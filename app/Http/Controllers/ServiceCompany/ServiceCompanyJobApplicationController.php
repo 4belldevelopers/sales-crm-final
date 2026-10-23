@@ -3555,8 +3555,11 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
             mb_strtolower($fullName)
         );
         $jobApplication->job_id = $request->job_id;
-        // $jobApplication->status_id 			=	$applicationStatus->id;
-        $jobApplication->status_id = 8;
+        $targetStatus = (int) ($request->input('master_status_id') ?: ($request->input('current_master_status_id') ?: 8));
+        if (! in_array($targetStatus, [1, 2, 3, 4, 5, 6, 7, 8])) {
+            $targetStatus = 8;
+        }
+        $jobApplication->status_id = $targetStatus;
         $jobApplication->email = ! empty($request->email) ? strtolower(trim($request->email)) : null;
         $jobApplication->phone = $request->phone;
         // $jobApplication->cover_letter 		=	$request->cover_letter;
@@ -3681,7 +3684,7 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
         $jobApplication->skills = $skillStr;
 
         // $jobApplication->master_status_id 	=	$applicationStatus->id;
-        $jobApplication->master_status_id = 8;
+        $jobApplication->master_status_id = $targetStatus;
         $jobApplication->secondrary_email = $request->filled('secondrary_email') ? strtolower(trim($request->secondrary_email)) : null;
         $jobApplication->secondary_mobile = $request->secondary_mobile;
         $submitted_by = '';
@@ -4154,6 +4157,13 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
 
             // Step 5: Atomically increment job-scoped dataset version and broadcast Reverb event
             $rawJobId = (int) (GeneralMethod::value_decrypt($request->job_id) ?: $jobApplication->job_id);
+            if ($rawJobId > 0) {
+                GeneralMethod::invalidateJobCounters((int) $rawJobId, [(int) $company_id]);
+                \Illuminate\Support\Facades\Cache::forget("custome_count_all:v4:{$company_id}:{$rawJobId}");
+                \Illuminate\Support\Facades\Cache::forget("custome_count_all:v3:{$company_id}:{$rawJobId}");
+                \Illuminate\Support\Facades\Cache::forget("custome_count_all:{$company_id}:{$rawJobId}");
+                \Illuminate\Support\Facades\Cache::forget("pipeline:{$company_id}:{$rawJobId}:v".cache()->get("allapptracker_version_company_{$company_id}", 1));
+            }
             $newJobDatasetVersion = 1;
             if ($rawJobId > 0) {
                 try {
@@ -4471,8 +4481,11 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
         $jobApplication = new JobApplication;
         $jobApplication->full_name = $request->full_name;
         $jobApplication->job_id = $request->job_id;
-        // $jobApplication->status_id 			=	$applicationStatus->id;
-        $jobApplication->status_id = 8;
+        $targetStatus = (int) ($request->input('master_status_id') ?: ($request->input('current_master_status_id') ?: 8));
+        if (! in_array($targetStatus, [1, 2, 3, 4, 5, 6, 7, 8])) {
+            $targetStatus = 8;
+        }
+        $jobApplication->status_id = $targetStatus;
         $jobApplication->email = $request->email;
         $jobApplication->phone = $request->phone;
         // $jobApplication->cover_letter 		=	$request->cover_letter;
@@ -4513,7 +4526,7 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
         $jobApplication->skills = $skillStr;
 
         // $jobApplication->master_status_id 	=	$applicationStatus->id;
-        $jobApplication->master_status_id = 8;
+        $jobApplication->master_status_id = $targetStatus;
         $jobApplication->secondrary_email = $request->secondrary_email;
         $jobApplication->secondary_mobile = $request->secondary_mobile;
         $submitted_by = '';

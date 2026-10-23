@@ -740,7 +740,8 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
         $mstatus_id = $request->mstatus_id;
         $jobid = $request->jobid;
 
-        $chkAdminRole = $this->user->hasRole('admin');
+        $this->user = $this->user ?? auth()->user();
+        $chkAdminRole = $this->user ? $this->user->hasRole('admin') : false;
 
         $feedback_status = ReferenceDataCache::feedbackStatus();
 
@@ -1294,7 +1295,7 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
             'listType' => 'allcandidate',
         ];
         // dd($pagination);
-        $userPermissions = $this->userPermissions;
+        $userPermissions = (array) ($this->userPermissions ?? []);
         $rowMaps = $this->prepareRowMaps($data, $company_id, (int) $request->input('app_duplicate', 0), (int) $request->input('app_duplicate_days', 0));
 
         $pipelineCounts = $this->getJobPipelineCounts((int) $jobid, (int) $company_id, $request->input('search'));
@@ -2443,7 +2444,7 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
             'listType' => 'allcandidate',
         ];
 
-        $userPermissions = $this->userPermissions;
+        $userPermissions = (array) ($this->userPermissions ?? []);
         $app_int_activity = request('app_int_activity');
         $app_int_status = request('app_int_status');
         $app_int_notice = request('app_int_notice');
@@ -2847,7 +2848,8 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
         $mstatus_id = $request->mstatus_id;
         $interviewStatus = [];
         $interviewStatus = DB::table('master_status')->select('*')->orderBy('priority', 'ASC')->get();
-        $chkAdminRole = $this->user->hasRole('admin');
+        $this->user = $this->user ?? auth()->user();
+        $chkAdminRole = $this->user ? $this->user->hasRole('admin') : false;
         // $chkAdminRole = DB::table('roles')->select('*')->where('id', $this->user->role->role_id)->where('name', 'admin')->count();
         $feedback_status = '';
         $feedback_status = ReferenceDataCache::feedbackStatus();
@@ -3369,7 +3371,7 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
             'listType' => 'allcandidate',
         ];
         // dd($pagination);
-        $userPermissions = $this->userPermissions;
+        $userPermissions = (array) ($this->userPermissions ?? []);
         $app_int_activity = request('app_int_activity');
         $app_int_status = request('app_int_status');
         $app_int_notice = request('app_int_notice');
@@ -4765,7 +4767,8 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
         $job = Job::withoutGlobalScopes()->findOrFail($jobid);
 
         $interviewStatus = ReferenceDataCache::masterStatuses();
-        $chkAdminRole = $this->user->hasRole('admin');
+        $this->user = $this->user ?? auth()->user();
+        $chkAdminRole = $this->user ? $this->user->hasRole('admin') : false;
         // $chkAdminRole = DB::table('roles')->select('*')->where('id', $this->user->role->role_id)->where('name', 'admin')->count();
         $feedback_status = ReferenceDataCache::feedbackStatus();
 
@@ -5463,7 +5466,7 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
             'listType' => 'allcandidate',
         ];
 
-        $userPermissions = $this->userPermissions;
+        $userPermissions = (array) ($this->userPermissions ?? []);
         $app_int_activity = request('app_int_activity');
         $app_int_status = request('app_int_status');
         $app_int_notice = request('app_int_notice');
@@ -5713,7 +5716,8 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
         $salaryMode = GeneralMethod::salaryMode();
         $currencySymbole = GeneralMethod::currencySymbole();
 
-        $chkAdminRole = $this->user->hasRole('admin');
+        $this->user = $this->user ?? auth()->user();
+        $chkAdminRole = $this->user ? $this->user->hasRole('admin') : false;
 
         // $chkAdminRole = DB::table('roles')
         // 	->select('*')
@@ -6549,7 +6553,7 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
             'listType' => 'allcandidate',
         ];
 
-        $userPermissions = $this->userPermissions;
+        $userPermissions = (array) ($this->userPermissions ?? []);
         $app_int_activity = request('app_int_activity');
         $app_int_status = request('app_int_status');
         $app_int_notice = request('app_int_notice');
@@ -6741,7 +6745,8 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
         $salaryMode = GeneralMethod::salaryMode();
         $currencySymbole = GeneralMethod::currencySymbole();
 
-        $chkAdminRole = $this->user->hasRole('admin');
+        $this->user = $this->user ?? auth()->user();
+        $chkAdminRole = $this->user ? $this->user->hasRole('admin') : false;
 
         // $chkAdminRole = DB::table('roles')
         // 	->select('*')
@@ -7523,7 +7528,7 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
         ];
         // dd($pagination);
 
-        $userPermissions = $this->userPermissions;
+        $userPermissions = (array) ($this->userPermissions ?? []);
         $app_int_activity = request('app_int_activity');
         $app_int_status = request('app_int_status');
         $app_int_notice = request('app_int_notice');
@@ -7684,7 +7689,8 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
         $salaryMode = GeneralMethod::salaryMode();
         $currencySymbole = GeneralMethod::currencySymbole();
 
-        $chkAdminRole = $this->user->hasRole('admin');
+        $this->user = $this->user ?? auth()->user();
+        $chkAdminRole = $this->user ? $this->user->hasRole('admin') : false;
 
         // $mandatorySkills tracks only the starred/checked skills (used to build
         // a strict "must match" clause below). $requiredSkills is EVERY entered
@@ -8502,7 +8508,7 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
             'listType' => 'allcandidate',
         ];
         $boostbenchApplications = [];
-        $userPermissions = $this->userPermissions;
+        $userPermissions = (array) ($this->userPermissions ?? []);
         $app_int_activity = request('app_int_activity');
         $app_int_status = request('app_int_status');
         $app_int_notice = request('app_int_notice');
@@ -9652,7 +9658,7 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
             'listType' => 'allcandidate',
         ];
 
-        $userPermissions = $this->userPermissions;
+        $userPermissions = (array) ($this->userPermissions ?? []);
         $app_int_activity = request('app_int_activity');
         $app_int_status = request('app_int_status');
         $app_int_notice = request('app_int_notice');
@@ -9913,7 +9919,8 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
             $mandatorySkills = array_column($checkedSkills, 'value');
         }
 
-        $chkAdminRole = $this->user->hasRole('admin');
+        $this->user = $this->user ?? auth()->user();
+        $chkAdminRole = $this->user ? $this->user->hasRole('admin') : false;
 
         // $chkAdminRole = DB::table('roles')
         // 	->select('*')
@@ -10727,7 +10734,7 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
             'listType' => 'allcandidate',
         ];
 
-        $userPermissions = $this->userPermissions;
+        $userPermissions = (array) ($this->userPermissions ?? []);
         $app_int_activity = request('app_int_activity');
         $app_int_status = request('app_int_status');
         $app_int_notice = request('app_int_notice');
@@ -11076,7 +11083,8 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
         $salaryMode = GeneralMethod::salaryMode();
         $currencySymbole = GeneralMethod::currencySymbole();
 
-        $chkAdminRole = $this->user->hasRole('admin');
+        $this->user = $this->user ?? auth()->user();
+        $chkAdminRole = $this->user ? $this->user->hasRole('admin') : false;
 
         // $chkAdminRole = DB::table('roles')
         // 	->select('*')
@@ -11683,7 +11691,7 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
             'listType' => 'allcandidate',
         ];
 
-        $userPermissions = $this->userPermissions;
+        $userPermissions = (array) ($this->userPermissions ?? []);
         $app_int_activity = request('app_int_activity');
         $app_int_status = request('app_int_status');
         $app_int_notice = request('app_int_notice');
