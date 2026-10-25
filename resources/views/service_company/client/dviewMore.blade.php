@@ -5467,8 +5467,6 @@
                 directfetchCandidatesJoin(1, search, window.currentOjSegmentDirect || 'all');
             } else if (target === 'candidateDashboard') {
                 initPerformanceDashboard();
-            }
-        });
                 setTimeout(function() {
                     if (window.perfChartInstances) {
                         Object.values(window.perfChartInstances).forEach(function(c) {
@@ -6861,19 +6859,23 @@
         ClientInterviewStoreDirect.init();
     });
 
-    window.fetchJobsClientdirect = function(page = 1, search = '', status = 'all') {
+    function fetchJobsClientdirect(page = 1, search = '', status = 'all') {
         $('.page-loader').css('display', 'flex');
         var activeStatus = status || window.currentJobStatusDirect || 'all';
         var clientName = $('.cd-client-name').first().text().trim() || '{{ addslashes($detailName ?? "") }}';
+        var clientId = $('#direct_client_id').val() || '{{ $directClientDetail->client_id ?? $directClientDetail->id ?? $dc_id ?? 0 }}';
+        var fromCompanyId = '{{ $directClientDetail->company_id ?? $directClientDetail->from_company_id ?? $directClientDetail->client_id ?? $directClientDetail->id ?? $dc_id ?? 0 }}';
+        var searchVal = (search !== undefined && search !== null && search !== '') ? search : ($('#requisitions #inputJobSearch').val() || '');
+
         return $.ajax({
             url: `{{ url('service_company/jobs_side_bar_job_ajax/data') }}?page=${page}`,
             type: 'GET',
             data: {
-                search: search || $('#inputJobSearch').val() || '',
+                search: searchVal,
                 status: activeStatus,
-                client_id: $('#direct_client_id').val() || '{{ $directClientDetail->client_id }}',
+                client_id: clientId,
                 client_name: clientName,
-                from_company_id: '{{ $directClientDetail->company_id ?? $directClientDetail->from_company_id ?? 0 }}',
+                from_company_id: fromCompanyId,
                 custom: false
             },
             success: function(response) {
@@ -6895,36 +6897,37 @@
                 $('.page-loader').css('display', 'none');
             }
         });
-    };
+    }
+    window.fetchJobsClientdirect = fetchJobsClientdirect;
 
     // Direct Client Jobs Tab: Dynamic Search Bar (Keyup & Clear)
     var directJobSearchTimer = null;
-    $(document).on('keyup', '#inputJobSearch', function() {
+    $(document).on('keyup', '#requisitions #inputJobSearch', function() {
         clearTimeout(directJobSearchTimer);
         var searchVal = $(this).val();
         if (searchVal.length > 0) {
-            $('#btnJobSearchClear').show();
+            $('#requisitions #btnJobSearchClear').show();
         } else {
-            $('#btnJobSearchClear').hide();
+            $('#requisitions #btnJobSearchClear').hide();
         }
         directJobSearchTimer = setTimeout(function() {
             fetchJobsClientdirect(1, searchVal, window.currentJobStatusDirect || 'all');
         }, 300);
     });
 
-    $(document).on('click', '#btnJobSearchClear', function() {
-        $('#inputJobSearch').val('');
+    $(document).on('click', '#requisitions #btnJobSearchClear', function() {
+        $('#requisitions #inputJobSearch').val('');
         $(this).hide();
         fetchJobsClientdirect(1, '', window.currentJobStatusDirect || 'all');
     });
 
     // Direct Client Jobs Tab: Filter Button Interaction
-    $(document).on('click', '.js-job-filter-btn', function() {
+    $(document).on('click', '#requisitions .js-job-filter-btn', function() {
         var status = $(this).data('status') || 'all';
         window.currentJobStatusDirect = status;
-        $('.js-job-filter-btn').removeClass('active');
+        $('#requisitions .js-job-filter-btn').removeClass('active');
         $(this).addClass('active');
-        fetchJobsClientdirect(1, $('#inputJobSearch').val(), status);
+        fetchJobsClientdirect(1, $('#requisitions #inputJobSearch').val(), status);
     });
 
     // Direct Client Jobs Tab: Click Routing (Fixing Drawer Click Collision Bug)
