@@ -2822,6 +2822,7 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
             })
             ->addColumn('is_primary', function ($row) use ($primaryContactName) {
                 $name = strtolower(trim((string) @$row->contact_person_name));
+
                 return ($name !== '' && $primaryContactName !== '' && ($name === $primaryContactName || str_contains($primaryContactName, $name) || str_contains($name, $primaryContactName))) ? 1 : 0;
             })
             ->addColumn('client_name', function () use ($clientCompanyName) {
@@ -2830,14 +2831,17 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
             ->addColumn('clean_phone', function ($row) {
                 $calling = trim((string) @$row->calling_code);
                 $num = trim((string) @$row->contact_person_number);
-                return $calling ? ($calling . ' ' . $num) : $num;
+
+                return $calling ? ($calling.' '.$num) : $num;
             })
             ->addColumn('created_formatted', function ($row) {
-                if (!empty($row->created_at)) {
+                if (! empty($row->created_at)) {
                     try {
                         return \Carbon\Carbon::parse($row->created_at)->format('d M Y');
-                    } catch (\Exception $e) {}
+                    } catch (\Exception $e) {
+                    }
                 }
+
                 return 'Active Member';
             })
             ->rawColumns(['chkbox', 'Contact', 'Email', 'Phone', 'Status', 'Actions'])
@@ -3270,7 +3274,7 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
 						</div>';
             })
             ->addColumn('is_primary', function ($row) {
-                return !empty($row->from_user_id) ? 1 : 0;
+                return ! empty($row->from_user_id) ? 1 : 0;
             })
             ->addColumn('client_name', function ($row) {
                 return (string) @$row->company_name;
@@ -3290,14 +3294,17 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
             ->addColumn('clean_phone', function ($row) {
                 $calling = trim((string) @$row->calling_code);
                 $num = trim((string) @$row->mobile);
-                return $calling ? ($calling . ' ' . $num) : $num;
+
+                return $calling ? ($calling.' '.$num) : $num;
             })
             ->addColumn('created_formatted', function ($row) {
-                if (!empty($row->user_created_at)) {
+                if (! empty($row->user_created_at)) {
                     try {
                         return \Carbon\Carbon::parse($row->user_created_at)->format('d M Y');
-                    } catch (\Exception $e) {}
+                    } catch (\Exception $e) {
+                    }
                 }
+
                 return 'Active Member';
             })
             ->rawColumns(['chkbox', 'Contact', 'Email', 'Phone', 'Status', 'Actions'])
