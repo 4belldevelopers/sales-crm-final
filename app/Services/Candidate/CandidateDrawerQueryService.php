@@ -97,6 +97,8 @@ class CandidateDrawerQueryService
         'skills',
         'skill_match',
         'duplicate',
+        'linkedin',
+        'visastatu',
     ];
 
     public function __construct(ElasticService $elasticService, ClientCandidateVersionStore $versionStore)
