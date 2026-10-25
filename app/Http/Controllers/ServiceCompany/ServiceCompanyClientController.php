@@ -817,7 +817,7 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
             $pendingRequests = [];
             $pendingJobsCountMap = [];
 
-            if ($tabFilter === 'all' && (int)$page === 1 && ! $hiringFilter && ! $inactiveFilter && $this->elasticService->indexExists(ELASTIC_CLIENT_REQUEST)) {
+            if ($tabFilter === 'all' && (int) $page === 1 && ! $hiringFilter && ! $inactiveFilter && $this->elasticService->indexExists(ELASTIC_CLIENT_REQUEST)) {
                 try {
                     $reqBool = [
                         'must' => [
@@ -889,7 +889,8 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
                                 foreach ($jobReqResp['aggregations']['by_from_company']['buckets'] ?? [] as $b) {
                                     $pendingJobsCountMap[(int) $b['key']] = (int) $b['doc_count'];
                                 }
-                            } catch (\Throwable $e) {}
+                            } catch (\Throwable $e) {
+                            }
                         }
 
                         foreach ($pendingRequests as &$pItem) {
@@ -902,7 +903,7 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
                         $total += count($pendingRequests);
                     }
                 } catch (\Throwable $esReqEx) {
-                    \Log::warning('Error querying ELASTIC_CLIENT_REQUEST for All Clients pinned tab: ' . $esReqEx->getMessage());
+                    \Log::warning('Error querying ELASTIC_CLIENT_REQUEST for All Clients pinned tab: '.$esReqEx->getMessage());
                 }
             }
 
@@ -1082,6 +1083,7 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
                         'days_ago' => (string) $daysAgo,
                         'projection_version' => (int) $tenantVersion,
                     ];
+
                     continue;
                 }
 
@@ -2704,8 +2706,6 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
      * and request correlation headers.
      *
      * @param  int  $id  Client ID (or Direct Client company ID)
-     * @param  Request  $request
-     * @param  ClientPerformanceAnalyticsService  $analyticsService
      * @return \Illuminate\Http\JsonResponse
      */
     public function performanceAnalyticsV1($id, Request $request, ClientPerformanceAnalyticsService $analyticsService)
@@ -2735,18 +2735,18 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
                 ->header('X-Schema-Version', $dashboard['meta']['schema_version']);
         } catch (\Illuminate\Auth\Access\AuthorizationException $e) {
             return response()->json([
-                'status'  => 'error',
+                'status' => 'error',
                 'message' => $e->getMessage(),
             ], 403);
         } catch (\Throwable $e) {
             \Log::error('performanceAnalyticsV1 error: '.$e->getMessage(), [
-                'client_id'  => $id,
+                'client_id' => $id,
                 'company_id' => $companyId,
-                'trace'      => $e->getTraceAsString(),
+                'trace' => $e->getTraceAsString(),
             ]);
 
             return response()->json([
-                'status'  => 'error',
+                'status' => 'error',
                 'message' => 'Unable to generate performance analytics. Please try again.',
             ], 500);
         }
@@ -2830,7 +2830,7 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
 
         $versionKey = 'clientsdviewmore_version_user_'.$userId;
         $version = cache()->get($versionKey, 1);
-        $cacheKeySet = 'ats:clientsdviewmore_v11:'.$userId.':'.$version.':'.md5(json_encode($cachePayload));
+        $cacheKeySet = 'ats:clientsdviewmore_v12:'.$userId.':'.$version.':'.md5(json_encode($cachePayload));
         /* ----------------------------
         ⚡ Check DragonflyDB first
         ----------------------------- */
@@ -4978,9 +4978,13 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
                 ]);
 
             if ($affected === 0) {
-                try { $lock->release(); } catch (\Throwable $e) {}
+                try {
+                    $lock->release();
+                } catch (\Throwable $e) {
+                }
                 $existingInv = DB::table('staffing_company_invitation')->where('id', $invitation_id)->first();
-                $alreadyStatus = ($existingInv && (int)$existingInv->to_invitation_status === 1) ? 'Accepted' : 'Ignored';
+                $alreadyStatus = ($existingInv && (int) $existingInv->to_invitation_status === 1) ? 'Accepted' : 'Ignored';
+
                 return response()->json([
                     'status' => 'conflict',
                     'code' => 'REQUEST_ALREADY_PROCESSED',

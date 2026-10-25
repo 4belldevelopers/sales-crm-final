@@ -62,18 +62,22 @@ class ClientJobsReadService
             ];
         } else {
             // Direct Client Complete 4-Level Defense-in-Depth Boundary
+            $fromCompId = $partnerPart > 0 ? $partnerPart : (int) $query->clientId;
+            $nestedMust = [
+                ['term' => ['recommendation_relation.to_company_id' => (int) $query->serviceCompanyId]],
+                ['terms' => ['recommendation_relation.final_status' => [1, 2]]],
+            ];
+            if ($fromCompId > 0) {
+                $nestedMust[] = ['term' => ['recommendation_relation.from_company_id' => $fromCompId]];
+            }
+
             $scopeMust = [
-                ['term' => ['client_id' => (int) $query->clientId]],
                 [
                     'nested' => [
                         'path' => 'recommendation_relation',
                         'query' => [
                             'bool' => [
-                                'must' => [
-                                    ['term' => ['recommendation_relation.to_company_id' => (int) $query->serviceCompanyId]],
-                                    ['term' => ['recommendation_relation.from_company_id' => $partnerPart]],
-                                    ['term' => ['recommendation_relation.final_status' => 1]],
-                                ],
+                                'must' => $nestedMust,
                             ],
                         ],
                     ],
@@ -281,19 +285,30 @@ class ClientJobsReadService
             if (empty($clientDisplayName)) {
                 try {
                     if ($query->clientType === 'internal') {
-                        $indexClient = defined('ELASTIC_CLIENT_LIST') ? ELASTIC_CLIENT_LIST : config('constants.ELASTIC_CLIENT_LIST', 'ats_client_list');
+                        $indexClient = defined('ELASTIC_CLIENT_LIST') ? ELASTIC_CLIENT_LIST : config('constants.ELASTIC_CLIENT_LIST', 'ats_client_list_elastic');
                         $clientDoc = $this->elasticService->getClient()->get([
                             'index' => $indexClient,
                             'id' => (string) $query->clientId,
                         ]);
                         $clientDisplayName = $clientDoc['_source']['name'] ?? ($clientDoc['_source']['client_name'] ?? '');
                     } else {
-                        $indexComp = defined('ELASTIC_COMPANIES_INDEX') ? ELASTIC_COMPANIES_INDEX : config('constants.ELASTIC_COMPANIES_INDEX', 'ats_companies_elastic');
-                        $compDoc = $this->elasticService->getClient()->get([
-                            'index' => $indexComp,
-                            'id' => (string) $query->clientId,
-                        ]);
-                        $clientDisplayName = $compDoc['_source']['company_name'] ?? ($compDoc['_source']['name'] ?? '');
+                        $indexClient = defined('ELASTIC_CLIENT_LIST') ? ELASTIC_CLIENT_LIST : 'ats_client_list_elastic';
+                        if ($this->elasticService->getClient()->exists(['index' => $indexClient, 'id' => (string) $query->clientId])) {
+                            $compDoc = $this->elasticService->getClient()->get([
+                                'index' => $indexClient,
+                                'id' => (string) $query->clientId,
+                            ]);
+                            $clientDisplayName = $compDoc['_source']['company_name'] ?? ($compDoc['_source']['name'] ?? '');
+                        } else {
+                            $indexComp = defined('ELASTIC_COMPANIES_INDEX') ? ELASTIC_COMPANIES_INDEX : config('constants.ELASTIC_COMPANIES_INDEX', 'ats_companies_elastic');
+                            if ($this->elasticService->getClient()->exists(['index' => $indexComp, 'id' => (string) $query->clientId])) {
+                                $compDoc = $this->elasticService->getClient()->get([
+                                    'index' => $indexComp,
+                                    'id' => (string) $query->clientId,
+                                ]);
+                                $clientDisplayName = $compDoc['_source']['company_name'] ?? ($compDoc['_source']['name'] ?? '');
+                            }
+                        }
                     }
                     if (! empty($clientDisplayName)) {
                         Redis::setex($clientNameKey, 3600, (string) $clientDisplayName);
