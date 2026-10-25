@@ -20,6 +20,22 @@ Last updated: 2026-10-22 (Super Admin Companies Page UI Redesign, 100% CQRS Read
 - **Test coverage:** `TenantIsolationTest`, `BenchToJobAppTrackerPipelineContractTest`, `BenchTalentRequestPipelineContractTest`, `SuperAdminCompanyLoadTest`, `SuperAdminSubscriptionLoadTest`, `SuperAdminDashboardLoadTest` (100% green).
 - **V2_login blocking-scenarios architecture:** session-epoch pattern + Reverb `UserAccountSuspended` event + `SyncUserStatusAction` (cross-tenant-safe) + `BlockCompanyAction` (static bulk helper) + `block_log` audit table + drop all 20 `refresh:true` ES sites + grep-lint guard. See [docs/V2_login/BLOCKING_SCENARIOS_AUDIT.md](../docs/V2_login/BLOCKING_SCENARIOS_AUDIT.md), [ADR 0007](../docs/adr/0007-blocking-scenarios-architecture.md). Code not yet landed.
 
+- *2026-10-25* — **Client Drawer Jobs Tab: Client Scope Header Classification (Option 2 Implementation 100% COMPLETED & VERIFIED)**:
+  - **User Request & Requirements**:
+    - Audit and implement the missing "Direct Client" vs "Internal Client" classification indicator on the Jobs tab.
+    - User selected Option 2: Place the classification pill badge inside the header of Sub-Card 1 (Job Details) positioned immediately beside the Canonical Status Badge (`HIRING`).
+  - **Architectural Implementation**:
+    - `JobsTabViewModel`: Added `public readonly string $clientType = 'internal'` to state contract.
+    - `ClientJobsReadService`: Populated `clientType: $query->clientType` from the authorized query contract.
+    - `client_jobs_side_bar_ajax.blade.php`:
+      - Dynamically resolved client scope across 4 fallback layers: job's `self_company`, `job->client_type`, request context `$custom`, and `$viewModel->clientType`.
+      - Rendered `.cd-header-badges` in Sub-Card 1 header holding the Client Scope Pill (`.cd-badge-client-type`) alongside `.cd-status-badge`.
+      - **Direct Client**: Emerald Green badge (`#ecfdf5`, border `#a7f3d0`, text `#059669`) with building icon.
+      - **Internal Client**: Primary Blue badge (`#eff6ff`, border `#bfdbfe`, text `#2563eb`) with building icon.
+    - `tab-jobs-style.blade.php`: Added scoped styling for `.cd-header-badges`, `.cd-badge-client-type.type-direct`, and `.cd-badge-client-type.type-internal`.
+    - `docs/UI_UX_CARD_SUB_CARD_DESIGN_STANDARD.md` & `docs/UI_UX_STANDARDS.md`: Codified Option 2 header dual badge requirement into the authoritative standards.
+  - **Verification**: `ClientJobsCqrsReadTest` (1 passed, 11 assertions, 0 MySQL reads), `ClientAccessContextSecurityTest` (3 passed, 5 assertions), Pint clean.
+
 - *2026-10-23* — **Client Drawer Jobs Tab Card/Sub-Card Information Placement Refinement (100% COMPLETED & VERIFIED)**:
   - **User Request & Requirements**:
     1. **Move Full-Time**: Remove "Full-Time" from the Compensation card and move it to the Job Details card, placed in the same row immediately next to the client name.
