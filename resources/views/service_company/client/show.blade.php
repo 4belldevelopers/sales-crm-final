@@ -669,28 +669,77 @@ use Carbon\Carbon;
 
           /* ── Top Action Header Bar (Internal: Blue Accent) ── */
           .cd-top-bar {
-            background: #ffffff;
-            border-bottom: 1px solid #e2e8f0;
-            padding: 8px 16px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            position: sticky;
-            top: 0;
-            z-index: 20;
+            background: #ffffff !important;
+            border: 1px solid #e2e8f0 !important;
+            border-radius: 10px !important;
+            margin: 10px 14px 10px 14px !important;
+            padding: 10px 16px !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: space-between !important;
+            position: sticky !important;
+            top: 0 !important;
+            z-index: 30 !important;
+            box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04) !important;
+            gap: 12px !important;
+            flex-wrap: wrap !important;
+          }
+          .cd-top-bar-left {
+            display: flex !important;
+            align-items: center !important;
+            gap: 10px !important;
+            min-width: 0 !important;
+          }
+          .cd-top-bar-icon {
+            width: 32px !important;
+            height: 32px !important;
+            border-radius: 8px !important;
+            background: #eff6ff !important;
+            color: #2563eb !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            font-size: 14px !important;
+            flex-shrink: 0 !important;
+          }
+          .cd-top-bar-icon-green {
+            background: #ecfdf5 !important;
+            color: #059669 !important;
+          }
+          .cd-top-bar-title-wrap {
+            display: flex !important;
+            align-items: center !important;
+            gap: 8px !important;
+            flex-wrap: wrap !important;
+          }
+          .cd-top-bar-title {
+            font-size: 13.5px !important;
+            font-weight: 700 !important;
+            color: #0f172a !important;
+            line-height: 1.2 !important;
+            margin: 0 !important;
+          }
+          .cd-top-bar-id {
+            font-size: 11.5px !important;
+            font-weight: 600 !important;
+            color: #2563eb !important;
+            background: #eff6ff !important;
+            border: 1px solid #bfdbfe !important;
+            border-radius: 6px !important;
+            padding: 1px 6px !important;
           }
           .cd-top-actions {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            flex-wrap: wrap;
+            display: flex !important;
+            align-items: center !important;
+            gap: 8px !important;
+            flex-wrap: wrap !important;
           }
           .cd-hdr-btn {
-            height: 30px !important;
-            padding: 0 13px !important;
-            border-radius: 6px !important;
-            font-size: 12.5px !important;
-            font-weight: 500 !important;
+            height: 32px !important;
+            padding: 0 12px !important;
+            border-radius: 8px !important;
+            font-size: 12px !important;
+            font-weight: 600 !important;
             display: inline-flex !important;
             align-items: center !important;
             gap: 6px !important;
@@ -698,646 +747,785 @@ use Carbon\Carbon;
             text-decoration: none !important;
             transition: all 0.15s ease-in-out !important;
             line-height: 1 !important;
+            border: 1px solid transparent !important;
           }
           .cd-hdr-btn-outline {
             background: #ffffff !important;
-            border: 1.5px solid #009ef7 !important;
-            color: #009ef7 !important;
+            border-color: #e2e8f0 !important;
+            color: #334155 !important;
+            box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03) !important;
           }
           .cd-hdr-btn-outline:hover {
-            background: #f0f9ff !important;
-            color: #0086d1 !important;
-            border-color: #0086d1 !important;
+            background: #f8fafc !important;
+            border-color: #cbd5e1 !important;
+            color: #0f172a !important;
           }
-          .cd-hdr-btn-solid-blue,
+          .cd-hdr-btn-outline-green {
+            background: #ffffff !important;
+            border-color: #a7f3d0 !important;
+            color: #059669 !important;
+          }
+          .cd-hdr-btn-outline-green:hover {
+            background: #ecfdf5 !important;
+            border-color: #059669 !important;
+          }
           .cd-hdr-btn-white-edit {
             background: #ffffff !important;
-            border: 1px solid #cbd5e1 !important;
-            color: #009ef7 !important;
-            font-weight: 500 !important;
-            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04) !important;
+            border-color: #bfdbfe !important;
+            color: #2563eb !important;
+            box-shadow: 0 1px 2px rgba(37, 99, 235, 0.05) !important;
           }
-          .cd-hdr-btn-solid-blue:hover,
           .cd-hdr-btn-white-edit:hover {
-            background: #f0f9ff !important;
+            background: #eff6ff !important;
+            border-color: #2563eb !important;
+          }
+          .cd-hdr-btn-primary {
+            background: #009ef7 !important;
+            border-color: #009ef7 !important;
+            color: #ffffff !important;
+            box-shadow: 0 2px 4px rgba(0, 158, 247, 0.2) !important;
+          }
+          .cd-hdr-btn-primary:hover {
+            background: #0086d1 !important;
             border-color: #0086d1 !important;
-            color: #0086d1 !important;
+            color: #ffffff !important;
           }
           .cd-hdr-btn-close {
-            width: 30px !important;
-            height: 30px !important;
+            width: 32px !important;
+            height: 32px !important;
             padding: 0 !important;
-            border-radius: 6px !important;
-            background: transparent !important;
-            border: none !important;
+            border-radius: 8px !important;
+            background: #f1f5f9 !important;
+            border: 1px solid #e2e8f0 !important;
             color: #64748b !important;
             display: inline-flex !important;
             align-items: center !important;
             justify-content: center !important;
             cursor: pointer !important;
-            font-size: 14px !important;
-            transition: all 0.15s !important;
+            font-size: 13px !important;
+            transition: all 0.15s ease-in-out !important;
           }
           .cd-hdr-btn-close:hover {
-            background: #f1f5f9 !important;
-            color: #0f172a !important;
+            background: #fee2e2 !important;
+            border-color: #fecdd3 !important;
+            color: #ef4444 !important;
+            transform: rotate(90deg) !important;
           }
 
-          /* ── Client Hero Banner: Clean Neutral Enterprise UI ── */
-          .cd-hero-banner-blue {
+          /* ── Client Hero Banner: Modern Card + Sub-Card System ── */
+          .cd-hero-card {
             background: #ffffff !important;
-            border-bottom: 1px solid #e2e8f0 !important;
-            padding: 14px 18px 12px;
+            border: 1px solid #e2e8f0 !important;
+            border-radius: 10px !important;
+            margin: 0 14px 12px 14px !important;
+            padding: 14px 16px !important;
+            box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04) !important;
+            width: calc(100% - 28px) !important;
           }
-          .cd-hero-top {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 16px;
-            flex-wrap: wrap;
+          .cd-hero-grid {
+            display: grid !important;
+            grid-template-columns: minmax(0, 1.8fr) minmax(0, 1.9fr) minmax(0, 1.3fr) !important;
+            gap: 12px !important;
+            align-items: stretch !important;
+            width: 100% !important;
           }
-          .cd-hero-left {
-            display: flex;
-            align-items: center;
-            gap: 14px;
-            flex: 1;
-            min-width: 0;
+          @media (max-width: 1200px) {
+            .cd-hero-grid {
+              grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) !important;
+            }
           }
-          .cd-avatar-wrap {
-            position: relative;
-            flex-shrink: 0;
-          }
-          .cd-avatar-circle {
-            width: 58px;
-            height: 58px;
-            border-radius: 50%;
-            background: #0f172a;
-            color: #ffffff;
-            border: 2px solid #ffffff;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 14px !important;
-            font-weight: 600;
-            overflow: hidden;
-          }
-          .cd-avatar-circle img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-          }
-          .cd-verified-badge {
-            position: absolute;
-            top: -2px;
-            right: -2px;
-            width: 18px;
-            height: 18px;
-            border-radius: 50%;
-            background: #10b981;
-            border: 2px solid #ffffff;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 1px 4px rgba(0,0,0,0.12);
-          }
-          .cd-verified-badge i {
-            font-size: 8.5px !important;
-            color: #ffffff;
-          }
-          .cd-hero-details {
-            flex: 1;
-            min-width: 0;
-          }
-          .cd-title-row {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            margin-bottom: 4px;
-            flex-wrap: wrap;
-          }
-          .cd-client-name {
-            font-size: 14px !important;
-            font-weight: 600 !important;
-            color: #0f172a !important;
-            letter-spacing: -0.2px;
-          }
-          .cd-pill-type-internal {
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-            background: #e0f2fe;
-            color: #0284c7;
-            border: 1px solid #bae6fd;
-            font-size: 10.5px !important;
-            font-weight: 500 !important;
-            padding: 2.5px 8px;
-            border-radius: 4px;
-            line-height: 1.2;
-          }
-          .cd-meta-row {
-            display: flex;
-            align-items: center;
-            gap: 7px;
-            font-size: 11.5px !important;
-            font-weight: 400 !important;
-            color: #64748b;
-            margin-bottom: 6px;
-            flex-wrap: wrap;
-          }
-          .cd-meta-sep {
-            color: #cbd5e1;
-            font-size: 10px;
-          }
-          .cd-meta-link {
-            color: #0284c7 !important;
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-            gap: 3px;
-          }
-          .cd-meta-link:hover {
-            text-decoration: underline;
-          }
-          .cd-tag-row {
-            display: flex;
-            align-items: center;
-            gap: 5px;
-            flex-wrap: wrap;
-          }
-          .cd-tag-pill {
-            display: inline-flex;
-            align-items: center;
-            padding: 2.5px 9px;
-            background: #e0f2fe;
-            border: 1px solid #bae6fd;
-            color: #0369a1;
-            font-size: 10.5px !important;
-            font-weight: 500 !important;
-            border-radius: 12px;
-            line-height: 1.2;
+          @media (max-width: 768px) {
+            .cd-hero-grid {
+              grid-template-columns: minmax(0, 1fr) !important;
+            }
           }
 
-          /* ── Right Status Cards ── */
-          .cd-hero-right {
-            display: flex;
-            flex-direction: column;
-            align-items: flex-end;
-            gap: 6px;
-            flex-shrink: 0;
-          }
-          .cd-status-group {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-          }
-          .cd-status-card {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            padding: 6px 12px;
-            border-radius: 8px;
-            min-width: 120px;
-          }
-          .cd-status-card-green {
-            background: #f0fdf4;
-            border: 1px solid #bbf7d0;
-          }
-          .cd-status-card-blue {
-            background: #eff6ff;
-            border: 1px solid #bfdbfe;
-          }
-          .cd-status-card-grey {
+          /* Sub-Card 1: Identity & Scope */
+          .cd-hero-subcard-identity {
             background: #f8fafc !important;
             border: 1px solid #e2e8f0 !important;
+            border-radius: 8px !important;
+            padding: 12px 14px !important;
+            display: flex !important;
+            align-items: center !important;
+            gap: 12px !important;
+            min-width: 0 !important;
           }
-          .cd-status-card-title {
-            font-size: 12px !important;
+          .cd-hero-avatar-wrap {
+            position: relative !important;
+            flex-shrink: 0 !important;
+          }
+          .cd-hero-avatar {
+            width: 52px !important;
+            height: 52px !important;
+            border-radius: 10px !important;
+            background: linear-gradient(135deg, #1e293b, #0f172a) !important;
+            color: #ffffff !important;
+            border: 2px solid #ffffff !important;
+            box-shadow: 0 2px 6px rgba(15, 23, 42, 0.08) !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            font-size: 16px !important;
+            font-weight: 700 !important;
+            overflow: hidden !important;
+          }
+          .cd-hero-avatar img {
+            width: 100% !important;
+            height: 100% !important;
+            object-fit: cover !important;
+          }
+          .cd-hero-verified-check {
+            position: absolute !important;
+            top: -3px !important;
+            right: -3px !important;
+            width: 17px !important;
+            height: 17px !important;
+            border-radius: 50% !important;
+            background: #10b981 !important;
+            border: 2px solid #ffffff !important;
+            color: #ffffff !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            font-size: 8px !important;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.15) !important;
+          }
+          .cd-hero-identity-body {
+            flex: 1 !important;
+            min-width: 0 !important;
+          }
+          .cd-hero-name {
+            font-size: 15px !important;
+            font-weight: 700 !important;
+            color: #0f172a !important;
+            line-height: 1.25 !important;
+            white-space: nowrap !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+            margin-bottom: 4px !important;
+          }
+          .cd-pill-scope-internal {
+            display: inline-flex !important;
+            align-items: center !important;
+            gap: 4px !important;
+            background: #eff6ff !important;
+            color: #2563eb !important;
+            border: 1px solid #bfdbfe !important;
+            font-size: 10.5px !important;
             font-weight: 600 !important;
-            line-height: 1.2;
+            padding: 2px 7px !important;
+            border-radius: 5px !important;
           }
-          .cd-status-card-sub {
-            font-size: 11px !important;
-            font-weight: 400 !important;
-            color: #64748b;
-            line-height: 1.1;
-          }
-          .cd-pulse-dot {
-            width: 7px;
-            height: 7px;
-            border-radius: 50%;
-            position: relative;
-            flex-shrink: 0;
-          }
-          .cd-pulse-green { background: #16a34a; }
-          .cd-pulse-green::after {
-            content: "";
-            position: absolute;
-            inset: -3px;
-            border-radius: 50%;
-            border: 1.5px solid #16a34a;
-            animation: cdpulse 2s infinite;
-          }
-          .cd-pulse-blue { background: #2563eb; }
-          .cd-pulse-blue::after {
-            content: "";
-            position: absolute;
-            inset: -3px;
-            border-radius: 50%;
-            border: 1.5px solid #2563eb;
-            animation: cdpulse 2s infinite;
-          }
-          .cd-pulse-grey {
-            background: #94a3b8 !important;
-          }
-          .cd-pulse-grey::after {
-            display: none !important;
-          }
-          @keyframes cdpulse {
-            0%, 100% { transform: scale(1); opacity: 1; }
-            50% { transform: scale(1.4); opacity: 0; }
-          }
-          .cd-hero-meta-time {
-            font-size: 11px !important;
-            font-weight: 400 !important;
-            color: #64748b;
+          .cd-pill-scope-direct {
+            display: inline-flex !important;
+            align-items: center !important;
+            gap: 4px !important;
+            background: #ecfdf5 !important;
+            color: #059669 !important;
+            border: 1px solid #a7f3d0 !important;
+            font-size: 10.5px !important;
+            font-weight: 600 !important;
+            padding: 2px 7px !important;
+            border-radius: 5px !important;
           }
 
-          /* ── 5 Metric KPI Stat Cards Row ── */
+          /* Sub-Card 2: Parameters Grid */
+          .cd-hero-subcard-meta {
+            background: #f8fafc !important;
+            border: 1px solid #e2e8f0 !important;
+            border-radius: 8px !important;
+            padding: 10px 12px !important;
+            display: grid !important;
+            grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+            gap: 6px 10px !important;
+            align-content: center !important;
+          }
+          .cd-meta-item-box {
+            display: flex !important;
+            align-items: center !important;
+            gap: 6px !important;
+            min-width: 0 !important;
+          }
+          .cd-meta-item-box i {
+            font-size: 11px !important;
+            color: #64748b !important;
+            width: 14px !important;
+            text-align: center !important;
+            flex-shrink: 0 !important;
+          }
+          .cd-meta-item-text {
+            font-size: 11px !important;
+            color: #334155 !important;
+            font-weight: 500 !important;
+            white-space: nowrap !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+          }
+          .cd-meta-item-link {
+            color: #2563eb !important;
+            text-decoration: none !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            gap: 3px !important;
+          }
+          .cd-meta-item-link:hover {
+            text-decoration: underline !important;
+          }
+
+          /* Sub-Card 3: Activity & Status */
+          .cd-hero-subcard-activity {
+            background: #f8fafc !important;
+            border: 1px solid #e2e8f0 !important;
+            border-radius: 8px !important;
+            padding: 10px 12px !important;
+            display: flex !important;
+            flex-direction: column !important;
+            justify-content: space-between !important;
+            gap: 6px !important;
+          }
+          .cd-hero-status-row {
+            display: flex !important;
+            align-items: center !important;
+            justify-content: space-between !important;
+            gap: 8px !important;
+          }
+          .cd-status-badge-active {
+            display: inline-flex !important;
+            align-items: center !important;
+            gap: 6px !important;
+            background: #ecfdf5 !important;
+            color: #059669 !important;
+            border: 1px solid #a7f3d0 !important;
+            padding: 3px 8px !important;
+            border-radius: 6px !important;
+            font-size: 11px !important;
+            font-weight: 600 !important;
+          }
+          .cd-status-badge-inactive {
+            display: inline-flex !important;
+            align-items: center !important;
+            gap: 6px !important;
+            background: #f1f5f9 !important;
+            color: #64748b !important;
+            border: 1px solid #cbd5e1 !important;
+            padding: 3px 8px !important;
+            border-radius: 6px !important;
+            font-size: 11px !important;
+            font-weight: 600 !important;
+          }
+          .cd-pulse-emerald {
+            width: 7px !important;
+            height: 7px !important;
+            border-radius: 50% !important;
+            background: #10b981 !important;
+            position: relative !important;
+            flex-shrink: 0 !important;
+          }
+          .cd-pulse-emerald::after {
+            content: "" !important;
+            position: absolute !important;
+            inset: -3px !important;
+            border-radius: 50% !important;
+            border: 1.5px solid #10b981 !important;
+            animation: cdpulse 2s infinite !important;
+          }
+          .cd-hero-time-strip {
+            font-size: 10.5px !important;
+            color: #64748b !important;
+            display: flex !important;
+            align-items: center !important;
+            gap: 6px !important;
+            flex-wrap: wrap !important;
+          }
+          .cd-hero-tags-strip {
+            display: flex !important;
+            gap: 4px !important;
+            flex-wrap: wrap !important;
+            margin-top: 2px !important;
+          }
+          .cd-hero-tag {
+            display: inline-flex !important;
+            align-items: center !important;
+            padding: 1.5px 6px !important;
+            background: #ffffff !important;
+            border: 1px solid #e2e8f0 !important;
+            border-radius: 4px !important;
+            color: #475569 !important;
+            font-size: 10px !important;
+            font-weight: 500 !important;
+          }
+
+          /* ── 5 Metric KPI Sub-Cards Row ── */
           .cd-kpi-grid {
-            display: grid;
-            grid-template-columns: repeat(5, 1fr);
-            gap: 10px;
-            padding: 12px 18px;
-            background: #ffffff;
-            border-bottom: 1px solid #f1f5f9;
+            display: grid !important;
+            grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+            gap: 10px !important;
+            margin: 0 14px 12px 14px !important;
+            width: calc(100% - 28px) !important;
+          }
+          @media (max-width: 1024px) {
+            .cd-kpi-grid {
+              grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+            }
+          }
+          @media (max-width: 640px) {
+            .cd-kpi-grid {
+              grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+            }
           }
           .cd-kpi-card {
-            background: #ffffff;
-            border: 1px solid #eef2f6;
-            border-radius: 8px;
-            padding: 10px 12px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
-            transition: all 0.15s ease-in-out;
-            cursor: pointer;
+            background: #ffffff !important;
+            border: 1px solid #e2e8f0 !important;
+            border-radius: 10px !important;
+            padding: 10px 12px !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: space-between !important;
+            box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03) !important;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+            cursor: pointer !important;
+            text-decoration: none !important;
+            min-width: 0 !important;
           }
           .cd-kpi-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-            border-color: #cbd5e1;
+            transform: translateY(-2px) !important;
+            box-shadow: 0 4px 12px rgba(15, 23, 42, 0.06) !important;
+            border-color: #cbd5e1 !important;
           }
           .cd-kpi-icon {
-            width: 34px;
-            height: 34px;
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 13.5px !important;
-            flex-shrink: 0;
-          }
-          .cd-kpi-icon-blue   { background: #eff6ff; color: #2563eb; }
-          .cd-kpi-icon-purple { background: #f5f3ff; color: #7c3aed; }
-          .cd-kpi-icon-amber  { background: #fffbeb; color: #d97706; }
-          .cd-kpi-icon-orange { background: #fff7ed; color: #ea580c; }
-          .cd-kpi-icon-green  { background: #f0fdf4; color: #16a34a; }
-          .cd-kpi-num {
+            width: 36px !important;
+            height: 36px !important;
+            border-radius: 8px !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
             font-size: 14px !important;
+            flex-shrink: 0 !important;
+          }
+          .cd-kpi-icon-blue   { background: #eff6ff !important; color: #2563eb !important; }
+          .cd-kpi-icon-purple { background: #f5f3ff !important; color: #7c3aed !important; }
+          .cd-kpi-icon-amber  { background: #fffbeb !important; color: #d97706 !important; }
+          .cd-kpi-icon-orange { background: #fff7ed !important; color: #ea580c !important; }
+          .cd-kpi-icon-green  { background: #ecfdf5 !important; color: #059669 !important; }
+          .cd-kpi-num {
+            font-size: 16px !important;
             font-weight: 700 !important;
-            color: #0f172a;
-            line-height: 1.1;
+            color: #0f172a !important;
+            line-height: 1.15 !important;
           }
           .cd-kpi-lbl {
-            font-size: 12px !important;
-            font-weight: 500 !important;
-            color: #1e293b;
-            line-height: 1.2;
-            margin-top: 1px;
-          }
-          .cd-kpi-desc {
             font-size: 11px !important;
-            font-weight: 400 !important;
-            color: #94a3b8;
-            line-height: 1.1;
-            margin-top: 1px;
+            font-weight: 600 !important;
+            color: #64748b !important;
+            text-transform: uppercase !important;
+            letter-spacing: 0.3px !important;
+            line-height: 1.2 !important;
+            margin-top: 1px !important;
           }
           .cd-kpi-arrow {
             font-size: 11px !important;
-            color: #cbd5e1;
-            flex-shrink: 0;
+            color: #cbd5e1 !important;
+            transition: transform 0.15s !important;
+          }
+          .cd-kpi-card:hover .cd-kpi-arrow {
+            color: #2563eb !important;
+            transform: translateX(3px) !important;
           }
 
-          /* ── Tab Navigation Bar ── */
-          .cd-tabs-bar {
-            display: flex;
-            align-items: center;
-            gap: 2px;
-            padding: 0 18px;
-            background: #ffffff;
-            border-bottom: 1px solid #e2e8f0;
-            overflow-x: auto;
-            white-space: nowrap;
+          /* ── Tier 2 Drawer Navigation Tabs Card ── */
+          .cd-drawer-tabs-card {
+            background: #ffffff !important;
+            border: 1px solid #e2e8f0 !important;
+            border-radius: 10px !important;
+            padding: 8px 12px !important;
+            margin: 0 14px 14px 14px !important;
+            box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03) !important;
+            width: calc(100% - 28px) !important;
           }
-          .cd-tabs-bar .nav-link {
-            padding: 10px 15px !important;
-            border: none !important;
-            border-bottom: 2px solid transparent !important;
-            border-radius: 0 !important;
-            font-size: 12.5px !important;
-            font-weight: 500 !important;
-            color: #64748b !important;
+          .cd-drawer-tabs-list {
+            display: flex !important;
+            align-items: center !important;
+            gap: 6px !important;
+            overflow-x: auto !important;
+            scrollbar-width: none !important;
+            list-style: none !important;
+            padding: 0 !important;
+            margin: 0 !important;
+            flex-wrap: nowrap !important;
+          }
+          .cd-drawer-tabs-list::-webkit-scrollbar {
+            display: none !important;
+          }
+          .cd-drawer-tabs-list .nav-item {
+            margin: 0 !important;
+            flex-shrink: 0 !important;
+          }
+          .cd-tab-pill-btn {
+            background: #ffffff !important;
+            border: 1px solid #e2e8f0 !important;
+            border-radius: 8px !important;
+            padding: 6px 12px !important;
+            font-size: 11.5px !important;
+            font-weight: 600 !important;
+            color: #475569 !important;
             display: inline-flex !important;
             align-items: center !important;
             gap: 7px !important;
-            background: transparent !important;
+            text-decoration: none !important;
+            box-shadow: 0 1px 2px rgba(15, 23, 42, 0.02) !important;
             transition: all 0.15s ease-in-out !important;
             cursor: pointer !important;
+            white-space: nowrap !important;
           }
-          .cd-tabs-bar .nav-link i {
-            font-size: 12.5px !important;
-          }
-          .cd-tabs-bar .nav-link:hover {
-            color: #009ef7 !important;
-            background: rgba(0, 158, 247, 0.04) !important;
-          }
-          .cd-tabs-bar .nav-link.active {
-            color: #009ef7 !important;
-            border-bottom: 2px solid #009ef7 !important;
-            font-weight: 500 !important;
-            background: #eff6ff !important;
-            border-radius: 6px 6px 0 0 !important;
-          }
-          /* Recent Activity Tab: EXPLICITLY BLACK */
-          .cd-tabs-bar .nav-link.cd-tab-black {
-            color: #0f172a !important;
-            font-weight: 500 !important;
-          }
-          .cd-tabs-bar .nav-link.cd-tab-black i {
+          .cd-tab-pill-btn:hover {
+            background: #f8fafc !important;
+            border-color: #cbd5e1 !important;
             color: #0f172a !important;
           }
-          .cd-tabs-bar .nav-link.cd-tab-black.active {
-            color: #0f172a !important;
-            border-bottom: 2px solid #0f172a !important;
-            font-weight: 500 !important;
-            background: #f1f5f9 !important;
-            border-radius: 6px 6px 0 0 !important;
+          .cd-tab-pill-btn.active {
+            background: #009ef7 !important;
+            border-color: #009ef7 !important;
+            color: #ffffff !important;
+            box-shadow: 0 2px 4px rgba(0, 158, 247, 0.2) !important;
           }
-          .cd-tab-badge {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            min-width: 18px;
-            height: 16px;
-            padding: 0 5px;
-            background: #009ef7;
-            color: #ffffff;
+          .cd-tab-pill-btn.active i {
+            color: #ffffff !important;
+          }
+          .cd-tab-pill-badge {
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            min-width: 18px !important;
+            height: 16px !important;
+            padding: 0 5px !important;
+            border-radius: 999px !important;
             font-size: 10px !important;
-            font-weight: 600;
-            border-radius: 8px;
-            line-height: 1;
+            font-weight: 700 !important;
+            background: #eff6ff !important;
+            color: #2563eb !important;
+            line-height: 1 !important;
+          }
+          .cd-tab-pill-btn.active .cd-tab-pill-badge {
+            background: rgba(255, 255, 255, 0.28) !important;
+            color: #ffffff !important;
           }
 
           /* ── Overview 2-Column Grid ── */
           .cd-grid-2col {
-            display: grid;
-            grid-template-columns: 1.35fr 0.85fr;
-            gap: 14px;
-            padding: 14px 18px 20px;
-            align-items: start;
-            background: #f8fafc;
+            display: grid !important;
+            grid-template-columns: minmax(0, 1.25fr) minmax(0, 0.95fr) !important;
+            gap: 14px !important;
+            padding: 0 14px 20px 14px !important;
+            align-items: start !important;
+            background: #f8fafc !important;
           }
           @media (max-width: 1024px) {
             .cd-grid-2col {
-              grid-template-columns: 1fr;
+              grid-template-columns: 1fr !important;
             }
           }
           .cd-card-panel {
-            background: #ffffff;
-            border: 1px solid #eef2f6;
-            border-radius: 8px;
-            padding: 14px 16px;
-            margin-bottom: 14px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+            background: #ffffff !important;
+            border: 1px solid #e2e8f0 !important;
+            border-radius: 10px !important;
+            padding: 14px 16px !important;
+            margin-bottom: 14px !important;
+            box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04) !important;
           }
           .cd-card-panel:last-child {
-            margin-bottom: 0;
+            margin-bottom: 0 !important;
           }
           .cd-card-hdr {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 12px;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: space-between !important;
+            margin-bottom: 12px !important;
+            padding-bottom: 8px !important;
+            border-bottom: 1px solid #f1f5f9 !important;
           }
           .cd-card-hdr-left {
-            display: flex;
-            align-items: center;
-            gap: 7px;
+            display: flex !important;
+            align-items: center !important;
+            gap: 8px !important;
           }
           .cd-card-hdr-title {
             font-size: 13.5px !important;
-            font-weight: 600 !important;
+            font-weight: 700 !important;
             color: #0f172a !important;
           }
           .cd-card-hdr-link {
             font-size: 12px !important;
-            color: #0284c7 !important;
-            font-weight: 500 !important;
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-            cursor: pointer;
+            color: #2563eb !important;
+            font-weight: 600 !important;
+            text-decoration: none !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            gap: 4px !important;
+            cursor: pointer !important;
           }
           .cd-card-hdr-link:hover {
-            text-decoration: underline;
+            text-decoration: underline !important;
           }
           .cd-about-body {
             font-size: 12px !important;
             font-weight: 400 !important;
             line-height: 1.65 !important;
-            color: #475569;
+            color: #475569 !important;
           }
 
           /* ── Recent Activity Timeline ── */
           .cd-timeline-list {
-            position: relative;
-            padding-left: 28px;
+            position: relative !important;
+            padding-left: 28px !important;
           }
           .cd-timeline-list::before {
-            content: "";
-            position: absolute;
-            top: 14px;
-            bottom: 14px;
-            left: 13px;
-            width: 1.5px;
-            background: #e2e8f0;
+            content: "" !important;
+            position: absolute !important;
+            top: 14px !important;
+            bottom: 14px !important;
+            left: 13px !important;
+            width: 1.5px !important;
+            background: #e2e8f0 !important;
           }
           .cd-tl-item {
-            position: relative;
-            display: flex;
-            align-items: flex-start;
-            justify-content: space-between;
-            gap: 12px;
-            padding: 8px 0;
-            border-bottom: 1px dashed #f1f5f9;
+            position: relative !important;
+            display: flex !important;
+            align-items: flex-start !important;
+            justify-content: space-between !important;
+            gap: 12px !important;
+            padding: 8px 0 !important;
+            border-bottom: 1px dashed #f1f5f9 !important;
           }
           .cd-tl-item:last-child {
-            border-bottom: none;
-            padding-bottom: 0;
+            border-bottom: none !important;
+            padding-bottom: 0 !important;
           }
           .cd-tl-item:first-child {
-            padding-top: 0;
+            padding-top: 0 !important;
           }
           .cd-tl-dot {
-            position: absolute;
-            left: -28px;
-            top: 9px;
-            width: 26px;
-            height: 26px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            position: absolute !important;
+            left: -28px !important;
+            top: 9px !important;
+            width: 26px !important;
+            height: 26px !important;
+            border-radius: 50 !important;
+            border-radius: 50% !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
             font-size: 11.5px !important;
-            border: 2px solid #ffffff;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.06);
-            z-index: 1;
+            border: 2px solid #ffffff !important;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.06) !important;
+            z-index: 1 !important;
           }
-          .cd-tl-dot-green  { background: #dcfce7; color: #16a34a; }
-          .cd-tl-dot-purple { background: #f3e8ff; color: #7c3aed; }
-          .cd-tl-dot-orange { background: #ffedd5; color: #ea580c; }
-          .cd-tl-dot-blue   { background: #e0f2fe; color: #0284c7; }
+          .cd-tl-dot-green  { background: #ecfdf5 !important; color: #059669 !important; }
+          .cd-tl-dot-purple { background: #f5f3ff !important; color: #7c3aed !important; }
+          .cd-tl-dot-orange { background: #fff7ed !important; color: #ea580c !important; }
+          .cd-tl-dot-blue   { background: #eff6ff !important; color: #2563eb !important; }
           .cd-tl-info {
-            flex: 1;
-            min-width: 0;
+            flex: 1 !important;
+            min-width: 0 !important;
           }
           .cd-tl-heading {
             font-size: 12.5px !important;
             font-weight: 600 !important;
-            color: #0f172a;
-            line-height: 1.25;
+            color: #0f172a !important;
+            line-height: 1.25 !important;
           }
           .cd-tl-sub {
             font-size: 11px !important;
             font-weight: 400 !important;
-            color: #64748b;
-            line-height: 1.25;
-            margin-top: 2px;
+            color: #64748b !important;
+            line-height: 1.25 !important;
+            margin-top: 2px !important;
           }
           .cd-tl-role {
             font-size: 12px !important;
             font-weight: 500 !important;
-            color: #334155;
-            min-width: 120px;
-            text-align: left;
+            color: #334155 !important;
+            min-width: 120px !important;
+            text-align: left !important;
           }
           .cd-tl-meta-right {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            flex-shrink: 0;
+            display: flex !important;
+            align-items: center !important;
+            gap: 10px !important;
+            flex-shrink: 0 !important;
           }
           .cd-tl-time {
             font-size: 11px !important;
             font-weight: 400 !important;
-            color: #94a3b8;
-            white-space: nowrap;
+            color: #94a3b8 !important;
+            white-space: nowrap !important;
           }
           .cd-tl-badge {
             font-size: 10.5px !important;
-            font-weight: 500 !important;
-            padding: 2.5px 8px;
-            border-radius: 12px;
-            line-height: 1.2;
-            white-space: nowrap;
+            font-weight: 600 !important;
+            padding: 2.5px 8px !important;
+            border-radius: 6px !important;
+            line-height: 1.2 !important;
+            white-space: nowrap !important;
           }
-          .cd-tl-badge-blue   { background: #e0f2fe; color: #0284c7; }
-          .cd-tl-badge-amber  { background: #fef3c7; color: #b45309; }
-          .cd-tl-badge-orange { background: #ffedd5; color: #c2410c; }
-          .cd-tl-badge-green  { background: #dcfce7; color: #15803d; }
+          .cd-tl-badge-blue   { background: #eff6ff !important; color: #2563eb !important; border: 1px solid #bfdbfe !important; }
+          .cd-tl-badge-amber  { background: #fffbeb !important; color: #d97706 !important; border: 1px solid #fde68a !important; }
+          .cd-tl-badge-orange { background: #fff7ed !important; color: #ea580c !important; border: 1px solid #fed7aa !important; }
+          .cd-tl-badge-green  { background: #ecfdf5 !important; color: #059669 !important; border: 1px solid #a7f3d0 !important; }
 
-          /* ── Client Information Rows ── */
-          .cd-kv-row {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 7px 0;
-            border-bottom: 1px dashed #f1f5f9;
-            gap: 12px;
+          /* ── Overview Discrete Sub-Cards Grid ── */
+          .cd-overview-subcards-grid {
+            display: grid !important;
+            grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+            gap: 8px !important;
+            width: 100% !important;
           }
-          .cd-kv-row:last-child {
-            border-bottom: none;
-            padding-bottom: 0;
+          @media (max-width: 640px) {
+            .cd-overview-subcards-grid {
+              grid-template-columns: 1fr !important;
+            }
           }
-          .cd-kv-lbl {
-            font-size: 11.5px !important;
-            color: #64748b;
-            font-weight: 400 !important;
-            flex-shrink: 0;
+          .cd-overview-subcard {
+            background: #f8fafc !important;
+            border: 1px solid #e2e8f0 !important;
+            border-radius: 8px !important;
+            padding: 8px 10px !important;
+            display: flex !important;
+            align-items: center !important;
+            gap: 10px !important;
+            min-width: 0 !important;
+            transition: all 0.15s ease-in-out !important;
           }
-          .cd-kv-val {
+          .cd-overview-subcard:hover {
+            border-color: #cbd5e1 !important;
+            background: #ffffff !important;
+            transform: translateY(-1px) !important;
+            box-shadow: 0 2px 4px rgba(15, 23, 42, 0.04) !important;
+          }
+          .cd-ov-icon-box {
+            width: 30px !important;
+            height: 30px !important;
+            border-radius: 6px !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
             font-size: 12px !important;
-            color: #0f172a;
-            font-weight: 500 !important;
-            text-align: right;
-            word-break: break-word;
+            flex-shrink: 0 !important;
           }
-          .cd-kv-val a {
-            color: #0284c7;
-            text-decoration: none;
+          .cd-ov-content {
+            flex: 1 !important;
+            min-width: 0 !important;
           }
-          .cd-kv-val a:hover {
-            text-decoration: underline;
+          .cd-ov-label {
+            display: block !important;
+            font-size: 9.5px !important;
+            font-weight: 700 !important;
+            color: #94a3b8 !important;
+            text-transform: uppercase !important;
+            letter-spacing: 0.4px !important;
+            line-height: 1.1 !important;
+          }
+          .cd-ov-value {
+            display: block !important;
+            font-size: 11.5px !important;
+            font-weight: 600 !important;
+            color: #0f172a !important;
+            white-space: nowrap !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+            line-height: 1.25 !important;
+            margin-top: 1px !important;
+          }
+          .cd-ov-link {
+            color: #2563eb !important;
+            text-decoration: none !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            gap: 3px !important;
+            font-size: 11.5px !important;
+            font-weight: 600 !important;
+            white-space: nowrap !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+          }
+          .cd-ov-link:hover {
+            text-decoration: underline !important;
           }
 
-          /* ── Primary Contact Card ── */
-          .cd-contact-preview {
-            display: flex;
-            align-items: center;
-            gap: 12px;
+          /* ── Primary SPOC Master Sub-Card ── */
+          .cd-contact-master-subcard {
+            background: #f8fafc !important;
+            border: 1px solid #e2e8f0 !important;
+            border-radius: 8px !important;
+            padding: 12px !important;
           }
-          .cd-contact-avatar {
-            width: 42px;
-            height: 42px;
-            border-radius: 50%;
-            background: #dcfce7;
-            color: #15803d;
-            font-size: 13px !important;
-            font-weight: 600 !important;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-shrink: 0;
-            border: 1.5px solid #bbf7d0;
+          .cd-contact-master-top {
+            display: flex !important;
+            align-items: center !important;
+            gap: 12px !important;
+            margin-bottom: 10px !important;
           }
-          .cd-contact-meta {
-            flex: 1;
-            min-width: 0;
+          .cd-contact-avatar-box {
+            width: 44px !important;
+            height: 44px !important;
+            border-radius: 10px !important;
+            background: #eff6ff !important;
+            color: #2563eb !important;
+            border: 1px solid #bfdbfe !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            font-size: 14px !important;
+            font-weight: 700 !important;
+            flex-shrink: 0 !important;
           }
-          .cd-contact-name-row {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            line-height: 1.2;
-          }
-          .cd-contact-name {
-            font-size: 13px !important;
-            font-weight: 600 !important;
-            color: #0f172a;
+          .cd-contact-master-info {
+            flex: 1 !important;
+            min-width: 0 !important;
           }
           .cd-contact-primary-tag {
-            font-size: 10.5px !important;
-            font-weight: 500 !important;
-            background: #dcfce7;
-            color: #15803d;
-            padding: 1.5px 7px;
-            border-radius: 10px;
+            display: inline-flex !important;
+            align-items: center !important;
+            gap: 3px !important;
+            background: #fef3c7 !important;
+            color: #92400e !important;
+            border: 1px solid #fde68a !important;
+            border-radius: 4px !important;
+            padding: 1.5px 6px !important;
+            font-size: 10px !important;
+            font-weight: 700 !important;
           }
-          .cd-contact-title {
+          .cd-contact-channels-grid {
+            display: grid !important;
+            grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+            gap: 8px !important;
+          }
+          .cd-contact-channel-item {
+            background: #ffffff !important;
+            border: 1px solid #e2e8f0 !important;
+            border-radius: 6px !important;
+            padding: 6px 10px !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: space-between !important;
+            gap: 6px !important;
+            text-decoration: none !important;
+            color: #334155 !important;
             font-size: 11px !important;
+            font-weight: 500 !important;
+            transition: all 0.15s !important;
+          }
+          .cd-contact-channel-item:hover {
+            background: #eff6ff !important;
+            border-color: #bfdbfe !important;
+            color: #2563eb !important;
+          }
+          .cd-channel-text {
+            white-space: nowrap !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+            flex: 1 !important;
+          }
             font-weight: 400 !important;
             color: #64748b;
             margin-top: 2px;
@@ -3500,146 +3688,204 @@ use Carbon\Carbon;
         @endphp
 
         <div class="cd-scope">
-          <!-- ── Top Action Header Bar (Internal: Followup, Edit Client, Add Contact, Add Job) ── -->
+          <!-- ── TIER 1: TOP ACTION HEADER TOOLBAR CARD ── -->
           <div class="cd-top-bar">
+            <div class="cd-top-bar-left">
+              <div class="cd-top-bar-icon">
+                <i class="fas fa-building fa-solid"></i>
+              </div>
+              <div class="cd-top-bar-title-wrap">
+                <h3 class="cd-top-bar-title">{{ $detailName }}</h3>
+                <span class="cd-top-bar-id">#{{ $client->id }}</span>
+                <span class="cd-pill-scope-internal">
+                  <i class="fas fa-building fa-solid"></i> Internal Client
+                </span>
+              </div>
+            </div>
             <div class="cd-top-actions">
-              <button type="button" class="cd-hdr-btn cd-hdr-btn-outline cd-btn-followup" data-client-id="{{ $client->id }}">
-                <i class="fas fa-calendar-check fa-solid" style="color:#0284c7;"></i> Follow Up
+              <button type="button" class="cd-hdr-btn cd-hdr-btn-outline cd-btn-followup" data-client-id="{{ $client->id }}" title="Schedule Follow Up">
+                <i class="fas fa-calendar-check fa-solid text-primary"></i> Follow Up
               </button>
               @if(in_array('edit_clients', $userPermissions))
-              <a href="{{ route('service_company.clients.edit', GeneralMethod::value_encrypt($client->id)) }}" class="cd-hdr-btn cd-hdr-btn-white-edit" style="color:#009ef7 !important;">
-                <i class="fas fa-pen-to-square fa-solid" style="color:#009ef7;"></i> Edit Client
+              <a href="{{ route('service_company.clients.edit', GeneralMethod::value_encrypt($client->id)) }}" class="cd-hdr-btn cd-hdr-btn-white-edit" title="Edit Client Information">
+                <i class="fas fa-pen-to-square fa-solid text-primary"></i> Edit Client
               </a>
               @endif
-              <button type="button" class="cd-hdr-btn cd-hdr-btn-outline cd-btn-add-contact">
-                <i class="fas fa-user-plus fa-solid" style="color:#10b981;"></i> Add Contact
+              <button type="button" class="cd-hdr-btn cd-hdr-btn-outline cd-btn-add-contact" title="Add New Client Contact">
+                <i class="fas fa-user-plus fa-solid text-success"></i> Add Contact
               </button>
               @if(in_array('add_jobs', $userPermissions))
-              <a href="{{ url('service_company/jobs/curstomcreate/' . $client->id) }}" class="cd-hdr-btn cd-hdr-btn-outline">
-                <i class="fas fa-briefcase fa-solid" style="color:#8b5cf6;"></i> Add Job
+              <a href="{{ url('service_company/jobs/curstomcreate/' . $client->id) }}" class="cd-hdr-btn cd-hdr-btn-primary" title="Post New Job Opening">
+                <i class="fas fa-plus me-1"></i> Add Job
               </a>
               @endif
+              <button type="button" class="cd-hdr-btn-close cd-close-drawer" id="kt_activitiesClient_close_btn" title="Close Drawer (Esc)">
+                <i class="fas fa-times fa-solid"></i>
+              </button>
             </div>
-            <button type="button" class="cd-hdr-btn-close cd-close-drawer" id="kt_activitiesClient_close_btn" title="Close Drawer">
-              <i class="fas fa-times fa-solid fa-xmark" style="color:#64748b;"></i>
-            </button>
           </div>
 
-          <!-- ── Hero Banner: Internal Client (Clean Neutral Enterprise UI) ── -->
-          <div class="cd-hero-banner-blue">
-            <div class="cd-hero-top">
-              <div class="cd-hero-left">
-                <div class="cd-avatar-wrap">
-                  <div class="cd-avatar-circle">
+          <!-- ── HERO MASTER CARD: DISCRETE SUB-CARDS STREAM ── -->
+          <div class="cd-hero-card">
+            <div class="cd-hero-grid">
+
+              <!-- Sub-Card 1: Client Identity & Scope -->
+              <div class="cd-hero-subcard-identity">
+                <div class="cd-hero-avatar-wrap">
+                  <div class="cd-hero-avatar">
                     @if (!empty($detailLogo))
                       <img src="{{ $detailLogo }}" alt="{{ $detailName }}">
                     @else
                       {{ $detailInitials }}
                     @endif
                   </div>
-                  <div class="cd-verified-badge" title="Verified Client">
-                    <i class="fas fa-check fa-solid"></i>
+                  <div class="cd-hero-verified-check" title="Verified Internal Client">
+                    <i class="fas fa-check"></i>
                   </div>
                 </div>
-                <div class="cd-hero-details">
-                  <div class="cd-title-row">
-                    <span class="cd-client-name">{{ $detailName }}</span>
-                    <span class="cd-pill-type-internal"><i class="fas fa-building fa-solid" style="color:#2563eb;"></i> Internal Client</span>
-                  </div>
-                  <div class="cd-meta-row">
-                    <span><i class="fas fa-building fa-solid me-1" style="color:#3b82f6;"></i>{{ $industries_name ?: 'Computer Software' }}</span>
-                    <span class="cd-meta-sep">|</span>
-                    <span><i class="fas fa-map-marker-alt fa-solid fa-location-dot me-1" style="color:#ef4444;"></i>{{ ucwords($city_name ?: 'Mumbai') }}@if($country_name), {{ ucwords($country_name) }}@else, India @endif</span>
-                    <span class="cd-meta-sep">|</span>
-                    @php $webClean = @$client->website ?: 'teslal.com'; @endphp
-                    <a href="{{ str_starts_with($webClean, 'http') ? $webClean : 'https://'.$webClean }}" target="_blank" class="cd-meta-link">
-                      <i class="fas fa-link fa-solid me-1" style="color:#06b6d4;"></i>{{ $webClean }} <i class="fas fa-external-link-alt fa-solid fa-arrow-up-right-from-square" style="font-size:8.5px;"></i>
-                    </a>
-                    @if(!empty(@$client->vendor_id))
-                    <span class="cd-meta-sep">|</span>
-                    <span>Vendor ID: <span style="font-weight:500; color:#0f172a;">{{ @$client->vendor_id }}</span></span>
+                <div class="cd-hero-identity-body">
+                  <div class="cd-hero-name" title="{{ $detailName }}">{{ $detailName }}</div>
+                  <div class="d-flex align-items-center gap-2 flex-wrap mb-1">
+                    <span class="cd-pill-scope-internal">
+                      <i class="fas fa-building fa-solid"></i> Internal Client
+                    </span>
+                    @if ($isClientActive)
+                      <span class="cd-status-badge-active" title="Client is actively hiring">
+                        <span class="cd-pulse-emerald"></span> Client Active
+                      </span>
+                    @else
+                      <span class="cd-status-badge-inactive" title="No active job requisitions">
+                        <span class="cd-pulse-dot cd-pulse-grey"></span> Client Inactive
+                      </span>
                     @endif
                   </div>
-                  <div class="cd-tag-row">
-                    @foreach ($tagsArr as $val)
-                      <span class="cd-tag-pill">{{ ucwords($val) }}</span>
-                    @endforeach
-                  </div>
                 </div>
               </div>
-              <div class="cd-hero-right">
-                <div class="cd-status-group">
-                  @if ($isClientActive)
-                    <div class="cd-status-card cd-status-card-green">
-                      <span class="cd-pulse-dot cd-pulse-green"></span>
-                      <div>
-                        <div class="cd-status-card-title text-success">Client Active</div>
-                        <div class="cd-status-card-sub text-success">{{ $kpiActive }} active {{ $kpiActive == 1 ? 'job' : 'jobs' }}</div>
-                      </div>
-                    </div>
-                  @else
-                    <div class="cd-status-card cd-status-card-grey">
-                      <span class="cd-pulse-dot cd-pulse-grey"></span>
-                      <div>
-                        <div class="cd-status-card-title" style="color:#64748b;">Client Inactive</div>
-                        <div class="cd-status-card-sub" style="color:#94a3b8;">No active jobs</div>
-                      </div>
-                    </div>
+
+              <!-- Sub-Card 2: Primary Metadata Grid (Discrete Mini-Cards) -->
+              <div class="cd-hero-subcard-meta">
+                <div class="cd-meta-item-box" title="Industry">
+                  <i class="fas fa-industry text-primary"></i>
+                  <span class="cd-meta-item-text">{{ $industries_name ?: 'Computer Software' }}</span>
+                </div>
+                <div class="cd-meta-item-box" title="Headquarters">
+                  <i class="fas fa-location-dot text-danger"></i>
+                  <span class="cd-meta-item-text">{{ ucwords($city_name ?: 'Mumbai') }}@if($country_name), {{ ucwords($country_name) }}@else, India @endif</span>
+                </div>
+                <div class="cd-meta-item-box" title="Official Website">
+                  <i class="fas fa-globe text-info"></i>
+                  @php $webClean = @$client->website ?: 'website.com'; @endphp
+                  <a href="{{ str_starts_with($webClean, 'http') ? $webClean : 'https://'.$webClean }}" target="_blank" class="cd-meta-item-text cd-meta-item-link">
+                    {{ $webClean }} <i class="fas fa-external-link-alt" style="font-size:9px;"></i>
+                  </a>
+                </div>
+                <div class="cd-meta-item-box" title="Company Type">
+                  <i class="fas fa-briefcase text-warning"></i>
+                  <span class="cd-meta-item-text">{{ $company_type_val ?: 'Enterprise Service' }}</span>
+                </div>
+                <div class="cd-meta-item-box" title="Workforce Size">
+                  <i class="fas fa-users text-success"></i>
+                  <span class="cd-meta-item-text">{{ is_numeric(@$client->company_sizes) ? number_format((float)@$client->company_sizes) . '+' : (@$client->company_sizes ?: '200+') }} Employees</span>
+                </div>
+                @if(!empty(@$client->vendor_id))
+                <div class="cd-meta-item-box" title="Vendor Identification">
+                  <i class="fas fa-hashtag text-purple"></i>
+                  <span class="cd-meta-item-text">Vendor: {{ @$client->vendor_id }}</span>
+                </div>
+                @else
+                <div class="cd-meta-item-box" title="Founded Year">
+                  <i class="fas fa-calendar-alt text-secondary"></i>
+                  <span class="cd-meta-item-text">Founded: {{ @$client->founded ?: '2023' }}</span>
+                </div>
+                @endif
+              </div>
+
+              <!-- Sub-Card 3: Activity & Capability Strip -->
+              <div class="cd-hero-subcard-activity">
+                <div class="cd-hero-status-row">
+                  <span class="fw-bold text-gray-800 fs-8">Engagement Pulse</span>
+                  <span class="text-muted fs-8">Active: {{ $kpiActive }} {{ $kpiActive == 1 ? 'Job' : 'Jobs' }}</span>
+                </div>
+                <div class="cd-hero-time-strip">
+                  <span><i class="fas fa-calendar-check text-primary me-1"></i>Client since {{ $clientSinceYear }}</span>
+                  <span>•</span>
+                  <span><i class="fas fa-clock text-amber-500 me-1"></i>{{ $clientUpdatedAt }}</span>
+                </div>
+                @if(!empty($tagsArr) && count($tagsArr) > 0)
+                <div class="cd-hero-tags-strip">
+                  @foreach (array_slice($tagsArr, 0, 3) as $val)
+                    <span class="cd-hero-tag">{{ ucwords($val) }}</span>
+                  @endforeach
+                  @if(count($tagsArr) > 3)
+                    <span class="cd-hero-tag text-primary">+{{ count($tagsArr) - 3 }}</span>
                   @endif
                 </div>
-                <div class="cd-hero-meta-time">
-                  Client since {{ $clientSinceYear }} <span class="mx-1">|</span> Last activity: {{ $clientUpdatedAt }}
-                </div>
+                @endif
               </div>
+
             </div>
           </div>
 
-          <!-- ── 5 Metric KPI Stat Cards Row ── -->
+          <!-- ── 5 METRIC KPI SUB-CARDS ROW (Click to Navigate Tabs) ── -->
           <div class="cd-kpi-grid">
-            <div class="cd-kpi-card" data-target-tab="#requisitions">
-              <div class="d-flex align-items-center gap-3">
-                <div class="cd-kpi-icon cd-kpi-icon-blue"><i class="fas fa-briefcase fa-solid" style="color:#2563eb;"></i></div>
-                <div>
+            <div class="cd-kpi-card" data-target-tab="#requisitions" title="View Active Job Requisitions">
+              <div class="d-flex align-items-center gap-3 min-w-0">
+                <div class="cd-kpi-icon cd-kpi-icon-blue">
+                  <i class="fas fa-briefcase fa-solid" style="color:#2563eb;"></i>
+                </div>
+                <div class="min-w-0">
                   <div class="cd-kpi-num">{{ $kpiActive }}</div>
                   <div class="cd-kpi-lbl">Active Jobs</div>
                 </div>
               </div>
               <i class="fas fa-chevron-right fa-solid cd-kpi-arrow"></i>
             </div>
-            <div class="cd-kpi-card" data-target-tab="#candidate_list">
-              <div class="d-flex align-items-center gap-3">
-                <div class="cd-kpi-icon cd-kpi-icon-purple"><i class="fas fa-users fa-solid" style="color:#7c3aed;"></i></div>
-                <div>
+
+            <div class="cd-kpi-card" data-target-tab="#candidate_list" title="View Candidates Pipeline">
+              <div class="d-flex align-items-center gap-3 min-w-0">
+                <div class="cd-kpi-icon cd-kpi-icon-purple">
+                  <i class="fas fa-users fa-solid" style="color:#7c3aed;"></i>
+                </div>
+                <div class="min-w-0">
                   <div class="cd-kpi-num">{{ $kpiSubmitted }}</div>
                   <div class="cd-kpi-lbl">Candidates</div>
                 </div>
               </div>
               <i class="fas fa-chevron-right fa-solid cd-kpi-arrow"></i>
             </div>
-            <div class="cd-kpi-card" data-target-tab="#interview_tracker">
-              <div class="d-flex align-items-center gap-3">
-                <div class="cd-kpi-icon cd-kpi-icon-amber"><i class="fas fa-calendar-days fa-solid" style="color:#d97706;"></i></div>
-                <div>
+
+            <div class="cd-kpi-card" data-target-tab="#interview_tracker" title="View Interview Tracker">
+              <div class="d-flex align-items-center gap-3 min-w-0">
+                <div class="cd-kpi-icon cd-kpi-icon-amber">
+                  <i class="fas fa-calendar-days fa-solid" style="color:#d97706;"></i>
+                </div>
+                <div class="min-w-0">
                   <div class="cd-kpi-num" id="kpiInterviewsScheduledCountShow">{{ $kpiInterviews }}</div>
                   <div class="cd-kpi-lbl">Interviews</div>
                 </div>
               </div>
               <i class="fas fa-chevron-right fa-solid cd-kpi-arrow"></i>
             </div>
-            <div class="cd-kpi-card" data-target-tab="#candidate_joining" data-segment="offers">
-              <div class="d-flex align-items-center gap-3">
-                <div class="cd-kpi-icon cd-kpi-icon-orange"><i class="fas fa-file-lines fa-solid" style="color:#ea580c;"></i></div>
-                <div>
+
+            <div class="cd-kpi-card" data-target-tab="#candidate_joining" data-segment="offers" title="View Extended Offers">
+              <div class="d-flex align-items-center gap-3 min-w-0">
+                <div class="cd-kpi-icon cd-kpi-icon-orange">
+                  <i class="fas fa-file-lines fa-solid" style="color:#ea580c;"></i>
+                </div>
+                <div class="min-w-0">
                   <div class="cd-kpi-num" id="kpiOffersCountInternal">{{ $kpiOffers }}</div>
                   <div class="cd-kpi-lbl">Offers</div>
                 </div>
               </div>
               <i class="fas fa-chevron-right fa-solid cd-kpi-arrow"></i>
             </div>
-            <div class="cd-kpi-card" data-target-tab="#candidate_joining" data-segment="joined">
-              <div class="d-flex align-items-center gap-3">
-                <div class="cd-kpi-icon cd-kpi-icon-green"><i class="fas fa-user-check fa-solid" style="color:#059669;"></i></div>
-                <div>
+
+            <div class="cd-kpi-card" data-target-tab="#candidate_joining" data-segment="joined" title="View Joined & Onboarded Candidates">
+              <div class="d-flex align-items-center gap-3 min-w-0">
+                <div class="cd-kpi-icon cd-kpi-icon-green">
+                  <i class="fas fa-user-check fa-solid" style="color:#059669;"></i>
+                </div>
+                <div class="min-w-0">
                   <div class="cd-kpi-num" id="kpiJoinsCountInternal">{{ $kpiJoins }}</div>
                   <div class="cd-kpi-lbl">Joined</div>
                 </div>
@@ -3648,54 +3894,62 @@ use Carbon\Carbon;
             </div>
           </div>
 
-          <!-- ── Tabs Navigation Bar ── -->
-          <div class="cd-tabs-bar">
-            <ul class="nav nav-tabs border-0 flex-nowrap" role="tablist">
+          <!-- ── TIER 2: SUB-TABS CARD WITH WHITE BACKGROUND (Rule 20 Compliant) ── -->
+          <div class="cd-drawer-tabs-card">
+            <ul class="cd-drawer-tabs-list nav nav-tabs border-0 flex-nowrap" role="tablist">
               <li class="nav-item">
-                <a class="nav-link active" data-toggle="tab" href="#overview">
-                  <i class="fas fa-house fa-solid" style="color:#3b82f6;"></i> Overview
+                <a class="cd-tab-pill-btn nav-link active" data-toggle="tab" href="#overview">
+                  <i class="fas fa-house fa-solid"></i>
+                  <span>Overview</span>
                 </a>
               </li>
               <li class="nav-item">
-                <a class="nav-link cd-tab-black" data-toggle="tab" href="#recent_activity">
-                  <i class="fas fa-clock fa-solid" style="color:#f59e0b;"></i> Recent Activity
+                <a class="cd-tab-pill-btn nav-link" data-toggle="tab" href="#recent_activity">
+                  <i class="fas fa-clock fa-solid"></i>
+                  <span>Recent Activity</span>
                 </a>
               </li>
               <li class="nav-item">
-                <a class="nav-link" data-toggle="tab" href="#contacts">
-                  <i class="fas fa-address-book fa-solid" style="color:#10b981;"></i> Contacts
+                <a class="cd-tab-pill-btn nav-link" data-toggle="tab" href="#contacts">
+                  <i class="fas fa-address-book fa-solid"></i>
+                  <span>Contacts</span>
                   @php $contactInitCount = isset($client_contact_info) ? count($client_contact_info) : 0; @endphp
-                  <span class="cd-tab-badge" id="cdContactNavBadgeInternal" style="{{ $contactInitCount > 0 ? '' : 'display:none;' }}">{{ $contactInitCount }}</span>
+                  <span class="cd-tab-pill-badge" id="cdContactNavBadgeInternal" style="{{ $contactInitCount > 0 ? '' : 'display:none;' }}">{{ $contactInitCount }}</span>
                 </a>
               </li>
               <li class="nav-item">
-                <a class="nav-link" data-bs-toggle="tab" data-toggle="tab" href="#requisitions">
-                  <i class="fas fa-briefcase fa-solid" style="color:#8b5cf6;"></i> Jobs
-                  @if($kpiActive > 0)<span class="cd-tab-badge">{{ $kpiActive }}</span>@endif
+                <a class="cd-tab-pill-btn nav-link" data-bs-toggle="tab" data-toggle="tab" href="#requisitions">
+                  <i class="fas fa-briefcase fa-solid"></i>
+                  <span>Jobs</span>
+                  <span class="cd-tab-pill-badge" id="cdJobsNavBadgeInternal" style="{{ $kpiActive > 0 ? '' : 'display:none;' }}">{{ $kpiActive }}</span>
                 </a>
               </li>
               <li class="nav-item">
-                <a class="nav-link" data-toggle="tab" href="#candidate_list">
-                  <i class="fas fa-user-tie fa-solid" style="color:#06b6d4;"></i> Candidates
-                  @if($kpiSubmitted > 0)<span class="cd-tab-badge">{{ $kpiSubmitted }}</span>@endif
+                <a class="cd-tab-pill-btn nav-link" data-toggle="tab" href="#candidate_list">
+                  <i class="fas fa-user-tie fa-solid"></i>
+                  <span>Candidates</span>
+                  <span class="cd-tab-pill-badge" id="cdCandidatesNavBadgeInternal" style="{{ $kpiSubmitted > 0 ? '' : 'display:none;' }}">{{ $kpiSubmitted }}</span>
                 </a>
               </li>
               <li class="nav-item">
-                <a class="nav-link" data-toggle="tab" href="#interview_tracker">
-                  <i class="fas fa-calendar-days fa-solid" style="color:#f43f5e;"></i> Interviews
-                  <span class="cd-tab-badge" id="tabBadgeInterviewTrackerShow" @if($kpiInterviews <= 0) style="display:none;" @endif>{{ $kpiInterviews }}</span>
+                <a class="cd-tab-pill-btn nav-link" data-toggle="tab" href="#interview_tracker">
+                  <i class="fas fa-calendar-days fa-solid"></i>
+                  <span>Interviews</span>
+                  <span class="cd-tab-pill-badge" id="tabBadgeInterviewTrackerShow" @if($kpiInterviews <= 0) style="display:none;" @endif>{{ $kpiInterviews }}</span>
                 </a>
               </li>
               <li class="nav-item">
-                <a class="nav-link" data-toggle="tab" href="#candidate_joining">
-                  <i class="fas fa-file-signature fa-solid" style="color:#d97706;"></i> Offers &amp; Joinings
+                <a class="cd-tab-pill-btn nav-link" data-toggle="tab" href="#candidate_joining">
+                  <i class="fas fa-file-signature fa-solid"></i>
+                  <span>Offers &amp; Joinings</span>
                   @php $totalOffersJoinsInternal = ($kpiOffers ?? 0) + ($kpiJoins ?? 0); @endphp
-                  <span class="cd-tab-badge" id="ojInternalTabBadge" @if($totalOffersJoinsInternal <= 0) style="display:none;" @endif>{{ $totalOffersJoinsInternal }}</span>
+                  <span class="cd-tab-pill-badge" id="ojInternalTabBadge" @if($totalOffersJoinsInternal <= 0) style="display:none;" @endif>{{ $totalOffersJoinsInternal }}</span>
                 </a>
               </li>
               <li class="nav-item">
-                <a class="nav-link" data-toggle="tab" href="#candidateDashboard">
-                  <i class="fas fa-chart-column fa-solid" style="color:#6366f1;"></i> Performance
+                <a class="cd-tab-pill-btn nav-link" data-toggle="tab" href="#candidateDashboard">
+                  <i class="fas fa-chart-column fa-solid"></i>
+                  <span>Performance</span>
                 </a>
               </li>
             </ul>
@@ -3712,40 +3966,46 @@ use Carbon\Carbon;
                   <div class="cd-card-panel">
                     <div class="cd-card-hdr">
                       <div class="cd-card-hdr-left">
-                        <i class="fas fa-building fa-solid" style="color:#3b82f6; font-size:12px;"></i>
+                        <div class="cd-top-bar-icon" style="width:28px; height:28px; font-size:12px;">
+                          <i class="fas fa-building fa-solid"></i>
+                        </div>
                         <span class="cd-card-hdr-title">About the Client</span>
                       </div>
+                      @if(!empty($webClean))
                       <a href="{{ str_starts_with($webClean, 'http') ? $webClean : 'https://'.$webClean }}" target="_blank" class="cd-card-hdr-link">
-                        {{ $webClean }} <i class="fas fa-external-link-alt fa-solid fa-arrow-up-right-from-square" style="font-size:8.5px;"></i>
+                        {{ $webClean }} <i class="fas fa-external-link-alt fa-solid" style="font-size:9px;"></i>
                       </a>
+                      @endif
                     </div>
                     <div class="cd-about-body">
                       @if (!empty(@$client->description))
                         {!! @$client->description !!}
                       @else
-                        {{ $detailName }} is a leading organization specializing in Information Technology / SaaS, providing scalable industry solutions. They focus on building innovative products and enterprise platforms with a strong global presence.
+                        {{ $detailName }} is an established corporate enterprise specializing in {{ $industries_name ?: 'Technology Solutions' }}, providing scalable services and talent solutions with a strong market presence.
                       @endif
                     </div>
                   </div>
 
-                  <!-- Card: Recent Activity (Timeline matching mockup) -->
+                  <!-- Card: Recent Activity (Timeline Stream) -->
                   <div class="cd-card-panel">
                     <div class="cd-card-hdr">
                       <div class="cd-card-hdr-left">
-                        <i class="fas fa-clock-rotate-left fa-solid" style="color:#f59e0b; font-size:12px;"></i>
+                        <div class="cd-top-bar-icon" style="width:28px; height:28px; font-size:12px; background:#fffbeb; color:#d97706;">
+                          <i class="fas fa-clock-rotate-left fa-solid"></i>
+                        </div>
                         <span class="cd-card-hdr-title">Recent Activity</span>
                       </div>
-                      <a href="javascript:void(0);" class="cd-card-hdr-link cd-view-all-activity">
+                      <a href="javascript:void(0);" class="cd-card-hdr-link cd-view-all-activity" onclick="$('.cd-tab-pill-btn[href=\'#recent_activity\']').tab('show');">
                         View all activity <i class="fas fa-arrow-right fa-solid ms-1" style="font-size:9px;"></i>
                       </a>
                     </div>
                     <div class="cd-timeline-list">
                       <!-- Node 1: Candidates Submitted -->
                       <div class="cd-tl-item">
-                        <div class="cd-tl-dot cd-tl-dot-green"><i class="fas fa-users fa-solid" style="color:#10b981;"></i></div>
+                        <div class="cd-tl-dot cd-tl-dot-green"><i class="fas fa-users fa-solid"></i></div>
                         <div class="cd-tl-info">
                           <div class="cd-tl-heading">2 candidates submitted</div>
-                          <div class="cd-tl-sub">{{ auth()->user()->name ?? 'Vibhanshu Jaiswal' }} submitted 2 candidates</div>
+                          <div class="cd-tl-sub">{{ auth()->user()->name ?? 'Recruiter' }} submitted profiles to client review</div>
                         </div>
                         <div class="cd-tl-role">Senior Java Developer</div>
                         <div class="cd-tl-meta-right">
@@ -3756,24 +4016,24 @@ use Carbon\Carbon;
 
                       <!-- Node 2: Interview Scheduled -->
                       <div class="cd-tl-item">
-                        <div class="cd-tl-dot cd-tl-dot-purple"><i class="fas fa-calendar-days fa-solid" style="color:#8b5cf6;"></i></div>
+                        <div class="cd-tl-dot cd-tl-dot-purple"><i class="fas fa-calendar-days fa-solid"></i></div>
                         <div class="cd-tl-info">
                           <div class="cd-tl-heading">Interview scheduled</div>
-                          <div class="cd-tl-sub">Interview scheduled with client panel</div>
+                          <div class="cd-tl-sub">Technical Round 1 scheduled with client panel</div>
                         </div>
                         <div class="cd-tl-role">Chief Java Architect</div>
                         <div class="cd-tl-meta-right">
                           <span class="cd-tl-time">1 day ago</span>
-                          <span class="cd-tl-badge cd-tl-badge-amber">Interview Scheduled</span>
+                          <span class="cd-tl-badge cd-tl-badge-amber">Interview</span>
                         </div>
                       </div>
 
                       <!-- Node 3: Offer Generated -->
                       <div class="cd-tl-item">
-                        <div class="cd-tl-dot cd-tl-dot-orange"><i class="fas fa-file-lines fa-solid" style="color:#f97316;"></i></div>
+                        <div class="cd-tl-dot cd-tl-dot-orange"><i class="fas fa-file-lines fa-solid"></i></div>
                         <div class="cd-tl-info">
-                          <div class="cd-tl-heading">Offer generated</div>
-                          <div class="cd-tl-sub">Offer letter sent to candidate</div>
+                          <div class="cd-tl-heading">Offer letter released</div>
+                          <div class="cd-tl-sub">Formal offer extended to candidate</div>
                         </div>
                         <div class="cd-tl-role">Software Engineer</div>
                         <div class="cd-tl-meta-right">
@@ -3784,24 +4044,24 @@ use Carbon\Carbon;
 
                       <!-- Node 4: New Job Requirement -->
                       <div class="cd-tl-item">
-                        <div class="cd-tl-dot cd-tl-dot-blue"><i class="fas fa-briefcase fa-solid" style="color:#3b82f6;"></i></div>
+                        <div class="cd-tl-dot cd-tl-dot-blue"><i class="fas fa-briefcase fa-solid"></i></div>
                         <div class="cd-tl-info">
-                          <div class="cd-tl-heading">New job requirement received</div>
-                          <div class="cd-tl-sub">New hiring requirement added by client</div>
+                          <div class="cd-tl-heading">New job requirement posted</div>
+                          <div class="cd-tl-sub">New hiring opening assigned to recruitment team</div>
                         </div>
                         <div class="cd-tl-role">DevOps Engineer</div>
                         <div class="cd-tl-meta-right">
                           <span class="cd-tl-time">3 days ago</span>
-                          <span class="cd-tl-badge cd-tl-badge-blue">New Requirement</span>
+                          <span class="cd-tl-badge cd-tl-badge-blue">New Opening</span>
                         </div>
                       </div>
 
                       <!-- Node 5: Candidate Joined -->
                       <div class="cd-tl-item">
-                        <div class="cd-tl-dot cd-tl-dot-green"><i class="fas fa-user-check fa-solid" style="color:#059669;"></i></div>
+                        <div class="cd-tl-dot cd-tl-dot-green"><i class="fas fa-user-check fa-solid"></i></div>
                         <div class="cd-tl-info">
                           <div class="cd-tl-heading">1 candidate joined</div>
-                          <div class="cd-tl-sub">Candidate successfully joined</div>
+                          <div class="cd-tl-sub">Candidate successfully joined client organization</div>
                         </div>
                         <div class="cd-tl-role">Full Stack Developer</div>
                         <div class="cd-tl-meta-right">
@@ -3815,79 +4075,106 @@ use Carbon\Carbon;
 
                 <!-- Right Column -->
                 <div>
-                  <!-- Card: Client Information -->
+                  <!-- Card: Client Information (Discrete Sub-Cards Grid) -->
                   <div class="cd-card-panel">
                     <div class="cd-card-hdr">
                       <div class="cd-card-hdr-left">
-                        <i class="fas fa-circle-info fa-solid" style="color:#6366f1; font-size:12px;"></i>
+                        <div class="cd-top-bar-icon" style="width:28px; height:28px; font-size:12px; background:#f5f3ff; color:#7c3aed;">
+                          <i class="fas fa-circle-info fa-solid"></i>
+                        </div>
                         <span class="cd-card-hdr-title">Client Information</span>
                       </div>
                     </div>
-                    <div class="cd-info-list">
-                      <div class="cd-kv-row">
-                        <span class="cd-kv-lbl">Headquarters</span>
-                        <span class="cd-kv-val">{{ ucwords($city_name ?: 'Mumbai') }}@if($country_name), {{ ucwords($country_name) }}@else, India @endif</span>
+                    <div class="cd-overview-subcards-grid">
+                      <div class="cd-overview-subcard">
+                        <div class="cd-ov-icon-box bg-light-danger text-danger"><i class="fas fa-map-marker-alt"></i></div>
+                        <div class="cd-ov-content">
+                          <span class="cd-ov-label">Headquarters</span>
+                          <span class="cd-ov-value">{{ ucwords($city_name ?: 'Mumbai') }}@if($country_name), {{ ucwords($country_name) }}@else, India @endif</span>
+                        </div>
                       </div>
-                      <div class="cd-kv-row">
-                        <span class="cd-kv-lbl">Website</span>
-                        <span class="cd-kv-val">
-                          <a href="{{ str_starts_with($webClean, 'http') ? $webClean : 'https://'.$webClean }}" target="_blank">
-                            {{ $webClean }} <i class="fas fa-external-link-alt fa-solid fa-arrow-up-right-from-square" style="font-size:8.5px;"></i>
-                          </a>
-                        </span>
+                      <div class="cd-overview-subcard">
+                        <div class="cd-ov-icon-box bg-light-info text-info"><i class="fas fa-globe"></i></div>
+                        <div class="cd-ov-content">
+                          <span class="cd-ov-label">Website</span>
+                          <a href="{{ str_starts_with($webClean, 'http') ? $webClean : 'https://'.$webClean }}" target="_blank" class="cd-ov-link">{{ $webClean }} <i class="fas fa-external-link-alt" style="font-size:9px;"></i></a>
+                        </div>
                       </div>
-                      <div class="cd-kv-row">
-                        <span class="cd-kv-lbl">Industry</span>
-                        <span class="cd-kv-val">{{ $industries_name ?: 'Computer Software' }}</span>
+                      <div class="cd-overview-subcard">
+                        <div class="cd-ov-icon-box bg-light-primary text-primary"><i class="fas fa-building"></i></div>
+                        <div class="cd-ov-content">
+                          <span class="cd-ov-label">Industry</span>
+                          <span class="cd-ov-value">{{ $industries_name ?: 'Computer Software' }}</span>
+                        </div>
                       </div>
-                      <div class="cd-kv-row">
-                        <span class="cd-kv-lbl">Company Type</span>
-                        <span class="cd-kv-val">{{ $company_type_val }}</span>
+                      <div class="cd-overview-subcard">
+                        <div class="cd-ov-icon-box bg-light-warning text-warning"><i class="fas fa-briefcase"></i></div>
+                        <div class="cd-ov-content">
+                          <span class="cd-ov-label">Company Type</span>
+                          <span class="cd-ov-value">{{ $company_type_val ?: 'Enterprise Service' }}</span>
+                        </div>
+                      </div>
+                      <div class="cd-overview-subcard">
+                        <div class="cd-ov-icon-box bg-light-success text-success"><i class="fas fa-users"></i></div>
+                        <div class="cd-ov-content">
+                          <span class="cd-ov-label">Employees</span>
+                          <span class="cd-ov-value">{{ is_numeric(@$client->company_sizes) ? number_format((float)@$client->company_sizes) . '+' : (@$client->company_sizes ?: '200+') }}</span>
+                        </div>
+                      </div>
+                      <div class="cd-overview-subcard">
+                        <div class="cd-ov-icon-box bg-light-warning text-amber-600"><i class="fas fa-calendar-alt"></i></div>
+                        <div class="cd-ov-content">
+                          <span class="cd-ov-label">Founded</span>
+                          <span class="cd-ov-value">{{ @$client->founded ?: '2023' }}</span>
+                        </div>
                       </div>
                       @if(!empty(@$client->vendor_id))
-                      <div class="cd-kv-row">
-                        <span class="cd-kv-lbl">Vendor ID</span>
-                        <span class="cd-kv-val">{{ @$client->vendor_id }}</span>
+                      <div class="cd-overview-subcard" style="grid-column: 1 / -1;">
+                        <div class="cd-ov-icon-box bg-light-primary text-primary"><i class="fas fa-hashtag"></i></div>
+                        <div class="cd-ov-content">
+                          <span class="cd-ov-label">Vendor ID</span>
+                          <span class="cd-ov-value">{{ @$client->vendor_id }}</span>
+                        </div>
                       </div>
                       @endif
-                      <div class="cd-kv-row">
-                        <span class="cd-kv-lbl">Founded</span>
-                        <span class="cd-kv-val">{{ @$client->founded ?: '2023' }}</span>
-                      </div>
-                      <div class="cd-kv-row">
-                        <span class="cd-kv-lbl">Number of Employees</span>
-                        <span class="cd-kv-val">{{ is_numeric(@$client->company_sizes) ? number_format((float)@$client->company_sizes) . '+' : (@$client->company_sizes ?: '200+') }}</span>
-                      </div>
                     </div>
                   </div>
 
-                  <!-- Card: Primary Contact -->
+                  <!-- Card: Primary Key Contact (Master Sub-Card) -->
                   <div class="cd-card-panel">
                     <div class="cd-card-hdr">
                       <div class="cd-card-hdr-left">
-                        <i class="fas fa-id-badge fa-solid" style="color:#10b981; font-size:12px;"></i>
-                        <span class="cd-card-hdr-title">Primary Contact</span>
+                        <div class="cd-top-bar-icon" style="width:28px; height:28px; font-size:12px; background:#ecfdf5; color:#059669;">
+                          <i class="fas fa-id-badge fa-solid"></i>
+                        </div>
+                        <span class="cd-card-hdr-title">Primary Key Contact</span>
                       </div>
-                      <a href="javascript:void(0);" class="cd-card-hdr-link cd-view-all-contacts">
+                      <a href="javascript:void(0);" class="cd-card-hdr-link cd-view-all-contacts" onclick="$('.cd-tab-pill-btn[href=\'#contacts\']').tab('show');">
                         View all contacts <i class="fas fa-arrow-right fa-solid ms-1" style="font-size:9px;"></i>
                       </a>
                     </div>
-                    <div class="cd-contact-preview">
-                      <div class="cd-contact-avatar">{{ $primaryInitials }}</div>
-                      <div class="cd-contact-meta">
-                        <div class="cd-contact-name-row">
-                          <span class="cd-contact-name">{{ $primaryName }}</span>
-                          <span class="cd-contact-primary-tag">Primary</span>
+                    <div class="cd-contact-master-subcard">
+                      <div class="cd-contact-master-top">
+                        <div class="cd-contact-avatar-box">{{ $primaryInitials }}</div>
+                        <div class="cd-contact-master-info">
+                          <div class="d-flex align-items-center gap-2 mb-1">
+                            <span class="fw-bold text-gray-900 fs-7">{{ $primaryName }}</span>
+                            <span class="cd-contact-primary-tag"><i class="fas fa-star text-warning me-1"></i>Primary SPOC</span>
+                          </div>
+                          <div class="text-gray-600 fs-8 fw-500">{{ $primaryDesignation }}</div>
                         </div>
-                        <div class="cd-contact-title">{{ $primaryDesignation }}</div>
-                        <div class="cd-contact-links">
-                          <a href="mailto:{{ $primaryEmail }}" class="cd-contact-link-item">
-                            <i class="fas fa-envelope fa-solid" style="color:#2563eb;"></i> {{ $primaryEmail }}
-                          </a>
-                          <span class="cd-contact-link-item">
-                            <i class="fas fa-phone fa-solid" style="color:#10b981;"></i> {{ $primaryPhone }}
-                          </span>
-                        </div>
+                      </div>
+                      <div class="cd-contact-channels-grid">
+                        <a href="mailto:{{ $primaryEmail }}" class="cd-contact-channel-item" title="Send Email">
+                          <i class="fas fa-envelope text-primary"></i>
+                          <span class="cd-channel-text">{{ $primaryEmail }}</span>
+                          <i class="fas fa-paper-plane text-gray-400" style="font-size:10px;"></i>
+                        </a>
+                        <a href="tel:{{ $primaryPhone }}" class="cd-contact-channel-item" title="Call Contact">
+                          <i class="fas fa-phone text-success"></i>
+                          <span class="cd-channel-text">{{ $primaryPhone }}</span>
+                          <i class="fas fa-phone-flip text-gray-400" style="font-size:10px;"></i>
+                        </a>
                       </div>
                     </div>
                   </div>
@@ -3896,34 +4183,172 @@ use Carbon\Carbon;
                   <div class="cd-card-panel">
                     <div class="cd-card-hdr">
                       <div class="cd-card-hdr-left">
-                        <i class="fas fa-layer-group fa-solid" style="color:#ec4899; font-size:12px;"></i>
-                        <span class="cd-card-hdr-title">Client Services</span>
+                        <div class="cd-top-bar-icon" style="width:28px; height:28px; font-size:12px; background:#fdf2f8; color:#ec4899;">
+                          <i class="fas fa-layer-group fa-solid"></i>
+                        </div>
+                        <span class="cd-card-hdr-title">Client Services &amp; Capabilities</span>
                       </div>
+                      <span class="badge bg-light-primary text-primary fs-8 fw-bold">{{ count($tagsArr) }} Tags</span>
                     </div>
-                    <div class="cd-tags-cloud">
-                      @foreach ($tagsArr as $tag)
-                        <span class="cd-tag-pill">{{ ucwords($tag) }}</span>
-                      @endforeach
+                    <div class="d-flex flex-wrap gap-2">
+                      @forelse ($tagsArr as $tag)
+                        <span class="cd-hero-tag px-3 py-1 fs-8 fw-500">{{ ucwords($tag) }}</span>
+                      @empty
+                        <span class="text-muted fs-8">No specific service tags defined.</span>
+                      @endforelse
                     </div>
                   </div>
                 </div>
               </div>
             </div>
 
-            <!-- ── TAB 2: RECENT ACTIVITY (Dedicated Black Card for Discussion) ── -->
+            <!-- ── TAB 2: RECENT ACTIVITY & AUDIT LOGS (Modern Card + Sub-Card Standard) ── -->
             <div class="tab-pane" id="recent_activity" role="tabpanel">
-              <div class="p-4">
-                <div class="cd-card-panel p-5" style="background:#000000; color:#ffffff; border-color:#1e293b; border-radius:10px;">
-                  <div class="d-flex align-items-center justify-content-between mb-3 border-bottom border-secondary pb-3">
-                    <div class="d-flex align-items-center gap-2">
-                      <i class="fas fa-clock fa-solid text-warning" style="font-size:14px;"></i>
-                      <h4 class="text-white mb-0" style="font-size:13.5px; font-weight:600;">Recent Activity &amp; Audit Logs</h4>
+              <div class="px-3 py-2">
+                <!-- Tier 1: Toolbar Header Card -->
+                <div class="cd-jobs-header-card mb-3">
+                  <div class="cd-jobs-header-left">
+                    <div class="cd-jobs-header-icon" style="background:#fffbeb; color:#d97706;">
+                      <i class="fas fa-clock-rotate-left"></i>
                     </div>
-                    <span class="badge bg-secondary text-white" style="font-size:10.5px;">Pending Discussion</span>
+                    <div>
+                      <div class="cd-jobs-header-title">Recent Activity &amp; Audit Trail</div>
+                      <div class="cd-jobs-header-sub">Chronological recruitment timeline, interview events, and administrative milestones.</div>
+                    </div>
                   </div>
-                  <p class="text-gray-400 mb-0" style="font-size:12px; line-height:1.6;">
-                    This section captures comprehensive timeline actions: candidate submissions, interview logs, offer letter events, job requisitions, and administrative audit trails. Additional widgets and configurations will be integrated as discussed.
-                  </p>
+                  <div class="cd-jobs-header-right">
+                    <div class="cd-jobs-search-subcard" style="width:240px;">
+                      <i class="fas fa-search"></i>
+                      <input type="text" placeholder="Filter activity by keyword..." autocomplete="off">
+                    </div>
+                    <button type="button" class="btn btn-sm btn-light fw-bold" style="height:36px; border:1px solid #e2e8f0; border-radius:8px;">
+                      <i class="fas fa-sync-alt me-1"></i> Refresh
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Tier 2: Sub-Tabs Filter Card -->
+                <div class="cd-jobs-tabs-card mb-3">
+                  <div class="cd-jobs-tabs-group">
+                    <button type="button" class="cd-jobs-tab-btn active">
+                      <span>All Events</span>
+                      <span class="cd-jobs-tab-badge">7</span>
+                    </button>
+                    <button type="button" class="cd-jobs-tab-btn">
+                      <span>Submissions</span>
+                      <span class="cd-jobs-tab-badge">2</span>
+                    </button>
+                    <button type="button" class="cd-jobs-tab-btn">
+                      <span>Interviews</span>
+                      <span class="cd-jobs-tab-badge">1</span>
+                    </button>
+                    <button type="button" class="cd-jobs-tab-btn">
+                      <span>Offers &amp; Joining</span>
+                      <span class="cd-jobs-tab-badge">2</span>
+                    </button>
+                    <button type="button" class="cd-jobs-tab-btn">
+                      <span>Requisitions</span>
+                      <span class="cd-jobs-tab-badge">1</span>
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Tier 3: Master Activity Cards Stream -->
+                <div class="d-flex flex-column gap-3">
+                  <!-- Activity Card 1 -->
+                  <div class="card p-4 border" style="border-radius:10px; border-color:#e2e8f0; background:#ffffff; box-shadow:0 1px 3px rgba(15, 23, 42, 0.03);">
+                    <div class="d-flex align-items-center justify-content-between mb-2 flex-wrap gap-2">
+                      <div class="d-flex align-items-center gap-3">
+                        <div class="cd-tl-dot-green rounded-circle d-flex align-items-center justify-content-center" style="width:34px; height:34px; font-size:13px;">
+                          <i class="fas fa-users"></i>
+                        </div>
+                        <div>
+                          <div class="fw-bold text-gray-900 fs-7">2 Candidates Submitted to Client</div>
+                          <div class="text-muted fs-8">{{ auth()->user()->name ?? 'Recruiter' }} shortlisted and submitted 2 candidates for Senior Java Developer role.</div>
+                        </div>
+                      </div>
+                      <div class="d-flex align-items-center gap-2">
+                        <span class="badge bg-light-primary text-primary fw-bold fs-8">Candidate Pipeline</span>
+                        <span class="text-muted fs-8"><i class="fas fa-clock me-1"></i>2 hours ago</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Activity Card 2 -->
+                  <div class="card p-4 border" style="border-radius:10px; border-color:#e2e8f0; background:#ffffff; box-shadow:0 1px 3px rgba(15, 23, 42, 0.03);">
+                    <div class="d-flex align-items-center justify-content-between mb-2 flex-wrap gap-2">
+                      <div class="d-flex align-items-center gap-3">
+                        <div class="cd-tl-dot-purple rounded-circle d-flex align-items-center justify-content-center" style="width:34px; height:34px; font-size:13px;">
+                          <i class="fas fa-calendar-days"></i>
+                        </div>
+                        <div>
+                          <div class="fw-bold text-gray-900 fs-7">Technical Interview Round 1 Scheduled</div>
+                          <div class="text-muted fs-8">Candidate scheduled with client technical evaluation panel via Google Meet.</div>
+                        </div>
+                      </div>
+                      <div class="d-flex align-items-center gap-2">
+                        <span class="badge bg-light-warning text-warning fw-bold fs-8">Interview</span>
+                        <span class="text-muted fs-8"><i class="fas fa-clock me-1"></i>1 day ago</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Activity Card 3 -->
+                  <div class="card p-4 border" style="border-radius:10px; border-color:#e2e8f0; background:#ffffff; box-shadow:0 1px 3px rgba(15, 23, 42, 0.03);">
+                    <div class="d-flex align-items-center justify-content-between mb-2 flex-wrap gap-2">
+                      <div class="d-flex align-items-center gap-3">
+                        <div class="cd-tl-dot-orange rounded-circle d-flex align-items-center justify-content-center" style="width:34px; height:34px; font-size:13px;">
+                          <i class="fas fa-file-lines"></i>
+                        </div>
+                        <div>
+                          <div class="fw-bold text-gray-900 fs-7">Formal Offer Letter Extended</div>
+                          <div class="text-muted fs-8">Offer rolled out for Software Engineer requirement after budget clearance.</div>
+                        </div>
+                      </div>
+                      <div class="d-flex align-items-center gap-2">
+                        <span class="badge bg-light-danger text-danger fw-bold fs-8">Offer Letter</span>
+                        <span class="text-muted fs-8"><i class="fas fa-clock me-1"></i>2 days ago</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Activity Card 4 -->
+                  <div class="card p-4 border" style="border-radius:10px; border-color:#e2e8f0; background:#ffffff; box-shadow:0 1px 3px rgba(15, 23, 42, 0.03);">
+                    <div class="d-flex align-items-center justify-content-between mb-2 flex-wrap gap-2">
+                      <div class="d-flex align-items-center gap-3">
+                        <div class="cd-tl-dot-blue rounded-circle d-flex align-items-center justify-content-center" style="width:34px; height:34px; font-size:13px;">
+                          <i class="fas fa-briefcase"></i>
+                        </div>
+                        <div>
+                          <div class="fw-bold text-gray-900 fs-7">New Job Requirement Assigned</div>
+                          <div class="text-muted fs-8">Client SPOC created requirement for DevOps Engineer (5+ Yrs, Pune).</div>
+                        </div>
+                      </div>
+                      <div class="d-flex align-items-center gap-2">
+                        <span class="badge bg-light-info text-info fw-bold fs-8">Requisition</span>
+                        <span class="text-muted fs-8"><i class="fas fa-clock me-1"></i>3 days ago</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Activity Card 5 -->
+                  <div class="card p-4 border" style="border-radius:10px; border-color:#e2e8f0; background:#ffffff; box-shadow:0 1px 3px rgba(15, 23, 42, 0.03);">
+                    <div class="d-flex align-items-center justify-content-between mb-2 flex-wrap gap-2">
+                      <div class="d-flex align-items-center gap-3">
+                        <div class="cd-tl-dot-green rounded-circle d-flex align-items-center justify-content-center" style="width:34px; height:34px; font-size:13px; background:#ecfdf5; color:#059669;">
+                          <i class="fas fa-user-check"></i>
+                        </div>
+                        <div>
+                          <div class="fw-bold text-gray-900 fs-7">Candidate Successfully Joined &amp; Onboarded</div>
+                          <div class="text-muted fs-8">Full Stack Developer successfully completed Day 1 onboarding formalities.</div>
+                        </div>
+                      </div>
+                      <div class="d-flex align-items-center gap-2">
+                        <span class="badge bg-light-success text-success fw-bold fs-8">Joined</span>
+                        <span class="text-muted fs-8"><i class="fas fa-clock me-1"></i>5 days ago</span>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -4774,657 +5199,56 @@ use Carbon\Carbon;
                             </div>
                         </div>
                         <div class="cd-tabwrap">
-                        <!--begin::Sub tabs-->
-                        {{-- <ul class="nav nav-tabs nav-line-tabs nav-line-tabs-2x mb-5 fs-6 border-bottom-0">
-                        <li class="nav-item"> <a class="nav-link active" data-bs-toggle="tab" href="#all-requisitions">All Req.</a> 
-                        </li> --}}
-                        {{-- <li class="nav-item"> <a class="nav-link" data-bs-toggle="tab" href="#client-requisitions">HCL Req.</a> </li>
-                        <li class="nav-item"> <a class="nav-link" data-bs-toggle="tab" href="#custom-requisitions">Custom Req.</a> </li>
-                        <li class="nav-item"> <a class="nav-link" data-bs-toggle="tab" href="#jobs">Jobs</a> </li> --}}
-                        {{-- </ul> --}}
-                        <!--end::Sub tabs-->
-                        <!--begin::Requisitions Content-->
-                        <div class="tab-content" id="myTabContent">
-                            <!--begin::All Req.-->
-                            <div class="tab-pane fade show active" id="all-requisitions" role="tabpanel">
-                                <!--begin::All Req. header-->
-                                <div class="card-header cursor-pointer px-0 d-none">
-                                    <!--begin::Card title-->
-                                    <div class="card-title m-0">
-                                        <h3 class="fw-bolder m-0">All Jobs</h3>
-                                    </div>
-                                    <!--end::Card title-->
-                                    <!--begin::Actions-->
-                                    <div class="d-flex align-items-center py-1">
-                                        <!--begin::Search-->
-                                        <div class="d-flex align-items-center position-relative my-1 me-3">
-                                            <!--begin::Svg Icon | path: icons/duotune/general/gen021.svg-->
-                                            <span class="svg-icon svg-icon-1 position-absolute ms-6">
-                                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
-                                                    viewBox="0 0 24 24" fill="none">
-                                                    <rect opacity="0.5" x="17.0365" y="15.1223" width="8.15546"
-                                                        height="2" rx="1"
-                                                        transform="rotate(45 17.0365 15.1223)" fill="black" />
-                                                    <path
-                                                        d="M11 19C6.55556 19 3 15.4444 3 11C3 6.55556 6.55556 3 11 3C15.4444 3 19 6.55556 19 11C19 15.4444 15.4444 19 11 19ZM11 5C7.53333 5 5 7.53333 5 11C5 14.4667 7.53333 17 11 17C14.4667 17 17 14.4667 17 11C17 7.53333 14.4667 5 11 5Z"
-                                                        fill="black" />
-                                                </svg>
-                                            </span>
-                                            <!--end::Svg Icon-->
-                                            <input type="text" id="inputJobSearch" name="inputJobSearch"
-                                                class="form-control form-control-solid w-250px ps-14"
-                                                style="padding: .6rem 1rem;" placeholder="Search..." />
-                                        </div>
-                                        <!--end::Search-->
-                                        <div class="card-toolbar">
-                                            <!--begin::Toolbar-->
-                                            <div class="d-flex justify-content-end" data-kt-user-table-toolbar="base">
-
-
-
-                                                @if (in_array('add_jobs', $userPermissions))
-                                                    <!--begin::Add Requisitions-->
-                                                    {{-- echo url('service_company/jobs/create'); --}}
-                                                    <a
-                                                        href="{{ url('service_company/jobs/curstomcreate/' . $client->id) }}">
-                                                        <button type="button"
-                                                            class="btn btn-sm btn-flex btn-primary btn-active-primary fw-bolder me-3">
-                                                            <!--begin::Svg Icon | path: icons/duotune/arrows/arr078.svg-->
-                                                            <span class="svg-icon svg-icon-primary svg-icon-1x">
-                                                                <svg xmlns="http://www.w3.org/2000/svg"
-                                                                    xmlns:xlink="http://www.w3.org/1999/xlink"
-                                                                    width="24px" height="24px" viewBox="0 0 24 24"
-                                                                    version="1.1">
-                                                                    <g stroke="none" stroke-width="1" fill="none"
-                                                                        fill-rule="evenodd">
-                                                                        <polygon points="0 0 24 0 24 24 0 24" />
-                                                                        <path
-                                                                            d="M18,8 L16,8 C15.4477153,8 15,7.55228475 15,7 C15,6.44771525 15.4477153,6 16,6 L18,6 L18,4 C18,3.44771525 18.4477153,3 19,3 C19.5522847,3 20,3.44771525 20,4 L20,6 L22,6 C22.5522847,6 23,6.44771525 23,7 C23,7.55228475 22.5522847,8 22,8 L20,8 L20,10 C20,10.5522847 19.5522847,11 19,11 C18.4477153,11 18,10.5522847 18,10 L18,8 Z M9,11 C6.790861,11 5,9.209139 5,7 C5,4.790861 6.790861,3 9,3 C11.209139,3 13,4.790861 13,7 C13,9.209139 11.209139,11 9,11 Z"
-                                                                            fill="#000000" fill-rule="nonzero"
-                                                                            opacity="0.3" />
-                                                                        <path
-                                                                            d="M0.00065168429,20.1992055 C0.388258525,15.4265159 4.26191235,13 8.98334134,13 C13.7712164,13 17.7048837,15.2931929 17.9979143,20.2 C18.0095879,20.3954741 17.9979143,21 17.2466999,21 C13.541124,21 8.03472472,21 0.727502227,21 C0.476712155,21 -0.0204617505,20.45918 0.00065168429,20.1992055 Z"
-                                                                            fill="#000000" fill-rule="nonzero" />
-                                                                    </g>
-                                                                </svg>
-                                                            </span> Add Jobs</button>
-                                                    </a>
-                                                    <!--end::Add Requisitions-->
-                                                @endif
-                                            </div>
-                                            <!--end::Toolbar-->
+                            @if (in_array('view_jobs', $userPermissions))
+                                <div class="jobx">
+                                    <!-- Tier 2: Sub-Tabs in Card-Based Design with White Background -->
+                                    <div class="cd-jobs-tabs-card">
+                                        <div class="cd-jobs-tabs-group">
+                                            <button type="button"
+                                                    class="cd-jobs-tab-btn js-job-filter-btn active"
+                                                    data-status="all">
+                                                <span>All Jobs</span>
+                                                <span class="cd-jobs-tab-badge" id="filterCountAll">{{ $kpiActive ?? 0 }}</span>
+                                            </button>
+                                            <button type="button"
+                                                    class="cd-jobs-tab-btn js-job-filter-btn"
+                                                    data-status="hiring">
+                                                <span>Hiring</span>
+                                                <span class="cd-jobs-tab-badge badge-hiring" id="filterCountHiring">{{ $kpiActive ?? 0 }}</span>
+                                            </button>
+                                            <button type="button"
+                                                    class="cd-jobs-tab-btn js-job-filter-btn"
+                                                    data-status="hold">
+                                                <span>On Hold</span>
+                                                <span class="cd-jobs-tab-badge badge-hold" id="filterCountHold">0</span>
+                                            </button>
+                                            <button type="button"
+                                                    class="cd-jobs-tab-btn js-job-filter-btn"
+                                                    data-status="closed">
+                                                <span>Closed</span>
+                                                <span class="cd-jobs-tab-badge badge-closed" id="filterCountClosed">0</span>
+                                            </button>
+                                            <button type="button"
+                                                    class="cd-jobs-tab-btn js-job-filter-btn"
+                                                    data-status="inactive">
+                                                <span>Inactive</span>
+                                                <span class="cd-jobs-tab-badge badge-inactive" id="filterCountInactive">0</span>
+                                            </button>
                                         </div>
                                     </div>
-                                    <!--end::Actions-->
-                                </div>
-                                <!--end::All Req. header-->
-                                <!--begin::All Req. Content-->
-                                <div class="card-body px-0 py-4">
-                                    @if (in_array('view_jobs', $userPermissions))
-                                        <div class="jobx">
-                                            <!-- 2. Sub-Tabs in Card-Based Design with White Background -->
-                                            <div class="cd-jobs-tabs-card">
-                                                <div class="cd-jobs-tabs-group">
-                                                    <button type="button"
-                                                            class="cd-jobs-tab-btn js-job-filter-btn active"
-                                                            data-status="all">
-                                                        <span>All Jobs</span>
-                                                        <span class="cd-jobs-tab-badge" id="filterCountAll">{{ $kpiActive ?? 0 }}</span>
-                                                    </button>
-                                                    <button type="button"
-                                                            class="cd-jobs-tab-btn js-job-filter-btn"
-                                                            data-status="hiring">
-                                                        <span>Hiring</span>
-                                                        <span class="cd-jobs-tab-badge badge-hiring" id="filterCountHiring">{{ $kpiActive ?? 0 }}</span>
-                                                    </button>
-                                                    <button type="button"
-                                                            class="cd-jobs-tab-btn js-job-filter-btn"
-                                                            data-status="hold">
-                                                        <span>On Hold</span>
-                                                        <span class="cd-jobs-tab-badge badge-hold" id="filterCountHold">0</span>
-                                                    </button>
-                                                    <button type="button"
-                                                            class="cd-jobs-tab-btn js-job-filter-btn"
-                                                            data-status="closed">
-                                                        <span>Closed</span>
-                                                        <span class="cd-jobs-tab-badge badge-closed" id="filterCountClosed">0</span>
-                                                    </button>
-                                                    <button type="button"
-                                                            class="cd-jobs-tab-btn js-job-filter-btn"
-                                                            data-status="inactive">
-                                                        <span>Inactive</span>
-                                                        <span class="cd-jobs-tab-badge badge-inactive" id="filterCountInactive">0</span>
-                                                    </button>
-                                                </div>
-                                            </div>
 
-                                            <!-- Restored Card-Based Jobs Stream -->
-                                            <div id="clientJobsListajax" class="cd-jobs-stream"></div>
-                                        </div>
-                                        <div id="paginationclientjobs" class="mt-3"></div>
-                                    @endif
+                                    <!-- Tier 3: Card-Based Jobs Stream -->
+                                    <div id="clientJobsListajax" class="cd-jobs-stream"></div>
                                 </div>
-                                <!--end::All Req. Content-->
-                            </div>
-                            <!--end::All Req.-->
-                            <!--end::Client Req.-->
-                            <div class="tab-pane fade" id="client-requisitions" role="tabpanel">
-                                <!--begin::Client Req. header-->
-                                <div class="card-header cursor-pointer px-0">
-                                    <!--begin::Card title-->
-                                    <div class="card-title m-0">
-                                        <h3 class="fw-bolder m-0">HCL Jobs</h3>
-                                    </div>
-                                    <!--end::Card title-->
+                                <div id="paginationclientjobs" class="mt-3"></div>
+                            @else
+                                <div class="cd-empty-card p-5 text-center text-muted">
+                                    <i class="fas fa-lock fs-2 mb-2 text-muted"></i>
+                                    <div>You do not have permission to view jobs for this client.</div>
                                 </div>
-                                <!--end::Client Req. header-->
-                                <!--begin::Client Req. Content-->
-                                <div class="card-body px-0 py-7">
-                                    <!--begin:Table-->
-                                    <table class="table align-middle table-row-dashed fs-6 gy-5" id="kt_table_users">
-                                        <!--begin::Table head-->
-                                        <thead>
-                                            <!--begin::Table row-->
-                                            <tr class="fw-bolder text-muted">
-                                                <th class="w-10px pe-0">
-                                                    <div
-                                                        class="form-check form-check-sm form-check-custom form-check-solid me-3">
-                                                        <input class="form-check-input" type="checkbox"
-                                                            data-kt-check="true"
-                                                            data-kt-check-target="#kt_table_users .form-check-input2"
-                                                            value="1" />
-                                                    </div>
-                                                </th>
-                                                <th class="">Jobs</th>
-                                                <th class="">Exp.</th>
-                                                <th class="">Salary</th>
-                                                <th class="">Location</th>
-                                                <th class="">Status</th>
-                                                <th class="">Date</th>
-                                                <th class="">HM | CP</th>
-                                                <th class="">S.Partners</th>
-                                                <th class="">TOT</th>
-                                                <th class="">SOU</th>
-                                                <th class="">SCR</th>
-                                                <th class="">EVA</th>
-                                                <th class="">NEO</th>
-                                                <th class="">OFF</th>
-                                                <th class="">JOI</th>
-                                                <th class="">REJ</th>
-                                            </tr>
-                                            <!--end::Table row-->
-                                        </thead>
-                                        <!--end::Table head-->
-                                        <!--begin::Table body-->
-                                        <tbody class="text-gray-600 fw-bold">
-                                            <!--begin::Table row-->
-                                            <tr class="">
-                                                <!--begin::Checkbox-->
-                                                <td class="">
-                                                    <div
-                                                        class="form-check form-check-sm form-check-custom form-check-solid">
-                                                        <input class="form-check-input form-check-input2"
-                                                            type="checkbox" value="1" />
-                                                    </div>
-                                                </td>
-                                                <!--end::Checkbox-->
-                                                <!--begin::Requisitions=-->
-                                                <td class="d-flex align-items-center border-0"><!--begin:: Avatar -->
-                                                    <div
-                                                        class="symbol symbol-circle symbol-40px overflow-hidden me-2 border-radius-5">
-                                                        <a href="javascript:void(0);">
-                                                            <div
-                                                                class="symbol-label fs-3 bg-light-warning text-warning border-radius-5">
-                                                                U</div>
-                                                        </a>
-                                                    </div>
-                                                    <!--end::Avatar-->
-                                                    <!--begin::User details-->
-                                                    <div class="d-flex flex-column"> <a href="javascript:void(0);"
-                                                            class="text-dark fw-bolder text-hover-primary fs-6">UI/UX
-                                                            Designer</a> <a href="javascript:void(0);"
-                                                            class="fw-bold text-muted d-block fs-7 text-hover-primary">Wipro</a>
-                                                    </div>
-                                                    <!--begin::User details-->
-                                                </td>
-                                                <!--end::Requisitions-->
-                                                <!--begin::Exp.-->
-                                                <td class="">
-                                                    <div class="d-flex flex-column">
-                                                         <span
-                                                            class="text-dark fw-bolder fs-6">22+</span> 
-                                                        <span
-                                                            class="text-muted fw-bold text-muted d-block fs-7">18+</span>
-                                                    </div>
-                                                </td>
-                                                <!--end::Exp.-->
-                                                <!--begin::Salary-->
-                                                <td class="">
-                                                    <div class="d-flex flex-column"> 
-                                                        <span
-                                                            class="text-dark fw-bolder fs-6">50 LPA</span> 
-                                                            <span
-                                                            class="fw-bold d-block fs-7">30 LPA</span> 
-                                                    </div>
-                                                </td>
-                                                <!--end::Salary-->
-                                                <!--begin::Location-->
-                                                <td class="">
-                                                    <div class="d-flex flex-column"> 
-                                                        <span
-                                                            class="text-dark fw-bolder fs-6">Gurgaon</span>
-                                                        <div class="d-flex align-items-center"> <span
-                                                                class="fw-bold text-muted d-block fs-7">Haryana</span>
-                                                            &nbsp;|&nbsp; <span
-                                                                class="fw-bold text-muted d-block fs-7">INDIA</span>
-                                                            <div> </div>
-                                                        </div>
-                                                    </div>
-                                                </td>
-                                                <!--end::Location-->
-                                                <!--begin::Status | Requisition ID-->
-                                                <td class="">
-                                                    <div class="d-flex flex-column"> <a href="javascript:void(0);"
-                                                            class="fs-6 hold-bg text-hover-warning">Hold</a> <span
-                                                            class="fw-bold text-muted d-block fs-7">R2</span> 
-                                                    </div>
-                                                </td>
-                                                <!--end::Status | Requisition ID-->
-                                                <!--begin::Date | Openings-->
-                                                <td class="">
-                                                    <div class="d-flex flex-column">
-                                                         <span
-                                                            class="text-dark fw-bolder fs-6">28-Apr-2021</span> <span
-                                                            class="text-muted fw-bold d-block fs-7">774</span> 
-                                                    </div>
-                                                </td>
-                                                <!--end::Date | Openings-->
-                                                <!--begin::Hiring Manager | Contact Person-->
-                                                <td class="">
-                                                    <div class="d-flex flex-column">
-                                                        <div class="symbol-group symbol-hover">
-                                                            <div class="symbol symbol-30 symbol-circle"
-                                                                data-bs-toggle="tooltip" data-bs-placement="top"
-                                                                title="Pawan"> <img alt="Pic"
-                                                                    src="https://preview.keenthemes.com//metronic/theme/html/demo1/dist/assets/media/users/300_4.jpg">
-                                                            </div>
-                                                            <div class="symbol symbol-30 symbol-circle symbol-light"
-                                                                data-bs-toggle="tooltip" data-bs-placement="top"
-                                                                title=""
-                                                                data-original-title="More users list.."> <span
-                                                                    class="symbol-label font-weight-bold">1+</span>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-
-                                                </td>
-
-                                                <!--end::Hiring Manager | Contact Person-->
-                                                <!--begin::Staffing Partners-->
-                                                <td class="">
-                                                    <div class="d-flex flex-column">
-                                                        <div class="symbol-group symbol-hover">
-                                                            <div class="symbol symbol-30 symbol-circle" data-bs-toggle="tooltip"
-                                                                data-bs-placement="top" title="" data-original-title="Pradeep">
-                                                                <img alt="Pic"
-                                                                    src="https://preview.keenthemes.com//metronic/theme/html/demo1/dist/assets/media/users/300_23.jpg">
-                                                            </div>
-                                                            <div class="symbol symbol-30 symbol-circle" data-bs-toggle="tooltip"
-                                                                data-bs-placement="top" title="" data-original-title="Abinesh">
-                                                                <img alt="Pic"
-                                                                    src="https://preview.keenthemes.com//metronic/theme/html/demo1/dist/assets/media/users/300_24.jpg">
-                                                            </div>
-                                                            <div class="symbol symbol-30 symbol-circle symbol-light"
-                                                                data-bs-toggle="tooltip" data-bs-placement="top" title=""
-                                                                data-original-title="More users list.."> <span
-                                                                    class="symbol-label font-weight-bold">2+</span> </div>
-                                                        </div>
-                                                    </div>
-                                                </td>
-                                                <!--end::Staffing Partners-->
-                                                <!--begin::TOT-->
-                                                <td class="">
-                                                    <div class="d-flex flex-column"> <a href="javascript:void(0);"
-                                                            class="text-dark fw-bolder fs-6 text-hover-primary">65</a> <a
-                                                            href="javascript:void(0);"
-                                                            class="text-muted fw-bold d-block fs-7 text-hover-primary">10</a>
-                                                    </div>
-                                                </td>
-                                                <!--end::TOT-->
-                                                <!--begin::SOU-->
-                                                <td class="">
-                                                    <div class="d-flex flex-column"> <a href="javascript:void(0);"
-                                                            class="text-dark fw-bolder fs-6 text-hover-primary">0</a> 
-                                                    </div>
-                                                </td>
-                                                <!--end::SOU-->
-                                                <!--begin::SCR-->
-                                                <td class="">
-                                                    <div class="d-flex flex-column"> <a href="javascript:void(0);"
-                                                            class="text-dark fw-bolder fs-6 text-hover-primary">23</a> 
-                                                    </div>
-                                                </td>
-                                                <!--end::SCR-->
-                                                <!--begin::EVA-->
-                                                <td class="">
-                                                    <div class="d-flex flex-column"> <a href="javascript:void(0);"
-                                                            class="text-dark fw-bolder fs-6 text-hover-primary">0</a> 
-                                                    </div>
-                                                </td>
-                                                <!--end::EVA-->
-                                                <!--begin::NEO-->
-                                                <td class="">
-                                                    <div class="d-flex flex-column"> <a href="javascript:void(0);"
-                                                            class="text-dark fw-bolder fs-6 text-hover-primary">24</a> 
-                                                    </div>
-                                                </td>
-                                                <!--end::NEO-->
-                                                <!--begin::OFF-->
-                                                <td class="">
-                                                    <div class="d-flex flex-column"> <a href="javascript:void(0);"
-                                                            class="text-dark fw-bolder fs-6 text-hover-primary">83</a> 
-                                                    </div>
-                                                </td>
-                                                <!--end::OFF-->
-                                                <!--begin::JOI-->
-                                                <td class="">
-                                                    <div class="d-flex flex-column"> <a href="javascript:void(0);"
-                                                            class="text-dark fw-bolder fs-6 text-hover-primary">49</a> 
-                                                    </div>
-                                                </td>
-                                                <!--end::JOI-->
-                                                <!--begin::REJ-->
-                                                <td class="">
-                                                    <div class="d-flex flex-column"> <a href="javascript:void(0);"
-                                                            class="text-dark fw-bolder fs-6 text-hover-primary">0</a> 
-                                                    </div>
-                                                </td>
-                                                <!--end::REJ-->
-                                            </tr>
-                                         <!--end::Table row-->
-                                        </tbody>
-
-                                     <!--end::Table body-->
-                                    </table>
-                                    <!--end::Table-->
-                                </div>
-                             <!--end::Client Req. Content-->
-                            </div>
-                        <!--end::Client Req.-->
-                        <!--begin::Custom Req.-->
-                        <div class="tab-pane fade" id="custom-requisitions" role="tabpanel">
-                            <!--begin::Custom Req. header-->
-                            <div class="card-header cursor-pointer px-0">
-                                <!--begin::Card title-->
-                                <div class="card-title m-0">
-                                    <h3 class="fw-bolder m-0">Custom Jobs</h3>
-                                </div>
-                                <!--end::Card title-->
-                                <!--begin::Actions-->
-                                <div class="d-flex align-items-center py-1">
-                                    <div class="card-toolbar">
-                                        <!--begin::Toolbar-->
-                                        <div class="d-flex justify-content-end" data-kt-user-table-toolbar="base">
-                                            <!--begin::Add Requisitions-->
-                                            <a href="{{ url('service_company/jobs/create') }}">
-                                                <button type="button"
-                                                    class="btn btn-sm btn-flex btn-primary btn-active-primary fw-bolder me-3">
-                                                    <!--begin::Svg Icon-->
-                                                    <span class="svg-icon svg-icon-primary svg-icon-1x">
-                                                        <svg xmlns="http://www.w3.org/2000/svg"
-                                                            xmlns:xlink="http://www.w3.org/1999/xlink" width="24px"
-                                                            height="24px" viewBox="0 0 24 24" version="1.1">
-                                                            <g stroke="none" stroke-width="1" fill="none"
-                                                                fill-rule="evenodd">
-                                                                <polygon points="0 0 24 0 24 24 0 24" />
-                                                                <path
-                                                                    d="M18,8 L16,8 C15.4477153,8 15,7.55228475 15,7 C15,6.44771525 15.4477153,6 16,6 L18,6 L18,4 C18,3.44771525 18.4477153,3 19,3 C19.5522847,3 20,3.44771525 20,4 L20,6 L22,6 C22.5522847,6 23,6.44771525 23,7 C23,7.55228475 22.5522847,8 22,8 L20,8 L20,10 C20,10.5522847 19.5522847,11 19,11 C18.4477153,11 18,10.5522847 18,10 L18,8 Z M9,11 C6.790861,11 5,9.209139 5,7 C5,4.790861 6.790861,3 9,3 C11.209139,3 13,4.790861 13,7 C13,9.209139 11.209139,11 9,11 Z"
-                                                                    fill="#000000" fill-rule="nonzero"
-                                                                    opacity="0.3" />
-                                                                <path
-                                                                    d="M0.00065168429,20.1992055 C0.388258525,15.4265159 4.26191235,13 8.98334134,13 C13.7712164,13 17.7048837,15.2931929 17.9979143,20.2 C18.0095879,20.3954741 17.9979143,21 17.2466999,21 C13.541124,21 8.03472472,21 0.727502227,21 C0.476712155,21 -0.0204617505,20.45918 0.00065168429,20.1992055 Z"
-                                                                    fill="#000000" fill-rule="nonzero" />
-                                                            </g>
-                                                        </svg>
-                                                    </span>
-                                                    <!--end::Svg Icon-->
-                                                    Add Jobs </button>
-                                            </a>
-                                            <!--end::Add Requisitions-->
-                                        </div>
-                                        <!--end::Toolbar-->
-                                    </div>
-                                </div>
-                                <!--end::Actions-->
-                            </div>
-                            <!--end::Custom Req. header-->
-                            <!--begin::Custom Req. Content-->
-                            <div class="card-body px-0 py-7">
-                                <!--begin:Table-->
-                                <table class="table align-middle table-row-dashed fs-6 gy-5" id="kt_table_users">
-                                    <!--begin::Table head-->
-                                    <thead>
-                                        <!--begin::Table row-->
-                                        <tr class="fw-bolder text-muted">
-                                            <th class="w-10px pe-0">
-                                                <div
-                                                    class="form-check form-check-sm form-check-custom form-check-solid me-3">
-                                                    <input class="form-check-input" type="checkbox"
-                                                        data-kt-check="true"
-                                                        data-kt-check-target="#kt_table_users .form-check-input3"
-                                                        value="1" />
-                                                </div>
-                                            </th>
-                                            <th class="">Jobs</th>
-                                            <th class="">Exp.</th>
-                                            <th class="">Salary</th>
-                                            <th class="">Location</th>
-                                            <th class="">Status</th>
-                                            <th class="">Date</th>
-                                            <th class="">HM | CP</th>
-                                            <th class="">S.Partners</th>
-                                            <th class="">TOT</th>
-                                            <th class="">SOU</th>
-                                            <th class="">SCR</th>
-                                            <th class="">EVA</th>
-                                            <th class="">NEO</th>
-                                            <th class="">OFF</th>
-                                            <th class="">JOI</th>
-                                            <th class="">REJ</th>
-                                        </tr>
-                                        <!--end::Table row-->
-                                    </thead>
-                                    <!--end::Table head-->
-                                    <!--begin::Table body-->
-                                    <tbody class="text-gray-600 fw-bold">
-                                        <!--begin::Table row-->
-                                        <tr class="">
-                                            <!--begin::Checkbox-->
-                                            <td class="">
-                                                <div
-                                                    class="form-check form-check-sm form-check-custom form-check-solid">
-                                                    <input class="form-check-input form-check-input3" type="checkbox"
-                                                        value="1" />
-                                                </div>
-                                            </td>
-                                            <!--end::Checkbox-->
-                                            <!--begin::Requisitions=-->
-                                            <td class="d-flex align-items-center border-0"><!--begin:: Avatar -->
-                                                <div
-                                                    class="symbol symbol-circle symbol-40px overflow-hidden me-2  border-radius-5">
-                                                    <a href="javascript:void(0);">
-                                                        <div class="symbol-label border-radius-5"> <img
-                                                                src="https://www.hcltech.com/sites/default/files/styles/large/public/images/guideline_based_vectors-square.png?itok=KEUChzF3"
-                                                                alt="Company Logo" class="border-radius-5 w-100">
-                                                        </div>
-                                                    </a>
-                                                </div>
-                                                <!--end::Avatar-->
-                                                <!--begin::User details-->
-                                                <div class="d-flex flex-column"> <a href="javascript:void(0);"
-                                                        class="text-dark fw-bolder text-hover-primary fs-6">Frontend
-                                                        Developer</a> <a href="javascript:void(0);"
-                                                        class="fw-bold text-muted d-block fs-7 text-hover-primary">HCl
-                                                        Technologies</a> </div>
-                                                <!--begin::User details-->
-                                            </td>
-                                            <!--end::Requisitions-->
-                                            <!--begin::Exp.-->
-                                            <td class="">
-                                                <div class="d-flex flex-column"> <span
-                                                        class="text-dark fw-bolder fs-6">30+</span> <span
-                                                        class="text-muted fw-bold text-muted d-block fs-7">27+</span>
-                                                </div>
-                                            </td>
-                                            <!--end::Exp.-->
-                                            <!--begin::Salary-->
-                                            <td class="">
-                                                <div class="d-flex flex-column"> <span
-                                                        class="text-dark fw-bolder fs-6">70 LPA</span> <span
-                                                        class="fw-bold d-block fs-7">67 LPA</span> </div>
-                                            </td>
-                                            <!--end::Salary-->
-                                            <!--begin::Location-->
-                                            <td class="">
-                                                <div class="d-flex flex-column">
-                                                    <span class="text-dark fw-bolder fs-6">Noida</span>
-                                                    <div class="d-flex align-items-center">
-                                                        <span class="fw-bold text-muted d-block fs-7">U.P</span>
-                                                        &nbsp;|&nbsp; <span
-                                                            class="fw-bold text-muted d-block fs-7">INDIA</span>
-                                                        <div> </div>
-                                            </td>
-                                            <!--end::Location-->
-                                            <!--begin::Status | Requisition ID-->
-                                            <td class="">
-                                                <div class="d-flex flex-column"> <a href="javascript:void(0);"
-                                                        class="fs-6 closed-bg text-hover-danger">Closed</a> <span
-                                                        class="fw-bold text-muted d-block fs-7">R3-Custom</span> </div>
-                                            </td>
-                                            <!--end::Status | Requisition ID-->
-                                            <!--begin::Date | Openings-->
-                                            <td class="">
-                                                <div class="d-flex flex-column"> <span
-                                                        class="text-dark fw-bolder fs-6">29-Aug-2021</span> <span
-                                                        class="text-muted fw-bold d-block fs-7">33</span> </div>
-                                            </td>
-                                            <!--end::Date | Openings-->
-                                            <!--begin::Hiring Manager | Contact Person-->
-                                            <td class="">
-                                                <div class="d-flex flex-column">
-                                                    <div class="symbol-group symbol-hover">
-                                                        <div class="symbol symbol-30 symbol-circle"
-                                                            data-bs-toggle="tooltip" data-bs-placement="top"
-                                                            title="Priyanka"> <img alt="Pic"
-                                                                src="https://preview.keenthemes.com//metronic/theme/html/demo1/dist/assets/media/users/300_20.jpg">
-                                                        </div>
-                                                        <div class="symbol symbol-30 symbol-circle symbol-light"
-                                                            data-bs-toggle="tooltip" data-bs-placement="top"
-                                                            title="" data-original-title="More users list..">
-                                                            <span class="symbol-label font-weight-bold">1+</span>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </td>
-                                            <!--end::Hiring Manager | Contact Person-->
-                                            <!--begin::Staffing Partners-->
-                                            <td class="">
-                                                <div class="d-flex flex-column">
-                                                    <div class="symbol-group symbol-hover">
-                                                        <div class="symbol symbol-30 symbol-circle"
-                                                            data-bs-toggle="tooltip" data-bs-placement="top"
-                                                            title="" data-original-title="One"> <img
-                                                                alt="Pic"
-                                                                src="https://preview.keenthemes.com//metronic/theme/html/demo1/dist/assets/media/users/300_1.jpg">
-                                                        </div>
-                                                        <div class="symbol symbol-30 symbol-circle"
-                                                            data-bs-toggle="tooltip" data-bs-placement="top"
-                                                            title="" data-original-title="Two"> <img
-                                                                alt="Pic"
-                                                                src="https://preview.keenthemes.com//metronic/theme/html/demo1/dist/assets/media/users/300_2.jpg">
-                                                        </div>
-                                                        <div class="symbol symbol-30 symbol-circle symbol-light"
-                                                            data-bs-toggle="tooltip" data-bs-placement="top"
-                                                            title="" data-original-title="More users list..">
-                                                            <span class="symbol-label font-weight-bold">2+</span>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </td>
-                                            <!--end::Staffing Partners-->
-                                            <!--begin::TOT-->
-                                            <td class="">
-                                                <div class="d-flex flex-column"> <a href="javascript:void(0);"
-                                                        class="text-dark fw-bolder fs-6 text-hover-primary">425</a> <a
-                                                        href="javascript:void(0);"
-                                                        class="text-muted fw-bold d-block fs-7 text-hover-primary">64</a>
-                                                </div>
-                                            </td>
-                                            <!--end::TOT-->
-                                            <!--begin::SOU-->
-                                            <td class="">
-                                                <div class="d-flex flex-column"> <a href="javascript:void(0);"
-                                                        class="text-dark fw-bolder fs-6 text-hover-primary">345</a>
-                                                </div>
-                                            </td>
-                                            <!--end::SOU-->
-                                            <!--begin::SCR-->
-                                            <td class="">
-                                                <div class="d-flex flex-column"> <a href="javascript:void(0);"
-                                                        class="text-dark fw-bolder fs-6 text-hover-primary">0</a>
-                                                </div>
-                                            </td>
-                                            <!--end::SCR-->
-                                            <!--begin::EVA-->
-                                            <td class="">
-                                                <div class="d-flex flex-column"> <a href="javascript:void(0);"
-                                                        class="text-dark fw-bolder fs-6 text-hover-primary">94</a>
-                                                </div>
-                                            </td>
-                                            <!--end::EVA-->
-                                            <!--begin::NEO-->
-                                            <td class="">
-                                                <div class="d-flex flex-column"> <a href="javascript:void(0);"
-                                                        class="text-dark fw-bolder fs-6 text-hover-primary">03</a>
-                                                </div>
-                                            </td>
-                                            <!--end::NEO-->
-                                            <!--begin::OFF-->
-                                            <td class="">
-                                                <div class="d-flex flex-column"> <a href="javascript:void(0);"
-                                                        class="text-dark fw-bolder fs-6 text-hover-primary">0</a>
-                                                </div>
-                                            </td>
-                                            <!--end::OFF-->
-                                            <!--begin::JOI-->
-                                            <td class="">
-                                                <div class="d-flex flex-column"> <a href="javascript:void(0);"
-                                                        class="text-dark fw-bolder fs-6 text-hover-primary">45</a>
-                                                </div>
-                                            </td>
-                                            <!--end::JOI-->
-                                            <!--begin::REJ-->
-                                            <td class="">
-                                                <div class="d-flex flex-column"> <a href="javascript:void(0);"
-                                                        class="text-dark fw-bolder fs-6 text-hover-primary">540</a>
-                                                </div>
-                                            </td>
-                                            <!--end::REJ-->
-                                        </tr>
-                                        <!--end::Table row-->
-                                    </tbody>
-                                    <!--end::Table body-->
-                                </table>
-                                <!--end::Table-->
-                            </div>
-                            <!--end::Custom Req. Content-->
+                            @endif
                         </div>
-                        <!--end::Custom Req.-->
-                        <div class="tab-pane fade" id="jobs" role="tabpanel">Jobs - Content</div>
-                        </div>
-                    <!--end::Requisitions Content-->
-                        </div></div>
-                </div>
+                    </div>
                 <!--end::Requisitions Content-->
             </div>
         </div>

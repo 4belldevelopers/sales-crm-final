@@ -1199,709 +1199,1027 @@
             font-weight: 400 !important;
           }
 
-          /* ── Top Action Header Bar (Direct Client: Follow Up ONLY) ── */
+          /* ── Modern Card + Sub-Card Design Standard (Direct Client - Metronic Aligned) ── */
+
+          /* TIER 1: Top Action Header Toolbar Card */
           .cd-top-bar {
-            background: #ffffff;
-            border-bottom: 1px solid #e2e8f0;
-            padding: 8px 16px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            position: sticky;
-            top: 0;
-            z-index: 20;
+            background: #ffffff !important;
+            border: 1px solid #e2e8f0 !important;
+            border-radius: 10px !important;
+            padding: 10px 16px !important;
+            margin: 0 0 12px 0 !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: space-between !important;
+            gap: 12px !important;
+            box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04) !important;
+            position: sticky !important;
+            top: 0 !important;
+            z-index: 25 !important;
           }
-          .cd-top-actions {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            flex-wrap: wrap;
+          .cd-top-bar-left {
+            display: flex !important;
+            align-items: center !important;
+            gap: 10px !important;
+            min-width: 0 !important;
+            flex: 1 !important;
           }
-          .cd-hdr-btn {
-            height: 30px !important;
+          .cd-top-title-wrap {
+            display: flex !important;
+            flex-direction: column !important;
+            gap: 3px !important;
+            min-width: 0 !important;
+          }
+          .cd-top-breadcrumbs {
+            display: flex !important;
+            align-items: center !important;
+            gap: 6px !important;
+            font-size: 11px !important;
+            color: #64748b !important;
+            flex-wrap: wrap !important;
+          }
+          .cd-breadcrumb-chip {
+            display: inline-flex !important;
+            align-items: center !important;
+            color: #64748b !important;
+            font-weight: 500 !important;
+          }
+          .cd-client-id-pill {
+            font-size: 10px !important;
+            font-weight: 700 !important;
+            color: #059669 !important;
+            background: #ecfdf5 !important;
+            border: 1px solid #a7f3d0 !important;
+            padding: 1px 6px !important;
+            border-radius: 4px !important;
+            font-family: monospace !important;
+          }
+          .cd-top-badge-row {
+            display: flex !important;
+            align-items: center !important;
+            gap: 6px !important;
+            flex-wrap: wrap !important;
+          }
+          .cd-client-type-badge-pill {
+            display: inline-flex !important;
+            align-items: center !important;
+            font-size: 10.5px !important;
+            font-weight: 600 !important;
+            padding: 2px 8px !important;
+            border-radius: 6px !important;
+            line-height: 1.2 !important;
+          }
+          .cd-client-type-badge-pill.direct {
+            background: #ecfdf5 !important;
+            color: #059669 !important;
+            border: 1px solid #a7f3d0 !important;
+          }
+          .cd-param-badge-pill {
+            display: inline-flex !important;
+            align-items: center !important;
+            font-size: 10.5px !important;
+            font-weight: 500 !important;
+            color: #475569 !important;
+            background: #f1f5f9 !important;
+            border: 1px solid #e2e8f0 !important;
+            padding: 2px 7px !important;
+            border-radius: 5px !important;
+          }
+          .cd-top-right-actions {
+            display: flex !important;
+            align-items: center !important;
+            gap: 8px !important;
+            flex-shrink: 0 !important;
+          }
+          .cd-hdr-action-btn {
+            height: 32px !important;
             padding: 0 13px !important;
             border-radius: 6px !important;
-            font-size: 12.5px !important;
-            font-weight: 500 !important;
+            font-size: 12px !important;
+            font-weight: 600 !important;
             display: inline-flex !important;
             align-items: center !important;
             gap: 6px !important;
             cursor: pointer !important;
             text-decoration: none !important;
             transition: all 0.15s ease-in-out !important;
-            line-height: 1 !important;
+            box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04) !important;
           }
-          .cd-hdr-btn-outline-green {
+          .cd-hdr-action-btn.followup {
             background: #ffffff !important;
-            border: 1.5px solid #10b981 !important;
-            color: #10b981 !important;
+            border: 1.5px solid #0284c7 !important;
+            color: #0284c7 !important;
           }
-          .cd-hdr-btn-outline-green:hover {
-            background: #ecfdf5 !important;
-            color: #059669 !important;
-            border-color: #059669 !important;
+          .cd-hdr-action-btn.followup:hover {
+            background: #f0f9ff !important;
+            border-color: #0369a1 !important;
+            color: #0369a1 !important;
           }
           .cd-hdr-btn-close {
-            width: 30px !important;
-            height: 30px !important;
+            width: 32px !important;
+            height: 32px !important;
             padding: 0 !important;
             border-radius: 6px !important;
-            background: transparent !important;
-            border: none !important;
+            background: #f8fafc !important;
+            border: 1px solid #e2e8f0 !important;
             color: #64748b !important;
             display: inline-flex !important;
             align-items: center !important;
             justify-content: center !important;
             cursor: pointer !important;
-            font-size: 14px !important;
+            font-size: 13px !important;
             transition: all 0.15s !important;
           }
           .cd-hdr-btn-close:hover {
             background: #f1f5f9 !important;
             color: #0f172a !important;
+            border-color: #cbd5e1 !important;
           }
 
-          /* ── Client Hero Banner: DIRECT CLIENT (Clean Neutral Enterprise UI) ── */
-          .cd-hero-banner-green {
+          /* HERO MASTER CARD: 3 Discrete Upper Sub-Cards + Discrete Bottom Activity Strip */
+          .cd-hero-card {
             background: #ffffff !important;
-            border-bottom: 1px solid #e2e8f0 !important;
-            padding: 14px 18px 12px;
+            border: 1px solid #e2e8f0 !important;
+            border-radius: 10px !important;
+            padding: 14px 16px 10px !important;
+            margin-bottom: 12px !important;
+            box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03) !important;
           }
-          .cd-hero-top {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 16px;
-            flex-wrap: wrap;
+          .cd-hero-subcards-grid {
+            display: grid !important;
+            grid-template-columns: 1.35fr 1.65fr 1fr !important;
+            gap: 12px !important;
+            align-items: center !important;
           }
-          .cd-hero-left {
-            display: flex;
-            align-items: center;
-            gap: 14px;
-            flex: 1;
-            min-width: 0;
+          @media (max-width: 1200px) {
+            .cd-hero-subcards-grid {
+              grid-template-columns: 1fr 1fr !important;
+            }
           }
-          .cd-avatar-wrap {
-            position: relative;
-            flex-shrink: 0;
-          }
-          .cd-avatar-circle {
-            width: 58px;
-            height: 58px;
-            border-radius: 50%;
-            background: #064e3b;
-            color: #ffffff;
-            border: 2px solid #ffffff;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 14px !important;
-            font-weight: 600;
-            overflow: hidden;
-          }
-          .cd-avatar-circle img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-          }
-          .cd-verified-badge {
-            position: absolute;
-            top: -2px;
-            right: -2px;
-            width: 18px;
-            height: 18px;
-            border-radius: 50%;
-            background: #10b981;
-            border: 2px solid #ffffff;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 1px 4px rgba(0,0,0,0.12);
-          }
-          .cd-verified-badge i {
-            font-size: 8.5px !important;
-            color: #ffffff;
-          }
-          .cd-hero-details {
-            flex: 1;
-            min-width: 0;
-          }
-          .cd-title-row {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            margin-bottom: 4px;
-            flex-wrap: wrap;
-          }
-          .cd-client-name {
-            font-size: 14px !important;
-            font-weight: 600 !important;
-            color: #0f172a !important;
-            letter-spacing: -0.2px;
-          }
-          .cd-pill-type-direct {
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-            background: #dcfce7;
-            color: #15803d;
-            border: 1px solid #bbf7d0;
-            font-size: 10.5px !important;
-            font-weight: 500 !important;
-            padding: 2.5px 8px;
-            border-radius: 4px;
-            line-height: 1.2;
-          }
-          .cd-meta-row {
-            display: flex;
-            align-items: center;
-            gap: 7px;
-            font-size: 11.5px !important;
-            font-weight: 400 !important;
-            color: #64748b;
-            margin-bottom: 6px;
-            flex-wrap: wrap;
-          }
-          .cd-meta-sep {
-            color: #cbd5e1;
-            font-size: 10px;
-          }
-          .cd-meta-link {
-            color: #059669 !important;
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-            gap: 3px;
-          }
-          .cd-meta-link:hover {
-            text-decoration: underline;
-          }
-          .cd-tag-row {
-            display: flex;
-            align-items: center;
-            gap: 5px;
-            flex-wrap: wrap;
-          }
-          .cd-tag-pill {
-            display: inline-flex;
-            align-items: center;
-            padding: 2.5px 9px;
-            background: #dcfce7;
-            border: 1px solid #bbf7d0;
-            color: #15803d;
-            font-size: 10.5px !important;
-            font-weight: 500 !important;
-            border-radius: 12px;
-            line-height: 1.2;
+          @media (max-width: 768px) {
+            .cd-hero-subcards-grid {
+              grid-template-columns: 1fr !important;
+            }
           }
 
-          /* ── Right Status Cards ── */
-          .cd-hero-right {
-            display: flex;
-            flex-direction: column;
-            align-items: flex-end;
-            gap: 6px;
-            flex-shrink: 0;
+          /* Sub-Card 1: Identity & Brand */
+          .cd-hero-subcard-identity {
+            display: flex !important;
+            align-items: center !important;
+            gap: 12px !important;
+            background: #f8fafc !important;
+            border: 1px solid #e2e8f0 !important;
+            border-radius: 8px !important;
+            padding: 10px 12px !important;
+            min-width: 0 !important;
           }
-          .cd-status-group {
-            display: flex;
-            align-items: center;
-            gap: 8px;
+          .cd-avatar-box {
+            position: relative !important;
+            width: 48px !important;
+            height: 48px !important;
+            border-radius: 8px !important;
+            background: #064e3b !important;
+            color: #ffffff !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            font-size: 14px !important;
+            font-weight: 700 !important;
+            flex-shrink: 0 !important;
+            overflow: visible !important;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06) !important;
           }
-          .cd-status-card {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            padding: 6px 12px;
-            border-radius: 8px;
-            min-width: 120px;
+          .cd-avatar-box img {
+            width: 100% !important;
+            height: 100% !important;
+            object-fit: cover !important;
+            border-radius: 8px !important;
           }
-          .cd-status-card-green {
-            background: #f0fdf4;
-            border: 1px solid #bbf7d0;
+          .cd-avatar-initials {
+            font-size: 14px !important;
+            font-weight: 700 !important;
+            color: #ffffff !important;
           }
-          .cd-status-card-teal {
-            background: #ecfdf5;
-            border: 1px solid #a7f3d0;
+          .cd-verified-seal {
+            position: absolute !important;
+            top: -4px !important;
+            right: -4px !important;
+            width: 16px !important;
+            height: 16px !important;
+            border-radius: 50% !important;
+            background: #10b981 !important;
+            border: 2px solid #ffffff !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            color: #ffffff !important;
+            font-size: 8px !important;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.15) !important;
           }
-          .cd-status-card-grey {
+          .cd-identity-meta {
+            min-width: 0 !important;
+            flex: 1 !important;
+          }
+          .cd-identity-title-row {
+            display: flex !important;
+            align-items: center !important;
+            gap: 6px !important;
+            margin-bottom: 2px !important;
+            flex-wrap: wrap !important;
+          }
+          .cd-identity-name {
+            font-size: 14px !important;
+            font-weight: 700 !important;
+            color: #0f172a !important;
+            margin: 0 !important;
+            line-height: 1.2 !important;
+            letter-spacing: -0.2px !important;
+            white-space: nowrap !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+          }
+          .cd-type-badge-tag {
+            font-size: 9.5px !important;
+            font-weight: 600 !important;
+            padding: 1.5px 6px !important;
+            border-radius: 4px !important;
+            line-height: 1.2 !important;
+            text-transform: uppercase !important;
+            letter-spacing: 0.3px !important;
+          }
+          .cd-type-badge-tag.direct {
+            background: #ecfdf5 !important;
+            color: #059669 !important;
+            border: 1px solid #a7f3d0 !important;
+          }
+          .cd-identity-subtitle {
+            font-size: 11px !important;
+            color: #64748b !important;
+            line-height: 1.2 !important;
+          }
+
+          /* Sub-Card 2: Discrete Parameter Chips */
+          .cd-hero-subcard-params {
+            display: flex !important;
+            flex-wrap: wrap !important;
+            gap: 6px !important;
+            background: #f8fafc !important;
+            border: 1px solid #e2e8f0 !important;
+            border-radius: 8px !important;
+            padding: 10px 12px !important;
+          }
+          .cd-hero-param-chip {
+            display: inline-flex !important;
+            align-items: center !important;
+            gap: 5px !important;
+            background: #ffffff !important;
+            border: 1px solid #e2e8f0 !important;
+            border-radius: 6px !important;
+            padding: 3px 8px !important;
+            font-size: 11px !important;
+            color: #334155 !important;
+            font-weight: 500 !important;
+          }
+          .cd-hero-param-chip.link {
+            color: #059669 !important;
+            text-decoration: none !important;
+            cursor: pointer !important;
+          }
+          .cd-hero-param-chip.link:hover {
+            border-color: #059669 !important;
+            text-decoration: underline !important;
+          }
+
+          /* Sub-Card 3: Activity & Pulse Status */
+          .cd-hero-subcard-activity {
+            display: flex !important;
+            flex-direction: column !important;
+            gap: 6px !important;
+            background: #f8fafc !important;
+            border: 1px solid #e2e8f0 !important;
+            border-radius: 8px !important;
+            padding: 10px 12px !important;
+          }
+          .cd-status-pulse-badge {
+            display: flex !important;
+            align-items: center !important;
+            gap: 8px !important;
+            border-radius: 6px !important;
+            padding: 4px 8px !important;
+          }
+          .cd-status-pulse-badge.active {
+            background: #f0fdf4 !important;
+            border: 1px solid #bbf7d0 !important;
+          }
+          .cd-status-pulse-badge.inactive {
             background: #f8fafc !important;
             border: 1px solid #e2e8f0 !important;
           }
-          .cd-status-card-title {
-            font-size: 12px !important;
-            font-weight: 600 !important;
-            line-height: 1.2;
+          .cd-pulse-indicator {
+            width: 7px !important;
+            height: 7px !important;
+            border-radius: 50% !important;
+            position: relative !important;
+            flex-shrink: 0 !important;
           }
-          .cd-status-card-sub {
-            font-size: 11px !important;
-            font-weight: 400 !important;
-            color: #64748b;
-            line-height: 1.1;
+          .cd-pulse-indicator.pulse-green {
+            background: #16a34a !important;
           }
-          .cd-pulse-dot {
-            width: 7px;
-            height: 7px;
-            border-radius: 50%;
-            position: relative;
-            flex-shrink: 0;
+          .cd-pulse-indicator.pulse-green::after {
+            content: "" !important;
+            position: absolute !important;
+            inset: -3px !important;
+            border-radius: 50% !important;
+            border: 1.5px solid #16a34a !important;
+            animation: cdpulse 2s infinite !important;
           }
-          .cd-pulse-green { background: #16a34a; }
-          .cd-pulse-green::after {
-            content: "";
-            position: absolute;
-            inset: -3px;
-            border-radius: 50%;
-            border: 1.5px solid #16a34a;
-            animation: cdpulse 2s infinite;
-          }
-          .cd-pulse-teal { background: #059669; }
-          .cd-pulse-teal::after {
-            content: "";
-            position: absolute;
-            inset: -3px;
-            border-radius: 50%;
-            border: 1.5px solid #059669;
-            animation: cdpulse 2s infinite;
-          }
-          .cd-pulse-grey {
+          .cd-pulse-indicator.pulse-grey {
             background: #94a3b8 !important;
           }
-          .cd-pulse-grey::after {
-            display: none !important;
+          .cd-status-text-wrap {
+            display: flex !important;
+            flex-direction: column !important;
+            line-height: 1.15 !important;
           }
-          @keyframes cdpulse {
-            0%, 100% { transform: scale(1); opacity: 1; }
-            50% { transform: scale(1.4); opacity: 0; }
+          .cd-status-main-text {
+            font-size: 11.5px !important;
+            font-weight: 700 !important;
+            color: #15803d !important;
           }
-          .cd-hero-meta-time {
-            font-size: 11px !important;
-            font-weight: 400 !important;
-            color: #64748b;
+          .cd-status-pulse-badge.inactive .cd-status-main-text {
+            color: #64748b !important;
+          }
+          .cd-status-sub-text {
+            font-size: 10px !important;
+            color: #16a34a !important;
+            font-weight: 500 !important;
+          }
+          .cd-status-pulse-badge.inactive .cd-status-sub-text {
+            color: #94a3b8 !important;
+          }
+          .cd-onboarding-chip {
+            font-size: 10.5px !important;
+            color: #64748b !important;
+            display: flex !important;
+            align-items: center !important;
           }
 
-          /* ── 5 Metric KPI Stat Cards Row ── */
+          /* Discrete Bottom Activity Strip */
+          .cd-hero-activity-strip {
+            display: flex !important;
+            align-items: center !important;
+            justify-content: space-between !important;
+            gap: 12px !important;
+            margin-top: 10px !important;
+            padding-top: 8px !important;
+            border-top: 1px solid #f1f5f9 !important;
+            font-size: 11px !important;
+            color: #64748b !important;
+          }
+          .cd-activity-strip-left {
+            display: flex !important;
+            align-items: center !important;
+            gap: 6px !important;
+          }
+          .cd-activity-strip-label {
+            font-weight: 600 !important;
+            color: #475569 !important;
+          }
+          .cd-activity-strip-text {
+            color: #64748b !important;
+          }
+          .cd-activity-strip-badge {
+            font-size: 10.5px !important;
+            font-weight: 600 !important;
+            color: #059669 !important;
+            background: #ecfdf5 !important;
+            border: 1px solid #a7f3d0 !important;
+            padding: 1.5px 7px !important;
+            border-radius: 4px !important;
+          }
+
+          /* 5 METRIC KPI SUB-CARDS GRID (Hover Lift, Active Border Transition) */
           .cd-kpi-grid {
-            display: grid;
-            grid-template-columns: repeat(5, 1fr);
-            gap: 10px;
-            padding: 12px 18px;
-            background: #ffffff;
-            border-bottom: 1px solid #f1f5f9;
+            display: grid !important;
+            grid-template-columns: repeat(5, 1fr) !important;
+            gap: 10px !important;
+            margin-bottom: 12px !important;
+          }
+          @media (max-width: 992px) {
+            .cd-kpi-grid {
+              grid-template-columns: repeat(3, 1fr) !important;
+            }
+          }
+          @media (max-width: 576px) {
+            .cd-kpi-grid {
+              grid-template-columns: repeat(2, 1fr) !important;
+            }
           }
           .cd-kpi-card {
-            background: #ffffff;
-            border: 1px solid #eef2f6;
-            border-radius: 8px;
-            padding: 10px 12px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
-            transition: all 0.15s ease-in-out;
-            cursor: pointer;
+            background: #ffffff !important;
+            border: 1px solid #e2e8f0 !important;
+            border-radius: 10px !important;
+            padding: 11px 13px !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: space-between !important;
+            gap: 8px !important;
+            box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03) !important;
+            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+            cursor: pointer !important;
+            user-select: none !important;
           }
           .cd-kpi-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-            border-color: #cbd5e1;
+            transform: translateY(-2px) !important;
+            box-shadow: 0 4px 12px rgba(15, 23, 42, 0.06) !important;
+            border-color: #009ef7 !important;
           }
-          .cd-kpi-icon {
-            width: 34px;
-            height: 34px;
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+          .cd-kpi-card-left {
+            display: flex !important;
+            align-items: center !important;
+            gap: 10px !important;
+            min-width: 0 !important;
+          }
+          .cd-kpi-icon-square {
+            width: 36px !important;
+            height: 36px !important;
+            border-radius: 8px !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
             font-size: 13.5px !important;
-            flex-shrink: 0;
+            flex-shrink: 0 !important;
           }
-          .cd-kpi-icon-blue   { background: #eff6ff; color: #2563eb; }
-          .cd-kpi-icon-purple { background: #f5f3ff; color: #7c3aed; }
-          .cd-kpi-icon-amber  { background: #fffbeb; color: #d97706; }
-          .cd-kpi-icon-orange { background: #fff7ed; color: #ea580c; }
-          .cd-kpi-icon-green  { background: #f0fdf4; color: #16a34a; }
-          .cd-kpi-num {
-            font-size: 14px !important;
-            font-weight: 700 !important;
-            color: #0f172a;
-            line-height: 1.1;
-          }
-          .cd-kpi-lbl {
-            font-size: 12px !important;
-            font-weight: 500 !important;
-            color: #1e293b;
-            line-height: 1.2;
-            margin-top: 1px;
-          }
-          .cd-kpi-desc {
-            font-size: 11px !important;
-            font-weight: 400 !important;
-            color: #94a3b8;
-            line-height: 1.1;
-            margin-top: 1px;
-          }
-          .cd-kpi-arrow {
-            font-size: 11px !important;
-            color: #cbd5e1;
-            flex-shrink: 0;
-          }
+          .cd-kpi-icon-square.blue   { background: #eff6ff !important; color: #2563eb !important; border: 1px solid #dbeafe !important; }
+          .cd-kpi-icon-square.purple { background: #f5f3ff !important; color: #7c3aed !important; border: 1px solid #ede9fe !important; }
+          .cd-kpi-icon-square.amber  { background: #fffbeb !important; color: #d97706 !important; border: 1px solid #fef3c7 !important; }
+          .cd-kpi-icon-square.orange { background: #fff7ed !important; color: #ea580c !important; border: 1px solid #ffedd5 !important; }
+          .cd-kpi-icon-square.green  { background: #f0fdf4 !important; color: #16a34a !important; border: 1px solid #dcfce7 !important; }
 
-          /* ── Tab Navigation Bar ── */
-          .cd-tabs-bar {
-            display: flex;
-            align-items: center;
-            gap: 2px;
-            padding: 0 18px;
-            background: #ffffff;
-            border-bottom: 1px solid #e2e8f0;
-            overflow-x: auto;
-            white-space: nowrap;
+          .cd-kpi-info {
+            display: flex !important;
+            flex-direction: column !important;
+            min-width: 0 !important;
           }
-          .cd-tabs-bar .nav-link {
-            padding: 10px 15px !important;
-            border: none !important;
-            border-bottom: 2px solid transparent !important;
-            border-radius: 0 !important;
-            font-size: 12.5px !important;
+          .cd-kpi-val {
+            font-size: 14.5px !important;
+            font-weight: 700 !important;
+            color: #0f172a !important;
+            line-height: 1.1 !important;
+          }
+          .cd-kpi-label {
+            font-size: 11.5px !important;
             font-weight: 500 !important;
             color: #64748b !important;
+            line-height: 1.2 !important;
+            margin-top: 2px !important;
+            white-space: nowrap !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+          }
+          .cd-kpi-arrow-subcard {
+            width: 22px !important;
+            height: 22px !important;
+            border-radius: 5px !important;
+            background: #f8fafc !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            font-size: 9px !important;
+            color: #94a3b8 !important;
+            flex-shrink: 0 !important;
+            transition: all 0.15s !important;
+          }
+          .cd-kpi-card:hover .cd-kpi-arrow-subcard {
+            background: #009ef7 !important;
+            color: #ffffff !important;
+          }
+
+          /* TIER 2: Dedicated Pure White Sub-Tabs Card */
+          .cd-drawer-tabs-card {
+            background: #ffffff !important;
+            border: 1px solid #e2e8f0 !important;
+            border-radius: 10px !important;
+            padding: 6px 10px !important;
+            margin-bottom: 12px !important;
+            box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03) !important;
+          }
+          .cd-drawer-tabs-list {
+            display: flex !important;
+            align-items: center !important;
+            gap: 4px !important;
+            overflow-x: auto !important;
+            white-space: nowrap !important;
+            padding: 2px !important;
+          }
+          .cd-tab-pill-btn {
             display: inline-flex !important;
             align-items: center !important;
             gap: 7px !important;
-            background: transparent !important;
+            padding: 7px 13px !important;
+            border-radius: 7px !important;
+            font-size: 12px !important;
+            font-weight: 500 !important;
+            color: #64748b !important;
+            text-decoration: none !important;
             transition: all 0.15s ease-in-out !important;
+            border: 1px solid transparent !important;
             cursor: pointer !important;
+            background: transparent !important;
           }
-          .cd-tabs-bar .nav-link i {
-            font-size: 12.5px !important;
+          .cd-tab-pill-btn i {
+            font-size: 12px !important;
+            color: #64748b !important;
+            transition: color 0.15s !important;
           }
-          .cd-tabs-bar .nav-link:hover {
-            color: #10b981 !important;
-            background: rgba(16, 185, 129, 0.04) !important;
+          .cd-tab-pill-btn:hover {
+            color: #009ef7 !important;
+            background: rgba(0, 158, 247, 0.04) !important;
           }
-          .cd-tabs-bar .nav-link.active {
-            color: #059669 !important;
-            border-bottom: 2px solid #10b981 !important;
-            font-weight: 500 !important;
-            background: #ecfdf5 !important;
-            border-radius: 6px 6px 0 0 !important;
+          .cd-tab-pill-btn:hover i {
+            color: #009ef7 !important;
           }
-          /* Recent Activity Tab: EXPLICITLY BLACK */
-          .cd-tabs-bar .nav-link.cd-tab-black {
-            color: #0f172a !important;
-            font-weight: 500 !important;
+          .cd-tab-pill-btn.active {
+            color: #009ef7 !important;
+            background: rgba(0, 158, 247, 0.08) !important;
+            border-color: rgba(0, 158, 247, 0.25) !important;
+            font-weight: 600 !important;
           }
-          .cd-tabs-bar .nav-link.cd-tab-black i {
-            color: #0f172a !important;
+          .cd-tab-pill-btn.active i {
+            color: #009ef7 !important;
           }
-          .cd-tabs-bar .nav-link.cd-tab-black.active {
-            color: #0f172a !important;
-            border-bottom: 2px solid #0f172a !important;
-            font-weight: 500 !important;
-            background: #f1f5f9 !important;
-            border-radius: 6px 6px 0 0 !important;
-          }
-          .cd-tab-badge {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            min-width: 18px;
-            height: 16px;
-            padding: 0 5px;
-            background: #10b981;
-            color: #ffffff;
+          .cd-tab-badge-pill {
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
             font-size: 10px !important;
-            font-weight: 600;
-            border-radius: 8px;
-            line-height: 1;
+            font-weight: 700 !important;
+            padding: 1.5px 6px !important;
+            border-radius: 999px !important;
+            background: #eff6ff !important;
+            color: #2563eb !important;
+            border: 1px solid #bfdbfe !important;
+            line-height: 1 !important;
+          }
+          .cd-tab-pill-btn.active .cd-tab-badge-pill {
+            background: #009ef7 !important;
+            color: #ffffff !important;
+            border-color: #009ef7 !important;
           }
 
-          /* ── Overview 2-Column Grid ── */
-          .cd-grid-2col {
-            display: grid;
-            grid-template-columns: 1.35fr 0.85fr;
-            gap: 14px;
-            padding: 14px 18px 20px;
-            align-items: start;
-            background: #f8fafc;
+          /* TIER 3: Overview Discrete Sub-Cards Stream */
+          .cd-overview-subcards-grid {
+            display: grid !important;
+            grid-template-columns: 1.35fr 1fr !important;
+            gap: 14px !important;
+            align-items: start !important;
           }
           @media (max-width: 1024px) {
-            .cd-grid-2col {
-              grid-template-columns: 1fr;
+            .cd-overview-subcards-grid {
+              grid-template-columns: 1fr !important;
             }
           }
-          .cd-card-panel {
-            background: #ffffff;
-            border: 1px solid #eef2f6;
-            border-radius: 8px;
-            padding: 14px 16px;
-            margin-bottom: 14px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+          .cd-overview-col-left, .cd-overview-col-right {
+            display: flex !important;
+            flex-direction: column !important;
+            gap: 12px !important;
           }
-          .cd-card-panel:last-child {
-            margin-bottom: 0;
+          .cd-master-subcard {
+            background: #ffffff !important;
+            border: 1px solid #e2e8f0 !important;
+            border-radius: 10px !important;
+            padding: 14px 16px !important;
+            box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03) !important;
           }
-          .cd-card-hdr {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 12px;
+          .cd-subcard-header {
+            display: flex !important;
+            align-items: center !important;
+            justify-content: space-between !important;
+            margin-bottom: 12px !important;
+            padding-bottom: 8px !important;
+            border-bottom: 1px solid #f1f5f9 !important;
           }
-          .cd-card-hdr-left {
-            display: flex;
-            align-items: center;
-            gap: 7px;
+          .cd-subcard-header-left {
+            display: flex !important;
+            align-items: center !important;
+            gap: 8px !important;
           }
-          .cd-card-hdr-title {
-            font-size: 13.5px !important;
+          .cd-subcard-header-icon {
+            width: 26px !important;
+            height: 26px !important;
+            border-radius: 6px !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            font-size: 11px !important;
+          }
+          .cd-subcard-header-icon.blue   { background: #eff6ff !important; color: #2563eb !important; }
+          .cd-subcard-header-icon.amber  { background: #fffbeb !important; color: #d97706 !important; }
+          .cd-subcard-header-icon.indigo { background: #eef2ff !important; color: #4f46e5 !important; }
+          .cd-subcard-header-icon.teal   { background: #f0fdf4 !important; color: #059669 !important; }
+          .cd-subcard-header-icon.pink   { background: #fdf2f8 !important; color: #db2777 !important; }
+
+          .cd-subcard-title {
+            font-size: 13px !important;
+            font-weight: 700 !important;
+            color: #0f172a !important;
+            margin: 0 !important;
+          }
+          .cd-subcard-action-link {
+            font-size: 11.5px !important;
+            font-weight: 600 !important;
+            color: #059669 !important;
+            text-decoration: none !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            gap: 3px !important;
+          }
+          .cd-subcard-action-link:hover {
+            text-decoration: underline !important;
+          }
+          .cd-about-text-content {
+            font-size: 12px !important;
+            line-height: 1.65 !important;
+            color: #475569 !important;
+          }
+
+          /* Recent Activity Timeline Stream */
+          .cd-timeline-subcards-stream {
+            display: flex !important;
+            flex-direction: column !important;
+            gap: 10px !important;
+          }
+          .cd-timeline-item-subcard {
+            display: flex !important;
+            align-items: flex-start !important;
+            gap: 10px !important;
+            background: #f8fafc !important;
+            border: 1px solid #eef2f6 !important;
+            border-radius: 8px !important;
+            padding: 9px 12px !important;
+            transition: all 0.15s !important;
+          }
+          .cd-timeline-item-subcard:hover {
+            border-color: #cbd5e1 !important;
+            background: #ffffff !important;
+          }
+          .cd-timeline-dot {
+            width: 26px !important;
+            height: 26px !important;
+            border-radius: 6px !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            font-size: 11px !important;
+            flex-shrink: 0 !important;
+            margin-top: 2px !important;
+          }
+          .cd-timeline-dot.green  { background: #dcfce7 !important; color: #16a34a !important; }
+          .cd-timeline-dot.purple { background: #f3e8ff !important; color: #7c3aed !important; }
+          .cd-timeline-dot.orange { background: #ffedd5 !important; color: #ea580c !important; }
+          .cd-timeline-dot.blue   { background: #e0f2fe !important; color: #0284c7 !important; }
+
+          .cd-timeline-body {
+            flex: 1 !important;
+            min-width: 0 !important;
+          }
+          .cd-timeline-title {
+            font-size: 12px !important;
+            font-weight: 600 !important;
+            color: #0f172a !important;
+            line-height: 1.25 !important;
+          }
+          .cd-timeline-subtext {
+            font-size: 11px !important;
+            color: #64748b !important;
+            margin-top: 1px !important;
+          }
+          .cd-timeline-meta-wrap {
+            display: flex !important;
+            flex-direction: column !important;
+            align-items: flex-end !important;
+            gap: 3px !important;
+            flex-shrink: 0 !important;
+          }
+          .cd-timeline-badge {
+            font-size: 10px !important;
+            font-weight: 600 !important;
+            padding: 1.5px 6px !important;
+            border-radius: 4px !important;
+            white-space: nowrap !important;
+          }
+          .cd-timeline-badge.green  { background: #dcfce7 !important; color: #15803d !important; }
+          .cd-timeline-badge.amber  { background: #fef3c7 !important; color: #b45309 !important; }
+          .cd-timeline-badge.orange { background: #ffedd5 !important; color: #c2410c !important; }
+          .cd-timeline-badge.blue   { background: #e0f2fe !important; color: #0284c7 !important; }
+          .cd-timeline-timestamp {
+            font-size: 10px !important;
+            color: #94a3b8 !important;
+            white-space: nowrap !important;
+          }
+
+          /* Client Information Discrete 2-Column Mini Cards */
+          .cd-info-subcards-grid {
+            display: grid !important;
+            grid-template-columns: 1fr 1fr !important;
+            gap: 8px !important;
+          }
+          .cd-info-subcard-mini {
+            background: #f8fafc !important;
+            border: 1px solid #eef2f6 !important;
+            border-radius: 7px !important;
+            padding: 7px 10px !important;
+            display: flex !important;
+            flex-direction: column !important;
+            gap: 2px !important;
+          }
+          .cd-mini-label {
+            font-size: 10px !important;
+            font-weight: 600 !important;
+            text-transform: uppercase !important;
+            letter-spacing: 0.3px !important;
+            color: #94a3b8 !important;
+          }
+          .cd-mini-value {
+            font-size: 12px !important;
+            font-weight: 600 !important;
+            color: #0f172a !important;
+            word-break: break-word !important;
+          }
+          .cd-mini-value a {
+            color: #059669 !important;
+            text-decoration: none !important;
+          }
+          .cd-mini-value a:hover {
+            text-decoration: underline !important;
+          }
+
+          /* Primary SPOC Master Card */
+          .cd-contact-master-subcard {
+            background: #f8fafc !important;
+            border: 1px solid #eef2f6 !important;
+            border-radius: 8px !important;
+            padding: 10px 12px !important;
+          }
+          .cd-contact-master-top {
+            display: flex !important;
+            align-items: center !important;
+            gap: 10px !important;
+            margin-bottom: 8px !important;
+          }
+          .cd-contact-avatar-box {
+            width: 38px !important;
+            height: 38px !important;
+            border-radius: 8px !important;
+            background: #dcfce7 !important;
+            border: 1px solid #bbf7d0 !important;
+            color: #15803d !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            font-size: 13px !important;
+            font-weight: 700 !important;
+            flex-shrink: 0 !important;
+          }
+          .cd-contact-master-info {
+            flex: 1 !important;
+            min-width: 0 !important;
+          }
+          .cd-contact-master-name-row {
+            display: flex !important;
+            align-items: center !important;
+            gap: 6px !important;
+          }
+          .cd-contact-master-name {
+            font-size: 12.5px !important;
+            font-weight: 700 !important;
+            color: #0f172a !important;
+          }
+          .cd-contact-primary-tag {
+            font-size: 9.5px !important;
+            font-weight: 600 !important;
+            background: #ecfdf5 !important;
+            color: #059669 !important;
+            border: 1px solid #a7f3d0 !important;
+            padding: 1px 5px !important;
+            border-radius: 4px !important;
+          }
+          .cd-contact-master-role {
+            font-size: 11px !important;
+            color: #64748b !important;
+          }
+          .cd-contact-channels-grid {
+            display: grid !important;
+            grid-template-columns: 1fr !important;
+            gap: 5px !important;
+            margin-top: 6px !important;
+            padding-top: 6px !important;
+            border-top: 1px solid #eef2f6 !important;
+          }
+          .cd-contact-channel-item {
+            display: flex !important;
+            align-items: center !important;
+            gap: 7px !important;
+            font-size: 11.5px !important;
+            color: #334155 !important;
+            text-decoration: none !important;
+            padding: 3px 6px !important;
+            border-radius: 5px !important;
+            transition: background 0.15s !important;
+          }
+          .cd-contact-channel-item:hover {
+            background: #ffffff !important;
+            color: #059669 !important;
+          }
+          .cd-contact-channel-icon {
+            width: 20px !important;
+            height: 20px !important;
+            border-radius: 4px !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            font-size: 10px !important;
+            flex-shrink: 0 !important;
+          }
+          .cd-contact-channel-icon.email { background: #eff6ff !important; color: #2563eb !important; }
+          .cd-contact-channel-icon.phone { background: #f0fdf4 !important; color: #16a34a !important; }
+
+          /* Client Services Tag Cloud */
+          .cd-tag-cloud-subcard {
+            display: flex !important;
+            flex-wrap: wrap !important;
+            gap: 5px !important;
+          }
+          .cd-service-tag-pill {
+            display: inline-flex !important;
+            align-items: center !important;
+            font-size: 11px !important;
+            font-weight: 500 !important;
+            color: #15803d !important;
+            background: #dcfce7 !important;
+            border: 1px solid #bbf7d0 !important;
+            padding: 2.5px 8px !important;
+            border-radius: 12px !important;
+          }
+
+          /* TAB 2: RECENT ACTIVITY - 3-Tier Activity & Audit Log Standard */
+          .cd-activity-header-card {
+            background: #ffffff !important;
+            border: 1px solid #e2e8f0 !important;
+            border-radius: 10px !important;
+            padding: 14px 18px !important;
+            margin-bottom: 12px !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: space-between !important;
+            box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03) !important;
+          }
+          .cd-activity-header-left {
+            display: flex !important;
+            align-items: center !important;
+            gap: 12px !important;
+          }
+          .cd-activity-icon-box {
+            width: 38px !important;
+            height: 38px !important;
+            border-radius: 8px !important;
+            background: #fffbeb !important;
+            border: 1px solid #fef3c7 !important;
+            color: #d97706 !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            font-size: 15px !important;
+            flex-shrink: 0 !important;
+          }
+          .cd-activity-main-title {
+            font-size: 14px !important;
+            font-weight: 700 !important;
+            color: #0f172a !important;
+            margin: 0 !important;
+          }
+          .cd-activity-sub-title {
+            font-size: 11.5px !important;
+            color: #64748b !important;
+            margin: 2px 0 0 0 !important;
+          }
+          .cd-activity-status-chip {
+            font-size: 11px !important;
+            font-weight: 600 !important;
+            color: #15803d !important;
+            background: #f0fdf4 !important;
+            border: 1px solid #bbf7d0 !important;
+            padding: 3px 8px !important;
+            border-radius: 6px !important;
+          }
+          .cd-activity-filter-card {
+            background: #ffffff !important;
+            border: 1px solid #e2e8f0 !important;
+            border-radius: 10px !important;
+            padding: 8px 12px !important;
+            margin-bottom: 12px !important;
+            box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03) !important;
+          }
+          .cd-activity-filter-list {
+            display: flex !important;
+            gap: 6px !important;
+            flex-wrap: wrap !important;
+          }
+          .cd-act-filter-btn {
+            background: transparent !important;
+            border: 1px solid #e2e8f0 !important;
+            border-radius: 6px !important;
+            padding: 5px 11px !important;
+            font-size: 11.5px !important;
+            font-weight: 500 !important;
+            color: #475569 !important;
+            cursor: pointer !important;
+            transition: all 0.15s !important;
+          }
+          .cd-act-filter-btn:hover {
+            background: #f8fafc !important;
+            border-color: #cbd5e1 !important;
+          }
+          .cd-act-filter-btn.active {
+            background: #009ef7 !important;
+            border-color: #009ef7 !important;
+            color: #ffffff !important;
+            font-weight: 600 !important;
+          }
+          .cd-timeline-stream-card {
+            background: #ffffff !important;
+            border: 1px solid #e2e8f0 !important;
+            border-radius: 10px !important;
+            padding: 16px 20px !important;
+            box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03) !important;
+            display: flex !important;
+            flex-direction: column !important;
+            gap: 14px !important;
+          }
+          .cd-stream-node {
+            display: flex !important;
+            align-items: flex-start !important;
+            gap: 12px !important;
+            padding-bottom: 12px !important;
+            border-bottom: 1px dashed #f1f5f9 !important;
+          }
+          .cd-stream-node:last-child {
+            border-bottom: none !important;
+            padding-bottom: 0 !important;
+          }
+          .cd-stream-node-dot {
+            width: 32px !important;
+            height: 32px !important;
+            border-radius: 8px !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            font-size: 12px !important;
+            flex-shrink: 0 !important;
+          }
+          .cd-stream-node-dot.green  { background: #dcfce7 !important; color: #16a34a !important; }
+          .cd-stream-node-dot.purple { background: #f3e8ff !important; color: #7c3aed !important; }
+          .cd-stream-node-dot.blue   { background: #e0f2fe !important; color: #0284c7 !important; }
+          .cd-stream-node-content {
+            flex: 1 !important;
+            min-width: 0 !important;
+          }
+          .cd-stream-node-header {
+            display: flex !important;
+            align-items: center !important;
+            justify-content: space-between !important;
+            gap: 8px !important;
+          }
+          .cd-stream-node-title {
+            font-size: 12.5px !important;
             font-weight: 600 !important;
             color: #0f172a !important;
           }
-          .cd-card-hdr-link {
-            font-size: 12px !important;
-            color: #059669 !important;
-            font-weight: 500 !important;
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-            cursor: pointer;
-          }
-          .cd-card-hdr-link:hover {
-            text-decoration: underline;
-          }
-          .cd-about-body {
-            font-size: 12px !important;
-            font-weight: 400 !important;
-            line-height: 1.65 !important;
-            color: #475569;
-          }
-
-          /* ── Recent Activity Timeline ── */
-          .cd-timeline-list {
-            position: relative;
-            padding-left: 28px;
-          }
-          .cd-timeline-list::before {
-            content: "";
-            position: absolute;
-            top: 14px;
-            bottom: 14px;
-            left: 13px;
-            width: 1.5px;
-            background: #e2e8f0;
-          }
-          .cd-tl-item {
-            position: relative;
-            display: flex;
-            align-items: flex-start;
-            justify-content: space-between;
-            gap: 12px;
-            padding: 8px 0;
-            border-bottom: 1px dashed #f1f5f9;
-          }
-          .cd-tl-item:last-child {
-            border-bottom: none;
-            padding-bottom: 0;
-          }
-          .cd-tl-item:first-child {
-            padding-top: 0;
-          }
-          .cd-tl-dot {
-            position: absolute;
-            left: -28px;
-            top: 9px;
-            width: 26px;
-            height: 26px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 11.5px !important;
-            border: 2px solid #ffffff;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.06);
-            z-index: 1;
-          }
-          .cd-tl-dot-green  { background: #dcfce7; color: #16a34a; }
-          .cd-tl-dot-purple { background: #f3e8ff; color: #7c3aed; }
-          .cd-tl-dot-orange { background: #ffedd5; color: #ea580c; }
-          .cd-tl-dot-blue   { background: #e0f2fe; color: #0284c7; }
-          .cd-tl-info {
-            flex: 1;
-            min-width: 0;
-          }
-          .cd-tl-heading {
-            font-size: 12.5px !important;
-            font-weight: 600 !important;
-            color: #0f172a;
-            line-height: 1.25;
-          }
-          .cd-tl-sub {
+          .cd-stream-node-time {
             font-size: 11px !important;
-            font-weight: 400 !important;
-            color: #64748b;
-            line-height: 1.25;
-            margin-top: 2px;
+            color: #94a3b8 !important;
           }
-          .cd-tl-role {
-            font-size: 12px !important;
-            font-weight: 500 !important;
-            color: #334155;
-            min-width: 120px;
-            text-align: left;
-          }
-          .cd-tl-meta-right {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            flex-shrink: 0;
-          }
-          .cd-tl-time {
-            font-size: 11px !important;
-            font-weight: 400 !important;
-            color: #94a3b8;
-            white-space: nowrap;
-          }
-          .cd-tl-badge {
-            font-size: 10.5px !important;
-            font-weight: 500 !important;
-            padding: 2.5px 8px;
-            border-radius: 12px;
-            line-height: 1.2;
-            white-space: nowrap;
-          }
-          .cd-tl-badge-blue   { background: #e0f2fe; color: #0284c7; }
-          .cd-tl-badge-amber  { background: #fef3c7; color: #b45309; }
-          .cd-tl-badge-orange { background: #ffedd5; color: #c2410c; }
-          .cd-tl-badge-green  { background: #dcfce7; color: #15803d; }
-
-          /* ── Client Information Rows ── */
-          .cd-kv-row {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 7px 0;
-            border-bottom: 1px dashed #f1f5f9;
-            gap: 12px;
-          }
-          .cd-kv-row:last-child {
-            border-bottom: none;
-            padding-bottom: 0;
-          }
-          .cd-kv-lbl {
+          .cd-stream-node-desc {
             font-size: 11.5px !important;
-            color: #64748b;
-            font-weight: 400 !important;
-            flex-shrink: 0;
+            color: #64748b !important;
+            margin: 3px 0 6px 0 !important;
+            line-height: 1.4 !important;
           }
-          .cd-kv-val {
-            font-size: 12px !important;
-            color: #0f172a;
-            font-weight: 500 !important;
-            text-align: right;
-            word-break: break-word;
+          .cd-stream-node-tags {
+            display: flex !important;
+            gap: 6px !important;
+            flex-wrap: wrap !important;
           }
-          .cd-kv-val a {
-            color: #059669;
-            text-decoration: none;
-          }
-          .cd-kv-val a:hover {
-            text-decoration: underline;
-          }
-
-          /* ── Primary Contact Card ── */
-          .cd-contact-preview {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-          }
-          .cd-contact-avatar {
-            width: 42px;
-            height: 42px;
-            border-radius: 50%;
-            background: #dcfce7;
-            color: #15803d;
-            font-size: 13px !important;
+          .cd-stream-tag {
+            font-size: 10px !important;
             font-weight: 600 !important;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-shrink: 0;
-            border: 1.5px solid #bbf7d0;
+            padding: 1px 6px !important;
+            border-radius: 4px !important;
           }
-          .cd-contact-meta {
-            flex: 1;
-            min-width: 0;
-          }
-          .cd-contact-name-row {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            line-height: 1.2;
-          }
-          .cd-contact-name {
-            font-size: 13px !important;
-            font-weight: 600 !important;
-            color: #0f172a;
-          }
-          .cd-contact-primary-tag {
-            font-size: 10.5px !important;
-            font-weight: 500 !important;
-            background: #dcfce7;
-            color: #15803d;
-            padding: 1.5px 7px;
-            border-radius: 10px;
-          }
-          .cd-contact-title {
-            font-size: 11px !important;
-            font-weight: 400 !important;
-            color: #64748b;
-            margin-top: 2px;
-          }
-          .cd-contact-links {
-            display: flex;
-            flex-direction: column;
-            gap: 3px;
-            margin-top: 5px;
-            font-size: 11.5px !important;
-            font-weight: 400 !important;
-          }
-          .cd-contact-link-item {
-            display: inline-flex;
-            align-items: center;
-            gap: 5px;
-            color: #334155;
-            font-weight: 400 !important;
-            text-decoration: none;
-          }
-          .cd-contact-link-item:hover {
-            color: #10b981;
-          }
-
-          /* ── Client Services Card ── */
-          .cd-tags-cloud {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            flex-wrap: wrap;
-          }
-          .cd-btn-add-tag {
-            border: 1px dashed #10b981;
-            background: transparent;
-            color: #10b981;
-            font-size: 10.5px !important;
-            font-weight: 500 !important;
-            padding: 2.5px 8px;
-            border-radius: 12px;
-            cursor: pointer;
-            line-height: 1.2;
-          }
-          .cd-btn-add-tag:hover {
-            background: #ecfdf5;
-          }
-
+          .cd-stream-tag.green { background: #dcfce7 !important; color: #15803d !important; }
+          .cd-stream-tag.blue  { background: #e0f2fe !important; color: #0284c7 !important; }
+          .cd-stream-tag.purple{ background: #f3e8ff !important; color: #6d28d9 !important; }
+          .cd-stream-tag.amber { background: #fef3c7 !important; color: #b45309 !important; }
           /* ── Drawer Footer ── */
           .cd-drawer-footer {
             padding: 10px 18px;
@@ -3537,217 +3855,276 @@
         <input type="hidden" name="direct_client_id" id="direct_client_id" value="{{ $directClientDetail->client_id ?? $directClientDetail->id }}" />
 
         <div class="cd-scope">
-          <!-- ── Top Action Header Bar (DIRECT CLIENT: ONLY FOLLOW UP BUTTON) ── -->
+          <!-- ── Tier 1: Action Header Toolbar Card ── -->
           <div class="cd-top-bar">
-            <div class="cd-top-actions">
-              <button type="button" class="cd-hdr-btn cd-hdr-btn-outline-green cd-btn-followup" data-client-id="{{ $directClientDetail->client_id ?? $directClientDetail->id }}">
-                <i class="fas fa-calendar-check fa-solid" style="color:#0284c7;"></i> Follow Up
-              </button>
-            </div>
-            <button type="button" class="cd-hdr-btn-close cd-close-drawer" id="kt_activitiesDirectClient_close_btn" title="Close Drawer">
-              <i class="fas fa-times fa-solid fa-xmark" style="color:#64748b;"></i>
-            </button>
-          </div>
-
-          <!-- ── Hero Banner: Direct Client (Clean Neutral Enterprise UI) ── -->
-          <div class="cd-hero-banner-green">
-            <div class="cd-hero-top">
-              <div class="cd-hero-left">
-                <div class="cd-avatar-wrap">
-                  <div class="cd-avatar-circle">
-                    @if (!empty($detailLogo))
-                      <img src="{{ $detailLogo }}" alt="{{ $detailName }}">
-                    @else
-                      {{ $detailInitials }}
-                    @endif
-                  </div>
-                  <div class="cd-verified-badge" title="Verified Direct Client">
-                    <i class="fas fa-check fa-solid"></i>
-                  </div>
+            <div class="cd-top-bar-left">
+              <div class="cd-top-title-wrap">
+                <div class="cd-top-breadcrumbs">
+                  <span class="cd-breadcrumb-chip"><i class="fas fa-building text-primary me-1"></i> Clients</span>
+                  <i class="fas fa-chevron-right text-muted" style="font-size: 8px;"></i>
+                  <span class="cd-breadcrumb-chip fw-bold text-dark">{{ $detailName }}</span>
+                  <span class="cd-client-id-pill">#{{ $directClientDetail->client_id ?? $directClientDetail->id }}</span>
                 </div>
-                <div class="cd-hero-details">
-                  <div class="cd-title-row">
-                    <span class="cd-client-name">{{ $detailName }}</span>
-                    <span class="cd-pill-type-direct"><i class="fas fa-building fa-solid" style="color:#059669;"></i> Direct Client</span>
-                  </div>
-                  <div class="cd-meta-row">
-                    @if ($industries_name)
-                    <span><i class="fas fa-building fa-solid me-1" style="color:#3b82f6;"></i>{{ $industries_name }}</span>
-                    <span class="cd-meta-sep">|</span>
-                    @endif
-                    <span><i class="fas fa-map-marker-alt fa-solid fa-location-dot me-1" style="color:#ef4444;"></i>{{ ucwords($city_name ?: 'Mumbai') }}@if($country_name), {{ ucwords($country_name) }}@else, India @endif</span>
-                    @if (!empty($webClean))
-                    <span class="cd-meta-sep">|</span>
-                    <a href="{{ str_starts_with($webClean, 'http') ? $webClean : 'https://'.$webClean }}" target="_blank" class="cd-meta-link">
-                      <i class="fas fa-link fa-solid me-1" style="color:#06b6d4;"></i>{{ $webClean }} <i class="fas fa-external-link-alt fa-solid fa-arrow-up-right-from-square" style="font-size:8.5px;"></i>
-                    </a>
-                    @endif
-                    @if(!empty(@$directClientDetail->vendor_id))
-                    <span class="cd-meta-sep">|</span>
-                    <span>Vendor ID: <span style="font-weight:500; color:#0f172a;">{{ @$directClientDetail->vendor_id }}</span></span>
-                    @endif
-                  </div>
-                  <div class="cd-tag-row">
-                    @foreach ($tagsArr as $val)
-                      <span class="cd-tag-pill">{{ ucwords($val) }}</span>
-                    @endforeach
-                  </div>
-                </div>
-              </div>
-              <div class="cd-hero-right">
-                <div class="cd-status-group">
-                  @if ($isClientActive)
-                    <div class="cd-status-card cd-status-card-green">
-                      <span class="cd-pulse-dot cd-pulse-green"></span>
-                      <div>
-                        <div class="cd-status-card-title text-success">Client Active</div>
-                        <div class="cd-status-card-sub text-success">{{ $kpiActive }} active {{ $kpiActive == 1 ? 'job' : 'jobs' }}</div>
-                      </div>
-                    </div>
-                  @else
-                    <div class="cd-status-card cd-status-card-grey">
-                      <span class="cd-pulse-dot cd-pulse-grey"></span>
-                      <div>
-                        <div class="cd-status-card-title" style="color:#64748b;">Client Inactive</div>
-                        <div class="cd-status-card-sub" style="color:#94a3b8;">No active jobs</div>
-                      </div>
-                    </div>
+                <div class="cd-top-badge-row">
+                  <span class="cd-client-type-badge-pill direct">
+                    <i class="fas fa-handshake me-1" style="color: #059669;"></i> Direct Client
+                  </span>
+                  @if (!empty($industries_name))
+                    <span class="cd-param-badge-pill">
+                      <i class="fas fa-industry text-primary me-1"></i> {{ $industries_name }}
+                    </span>
+                  @endif
+                  @if (!empty($city_name))
+                    <span class="cd-param-badge-pill">
+                      <i class="fas fa-location-dot text-danger me-1"></i> {{ ucwords($city_name) }}
+                    </span>
                   @endif
                 </div>
-                <div class="cd-hero-meta-time">
-                  Client since {{ $clientSinceYear }} <span class="mx-1">|</span> Last activity: {{ $clientUpdatedAt }}
+              </div>
+            </div>
+            <div class="cd-top-right-actions">
+              <button type="button" class="cd-hdr-action-btn followup cd-btn-followup" data-client-id="{{ $directClientDetail->client_id ?? $directClientDetail->id }}">
+                <i class="fas fa-calendar-check" style="color:#0284c7;"></i> Follow Up
+              </button>
+              <button type="button" class="cd-hdr-btn-close cd-close-drawer" id="kt_activitiesDirectClient_close_btn" title="Close Drawer">
+                <i class="fas fa-times"></i>
+              </button>
+            </div>
+          </div>
+
+          <!-- ── Master Card: Client Identity & Quick Heuristics ── -->
+          <div class="cd-hero-card">
+            <div class="cd-hero-subcards-grid">
+              <!-- Sub-Card 1: Identity & Brand -->
+              <div class="cd-hero-subcard-identity">
+                <div class="cd-avatar-box">
+                  @if (!empty($detailLogo))
+                    <img src="{{ $detailLogo }}" alt="{{ $detailName }}">
+                  @else
+                    <span class="cd-avatar-initials">{{ $detailInitials }}</span>
+                  @endif
+                  <div class="cd-verified-seal" title="Verified Direct Client">
+                    <i class="fas fa-check"></i>
+                  </div>
                 </div>
+                <div class="cd-identity-meta">
+                  <div class="cd-identity-title-row">
+                    <h2 class="cd-identity-name">{{ $detailName }}</h2>
+                    <span class="cd-type-badge-tag direct">Direct Client</span>
+                  </div>
+                  <div class="cd-identity-subtitle">
+                    {{ $d_company_type_val }}
+                  </div>
+                </div>
+              </div>
+
+              <!-- Sub-Card 2: Discrete Parameter Chips -->
+              <div class="cd-hero-subcard-params">
+                @if ($industries_name)
+                  <div class="cd-hero-param-chip">
+                    <i class="fas fa-building text-primary"></i>
+                    <span>{{ $industries_name }}</span>
+                  </div>
+                @endif
+                <div class="cd-hero-param-chip">
+                  <i class="fas fa-map-marker-alt text-danger"></i>
+                  <span>{{ ucwords($city_name ?: 'Mumbai') }}@if($country_name), {{ ucwords($country_name) }}@else, India @endif</span>
+                </div>
+                @if (!empty($webClean))
+                  <a href="{{ str_starts_with($webClean, 'http') ? $webClean : 'https://'.$webClean }}" target="_blank" class="cd-hero-param-chip link">
+                    <i class="fas fa-globe text-info"></i>
+                    <span class="text-truncate" style="max-width: 140px;">{{ $webClean }}</span>
+                    <i class="fas fa-external-link-alt ms-1" style="font-size: 8px;"></i>
+                  </a>
+                @endif
+                @if (!empty(@$directClientDetail->vendor_id))
+                  <div class="cd-hero-param-chip">
+                    <i class="fas fa-id-badge text-warning"></i>
+                    <span>VID: <strong class="text-dark">{{ @$directClientDetail->vendor_id }}</strong></span>
+                  </div>
+                @endif
+              </div>
+
+              <!-- Sub-Card 3: Activity & Pulse Status -->
+              <div class="cd-hero-subcard-activity">
+                <div class="cd-status-pulse-badge {{ $isClientActive ? 'active' : 'inactive' }}">
+                  <span class="cd-pulse-indicator {{ $isClientActive ? 'pulse-green' : 'pulse-grey' }}"></span>
+                  <div class="cd-status-text-wrap">
+                    <div class="cd-status-main-text">{{ $isClientActive ? 'Client Active' : 'Client Inactive' }}</div>
+                    <div class="cd-status-sub-text">{{ $kpiActive }} active {{ $kpiActive == 1 ? 'job' : 'jobs' }}</div>
+                  </div>
+                </div>
+                <div class="cd-onboarding-chip">
+                  <i class="fas fa-history text-muted me-1"></i>
+                  <span>Since <strong>{{ $clientSinceYear }}</strong> <span class="mx-1">•</span> {{ $clientUpdatedAt }}</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Discrete Bottom Activity Strip -->
+            <div class="cd-hero-activity-strip">
+              <div class="cd-activity-strip-left">
+                <span class="cd-activity-strip-label"><i class="fas fa-bolt text-warning me-1"></i> Client Engagement:</span>
+                <span class="cd-activity-strip-text">Connected as Direct Corporate Talent Partner</span>
+              </div>
+              <div class="cd-activity-strip-right">
+                <span class="cd-activity-strip-badge"><i class="fas fa-shield-halved text-success me-1"></i> Direct Corporate Client</span>
               </div>
             </div>
           </div>
 
-          <!-- ── 5 Metric KPI Stat Cards Row ── -->
+          <!-- ── 5 Metric KPI Sub-Cards Row ── -->
           <div class="cd-kpi-grid">
             <div class="cd-kpi-card" data-target-tab="#requisitions">
-              <div class="d-flex align-items-center gap-3">
-                <div class="cd-kpi-icon cd-kpi-icon-blue"><i class="fas fa-briefcase fa-solid" style="color:#2563eb;"></i></div>
-                <div>
-                  <div class="cd-kpi-num">{{ $kpiActive }}</div>
-                  <div class="cd-kpi-lbl">Active Jobs</div>
+              <div class="cd-kpi-card-left">
+                <div class="cd-kpi-icon-square blue">
+                  <i class="fas fa-briefcase"></i>
+                </div>
+                <div class="cd-kpi-info">
+                  <div class="cd-kpi-val">{{ $kpiActive }}</div>
+                  <div class="cd-kpi-label">Active Jobs</div>
                 </div>
               </div>
-              <i class="fas fa-chevron-right fa-solid cd-kpi-arrow"></i>
+              <div class="cd-kpi-arrow-subcard">
+                <i class="fas fa-arrow-right"></i>
+              </div>
             </div>
+
             <div class="cd-kpi-card" data-target-tab="#candidate_list">
-              <div class="d-flex align-items-center gap-3">
-                <div class="cd-kpi-icon cd-kpi-icon-purple"><i class="fas fa-users fa-solid" style="color:#7c3aed;"></i></div>
-                <div>
-                  <div class="cd-kpi-num">{{ $kpiSubmitted }}</div>
-                  <div class="cd-kpi-lbl">Candidates</div>
+              <div class="cd-kpi-card-left">
+                <div class="cd-kpi-icon-square purple">
+                  <i class="fas fa-users"></i>
+                </div>
+                <div class="cd-kpi-info">
+                  <div class="cd-kpi-val">{{ $kpiSubmitted }}</div>
+                  <div class="cd-kpi-label">Candidates</div>
                 </div>
               </div>
-              <i class="fas fa-chevron-right fa-solid cd-kpi-arrow"></i>
+              <div class="cd-kpi-arrow-subcard">
+                <i class="fas fa-arrow-right"></i>
+              </div>
             </div>
+
             <div class="cd-kpi-card" data-target-tab="#interview_tracker">
-              <div class="d-flex align-items-center gap-3">
-                <div class="cd-kpi-icon cd-kpi-icon-amber"><i class="fas fa-calendar-days fa-solid" style="color:#d97706;"></i></div>
-                <div>
-                  <div class="cd-kpi-num" id="kpiInterviewsScheduledCount">{{ $kpiInterviews }}</div>
-                  <div class="cd-kpi-lbl">Interviews</div>
+              <div class="cd-kpi-card-left">
+                <div class="cd-kpi-icon-square amber">
+                  <i class="fas fa-calendar-check"></i>
+                </div>
+                <div class="cd-kpi-info">
+                  <div class="cd-kpi-val" id="kpiInterviewsScheduledCount">{{ $kpiInterviews }}</div>
+                  <div class="cd-kpi-label">Interviews</div>
                 </div>
               </div>
-              <i class="fas fa-chevron-right fa-solid cd-kpi-arrow"></i>
+              <div class="cd-kpi-arrow-subcard">
+                <i class="fas fa-arrow-right"></i>
+              </div>
             </div>
+
             <div class="cd-kpi-card" data-target-tab="#candidate_joining" data-segment="offers">
-              <div class="d-flex align-items-center gap-3">
-                <div class="cd-kpi-icon cd-kpi-icon-orange"><i class="fas fa-file-lines fa-solid" style="color:#ea580c;"></i></div>
-                <div>
-                  <div class="cd-kpi-num" id="kpiOffersCountDirect">{{ $kpiOffers }}</div>
-                  <div class="cd-kpi-lbl">Offers</div>
+              <div class="cd-kpi-card-left">
+                <div class="cd-kpi-icon-square orange">
+                  <i class="fas fa-file-signature"></i>
+                </div>
+                <div class="cd-kpi-info">
+                  <div class="cd-kpi-val" id="kpiOffersCountDirect">{{ $kpiOffers }}</div>
+                  <div class="cd-kpi-label">Offers</div>
                 </div>
               </div>
-              <i class="fas fa-chevron-right fa-solid cd-kpi-arrow"></i>
+              <div class="cd-kpi-arrow-subcard">
+                <i class="fas fa-arrow-right"></i>
+              </div>
             </div>
+
             <div class="cd-kpi-card" data-target-tab="#candidate_joining" data-segment="joined">
-              <div class="d-flex align-items-center gap-3">
-                <div class="cd-kpi-icon cd-kpi-icon-green"><i class="fas fa-user-check fa-solid" style="color:#059669;"></i></div>
-                <div>
-                  <div class="cd-kpi-num" id="kpiJoinsCountDirect">{{ $kpiJoins }}</div>
-                  <div class="cd-kpi-lbl">Joined</div>
+              <div class="cd-kpi-card-left">
+                <div class="cd-kpi-icon-square green">
+                  <i class="fas fa-user-check"></i>
+                </div>
+                <div class="cd-kpi-info">
+                  <div class="cd-kpi-val" id="kpiJoinsCountDirect">{{ $kpiJoins }}</div>
+                  <div class="cd-kpi-label">Joined</div>
                 </div>
               </div>
-              <i class="fas fa-chevron-right fa-solid cd-kpi-arrow"></i>
+              <div class="cd-kpi-arrow-subcard">
+                <i class="fas fa-arrow-right"></i>
+              </div>
             </div>
           </div>
 
-          <!-- ── Tabs Navigation Bar ── -->
-          <div class="cd-tabs-bar">
-            <ul class="nav nav-tabs border-0 flex-nowrap" role="tablist">
-              <li class="nav-item">
-                <a class="nav-link active" data-toggle="tab" href="#overview">
-                  <i class="fas fa-house fa-solid" style="color:#3b82f6;"></i> Overview
-                </a>
-              </li>
-              <li class="nav-item">
-                <a class="nav-link cd-tab-black" data-toggle="tab" href="#recent_activity">
-                  <i class="fas fa-clock fa-solid" style="color:#f59e0b;"></i> Recent Activity
-                </a>
-              </li>
-              <li class="nav-item">
-                <a class="nav-link" data-toggle="tab" href="#contacts">
-                  <i class="fas fa-address-book fa-solid" style="color:#10b981;"></i> Contacts
-                  <span class="cd-tab-badge" id="cdContactNavBadgeDirect" style="{{ (!empty($client_contact_count) && $client_contact_count > 0) ? '' : 'display:none;' }}">{{ $client_contact_count ?? 0 }}</span>
-                </a>
-              </li>
-              <li class="nav-item">
-                <a class="nav-link" data-bs-toggle="tab" data-toggle="tab" href="#requisitions">
-                  <i class="fas fa-briefcase fa-solid" style="color:#8b5cf6;"></i> Jobs
-                  @if($kpiActive > 0)<span class="cd-tab-badge">{{ $kpiActive }}</span>@endif
-                </a>
-              </li>
-              <li class="nav-item">
-                <a class="nav-link" data-toggle="tab" href="#candidate_list">
-                  <i class="fas fa-user-tie fa-solid" style="color:#06b6d4;"></i> Candidates
-                  @if($kpiSubmitted > 0)<span class="cd-tab-badge">{{ $kpiSubmitted }}</span>@endif
-                </a>
-              </li>
-              <li class="nav-item">
-                <a class="nav-link" data-toggle="tab" href="#interview_tracker">
-                  <i class="fas fa-calendar-days fa-solid" style="color:#f43f5e;"></i> Interviews
-                  <span class="cd-tab-badge" id="tabBadgeInterviewTracker" @if($kpiInterviews <= 0) style="display:none;" @endif>{{ $kpiInterviews }}</span>
-                </a>
-              </li>
-              <li class="nav-item">
-                <a class="nav-link" data-toggle="tab" href="#candidate_joining">
-                  <i class="fas fa-file-signature fa-solid" style="color:#d97706;"></i> Offers &amp; Joinings
-                  @php $totalOffersJoinsDirect = ($kpiOffers ?? 0) + ($kpiJoins ?? 0); @endphp
-                  <span class="cd-tab-badge" id="ojDirectTabBadge" @if($totalOffersJoinsDirect <= 0) style="display:none;" @endif>{{ $totalOffersJoinsDirect }}</span>
-                </a>
-              </li>
-              <li class="nav-item">
-                <a class="nav-link" data-toggle="tab" href="#candidateDashboard">
-                  <i class="fas fa-chart-column fa-solid" style="color:#6366f1;"></i> Performance
-                </a>
-              </li>
-            </ul>
+          <!-- ── Tier 2: Dedicated Pure White Sub-Tabs Card ── -->
+          <div class="cd-drawer-tabs-card">
+            <div class="cd-drawer-tabs-list" role="tablist">
+              <a class="cd-tab-pill-btn active" data-toggle="tab" href="#overview" role="tab">
+                <i class="fas fa-house"></i>
+                <span>Overview</span>
+              </a>
+
+              <a class="cd-tab-pill-btn" data-toggle="tab" href="#recent_activity" role="tab">
+                <i class="fas fa-clock"></i>
+                <span>Recent Activity</span>
+              </a>
+
+              <a class="cd-tab-pill-btn" data-toggle="tab" href="#contacts" role="tab">
+                <i class="fas fa-address-book"></i>
+                <span>Contacts</span>
+                <span class="cd-tab-badge-pill" id="cdContactNavBadgeDirect" style="{{ (!empty($client_contact_count) && $client_contact_count > 0) ? '' : 'display:none;' }}">{{ $client_contact_count ?? 0 }}</span>
+              </a>
+
+              <a class="cd-tab-pill-btn" data-bs-toggle="tab" data-toggle="tab" href="#requisitions" role="tab">
+                <i class="fas fa-briefcase"></i>
+                <span>Jobs</span>
+                @if($kpiActive > 0)<span class="cd-tab-badge-pill">{{ $kpiActive }}</span>@endif
+              </a>
+
+              <a class="cd-tab-pill-btn" data-toggle="tab" href="#candidate_list" role="tab">
+                <i class="fas fa-users"></i>
+                <span>Candidates</span>
+                @if($kpiSubmitted > 0)<span class="cd-tab-badge-pill">{{ $kpiSubmitted }}</span>@endif
+              </a>
+
+              <a class="cd-tab-pill-btn" data-toggle="tab" href="#interview_tracker" role="tab">
+                <i class="fas fa-calendar-days"></i>
+                <span>Interviews</span>
+                <span class="cd-tab-badge-pill" id="tabBadgeInterviewTracker" @if($kpiInterviews <= 0) style="display:none;" @endif>{{ $kpiInterviews }}</span>
+              </a>
+
+              <a class="cd-tab-pill-btn" data-toggle="tab" href="#candidate_joining" role="tab">
+                <i class="fas fa-file-signature"></i>
+                <span>Offers &amp; Joinings</span>
+                @php $totalOffersJoinsDirect = ($kpiOffers ?? 0) + ($kpiJoins ?? 0); @endphp
+                <span class="cd-tab-badge-pill" id="ojDirectTabBadge" @if($totalOffersJoinsDirect <= 0) style="display:none;" @endif>{{ $totalOffersJoinsDirect }}</span>
+              </a>
+
+              <a class="cd-tab-pill-btn" data-toggle="tab" href="#candidateDashboard" role="tab">
+                <i class="fas fa-chart-column"></i>
+                <span>Performance</span>
+              </a>
+            </div>
           </div>
 
           <!-- ── Tab Contents Container ── -->
           <div class="tab-content">
             <!-- ── TAB 1: OVERVIEW ── -->
             <div class="tab-pane active" id="overview" role="tabpanel">
-              <div class="cd-grid-2col">
-                <!-- Left Column -->
-                <div>
-                  <!-- Card: About the Client -->
-                  <div class="cd-card-panel">
-                    <div class="cd-card-hdr">
-                      <div class="cd-card-hdr-left">
-                        <i class="fas fa-bookmark fa-solid" style="font-size:12px; color:#10b981;"></i>
-                        <span class="cd-card-hdr-title">About the Client</span>
+              <div class="cd-overview-subcards-grid">
+                <!-- Left Column Sub-Cards Stream -->
+                <div class="cd-overview-col-left">
+                  <!-- Sub-Card: About Client -->
+                  <div class="cd-master-subcard">
+                    <div class="cd-subcard-header">
+                      <div class="cd-subcard-header-left">
+                        <div class="cd-subcard-header-icon blue">
+                          <i class="fas fa-info-circle"></i>
+                        </div>
+                        <h4 class="cd-subcard-title">About the Client</h4>
                       </div>
                       @if (!empty($webClean))
-                      <a href="{{ str_starts_with($webClean, 'http') ? $webClean : 'https://'.$webClean }}" target="_blank" class="cd-card-hdr-link">
-                        {{ $webClean }} <i class="fas fa-external-link-alt fa-solid fa-arrow-up-right-from-square" style="font-size:8.5px;"></i>
-                      </a>
+                        <a href="{{ str_starts_with($webClean, 'http') ? $webClean : 'https://'.$webClean }}" target="_blank" class="cd-subcard-action-link">
+                          {{ $webClean }} <i class="fas fa-external-link-alt ms-1"></i>
+                        </a>
                       @endif
                     </div>
-                    <div class="cd-about-body">
+                    <div class="cd-about-text-content">
                       @php
                           $description = @$directClientDetail->description ?: @$directClientDetail->companies_description;
                       @endphp
@@ -3759,195 +4136,204 @@
                     </div>
                   </div>
 
-                  <!-- Card: Recent Activity (Timeline matching mockup) -->
-                  <div class="cd-card-panel">
-                    <div class="cd-card-hdr">
-                      <div class="cd-card-hdr-left">
-                        <i class="fas fa-clock fa-solid" style="font-size:12px; color:#10b981;"></i>
-                        <span class="cd-card-hdr-title">Recent Activity</span>
+                  <!-- Sub-Card: Recent Activity Timeline Stream -->
+                  <div class="cd-master-subcard">
+                    <div class="cd-subcard-header">
+                      <div class="cd-subcard-header-left">
+                        <div class="cd-subcard-header-icon amber">
+                          <i class="fas fa-clock"></i>
+                        </div>
+                        <h4 class="cd-subcard-title">Recent Activity Stream</h4>
                       </div>
-                      <a href="javascript:void(0);" class="cd-card-hdr-link cd-view-all-activity">
-                        View all activity <i class="fas fa-arrow-right fa-solid ms-1" style="font-size:9px;"></i>
+                      <a href="javascript:void(0);" class="cd-subcard-action-link cd-view-all-activity">
+                        View Audit Log <i class="fas fa-arrow-right ms-1"></i>
                       </a>
                     </div>
-                    <div class="cd-timeline-list">
-                      <!-- Node 1: Candidates Submitted -->
-                      <div class="cd-tl-item">
-                        <div class="cd-tl-dot cd-tl-dot-green"><i class="fas fa-users fas fa-user fa-solid-group"></i></div>
-                        <div class="cd-tl-info">
-                          <div class="cd-tl-heading">Candidates submitted to client</div>
-                          <div class="cd-tl-sub">{{ auth()->user()->name ?? 'Recruiter' }} forwarded active profiles</div>
+                    <div class="cd-timeline-subcards-stream">
+                      <!-- Activity 1 -->
+                      <div class="cd-timeline-item-subcard">
+                        <div class="cd-timeline-dot green"><i class="fas fa-users"></i></div>
+                        <div class="cd-timeline-body">
+                          <div class="cd-timeline-title">Candidates submitted to client</div>
+                          <div class="cd-timeline-subtext">{{ auth()->user()->name ?? 'Recruiter' }} forwarded active candidate profiles</div>
                         </div>
-                        <div class="cd-tl-role">Direct Requirement</div>
-                        <div class="cd-tl-meta-right">
-                          <span class="cd-tl-time">2 hours ago</span>
-                          <span class="cd-tl-badge cd-tl-badge-green">Submitted</span>
-                        </div>
-                      </div>
-
-                      <!-- Node 2: Interview Scheduled -->
-                      <div class="cd-tl-item">
-                        <div class="cd-tl-dot cd-tl-dot-purple"><i class="fas fa-calendar-alt fa-solid fa-calendar-days"></i></div>
-                        <div class="cd-tl-info">
-                          <div class="cd-tl-heading">Client interview scheduled</div>
-                          <div class="cd-tl-sub">Interview confirmed with hiring team</div>
-                        </div>
-                        <div class="cd-tl-role">Technical Lead</div>
-                        <div class="cd-tl-meta-right">
-                          <span class="cd-tl-time">1 day ago</span>
-                          <span class="cd-tl-badge cd-tl-badge-amber">Scheduled</span>
+                        <div class="cd-timeline-meta-wrap">
+                          <span class="cd-timeline-badge green">Submitted</span>
+                          <span class="cd-timeline-timestamp">2 hours ago</span>
                         </div>
                       </div>
 
-                      <!-- Node 3: Offer Generated -->
-                      <div class="cd-tl-item">
-                        <div class="cd-tl-dot cd-tl-dot-orange"><i class="fas fa-file-alt fa-solid fa-file-lines"></i></div>
-                        <div class="cd-tl-info">
-                          <div class="cd-tl-heading">Offer proposal extended</div>
-                          <div class="cd-tl-sub">Compensation terms approved</div>
+                      <!-- Activity 2 -->
+                      <div class="cd-timeline-item-subcard">
+                        <div class="cd-timeline-dot purple"><i class="fas fa-calendar-check"></i></div>
+                        <div class="cd-timeline-body">
+                          <div class="cd-timeline-title">Client interview scheduled</div>
+                          <div class="cd-timeline-subtext">Interview confirmed with hiring team</div>
                         </div>
-                        <div class="cd-tl-role">Senior Analyst</div>
-                        <div class="cd-tl-meta-right">
-                          <span class="cd-tl-time">2 days ago</span>
-                          <span class="cd-tl-badge cd-tl-badge-orange">Offer Sent</span>
-                        </div>
-                      </div>
-
-                      <!-- Node 4: Requirement Received -->
-                      <div class="cd-tl-item">
-                        <div class="cd-tl-dot cd-tl-dot-blue"><i class="fas fa-briefcase fa-solid"></i></div>
-                        <div class="cd-tl-info">
-                          <div class="cd-tl-heading">Direct mandate received</div>
-                          <div class="cd-tl-sub">Hiring requisition added to board</div>
-                        </div>
-                        <div class="cd-tl-role">Cloud Architect</div>
-                        <div class="cd-tl-meta-right">
-                          <span class="cd-tl-time">3 days ago</span>
-                          <span class="cd-tl-badge cd-tl-badge-blue">Mandate</span>
+                        <div class="cd-timeline-meta-wrap">
+                          <span class="cd-timeline-badge amber">Scheduled</span>
+                          <span class="cd-timeline-timestamp">1 day ago</span>
                         </div>
                       </div>
 
-                      <!-- Node 5: Successful Join -->
-                      <div class="cd-tl-item">
-                        <div class="cd-tl-dot cd-tl-dot-green"><i class="fas fa-user-check fa-solid"></i></div>
-                        <div class="cd-tl-info">
-                          <div class="cd-tl-heading">Candidate onboarding complete</div>
-                          <div class="cd-tl-sub">Placement milestone reached</div>
+                      <!-- Activity 3 -->
+                      <div class="cd-timeline-item-subcard">
+                        <div class="cd-timeline-dot orange"><i class="fas fa-file-lines"></i></div>
+                        <div class="cd-timeline-body">
+                          <div class="cd-timeline-title">Offer proposal extended</div>
+                          <div class="cd-timeline-subtext">Compensation terms approved</div>
                         </div>
-                        <div class="cd-tl-role">DevOps Engineer</div>
-                        <div class="cd-tl-meta-right">
-                          <span class="cd-tl-time">5 days ago</span>
-                          <span class="cd-tl-badge cd-tl-badge-green">Joined</span>
+                        <div class="cd-timeline-meta-wrap">
+                          <span class="cd-timeline-badge orange">Offer Sent</span>
+                          <span class="cd-timeline-timestamp">2 days ago</span>
+                        </div>
+                      </div>
+
+                      <!-- Activity 4 -->
+                      <div class="cd-timeline-item-subcard">
+                        <div class="cd-timeline-dot blue"><i class="fas fa-briefcase"></i></div>
+                        <div class="cd-timeline-body">
+                          <div class="cd-timeline-title">Direct mandate received</div>
+                          <div class="cd-timeline-subtext">Hiring requisition added to board</div>
+                        </div>
+                        <div class="cd-timeline-meta-wrap">
+                          <span class="cd-timeline-badge blue">Mandate</span>
+                          <span class="cd-timeline-timestamp">3 days ago</span>
+                        </div>
+                      </div>
+
+                      <!-- Activity 5 -->
+                      <div class="cd-timeline-item-subcard">
+                        <div class="cd-timeline-dot green"><i class="fas fa-user-check"></i></div>
+                        <div class="cd-timeline-body">
+                          <div class="cd-timeline-title">Candidate onboarding complete</div>
+                          <div class="cd-timeline-subtext">Placement milestone reached</div>
+                        </div>
+                        <div class="cd-timeline-meta-wrap">
+                          <span class="cd-timeline-badge green">Joined</span>
+                          <span class="cd-timeline-timestamp">5 days ago</span>
                         </div>
                       </div>
                     </div>
                   </div>
                 </div>
 
-                <!-- Right Column -->
-                <div>
-                  <!-- Card: Client Information -->
-                  <div class="cd-card-panel">
-                    <div class="cd-card-hdr">
-                      <div class="cd-card-hdr-left">
-                        <i class="fas fa-circle-info fa-solid" style="color:#6366f1; font-size:12px;"></i>
-                        <span class="cd-card-hdr-title">Client Information</span>
+                <!-- Right Column Sub-Cards Stream -->
+                <div class="cd-overview-col-right">
+                  <!-- Sub-Card: Client Information Discrete Grid -->
+                  <div class="cd-master-subcard">
+                    <div class="cd-subcard-header">
+                      <div class="cd-subcard-header-left">
+                        <div class="cd-subcard-header-icon indigo">
+                          <i class="fas fa-building"></i>
+                        </div>
+                        <h4 class="cd-subcard-title">Client Information</h4>
                       </div>
                     </div>
-                    <div class="cd-info-list">
-                      <div class="cd-kv-row">
-                        <span class="cd-kv-lbl">Headquarters</span>
-                        <span class="cd-kv-val">{{ ucwords($city_name ?: 'Mumbai') }}@if($country_name), {{ ucwords($country_name) }}@else, India @endif</span>
+                    <div class="cd-info-subcards-grid">
+                      <div class="cd-info-subcard-mini">
+                        <span class="cd-mini-label">Headquarters</span>
+                        <span class="cd-mini-value">{{ ucwords($city_name ?: 'Mumbai') }}@if($country_name), {{ ucwords($country_name) }}@else, India @endif</span>
                       </div>
                       @if (!empty($webClean))
-                      <div class="cd-kv-row">
-                        <span class="cd-kv-lbl">Website</span>
-                        <span class="cd-kv-val">
-                          <a href="{{ str_starts_with($webClean, 'http') ? $webClean : 'https://'.$webClean }}" target="_blank">
-                            {{ $webClean }} <i class="fas fa-external-link-alt fa-solid fa-arrow-up-right-from-square" style="font-size:8.5px;"></i>
-                          </a>
-                        </span>
-                      </div>
-                      @endif
-                      @if ($industries_name)
-                      <div class="cd-kv-row">
-                        <span class="cd-kv-lbl">Industry</span>
-                        <span class="cd-kv-val">{{ $industries_name }}</span>
-                      </div>
-                      @endif
-                      <div class="cd-kv-row">
-                        <span class="cd-kv-lbl">Company Type</span>
-                        <span class="cd-kv-val">{{ $d_company_type_val }}</span>
-                      </div>
-                      @if(!empty(@$directClientDetail->vendor_id))
-                      <div class="cd-kv-row">
-                        <span class="cd-kv-lbl">Vendor ID</span>
-                        <span class="cd-kv-val">{{ @$directClientDetail->vendor_id }}</span>
-                      </div>
-                      @endif
-                      @if (@$directClientDetail->founded)
-                      <div class="cd-kv-row">
-                        <span class="cd-kv-lbl">Founded</span>
-                        <span class="cd-kv-val">{{ @$directClientDetail->founded }}</span>
-                      </div>
-                      @endif
-                      @if (!empty(@$directClientDetail->company_sizes))
-                      <div class="cd-kv-row">
-                        <span class="cd-kv-lbl">Number of Employees</span>
-                        <span class="cd-kv-val">{{ is_numeric(@$directClientDetail->company_sizes) ? number_format((float)@$directClientDetail->company_sizes) . '+' : @$directClientDetail->company_sizes }}</span>
-                      </div>
-                      @endif
-                      @if (!empty(@$directClientDetail->to_created_at))
-                      <div class="cd-kv-row">
-                        <span class="cd-kv-lbl">Connected On</span>
-                        <span class="cd-kv-val">{{ date('d M, Y', strtotime(@$directClientDetail->to_created_at)) }}</span>
-                      </div>
-                      @endif
-                    </div>
-                  </div>
-
-                  <!-- Card: Primary Contact -->
-                  <div class="cd-card-panel">
-                    <div class="cd-card-hdr">
-                      <div class="cd-card-hdr-left">
-                        <i class="fas fa-id-badge fa-solid" style="color:#10b981; font-size:12px;"></i>
-                        <span class="cd-card-hdr-title">Primary Contact</span>
-                      </div>
-                      <a href="javascript:void(0);" class="cd-card-hdr-link cd-view-all-contacts">
-                        View all contacts <i class="fas fa-arrow-right fa-solid ms-1" style="font-size:9px;"></i>
-                      </a>
-                    </div>
-                    <div class="cd-contact-preview">
-                      <div class="cd-contact-avatar">{{ $primaryInitials }}</div>
-                      <div class="cd-contact-meta">
-                        <div class="cd-contact-name-row">
-                          <span class="cd-contact-name">{{ $primaryName }}</span>
-                          <span class="cd-contact-primary-tag">Primary</span>
-                        </div>
-                        <div class="cd-contact-title">{{ $primaryDesignation }}</div>
-                        <div class="cd-contact-links">
-                          <a href="mailto:{{ $primaryEmail }}" class="cd-contact-link-item">
-                            <i class="fas fa-envelope fa-solid" style="color:#2563eb;"></i> {{ $primaryEmail }}
-                          </a>
-                          <span class="cd-contact-link-item">
-                            <i class="fas fa-phone fa-solid" style="color:#10b981;"></i> {{ $primaryPhone }}
+                        <div class="cd-info-subcard-mini">
+                          <span class="cd-mini-label">Website</span>
+                          <span class="cd-mini-value">
+                            <a href="{{ str_starts_with($webClean, 'http') ? $webClean : 'https://'.$webClean }}" target="_blank" class="text-truncate d-inline-block" style="max-width:140px;">
+                              {{ $webClean }} <i class="fas fa-external-link-alt ms-1" style="font-size:8px;"></i>
+                            </a>
                           </span>
                         </div>
+                      @endif
+                      @if ($industries_name)
+                        <div class="cd-info-subcard-mini">
+                          <span class="cd-mini-label">Industry</span>
+                          <span class="cd-mini-value">{{ $industries_name }}</span>
+                        </div>
+                      @endif
+                      <div class="cd-info-subcard-mini">
+                        <span class="cd-mini-label">Company Type</span>
+                        <span class="cd-mini-value">{{ $d_company_type_val }}</span>
+                      </div>
+                      @if(!empty(@$directClientDetail->vendor_id))
+                        <div class="cd-info-subcard-mini">
+                          <span class="cd-mini-label">Vendor ID</span>
+                          <span class="cd-mini-value fw-bold text-dark">{{ @$directClientDetail->vendor_id }}</span>
+                        </div>
+                      @endif
+                      @if (@$directClientDetail->founded)
+                        <div class="cd-info-subcard-mini">
+                          <span class="cd-mini-label">Founded</span>
+                          <span class="cd-mini-value">{{ @$directClientDetail->founded }}</span>
+                        </div>
+                      @endif
+                      @if (!empty(@$directClientDetail->company_sizes))
+                        <div class="cd-info-subcard-mini">
+                          <span class="cd-mini-label">Employees</span>
+                          <span class="cd-mini-value">{{ is_numeric(@$directClientDetail->company_sizes) ? number_format((float)@$directClientDetail->company_sizes) . '+' : @$directClientDetail->company_sizes }}</span>
+                        </div>
+                      @endif
+                      @if (!empty(@$directClientDetail->to_created_at))
+                        <div class="cd-info-subcard-mini">
+                          <span class="cd-mini-label">Connected On</span>
+                          <span class="cd-mini-value">{{ date('d M, Y', strtotime(@$directClientDetail->to_created_at)) }}</span>
+                        </div>
+                      @endif
+                    </div>
+                  </div>
+
+                  <!-- Sub-Card: Primary SPOC Master Card -->
+                  <div class="cd-master-subcard">
+                    <div class="cd-subcard-header">
+                      <div class="cd-subcard-header-left">
+                        <div class="cd-subcard-header-icon teal">
+                          <i class="fas fa-id-badge"></i>
+                        </div>
+                        <h4 class="cd-subcard-title">Primary SPOC</h4>
+                      </div>
+                      <a href="javascript:void(0);" class="cd-subcard-action-link cd-view-all-contacts">
+                        All Contacts <i class="fas fa-arrow-right ms-1"></i>
+                      </a>
+                    </div>
+                    <div class="cd-contact-master-subcard">
+                      <div class="cd-contact-master-top">
+                        <div class="cd-contact-avatar-box">
+                          {{ $primaryInitials }}
+                        </div>
+                        <div class="cd-contact-master-info">
+                          <div class="cd-contact-master-name-row">
+                            <span class="cd-contact-master-name">{{ $primaryName }}</span>
+                            <span class="cd-contact-primary-tag">Primary</span>
+                          </div>
+                          <div class="cd-contact-master-role">{{ $primaryDesignation }}</div>
+                        </div>
+                      </div>
+                      <div class="cd-contact-channels-grid">
+                        <a href="mailto:{{ $primaryEmail }}" class="cd-contact-channel-item" title="Send Email">
+                          <div class="cd-contact-channel-icon email"><i class="fas fa-envelope"></i></div>
+                          <span class="cd-contact-channel-text">{{ $primaryEmail }}</span>
+                        </a>
+                        <a href="tel:{{ $primaryPhone }}" class="cd-contact-channel-item" title="Call Phone">
+                          <div class="cd-contact-channel-icon phone"><i class="fas fa-phone"></i></div>
+                          <span class="cd-contact-channel-text">{{ $primaryPhone }}</span>
+                        </a>
                       </div>
                     </div>
                   </div>
 
-                  <!-- Card: Client Services -->
-                  <div class="cd-card-panel">
-                    <div class="cd-card-hdr">
-                      <div class="cd-card-hdr-left">
-                        <i class="fas fa-layer-group fa-solid" style="color:#ec4899; font-size:12px;"></i>
-                        <span class="cd-card-hdr-title">Client Services</span>
+                  <!-- Sub-Card: Client Services / Tags -->
+                  <div class="cd-master-subcard">
+                    <div class="cd-subcard-header">
+                      <div class="cd-subcard-header-left">
+                        <div class="cd-subcard-header-icon pink">
+                          <i class="fas fa-tags"></i>
+                        </div>
+                        <h4 class="cd-subcard-title">Client Services &amp; Tags</h4>
                       </div>
                     </div>
-                    <div class="cd-tags-cloud">
+                    <div class="cd-tag-cloud-subcard">
                       @foreach ($tagsArr as $tag)
-                        <span class="cd-tag-pill">{{ ucwords($tag) }}</span>
+                        <span class="cd-service-tag-pill">{{ ucwords($tag) }}</span>
                       @endforeach
                     </div>
                   </div>
@@ -3955,24 +4341,86 @@
               </div>
             </div>
 
-            <!-- ── TAB 2: RECENT ACTIVITY (Dedicated Black Card for Discussion) ── -->
+            <!-- ── TAB 2: RECENT ACTIVITY (3-Tier Activity & Audit Log Standard) ── -->
             <div class="tab-pane" id="recent_activity" role="tabpanel">
-              <div class="p-4">
-                <div class="cd-card-panel p-5" style="background:#000000; color:#ffffff; border-color:#1e293b; border-radius:10px;">
-                  <div class="d-flex align-items-center justify-content-between mb-3 border-bottom border-secondary pb-3">
-                    <div class="d-flex align-items-center gap-2">
-                      <i class="fas fa-clock fa-solid text-warning" style="font-size:14px;"></i>
-                      <h4 class="text-white mb-0" style="font-size:13.5px; font-weight:600;">Recent Activity &amp; Audit Logs</h4>
+              <div class="cd-activity-tab-wrap p-4">
+                <!-- Tier 1: Toolbar Header Card -->
+                <div class="cd-activity-header-card">
+                  <div class="cd-activity-header-left">
+                    <div class="cd-activity-icon-box">
+                      <i class="fas fa-clock-rotate-left"></i>
                     </div>
-                    <span class="badge bg-secondary text-white" style="font-size:10.5px;">Pending Discussion</span>
+                    <div>
+                      <h4 class="cd-activity-main-title">Activity &amp; Audit Logs</h4>
+                      <p class="cd-activity-sub-title">Chronological timeline of submissions, interview events, candidate offers, and direct client engagements.</p>
+                    </div>
                   </div>
-                  <p class="text-gray-400 mb-0" style="font-size:12px; line-height:1.6;">
-                    This section captures comprehensive timeline actions: candidate submissions, interview logs, offer letter events, job requisitions, and administrative audit trails for direct client interactions. Additional widgets and configurations will be integrated as discussed.
-                  </p>
+                  <div class="cd-activity-header-right">
+                    <span class="cd-activity-status-chip">
+                      <i class="fas fa-check-circle text-success me-1"></i> Live Audit Feed
+                    </span>
+                  </div>
+                </div>
+
+                <!-- Tier 2: Quick Filter Sub-Tabs Card -->
+                <div class="cd-activity-filter-card">
+                  <div class="cd-activity-filter-list">
+                    <button type="button" class="cd-act-filter-btn active" data-act-filter="all">All Events</button>
+                    <button type="button" class="cd-act-filter-btn" data-act-filter="submissions">Submissions</button>
+                    <button type="button" class="cd-act-filter-btn" data-act-filter="interviews">Interviews</button>
+                    <button type="button" class="cd-act-filter-btn" data-act-filter="offers">Offers &amp; Onboarding</button>
+                  </div>
+                </div>
+
+                <!-- Tier 3: Timeline Stream Card -->
+                <div class="cd-timeline-stream-card">
+                  <div class="cd-stream-node">
+                    <div class="cd-stream-node-dot green"><i class="fas fa-user-plus"></i></div>
+                    <div class="cd-stream-node-content">
+                      <div class="cd-stream-node-header">
+                        <span class="cd-stream-node-title">Candidate Pipeline Engagement</span>
+                        <span class="cd-stream-node-time">Today, 2:45 PM</span>
+                      </div>
+                      <p class="cd-stream-node-desc">Direct talent profiles forwarded to client hiring coordinator for active roles.</p>
+                      <div class="cd-stream-node-tags">
+                        <span class="cd-stream-tag green">Pipeline</span>
+                        <span class="cd-stream-tag blue">{{ $detailName }}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="cd-stream-node">
+                    <div class="cd-stream-node-dot purple"><i class="fas fa-calendar-check"></i></div>
+                    <div class="cd-stream-node-content">
+                      <div class="cd-stream-node-header">
+                        <span class="cd-stream-node-title">Interview Slot Confirmation</span>
+                        <span class="cd-stream-node-time">Yesterday, 11:30 AM</span>
+                      </div>
+                      <p class="cd-stream-node-desc">Client confirmed evaluation interview with technical team panel.</p>
+                      <div class="cd-stream-node-tags">
+                        <span class="cd-stream-tag purple">Interview</span>
+                        <span class="cd-stream-tag amber">Evaluation</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="cd-stream-node">
+                    <div class="cd-stream-node-dot blue"><i class="fas fa-briefcase"></i></div>
+                    <div class="cd-stream-node-content">
+                      <div class="cd-stream-node-header">
+                        <span class="cd-stream-node-title">Direct Client Mandate Synchronized</span>
+                        <span class="cd-stream-node-time">3 days ago</span>
+                      </div>
+                      <p class="cd-stream-node-desc">Requirements aligned with client terms and live requisition board.</p>
+                      <div class="cd-stream-node-tags">
+                        <span class="cd-stream-tag blue">Direct Mandate</span>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
-                    <div class="tab-pane" id="contacts" role="tabpanel" style="background:#ffffff; min-height: 520px;">
+<div class="tab-pane" id="contacts" role="tabpanel" style="background:#ffffff; min-height: 520px;">
                         <div class="cd-contact-tab-container">
 
                             <!-- TIER 1: TOP HEADER TOOLBAR CARD -->
@@ -4807,347 +5255,55 @@
                             </div>
                         </div>
                         <div class="cd-tabwrap">
-                        <ul class="nav nav-tabs nav-line-tabs nav-line-tabs-2x mb-5 fs-6 border-bottom-0 d-none">
-                            <li class="nav-item"> <a class="nav-link active" data-bs-toggle="tab"
-                                    href="#all-requisitions">&nbsp;</a> </li>
-                            {{-- <li class="nav-item"> <a class="nav-link" data-bs-toggle="tab" href="#client-requisitions">HCL Req.</a> </li>
-                          <li class="nav-item"> <a class="nav-link" data-bs-toggle="tab" href="#custom-requisitions">Custom Req.</a> </li>
-                          <li class="nav-item"> <a class="nav-link" data-bs-toggle="tab" href="#jobs">Jobs</a> </li> --}}
-                        </ul>
-                        <div class="tab-content" id="myTabContent">
-                            <!--begin::All Req.-->
-                            <div class="tab-pane fade show active" id="all-requisitions" role="tabpanel">
-                                <!--begin::All Req. header-->
-                                <div class="card-header cursor-pointer px-0 d-none">
-                                    <!--begin::Card title-->
-                                    <div class="card-title m-0">
-                                        <h3 class="fw-bolder m-0">All Jobs</h3>
-                                    </div>
-                                    <!--end::Card title-->
-                                    <!--begin::Actions-->
-                                    <div class="d-flex align-items-center py-1">
-                                        <!--begin::Search-->
-                                        <div class="d-flex align-items-center position-relative my-1 me-3">
-                                            <!--begin::Svg Icon | path: icons/duotune/general/gen021.svg-->
-                                            <span class="svg-icon svg-icon-1 position-absolute ms-6">
-                                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
-                                                    viewBox="0 0 24 24" fill="none">
-                                                    <rect opacity="0.5" x="17.0365" y="15.1223" width="8.15546"
-                                                        height="2" rx="1"
-                                                        transform="rotate(45 17.0365 15.1223)" fill="black" />
-                                                    <path
-                                                        d="M11 19C6.55556 19 3 15.4444 3 11C3 6.55556 6.55556 3 11 3C15.4444 3 19 6.55556 19 11C19 15.4444 15.4444 19 11 19ZM11 5C7.53333 5 5 7.53333 5 11C5 14.4667 7.53333 17 11 17C14.4667 17 17 14.4667 17 11C17 7.53333 14.4667 5 11 5Z"
-                                                        fill="black" />
-                                                </svg>
-                                            </span>
-                                            <!--end::Svg Icon-->
-                                            <input type="text" id="inputSearch" data-kt-user-table-filter="search"
-                                                class="form-control form-control-solid w-250px ps-14"
-                                                style="padding: .6rem 1rem;" placeholder="Search..." />
-                                        </div>
-                                        <!--end::Search-->
-                                        <div class="card-toolbar">
-                                            <!--begin::Toolbar-->
-                                            <div class="d-flex justify-content-end" data-kt-user-table-toolbar="base">
-                                                <!--begin::Filter-->
-                                                <button type="button"
-                                                    class="btn btn-sm btn-flex btn-light btn-active-primary fw-bolder me-3"
-                                                    data-kt-menu-trigger="click" data-kt-menu-placement="bottom-end"
-                                                    data-kt-menu-flip="top-end">
-                                                    <!--begin::Svg Icon | path: icons/duotune/general/gen031.svg-->
-                                                    <span class="svg-icon svg-icon-2">
-                                                        <svg xmlns="http://www.w3.org/2000/svg" width="24"
-                                                            height="24" viewBox="0 0 24 24" fill="none">
-                                                            <path
-                                                                d="M19.0759 3H4.72777C3.95892 3 3.47768 3.83148 3.86067 4.49814L8.56967 12.6949C9.17923 13.7559 9.5 14.9582 9.5 16.1819V19.5072C9.5 20.2189 10.2223 20.7028 10.8805 20.432L13.8805 19.1977C14.2553 19.0435 14.5 18.6783 14.5 18.273V13.8372C14.5 12.8089 14.8171 11.8056 15.408 10.964L19.8943 4.57465C20.3596 3.912 19.8856 3 19.0759 3Z"
-                                                                fill="black" />
-                                                        </svg>
-                                                    </span>
-                                                    <!--end::Svg Icon-->
-                                                    Filter</button>
-                                                <!--begin::Menu 1-->
-                                                <div class="menu menu-sub menu-sub-dropdown w-300px w-md-325px"
-                                                    data-kt-menu="true">
-                                                    <!--begin::Header-->
-                                                    <div class="px-7 py-5">
-                                                        <div class="fs-5 text-dark fw-bolder">Filter Options</div>
-                                                    </div>
-                                                    <!--end::Header-->
-                                                    <!--begin::Separator-->
-                                                    <div class="separator border-gray-200"></div>
-                                                    <!--end::Separator-->
-                                                    <!--begin::Content-->
-                                                    <div class="px-7 py-5" data-kt-user-table-filter="form">
-                                                        <!--begin::Input group-->
-                                                        <div class="mb-10">
-                                                            <label class="form-label fs-6 fw-bold">Role:</label>
-                                                            <select class="form-select form-select-solid fw-bolder"
-                                                                data-kt-select2="true"
-                                                                data-placeholder="Select option"
-                                                                data-allow-clear="true"
-                                                                data-kt-user-table-filter="role"
-                                                                data-hide-search="true">
-                                                                <option></option>
-                                                                <option value="Administrator">Administrator</option>
-                                                                <option value="Analyst">Analyst</option>
-                                                                <option value="Developer">Developer</option>
-                                                                <option value="Support">Support</option>
-                                                                <option value="Trial">Trial</option>
-                                                            </select>
-                                                        </div>
-                                                        <!--end::Input group-->
-                                                        <!--begin::Input group-->
-                                                        <div class="mb-10">
-                                                            <label class="form-label fs-6 fw-bold">Two Step
-                                                                Verification:</label>
-                                                            <select class="form-select form-select-solid fw-bolder"
-                                                                data-kt-select2="true"
-                                                                data-placeholder="Select option"
-                                                                data-allow-clear="true"
-                                                                data-kt-user-table-filter="two-step"
-                                                                data-hide-search="true">
-                                                                <option></option>
-                                                                <option value="Enabled">Enabled</option>
-                                                            </select>
-                                                        </div>
-                                                        <!--end::Input group-->
-                                                        <!--begin::Actions-->
-                                                        <div class="d-flex justify-content-end">
-                                                            <button type="reset"
-                                                                class="btn btn-light btn-active-light-primary fw-bold me-2 px-6"
-                                                                data-kt-menu-dismiss="true"
-                                                                data-kt-user-table-filter="reset">Reset</button>
-                                                            <button type="submit"
-                                                                class="btn btn-primary fw-bold px-6"
-                                                                data-kt-menu-dismiss="true"
-                                                                data-kt-user-table-filter="filter">Apply</button>
-                                                        </div>
-                                                        <!--end::Actions-->
-                                                    </div>
-                                                    <!--end::Content-->
-                                                </div>
-                                                <!--end::Menu 1-->
-                                                <!--end::Filter-->
-                                                @if (in_array('add_jobs', $userPermissions))
-                                                @endif
-                                            </div>
-                                            <!--end::Toolbar-->
+                            @if (in_array('view_jobs', $userPermissions))
+                                <div class="jobx">
+                                    <!-- Tier 2: Sub-Tabs in Card-Based Design with White Background -->
+                                    <div class="cd-jobs-tabs-card">
+                                        <div class="cd-jobs-tabs-group">
+                                            <button type="button" 
+                                                    class="cd-jobs-tab-btn js-job-filter-btn active" 
+                                                    data-status="all">
+                                                <span>All Jobs</span>
+                                                <span class="cd-jobs-tab-badge" id="directFilterCountAll">{{ $kpiActive ?? 0 }}</span>
+                                            </button>
+                                            <button type="button" 
+                                                    class="cd-jobs-tab-btn js-job-filter-btn" 
+                                                    data-status="hiring">
+                                                <span>Hiring</span>
+                                                <span class="cd-jobs-tab-badge badge-hiring" id="directFilterCountHiring">{{ $kpiActive ?? 0 }}</span>
+                                            </button>
+                                            <button type="button" 
+                                                    class="cd-jobs-tab-btn js-job-filter-btn" 
+                                                    data-status="hold">
+                                                <span>On Hold</span>
+                                                <span class="cd-jobs-tab-badge badge-hold" id="directFilterCountHold">0</span>
+                                            </button>
+                                            <button type="button" 
+                                                    class="cd-jobs-tab-btn js-job-filter-btn" 
+                                                    data-status="closed">
+                                                <span>Closed</span>
+                                                <span class="cd-jobs-tab-badge badge-closed" id="directFilterCountClosed">0</span>
+                                            </button>
+                                            <button type="button" 
+                                                    class="cd-jobs-tab-btn js-job-filter-btn" 
+                                                    data-status="inactive">
+                                                <span>Inactive</span>
+                                                <span class="cd-jobs-tab-badge badge-inactive" id="directFilterCountInactive">0</span>
+                                            </button>
                                         </div>
                                     </div>
-                                    <!--end::Actions-->
-                                </div>
-                                <!--end::All Req. header-->
-                                <!--begin::All Req. Content-->
-                                <div class="card-body px-0 py-4">
-                                    @if (in_array('view_jobs', $userPermissions))
-                                        <div class="jobx">
-                                            <!-- 2. Sub-Tabs in Card-Based Design with White Background -->
-                                            <div class="cd-jobs-tabs-card">
-                                                <div class="cd-jobs-tabs-group">
-                                                    <button type="button" 
-                                                            class="cd-jobs-tab-btn js-job-filter-btn active" 
-                                                            data-status="all">
-                                                        <span>All Jobs</span>
-                                                        <span class="cd-jobs-tab-badge" id="directFilterCountAll">{{ $kpiActive ?? 0 }}</span>
-                                                    </button>
-                                                    <button type="button" 
-                                                            class="cd-jobs-tab-btn js-job-filter-btn" 
-                                                            data-status="hiring">
-                                                        <span>Hiring</span>
-                                                        <span class="cd-jobs-tab-badge badge-hiring" id="directFilterCountHiring">{{ $kpiActive ?? 0 }}</span>
-                                                    </button>
-                                                    <button type="button" 
-                                                            class="cd-jobs-tab-btn js-job-filter-btn" 
-                                                            data-status="hold">
-                                                        <span>On Hold</span>
-                                                        <span class="cd-jobs-tab-badge badge-hold" id="directFilterCountHold">0</span>
-                                                    </button>
-                                                    <button type="button" 
-                                                            class="cd-jobs-tab-btn js-job-filter-btn" 
-                                                            data-status="closed">
-                                                        <span>Closed</span>
-                                                        <span class="cd-jobs-tab-badge badge-closed" id="directFilterCountClosed">0</span>
-                                                    </button>
-                                                    <button type="button" 
-                                                            class="cd-jobs-tab-btn js-job-filter-btn" 
-                                                            data-status="inactive">
-                                                        <span>Inactive</span>
-                                                        <span class="cd-jobs-tab-badge badge-inactive" id="directFilterCountInactive">0</span>
-                                                    </button>
-                                                </div>
-                                            </div>
 
-                                            <!-- Restored Card-Based Jobs Stream -->
-                                            <div id="directclientJobsListajax" class="cd-jobs-stream"></div>
-                                        </div>
-                                        <div id="directpaginationclientjobs" class="mt-3"></div>
-                                    @endif
+                                    <!-- Tier 3: Card-Based Jobs Stream -->
+                                    <div id="directclientJobsListajax" class="cd-jobs-stream"></div>
                                 </div>
-                                <!--end::All Req. Content-->
-                            </div>
-                            <!--end::All Req.-->
-                            <!--end::Client Req.-->
-                            <div class="tab-pane fade" id="client-requisitions" role="tabpanel">
-                                <!--begin::Client Req. header-->
-                                <div class="card-header cursor-pointer px-0">
-                                    <!--begin::Card title-->
-                                    <div class="card-title m-0">
-                                        <h3 class="fw-bolder m-0">HCL Jobs</h3>
-                                    </div>
-                                    <!--end::Card title-->
+                                <div id="directpaginationclientjobs" class="mt-3"></div>
+                            @else
+                                <div class="cd-empty-card p-5 text-center text-muted">
+                                    <i class="fas fa-lock fs-2 mb-2 text-muted"></i>
+                                    <div>You do not have permission to view jobs for this client.</div>
                                 </div>
-                                <!--end::Client Req. header-->
-                                <!--begin::Client Req. Content-->
-                                <div class="card-body px-0 py-7">
-                                    <!--begin:Table-->
-                                    <table class="table align-middle table-row-dashed fs-6 gy-5" id="kt_table_users">
-                                        <!--begin::Table head-->
-                                        <thead>
-                                            <!--begin::Table row-->
-                                            <tr class="fw-bolder text-muted">
-                                                <th class="w-10px pe-0">
-                                                    <div
-                                                        class="form-check form-check-sm form-check-custom form-check-solid me-3">
-                                                        <input class="form-check-input" type="checkbox"
-                                                            data-kt-check="true"
-                                                            data-kt-check-target="#kt_table_users .form-check-input2"
-                                                            value="1" />
-                                                    </div>
-                                                </th>
-                                                <th class="">Jobs</th>
-                                                <th class="">Exp.</th>
-                                                <th class="">Salary</th>
-                                                <th class="">Location</th>
-                                                <th class="">Status</th>
-                                                <th class="">Date</th>
-                                                <th class="">HM | CP</th>
-                                                <th class="">S.Partners</th>
-                                                <th class="">TOT</th>
-                                                <th class="">SOU</th>
-                                                <th class="">SCR</th>
-                                                <th class="">EVA</th>
-                                                <th class="">NEO</th>
-                                                <th class="">OFF</th>
-                                                <th class="">JOI</th>
-                                                <th class="">REJ</th>
-                                            </tr>
-                                            <!--end::Table row-->
-                                        </thead>
-                                        <!--end::Table head-->
-                                        <!--begin::Table body-->
-                                        <tbody class="text-gray-600 fw-bold">
-                                            <!--begin::Table row-->
-
-
-                                            <!--end::Table row-->
-                                        </tbody>
-
-                                        <!--end::Table body-->
-                                    </table>
-                                    <!--end::Table-->
-                                </div>
-                                <!--end::Client Req. Content-->
-                            </div>
-                            <div class="tab-pane fade" id="custom-requisitions" role="tabpanel">
-                                <!--begin::Custom Req. header-->
-                                <div class="card-header cursor-pointer px-0">
-                                    <!--begin::Card title-->
-                                    <div class="card-title m-0">
-                                        <h3 class="fw-bolder m-0">Custom Jobs</h3>
-                                    </div>
-                                    <!--end::Card title-->
-                                    <!--begin::Actions-->
-                                    <div class="d-flex align-items-center py-1">
-                                        <div class="card-toolbar">
-                                            <!--begin::Toolbar-->
-                                            <div class="d-flex justify-content-end" data-kt-user-table-toolbar="base">
-                                                <!--begin::Add Requisitions-->
-                                                <a href="{{ url('service_company/jobs/create') }}">
-                                                    <button type="button"
-                                                        class="btn btn-sm btn-flex btn-primary btn-active-primary fw-bolder me-3">
-                                                        <!--begin::Svg Icon-->
-                                                        <span class="svg-icon svg-icon-primary svg-icon-1x">
-                                                            <svg xmlns="http://www.w3.org/2000/svg"
-                                                                xmlns:xlink="http://www.w3.org/1999/xlink"
-                                                                width="24px" height="24px" viewBox="0 0 24 24"
-                                                                version="1.1">
-                                                                <g stroke="none" stroke-width="1" fill="none"
-                                                                    fill-rule="evenodd">
-                                                                    <polygon points="0 0 24 0 24 24 0 24" />
-                                                                    <path
-                                                                        d="M18,8 L16,8 C15.4477153,8 15,7.55228475 15,7 C15,6.44771525 15.4477153,6 16,6 L18,6 L18,4 C18,3.44771525 18.4477153,3 19,3 C19.5522847,3 20,3.44771525 20,4 L20,6 L22,6 C22.5522847,6 23,6.44771525 23,7 C23,7.55228475 22.5522847,8 22,8 L20,8 L20,10 C20,10.5522847 19.5522847,11 19,11 C18.4477153,11 18,10.5522847 18,10 L18,8 Z M9,11 C6.790861,11 5,9.209139 5,7 C5,4.790861 6.790861,3 9,3 C11.209139,3 13,4.790861 13,7 C13,9.209139 11.209139,11 9,11 Z"
-                                                                        fill="#000000" fill-rule="nonzero"
-                                                                        opacity="0.3" />
-                                                                    <path
-                                                                        d="M0.00065168429,20.1992055 C0.388258525,15.4265159 4.26191235,13 8.98334134,13 C13.7712164,13 17.7048837,15.2931929 17.9979143,20.2 C18.0095879,20.3954741 17.9979143,21 17.2466999,21 C13.541124,21 8.03472472,21 0.727502227,21 C0.476712155,21 -0.0204617505,20.45918 0.00065168429,20.1992055 Z"
-                                                                        fill="#000000" fill-rule="nonzero" />
-                                                                </g>
-                                                            </svg>
-                                                        </span>
-                                                        <!--end::Svg Icon-->
-                                                        Add Jobs </button>
-                                                </a>
-                                                <!--end::Add Requisitions-->
-                                            </div>
-                                            <!--end::Toolbar-->
-                                        </div>
-                                    </div>
-                                    <!--end::Actions-->
-                                </div>
-                                <!--end::Custom Req. header-->
-                                <!--begin::Custom Req. Content-->
-                                <div class="card-body px-0 py-7">
-                                    <!--begin:Table-->
-                                    <table class="table align-middle table-row-dashed fs-6 gy-5" id="kt_table_users">
-                                        <!--begin::Table head-->
-                                        <thead>
-                                            <!--begin::Table row-->
-                                            <tr class="fw-bolder text-muted">
-                                                <th class="w-10px pe-0">
-                                                    <div
-                                                        class="form-check form-check-sm form-check-custom form-check-solid me-3">
-                                                        <input class="form-check-input" type="checkbox"
-                                                            data-kt-check="true"
-                                                            data-kt-check-target="#kt_table_users .form-check-input3"
-                                                            value="1" />
-                                                    </div>
-                                                </th>
-                                                <th class="">Jobs</th>
-                                                <th class="">Exp.</th>
-                                                <th class="">Salary</th>
-                                                <th class="">Location</th>
-                                                <th class="">Status</th>
-                                                <th class="">Date</th>
-                                                <th class="">HM | CP</th>
-                                                <th class="">S.Partners</th>
-                                                <th class="">TOT</th>
-                                                <th class="">SOU</th>
-                                                <th class="">SCR</th>
-                                                <th class="">EVA</th>
-                                                <th class="">NEO</th>
-                                                <th class="">OFF</th>
-                                                <th class="">JOI</th>
-                                                <th class="">REJ</th>
-                                            </tr>
-                                            <!--end::Table row-->
-                                        </thead>
-                                        <!--end::Table head-->
-                                        <!--begin::Table body-->
-                                        <tbody class="text-gray-600 fw-bold">
-                                            <!--begin::Table row-->
-
-                                        </tbody>
-                                        <!--end::Table body-->
-                                    </table>
-                                    <!--end::Table-->
-                                </div>
-                                <!--end::Custom Req. Content-->
-                            </div>
-                            <!--end::Custom Req.-->
-                            <div class="tab-pane fade" id="jobs" role="tabpanel">Jobs - Content</div>
+                            @endif
                         </div>
-                        <!--end::Requisitions Content-->
-                        </div></div>
                     </div>
                 </div>
             </div>

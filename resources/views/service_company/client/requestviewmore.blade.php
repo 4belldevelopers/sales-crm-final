@@ -1,7 +1,7 @@
 @php
     /**
      * Intent: Direct Client Request Details Drawer UI component.
-     * Reuses the existing Direct Client Details design system from dviewMore.blade.php.
+     * Aligned strictly with Modern Card + Sub-Card Enterprise Design Standard (Rule 20).
      */
     use App\Helper\GeneralMethod;
     use Carbon\Carbon;
@@ -46,7 +46,7 @@
     if (empty($detailName) && !empty(@$directClientDetail->company_name)) {
         $detailName = ucwords(@$directClientDetail->company_name);
     }
-    $detailInitials = strtoupper(implode('', array_map(fn($w) => mb_substr($w, 0, 1), array_slice(explode(' ', trim($detailName ?: 'C')), 0, 2))));
+    $detailInitials = strtoupper(implode('', array_map(fn($w) => mb_substr($w, 0, 1), array_slice(explode(' ', trim($detailName ?: 'DC')), 0, 2)))) ?: 'DC';
 
     $industries_name = '';
     $lookupInd = function ($source, $indId) {
@@ -71,332 +71,891 @@
     };
 
     if (!empty(@$directClientDetail->industry)) {
-        $industries_name = $lookupInd($department, @$directClientDetail->industry);
+        $industries_name = $lookupInd($department ?? null, @$directClientDetail->industry);
     }
     if (empty($industries_name) && !empty(@$directClientDetail->industries)) {
-        $industries_name = $lookupInd($industries, @$directClientDetail->industries);
+        $industries_name = $lookupInd($industries ?? null, @$directClientDetail->industries);
     }
 
     $tagsArr = array_filter(array_map('trim', explode(',', (string) @$directClientDetail->tags)));
+
+    $rc_company_type_val = '';
+    if (isset($directClientDetail->company_type) && $directClientDetail->company_type !== '' && isset($companyType[$directClientDetail->company_type])) {
+        $rawRcComp = $companyType[$directClientDetail->company_type];
+        $rc_company_type_val = is_string($rawRcComp) ? $rawRcComp : (is_object($rawRcComp) ? (string)($rawRcComp->name ?? '') : '');
+    }
+    if (empty($rc_company_type_val)) {
+        $rc_company_type_val = 'Direct Corporate Client';
+    }
+
+    $webClean = @$directClientDetail->website ?: '';
+    $clientSinceYear = (!empty(@$directClientDetail->created_at)) ? \Carbon\Carbon::parse(@$directClientDetail->created_at)->format('Y') : ((!empty(@$directClientDetail->to_created_at)) ? \Carbon\Carbon::parse(@$directClientDetail->to_created_at)->format('Y') : date('Y'));
+    $clientUpdatedAt = @$directClientDetail->updated_at ? Carbon::parse($directClientDetail->updated_at)->diffForHumans() : 'Recent';
+    $isClientActive = ($kpiActive > 0);
 @endphp
 
-<style>
-    @media only screen and (min-width: 900px) and (max-width: 2560px) {
-        .table td, .table th, .table tr { width: max-content !important; }
-        .table > :not(caption) > * > * { padding: 0.75em 0rem !important; }
-        td:nth-child(n+2), th:nth-child(n+2) { width: revert !important; border-bottom: 1px dashed #f5f8fa !important; }
-    }
-    .table-custom-class tbody tr { height: 82px; position: relative; }
-    .iti__flag { margin-top: 2px !important; }
-</style>
-
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
 <style>
-  .cd-hero .profile-card { background:#fff; border-radius:12px; border:1px solid #eff2f5; padding:24px; margin:0 8px 16px; }
-  .cd-hero .profile-top { display:flex; align-items:flex-start; justify-content:space-between; gap:20px; }
-  .cd-hero .profile-left { display:flex; gap:18px; flex:1; min-width:0; }
-  .cd-hero .logo-wrap { position:relative; flex-shrink:0; }
-  .cd-hero .logo-circle { width:88px; height:88px; border-radius:50%; background:#f8f9fa; border:1px solid #e4e6ef; display:flex; align-items:center; justify-content:center; overflow:hidden; font-size:32px; font-weight:700; color:#5e6278; }
-  .cd-hero .logo-circle img { width:100%; height:100%; object-fit:cover; }
-  .cd-hero .verified-check { position:absolute; top:-2px; right:-2px; width:24px; height:24px; background:#50cd89; border-radius:50%; display:flex; align-items:center; justify-content:center; border:2.5px solid #fff; box-shadow:0 2px 6px rgba(0,0,0,.08); }
-  .cd-hero .verified-check i { color:#fff; font-size:10px; }
-  .cd-hero .profile-info { flex:1; min-width:0; }
-  .cd-hero .profile-name-row { display:flex; align-items:center; gap:10px; margin-bottom:8px; flex-wrap:wrap; }
-  .cd-hero .profile-name { font-size:20px; font-weight:700; color:#181c32; }
-  .cd-hero .verified-badge { display:inline-flex; align-items:center; gap:4px; background:#e8fff3; color:#47be7d; font-size:11px; font-weight:600; padding:4px 10px; border-radius:50px; }
-  .cd-hero .verified-badge i { font-size:9px; }
-  .cd-hero .profile-meta { display:flex; align-items:center; gap:4px 16px; flex-wrap:wrap; font-size:13px; color:#a1a5b7; margin-bottom:12px; }
-  .cd-hero .meta-item { display:flex; align-items:center; gap:6px; }
-  .cd-hero .meta-item i { font-size:11px; color:#b5b5c3; }
-  .cd-hero .meta-divider { color:#e4e6ef; font-size:10px; }
-  .cd-hero .meta-link { color:#009ef7; text-decoration:none; display:flex; align-items:center; gap:4px; }
-  .cd-hero .meta-link:hover { text-decoration:underline; }
-  .cd-hero .meta-link i.fa-external-link-alt { font-size:9px; }
-  .cd-hero .service-tags { display:flex; flex-wrap:wrap; gap:8px; }
-  .cd-hero .tag { display:inline-flex; align-items:center; gap:6px; padding:6px 12px; background:#f5f8fa; border:1px solid #e4e6ef; border-radius:6px; font-size:12px; font-weight:500; color:#5e6278; }
-  .cd-hero .profile-right { display:flex; flex-direction:column; align-items:flex-end; gap:12px; flex-shrink:0; }
-  .cd-hero .status-badge { display:inline-flex; align-items:center; gap:6px; background:#e8fff3; color:#47be7d; font-size:13px; font-weight:600; padding:6px 14px; border-radius:6px; border:1px solid rgba(80,205,137,.15); }
-  .cd-hero .status-dot { width:8px; height:8px; background:#50cd89; border-radius:50%; position:relative; }
-  .cd-hero .status-dot::after { content:""; position:absolute; inset:-3px; border-radius:50%; border:1px solid #50cd89; animation:cdpulse 2s infinite; }
-  @keyframes cdpulse { 0%,100% { transform:scale(1); opacity:1; } 50% { transform:scale(1.3); opacity:0; } }
-  .cd-hero .kpi-row { display:grid; grid-template-columns:repeat(5,1fr); gap:16px; margin:0 8px 16px; }
-  .cd-hero .kpi-box { background:#fff; border-radius:12px; border:1px solid #eff2f5; padding:13px; transition:all .2s; }
-  .cd-hero .kpi-box:hover { transform:translateY(-2px); box-shadow:0 8px 24px rgba(0,0,0,.04); }
-  .cd-hero .kpi-header { display:flex; align-items:center; gap:10px; margin-bottom:16px; }
-  .cd-hero .kpi-icon-box { width:40px; height:40px; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:14px; flex-shrink:0; }
-  .cd-hero .kpi-icon-blue { background:#f1faff; color:#009ef7; }
-  .cd-hero .kpi-icon-green { background:#e8fff3; color:#50cd89; }
-  .cd-hero .kpi-icon-purple { background:#f8f5ff; color:#7239ea; }
-  .cd-hero .kpi-icon-orange { background:#fff8dd; color:#f6a723; }
-  .cd-hero .kpi-icon-teal { background:#f0fdfa; color:#14b8a6; }
-  .cd-hero .kpi-label { font-size:12px; font-weight:600; color:#7e8299; line-height:1.3; }
-  .cd-hero .kpi-number { font-size:28px; font-weight:700; color:#181c32; line-height:1; }
-  @media (max-width:1200px){ .cd-hero .kpi-row { grid-template-columns:repeat(3,1fr); } }
-  @media (max-width:768px){ .cd-hero .kpi-row { grid-template-columns:repeat(2,1fr); } .cd-hero .profile-top { flex-direction:column; } }
+    .cd-req-scope {
+        box-sizing: border-box;
+        font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+        font-size: 12px !important;
+        color: #334155;
+        background: #f8fafc;
+        padding: 0;
+    }
+    .cd-req-scope *, .cd-req-scope *::before, .cd-req-scope *::after {
+        box-sizing: border-box;
+    }
 
-  .cd-maintabs { border-bottom:none !important; flex-wrap:wrap; }
-  .cd-maintabs .nav-item { margin-right:0 !important; }
-  .cd-maintabs .nav-link { padding:14px 20px; border:none !important; position:relative; background:none !important; }
-  .cd-maintabs .nav-link .nav-text { font-size:13px; font-weight:500 !important; color:#a1a5b7; transition:color .2s; }
-  .cd-maintabs .nav-link:hover .nav-text { color:#009ef7; }
-  .cd-maintabs .nav-link.active .nav-text { color:#009ef7; font-weight:600 !important; }
-  .cd-maintabs .nav-link.active::after { content:""; position:absolute; bottom:0; left:20px; right:20px; height:2.5px; background:#009ef7; border-radius:2px 2px 0 0; }
-  .cd-content-grid { display:grid; grid-template-columns:1.2fr 0.8fr; gap:16px; align-items:start; }
-  @media (max-width:992px){ .cd-content-grid { grid-template-columns:1fr; } }
-  .cd-card { background:#fff; border-radius:12px; border:1px solid #eff2f5; padding:24px; }
-  .cd-card-head { display:flex; align-items:center; gap:10px; margin-bottom:20px; }
-  .cd-card-ic { width:32px; height:32px; border-radius:6px; background:#f5f8fa; display:flex; align-items:center; justify-content:center; color:#a1a5b7; font-size:13px; }
-  .cd-card-title { font-size:15px; font-weight:700; color:#181c32; }
-  .cd-about { font-size:13px; color:#7e8299; line-height:1.7; }
-  .cd-info-list { display:flex; flex-direction:column; }
-  .cd-info-row { display:flex; justify-content:space-between; align-items:center; padding:10px 0; border-bottom:1px dashed #eff2f5; gap:12px; }
-  .cd-info-row:last-child { border-bottom:none; }
-  .cd-info-label { font-size:12px; color:#a1a5b7; font-weight:500; flex-shrink:0; }
-  .cd-info-value { font-size:12px; color:#3f4254; font-weight:600; text-align:right; display:flex; align-items:center; gap:6px; justify-content:flex-end; flex-wrap:wrap; }
-  .cd-info-value a { color:#009ef7; text-decoration:none; }
-  .cd-info-value a:hover { text-decoration:underline; }
+    /* TIER 1: Top Action Header Toolbar Card */
+    .cd-top-bar {
+        background: #ffffff !important;
+        border: 1px solid #e2e8f0 !important;
+        border-radius: 10px !important;
+        padding: 10px 16px !important;
+        margin: 0 0 12px 0 !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+        gap: 12px !important;
+        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04) !important;
+        position: sticky !important;
+        top: 0 !important;
+        z-index: 25 !important;
+    }
+    .cd-top-bar-left {
+        display: flex !important;
+        align-items: center !important;
+        gap: 10px !important;
+        min-width: 0 !important;
+        flex: 1 !important;
+    }
+    .cd-top-title-wrap {
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 3px !important;
+        min-width: 0 !important;
+    }
+    .cd-top-breadcrumbs {
+        display: flex !important;
+        align-items: center !important;
+        gap: 6px !important;
+        font-size: 11px !important;
+        color: #64748b !important;
+        flex-wrap: wrap !important;
+    }
+    .cd-breadcrumb-chip {
+        display: inline-flex !important;
+        align-items: center !important;
+        color: #64748b !important;
+        font-weight: 500 !important;
+    }
+    .cd-client-id-pill {
+        font-size: 10px !important;
+        font-weight: 700 !important;
+        color: #059669 !important;
+        background: #ecfdf5 !important;
+        border: 1px solid #a7f3d0 !important;
+        padding: 1px 6px !important;
+        border-radius: 4px !important;
+        font-family: monospace !important;
+    }
+    .cd-top-badge-row {
+        display: flex !important;
+        align-items: center !important;
+        gap: 6px !important;
+        flex-wrap: wrap !important;
+    }
+    .cd-client-type-badge-pill {
+        display: inline-flex !important;
+        align-items: center !important;
+        font-size: 10.5px !important;
+        font-weight: 600 !important;
+        padding: 2px 8px !important;
+        border-radius: 6px !important;
+        line-height: 1.2 !important;
+    }
+    .cd-client-type-badge-pill.direct {
+        background: #ecfdf5 !important;
+        color: #059669 !important;
+        border: 1px solid #a7f3d0 !important;
+    }
+    .cd-param-badge-pill {
+        display: inline-flex !important;
+        align-items: center !important;
+        font-size: 10.5px !important;
+        font-weight: 500 !important;
+        color: #475569 !important;
+        background: #f1f5f9 !important;
+        border: 1px solid #e2e8f0 !important;
+        padding: 2px 7px !important;
+        border-radius: 5px !important;
+    }
+    .cd-hdr-btn-close {
+        width: 32px !important;
+        height: 32px !important;
+        padding: 0 !important;
+        border-radius: 6px !important;
+        background: #f8fafc !important;
+        border: 1px solid #e2e8f0 !important;
+        color: #64748b !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        cursor: pointer !important;
+        font-size: 13px !important;
+        transition: all 0.15s !important;
+    }
+    .cd-hdr-btn-close:hover {
+        background: #f1f5f9 !important;
+        color: #0f172a !important;
+        border-color: #cbd5e1 !important;
+    }
 
-  /* Contacts tab styling */
-  .cd-tabcard { background:#fff; border-radius:12px; border:1px solid #eff2f5; overflow:hidden; margin-top:4px; }
-  .cd-tabcard-head { padding:18px 24px; border-bottom:1px solid #eff2f5; }
-  .cd-tabcard-title { font-size:16px; font-weight:700; color:#181c32; }
-  .cd-tabcard-sub { font-size:12px; color:#a1a5b7; margin-top:2px; }
-  .cd-contacts .data-table { width:100%; border-collapse:collapse; min-width:600px; }
-  .cd-contacts .data-table thead tr { background:#f8f9fa; }
-  .cd-contacts .data-table th { padding:12px 16px; text-align:left; font-size:11px; font-weight:600; color:#7e8299; text-transform:uppercase; letter-spacing:.3px; white-space:nowrap; border:none !important; }
-  .cd-contacts .data-table td { padding:14px 16px; font-size:13px; color:#3f4254; border-bottom:1px solid #f5f8fa; vertical-align:middle; }
-  .cd-contacts .data-table tr:hover td { background:#fafbfc; }
-  .cd-contacts .contact-avatar-table { width:36px; height:36px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:600; font-size:13px; background:#009ef7; color:#fff; flex-shrink:0; }
-  .cd-contacts .contact-name-table { font-size:14px; font-weight:600; color:#181c32; }
+    /* HERO MASTER CARD: 3 Discrete Upper Sub-Cards + Discrete Bottom Activity Strip */
+    .cd-hero-card {
+        background: #ffffff !important;
+        border: 1px solid #e2e8f0 !important;
+        border-radius: 10px !important;
+        padding: 14px 16px 10px !important;
+        margin-bottom: 12px !important;
+        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03) !important;
+    }
+    .cd-hero-subcards-grid {
+        display: grid !important;
+        grid-template-columns: 1.35fr 1.65fr 1fr !important;
+        gap: 12px !important;
+        align-items: center !important;
+    }
+    @media (max-width: 1200px) {
+        .cd-hero-subcards-grid { grid-template-columns: 1fr 1fr !important; }
+    }
+    @media (max-width: 768px) {
+        .cd-hero-subcards-grid { grid-template-columns: 1fr !important; }
+    }
+
+    .cd-hero-subcard-identity {
+        display: flex !important;
+        align-items: center !important;
+        gap: 12px !important;
+        background: #f8fafc !important;
+        border: 1px solid #e2e8f0 !important;
+        border-radius: 8px !important;
+        padding: 10px 12px !important;
+        min-width: 0 !important;
+    }
+    .cd-avatar-box {
+        position: relative !important;
+        width: 48px !important;
+        height: 48px !important;
+        border-radius: 8px !important;
+        background: #064e3b !important;
+        color: #ffffff !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        font-size: 14px !important;
+        font-weight: 700 !important;
+        flex-shrink: 0 !important;
+        overflow: visible !important;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06) !important;
+    }
+    .cd-avatar-box img {
+        width: 100% !important;
+        height: 100% !important;
+        object-fit: cover !important;
+        border-radius: 8px !important;
+    }
+    .cd-avatar-initials {
+        font-size: 14px !important;
+        font-weight: 700 !important;
+        color: #ffffff !important;
+    }
+    .cd-verified-seal {
+        position: absolute !important;
+        top: -4px !important;
+        right: -4px !important;
+        width: 16px !important;
+        height: 16px !important;
+        border-radius: 50% !important;
+        background: #10b981 !important;
+        border: 2px solid #ffffff !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        color: #ffffff !important;
+        font-size: 8px !important;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.15) !important;
+    }
+    .cd-identity-meta { min-width: 0 !important; flex: 1 !important; }
+    .cd-identity-title-row {
+        display: flex !important;
+        align-items: center !important;
+        gap: 6px !important;
+        margin-bottom: 2px !important;
+        flex-wrap: wrap !important;
+    }
+    .cd-identity-name {
+        font-size: 14px !important;
+        font-weight: 700 !important;
+        color: #0f172a !important;
+        margin: 0 !important;
+        line-height: 1.2 !important;
+        letter-spacing: -0.2px !important;
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+    }
+    .cd-type-badge-tag {
+        font-size: 9.5px !important;
+        font-weight: 600 !important;
+        padding: 1.5px 6px !important;
+        border-radius: 4px !important;
+        line-height: 1.2 !important;
+        text-transform: uppercase !important;
+        letter-spacing: 0.3px !important;
+    }
+    .cd-type-badge-tag.direct {
+        background: #ecfdf5 !important;
+        color: #059669 !important;
+        border: 1px solid #a7f3d0 !important;
+    }
+    .cd-identity-subtitle { font-size: 11px !important; color: #64748b !important; line-height: 1.2 !important; }
+
+    .cd-hero-subcard-params {
+        display: flex !important;
+        flex-wrap: wrap !important;
+        gap: 6px !important;
+        background: #f8fafc !important;
+        border: 1px solid #e2e8f0 !important;
+        border-radius: 8px !important;
+        padding: 10px 12px !important;
+    }
+    .cd-hero-param-chip {
+        display: inline-flex !important;
+        align-items: center !important;
+        gap: 5px !important;
+        background: #ffffff !important;
+        border: 1px solid #e2e8f0 !important;
+        border-radius: 6px !important;
+        padding: 3px 8px !important;
+        font-size: 11px !important;
+        color: #334155 !important;
+        font-weight: 500 !important;
+    }
+    .cd-hero-param-chip.link {
+        color: #059669 !important;
+        text-decoration: none !important;
+        cursor: pointer !important;
+    }
+    .cd-hero-param-chip.link:hover {
+        border-color: #059669 !important;
+        text-decoration: underline !important;
+    }
+
+    .cd-hero-subcard-activity {
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 6px !important;
+        background: #f8fafc !important;
+        border: 1px solid #e2e8f0 !important;
+        border-radius: 8px !important;
+        padding: 10px 12px !important;
+    }
+    .cd-status-pulse-badge {
+        display: flex !important;
+        align-items: center !important;
+        gap: 8px !important;
+        border-radius: 6px !important;
+        padding: 4px 8px !important;
+    }
+    .cd-status-pulse-badge.active { background: #f0fdf4 !important; border: 1px solid #bbf7d0 !important; }
+    .cd-status-pulse-badge.inactive { background: #f8fafc !important; border: 1px solid #e2e8f0 !important; }
+    .cd-pulse-indicator {
+        width: 7px !important;
+        height: 7px !important;
+        border-radius: 50% !important;
+        position: relative !important;
+        flex-shrink: 0 !important;
+    }
+    .cd-pulse-indicator.pulse-green { background: #16a34a !important; }
+    .cd-pulse-indicator.pulse-green::after {
+        content: "" !important;
+        position: absolute !important;
+        inset: -3px !important;
+        border-radius: 50% !important;
+        border: 1.5px solid #16a34a !important;
+        animation: cdpulse 2s infinite !important;
+    }
+    @keyframes cdpulse { 0%, 100% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.4); opacity: 0; } }
+    .cd-status-main-text { font-size: 11.5px !important; font-weight: 700 !important; color: #15803d !important; }
+    .cd-status-sub-text { font-size: 10px !important; color: #16a34a !important; font-weight: 500 !important; }
+
+    .cd-hero-activity-strip {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+        gap: 12px !important;
+        margin-top: 10px !important;
+        padding-top: 8px !important;
+        border-top: 1px solid #f1f5f9 !important;
+        font-size: 11px !important;
+        color: #64748b !important;
+    }
+
+    /* 5 METRIC KPI SUB-CARDS GRID */
+    .cd-kpi-grid {
+        display: grid !important;
+        grid-template-columns: repeat(5, 1fr) !important;
+        gap: 10px !important;
+        margin-bottom: 12px !important;
+    }
+    @media (max-width: 992px) { .cd-kpi-grid { grid-template-columns: repeat(3, 1fr) !important; } }
+    @media (max-width: 576px) { .cd-kpi-grid { grid-template-columns: repeat(2, 1fr) !important; } }
+    .cd-kpi-card {
+        background: #ffffff !important;
+        border: 1px solid #e2e8f0 !important;
+        border-radius: 10px !important;
+        padding: 11px 13px !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+        gap: 8px !important;
+        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03) !important;
+        transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+    }
+    .cd-kpi-card:hover {
+        transform: translateY(-2px) !important;
+        box-shadow: 0 4px 12px rgba(15, 23, 42, 0.06) !important;
+        border-color: #009ef7 !important;
+    }
+    .cd-kpi-card-left { display: flex !important; align-items: center !important; gap: 10px !important; min-width: 0 !important; }
+    .cd-kpi-icon-square {
+        width: 36px !important;
+        height: 36px !important;
+        border-radius: 8px !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        font-size: 13.5px !important;
+        flex-shrink: 0 !important;
+    }
+    .cd-kpi-icon-square.blue   { background: #eff6ff !important; color: #2563eb !important; border: 1px solid #dbeafe !important; }
+    .cd-kpi-icon-square.green  { background: #f0fdf4 !important; color: #16a34a !important; border: 1px solid #dcfce7 !important; }
+    .cd-kpi-icon-square.purple { background: #f5f3ff !important; color: #7c3aed !important; border: 1px solid #ede9fe !important; }
+    .cd-kpi-icon-square.orange { background: #fff7ed !important; color: #ea580c !important; border: 1px solid #ffedd5 !important; }
+    .cd-kpi-icon-square.teal   { background: #f0fdfa !important; color: #0d9488 !important; border: 1px solid #ccfbf1 !important; }
+    .cd-kpi-val { font-size: 14.5px !important; font-weight: 700 !important; color: #0f172a !important; line-height: 1.1 !important; }
+    .cd-kpi-label { font-size: 11px !important; font-weight: 500 !important; color: #64748b !important; line-height: 1.2 !important; margin-top: 2px !important; }
+
+    /* TIER 2: Dedicated Pure White Sub-Tabs Card */
+    .cd-drawer-tabs-card {
+        background: #ffffff !important;
+        border: 1px solid #e2e8f0 !important;
+        border-radius: 10px !important;
+        padding: 6px 10px !important;
+        margin-bottom: 12px !important;
+        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03) !important;
+    }
+    .cd-drawer-tabs-list {
+        display: flex !important;
+        align-items: center !important;
+        gap: 4px !important;
+        overflow-x: auto !important;
+        white-space: nowrap !important;
+        padding: 2px !important;
+    }
+    .cd-tab-pill-btn {
+        display: inline-flex !important;
+        align-items: center !important;
+        gap: 7px !important;
+        padding: 7px 13px !important;
+        border-radius: 7px !important;
+        font-size: 12px !important;
+        font-weight: 500 !important;
+        color: #64748b !important;
+        text-decoration: none !important;
+        transition: all 0.15s ease-in-out !important;
+        border: 1px solid transparent !important;
+        cursor: pointer !important;
+        background: transparent !important;
+    }
+    .cd-tab-pill-btn:hover { color: #009ef7 !important; background: rgba(0, 158, 247, 0.04) !important; }
+    .cd-tab-pill-btn.active {
+        color: #009ef7 !important;
+        background: rgba(0, 158, 247, 0.08) !important;
+        border-color: rgba(0, 158, 247, 0.25) !important;
+        font-weight: 600 !important;
+    }
+    .cd-tab-badge-pill {
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        font-size: 10px !important;
+        font-weight: 700 !important;
+        padding: 1.5px 6px !important;
+        border-radius: 999px !important;
+        background: #eff6ff !important;
+        color: #2563eb !important;
+        border: 1px solid #bfdbfe !important;
+        line-height: 1 !important;
+    }
+
+    /* TIER 3: Overview Sub-Cards Grid */
+    .cd-overview-subcards-grid {
+        display: grid !important;
+        grid-template-columns: 1.35fr 1fr !important;
+        gap: 14px !important;
+        align-items: start !important;
+    }
+    @media (max-width: 1024px) { .cd-overview-subcards-grid { grid-template-columns: 1fr !important; } }
+    .cd-master-subcard {
+        background: #ffffff !important;
+        border: 1px solid #e2e8f0 !important;
+        border-radius: 10px !important;
+        padding: 14px 16px !important;
+        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03) !important;
+    }
+    .cd-subcard-header {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+        margin-bottom: 12px !important;
+        padding-bottom: 8px !important;
+        border-bottom: 1px solid #f1f5f9 !important;
+    }
+    .cd-subcard-header-left { display: flex !important; align-items: center !important; gap: 8px !important; }
+    .cd-subcard-header-icon {
+        width: 26px !important;
+        height: 26px !important;
+        border-radius: 6px !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        font-size: 11px !important;
+    }
+    .cd-subcard-header-icon.blue   { background: #eff6ff !important; color: #2563eb !important; }
+    .cd-subcard-header-icon.indigo { background: #eef2ff !important; color: #4f46e5 !important; }
+    .cd-subcard-title { font-size: 13px !important; font-weight: 700 !important; color: #0f172a !important; margin: 0 !important; }
+
+    .cd-info-subcards-grid {
+        display: grid !important;
+        grid-template-columns: 1fr 1fr !important;
+        gap: 8px !important;
+    }
+    .cd-info-subcard-mini {
+        background: #f8fafc !important;
+        border: 1px solid #eef2f6 !important;
+        border-radius: 7px !important;
+        padding: 7px 10px !important;
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 2px !important;
+    }
+    .cd-mini-label { font-size: 10px !important; font-weight: 600 !important; text-transform: uppercase !important; letter-spacing: 0.3px !important; color: #94a3b8 !important; }
+    .cd-mini-value { font-size: 12px !important; font-weight: 600 !important; color: #0f172a !important; word-break: break-word !important; }
+
+    /* Contacts Tab: Modern Card Stream (No Raw Table) */
+    .cd-contacts-stream {
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 10px !important;
+    }
+    .cd-contact-card-subcard {
+        background: #ffffff !important;
+        border: 1px solid #e2e8f0 !important;
+        border-radius: 10px !important;
+        padding: 12px 16px !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+        gap: 14px !important;
+        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.02) !important;
+        transition: all 0.15s ease-in-out !important;
+    }
+    .cd-contact-card-subcard:hover {
+        border-color: #009ef7 !important;
+        box-shadow: 0 4px 12px rgba(15, 23, 42, 0.05) !important;
+        transform: translateY(-1px) !important;
+    }
+    .cd-contact-card-left {
+        display: flex !important;
+        align-items: center !important;
+        gap: 12px !important;
+        min-width: 0 !important;
+        flex: 1 !important;
+    }
+    .cd-contact-avatar-round {
+        width: 40px !important;
+        height: 40px !important;
+        border-radius: 8px !important;
+        background: #eff6ff !important;
+        color: #2563eb !important;
+        border: 1px solid #bfdbfe !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        font-weight: 700 !important;
+        font-size: 14px !important;
+        flex-shrink: 0 !important;
+    }
+    .cd-contact-name-title-wrap {
+        display: flex !important;
+        flex-direction: column !important;
+        min-width: 0 !important;
+    }
+    .cd-contact-fullname {
+        font-size: 13px !important;
+        font-weight: 700 !important;
+        color: #0f172a !important;
+    }
+    .cd-contact-designation {
+        font-size: 11px !important;
+        color: #64748b !important;
+    }
+    .cd-contact-channels-wrap {
+        display: flex !important;
+        align-items: center !important;
+        gap: 14px !important;
+        flex-wrap: wrap !important;
+    }
+    .cd-channel-badge {
+        display: inline-flex !important;
+        align-items: center !important;
+        gap: 6px !important;
+        font-size: 11.5px !important;
+        color: #334155 !important;
+        text-decoration: none !important;
+        background: #f8fafc !important;
+        border: 1px solid #e2e8f0 !important;
+        padding: 4px 10px !important;
+        border-radius: 6px !important;
+        transition: all 0.15s !important;
+    }
+    .cd-channel-badge:hover {
+        background: #ffffff !important;
+        border-color: #009ef7 !important;
+        color: #009ef7 !important;
+    }
 </style>
 
 <div class="card-body position-relative px-0 py-0" id="kt_activities_body">
     <input type="hidden" name="hid_client_id" id="hid_client_id" value="{{ @$directClientDetail->client_id }}" />
 
     <!--begin::Content-->
-    <div id="kt_activities_scroll" class="position-relative scroll-y bg-light pt-2" data-kt-scroll="true"
+    <div id="kt_activities_scroll" class="position-relative scroll-y bg-light pt-2 px-3" data-kt-scroll="true"
         data-kt-scroll-height="auto" data-kt-scroll-wrappers="#kt_activities_body"
         data-kt-scroll-dependencies="#kt_activities_header, #kt_activities_footer" data-kt-scroll-offset="5px">
 
-        <!-- Hero Profile Card + KPI row -->
-        <div class="cd-hero">
-            <div class="profile-card">
-                <div class="profile-top">
-                    <div class="profile-left">
-                        <div class="logo-wrap">
-                            <div class="logo-circle">
-                                @if (!empty($detailLogo))
-                                    <img src="{{ $detailLogo }}" alt="logo">
-                                @else
-                                    {{ $detailInitials }}
-                                @endif
-                            </div>
-                            <div class="verified-check"><i class="fas fa-check"></i></div>
+        <div class="cd-req-scope">
+            <!-- ── Tier 1: Action Header Toolbar Card ── -->
+            <div class="cd-top-bar">
+                <div class="cd-top-bar-left">
+                    <div class="cd-top-title-wrap">
+                        <div class="cd-top-breadcrumbs">
+                            <span class="cd-breadcrumb-chip"><i class="fas fa-building text-primary me-1"></i> Clients</span>
+                            <i class="fas fa-chevron-right text-muted" style="font-size: 8px;"></i>
+                            <span class="cd-breadcrumb-chip fw-bold text-dark">{{ $detailName }}</span>
+                            <span class="cd-client-id-pill">#{{ @$directClientDetail->client_id }}</span>
                         </div>
-                        <div class="profile-info">
-                            <div class="profile-name-row">
-                                <span class="profile-name">{{ $detailName }}</span>
-                                <span class="verified-badge">Verified <i class="fas fa-check"></i></span>
-                            </div>
-                            <div class="profile-meta">
-                                @if ($industries_name)
-                                    <span class="meta-item"><i class="fas fa-briefcase"></i>{{ $industries_name }}</span>
-                                    <span class="meta-divider">|</span>
-                                @endif
-                                <span class="meta-item"><i class="fas fa-map-marker-alt"></i>{{ ucwords($city_name) }}@if($country_name), {{ ucwords($country_name) }}@endif</span>
-                                @if (!empty(@$directClientDetail->website))
-                                    <span class="meta-divider">|</span>
-                                    <a href="{{ @$directClientDetail->website }}" target="_blank" class="meta-link"><i class="fas fa-globe"></i>{{ @$directClientDetail->website }} <i class="fas fa-external-link-alt"></i></a>
-                                @endif
-                            </div>
-                            <div class="service-tags">
-                                @foreach ($tagsArr as $val)
-                                    <span class="tag">{{ ucwords($val) }}</span>
-                                @endforeach
-                            </div>
+                        <div class="cd-top-badge-row">
+                            <span class="cd-client-type-badge-pill direct">
+                                <i class="fas fa-handshake me-1" style="color: #059669;"></i> Direct Client Request
+                            </span>
+                            @if (!empty($industries_name))
+                                <span class="cd-param-badge-pill">
+                                    <i class="fas fa-industry text-primary me-1"></i> {{ $industries_name }}
+                                </span>
+                            @endif
+                            @if (!empty($city_name))
+                                <span class="cd-param-badge-pill">
+                                    <i class="fas fa-location-dot text-danger me-1"></i> {{ ucwords($city_name) }}
+                                </span>
+                            @endif
                         </div>
                     </div>
-                    <div class="profile-right">
-                        <span class="status-badge"><span class="status-dot"></span>Active</span>
-                    </div>
+                </div>
+                <div class="cd-top-right-actions">
+                    <button type="button" class="cd-hdr-btn-close cd-close-drawer" id="kt_activitiesRequest_close_btn" title="Close Drawer">
+                        <i class="fas fa-times"></i>
+                    </button>
                 </div>
             </div>
-            <div class="kpi-row">
-                <div class="kpi-box">
-                    <div class="kpi-header"><div class="kpi-icon-box kpi-icon-blue"><i class="fas fa-file-alt"></i></div><span class="kpi-label">Active Jobs</span></div>
-                    <div class="kpi-number">{{ $kpiActive }}</div>
-                </div>
-                <div class="kpi-box">
-                    <div class="kpi-header"><div class="kpi-icon-box kpi-icon-green"><i class="fas fa-id-badge"></i></div><span class="kpi-label">Candidates Submitted</span></div>
-                    <div class="kpi-number">{{ $kpiSubmitted }}</div>
-                </div>
-                <div class="kpi-box">
-                    <div class="kpi-header"><div class="kpi-icon-box kpi-icon-purple"><i class="fas fa-people-arrows"></i></div><span class="kpi-label">Interviews Scheduled</span></div>
-                    <div class="kpi-number">{{ $kpiInterviews }}</div>
-                </div>
-                <div class="kpi-box">
-                    <div class="kpi-header"><div class="kpi-icon-box kpi-icon-orange"><i class="fas fa-gift"></i></div><span class="kpi-label">Offers Generated</span></div>
-                    <div class="kpi-number">{{ $kpiOffers }}</div>
-                </div>
-                <div class="kpi-box">
-                    <div class="kpi-header"><div class="kpi-icon-box kpi-icon-teal"><i class="fas fa-calendar-check"></i></div><span class="kpi-label">Successful Joins</span></div>
-                    <div class="kpi-number">{{ $kpiJoins }}</div>
-                </div>
-            </div>
-        </div>
 
-        <!-- Tabs Section -->
-        <div class="card card-custom mx-2">
-            <div class="card-header card-header-tabs-line">
-                <div class="card-toolbar">
-                    <ul class="nav nav-tabs nav-tabs-space-lg nav-tabs-line nav-tabs-bold nav-tabs-line-3x cd-maintabs" role="tablist">
-                        <li class="nav-item me-3">
-                            <a class="nav-link active" data-toggle="tab" href="#overview_req">
-                                <span class="nav-text font-weight-bold">Overview</span>
-                            </a>
-                        </li>
-                        @if (!empty($client_contact_info) && count($client_contact_info) > 0)
-                        <li class="nav-item me-3">
-                            <a class="nav-link" data-toggle="tab" href="#contacts_req">
-                                <span class="nav-text font-weight-bold">Contacts</span>
-                            </a>
-                        </li>
+            <!-- ── Master Card: Client Identity & Quick Heuristics ── -->
+            <div class="cd-hero-card">
+                <div class="cd-hero-subcards-grid">
+                    <!-- Sub-Card 1: Identity & Brand -->
+                    <div class="cd-hero-subcard-identity">
+                        <div class="cd-avatar-box">
+                            @if (!empty($detailLogo))
+                                <img src="{{ $detailLogo }}" alt="{{ $detailName }}">
+                            @else
+                                <span class="cd-avatar-initials">{{ $detailInitials }}</span>
+                            @endif
+                            <div class="cd-verified-seal" title="Verified Direct Client">
+                                <i class="fas fa-check"></i>
+                            </div>
+                        </div>
+                        <div class="cd-identity-meta">
+                            <div class="cd-identity-title-row">
+                                <h2 class="cd-identity-name">{{ $detailName }}</h2>
+                                <span class="cd-type-badge-tag direct">Direct Client</span>
+                            </div>
+                            <div class="cd-identity-subtitle">
+                                {{ $rc_company_type_val }}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Sub-Card 2: Discrete Parameter Chips -->
+                    <div class="cd-hero-subcard-params">
+                        @if ($industries_name)
+                            <div class="cd-hero-param-chip">
+                                <i class="fas fa-building text-primary"></i>
+                                <span>{{ $industries_name }}</span>
+                            </div>
                         @endif
-                    </ul>
-                </div>
-            </div>
-            <div class="card-body py-0">
-                <div class="tab-content pt-5">
-                    <!-- Overview Tab Pane -->
-                    <div class="tab-pane active" id="overview_req" role="tabpanel">
-                        <div class="cd-content-grid py-5">
-                            <div class="cd-card">
-                                <div class="cd-card-head">
-                                    <div class="cd-card-ic"><i class="fas fa-info-circle"></i></div>
-                                    <h3 class="cd-card-title">About the Client</h3>
-                                </div>
-                                <div class="cd-about">
-                                    {!! @$directClientDetail->description !!}
-                                </div>
-                            </div>
-                            <div class="cd-card">
-                                <div class="cd-card-head">
-                                    <div class="cd-card-ic"><i class="fas fa-building"></i></div>
-                                    <h3 class="cd-card-title">Client Information</h3>
-                                </div>
-                                <div class="cd-info-list">
-                                    <div class="cd-info-row">
-                                        <span class="cd-info-label">Headquarters</span>
-                                        <span class="cd-info-value">{{ ucwords($city_name) }}@if($country_name), {{ ucwords($country_name) }}@endif</span>
-                                    </div>
-                                    @if (!empty(@$directClientDetail->website))
-                                    <div class="cd-info-row">
-                                        <span class="cd-info-label">Website</span>
-                                        <span class="cd-info-value"><a href="{{ @$directClientDetail->website }}" target="_blank">{{ @$directClientDetail->website }} <i class="fas fa-external-link-alt"></i></a></span>
-                                    </div>
-                                    @endif
-                                    @if ($industries_name)
-                                    <div class="cd-info-row">
-                                        <span class="cd-info-label">Industry</span>
-                                        <span class="cd-info-value">{{ $industries_name }}</span>
-                                    </div>
-                                    @endif
-                                    @php
-                                        $rc_company_type_val = '';
-                                        if (isset($directClientDetail->company_type) && $directClientDetail->company_type !== '' && isset($companyType[$directClientDetail->company_type])) {
-                                            $rawRcComp = $companyType[$directClientDetail->company_type];
-                                            $rc_company_type_val = is_string($rawRcComp) ? $rawRcComp : (is_object($rawRcComp) ? (string)($rawRcComp->name ?? '') : '');
-                                        }
-                                    @endphp
-                                    @if ($rc_company_type_val !== '')
-                                    <div class="cd-info-row">
-                                        <span class="cd-info-label">Company Type</span>
-                                        <span class="cd-info-value">{{ $rc_company_type_val }}</span>
-                                    </div>
-                                    @endif
-                                    <div class="cd-info-row">
-                                        <span class="cd-info-label">Vendor ID</span>
-                                        <span class="cd-info-value">VEN-{{ @$directClientDetail->client_id }}</span>
-                                    </div>
-                                    @if (@$directClientDetail->founded)
-                                    <div class="cd-info-row">
-                                        <span class="cd-info-label">Founded</span>
-                                        <span class="cd-info-value">
-                                            @php
-                                                $currentYr = date('Y');
-                                                $foundedYr = @$directClientDetail->founded;
-                                                $diffYr = $currentYr - $foundedYr;
-                                                echo $diffYr > 0 ? $diffYr . ' Years ago' : $foundedYr;
-                                            @endphp
-                                        </span>
-                                    </div>
-                                    @endif
-                                     @if (@$directClientDetail->company_size)
-                                     <div class="cd-info-row">
-                                         <span class="cd-info-label">Number of Employees</span>
-                                         <span class="cd-info-value">{{ is_numeric(@$directClientDetail->company_size) ? number_format((float)@$directClientDetail->company_size) . '+' : @$directClientDetail->company_size }}</span>
-                                     </div>
-                                     @endif
-                                    @if (!empty(@$directClientDetail->to_created_at))
-                                    <div class="cd-info-row">
-                                        <span class="cd-info-label">Connected On</span>
-                                        <span class="cd-info-value">{{ date('d M, Y', strtotime(@$directClientDetail->to_created_at)) }}</span>
-                                    </div>
-                                    @endif
-                                    @if (count($tagsArr))
-                                    <div class="cd-info-row">
-                                        <span class="cd-info-label">Specialties</span>
-                                        <span class="cd-info-value">{{ ucwords(implode(', ', $tagsArr)) }}</span>
-                                    </div>
-                                    @endif
-                                </div>
-                            </div>
+                        <div class="cd-hero-param-chip">
+                            <i class="fas fa-map-marker-alt text-danger"></i>
+                            <span>{{ ucwords($city_name) }}@if($country_name), {{ ucwords($country_name) }}@endif</span>
+                        </div>
+                        @if (!empty($webClean))
+                            <a href="{{ str_starts_with($webClean, 'http') ? $webClean : 'https://'.$webClean }}" target="_blank" class="cd-hero-param-chip link">
+                                <i class="fas fa-globe text-info"></i>
+                                <span class="text-truncate" style="max-width: 140px;">{{ $webClean }}</span>
+                                <i class="fas fa-external-link-alt ms-1" style="font-size: 8px;"></i>
+                            </a>
+                        @endif
+                        <div class="cd-hero-param-chip">
+                            <i class="fas fa-id-badge text-warning"></i>
+                            <span>VID: <strong class="text-dark">VEN-{{ @$directClientDetail->client_id }}</strong></span>
                         </div>
                     </div>
 
-                    <!-- Contacts Tab Pane -->
-                    @if (!empty($client_contact_info) && count($client_contact_info) > 0)
-                    <div class="tab-pane" id="contacts_req" role="tabpanel">
-                        <div class="cd-tabcard cd-contacts my-5">
-                            <div class="cd-tabcard-head" style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;">
-                                <div>
-                                    <div class="cd-tabcard-title">Contacts</div>
-                                    <div class="cd-tabcard-sub">Contacts associated with this client.</div>
-                                </div>
-                            </div>
-                            <div style="overflow-x:auto;">
-                                <table class="data-table">
-                                    <thead>
-                                        <tr>
-                                            <th>Contact</th>
-                                            <th>Designation</th>
-                                            <th>Email</th>
-                                            <th>Phone</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        @foreach($client_contact_info as $cci)
-                                        <tr>
-                                            <td>
-                                                <div style="display:flex;align-items:center;gap:10px;">
-                                                    <div class="contact-avatar-table">
-                                                        {{ strtoupper(mb_substr(@$cci->contact_person_name ?: 'C', 0, 1)) }}
-                                                    </div>
-                                                    <span class="contact-name-table">{{ @$cci->contact_person_name }}</span>
-                                                </div>
-                                            </td>
-                                            <td>{{ @$cci->designation ?: '-' }}</td>
-                                            <td><a href="mailto:{{ @$cci->email }}" style="color:#009ef7;">{{ @$cci->email ?: '-' }}</a></td>
-                                            <td>{{ @$cci->phone ?: '-' }}</td>
-                                        </tr>
-                                        @endforeach
-                                    </tbody>
-                                </table>
+                    <!-- Sub-Card 3: Activity & Pulse Status -->
+                    <div class="cd-hero-subcard-activity">
+                        <div class="cd-status-pulse-badge {{ $isClientActive ? 'active' : 'inactive' }}">
+                            <span class="cd-pulse-indicator {{ $isClientActive ? 'pulse-green' : 'pulse-grey' }}"></span>
+                            <div class="cd-status-text-wrap">
+                                <div class="cd-status-main-text">{{ $isClientActive ? 'Client Active' : 'Terms Review' }}</div>
+                                <div class="cd-status-sub-text">{{ $kpiActive }} active {{ $kpiActive == 1 ? 'job' : 'jobs' }}</div>
                             </div>
                         </div>
+                        <div class="cd-onboarding-chip">
+                            <i class="fas fa-history text-muted me-1"></i>
+                            <span>Since <strong>{{ $clientSinceYear }}</strong> <span class="mx-1">•</span> {{ $clientUpdatedAt }}</span>
+                        </div>
                     </div>
+                </div>
+
+                <!-- Discrete Bottom Activity Strip -->
+                <div class="cd-hero-activity-strip">
+                    <div>
+                        <i class="fas fa-file-contract text-primary me-1"></i> Direct Client Terms &amp; Master Agreement Request
+                    </div>
+                    <div>
+                        <span class="badge bg-light-success text-success fw-bold"><i class="fas fa-check-circle me-1"></i> Verified Partnership</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ── 5 Metric KPI Sub-Cards Row ── -->
+            <div class="cd-kpi-grid">
+                <div class="cd-kpi-card">
+                    <div class="cd-kpi-card-left">
+                        <div class="cd-kpi-icon-square blue"><i class="fas fa-briefcase"></i></div>
+                        <div>
+                            <div class="cd-kpi-val">{{ $kpiActive }}</div>
+                            <div class="cd-kpi-label">Active Jobs</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="cd-kpi-card">
+                    <div class="cd-kpi-card-left">
+                        <div class="cd-kpi-icon-square green"><i class="fas fa-users"></i></div>
+                        <div>
+                            <div class="cd-kpi-val">{{ $kpiSubmitted }}</div>
+                            <div class="cd-kpi-label">Submitted</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="cd-kpi-card">
+                    <div class="cd-kpi-card-left">
+                        <div class="cd-kpi-icon-square purple"><i class="fas fa-calendar-check"></i></div>
+                        <div>
+                            <div class="cd-kpi-val">{{ $kpiInterviews }}</div>
+                            <div class="cd-kpi-label">Interviews</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="cd-kpi-card">
+                    <div class="cd-kpi-card-left">
+                        <div class="cd-kpi-icon-square orange"><i class="fas fa-file-signature"></i></div>
+                        <div>
+                            <div class="cd-kpi-val">{{ $kpiOffers }}</div>
+                            <div class="cd-kpi-label">Offers</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="cd-kpi-card">
+                    <div class="cd-kpi-card-left">
+                        <div class="cd-kpi-icon-square teal"><i class="fas fa-user-check"></i></div>
+                        <div>
+                            <div class="cd-kpi-val">{{ $kpiJoins }}</div>
+                            <div class="cd-kpi-label">Joined</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ── Tier 2: Dedicated Pure White Sub-Tabs Card ── -->
+            <div class="cd-drawer-tabs-card">
+                <div class="cd-drawer-tabs-list" role="tablist">
+                    <a class="cd-tab-pill-btn active" data-toggle="tab" href="#overview_req" role="tab">
+                        <i class="fas fa-house"></i>
+                        <span>Overview</span>
+                    </a>
+                    @if (!empty($client_contact_info) && count($client_contact_info) > 0)
+                    <a class="cd-tab-pill-btn" data-toggle="tab" href="#contacts_req" role="tab">
+                        <i class="fas fa-address-book"></i>
+                        <span>Contacts</span>
+                        <span class="cd-tab-badge-pill">{{ count($client_contact_info) }}</span>
+                    </a>
                     @endif
                 </div>
+            </div>
+
+            <!-- ── Tab Contents Container ── -->
+            <div class="tab-content">
+                <!-- Overview Tab Pane -->
+                <div class="tab-pane active" id="overview_req" role="tabpanel">
+                    <div class="cd-overview-subcards-grid py-2">
+                        <!-- Left Column -->
+                        <div class="cd-master-subcard">
+                            <div class="cd-subcard-header">
+                                <div class="cd-subcard-header-left">
+                                    <div class="cd-subcard-header-icon blue"><i class="fas fa-info-circle"></i></div>
+                                    <h4 class="cd-subcard-title">About the Client</h4>
+                                </div>
+                                @if (!empty($webClean))
+                                <a href="{{ str_starts_with($webClean, 'http') ? $webClean : 'https://'.$webClean }}" target="_blank" class="cd-subcard-action-link">
+                                    {{ $webClean }} <i class="fas fa-external-link-alt ms-1"></i>
+                                </a>
+                                @endif
+                            </div>
+                            <div style="font-size: 12px; line-height: 1.65; color: #475569;">
+                                @if (!empty(@$directClientDetail->description))
+                                    {!! @$directClientDetail->description !!}
+                                @else
+                                    {{ $detailName }} is an authorized enterprise client engaging through direct contractual agreement. All hiring requisitions and terms are authoritative.
+                                @endif
+                            </div>
+                        </div>
+
+                        <!-- Right Column -->
+                        <div class="cd-master-subcard">
+                            <div class="cd-subcard-header">
+                                <div class="cd-subcard-header-left">
+                                    <div class="cd-subcard-header-icon indigo"><i class="fas fa-building"></i></div>
+                                    <h4 class="cd-subcard-title">Client Information</h4>
+                                </div>
+                            </div>
+                            <div class="cd-info-subcards-grid">
+                                <div class="cd-info-subcard-mini">
+                                    <span class="cd-mini-label">Headquarters</span>
+                                    <span class="cd-mini-value">{{ ucwords($city_name) }}@if($country_name), {{ ucwords($country_name) }}@endif</span>
+                                </div>
+                                @if (!empty($webClean))
+                                <div class="cd-info-subcard-mini">
+                                    <span class="cd-mini-label">Website</span>
+                                    <span class="cd-mini-value">
+                                        <a href="{{ str_starts_with($webClean, 'http') ? $webClean : 'https://'.$webClean }}" target="_blank" class="text-truncate d-inline-block" style="max-width:140px;">
+                                            {{ $webClean }} <i class="fas fa-external-link-alt ms-1" style="font-size:8px;"></i>
+                                        </a>
+                                    </span>
+                                </div>
+                                @endif
+                                @if ($industries_name)
+                                <div class="cd-info-subcard-mini">
+                                    <span class="cd-mini-label">Industry</span>
+                                    <span class="cd-mini-value">{{ $industries_name }}</span>
+                                </div>
+                                @endif
+                                <div class="cd-info-subcard-mini">
+                                    <span class="cd-mini-label">Company Type</span>
+                                    <span class="cd-mini-value">{{ $rc_company_type_val }}</span>
+                                </div>
+                                <div class="cd-info-subcard-mini">
+                                    <span class="cd-mini-label">Vendor ID</span>
+                                    <span class="cd-mini-value fw-bold text-dark">VEN-{{ @$directClientDetail->client_id }}</span>
+                                </div>
+                                @if (@$directClientDetail->founded)
+                                <div class="cd-info-subcard-mini">
+                                    <span class="cd-mini-label">Founded</span>
+                                    <span class="cd-mini-value">
+                                        @php
+                                            $currentYr = date('Y');
+                                            $foundedYr = @$directClientDetail->founded;
+                                            $diffYr = $currentYr - $foundedYr;
+                                            echo $diffYr > 0 ? $diffYr . ' Years ago' : $foundedYr;
+                                        @endphp
+                                    </span>
+                                </div>
+                                @endif
+                                @if (@$directClientDetail->company_size)
+                                <div class="cd-info-subcard-mini">
+                                    <span class="cd-mini-label">Employees</span>
+                                    <span class="cd-mini-value">{{ is_numeric(@$directClientDetail->company_size) ? number_format((float)@$directClientDetail->company_size) . '+' : @$directClientDetail->company_size }}</span>
+                                </div>
+                                @endif
+                                @if (!empty(@$directClientDetail->to_created_at))
+                                <div class="cd-info-subcard-mini">
+                                    <span class="cd-mini-label">Connected On</span>
+                                    <span class="cd-mini-value">{{ date('d M, Y', strtotime(@$directClientDetail->to_created_at)) }}</span>
+                                </div>
+                                @endif
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Contacts Tab Pane -->
+                @if (!empty($client_contact_info) && count($client_contact_info) > 0)
+                <div class="tab-pane" id="contacts_req" role="tabpanel">
+                    <div class="cd-contacts-stream my-3">
+                        @foreach($client_contact_info as $cci)
+                        <div class="cd-contact-card-subcard">
+                            <div class="cd-contact-card-left">
+                                <div class="cd-contact-avatar-round">
+                                    {{ strtoupper(mb_substr(@$cci->contact_person_name ?: 'C', 0, 1)) }}
+                                </div>
+                                <div class="cd-contact-name-title-wrap">
+                                    <span class="cd-contact-fullname">{{ @$cci->contact_person_name }}</span>
+                                    <span class="cd-contact-designation">{{ @$cci->designation ?: 'Client Stakeholder' }}</span>
+                                </div>
+                            </div>
+                            <div class="cd-contact-channels-wrap">
+                                @if(!empty(@$cci->email))
+                                <a href="mailto:{{ @$cci->email }}" class="cd-channel-badge" title="Send Email">
+                                    <i class="fas fa-envelope text-primary"></i>
+                                    <span>{{ @$cci->email }}</span>
+                                </a>
+                                @endif
+                                @if(!empty(@$cci->phone))
+                                <a href="tel:{{ @$cci->phone }}" class="cd-channel-badge" title="Call Phone">
+                                    <i class="fas fa-phone text-success"></i>
+                                    <span>{{ @$cci->phone }}</span>
+                                </a>
+                                @endif
+                            </div>
+                        </div>
+                        @endforeach
+                    </div>
+                </div>
+                @endif
             </div>
         </div>
 
