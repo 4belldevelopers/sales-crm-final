@@ -71,6 +71,21 @@
                 }
                 $clientDisplayName = !empty($resolvedClient) ? strtoupper($resolvedClient) : 'CLIENT';
 
+                // Client Type Resolution (Direct Client vs Internal Client)
+                $isDirect = false;
+                if (isset($job->self_company) && (int) $job->self_company === 1) {
+                    $isDirect = true;
+                } elseif (isset($job->client_type) && strtolower((string) $job->client_type) === 'direct') {
+                    $isDirect = true;
+                } elseif (isset($custom) && ($custom === 'false' || $custom === false)) {
+                    $isDirect = true;
+                } elseif (isset($viewModel) && !empty($viewModel->clientType) && $viewModel->clientType === 'direct') {
+                    $isDirect = true;
+                }
+
+                $clientTypeLabel = $isDirect ? 'Direct Client' : 'Internal Client';
+                $clientTypeCls   = $isDirect ? 'type-direct' : 'type-internal';
+
                 // 3. Sub-Card 2: Experience & Compensation
                 $minExp = (int) ($job->min_exp ?? 0);
                 $maxExp = (int) ($job->max_exp ?? 0);
@@ -200,7 +215,10 @@
                     <div class="cd-job-subcard cd-subcard-details">
                         <div class="cd-subcard-header">
                             <span class="cd-subcard-label">Job Details</span>
-                            <span class="cd-status-badge {{ $statusCls }}">{{ $statusLabel }}</span>
+                            <div class="cd-header-badges">
+                                <span class="cd-badge-client-type {{ $clientTypeCls }}"><i class="fas fa-building me-1"></i>{{ $clientTypeLabel }}</span>
+                                <span class="cd-status-badge {{ $statusCls }}">{{ $statusLabel }}</span>
+                            </div>
                         </div>
                         <div class="cd-details-body">
                             <div class="cd-logo-box" style="background-color: {{ $logoColor }};">

@@ -30,7 +30,8 @@ class JobsTabViewModel
         public readonly string $queryHash = '',       // Observable query identity
         public readonly string $generatedAt = '',      // Generation timestamp for telemetry
         public readonly array $tabs = [],        // Fully dynamic status tabs
-        public readonly ?string $clientName = null   // Dynamically resolved client name
+        public readonly ?string $clientName = null,   // Dynamically resolved client name
+        public readonly string $clientType = 'internal' // 'internal' | 'direct'
     ) {}
 
     public function hasJobs(): bool

@@ -128,7 +128,7 @@ align-items: stretch !important;
    - Entity Title (12.5px bold, with drawer trigger routing).
    - Entity ID (`#99991` in primary blue) & Department / Category name.
    - **Dynamic Client Name & Employment Type:** Third row displays the dynamically populated Client Name (never a hardcoded company name) immediately followed by the Employment Type badge (`CLIENT NAME • 💼 Full-Time`).
-   - Canonical Status Badge (Hiring `#dcfce7`, Hold `#fef3c7`, Closed `#fee2e2`, Inactive `#f1f5f9`).
+   - **Header Dual Badges (Client Scope & Status):** Sub-Card 1 header displays the dedicated **Client Scope Pill** (`[Direct Client]` in emerald green `#ecfdf5` or `[Internal Client]` in primary blue `#eff6ff`) positioned immediately beside the Canonical Status Badge (`HIRING` `#dcfce7`, `HOLD` `#fef3c7`, `CLOSED` `#fee2e2`, `INACTIVE` `#f1f5f9`).
 2. **Sub-Card 2: Compensation & Experience (`.cd-subcard-comp-loc`, Label: `COMPENSATION & EXP`)**
    - **Row 1:** Salary range formatted cleanly in bold (`₹5,000 - 2.50 L`).
    - **Row 2:** Experience range with dedicated clock icon (`🕒 6 - 10 Yrs`).
@@ -281,4 +281,5 @@ $(document).on('click', '.js-job-filter-btn', function() {
 8. **Dynamic Client Name & Full-Time Placement:** In the Primary Details sub-card, always display the dynamically populated Client Name (never hardcode company names) with Employment Type (e.g. `Full-Time`) placed in the same row immediately next to the client name.
 9. **Compensation & Experience Sub-Card:** Sub-card 2 must be labeled `COMPENSATION & EXP` with Row 1 for salary, Row 2 for experience with clock icon (`🕒 X - Y Yrs`), and Row 3 for location & work mode.
 10. **Consistent Work Mode Wording:** Always use `"Work From Office"` (never just `"Office"`) across all entity views and tabs.
-8. **Multi-Tenant Scoping:** All client-side storage, caches, and requests must carry explicit tenant scoping (`company_id`).
+11. **Client Scope Header Classification:** Sub-Card 1 header must display the Client Scope Pill (`Direct Client` in emerald `#ecfdf5` or `Internal Client` in blue `#eff6ff`) positioned beside the status badge.
+12. **Multi-Tenant Scoping:** All client-side storage, caches, and requests must carry explicit tenant scoping (`company_id`).

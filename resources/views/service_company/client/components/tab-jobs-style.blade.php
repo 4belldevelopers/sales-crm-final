@@ -331,7 +331,45 @@
     text-overflow: ellipsis !important;
 }
 
-/* Canonical Status Badges */
+/* Canonical Status Badges & Client Type Classification */
+.cd-header-badges {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 4px !important;
+    flex-shrink: 0 !important;
+}
+
+.cd-badge-client-type {
+    font-size: 8.5px !important;
+    font-weight: 700 !important;
+    padding: 1px 6px !important;
+    border-radius: 4px !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.2px !important;
+    line-height: 1.3 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 3px !important;
+    white-space: nowrap !important;
+    flex-shrink: 0 !important;
+}
+
+.cd-badge-client-type i {
+    font-size: 8px !important;
+}
+
+.cd-badge-client-type.type-direct {
+    background: #ecfdf5 !important;
+    color: #059669 !important;
+    border: 1px solid #a7f3d0 !important;
+}
+
+.cd-badge-client-type.type-internal {
+    background: #eff6ff !important;
+    color: #2563eb !important;
+    border: 1px solid #bfdbfe !important;
+}
+
 .cd-status-badge {
     font-size: 9px !important;
     font-weight: 700 !important;

@@ -365,7 +365,8 @@ class ClientJobsReadService
             projectionVersion: $currentVersion,
             queryHash: md5($cacheKey),
             generatedAt: now()->toIso8601String(),
-            clientName: $clientDisplayName
+            clientName: $clientDisplayName,
+            clientType: $query->clientType
         );
 
         // 9. Store in Redis Query Cache
