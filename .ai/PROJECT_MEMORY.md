@@ -20,6 +20,18 @@ Last updated: 2026-10-22 (Super Admin Companies Page UI Redesign, 100% CQRS Read
 - **Test coverage:** `TenantIsolationTest`, `BenchToJobAppTrackerPipelineContractTest`, `BenchTalentRequestPipelineContractTest`, `SuperAdminCompanyLoadTest`, `SuperAdminSubscriptionLoadTest`, `SuperAdminDashboardLoadTest` (100% green).
 - **V2_login blocking-scenarios architecture:** session-epoch pattern + Reverb `UserAccountSuspended` event + `SyncUserStatusAction` (cross-tenant-safe) + `BlockCompanyAction` (static bulk helper) + `block_log` audit table + drop all 20 `refresh:true` ES sites + grep-lint guard. See [docs/V2_login/BLOCKING_SCENARIOS_AUDIT.md](../docs/V2_login/BLOCKING_SCENARIOS_AUDIT.md), [ADR 0007](../docs/adr/0007-blocking-scenarios-architecture.md). Code not yet landed.
 
+- *2026-10-26* — **Client Drawer Modern Card + Sub-Card Overhaul & Linear/Stripe Continuous Hero Header (100% COMPLETED & VERIFIED)**:
+  - **Scope**: Internal Client Drawer (`resources/views/service_company/client/show.blade.php`), Direct Client Drawer (`resources/views/service_company/client/dviewMore.blade.php`), Direct Client Terms/Request Drawer (`resources/views/service_company/client/requestviewmore.blade.php`).
+  - **Implementation**:
+    - Overhauled all 3 client drawers to the authoritative **Modern Card + Sub-Card Enterprise Design System** (`docs/UI_UX_CARD_SUB_CARD_DESIGN_STANDARD.md`).
+    - Standardized Tier 1 executive toolbar card, Tier 2 sub-tabs card, Tier 3 card stream, and removed 500+ lines of dead mock tables in `#requisitions`.
+    - Implemented **Option 2: "The Linear / Stripe Continuous Header"** for the Hero section (`.cd-hero-card` with `padding: 0; overflow: hidden;`):
+      - Left executive identity anchor (`.cd-hero-continuous-left`) with brand logo, `#CL-{id}` ID tag, scope pills (`[🏢 Internal Client]` / `[🤝 Direct Client]`), and active status indicators.
+      - Right 2-column hairline metadata grid (`.cd-hero-continuous-right`) with Industry, Location, direct external Website link (`domain.com ↗`), Company Type, Workforce Size, and Founded/VID.
+      - Full-width continuous bottom activity strip (`.cd-hero-continuous-bottom`) featuring active roles (`⚡ X Active Roles`), onboarded date, last activity time, and discrete tag pills.
+    - Verified 15.6" screen responsiveness (`1366×768` and `1920×1080`), zero horizontal scroll, and 0% MySQL reads.
+  - **Verification**: `php -l` passed clean with 0 syntax errors, `php artisan view:clear` passed, committed and pushed to `origin/staging`.
+
 - *2026-10-25* — **Client Drawer Jobs Tab: Client Scope Header Classification (Option 2 Implementation 100% COMPLETED & VERIFIED)**:
   - **User Request & Requirements**:
     - Audit and implement the missing "Direct Client" vs "Internal Client" classification indicator on the Jobs tab.
