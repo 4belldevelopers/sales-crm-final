@@ -5894,41 +5894,493 @@ use Carbon\Carbon;
 </script>
 
 <script>
-    function initContactsDataTable() {
-        if ($.fn.DataTable.isDataTable('#contactList')) {
-            return;
-        }
-        var table = $('#contactList').dataTable({
-            responsive: true,
-            processing: true,
-            serverSide: true,
-            destroy: true,
-            ordering: false, //disable ordering			
-            "bLengthChange": false, //thought this line could hide the LengthMenu
-            sDom: 'lrtip',
-            oLanguage: {
-                sLengthMenu: "_MENU_",
-            },
-            ajax: {
-                'url': '{!! route('service_company.clients.contactdata') !!}?clientId=' + {{ @$client->id }},
-                "data": function(d) {
-                    d.search = $('#contactSearchInput').val() || $('#inputSearch').val()
+    /**
+     * ── InternalClientContactsManager (Client-First RAM & Card Stream Engine) ──
+     * God-Level Modern Card + Sub-Card Enterprise Implementation.
+     * 100% Client-First Local Filtering, 300ms Debounce, Copy Actions, Zero Horizontal Overflow.
+     */
+    window.InternalClientContactsManager = {
+        clientId: {{ (int) @$client->id }},
+        companyId: {{ (int) auth()->user()->company_id }},
+        clientName: '{{ addslashes($detailName ?? @$client->company_name ?? "Internal Client") }}',
+        allContacts: [],
+        filteredContacts: [],
+        activeFilter: 'all',
+        searchTerm: '',
+        searchDebounceTimer: null,
+        isInitialized: false,
+        isLoading: false,
+
+        avatarPalette: ['#2563eb', '#059669', '#7c3aed', '#d97706', '#db2777', '#0284c7', '#4f46e5', '#0d9488', '#ea580c'],
+
+        init: function(clientId) {
+            if (clientId) this.clientId = clientId;
+            if (!this.isInitialized) {
+                this.bindEvents();
+                this.isInitialized = true;
+            }
+            this.fetch();
+        },
+
+        bindEvents: function() {
+            var self = this;
+
+            // 1. Debounced live search
+            $(document).off('input', '#cdContactSearchInputInternal');
+            $(document).on('input', '#cdContactSearchInputInternal', function() {
+                var val = $(this).val();
+                if (val && val.length > 0) {
+                    $('#cdContactSearchClearInternal').show();
+                } else {
+                    $('#cdContactSearchClearInternal').hide();
                 }
-            },
-            "drawCallback": function(settings) {
-                $('[data-toggle="tooltip1"]').tooltip();
-                $('[data-toggle="tooltip2"]').tooltip();
-            },
-            columns: [
-                { data: 'chkbox', name: 'chkbox', searchable: false, orderable: false, width: '40px' },
-                { data: 'Contact', name: 'Contact', searchable: false, orderable: false },
-                { data: 'Designation', name: 'Designation', searchable: false, orderable: false },
-                { data: 'Email', name: 'Email', searchable: false, orderable: false },
-                { data: 'Phone', name: 'Phone', searchable: false, orderable: false },
-                { data: 'Status', name: 'Status', searchable: false, orderable: false, width: '90px' }
-            ]
-        });
-        new $.fn.dataTable.FixedHeader(table);
+                clearTimeout(self.searchDebounceTimer);
+                self.searchDebounceTimer = setTimeout(function() {
+                    self.searchTerm = (val || '').trim().toLowerCase();
+                    self.filterAndRender();
+                }, 300);
+            });
+
+            // 2. Interactive clear search button
+            $(document).off('click', '#cdContactSearchClearInternal');
+            $(document).on('click', '#cdContactSearchClearInternal', function() {
+                $('#cdContactSearchInputInternal').val('');
+                $(this).hide();
+                self.searchTerm = '';
+                self.filterAndRender();
+            });
+
+            // 3. Reset filters & refresh button
+            $(document).off('click', '#cdContactResetBtnInternal, #cdContactClearFilterBtnInternal');
+            $(document).on('click', '#cdContactResetBtnInternal, #cdContactClearFilterBtnInternal', function() {
+                $('#cdContactSearchInputInternal').val('');
+                $('#cdContactSearchClearInternal').hide();
+                self.searchTerm = '';
+                self.activeFilter = 'all';
+                $('.cd-contact-subtab').removeClass('active');
+                $('#cdContactTabAllInternal').addClass('active');
+                self.fetch();
+            });
+
+            // 4. Sub-tab filter buttons
+            $(document).off('click', '.cd-contact-tabs-card .cd-contact-subtab');
+            $(document).on('click', '.cd-contact-tabs-card .cd-contact-subtab', function() {
+                var filter = $(this).data('filter') || 'all';
+                $('.cd-contact-tabs-card .cd-contact-subtab').removeClass('active');
+                $(this).addClass('active');
+                self.activeFilter = filter;
+                self.filterAndRender();
+            });
+
+            // 5. One-click copy with visual tooltip / checkmark
+            $(document).off('click', '.js-copy-data');
+            $(document).on('click', '.js-copy-data', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                var text = $(this).data('copy') || $(this).attr('data-copy');
+                if (!text) return;
+                var $btn = $(this);
+                var origHtml = $btn.html();
+
+                var showSuccess = function() {
+                    $btn.html('<i class="fas fa-check text-success" style="font-size:10px;"></i>');
+                    setTimeout(function() { $btn.html(origHtml); }, 1400);
+                };
+
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    navigator.clipboard.writeText(text).then(showSuccess).catch(function() {
+                        self.fallbackCopy(text, showSuccess);
+                    });
+                } else {
+                    self.fallbackCopy(text, showSuccess);
+                }
+            });
+
+            // 6. View Requisitions button: switch to #requisitions tab
+            $(document).off('click', '.js-contact-view-jobs');
+            $(document).on('click', '.js-contact-view-jobs', function(e) {
+                e.preventDefault();
+                $('a[href="#requisitions"]').tab('show');
+            });
+        },
+
+        fallbackCopy: function(text, cb) {
+            var textArea = document.createElement('textarea');
+            textArea.value = text;
+            textArea.style.position = 'fixed';
+            textArea.style.left = '-9999px';
+            document.body.appendChild(textArea);
+            textArea.focus();
+            textArea.select();
+            try {
+                document.execCommand('copy');
+                if (typeof cb === 'function') cb();
+            } catch (err) {}
+            document.body.removeChild(textArea);
+        },
+
+        fetch: function() {
+            var self = this;
+            this.isLoading = true;
+            $('#cdContactSkeletonLoaderInternal').show();
+            $('#cdContactCardsStreamInternal').hide();
+            $('#cdContactEmptyStateInternal').hide();
+
+            var clientId = this.clientId;
+            $.ajax({
+                url: '{!! route('service_company.clients.contactdata') !!}?clientId=' + clientId,
+                type: 'GET',
+                dataType: 'json',
+                success: function(res) {
+                    self.isLoading = false;
+                    $('#cdContactSkeletonLoaderInternal').hide();
+                    $('#cdContactCardsStreamInternal').show();
+
+                    var list = (res && res.data && Array.isArray(res.data)) ? res.data : [];
+                    self.allContacts = list;
+                    self.updateCounts(list);
+                    self.filterAndRender();
+                },
+                error: function() {
+                    self.isLoading = false;
+                    $('#cdContactSkeletonLoaderInternal').hide();
+                    $('#cdContactCardsStreamInternal').show();
+                    self.allContacts = [];
+                    self.filterAndRender();
+                }
+            });
+        },
+
+        updateCounts: function(list) {
+            var total = list.length;
+            var primaryCount = 0;
+            var managerCount = 0;
+            var hrCount = 0;
+            var activeCount = 0;
+
+            var managerKeywords = ['manager', 'lead', 'head', 'vp', 'director', 'chief', 'principal', 'president', 'officer', 'lead'];
+            var hrKeywords = ['hr', 'recruiter', 'recruiting', 'talent', 'sourcer', 'coordinator', 'people', 'admin'];
+
+            list.forEach(function(item, idx) {
+                var desig = (item.contact_person_designation || item.Designation || item.display_name || '').toLowerCase();
+                var isPrimary = (item.is_primary == 1) || (idx === 0);
+                if (isPrimary) primaryCount++;
+
+                var isMgr = managerKeywords.some(function(k) { return desig.indexOf(k) !== -1; });
+                if (isMgr) managerCount++;
+
+                var isHr = hrKeywords.some(function(k) { return desig.indexOf(k) !== -1; });
+                if (isHr) hrCount++;
+
+                var status = (item.status || item.Status || 'active').toLowerCase();
+                if (status.indexOf('active') !== -1) activeCount++;
+            });
+
+            $('#cdContactCountTextInternal').text(total);
+            $('#contactTabCountAllInternal').text(total);
+            $('#contactTabCountPrimaryInternal').text(primaryCount);
+            $('#contactTabCountManagerInternal').text(managerCount);
+            $('#contactTabCountHrInternal').text(hrCount);
+            $('#contactTabCountActiveInternal').text(activeCount);
+
+            // Update main tab badge
+            var $navBadge = $('#cdContactNavBadgeInternal');
+            if ($navBadge.length) {
+                $navBadge.text(total);
+                if (total > 0) $navBadge.show(); else $navBadge.hide();
+            }
+        },
+
+        filterAndRender: function() {
+            var self = this;
+            var list = this.allContacts.slice();
+
+            var managerKeywords = ['manager', 'lead', 'head', 'vp', 'director', 'chief', 'principal', 'president', 'officer'];
+            var hrKeywords = ['hr', 'recruiter', 'recruiting', 'talent', 'sourcer', 'coordinator', 'people', 'admin'];
+
+            // 1. Sub-tab filter
+            if (this.activeFilter === 'primary') {
+                list = list.filter(function(item, idx) {
+                    return (item.is_primary == 1) || (idx === 0);
+                });
+            } else if (this.activeFilter === 'manager') {
+                list = list.filter(function(item) {
+                    var desig = (item.contact_person_designation || item.Designation || item.display_name || '').toLowerCase();
+                    return managerKeywords.some(function(k) { return desig.indexOf(k) !== -1; });
+                });
+            } else if (this.activeFilter === 'hr') {
+                list = list.filter(function(item) {
+                    var desig = (item.contact_person_designation || item.Designation || item.display_name || '').toLowerCase();
+                    return hrKeywords.some(function(k) { return desig.indexOf(k) !== -1; });
+                });
+            } else if (this.activeFilter === 'active') {
+                list = list.filter(function(item) {
+                    var status = (item.status || item.Status || 'active').toLowerCase();
+                    return status.indexOf('active') !== -1;
+                });
+            }
+
+            // 2. Search query filter
+            if (this.searchTerm) {
+                var q = this.searchTerm;
+                list = list.filter(function(item) {
+                    var name = (item.contact_person_name || item.name || '').toLowerCase();
+                    var desig = (item.contact_person_designation || item.Designation || item.display_name || '').toLowerCase();
+                    var email = (item.contact_person_email || item.email || '').toLowerCase();
+                    var phone = (item.clean_phone || item.contact_person_number || item.mobile || '').toLowerCase();
+                    var client = (item.client_name || self.clientName || '').toLowerCase();
+                    return name.indexOf(q) !== -1 || desig.indexOf(q) !== -1 || email.indexOf(q) !== -1 || phone.indexOf(q) !== -1 || client.indexOf(q) !== -1;
+                });
+            }
+
+            this.filteredContacts = list;
+
+            var $stream = $('#cdContactCardsStreamInternal');
+            var $empty = $('#cdContactEmptyStateInternal');
+
+            if (!list || list.length === 0) {
+                $stream.empty().hide();
+                $empty.show();
+                return;
+            }
+
+            $empty.hide();
+            var html = '';
+            list.forEach(function(item, idx) {
+                html += self.renderCard(item, idx);
+            });
+            $stream.html(html).show();
+        },
+
+        getInitials: function(name) {
+            if (!name) return 'CC';
+            var parts = name.trim().split(/\s+/);
+            if (parts.length === 1) return parts[0].substring(0, 2).toUpperCase();
+            return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+        },
+
+        getAvatarColor: function(name) {
+            var sum = 0;
+            var str = name || 'Internal Contact';
+            for (var i = 0; i < str.length; i++) {
+                sum += str.charCodeAt(i);
+            }
+            return this.avatarPalette[sum % this.avatarPalette.length];
+        },
+
+        renderCard: function(row, index) {
+            var self = this;
+            var cid = row.id || (index + 1);
+            var rawName = (row.contact_person_name || row.name || 'Client Contact').trim();
+            var initials = this.getInitials(rawName);
+            var avatarBg = this.getAvatarColor(rawName);
+            var rawDesig = (row.contact_person_designation || row.Designation || row.display_name || 'Key Stakeholder').trim();
+            var email = (row.contact_person_email || row.email || '').trim();
+            var phone = (row.clean_phone || (row.calling_code ? (row.calling_code + ' ' + (row.contact_person_number || '')) : (row.contact_person_number || ''))).trim();
+            var cleanPhoneForTel = phone.replace(/[^0-9+]/g, '');
+            var isPrimary = (row.is_primary == 1) || (index === 0);
+            var clientName = (row.client_name || this.clientName || 'Internal Client').trim();
+            var linkedJobs = parseInt(row.linked_jobs_count || 0, 10);
+            var createdFormatted = row.created_formatted || 'Active Member';
+            var statusStr = (row.status || 'active').toLowerCase();
+            var isActive = (statusStr.indexOf('active') !== -1);
+
+            // Sub-Card 1: Primary vs Secondary Badge
+            var primaryBadgeHtml = isPrimary
+                ? `<span class="cd-badge-primary-spoc"><i class="fas fa-star text-amber-500 me-1"></i>Primary SPOC</span>`
+                : `<span class="cd-badge-secondary-contact">Contact</span>`;
+
+            // Sub-Card 2: Communication Elements
+            var copyAllText = `Name: ${rawName} | Email: ${email || 'N/A'} | Phone: ${phone || 'N/A'} | Client: ${clientName}`;
+
+            var emailHtml = email
+                ? `<a href="mailto:${email}" class="cd-comm-link text-truncate" title="Send email to ${email}">${email}</a>`
+                : `<span class="text-muted" style="font-size:11px;">No email on file</span>`;
+
+            var emailCopyBtn = email
+                ? `<button type="button" class="cd-copy-btn js-copy-data" data-copy="${email}" title="Copy Email"><i class="far fa-copy"></i></button>`
+                : '';
+
+            var phoneHtml = phone
+                ? `<a href="tel:${cleanPhoneForTel}" class="cd-comm-link text-truncate" title="Call ${phone}">${phone}</a>`
+                : `<span class="text-muted" style="font-size:11px;">No phone on file</span>`;
+
+            var phoneCopyBtn = phone
+                ? `<button type="button" class="cd-copy-btn js-copy-data" data-copy="${phone}" title="Copy Phone"><i class="far fa-copy"></i></button>`
+                : '';
+
+            // Sub-Card 3: Role Scope Classification
+            var desigLower = rawDesig.toLowerCase();
+            var roleBadgeText = 'Account Coordinator';
+            if (desigLower.indexOf('director') !== -1 || desigLower.indexOf('vp') !== -1 || desigLower.indexOf('chief') !== -1) {
+                roleBadgeText = 'Executive SPOC';
+            } else if (desigLower.indexOf('manager') !== -1 || desigLower.indexOf('lead') !== -1 || desigLower.indexOf('head') !== -1) {
+                roleBadgeText = 'Hiring Authority';
+            } else if (desigLower.indexOf('hr') !== -1 || desigLower.indexOf('recruit') !== -1 || desigLower.indexOf('talent') !== -1) {
+                roleBadgeText = 'Talent Partner';
+            }
+
+            // Sub-Card 4: Linked Jobs
+            var jobsCountText = linkedJobs > 0 ? `<strong>${linkedJobs}</strong> Active Roles` : `Client Requisitions`;
+            var jobsBadgeText = linkedJobs > 0 ? `${linkedJobs} Roles` : 'Internal';
+
+            // Sub-Card 5: Status & Quick Actions
+            var statusPillHtml = isActive
+                ? `<span class="cd-contact-status-active"><i class="fas fa-circle"></i> Active</span>`
+                : `<span class="cd-contact-status-inactive"><i class="fas fa-circle"></i> Inactive</span>`;
+
+            var callBtnHtml = phone
+                ? `<a href="tel:${cleanPhoneForTel}" class="cd-contact-btn-call" title="Call ${rawName}"><i class="fas fa-phone-alt"></i> Call</a>`
+                : `<button type="button" class="cd-contact-btn-call disabled" style="opacity:0.4; pointer-events:none;"><i class="fas fa-phone-alt"></i> Call</button>`;
+
+            var mailBtnHtml = email
+                ? `<a href="mailto:${email}" class="cd-contact-btn-mail" title="Email ${rawName}"><i class="fas fa-envelope"></i> Email</a>`
+                : `<button type="button" class="cd-contact-btn-mail disabled" style="opacity:0.4; pointer-events:none;"><i class="fas fa-envelope"></i> Email</button>`;
+
+            var waPhoneClean = cleanPhoneForTel.replace('+', '');
+            var waBtnHtml = phone
+                ? `<a href="https://wa.me/${waPhoneClean}" target="_blank" class="cd-contact-btn-wa" title="WhatsApp ${rawName}"><i class="fab fa-whatsapp"></i></a>`
+                : '';
+
+            return `
+                <div class="cd-contact-card" data-contact-id="${cid}">
+                    <div class="cd-contact-card-grid">
+
+                        <!-- SUB-CARD 1: Contact Identity & Profile -->
+                        <div class="cd-contact-subcard cd-contact-subcard-profile">
+                            <div class="cd-contact-subcard-hdr">
+                                <span class="cd-contact-subcard-label">CONTACT PROFILE</span>
+                                ${primaryBadgeHtml}
+                            </div>
+                            <div class="cd-contact-subcard-body">
+                                <div class="cd-contact-profile-row">
+                                    <div class="cd-contact-avatar-box" style="background: ${avatarBg};">
+                                        ${initials}
+                                    </div>
+                                    <div class="cd-contact-profile-meta">
+                                        <span class="cd-contact-card-name text-truncate" title="${rawName}">${rawName}</span>
+                                        <span class="cd-contact-card-desig text-truncate" title="${rawDesig}">${rawDesig}</span>
+                                        <div class="d-flex align-items-center gap-1 mt-1">
+                                            <span class="text-muted" style="font-size: 10px; font-weight: 600;">#C-${cid}</span>
+                                            <span class="text-slate-300">•</span>
+                                            <span class="text-muted" style="font-size: 10px;">Internal Client</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- SUB-CARD 2: Direct Communication Channels -->
+                        <div class="cd-contact-subcard cd-contact-subcard-comm">
+                            <div class="cd-contact-subcard-hdr">
+                                <span class="cd-contact-subcard-label">COMMUNICATION</span>
+                                <button type="button" class="cd-copy-btn js-copy-data" data-copy="${copyAllText}" title="Copy email &amp; phone details">
+                                    <i class="far fa-clone"></i>
+                                </button>
+                            </div>
+                            <div class="cd-contact-subcard-body">
+                                <div class="cd-comm-item" title="${email}">
+                                    <i class="far fa-envelope text-primary"></i>
+                                    ${emailHtml}
+                                    ${emailCopyBtn}
+                                </div>
+                                <div class="cd-comm-item" title="${phone}">
+                                    <i class="fas fa-phone-alt text-success"></i>
+                                    ${phoneHtml}
+                                    ${phoneCopyBtn}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- SUB-CARD 3: Organization & Role Scope -->
+                        <div class="cd-contact-subcard cd-contact-subcard-org">
+                            <div class="cd-contact-subcard-hdr">
+                                <span class="cd-contact-subcard-label">CLIENT &amp; SCOPE</span>
+                                <span class="cd-org-role-badge text-truncate" title="${roleBadgeText}">
+                                    <i class="fas fa-user-shield me-1"></i>${roleBadgeText}
+                                </span>
+                            </div>
+                            <div class="cd-contact-subcard-body">
+                                <div class="cd-org-client text-truncate" title="${clientName}">
+                                    <i class="far fa-building text-slate-400"></i>
+                                    <span class="text-truncate">${clientName}</span>
+                                </div>
+                                <div class="d-flex align-items-center gap-1 mt-1">
+                                    <span class="badge badge-light-primary fw-bold" style="font-size:9.5px; padding:2px 6px;">
+                                        Authorized POC
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- SUB-CARD 4: Linked Jobs & Pipeline -->
+                        <div class="cd-contact-subcard cd-contact-subcard-jobs">
+                            <div class="cd-contact-subcard-hdr">
+                                <span class="cd-contact-subcard-label">REQUISITIONS</span>
+                                <span class="badge badge-light-info fw-bold" style="font-size:9.5px; padding:2px 5px;">
+                                    ${jobsBadgeText}
+                                </span>
+                            </div>
+                            <div class="cd-contact-subcard-body">
+                                <div class="cd-linked-jobs-stat text-truncate">
+                                    <i class="fas fa-briefcase text-info"></i>
+                                    <span>${jobsCountText}</span>
+                                </div>
+                                <div>
+                                    <a href="javascript:void(0);" class="cd-view-jobs-link js-contact-view-jobs" title="View client job requisitions">
+                                        View Jobs <i class="fas fa-arrow-right ms-1" style="font-size:8px;"></i>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- SUB-CARD 5: Status & Quick Reach Actions -->
+                        <div class="cd-contact-subcard cd-contact-subcard-actions">
+                            <div class="cd-contact-subcard-hdr">
+                                <span class="cd-contact-subcard-label">STATUS &amp; ACTIONS</span>
+                                ${statusPillHtml}
+                            </div>
+                            <div class="cd-contact-subcard-body">
+                                <div class="cd-contact-actions-row">
+                                    ${callBtnHtml}
+                                    ${mailBtnHtml}
+                                    ${waBtnHtml}
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <!-- SUB-CARD 6: Bottom Activity & Metadata Strip -->
+                    <div class="cd-contact-card-bottom">
+                        <div class="cd-contact-bottom-left">
+                            <span class="cd-contact-meta-item">
+                                <i class="far fa-calendar-check text-slate-400"></i> Member since ${createdFormatted}
+                            </span>
+                            <span class="text-slate-300">•</span>
+                            <span class="cd-contact-meta-item">
+                                <i class="fas fa-check-double text-success"></i> Verified Point of Contact
+                            </span>
+                        </div>
+                        <div class="cd-contact-bottom-right">
+                            <span class="cd-contact-tag-pill">
+                                <i class="fas fa-id-badge text-primary"></i> Internal Stakeholder
+                            </span>
+                            <span class="cd-contact-tag-pill">
+                                <i class="fas fa-bolt text-amber-500"></i> Quick Reach
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+    };
+
+    function initContactsDataTable() {
+        window.InternalClientContactsManager.init();
+    }
+    function initContactsManager() {
+        window.InternalClientContactsManager.init();
     }
 </script>
 
@@ -6028,12 +6480,6 @@ use Carbon\Carbon;
             } else if (target === 'candidateDashboard') {
                 fetchInternalClientDashboardAnalytics();
                 loadedTabs[target] = true;
-            }
-        });
-
-        $(document).on('keyup', '#contactSearchInput', function() {
-            if ($.fn.DataTable.isDataTable('#contactList')) {
-                $('#contactList').DataTable().search($(this).val()).draw();
             }
         });
 
