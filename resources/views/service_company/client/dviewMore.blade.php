@@ -2781,105 +2781,170 @@
             width: 100%;
           }
 
-          /* Individual Candidate Card */
+          /* Individual Candidate Master Card (Card + Sub-Card Enterprise Standard) */
           .cd-cand-card {
-            background: #ffffff;
-            border: 1px solid #e2e8f0;
-            border-radius: 10px;
-            box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
-            transition: all 0.18s ease-in-out;
-            overflow: hidden;
-            width: 100%;
+            background: #ffffff !important;
+            border: 1px solid #e2e8f0 !important;
+            border-radius: 10px !important;
+            box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03) !important;
+            transition: all 0.15s ease-in-out !important;
+            overflow: hidden !important;
+            width: 100% !important;
+            max-width: 100% !important;
           }
           .cd-cand-card:hover {
-            border-color: #cbd5e1;
-            box-shadow: 0 6px 16px rgba(15, 23, 42, 0.07);
-            transform: translateY(-1px);
+            border-color: #cbd5e1 !important;
+            box-shadow: 0 4px 14px rgba(15, 23, 42, 0.06) !important;
+            transform: translateY(-1px) !important;
           }
 
-          /* 6-Column Grid */
+          /* 6 Discrete Sub-Cards Grid */
           .cd-cand-card-grid {
-            display: grid;
-            grid-template-columns: minmax(0, 1.8fr) minmax(0, 1.4fr) minmax(0, 1.3fr) minmax(0, 2.7fr) minmax(0, 1.5fr) minmax(0, 1.3fr);
-            gap: 12px;
-            padding: 10px 14px;
-            align-items: stretch;
-            width: 100%;
-          }
-          .cd-grid-col {
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            gap: 3px;
-            min-width: 0;
-            overflow: hidden;
+            display: grid !important;
+            grid-template-columns: minmax(0, 1.85fr) minmax(0, 1.35fr) minmax(0, 1.25fr) minmax(0, 2.35fr) minmax(0, 1.55fr) minmax(0, 1.25fr) !important;
+            gap: 8px !important;
+            padding: 10px 12px !important;
+            width: 100% !important;
+            max-width: 100% !important;
+            align-items: stretch !important;
           }
 
-          /* Col 1: Profile */
-          .cd-col-profile .cd-cand-name {
-            font-size: 13.5px !important;
-            font-weight: 600 !important;
+          /* Discrete Sub-Card Container */
+          .cd-cand-subcard {
+            background: #f8fafc !important;
+            border: 1px solid #edf2f7 !important;
+            border-radius: 8px !important;
+            padding: 7px 9px !important;
+            display: flex !important;
+            flex-direction: column !important;
+            justify-content: space-between !important;
+            min-width: 0 !important;
+            overflow: hidden !important;
+          }
+          .cd-cand-subcard-hdr {
+            display: flex !important;
+            align-items: center !important;
+            justify-content: space-between !important;
+            margin-bottom: 5px !important;
+            gap: 4px !important;
+            line-height: 1 !important;
+          }
+          .cd-cand-subcard-label {
+            font-size: 9.5px !important;
+            font-weight: 700 !important;
+            text-transform: uppercase !important;
+            letter-spacing: 0.3px !important;
+            color: #64748b !important;
+            white-space: nowrap !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+          }
+          .cd-cand-subcard-body {
+            display: flex !important;
+            flex-direction: column !important;
+            justify-content: center !important;
+            gap: 2.5px !important;
+            flex: 1 1 auto !important;
+            min-width: 0 !important;
+            overflow: hidden !important;
+          }
+
+          /* Sub-Card 1: Profile */
+          .cd-cand-profile-row {
+            display: flex !important;
+            align-items: center !important;
+            gap: 8px !important;
+            min-width: 0 !important;
+          }
+          .cd-cand-avatar-box {
+            width: 36px !important;
+            height: 36px !important;
+            min-width: 36px !important;
+            border-radius: 8px !important;
+            background: #eff6ff !important;
+            color: #2563eb !important;
+            border: 1px solid #dbeafe !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            font-size: 13px !important;
+            font-weight: 700 !important;
+            flex-shrink: 0 !important;
+          }
+          .cd-cand-profile-meta {
+            flex: 1 1 auto !important;
+            min-width: 0 !important;
+            overflow: hidden !important;
+          }
+          .cd-cand-name {
+            font-size: 13px !important;
+            font-weight: 700 !important;
             color: #0f172a !important;
             line-height: 1.25 !important;
+            display: block !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+            white-space: nowrap !important;
             text-decoration: none !important;
-            display: block;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
+            transition: color 0.12s ease !important;
           }
-          .cd-col-profile .cd-cand-name:hover {
+          .cd-cand-name:hover {
             color: #009ef7 !important;
           }
-          .cd-col-profile .cd-cand-desig {
-            font-size: 11.5px !important;
-            font-weight: 400 !important;
-            color: #64748b !important;
-            line-height: 1.2 !important;
-            display: block;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-          }
-          .cd-col-profile .cd-cand-employer {
+          .cd-cand-desig {
             font-size: 11px !important;
+            font-weight: 500 !important;
+            color: #475569 !important;
+            line-height: 1.2 !important;
+            margin-top: 1px !important;
+            display: block !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+            white-space: nowrap !important;
+          }
+          .cd-cand-employer {
+            font-size: 10.5px !important;
             color: #64748b !important;
             line-height: 1.2 !important;
-            display: block;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
+            margin-top: 2px !important;
+            display: block !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+            white-space: nowrap !important;
           }
 
-          /* Col 2: Comp */
-          .cd-col-comp .cd-comp-val {
-            font-size: 12.5px;
-            font-weight: 700;
-            color: #0f172a;
-            line-height: 1.25;
-            display: block;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
+          /* Sub-Card 2: Comp */
+          .cd-val-salary {
+            font-size: 12px !important;
+            font-weight: 700 !important;
+            color: #0f172a !important;
+            white-space: nowrap !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+            line-height: 1.3 !important;
           }
-          .cd-col-comp .cd-comp-sub {
-            font-size: 11px;
-            color: #64748b;
-            line-height: 1.2;
-            display: block;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
+          .cd-val-exp {
+            font-size: 10.5px !important;
+            font-weight: 500 !important;
+            color: #475569 !important;
+            margin-top: 2px !important;
+            display: flex !important;
+            align-items: center !important;
+            gap: 4px !important;
+            white-space: nowrap !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+            line-height: 1.3 !important;
           }
-          .cd-col-comp .cd-comp-notice {
-            font-size: 11px;
-            line-height: 1.2;
-            display: block;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
+          .cd-val-notice {
+            font-size: 10.5px !important;
+            font-weight: 600 !important;
+            margin-top: 2px !important;
+            white-space: nowrap !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+            line-height: 1.3 !important;
           }
-
-          /* Notice Clean Text-Only (NO background, NO pill, NO border) */
           .cd-notice-clean {
             font-weight: 600 !important;
             background: transparent !important;
@@ -2891,243 +2956,217 @@
           .cd-notice-days { color: #d97706 !important; }
           .cd-notice-default { color: #475569 !important; }
 
-          /* Col 3: Location */
-          .cd-col-loc .cd-loc-val {
-            font-size: 12px;
-            font-weight: 600;
-            color: #0f172a;
-            line-height: 1.25;
-            display: block;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
+          /* Sub-Card 3: Location & Degree */
+          .cd-loc-val {
+            font-size: 11.5px !important;
+            font-weight: 600 !important;
+            color: #0f172a !important;
+            white-space: nowrap !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+            line-height: 1.3 !important;
           }
-          .cd-col-loc .cd-loc-sub {
-            font-size: 11px;
-            color: #64748b;
-            line-height: 1.2;
-            display: block;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
+          .cd-loc-mode {
+            font-size: 10.5px !important;
+            color: #64748b !important;
+            margin-top: 2px !important;
+            display: flex !important;
+            align-items: center !important;
+            gap: 4px !important;
+            white-space: nowrap !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+            line-height: 1.3 !important;
           }
-          .cd-col-loc .cd-loc-edu {
-            font-size: 11px;
-            color: #64748b;
-            line-height: 1.2;
-            display: block;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
+          .cd-loc-edu {
+            font-size: 10.5px !important;
+            color: #64748b !important;
+            margin-top: 2px !important;
+            display: flex !important;
+            align-items: center !important;
+            gap: 4px !important;
+            white-space: nowrap !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+            line-height: 1.3 !important;
           }
 
-          /* Col 4: Target Job Requisition Sub-Card (Inset Box) */
-          .cd-col-job {
-            padding: 0 !important;
+          /* Sub-Card 4: Target Requisition */
+          .cd-header-badges {
+            display: inline-flex !important;
+            align-items: center !important;
+            gap: 4px !important;
+            flex-shrink: 0 !important;
           }
-          .cd-subcard-job-box {
-            background: #f8fafc;
-            border: 1px solid #eef2f6;
-            border-radius: 8px;
-            padding: 6px 10px;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            gap: 3px;
-            height: 100%;
-            min-height: 72px;
-            transition: border-color 0.15s ease;
-            overflow: hidden;
+          .cd-badge-client-type {
+            font-size: 8.5px !important;
+            font-weight: 700 !important;
+            padding: 1px 6px !important;
+            border-radius: 4px !important;
+            text-transform: uppercase !important;
+            letter-spacing: 0.2px !important;
+            line-height: 1.3 !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            gap: 3px !important;
+            white-space: nowrap !important;
+            flex-shrink: 0 !important;
           }
-          .cd-cand-card:hover .cd-subcard-job-box {
-            border-color: #e2e8f0;
-            background: #fbfcfe;
+          .cd-badge-client-type.type-direct {
+            background: #ecfdf5 !important;
+            color: #059669 !important;
+            border: 1px solid #a7f3d0 !important;
           }
-          .cd-subcard-job-hdr {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 6px;
-            line-height: 1;
+          .cd-badge-client-type.type-internal {
+            background: #eff6ff !important;
+            color: #2563eb !important;
+            border: 1px solid #bfdbfe !important;
           }
-          .cd-job-scope-tag {
-            font-size: 9.5px;
-            font-weight: 600;
-            color: #475569;
-            background: #ffffff;
-            border: 1px solid #e2e8f0;
-            padding: 1px 5px;
-            border-radius: 4px;
-            text-transform: uppercase;
-            letter-spacing: 0.3px;
+          .cd-status-badge {
+            font-size: 8.5px !important;
+            font-weight: 700 !important;
+            padding: 1px 6px !important;
+            border-radius: 4px !important;
+            text-transform: uppercase !important;
+            letter-spacing: 0.2px !important;
+            line-height: 1.3 !important;
+            flex-shrink: 0 !important;
           }
-          .cd-subcard-job-body {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            min-width: 0;
+          .status-hiring   { background: #dcfce7 !important; color: #15803d !important; }
+          .status-hold     { background: #fef3c7 !important; color: #b45309 !important; }
+          .status-closed   { background: #fee2e2 !important; color: #b91c1c !important; }
+          .status-inactive { background: #f1f5f9 !important; color: #64748b !important; }
+
+          .cd-job-row {
+            display: flex !important;
+            align-items: center !important;
+            gap: 7px !important;
+            min-width: 0 !important;
           }
           .cd-job-logo-box {
-            width: 26px;
-            height: 26px;
-            border-radius: 6px;
-            background: #eff6ff;
-            color: #2563eb;
-            font-size: 11px;
-            font-weight: 700;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border: 1px solid #dbeafe;
-            flex-shrink: 0;
+            width: 26px !important;
+            height: 26px !important;
+            min-width: 26px !important;
+            border-radius: 6px !important;
+            background: #eff6ff !important;
+            color: #2563eb !important;
+            font-size: 11px !important;
+            font-weight: 700 !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            border: 1px solid #dbeafe !important;
+            flex-shrink: 0 !important;
           }
-          .cd-job-info-wrap {
-            flex: 1 1 auto;
-            min-width: 0;
-            overflow: hidden;
+          .cd-job-meta-wrap {
+            flex: 1 1 auto !important;
+            min-width: 0 !important;
+            overflow: hidden !important;
           }
           .cd-job-title-link {
             font-size: 12px !important;
-            font-weight: 600 !important;
+            font-weight: 700 !important;
             color: #0f172a !important;
-            line-height: 1.2 !important;
-            display: block;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
+            line-height: 1.25 !important;
+            display: block !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+            white-space: nowrap !important;
             text-decoration: none !important;
+            transition: color 0.12s ease !important;
           }
           .cd-job-title-link:hover {
             color: #009ef7 !important;
           }
-          .cd-job-meta-line {
-            font-size: 10.5px;
-            line-height: 1.2;
-            color: #64748b;
-            display: block;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
+          .cd-job-submeta {
+            font-size: 10px !important;
+            color: #64748b !important;
+            line-height: 1.2 !important;
+            margin-top: 1px !important;
+            white-space: nowrap !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
           }
-          .cd-subcard-job-footer {
-            font-size: 10.5px;
-            line-height: 1.2;
-            color: #64748b;
-            display: block;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-          }
-
-          /* Status & Stage Chips */
-          .cd-status-chip {
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-            padding: 1px 6px;
-            border-radius: 4px;
-            font-size: 10px;
-            font-weight: 700;
-            line-height: 1.2;
-            text-transform: uppercase;
-            letter-spacing: 0.2px;
-            flex-shrink: 0;
-          }
-          .cd-status-dot {
-            width: 5px;
-            height: 5px;
-            border-radius: 50%;
-            display: inline-block;
-          }
-          .cd-status-hiring {
-            background: #dcfce7;
-            color: #15803d;
-            border: 1px solid #bbf7d0;
-          }
-          .cd-status-hiring .cd-status-dot { background: #16a34a; }
-          .cd-status-hold {
-            background: #fef3c7;
-            color: #b45309;
-            border: 1px solid #fde68a;
-          }
-          .cd-status-hold .cd-status-dot { background: #d97706; }
-          .cd-status-closed {
-            background: #fee2e2;
-            color: #b91c1c;
-            border: 1px solid #fecdd3;
-          }
-          .cd-status-closed .cd-status-dot { background: #dc2626; }
-
-          /* Col 5: Ownership */
-          .cd-col-owner .cd-owner-val {
-            font-size: 12px;
-            font-weight: 600;
-            color: #0f172a;
-            line-height: 1.25;
-            display: block;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-          }
-          .cd-col-owner .cd-owner-sub {
-            font-size: 11px;
-            color: #64748b;
-            line-height: 1.2;
-            display: block;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-          }
-          .cd-col-owner .cd-owner-time {
-            font-size: 10.5px;
-            color: #94a3b8;
-            line-height: 1.2;
-            display: block;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
+          .cd-job-footer-line {
+            font-size: 10px !important;
+            color: #64748b !important;
+            line-height: 1.2 !important;
+            margin-top: 2px !important;
+            white-space: nowrap !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
           }
 
-          /* Col 6: Stage & Actions */
+          /* Sub-Card 5: Recruiter & Sourcing */
+          .cd-recruiter-name {
+            font-size: 11.5px !important;
+            font-weight: 600 !important;
+            color: #0f172a !important;
+            line-height: 1.3 !important;
+            white-space: nowrap !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+          }
+          .cd-recruiter-company {
+            font-size: 10.5px !important;
+            color: #64748b !important;
+            margin-top: 2px !important;
+            line-height: 1.3 !important;
+            white-space: nowrap !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+          }
+          .cd-recruiter-time {
+            font-size: 10px !important;
+            color: #94a3b8 !important;
+            margin-top: 2px !important;
+            line-height: 1.3 !important;
+            white-space: nowrap !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+          }
+
+          /* Sub-Card 6: Pipeline & Stage */
           .cd-stage-chip {
-            display: inline-flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 4px;
-            padding: 3px 8px;
-            border-radius: 6px;
-            font-size: 11px;
-            font-weight: 600;
-            line-height: 1.3;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: space-between !important;
+            gap: 4px !important;
+            padding: 2px 7px !important;
+            border-radius: 6px !important;
+            font-size: 10.5px !important;
+            font-weight: 600 !important;
+            line-height: 1.3 !important;
             text-decoration: none !important;
-            cursor: pointer;
-            transition: filter 0.15s ease;
-            max-width: 100%;
-            overflow: hidden;
+            cursor: pointer !important;
+            transition: filter 0.15s ease !important;
+            max-width: 100% !important;
+            overflow: hidden !important;
+            white-space: nowrap !important;
           }
           .cd-stage-chip:hover {
-            filter: brightness(0.95);
+            filter: brightness(0.95) !important;
           }
-          .cd-col-stage .cd-stage-sub {
-            font-size: 10.5px;
-            color: #64748b;
-            line-height: 1.2;
-            display: block;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
+          .cd-stage-sub {
+            font-size: 10.5px !important;
+            color: #64748b !important;
+            margin-top: 2px !important;
+            line-height: 1.2 !important;
+            white-space: nowrap !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
           }
-          .cd-col-stage .cd-stage-action {
-            font-size: 10.5px;
-            line-height: 1.2;
-            display: block;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
+          .cd-stage-action {
+            font-size: 10.5px !important;
+            line-height: 1.2 !important;
+            margin-top: 2px !important;
+            white-space: nowrap !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
           }
           .cd-action-link {
             color: #009ef7 !important;
-            font-weight: 600;
+            font-weight: 600 !important;
             text-decoration: none !important;
           }
           .cd-action-link:hover {
@@ -3135,41 +3174,60 @@
             text-decoration: underline !important;
           }
 
-          /* Full-Width Bottom Strip: Skills & CV Match % */
+          /* Sub-Card 7: Full-Width Intelligence Strip */
           .cd-cand-bottom-strip {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            padding: 6px 14px;
-            background: #fafbfc;
-            border-top: 1px solid #f1f5f9;
-            overflow-x: auto;
-            scrollbar-width: none;
-            -ms-overflow-style: none;
-            white-space: nowrap;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: space-between !important;
+            gap: 10px !important;
+            padding: 6px 12px !important;
+            background: #ffffff !important;
+            border-top: 1px solid #f1f5f9 !important;
+            width: 100% !important;
+            overflow: hidden !important;
           }
-          .cd-cand-bottom-strip::-webkit-scrollbar {
-            display: none;
+          .cd-cand-bottom-left {
+            display: flex !important;
+            align-items: center !important;
+            gap: 8px !important;
+            min-width: 0 !important;
+            flex: 1 1 auto !important;
+            overflow: hidden !important;
+          }
+          .cd-cand-bottom-right {
+            display: flex !important;
+            align-items: center !important;
+            gap: 8px !important;
+            flex-shrink: 0 !important;
+            white-space: nowrap !important;
           }
           .cd-bottom-skills-scroll {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            white-space: nowrap;
+            display: flex !important;
+            align-items: center !important;
+            gap: 4px !important;
+            overflow-x: auto !important;
+            overflow-y: hidden !important;
+            scrollbar-width: none !important;
+            -ms-overflow-style: none !important;
+            white-space: nowrap !important;
+            min-width: 0 !important;
+          }
+          .cd-bottom-skills-scroll::-webkit-scrollbar {
+            display: none !important;
           }
 
           /* CV Tracker Match % & Skills Pill Styles */
           .cd-match-badge-cv {
-            display: inline-flex;
-            align-items: center;
-            gap: 3px;
-            padding: 2px 8px;
-            border-radius: 6px;
-            font-size: 10.5px;
-            font-weight: 700;
-            line-height: 1.3;
-            white-space: nowrap;
-            flex-shrink: 0;
+            display: inline-flex !important;
+            align-items: center !important;
+            gap: 3px !important;
+            padding: 1.5px 7px !important;
+            border-radius: 4px !important;
+            font-size: 10px !important;
+            font-weight: 700 !important;
+            line-height: 1.3 !important;
+            white-space: nowrap !important;
+            flex-shrink: 0 !important;
           }
           .cd-match-green {
             background: #dcfce7 !important;
@@ -3188,18 +3246,81 @@
           }
 
           .cd-skill-pill-cv {
-            display: inline-flex;
-            align-items: center;
-            padding: 2px 8px;
-            border-radius: 6px;
-            font-size: 10.5px;
-            font-weight: 500;
-            line-height: 1.3;
-            background: #dcfce7;
-            color: #15803d;
-            border: 1px solid #bbf7d0;
-            white-space: nowrap;
-            flex-shrink: 0;
+            display: inline-flex !important;
+            align-items: center !important;
+            padding: 1px 7px !important;
+            border-radius: 4px !important;
+            background: #f8fafc !important;
+            color: #334155 !important;
+            font-size: 10px !important;
+            font-weight: 500 !important;
+            border: 1px solid #e2e8f0 !important;
+            white-space: nowrap !important;
+            line-height: 1.4 !important;
+            flex-shrink: 0 !important;
+          }
+
+          /* Dynamic LinkedIn & Visa Status Badges */
+          .cd-cand-linkedin-pill {
+            display: inline-flex !important;
+            align-items: center !important;
+            gap: 4px !important;
+            padding: 1.5px 8px !important;
+            border-radius: 4px !important;
+            background: #eff6ff !important;
+            color: #1d4ed8 !important;
+            border: 1px solid #bfdbfe !important;
+            font-size: 10px !important;
+            font-weight: 600 !important;
+            text-decoration: none !important;
+            line-height: 1.4 !important;
+            white-space: nowrap !important;
+            flex-shrink: 0 !important;
+            transition: all 0.15s ease !important;
+          }
+          .cd-cand-linkedin-pill:hover {
+            background: #dbeafe !important;
+            color: #1e40af !important;
+            border-color: #93c5fd !important;
+          }
+          .cd-cand-visa-pill {
+            display: inline-flex !important;
+            align-items: center !important;
+            gap: 4px !important;
+            padding: 1.5px 8px !important;
+            border-radius: 4px !important;
+            background: #f8fafc !important;
+            color: #334155 !important;
+            border: 1px solid #e2e8f0 !important;
+            font-size: 10px !important;
+            font-weight: 600 !important;
+            line-height: 1.4 !important;
+            white-space: nowrap !important;
+            flex-shrink: 0 !important;
+          }
+
+          /* Responsive Scaling for 15.6" Laptops (1366x768 & 1920x1080) and Smaller */
+          @media (max-width: 1440px) {
+            .cd-cand-card-grid {
+              grid-template-columns: minmax(0, 1.8fr) minmax(0, 1.3fr) minmax(0, 1.2fr) minmax(0, 2.2fr) minmax(0, 1.45fr) minmax(0, 1.2fr) !important;
+              gap: 6px !important;
+              padding: 8px 10px !important;
+            }
+            .cd-cand-subcard {
+              padding: 6px 8px !important;
+            }
+          }
+          @media (max-width: 1100px) {
+            .cd-cand-card-grid {
+              grid-template-columns: minmax(0, 1.7fr) minmax(0, 1.2fr) minmax(0, 1.1fr) minmax(0, 2fr) minmax(0, 1.4fr) minmax(0, 1.1fr) !important;
+              gap: 5px !important;
+              padding: 6px 8px !important;
+            }
+            .cd-cand-bottom-strip {
+              flex-direction: column !important;
+              align-items: flex-start !important;
+              gap: 6px !important;
+            }
           }
 
           /* Skeleton Sub-Cards */
@@ -6007,12 +6128,26 @@
             var cid = row.id || row.wiseId || row.candidate_id || 0;
             var jobId = row.jobId || row.job_id || 0;
 
-            // Sentence case helper: strictly capitalize only the first letter of string
-            var formatSentenceCase = function(str) {
+            // Acronym-preserving sentence/title case formatter
+            var formatWithAcronyms = function(str) {
                 if (!str || typeof str !== 'string') return '';
                 var s = str.trim();
                 if (!s) return '';
-                return s.charAt(0).toUpperCase() + s.slice(1).toLowerCase();
+                var acronyms = {
+                    'php': 'PHP', 'aws': 'AWS', 'gcp': 'GCP', 'azure': 'Azure', 'api': 'API',
+                    'sql': 'SQL', 'mysql': 'MySQL', 'nosql': 'NoSQL', 'ui': 'UI', 'ux': 'UX',
+                    'qa': 'QA', 'hr': 'HR', 'ats': 'ATS', 'crm': 'CRM', 'erp': 'ERP',
+                    'in': 'IN', 'us': 'US', 'uk': 'UK', 'uae': 'UAE', 'ca': 'CA', 'sg': 'SG', 'au': 'AU',
+                    'b.tech': 'B.Tech', 'b.e': 'B.E', 'm.tech': 'M.Tech', 'm.e': 'M.E',
+                    'bca': 'BCA', 'mca': 'MCA', 'mba': 'MBA', 'b.sc': 'B.Sc', 'm.sc': 'M.Sc',
+                    'wfo': 'WFO', 'wfh': 'WFH', 'it': 'IT'
+                };
+                return s.split(/(\s+|[/\-+&])/).map(function(token) {
+                    var lower = token.toLowerCase();
+                    if (acronyms[lower]) return acronyms[lower];
+                    if (token.length <= 1) return token.toUpperCase();
+                    return token.charAt(0).toUpperCase() + token.slice(1).toLowerCase();
+                }).join('');
             };
 
             // Word limiter helper: allows up to maxWords
@@ -6021,6 +6156,15 @@
                 var words = str.trim().split(/\s+/);
                 if (words.length <= maxWords) return str.trim();
                 return words.slice(0, maxWords).join(' ') + '...';
+            };
+
+            // Initials generator for candidate avatar monogram
+            var getInitials = function(name) {
+                if (!name || typeof name !== 'string') return 'C';
+                var parts = name.trim().split(/\s+/).filter(Boolean);
+                if (parts.length === 0) return 'C';
+                if (parts.length === 1) return parts[0].substring(0, 2).toUpperCase();
+                return (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase();
             };
 
             // Relative time formatted helper
@@ -6067,16 +6211,17 @@
                 return num.toLocaleString();
             };
 
-            // 1. Candidate Name (Sentence case, text-only, up to 15 words, NO profile icon)
+            // 1. Sub-Card 1: Candidate Profile
             var rawFullName = (row.full_name || ((row.first_name || '') + ' ' + (row.last_name || ''))).trim() || 'Candidate';
             var rawDesignation = (row.current_designation || '----').trim();
             var currCompany = (row.current_company || '----').trim();
 
-            var displayName = formatSentenceCase(limitWords(rawFullName, 15));
-            var displayDesig = formatSentenceCase(limitWords(rawDesignation, 15));
-            var currCompanyClean = formatSentenceCase(limitWords(currCompany, 10));
+            var displayName = formatWithAcronyms(limitWords(rawFullName, 15));
+            var displayDesig = formatWithAcronyms(limitWords(rawDesignation, 15));
+            var currCompanyClean = formatWithAcronyms(limitWords(currCompany, 10));
+            var candInitials = getInitials(rawFullName);
 
-            // 2. Comp & Availability
+            // 2. Sub-Card 2: Compensation & Experience
             var currencySymbol = row.current_ctc_cur || row.salary_currency || row.job_currency || '₹';
             if (currencySymbol === '0' || !currencySymbol || currencySymbol === 'INR') currencySymbol = '₹';
             if (currencySymbol === 'USD' || currencySymbol === '4') currencySymbol = '$';
@@ -6086,9 +6231,10 @@
 
             var ectcVal = formatCompactSalary(row.ectc_yearly || row.ectc || row.salary);
             var ctcVal = formatCompactSalary(row.ctc_yearly || row.ctc);
+            // Single currency symbol formatting (guaranteed no double symbols)
             var salaryPrimaryHtml = ectcVal
-                ? `<span class="text-muted">${currencySymbol}</span><span class="fw-bold text-dark">${currencySymbol}${ectcVal}</span> <span class="text-muted fs-8">/ Yr</span>`
-                : (ctcVal ? `<span class="text-muted">${currencySymbol}</span><span class="fw-bold text-dark">${currencySymbol}${ctcVal}</span> <span class="text-muted fs-8">/ Yr</span>` : '<span class="text-muted">----</span>');
+                ? `<span class="fw-bold text-dark">${currencySymbol}${ectcVal}</span> <span class="text-muted fs-8">/ Yr</span>`
+                : (ctcVal ? `<span class="fw-bold text-dark">${currencySymbol}${ctcVal}</span> <span class="text-muted fs-8">/ Yr</span>` : '<span class="text-muted">----</span>');
 
             var totalExpNum = cleanExpNum(row.total_exp);
             var relExpNum = cleanExpNum(row.rel_exp);
@@ -6097,7 +6243,7 @@
                 totalExpStr += ` (${relExpNum} Rel)`;
             }
 
-            // Notice: Clean colored text ONLY (NO pill/badge background)
+            // Notice: Clean colored text ONLY (NO background/pill)
             var noticeText = 'Immediate';
             var noticeColorClass = 'cd-notice-immediate';
             var rawNotice = String(row.np_id || row.notice || '').trim();
@@ -6117,14 +6263,15 @@
                 noticeColorClass = 'cd-notice-default';
             }
 
-            // 3. Location & Education
+            // 3. Sub-Card 3: Location & Education
             var city = row.city_name || row.city || '----';
             var country = row.country_name || '';
             var locLine1 = city;
             if (country && country !== '----') {
-                locLine1 += ', ' + (country.length > 2 ? country.substring(0, 2).toUpperCase() : country.toUpperCase());
+                var cShort = country.length > 2 ? country.substring(0, 2).toUpperCase() : country.toUpperCase();
+                locLine1 += ', ' + cShort;
             }
-            var locLine1Clean = formatSentenceCase(locLine1);
+            var locLine1Clean = formatWithAcronyms(locLine1);
 
             var rawWorkMode = String(row.job_mode || '').toLowerCase();
             var workModeClean = 'Work From Office';
@@ -6137,42 +6284,48 @@
             }
 
             var qualification = row.qualification_name || '----';
-            var qualificationClean = limitWords(qualification, 8);
+            var qualificationClean = formatWithAcronyms(limitWords(qualification, 8));
 
-            // 4. Inset Job Requisition Sub-Card
+            // 4. Sub-Card 4: Target Job Requisition
             var jobTitle = row.title || row.job_title || ('Job #' + jobId);
-            var jobTitleFormatted = formatSentenceCase(limitWords(jobTitle, 15));
-            var companyName = row.cur_company_name || row.client_name || '{{ addslashes($detailName ?? "Direct Client") }}';
-            var companyNameFormatted = formatSentenceCase(limitWords(companyName, 12));
+            var jobTitleFormatted = formatWithAcronyms(limitWords(jobTitle, 15));
+            var companyName = row.cur_company_name || row.client_name || '{{ addslashes($detailName ?? "Client") }}';
+            var companyNameFormatted = formatWithAcronyms(limitWords(companyName, 12));
             var jobUrl = jobId ? `{{ url('service_company/jobs') }}/${jobId}` : 'javascript:void(0);';
 
             var jobInitial = (jobTitle && jobTitle.length > 0) ? jobTitle.charAt(0).toUpperCase() : 'J';
-            var deptFormatted = formatSentenceCase(row.industry_name || row.department || 'Technology');
+            var deptFormatted = formatWithAcronyms(row.industry_name || row.department || 'Technology');
             var jobTypeClean = (row.job_type || 'Full-Time');
-            var scopeTag = 'Direct Client';
+
+            var scopeTag = this.clientType === 'direct' ? 'Direct Client' : 'Direct Client';
+            var scopeCls = 'type-direct';
+            if (row.client_type === 'internal' || this.clientType === 'internal') {
+                scopeTag = 'Internal Client';
+                scopeCls = 'type-internal';
+            }
 
             var rawJobStatus = String(row.job_status || 'active').toLowerCase();
             var statusPillText = 'Hiring';
-            var statusChipClass = 'cd-status-hiring';
+            var statusChipClass = 'status-hiring';
             if (rawJobStatus === 'active' || rawJobStatus === 'hiring') {
                 statusPillText = 'Hiring';
-                statusChipClass = 'cd-status-hiring';
+                statusChipClass = 'status-hiring';
             } else if (rawJobStatus === 'hold') {
                 statusPillText = 'Hold';
-                statusChipClass = 'cd-status-hold';
+                statusChipClass = 'status-hold';
             } else if (rawJobStatus === 'inactive' || rawJobStatus === 'closed') {
                 statusPillText = 'Closed';
-                statusChipClass = 'cd-status-closed';
+                statusChipClass = 'status-closed';
             }
 
-            // 5. Ownership & Traceability
+            // 5. Sub-Card 5: Recruiter & Sourcing
             var recruiter = row.posted_by_name || row.posted_by || row.submitted_by_name || row.agency_root_name || 'Recruiter';
             var submitterCompany = row.submitted_by_company_name || row.post_company_name || row.apl_company_name || row.company_name || 'Agency';
-            var recruiterFormatted = formatSentenceCase(limitWords(recruiter, 12));
-            var submitterFormatted = formatSentenceCase(limitWords(submitterCompany, 12));
+            var recruiterFormatted = formatWithAcronyms(limitWords(recruiter, 12));
+            var submitterFormatted = formatWithAcronyms(limitWords(submitterCompany, 12));
             var submittedAgo = formatTimeAgo(row.created_at);
 
-            // 6. Stage & Quick Actions
+            // 6. Sub-Card 6: Pipeline & Stage
             var stageName = row.child_status_name || row.master_status_name || row.name || 'InReview';
             var stageChipStyle = 'background:#fef9c3;color:#854d0e;border:1px solid #fde047;';
             if (stageName.toLowerCase().includes('offer')) {
@@ -6186,7 +6339,7 @@
             }
             var subStageText = row.childStatus ? (row.child_status_name || 'Private') : 'Private';
 
-            // Bottom Strip: Skills & CV Match %
+            // 7. Sub-Card 7 (Bottom Strip): Skills, CV Match, LinkedIn Verified, Visa Status
             var matchPct = (row.skill_match !== undefined && row.skill_match !== null) ? Math.round(row.skill_match) : 0;
             var matchBadgeClass = 'cd-match-red';
             if (matchPct >= 85) {
@@ -6205,115 +6358,213 @@
             var skillsPillsHtml = '';
             if (skillsList.length > 0) {
                 skillsList.forEach(function(s) {
-                    var cleanSkill = $('<div>').text(formatSentenceCase(s)).html();
+                    var cleanSkill = $('<div>').text(formatWithAcronyms(s)).html();
                     skillsPillsHtml += `<span class="cd-skill-pill-cv">${cleanSkill}</span>`;
                 });
             } else {
                 skillsPillsHtml = `<span class="text-muted fs-8">No specific skills tagged</span>`;
             }
 
+            // LinkedIn Verified Pill: If LinkedIn ID/URL is available, otherwise hides
+            var rawLinkedin = String(row.linkedin || row.ci_linkedin || '').trim();
+            var linkedinHtml = '';
+            if (rawLinkedin && rawLinkedin !== '0' && rawLinkedin.toLowerCase() !== 'none' && rawLinkedin.toLowerCase() !== 'null' && rawLinkedin !== '----') {
+                var linkedinUrl = rawLinkedin;
+                if (!linkedinUrl.startsWith('http://') && !linkedinUrl.startsWith('https://')) {
+                    if (linkedinUrl.includes('linkedin.com')) {
+                        linkedinUrl = 'https://' + linkedinUrl;
+                    } else {
+                        linkedinUrl = 'https://www.linkedin.com/in/' + linkedinUrl.replace(/^@/, '');
+                    }
+                }
+                linkedinHtml = `
+                    <a href="${linkedinUrl}" target="_blank" rel="noopener noreferrer" class="cd-cand-linkedin-pill" title="LinkedIn Profile Verified">
+                        <i class="fab fa-linkedin text-primary"></i><span>LinkedIn Verified</span>
+                    </a>
+                `;
+            }
+
+            // Visa Status Badge: (country short name, Visa Name) - if available, otherwise hides
+            var rawVisa = String(row.visastatu || row.visa_status || row.visa || '').trim();
+            var visaHtml = '';
+            if (rawVisa && rawVisa !== '0' && rawVisa.toLowerCase() !== 'none' && rawVisa.toLowerCase() !== 'null' && rawVisa !== '----') {
+                var visaCountryShort = '';
+                var rawCountry = String(row.country_name || '').trim().toUpperCase();
+                if (rawCountry && rawCountry !== '----') {
+                    visaCountryShort = rawCountry.length > 2 ? rawCountry.substring(0, 2) : rawCountry;
+                }
+
+                var vLower = rawVisa.toLowerCase();
+                if (vLower.includes('us') || vLower.includes('h-1b') || vLower.includes('h1b') || vLower.includes('green card') || vLower.includes('gc-ead') || vLower.includes('opt') || vLower.includes('cpt') || vLower.includes('tn permit')) {
+                    if (!visaCountryShort) visaCountryShort = 'US';
+                } else if (vLower.includes('canada') || vLower.includes('canadian')) {
+                    if (!visaCountryShort) visaCountryShort = 'CA';
+                } else if (vLower.includes('india') || vLower.includes('indian')) {
+                    if (!visaCountryShort) visaCountryShort = 'IN';
+                } else if (vLower.includes('uk') || vLower.includes('british')) {
+                    if (!visaCountryShort) visaCountryShort = 'UK';
+                } else if (vLower.includes('uae') || vLower.includes('dubai')) {
+                    if (!visaCountryShort) visaCountryShort = 'UAE';
+                } else if (vLower.includes('singapore')) {
+                    if (!visaCountryShort) visaCountryShort = 'SG';
+                } else if (vLower.includes('australia')) {
+                    if (!visaCountryShort) visaCountryShort = 'AU';
+                }
+                if (!visaCountryShort) visaCountryShort = 'Visa';
+
+                var cleanVisaName = rawVisa
+                    .replace(/^(US|United States|Canada|Canadian|India|Indian|UK|UAE|Dubai|Singapore|Australia)\s+/i, '')
+                    .trim();
+                if (!cleanVisaName) cleanVisaName = rawVisa;
+                cleanVisaName = formatWithAcronyms(cleanVisaName);
+
+                var visaDisplay = `(${visaCountryShort}, ${cleanVisaName})`;
+                visaHtml = `
+                    <span class="cd-cand-visa-pill" title="Visa Status: ${$('<div>').text(rawVisa).html()}">
+                        <i class="fas fa-passport text-muted"></i><span>${$('<div>').text(visaDisplay).html()}</span>
+                    </span>
+                `;
+            }
+
             return `
                 <div class="cd-cand-card" data-candidate-id="${cid}">
                     <div class="cd-cand-card-grid">
-                        <!-- Col 1: Candidate Profile -->
-                        <div class="cd-grid-col cd-col-profile">
-                            <a href="javascript:void(0);" class="cd-cand-name text-truncate show-application-detail" data-row-id="${cid}" title="${$('<div>').text(rawFullName).html()}">
-                                ${displayName}
-                            </a>
-                            <div class="cd-cand-desig text-truncate" title="${$('<div>').text(rawDesignation).html()}">${displayDesig}</div>
-                            <div class="cd-cand-employer text-truncate" title="${$('<div>').text(currCompany).html()}">
-                                <span class="text-muted">Company:</span> <span class="fw-medium text-dark">${currCompanyClean}</span>
+                        <!-- Sub-Card 1: CANDIDATE INFO -->
+                        <div class="cd-cand-subcard cd-cand-subcard-info">
+                            <div class="cd-cand-subcard-hdr">
+                                <span class="cd-cand-subcard-label">CANDIDATE INFO</span>
                             </div>
-                        </div>
-
-                        <!-- Col 2: Comp & Availability -->
-                        <div class="cd-grid-col cd-col-comp">
-                            <div class="cd-comp-val text-truncate" title="${ectcVal || ctcVal || ''}">
-                                ${salaryPrimaryHtml}
-                            </div>
-                            <div class="cd-comp-sub text-truncate" title="${totalExpStr}">
-                                <i class="far fa-clock text-primary me-1" style="font-size:10px;"></i>${totalExpStr}
-                            </div>
-                            <div class="cd-comp-notice text-truncate" title="${noticeText}">
-                                <span class="text-muted">Notice:</span> <span class="cd-notice-clean ${noticeColorClass}">${noticeText}</span>
-                            </div>
-                        </div>
-
-                        <!-- Col 3: Location & Edu -->
-                        <div class="cd-grid-col cd-col-loc">
-                            <div class="cd-loc-val text-truncate" title="${$('<div>').text(locLine1Clean).html()}">
-                                <i class="fas fa-map-marker-alt text-danger me-1" style="font-size:10px;"></i>${locLine1Clean}
-                            </div>
-                            <div class="cd-loc-sub text-truncate" title="${workModeClean}">
-                                <i class="fas fa-building text-muted me-1" style="font-size:9.5px;"></i>${workModeClean}
-                            </div>
-                            <div class="cd-loc-edu text-truncate" title="${$('<div>').text(qualification).html()}">
-                                <i class="fas fa-graduation-cap text-muted me-1" style="font-size:10px;"></i>${qualificationClean}
-                            </div>
-                        </div>
-
-                        <!-- Col 4: Inset Target Job Requisition Sub-Card -->
-                        <div class="cd-grid-col cd-col-job">
-                            <div class="cd-subcard-job-box">
-                                <div class="cd-subcard-job-hdr">
-                                    <span class="cd-job-scope-tag">${scopeTag}</span>
-                                    <span class="cd-status-chip ${statusChipClass}">
-                                        <span class="cd-status-dot"></span>${statusPillText}
-                                    </span>
-                                </div>
-                                <div class="cd-subcard-job-body">
-                                    <div class="cd-job-logo-box">${jobInitial}</div>
-                                    <div class="cd-job-info-wrap min-w-0">
-                                        <a href="${jobUrl}" target="_blank" class="cd-job-title-link text-truncate" title="${$('<div>').text(jobTitle).html()}">
-                                            ${jobTitleFormatted}
+                            <div class="cd-cand-subcard-body">
+                                <div class="cd-cand-profile-row">
+                                    <div class="cd-cand-avatar-box">${candInitials}</div>
+                                    <div class="cd-cand-profile-meta">
+                                        <a href="javascript:void(0);" class="cd-cand-name show-application-detail" data-row-id="${cid}" title="${$('<div>').text(rawFullName).html()}">
+                                            ${displayName}
                                         </a>
-                                        <div class="cd-job-meta-line text-truncate">
-                                            <span class="text-primary fw-bold">#${jobId}</span> • <span class="text-muted">${deptFormatted}</span>
+                                        <div class="cd-cand-desig" title="${$('<div>').text(rawDesignation).html()}">${displayDesig}</div>
+                                        <div class="cd-cand-employer" title="${$('<div>').text(currCompany).html()}">
+                                            <i class="fas fa-building text-muted me-1" style="font-size:9.5px;"></i>${currCompanyClean}
                                         </div>
                                     </div>
                                 </div>
-                                <div class="cd-subcard-job-footer text-truncate">
-                                    <span class="fw-semibold text-dark">${companyNameFormatted}</span>
-                                    <span class="text-muted mx-1">•</span>
-                                    <span class="text-muted"><i class="fas fa-briefcase me-1" style="font-size:9.5px;"></i>${jobTypeClean}</span>
+                            </div>
+                        </div>
+
+                        <!-- Sub-Card 2: COMPENSATION & EXP -->
+                        <div class="cd-cand-subcard cd-cand-subcard-comp">
+                            <div class="cd-cand-subcard-hdr">
+                                <span class="cd-cand-subcard-label">COMPENSATION &amp; EXP</span>
+                            </div>
+                            <div class="cd-cand-subcard-body">
+                                <div class="cd-val-salary" title="${ectcVal || ctcVal || ''}">
+                                    ${salaryPrimaryHtml}
+                                </div>
+                                <div class="cd-val-exp" title="${totalExpStr}">
+                                    <i class="far fa-clock text-muted me-1" style="font-size:10px;"></i><span>${totalExpStr}</span>
+                                </div>
+                                <div class="cd-val-notice" title="${noticeText}">
+                                    <span class="cd-notice-clean ${noticeColorClass}">${noticeText}</span>
                                 </div>
                             </div>
                         </div>
 
-                        <!-- Col 5: Ownership & Traceability -->
-                        <div class="cd-grid-col cd-col-owner">
-                            <div class="cd-owner-val text-truncate" title="${$('<div>').text(recruiter).html()}">
-                                <i class="fas fa-user-circle text-primary me-1" style="font-size:11px;"></i>${recruiterFormatted}
+                        <!-- Sub-Card 3: LOCATION & DEGREE -->
+                        <div class="cd-cand-subcard cd-cand-subcard-loc">
+                            <div class="cd-cand-subcard-hdr">
+                                <span class="cd-cand-subcard-label">LOCATION &amp; DEGREE</span>
                             </div>
-                            <div class="cd-owner-sub text-truncate" title="${$('<div>').text(submitterCompany).html()}">
-                                <i class="fas fa-building text-muted me-1" style="font-size:10px;"></i>${submitterFormatted}
-                            </div>
-                            <div class="cd-owner-time text-truncate" title="${submittedAgo}">
-                                <i class="far fa-calendar-alt text-muted me-1" style="font-size:10px;"></i>Submitted: ${submittedAgo}
+                            <div class="cd-cand-subcard-body">
+                                <div class="cd-loc-val" title="${$('<div>').text(locLine1Clean).html()}">
+                                    <i class="fas fa-map-marker-alt text-muted me-1" style="font-size:10px;"></i>${locLine1Clean}
+                                </div>
+                                <div class="cd-loc-mode" title="${workModeClean}">
+                                    <i class="fas fa-building text-muted me-1" style="font-size:9.5px;"></i>${workModeClean}
+                                </div>
+                                <div class="cd-loc-edu" title="${$('<div>').text(qualification).html()}">
+                                    <i class="fas fa-graduation-cap text-muted me-1" style="font-size:10px;"></i>${qualificationClean}
+                                </div>
                             </div>
                         </div>
 
-                        <!-- Col 6: Stage & Quick Actions -->
-                        <div class="cd-grid-col cd-col-stage">
-                            <a href="javascript:void(0);" class="cd-stage-chip stage_sub_stage text-truncate" data-row-id="${cid}" data-toggle="modal" data-target="#stage_sub_stage" style="${stageChipStyle}" title="${stageName}">
-                                <span>${stageName}</span> <i class="fas fa-caret-down ms-1" style="font-size:9px;"></i>
-                            </a>
-                            <div class="cd-stage-sub text-truncate" title="${subStageText}">
-                                <span class="text-muted">Sub-stage:</span> <span class="fw-medium text-dark">${subStageText}</span>
+                        <!-- Sub-Card 4: TARGET REQUISITION -->
+                        <div class="cd-cand-subcard cd-cand-subcard-job">
+                            <div class="cd-cand-subcard-hdr">
+                                <span class="cd-cand-subcard-label">TARGET REQUISITION</span>
+                                <div class="cd-header-badges">
+                                    <span class="cd-badge-client-type ${scopeCls}">${scopeTag}</span>
+                                    <span class="cd-status-badge ${statusChipClass}">${statusPillText}</span>
+                                </div>
                             </div>
-                            <div class="cd-stage-action text-truncate">
-                                <a href="javascript:void(0);" class="cd-action-link show-application-detail text-truncate" data-row-id="${cid}" title="View profile &amp; application">
-                                    <i class="far fa-id-badge text-primary me-1" style="font-size:10px;"></i>View Details
-                                </a>
+                            <div class="cd-cand-subcard-body">
+                                <div class="cd-job-row">
+                                    <div class="cd-job-logo-box">${jobInitial}</div>
+                                    <div class="cd-job-meta-wrap">
+                                        <a href="${jobUrl}" target="_blank" class="cd-job-title-link" title="${$('<div>').text(jobTitle).html()}">
+                                            ${jobTitleFormatted}
+                                        </a>
+                                        <div class="cd-job-submeta">
+                                            <span class="text-primary fw-bold">#${jobId}</span> &bull; <span>${deptFormatted}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="cd-job-footer-line">
+                                    <span class="fw-semibold text-dark">${companyNameFormatted}</span> &bull; <span><i class="fas fa-briefcase text-primary me-1" style="font-size:9px;"></i>${jobTypeClean}</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Sub-Card 5: RECRUITER & SOURCING -->
+                        <div class="cd-cand-subcard cd-cand-subcard-recruiter">
+                            <div class="cd-cand-subcard-hdr">
+                                <span class="cd-cand-subcard-label"><i class="fa fa-user-tie me-1 text-muted"></i>RECRUITER &amp; SOURCING</span>
+                            </div>
+                            <div class="cd-cand-subcard-body">
+                                <div class="cd-recruiter-name" title="${$('<div>').text(recruiter).html()}">
+                                    <i class="fas fa-user-circle text-primary me-1" style="font-size:10.5px;"></i>${recruiterFormatted}
+                                </div>
+                                <div class="cd-recruiter-company" title="${$('<div>').text(submitterCompany).html()}">
+                                    <i class="fas fa-building text-muted me-1" style="font-size:9.5px;"></i>${submitterFormatted}
+                                </div>
+                                <div class="cd-recruiter-time" title="${submittedAgo}">
+                                    <i class="far fa-calendar-alt text-muted me-1" style="font-size:9.5px;"></i>Submitted: ${submittedAgo}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Sub-Card 6: PIPELINE & STAGE -->
+                        <div class="cd-cand-subcard cd-cand-subcard-stage">
+                            <div class="cd-cand-subcard-hdr">
+                                <span class="cd-cand-subcard-label">PIPELINE &amp; STAGE</span>
+                            </div>
+                            <div class="cd-cand-subcard-body">
+                                <div>
+                                    <a href="javascript:void(0);" class="cd-stage-chip stage_sub_stage" data-row-id="${cid}" data-toggle="modal" data-target="#stage_sub_stage" style="${stageChipStyle}" title="${stageName}">
+                                        <span>${stageName}</span> <i class="fas fa-caret-down ms-1" style="font-size:9px;"></i>
+                                    </a>
+                                </div>
+                                <div class="cd-stage-sub" title="${subStageText}">
+                                    <span class="text-muted">Sub-stage:</span> <span class="fw-medium text-dark">${subStageText}</span>
+                                </div>
+                                <div class="cd-stage-action">
+                                    <a href="javascript:void(0);" class="cd-action-link show-application-detail" data-row-id="${cid}" title="View details">
+                                        <i class="far fa-id-badge text-primary me-1" style="font-size:9.5px;"></i>View Details
+                                    </a>
+                                </div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Bottom Strip: Full-Width CV Tracker Match % and Skills (horizontal scroll with mouse-wheel) -->
+                    <!-- Sub-Card 7: Full-Width Intelligence Strip (CV Match, Skills, LinkedIn Verified, Visa Status) -->
                     <div class="cd-cand-bottom-strip">
-                        <span class="cd-match-badge-cv ${matchBadgeClass}">Match ${matchPct}%</span>
-                        <div class="cd-bottom-skills-scroll">
-                            ${skillsPillsHtml}
+                        <div class="cd-cand-bottom-left">
+                            <span class="cd-match-badge-cv ${matchBadgeClass}">Match ${matchPct}%</span>
+                            <div class="cd-bottom-skills-scroll">
+                                ${skillsPillsHtml}
+                            </div>
+                        </div>
+                        <div class="cd-cand-bottom-right">
+                            ${linkedinHtml}
+                            ${visaHtml}
                         </div>
                     </div>
                 </div>
