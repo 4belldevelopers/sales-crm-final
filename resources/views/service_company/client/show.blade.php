@@ -12,6 +12,7 @@ use Carbon\Carbon;
 
   @endphp
 @include('service_company.client.components.tab-jobs-style')
+@include('service_company.client.components.tab-offers-joinings-style')
 <style>
     /* Scoped Interview Tracker Styling (Metronic Theme Aligned) */
     .cit-fb-pill {
@@ -594,569 +595,8 @@ use Carbon\Carbon;
         }
     }
 
-    /* ===== Scoped Offer & Joining Tracker: Card + Sub-Card Proportional Layout ===== */
-    .oj-main-card {
-        width: 100% !important;
-        font-family: 'Poppins', -apple-system, BlinkMacSystemFont, sans-serif !important;
-    }
+    @media only screen and (min-width: 900px) and (max-width: 2560px) {
 
-    /* 1. Top Card Header Toolbar (Milestone Filter Cards + Search Bar) */
-    .oj-toolbar-card {
-        background: #ffffff !important;
-        border: 1px solid #e2e8f0 !important;
-        border-radius: 10px !important;
-        padding: 12px 18px !important;
-        margin-bottom: 12px !important;
-        display: flex !important;
-        align-items: center !important;
-        justify-content: space-between !important;
-        gap: 14px !important;
-        flex-wrap: wrap !important;
-        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03) !important;
-    }
-    .oj-toolbar-left {
-        display: flex !important;
-        align-items: center !important;
-        gap: 16px !important;
-        min-width: 0 !important;
-        flex-wrap: wrap !important;
-    }
-    .oj-header-icon {
-        width: 38px !important;
-        height: 38px !important;
-        border-radius: 8px !important;
-        background: #eff6ff !important;
-        display: flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        font-size: 15px !important;
-        flex-shrink: 0 !important;
-    }
-    .oj-title-wrap {
-        display: flex !important;
-        flex-direction: column !important;
-    }
-    .oj-title {
-        font-size: 13.5px !important;
-        font-weight: 700 !important;
-        color: #0f172a !important;
-        line-height: 1.2 !important;
-        letter-spacing: -0.2px !important;
-        margin: 0 !important;
-    }
-    .oj-badge-count {
-        display: inline-flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        padding: 1.5px 8px !important;
-        font-size: 11px !important;
-        font-weight: 700 !important;
-        color: #2563eb !important;
-        background: #eff6ff !important;
-        border: 1px solid #bfdbfe !important;
-        border-radius: 999px !important;
-    }
-    .oj-subtitle {
-        font-size: 11px !important;
-        font-weight: 500 !important;
-        color: #64748b !important;
-        margin-top: 2px !important;
-    }
-
-    /* Milestone Segment Buttons (Card Toolbar) */
-    .oj-segment-group {
-        display: inline-flex !important;
-        align-items: center !important;
-        background: #f1f5f9 !important;
-        border: 1px solid #e2e8f0 !important;
-        border-radius: 8px !important;
-        padding: 3px !important;
-        gap: 3px !important;
-    }
-    .oj-seg-btn {
-        border: none !important;
-        background: transparent !important;
-        padding: 5px 12px !important;
-        font-size: 11.5px !important;
-        font-weight: 600 !important;
-        color: #64748b !important;
-        border-radius: 6px !important;
-        display: inline-flex !important;
-        align-items: center !important;
-        gap: 6px !important;
-        cursor: pointer !important;
-        transition: all 0.15s ease-in-out !important;
-        line-height: 1.2 !important;
-    }
-    .oj-seg-btn:hover {
-        color: #0f172a !important;
-        background: rgba(255, 255, 255, 0.6) !important;
-    }
-    .oj-seg-btn.active {
-        background: #ffffff !important;
-        color: #0f172a !important;
-        font-weight: 700 !important;
-        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.08) !important;
-    }
-    .oj-seg-badge {
-        font-size: 10.5px !important;
-        font-weight: 700 !important;
-        padding: 1px 6px !important;
-        border-radius: 999px !important;
-        background: #e2e8f0 !important;
-        color: #475569 !important;
-    }
-    .oj-seg-btn.active .oj-seg-badge {
-        background: #0f172a !important;
-        color: #ffffff !important;
-    }
-    .oj-badge-warning {
-        background: #fef3c7 !important;
-        color: #b45309 !important;
-    }
-    .oj-seg-btn.active .oj-badge-warning {
-        background: #ea580c !important;
-        color: #ffffff !important;
-    }
-    .oj-badge-primary {
-        background: #eff6ff !important;
-        color: #1d4ed8 !important;
-    }
-    .oj-seg-btn.active .oj-badge-primary {
-        background: #2563eb !important;
-        color: #ffffff !important;
-    }
-    .oj-badge-success {
-        background: #dcfce7 !important;
-        color: #15803d !important;
-    }
-    .oj-seg-btn.active .oj-badge-success {
-        background: #16a34a !important;
-        color: #ffffff !important;
-    }
-    .oj-dot {
-        width: 6px !important;
-        height: 6px !important;
-        border-radius: 50% !important;
-        display: inline-block !important;
-    }
-    .oj-dot-warning { background: #f59e0b !important; }
-    .oj-dot-primary { background: #3b82f6 !important; }
-    .oj-dot-success { background: #10b981 !important; }
-
-    /* Search Bar Sub-Card */
-    .oj-toolbar-right {
-        display: flex !important;
-        align-items: center !important;
-        gap: 10px !important;
-    }
-    .oj-search-subcard {
-        display: flex !important;
-        align-items: center !important;
-        gap: 8px !important;
-        background: #f8fafc !important;
-        border: 1px solid #e2e8f0 !important;
-        border-radius: 8px !important;
-        padding: 0 12px !important;
-        height: 36px !important;
-        min-width: 240px !important;
-        max-width: 320px !important;
-        width: 100% !important;
-        transition: all 0.15s ease-in-out !important;
-    }
-    .oj-search-subcard:focus-within {
-        background: #ffffff !important;
-        border-color: #2563eb !important;
-        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12) !important;
-    }
-    .oj-search-subcard i {
-        color: #94a3b8 !important;
-        font-size: 12px !important;
-        flex-shrink: 0 !important;
-    }
-    .oj-search-subcard input {
-        border: none !important;
-        background: transparent !important;
-        outline: none !important;
-        box-shadow: none !important;
-        font-size: 12px !important;
-        font-family: inherit !important;
-        color: #0f172a !important;
-        width: 100% !important;
-        padding: 0 !important;
-        line-height: 36px !important;
-    }
-    .oj-search-subcard input::placeholder {
-        color: #94a3b8 !important;
-        font-size: 11.5px !important;
-    }
-    .oj-search-clear {
-        background: transparent !important;
-        border: none !important;
-        color: #94a3b8 !important;
-        cursor: pointer !important;
-        padding: 2px 4px !important;
-        font-size: 11px !important;
-        display: flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-    }
-    .oj-search-clear:hover {
-        color: #ef4444 !important;
-    }
-
-    /* Container for Cards List */
-    .oj-card-container {
-        width: 100% !important;
-        overflow-x: auto !important;
-        font-family: 'Poppins', -apple-system, BlinkMacSystemFont, sans-serif !important;
-    }
-
-    /* Proportional Grid for 8 Columns (Matches Mockup) */
-    .oj-card-header,
-    .oj-primary-card {
-        display: grid !important;
-        grid-template-columns: minmax(170px, 1.8fr) minmax(150px, 1.6fr) minmax(130px, 1.3fr) minmax(130px, 1.3fr) minmax(140px, 1.4fr) minmax(140px, 1.4fr) minmax(140px, 1.4fr) minmax(100px, 1fr) !important;
-        column-gap: 12px !important;
-        align-items: center !important;
-        min-width: 1020px !important;
-        box-sizing: border-box !important;
-    }
-
-    .oj-card-header {
-        background: #f8fafc !important;
-        border: 1px solid #e2e8f0 !important;
-        border-radius: 8px !important;
-        padding: 9px 14px !important;
-        margin-bottom: 8px !important;
-    }
-
-    .oj-col-th {
-        font-size: 10px !important;
-        font-weight: 700 !important;
-        color: #64748b !important;
-        text-transform: uppercase !important;
-        letter-spacing: 0.5px !important;
-        white-space: nowrap !important;
-    }
-
-    /* Primary Job Card for Each Candidate Offer/Joining */
-    .oj-primary-card {
-        background: #ffffff !important;
-        border: 1px solid #e2e8f0 !important;
-        border-radius: 10px !important;
-        padding: 12px 14px !important;
-        margin-bottom: 8px !important;
-        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03) !important;
-        transition: all 0.15s ease-in-out !important;
-    }
-    .oj-primary-card:hover {
-        border-color: #cbd5e1 !important;
-        box-shadow: 0 4px 14px rgba(15, 23, 42, 0.06) !important;
-        transform: translateY(-1px) !important;
-    }
-
-    /* Subcard layout */
-    .oj-subcard {
-        min-width: 0 !important;
-        display: flex !important;
-        flex-direction: column !important;
-    }
-
-    /* 1. Candidate Subcard */
-    .oj-subcard-cand {
-        flex-direction: row !important;
-        align-items: center !important;
-        gap: 10px !important;
-    }
-    .oj-cand-avatar {
-        width: 38px !important;
-        height: 38px !important;
-        border-radius: 8px !important;
-        display: flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        font-size: 14px !important;
-        font-weight: 700 !important;
-        flex-shrink: 0 !important;
-        text-transform: uppercase !important;
-    }
-    .oj-avatar-red { background: #fee2e2 !important; color: #dc2626 !important; }
-    .oj-avatar-orange { background: #fef3c7 !important; color: #d97706 !important; }
-    .oj-avatar-blue { background: #dbeafe !important; color: #2563eb !important; }
-    .oj-avatar-green { background: #dcfce7 !important; color: #16a34a !important; }
-    .oj-avatar-purple { background: #f3e8ff !important; color: #9333ea !important; }
-    .oj-avatar-gray { background: #f1f5f9 !important; color: #475569 !important; }
-
-    .oj-cand-info {
-        min-width: 0 !important;
-        display: flex !important;
-        flex-direction: column !important;
-        gap: 1px !important;
-    }
-    .oj-cand-name {
-        font-size: 12.5px !important;
-        font-weight: 700 !important;
-        color: #0f172a !important;
-        line-height: 1.35 !important;
-        text-decoration: none !important;
-        word-break: break-word !important;
-    }
-    .oj-cand-name:hover {
-        color: #2563eb !important;
-    }
-    .oj-cand-role {
-        font-size: 11px !important;
-        font-weight: 500 !important;
-        color: #64748b !important;
-        line-height: 1.3 !important;
-        word-break: break-word !important;
-    }
-
-    /* 2. Job Subcard */
-    .oj-subcard-job {
-        gap: 2px !important;
-    }
-    .oj-job-title {
-        font-size: 12.5px !important;
-        font-weight: 700 !important;
-        color: #0f172a !important;
-        line-height: 1.35 !important;
-        word-break: break-word !important;
-    }
-    .oj-job-company {
-        font-size: 11px !important;
-        font-weight: 500 !important;
-        color: #64748b !important;
-        line-height: 1.3 !important;
-        word-break: break-word !important;
-    }
-
-    /* 3. Job Status, ID & Client */
-    .oj-subcard-meta {
-        gap: 3px !important;
-    }
-    .oj-meta-status-badge {
-        display: inline-flex !important;
-        align-items: center !important;
-        gap: 4px !important;
-        font-size: 10px !important;
-        font-weight: 700 !important;
-        padding: 2px 7px !important;
-        border-radius: 999px !important;
-        background: #f0fdf4 !important;
-        color: #16a34a !important;
-        border: 1px solid #bbf7d0 !important;
-        width: fit-content !important;
-    }
-    .oj-meta-status-dot {
-        font-size: 5px !important;
-    }
-    .oj-meta-sub {
-        font-size: 11px !important;
-        color: #64748b !important;
-        font-weight: 500 !important;
-    }
-
-    /* 4. Ownership Subcard */
-    .oj-subcard-owner {
-        gap: 2px !important;
-    }
-    .oj-owner-name {
-        font-size: 12px !important;
-        font-weight: 700 !important;
-        color: #0f172a !important;
-        word-break: break-word !important;
-    }
-    .oj-owner-comp {
-        font-size: 10.5px !important;
-        font-weight: 500 !important;
-        color: #64748b !important;
-        word-break: break-word !important;
-    }
-
-    /* 5. Compensation Subcard */
-    .oj-subcard-comp {
-        gap: 2px !important;
-    }
-    .oj-comp-amount {
-        font-size: 12.5px !important;
-        font-weight: 700 !important;
-        color: #0f172a !important;
-        letter-spacing: -0.2px !important;
-    }
-    .oj-comp-details {
-        display: flex !important;
-        align-items: center !important;
-        gap: 5px !important;
-        font-size: 10.5px !important;
-    }
-    .oj-comp-type {
-        color: #64748b !important;
-        font-weight: 500 !important;
-    }
-    .oj-comp-sep {
-        color: #cbd5e1 !important;
-    }
-    .oj-comp-change {
-        color: #2563eb !important;
-        font-weight: 600 !important;
-        text-decoration: none !important;
-    }
-    .oj-comp-change:hover {
-        text-decoration: underline !important;
-    }
-
-    /* 6. Offer Status Subcard */
-    .oj-subcard-offer-status {
-        gap: 3px !important;
-    }
-    .oj-status-pill {
-        display: inline-flex !important;
-        align-items: center !important;
-        gap: 5px !important;
-        font-size: 11px !important;
-        font-weight: 600 !important;
-        padding: 4px 10px !important;
-        border-radius: 999px !important;
-        width: fit-content !important;
-        line-height: 1.2 !important;
-    }
-    .oj-pill-offered {
-        background: #eff6ff !important;
-        color: #2563eb !important;
-        border: 1px solid #bfdbfe !important;
-    }
-    .oj-pill-joined {
-        background: #f0fdf4 !important;
-        color: #16a34a !important;
-        border: 1px solid #bbf7d0 !important;
-    }
-    .oj-status-subtext {
-        font-size: 10.5px !important;
-        color: #64748b !important;
-        font-weight: 500 !important;
-        padding-left: 2px !important;
-    }
-
-    /* 7. Joining Subcard */
-    .oj-subcard-joining {
-        gap: 2px !important;
-    }
-    .oj-join-date {
-        font-size: 12px !important;
-        font-weight: 700 !important;
-        color: #0f172a !important;
-    }
-    .oj-join-time {
-        font-size: 10.5px !important;
-        color: #64748b !important;
-        font-weight: 500 !important;
-    }
-    .oj-join-countdown {
-        margin-top: 1px !important;
-    }
-    .oj-countdown-pill {
-        display: inline-flex !important;
-        align-items: center !important;
-        font-size: 10px !important;
-        font-weight: 700 !important;
-        padding: 1px 6px !important;
-        border-radius: 4px !important;
-    }
-    .oj-countdown-soon {
-        color: #dc2626 !important;
-        background: #fef2f2 !important;
-    }
-    .oj-countdown-tomorrow {
-        color: #d97706 !important;
-        background: #fef3c7 !important;
-    }
-    .oj-countdown-today {
-        color: #b45309 !important;
-        background: #fef3c7 !important;
-    }
-    .oj-countdown-overdue {
-        color: #b91c1c !important;
-        background: #fee2e2 !important;
-    }
-    .oj-countdown-joined {
-        color: #16a34a !important;
-        background: #f0fdf4 !important;
-    }
-    .oj-countdown-neutral {
-        color: #64748b !important;
-        background: #f1f5f9 !important;
-    }
-
-    /* 8. Stage Subcard */
-    .oj-subcard-stage {
-        gap: 2px !important;
-    }
-    .oj-stage-badge-link {
-        text-decoration: none !important;
-        display: flex !important;
-        flex-direction: column !important;
-        gap: 2px !important;
-        width: fit-content !important;
-    }
-    .oj-stage-outline-badge {
-        display: inline-flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        font-size: 11px !important;
-        font-weight: 600 !important;
-        padding: 3px 10px !important;
-        border-radius: 6px !important;
-        line-height: 1.2 !important;
-        width: fit-content !important;
-    }
-    .oj-stage-badge-orange {
-        color: #ea580c !important;
-        border: 1px solid #f97316 !important;
-        background: #fff7ed !important;
-    }
-    .oj-stage-badge-green {
-        color: #059669 !important;
-        border: 1px solid #10b981 !important;
-        background: #ecfdf5 !important;
-    }
-    .oj-stage-subtext {
-        font-size: 10.5px !important;
-        color: #64748b !important;
-        font-weight: 500 !important;
-    }
-
-    /* Empty Card State */
-    .oj-empty-card {
-        background: #ffffff !important;
-        border: 1px dashed #cbd5e1 !important;
-        border-radius: 10px !important;
-        padding: 36px 20px !important;
-        text-align: center !important;
-        margin: 12px 0 !important;
-    }
-    .oj-empty-icon {
-        font-size: 28px !important;
-        color: #94a3b8 !important;
-        margin-bottom: 8px !important;
-        display: inline-block !important;
-    }
-    .oj-empty-title {
-        font-size: 13.5px !important;
-        font-weight: 700 !important;
-        color: #0f172a !important;
-        margin-bottom: 4px !important;
-    }
-    .oj-empty-desc {
-        font-size: 11.5px !important;
-        color: #64748b !important;
-    }
-
-    /* Pagination card wrapper */
-    .oj-pagination-card {
-        margin-top: 10px !important;
-    }
 
 
         .table td,
@@ -1944,11 +1384,678 @@ use Carbon\Carbon;
             background: #f0f9ff;
           }
 
-          /* ── Contacts Tab Header & Search ── */
-          .cd-contacts .cd-tabcard-title { font-size: 13.5px !important; font-weight: 600 !important; color: #0f172a; }
-          .cd-contacts .cd-tabcard-sub { font-size: 11.5px !important; color: #64748b; margin-top: 2px; }
-          .cd-contacts .cd-search input { height: 32px; font-size: 12px !important; border-radius: 6px; border: 1px solid #e2e8f0; padding-left: 30px; padding-right: 12px; width: 220px; }
-          .cd-contacts .cd-search i { position: absolute; left: 10px; top: 10px; font-size: 12px; color: #94a3b8; }
+          /* ── Contacts Tab Modern Card + Sub-Card Enterprise Design ── */
+          .cd-contact-tab-container {
+            background: #ffffff;
+            border-radius: 12px;
+            padding: 12px 14px 18px;
+            margin: 8px 10px 16px;
+            border: 1px solid #edf2f7;
+            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.02);
+            overflow: hidden;
+          }
+
+          /* TIER 1: Searchbar & Filter Toolbar Card */
+          .cd-contact-toolbar-card {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 10px 14px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            flex-wrap: wrap;
+            box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03);
+          }
+          .cd-contact-toolbar-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex: 1 1 300px;
+          }
+          .cd-contact-title-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            background: #eff6ff;
+            color: #009ef7;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 15px;
+            flex-shrink: 0;
+            border: 1px solid #dbeafe;
+          }
+          .cd-contact-title-wrap {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+          }
+          .cd-contact-title {
+            font-size: 14.5px;
+            font-weight: 700;
+            color: #0f172a;
+            margin: 0;
+            line-height: 1.2;
+          }
+          .cd-contact-subtitle {
+            font-size: 11.5px;
+            color: #64748b;
+            margin: 0;
+            line-height: 1.2;
+          }
+          .cd-contact-count-badge {
+            background: #eff6ff;
+            color: #1d4ed8;
+            border: 1px solid #dbeafe;
+            border-radius: 6px;
+            padding: 1px 8px;
+            font-size: 11px;
+            font-weight: 600;
+          }
+          .cd-contact-scope-pill {
+            background: #eff6ff;
+            color: #1d4ed8;
+            border: 1px solid #bfdbfe;
+            border-radius: 6px;
+            padding: 1px 7px;
+            font-size: 10.5px;
+            font-weight: 600;
+          }
+          .cd-contact-toolbar-right {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+          }
+
+          /* Search Sub-Card */
+          .cd-contact-search-subcard {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 0 10px 0 12px;
+            height: 36px;
+            width: 100%;
+            max-width: 360px;
+            transition: all 0.15s ease-in-out;
+            position: relative;
+          }
+          .cd-contact-search-subcard:focus-within {
+            background: #ffffff;
+            border-color: #009ef7;
+            box-shadow: 0 0 0 3px rgba(0, 158, 247, 0.12);
+          }
+          .cd-contact-search-subcard i.fa-search {
+            color: #94a3b8;
+            font-size: 12px;
+            flex-shrink: 0;
+          }
+          .cd-contact-search-subcard input {
+            border: none !important;
+            background: transparent !important;
+            outline: none !important;
+            box-shadow: none !important;
+            font-size: 12px !important;
+            color: #0f172a !important;
+            width: 100%;
+            padding: 0 !important;
+            line-height: 36px;
+            font-family: inherit;
+          }
+          .cd-contact-search-subcard input::placeholder {
+            color: #94a3b8;
+            font-weight: 400;
+          }
+          .cd-contact-search-clear {
+            border: none;
+            background: transparent;
+            color: #94a3b8;
+            cursor: pointer;
+            padding: 2px 4px;
+            font-size: 11px;
+            transition: color 0.15s;
+          }
+          .cd-contact-search-clear:hover {
+            color: #ef4444;
+          }
+
+          .cd-contact-action-subcard {
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+            background: #f8fafc;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            color: #64748b;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            padding: 0;
+          }
+          .cd-contact-action-subcard:hover {
+            background: #eff6ff;
+            color: #009ef7;
+            border-color: #bfdbfe;
+          }
+
+          /* TIER 2: Sub-Tabs Filter Card */
+          .cd-contact-tabs-card {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 6px 8px;
+            margin-bottom: 12px;
+            box-shadow: 0 1px 2px rgba(15, 23, 42, 0.02);
+          }
+          .cd-contact-tabs-list {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            overflow-x: auto;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+            padding: 2px 0;
+          }
+          .cd-contact-tabs-list::-webkit-scrollbar {
+            display: none;
+          }
+          .cd-contact-subtab {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            border-radius: 7px;
+            border: 1px solid #e2e8f0;
+            background: #f8fafc;
+            color: #475569;
+            font-size: 11.5px;
+            font-weight: 500;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: all 0.15s ease;
+            user-select: none;
+          }
+          .cd-contact-subtab:hover {
+            background: #f1f5f9;
+            color: #0f172a;
+            border-color: #cbd5e1;
+          }
+          .cd-contact-subtab.active {
+            background: #009ef7 !important;
+            color: #ffffff !important;
+            border-color: #009ef7 !important;
+            font-weight: 600 !important;
+            box-shadow: 0 2px 6px rgba(0, 158, 247, 0.28) !important;
+          }
+          .cd-contact-subtab-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 18px;
+            height: 18px;
+            padding: 0 5px;
+            border-radius: 10px;
+            font-size: 10px;
+            font-weight: 700;
+            background: #e2e8f0;
+            color: #475569;
+          }
+          .cd-contact-subtab.active .cd-contact-subtab-badge {
+            background: rgba(255, 255, 255, 0.28) !important;
+            color: #ffffff !important;
+          }
+
+          /* TIER 3: Contact Cards Stream */
+          .cd-contact-stream-wrap {
+            width: 100%;
+            overflow-x: hidden;
+          }
+          .cd-contact-stream {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            width: 100%;
+          }
+
+          /* Individual Contact Master Card */
+          .cd-contact-card {
+            background: #ffffff !important;
+            border: 1px solid #e2e8f0 !important;
+            border-radius: 10px !important;
+            box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03) !important;
+            transition: all 0.15s ease-in-out !important;
+            overflow: hidden !important;
+            width: 100% !important;
+            max-width: 100% !important;
+          }
+          .cd-contact-card:hover {
+            border-color: #cbd5e1 !important;
+            box-shadow: 0 4px 14px rgba(15, 23, 42, 0.06) !important;
+            transform: translateY(-1px) !important;
+          }
+
+          /* Discrete Sub-Cards Grid */
+          .cd-contact-card-grid {
+            display: grid !important;
+            grid-template-columns: minmax(0, 2.2fr) minmax(0, 2.2fr) minmax(0, 1.4fr) minmax(0, 1.2fr) minmax(0, 1.4fr) !important;
+            gap: 8px !important;
+            padding: 10px 12px !important;
+            width: 100% !important;
+            max-width: 100% !important;
+            align-items: stretch !important;
+          }
+
+          /* Discrete Sub-Card Container */
+          .cd-contact-subcard {
+            background: #f8fafc !important;
+            border: 1px solid #edf2f7 !important;
+            border-radius: 8px !important;
+            padding: 7px 9px !important;
+            display: flex !important;
+            flex-direction: column !important;
+            justify-content: space-between !important;
+            min-width: 0 !important;
+            overflow: hidden !important;
+          }
+          .cd-contact-subcard-hdr {
+            display: flex !important;
+            align-items: center !important;
+            justify-content: space-between !important;
+            margin-bottom: 5px !important;
+            gap: 4px !important;
+            line-height: 1 !important;
+          }
+          .cd-contact-subcard-label {
+            font-size: 9.5px !important;
+            font-weight: 700 !important;
+            text-transform: uppercase !important;
+            letter-spacing: 0.3px !important;
+            color: #64748b !important;
+            white-space: nowrap !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+          }
+          .cd-contact-subcard-body {
+            display: flex !important;
+            flex-direction: column !important;
+            justify-content: center !important;
+            gap: 3px !important;
+            flex: 1 1 auto !important;
+            min-width: 0 !important;
+            overflow: hidden !important;
+          }
+
+          /* Sub-Card 1: Profile Elements */
+          .cd-contact-profile-row {
+            display: flex !important;
+            align-items: center !important;
+            gap: 9px !important;
+            min-width: 0 !important;
+          }
+          .cd-contact-avatar-box {
+            width: 38px !important;
+            height: 38px !important;
+            min-width: 38px !important;
+            border-radius: 8px !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            font-size: 13.5px !important;
+            font-weight: 700 !important;
+            color: #ffffff !important;
+            flex-shrink: 0 !important;
+            text-transform: uppercase !important;
+          }
+          .cd-contact-profile-meta {
+            flex: 1 1 auto !important;
+            min-width: 0 !important;
+            overflow: hidden !important;
+          }
+          .cd-contact-card-name {
+            font-size: 13px !important;
+            font-weight: 700 !important;
+            color: #0f172a !important;
+            line-height: 1.25 !important;
+            display: block !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+            white-space: nowrap !important;
+          }
+          .cd-contact-card-desig {
+            font-size: 11px !important;
+            font-weight: 500 !important;
+            color: #475569 !important;
+            line-height: 1.2 !important;
+            margin-top: 2px !important;
+            display: block !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+            white-space: nowrap !important;
+          }
+          .cd-badge-primary-spoc {
+            display: inline-flex !important;
+            align-items: center !important;
+            padding: 1px 6px !important;
+            border-radius: 4px !important;
+            font-size: 9.5px !important;
+            font-weight: 700 !important;
+            background: #fef3c7 !important;
+            color: #92400e !important;
+            border: 1px solid #fde68a !important;
+          }
+          .cd-badge-secondary-contact {
+            display: inline-flex !important;
+            align-items: center !important;
+            padding: 1px 5px !important;
+            border-radius: 4px !important;
+            font-size: 9.5px !important;
+            font-weight: 600 !important;
+            background: #f1f5f9 !important;
+            color: #475569 !important;
+            border: 1px solid #e2e8f0 !important;
+          }
+
+          /* Sub-Card 2: Communication Elements */
+          .cd-comm-item {
+            display: flex !important;
+            align-items: center !important;
+            gap: 6px !important;
+            font-size: 11.5px !important;
+            color: #334155 !important;
+            min-width: 0 !important;
+            line-height: 1.3 !important;
+          }
+          .cd-comm-item i {
+            font-size: 11px !important;
+            width: 14px !important;
+            text-align: center !important;
+            flex-shrink: 0 !important;
+          }
+          .cd-comm-link {
+            color: #0f172a !important;
+            text-decoration: none !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+            white-space: nowrap !important;
+            font-weight: 500 !important;
+            transition: color 0.12s ease !important;
+          }
+          .cd-comm-link:hover {
+            color: #009ef7 !important;
+            text-decoration: underline !important;
+          }
+          .cd-copy-btn {
+            background: transparent !important;
+            border: none !important;
+            color: #94a3b8 !important;
+            cursor: pointer !important;
+            padding: 1px 3px !important;
+            font-size: 10.5px !important;
+            border-radius: 3px !important;
+            transition: all 0.12s ease !important;
+            flex-shrink: 0 !important;
+          }
+          .cd-copy-btn:hover {
+            color: #009ef7 !important;
+            background: #eff6ff !important;
+          }
+
+          /* Sub-Card 3: Org & Scope */
+          .cd-org-client {
+            font-size: 11.5px !important;
+            font-weight: 600 !important;
+            color: #1e293b !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+            white-space: nowrap !important;
+            display: flex !important;
+            align-items: center !important;
+            gap: 5px !important;
+          }
+          .cd-org-role-badge {
+            display: inline-flex !important;
+            align-items: center !important;
+            gap: 4px !important;
+            padding: 1px 6px !important;
+            border-radius: 4px !important;
+            font-size: 10px !important;
+            font-weight: 600 !important;
+            background: #eff6ff !important;
+            color: #2563eb !important;
+            border: 1px solid #dbeafe !important;
+            max-width: 100% !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+            white-space: nowrap !important;
+          }
+
+          /* Sub-Card 4: Linked Jobs */
+          .cd-linked-jobs-stat {
+            font-size: 11.5px !important;
+            font-weight: 600 !important;
+            color: #0f172a !important;
+            display: flex !important;
+            align-items: center !important;
+            gap: 5px !important;
+          }
+          .cd-view-jobs-link {
+            font-size: 10.5px !important;
+            color: #009ef7 !important;
+            font-weight: 600 !important;
+            text-decoration: none !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            gap: 3px !important;
+            margin-top: 2px !important;
+            cursor: pointer !important;
+          }
+          .cd-view-jobs-link:hover {
+            text-decoration: underline !important;
+            color: #007bb5 !important;
+          }
+
+          /* Sub-Card 5: Actions */
+          .cd-contact-actions-row {
+            display: flex !important;
+            align-items: center !important;
+            gap: 5px !important;
+            flex-wrap: nowrap !important;
+          }
+          .cd-contact-btn-call {
+            padding: 4px 8px !important;
+            font-size: 11px !important;
+            font-weight: 600 !important;
+            border-radius: 6px !important;
+            background: #eff6ff !important;
+            color: #2563eb !important;
+            border: 1px solid #bfdbfe !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            gap: 4px !important;
+            text-decoration: none !important;
+            transition: all 0.12s ease !important;
+          }
+          .cd-contact-btn-call:hover {
+            background: #2563eb !important;
+            color: #ffffff !important;
+          }
+          .cd-contact-btn-mail {
+            padding: 4px 8px !important;
+            font-size: 11px !important;
+            font-weight: 600 !important;
+            border-radius: 6px !important;
+            background: #eff6ff !important;
+            color: #009ef7 !important;
+            border: 1px solid #bae6fd !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            gap: 4px !important;
+            text-decoration: none !important;
+            transition: all 0.12s ease !important;
+          }
+          .cd-contact-btn-mail:hover {
+            background: #009ef7 !important;
+            color: #ffffff !important;
+          }
+          .cd-contact-btn-wa {
+            padding: 4px 7px !important;
+            font-size: 11px !important;
+            border-radius: 6px !important;
+            background: #f0fdf4 !important;
+            color: #16a34a !important;
+            border: 1px solid #bbf7d0 !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            text-decoration: none !important;
+            transition: all 0.12s ease !important;
+          }
+          .cd-contact-btn-wa:hover {
+            background: #16a34a !important;
+            color: #ffffff !important;
+          }
+
+          /* Status Badges */
+          .cd-contact-status-active {
+            display: inline-flex !important;
+            align-items: center !important;
+            gap: 4px !important;
+            padding: 1px 6px !important;
+            border-radius: 4px !important;
+            font-size: 9.5px !important;
+            font-weight: 700 !important;
+            background: #dcfce7 !important;
+            color: #15803d !important;
+            border: 1px solid #bbf7d0 !important;
+          }
+          .cd-contact-status-active i {
+            font-size: 6px !important;
+          }
+          .cd-contact-status-inactive {
+            display: inline-flex !important;
+            align-items: center !important;
+            gap: 4px !important;
+            padding: 1px 6px !important;
+            border-radius: 4px !important;
+            font-size: 9.5px !important;
+            font-weight: 700 !important;
+            background: #f1f5f9 !important;
+            color: #64748b !important;
+            border: 1px solid #e2e8f0 !important;
+          }
+
+          /* Sub-Card 6: Bottom Activity Strip */
+          .cd-contact-card-bottom {
+            background: #fbfcfe !important;
+            border-top: 1px solid #f1f5f9 !important;
+            padding: 6px 12px !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: space-between !important;
+            gap: 10px !important;
+            flex-wrap: wrap !important;
+          }
+          .cd-contact-bottom-left {
+            display: flex !important;
+            align-items: center !important;
+            gap: 12px !important;
+            font-size: 11px !important;
+            color: #64748b !important;
+          }
+          .cd-contact-meta-item {
+            display: inline-flex !important;
+            align-items: center !important;
+            gap: 4px !important;
+          }
+          .cd-contact-bottom-right {
+            display: flex !important;
+            align-items: center !important;
+            gap: 6px !important;
+          }
+          .cd-contact-tag-pill {
+            display: inline-flex !important;
+            align-items: center !important;
+            gap: 4px !important;
+            padding: 1px 7px !important;
+            border-radius: 4px !important;
+            font-size: 10px !important;
+            font-weight: 500 !important;
+            background: #f1f5f9 !important;
+            color: #475569 !important;
+            border: 1px solid #e2e8f0 !important;
+          }
+
+          /* Skeleton Loader */
+          .cd-contact-skeleton-card {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 12px;
+            margin-bottom: 10px;
+            display: flex;
+            gap: 10px;
+          }
+          .cd-contact-skeleton-pulse {
+            background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%);
+            background-size: 200% 100%;
+            animation: cdContactPulse 1.4s ease infinite;
+            border-radius: 6px;
+          }
+          @keyframes cdContactPulse {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+          }
+
+          /* Empty State */
+          .cd-contact-empty-state {
+            background: #ffffff;
+            border: 1px dashed #cbd5e1;
+            border-radius: 10px;
+            padding: 36px 20px;
+            text-align: center;
+            margin: 10px 0;
+          }
+          .cd-contact-empty-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: #f1f5f9;
+            color: #94a3b8;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            margin-bottom: 10px;
+          }
+          .cd-contact-empty-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #0f172a;
+            margin-bottom: 4px;
+          }
+          .cd-contact-empty-sub {
+            font-size: 12px;
+            color: #64748b;
+            margin-bottom: 12px;
+          }
+
+          @media (max-width: 1200px) {
+            .cd-contact-card-grid {
+              grid-template-columns: minmax(0, 1.8fr) minmax(0, 1.8fr) minmax(0, 1.4fr) !important;
+            }
+          }
+          @media (max-width: 768px) {
+            .cd-contact-card-grid {
+              grid-template-columns: 1fr !important;
+            }
+          }
 
           /* ── Drawer Footer ── */
           .cd-drawer-footer {
@@ -3557,6 +3664,8 @@ use Carbon\Carbon;
               <li class="nav-item">
                 <a class="nav-link" data-toggle="tab" href="#contacts">
                   <i class="fas fa-address-book fa-solid" style="color:#10b981;"></i> Contacts
+                  @php $contactInitCount = isset($client_contact_info) ? count($client_contact_info) : 0; @endphp
+                  <span class="cd-tab-badge" id="cdContactNavBadgeInternal" style="{{ $contactInitCount > 0 ? '' : 'display:none;' }}">{{ $contactInitCount }}</span>
                 </a>
               </li>
               <li class="nav-item">
@@ -3818,32 +3927,110 @@ use Carbon\Carbon;
                 </div>
               </div>
             </div>
-                    <div class="tab-pane" id="contacts" role="tabpanel">
-                        <div class="cd-tabcard cd-contacts">
-                            <div class="cd-tabcard-head" style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;">
-                                <div>
-                                    <div class="cd-tabcard-title">Contacts</div>
-                                    <div class="cd-tabcard-sub">Manage and view all contacts associated with this client.</div>
+                    <div class="tab-pane" id="contacts" role="tabpanel" style="background:#ffffff; min-height: 520px;">
+                        <div class="cd-contact-tab-container">
+
+                            <!-- TIER 1: TOP HEADER TOOLBAR CARD -->
+                            <div class="cd-contact-toolbar-card">
+                                <div class="cd-contact-toolbar-left">
+                                    <div class="cd-contact-title-avatar">
+                                        <i class="fas fa-address-book fa-solid"></i>
+                                    </div>
+                                    <div class="cd-contact-title-wrap">
+                                        <div class="d-flex align-items-center gap-2">
+                                            <h4 class="cd-contact-title">Client Contacts</h4>
+                                            <span class="cd-contact-count-badge" id="cdContactCountBadgeInternal">
+                                                <span id="cdContactCountTextInternal">{{ $contactInitCount ?? 0 }}</span> Contacts
+                                            </span>
+                                            <span class="cd-contact-scope-pill">
+                                                <i class="fas fa-building text-primary me-1"></i> Internal Client
+                                            </span>
+                                        </div>
+                                        <div class="cd-contact-subtitle">Authoritative directory of key stakeholders, hiring managers, and primary coordinators.</div>
+                                    </div>
                                 </div>
-                                <div class="cd-tabcard-actions">
-                                    <div class="cd-search"><i class="fas fa-search"></i><input type="text" id="contactSearchInput" placeholder="Search contacts..." /></div>
+                                <div class="cd-contact-toolbar-right">
+                                    <!-- Search Contacts Sub-Card with Clear Button -->
+                                    <div class="cd-contact-search-subcard">
+                                        <i class="fas fa-search fa-solid"></i>
+                                        <input type="text" id="cdContactSearchInputInternal" placeholder="Search contacts by name, role, email, phone..." autocomplete="off">
+                                        <button type="button" class="cd-contact-search-clear" id="cdContactSearchClearInternal" style="display: none;" title="Clear search">
+                                            <i class="fas fa-times fa-solid"></i>
+                                        </button>
+                                    </div>
+                                    <!-- Quick Refresh / Reset Button -->
+                                    <button type="button" id="cdContactResetBtnInternal" class="cd-contact-action-subcard" title="Reset Filters &amp; Refresh">
+                                        <i class="fas fa-sync-alt fa-solid"></i>
+                                    </button>
+                                    @if(in_array('edit_clients', $userPermissions))
+                                    <a href="{{ route('service_company.clients.edit', GeneralMethod::value_encrypt($client->id)) }}" class="btn btn-sm btn-primary fw-bold" style="height:36px; display:inline-flex; align-items:center; border-radius:8px; font-size:12px;">
+                                        <i class="fas fa-user-plus me-1"></i> Add / Edit Contacts
+                                    </a>
+                                    @endif
                                 </div>
                             </div>
-                            <div style="overflow-x:auto;">
-                                <table class="data-table" id="contactList">
-                                    <thead>
-                                        <tr>
-                                            <th style="width:40px;"><input type="checkbox" class="table-checkbox" /></th>
-                                            <th style="width:28%;">Contact <i class="fas fa-sort"></i></th>
-                                            <th style="width:18%;">Designation <i class="fas fa-sort"></i></th>
-                                            <th style="width:24%;">Email <i class="fas fa-sort"></i></th>
-                                            <th style="width:20%;">Phone <i class="fas fa-sort"></i></th>
-                                            <th style="width:10%;">Status <i class="fas fa-sort"></i></th>
-                                        </tr>
-                                    </thead>
-                                    <tbody></tbody>
-                                </table>
+
+                            <!-- TIER 2: SUB-TABS FILTER CARD -->
+                            <div class="cd-contact-tabs-card">
+                                <div class="cd-contact-tabs-list">
+                                    <button type="button" class="cd-contact-subtab active" data-filter="all" id="cdContactTabAllInternal">
+                                        <span>All Contacts</span>
+                                        <span class="cd-contact-subtab-badge" id="contactTabCountAllInternal">0</span>
+                                    </button>
+                                    <button type="button" class="cd-contact-subtab" data-filter="primary" id="cdContactTabPrimaryInternal">
+                                        <span><i class="fas fa-star text-amber-500 me-1" style="font-size:10px;"></i> Primary SPOCs</span>
+                                        <span class="cd-contact-subtab-badge" id="contactTabCountPrimaryInternal">0</span>
+                                    </button>
+                                    <button type="button" class="cd-contact-subtab" data-filter="manager" id="cdContactTabManagerInternal">
+                                        <span>Hiring Managers &amp; Leads</span>
+                                        <span class="cd-contact-subtab-badge" id="contactTabCountManagerInternal">0</span>
+                                    </button>
+                                    <button type="button" class="cd-contact-subtab" data-filter="hr" id="cdContactTabHrInternal">
+                                        <span>Coordinators &amp; HR</span>
+                                        <span class="cd-contact-subtab-badge" id="contactTabCountHrInternal">0</span>
+                                    </button>
+                                    <button type="button" class="cd-contact-subtab" data-filter="active" id="cdContactTabActiveInternal">
+                                        <span>Active</span>
+                                        <span class="cd-contact-subtab-badge" id="contactTabCountActiveInternal">0</span>
+                                    </button>
+                                </div>
                             </div>
+
+                            <!-- Local Skeleton Loader Cards -->
+                            <div id="cdContactSkeletonLoaderInternal" style="display:none;" class="py-2">
+                                <div class="cd-contact-skeleton-card">
+                                    <div class="cd-contact-skeleton-pulse" style="width: 25%; height: 50px;"></div>
+                                    <div class="cd-contact-skeleton-pulse" style="width: 25%; height: 50px;"></div>
+                                    <div class="cd-contact-skeleton-pulse" style="width: 20%; height: 50px;"></div>
+                                    <div class="cd-contact-skeleton-pulse" style="width: 15%; height: 50px;"></div>
+                                    <div class="cd-contact-skeleton-pulse" style="width: 15%; height: 50px;"></div>
+                                </div>
+                                <div class="cd-contact-skeleton-card">
+                                    <div class="cd-contact-skeleton-pulse" style="width: 25%; height: 50px;"></div>
+                                    <div class="cd-contact-skeleton-pulse" style="width: 25%; height: 50px;"></div>
+                                    <div class="cd-contact-skeleton-pulse" style="width: 20%; height: 50px;"></div>
+                                    <div class="cd-contact-skeleton-pulse" style="width: 15%; height: 50px;"></div>
+                                    <div class="cd-contact-skeleton-pulse" style="width: 15%; height: 50px;"></div>
+                                </div>
+                            </div>
+
+                            <!-- TIER 3: Modern Contact Cards Stream -->
+                            <div class="cd-contact-stream-wrap">
+                                <div id="cdContactCardsStreamInternal" class="cd-contact-stream"></div>
+                            </div>
+
+                            <!-- Empty State -->
+                            <div id="cdContactEmptyStateInternal" class="cd-contact-empty-state" style="display:none;">
+                                <div class="cd-contact-empty-icon">
+                                    <i class="fas fa-address-book fa-solid"></i>
+                                </div>
+                                <div class="cd-contact-empty-title">No Contacts Found</div>
+                                <div class="cd-contact-empty-sub">No contacts match the selected criteria or search term.</div>
+                                <button type="button" class="btn btn-sm btn-light-primary fw-bold" id="cdContactClearFilterBtnInternal">
+                                    <i class="fas fa-undo me-1"></i> Reset Filters
+                                </button>
+                            </div>
+
                         </div>
                     </div>
                     <!--end::Contacts Content-->
@@ -4015,81 +4202,69 @@ use Carbon\Carbon;
                     <!--end::interview_tracker Candidate List-->
 
                     <!--begin::candidate_joining Candidate List-->
-                    <div class="tab-pane" id="candidate_joining" role="tabpanel">
-                        <div class="oj-main-card">
-                            <!-- 1. Top Card Header Toolbar (Title, Milestone Filter Cards & Search in Card) -->
-                            <div class="oj-toolbar-card">
-                                <div class="oj-toolbar-left">
-                                    <div class="oj-title-wrap">
-                                        <div class="d-flex align-items-center gap-2">
-                                            <div class="oj-header-icon">
-                                                <i class="fas fa-handshake fa-solid" style="color: #2563eb;"></i>
-                                            </div>
-                                            <div>
-                                                <div class="d-flex align-items-center gap-2">
-                                                    <h4 class="oj-title">Offer &amp; Joining Tracker</h4>
-                                                    <span class="oj-badge-count" id="ojCountAllBadgeInternal">{{ ($kpiOffers ?? 0) + ($kpiJoins ?? 0) }}</span>
-                                                </div>
-                                                <div class="oj-subtitle">Track candidate job offers, joining confirmations and onboardings.</div>
-                                            </div>
-                                        </div>
+                    <div class="tab-pane" id="candidate_joining" role="tabpanel" style="background:#ffffff; min-height: 520px;">
+                        <div class="cd-oj-wrapper">
+                            <!-- TIER 1: TOP HEADER TOOLBAR CARD -->
+                            <div class="cd-oj-header-card">
+                                <div class="cd-oj-header-left">
+                                    <div class="cd-oj-header-icon">
+                                        <i class="fas fa-handshake"></i>
                                     </div>
-                                    
-                                    <!-- Milestone Filter Cards / Segments -->
-                                    <div class="oj-segment-group" id="ojSegmentGroupInternal">
-                                        <button type="button" class="oj-seg-btn active cd-oj-seg-btn" data-segment="all">
-                                            <span>All</span>
-                                            <span class="oj-seg-badge" id="ojCountAllInternal">{{ ($kpiOffers ?? 0) + ($kpiJoins ?? 0) }}</span>
-                                        </button>
-                                        <button type="button" class="oj-seg-btn cd-oj-seg-btn" data-segment="offers">
-                                            <span class="oj-dot oj-dot-warning"></span>
-                                            <span>Offers</span>
-                                            <span class="oj-seg-badge oj-badge-warning" id="ojCountOffersInternal">{{ $kpiOffers ?? 0 }}</span>
-                                        </button>
-                                        <button type="button" class="oj-seg-btn cd-oj-seg-btn" data-segment="joining">
-                                            <span class="oj-dot oj-dot-primary"></span>
-                                            <span>Joining</span>
-                                            <span class="oj-seg-badge oj-badge-primary" id="ojCountJoiningInternal">0</span>
-                                        </button>
-                                        <button type="button" class="oj-seg-btn cd-oj-seg-btn" data-segment="joined">
-                                            <span class="oj-dot oj-dot-success"></span>
-                                            <span>Joined</span>
-                                            <span class="oj-seg-badge oj-badge-success" id="ojCountJoinedInternal">{{ $kpiJoins ?? 0 }}</span>
-                                        </button>
+                                    <div>
+                                        <div class="d-flex align-items-center gap-2">
+                                            <h4 class="cd-oj-header-title">Offer &amp; Joining</h4>
+                                            <span class="cd-oj-header-badge" id="cdOjCountBadgeInternal">
+                                                <span id="cdOjCountTextInternal">{{ ($kpiOffers ?? 0) + ($kpiJoins ?? 0) }}</span> Offers &amp; Joinings
+                                            </span>
+                                        </div>
+                                        <div class="cd-oj-header-sub">Track candidate offers extended, joining confirmations, and onboarding milestones.</div>
                                     </div>
                                 </div>
-                                
-                                <div class="oj-toolbar-right">
-                                    <div class="oj-search-subcard">
+                                <div class="cd-oj-header-right">
+                                    <div class="cd-oj-search-subcard">
                                         <i class="fas fa-search"></i>
-                                        <input type="text" id="ojSearchInputInternal" placeholder="Search candidate, job, CTC..." autocomplete="off">
-                                        <button type="button" class="oj-search-clear" id="ojSearchClearInternal" style="display:none;" title="Clear search">
+                                        <input type="text" id="ojSearchInputInternal" placeholder="Search candidate, job, CTC, status..." autocomplete="off">
+                                        <button type="button" class="cd-oj-search-clear" id="ojSearchClearInternal" style="display: none;" title="Clear search">
                                             <i class="fas fa-times"></i>
                                         </button>
                                     </div>
+                                    <button type="button" id="ojResetBtnInternal" class="cd-oj-action-subcard" title="Reset Filters &amp; Refresh">
+                                        <i class="fas fa-sync-alt"></i>
+                                    </button>
                                 </div>
                             </div>
 
-                            <!-- 2. Proportional Column Header Strip & Cards Container -->
-                            <div class="oj-card-container">
-                                <div class="oj-card-header">
-                                    <div class="oj-col-th oj-th-cand">Candidate</div>
-                                    <div class="oj-col-th oj-th-job">Job</div>
-                                    <div class="oj-col-th oj-th-meta">Job Status, ID &amp; Client</div>
-                                    <div class="oj-col-th oj-th-owner">Ownership</div>
-                                    <div class="oj-col-th oj-th-comp">Compensation</div>
-                                    <div class="oj-col-th oj-th-offer-status">Offer Status</div>
-                                    <div class="oj-col-th oj-th-joining">Joining</div>
-                                    <div class="oj-col-th oj-th-stage">Stage</div>
-                                </div>
-
-                                <!-- Primary Cards List Container (populated via AJAX HTML) -->
-                                <div id="candidatetListJoin" class="oj-cards-list" data-role="offer-joining-list">
+                            <!-- TIER 2: SUB-TABS CARD WITH WHITE BACKGROUND -->
+                            <div class="cd-oj-tabs-card">
+                                <div class="cd-oj-tabs-group" id="ojSegmentGroupInternal">
+                                    <button type="button" class="cd-oj-tab-btn active cd-oj-seg-btn" data-segment="all">
+                                        <span>All Records</span>
+                                        <span class="cd-oj-tab-badge" id="ojCountAllInternal">{{ ($kpiOffers ?? 0) + ($kpiJoins ?? 0) }}</span>
+                                    </button>
+                                    <button type="button" class="cd-oj-tab-btn cd-oj-seg-btn" data-segment="offers">
+                                        <span class="cd-oj-dot dot-warning"></span>
+                                        <span>Offers Extended</span>
+                                        <span class="cd-oj-tab-badge badge-warning" id="ojCountOffersInternal">{{ $kpiOffers ?? 0 }}</span>
+                                    </button>
+                                    <button type="button" class="cd-oj-tab-btn cd-oj-seg-btn" data-segment="joining">
+                                        <span class="cd-oj-dot dot-primary"></span>
+                                        <span>Joining Soon</span>
+                                        <span class="cd-oj-tab-badge badge-primary" id="ojCountJoiningInternal">0</span>
+                                    </button>
+                                    <button type="button" class="cd-oj-tab-btn cd-oj-seg-btn" data-segment="joined">
+                                        <span class="cd-oj-dot dot-success"></span>
+                                        <span>Joined &amp; Onboarded</span>
+                                        <span class="cd-oj-tab-badge badge-success" id="ojCountJoinedInternal">{{ $kpiJoins ?? 0 }}</span>
+                                    </button>
                                 </div>
                             </div>
 
-                            <!-- 3. Enterprise Pagination Card -->
-                            <div id="paginationcandidatejoin" class="oj-pagination-card" data-role="offer-joining-pagination">
+                            <!-- TIER 3: PRIMARY CARDS LIST STREAM (Populated via AJAX) -->
+                            <div class="cd-oj-stream-wrap">
+                                <div id="candidatetListJoin" class="cd-oj-stream" data-role="offer-joining-list">
+                                </div>
+                            </div>
+                            <div id="paginationcandidatejoin" class="mt-3">
                             </div>
                         </div>
                     </div>
@@ -6905,6 +7080,12 @@ use Carbon\Carbon;
                     $('#ojCountOffersInternal').text(response.counts.offers || 0);
                     $('#ojCountJoiningInternal').text(response.counts.joining || 0);
                     $('#ojCountJoinedInternal').text(response.counts.joined || 0);
+                    if ($('#cdOjCountTextInternal').length) {
+                        $('#cdOjCountTextInternal').text(response.counts.all || 0);
+                    }
+                    if ($('#cdOjCountBadgeInternal').length) {
+                        $('#cdOjCountBadgeInternal').html('<span id="cdOjCountTextInternal">' + (response.counts.all || 0) + '</span> Offers &amp; Joinings');
+                    }
                     if ($('#ojCountAllBadgeInternal').length) {
                         $('#ojCountAllBadgeInternal').text(response.counts.all || 0);
                     }
@@ -6956,6 +7137,15 @@ use Carbon\Carbon;
         $('#ojSearchInputInternal').val('');
         $(this).hide();
         fetchCandidatesJoin(1, '', window.currentOjSegmentInternal || 'all');
+    });
+
+    $(document).on('click', '#ojResetBtnInternal', function() {
+        $('#ojSearchInputInternal').val('');
+        $('#ojSearchClearInternal').hide();
+        window.currentOjSegmentInternal = 'all';
+        $('.cd-oj-seg-btn').removeClass('active');
+        $('.cd-oj-seg-btn[data-segment="all"]').addClass('active');
+        fetchCandidatesJoin(1, '', 'all');
     });
 
     // ══════════════════════════════════════════════════════════════════════════
