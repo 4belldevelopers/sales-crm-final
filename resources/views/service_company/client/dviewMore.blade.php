@@ -1336,266 +1336,330 @@
             border-color: #cbd5e1 !important;
           }
 
-          /* HERO MASTER CARD: 3 Discrete Upper Sub-Cards + Discrete Bottom Activity Strip */
+          /* ── Client Hero Banner: Option 2 — Linear / Stripe Continuous Header ── */
           .cd-hero-card {
             background: #ffffff !important;
             border: 1px solid #e2e8f0 !important;
             border-radius: 10px !important;
-            padding: 14px 16px 10px !important;
-            margin-bottom: 12px !important;
-            box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03) !important;
+            margin: 0 14px 12px 14px !important;
+            padding: 0 !important;
+            box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04) !important;
+            width: calc(100% - 28px) !important;
+            overflow: hidden !important;
           }
-          .cd-hero-subcards-grid {
-            display: grid !important;
-            grid-template-columns: 1.35fr 1.65fr 1fr !important;
-            gap: 12px !important;
-            align-items: center !important;
+          .cd-hero-continuous-main {
+            display: flex !important;
+            align-items: stretch !important;
+            justify-content: space-between !important;
+            width: 100% !important;
           }
-          @media (max-width: 1200px) {
-            .cd-hero-subcards-grid {
-              grid-template-columns: 1fr 1fr !important;
-            }
-          }
-          @media (max-width: 768px) {
-            .cd-hero-subcards-grid {
-              grid-template-columns: 1fr !important;
+          @media (max-width: 992px) {
+            .cd-hero-continuous-main {
+              flex-direction: column !important;
             }
           }
 
-          /* Sub-Card 1: Identity & Brand */
-          .cd-hero-subcard-identity {
+          /* Left: Brand Identity & Status */
+          .cd-hero-continuous-left {
             display: flex !important;
             align-items: center !important;
-            gap: 12px !important;
-            background: #f8fafc !important;
-            border: 1px solid #e2e8f0 !important;
-            border-radius: 8px !important;
-            padding: 10px 12px !important;
-            min-width: 0 !important;
+            gap: 14px !important;
+            padding: 14px 18px !important;
+            flex: 0 0 auto !important;
+            min-width: 310px !important;
+            max-width: 380px !important;
+            border-right: 1px solid #eef2f6 !important;
+            background: #ffffff !important;
           }
-          .cd-avatar-box {
+          @media (max-width: 992px) {
+            .cd-hero-continuous-left {
+              max-width: 100% !important;
+              border-right: none !important;
+              border-bottom: 1px solid #eef2f6 !important;
+            }
+          }
+          .cd-hero-avatar-wrap {
             position: relative !important;
-            width: 48px !important;
-            height: 48px !important;
-            border-radius: 8px !important;
-            background: #064e3b !important;
+            flex-shrink: 0 !important;
+          }
+          .cd-hero-avatar {
+            width: 52px !important;
+            height: 52px !important;
+            border-radius: 10px !important;
+            background: linear-gradient(135deg, #4f46e5, #3b82f6) !important;
             color: #ffffff !important;
+            border: 2px solid #ffffff !important;
+            box-shadow: 0 2px 6px rgba(15, 23, 42, 0.08) !important;
             display: flex !important;
             align-items: center !important;
             justify-content: center !important;
-            font-size: 14px !important;
+            font-size: 16px !important;
             font-weight: 700 !important;
-            flex-shrink: 0 !important;
-            overflow: visible !important;
-            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06) !important;
+            overflow: hidden !important;
           }
-          .cd-avatar-box img {
+          .cd-hero-avatar img {
             width: 100% !important;
             height: 100% !important;
             object-fit: cover !important;
-            border-radius: 8px !important;
           }
-          .cd-avatar-initials {
-            font-size: 14px !important;
-            font-weight: 700 !important;
-            color: #ffffff !important;
-          }
-          .cd-verified-seal {
+          .cd-hero-verified-check {
             position: absolute !important;
-            top: -4px !important;
-            right: -4px !important;
-            width: 16px !important;
-            height: 16px !important;
+            top: -3px !important;
+            right: -3px !important;
+            width: 17px !important;
+            height: 17px !important;
             border-radius: 50% !important;
             background: #10b981 !important;
             border: 2px solid #ffffff !important;
+            color: #ffffff !important;
             display: flex !important;
             align-items: center !important;
             justify-content: center !important;
-            color: #ffffff !important;
             font-size: 8px !important;
             box-shadow: 0 1px 3px rgba(0,0,0,0.15) !important;
           }
-          .cd-identity-meta {
-            min-width: 0 !important;
+          .cd-hero-identity-body {
             flex: 1 !important;
+            min-width: 0 !important;
           }
-          .cd-identity-title-row {
+          .cd-hero-title-row {
             display: flex !important;
             align-items: center !important;
             gap: 6px !important;
             margin-bottom: 2px !important;
-            flex-wrap: wrap !important;
           }
-          .cd-identity-name {
-            font-size: 14px !important;
+          .cd-hero-name {
+            font-size: 15px !important;
             font-weight: 700 !important;
             color: #0f172a !important;
-            margin: 0 !important;
-            line-height: 1.2 !important;
-            letter-spacing: -0.2px !important;
+            line-height: 1.25 !important;
             white-space: nowrap !important;
             overflow: hidden !important;
             text-overflow: ellipsis !important;
+            letter-spacing: -0.2px !important;
+            margin: 0 !important;
           }
-          .cd-type-badge-tag {
-            font-size: 9.5px !important;
-            font-weight: 600 !important;
-            padding: 1.5px 6px !important;
+          .cd-hero-id-badge {
+            font-size: 10px !important;
+            font-weight: 700 !important;
+            color: #2563eb !important;
+            background: #eff6ff !important;
+            border: 1px solid #bfdbfe !important;
+            padding: 1px 5px !important;
             border-radius: 4px !important;
-            line-height: 1.2 !important;
-            text-transform: uppercase !important;
-            letter-spacing: 0.3px !important;
+            font-family: monospace !important;
+            flex-shrink: 0 !important;
           }
-          .cd-type-badge-tag.direct {
+          .cd-hero-subtitle {
+            font-size: 11.5px !important;
+            color: #64748b !important;
+            font-weight: 500 !important;
+            white-space: nowrap !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+            margin-bottom: 5px !important;
+            line-height: 1.2 !important;
+          }
+          .cd-hero-badge-row {
+            display: flex !important;
+            align-items: center !important;
+            gap: 6px !important;
+            flex-wrap: wrap !important;
+          }
+          .cd-pill-scope-internal {
+            display: inline-flex !important;
+            align-items: center !important;
+            gap: 4px !important;
+            background: #eff6ff !important;
+            color: #2563eb !important;
+            border: 1px solid #bfdbfe !important;
+            font-size: 10.5px !important;
+            font-weight: 600 !important;
+            padding: 2px 7px !important;
+            border-radius: 5px !important;
+            line-height: 1.2 !important;
+          }
+          .cd-pill-scope-direct {
+            display: inline-flex !important;
+            align-items: center !important;
+            gap: 4px !important;
             background: #ecfdf5 !important;
             color: #059669 !important;
             border: 1px solid #a7f3d0 !important;
-          }
-          .cd-identity-subtitle {
-            font-size: 11px !important;
-            color: #64748b !important;
+            font-size: 10.5px !important;
+            font-weight: 600 !important;
+            padding: 2px 7px !important;
+            border-radius: 5px !important;
             line-height: 1.2 !important;
           }
-
-          /* Sub-Card 2: Discrete Parameter Chips */
-          .cd-hero-subcard-params {
-            display: flex !important;
-            flex-wrap: wrap !important;
-            gap: 6px !important;
-            background: #f8fafc !important;
-            border: 1px solid #e2e8f0 !important;
-            border-radius: 8px !important;
-            padding: 10px 12px !important;
-          }
-          .cd-hero-param-chip {
+          .cd-status-badge-active {
             display: inline-flex !important;
             align-items: center !important;
-            gap: 5px !important;
-            background: #ffffff !important;
-            border: 1px solid #e2e8f0 !important;
-            border-radius: 6px !important;
-            padding: 3px 8px !important;
-            font-size: 11px !important;
-            color: #334155 !important;
-            font-weight: 500 !important;
-          }
-          .cd-hero-param-chip.link {
+            gap: 6px !important;
+            background: #ecfdf5 !important;
             color: #059669 !important;
-            text-decoration: none !important;
-            cursor: pointer !important;
+            border: 1px solid #a7f3d0 !important;
+            padding: 2px 7px !important;
+            border-radius: 5px !important;
+            font-size: 10.5px !important;
+            font-weight: 600 !important;
+            line-height: 1.2 !important;
           }
-          .cd-hero-param-chip.link:hover {
-            border-color: #059669 !important;
-            text-decoration: underline !important;
-          }
-
-          /* Sub-Card 3: Activity & Pulse Status */
-          .cd-hero-subcard-activity {
-            display: flex !important;
-            flex-direction: column !important;
+          .cd-status-badge-inactive {
+            display: inline-flex !important;
+            align-items: center !important;
             gap: 6px !important;
             background: #f8fafc !important;
+            color: #64748b !important;
             border: 1px solid #e2e8f0 !important;
-            border-radius: 8px !important;
-            padding: 10px 12px !important;
+            padding: 2px 7px !important;
+            border-radius: 5px !important;
+            font-size: 10.5px !important;
+            font-weight: 600 !important;
+            line-height: 1.2 !important;
           }
-          .cd-status-pulse-badge {
-            display: flex !important;
-            align-items: center !important;
-            gap: 8px !important;
-            border-radius: 6px !important;
-            padding: 4px 8px !important;
-          }
-          .cd-status-pulse-badge.active {
-            background: #f0fdf4 !important;
-            border: 1px solid #bbf7d0 !important;
-          }
-          .cd-status-pulse-badge.inactive {
-            background: #f8fafc !important;
-            border: 1px solid #e2e8f0 !important;
-          }
-          .cd-pulse-indicator {
+          .cd-pulse-emerald {
             width: 7px !important;
             height: 7px !important;
             border-radius: 50% !important;
+            background: #10b981 !important;
             position: relative !important;
             flex-shrink: 0 !important;
           }
-          .cd-pulse-indicator.pulse-green {
-            background: #16a34a !important;
-          }
-          .cd-pulse-indicator.pulse-green::after {
+          .cd-pulse-emerald::after {
             content: "" !important;
             position: absolute !important;
             inset: -3px !important;
             border-radius: 50% !important;
-            border: 1.5px solid #16a34a !important;
+            border: 1.5px solid #10b981 !important;
             animation: cdpulse 2s infinite !important;
           }
-          .cd-pulse-indicator.pulse-grey {
+          .cd-pulse-dot {
+            width: 7px !important;
+            height: 7px !important;
+            border-radius: 50% !important;
+            flex-shrink: 0 !important;
+          }
+          .cd-pulse-grey {
             background: #94a3b8 !important;
           }
-          .cd-status-text-wrap {
-            display: flex !important;
-            flex-direction: column !important;
-            line-height: 1.15 !important;
+
+          /* Right: Corporate DNA Parameters (2-Column Grid) */
+          .cd-hero-continuous-right {
+            flex: 1 1 auto !important;
+            min-width: 0 !important;
+            padding: 12px 20px !important;
+            display: grid !important;
+            grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) !important;
+            gap: 7px 22px !important;
+            align-content: center !important;
+            background: #ffffff !important;
           }
-          .cd-status-main-text {
-            font-size: 11.5px !important;
-            font-weight: 700 !important;
-            color: #15803d !important;
+          @media (max-width: 600px) {
+            .cd-hero-continuous-right {
+              grid-template-columns: minmax(0, 1fr) !important;
+            }
           }
-          .cd-status-pulse-badge.inactive .cd-status-main-text {
-            color: #64748b !important;
-          }
-          .cd-status-sub-text {
-            font-size: 10px !important;
-            color: #16a34a !important;
-            font-weight: 500 !important;
-          }
-          .cd-status-pulse-badge.inactive .cd-status-sub-text {
-            color: #94a3b8 !important;
-          }
-          .cd-onboarding-chip {
-            font-size: 10.5px !important;
-            color: #64748b !important;
+          .cd-hero-meta-item {
             display: flex !important;
             align-items: center !important;
+            gap: 8px !important;
+            min-width: 0 !important;
+            font-size: 11.5px !important;
+            color: #334155 !important;
+            font-weight: 500 !important;
+          }
+          .cd-hero-meta-item i {
+            font-size: 12px !important;
+            color: #64748b !important;
+            width: 14px !important;
+            text-align: center !important;
+            flex-shrink: 0 !important;
+          }
+          .cd-hero-meta-item span {
+            white-space: nowrap !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+          }
+          .cd-hero-link {
+            color: #2563eb !important;
+            text-decoration: none !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            gap: 4px !important;
+            font-weight: 500 !important;
+            white-space: nowrap !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+          }
+          .cd-hero-link:hover {
+            text-decoration: underline !important;
           }
 
-          /* Discrete Bottom Activity Strip */
-          .cd-hero-activity-strip {
+          /* Bottom Continuous Activity Strip */
+          .cd-hero-continuous-bottom {
+            background: #f8fafc !important;
+            border-top: 1px solid #eef2f6 !important;
+            padding: 7px 18px !important;
             display: flex !important;
             align-items: center !important;
             justify-content: space-between !important;
             gap: 12px !important;
-            margin-top: 10px !important;
-            padding-top: 8px !important;
-            border-top: 1px solid #f1f5f9 !important;
+            flex-wrap: wrap !important;
             font-size: 11px !important;
-            color: #64748b !important;
           }
-          .cd-activity-strip-left {
+          .cd-strip-left {
             display: flex !important;
             align-items: center !important;
-            gap: 6px !important;
-          }
-          .cd-activity-strip-label {
-            font-weight: 600 !important;
+            gap: 8px !important;
             color: #475569 !important;
+            flex-wrap: wrap !important;
           }
-          .cd-activity-strip-text {
+          .cd-strip-metric {
+            display: inline-flex !important;
+            align-items: center !important;
+            color: #0f172a !important;
+            font-weight: 600 !important;
+          }
+          .cd-strip-sep {
+            color: #cbd5e1 !important;
+            font-size: 9px !important;
+          }
+          .cd-strip-item {
+            display: inline-flex !important;
+            align-items: center !important;
             color: #64748b !important;
           }
-          .cd-activity-strip-badge {
+          .cd-strip-right {
+            display: flex !important;
+            align-items: center !important;
+            gap: 5px !important;
+            flex-wrap: wrap !important;
+          }
+          .cd-strip-tags-lbl {
+            color: #94a3b8 !important;
+            font-weight: 500 !important;
             font-size: 10.5px !important;
-            font-weight: 600 !important;
-            color: #059669 !important;
-            background: #ecfdf5 !important;
-            border: 1px solid #a7f3d0 !important;
+            margin-right: 2px !important;
+          }
+          .cd-strip-tag-pill {
+            display: inline-block !important;
+            background: #eff6ff !important;
+            color: #2563eb !important;
+            border: 1px solid #dbeafe !important;
             padding: 1.5px 7px !important;
             border-radius: 4px !important;
+            font-size: 10.5px !important;
+            font-weight: 500 !important;
+            line-height: 1.2 !important;
+            white-space: nowrap !important;
+          }
+          .cd-strip-tag-more {
+            display: inline-block !important;
+            font-size: 10.5px !important;
+            font-weight: 600 !important;
+            color: #2563eb !important;
+            padding: 1px 4px !important;
           }
 
           /* 5 METRIC KPI SUB-CARDS GRID (Hover Lift, Active Border Transition) */
@@ -3892,84 +3956,114 @@
             </div>
           </div>
 
-          <!-- ── Master Card: Client Identity & Quick Heuristics ── -->
+          <!-- ── HERO MASTER CARD: CONTINUOUS MINIMALIST HEADER (Option 2) ── -->
           <div class="cd-hero-card">
-            <div class="cd-hero-subcards-grid">
-              <!-- Sub-Card 1: Identity & Brand -->
-              <div class="cd-hero-subcard-identity">
-                <div class="cd-avatar-box">
-                  @if (!empty($detailLogo))
-                    <img src="{{ $detailLogo }}" alt="{{ $detailName }}">
-                  @else
-                    <span class="cd-avatar-initials">{{ $detailInitials }}</span>
-                  @endif
-                  <div class="cd-verified-seal" title="Verified Direct Client">
+            <div class="cd-hero-continuous-main">
+              <!-- Left: Brand Identity & Status -->
+              <div class="cd-hero-continuous-left">
+                <div class="cd-hero-avatar-wrap">
+                  <div class="cd-hero-avatar" style="background: linear-gradient(135deg, #064e3b, #059669) !important;">
+                    @if (!empty($detailLogo))
+                      <img src="{{ $detailLogo }}" alt="{{ $detailName }}">
+                    @else
+                      {{ $detailInitials }}
+                    @endif
+                  </div>
+                  <div class="cd-hero-verified-check" title="Verified Direct Client">
                     <i class="fas fa-check"></i>
                   </div>
                 </div>
-                <div class="cd-identity-meta">
-                  <div class="cd-identity-title-row">
-                    <h2 class="cd-identity-name">{{ $detailName }}</h2>
-                    <span class="cd-type-badge-tag direct">Direct Client</span>
+                <div class="cd-hero-identity-body">
+                  <div class="cd-hero-title-row">
+                    <h2 class="cd-hero-name" title="{{ $detailName }}">{{ $detailName }}</h2>
+                    <span class="cd-hero-id-badge" style="color:#059669; background:#ecfdf5; border-color:#a7f3d0;">#CL-{{ $directClientDetail->client_id ?? $directClientDetail->id }}</span>
                   </div>
-                  <div class="cd-identity-subtitle">
-                    {{ $d_company_type_val }}
+                  <div class="cd-hero-subtitle" title="{{ $d_company_type_val ?: 'Direct Corporate Client' }}">
+                    {{ $d_company_type_val ?: 'Direct Corporate Client' }}
+                  </div>
+                  <div class="cd-hero-badge-row">
+                    <span class="cd-pill-scope-direct">
+                      <i class="fas fa-handshake fa-solid me-1"></i> Direct Client
+                    </span>
+                    @if ($isClientActive)
+                      <span class="cd-status-badge-active" title="Client is actively hiring">
+                        <span class="cd-pulse-emerald"></span> Client Active
+                      </span>
+                    @else
+                      <span class="cd-status-badge-inactive" title="No active job requisitions">
+                        <span class="cd-pulse-dot cd-pulse-grey"></span> Client Inactive
+                      </span>
+                    @endif
                   </div>
                 </div>
               </div>
 
-              <!-- Sub-Card 2: Discrete Parameter Chips -->
-              <div class="cd-hero-subcard-params">
-                @if ($industries_name)
-                  <div class="cd-hero-param-chip">
-                    <i class="fas fa-building text-primary"></i>
-                    <span>{{ $industries_name }}</span>
-                  </div>
-                @endif
-                <div class="cd-hero-param-chip">
-                  <i class="fas fa-map-marker-alt text-danger"></i>
+              <!-- Right: Corporate DNA Parameters (2-Column Hairline Grid) -->
+              <div class="cd-hero-continuous-right">
+                <div class="cd-hero-meta-item" title="Industry">
+                  <i class="fas fa-industry"></i>
+                  <span>{{ $industries_name ?: 'Computer Software' }}</span>
+                </div>
+                <div class="cd-hero-meta-item" title="Headquarters">
+                  <i class="fas fa-location-dot"></i>
                   <span>{{ ucwords($city_name ?: 'Mumbai') }}@if($country_name), {{ ucwords($country_name) }}@else, India @endif</span>
                 </div>
-                @if (!empty($webClean))
-                  <a href="{{ str_starts_with($webClean, 'http') ? $webClean : 'https://'.$webClean }}" target="_blank" class="cd-hero-param-chip link">
-                    <i class="fas fa-globe text-info"></i>
-                    <span class="text-truncate" style="max-width: 140px;">{{ $webClean }}</span>
-                    <i class="fas fa-external-link-alt ms-1" style="font-size: 8px;"></i>
-                  </a>
-                @endif
-                @if (!empty(@$directClientDetail->vendor_id))
-                  <div class="cd-hero-param-chip">
-                    <i class="fas fa-id-badge text-warning"></i>
-                    <span>VID: <strong class="text-dark">{{ @$directClientDetail->vendor_id }}</strong></span>
-                  </div>
-                @endif
-              </div>
-
-              <!-- Sub-Card 3: Activity & Pulse Status -->
-              <div class="cd-hero-subcard-activity">
-                <div class="cd-status-pulse-badge {{ $isClientActive ? 'active' : 'inactive' }}">
-                  <span class="cd-pulse-indicator {{ $isClientActive ? 'pulse-green' : 'pulse-grey' }}"></span>
-                  <div class="cd-status-text-wrap">
-                    <div class="cd-status-main-text">{{ $isClientActive ? 'Client Active' : 'Client Inactive' }}</div>
-                    <div class="cd-status-sub-text">{{ $kpiActive }} active {{ $kpiActive == 1 ? 'job' : 'jobs' }}</div>
-                  </div>
+                <div class="cd-hero-meta-item" title="Website">
+                  <i class="fas fa-globe"></i>
+                  @if (!empty($webClean))
+                    <a href="{{ str_starts_with($webClean, 'http') ? $webClean : 'https://'.$webClean }}" target="_blank" class="cd-hero-link" style="color:#059669;">
+                      {{ $webClean }} <i class="fas fa-arrow-up-right-from-square" style="font-size:9px;"></i>
+                    </a>
+                  @else
+                    <span>-</span>
+                  @endif
                 </div>
-                <div class="cd-onboarding-chip">
-                  <i class="fas fa-history text-muted me-1"></i>
-                  <span>Since <strong>{{ $clientSinceYear }}</strong> <span class="mx-1">•</span> {{ $clientUpdatedAt }}</span>
+                <div class="cd-hero-meta-item" title="Company Type">
+                  <i class="fas fa-briefcase"></i>
+                  <span title="{{ $d_company_type_val }}">{{ $d_company_type_val }}</span>
+                </div>
+                <div class="cd-hero-meta-item" title="Workforce Scale">
+                  <i class="fas fa-users"></i>
+                  <span>{{ is_numeric(@$directClientDetail->company_sizes) ? number_format((float)@$directClientDetail->company_sizes) . '+' : (@$directClientDetail->company_sizes ?: '200+') }} Employees</span>
+                </div>
+                <div class="cd-hero-meta-item" title="Founded Year / Vendor Reference">
+                  @if(!empty(@$directClientDetail->vendor_id))
+                    <i class="fas fa-id-badge"></i>
+                    <span>VID: {{ @$directClientDetail->vendor_id }}</span>
+                  @else
+                    <i class="fas fa-calendar-days"></i>
+                    <span>Founded: {{ @$directClientDetail->founded ?: '2010' }}</span>
+                  @endif
                 </div>
               </div>
             </div>
 
-            <!-- Discrete Bottom Activity Strip -->
-            <div class="cd-hero-activity-strip">
-              <div class="cd-activity-strip-left">
-                <span class="cd-activity-strip-label"><i class="fas fa-bolt text-warning me-1"></i> Client Engagement:</span>
-                <span class="cd-activity-strip-text">Connected as Direct Corporate Talent Partner</span>
+            <!-- Full-Width Bottom Continuous Strip -->
+            <div class="cd-hero-continuous-bottom">
+              <div class="cd-strip-left">
+                <span class="cd-strip-metric">
+                  <i class="fas fa-bolt text-warning me-1"></i><strong>{{ $kpiActive }}</strong> Active {{ $kpiActive == 1 ? 'Role' : 'Roles' }}
+                </span>
+                <span class="cd-strip-sep">•</span>
+                <span class="cd-strip-item">
+                  <i class="fas fa-calendar-check text-primary me-1"></i>Onboarded {{ $clientSinceYear }}
+                </span>
+                <span class="cd-strip-sep">•</span>
+                <span class="cd-strip-item">
+                  <i class="fas fa-clock text-amber-500 me-1"></i>Active {{ $clientUpdatedAt }}
+                </span>
               </div>
-              <div class="cd-activity-strip-right">
-                <span class="cd-activity-strip-badge"><i class="fas fa-shield-halved text-success me-1"></i> Direct Corporate Client</span>
+              @if(!empty($tagsArr) && count($tagsArr) > 0)
+              <div class="cd-strip-right">
+                <span class="cd-strip-tags-lbl">Tags:</span>
+                @foreach (array_slice($tagsArr, 0, 3) as $val)
+                  <span class="cd-strip-tag-pill" style="background:#ecfdf5; color:#059669; border-color:#a7f3d0;">{{ ucwords($val) }}</span>
+                @endforeach
+                @if(count($tagsArr) > 3)
+                  <span class="cd-strip-tag-more" style="color:#059669;">+{{ count($tagsArr) - 3 }}</span>
+                @endif
               </div>
+              @endif
             </div>
           </div>
 
