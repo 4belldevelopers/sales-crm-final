@@ -12,6 +12,7 @@
 
   @endphp
 @include('service_company.client.components.tab-jobs-style')
+@include('service_company.client.components.tab-offers-joinings-style')
 <style>
     /* Scoped Interview Tracker Styling (Metronic Theme Aligned) */
     .cit-fb-pill {
@@ -587,569 +588,6 @@
         }
     }
 
-    /* ===== Scoped Offer & Joining Tracker: Card + Sub-Card Proportional Layout ===== */
-    .oj-main-card {
-        width: 100% !important;
-        font-family: 'Poppins', -apple-system, BlinkMacSystemFont, sans-serif !important;
-    }
-
-    /* 1. Top Card Header Toolbar (Milestone Filter Cards + Search Bar) */
-    .oj-toolbar-card {
-        background: #ffffff !important;
-        border: 1px solid #e2e8f0 !important;
-        border-radius: 10px !important;
-        padding: 12px 18px !important;
-        margin-bottom: 12px !important;
-        display: flex !important;
-        align-items: center !important;
-        justify-content: space-between !important;
-        gap: 14px !important;
-        flex-wrap: wrap !important;
-        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03) !important;
-    }
-    .oj-toolbar-left {
-        display: flex !important;
-        align-items: center !important;
-        gap: 16px !important;
-        min-width: 0 !important;
-        flex-wrap: wrap !important;
-    }
-    .oj-header-icon {
-        width: 38px !important;
-        height: 38px !important;
-        border-radius: 8px !important;
-        background: #eff6ff !important;
-        display: flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        font-size: 15px !important;
-        flex-shrink: 0 !important;
-    }
-    .oj-title-wrap {
-        display: flex !important;
-        flex-direction: column !important;
-    }
-    .oj-title {
-        font-size: 13.5px !important;
-        font-weight: 700 !important;
-        color: #0f172a !important;
-        line-height: 1.2 !important;
-        letter-spacing: -0.2px !important;
-        margin: 0 !important;
-    }
-    .oj-badge-count {
-        display: inline-flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        padding: 1.5px 8px !important;
-        font-size: 11px !important;
-        font-weight: 700 !important;
-        color: #2563eb !important;
-        background: #eff6ff !important;
-        border: 1px solid #bfdbfe !important;
-        border-radius: 999px !important;
-    }
-    .oj-subtitle {
-        font-size: 11px !important;
-        font-weight: 500 !important;
-        color: #64748b !important;
-        margin-top: 2px !important;
-    }
-
-    /* Milestone Segment Buttons (Card Toolbar) */
-    .oj-segment-group {
-        display: inline-flex !important;
-        align-items: center !important;
-        background: #f1f5f9 !important;
-        border: 1px solid #e2e8f0 !important;
-        border-radius: 8px !important;
-        padding: 3px !important;
-        gap: 3px !important;
-    }
-    .oj-seg-btn {
-        border: none !important;
-        background: transparent !important;
-        padding: 5px 12px !important;
-        font-size: 11.5px !important;
-        font-weight: 600 !important;
-        color: #64748b !important;
-        border-radius: 6px !important;
-        display: inline-flex !important;
-        align-items: center !important;
-        gap: 6px !important;
-        cursor: pointer !important;
-        transition: all 0.15s ease-in-out !important;
-        line-height: 1.2 !important;
-    }
-    .oj-seg-btn:hover {
-        color: #0f172a !important;
-        background: rgba(255, 255, 255, 0.6) !important;
-    }
-    .oj-seg-btn.active {
-        background: #ffffff !important;
-        color: #0f172a !important;
-        font-weight: 700 !important;
-        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.08) !important;
-    }
-    .oj-seg-badge {
-        font-size: 10.5px !important;
-        font-weight: 700 !important;
-        padding: 1px 6px !important;
-        border-radius: 999px !important;
-        background: #e2e8f0 !important;
-        color: #475569 !important;
-    }
-    .oj-seg-btn.active .oj-seg-badge {
-        background: #0f172a !important;
-        color: #ffffff !important;
-    }
-    .oj-badge-warning {
-        background: #fef3c7 !important;
-        color: #b45309 !important;
-    }
-    .oj-seg-btn.active .oj-badge-warning {
-        background: #ea580c !important;
-        color: #ffffff !important;
-    }
-    .oj-badge-primary {
-        background: #eff6ff !important;
-        color: #1d4ed8 !important;
-    }
-    .oj-seg-btn.active .oj-badge-primary {
-        background: #2563eb !important;
-        color: #ffffff !important;
-    }
-    .oj-badge-success {
-        background: #dcfce7 !important;
-        color: #15803d !important;
-    }
-    .oj-seg-btn.active .oj-badge-success {
-        background: #16a34a !important;
-        color: #ffffff !important;
-    }
-    .oj-dot {
-        width: 6px !important;
-        height: 6px !important;
-        border-radius: 50% !important;
-        display: inline-block !important;
-    }
-    .oj-dot-warning { background: #f59e0b !important; }
-    .oj-dot-primary { background: #3b82f6 !important; }
-    .oj-dot-success { background: #10b981 !important; }
-
-    /* Search Bar Sub-Card */
-    .oj-toolbar-right {
-        display: flex !important;
-        align-items: center !important;
-        gap: 10px !important;
-    }
-    .oj-search-subcard {
-        display: flex !important;
-        align-items: center !important;
-        gap: 8px !important;
-        background: #f8fafc !important;
-        border: 1px solid #e2e8f0 !important;
-        border-radius: 8px !important;
-        padding: 0 12px !important;
-        height: 36px !important;
-        min-width: 240px !important;
-        max-width: 320px !important;
-        width: 100% !important;
-        transition: all 0.15s ease-in-out !important;
-    }
-    .oj-search-subcard:focus-within {
-        background: #ffffff !important;
-        border-color: #2563eb !important;
-        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12) !important;
-    }
-    .oj-search-subcard i {
-        color: #94a3b8 !important;
-        font-size: 12px !important;
-        flex-shrink: 0 !important;
-    }
-    .oj-search-subcard input {
-        border: none !important;
-        background: transparent !important;
-        outline: none !important;
-        box-shadow: none !important;
-        font-size: 12px !important;
-        font-family: inherit !important;
-        color: #0f172a !important;
-        width: 100% !important;
-        padding: 0 !important;
-        line-height: 36px !important;
-    }
-    .oj-search-subcard input::placeholder {
-        color: #94a3b8 !important;
-        font-size: 11.5px !important;
-    }
-    .oj-search-clear {
-        background: transparent !important;
-        border: none !important;
-        color: #94a3b8 !important;
-        cursor: pointer !important;
-        padding: 2px 4px !important;
-        font-size: 11px !important;
-        display: flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-    }
-    .oj-search-clear:hover {
-        color: #ef4444 !important;
-    }
-
-    /* Container for Cards List */
-    .oj-card-container {
-        width: 100% !important;
-        overflow-x: auto !important;
-        font-family: 'Poppins', -apple-system, BlinkMacSystemFont, sans-serif !important;
-    }
-
-    /* Proportional Grid for 8 Columns (Matches Mockup) */
-    .oj-card-header,
-    .oj-primary-card {
-        display: grid !important;
-        grid-template-columns: minmax(170px, 1.8fr) minmax(150px, 1.6fr) minmax(130px, 1.3fr) minmax(130px, 1.3fr) minmax(140px, 1.4fr) minmax(140px, 1.4fr) minmax(140px, 1.4fr) minmax(100px, 1fr) !important;
-        column-gap: 12px !important;
-        align-items: center !important;
-        min-width: 1020px !important;
-        box-sizing: border-box !important;
-    }
-
-    .oj-card-header {
-        background: #f8fafc !important;
-        border: 1px solid #e2e8f0 !important;
-        border-radius: 8px !important;
-        padding: 9px 14px !important;
-        margin-bottom: 8px !important;
-    }
-
-    .oj-col-th {
-        font-size: 10px !important;
-        font-weight: 700 !important;
-        color: #64748b !important;
-        text-transform: uppercase !important;
-        letter-spacing: 0.5px !important;
-        white-space: nowrap !important;
-    }
-
-    /* Primary Job Card for Each Candidate Offer/Joining */
-    .oj-primary-card {
-        background: #ffffff !important;
-        border: 1px solid #e2e8f0 !important;
-        border-radius: 10px !important;
-        padding: 12px 14px !important;
-        margin-bottom: 8px !important;
-        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03) !important;
-        transition: all 0.15s ease-in-out !important;
-    }
-    .oj-primary-card:hover {
-        border-color: #cbd5e1 !important;
-        box-shadow: 0 4px 14px rgba(15, 23, 42, 0.06) !important;
-        transform: translateY(-1px) !important;
-    }
-
-    /* Subcard layout */
-    .oj-subcard {
-        min-width: 0 !important;
-        display: flex !important;
-        flex-direction: column !important;
-    }
-
-    /* 1. Candidate Subcard */
-    .oj-subcard-cand {
-        flex-direction: row !important;
-        align-items: center !important;
-        gap: 10px !important;
-    }
-    .oj-cand-avatar {
-        width: 38px !important;
-        height: 38px !important;
-        border-radius: 8px !important;
-        display: flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        font-size: 14px !important;
-        font-weight: 700 !important;
-        flex-shrink: 0 !important;
-        text-transform: uppercase !important;
-    }
-    .oj-avatar-red { background: #fee2e2 !important; color: #dc2626 !important; }
-    .oj-avatar-orange { background: #fef3c7 !important; color: #d97706 !important; }
-    .oj-avatar-blue { background: #dbeafe !important; color: #2563eb !important; }
-    .oj-avatar-green { background: #dcfce7 !important; color: #16a34a !important; }
-    .oj-avatar-purple { background: #f3e8ff !important; color: #9333ea !important; }
-    .oj-avatar-gray { background: #f1f5f9 !important; color: #475569 !important; }
-
-    .oj-cand-info {
-        min-width: 0 !important;
-        display: flex !important;
-        flex-direction: column !important;
-        gap: 1px !important;
-    }
-    .oj-cand-name {
-        font-size: 12.5px !important;
-        font-weight: 700 !important;
-        color: #0f172a !important;
-        line-height: 1.35 !important;
-        text-decoration: none !important;
-        word-break: break-word !important;
-    }
-    .oj-cand-name:hover {
-        color: #2563eb !important;
-    }
-    .oj-cand-role {
-        font-size: 11px !important;
-        font-weight: 500 !important;
-        color: #64748b !important;
-        line-height: 1.3 !important;
-        word-break: break-word !important;
-    }
-
-    /* 2. Job Subcard */
-    .oj-subcard-job {
-        gap: 2px !important;
-    }
-    .oj-job-title {
-        font-size: 12.5px !important;
-        font-weight: 700 !important;
-        color: #0f172a !important;
-        line-height: 1.35 !important;
-        word-break: break-word !important;
-    }
-    .oj-job-company {
-        font-size: 11px !important;
-        font-weight: 500 !important;
-        color: #64748b !important;
-        line-height: 1.3 !important;
-        word-break: break-word !important;
-    }
-
-    /* 3. Job Status, ID & Client */
-    .oj-subcard-meta {
-        gap: 3px !important;
-    }
-    .oj-meta-status-badge {
-        display: inline-flex !important;
-        align-items: center !important;
-        gap: 4px !important;
-        font-size: 10px !important;
-        font-weight: 700 !important;
-        padding: 2px 7px !important;
-        border-radius: 999px !important;
-        background: #f0fdf4 !important;
-        color: #16a34a !important;
-        border: 1px solid #bbf7d0 !important;
-        width: fit-content !important;
-    }
-    .oj-meta-status-dot {
-        font-size: 5px !important;
-    }
-    .oj-meta-sub {
-        font-size: 11px !important;
-        color: #64748b !important;
-        font-weight: 500 !important;
-    }
-
-    /* 4. Ownership Subcard */
-    .oj-subcard-owner {
-        gap: 2px !important;
-    }
-    .oj-owner-name {
-        font-size: 12px !important;
-        font-weight: 700 !important;
-        color: #0f172a !important;
-        word-break: break-word !important;
-    }
-    .oj-owner-comp {
-        font-size: 10.5px !important;
-        font-weight: 500 !important;
-        color: #64748b !important;
-        word-break: break-word !important;
-    }
-
-    /* 5. Compensation Subcard */
-    .oj-subcard-comp {
-        gap: 2px !important;
-    }
-    .oj-comp-amount {
-        font-size: 12.5px !important;
-        font-weight: 700 !important;
-        color: #0f172a !important;
-        letter-spacing: -0.2px !important;
-    }
-    .oj-comp-details {
-        display: flex !important;
-        align-items: center !important;
-        gap: 5px !important;
-        font-size: 10.5px !important;
-    }
-    .oj-comp-type {
-        color: #64748b !important;
-        font-weight: 500 !important;
-    }
-    .oj-comp-sep {
-        color: #cbd5e1 !important;
-    }
-    .oj-comp-change {
-        color: #2563eb !important;
-        font-weight: 600 !important;
-        text-decoration: none !important;
-    }
-    .oj-comp-change:hover {
-        text-decoration: underline !important;
-    }
-
-    /* 6. Offer Status Subcard */
-    .oj-subcard-offer-status {
-        gap: 3px !important;
-    }
-    .oj-status-pill {
-        display: inline-flex !important;
-        align-items: center !important;
-        gap: 5px !important;
-        font-size: 11px !important;
-        font-weight: 600 !important;
-        padding: 4px 10px !important;
-        border-radius: 999px !important;
-        width: fit-content !important;
-        line-height: 1.2 !important;
-    }
-    .oj-pill-offered {
-        background: #eff6ff !important;
-        color: #2563eb !important;
-        border: 1px solid #bfdbfe !important;
-    }
-    .oj-pill-joined {
-        background: #f0fdf4 !important;
-        color: #16a34a !important;
-        border: 1px solid #bbf7d0 !important;
-    }
-    .oj-status-subtext {
-        font-size: 10.5px !important;
-        color: #64748b !important;
-        font-weight: 500 !important;
-        padding-left: 2px !important;
-    }
-
-    /* 7. Joining Subcard */
-    .oj-subcard-joining {
-        gap: 2px !important;
-    }
-    .oj-join-date {
-        font-size: 12px !important;
-        font-weight: 700 !important;
-        color: #0f172a !important;
-    }
-    .oj-join-time {
-        font-size: 10.5px !important;
-        color: #64748b !important;
-        font-weight: 500 !important;
-    }
-    .oj-join-countdown {
-        margin-top: 1px !important;
-    }
-    .oj-countdown-pill {
-        display: inline-flex !important;
-        align-items: center !important;
-        font-size: 10px !important;
-        font-weight: 700 !important;
-        padding: 1px 6px !important;
-        border-radius: 4px !important;
-    }
-    .oj-countdown-soon {
-        color: #dc2626 !important;
-        background: #fef2f2 !important;
-    }
-    .oj-countdown-tomorrow {
-        color: #d97706 !important;
-        background: #fef3c7 !important;
-    }
-    .oj-countdown-today {
-        color: #b45309 !important;
-        background: #fef3c7 !important;
-    }
-    .oj-countdown-overdue {
-        color: #b91c1c !important;
-        background: #fee2e2 !important;
-    }
-    .oj-countdown-joined {
-        color: #16a34a !important;
-        background: #f0fdf4 !important;
-    }
-    .oj-countdown-neutral {
-        color: #64748b !important;
-        background: #f1f5f9 !important;
-    }
-
-    /* 8. Stage Subcard */
-    .oj-subcard-stage {
-        gap: 2px !important;
-    }
-    .oj-stage-badge-link {
-        text-decoration: none !important;
-        display: flex !important;
-        flex-direction: column !important;
-        gap: 2px !important;
-        width: fit-content !important;
-    }
-    .oj-stage-outline-badge {
-        display: inline-flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        font-size: 11px !important;
-        font-weight: 600 !important;
-        padding: 3px 10px !important;
-        border-radius: 6px !important;
-        line-height: 1.2 !important;
-        width: fit-content !important;
-    }
-    .oj-stage-badge-orange {
-        color: #ea580c !important;
-        border: 1px solid #f97316 !important;
-        background: #fff7ed !important;
-    }
-    .oj-stage-badge-green {
-        color: #059669 !important;
-        border: 1px solid #10b981 !important;
-        background: #ecfdf5 !important;
-    }
-    .oj-stage-subtext {
-        font-size: 10.5px !important;
-        color: #64748b !important;
-        font-weight: 500 !important;
-    }
-
-    /* Empty Card State */
-    .oj-empty-card {
-        background: #ffffff !important;
-        border: 1px dashed #cbd5e1 !important;
-        border-radius: 10px !important;
-        padding: 36px 20px !important;
-        text-align: center !important;
-        margin: 12px 0 !important;
-    }
-    .oj-empty-icon {
-        font-size: 28px !important;
-        color: #94a3b8 !important;
-        margin-bottom: 8px !important;
-        display: inline-block !important;
-    }
-    .oj-empty-title {
-        font-size: 13.5px !important;
-        font-weight: 700 !important;
-        color: #0f172a !important;
-        margin-bottom: 4px !important;
-    }
-    .oj-empty-desc {
-        font-size: 11.5px !important;
-        color: #64748b !important;
-    }
-
-    /* Pagination card wrapper */
-    .oj-pagination-card {
-        margin-top: 10px !important;
-    }
     @media only screen and (min-width: 900px) and (max-width: 2560px) {
 
         .table td,
@@ -3588,6 +3026,7 @@
               <li class="nav-item">
                 <a class="nav-link" data-toggle="tab" href="#contacts">
                   <i class="fas fa-address-book fa-solid" style="color:#10b981;"></i> Contacts
+                  <span class="cd-tab-badge" id="cdContactNavBadgeDirect" style="{{ (!empty($client_contact_count) && $client_contact_count > 0) ? '' : 'display:none;' }}">{{ $client_contact_count ?? 0 }}</span>
                 </a>
               </li>
               <li class="nav-item">
@@ -4063,81 +3502,69 @@
                     <!--end::interview_tracker Candidate List-->
 
                     <!--begin::candidate_joining Candidate List-->
-                    <div class="tab-pane" id="candidate_joining" role="tabpanel">
-                        <div class="oj-main-card">
-                            <!-- 1. Top Card Header Toolbar (Title, Milestone Filter Cards & Search in Card) -->
-                            <div class="oj-toolbar-card">
-                                <div class="oj-toolbar-left">
-                                    <div class="oj-title-wrap">
-                                        <div class="d-flex align-items-center gap-2">
-                                            <div class="oj-header-icon">
-                                                <i class="fas fa-handshake fa-solid" style="color: #2563eb;"></i>
-                                            </div>
-                                            <div>
-                                                <div class="d-flex align-items-center gap-2">
-                                                    <h4 class="oj-title">Offer &amp; Joining Tracker</h4>
-                                                    <span class="oj-badge-count" id="ojCountAllBadgeDirect">{{ ($kpiOffers ?? 0) + ($kpiJoins ?? 0) }}</span>
-                                                </div>
-                                                <div class="oj-subtitle">Track direct candidate job offers, joining confirmations and onboardings.</div>
-                                            </div>
-                                        </div>
+                    <div class="tab-pane" id="candidate_joining" role="tabpanel" style="background:#ffffff; min-height: 520px;">
+                        <div class="cd-oj-wrapper">
+                            <!-- TIER 1: TOP HEADER TOOLBAR CARD -->
+                            <div class="cd-oj-header-card">
+                                <div class="cd-oj-header-left">
+                                    <div class="cd-oj-header-icon">
+                                        <i class="fas fa-handshake"></i>
                                     </div>
-                                    
-                                    <!-- Milestone Filter Cards / Segments -->
-                                    <div class="oj-segment-group" id="ojSegmentGroupDirect">
-                                        <button type="button" class="oj-seg-btn active cd-oj-seg-btn-direct" data-segment="all">
-                                            <span>All</span>
-                                            <span class="oj-seg-badge" id="ojCountAllDirect">{{ ($kpiOffers ?? 0) + ($kpiJoins ?? 0) }}</span>
-                                        </button>
-                                        <button type="button" class="oj-seg-btn cd-oj-seg-btn-direct" data-segment="offers">
-                                            <span class="oj-dot oj-dot-warning"></span>
-                                            <span>Offers</span>
-                                            <span class="oj-seg-badge oj-badge-warning" id="ojCountOffersDirect">{{ $kpiOffers ?? 0 }}</span>
-                                        </button>
-                                        <button type="button" class="oj-seg-btn cd-oj-seg-btn-direct" data-segment="joining">
-                                            <span class="oj-dot oj-dot-primary"></span>
-                                            <span>Joining</span>
-                                            <span class="oj-seg-badge oj-badge-primary" id="ojCountJoiningDirect">0</span>
-                                        </button>
-                                        <button type="button" class="oj-seg-btn cd-oj-seg-btn-direct" data-segment="joined">
-                                            <span class="oj-dot oj-dot-success"></span>
-                                            <span>Joined</span>
-                                            <span class="oj-seg-badge oj-badge-success" id="ojCountJoinedDirect">{{ $kpiJoins ?? 0 }}</span>
-                                        </button>
+                                    <div>
+                                        <div class="d-flex align-items-center gap-2">
+                                            <h4 class="cd-oj-header-title">Offer &amp; Joining</h4>
+                                            <span class="cd-oj-header-badge" id="cdOjCountBadgeDirect">
+                                                <span id="cdOjCountTextDirect">{{ ($kpiOffers ?? 0) + ($kpiJoins ?? 0) }}</span> Offers &amp; Joinings
+                                            </span>
+                                        </div>
+                                        <div class="cd-oj-header-sub">Track direct candidate job offers, joining confirmations and onboardings.</div>
                                     </div>
                                 </div>
-                                
-                                <div class="oj-toolbar-right">
-                                    <div class="oj-search-subcard">
+                                <div class="cd-oj-header-right">
+                                    <div class="cd-oj-search-subcard">
                                         <i class="fas fa-search"></i>
-                                        <input type="text" id="ojSearchInputDirect" placeholder="Search candidate, job, CTC..." autocomplete="off">
-                                        <button type="button" class="oj-search-clear" id="ojSearchClearDirect" style="display:none;" title="Clear search">
+                                        <input type="text" id="ojSearchInputDirect" placeholder="Search candidate, job, CTC, status..." autocomplete="off">
+                                        <button type="button" class="cd-oj-search-clear" id="ojSearchClearDirect" style="display: none;" title="Clear search">
                                             <i class="fas fa-times"></i>
                                         </button>
                                     </div>
+                                    <button type="button" id="ojResetBtnDirect" class="cd-oj-action-subcard" title="Reset Filters &amp; Refresh">
+                                        <i class="fas fa-sync-alt"></i>
+                                    </button>
                                 </div>
                             </div>
 
-                            <!-- 2. Proportional Column Header Strip & Cards Container -->
-                            <div class="oj-card-container">
-                                <div class="oj-card-header">
-                                    <div class="oj-col-th oj-th-cand">Candidate</div>
-                                    <div class="oj-col-th oj-th-job">Job</div>
-                                    <div class="oj-col-th oj-th-meta">Job Status, ID &amp; Client</div>
-                                    <div class="oj-col-th oj-th-owner">Ownership</div>
-                                    <div class="oj-col-th oj-th-comp">Compensation</div>
-                                    <div class="oj-col-th oj-th-offer-status">Offer Status</div>
-                                    <div class="oj-col-th oj-th-joining">Joining</div>
-                                    <div class="oj-col-th oj-th-stage">Stage</div>
-                                </div>
-
-                                <!-- Primary Cards List Container (populated via AJAX HTML) -->
-                                <div id="candidatetListJoin" class="oj-cards-list" data-role="offer-joining-list">
+                            <!-- TIER 2: SUB-TABS CARD WITH WHITE BACKGROUND -->
+                            <div class="cd-oj-tabs-card">
+                                <div class="cd-oj-tabs-group" id="ojSegmentGroupDirect">
+                                    <button type="button" class="cd-oj-tab-btn active cd-oj-seg-btn-direct" data-segment="all">
+                                        <span>All Records</span>
+                                        <span class="cd-oj-tab-badge" id="ojCountAllDirect">{{ ($kpiOffers ?? 0) + ($kpiJoins ?? 0) }}</span>
+                                    </button>
+                                    <button type="button" class="cd-oj-tab-btn cd-oj-seg-btn-direct" data-segment="offers">
+                                        <span class="cd-oj-dot dot-warning"></span>
+                                        <span>Offers Extended</span>
+                                        <span class="cd-oj-tab-badge badge-warning" id="ojCountOffersDirect">{{ $kpiOffers ?? 0 }}</span>
+                                    </button>
+                                    <button type="button" class="cd-oj-tab-btn cd-oj-seg-btn-direct" data-segment="joining">
+                                        <span class="cd-oj-dot dot-primary"></span>
+                                        <span>Joining Soon</span>
+                                        <span class="cd-oj-tab-badge badge-primary" id="ojCountJoiningDirect">0</span>
+                                    </button>
+                                    <button type="button" class="cd-oj-tab-btn cd-oj-seg-btn-direct" data-segment="joined">
+                                        <span class="cd-oj-dot dot-success"></span>
+                                        <span>Joined &amp; Onboarded</span>
+                                        <span class="cd-oj-tab-badge badge-success" id="ojCountJoinedDirect">{{ $kpiJoins ?? 0 }}</span>
+                                    </button>
                                 </div>
                             </div>
 
-                            <!-- 3. Enterprise Pagination Card -->
-                            <div id="paginationcandidatejoin" class="oj-pagination-card" data-role="offer-joining-pagination">
+                            <!-- TIER 3: PRIMARY CARDS LIST STREAM (Populated via AJAX) -->
+                            <div class="cd-oj-stream-wrap">
+                                <div id="candidatetListJoin" class="cd-oj-stream" data-role="offer-joining-list">
+                                </div>
+                            </div>
+                            <div id="paginationcandidatejoin" class="mt-3">
                             </div>
                         </div>
                     </div>
@@ -5711,61 +5138,492 @@
     // new $.fn.dataTable.FixedHeader(table);
 </script>
 <script>
-    var company_id = {{ $directClientDetail->company_id ?? $directClientDetail->from_company_id ?? $directClientDetail->companies_id ?? $directClientDetail->client_id ?? 0 }};
-    function initDContactsDataTable() {
-        if ($.fn.DataTable.isDataTable('#dcontactList')) {
-            return;
+    /**
+     * ── DirectClientContactsManager (Client-First RAM & Card Stream Engine) ──
+     * God-Level Modern Card + Sub-Card Enterprise Implementation.
+     * 100% Client-First Local Filtering, 300ms Debounce, Copy Actions, Zero Horizontal Overflow.
+     */
+    window.DirectClientContactsManager = {
+        companyId: {{ $directClientDetail->company_id ?? $directClientDetail->from_company_id ?? $directClientDetail->companies_id ?? $directClientDetail->client_id ?? 0 }},
+        clientName: '{{ addslashes($clientTitle ?? @$directClientDetail->name ?? "Direct Client") }}',
+        allContacts: [],
+        filteredContacts: [],
+        activeFilter: 'all',
+        searchTerm: '',
+        searchDebounceTimer: null,
+        isInitialized: false,
+        isLoading: false,
+
+        avatarPalette: ['#059669', '#2563eb', '#7c3aed', '#d97706', '#db2777', '#0284c7', '#4f46e5', '#0d9488', '#ea580c'],
+
+        init: function(companyId) {
+            if (companyId) this.companyId = companyId;
+            if (!this.isInitialized) {
+                this.bindEvents();
+                this.isInitialized = true;
+            }
+            this.fetch();
+        },
+
+        bindEvents: function() {
+            var self = this;
+
+            // 1. Debounced live search
+            $(document).off('input', '#cdContactSearchInputDirect');
+            $(document).on('input', '#cdContactSearchInputDirect', function() {
+                var val = $(this).val();
+                if (val && val.length > 0) {
+                    $('#cdContactSearchClearDirect').show();
+                } else {
+                    $('#cdContactSearchClearDirect').hide();
+                }
+                clearTimeout(self.searchDebounceTimer);
+                self.searchDebounceTimer = setTimeout(function() {
+                    self.searchTerm = (val || '').trim().toLowerCase();
+                    self.filterAndRender();
+                }, 300);
+            });
+
+            // 2. Interactive clear search button
+            $(document).off('click', '#cdContactSearchClearDirect');
+            $(document).on('click', '#cdContactSearchClearDirect', function() {
+                $('#cdContactSearchInputDirect').val('');
+                $(this).hide();
+                self.searchTerm = '';
+                self.filterAndRender();
+            });
+
+            // 3. Reset filters & refresh button
+            $(document).off('click', '#cdContactResetBtnDirect, #cdContactClearFilterBtnDirect');
+            $(document).on('click', '#cdContactResetBtnDirect, #cdContactClearFilterBtnDirect', function() {
+                $('#cdContactSearchInputDirect').val('');
+                $('#cdContactSearchClearDirect').hide();
+                self.searchTerm = '';
+                self.activeFilter = 'all';
+                $('.cd-contact-subtab').removeClass('active');
+                $('#cdContactTabAllDirect').addClass('active');
+                self.fetch();
+            });
+
+            // 4. Sub-tab filter buttons
+            $(document).off('click', '.cd-contact-tabs-card .cd-contact-subtab');
+            $(document).on('click', '.cd-contact-tabs-card .cd-contact-subtab', function() {
+                var filter = $(this).data('filter') || 'all';
+                $('.cd-contact-tabs-card .cd-contact-subtab').removeClass('active');
+                $(this).addClass('active');
+                self.activeFilter = filter;
+                self.filterAndRender();
+            });
+
+            // 5. One-click copy with visual tooltip / checkmark
+            $(document).off('click', '.js-copy-data');
+            $(document).on('click', '.js-copy-data', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                var text = $(this).data('copy') || $(this).attr('data-copy');
+                if (!text) return;
+                var $btn = $(this);
+                var origHtml = $btn.html();
+
+                var showSuccess = function() {
+                    $btn.html('<i class="fas fa-check text-success" style="font-size:10px;"></i>');
+                    setTimeout(function() { $btn.html(origHtml); }, 1400);
+                };
+
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    navigator.clipboard.writeText(text).then(showSuccess).catch(function() {
+                        self.fallbackCopy(text, showSuccess);
+                    });
+                } else {
+                    self.fallbackCopy(text, showSuccess);
+                }
+            });
+
+            // 6. View Requisitions button: switch to #requisitions tab
+            $(document).off('click', '.js-contact-view-jobs');
+            $(document).on('click', '.js-contact-view-jobs', function(e) {
+                e.preventDefault();
+                $('a[href="#requisitions"]').tab('show');
+            });
+        },
+
+        fallbackCopy: function(text, cb) {
+            var textArea = document.createElement('textarea');
+            textArea.value = text;
+            textArea.style.position = 'fixed';
+            textArea.style.left = '-9999px';
+            document.body.appendChild(textArea);
+            textArea.focus();
+            textArea.select();
+            try {
+                document.execCommand('copy');
+                if (typeof cb === 'function') cb();
+            } catch (err) {}
+            document.body.removeChild(textArea);
+        },
+
+        fetch: function() {
+            var self = this;
+            this.isLoading = true;
+            $('#cdContactSkeletonLoaderDirect').show();
+            $('#cdContactCardsStreamDirect').hide();
+            $('#cdContactEmptyStateDirect').hide();
+
+            var companyId = this.companyId;
+            $.ajax({
+                url: '{!! route('service_company.clients.dcontactList') !!}?company_id=' + companyId,
+                type: 'GET',
+                dataType: 'json',
+                success: function(res) {
+                    self.isLoading = false;
+                    $('#cdContactSkeletonLoaderDirect').hide();
+                    $('#cdContactCardsStreamDirect').show();
+
+                    var list = (res && res.data && Array.isArray(res.data)) ? res.data : [];
+                    self.allContacts = list;
+                    self.updateCounts(list);
+                    self.filterAndRender();
+                },
+                error: function() {
+                    self.isLoading = false;
+                    $('#cdContactSkeletonLoaderDirect').hide();
+                    $('#cdContactCardsStreamDirect').show();
+                    self.allContacts = [];
+                    self.filterAndRender();
+                }
+            });
+        },
+
+        updateCounts: function(list) {
+            var total = list.length;
+            var primaryCount = 0;
+            var managerCount = 0;
+            var hrCount = 0;
+            var activeCount = 0;
+
+            var managerKeywords = ['manager', 'lead', 'head', 'vp', 'director', 'chief', 'principal', 'president', 'officer', 'lead'];
+            var hrKeywords = ['hr', 'recruiter', 'recruiting', 'talent', 'sourcer', 'coordinator', 'people', 'admin'];
+
+            list.forEach(function(item, idx) {
+                var desig = (item.contact_person_designation || item.Designation || item.display_name || '').toLowerCase();
+                var isPrimary = (item.is_primary == 1) || (idx === 0);
+                if (isPrimary) primaryCount++;
+
+                var isMgr = managerKeywords.some(function(k) { return desig.indexOf(k) !== -1; });
+                if (isMgr) managerCount++;
+
+                var isHr = hrKeywords.some(function(k) { return desig.indexOf(k) !== -1; });
+                if (isHr) hrCount++;
+
+                var status = (item.status || item.Status || 'active').toLowerCase();
+                if (status.indexOf('active') !== -1) activeCount++;
+            });
+
+            $('#cdContactCountTextDirect').text(total);
+            $('#contactTabCountAllDirect').text(total);
+            $('#contactTabCountPrimaryDirect').text(primaryCount);
+            $('#contactTabCountManagerDirect').text(managerCount);
+            $('#contactTabCountHrDirect').text(hrCount);
+            $('#contactTabCountActiveDirect').text(activeCount);
+
+            // Update main tab badge
+            var $navBadge = $('#cdContactNavBadgeDirect');
+            if ($navBadge.length) {
+                $navBadge.text(total);
+                if (total > 0) $navBadge.show(); else $navBadge.hide();
+            }
+        },
+
+        filterAndRender: function() {
+            var self = this;
+            var list = this.allContacts.slice();
+
+            var managerKeywords = ['manager', 'lead', 'head', 'vp', 'director', 'chief', 'principal', 'president', 'officer'];
+            var hrKeywords = ['hr', 'recruiter', 'recruiting', 'talent', 'sourcer', 'coordinator', 'people', 'admin'];
+
+            // 1. Sub-tab filter
+            if (this.activeFilter === 'primary') {
+                list = list.filter(function(item, idx) {
+                    return (item.is_primary == 1) || (idx === 0);
+                });
+            } else if (this.activeFilter === 'manager') {
+                list = list.filter(function(item) {
+                    var desig = (item.contact_person_designation || item.Designation || item.display_name || '').toLowerCase();
+                    return managerKeywords.some(function(k) { return desig.indexOf(k) !== -1; });
+                });
+            } else if (this.activeFilter === 'hr') {
+                list = list.filter(function(item) {
+                    var desig = (item.contact_person_designation || item.Designation || item.display_name || '').toLowerCase();
+                    return hrKeywords.some(function(k) { return desig.indexOf(k) !== -1; });
+                });
+            } else if (this.activeFilter === 'active') {
+                list = list.filter(function(item) {
+                    var status = (item.status || item.Status || 'active').toLowerCase();
+                    return status.indexOf('active') !== -1;
+                });
+            }
+
+            // 2. Search query filter
+            if (this.searchTerm) {
+                var q = this.searchTerm;
+                list = list.filter(function(item) {
+                    var name = (item.contact_person_name || item.name || '').toLowerCase();
+                    var desig = (item.contact_person_designation || item.Designation || item.display_name || '').toLowerCase();
+                    var email = (item.contact_person_email || item.email || '').toLowerCase();
+                    var phone = (item.clean_phone || item.contact_person_number || item.mobile || '').toLowerCase();
+                    var client = (item.client_name || self.clientName || '').toLowerCase();
+                    return name.indexOf(q) !== -1 || desig.indexOf(q) !== -1 || email.indexOf(q) !== -1 || phone.indexOf(q) !== -1 || client.indexOf(q) !== -1;
+                });
+            }
+
+            this.filteredContacts = list;
+
+            var $stream = $('#cdContactCardsStreamDirect');
+            var $empty = $('#cdContactEmptyStateDirect');
+
+            if (!list || list.length === 0) {
+                $stream.empty().hide();
+                $empty.show();
+                return;
+            }
+
+            $empty.hide();
+            var html = '';
+            list.forEach(function(item, idx) {
+                html += self.renderCard(item, idx);
+            });
+            $stream.html(html).show();
+        },
+
+        getInitials: function(name) {
+            if (!name) return 'CC';
+            var parts = name.trim().split(/\s+/);
+            if (parts.length === 1) return parts[0].substring(0, 2).toUpperCase();
+            return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+        },
+
+        getAvatarColor: function(name) {
+            var sum = 0;
+            var str = name || 'Direct Contact';
+            for (var i = 0; i < str.length; i++) {
+                sum += str.charCodeAt(i);
+            }
+            return this.avatarPalette[sum % this.avatarPalette.length];
+        },
+
+        renderCard: function(row, index) {
+            var self = this;
+            var cid = row.id || row.userId || (index + 1);
+            var rawName = (row.contact_person_name || row.name || 'Direct Contact').trim();
+            var initials = this.getInitials(rawName);
+            var avatarBg = this.getAvatarColor(rawName);
+            var rawDesig = (row.contact_person_designation || row.Designation || row.display_name || 'Key Stakeholder').trim();
+            var email = (row.contact_person_email || row.email || '').trim();
+            var phone = (row.clean_phone || (row.calling_code ? (row.calling_code + ' ' + (row.contact_person_number || row.mobile || '')) : (row.contact_person_number || row.mobile || ''))).trim();
+            var cleanPhoneForTel = phone.replace(/[^0-9+]/g, '');
+            var isPrimary = (row.is_primary == 1) || (index === 0);
+            var clientName = (row.client_name || row.company_name || this.clientName || 'Direct Client').trim();
+            var linkedJobs = parseInt(row.linked_jobs_count || 0, 10);
+            var createdFormatted = row.created_formatted || 'Active Member';
+            var statusStr = (row.status || 'active').toLowerCase();
+            var isActive = (statusStr.indexOf('active') !== -1);
+
+            // Sub-Card 1: Primary vs Secondary Badge
+            var primaryBadgeHtml = isPrimary
+                ? `<span class="cd-badge-primary-spoc"><i class="fas fa-star text-amber-500 me-1"></i>Primary SPOC</span>`
+                : `<span class="cd-badge-secondary-contact">Contact</span>`;
+
+            // Sub-Card 2: Communication Elements
+            var copyAllText = `Name: ${rawName} | Email: ${email || 'N/A'} | Phone: ${phone || 'N/A'} | Client: ${clientName}`;
+
+            var emailHtml = email
+                ? `<a href="mailto:${email}" class="cd-comm-link text-truncate" title="Send email to ${email}">${email}</a>`
+                : `<span class="text-muted" style="font-size:11px;">No email on file</span>`;
+
+            var emailCopyBtn = email
+                ? `<button type="button" class="cd-copy-btn js-copy-data" data-copy="${email}" title="Copy Email"><i class="far fa-copy"></i></button>`
+                : '';
+
+            var phoneHtml = phone
+                ? `<a href="tel:${cleanPhoneForTel}" class="cd-comm-link text-truncate" title="Call ${phone}">${phone}</a>`
+                : `<span class="text-muted" style="font-size:11px;">No phone on file</span>`;
+
+            var phoneCopyBtn = phone
+                ? `<button type="button" class="cd-copy-btn js-copy-data" data-copy="${phone}" title="Copy Phone"><i class="far fa-copy"></i></button>`
+                : '';
+
+            // Sub-Card 3: Role Scope Classification
+            var desigLower = rawDesig.toLowerCase();
+            var roleBadgeText = 'Account Coordinator';
+            if (desigLower.indexOf('director') !== -1 || desigLower.indexOf('vp') !== -1 || desigLower.indexOf('chief') !== -1) {
+                roleBadgeText = 'Executive SPOC';
+            } else if (desigLower.indexOf('manager') !== -1 || desigLower.indexOf('lead') !== -1 || desigLower.indexOf('head') !== -1) {
+                roleBadgeText = 'Hiring Authority';
+            } else if (desigLower.indexOf('hr') !== -1 || desigLower.indexOf('recruit') !== -1 || desigLower.indexOf('talent') !== -1) {
+                roleBadgeText = 'Talent Partner';
+            }
+
+            // Sub-Card 4: Linked Jobs
+            var jobsCountText = linkedJobs > 0 ? `<strong>${linkedJobs}</strong> Active Roles` : `Client Requisitions`;
+            var jobsBadgeText = linkedJobs > 0 ? `${linkedJobs} Roles` : 'Direct';
+
+            // Sub-Card 5: Status & Quick Actions
+            var statusPillHtml = isActive
+                ? `<span class="cd-contact-status-active"><i class="fas fa-circle"></i> Active</span>`
+                : `<span class="cd-contact-status-inactive"><i class="fas fa-circle"></i> Inactive</span>`;
+
+            var callBtnHtml = phone
+                ? `<a href="tel:${cleanPhoneForTel}" class="cd-contact-btn-call" title="Call ${rawName}"><i class="fas fa-phone-alt"></i> Call</a>`
+                : `<button type="button" class="cd-contact-btn-call disabled" style="opacity:0.4; pointer-events:none;"><i class="fas fa-phone-alt"></i> Call</button>`;
+
+            var mailBtnHtml = email
+                ? `<a href="mailto:${email}" class="cd-contact-btn-mail" title="Email ${rawName}"><i class="fas fa-envelope"></i> Email</a>`
+                : `<button type="button" class="cd-contact-btn-mail disabled" style="opacity:0.4; pointer-events:none;"><i class="fas fa-envelope"></i> Email</button>`;
+
+            var waPhoneClean = cleanPhoneForTel.replace('+', '');
+            var waBtnHtml = phone
+                ? `<a href="https://wa.me/${waPhoneClean}" target="_blank" class="cd-contact-btn-wa" title="WhatsApp ${rawName}"><i class="fab fa-whatsapp"></i></a>`
+                : '';
+
+            return `
+                <div class="cd-contact-card" data-contact-id="${cid}">
+                    <div class="cd-contact-card-grid">
+
+                        <!-- SUB-CARD 1: Contact Identity & Profile -->
+                        <div class="cd-contact-subcard cd-contact-subcard-profile">
+                            <div class="cd-contact-subcard-hdr">
+                                <span class="cd-contact-subcard-label">CONTACT PROFILE</span>
+                                ${primaryBadgeHtml}
+                            </div>
+                            <div class="cd-contact-subcard-body">
+                                <div class="cd-contact-profile-row">
+                                    <div class="cd-contact-avatar-box" style="background: ${avatarBg};">
+                                        ${initials}
+                                    </div>
+                                    <div class="cd-contact-profile-meta">
+                                        <span class="cd-contact-card-name text-truncate" title="${rawName}">${rawName}</span>
+                                        <span class="cd-contact-card-desig text-truncate" title="${rawDesig}">${rawDesig}</span>
+                                        <div class="d-flex align-items-center gap-1 mt-1">
+                                            <span class="text-muted" style="font-size: 10px; font-weight: 600;">#C-${cid}</span>
+                                            <span class="text-slate-300">•</span>
+                                            <span class="text-muted" style="font-size: 10px;">Direct Client</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- SUB-CARD 2: Direct Communication Channels -->
+                        <div class="cd-contact-subcard cd-contact-subcard-comm">
+                            <div class="cd-contact-subcard-hdr">
+                                <span class="cd-contact-subcard-label">COMMUNICATION</span>
+                                <button type="button" class="cd-copy-btn js-copy-data" data-copy="${copyAllText}" title="Copy email &amp; phone details">
+                                    <i class="far fa-clone"></i>
+                                </button>
+                            </div>
+                            <div class="cd-contact-subcard-body">
+                                <div class="cd-comm-item" title="${email}">
+                                    <i class="far fa-envelope text-primary"></i>
+                                    ${emailHtml}
+                                    ${emailCopyBtn}
+                                </div>
+                                <div class="cd-comm-item" title="${phone}">
+                                    <i class="fas fa-phone-alt text-success"></i>
+                                    ${phoneHtml}
+                                    ${phoneCopyBtn}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- SUB-CARD 3: Organization & Role Scope -->
+                        <div class="cd-contact-subcard cd-contact-subcard-org">
+                            <div class="cd-contact-subcard-hdr">
+                                <span class="cd-contact-subcard-label">CLIENT &amp; SCOPE</span>
+                                <span class="cd-org-role-badge text-truncate" title="${roleBadgeText}">
+                                    <i class="fas fa-user-shield me-1"></i>${roleBadgeText}
+                                </span>
+                            </div>
+                            <div class="cd-contact-subcard-body">
+                                <div class="cd-org-client text-truncate" title="${clientName}">
+                                    <i class="far fa-building text-slate-400"></i>
+                                    <span class="text-truncate">${clientName}</span>
+                                </div>
+                                <div class="d-flex align-items-center gap-1 mt-1">
+                                    <span class="badge badge-light-success fw-bold" style="font-size:9.5px; padding:2px 6px;">
+                                        Authorized POC
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- SUB-CARD 4: Linked Jobs & Pipeline -->
+                        <div class="cd-contact-subcard cd-contact-subcard-jobs">
+                            <div class="cd-contact-subcard-hdr">
+                                <span class="cd-contact-subcard-label">REQUISITIONS</span>
+                                <span class="badge badge-light-info fw-bold" style="font-size:9.5px; padding:2px 5px;">
+                                    ${jobsBadgeText}
+                                </span>
+                            </div>
+                            <div class="cd-contact-subcard-body">
+                                <div class="cd-linked-jobs-stat text-truncate">
+                                    <i class="fas fa-briefcase text-info"></i>
+                                    <span>${jobsCountText}</span>
+                                </div>
+                                <div>
+                                    <a href="javascript:void(0);" class="cd-view-jobs-link js-contact-view-jobs" title="View client job requisitions">
+                                        View Jobs <i class="fas fa-arrow-right ms-1" style="font-size:8px;"></i>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- SUB-CARD 5: Status & Quick Reach Actions -->
+                        <div class="cd-contact-subcard cd-contact-subcard-actions">
+                            <div class="cd-contact-subcard-hdr">
+                                <span class="cd-contact-subcard-label">STATUS &amp; ACTIONS</span>
+                                ${statusPillHtml}
+                            </div>
+                            <div class="cd-contact-subcard-body">
+                                <div class="cd-contact-actions-row">
+                                    ${callBtnHtml}
+                                    ${mailBtnHtml}
+                                    ${waBtnHtml}
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <!-- SUB-CARD 6: Bottom Activity & Metadata Strip -->
+                    <div class="cd-contact-card-bottom">
+                        <div class="cd-contact-bottom-left">
+                            <span class="cd-contact-meta-item">
+                                <i class="far fa-calendar-check text-slate-400"></i> Member since ${createdFormatted}
+                            </span>
+                            <span class="text-slate-300">•</span>
+                            <span class="cd-contact-meta-item">
+                                <i class="fas fa-check-double text-success"></i> Verified Direct Point of Contact
+                            </span>
+                        </div>
+                        <div class="cd-contact-bottom-right">
+                            <span class="cd-contact-tag-pill">
+                                <i class="fas fa-id-badge text-primary"></i> Direct Stakeholder
+                            </span>
+                            <span class="cd-contact-tag-pill">
+                                <i class="fas fa-bolt text-amber-500"></i> Quick Reach
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            `;
         }
-        var dcontactList = $('#dcontactList').dataTable({
-            responsive: true,
-            processing: true,
-            serverSide: true,
-            destroy: true,
-            ordering: false, //	disable ordering
-            "bLengthChange": false, //	thought this line could hide the LengthMenu
-            sDom: 'lrtip',
-            oLanguage: {
-                sLengthMenu: "_MENU_",
-            },
-            "pageLength": 10,
-            colReorder: true,
-            ajax: {
-                'url': '{!! route('service_company.clients.dcontactList') !!}?company_id=' + company_id,
-                "data": function(d) {
-                    d.search = $('#dcontactSearchInput').val() || $('#inputSearch').val(), d.client_id = $('#direct_client_id').val()
-                }
-            },
-            "drawCallback": function(settings) {
-                $('[data-toggle="tooltip1"]').tooltip();
-            },
-            "columnDefs": [{
-                    "width": "50px",
-                    "targets": 0
-                },
-                {
-                    "width": "100px",
-                    "targets": 1,
-                    "class": "align-items-center border-0"
-                },
-                {
-                    "width": "50px",
-                    "targets": 2
-                },
-                {
-                    "width": "200px",
-                    "targets": 3
-                }
-            ],
-            columns: [
-                { data: 'chkbox', name: 'chkbox', searchable: false, orderable: false, width: '40px' },
-                { data: 'Contact', name: 'Contact', searchable: false, orderable: false },
-                { data: 'Designation', name: 'Designation', searchable: false, orderable: false },
-                { data: 'Email', name: 'Email', searchable: false, orderable: false },
-                { data: 'Phone', name: 'Phone', searchable: false, orderable: false },
-                { data: 'Status', name: 'Status', searchable: false, orderable: false, width: '90px' }
-            ]
-        });
-        new $.fn.dataTable.FixedHeader(dcontactList);
+    };
+
+    function initDContactsDataTable() {
+        window.DirectClientContactsManager.init();
+    }
+    function initDContactsManager() {
+        window.DirectClientContactsManager.init();
     }
 </script>
 
@@ -6874,6 +6732,9 @@
                     $('#ojCountOffersDirect').text(response.counts.offers || 0);
                     $('#ojCountJoiningDirect').text(response.counts.joining || 0);
                     $('#ojCountJoinedDirect').text(response.counts.joined || 0);
+                    if ($('#cdOjCountTextDirect').length) {
+                        $('#cdOjCountTextDirect').text(response.counts.all || 0);
+                    }
                     if ($('#ojCountAllBadgeDirect').length) {
                         $('#ojCountAllBadgeDirect').text(response.counts.all || 0);
                     }
@@ -6925,6 +6786,15 @@
         $('#ojSearchInputDirect').val('');
         $(this).hide();
         directfetchCandidatesJoin(1, '', window.currentOjSegmentDirect || 'all');
+    });
+
+    $(document).on('click', '#ojResetBtnDirect', function() {
+        $('#ojSearchInputDirect').val('');
+        $('#ojSearchClearDirect').hide();
+        window.currentOjSegmentDirect = 'all';
+        $('.cd-oj-seg-btn-direct').removeClass('active');
+        $('.cd-oj-seg-btn-direct[data-segment="all"]').addClass('active');
+        directfetchCandidatesJoin(1, '', 'all');
     });
 
     // ══════════════════════════════════════════════════════════════════════════

@@ -2760,9 +2760,25 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
         $clientId = (int) $request->input('clientId');
         $companyId = (int) auth()->user()->company_id;
 
+        $client = DB::table('clients')->select('contact_person', 'company_name')->where('id', $clientId)->first();
+        $primaryContactName = strtolower(trim((string) @$client->contact_person));
+        $clientCompanyName = (string) (@$client->company_name ?? 'Client');
+
         $schedule = DB::table('client_contact_info')
-            ->select('id', 'contact_person_name', 'calling_code', 'contact_person_email', 'contact_person_number', 'contact_person_designation')
-            ->where('client_id', $clientId);
+            ->leftJoin('client_contact_info_jobs', 'client_contact_info_jobs.client_contact_info_id', '=', 'client_contact_info.id')
+            ->select(
+                'client_contact_info.id',
+                'client_contact_info.client_id',
+                'client_contact_info.contact_person_name',
+                'client_contact_info.calling_code',
+                'client_contact_info.contact_person_email',
+                'client_contact_info.contact_person_number',
+                'client_contact_info.contact_person_designation',
+                'client_contact_info.created_at',
+                DB::raw('COUNT(DISTINCT client_contact_info_jobs.job_id) as linked_jobs_count')
+            )
+            ->where('client_contact_info.client_id', $clientId)
+            ->groupBy('client_contact_info.id');
 
         // Avatar colour palette
         $avatarColors = ['#c084fc', '#60a5fa', '#fbbf24', '#34d399', '#f472b6', '#38bdf8', '#fb923c'];
@@ -2803,6 +2819,26 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
 							<a href="tel:'.$call.'" class="action-btn-table" title="Call"><i class="fas fa-phone"></i></a>
 							<a href="mailto:'.$row->contact_person_email.'" class="action-btn-table" title="Email"><i class="fas fa-envelope"></i></a>
 						</div>';
+            })
+            ->addColumn('is_primary', function ($row) use ($primaryContactName) {
+                $name = strtolower(trim((string) @$row->contact_person_name));
+                return ($name !== '' && $primaryContactName !== '' && ($name === $primaryContactName || str_contains($primaryContactName, $name) || str_contains($name, $primaryContactName))) ? 1 : 0;
+            })
+            ->addColumn('client_name', function () use ($clientCompanyName) {
+                return $clientCompanyName;
+            })
+            ->addColumn('clean_phone', function ($row) {
+                $calling = trim((string) @$row->calling_code);
+                $num = trim((string) @$row->contact_person_number);
+                return $calling ? ($calling . ' ' . $num) : $num;
+            })
+            ->addColumn('created_formatted', function ($row) {
+                if (!empty($row->created_at)) {
+                    try {
+                        return \Carbon\Carbon::parse($row->created_at)->format('d M Y');
+                    } catch (\Exception $e) {}
+                }
+                return 'Active Member';
             })
             ->rawColumns(['chkbox', 'Contact', 'Email', 'Phone', 'Status', 'Actions'])
             ->addIndexColumn()->make(true);
@@ -3170,8 +3206,10 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
                 'users.image',
                 'users.status',
                 'users.calling_code',
+                'users.created_at as user_created_at',
                 'recommendation_relation.from_user_id',
-                'users_profile.designation as display_name'
+                'users_profile.designation as display_name',
+                DB::raw('COUNT(DISTINCT job_assign.job_id) as linked_jobs_count')
             );
         $directContactList = $directContactList->join('roles', 'roles.company_id', '=', 'companies.id');
         $directContactList = $directContactList->join('role_user', 'role_user.role_id', '=', 'roles.id');
@@ -3230,6 +3268,37 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
 							<a href="tel:'.$call.'" class="action-btn-table" title="Call"><i class="fas fa-phone"></i></a>
 							<a href="mailto:'.$row->email.'" class="action-btn-table" title="Email"><i class="fas fa-envelope"></i></a>
 						</div>';
+            })
+            ->addColumn('is_primary', function ($row) {
+                return !empty($row->from_user_id) ? 1 : 0;
+            })
+            ->addColumn('client_name', function ($row) {
+                return (string) @$row->company_name;
+            })
+            ->addColumn('contact_person_name', function ($row) {
+                return (string) @$row->name;
+            })
+            ->addColumn('contact_person_email', function ($row) {
+                return (string) @$row->email;
+            })
+            ->addColumn('contact_person_number', function ($row) {
+                return (string) @$row->mobile;
+            })
+            ->addColumn('contact_person_designation', function ($row) {
+                return (string) @$row->display_name;
+            })
+            ->addColumn('clean_phone', function ($row) {
+                $calling = trim((string) @$row->calling_code);
+                $num = trim((string) @$row->mobile);
+                return $calling ? ($calling . ' ' . $num) : $num;
+            })
+            ->addColumn('created_formatted', function ($row) {
+                if (!empty($row->user_created_at)) {
+                    try {
+                        return \Carbon\Carbon::parse($row->user_created_at)->format('d M Y');
+                    } catch (\Exception $e) {}
+                }
+                return 'Active Member';
             })
             ->rawColumns(['chkbox', 'Contact', 'Email', 'Phone', 'Status', 'Actions'])
             ->addIndexColumn()->make(true);
