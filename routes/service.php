@@ -118,6 +118,11 @@ Route::group(['middleware' => 'auth'], function () {
                 });
 
                 // #############       	START CLIENT MANAGEMENT
+                // ─── JDCR V5.2 Client-First Thin JSON API Routes ───
+                Route::get('clients/api/v2/{id}/graph', [ServiceCompanyClientController::class, 'clientGraphV2'])->name('clients.api.v2.graph');
+                Route::get('clients/api/v2/delta-sync', [ServiceCompanyClientController::class, 'deltaSyncV2'])->name('clients.api.v2.deltaSync');
+
+                Route::match(['GET', 'HEAD'], 'clients/session-heartbeat', [ServiceCompanyClientController::class, 'sessionHeartbeat'])->name('clients.sessionHeartbeat');
                 Route::get('clients/industries-bundle', [ServiceCompanyClientController::class, 'industriesBundle'])->name('clients.industriesBundle');
                 Route::get('clients/location-facets', [ServiceCompanyClientController::class, 'locationFacets'])->name('clients.locationFacets');
                 Route::get('clients/active-projection', [ServiceCompanyClientController::class, 'activeClientProjection'])->name('clients.activeClientProjection');
