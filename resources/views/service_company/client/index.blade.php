@@ -1857,12 +1857,14 @@ window.ClientStateManager = {
         var tenantId = {{ (int) (auth()->user()->company_id ?? 0) }};
 
         // ─── JDCR V5.2 Tier 1: Check L1 Working RAM (< 5ms) ───
-        var ramCached = window.ClientMemoryStore.get(clientId);
+        var ramCached = window.ClientMemoryStore ? window.ClientMemoryStore.get(clientId) : null;
         if (ramCached && window.ClientIncrementalRenderer && type !== 'request') {
             $(bodyId).html(ClientIncrementalRenderer.renderDrawerShell(ramCached, 'overview'));
             self.state.drawerStatus = 'loaded';
             self.markTabLoaded(clientId, 'overview');
-            window.SyncSupervisor.notifyHint(clientId);
+            if (window.SyncSupervisor && typeof window.SyncSupervisor.notifyHint === 'function') {
+                window.SyncSupervisor.notifyHint(clientId);
+            }
             return;
         }
 
@@ -1916,6 +1918,33 @@ window.ClientStateManager = {
             });
         };
 
+        var executeLegacyDrawerFetch = function() {
+            ClientSessionRecoveryManager.executeWithRetry(fetchDrawerData, 1, function(xhr) {
+                var activeCtx = self.state.currentDrawerContext;
+                if (!activeCtx || activeCtx.contextToken !== contextToken || self.state.drawerRequestToken !== requestToken) return;
+
+                var msg = (!xhr || xhr.status === 0 || !navigator.onLine)
+                    ? 'Network connection was interrupted. Please check your connectivity.'
+                    : 'Could not load client details (HTTP ' + (xhr.status || 500) + '). Please try again.';
+
+                self.state.drawerStatus = 'error';
+                self.state.drawerError = msg;
+
+                $(bodyId).html(`
+                    <div class="d-flex flex-column align-items-center justify-content-center p-10 text-center" style="min-height:380px;">
+                        <div class="mb-3 text-danger">
+                            <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                        </div>
+                        <div class="fw-bold fs-6 text-gray-800 mb-1">Failed to Load Client Details</div>
+                        <div class="text-muted fs-7 mb-4 font-poppins">${msg}</div>
+                        <button type="button" class="btn btn-sm btn-primary px-4 py-2" onclick="ClientStateManager.openClientDrawer('${clientId}', '${type}')">
+                            <i class="fas fa-redo me-1"></i> Retry Loading
+                        </button>
+                    </div>
+                `);
+            });
+        };
+
         var fetchDrawerViaGateway = function() {
             var graphEndpoint = "{{ route('service_company.clients.api.v2.graph', ':id') }}".replace(':id', clientId);
             if (type !== 'request') {
@@ -1928,7 +1957,7 @@ window.ClientStateManager = {
                         if (!activeCtx || activeCtx.contextToken !== contextToken || self.state.drawerRequestToken !== requestToken || self.state.selectedClientId !== clientId) return;
 
                         if (res && res.data && window.ClientIncrementalRenderer) {
-                            window.ClientMemoryStore.set(clientId, res.data);
+                            if (window.ClientMemoryStore) window.ClientMemoryStore.set(clientId, res.data);
                             if (window.ClientEntityDB) {
                                 window.ClientEntityDB.put(tenantId, clientId, res);
                             }
@@ -1939,16 +1968,16 @@ window.ClientStateManager = {
                         }
 
                         // Fallback to legacy Blade AJAX
-                        ClientSessionRecoveryManager.executeWithRetry(fetchDrawerData, 1);
+                        executeLegacyDrawerFetch();
                     },
                     error: function(xhr, status) {
                         if (status === 'abort') return;
                         // Fallback to legacy Blade AJAX
-                        ClientSessionRecoveryManager.executeWithRetry(fetchDrawerData, 1);
+                        executeLegacyDrawerFetch();
                     }
                 });
             } else {
-                ClientSessionRecoveryManager.executeWithRetry(fetchDrawerData, 1);
+                executeLegacyDrawerFetch();
             }
         };
 
@@ -1959,11 +1988,11 @@ window.ClientStateManager = {
                 if (!activeCtx || activeCtx.contextToken !== contextToken || self.state.drawerRequestToken !== requestToken || self.state.selectedClientId !== clientId) return;
 
                 if (idbRecord && idbRecord.data && window.ClientIncrementalRenderer) {
-                    window.ClientMemoryStore.set(clientId, idbRecord.data);
+                    if (window.ClientMemoryStore) window.ClientMemoryStore.set(clientId, idbRecord.data);
                     $(bodyId).html(ClientIncrementalRenderer.renderDrawerShell(idbRecord.data, 'overview'));
                     self.state.drawerStatus = 'loaded';
                     self.markTabLoaded(clientId, 'overview');
-                    window.SyncSupervisor.notifyHint(clientId);
+                    if (window.SyncSupervisor) window.SyncSupervisor.notifyHint(clientId);
                     return;
                 }
 
@@ -1975,54 +2004,38 @@ window.ClientStateManager = {
         }
 
         fetchDrawerViaGateway();
-                        self.state.drawerStatus = 'error';
-                        if (typeof doneCallback === 'function') doneCallback(false, null);
-                    }
-                },
-                error: function(xhr, status) {
-                    if (status === 'abort') return;
-                    if (typeof doneCallback === 'function') doneCallback(false, null, xhr);
-                }
-            });
-        };
-
-        ClientSessionRecoveryManager.executeWithRetry(fetchDrawerData, 1, function(xhr) {
-            var activeCtx = self.state.currentDrawerContext;
-            if (!activeCtx || activeCtx.contextToken !== contextToken || self.state.drawerRequestToken !== requestToken) return;
-
-            var msg = (!xhr || xhr.status === 0 || !navigator.onLine)
-                ? 'Network connection was interrupted. Please check your connectivity.'
-                : 'Could not load client details (HTTP ' + (xhr.status || 500) + '). Please try again.';
-
-            self.state.drawerStatus = 'error';
-            self.state.drawerError = msg;
-
-            $(bodyId).html(`
-                <div class="d-flex flex-column align-items-center justify-content-center p-10 text-center" style="min-height:380px;">
-                    <div class="mb-3 text-danger">
-                        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-                    </div>
-                    <div class="fw-bold fs-6 text-gray-800 mb-1">Failed to Load Client Details</div>
-                    <div class="text-muted fs-7 mb-4 font-poppins">${msg}</div>
-                    <button type="button" class="btn btn-sm btn-primary px-4 py-2" onclick="ClientStateManager.openClientDrawer('${clientId}', '${type}')">
-                        <i class="fas fa-redo me-1"></i> Retry Loading
-                    </button>
-                </div>
-            `);
-        });
     },
 
     // ─── JDCR V5.2: Client-Side Sub-Tab Switcher (< 5ms) ───
     switchDrawerTab: function(clientId, tabName) {
         this.state.selectedClientTab = tabName;
         var cid = Number(clientId);
+        var tenantId = {{ (int) (auth()->user()->company_id ?? 0) }};
+        var renderTab = function(c) {
+            if (c && window.ClientIncrementalRenderer) {
+                var surfaceHtml = ClientIncrementalRenderer.renderTabContent(c, tabName);
+                $(`#jdcr-tab-surface-${cid}`).html(surfaceHtml);
+                $('#jdcr-tabs-list .nav-link').removeClass('active text-primary border-primary border-bottom-2');
+                $(`#jdcr-tabs-list [data-tab="${tabName}"]`).addClass('active text-primary border-primary border-bottom-2');
+            }
+        };
+
         var client = window.ClientMemoryStore ? window.ClientMemoryStore.get(cid) : null;
-        if (client && window.ClientIncrementalRenderer) {
-            var surfaceHtml = ClientIncrementalRenderer.renderTabContent(client, tabName);
-            $(`#jdcr-tab-surface-${cid}`).html(surfaceHtml);
-            $('#jdcr-tabs-list .nav-link').removeClass('active text-primary border-primary border-bottom-2');
-            $(`#jdcr-tabs-list [data-tab="${tabName}"]`).addClass('active text-primary border-primary border-bottom-2');
+        if (client) {
+            renderTab(client);
             this.markTabLoaded(cid, tabName);
+            return;
+        }
+
+        if (window.ClientEntityDB) {
+            var self = this;
+            window.ClientEntityDB.get(tenantId, cid).then(function(rec) {
+                if (rec && rec.data) {
+                    if (window.ClientMemoryStore) window.ClientMemoryStore.set(cid, rec.data);
+                    renderTab(rec.data);
+                    self.markTabLoaded(cid, tabName);
+                }
+            }).catch(function() {});
         }
     },
 
