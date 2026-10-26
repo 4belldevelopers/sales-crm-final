@@ -26,14 +26,17 @@ class JobsTabViewModel
         public readonly array $logoMap,          // [jobId => resolvedLogoPathOrInitial]
         public readonly array $pagination,        // Pagination metadata
         public readonly array $activeFilters,    // Active filter state
-        public readonly int $projectionVersion,  // Observable version identity
-        public readonly string $queryHash,       // Observable query identity
-        public readonly string $generatedAt      // Generation timestamp for telemetry
+        public readonly int $projectionVersion = 1,  // Observable version identity
+        public readonly string $queryHash = '',       // Observable query identity
+        public readonly string $generatedAt = '',      // Generation timestamp for telemetry
+        public readonly array $tabs = [],        // Fully dynamic status tabs
+        public readonly ?string $clientName = null,   // Dynamically resolved client name
+        public readonly string $clientType = 'internal' // 'internal' | 'direct'
     ) {}
 
     public function hasJobs(): bool
     {
-        return !empty($this->jobs);
+        return ! empty($this->jobs);
     }
 
     public function getActiveFilter(): string

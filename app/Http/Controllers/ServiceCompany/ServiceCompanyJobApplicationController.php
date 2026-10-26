@@ -1492,7 +1492,7 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
         ];
 
         return response()->json([
-            'html' => view('service_company.ajax_pages.custom_client_candidates', compact('data', 'company_id', 'jobsMap', 'citiesMap', 'statusMap', 'jobAssignMap', 'jobSkillsMap'))->render(),
+            'html' => view('service_company.ajax_pages.custom_client_candidates_join', compact('data', 'company_id', 'jobsMap', 'citiesMap', 'statusMap', 'jobAssignMap', 'jobSkillsMap'))->render(),
             'pagination' => view('service_company.ajax_pages.pagination', compact('pagination'))->render(),
             'counts' => [
                 'all' => $allCount,
@@ -1509,7 +1509,7 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
         $startTime = microtime(true);
         $company_id = (int) auth()->user()->company_id;
         $client_id = (int) $request->clientid;
-        $size = max(1, min((int) $request->input('size', 20), 100)); // Default 20 for client-first store
+        $size = max(10, min((int) $request->input('size', 10), 100)); // Minimum 10 rows default
 
         $cursorParam = $request->input('cursor');
         $searchAfter = null;
@@ -1530,6 +1530,35 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
 
         // Authoritative Tenancy Scoping (Pure Normalized Envelope + Migration Guard)
         $query = \App\Services\Interview\InterviewTenantScope::forClient($company_id, $client_id, 'internal');
+
+        $search = trim((string) $request->input('search', $request->input('q', '')));
+        if ($search !== '') {
+            $query = [
+                'bool' => [
+                    'must' => [
+                        $query,
+                        [
+                            'multi_match' => [
+                                'query' => $search,
+                                'fields' => [
+                                    'full_name^3',
+                                    'job_title^2',
+                                    'current_designation',
+                                    'interviewer_name',
+                                    'client_name',
+                                    'company_name',
+                                    'round_name',
+                                    'master_status_name',
+                                    'child_status_name',
+                                    'source',
+                                ],
+                                'type' => 'phrase_prefix',
+                            ],
+                        ],
+                    ],
+                ],
+            ];
+        }
 
         $sourceFields = [
             'id', 'full_name', 'current_designation', 'candidate_id', 'condidate_id', 'jobId', 'job_id', 'job_title', 'client_id', 'comId',
@@ -1918,7 +1947,7 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
         $startTime = microtime(true);
         $client_id = (int) $request->clientid;
         $company_id = (int) auth()->user()->company_id;
-        $size = max(1, min((int) $request->input('size', 20), 100)); // Default 20 for client-first store
+        $size = max(10, min((int) $request->input('size', 10), 100)); // Minimum 10 rows default
 
         $cursorParam = $request->input('cursor');
         $searchAfter = null;
@@ -1939,6 +1968,35 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
 
         // Authoritative Tenancy Scoping for Direct Client
         $query = \App\Services\Interview\InterviewTenantScope::forClient($company_id, $client_id, 'direct');
+
+        $search = trim((string) $request->input('search', $request->input('q', '')));
+        if ($search !== '') {
+            $query = [
+                'bool' => [
+                    'must' => [
+                        $query,
+                        [
+                            'multi_match' => [
+                                'query' => $search,
+                                'fields' => [
+                                    'full_name^3',
+                                    'job_title^2',
+                                    'current_designation',
+                                    'interviewer_name',
+                                    'client_name',
+                                    'company_name',
+                                    'round_name',
+                                    'master_status_name',
+                                    'child_status_name',
+                                    'source',
+                                ],
+                                'type' => 'phrase_prefix',
+                            ],
+                        ],
+                    ],
+                ],
+            ];
+        }
 
         $sourceFields = [
             'id', 'full_name', 'current_designation', 'candidate_id', 'condidate_id', 'jobId', 'job_id', 'job_title', 'client_id', 'comId',
@@ -3555,8 +3613,11 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
             mb_strtolower($fullName)
         );
         $jobApplication->job_id = $request->job_id;
-        // $jobApplication->status_id 			=	$applicationStatus->id;
-        $jobApplication->status_id = 8;
+        $targetStatus = (int) ($request->input('master_status_id') ?: ($request->input('current_master_status_id') ?: 8));
+        if (! in_array($targetStatus, [1, 2, 3, 4, 5, 6, 7, 8])) {
+            $targetStatus = 8;
+        }
+        $jobApplication->status_id = $targetStatus;
         $jobApplication->email = ! empty($request->email) ? strtolower(trim($request->email)) : null;
         $jobApplication->phone = $request->phone;
         // $jobApplication->cover_letter 		=	$request->cover_letter;
@@ -3681,7 +3742,7 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
         $jobApplication->skills = $skillStr;
 
         // $jobApplication->master_status_id 	=	$applicationStatus->id;
-        $jobApplication->master_status_id = 8;
+        $jobApplication->master_status_id = $targetStatus;
         $jobApplication->secondrary_email = $request->filled('secondrary_email') ? strtolower(trim($request->secondrary_email)) : null;
         $jobApplication->secondary_mobile = $request->secondary_mobile;
         $submitted_by = '';
@@ -4154,6 +4215,13 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
 
             // Step 5: Atomically increment job-scoped dataset version and broadcast Reverb event
             $rawJobId = (int) (GeneralMethod::value_decrypt($request->job_id) ?: $jobApplication->job_id);
+            if ($rawJobId > 0) {
+                GeneralMethod::invalidateJobCounters((int) $rawJobId, [(int) $company_id]);
+                \Illuminate\Support\Facades\Cache::forget("custome_count_all:v4:{$company_id}:{$rawJobId}");
+                \Illuminate\Support\Facades\Cache::forget("custome_count_all:v3:{$company_id}:{$rawJobId}");
+                \Illuminate\Support\Facades\Cache::forget("custome_count_all:{$company_id}:{$rawJobId}");
+                \Illuminate\Support\Facades\Cache::forget("pipeline:{$company_id}:{$rawJobId}:v".cache()->get("allapptracker_version_company_{$company_id}", 1));
+            }
             $newJobDatasetVersion = 1;
             if ($rawJobId > 0) {
                 try {
@@ -4471,8 +4539,11 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
         $jobApplication = new JobApplication;
         $jobApplication->full_name = $request->full_name;
         $jobApplication->job_id = $request->job_id;
-        // $jobApplication->status_id 			=	$applicationStatus->id;
-        $jobApplication->status_id = 8;
+        $targetStatus = (int) ($request->input('master_status_id') ?: ($request->input('current_master_status_id') ?: 8));
+        if (! in_array($targetStatus, [1, 2, 3, 4, 5, 6, 7, 8])) {
+            $targetStatus = 8;
+        }
+        $jobApplication->status_id = $targetStatus;
         $jobApplication->email = $request->email;
         $jobApplication->phone = $request->phone;
         // $jobApplication->cover_letter 		=	$request->cover_letter;
@@ -4513,7 +4584,7 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
         $jobApplication->skills = $skillStr;
 
         // $jobApplication->master_status_id 	=	$applicationStatus->id;
-        $jobApplication->master_status_id = 8;
+        $jobApplication->master_status_id = $targetStatus;
         $jobApplication->secondrary_email = $request->secondrary_email;
         $jobApplication->secondary_mobile = $request->secondary_mobile;
         $submitted_by = '';

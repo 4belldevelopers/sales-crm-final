@@ -62,18 +62,22 @@ class ClientJobsReadService
             ];
         } else {
             // Direct Client Complete 4-Level Defense-in-Depth Boundary
+            $fromCompId = $partnerPart > 0 ? $partnerPart : (int) $query->clientId;
+            $nestedMust = [
+                ['term' => ['recommendation_relation.to_company_id' => (int) $query->serviceCompanyId]],
+                ['terms' => ['recommendation_relation.final_status' => [1, 2]]],
+            ];
+            if ($fromCompId > 0) {
+                $nestedMust[] = ['term' => ['recommendation_relation.from_company_id' => $fromCompId]];
+            }
+
             $scopeMust = [
-                ['term' => ['client_id' => (int) $query->clientId]],
                 [
                     'nested' => [
                         'path' => 'recommendation_relation',
                         'query' => [
                             'bool' => [
-                                'must' => [
-                                    ['term' => ['recommendation_relation.to_company_id' => (int) $query->serviceCompanyId]],
-                                    ['term' => ['recommendation_relation.from_company_id' => $partnerPart]],
-                                    ['term' => ['recommendation_relation.final_status' => 1]],
-                                ],
+                                'must' => $nestedMust,
                             ],
                         ],
                     ],
@@ -86,7 +90,7 @@ class ClientJobsReadService
             'status_counts' => [
                 'terms' => [
                     'field' => 'status',
-                    'size'  => 10,
+                    'size' => 10,
                 ],
             ],
         ];
@@ -94,7 +98,7 @@ class ClientJobsReadService
         // 3.3 Status & Search Filtering
         $must = $scopeMust;
 
-        if (!empty($query->status) && $query->status !== 'all') {
+        if (! empty($query->status) && $query->status !== 'all') {
             if ($query->status === 'hiring' || $query->status === 'active') {
                 $must[] = ['terms' => ['status' => ['active', 'hiring']]];
             } elseif ($query->status === 'hold') {
@@ -106,7 +110,7 @@ class ClientJobsReadService
             }
         }
 
-        if (!empty($query->search)) {
+        if (! empty($query->search)) {
             $searchFields = config('ats.search.jobs.fields', [
                 'title.keyword^5',
                 'title^3',
@@ -119,10 +123,10 @@ class ClientJobsReadService
 
             $must[] = [
                 'multi_match' => [
-                    'query'                => $query->search,
-                    'fields'               => $searchFields,
-                    'type'                 => 'best_fields',
-                    'operator'             => $operator,
+                    'query' => $query->search,
+                    'fields' => $searchFields,
+                    'type' => 'best_fields',
+                    'operator' => $operator,
                     'minimum_should_match' => $minMatch,
                 ],
             ];
@@ -133,7 +137,7 @@ class ClientJobsReadService
         $sortField = $query->sort === 'created_at' ? 'created_at' : 'id';
         $sort = [
             [$sortField => ['order' => $sortOrder]],
-            ['id'       => ['order' => 'desc']],
+            ['id' => ['order' => 'desc']],
         ];
 
         // 3.5 Bounded _source fields
@@ -144,25 +148,25 @@ class ClientJobsReadService
             'comId', 'location_id', 'category_id', 'client_name', 'client_company',
             'company_name', 'self_company', 'work_type', 'employment_type', 'client_city_jobs',
             'client_contact_info_jobs', 'job_assign', 'recommendation_relation', 'matching_agency_count',
-            'department_name', 'category_name', 'state_version', 'projection_version',
+            'department_name', 'category_name', 'job_metronics_skills', 'logo', 'logo_logical_path', 'state_version', 'projection_version',
         ];
 
         $from = ($query->page - 1) * $query->perPage;
 
         $jobsParams = [
-            'index'         => $indexJobs,
+            'index' => $indexJobs,
             'request_cache' => true,
-            'body'          => [
+            'body' => [
                 '_source' => $sourceFields,
-                'from'    => $from,
-                'size'    => $query->perPage,
-                'sort'    => $sort,
-                'query'   => [
+                'from' => $from,
+                'size' => $query->perPage,
+                'sort' => $sort,
+                'query' => [
                     'bool' => [
                         'must' => $must,
                     ],
                 ],
-                'aggs'    => $aggs,
+                'aggs' => $aggs,
             ],
         ];
 
@@ -196,34 +200,34 @@ class ClientJobsReadService
         // 5. Extract Hits & Defensive Page Clamping
         $filteredCount = (int) ($response['hits']['total']['value'] ?? 0);
         $hits = $response['hits']['hits'] ?? [];
-        $jobs = array_map(fn($h) => (object) $h['_source'], $hits);
+        $jobs = array_map(fn ($h) => (object) $h['_source'], $hits);
 
         // Page clamping: if jobs closed/evicted and page > last_page, adjust page
         $lastPage = (int) max(1, ceil($filteredCount / $query->perPage));
         $currentPage = min($query->page, $lastPage);
 
         // 6. Secondary Query: Candidate Pipeline Stages (Batched O(1))
-        $jobIds = array_filter(array_map(fn($j) => (int) ($j->id ?? 0), $jobs));
+        $jobIds = array_filter(array_map(fn ($j) => (int) ($j->id ?? 0), $jobs));
         $pipelineStageMap = [];
         $logoMap = [];
 
-        if (!empty($jobIds)) {
+        if (! empty($jobIds)) {
             $candParams = [
                 'index' => $indexCandidates,
-                'size'  => 0,
-                'body'  => [
+                'size' => 0,
+                'body' => [
                     'query' => [
                         'bool' => [
                             'filter' => [
                                 ['terms' => ['job_id' => array_values($jobIds)]],
-                                ['term'  => ['company_id' => (int) $query->serviceCompanyId]],
+                                ['term' => ['company_id' => (int) $query->serviceCompanyId]],
                             ],
                         ],
                     ],
                     'aggs' => [
                         'by_job' => [
                             'terms' => ['field' => 'job_id', 'size' => count($jobIds)],
-                            'aggs'  => [
+                            'aggs' => [
                                 'by_stage' => [
                                     'terms' => ['field' => 'master_status_id', 'size' => 10],
                                 ],
@@ -257,23 +261,106 @@ class ClientJobsReadService
                 $initial = strtoupper(mb_substr(trim($title), 0, 1));
                 $logoMap[$jId] = [
                     'initial' => $initial ?: 'J',
-                    'color'   => $this->getInitialColor($initial),
+                    'color' => $this->getInitialColor($initial),
                 ];
             }
         }
 
         // 7. Pagination Contract
         $pagination = [
-            'total'        => $filteredCount,
+            'total' => $filteredCount,
             'current_page' => $currentPage,
-            'last_page'    => $lastPage,
-            'per_page'     => $query->perPage,
-            'from'         => $filteredCount > 0 ? $from + 1 : 0,
-            'to'           => min($filteredCount, $from + count($jobs)),
-            'listType'     => 'client_jobs',
+            'last_page' => $lastPage,
+            'per_page' => $query->perPage,
+            'from' => $filteredCount > 0 ? $from + 1 : 0,
+            'to' => min($filteredCount, $from + count($jobs)),
+            'listType' => 'client_jobs',
         ];
 
-        // 8. Construct View Model
+        // 8. Resolve Authoritative Client Display Name (Strictly 0% MySQL Reads)
+        $clientDisplayName = $query->clientName;
+        if (empty($clientDisplayName) && $query->clientId > 0) {
+            $clientNameKey = "ats:client_display_name:{$query->clientType}:{$query->clientId}";
+            $clientDisplayName = Redis::get($clientNameKey);
+            if (empty($clientDisplayName)) {
+                try {
+                    if ($query->clientType === 'internal') {
+                        $indexClient = defined('ELASTIC_CLIENT_LIST') ? ELASTIC_CLIENT_LIST : config('constants.ELASTIC_CLIENT_LIST', 'ats_client_list_elastic');
+                        $clientDoc = $this->elasticService->getClient()->get([
+                            'index' => $indexClient,
+                            'id' => (string) $query->clientId,
+                        ]);
+                        $clientDisplayName = $clientDoc['_source']['name'] ?? ($clientDoc['_source']['client_name'] ?? '');
+                    } else {
+                        $indexClient = defined('ELASTIC_CLIENT_LIST') ? ELASTIC_CLIENT_LIST : 'ats_client_list_elastic';
+                        if ($this->elasticService->getClient()->exists(['index' => $indexClient, 'id' => (string) $query->clientId])) {
+                            $compDoc = $this->elasticService->getClient()->get([
+                                'index' => $indexClient,
+                                'id' => (string) $query->clientId,
+                            ]);
+                            $clientDisplayName = $compDoc['_source']['company_name'] ?? ($compDoc['_source']['name'] ?? '');
+                        } else {
+                            $indexComp = defined('ELASTIC_COMPANIES_INDEX') ? ELASTIC_COMPANIES_INDEX : config('constants.ELASTIC_COMPANIES_INDEX', 'ats_companies_elastic');
+                            if ($this->elasticService->getClient()->exists(['index' => $indexComp, 'id' => (string) $query->clientId])) {
+                                $compDoc = $this->elasticService->getClient()->get([
+                                    'index' => $indexComp,
+                                    'id' => (string) $query->clientId,
+                                ]);
+                                $clientDisplayName = $compDoc['_source']['company_name'] ?? ($compDoc['_source']['name'] ?? '');
+                            }
+                        }
+                    }
+                    if (! empty($clientDisplayName)) {
+                        Redis::setex($clientNameKey, 3600, (string) $clientDisplayName);
+                    }
+                } catch (\Throwable $e) {
+                    // Graceful fallback with zero MySQL reads
+                }
+            }
+        }
+
+        // Attach resolved client name to jobs missing it
+        foreach ($jobs as $job) {
+            if (empty($job->client_name) && ! empty($clientDisplayName)) {
+                $job->client_name = $clientDisplayName;
+            }
+        }
+
+        // 9. Assemble Fully Dynamic Status Tabs
+        $dynamicTabs = [
+            [
+                'key' => 'all',
+                'label' => 'All Jobs',
+                'count' => $totalCount,
+                'badge_cls' => 'count-primary',
+            ],
+            [
+                'key' => 'hiring',
+                'label' => 'Hiring',
+                'count' => $hiringCount,
+                'badge_cls' => 'count-success',
+            ],
+            [
+                'key' => 'hold',
+                'label' => 'On Hold',
+                'count' => $holdCount,
+                'badge_cls' => 'count-warning',
+            ],
+            [
+                'key' => 'closed',
+                'label' => 'Closed',
+                'count' => $closedCount,
+                'badge_cls' => 'count-danger',
+            ],
+            [
+                'key' => 'inactive',
+                'label' => 'Inactive',
+                'count' => $inactiveCount,
+                'badge_cls' => 'count-neutral',
+            ],
+        ];
+
+        // 10. Construct View Model
         $viewModel = new JobsTabViewModel(
             totalCount: $totalCount,
             filteredCount: $filteredCount,
@@ -289,9 +376,12 @@ class ClientJobsReadService
                 'status' => $query->status,
                 'search' => $query->search,
             ],
+            tabs: $dynamicTabs,
             projectionVersion: $currentVersion,
             queryHash: md5($cacheKey),
-            generatedAt: now()->toIso8601String()
+            generatedAt: now()->toIso8601String(),
+            clientName: $clientDisplayName,
+            clientType: $query->clientType
         );
 
         // 9. Store in Redis Query Cache

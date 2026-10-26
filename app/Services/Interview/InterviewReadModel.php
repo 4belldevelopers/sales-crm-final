@@ -29,10 +29,52 @@ class InterviewReadModel
         $initial = strtoupper(mb_substr($fullName, 0, 1) ?: 'C');
         $designation = trim((string) ($source['current_designation'] ?? '—'));
 
-        // Job details
+        // Candidate Avatar Color
+        $firstChar = strtolower(mb_substr($fullName, 0, 1) ?: 'a');
+        $ord = ord($firstChar);
+        if ($ord >= 97 && $ord <= 101) {
+            $avatarColorClass = 'it-avatar-red';
+        } elseif ($ord >= 102 && $ord <= 106) {
+            $avatarColorClass = 'it-avatar-orange';
+        } elseif ($ord >= 107 && $ord <= 111) {
+            $avatarColorClass = 'it-avatar-blue';
+        } elseif ($ord >= 112 && $ord <= 116) {
+            $avatarColorClass = 'it-avatar-green';
+        } elseif ($ord >= 117 && $ord <= 121) {
+            $avatarColorClass = 'it-avatar-purple';
+        } else {
+            $avatarColorClass = 'it-avatar-gray';
+        }
+
+        // Candidate Follow-up (view-only)
+        $fuStatus = $source['followup_status'] ?? null;
+        $fuAt = $source['followup_status_at'] ?? null;
+        $fuFormattedAt = null;
+        if ($fuAt) {
+            try {
+                $fuFormattedAt = Carbon::parse($fuAt)->format('d M, h:i A');
+            } catch (Throwable $e) {
+                $fuFormattedAt = (string) $fuAt;
+            }
+        }
+        $fuLabels = ['confirmed' => 'Confirmed', 'no-response' => 'No Response', 'rescheduled' => 'Rescheduled'];
+        $fuLabel = $fuLabels[$fuStatus] ?? null;
+        $fuStyleClass = $fuStatus === 'confirmed' ? 'confirmed' : ($fuStatus === 'no-response' ? 'danger' : ($fuStatus === 'rescheduled' ? 'info' : ''));
+
+        // Job details & Classification
         $jobId = (int) ($source['jobId'] ?? ($source['job_id'] ?? 0));
         $jobTitle = trim((string) ($source['job_title'] ?? 'Job Position'));
         $clientName = trim((string) ($source['client_name'] ?? ($source['company_name'] ?? '')));
+
+        $recommendationId = (int) ($source['recommendation_id'] ?? 0);
+        $toCompanyId = (int) ($source['to_company_id'] ?? 0);
+        $isDirect = ($recommendationId > 0 && $authCompanyId && $toCompanyId === (int) $authCompanyId);
+
+        $jobTypeLabel = $isDirect ? 'Direct Client' : 'Internal';
+        $jobTypeClass = $isDirect ? 'it-job-type-direct' : 'it-job-type-internal';
+        $displayCompName = $isDirect
+            ? ($source['company_name'] ?? ($source['uc_company_name'] ?? ($source['client_name'] ?? '')))
+            : ($source['client_name'] ?? ($source['company_name'] ?? ''));
 
         // Schedule & Timing
         $scheduleDateRaw = $source['schedule_date'] ?? null;
@@ -59,22 +101,37 @@ class InterviewReadModel
             $timeFormatted = $timeFrom . ($tz ? " ({$tz})" : '');
         }
 
-        // Mode and Round
-        $modeName = trim((string) ($source['mode_name'] ?? ($source['interview_mode'] ?? 'Video')));
+        // Mode and Link/Address
+        $modeName = trim((string) ($source['mode_name'] ?? 'Video Call'));
+        $interviewMode = (int) ($source['interview_mode'] ?? ($source['mode'] ?? 2));
         $modeLower = strtolower($modeName);
-        $modeIcon = 'fa-video';
-        $modeLabel = $modeName ?: 'Video';
+        $modeIconType = 'video';
+        $modeDisplayLabel = $modeName ?: 'Video Call';
+        $modeIconLegacy = 'fa-video';
 
-        if (str_contains($modeLower, 'phone') || str_contains($modeLower, 'call')) {
-            $modeIcon = 'fa-phone-alt';
-            $modeLabel = 'Phone';
-        } elseif (str_contains($modeLower, 'person') || str_contains($modeLower, 'office') || str_contains($modeLower, 'offline')) {
-            $modeIcon = 'fa-building';
-            $modeLabel = 'In-Person';
+        if ($interviewMode == 1 || str_contains($modeLower, 'person') || str_contains($modeLower, 'face') || str_contains($modeLower, 'office') || str_contains($modeLower, 'offline')) {
+            $modeIconType = 'map-marker';
+            $modeIconLegacy = 'fa-building';
+            $modeDisplayLabel = $modeName ?: 'Face to Face';
+        } elseif ($interviewMode == 3 || str_contains($modeLower, 'phone') || str_contains($modeLower, 'call')) {
+            $modeIconType = 'phone';
+            $modeIconLegacy = 'fa-phone-alt';
+            $modeDisplayLabel = $modeName ?: 'Phone Call';
         }
 
         $roundName = trim((string) ($source['round_name'] ?? ($source['mode_lavel_name'] ?? 'Interview')));
         $meetingLink = trim((string) ($source['interview_mention_link'] ?? ($source['meeting_link'] ?? ($source['url_link'] ?? ''))));
+
+        $isUrl = (bool) preg_match('#^https?://#i', $meetingLink);
+        $ilType = null;
+        $ilLabel = '';
+        if ($modeIconType === 'map-marker' && $meetingLink !== '') {
+            $ilType = 'address';
+            $ilLabel = 'View Address';
+        } elseif ($isUrl) {
+            $ilType = 'link';
+            $ilLabel = 'Interview Link';
+        }
 
         // Attendance / Available Status
         // 0 = Scheduled, 1 = Attended, 2 = No Show, 3 = Rescheduled, 4 = Cancelled by Company, 6 = Other, 7 = Cancelled by Candidate
@@ -104,6 +161,59 @@ class InterviewReadModel
         $starRating = (float) ($source['average_star_rating'] ?? 0);
         $evaluation['star_rating'] = $starRating > 0 ? round($starRating, 1) : null;
 
+        // Feedback View Presentation (Read-Only)
+        $resultKey = $source['interview_result'] ?? null;
+        $recommendationKey = $source['overall_recommendation'] ?? null;
+
+        $feedbackText = 'Pending';
+        $feedbackColor = '#f59e0b'; // orange/amber
+        $feedbackIcon = 'clock';
+
+        if ($availableStatus === 1) { // Attended
+            if ($resultKey === 'selected' || $feedbackCode === 1) {
+                $feedbackText = 'Selected';
+                $feedbackColor = '#10b981';
+                $feedbackIcon = 'check';
+            } elseif ($resultKey === 'rejected' || $resultKey === 'fake_proxy' || in_array($feedbackCode, [3, 4], true)) {
+                $feedbackText = ($resultKey === 'fake_proxy' || $feedbackCode === 4) ? 'Fake / Proxy' : 'Rejected';
+                $feedbackColor = '#ef4444';
+                $feedbackIcon = 'times';
+            } elseif ($resultKey === 'hold' || $feedbackCode === 2) {
+                $feedbackText = 'Hold';
+                $feedbackColor = '#f59e0b';
+                $feedbackIcon = 'exclamation-circle';
+            } else {
+                $feedbackText = 'Feedback Pending';
+                $feedbackColor = '#f59e0b';
+                $feedbackIcon = 'clock';
+            }
+        } elseif ($availableStatus === 2) {
+            $feedbackText = 'No Show';
+            $feedbackColor = '#f59e0b';
+            $feedbackIcon = 'exclamation-triangle';
+        } elseif ($availableStatus === 3) {
+            $feedbackText = 'Rescheduled';
+            $feedbackColor = '#3b82f6';
+            $feedbackIcon = 'history';
+        } elseif ($availableStatus === 4 || $availableStatus === 7) {
+            $feedbackText = 'Cancelled';
+            $feedbackColor = '#ef4444';
+            $feedbackIcon = 'times-circle';
+        } else {
+            $feedbackText = 'Pending';
+            $feedbackColor = '#f59e0b';
+            $feedbackIcon = 'clock';
+        }
+
+        $recLabels = [
+            'strong_hire' => ['label' => 'Strong Hire', 'bg' => '#dcfce7', 'color' => '#16a34a'],
+            'hire' => ['label' => 'Hire', 'bg' => '#dcfce7', 'color' => '#16a34a'],
+            'consider' => ['label' => 'Consider', 'bg' => '#fef3c7', 'color' => '#d97706'],
+            'no_hire' => ['label' => 'No Hire', 'bg' => '#fee2e2', 'color' => '#dc2626'],
+            'strong_no_hire' => ['label' => 'Strong No Hire', 'bg' => '#fee2e2', 'color' => '#dc2626'],
+        ];
+        $recommendation = $recommendationKey && isset($recLabels[$recommendationKey]) ? $recLabels[$recommendationKey] : null;
+
         // Action Eligibility Computation (Server-Authoritative Time Windows)
         $now = Carbon::now('UTC');
         $joinAllowed = false;
@@ -112,7 +222,7 @@ class InterviewReadModel
 
         if ($scheduleCarbon && !empty($meetingLink) && in_array($availableStatus, [0, 3], true)) {
             $windowStart = $scheduleCarbon->copy()->subMinutes(15);
-            $windowEnd = $scheduleCarbon->copy()->addMinutes(60); // 45 min interview + 15 min grace
+            $windowEnd = $scheduleCarbon->copy()->addMinutes(60);
 
             $joinWindow = [
                 'starts_at' => $windowStart->toIso8601String(),
@@ -138,6 +248,9 @@ class InterviewReadModel
         $interviewers = [];
         $rawInterviewers = $source['interviewers'] ?? ($source['interviewer_name'] ?? '');
         $companyNameDefault = trim((string) ($source['company_name'] ?? 'Panel'));
+        $leadName = 'N/A';
+        $leadCompany = trim((string) ($source['uc_company_name'] ?? ($source['company_name'] ?? 'Panel')));
+        $extraCount = 0;
 
         if (!empty($rawInterviewers)) {
             $names = is_array($rawInterviewers)
@@ -152,12 +265,45 @@ class InterviewReadModel
                     'company_name' => $companyNameDefault,
                 ];
             }
+
+            if (!empty($names)) {
+                $leadName = ucwords($names[0]);
+                $extraCount = max(0, count($names) - 1);
+            }
         }
 
-        // Master & Child Status
-        $masterStatusName = trim((string) ($source['master_status_name'] ?? 'Interview'));
+        // Source (Recruiter / Spokperson)
+        $sourceName = trim((string) ($source['submitted_by_name'] ?? ($source['posted_by'] ?? ($source['spokperson_name'] ?? ($source['source'] ?? '—')))));
+        $sourceCompany = trim((string) ($source['submitted_by_company_name'] ?? ($source['post_company_name'] ?? ($source['from_company_name'] ?? ($source['uc_company_name'] ?? ($source['company_name'] ?? ''))))));
+
+        // Master & Child Status / Stage
+        $masterStatusName = trim((string) ($source['master_status_name'] ?? 'In Review'));
         $childStatusName = trim((string) ($source['child_status_name'] ?? ''));
+        $masterStatusId = (int) ($source['master_status_id'] ?? 0);
+        if ($masterStatusId === 8 && empty($childStatusName)) {
+            $childStatusName = 'Private';
+        }
         $cssStyle = trim((string) ($source['css_style'] ?? 'badge-light-primary'));
+
+        $stageLower = strtolower($masterStatusName);
+        $stageBadgeClass = 'it-badge-blue';
+        if (str_contains($stageLower, 'review') || str_contains($stageLower, 'inw')) {
+            $stageBadgeClass = 'it-badge-yellow';
+        } elseif (str_contains($stageLower, 'sourc') || str_contains($stageLower, 'sou')) {
+            $stageBadgeClass = 'it-badge-gray';
+        } elseif (str_contains($stageLower, 'screen') || str_contains($stageLower, 'scr')) {
+            $stageBadgeClass = 'it-badge-purple';
+        } elseif (str_contains($stageLower, 'evaluat') || str_contains($stageLower, 'eva')) {
+            $stageBadgeClass = 'it-badge-blue';
+        } elseif (str_contains($stageLower, 'negot') || str_contains($stageLower, 'neg')) {
+            $stageBadgeClass = 'it-badge-pink';
+        } elseif (str_contains($stageLower, 'offer') || str_contains($stageLower, 'off')) {
+            $stageBadgeClass = 'it-badge-orange';
+        } elseif (str_contains($stageLower, 'join') || str_contains($stageLower, 'joi')) {
+            $stageBadgeClass = 'it-badge-green';
+        } elseif (str_contains($stageLower, 'reject') || str_contains($stageLower, 'rej')) {
+            $stageBadgeClass = 'it-badge-red';
+        }
 
         return [
             'id' => $id,
@@ -166,25 +312,56 @@ class InterviewReadModel
                 'name' => $fullName,
                 'initial' => $initial,
                 'designation' => $designation,
+                'avatar_color_class' => $avatarColorClass,
                 'email' => trim((string) ($source['email'] ?? '')),
                 'phone' => trim((string) ($source['phone'] ?? '')),
+            ],
+            'followup' => [
+                'status' => $fuStatus,
+                'label' => $fuLabel,
+                'style_class' => $fuStyleClass,
+                'formatted_at' => $fuFormattedAt,
             ],
             'job' => [
                 'id' => $jobId,
                 'title' => $jobTitle,
                 'client_name' => $clientName,
+                'display_company_name' => $displayCompName,
+                'job_type_label' => $jobTypeLabel,
+                'job_type_class' => $jobTypeClass,
+                'job_id_display' => $jobId ? "#{$jobId}" : '',
             ],
             'schedule' => [
                 'date_raw' => $scheduleDateRaw,
                 'date_formatted' => $dateFormatted,
                 'time_formatted' => $timeFormatted,
-                'mode_icon' => $modeIcon,
-                'mode_label' => $modeLabel,
+                'mode_icon' => $modeIconLegacy,
+                'mode_icon_type' => $modeIconType,
+                'mode_label' => $modeDisplayLabel,
                 'round_name' => $roundName,
                 'meeting_link' => $meetingLink,
+                'link_type' => $ilType,
+                'link_label' => $ilLabel,
+            ],
+            'interviewers' => $interviewers,
+            'interviewers_summary' => [
+                'lead_name' => $leadName,
+                'lead_company' => $leadCompany,
+                'extra_count' => $extraCount,
+                'extra_label' => $extraCount > 0 ? "+{$extraCount}" : '',
+            ],
+            'source_info' => [
+                'name' => $sourceName,
+                'company_name' => $sourceCompany,
             ],
             'attendance' => $attendance,
             'evaluation' => $evaluation,
+            'feedback_view' => [
+                'status_text' => $feedbackText,
+                'status_color' => $feedbackColor,
+                'status_icon' => $feedbackIcon,
+                'recommendation' => $recommendation,
+            ],
             'actions' => [
                 'join_allowed' => $joinAllowed,
                 'join_window_state' => $joinWindowState,
@@ -193,11 +370,11 @@ class InterviewReadModel
                 'feedback_submit_allowed' => $feedbackSubmitAllowed,
                 'reschedule_allowed' => $rescheduleAllowed,
             ],
-            'interviewers' => $interviewers,
             'stage' => [
                 'master_status_name' => $masterStatusName,
                 'child_status_name' => $childStatusName,
                 'css_style' => $cssStyle,
+                'badge_class' => $stageBadgeClass,
             ],
         ];
     }

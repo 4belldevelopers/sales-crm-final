@@ -155,15 +155,10 @@
             <td>
                 @php
 
-                    $current_ctc_cur = '';
-                    $current_ctc_cur = $currencySymbole[@$row->current_ctc_cur];
-
-                    $current_ectc_cur = '';
-                    $current_ectc_cur = $currencySymbole[@$row->current_ectc_cur];
-
-                    if ($row->condidate_type == 'bench_condidate') {
-                        $current_ectc_cur = $currencySymbole[@$row->bill_rate_currency];
-                    }
+                    $safeCtcCur = @$row->current_ctc_cur ?? 0;
+                    $safeEctcCur = ($row->condidate_type == 'bench_condidate') ? (@$row->bill_rate_currency ?? 0) : (@$row->current_ectc_cur ?? 0);
+                    $current_ctc_cur = $currencySymbole[$safeCtcCur] ?? ($currencySymbole[\App\Services\CurrencyService::resolveCurrencyCode($safeCtcCur)] ?? '');
+                    $current_ectc_cur = $currencySymbole[$safeEctcCur] ?? ($currencySymbole[\App\Services\CurrencyService::resolveCurrencyCode($safeEctcCur)] ?? '');
 
                     $ctc = '';
                     $ctc = GeneralMethod::thousandsCurrencyFormat($row->ctc);

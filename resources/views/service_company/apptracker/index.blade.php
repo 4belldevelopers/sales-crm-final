@@ -2720,8 +2720,6 @@
 
                 if (statusId >= 1 && statusId <= 7) {
                     incrementDomBadge('#bg_' + statusId, delta);
-                } else if (statusId === 8) {
-                    incrementDomBadge('#benchTalentReq_counter', delta);
                 }
             }
 
