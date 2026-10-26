@@ -20,7 +20,19 @@ Last updated: 2026-10-22 (Super Admin Companies Page UI Redesign, 100% CQRS Read
 - **Test coverage:** `TenantIsolationTest`, `BenchToJobAppTrackerPipelineContractTest`, `BenchTalentRequestPipelineContractTest`, `SuperAdminCompanyLoadTest`, `SuperAdminSubscriptionLoadTest`, `SuperAdminDashboardLoadTest` (100% green).
 - **V2_login blocking-scenarios architecture:** session-epoch pattern + Reverb `UserAccountSuspended` event + `SyncUserStatusAction` (cross-tenant-safe) + `BlockCompanyAction` (static bulk helper) + `block_log` audit table + drop all 20 `refresh:true` ES sites + grep-lint guard. See [docs/V2_login/BLOCKING_SCENARIOS_AUDIT.md](../docs/V2_login/BLOCKING_SCENARIOS_AUDIT.md), [ADR 0007](../docs/adr/0007-blocking-scenarios-architecture.md). Code not yet landed.
 
-- *2026-10-26* — **Client Listing & Drawer Workflow: God-Level Architecture, Idle Session Heartbeat & Tab Isolation Fix (100% COMPLETED & VERIFIED)**:
+- *2026-10-26* — **Client Drawer Hero Section: Streamlined Executive Minimalist Redesign (100% COMPLETED & VERIFIED)**:
+  - **Scope**: Internal Client Drawer (`show.blade.php`), Direct Client Drawer (`dviewMore.blade.php`), Direct Client Mandate Drawer (`requestviewmore.blade.php`).
+  - **Design Specification & Duplication Elimination**:
+    - Completely eliminated duplicate company directory items (Industry, Location, Company Type, Workforce, Founded) which are already in the **Client Information** vertical list card in the Overview tab.
+    - Completely eliminated duplicate raw counting boxes that repeated what the navigation tab badges already display.
+    - **Streamlined 2-Flank Minimalist Layout (`.cd-hero-streamlined`)**:
+      - **Top Left**: Company Name (with avatar & verified badge) + `#CL-{id}` badge.
+      - **Middle Left**: Direct clickable Website link (`🌐 domain.com ↗`).
+      - **Top Right**: Scope badge (`[🏢 Internal Client]` / `[🤝 Direct Client]`).
+      - **Middle Right**: Live Status & Active Positions (`[🟢 Active] | ⚡ X Active Positions` with 1-click navigation to `#requisitions` tab).
+      - **Bottom Row**: Horizontal Tags strip (`Tags: [Software Development] [FinTech] ...`).
+    - **Vertical Space Reclaimed**: Total header height reduced to ~78px, saving over **90px of vertical space** for standard 15.6" screens (`1366×768` and `1920×1080` at 125% OS scaling).
+  - **Verification**: `php -l` passed clean across all 3 view templates; `php artisan view:clear` passed; automated rendering tests (`test_streamlined_hero.php` & `test_all_three_drawers.php`) verified 100% clean rendering with zero undefined variables.
   - **Scope**: Complete Client Listing flow across all 6 tabs (`all`, `internal`, `direct`, `hiring`, `inactive`, `request`) and all client drawers (`show.blade.php`, `dviewMore.blade.php`, `requestviewmore.blade.php`).
   - **Issues Resolved**:
     1. **Blank Drawer / 500 Crash on Client Switch**:
