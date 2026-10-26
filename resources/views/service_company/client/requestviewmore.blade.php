@@ -253,6 +253,16 @@
         padding: 2px 7px !important;
         border-radius: 5px !important;
     }
+    .cd-top-actions {
+        display: flex !important;
+        align-items: center !important;
+        gap: 8px !important;
+        flex-wrap: wrap !important;
+    }
+    .cd-top-close-wrap {
+        display: flex !important;
+        align-items: center !important;
+    }
     .cd-hdr-btn-close {
         width: 32px !important;
         height: 32px !important;
@@ -1013,8 +1023,8 @@
             display: flex !important;
             align-items: center !important;
             gap: 8px !important;
-            flex: 0 0 145px !important;
-            min-width: 125px !important;
+            flex: 0 0 132px !important;
+            min-width: 110px !important;
           }
           .cd-vinfo-icon {
             width: 26px !important;
@@ -1135,62 +1145,158 @@
             border-color: #cbd5e1 !important;
           }
 
+          /* Enterprise Location Sub-Cards */
           .cd-loc-group {
             display: flex !important;
             flex-direction: column !important;
-            gap: 6px !important;
+            gap: 8px !important;
             width: 100% !important;
           }
           .cd-loc-card {
-            background: #f8fafc !important;
-            border: 1px solid #eef2f6 !important;
-            border-radius: 6px !important;
-            padding: 6px 9px !important;
+            background: #ffffff !important;
+            border: 1px solid #e2e8f0 !important;
+            border-left: 3.5px solid #94a3b8 !important;
+            border-radius: 7px !important;
+            padding: 8px 11px !important;
             text-align: left !important;
             width: 100% !important;
+            box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03) !important;
+            transition: all 0.2s ease !important;
           }
+          .cd-loc-card:hover {
+            border-color: #cbd5e1 !important;
+            box-shadow: 0 3px 6px rgba(15, 23, 42, 0.05) !important;
+          }
+          .cd-loc-card.is-primary,
           .cd-loc-card.hq {
-            background: #f0f7ff !important;
+            background: #f8fbff !important;
             border-color: #dbeafe !important;
+            border-left: 3.5px solid #2563eb !important;
           }
+          .cd-loc-card.is-primary:hover,
+          .cd-loc-card.hq:hover {
+            border-color: #bfdbfe !important;
+            box-shadow: 0 3px 8px rgba(37, 99, 235, 0.08) !important;
+          }
+          .cd-loc-header,
           .cd-loc-top {
             display: flex !important;
             align-items: center !important;
             justify-content: space-between !important;
             gap: 8px !important;
-            margin-bottom: 2px !important;
+            margin-bottom: 5px !important;
           }
+          .cd-loc-header-left {
+            display: inline-flex !important;
+            align-items: center !important;
+            gap: 5px !important;
+            flex-shrink: 0 !important;
+          }
+          .cd-loc-badge,
           .cd-loc-tag {
-            font-size: 9px !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            font-size: 10px !important;
             font-weight: 700 !important;
+            line-height: 1 !important;
+            white-space: nowrap !important;
+            flex-shrink: 0 !important;
+            padding: 3px 7px !important;
+            border-radius: 4px !important;
+            letter-spacing: 0.2px !important;
             text-transform: uppercase !important;
-            letter-spacing: 0.3px !important;
-            padding: 1px 5px !important;
-            border-radius: 3px !important;
           }
+          .cd-loc-badge.loc-primary,
           .cd-loc-tag.hq {
+            background: #eff6ff !important;
+            color: #1d4ed8 !important;
+            border: 1px solid #bfdbfe !important;
+          }
+          .cd-loc-badge.loc-secondary,
+          .cd-loc-tag.branch {
+            background: #f1f5f9 !important;
+            color: #334155 !important;
+            border: 1px solid #cbd5e1 !important;
+          }
+          .cd-loc-hq-tag {
+            display: inline-flex !important;
+            align-items: center !important;
+            font-size: 8.5px !important;
+            font-weight: 800 !important;
+            line-height: 1 !important;
+            text-transform: uppercase !important;
+            letter-spacing: 0.4px !important;
             background: #2563eb !important;
             color: #ffffff !important;
+            padding: 2.5px 5px !important;
+            border-radius: 3px !important;
+            white-space: nowrap !important;
+            flex-shrink: 0 !important;
           }
-          .cd-loc-tag.branch {
-            background: #e2e8f0 !important;
+          .cd-loc-country-pill {
+            display: inline-flex !important;
+            align-items: center !important;
+            font-size: 10px !important;
+            font-weight: 600 !important;
+            line-height: 1 !important;
             color: #475569 !important;
+            background: #ffffff !important;
+            border: 1px solid #e2e8f0 !important;
+            padding: 2.5px 8px !important;
+            border-radius: 12px !important;
+            white-space: nowrap !important;
+            flex-shrink: 0 !important;
+            box-shadow: 0 1px 2px rgba(15, 23, 42, 0.02) !important;
           }
-          .cd-loc-title {
+          .cd-loc-city-line {
             font-size: 12px !important;
+            line-height: 1.35 !important;
+            margin-bottom: 3px !important;
+            word-break: break-word !important;
+          }
+          .cd-loc-city-name,
+          .cd-loc-title {
             font-weight: 700 !important;
             color: #0f172a !important;
           }
+          .cd-loc-state-name {
+            font-weight: 500 !important;
+            color: #475569 !important;
+          }
+          .cd-loc-street-line,
           .cd-loc-street {
+            display: flex !important;
+            align-items: flex-start !important;
+            gap: 5px !important;
             font-size: 11px !important;
             color: #475569 !important;
-            line-height: 1.3 !important;
+            line-height: 1.35 !important;
             word-break: break-word !important;
+            margin-bottom: 2px !important;
           }
+          .cd-loc-meta-line {
+            display: flex !important;
+            align-items: center !important;
+            gap: 6px !important;
+            margin-top: 4px !important;
+          }
+          .cd-loc-meta-chip,
           .cd-loc-postcode {
-            font-size: 10.5px !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            background: #f8fafc !important;
+            border: 1px solid #e2e8f0 !important;
+            border-radius: 4px !important;
+            padding: 1.5px 6px !important;
+            font-size: 10px !important;
+            font-weight: 500 !important;
             color: #64748b !important;
-            margin-top: 1px !important;
+            line-height: 1.2 !important;
+          }
+          .cd-loc-meta-chip strong {
+            color: #0f172a !important;
+            font-weight: 700 !important;
+            margin-left: 3px !important;
           }
 
           .cd-type-badge-pill {
@@ -1352,32 +1458,9 @@
         <div class="cd-req-scope">
             <!-- ── Tier 1: Action Header Toolbar Card ── -->
             <div class="cd-top-bar">
-                <div class="cd-top-bar-left">
-                    <div class="cd-top-title-wrap">
-                        <div class="cd-top-breadcrumbs">
-                            <span class="cd-breadcrumb-chip"><i class="fas fa-building text-primary me-1"></i> Clients</span>
-                            <i class="fas fa-chevron-right text-muted" style="font-size: 8px;"></i>
-                            <span class="cd-breadcrumb-chip fw-bold text-dark">{{ $detailName }}</span>
-                            <span class="cd-client-id-pill">#{{ @$directClientDetail->client_id }}</span>
-                        </div>
-                        <div class="cd-top-badge-row">
-                            <span class="cd-client-type-badge-pill direct">
-                                <i class="fas fa-handshake me-1" style="color: #059669;"></i> Direct Client Request
-                            </span>
-                            @if (!empty($industries_name))
-                                <span class="cd-param-badge-pill">
-                                    <i class="fas fa-industry text-primary me-1"></i> {{ $industries_name }}
-                                </span>
-                            @endif
-                            @if (!empty($city_name))
-                                <span class="cd-param-badge-pill">
-                                    <i class="fas fa-location-dot text-danger me-1"></i> {{ ucwords($city_name) }}
-                                </span>
-                            @endif
-                        </div>
-                    </div>
+                <div class="cd-top-actions">
                 </div>
-                <div class="cd-top-right-actions">
+                <div class="cd-top-close-wrap">
                     <button type="button" class="cd-hdr-btn-close cd-close-drawer" id="kt_activitiesRequest_close_btn" title="Close Drawer">
                         <i class="fas fa-times"></i>
                     </button>
