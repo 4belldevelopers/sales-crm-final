@@ -1923,7 +1923,7 @@ use Carbon\Carbon;
             overflow: hidden;
           }
 
-          /* TIER 1: Searchbar & Filter Toolbar Card */
+          /* TIER 1: Top Header Toolbar Card (Single Row) */
           .cd-contact-toolbar-card {
             background: #ffffff;
             border: 1px solid #e2e8f0;
@@ -1934,18 +1934,18 @@ use Carbon\Carbon;
             align-items: center;
             justify-content: space-between;
             gap: 12px;
-            flex-wrap: wrap;
             box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03);
           }
           .cd-contact-toolbar-left {
             display: flex;
             align-items: center;
             gap: 12px;
-            flex: 1 1 300px;
+            min-width: 0;
+            flex: 1 1 auto;
           }
           .cd-contact-title-avatar {
-            width: 36px;
-            height: 36px;
+            width: 38px;
+            height: 38px;
             border-radius: 8px;
             background: #eff6ff;
             color: #009ef7;
@@ -1960,13 +1960,15 @@ use Carbon\Carbon;
             display: flex;
             flex-direction: column;
             gap: 2px;
+            min-width: 0;
           }
           .cd-contact-title {
-            font-size: 14.5px;
+            font-size: 15px;
             font-weight: 700;
             color: #0f172a;
             margin: 0;
-            line-height: 1.2;
+            line-height: 1.25;
+            white-space: nowrap;
           }
           .cd-contact-subtitle {
             font-size: 11.5px;
@@ -1982,6 +1984,7 @@ use Carbon\Carbon;
             padding: 1px 8px;
             font-size: 11px;
             font-weight: 600;
+            white-space: nowrap;
           }
           .cd-contact-scope-pill {
             background: #eff6ff;
@@ -1991,38 +1994,39 @@ use Carbon\Carbon;
             padding: 1px 7px;
             font-size: 10.5px;
             font-weight: 600;
+            white-space: nowrap;
           }
           .cd-contact-toolbar-right {
             display: flex;
             align-items: center;
             gap: 8px;
-            flex-wrap: wrap;
+            flex-shrink: 0;
           }
 
-          /* Search Sub-Card */
+          /* Search Sub-Card (Positioned in Top Header Toolbar) */
           .cd-contact-search-subcard {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            background: #f8fafc;
-            border: 1px solid #e2e8f0;
-            border-radius: 8px;
-            padding: 0 10px 0 12px;
-            height: 36px;
-            width: 100%;
-            max-width: 360px;
-            transition: all 0.15s ease-in-out;
-            position: relative;
+            display: flex !important;
+            align-items: center !important;
+            gap: 8px !important;
+            background: #f8fafc !important;
+            border: 1px solid #e2e8f0 !important;
+            border-radius: 8px !important;
+            padding: 0 10px 0 12px !important;
+            height: 36px !important;
+            width: 320px !important;
+            max-width: 100% !important;
+            transition: all 0.15s ease-in-out !important;
+            position: relative !important;
           }
           .cd-contact-search-subcard:focus-within {
-            background: #ffffff;
-            border-color: #009ef7;
-            box-shadow: 0 0 0 3px rgba(0, 158, 247, 0.12);
+            background: #ffffff !important;
+            border-color: #009ef7 !important;
+            box-shadow: 0 0 0 3px rgba(0, 158, 247, 0.12) !important;
           }
           .cd-contact-search-subcard i.fa-search {
-            color: #94a3b8;
-            font-size: 12px;
-            flex-shrink: 0;
+            color: #94a3b8 !important;
+            font-size: 12px !important;
+            flex-shrink: 0 !important;
           }
           .cd-contact-search-subcard input {
             border: none !important;
@@ -2031,26 +2035,26 @@ use Carbon\Carbon;
             box-shadow: none !important;
             font-size: 12px !important;
             color: #0f172a !important;
-            width: 100%;
+            width: 100% !important;
             padding: 0 !important;
-            line-height: 36px;
-            font-family: inherit;
+            line-height: 36px !important;
+            font-family: inherit !important;
           }
           .cd-contact-search-subcard input::placeholder {
-            color: #94a3b8;
-            font-weight: 400;
+            color: #94a3b8 !important;
+            font-weight: 400 !important;
           }
           .cd-contact-search-clear {
-            border: none;
-            background: transparent;
-            color: #94a3b8;
-            cursor: pointer;
-            padding: 2px 4px;
-            font-size: 11px;
-            transition: color 0.15s;
+            border: none !important;
+            background: transparent !important;
+            color: #94a3b8 !important;
+            cursor: pointer !important;
+            padding: 2px 4px !important;
+            font-size: 11px !important;
+            transition: color 0.15s !important;
           }
           .cd-contact-search-clear:hover {
-            color: #ef4444;
+            color: #ef4444 !important;
           }
 
           .cd-contact-action-subcard {
@@ -2169,12 +2173,12 @@ use Carbon\Carbon;
             transform: translateY(-1px) !important;
           }
 
-          /* Discrete Sub-Cards Grid */
+          /* Discrete Sub-Cards Grid (3 Columns calibrated for 15.6" and smaller screens) */
           .cd-contact-card-grid {
             display: grid !important;
-            grid-template-columns: minmax(0, 2.1fr) minmax(0, 2.1fr) minmax(0, 1.4fr) minmax(0, 1.1fr) minmax(0, 1.3fr) !important;
-            gap: 8px !important;
-            padding: 9px 11px !important;
+            grid-template-columns: minmax(0, 1.25fr) minmax(0, 1.2fr) minmax(0, 1.05fr) !important;
+            gap: 10px !important;
+            padding: 10px 12px !important;
             width: 100% !important;
             max-width: 100% !important;
             align-items: stretch !important;
@@ -2186,7 +2190,7 @@ use Carbon\Carbon;
             background: #f8fafc !important;
             border: 1px solid #edf2f7 !important;
             border-radius: 8px !important;
-            padding: 7px 9px !important;
+            padding: 8px 10px !important;
             display: flex !important;
             flex-direction: column !important;
             justify-content: space-between !important;
@@ -2197,25 +2201,25 @@ use Carbon\Carbon;
             display: flex !important;
             align-items: center !important;
             justify-content: space-between !important;
-            margin-bottom: 5px !important;
-            gap: 4px !important;
+            margin-bottom: 6px !important;
+            gap: 6px !important;
             line-height: 1 !important;
           }
           .cd-contact-subcard-label {
-            font-size: 9.5px !important;
+            font-size: 10px !important;
             font-weight: 700 !important;
             text-transform: uppercase !important;
             letter-spacing: 0.3px !important;
             color: #64748b !important;
             white-space: nowrap !important;
-            overflow: hidden !important;
-            text-overflow: ellipsis !important;
+            display: inline-flex !important;
+            align-items: center !important;
           }
           .cd-contact-subcard-body {
             display: flex !important;
             flex-direction: column !important;
             justify-content: center !important;
-            gap: 3px !important;
+            gap: 4px !important;
             flex: 1 1 auto !important;
             min-width: 0 !important;
             overflow: hidden !important;
@@ -2225,22 +2229,23 @@ use Carbon\Carbon;
           .cd-contact-profile-row {
             display: flex !important;
             align-items: center !important;
-            gap: 9px !important;
+            gap: 10px !important;
             min-width: 0 !important;
           }
           .cd-contact-avatar-box {
-            width: 38px !important;
-            height: 38px !important;
-            min-width: 38px !important;
-            border-radius: 8px !important;
+            width: 40px !important;
+            height: 40px !important;
+            min-width: 40px !important;
+            border-radius: 9px !important;
             display: flex !important;
             align-items: center !important;
             justify-content: center !important;
-            font-size: 13.5px !important;
+            font-size: 14px !important;
             font-weight: 700 !important;
             color: #ffffff !important;
             flex-shrink: 0 !important;
             text-transform: uppercase !important;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08) !important;
           }
           .cd-contact-profile-meta {
             flex: 1 1 auto !important;
@@ -2248,7 +2253,7 @@ use Carbon\Carbon;
             overflow: hidden !important;
           }
           .cd-contact-card-name {
-            font-size: 13px !important;
+            font-size: 13.5px !important;
             font-weight: 700 !important;
             color: #0f172a !important;
             line-height: 1.25 !important;
@@ -2258,11 +2263,11 @@ use Carbon\Carbon;
             white-space: nowrap !important;
           }
           .cd-contact-card-desig {
-            font-size: 11px !important;
+            font-size: 11.5px !important;
             font-weight: 500 !important;
             color: #475569 !important;
             line-height: 1.2 !important;
-            margin-top: 2px !important;
+            margin-top: 1px !important;
             display: block !important;
             overflow: hidden !important;
             text-overflow: ellipsis !important;
@@ -2271,37 +2276,89 @@ use Carbon\Carbon;
           .cd-badge-primary-spoc {
             display: inline-flex !important;
             align-items: center !important;
-            padding: 1px 6px !important;
-            border-radius: 4px !important;
+            padding: 2px 7px !important;
+            border-radius: 5px !important;
             font-size: 9.5px !important;
             font-weight: 700 !important;
             background: #fef3c7 !important;
             color: #92400e !important;
             border: 1px solid #fde68a !important;
+            white-space: nowrap !important;
           }
           .cd-badge-secondary-contact {
             display: inline-flex !important;
             align-items: center !important;
-            padding: 1px 5px !important;
-            border-radius: 4px !important;
+            padding: 2px 6px !important;
+            border-radius: 5px !important;
             font-size: 9.5px !important;
             font-weight: 600 !important;
             background: #f1f5f9 !important;
             color: #475569 !important;
             border: 1px solid #e2e8f0 !important;
+            white-space: nowrap !important;
+          }
+          .cd-chip-client {
+            font-size: 10px !important;
+            font-weight: 600 !important;
+            padding: 1px 6px !important;
+            border-radius: 4px !important;
+            background: #eff6ff !important;
+            color: #1d4ed8 !important;
+            border: 1px solid #bfdbfe !important;
+            white-space: nowrap !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+            max-width: 140px !important;
+            display: inline-flex !important;
+            align-items: center !important;
+          }
+          .cd-chip-id {
+            font-size: 10px !important;
+            font-weight: 600 !important;
+            padding: 1px 5px !important;
+            border-radius: 4px !important;
+            background: #f8fafc !important;
+            color: #64748b !important;
+            border: 1px solid #e2e8f0 !important;
+            white-space: nowrap !important;
+          }
+          .cd-chip-auth {
+            font-size: 10px !important;
+            font-weight: 600 !important;
+            padding: 1px 6px !important;
+            border-radius: 4px !important;
+            background: #ecfdf5 !important;
+            color: #047857 !important;
+            border: 1px solid #a7f3d0 !important;
+            white-space: nowrap !important;
+            display: inline-flex !important;
+            align-items: center !important;
           }
 
           /* Sub-Card 2: Communication Elements */
           .cd-comm-item {
             display: flex !important;
             align-items: center !important;
+            justify-content: space-between !important;
             gap: 6px !important;
             font-size: 11.5px !important;
             color: #334155 !important;
             min-width: 0 !important;
-            line-height: 1.3 !important;
+            line-height: 1.35 !important;
+            background: #ffffff !important;
+            border: 1px solid #edf2f7 !important;
+            border-radius: 6px !important;
+            padding: 3px 8px !important;
           }
-          .cd-comm-item i {
+          .cd-comm-content {
+            display: flex !important;
+            align-items: center !important;
+            gap: 6px !important;
+            min-width: 0 !important;
+            flex: 1 1 auto !important;
+            overflow: hidden !important;
+          }
+          .cd-comm-content i {
             font-size: 11px !important;
             width: 14px !important;
             text-align: center !important;
@@ -2314,6 +2371,7 @@ use Carbon\Carbon;
             text-overflow: ellipsis !important;
             white-space: nowrap !important;
             font-weight: 500 !important;
+            font-size: 11.5px !important;
             transition: color 0.12s ease !important;
           }
           .cd-comm-link:hover {
@@ -2325,47 +2383,39 @@ use Carbon\Carbon;
             border: none !important;
             color: #94a3b8 !important;
             cursor: pointer !important;
-            padding: 1px 3px !important;
-            font-size: 10.5px !important;
-            border-radius: 3px !important;
+            padding: 2px 4px !important;
+            font-size: 11px !important;
+            border-radius: 4px !important;
             transition: all 0.12s ease !important;
             flex-shrink: 0 !important;
+            display: inline-flex !important;
+            align-items: center !important;
           }
           .cd-copy-btn:hover {
             color: #009ef7 !important;
             background: #eff6ff !important;
           }
-
-          /* Sub-Card 3: Org & Scope */
-          .cd-org-client {
-            font-size: 11.5px !important;
-            font-weight: 600 !important;
-            color: #1e293b !important;
-            overflow: hidden !important;
-            text-overflow: ellipsis !important;
-            white-space: nowrap !important;
-            display: flex !important;
-            align-items: center !important;
-            gap: 5px !important;
-          }
-          .cd-org-role-badge {
-            display: inline-flex !important;
-            align-items: center !important;
-            gap: 4px !important;
+          .cd-copy-all-btn {
+            background: transparent !important;
+            border: 1px solid #e2e8f0 !important;
+            color: #64748b !important;
+            cursor: pointer !important;
             padding: 1px 6px !important;
-            border-radius: 4px !important;
             font-size: 10px !important;
             font-weight: 600 !important;
+            border-radius: 4px !important;
+            transition: all 0.12s ease !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            gap: 3px !important;
+          }
+          .cd-copy-all-btn:hover {
+            color: #009ef7 !important;
+            border-color: #bfdbfe !important;
             background: #eff6ff !important;
-            color: #2563eb !important;
-            border: 1px solid #dbeafe !important;
-            max-width: 100% !important;
-            overflow: hidden !important;
-            text-overflow: ellipsis !important;
-            white-space: nowrap !important;
           }
 
-          /* Sub-Card 4: Linked Jobs */
+          /* Sub-Card 3: Requisitions & Actions */
           .cd-linked-jobs-stat {
             font-size: 11.5px !important;
             font-weight: 600 !important;
@@ -2373,32 +2423,31 @@ use Carbon\Carbon;
             display: flex !important;
             align-items: center !important;
             gap: 5px !important;
+            white-space: nowrap !important;
           }
           .cd-view-jobs-link {
-            font-size: 10.5px !important;
+            font-size: 11px !important;
             color: #009ef7 !important;
             font-weight: 600 !important;
             text-decoration: none !important;
             display: inline-flex !important;
             align-items: center !important;
             gap: 3px !important;
-            margin-top: 2px !important;
             cursor: pointer !important;
+            white-space: nowrap !important;
           }
           .cd-view-jobs-link:hover {
             text-decoration: underline !important;
             color: #007bb5 !important;
           }
-
-          /* Sub-Card 5: Actions */
           .cd-contact-actions-row {
             display: flex !important;
             align-items: center !important;
-            gap: 5px !important;
+            gap: 6px !important;
             flex-wrap: nowrap !important;
           }
           .cd-contact-btn-call {
-            padding: 4px 8px !important;
+            padding: 4px 9px !important;
             font-size: 11px !important;
             font-weight: 600 !important;
             border-radius: 6px !important;
@@ -2410,13 +2459,14 @@ use Carbon\Carbon;
             gap: 4px !important;
             text-decoration: none !important;
             transition: all 0.12s ease !important;
+            white-space: nowrap !important;
           }
           .cd-contact-btn-call:hover {
             background: #2563eb !important;
             color: #ffffff !important;
           }
           .cd-contact-btn-mail {
-            padding: 4px 8px !important;
+            padding: 4px 9px !important;
             font-size: 11px !important;
             font-weight: 600 !important;
             border-radius: 6px !important;
@@ -2428,23 +2478,26 @@ use Carbon\Carbon;
             gap: 4px !important;
             text-decoration: none !important;
             transition: all 0.12s ease !important;
+            white-space: nowrap !important;
           }
           .cd-contact-btn-mail:hover {
             background: #009ef7 !important;
             color: #ffffff !important;
           }
           .cd-contact-btn-wa {
-            padding: 4px 7px !important;
+            padding: 4px 9px !important;
             font-size: 11px !important;
+            font-weight: 600 !important;
             border-radius: 6px !important;
             background: #f0fdf4 !important;
             color: #16a34a !important;
             border: 1px solid #bbf7d0 !important;
             display: inline-flex !important;
             align-items: center !important;
-            justify-content: center !important;
+            gap: 4px !important;
             text-decoration: none !important;
             transition: all 0.12s ease !important;
+            white-space: nowrap !important;
           }
           .cd-contact-btn-wa:hover {
             background: #16a34a !important;
@@ -2456,13 +2509,14 @@ use Carbon\Carbon;
             display: inline-flex !important;
             align-items: center !important;
             gap: 4px !important;
-            padding: 1px 6px !important;
-            border-radius: 4px !important;
+            padding: 2px 7px !important;
+            border-radius: 5px !important;
             font-size: 9.5px !important;
             font-weight: 700 !important;
             background: #dcfce7 !important;
             color: #15803d !important;
             border: 1px solid #bbf7d0 !important;
+            white-space: nowrap !important;
           }
           .cd-contact-status-active i {
             font-size: 6px !important;
@@ -2471,16 +2525,17 @@ use Carbon\Carbon;
             display: inline-flex !important;
             align-items: center !important;
             gap: 4px !important;
-            padding: 1px 6px !important;
-            border-radius: 4px !important;
+            padding: 2px 7px !important;
+            border-radius: 5px !important;
             font-size: 9.5px !important;
             font-weight: 700 !important;
             background: #f1f5f9 !important;
             color: #64748b !important;
             border: 1px solid #e2e8f0 !important;
+            white-space: nowrap !important;
           }
 
-          /* Sub-Card 6: Bottom Activity Strip */
+          /* Sub-Card 4: Bottom Activity Strip */
           .cd-contact-card-bottom {
             background: #fbfcfe !important;
             border-top: 1px solid #f1f5f9 !important;
@@ -2494,9 +2549,10 @@ use Carbon\Carbon;
           .cd-contact-bottom-left {
             display: flex !important;
             align-items: center !important;
-            gap: 12px !important;
+            gap: 10px !important;
             font-size: 11px !important;
             color: #64748b !important;
+            flex-wrap: wrap !important;
           }
           .cd-contact-meta-item {
             display: inline-flex !important;
@@ -2507,6 +2563,7 @@ use Carbon\Carbon;
             display: flex !important;
             align-items: center !important;
             gap: 6px !important;
+            flex-wrap: wrap !important;
           }
           .cd-contact-tag-pill {
             display: inline-flex !important;
@@ -2575,40 +2632,32 @@ use Carbon\Carbon;
             margin-bottom: 12px;
           }
 
-          @media (max-width: 1280px) {
-            .cd-contact-card-grid {
-              grid-template-columns: minmax(0, 1.8fr) minmax(0, 1.8fr) minmax(0, 1.4fr) !important;
-              gap: 6px !important;
-              padding: 8px 10px !important;
-            }
-          }
-          @media (max-width: 860px) {
+          /* Responsive Breakpoints Calibrated for 15.6" and Smaller Screens */
+          @media (max-width: 1180px) {
             .cd-contact-card-grid {
               grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) !important;
-              gap: 6px !important;
+              gap: 8px !important;
+            }
+            .cd-contact-subcard-actions {
+              grid-column: span 2 !important;
             }
           }
-          @media (max-width: 600px) {
+          @media (max-width: 768px) {
             .cd-contact-card-grid {
               grid-template-columns: 1fr !important;
+              gap: 8px !important;
+            }
+            .cd-contact-subcard-actions {
+              grid-column: auto !important;
             }
             .cd-contact-toolbar-card {
               flex-direction: column !important;
               align-items: flex-start !important;
-              gap: 8px !important;
+              gap: 10px !important;
             }
             .cd-contact-toolbar-right {
               width: 100% !important;
               justify-content: space-between !important;
-            }
-            .cd-contact-search-subcard {
-              max-width: 100% !important;
-              flex: 1 1 auto !important;
-            }
-            .cd-contact-card-bottom {
-              flex-direction: column !important;
-              align-items: flex-start !important;
-              gap: 6px !important;
             }
           }
 
@@ -4327,57 +4376,57 @@ use Carbon\Carbon;
           <!-- ── TIER 2: SUB-TABS CARD WITH WHITE BACKGROUND (Rule 20 Compliant) ── -->
           <div class="cd-drawer-tabs-card">
             <ul class="cd-drawer-tabs-list nav nav-tabs border-0 flex-nowrap" role="tablist">
-              <li class="nav-item">
-                <a class="cd-tab-pill-btn nav-link active" data-toggle="tab" href="#overview">
+              <li class="nav-item" role="presentation">
+                <a class="cd-tab-pill-btn nav-link active" data-bs-toggle="tab" data-toggle="tab" href="#overview" role="tab" aria-selected="true">
                   <i class="fas fa-house fa-solid"></i>
                   <span>Overview</span>
                 </a>
               </li>
-              <li class="nav-item">
-                <a class="cd-tab-pill-btn nav-link" data-toggle="tab" href="#recent_activity">
+              <li class="nav-item" role="presentation">
+                <a class="cd-tab-pill-btn nav-link" data-bs-toggle="tab" data-toggle="tab" href="#recent_activity" role="tab" aria-selected="false">
                   <i class="fas fa-clock fa-solid"></i>
                   <span>Recent Activity</span>
                 </a>
               </li>
-              <li class="nav-item">
-                <a class="cd-tab-pill-btn nav-link" data-toggle="tab" href="#contacts">
+              <li class="nav-item" role="presentation">
+                <a class="cd-tab-pill-btn nav-link" data-bs-toggle="tab" data-toggle="tab" href="#contacts" role="tab" aria-selected="false">
                   <i class="fas fa-address-book fa-solid"></i>
                   <span>Contacts</span>
                   @php $contactInitCount = isset($client_contact_info) ? count($client_contact_info) : 0; @endphp
                   <span class="cd-tab-pill-badge" id="cdContactNavBadgeInternal" style="{{ $contactInitCount > 0 ? '' : 'display:none;' }}">{{ $contactInitCount }}</span>
                 </a>
               </li>
-              <li class="nav-item">
-                <a class="cd-tab-pill-btn nav-link" data-bs-toggle="tab" data-toggle="tab" href="#requisitions">
+              <li class="nav-item" role="presentation">
+                <a class="cd-tab-pill-btn nav-link" data-bs-toggle="tab" data-toggle="tab" href="#requisitions" role="tab" aria-selected="false">
                   <i class="fas fa-briefcase fa-solid"></i>
                   <span>Jobs</span>
                   <span class="cd-tab-pill-badge" id="cdJobsNavBadgeInternal" style="{{ $kpiActive > 0 ? '' : 'display:none;' }}">{{ $kpiActive }}</span>
                 </a>
               </li>
-              <li class="nav-item">
-                <a class="cd-tab-pill-btn nav-link" data-toggle="tab" href="#candidate_list">
+              <li class="nav-item" role="presentation">
+                <a class="cd-tab-pill-btn nav-link" data-bs-toggle="tab" data-toggle="tab" href="#candidate_list" role="tab" aria-selected="false">
                   <i class="fas fa-user-tie fa-solid"></i>
                   <span>Candidates</span>
                   <span class="cd-tab-pill-badge" id="cdCandidatesNavBadgeInternal" style="{{ $kpiSubmitted > 0 ? '' : 'display:none;' }}">{{ $kpiSubmitted }}</span>
                 </a>
               </li>
-              <li class="nav-item">
-                <a class="cd-tab-pill-btn nav-link" data-toggle="tab" href="#interview_tracker">
+              <li class="nav-item" role="presentation">
+                <a class="cd-tab-pill-btn nav-link" data-bs-toggle="tab" data-toggle="tab" href="#interview_tracker" role="tab" aria-selected="false">
                   <i class="fas fa-calendar-days fa-solid"></i>
                   <span>Interviews</span>
                   <span class="cd-tab-pill-badge" id="tabBadgeInterviewTrackerShow" @if($kpiInterviews <= 0) style="display:none;" @endif>{{ $kpiInterviews }}</span>
                 </a>
               </li>
-              <li class="nav-item">
-                <a class="cd-tab-pill-btn nav-link" data-toggle="tab" href="#candidate_joining">
+              <li class="nav-item" role="presentation">
+                <a class="cd-tab-pill-btn nav-link" data-bs-toggle="tab" data-toggle="tab" href="#candidate_joining" role="tab" aria-selected="false">
                   <i class="fas fa-file-signature fa-solid"></i>
                   <span>Offers &amp; Joinings</span>
                   @php $totalOffersJoinsInternal = ($kpiOffers ?? 0) + ($kpiJoins ?? 0); @endphp
                   <span class="cd-tab-pill-badge" id="ojInternalTabBadge" @if($totalOffersJoinsInternal <= 0) style="display:none;" @endif>{{ $totalOffersJoinsInternal }}</span>
                 </a>
               </li>
-              <li class="nav-item">
-                <a class="cd-tab-pill-btn nav-link" data-toggle="tab" href="#candidateDashboard">
+              <li class="nav-item" role="presentation">
+                <a class="cd-tab-pill-btn nav-link" data-bs-toggle="tab" data-toggle="tab" href="#candidateDashboard" role="tab" aria-selected="false">
                   <i class="fas fa-chart-column fa-solid"></i>
                   <span>Performance</span>
                 </a>
@@ -5066,7 +5115,7 @@ use Carbon\Carbon;
                                         <i class="fas fa-address-book fa-solid"></i>
                                     </div>
                                     <div class="cd-contact-title-wrap">
-                                        <div class="d-flex align-items-center gap-2">
+                                        <div class="d-flex align-items-center gap-2 flex-wrap">
                                             <h4 class="cd-contact-title">Client Contacts</h4>
                                             <span class="cd-contact-count-badge" id="cdContactCountBadgeInternal">
                                                 <span id="cdContactCountTextInternal">{{ $contactInitCount ?? 0 }}</span> Contacts
@@ -5091,11 +5140,6 @@ use Carbon\Carbon;
                                     <button type="button" id="cdContactResetBtnInternal" class="cd-contact-action-subcard" title="Reset Filters &amp; Refresh">
                                         <i class="fas fa-sync-alt fa-solid"></i>
                                     </button>
-                                    @if(in_array('edit_clients', $userPermissions))
-                                    <a href="{{ route('service_company.clients.edit', GeneralMethod::value_encrypt($client->id)) }}" class="btn btn-sm btn-primary fw-bold" style="height:36px; display:inline-flex; align-items:center; border-radius:8px; font-size:12px;">
-                                        <i class="fas fa-user-plus me-1"></i> Add / Edit Contacts
-                                    </a>
-                                    @endif
                                 </div>
                             </div>
 
@@ -6758,15 +6802,15 @@ use Carbon\Carbon;
                 roleBadgeText = 'Talent Partner';
             }
 
-            // Sub-Card 4: Linked Jobs
+            // Linked Jobs
             var jobsCountText = linkedJobs > 0 ? `<strong>${linkedJobs}</strong> Active Roles` : `Client Requisitions`;
-            var jobsBadgeText = linkedJobs > 0 ? `${linkedJobs} Roles` : 'Internal';
 
-            // Sub-Card 5: Status & Quick Actions
+            // Status Pill
             var statusPillHtml = isActive
                 ? `<span class="cd-contact-status-active"><i class="fas fa-circle"></i> Active</span>`
                 : `<span class="cd-contact-status-inactive"><i class="fas fa-circle"></i> Inactive</span>`;
 
+            // Action Buttons
             var callBtnHtml = phone
                 ? `<a href="tel:${cleanPhoneForTel}" class="cd-contact-btn-call" title="Call ${rawName}"><i class="fas fa-phone-alt"></i> Call</a>`
                 : `<button type="button" class="cd-contact-btn-call disabled" style="opacity:0.4; pointer-events:none;"><i class="fas fa-phone-alt"></i> Call</button>`;
@@ -6777,17 +6821,17 @@ use Carbon\Carbon;
 
             var waPhoneClean = cleanPhoneForTel.replace('+', '');
             var waBtnHtml = phone
-                ? `<a href="https://wa.me/${waPhoneClean}" target="_blank" class="cd-contact-btn-wa" title="WhatsApp ${rawName}"><i class="fab fa-whatsapp"></i></a>`
+                ? `<a href="https://wa.me/${waPhoneClean}" target="_blank" class="cd-contact-btn-wa" title="WhatsApp ${rawName}"><i class="fab fa-whatsapp"></i> Chat</a>`
                 : '';
 
             return `
                 <div class="cd-contact-card" data-contact-id="${cid}">
                     <div class="cd-contact-card-grid">
 
-                        <!-- SUB-CARD 1: Contact Identity & Profile -->
+                        <!-- SUB-CARD 1: Contact Identity & Scope (All details integrated) -->
                         <div class="cd-contact-subcard cd-contact-subcard-profile">
                             <div class="cd-contact-subcard-hdr">
-                                <span class="cd-contact-subcard-label">CONTACT PROFILE</span>
+                                <span class="cd-contact-subcard-label"><i class="fas fa-user-circle me-1 text-primary"></i> PROFILE &amp; ROLE</span>
                                 ${primaryBadgeHtml}
                             </div>
                             <div class="cd-contact-subcard-body">
@@ -6798,87 +6842,62 @@ use Carbon\Carbon;
                                     <div class="cd-contact-profile-meta">
                                         <span class="cd-contact-card-name text-truncate" title="${rawName}">${rawName}</span>
                                         <span class="cd-contact-card-desig text-truncate" title="${rawDesig}">${rawDesig}</span>
-                                        <div class="d-flex align-items-center gap-1 mt-1">
-                                            <span class="text-muted" style="font-size: 10px; font-weight: 600;">#C-${cid}</span>
-                                            <span class="text-slate-300">•</span>
-                                            <span class="text-muted" style="font-size: 10px;">Internal Client</span>
-                                        </div>
                                     </div>
                                 </div>
-                            </div>
-                        </div>
-
-                        <!-- SUB-CARD 2: Direct Communication Channels -->
-                        <div class="cd-contact-subcard cd-contact-subcard-comm">
-                            <div class="cd-contact-subcard-hdr">
-                                <span class="cd-contact-subcard-label">COMMUNICATION</span>
-                                <button type="button" class="cd-copy-btn js-copy-data" data-copy="${copyAllText}" title="Copy email &amp; phone details">
-                                    <i class="far fa-clone"></i>
-                                </button>
-                            </div>
-                            <div class="cd-contact-subcard-body">
-                                <div class="cd-comm-item" title="${email}">
-                                    <i class="far fa-envelope text-primary"></i>
-                                    ${emailHtml}
-                                    ${emailCopyBtn}
-                                </div>
-                                <div class="cd-comm-item" title="${phone}">
-                                    <i class="fas fa-phone-alt text-success"></i>
-                                    ${phoneHtml}
-                                    ${phoneCopyBtn}
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- SUB-CARD 3: Organization & Role Scope -->
-                        <div class="cd-contact-subcard cd-contact-subcard-org">
-                            <div class="cd-contact-subcard-hdr">
-                                <span class="cd-contact-subcard-label">CLIENT &amp; SCOPE</span>
-                                <span class="cd-org-role-badge text-truncate" title="${roleBadgeText}">
-                                    <i class="fas fa-user-shield me-1"></i>${roleBadgeText}
-                                </span>
-                            </div>
-                            <div class="cd-contact-subcard-body">
-                                <div class="cd-org-client text-truncate" title="${clientName}">
-                                    <i class="far fa-building text-slate-400"></i>
-                                    <span class="text-truncate">${clientName}</span>
-                                </div>
-                                <div class="d-flex align-items-center gap-1 mt-1">
-                                    <span class="badge badge-light-primary fw-bold" style="font-size:9.5px; padding:2px 6px;">
-                                        Authorized POC
+                                <div class="d-flex align-items-center gap-1 mt-1 flex-wrap">
+                                    <span class="cd-chip-client text-truncate" title="${clientName}">
+                                        <i class="far fa-building me-1"></i>${clientName}
+                                    </span>
+                                    <span class="cd-chip-id">#C-${cid}</span>
+                                    <span class="cd-chip-auth">
+                                        <i class="fas fa-check-circle me-1"></i>Authorized POC
                                     </span>
                                 </div>
                             </div>
                         </div>
 
-                        <!-- SUB-CARD 4: Linked Jobs & Pipeline -->
-                        <div class="cd-contact-subcard cd-contact-subcard-jobs">
+                        <!-- SUB-CARD 2: Direct Communication Channels (Wide & Spacious) -->
+                        <div class="cd-contact-subcard cd-contact-subcard-comm">
                             <div class="cd-contact-subcard-hdr">
-                                <span class="cd-contact-subcard-label">REQUISITIONS</span>
-                                <span class="badge badge-light-info fw-bold" style="font-size:9.5px; padding:2px 5px;">
-                                    ${jobsBadgeText}
-                                </span>
+                                <span class="cd-contact-subcard-label"><i class="fas fa-address-card me-1 text-info"></i> COMMUNICATION</span>
+                                <button type="button" class="cd-copy-all-btn js-copy-data" data-copy="${copyAllText}" title="Copy all contact details">
+                                    <i class="far fa-copy"></i> Copy
+                                </button>
                             </div>
                             <div class="cd-contact-subcard-body">
-                                <div class="cd-linked-jobs-stat text-truncate">
-                                    <i class="fas fa-briefcase text-info"></i>
-                                    <span>${jobsCountText}</span>
+                                <div class="cd-comm-item" title="${email}">
+                                    <div class="cd-comm-content">
+                                        <i class="far fa-envelope text-primary"></i>
+                                        ${emailHtml}
+                                    </div>
+                                    ${emailCopyBtn}
                                 </div>
-                                <div>
-                                    <a href="javascript:void(0);" class="cd-view-jobs-link js-contact-view-jobs" title="View client job requisitions">
-                                        View Jobs <i class="fas fa-arrow-right ms-1" style="font-size:8px;"></i>
-                                    </a>
+                                <div class="cd-comm-item" title="${phone}">
+                                    <div class="cd-comm-content">
+                                        <i class="fas fa-phone-alt text-success"></i>
+                                        ${phoneHtml}
+                                    </div>
+                                    ${phoneCopyBtn}
                                 </div>
                             </div>
                         </div>
 
-                        <!-- SUB-CARD 5: Status & Quick Reach Actions -->
+                        <!-- SUB-CARD 3: Requisitions & Quick Actions (Zero overflow) -->
                         <div class="cd-contact-subcard cd-contact-subcard-actions">
                             <div class="cd-contact-subcard-hdr">
-                                <span class="cd-contact-subcard-label">STATUS &amp; ACTIONS</span>
+                                <span class="cd-contact-subcard-label"><i class="fas fa-bolt me-1 text-amber-500"></i> REQUISITIONS &amp; ACTIONS</span>
                                 ${statusPillHtml}
                             </div>
                             <div class="cd-contact-subcard-body">
+                                <div class="d-flex align-items-center justify-content-between gap-2 mb-1">
+                                    <div class="cd-linked-jobs-stat text-truncate">
+                                        <i class="fas fa-briefcase text-info"></i>
+                                        <span>${jobsCountText}</span>
+                                    </div>
+                                    <a href="javascript:void(0);" class="cd-view-jobs-link js-contact-view-jobs" title="View client job requisitions">
+                                        View Jobs <i class="fas fa-arrow-right ms-1" style="font-size:8px;"></i>
+                                    </a>
+                                </div>
                                 <div class="cd-contact-actions-row">
                                     ${callBtnHtml}
                                     ${mailBtnHtml}
@@ -6889,7 +6908,7 @@ use Carbon\Carbon;
 
                     </div>
 
-                    <!-- SUB-CARD 6: Bottom Activity & Metadata Strip -->
+                    <!-- SUB-CARD 4: Bottom Activity & Metadata Strip -->
                     <div class="cd-contact-card-bottom">
                         <div class="cd-contact-bottom-left">
                             <span class="cd-contact-meta-item">
@@ -6902,7 +6921,7 @@ use Carbon\Carbon;
                         </div>
                         <div class="cd-contact-bottom-right">
                             <span class="cd-contact-tag-pill">
-                                <i class="fas fa-id-badge text-primary"></i> Internal Stakeholder
+                                <i class="fas fa-id-badge text-primary"></i> ${roleBadgeText}
                             </span>
                             <span class="cd-contact-tag-pill">
                                 <i class="fas fa-bolt text-amber-500"></i> Quick Reach
@@ -6952,34 +6971,14 @@ use Carbon\Carbon;
                 }
             }, 100);
         }
-        // Phase 9 Optimization: Lazy load tab data on tab activation & debounce search inputs
-        var loadedTabs = {};
+        var currentClientId = parseInt('{{ $client->id }}', 10);
+        var currentCompanyId = parseInt('{{ auth()->user()->company_id }}', 10);
 
-        if ($('#candidate_list').hasClass('active') || $('a[href="#candidate_list"]').hasClass('active')) {
-            window.ClientCandidateStore.init({{ auth()->user()->company_id }}, {{ $client->id }}, 'internal');
-        } else if ($('#contacts').hasClass('active') || $('a[href="#contacts"]').hasClass('active')) {
-            initContactsDataTable();
-            loadedTabs['contacts'] = true;
-        } else if ($('#requisitions').hasClass('active') || $('a[href="#requisitions"]').hasClass('active')) {
-            fetchJobsClient();
-            loadedTabs['requisitions'] = true;
-        } else if ($('#candidateDashboard').hasClass('active') || $('a[href="#candidateDashboard"]').hasClass('active')) {
-            initPerformanceDashboard();
-            fetchInternalClientDashboardAnalytics();
-            loadedTabs['candidateDashboard'] = true;
-        }
-
-        $(document).on('click', 'a[href="#requisitions"], .cd-kpi-card[data-target-tab="#requisitions"]', function(e) {
-            if (!loadedTabs['requisitions']) {
-                fetchJobsClient();
-                loadedTabs['requisitions'] = true;
-            }
-        });
-
-        $(document).on('shown.bs.tab', 'a[data-toggle="tab"], a[data-bs-toggle="tab"]', function (e) {
-            var target = $(e.target).attr('href');
+        function loadInternalTabContent(target, force) {
             if (!target) return;
-            target = target.replace('#', '');
+            if (window.ClientStateManager && window.ClientStateManager.getSelectedClientId() !== currentClientId) {
+                return;
+            }
 
             if (target === 'candidateDashboard') {
                 initPerformanceDashboard();
@@ -6993,32 +6992,96 @@ use Carbon\Carbon;
             }
 
             if (target === 'candidate_list') {
-                if (!window.ClientCandidateStore.companyId || window.ClientCandidateStore.clientId !== {{ $client->id }} || window.ClientCandidateStore.state === 'IDLE') {
-                    window.ClientCandidateStore.init({{ auth()->user()->company_id }}, {{ $client->id }}, 'internal');
+                if (!window.ClientCandidateStore.companyId || window.ClientCandidateStore.clientId !== currentClientId || window.ClientCandidateStore.state === 'IDLE' || force) {
+                    window.ClientCandidateStore.init(currentCompanyId, currentClientId, 'internal');
                 } else {
                     window.ClientCandidateStore.reconcileVersion();
                 }
+                if (window.ClientStateManager) window.ClientStateManager.markTabLoaded(currentClientId, target);
                 return;
             }
 
-            if (loadedTabs[target]) return;
+            if (!force && window.ClientStateManager && window.ClientStateManager.isTabLoaded(currentClientId, target)) {
+                return;
+            }
 
             if (target === 'contacts') {
                 initContactsDataTable();
-                loadedTabs[target] = true;
+                if (window.ClientStateManager) window.ClientStateManager.markTabLoaded(currentClientId, target);
             } else if (target === 'requisitions') {
-                fetchJobsClient();
-                loadedTabs[target] = true;
+                fetchJobsClient(1, $('#inputJobSearch').val() || '', window.currentJobStatusInternal || 'all');
+                if (window.ClientStateManager) window.ClientStateManager.markTabLoaded(currentClientId, target);
             } else if (target === 'interview_tracker') {
                 fetchCandidatesInverViewTracker();
-                loadedTabs[target] = true;
+                if (window.ClientStateManager) window.ClientStateManager.markTabLoaded(currentClientId, target);
             } else if (target === 'candidate_joining') {
                 var search = $('#ojSearchInputInternal').val() || '';
                 fetchCandidatesJoin(1, search, window.currentOjSegmentInternal || 'all');
+                if (window.ClientStateManager) window.ClientStateManager.markTabLoaded(currentClientId, target);
             } else if (target === 'candidateDashboard') {
                 fetchInternalClientDashboardAnalytics();
-                loadedTabs[target] = true;
+                if (window.ClientStateManager) window.ClientStateManager.markTabLoaded(currentClientId, target);
             }
+        }
+
+        // Initialize active tab immediately on drawer mount
+        if ($('#kt_activitiesClient #candidate_list').hasClass('active') || $('#kt_activitiesClient a[href="#candidate_list"]').hasClass('active')) {
+            loadInternalTabContent('candidate_list', true);
+        } else if ($('#kt_activitiesClient #contacts').hasClass('active') || $('#kt_activitiesClient a[href="#contacts"]').hasClass('active')) {
+            loadInternalTabContent('contacts', true);
+        } else if ($('#kt_activitiesClient #requisitions').hasClass('active') || $('#kt_activitiesClient a[href="#requisitions"]').hasClass('active')) {
+            loadInternalTabContent('requisitions', true);
+        } else if ($('#kt_activitiesClient #candidateDashboard').hasClass('active') || $('#kt_activitiesClient a[href="#candidateDashboard"]').hasClass('active')) {
+            loadInternalTabContent('candidateDashboard', true);
+        }
+
+        // Clean unbind previous namespaced listeners before binding fresh ones
+        $(document).off('.internalDrawer');
+
+        // Scoped Click Handler for Sub-Tab Pills
+        $(document).on('click.internalDrawer', '#kt_activitiesClient .cd-tab-pill-btn', function(e) {
+            var target = $(this).attr('href');
+            if (!target) return;
+            target = target.replace('#', '');
+            $('#kt_activitiesClient .cd-tab-pill-btn').removeClass('active');
+            $(this).addClass('active');
+            $('#kt_activitiesClient .tab-pane').removeClass('active show');
+            $(`#kt_activitiesClient #${target}`).addClass('active show');
+            loadInternalTabContent(target);
+        });
+
+        // Scoped Click Handler for Metric KPI Cards
+        $(document).on('click.internalDrawer', '#kt_activitiesClient .cd-kpi-card', function(e) {
+            var target = $(this).data('target-tab');
+            if (!target) return;
+            target = target.replace('#', '');
+
+            var $tabBtn = $(`#kt_activitiesClient .cd-tab-pill-btn[href="#${target}"]`);
+            if ($tabBtn.length) {
+                if (typeof bootstrap !== 'undefined' && bootstrap.Tab) {
+                    try { bootstrap.Tab.getOrCreateInstance($tabBtn[0]).show(); } catch(err){}
+                } else if (typeof $tabBtn.tab === 'function') {
+                    $tabBtn.tab('show');
+                }
+                $('#kt_activitiesClient .cd-tab-pill-btn').removeClass('active');
+                $tabBtn.addClass('active');
+                $('#kt_activitiesClient .tab-pane').removeClass('active show');
+                $(`#kt_activitiesClient #${target}`).addClass('active show');
+            }
+
+            var segment = $(this).data('segment');
+            if (segment && target === 'candidate_joining') {
+                window.currentOjSegmentInternal = segment;
+            }
+            loadInternalTabContent(target, true);
+        });
+
+        // Scoped Bootstrap tab event listener
+        $(document).on('shown.bs.tab.internalDrawer', '#kt_activitiesClient a[data-bs-toggle="tab"], #kt_activitiesClient a[data-toggle="tab"]', function (e) {
+            var target = $(e.target).attr('href');
+            if (!target) return;
+            target = target.replace('#', '');
+            loadInternalTabContent(target);
         });
 
         var jobSearchTimer = null;
@@ -8730,6 +8793,11 @@ use Carbon\Carbon;
     });
 
     window.fetchJobsClient = function(page = 1, search = '', status = 'all') {
+        var activeClientId = $('#hid_client_id').val() || '{{ $client->id }}';
+        if (window.ClientStateManager && window.ClientStateManager.getSelectedClientId() && window.ClientStateManager.getSelectedClientId() != activeClientId) {
+            console.log('[Jobs Tab Shield] Discarded fetch for inactive client', activeClientId);
+            return;
+        }
         $('.page-loader').css('display', 'flex');
         var activeStatus = status || window.currentJobStatusInternal || 'all';
         var clientName = $('.cd-client-name').first().text().trim() || '{{ addslashes($detailName ?? "") }}';
@@ -8739,11 +8807,14 @@ use Carbon\Carbon;
             data: {
                 search: search || $('#inputJobSearch').val() || '',
                 status: activeStatus,
-                client_id: $('#hid_client_id').val(),
+                client_id: activeClientId,
                 client_name: clientName,
                 custom: true
             },
             success: function(response) {
+                if (window.ClientStateManager && window.ClientStateManager.getSelectedClientId() && window.ClientStateManager.getSelectedClientId() != activeClientId) {
+                    return;
+                }
                 $('.page-loader').css('display', 'none');
                 $('#clientJobsListajax').html(response.html);
                 $('#paginationclientjobs').html(response.pagination);

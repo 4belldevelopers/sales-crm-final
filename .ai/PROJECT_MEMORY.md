@@ -33,6 +33,22 @@ Last updated: 2026-10-22 (Super Admin Companies Page UI Redesign, 100% CQRS Read
     - **CQRS Read Synchronization**: Updated `GeneralMethod::clientStaffingPartner()` to index `clients.detail` into Elasticsearch `ELASTIC_CLIENT_LIST` for 0% MySQL read strain on future page loads.
   - **Verification**: `php -l` clean across all views and helper classes, `php artisan view:clear` passed, automated view rendering tests passed across multiple client scenarios (tax ID present vs absent, social links present vs absent, workforce range mapping).
 
+- *2026-10-26* — **Client Drawer Contacts Tab: Add Contacts Removal, Header Search Bar Placement & 3-Column Zero-Truncation Card Redesign (100% COMPLETED & VERIFIED)**:
+  - **User Feedback & Requirements**:
+    1. Remove "Add Contacts" from the contacts tab completely.
+    2. Adjust the search bar directly in place of the "Add Contact" button inside the top header toolbar card for a sleek, single-row top toolbar.
+    3. Redesign the contact list cards into a 3-column layout so that all details fit on standard 15.6" screens (`1366×768` and `1920×1080`) and smaller screens without any truncated labels (`CLIENT...`, `REQUISITIO...`, `STATUS & AC...`) or clipped action buttons.
+  - **Implementation**:
+    - **Header Toolbar Card (Sleek Single Row)**: Left side contains avatar, "Client Contacts", contact count badge, scope pill, and subtitle. Right side contains the 320px live search bar (`.cd-contact-search-subcard`) and the Quick Refresh button (`#cdContactResetBtn`). "Add Contacts" button completely removed. Zero vertical stacking.
+    - **3-Master-Sub-Cards List Card Architecture**:
+      - Converted cramped 5-column layout into 3 balanced, spacious master sub-cards (`minmax(0, 1.25fr) minmax(0, 1.2fr) minmax(0, 1.05fr)`):
+        1. **Profile & Role Sub-Card**: 40x40 avatar, name, designation, primary SPOC badge, and compact chip cluster (`[Client Name]`, `[#C-ID]`, `[Authorized POC]`). All identity elements unified with zero truncation.
+        2. **Communication Sub-Card**: Wide container (320px+) for full email and phone numbers with copy icons and a "Copy All" header button.
+        3. **Requisitions & Actions Sub-Card**: Pipeline active roles counter with direct "View Jobs →" link, and spacious action buttons (`Call`, `Email`, `WhatsApp Chat`) with over 100px safety margin—preventing button cutoff.
+      - **Responsive Adaptability**: Dynamically transitions to 2-column layout at `<= 1180px` (actions span full width) and 1-column stack at `<= 768px`.
+    - **Scope**: Applied identically across Internal Client drawer (`show.blade.php`) and Direct Client drawer (`dviewMore.blade.php`).
+  - **Verification**: `php -l` clean, `php artisan view:clear` passed, simulation verified end-to-end rendering and search integration.
+
 - *2026-10-26* — **Client Drawer Contacts Tab: Data Loading Fix, Client-First RAM Hydration & 15.6" Screen UI/UX Optimization (100% COMPLETED & VERIFIED)**:
   - **Issue Root Cause Analysis**:
     - The Contacts tab in the client drawer displayed empty "No Contacts Found" and 0 sub-tab counts even when the top header and tab pill badges indicated contacts existed (e.g. "1 Contacts").
