@@ -6614,11 +6614,17 @@ use Carbon\Carbon;
         avatarPalette: ['#2563eb', '#059669', '#7c3aed', '#d97706', '#db2777', '#0284c7', '#4f46e5', '#0d9488', '#ea580c'],
 
         init: function(clientId) {
-            if (clientId) this.clientId = clientId;
-            if (!this.isInitialized) {
-                this.bindEvents();
-                this.isInitialized = true;
+            if (clientId) {
+                var cid = parseInt(clientId, 10);
+                if (this.clientId && parseInt(this.clientId, 10) !== cid) {
+                    this.clientId = cid;
+                    this.allContacts = [];
+                } else {
+                    this.clientId = cid;
+                }
             }
+            this.bindEvents();
+            this.isInitialized = true;
             if (Array.isArray(this.allContacts) && this.allContacts.length > 0) {
                 this.updateCounts(this.allContacts);
                 this.filterAndRender();
@@ -7062,10 +7068,12 @@ use Carbon\Carbon;
     };
 
     function initContactsDataTable() {
-        window.InternalClientContactsManager.init();
+        var cid = (typeof currentClientId !== 'undefined') ? currentClientId : (window.ClientStateManager && typeof window.ClientStateManager.getSelectedClientId === 'function' ? window.ClientStateManager.getSelectedClientId() : null);
+        window.InternalClientContactsManager.init(cid);
     }
     function initContactsManager() {
-        window.InternalClientContactsManager.init();
+        var cid = (typeof currentClientId !== 'undefined') ? currentClientId : (window.ClientStateManager && typeof window.ClientStateManager.getSelectedClientId === 'function' ? window.ClientStateManager.getSelectedClientId() : null);
+        window.InternalClientContactsManager.init(cid);
     }
 </script>
 
@@ -7087,7 +7095,7 @@ use Carbon\Carbon;
 </div>
 
 <script>
-    $(document).ready(function() {
+    (function() {
         if (window.performance && performance.mark) {
             performance.mark('client_drawer_render_start');
             setTimeout(function() {
@@ -7104,7 +7112,11 @@ use Carbon\Carbon;
 
         function loadInternalTabContent(target, force) {
             if (!target) return;
-            if (window.ClientStateManager && window.ClientStateManager.getSelectedClientId() !== currentClientId) {
+            var activeSelId = window.ClientStateManager && typeof window.ClientStateManager.getSelectedClientId === 'function'
+                ? window.ClientStateManager.getSelectedClientId()
+                : (window.activeSelectedClientId || null);
+            if (activeSelId && parseInt(activeSelId, 10) !== currentClientId) {
+                console.warn('[Client Drawer Shield] Discarded tab load for inactive client', activeSelId, 'vs current', currentClientId);
                 return;
             }
 
@@ -7117,6 +7129,8 @@ use Carbon\Carbon;
                         });
                     }
                 }, 60);
+                if (window.ClientStateManager) window.ClientStateManager.markTabLoaded(currentClientId, target);
+                return;
             }
 
             if (target === 'candidate_list') {
@@ -7175,7 +7189,7 @@ use Carbon\Carbon;
             $(this).addClass('active');
             $('#kt_activitiesClient .tab-pane').removeClass('active show');
             $(`#kt_activitiesClient #${target}`).addClass('active show');
-            loadInternalTabContent(target);
+            loadInternalTabContent(target, true);
         });
 
         // Scoped Click Handler for Metric KPI Cards
@@ -8921,8 +8935,11 @@ use Carbon\Carbon;
     });
 
     window.fetchJobsClient = function(page = 1, search = '', status = 'all') {
-        var activeClientId = $('#hid_client_id').val() || '{{ $client->id }}';
-        if (window.ClientStateManager && window.ClientStateManager.getSelectedClientId() && window.ClientStateManager.getSelectedClientId() != activeClientId) {
+        var activeClientId = parseInt($('#hid_client_id').val() || '{{ $client->id }}', 10);
+        var curSelId = window.ClientStateManager && typeof window.ClientStateManager.getSelectedClientId === 'function'
+            ? window.ClientStateManager.getSelectedClientId()
+            : (window.activeSelectedClientId || null);
+        if (curSelId && parseInt(curSelId, 10) !== activeClientId) {
             console.log('[Jobs Tab Shield] Discarded fetch for inactive client', activeClientId);
             return;
         }
@@ -8940,7 +8957,10 @@ use Carbon\Carbon;
                 custom: true
             },
             success: function(response) {
-                if (window.ClientStateManager && window.ClientStateManager.getSelectedClientId() && window.ClientStateManager.getSelectedClientId() != activeClientId) {
+                var verifySelId = window.ClientStateManager && typeof window.ClientStateManager.getSelectedClientId === 'function'
+                    ? window.ClientStateManager.getSelectedClientId()
+                    : (window.activeSelectedClientId || null);
+                if (verifySelId && parseInt(verifySelId, 10) !== activeClientId) {
                     return;
                 }
                 $('.page-loader').css('display', 'none');
@@ -9297,5 +9317,5 @@ use Carbon\Carbon;
                 });
             }
         });
-    });
+    })();
 </script>
