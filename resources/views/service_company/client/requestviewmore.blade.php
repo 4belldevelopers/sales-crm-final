@@ -88,6 +88,62 @@
         $rc_company_type_val = 'Direct Corporate Client';
     }
 
+    // Workforce Scale Range calculation
+    $cFrom = @$directClientDetail->company_size_from;
+    $cTo = @$directClientDetail->company_size ?: @$directClientDetail->company_sizes;
+    $workforceRange = '51 – 200 Employees';
+    $tiersMap = [
+      '1-1'         => '1 Employee (Solo)',
+      '1-10'        => '1 – 10 Employees',
+      '2-10'        => '2 – 10 Employees',
+      '11-50'       => '11 – 50 Employees',
+      '51-200'      => '51 – 200 Employees',
+      '201-500'     => '201 – 500 Employees',
+      '501-1000'    => '501 – 1,000 Employees',
+      '1001-5000'   => '1,001 – 5,000 Employees',
+      '5001-10000'  => '5,001 – 10,000 Employees',
+      '10001-50000' => '10,001 – 50,000 Employees',
+      '50001-0'     => '50,000+ Employees',
+    ];
+    $rawCheck = (string)($cTo ?: $cFrom);
+    if (str_contains($rawCheck, '-')) {
+      $parts = explode('-', $rawCheck);
+      $p1 = trim($parts[0]);
+      $p2 = trim($parts[1] ?? '');
+      if (isset($tiersMap[$p1.'-'.$p2])) {
+        $workforceRange = $tiersMap[$p1.'-'.$p2];
+      } elseif ($p2 === '' || $p2 === '0') {
+        $workforceRange = (is_numeric($p1) ? number_format((float)$p1) : $p1) . '+ Employees';
+      } else {
+        $f1 = is_numeric($p1) ? number_format((float)$p1) : $p1;
+        $f2 = is_numeric($p2) ? number_format((float)$p2) : $p2;
+        $workforceRange = "{$f1} – {$f2} Employees";
+      }
+    } elseif (!empty($cFrom) && !empty($cTo)) {
+      $key = (int)$cFrom . '-' . (int)$cTo;
+      if (isset($tiersMap[$key])) {
+        $workforceRange = $tiersMap[$key];
+      } elseif ((int)$cFrom >= 50000 || (int)$cTo == 0) {
+        $workforceRange = '50,000+ Employees';
+      } else {
+        $workforceRange = number_format((float)$cFrom) . ' – ' . number_format((float)$cTo) . ' Employees';
+      }
+    } elseif (!empty($cTo) && is_numeric($cTo)) {
+      $val = (int)$cTo;
+      if ($val <= 1) $workforceRange = '1 Employee (Solo)';
+      elseif ($val <= 10) $workforceRange = '1 – 10 Employees';
+      elseif ($val <= 50) $workforceRange = '11 – 50 Employees';
+      elseif ($val <= 200) $workforceRange = '51 – 200 Employees';
+      elseif ($val <= 500) $workforceRange = '201 – 500 Employees';
+      elseif ($val <= 1000) $workforceRange = '501 – 1,000 Employees';
+      elseif ($val <= 5000) $workforceRange = '1,001 – 5,000 Employees';
+      elseif ($val <= 10000) $workforceRange = '5,001 – 10,000 Employees';
+      elseif ($val <= 50000) $workforceRange = '10,001 – 50,000 Employees';
+      else $workforceRange = '50,000+ Employees';
+    } elseif (!empty($cTo)) {
+      $workforceRange = (string)$cTo;
+    }
+
     $webClean = @$directClientDetail->website ?: '';
     $clientSinceYear = (!empty(@$directClientDetail->created_at)) ? \Carbon\Carbon::parse(@$directClientDetail->created_at)->format('Y') : ((!empty(@$directClientDetail->to_created_at)) ? \Carbon\Carbon::parse(@$directClientDetail->to_created_at)->format('Y') : date('Y'));
     $clientUpdatedAt = @$directClientDetail->updated_at ? Carbon::parse($directClientDetail->updated_at)->diffForHumans() : 'Recent';
@@ -675,6 +731,264 @@
     .cd-subcard-header-icon.indigo { background: #eef2ff !important; color: #4f46e5 !important; }
     .cd-subcard-title { font-size: 13px !important; font-weight: 700 !important; color: #0f172a !important; margin: 0 !important; }
 
+    
+          /* ── Client Information: Executive Vertical Listing (God-Level) ── */
+          .cd-vertical-info-list {
+            display: flex !important;
+            flex-direction: column !important;
+            width: 100% !important;
+          }
+          .cd-vinfo-row {
+            display: flex !important;
+            align-items: flex-start !important;
+            justify-content: space-between !important;
+            gap: 12px !important;
+            padding: 9px 2px !important;
+            border-bottom: 1px solid #f1f5f9 !important;
+            min-width: 0 !important;
+            transition: background-color 0.15s ease !important;
+          }
+          .cd-vinfo-row:first-child {
+            padding-top: 2px !important;
+          }
+          .cd-vinfo-row:last-child {
+            border-bottom: none !important;
+            padding-bottom: 2px !important;
+          }
+          .cd-vinfo-row:hover {
+            background-color: #fcfdfe !important;
+          }
+          .cd-vinfo-key {
+            display: flex !important;
+            align-items: center !important;
+            gap: 8px !important;
+            flex: 0 0 145px !important;
+            min-width: 125px !important;
+          }
+          .cd-vinfo-icon {
+            width: 26px !important;
+            height: 26px !important;
+            border-radius: 6px !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            font-size: 11px !important;
+            flex-shrink: 0 !important;
+          }
+          .cd-vinfo-icon.red     { background: #fef2f2 !important; color: #ef4444 !important; }
+          .cd-vinfo-icon.blue    { background: #eff6ff !important; color: #2563eb !important; }
+          .cd-vinfo-icon.green   { background: #ecfdf5 !important; color: #059669 !important; }
+          .cd-vinfo-icon.amber   { background: #fefce8 !important; color: #ca8a04 !important; }
+          .cd-vinfo-icon.purple  { background: #f5f3ff !important; color: #7c3aed !important; }
+          .cd-vinfo-icon.sky     { background: #f0f9ff !important; color: #0284c7 !important; }
+          .cd-vinfo-icon.emerald { background: #f0fdf4 !important; color: #16a34a !important; }
+          .cd-vinfo-icon.orange  { background: #fff7ed !important; color: #ea580c !important; }
+          .cd-vinfo-icon.slate   { background: #f8fafc !important; color: #475569 !important; border: 1px solid #e2e8f0 !important; }
+          .cd-vinfo-icon.cyan    { background: #ecfeff !important; color: #0891b2 !important; }
+          .cd-vinfo-icon.indigo  { background: #eef2ff !important; color: #4f46e5 !important; }
+
+          .cd-vinfo-label {
+            font-size: 11.5px !important;
+            font-weight: 600 !important;
+            color: #64748b !important;
+            letter-spacing: -0.1px !important;
+            line-height: 1.3 !important;
+          }
+          .cd-vinfo-val {
+            flex: 1 !important;
+            min-width: 0 !important;
+            text-align: right !important;
+            display: flex !important;
+            flex-direction: column !important;
+            align-items: flex-end !important;
+            justify-content: center !important;
+            font-size: 12.5px !important;
+            font-weight: 500 !important;
+            color: #0f172a !important;
+            word-break: break-word !important;
+          }
+          .cd-vinfo-link {
+            color: #2563eb !important;
+            font-weight: 600 !important;
+            text-decoration: none !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            gap: 4px !important;
+            transition: color 0.15s ease !important;
+          }
+          .cd-vinfo-link:hover {
+            color: #1d4ed8 !important;
+            text-decoration: underline !important;
+          }
+          .cd-vinfo-link.direct {
+            color: #059669 !important;
+          }
+          .cd-vinfo-link.direct:hover {
+            color: #047857 !important;
+          }
+
+          .cd-career-pill {
+            display: inline-flex !important;
+            align-items: center !important;
+            gap: 4px !important;
+            background: #ecfdf5 !important;
+            color: #059669 !important;
+            border: 1px solid #a7f3d0 !important;
+            padding: 2px 7px !important;
+            border-radius: 4px !important;
+            font-size: 11px !important;
+            font-weight: 600 !important;
+            text-decoration: none !important;
+            transition: all 0.15s ease !important;
+          }
+          .cd-career-pill:hover {
+            background: #059669 !important;
+            color: #ffffff !important;
+            border-color: #059669 !important;
+          }
+
+          .cd-tax-wrap {
+            display: inline-flex !important;
+            align-items: center !important;
+            gap: 6px !important;
+          }
+          .cd-tax-code {
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace !important;
+            font-size: 11.5px !important;
+            font-weight: 600 !important;
+            background: #f1f5f9 !important;
+            color: #0f172a !important;
+            padding: 2px 7px !important;
+            border-radius: 4px !important;
+            border: 1px solid #e2e8f0 !important;
+            letter-spacing: 0.3px !important;
+          }
+          .cd-copy-btn {
+            background: transparent !important;
+            border: 1px solid #e2e8f0 !important;
+            border-radius: 4px !important;
+            color: #64748b !important;
+            width: 22px !important;
+            height: 22px !important;
+            padding: 0 !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            font-size: 10px !important;
+            cursor: pointer !important;
+            transition: all 0.15s ease !important;
+          }
+          .cd-copy-btn:hover {
+            background: #f8fafc !important;
+            color: #0f172a !important;
+            border-color: #cbd5e1 !important;
+          }
+
+          .cd-loc-group {
+            display: flex !important;
+            flex-direction: column !important;
+            gap: 6px !important;
+            width: 100% !important;
+          }
+          .cd-loc-card {
+            background: #f8fafc !important;
+            border: 1px solid #eef2f6 !important;
+            border-radius: 6px !important;
+            padding: 6px 9px !important;
+            text-align: left !important;
+            width: 100% !important;
+          }
+          .cd-loc-card.hq {
+            background: #f0f7ff !important;
+            border-color: #dbeafe !important;
+          }
+          .cd-loc-top {
+            display: flex !important;
+            align-items: center !important;
+            justify-content: space-between !important;
+            gap: 8px !important;
+            margin-bottom: 2px !important;
+          }
+          .cd-loc-tag {
+            font-size: 9px !important;
+            font-weight: 700 !important;
+            text-transform: uppercase !important;
+            letter-spacing: 0.3px !important;
+            padding: 1px 5px !important;
+            border-radius: 3px !important;
+          }
+          .cd-loc-tag.hq {
+            background: #2563eb !important;
+            color: #ffffff !important;
+          }
+          .cd-loc-tag.branch {
+            background: #e2e8f0 !important;
+            color: #475569 !important;
+          }
+          .cd-loc-title {
+            font-size: 12px !important;
+            font-weight: 700 !important;
+            color: #0f172a !important;
+          }
+          .cd-loc-street {
+            font-size: 11px !important;
+            color: #475569 !important;
+            line-height: 1.3 !important;
+            word-break: break-word !important;
+          }
+          .cd-loc-postcode {
+            font-size: 10.5px !important;
+            color: #64748b !important;
+            margin-top: 1px !important;
+          }
+
+          .cd-type-badge-pill {
+            font-size: 11px !important;
+            font-weight: 600 !important;
+            padding: 2px 7px !important;
+            border-radius: 4px !important;
+            background: #f0f9ff !important;
+            color: #0284c7 !important;
+            border: 1px solid #bae6fd !important;
+          }
+          .cd-vintage-chip {
+            font-size: 10.5px !important;
+            color: #64748b !important;
+            font-weight: 500 !important;
+            margin-left: 4px !important;
+          }
+
+          .cd-social-links-row {
+            display: inline-flex !important;
+            align-items: center !important;
+            gap: 5px !important;
+            flex-wrap: wrap !important;
+            justify-content: flex-end !important;
+          }
+          .cd-social-btn {
+            width: 24px !important;
+            height: 24px !important;
+            border-radius: 5px !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            font-size: 11px !important;
+            color: #ffffff !important;
+            text-decoration: none !important;
+            transition: opacity 0.15s ease, transform 0.15s ease !important;
+          }
+          .cd-social-btn:hover {
+            opacity: 0.9 !important;
+            transform: translateY(-1px) !important;
+            color: #ffffff !important;
+          }
+          .cd-social-btn.linkedin { background: #0a66c2 !important; }
+          .cd-social-btn.twitter  { background: #0f172a !important; }
+          .cd-social-btn.github   { background: #24292f !important; }
+          .cd-social-btn.youtube  { background: #ff0000 !important; }
+          .cd-social-btn.facebook { background: #1877f2 !important; }
+          .cd-social-btn.instagram{ background: linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888) !important; }
+          .cd-social-btn.custom   { background: #475569 !important; }
     .cd-info-subcards-grid {
         display: grid !important;
         grid-template-columns: 1fr 1fr !important;
@@ -887,7 +1201,7 @@
                         </div>
                         <div class="cd-hero-meta-item" title="Workforce Scale">
                             <i class="fas fa-users"></i>
-                            <span>{{ is_numeric(@$directClientDetail->company_size) ? number_format((float)@$directClientDetail->company_size) . '+' : (@$directClientDetail->company_size ?: '200+') }} Employees</span>
+                            <span>{{ $workforceRange }}</span>
                         </div>
                         <div class="cd-hero-meta-item" title="Vendor Reference">
                             <i class="fas fa-id-badge"></i>
