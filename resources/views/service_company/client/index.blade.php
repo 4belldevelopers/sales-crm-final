@@ -1387,46 +1387,143 @@ function exportClientsToCsv() {
     document.body.removeChild(link);
 }
 
-// ── Bounded Browser RAM LRU Cache for Client Drawers ──
-const DrawerLRUCache = {
-    cache: new Map(),
-    maxEntries: 25,
+// ── Session & Inactivity Recovery Engine (10-minute Idle & Sleep Recovery) ──
+window.ClientSessionRecoveryManager = {
+    heartbeatRoute: "{{ route('service_company.clients.sessionHeartbeat') }}",
+    lastActivity: Date.now(),
+    lastHeartbeat: Date.now(),
+    heartbeatIntervalMs: 300000, // 5 minutes
+    idleThresholdMs: 60000,      // 60 seconds
+    isReconnecting: false,
 
-    get: function(key) {
-        return this.cache.get(key) || null;
-    },
+    init: function() {
+        var self = this;
+        var updateActivity = function() {
+            self.lastActivity = Date.now();
+        };
+        ['mousedown', 'keydown', 'scroll', 'touchstart'].forEach(function(evt) {
+            window.addEventListener(evt, updateActivity, { passive: true });
+        });
 
-    set: function(key, html) {
-        if (this.cache.size >= this.maxEntries) {
-            const oldestKey = this.cache.keys().next().value;
-            this.cache.delete(oldestKey);
-        }
-        this.cache.set(key, html);
-    },
-
-    invalidate: function(id) {
-        for (const k of this.cache.keys()) {
-            if (k.includes(`_${id}`)) {
-                this.cache.delete(k);
+        // Tab Visibility & Focus Recovery (Triggered on wake from 10-minute sleep or background)
+        document.addEventListener('visibilitychange', function() {
+            if (document.visibilityState === 'visible') {
+                self.onWakeUp('visibilitychange');
             }
+        });
+        window.addEventListener('focus', function() {
+            self.onWakeUp('focus');
+        });
+
+        // Browser Online recovery
+        window.addEventListener('online', function() {
+            console.log('⚡ [Session Recovery] Network back online. Refreshing session...');
+            self.pingHeartbeat(function() {
+                if (typeof loadClientList === 'function') {
+                    loadClientList(window.page_no || 1, false);
+                }
+            });
+        });
+
+        // Periodic Background Heartbeat (every 5 min while page active)
+        setInterval(function() {
+            if (document.visibilityState === 'visible' && (Date.now() - self.lastActivity < 600000)) {
+                self.pingHeartbeat();
+            }
+        }, this.heartbeatIntervalMs);
+    },
+
+    onWakeUp: function(source) {
+        var elapsed = Date.now() - this.lastActivity;
+        this.lastActivity = Date.now();
+
+        // If page was idle for > 60 seconds, ping session heartbeat to revive TCP keepalive and refresh CSRF
+        if (elapsed > this.idleThresholdMs) {
+            var self = this;
+            this.pingHeartbeat(function(authOk) {
+                if (!authOk) {
+                    console.warn('[Session Recovery] Session expired during idle period.');
+                    return;
+                }
+                // Revive Web Worker if suspended
+                if (typeof clWorkerReady !== 'undefined' && !clWorkerReady && typeof initClientWorker === 'function') {
+                    initClientWorker();
+                } else if (typeof fetchActiveProjection === 'function') {
+                    fetchActiveProjection();
+                }
+
+                // If active drawer was in error state, auto-recover
+                if (window.ClientStateManager && window.ClientStateManager.state.drawerStatus === 'error') {
+                    var selId = window.ClientStateManager.getSelectedClientId();
+                    var selType = window.ClientStateManager.state.selectedClientType;
+                    if (selId && selType) {
+                        console.log('[Session Recovery] Auto-recovering failed drawer for client', selId);
+                        window.ClientStateManager.openClientDrawer(selId, selType);
+                    }
+                }
+            });
         }
     },
 
-    clear: function() {
-        this.cache.clear();
+    pingHeartbeat: function(callback) {
+        var self = this;
+        $.ajax({
+            url: self.heartbeatRoute,
+            type: 'GET',
+            cache: false,
+            timeout: 8000,
+            success: function(resp) {
+                self.lastHeartbeat = Date.now();
+                if (resp && resp.csrf_token) {
+                    $('meta[name="csrf-token"]').attr('content', resp.csrf_token);
+                    $.ajaxSetup({
+                        headers: { 'X-CSRF-TOKEN': resp.csrf_token }
+                    });
+                }
+                if (typeof callback === 'function') callback(true, resp);
+            },
+            error: function(xhr) {
+                console.warn('[Session Recovery] Heartbeat check error:', xhr.status);
+                if (typeof callback === 'function') callback(false, xhr);
+            }
+        });
+    },
+
+    executeWithRetry: function(requestFn, retryCount = 1, onFinalError) {
+        var self = this;
+        requestFn(function(success, data, xhr) {
+            if (success) return;
+            // Transient connection reset (0) or CSRF token mismatch (419)
+            if (xhr && (xhr.status === 0 || xhr.status === 419) && retryCount > 0) {
+                console.log(`[Session Recovery] Transient HTTP ${xhr.status} caught. Reviving session & retrying...`);
+                self.pingHeartbeat(function(authOk) {
+                    if (authOk) {
+                        setTimeout(function() {
+                            self.executeWithRetry(requestFn, retryCount - 1, onFinalError);
+                        }, 250);
+                    } else if (typeof onFinalError === 'function') {
+                        onFinalError(xhr);
+                    }
+                });
+            } else if (typeof onFinalError === 'function') {
+                onFinalError(xhr);
+            }
+        });
     }
 };
 
-// ── Canonical Architecture & State Machine for Client Management ──
+// ── Canonical Architecture & Deterministic State Machine for Client Management ──
 window.ClientStateManager = {
     state: {
         activeTab: {!! json_encode($initialTab ?? 'all') !!},
         selectedClientId: null,
-        selectedClientType: null, // 'internal' | 'direct' | null
-        selectedClientTab: null,
+        selectedClientType: null, // 'internal' | 'direct' | 'request' | null
+        selectedClientTab: 'overview',
         drawerStatus: 'idle', // 'idle' | 'loading' | 'loaded' | 'error'
         drawerError: null,
-        drawerRequestToken: 0
+        drawerRequestToken: 0,
+        drawerLoadedTabs: {}, // keyed by `${clientId}_${tabName}`
+        currentDrawerContext: null
     },
 
     activeDrawerXhr: null,
@@ -1437,6 +1534,85 @@ window.ClientStateManager = {
 
     getSelectedClientId: function() {
         return this.state.selectedClientId;
+    },
+
+    isTabLoaded: function(clientId, tabName) {
+        return !!this.state.drawerLoadedTabs[`${clientId}_${tabName}`];
+    },
+
+    markTabLoaded: function(clientId, tabName) {
+        this.state.drawerLoadedTabs[`${clientId}_${tabName}`] = true;
+    },
+
+    // ── Teardown Active Drawer (Atomic Clean State Transition) ──
+    teardownDrawer: function(fullReset = true) {
+        // 1. Abort in-flight drawer network request
+        if (this.activeDrawerXhr && this.activeDrawerXhr.readyState !== 4) {
+            this.activeDrawerXhr.abort();
+            this.activeDrawerXhr = null;
+        }
+
+        // 2. Detach namespaced drawer DOM event listeners to prevent duplicate triggers
+        $(document).off('.clientDrawer .internalDrawer .directDrawer .drawerTabs');
+
+        // 3. Destroy Chart.js instances cleanly
+        if (window.perfChartInstances) {
+            Object.values(window.perfChartInstances).forEach(function(c) {
+                try { if (c && typeof c.destroy === 'function') c.destroy(); } catch (e) {}
+            });
+            window.perfChartInstances = {};
+        }
+        if (window.dcChartInstances) {
+            Object.values(window.dcChartInstances).forEach(function(c) {
+                try { if (c && typeof c.destroy === 'function') c.destroy(); } catch (e) {}
+            });
+            window.dcChartInstances = {};
+        }
+
+        // 4. Clear performance analytics RAM cache
+        window.perfClientCache = {};
+
+        // 5. Teardown sub-card state machines
+        if (window.ClientCandidateStore && typeof window.ClientCandidateStore.destroy === 'function') {
+            try { window.ClientCandidateStore.destroy(); } catch (e) {}
+        }
+        if (window.ClientCandidateStoreDirect && typeof window.ClientCandidateStoreDirect.destroy === 'function') {
+            try { window.ClientCandidateStoreDirect.destroy(); } catch (e) {}
+        }
+
+        // 6. Empty drawer container DOM elements completely
+        $('#kt_activitiesClient_body').empty();
+        $('#kt_activitiesDirectClient_body').empty();
+
+        // 7. Reset tokens and context
+        this.state.drawerRequestToken++;
+        this.state.currentDrawerContext = null;
+
+        if (fullReset) {
+            this.state.selectedClientId = null;
+            this.state.selectedClientType = null;
+            this.state.selectedClientTab = null;
+            this.state.drawerStatus = 'idle';
+            this.state.drawerError = null;
+            window.activeSelectedClientId = null;
+
+            closeClientDrawers();
+
+            // Clear row highlights
+            $('.tbl-r.client-selected').removeClass('client-selected');
+            $('[data-selected-client]').removeAttr('data-selected-client');
+
+            try {
+                localStorage.removeItem('selected_client_id');
+                localStorage.removeItem('active_client_id');
+                sessionStorage.removeItem('selected_client_id');
+                sessionStorage.removeItem('active_client_id');
+            } catch (e) {}
+        }
+    },
+
+    clearDrawerState: function() {
+        this.teardownDrawer(true);
     },
 
     // ── Deterministic Tab Change Lifecycle (Requirement 4) ──
@@ -1457,13 +1633,10 @@ window.ClientStateManager = {
         // 2. Invalidate previous tab/client context
         this.invalidateTabContext();
 
-        // 3. Clear selectedClient
-        this.clearSelectedClient();
-
-        // 4. Clear drawer state
+        // 3. Clear selectedClient & full drawer teardown
         this.clearDrawerState();
 
-        // 5. Load
+        // 4. Load
         this.renderTabHeaders(newTab);
         if (typeof loadClientList === 'function') {
             loadClientList(1, updateUrl);
@@ -1485,11 +1658,6 @@ window.ClientStateManager = {
             ClientStore.currentXhr = null;
         }
 
-        // Requirement 2: Never Reuse Previous Drawer Data - Purge drawer LRU cache across tab changes
-        if (typeof DrawerLRUCache !== 'undefined' && typeof DrawerLRUCache.clear === 'function') {
-            DrawerLRUCache.clear();
-        }
-
         // Clean any leftover URL client params so back/forward or reload starts clean
         try {
             const url = new URL(window.location);
@@ -1501,62 +1669,7 @@ window.ClientStateManager = {
     },
 
     clearSelectedClient: function() {
-        this.state.selectedClientId = null;
-        this.state.selectedClientType = null;
-        this.state.selectedClientTab = null;
-        window.activeSelectedClientId = null;
-
-        // Clear any selected client attributes from DOM
-        $('[data-selected-client]').removeAttr('data-selected-client');
-        $('.tbl-r.client-selected').removeClass('client-selected');
-
-        // Sanitize any potential localStorage/sessionStorage references
-        try {
-            localStorage.removeItem('selected_client_id');
-            localStorage.removeItem('active_client_id');
-            sessionStorage.removeItem('selected_client_id');
-            sessionStorage.removeItem('active_client_id');
-        } catch (e) {}
-    },
-
-    clearDrawerState: function() {
-        // 1. Invalidate drawer cache for closed client to guarantee 100% fresh data on reopening
-        if (typeof DrawerLRUCache !== 'undefined' && this.state.selectedClientId) {
-            DrawerLRUCache.invalidate(this.state.selectedClientId);
-        }
-
-        // 2. Close drawers if active
-        closeClientDrawers();
-
-        // 3. Abort any active drawer request
-        if (this.activeDrawerXhr && this.activeDrawerXhr.readyState !== 4) {
-            this.activeDrawerXhr.abort();
-            this.activeDrawerXhr = null;
-        }
-
-        // 4. Reset drawer state & context shield
-        this.state.drawerStatus = 'idle';
-        this.state.drawerError = null;
-        this.state.drawerRequestToken++;
-        this.state.currentDrawerContext = null;
-
-        // 4. Destroy chart instances
-        if (window.perfChartInstances) {
-            Object.values(window.perfChartInstances).forEach(function(c) {
-                try { if (c && typeof c.destroy === 'function') c.destroy(); } catch (e) {}
-            });
-            window.perfChartInstances = {};
-        }
-        if (window.dcChartInstances) {
-            Object.values(window.dcChartInstances).forEach(function(c) {
-                try { if (c && typeof c.destroy === 'function') c.destroy(); } catch (e) {}
-            });
-            window.dcChartInstances = {};
-        }
-
-        // 5. Empty drawer bodies to guarantee NO leftover HTML, inputs or stale IDs in DOM
-        $('#kt_activitiesClient_body').empty();
-        $('#kt_activitiesDirectClient_body').empty();
+        this.clearDrawerState();
     },
 
     openClientDrawer: function(clientId, type) {
@@ -1564,11 +1677,8 @@ window.ClientStateManager = {
         var self = this;
         var currentTab = this.state.activeTab;
 
-        // Abort previous drawer request if in flight
-        if (this.activeDrawerXhr && this.activeDrawerXhr.readyState !== 4) {
-            this.activeDrawerXhr.abort();
-            this.activeDrawerXhr = null;
-        }
+        // Atomic Teardown of previous client drawer without closing container
+        this.teardownDrawer(false);
 
         var isDirect = (type === 'direct' || type === 'request');
         var targetDrawerId = isDirect ? 'kt_activitiesDirectClient' : 'kt_activitiesClient';
@@ -1576,10 +1686,12 @@ window.ClientStateManager = {
         var bodyId = isDirect ? '#kt_activitiesDirectClient_body' : '#kt_activitiesClient_body';
         var otherBodyId = isDirect ? '#kt_activitiesClient_body' : '#kt_activitiesDirectClient_body';
 
-        // Multi-Vector Drawer Context Shield (Approved Standard)
-        var contextToken = 'ctx_' + (++this.state.drawerRequestToken) + '_' + Date.now();
+        // Deterministic Context Shield & Monotonic Token
+        var requestToken = ++this.state.drawerRequestToken;
+        var contextToken = 'ctx_' + requestToken + '_' + Date.now();
         var drawerContext = {
             contextToken: contextToken,
+            requestToken: requestToken,
             clientId: clientId,
             clientType: type,
             tab: currentTab,
@@ -1590,7 +1702,7 @@ window.ClientStateManager = {
         // Set state - Single Source of Truth
         this.state.selectedClientId = clientId;
         this.state.selectedClientType = type;
-        this.state.selectedClientTab = currentTab;
+        this.state.selectedClientTab = 'overview';
         this.state.drawerStatus = 'loading';
         this.state.drawerError = null;
         window.activeSelectedClientId = clientId;
@@ -1607,24 +1719,12 @@ window.ClientStateManager = {
         var baseurl = "{{ asset('assets/images/Loading2.gif') }}";
         var loadingText = (type === 'request') ? 'Loading Request & Commercial Terms...' : (isDirect ? 'Loading Direct Client Details...' : 'Loading Client Details...');
         $(bodyId).html(`
-            <div class="d-flex flex-column align-items-center justify-content-center p-10" style="min-height:360px;">
+            <div class="d-flex flex-column align-items-center justify-content-center p-10" style="min-height:380px;">
                 <img src="${baseurl}" height="38px" width="38px" style="object-fit:contain;" alt="Loading...">
-                <span class="mt-4 text-gray-700 font-poppins fs-7 fw-500">${loadingText}</span>
+                <span class="mt-4 text-gray-700 font-poppins fs-7 fw-600">${loadingText}</span>
                 <span class="text-gray-400 font-poppins fs-8 mt-1">Context: ${currentTab.toUpperCase()} tab</span>
             </div>
         `);
-
-        // Check cache (strictly scoped to current tab and destroyed on tab switch)
-        var cacheKey = `${currentTab}_${type}_${clientId}`;
-        var cachedView = DrawerLRUCache.get(cacheKey);
-        if (cachedView) {
-            var activeCtx = self.state.currentDrawerContext;
-            if (activeCtx && activeCtx.contextToken === contextToken && self.state.activeTab === currentTab) {
-                $(bodyId).html(cachedView);
-                self.state.drawerStatus = 'loaded';
-            }
-            return;
-        }
 
         var endpoint;
         if (type === 'request') {
@@ -1635,38 +1735,59 @@ window.ClientStateManager = {
             endpoint = "{{ route('service_company.clients.viewmore', ':id') }}".replace(':id', clientId);
         }
 
-        this.activeDrawerXhr = $.ajax({
-            type: 'GET',
-            url: endpoint,
-            success: function(response) {
-                // Multi-Vector Shield: Verify contextToken, clientId, and tab have not changed while request was in-flight
-                var activeCtx = self.state.currentDrawerContext;
-                if (!activeCtx || activeCtx.contextToken !== contextToken || activeCtx.clientId !== clientId || self.state.activeTab !== currentTab) {
-                    console.log(`[Drawer Shield] Discarded stale response for client ${clientId}. Current token: ${activeCtx ? activeCtx.contextToken : 'null'}`);
-                    return;
-                }
+        var fetchDrawerData = function(doneCallback) {
+            self.activeDrawerXhr = $.ajax({
+                type: 'GET',
+                url: endpoint,
+                cache: false,
+                success: function(response) {
+                    var activeCtx = self.state.currentDrawerContext;
+                    if (!activeCtx || activeCtx.contextToken !== contextToken || self.state.drawerRequestToken !== requestToken || self.state.selectedClientId !== clientId) {
+                        console.log(`[Drawer Shield] Discarded stale response for client ${clientId}. Current token: ${activeCtx ? activeCtx.contextToken : 'null'}`);
+                        return;
+                    }
 
-                if (response && response.view) {
-                    $(bodyId).html(response.view);
-                    DrawerLRUCache.set(cacheKey, response.view);
-                    self.state.drawerStatus = 'loaded';
-                } else {
-                    $(bodyId).html('<div class="p-8 text-center text-danger font-poppins fs-7">No client details available for the selected record.</div>');
-                    self.state.drawerStatus = 'error';
+                    if (response && response.view) {
+                        $(bodyId).html(response.view);
+                        self.state.drawerStatus = 'loaded';
+                        self.markTabLoaded(clientId, 'overview');
+                        if (typeof doneCallback === 'function') doneCallback(true, response);
+                    } else {
+                        $(bodyId).html('<div class="p-8 text-center text-danger font-poppins fs-7">No client details available for the selected record.</div>');
+                        self.state.drawerStatus = 'error';
+                        if (typeof doneCallback === 'function') doneCallback(false, null);
+                    }
+                },
+                error: function(xhr, status) {
+                    if (status === 'abort') return;
+                    if (typeof doneCallback === 'function') doneCallback(false, null, xhr);
                 }
-            },
-            error: function(xhr, status) {
-                if (status === 'abort') return;
-                var activeCtx = self.state.currentDrawerContext;
-                if (!activeCtx || activeCtx.contextToken !== contextToken || self.state.activeTab !== currentTab) return;
+            });
+        };
 
-                var msg = (xhr.status === 0 || !navigator.onLine)
-                    ? 'You are offline. Please check your network connection.'
-                    : 'Could not load client details (HTTP ' + xhr.status + '). Please try again.';
-                $(bodyId).html('<div class="p-8 text-center text-danger font-poppins fs-7" style="color:#ef4444;">' + msg + '</div>');
-                self.state.drawerStatus = 'error';
-                self.state.drawerError = msg;
-            }
+        ClientSessionRecoveryManager.executeWithRetry(fetchDrawerData, 1, function(xhr) {
+            var activeCtx = self.state.currentDrawerContext;
+            if (!activeCtx || activeCtx.contextToken !== contextToken || self.state.drawerRequestToken !== requestToken) return;
+
+            var msg = (!xhr || xhr.status === 0 || !navigator.onLine)
+                ? 'Network connection was interrupted. Please check your connectivity.'
+                : 'Could not load client details (HTTP ' + (xhr.status || 500) + '). Please try again.';
+
+            self.state.drawerStatus = 'error';
+            self.state.drawerError = msg;
+
+            $(bodyId).html(`
+                <div class="d-flex flex-column align-items-center justify-content-center p-10 text-center" style="min-height:380px;">
+                    <div class="mb-3 text-danger">
+                        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                    </div>
+                    <div class="fw-bold fs-6 text-gray-800 mb-1">Failed to Load Client Details</div>
+                    <div class="text-muted fs-7 mb-4 font-poppins">${msg}</div>
+                    <button type="button" class="btn btn-sm btn-primary px-4 py-2" onclick="ClientStateManager.openClientDrawer('${clientId}', '${type}')">
+                        <i class="fas fa-redo me-1"></i> Retry Loading
+                    </button>
+                </div>
+            `);
         });
     },
 
@@ -1771,6 +1892,8 @@ function openClientDrawer(drawerId, toggleId) {
             }
         }
         otherDrawerEl.classList.remove('drawer-on');
+        otherDrawerEl.style.removeProperty('transform');
+        otherDrawerEl.style.removeProperty('z-index');
     }
 
     var drawerEl = document.getElementById(drawerId);
@@ -2767,6 +2890,30 @@ function loadClientList(page, updateUrl = true, cursor = null) {
                 $('.loadingMessage').css({ display: 'none' });
                 $('.loader_search').css({ display: 'none' });
                 $('.page-loader').css('display', 'none');
+
+                if ((xhr.status === 0 || xhr.status === 419) && !ClientSessionRecoveryManager.isReconnecting) {
+                    ClientSessionRecoveryManager.isReconnecting = true;
+                    ClientSessionRecoveryManager.pingHeartbeat(function(authOk) {
+                        ClientSessionRecoveryManager.isReconnecting = false;
+                        if (authOk) {
+                            loadClientList(targetPage, false);
+                            return;
+                        }
+                    });
+                }
+
+                $('#allClients').html(`
+                    <div class="cl-empty-state py-12 text-center">
+                        <div class="cl-empty-icon mb-3">
+                            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                        </div>
+                        <div class="fw-bold fs-6 text-gray-800 mb-1">Unable to Load Client Data</div>
+                        <div class="text-muted fs-7 mb-4">Connection was interrupted or timed out. Click below to reconnect.</div>
+                        <button type="button" class="btn btn-sm btn-primary px-4 py-2" onclick="loadClientList(${targetPage}, false)">
+                            <i class="fas fa-redo me-1"></i> Retry Connection
+                        </button>
+                    </div>
+                `);
             }
         }
     });
@@ -2777,6 +2924,11 @@ window.loadClientList = loadClientList;
 window.fetchCandidates = loadClientList;
 
 $(document).ready(function() {
+    // Phase 0: Initialize Session & Idle Inactivity Recovery Engine
+    if (typeof ClientSessionRecoveryManager !== 'undefined') {
+        ClientSessionRecoveryManager.init();
+    }
+
     // Phase 1: Hydrate static country bundle from IndexedDB / JSON
     initCountryBundle();
 
@@ -3060,7 +3212,11 @@ function handleClientMutationEvent(data) {
 
 // 3. Tab Focus / Sleep Recovery Guard
 window.addEventListener('focus', function() {
-    fetchActiveProjection();
+    if (typeof ClientSessionRecoveryManager !== 'undefined') {
+        ClientSessionRecoveryManager.onWakeUp('focus');
+    } else {
+        fetchActiveProjection();
+    }
 });
 </script>
 @endpush

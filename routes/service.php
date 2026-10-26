@@ -118,6 +118,7 @@ Route::group(['middleware' => 'auth'], function () {
                 });
 
                 // #############       	START CLIENT MANAGEMENT
+                Route::match(['GET', 'HEAD'], 'clients/session-heartbeat', [ServiceCompanyClientController::class, 'sessionHeartbeat'])->name('clients.sessionHeartbeat');
                 Route::get('clients/industries-bundle', [ServiceCompanyClientController::class, 'industriesBundle'])->name('clients.industriesBundle');
                 Route::get('clients/location-facets', [ServiceCompanyClientController::class, 'locationFacets'])->name('clients.locationFacets');
                 Route::get('clients/active-projection', [ServiceCompanyClientController::class, 'activeClientProjection'])->name('clients.activeClientProjection');
