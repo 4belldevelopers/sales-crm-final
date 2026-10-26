@@ -1,18 +1,95 @@
-# Client-First Browser Architecture: The God-Level Blueprint for 0% Server Rendering, Zero-Strain ATS Drawers, and Real-Time Local Execution
+# JERO Distributed Client Runtime (JDCR): The God-Level Blueprint for 0% Server Rendering, Zero-Strain ATS Drawers, and Real-Time Local Execution
 
 > **Platform:** JERO.WORKS — Enterprise B2B Multi-Tenant ATS & Talent Trading Marketplace  
+> **System Paradigm:** **JERO Distributed Client Runtime (JDCR)**  
 > **Target Scale:** 10,000 Concurrent Users per page with **0% Server / MySQL / Elasticsearch Strain on Rendering & Interaction**  
-> **Core Architecture:** Transactional Outbox CQRS (MySQL Authority -> Outbox Log -> Idempotent ES Projection -> Reverb Invalidation Hint -> Client-Side Incremental Template Engine)  
+> **Core Architecture:** Transactional Outbox CQRS (MySQL Write Authority -> Outbox Log -> Idempotent ES Read Projection -> Reverb Invalidation Hint -> Browser Distributed Runtime)  
 > **Hardware Profile:** Dedicated 32 GB RAM nodes for Web/App Server, MySQL DB, and Elasticsearch  
-> **Document Status:** Authoritative Architectural Standard & Living Engineering Blueprint (V4.2 Enterprise Standard)  
+> **Document Status:** Authoritative Architectural Standard & Living Engineering Blueprint (V4.3 Enterprise Standard)  
 > **Scope:** Service Company Module (`service_company/clients`) & Universal ATS Platform Standard  
 > **Updated:** October 2026  
 
 ---
 
-## 1. Executive Summary & Forensic Analysis
+## 1. Executive Summary & The JDCR Paradigm
 
-### 1.1 The Core Architectural Questions Answered
+### 1.1 The Paradigm Shift: From "Web Page with Caching" to "Distributed Client Runtime"
+
+In high-concurrency recruitment software, treating the browser as a traditional web client that requests server-rendered HTML or monolithic JSON graphs on every user interaction is an architectural failure. 
+
+JERO.WORKS rejects the legacy Web 2.0 client-server model in favor of the **JERO Distributed Client Runtime (JDCR)**:
+> **The user's browser is engineered as an autonomous, stateful edge node operating in a distributed recruitment runtime.**
+
+```
+══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+                                    JERO DISTRIBUTED CLIENT RUNTIME (JDCR)
+══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+                               ┌──────────────────────────────────────────────────┐
+                               │                    UI RUNTIME                    │
+                               │   • Incremental Template Renderer                │
+                               │   • Information Hierarchy (Tiers 1, 2, 3, 4)     │
+                               │   • Calibrated for 15.6" Screens (1366 & 1920)   │
+                               └────────────────────────┬─────────────────────────┘
+                                                        │
+                      ┌─────────────────────────────────┼─────────────────────────────────┐
+                      ▼                                 ▼                                 ▼
+         ┌─────────────────────────┐       ┌─────────────────────────┐       ┌─────────────────────────┐
+         │     L1 WORKING RAM      │       │     L2 PERSISTENCE      │       │   COMPUTE ENGINE (OLAP) │
+         │   (ClientMemoryDB)      │       │    (ClientEntityDB)     │       │   (cl-data-worker.js)   │
+         │ • Active Working Set    │       │ • Bounded IndexedDB     │       │ • Stateless Web Worker  │
+         │ • 0ms Pointer Lookups   │       │ • LRU Eviction (100 cap)│       │ • Off-Thread Filtering  │
+         │ • Ephemeral WASM Blobs  │       │ • PII & Session Purge   │       │ • Facet & Sort Compute  │
+         └────────────┬────────────┘       └────────────┬────────────┘       └────────────┬────────────┘
+                      │                                 │                                 │
+                      └─────────────────────────────────┼─────────────────────────────────┘
+                                                        │
+                                                        ▼
+                                       ┌──────────────────────────────────┐
+                                       │     SYNCHRONIZATION SUBSYSTEM    │
+                                       │   • Monotonic Version Tracker    │
+                                       │   • Optimistic Concurrency Guard │
+                                       │   • AbortController Supervisor   │
+                                       └────────────────┬─────────────────┘
+                                                        │
+                                  ┌─────────────────────┴─────────────────────┐
+                                  │ (Notification Hint)                       │ (Authoritative Reconcile)
+                                  ▼                                           ▼
+                   ┌──────────────────────────────┐            ┌──────────────────────────────┐
+                   │   LARAVEL REVERB WEBSOCKET   │            │     THIN DELTA-SYNC API      │
+                   │   • Lossy-Tolerant Broadcast │            │   • Monotonic Version Check  │
+                   │   • Entity Invalidation Hint │            │   • HTTP 304 ETag Validation │
+                   └──────────────┬───────────────┘            └──────────────┬───────────────┘
+                                  │                                           │
+                                  └─────────────────────┬─────────────────────┘
+                                                        │
+════════════════════════════════════════════════════════╪══════════════════════════════════════════════════════════
+                                                 NETWORK BOUNDARY (REST / WS)
+════════════════════════════════════════════════════════╪══════════════════════════════════════════════════════════
+                                                        │
+                                       ┌────────────────▼─────────────────┐
+                                       │      LARAVEL OCTANE GATEWAY      │
+                                       │   • Session & Tenant Auth Guard  │
+                                       │   • RBAC & Field Masking         │
+                                       │   • Zero HTML Blade Rendering    │
+                                       └────────────────┬─────────────────┘
+                                                        │
+                                ┌───────────────────────┴───────────────────────┐
+                                │                                               │
+                                ▼                                               ▼
+                 ┌─────────────────────────────┐                 ┌─────────────────────────────┐
+                 │     ELASTICSEARCH CLUSTER   │                 │     MYSQL TRANSACTIONAL     │
+                 │          (READ MODEL)       │                 │        (WRITE MODEL)        │
+                 │ • 100% Query Reads (60+ idx)│                 │ • Strict CUD Authority      │
+                 │ • Idempotent Outbox Sink    │                 │ • Transactional Outbox Log  │
+                 │ • 0% MySQL Reads on Web/API │                 │ • DB::transaction() Scope   │
+                 └─────────────────────────────┘                 └─────────────────────────────┘
+══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+```
+
+---
+
+### 1.2 The Forensic Answers to Core Questions
 
 #### 1. "Is everything browser-based right now? Is local DB working?"
 * **Current Reality:** **No, not everything is browser-based yet.**
@@ -23,7 +100,7 @@
 #### 2. "What is the use case of 'FrankenPHP/Octane drops idle TCP connections after 60–75s'? Why load unnecessary on the server if everything can be loaded locally?"
 * **Why the TCP drop happened:** FrankenPHP and Octane maintain persistent worker processes and HTTP/2 or HTTP/1.1 keep-alive TCP connections. By default, high-concurrency web servers configure an idle keep-alive timeout between 60s and 75s to release inactive sockets and prevent socket exhaustion when handling thousands of clients.
 * **Why the Heartbeat was built:** The idle session heartbeat (`/clients/session-heartbeat`) was added as a defensive bandage because after a recruiter left the browser idle for 10 minutes, the underlying TCP connection was dropped, PHP session garbage collection or CSRF expiration occurred, and the next click on a drawer produced a stalled request or HTTP 419/500 error.
-* **The Fundamental Truth:** The heartbeat **is indeed a band-aid**. If drawer rendering and entity data live locally in the user's browser (RAM + bounded IndexedDB), **the recruiter never needs to talk to FrankenPHP/Octane just to view a client or switch drawer tabs**. The entire UI renders at 0ms latency with 0% server network traffic, completely eliminating idle session crashes.
+* **The JDCR Solution:** In JDCR, the heartbeat **becomes completely unnecessary**. Because entity data and UI templates execute inside the browser runtime (RAM + bounded IndexedDB), **the recruiter never needs to talk to FrankenPHP/Octane just to view a client or switch drawer tabs**. The entire UI renders at 0ms latency with 0% server network traffic, completely eliminating idle session crashes.
 
 #### 3. "Can we remove dependency on FrankenPHP/Octane? What's your thoughts?"
 * **Can Octane be removed from Drawer Rendering & Page Interaction? YES, 100%.**
@@ -307,7 +384,7 @@ Debounce and throttle timings are calibrated per interaction type:
 * **Data Transfer:** Employs structured clones and transferable `ArrayBuffer` instances where large numerical datasets exist.
 
 ### 7.2 Client-Side Incremental Template Engine
-To avoid misnomers, the rendering pipeline is defined as a **Client-Side Incremental Template Engine** (not a "Virtual DOM"). It generates DOM fragments from pre-compiled template functions and patches changed nodes using element ID targeting:
+The rendering pipeline is defined as a **Client-Side Incremental Template Engine**. It generates DOM fragments from pre-compiled template functions and patches changed nodes using element ID targeting:
 
 ```javascript
 // High-performance compiled template renderer
@@ -424,4 +501,4 @@ The server-side gateway endpoint (`GET /service_company/clients/api/v2/{id}/grap
 
 ---
 
-*This document is the authoritative standard for JERO.WORKS Client-First Architecture. All subsequent development on the Service Company Client module must adhere strictly to these specifications.*
+*This document is the authoritative standard for the JERO Distributed Client Runtime (JDCR). All subsequent development on the Service Company Client module must adhere strictly to these specifications.*
