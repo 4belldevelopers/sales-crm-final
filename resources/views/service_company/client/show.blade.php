@@ -673,7 +673,7 @@ use Carbon\Carbon;
             border: 1px solid #e2e8f0 !important;
             border-radius: 10px !important;
             margin: 10px 14px 10px 14px !important;
-            padding: 10px 16px !important;
+            padding: 8px 14px !important;
             display: flex !important;
             align-items: center !important;
             justify-content: space-between !important;
@@ -683,6 +683,8 @@ use Carbon\Carbon;
             box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04) !important;
             gap: 12px !important;
             flex-wrap: wrap !important;
+            width: auto !important;
+            box-sizing: border-box !important;
           }
           .cd-top-bar-left {
             display: flex !important;
@@ -825,7 +827,8 @@ use Carbon\Carbon;
             margin: 0 14px 12px 14px !important;
             padding: 0 !important;
             box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03) !important;
-            width: calc(100% - 28px) !important;
+            width: auto !important;
+            box-sizing: border-box !important;
             overflow: hidden !important;
           }
           .cd-hero-main-row {
@@ -1263,56 +1266,80 @@ use Carbon\Carbon;
             background: #ffffff !important;
             border: 1px solid #e2e8f0 !important;
             border-radius: 10px !important;
-            padding: 8px 12px !important;
-            margin: 0 14px 14px 14px !important;
-            box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03) !important;
-            width: calc(100% - 28px) !important;
+            padding: 5px 8px !important;
+            margin: 0 14px 12px 14px !important;
+            box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04) !important;
+            width: auto !important;
+            box-sizing: border-box !important;
+            overflow: hidden !important;
           }
           .cd-drawer-tabs-list {
             display: flex !important;
             align-items: center !important;
-            gap: 6px !important;
+            gap: 4px !important;
             overflow-x: auto !important;
-            scrollbar-width: none !important;
+            overflow-y: hidden !important;
+            -webkit-overflow-scrolling: touch !important;
+            scrollbar-width: thin !important;
+            scrollbar-color: #cbd5e1 transparent !important;
             list-style: none !important;
             padding: 0 !important;
             margin: 0 !important;
             flex-wrap: nowrap !important;
+            width: 100% !important;
           }
           .cd-drawer-tabs-list::-webkit-scrollbar {
-            display: none !important;
+            height: 3px !important;
+          }
+          .cd-drawer-tabs-list::-webkit-scrollbar-track {
+            background: transparent !important;
+          }
+          .cd-drawer-tabs-list::-webkit-scrollbar-thumb {
+            background: #cbd5e1 !important;
+            border-radius: 3px !important;
           }
           .cd-drawer-tabs-list .nav-item {
             margin: 0 !important;
             flex-shrink: 0 !important;
           }
           .cd-tab-pill-btn {
-            background: #ffffff !important;
+            background: #f8fafc !important;
             border: 1px solid #e2e8f0 !important;
-            border-radius: 8px !important;
-            padding: 6px 12px !important;
-            font-size: 11.5px !important;
+            border-radius: 7px !important;
+            padding: 5px 8.5px !important;
+            font-size: 11px !important;
             font-weight: 600 !important;
             color: #475569 !important;
             display: inline-flex !important;
             align-items: center !important;
-            gap: 7px !important;
+            gap: 5px !important;
+            height: 29px !important;
             text-decoration: none !important;
             box-shadow: 0 1px 2px rgba(15, 23, 42, 0.02) !important;
             transition: all 0.15s ease-in-out !important;
             cursor: pointer !important;
             white-space: nowrap !important;
+            flex-shrink: 0 !important;
+            line-height: 1 !important;
+          }
+          .cd-tab-pill-btn i {
+            font-size: 11px !important;
+            color: #64748b !important;
+            transition: color 0.15s !important;
           }
           .cd-tab-pill-btn:hover {
-            background: #f8fafc !important;
+            background: #f1f5f9 !important;
             border-color: #cbd5e1 !important;
             color: #0f172a !important;
+          }
+          .cd-tab-pill-btn:hover i {
+            color: #009ef7 !important;
           }
           .cd-tab-pill-btn.active {
             background: #009ef7 !important;
             border-color: #009ef7 !important;
             color: #ffffff !important;
-            box-shadow: 0 2px 4px rgba(0, 158, 247, 0.2) !important;
+            box-shadow: 0 2px 5px rgba(0, 158, 247, 0.22) !important;
           }
           .cd-tab-pill-btn.active i {
             color: #ffffff !important;
@@ -1321,11 +1348,11 @@ use Carbon\Carbon;
             display: inline-flex !important;
             align-items: center !important;
             justify-content: center !important;
-            min-width: 18px !important;
-            height: 16px !important;
-            padding: 0 5px !important;
+            min-width: 17px !important;
+            height: 15px !important;
+            padding: 0 4px !important;
             border-radius: 999px !important;
-            font-size: 10px !important;
+            font-size: 9.5px !important;
             font-weight: 700 !important;
             background: #eff6ff !important;
             color: #2563eb !important;
@@ -1334,6 +1361,13 @@ use Carbon\Carbon;
           .cd-tab-pill-btn.active .cd-tab-pill-badge {
             background: rgba(255, 255, 255, 0.28) !important;
             color: #ffffff !important;
+          }
+          @media (max-width: 1200px) {
+            .cd-tab-pill-btn {
+              padding: 4.5px 7px !important;
+              font-size: 10.5px !important;
+              gap: 4px !important;
+            }
           }
 
           /* ── Overview 2-Column Grid ── */
@@ -4415,19 +4449,19 @@ use Carbon\Carbon;
           <div class="cd-drawer-tabs-card">
             <ul class="cd-drawer-tabs-list nav nav-tabs border-0 flex-nowrap" role="tablist">
               <li class="nav-item" role="presentation">
-                <a class="cd-tab-pill-btn nav-link active" data-bs-toggle="tab" data-toggle="tab" href="#overview" role="tab" aria-selected="true">
+                <a class="cd-tab-pill-btn nav-link active" data-bs-toggle="tab" data-toggle="tab" href="#overview" role="tab" aria-selected="true" title="Overview">
                   <i class="fas fa-house fa-solid"></i>
                   <span>Overview</span>
                 </a>
               </li>
               <li class="nav-item" role="presentation">
-                <a class="cd-tab-pill-btn nav-link" data-bs-toggle="tab" data-toggle="tab" href="#recent_activity" role="tab" aria-selected="false">
+                <a class="cd-tab-pill-btn nav-link" data-bs-toggle="tab" data-toggle="tab" href="#recent_activity" role="tab" aria-selected="false" title="Recent Activity">
                   <i class="fas fa-clock fa-solid"></i>
-                  <span>Recent Activity</span>
+                  <span>Activity</span>
                 </a>
               </li>
               <li class="nav-item" role="presentation">
-                <a class="cd-tab-pill-btn nav-link" data-bs-toggle="tab" data-toggle="tab" href="#contacts" role="tab" aria-selected="false">
+                <a class="cd-tab-pill-btn nav-link" data-bs-toggle="tab" data-toggle="tab" href="#contacts" role="tab" aria-selected="false" title="Client Contacts">
                   <i class="fas fa-address-book fa-solid"></i>
                   <span>Contacts</span>
                   @php $contactInitCount = isset($client_contact_info) ? count($client_contact_info) : 0; @endphp
@@ -4435,36 +4469,36 @@ use Carbon\Carbon;
                 </a>
               </li>
               <li class="nav-item" role="presentation">
-                <a class="cd-tab-pill-btn nav-link" data-bs-toggle="tab" data-toggle="tab" href="#requisitions" role="tab" aria-selected="false">
+                <a class="cd-tab-pill-btn nav-link" data-bs-toggle="tab" data-toggle="tab" href="#requisitions" role="tab" aria-selected="false" title="Active Jobs">
                   <i class="fas fa-briefcase fa-solid"></i>
                   <span>Jobs</span>
                   <span class="cd-tab-pill-badge" id="cdJobsNavBadgeInternal" style="{{ $kpiActive > 0 ? '' : 'display:none;' }}">{{ $kpiActive }}</span>
                 </a>
               </li>
               <li class="nav-item" role="presentation">
-                <a class="cd-tab-pill-btn nav-link" data-bs-toggle="tab" data-toggle="tab" href="#candidate_list" role="tab" aria-selected="false">
+                <a class="cd-tab-pill-btn nav-link" data-bs-toggle="tab" data-toggle="tab" href="#candidate_list" role="tab" aria-selected="false" title="Candidates Pipeline">
                   <i class="fas fa-user-tie fa-solid"></i>
                   <span>Candidates</span>
                   <span class="cd-tab-pill-badge" id="cdCandidatesNavBadgeInternal" style="{{ $kpiSubmitted > 0 ? '' : 'display:none;' }}">{{ $kpiSubmitted }}</span>
                 </a>
               </li>
               <li class="nav-item" role="presentation">
-                <a class="cd-tab-pill-btn nav-link" data-bs-toggle="tab" data-toggle="tab" href="#interview_tracker" role="tab" aria-selected="false">
+                <a class="cd-tab-pill-btn nav-link" data-bs-toggle="tab" data-toggle="tab" href="#interview_tracker" role="tab" aria-selected="false" title="Interview Schedule">
                   <i class="fas fa-calendar-days fa-solid"></i>
                   <span>Interviews</span>
                   <span class="cd-tab-pill-badge" id="tabBadgeInterviewTrackerShow" @if($kpiInterviews <= 0) style="display:none;" @endif>{{ $kpiInterviews }}</span>
                 </a>
               </li>
               <li class="nav-item" role="presentation">
-                <a class="cd-tab-pill-btn nav-link" data-bs-toggle="tab" data-toggle="tab" href="#candidate_joining" role="tab" aria-selected="false">
+                <a class="cd-tab-pill-btn nav-link" data-bs-toggle="tab" data-toggle="tab" href="#candidate_joining" role="tab" aria-selected="false" title="Offers & Joinings">
                   <i class="fas fa-file-signature fa-solid"></i>
-                  <span>Offers &amp; Joinings</span>
+                  <span>Offers &amp; Joins</span>
                   @php $totalOffersJoinsInternal = ($kpiOffers ?? 0) + ($kpiJoins ?? 0); @endphp
                   <span class="cd-tab-pill-badge" id="ojInternalTabBadge" @if($totalOffersJoinsInternal <= 0) style="display:none;" @endif>{{ $totalOffersJoinsInternal }}</span>
                 </a>
               </li>
               <li class="nav-item" role="presentation">
-                <a class="cd-tab-pill-btn nav-link" data-bs-toggle="tab" data-toggle="tab" href="#candidateDashboard" role="tab" aria-selected="false">
+                <a class="cd-tab-pill-btn nav-link" data-bs-toggle="tab" data-toggle="tab" href="#candidateDashboard" role="tab" aria-selected="false" title="Performance Analytics">
                   <i class="fas fa-chart-column fa-solid"></i>
                   <span>Performance</span>
                 </a>

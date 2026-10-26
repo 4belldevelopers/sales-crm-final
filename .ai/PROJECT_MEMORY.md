@@ -20,6 +20,26 @@ Last updated: 2026-10-22 (Super Admin Companies Page UI Redesign, 100% CQRS Read
 - **Test coverage:** `TenantIsolationTest`, `BenchToJobAppTrackerPipelineContractTest`, `BenchTalentRequestPipelineContractTest`, `SuperAdminCompanyLoadTest`, `SuperAdminSubscriptionLoadTest`, `SuperAdminDashboardLoadTest` (100% green).
 - **V2_login blocking-scenarios architecture:** session-epoch pattern + Reverb `UserAccountSuspended` event + `SyncUserStatusAction` (cross-tenant-safe) + `BlockCompanyAction` (static bulk helper) + `block_log` audit table + drop all 20 `refresh:true` ES sites + grep-lint guard. See [docs/V2_login/BLOCKING_SCENARIOS_AUDIT.md](../docs/V2_login/BLOCKING_SCENARIOS_AUDIT.md), [ADR 0007](../docs/adr/0007-blocking-scenarios-architecture.md). Code not yet landed.
 
+- *2026-10-26* — **Client Drawer Sub-Tabs: 15.6" Screen Responsive Fit & Complete Box Visibility (100% COMPLETED & VERIFIED)**:
+  - **User Feedback & Problem**:
+    - On standard 15.6" screens (`1366×768` and `1920×1080` at 125% OS scaling), the 8 drawer sub-tabs overflowed horizontally, cutting off the last tab ("Performance" as `Perform...`) on the right.
+    - The right border and corners of the tab card container (`.cd-drawer-tabs-card`) were cut off and not properly visible due to hardcoded `width: calc(100% - 28px)` combined with unbounded flex child blowout.
+  - **Root Cause & Architectural Fix**:
+    1. **Box Geometry & Full Visibility (`.cd-drawer-tabs-card`)**:
+       - Replaced rigid `width: calc(100% - 28px)` with `width: auto !important; box-sizing: border-box !important; overflow: hidden !important;`.
+       - Block layout now automatically calculates the exact card width with balanced 14px gutters on both left AND right. The pure white card, border (`#e2e8f0`), shadow, and all 4 rounded corners (`10px`) are 100% visible on screen with zero clipping.
+    2. **Horizontal Fit on 15.6" Screens (Total Width = 885px vs 1092px+ Available)**:
+       - Streamlined text labels: `Recent Activity` -> `Activity` (saved 45px), `Offers & Joinings` -> `Offers & Joins` (saved 25px). All target pane IDs (`#recent_activity`, `#candidate_joining`) and JS bindings remain 100% intact.
+       - Calibrated button dimensions: `padding: 5px 8.5px !important; gap: 5px !important; height: 29px !important; font-size: 11px !important;`.
+       - All 8 tabs fit in **885px**, providing over **200px of free breathing space** inside the drawer on 1366×768 screens without any cut-offs.
+    3. **Vertical & Visual Design Upgrade**:
+       - Inactive tabs use crisp slate `#f8fafc` background with `#e2e8f0` border, creating clear contrast against the pure white `#ffffff` card container.
+       - Active tab highlighted in Metronic Primary Blue (`#009ef7`) with white text and translucent badge (`background: rgba(255, 255, 255, 0.28)`).
+       - Card vertical height optimized to a compact 41px (`padding: 5px 8px !important;`), saving vertical space while keeping icons and labels vertically centered.
+       - Added smooth touch/micro-scrollbar (`height: 3px`) fallback for ultra-narrow viewport resizes.
+  - **Scope**: Applied identically across `show.blade.php`, `dviewMore.blade.php`, and `requestviewmore.blade.php`.
+  - **Verification**: `php -l` passed with 0 errors across all 3 view templates; `php artisan view:clear` passed; render verification confirmed all 8 tabs present and correctly targeted.
+
 - *2026-10-26* — **Client Drawer Top Header Bar: Clean Action Toolbar Alignment (100% COMPLETED & VERIFIED)**:
   - **User Feedback & Request**:
     - Completely eliminate duplicate company title, `#ID`, and scope badge from the top sticky header toolbar card (`.cd-top-bar`).

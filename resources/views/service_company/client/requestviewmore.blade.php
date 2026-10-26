@@ -907,52 +907,105 @@
         background: #ffffff !important;
         border: 1px solid #e2e8f0 !important;
         border-radius: 10px !important;
-        padding: 6px 10px !important;
-        margin-bottom: 12px !important;
-        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03) !important;
+        padding: 5px 8px !important;
+        margin: 0 14px 12px 14px !important;
+        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04) !important;
+        width: auto !important;
+        box-sizing: border-box !important;
+        overflow: hidden !important;
     }
     .cd-drawer-tabs-list {
         display: flex !important;
         align-items: center !important;
         gap: 4px !important;
         overflow-x: auto !important;
-        white-space: nowrap !important;
-        padding: 2px !important;
+        overflow-y: hidden !important;
+        -webkit-overflow-scrolling: touch !important;
+        scrollbar-width: thin !important;
+        scrollbar-color: #cbd5e1 transparent !important;
+        list-style: none !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        flex-wrap: nowrap !important;
+        width: 100% !important;
     }
-    .cd-tab-pill-btn {
-        display: inline-flex !important;
-        align-items: center !important;
-        gap: 7px !important;
-        padding: 7px 13px !important;
-        border-radius: 7px !important;
-        font-size: 12px !important;
-        font-weight: 500 !important;
-        color: #64748b !important;
-        text-decoration: none !important;
-        transition: all 0.15s ease-in-out !important;
-        border: 1px solid transparent !important;
-        cursor: pointer !important;
+    .cd-drawer-tabs-list::-webkit-scrollbar {
+        height: 3px !important;
+    }
+    .cd-drawer-tabs-list::-webkit-scrollbar-track {
         background: transparent !important;
     }
-    .cd-tab-pill-btn:hover { color: #009ef7 !important; background: rgba(0, 158, 247, 0.04) !important; }
-    .cd-tab-pill-btn.active {
-        color: #009ef7 !important;
-        background: rgba(0, 158, 247, 0.08) !important;
-        border-color: rgba(0, 158, 247, 0.25) !important;
+    .cd-drawer-tabs-list::-webkit-scrollbar-thumb {
+        background: #cbd5e1 !important;
+        border-radius: 3px !important;
+    }
+    .cd-tab-pill-btn {
+        background: #f8fafc !important;
+        border: 1px solid #e2e8f0 !important;
+        border-radius: 7px !important;
+        padding: 5px 8.5px !important;
+        font-size: 11px !important;
         font-weight: 600 !important;
+        color: #475569 !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        gap: 5px !important;
+        height: 29px !important;
+        text-decoration: none !important;
+        box-shadow: 0 1px 2px rgba(15, 23, 42, 0.02) !important;
+        transition: all 0.15s ease-in-out !important;
+        cursor: pointer !important;
+        white-space: nowrap !important;
+        flex-shrink: 0 !important;
+        line-height: 1 !important;
+    }
+    .cd-tab-pill-btn i {
+        font-size: 11px !important;
+        color: #64748b !important;
+        transition: color 0.15s !important;
+    }
+    .cd-tab-pill-btn:hover {
+        background: #f1f5f9 !important;
+        border-color: #cbd5e1 !important;
+        color: #0f172a !important;
+    }
+    .cd-tab-pill-btn:hover i {
+        color: #009ef7 !important;
+    }
+    .cd-tab-pill-btn.active {
+        background: #009ef7 !important;
+        border-color: #009ef7 !important;
+        color: #ffffff !important;
+        box-shadow: 0 2px 5px rgba(0, 158, 247, 0.22) !important;
+    }
+    .cd-tab-pill-btn.active i {
+        color: #ffffff !important;
     }
     .cd-tab-badge-pill {
         display: inline-flex !important;
         align-items: center !important;
         justify-content: center !important;
-        font-size: 10px !important;
-        font-weight: 700 !important;
-        padding: 1.5px 6px !important;
+        min-width: 17px !important;
+        height: 15px !important;
+        padding: 0 4px !important;
         border-radius: 999px !important;
+        font-size: 9.5px !important;
+        font-weight: 700 !important;
         background: #eff6ff !important;
         color: #2563eb !important;
-        border: 1px solid #bfdbfe !important;
         line-height: 1 !important;
+    }
+    .cd-tab-pill-btn.active .cd-tab-badge-pill {
+        background: rgba(255, 255, 255, 0.28) !important;
+        color: #ffffff !important;
+    }
+    @media (max-width: 1200px) {
+        .cd-tab-pill-btn {
+            padding: 4.5px 7px !important;
+            font-size: 10.5px !important;
+            gap: 4px !important;
+        }
+    }
     }
 
     /* TIER 3: Overview Sub-Cards Grid */
