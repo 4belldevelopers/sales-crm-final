@@ -1291,12 +1291,12 @@
             <!-- ── Tier 2: Dedicated Pure White Sub-Tabs Card ── -->
             <div class="cd-drawer-tabs-card">
                 <div class="cd-drawer-tabs-list" role="tablist">
-                    <a class="cd-tab-pill-btn active" data-toggle="tab" href="#overview_req" role="tab">
+                    <a class="cd-tab-pill-btn active" data-bs-toggle="tab" data-toggle="tab" href="#overview_req" role="tab">
                         <i class="fas fa-house"></i>
                         <span>Overview</span>
                     </a>
                     @if (!empty($client_contact_info) && count($client_contact_info) > 0)
-                    <a class="cd-tab-pill-btn" data-toggle="tab" href="#contacts_req" role="tab">
+                    <a class="cd-tab-pill-btn" data-bs-toggle="tab" data-toggle="tab" href="#contacts_req" role="tab">
                         <i class="fas fa-address-book"></i>
                         <span>Contacts</span>
                         <span class="cd-tab-badge-pill">{{ count($client_contact_info) }}</span>
@@ -1438,3 +1438,17 @@
 
     </div>
 </div>
+
+<script>
+    $(document).ready(function() {
+        $(document).off('click.reqDrawer', '#kt_activitiesDirectClient .cd-tab-pill-btn');
+        $(document).on('click.reqDrawer', '#kt_activitiesDirectClient .cd-tab-pill-btn', function(e) {
+            var target = $(this).attr('href');
+            if (!target) return;
+            $('#kt_activitiesDirectClient .cd-tab-pill-btn').removeClass('active');
+            $(this).addClass('active');
+            $('#kt_activitiesDirectClient .tab-pane').removeClass('active show');
+            $(`#kt_activitiesDirectClient ${target}`).addClass('active show');
+        });
+    });
+</script>

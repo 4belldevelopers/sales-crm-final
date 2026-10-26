@@ -9010,9 +9010,13 @@
     })();
 
     function directfetchCandidatesInverViewTracker(page = 1, search = '') {
-        const clientid = parseInt('{{ $directClientDetail->client_id ?: ($directClientDetail->from_company_id ?: $directClientDetail->company_id) }}', 10);
-        if (clientid) {
-            ClientInterviewStoreDirect.fetch(clientid, null, false, search);
+        var activeSelectedId = window.ClientStateManager ? window.ClientStateManager.getSelectedClientId() : null;
+        var directCurrentId = parseInt('{{ $directClientDetail->client_id ?: ($directClientDetail->from_company_id ?: $directClientDetail->company_id) }}', 10);
+        if (activeSelectedId && directCurrentId && activeSelectedId !== directCurrentId) {
+            return;
+        }
+        if (directCurrentId) {
+            ClientInterviewStoreDirect.fetch(directCurrentId, null, false, search);
         }
     }
 
@@ -9021,12 +9025,18 @@
     });
 
     function fetchJobsClientdirect(page = 1, search = '', status = 'all') {
+        var activeSelectedId = window.ClientStateManager ? window.ClientStateManager.getSelectedClientId() : null;
+        var directCurrentId = parseInt('{{ $directClientDetail->client_id ?: ($directClientDetail->from_company_id ?: $directClientDetail->company_id) }}', 10);
+        if (activeSelectedId && directCurrentId && activeSelectedId !== directCurrentId) {
+            return;
+        }
+
         $('.page-loader').css('display', 'flex');
         var activeStatus = status || window.currentJobStatusDirect || 'all';
         var clientName = $('.cd-client-name').first().text().trim() || '{{ addslashes($detailName ?? "") }}';
         var clientId = $('#direct_client_id').val() || '{{ $directClientDetail->client_id ?? $directClientDetail->id ?? $dc_id ?? 0 }}';
         var fromCompanyId = '{{ $directClientDetail->company_id ?? $directClientDetail->from_company_id ?? $directClientDetail->client_id ?? $directClientDetail->id ?? $dc_id ?? 0 }}';
-        var searchVal = (search !== undefined && search !== null && search !== '') ? search : ($('#requisitions #inputJobSearch').val() || '');
+        var searchVal = (search !== undefined && search !== null && search !== '') ? search : ($('#kt_activitiesDirectClient #requisitions #inputJobSearch').val() || '');
 
         return $.ajax({
             url: `{{ url('service_company/jobs_side_bar_job_ajax/data') }}?page=${page}`,
@@ -9041,6 +9051,9 @@
             },
             success: function(response) {
                 $('.page-loader').css('display', 'none');
+                if (window.ClientStateManager && window.ClientStateManager.getSelectedClientId() !== directCurrentId) {
+                    return;
+                }
                 $('#directclientJobsListajax').html(response.html);
                 $('#directpaginationclientjobs').html(response.pagination);
 
@@ -9063,36 +9076,36 @@
 
     // Direct Client Jobs Tab: Dynamic Search Bar (Keyup & Clear)
     var directJobSearchTimer = null;
-    $(document).on('keyup', '#requisitions #inputJobSearch', function() {
+    $(document).on('keyup.directDrawer', '#kt_activitiesDirectClient #requisitions #inputJobSearch', function() {
         clearTimeout(directJobSearchTimer);
         var searchVal = $(this).val();
         if (searchVal.length > 0) {
-            $('#requisitions #btnJobSearchClear').show();
+            $('#kt_activitiesDirectClient #requisitions #btnJobSearchClear').show();
         } else {
-            $('#requisitions #btnJobSearchClear').hide();
+            $('#kt_activitiesDirectClient #requisitions #btnJobSearchClear').hide();
         }
         directJobSearchTimer = setTimeout(function() {
             fetchJobsClientdirect(1, searchVal, window.currentJobStatusDirect || 'all');
         }, 300);
     });
 
-    $(document).on('click', '#requisitions #btnJobSearchClear', function() {
-        $('#requisitions #inputJobSearch').val('');
+    $(document).on('click.directDrawer', '#kt_activitiesDirectClient #requisitions #btnJobSearchClear', function() {
+        $('#kt_activitiesDirectClient #requisitions #inputJobSearch').val('');
         $(this).hide();
         fetchJobsClientdirect(1, '', window.currentJobStatusDirect || 'all');
     });
 
     // Direct Client Jobs Tab: Filter Button Interaction
-    $(document).on('click', '#requisitions .js-job-filter-btn', function() {
+    $(document).on('click.directDrawer', '#kt_activitiesDirectClient #requisitions .js-job-filter-btn', function() {
         var status = $(this).data('status') || 'all';
         window.currentJobStatusDirect = status;
-        $('#requisitions .js-job-filter-btn').removeClass('active');
+        $('#kt_activitiesDirectClient #requisitions .js-job-filter-btn').removeClass('active');
         $(this).addClass('active');
-        fetchJobsClientdirect(1, $('#requisitions #inputJobSearch').val(), status);
+        fetchJobsClientdirect(1, $('#kt_activitiesDirectClient #requisitions #inputJobSearch').val(), status);
     });
 
     // Direct Client Jobs Tab: Click Routing (Fixing Drawer Click Collision Bug)
-    $(document).on('click', '#directclientJobsListajax .js-job-drawer-trigger', function(e) {
+    $(document).on('click.directDrawer', '#kt_activitiesDirectClient #directclientJobsListajax .js-job-drawer-trigger', function(e) {
         e.preventDefault();
         e.stopPropagation();
         var jobId = $(this).data('job-id');
@@ -9107,38 +9120,23 @@
         }
     });
 
-    $(document).ready(function() {
-        if ($('#candidateDashboard').hasClass('active') || $('a[href="#candidateDashboard"]').hasClass('active')) {
-            initPerformanceDashboard();
+    $(document).on('click.directDrawer', '#kt_activitiesDirectClient .cd-view-all-activity', function(e) {
+        e.preventDefault();
+        var $tabBtn = $('#kt_activitiesDirectClient .cd-tab-pill-btn[href="#recent_activity"]');
+        if ($tabBtn.length) {
+            $tabBtn.trigger('click');
         }
     });
 
-    // Direct Client Drawer Interactive Handlers
-    $(document).on('click', '.cd-kpi-card, .cd-nav-tab', function() {
-        var targetTab = $(this).data('target-tab') || $(this).data('target');
-        var segment = $(this).data('segment');
-        if (targetTab) {
-            $('.cd-tabs-bar a[href="' + targetTab + '"], a[href="' + targetTab + '"]').tab('show');
-            if (targetTab === '#candidate_joining' && segment) {
-                window.currentOjSegmentDirect = segment;
-                $('.cd-oj-seg-btn-direct').removeClass('active');
-                $('.cd-oj-seg-btn-direct[data-segment="' + segment + '"]').addClass('active');
-                directfetchCandidatesJoin(1, '', segment);
-            }
+    $(document).on('click.directDrawer', '#kt_activitiesDirectClient .cd-view-all-contacts', function(e) {
+        e.preventDefault();
+        var $tabBtn = $('#kt_activitiesDirectClient .cd-tab-pill-btn[href="#contacts"]');
+        if ($tabBtn.length) {
+            $tabBtn.trigger('click');
         }
     });
 
-    $(document).on('click', '.cd-view-all-activity', function(e) {
-        e.preventDefault();
-        $('.cd-tabs-bar a[href="#recent_activity"]').tab('show');
-    });
-
-    $(document).on('click', '.cd-view-all-contacts', function(e) {
-        e.preventDefault();
-        $('.cd-tabs-bar a[href="#contacts"]').tab('show');
-    });
-
-    $(document).on('click', '.cd-btn-followup', function(e) {
+    $(document).on('click.directDrawer', '#kt_activitiesDirectClient .cd-btn-followup', function(e) {
         e.preventDefault();
         if (typeof Swal !== 'undefined') {
             Swal.fire({
@@ -9168,7 +9166,7 @@
         }
     });
 
-    $(document).on('click', '.cd-btn-add-tag-trigger, .cd-btn-edit-tags', function(e) {
+    $(document).on('click.directDrawer', '#kt_activitiesDirectClient .cd-btn-add-tag-trigger, #kt_activitiesDirectClient .cd-btn-edit-tags', function(e) {
         e.preventDefault();
         if (typeof Swal !== 'undefined') {
             Swal.fire({
