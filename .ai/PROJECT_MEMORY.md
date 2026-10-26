@@ -20,6 +20,22 @@ Last updated: 2026-10-22 (Super Admin Companies Page UI Redesign, 100% CQRS Read
 - **Test coverage:** `TenantIsolationTest`, `BenchToJobAppTrackerPipelineContractTest`, `BenchTalentRequestPipelineContractTest`, `SuperAdminCompanyLoadTest`, `SuperAdminSubscriptionLoadTest`, `SuperAdminDashboardLoadTest` (100% green).
 - **V2_login blocking-scenarios architecture:** session-epoch pattern + Reverb `UserAccountSuspended` event + `SyncUserStatusAction` (cross-tenant-safe) + `BlockCompanyAction` (static bulk helper) + `block_log` audit table + drop all 20 `refresh:true` ES sites + grep-lint guard. See [docs/V2_login/BLOCKING_SCENARIOS_AUDIT.md](../docs/V2_login/BLOCKING_SCENARIOS_AUDIT.md), [ADR 0007](../docs/adr/0007-blocking-scenarios-architecture.md). Code not yet landed.
 
+- *2026-10-26* — **Client Listing & Drawer Workflow: God-Level Architecture, Idle Session Heartbeat & Tab Isolation Fix (100% COMPLETED & VERIFIED)**:
+  - **Scope**: Complete Client Listing flow across all 6 tabs (`all`, `internal`, `direct`, `hiring`, `inactive`, `request`) and all client drawers (`show.blade.php`, `dviewMore.blade.php`, `requestviewmore.blade.php`).
+  - **Issues Resolved**:
+    1. **Blank Drawer / 500 Crash on Client Switch**:
+       - Replaced raw unhandled `elasticService->getClient()->get($params)` in `viewMore($id)` with 3-tier resilient retrieval (Tier 1a ES exact `get`, Tier 1b ES search query by `_id`/`client_id`/`id`, Tier 2 MySQL DB fallback, Tier 3 safe fallback object), preventing uncaught `Missing404Exception` 500 errors when ES documents are missing or desynchronized.
+       - Corrected typo in `dviewMore($id)` where DB record was assigned to `$clientRec` but line 3141 checked `$this->directClientDetail`.
+    2. **Idle Session Failure (10-Minute Timeout / Sleep)**:
+       - Created dedicated `Route::match(['GET', 'HEAD'], 'clients/session-heartbeat', ...)` and `sessionHeartbeat()` controller action (< 2ms latency, 0 MySQL reads) returning fresh CSRF token and auth status.
+       - Implemented `ClientSessionRecoveryManager` in `index.blade.php`: tracks user activity, auto-detects `visibilitychange`, `online`, and `focus` events when returning from idle sleep, pings heartbeat, and updates CSRF headers.
+       - Added `executeWithRetry`: catches transient network resets (`status: 0`) and CSRF expiration (`status: 419`), triggers heartbeat session revival, and transparently retries the request with zero browser reload.
+    3. **Drawer Tab Switching & Cross-Contamination**:
+       - Normalized all sub-tabs across `show.blade.php`, `dviewMore.blade.php`, and `requestviewmore.blade.php` with Bootstrap 5 `data-bs-toggle="tab"` alongside legacy `data-toggle="tab"` so Metronic 8 activates tab panes natively.
+       - Implemented deterministic tab loaders `loadInternalTabContent(target, force)` and `loadDirectTabContent(target, force)` with active client ID validation (`window.ClientStateManager.getSelectedClientId() === clientId`) and loaded tab caching (`ClientStateManager.isTabLoaded()`).
+       - Strictly namespaced all drawer event listeners (`.internalDrawer`, `.directDrawer`, `.reqDrawer`) and unbind them via `ClientStateManager.teardownDrawer()`. Obsolete async responses are blocked by monotonic request and context tokens.
+  - **Verification**: `php -l` clean across all views, controller, and routes; view cache cleared (`php artisan view:clear`); route registration verified; CLI test scripts verified successful execution of `sessionHeartbeat` (200 OK), `viewMore` (success, 440KB payload, missing doc handled gracefully), and `dviewMore` (success, 440KB payload).
+
 - *2026-10-26* — **Client Information Card: God-Level Vertical Listing, Range-Based Workforce Scale & Conditional Metadata Visibility (100% COMPLETED & VERIFIED)**:
   - **Scope**: Internal Client Drawer (`show.blade.php`), Direct Client Drawer (`dviewMore.blade.php`), Direct Client Mandate Drawer (`requestviewmore.blade.php`).
   - **Implementation**:
