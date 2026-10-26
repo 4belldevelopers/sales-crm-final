@@ -200,15 +200,8 @@
             <td>
                 @php
 
-                    $current_ctc_cur = '';
-                    $current_ctc_cur = $currencySymbole[@$jobCurrency];
-
-                    $current_ectc_cur = '';
-                    $current_ectc_cur = $currencySymbole[@$jobCurrency];
-
-                    if ($row->condidate_type == 'bench_condidate') {
-                        $current_ectc_cur = $currencySymbole[@$jobCurrency];
-                    }
+                    $safeJobCur = @$jobCurrency ?? 0;
+                    $current_ctc_cur = $current_ectc_cur = $currencySymbole[$safeJobCur] ?? ($currencySymbole[\App\Services\CurrencyService::resolveCurrencyCode($safeJobCur)] ?? '');
 
                     $payFormatViewSalary = GeneralMethod::formatViewSalary($row->ctc_yearly,$symbols,$jobMode);
                     $billFormatViewSalary = GeneralMethod::formatViewSalary($row->ectc_yearly,$symbols,$jobMode);

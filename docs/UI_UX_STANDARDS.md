@@ -581,4 +581,37 @@ A critical failure pattern in SaaS applications is cross-module entanglement, wh
 3. **No Cross-Page DOM Selectors:** Never query or bind listeners to generic DOM IDs across pages (e.g., `#kt_modal_1`, `#submit_btn`). Use namespaced IDs and classes (e.g., `#cv_tracker_submit_btn`, `#app_tracker_filter_drawer`).
 4. **Zero Cross-Module Regressions:** Modifying, refactoring, or styling Page A must **NEVER** alter, break, or mutate the behavior, layout, or data flow of Page B. Before submitting any page-level changes, verify that neighboring modules remain 100% unaffected.
 
+---
+
+## 13. Modern Enterprise Card + Sub-Card Design Standard (Mandatory for Entity Lists, Drawers & Tabs)
+
+> **MANDATORY FOR ALL AI MODELS, DESIGNERS & DEVELOPERS**  
+> **Full Authoritative Specification:** [`docs/UI_UX_CARD_SUB_CARD_DESIGN_STANDARD.md`](UI_UX_CARD_SUB_CARD_DESIGN_STANDARD.md)
+
+All future and refactored entity listings, drawer tabs (such as the Client Drawer Jobs tab), overview dashboards, and candidate/job rosters across JERO **MUST AND ONLY** use the **Modern Card + Sub-Card Enterprise Design System**. Raw, sprawling HTML tables, generic unstyled card heads, and unstructured flat lists are strictly prohibited.
+
+### 13.1 The 3-Tier Layered Hierarchy
+1. **Tier 1: Top Header Toolbar Card (`.cd-*-header-card`)**
+   - **Container:** Standalone card with pure white background (`#ffffff`), subtle 1px border (`#e2e8f0`), rounded corners (`border-radius: 10px`), and soft elevation (`box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04)`).
+   - **Left Branding:** Soft squircle icon box (38×38px, `#eff6ff`), bold title (15px Poppins, `#0f172a`), and descriptive subtitle (11.5px `#64748b`).
+   - **Right Dynamic Search Sub-Card:** Embedded search sub-card (`.cd-*-search-subcard`) with search icon, 300ms debounced text input, and an interactive clear button (`✕`) alongside primary action buttons (e.g., `+ Add Jobs`).
+2. **Tier 2: Sub-Tabs Card (`.cd-*-tabs-card`)**
+   - **Container:** Dedicated standalone white card (`#ffffff`, border `#e2e8f0`, radius 10px) containing all sub-tab filters. Never float raw navigation links or tabs outside a card container.
+   - **Card-Based Tab Buttons:** Individual pill/card buttons (`.cd-*-tab-btn`) with 1px border (`#e2e8f0`) and subtle shadows.
+   - **Single Active Blue Highlight:** ONLY the currently active tab receives the vibrant Metronic primary blue highlight (`background: #009ef7 !important; color: #ffffff !important; border-color: #009ef7 !important;`). All other tabs remain neutral white with slate text (`#475569`).
+   - **Dynamic Counters:** Dynamic count pills derived directly from authoritative counts.
+3. **Tier 3: Primary Entity Card Stream (`.cd-*-card`)**
+   - **Primary Card:** High-density card with hover elevation, subtle border (`#e2e8f0`), and 10px radius.
+   - **Modular Upper Sub-Cards Grid:** 5 distinct, semantic sub-cards using responsive CSS grid (`grid-template-columns: minmax(0, 1.4fr) minmax(0, 1.15fr) minmax(0, 1.05fr) minmax(0, 0.95fr) minmax(0, 1.45fr)` on desktop):
+     1. *Details Sub-Card:* Entity logo/avatar, primary title, ID badge, dynamic client name row with employment type (`CLIENT NAME • 💼 Full-Time`), and header dual badges: Client Scope Pill (`[Direct Client]` / `[Internal Client]`) beside the live status badge (`HIRING`).
+     2. *Compensation & Exp Sub-Card (`COMPENSATION & EXP`):* Row 1 for bold salary, Row 2 for experience with clock icon (`🕒 X - Y Yrs`), Row 3 for location with extra cities badge and standardized `"Work From Office"` indicator.
+     3. *Team Sub-Card:* Real assigned team leads, recruiters, and member counts. **Never display placeholder matching badges (e.g., "15 Matching" is banned).**
+     4. *Agency Sub-Card:* Real hired agencies count (e.g. `3 Agencies` or `—` if none hired).
+     5. *Pipeline / Metrics Sub-Card:* Authoritative progress counters across stages (e.g. Sourced, Evaluated, Interview, Offer, Joined).
+   - **Modular Bottom Activity Strip:** Dedicated light bottom strip (`#f8fafc`) displaying timestamps, hiring manager info, and skill keyword pills.
+
+### 13.2 15.6" Screen Fit & Anti-Scroll Rule
+All Card + Sub-Card layouts must render fluidly on standard 15.6" laptop screens (`1366×768` and `1920×1080` at 125% scaling) and smaller screens. Every grid column must utilize `minmax(0, ...fr)` to guarantee text wrapping without forcing horizontal scrollbars (`overflow-x: hidden`). Internal drawer content scrolls vertically (`overflow-y: auto`).
+
+
 

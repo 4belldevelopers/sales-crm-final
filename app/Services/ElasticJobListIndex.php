@@ -124,6 +124,44 @@ class ElasticJobListIndex
                     })
                     ->toArray();
 
+                    
+                    if (empty($client_city_jobs)) {
+                        $clj = DB::table('client_location_jobs')->where('job_id', $row->id)->first();
+                        if ($clj && ! empty($clj->client_location_id)) {
+                            $cId = (int) $clj->client_location_id;
+                            $cityInfo = DB::table('city_list')
+                                ->leftJoin('state_list', 'state_list.id', '=', 'city_list.state_id')
+                                ->leftJoin('countries', 'countries.id', '=', 'state_list.country_id')
+                                ->select('city_list.city_id', 'city_list.city as city_name', 'countries.id as country_id', 'countries.country_name')
+                                ->where('city_list.city_id', $cId)
+                                ->first();
+
+                            if (! $cityInfo) {
+                                $clRow = DB::table('client_location')->where('id', $cId)->first();
+                                if ($clRow && ! empty($clRow->city_id)) {
+                                    $cityInfo = DB::table('city_list')
+                                        ->leftJoin('state_list', 'state_list.id', '=', 'city_list.state_id')
+                                        ->leftJoin('countries', 'countries.id', '=', 'state_list.country_id')
+                                        ->select('city_list.city_id', 'city_list.city as city_name', 'countries.id as country_id', 'countries.country_name')
+                                        ->where('city_list.city_id', $clRow->city_id)
+                                        ->first();
+                                }
+                            }
+
+                            if ($cityInfo) {
+                                $client_city_jobs[] = [
+                                    'id' => (int) $clj->id,
+                                    'company_id' => (int) $clj->company_id,
+                                    'job_id' => (int) $row->id,
+                                    'city_id' => (int) $cityInfo->city_id,
+                                    'country_id' => (int) ($cityInfo->country_id ?? 0),
+                                    'city_name' => strtolower($cityInfo->city_name),
+                                    'country_name' => strtolower($cityInfo->country_name ?? ''),
+                                ];
+                            }
+                        }
+                    }
+
                     $client_contact_info_jobs = DB::table('client_contact_info_jobs')
                     ->join('client_contact_info', 'client_contact_info.id', '=', 'client_contact_info_jobs.client_contact_info_id')
                     ->select('client_contact_info.contact_person_name', 'client_contact_info.contact_person_designation', 'client_contact_info.contact_person_email', 'client_contact_info.contact_person_number', 'client_contact_info_jobs.*')

@@ -11,6 +11,8 @@ use Carbon\Carbon;
         $startDate = Carbon::today()->subDays(6)->startOfDay();
 
   @endphp
+@include('service_company.client.components.tab-jobs-style')
+@include('service_company.client.components.tab-offers-joinings-style')
 <style>
     /* Scoped Interview Tracker Styling (Metronic Theme Aligned) */
     .cit-fb-pill {
@@ -33,6 +35,568 @@ use Carbon\Carbon;
     .cit-stars { display: inline-flex; gap: 2px; }
     .cit-star-fill { color: #FFAD0F; font-size: 11px; }
     .cit-star-empty { color: #E4E6EF; font-size: 11px; }
+
+    /* ===== Scoped Interview Tracker: Card + Sub-Card Proportional Layout ===== */
+    .it-main-card {
+        width: 100% !important;
+        font-family: 'Poppins', -apple-system, BlinkMacSystemFont, sans-serif !important;
+    }
+
+    /* 1. Top Card Header Toolbar (Heading in Card + Search Bar) */
+    .it-toolbar-card {
+        background: #ffffff !important;
+        border: 1px solid #e2e8f0 !important;
+        border-radius: 10px !important;
+        padding: 12px 18px !important;
+        margin-bottom: 10px !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+        gap: 14px !important;
+        flex-wrap: wrap !important;
+        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03) !important;
+    }
+    .it-toolbar-left {
+        display: flex !important;
+        align-items: center !important;
+        gap: 10px !important;
+        min-width: 0 !important;
+    }
+    .it-title {
+        font-size: 13.5px !important;
+        font-weight: 700 !important;
+        color: #0f172a !important;
+        line-height: 1.2 !important;
+        letter-spacing: -0.2px !important;
+        margin: 0 !important;
+    }
+    .it-badge-count {
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        padding: 1.5px 8px !important;
+        font-size: 11px !important;
+        font-weight: 700 !important;
+        color: #2563eb !important;
+        background: #eff6ff !important;
+        border: 1px solid #bfdbfe !important;
+        border-radius: 999px !important;
+    }
+    .it-subtitle {
+        font-size: 11px !important;
+        font-weight: 500 !important;
+        color: #64748b !important;
+        margin-top: 2px !important;
+    }
+    .it-toolbar-right {
+        display: flex !important;
+        align-items: center !important;
+        gap: 10px !important;
+    }
+    .it-search-subcard {
+        display: flex !important;
+        align-items: center !important;
+        gap: 8px !important;
+        background: #f8fafc !important;
+        border: 1px solid #e2e8f0 !important;
+        border-radius: 8px !important;
+        padding: 0 12px !important;
+        height: 36px !important;
+        min-width: 260px !important;
+        max-width: 380px !important;
+        width: 100% !important;
+        transition: all 0.15s ease-in-out !important;
+    }
+    .it-search-subcard:focus-within {
+        background: #ffffff !important;
+        border-color: #2563eb !important;
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12) !important;
+    }
+    .it-search-subcard i {
+        color: #94a3b8 !important;
+        font-size: 12px !important;
+        flex-shrink: 0 !important;
+    }
+    .it-search-subcard input {
+        border: none !important;
+        background: transparent !important;
+        outline: none !important;
+        box-shadow: none !important;
+        font-size: 12px !important;
+        font-family: inherit !important;
+        color: #0f172a !important;
+        width: 100% !important;
+        padding: 0 !important;
+        line-height: 36px !important;
+    }
+    .it-search-subcard input::placeholder {
+        color: #94a3b8 !important;
+        font-size: 11.5px !important;
+    }
+    .it-search-clear {
+        background: transparent !important;
+        border: none !important;
+        color: #94a3b8 !important;
+        cursor: pointer !important;
+        padding: 2px 4px !important;
+        font-size: 11px !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+    }
+    .it-search-clear:hover {
+        color: #ef4444 !important;
+    }
+
+    .it-card-container {
+        width: 100% !important;
+        font-family: 'Poppins', -apple-system, BlinkMacSystemFont, sans-serif !important;
+    }
+
+    /* Proportional Header Strip */
+    .it-card-header,
+    .it-primary-card {
+        display: grid !important;
+        grid-template-columns: minmax(0, 2.2fr) minmax(0, 2.3fr) minmax(0, 1.75fr) minmax(0, 1.1fr) minmax(0, 1.1fr) minmax(0, 0.75fr) minmax(0, 0.8fr) !important;
+        column-gap: 12px !important;
+        align-items: center !important;
+        width: 100% !important;
+        box-sizing: border-box !important;
+    }
+
+    .it-card-header {
+        background: #f8fafc !important;
+        border: 1px solid #e2e8f0 !important;
+        border-radius: 8px !important;
+        padding: 9px 14px !important;
+        margin-bottom: 8px !important;
+    }
+
+    .it-col-th {
+        font-size: 10px !important;
+        font-weight: 700 !important;
+        color: #64748b !important;
+        text-transform: uppercase !important;
+        letter-spacing: 0.5px !important;
+        white-space: nowrap !important;
+    }
+
+    /* Primary Job Card for Each Interview */
+    .it-primary-card {
+        background: #ffffff !important;
+        border: 1px solid #e2e8f0 !important;
+        border-radius: 10px !important;
+        padding: 12px 14px !important;
+        margin-bottom: 8px !important;
+        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03) !important;
+        transition: all 0.15s ease-in-out !important;
+    }
+
+    .it-primary-card:hover {
+        border-color: #cbd5e1 !important;
+        box-shadow: 0 4px 14px rgba(15, 23, 42, 0.06) !important;
+        transform: translateY(-1px) !important;
+    }
+
+    /* Logical Sub-Cards Inside the Primary Card */
+    .it-subcard {
+        min-width: 0 !important;
+        display: flex !important;
+        flex-direction: column !important;
+    }
+
+    /* 1. Candidate Sub-Card */
+    .it-subcard-cand {
+        flex-direction: row !important;
+        align-items: center !important;
+        gap: 10px !important;
+    }
+    .it-cand-avatar {
+        width: 36px !important;
+        height: 36px !important;
+        border-radius: 50% !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        color: #ffffff !important;
+        font-size: 13px !important;
+        font-weight: 700 !important;
+        flex-shrink: 0 !important;
+        text-transform: uppercase !important;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.08) !important;
+    }
+    .it-avatar-green { background: #10b981 !important; }
+    .it-avatar-red { background: #ef4444 !important; }
+    .it-avatar-blue { background: #3b82f6 !important; }
+    .it-avatar-purple { background: #8b5cf6 !important; }
+    .it-avatar-orange { background: #f97316 !important; }
+    .it-avatar-gray { background: #6b7280 !important; }
+
+    .it-cand-info {
+        min-width: 0 !important;
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 1px !important;
+    }
+    .it-cand-name {
+        font-size: 12.5px !important;
+        font-weight: 700 !important;
+        color: #0f172a !important;
+        line-height: 1.35 !important;
+        word-break: break-word !important;
+    }
+    .it-cand-role {
+        font-size: 11px !important;
+        font-weight: 500 !important;
+        color: #64748b !important;
+        line-height: 1.3 !important;
+        word-break: break-word !important;
+    }
+    .it-cand-meta {
+        display: flex !important;
+        align-items: center !important;
+        gap: 5px !important;
+        margin-top: 3px !important;
+        flex-wrap: wrap !important;
+    }
+    .it-meta-tag {
+        display: inline-flex !important;
+        align-items: center !important;
+        gap: 3px !important;
+        font-size: 9.5px !important;
+        font-weight: 600 !important;
+        padding: 1.5px 6px !important;
+        border-radius: 4px !important;
+    }
+    .it-meta-tag.confirmed { color: #10b981 !important; background: #f0fdf4 !important; border: 1px solid #bbf7d0 !important; }
+    .it-meta-tag.warning { color: #f59e0b !important; background: #fffbeb !important; border: 1px solid #fde68a !important; }
+    .it-meta-tag.danger { color: #ef4444 !important; background: #fef2f2 !important; border: 1px solid #fecaca !important; }
+    .it-meta-tag.info { color: #3b82f6 !important; background: #eff6ff !important; border: 1px solid #bfdbfe !important; }
+    .it-meta-date {
+        font-size: 10px !important;
+        color: #94a3b8 !important;
+    }
+
+    /* 2. Job Requisition Sub-Card */
+    .it-subcard-job {
+        gap: 2px !important;
+    }
+    .it-job-title {
+        font-size: 12.5px !important;
+        font-weight: 700 !important;
+        color: #0f172a !important;
+        line-height: 1.35 !important;
+        word-break: break-word !important;
+    }
+    .it-job-company {
+        font-size: 11px !important;
+        font-weight: 500 !important;
+        color: #64748b !important;
+        line-height: 1.3 !important;
+        word-break: break-word !important;
+    }
+    .it-job-tags {
+        display: flex !important;
+        align-items: center !important;
+        gap: 5px !important;
+        margin-top: 2px !important;
+        flex-wrap: wrap !important;
+    }
+    .it-job-type {
+        display: inline-flex !important;
+        align-items: center !important;
+        padding: 1.5px 6px !important;
+        border-radius: 4px !important;
+        font-size: 9.5px !important;
+        font-weight: 600 !important;
+    }
+    .it-job-type-internal { background: #eef2ff !important; color: #4f46e5 !important; border: 1px solid #e0e7ff !important; }
+    .it-job-type-direct { background: #f0fdf4 !important; color: #16a34a !important; border: 1px solid #dcfce7 !important; }
+    .it-job-id {
+        font-size: 10.5px !important;
+        color: #2563eb !important;
+        font-weight: 600 !important;
+    }
+    .it-dot-sep {
+        width: 3px !important;
+        height: 3px !important;
+        border-radius: 50% !important;
+        background: #cbd5e1 !important;
+    }
+
+    /* 3. Date & Time Sub-Card */
+    .it-subcard-datetime {
+        gap: 3px !important;
+    }
+    .it-dt-row {
+        display: flex !important;
+        align-items: center !important;
+        gap: 5px !important;
+        font-size: 11.5px !important;
+        color: #1e293b !important;
+        line-height: 1.3 !important;
+    }
+    .it-dt-row svg {
+        color: #94a3b8 !important;
+        flex-shrink: 0 !important;
+    }
+    .it-dt-date {
+        font-weight: 600 !important;
+        color: #0f172a !important;
+    }
+    .it-dt-time {
+        font-size: 11px !important;
+        font-weight: 500 !important;
+        color: #475569 !important;
+    }
+    .it-dt-mode {
+        font-size: 10.5px !important;
+        font-weight: 500 !important;
+        color: #64748b !important;
+    }
+    .it-dt-link {
+        display: inline-flex !important;
+        align-items: center !important;
+        gap: 4px !important;
+        color: #2563eb !important;
+        font-size: 11px !important;
+        font-weight: 600 !important;
+        text-decoration: none !important;
+        margin-top: 2px !important;
+        cursor: pointer !important;
+    }
+    .it-dt-link:hover {
+        color: #1d4ed8 !important;
+        text-decoration: underline !important;
+    }
+    .it-dt-link svg {
+        color: #2563eb !important;
+    }
+
+    /* 4. Interviewers Sub-Card */
+    .it-subcard-interviewers {
+        gap: 2px !important;
+    }
+    .it-lead-name {
+        font-size: 12px !important;
+        font-weight: 600 !important;
+        color: #0f172a !important;
+        line-height: 1.35 !important;
+        word-break: break-word !important;
+    }
+    .it-lead-comp {
+        font-size: 10.5px !important;
+        font-weight: 600 !important;
+        color: #009ef7 !important;
+        line-height: 1.3 !important;
+        word-break: break-word !important;
+    }
+    .it-extra-wrap {
+        display: flex !important;
+        align-items: center !important;
+        gap: 4px !important;
+        margin-top: 2px !important;
+    }
+    .it-extra-pill {
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        min-width: 17px !important;
+        height: 15px !important;
+        padding: 0 4px !important;
+        background: #f8fafc !important;
+        border: 1px solid #e2e8f0 !important;
+        border-radius: 4px !important;
+        font-size: 9px !important;
+        font-weight: 600 !important;
+        color: #64748b !important;
+    }
+    .it-extra-lbl {
+        font-size: 10px !important;
+        color: #64748b !important;
+    }
+
+    /* 5. Source Sub-Card */
+    .it-subcard-source {
+        gap: 2px !important;
+    }
+    .it-src-name {
+        font-size: 12px !important;
+        font-weight: 600 !important;
+        color: #0f172a !important;
+        line-height: 1.35 !important;
+        word-break: break-word !important;
+    }
+    .it-src-comp {
+        font-size: 10.5px !important;
+        font-weight: 500 !important;
+        color: #64748b !important;
+        line-height: 1.3 !important;
+        word-break: break-word !important;
+    }
+
+    /* 6. Stage Sub-Card */
+    .it-subcard-stage {
+        gap: 3px !important;
+        align-items: flex-start !important;
+    }
+    .it-badge { display: inline-flex; align-items: center; padding: 2px 8px; border-radius: 999px; font-size: 10px; font-weight: 600; width: fit-content; }
+    .it-badge-blue   { background: #dbeafe; color: #1e40af; }
+    .it-badge-purple { background: #f3e8ff; color: #6b21a8; }
+    .it-badge-orange { background: #ffedd5; color: #9a3412; }
+    .it-badge-red    { background: #fee2e2; color: #991b1b; }
+    .it-badge-green  { background: #d1fae5; color: #065f46; }
+    .it-badge-yellow { background: #fef9c3; color: #854d0e; }
+    .it-badge-gray   { background: #e2e8f0; color: #374151; }
+    .it-badge-pink   { background: #fce7f3; color: #9d174d; }
+    .it-stage-sub {
+        font-size: 10px !important;
+        font-weight: 500 !important;
+        color: #94a3b8 !important;
+        line-height: 1.2 !important;
+    }
+
+    /* 7. Feedback Sub-Card */
+    .it-subcard-feedback {
+        gap: 3px !important;
+        align-items: flex-start !important;
+    }
+    .it-fb-status {
+        font-size: 11px !important;
+        font-weight: 600 !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        gap: 4px !important;
+    }
+    .it-rec-pill {
+        display: inline-flex !important;
+        align-items: center !important;
+        padding: 1.5px 7px !important;
+        border-radius: 50px !important;
+        font-size: 9.5px !important;
+        font-weight: 600 !important;
+        margin-top: 1px !important;
+    }
+
+    /* Empty, Loading, and Error State Cards */
+    .it-empty-card,
+    .it-loading-card,
+    .it-error-card {
+        background: #ffffff !important;
+        border: 1px dashed #cbd5e1 !important;
+        border-radius: 10px !important;
+        padding: 36px 20px !important;
+        text-align: center !important;
+        color: #64748b !important;
+        font-size: 12.5px !important;
+        margin: 8px 0 !important;
+    }
+    .it-error-card {
+        border-color: #fca5a5 !important;
+        color: #dc2626 !important;
+    }
+
+    /* 4. Enterprise Pagination Card / Footer (Minimum 10 rows) */
+    .it-pagination-card {
+        background: #ffffff !important;
+        border: 1px solid #e2e8f0 !important;
+        border-radius: 10px !important;
+        padding: 10px 16px !important;
+        margin-top: 10px !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+        gap: 12px !important;
+        flex-wrap: wrap !important;
+        box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03) !important;
+    }
+    .it-pagi-info {
+        font-size: 11.5px !important;
+        font-weight: 500 !important;
+        color: #64748b !important;
+    }
+    .it-pagi-info strong {
+        color: #0f172a !important;
+        font-weight: 700 !important;
+    }
+    .it-pagi-controls {
+        display: flex !important;
+        align-items: center !important;
+        gap: 8px !important;
+    }
+    .it-pagi-btn {
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        gap: 6px !important;
+        height: 32px !important;
+        padding: 0 12px !important;
+        border-radius: 6px !important;
+        font-size: 11.5px !important;
+        font-weight: 600 !important;
+        border: 1px solid #e2e8f0 !important;
+        background: #ffffff !important;
+        color: #334155 !important;
+        cursor: pointer !important;
+        transition: all 0.15s ease-in-out !important;
+    }
+    .it-pagi-btn:hover:not(.disabled) {
+        background: #f8fafc !important;
+        border-color: #cbd5e1 !important;
+        color: #0f172a !important;
+    }
+    .it-pagi-btn.disabled {
+        opacity: 0.45 !important;
+        cursor: not-allowed !important;
+        background: #f8fafc !important;
+        border-color: #e2e8f0 !important;
+        color: #94a3b8 !important;
+    }
+    .it-pagi-page-indicator {
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        padding: 0 10px !important;
+        height: 32px !important;
+        font-size: 11.5px !important;
+        font-weight: 600 !important;
+        color: #475569 !important;
+        background: #f8fafc !important;
+        border: 1px solid #e2e8f0 !important;
+        border-radius: 6px !important;
+    }
+    .it-pagi-size-select {
+        height: 32px !important;
+        padding: 0 8px 0 10px !important;
+        border: 1px solid #e2e8f0 !important;
+        border-radius: 6px !important;
+        background: #ffffff !important;
+        font-size: 11.5px !important;
+        font-weight: 500 !important;
+        color: #334155 !important;
+        outline: none !important;
+        cursor: pointer !important;
+    }
+
+    @media (max-width: 1280px) {
+        .it-card-header,
+        .it-primary-card {
+            grid-template-columns: minmax(0, 2.1fr) minmax(0, 2.2fr) minmax(0, 1.7fr) minmax(0, 1fr) minmax(0, 1fr) minmax(0, 0.7fr) minmax(0, 0.75fr) !important;
+            column-gap: 8px !important;
+            padding-left: 10px !important;
+            padding-right: 10px !important;
+        }
+    }
+    @media (max-width: 992px) {
+        .it-card-header,
+        .it-primary-card {
+            grid-template-columns: minmax(0, 1.9fr) minmax(0, 2fr) minmax(0, 1.6fr) minmax(0, 0.9fr) minmax(0, 0.9fr) minmax(0, 0.65fr) minmax(0, 0.7fr) !important;
+            column-gap: 6px !important;
+        }
+    }
+
+    @media only screen and (min-width: 900px) and (max-width: 2560px) {
+
 
 
         .table td,
@@ -105,28 +669,77 @@ use Carbon\Carbon;
 
           /* ── Top Action Header Bar (Internal: Blue Accent) ── */
           .cd-top-bar {
-            background: #ffffff;
-            border-bottom: 1px solid #e2e8f0;
-            padding: 8px 16px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            position: sticky;
-            top: 0;
-            z-index: 20;
+            background: #ffffff !important;
+            border: 1px solid #e2e8f0 !important;
+            border-radius: 10px !important;
+            margin: 10px 14px 10px 14px !important;
+            padding: 10px 16px !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: space-between !important;
+            position: sticky !important;
+            top: 0 !important;
+            z-index: 30 !important;
+            box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04) !important;
+            gap: 12px !important;
+            flex-wrap: wrap !important;
+          }
+          .cd-top-bar-left {
+            display: flex !important;
+            align-items: center !important;
+            gap: 10px !important;
+            min-width: 0 !important;
+          }
+          .cd-top-bar-icon {
+            width: 32px !important;
+            height: 32px !important;
+            border-radius: 8px !important;
+            background: #eff6ff !important;
+            color: #2563eb !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            font-size: 14px !important;
+            flex-shrink: 0 !important;
+          }
+          .cd-top-bar-icon-green {
+            background: #ecfdf5 !important;
+            color: #059669 !important;
+          }
+          .cd-top-bar-title-wrap {
+            display: flex !important;
+            align-items: center !important;
+            gap: 8px !important;
+            flex-wrap: wrap !important;
+          }
+          .cd-top-bar-title {
+            font-size: 13.5px !important;
+            font-weight: 700 !important;
+            color: #0f172a !important;
+            line-height: 1.2 !important;
+            margin: 0 !important;
+          }
+          .cd-top-bar-id {
+            font-size: 11.5px !important;
+            font-weight: 600 !important;
+            color: #2563eb !important;
+            background: #eff6ff !important;
+            border: 1px solid #bfdbfe !important;
+            border-radius: 6px !important;
+            padding: 1px 6px !important;
           }
           .cd-top-actions {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            flex-wrap: wrap;
+            display: flex !important;
+            align-items: center !important;
+            gap: 8px !important;
+            flex-wrap: wrap !important;
           }
           .cd-hdr-btn {
-            height: 30px !important;
-            padding: 0 13px !important;
-            border-radius: 6px !important;
-            font-size: 12.5px !important;
-            font-weight: 500 !important;
+            height: 32px !important;
+            padding: 0 12px !important;
+            border-radius: 8px !important;
+            font-size: 12px !important;
+            font-weight: 600 !important;
             display: inline-flex !important;
             align-items: center !important;
             gap: 6px !important;
@@ -134,646 +747,867 @@ use Carbon\Carbon;
             text-decoration: none !important;
             transition: all 0.15s ease-in-out !important;
             line-height: 1 !important;
+            border: 1px solid transparent !important;
           }
           .cd-hdr-btn-outline {
             background: #ffffff !important;
-            border: 1.5px solid #009ef7 !important;
-            color: #009ef7 !important;
+            border-color: #e2e8f0 !important;
+            color: #334155 !important;
+            box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03) !important;
           }
           .cd-hdr-btn-outline:hover {
-            background: #f0f9ff !important;
-            color: #0086d1 !important;
-            border-color: #0086d1 !important;
+            background: #f8fafc !important;
+            border-color: #cbd5e1 !important;
+            color: #0f172a !important;
           }
-          .cd-hdr-btn-solid-blue,
+          .cd-hdr-btn-outline-green {
+            background: #ffffff !important;
+            border-color: #a7f3d0 !important;
+            color: #059669 !important;
+          }
+          .cd-hdr-btn-outline-green:hover {
+            background: #ecfdf5 !important;
+            border-color: #059669 !important;
+          }
           .cd-hdr-btn-white-edit {
             background: #ffffff !important;
-            border: 1px solid #cbd5e1 !important;
-            color: #009ef7 !important;
-            font-weight: 500 !important;
-            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04) !important;
+            border-color: #bfdbfe !important;
+            color: #2563eb !important;
+            box-shadow: 0 1px 2px rgba(37, 99, 235, 0.05) !important;
           }
-          .cd-hdr-btn-solid-blue:hover,
           .cd-hdr-btn-white-edit:hover {
-            background: #f0f9ff !important;
+            background: #eff6ff !important;
+            border-color: #2563eb !important;
+          }
+          .cd-hdr-btn-primary {
+            background: #009ef7 !important;
+            border-color: #009ef7 !important;
+            color: #ffffff !important;
+            box-shadow: 0 2px 4px rgba(0, 158, 247, 0.2) !important;
+          }
+          .cd-hdr-btn-primary:hover {
+            background: #0086d1 !important;
             border-color: #0086d1 !important;
-            color: #0086d1 !important;
+            color: #ffffff !important;
           }
           .cd-hdr-btn-close {
-            width: 30px !important;
-            height: 30px !important;
+            width: 32px !important;
+            height: 32px !important;
             padding: 0 !important;
-            border-radius: 6px !important;
-            background: transparent !important;
-            border: none !important;
+            border-radius: 8px !important;
+            background: #f1f5f9 !important;
+            border: 1px solid #e2e8f0 !important;
             color: #64748b !important;
             display: inline-flex !important;
             align-items: center !important;
             justify-content: center !important;
             cursor: pointer !important;
-            font-size: 14px !important;
-            transition: all 0.15s !important;
+            font-size: 13px !important;
+            transition: all 0.15s ease-in-out !important;
           }
           .cd-hdr-btn-close:hover {
-            background: #f1f5f9 !important;
-            color: #0f172a !important;
+            background: #fee2e2 !important;
+            border-color: #fecdd3 !important;
+            color: #ef4444 !important;
+            transform: rotate(90deg) !important;
           }
 
-          /* ── Client Hero Banner: Clean Neutral Enterprise UI ── */
-          .cd-hero-banner-blue {
+          /* ── Client Hero Banner: Option 2 — Linear / Stripe Continuous Header ── */
+          .cd-hero-card {
             background: #ffffff !important;
-            border-bottom: 1px solid #e2e8f0 !important;
-            padding: 14px 18px 12px;
+            border: 1px solid #e2e8f0 !important;
+            border-radius: 10px !important;
+            margin: 0 14px 12px 14px !important;
+            padding: 0 !important;
+            box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04) !important;
+            width: calc(100% - 28px) !important;
+            overflow: hidden !important;
           }
-          .cd-hero-top {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 16px;
-            flex-wrap: wrap;
+          .cd-hero-continuous-main {
+            display: flex !important;
+            align-items: stretch !important;
+            justify-content: space-between !important;
+            width: 100% !important;
           }
-          .cd-hero-left {
-            display: flex;
-            align-items: center;
-            gap: 14px;
-            flex: 1;
-            min-width: 0;
-          }
-          .cd-avatar-wrap {
-            position: relative;
-            flex-shrink: 0;
-          }
-          .cd-avatar-circle {
-            width: 58px;
-            height: 58px;
-            border-radius: 50%;
-            background: #0f172a;
-            color: #ffffff;
-            border: 2px solid #ffffff;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 14px !important;
-            font-weight: 600;
-            overflow: hidden;
-          }
-          .cd-avatar-circle img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-          }
-          .cd-verified-badge {
-            position: absolute;
-            top: -2px;
-            right: -2px;
-            width: 18px;
-            height: 18px;
-            border-radius: 50%;
-            background: #10b981;
-            border: 2px solid #ffffff;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 1px 4px rgba(0,0,0,0.12);
-          }
-          .cd-verified-badge i {
-            font-size: 8.5px !important;
-            color: #ffffff;
-          }
-          .cd-hero-details {
-            flex: 1;
-            min-width: 0;
-          }
-          .cd-title-row {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            margin-bottom: 4px;
-            flex-wrap: wrap;
-          }
-          .cd-client-name {
-            font-size: 14px !important;
-            font-weight: 600 !important;
-            color: #0f172a !important;
-            letter-spacing: -0.2px;
-          }
-          .cd-pill-type-internal {
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-            background: #e0f2fe;
-            color: #0284c7;
-            border: 1px solid #bae6fd;
-            font-size: 10.5px !important;
-            font-weight: 500 !important;
-            padding: 2.5px 8px;
-            border-radius: 4px;
-            line-height: 1.2;
-          }
-          .cd-meta-row {
-            display: flex;
-            align-items: center;
-            gap: 7px;
-            font-size: 11.5px !important;
-            font-weight: 400 !important;
-            color: #64748b;
-            margin-bottom: 6px;
-            flex-wrap: wrap;
-          }
-          .cd-meta-sep {
-            color: #cbd5e1;
-            font-size: 10px;
-          }
-          .cd-meta-link {
-            color: #0284c7 !important;
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-            gap: 3px;
-          }
-          .cd-meta-link:hover {
-            text-decoration: underline;
-          }
-          .cd-tag-row {
-            display: flex;
-            align-items: center;
-            gap: 5px;
-            flex-wrap: wrap;
-          }
-          .cd-tag-pill {
-            display: inline-flex;
-            align-items: center;
-            padding: 2.5px 9px;
-            background: #e0f2fe;
-            border: 1px solid #bae6fd;
-            color: #0369a1;
-            font-size: 10.5px !important;
-            font-weight: 500 !important;
-            border-radius: 12px;
-            line-height: 1.2;
+          @media (max-width: 992px) {
+            .cd-hero-continuous-main {
+              flex-direction: column !important;
+            }
           }
 
-          /* ── Right Status Cards ── */
-          .cd-hero-right {
-            display: flex;
-            flex-direction: column;
-            align-items: flex-end;
-            gap: 6px;
-            flex-shrink: 0;
+          /* Left: Brand Identity & Status */
+          .cd-hero-continuous-left {
+            display: flex !important;
+            align-items: center !important;
+            gap: 14px !important;
+            padding: 14px 18px !important;
+            flex: 0 0 auto !important;
+            min-width: 310px !important;
+            max-width: 380px !important;
+            border-right: 1px solid #eef2f6 !important;
+            background: #ffffff !important;
           }
-          .cd-status-group {
-            display: flex;
-            align-items: center;
-            gap: 8px;
+          @media (max-width: 992px) {
+            .cd-hero-continuous-left {
+              max-width: 100% !important;
+              border-right: none !important;
+              border-bottom: 1px solid #eef2f6 !important;
+            }
           }
-          .cd-status-card {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            padding: 6px 12px;
-            border-radius: 8px;
-            min-width: 120px;
+          .cd-hero-avatar-wrap {
+            position: relative !important;
+            flex-shrink: 0 !important;
           }
-          .cd-status-card-green {
-            background: #f0fdf4;
-            border: 1px solid #bbf7d0;
+          .cd-hero-avatar {
+            width: 52px !important;
+            height: 52px !important;
+            border-radius: 10px !important;
+            background: linear-gradient(135deg, #4f46e5, #3b82f6) !important;
+            color: #ffffff !important;
+            border: 2px solid #ffffff !important;
+            box-shadow: 0 2px 6px rgba(15, 23, 42, 0.08) !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            font-size: 16px !important;
+            font-weight: 700 !important;
+            overflow: hidden !important;
           }
-          .cd-status-card-blue {
-            background: #eff6ff;
-            border: 1px solid #bfdbfe;
+          .cd-hero-avatar img {
+            width: 100% !important;
+            height: 100% !important;
+            object-fit: cover !important;
           }
-          .cd-status-card-grey {
-            background: #f8fafc !important;
-            border: 1px solid #e2e8f0 !important;
+          .cd-hero-verified-check {
+            position: absolute !important;
+            top: -3px !important;
+            right: -3px !important;
+            width: 17px !important;
+            height: 17px !important;
+            border-radius: 50% !important;
+            background: #10b981 !important;
+            border: 2px solid #ffffff !important;
+            color: #ffffff !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            font-size: 8px !important;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.15) !important;
           }
-          .cd-status-card-title {
-            font-size: 12px !important;
+          .cd-hero-identity-body {
+            flex: 1 !important;
+            min-width: 0 !important;
+          }
+          .cd-hero-title-row {
+            display: flex !important;
+            align-items: center !important;
+            gap: 6px !important;
+            margin-bottom: 2px !important;
+          }
+          .cd-hero-name {
+            font-size: 15px !important;
+            font-weight: 700 !important;
+            color: #0f172a !important;
+            line-height: 1.25 !important;
+            white-space: nowrap !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+            letter-spacing: -0.2px !important;
+            margin: 0 !important;
+          }
+          .cd-hero-id-badge {
+            font-size: 10px !important;
+            font-weight: 700 !important;
+            color: #2563eb !important;
+            background: #eff6ff !important;
+            border: 1px solid #bfdbfe !important;
+            padding: 1px 5px !important;
+            border-radius: 4px !important;
+            font-family: monospace !important;
+            flex-shrink: 0 !important;
+          }
+          .cd-hero-subtitle {
+            font-size: 11.5px !important;
+            color: #64748b !important;
+            font-weight: 500 !important;
+            white-space: nowrap !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+            margin-bottom: 5px !important;
+            line-height: 1.2 !important;
+          }
+          .cd-hero-badge-row {
+            display: flex !important;
+            align-items: center !important;
+            gap: 6px !important;
+            flex-wrap: wrap !important;
+          }
+          .cd-pill-scope-internal {
+            display: inline-flex !important;
+            align-items: center !important;
+            gap: 4px !important;
+            background: #eff6ff !important;
+            color: #2563eb !important;
+            border: 1px solid #bfdbfe !important;
+            font-size: 10.5px !important;
             font-weight: 600 !important;
-            line-height: 1.2;
+            padding: 2px 7px !important;
+            border-radius: 5px !important;
+            line-height: 1.2 !important;
           }
-          .cd-status-card-sub {
-            font-size: 11px !important;
-            font-weight: 400 !important;
-            color: #64748b;
-            line-height: 1.1;
+          .cd-pill-scope-direct {
+            display: inline-flex !important;
+            align-items: center !important;
+            gap: 4px !important;
+            background: #ecfdf5 !important;
+            color: #059669 !important;
+            border: 1px solid #a7f3d0 !important;
+            font-size: 10.5px !important;
+            font-weight: 600 !important;
+            padding: 2px 7px !important;
+            border-radius: 5px !important;
+            line-height: 1.2 !important;
+          }
+          .cd-status-badge-active {
+            display: inline-flex !important;
+            align-items: center !important;
+            gap: 6px !important;
+            background: #ecfdf5 !important;
+            color: #059669 !important;
+            border: 1px solid #a7f3d0 !important;
+            padding: 2px 7px !important;
+            border-radius: 5px !important;
+            font-size: 10.5px !important;
+            font-weight: 600 !important;
+            line-height: 1.2 !important;
+          }
+          .cd-status-badge-inactive {
+            display: inline-flex !important;
+            align-items: center !important;
+            gap: 6px !important;
+            background: #f8fafc !important;
+            color: #64748b !important;
+            border: 1px solid #e2e8f0 !important;
+            padding: 2px 7px !important;
+            border-radius: 5px !important;
+            font-size: 10.5px !important;
+            font-weight: 600 !important;
+            line-height: 1.2 !important;
+          }
+          .cd-pulse-emerald {
+            width: 7px !important;
+            height: 7px !important;
+            border-radius: 50% !important;
+            background: #10b981 !important;
+            position: relative !important;
+            flex-shrink: 0 !important;
+          }
+          .cd-pulse-emerald::after {
+            content: "" !important;
+            position: absolute !important;
+            inset: -3px !important;
+            border-radius: 50% !important;
+            border: 1.5px solid #10b981 !important;
+            animation: cdpulse 2s infinite !important;
           }
           .cd-pulse-dot {
-            width: 7px;
-            height: 7px;
-            border-radius: 50%;
-            position: relative;
-            flex-shrink: 0;
-          }
-          .cd-pulse-green { background: #16a34a; }
-          .cd-pulse-green::after {
-            content: "";
-            position: absolute;
-            inset: -3px;
-            border-radius: 50%;
-            border: 1.5px solid #16a34a;
-            animation: cdpulse 2s infinite;
-          }
-          .cd-pulse-blue { background: #2563eb; }
-          .cd-pulse-blue::after {
-            content: "";
-            position: absolute;
-            inset: -3px;
-            border-radius: 50%;
-            border: 1.5px solid #2563eb;
-            animation: cdpulse 2s infinite;
+            width: 7px !important;
+            height: 7px !important;
+            border-radius: 50% !important;
+            flex-shrink: 0 !important;
           }
           .cd-pulse-grey {
             background: #94a3b8 !important;
           }
-          .cd-pulse-grey::after {
-            display: none !important;
+
+          /* Right: Corporate DNA Parameters (2-Column Grid) */
+          .cd-hero-continuous-right {
+            flex: 1 1 auto !important;
+            min-width: 0 !important;
+            padding: 12px 20px !important;
+            display: grid !important;
+            grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) !important;
+            gap: 7px 22px !important;
+            align-content: center !important;
+            background: #ffffff !important;
           }
-          @keyframes cdpulse {
-            0%, 100% { transform: scale(1); opacity: 1; }
-            50% { transform: scale(1.4); opacity: 0; }
+          @media (max-width: 600px) {
+            .cd-hero-continuous-right {
+              grid-template-columns: minmax(0, 1fr) !important;
+            }
           }
-          .cd-hero-meta-time {
-            font-size: 11px !important;
-            font-weight: 400 !important;
-            color: #64748b;
+          .cd-hero-meta-item {
+            display: flex !important;
+            align-items: center !important;
+            gap: 8px !important;
+            min-width: 0 !important;
+            font-size: 11.5px !important;
+            color: #334155 !important;
+            font-weight: 500 !important;
+          }
+          .cd-hero-meta-item i {
+            font-size: 12px !important;
+            color: #64748b !important;
+            width: 14px !important;
+            text-align: center !important;
+            flex-shrink: 0 !important;
+          }
+          .cd-hero-meta-item span {
+            white-space: nowrap !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+          }
+          .cd-hero-link {
+            color: #2563eb !important;
+            text-decoration: none !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            gap: 4px !important;
+            font-weight: 500 !important;
+            white-space: nowrap !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+          }
+          .cd-hero-link:hover {
+            text-decoration: underline !important;
           }
 
-          /* ── 5 Metric KPI Stat Cards Row ── */
+          /* Bottom Continuous Activity Strip */
+          .cd-hero-continuous-bottom {
+            background: #f8fafc !important;
+            border-top: 1px solid #eef2f6 !important;
+            padding: 7px 18px !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: space-between !important;
+            gap: 12px !important;
+            flex-wrap: wrap !important;
+            font-size: 11px !important;
+          }
+          .cd-strip-left {
+            display: flex !important;
+            align-items: center !important;
+            gap: 8px !important;
+            color: #475569 !important;
+            flex-wrap: wrap !important;
+          }
+          .cd-strip-metric {
+            display: inline-flex !important;
+            align-items: center !important;
+            color: #0f172a !important;
+            font-weight: 600 !important;
+          }
+          .cd-strip-sep {
+            color: #cbd5e1 !important;
+            font-size: 9px !important;
+          }
+          .cd-strip-item {
+            display: inline-flex !important;
+            align-items: center !important;
+            color: #64748b !important;
+          }
+          .cd-strip-right {
+            display: flex !important;
+            align-items: center !important;
+            gap: 5px !important;
+            flex-wrap: wrap !important;
+          }
+          .cd-strip-tags-lbl {
+            color: #94a3b8 !important;
+            font-weight: 500 !important;
+            font-size: 10.5px !important;
+            margin-right: 2px !important;
+          }
+          .cd-strip-tag-pill {
+            display: inline-block !important;
+            background: #eff6ff !important;
+            color: #2563eb !important;
+            border: 1px solid #dbeafe !important;
+            padding: 1.5px 7px !important;
+            border-radius: 4px !important;
+            font-size: 10.5px !important;
+            font-weight: 500 !important;
+            line-height: 1.2 !important;
+            white-space: nowrap !important;
+          }
+          .cd-strip-tag-more {
+            display: inline-block !important;
+            font-size: 10.5px !important;
+            font-weight: 600 !important;
+            color: #2563eb !important;
+            padding: 1px 4px !important;
+          }
+
+          /* ── 5 Metric KPI Sub-Cards Row ── */
           .cd-kpi-grid {
-            display: grid;
-            grid-template-columns: repeat(5, 1fr);
-            gap: 10px;
-            padding: 12px 18px;
-            background: #ffffff;
-            border-bottom: 1px solid #f1f5f9;
+            display: grid !important;
+            grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+            gap: 10px !important;
+            margin: 0 14px 12px 14px !important;
+            width: calc(100% - 28px) !important;
+          }
+          @media (max-width: 1024px) {
+            .cd-kpi-grid {
+              grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+            }
+          }
+          @media (max-width: 640px) {
+            .cd-kpi-grid {
+              grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+            }
           }
           .cd-kpi-card {
-            background: #ffffff;
-            border: 1px solid #eef2f6;
-            border-radius: 8px;
-            padding: 10px 12px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
-            transition: all 0.15s ease-in-out;
-            cursor: pointer;
+            background: #ffffff !important;
+            border: 1px solid #e2e8f0 !important;
+            border-radius: 10px !important;
+            padding: 10px 12px !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: space-between !important;
+            box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03) !important;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+            cursor: pointer !important;
+            text-decoration: none !important;
+            min-width: 0 !important;
           }
           .cd-kpi-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-            border-color: #cbd5e1;
+            transform: translateY(-2px) !important;
+            box-shadow: 0 4px 12px rgba(15, 23, 42, 0.06) !important;
+            border-color: #cbd5e1 !important;
           }
           .cd-kpi-icon {
-            width: 34px;
-            height: 34px;
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 13.5px !important;
-            flex-shrink: 0;
-          }
-          .cd-kpi-icon-blue   { background: #eff6ff; color: #2563eb; }
-          .cd-kpi-icon-purple { background: #f5f3ff; color: #7c3aed; }
-          .cd-kpi-icon-amber  { background: #fffbeb; color: #d97706; }
-          .cd-kpi-icon-orange { background: #fff7ed; color: #ea580c; }
-          .cd-kpi-icon-green  { background: #f0fdf4; color: #16a34a; }
-          .cd-kpi-num {
+            width: 36px !important;
+            height: 36px !important;
+            border-radius: 8px !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
             font-size: 14px !important;
+            flex-shrink: 0 !important;
+          }
+          .cd-kpi-icon-blue   { background: #eff6ff !important; color: #2563eb !important; }
+          .cd-kpi-icon-purple { background: #f5f3ff !important; color: #7c3aed !important; }
+          .cd-kpi-icon-amber  { background: #fffbeb !important; color: #d97706 !important; }
+          .cd-kpi-icon-orange { background: #fff7ed !important; color: #ea580c !important; }
+          .cd-kpi-icon-green  { background: #ecfdf5 !important; color: #059669 !important; }
+          .cd-kpi-num {
+            font-size: 16px !important;
             font-weight: 700 !important;
-            color: #0f172a;
-            line-height: 1.1;
+            color: #0f172a !important;
+            line-height: 1.15 !important;
           }
           .cd-kpi-lbl {
-            font-size: 12px !important;
-            font-weight: 500 !important;
-            color: #1e293b;
-            line-height: 1.2;
-            margin-top: 1px;
-          }
-          .cd-kpi-desc {
             font-size: 11px !important;
-            font-weight: 400 !important;
-            color: #94a3b8;
-            line-height: 1.1;
-            margin-top: 1px;
+            font-weight: 600 !important;
+            color: #64748b !important;
+            text-transform: uppercase !important;
+            letter-spacing: 0.3px !important;
+            line-height: 1.2 !important;
+            margin-top: 1px !important;
           }
           .cd-kpi-arrow {
             font-size: 11px !important;
-            color: #cbd5e1;
-            flex-shrink: 0;
+            color: #cbd5e1 !important;
+            transition: transform 0.15s !important;
+          }
+          .cd-kpi-card:hover .cd-kpi-arrow {
+            color: #2563eb !important;
+            transform: translateX(3px) !important;
           }
 
-          /* ── Tab Navigation Bar ── */
-          .cd-tabs-bar {
-            display: flex;
-            align-items: center;
-            gap: 2px;
-            padding: 0 18px;
-            background: #ffffff;
-            border-bottom: 1px solid #e2e8f0;
-            overflow-x: auto;
-            white-space: nowrap;
+          /* ── Tier 2 Drawer Navigation Tabs Card ── */
+          .cd-drawer-tabs-card {
+            background: #ffffff !important;
+            border: 1px solid #e2e8f0 !important;
+            border-radius: 10px !important;
+            padding: 8px 12px !important;
+            margin: 0 14px 14px 14px !important;
+            box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03) !important;
+            width: calc(100% - 28px) !important;
           }
-          .cd-tabs-bar .nav-link {
-            padding: 10px 15px !important;
-            border: none !important;
-            border-bottom: 2px solid transparent !important;
-            border-radius: 0 !important;
-            font-size: 12.5px !important;
-            font-weight: 500 !important;
-            color: #64748b !important;
+          .cd-drawer-tabs-list {
+            display: flex !important;
+            align-items: center !important;
+            gap: 6px !important;
+            overflow-x: auto !important;
+            scrollbar-width: none !important;
+            list-style: none !important;
+            padding: 0 !important;
+            margin: 0 !important;
+            flex-wrap: nowrap !important;
+          }
+          .cd-drawer-tabs-list::-webkit-scrollbar {
+            display: none !important;
+          }
+          .cd-drawer-tabs-list .nav-item {
+            margin: 0 !important;
+            flex-shrink: 0 !important;
+          }
+          .cd-tab-pill-btn {
+            background: #ffffff !important;
+            border: 1px solid #e2e8f0 !important;
+            border-radius: 8px !important;
+            padding: 6px 12px !important;
+            font-size: 11.5px !important;
+            font-weight: 600 !important;
+            color: #475569 !important;
             display: inline-flex !important;
             align-items: center !important;
             gap: 7px !important;
-            background: transparent !important;
+            text-decoration: none !important;
+            box-shadow: 0 1px 2px rgba(15, 23, 42, 0.02) !important;
             transition: all 0.15s ease-in-out !important;
             cursor: pointer !important;
+            white-space: nowrap !important;
           }
-          .cd-tabs-bar .nav-link i {
-            font-size: 12.5px !important;
-          }
-          .cd-tabs-bar .nav-link:hover {
-            color: #009ef7 !important;
-            background: rgba(0, 158, 247, 0.04) !important;
-          }
-          .cd-tabs-bar .nav-link.active {
-            color: #009ef7 !important;
-            border-bottom: 2px solid #009ef7 !important;
-            font-weight: 500 !important;
-            background: #eff6ff !important;
-            border-radius: 6px 6px 0 0 !important;
-          }
-          /* Recent Activity Tab: EXPLICITLY BLACK */
-          .cd-tabs-bar .nav-link.cd-tab-black {
-            color: #0f172a !important;
-            font-weight: 500 !important;
-          }
-          .cd-tabs-bar .nav-link.cd-tab-black i {
+          .cd-tab-pill-btn:hover {
+            background: #f8fafc !important;
+            border-color: #cbd5e1 !important;
             color: #0f172a !important;
           }
-          .cd-tabs-bar .nav-link.cd-tab-black.active {
-            color: #0f172a !important;
-            border-bottom: 2px solid #0f172a !important;
-            font-weight: 500 !important;
-            background: #f1f5f9 !important;
-            border-radius: 6px 6px 0 0 !important;
+          .cd-tab-pill-btn.active {
+            background: #009ef7 !important;
+            border-color: #009ef7 !important;
+            color: #ffffff !important;
+            box-shadow: 0 2px 4px rgba(0, 158, 247, 0.2) !important;
           }
-          .cd-tab-badge {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            min-width: 18px;
-            height: 16px;
-            padding: 0 5px;
-            background: #009ef7;
-            color: #ffffff;
+          .cd-tab-pill-btn.active i {
+            color: #ffffff !important;
+          }
+          .cd-tab-pill-badge {
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            min-width: 18px !important;
+            height: 16px !important;
+            padding: 0 5px !important;
+            border-radius: 999px !important;
             font-size: 10px !important;
-            font-weight: 600;
-            border-radius: 8px;
-            line-height: 1;
+            font-weight: 700 !important;
+            background: #eff6ff !important;
+            color: #2563eb !important;
+            line-height: 1 !important;
+          }
+          .cd-tab-pill-btn.active .cd-tab-pill-badge {
+            background: rgba(255, 255, 255, 0.28) !important;
+            color: #ffffff !important;
           }
 
           /* ── Overview 2-Column Grid ── */
           .cd-grid-2col {
-            display: grid;
-            grid-template-columns: 1.35fr 0.85fr;
-            gap: 14px;
-            padding: 14px 18px 20px;
-            align-items: start;
-            background: #f8fafc;
+            display: grid !important;
+            grid-template-columns: minmax(0, 1.25fr) minmax(0, 0.95fr) !important;
+            gap: 14px !important;
+            padding: 0 14px 20px 14px !important;
+            align-items: start !important;
+            background: #f8fafc !important;
           }
           @media (max-width: 1024px) {
             .cd-grid-2col {
-              grid-template-columns: 1fr;
+              grid-template-columns: 1fr !important;
             }
           }
           .cd-card-panel {
-            background: #ffffff;
-            border: 1px solid #eef2f6;
-            border-radius: 8px;
-            padding: 14px 16px;
-            margin-bottom: 14px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+            background: #ffffff !important;
+            border: 1px solid #e2e8f0 !important;
+            border-radius: 10px !important;
+            padding: 14px 16px !important;
+            margin-bottom: 14px !important;
+            box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04) !important;
           }
           .cd-card-panel:last-child {
-            margin-bottom: 0;
+            margin-bottom: 0 !important;
           }
           .cd-card-hdr {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 12px;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: space-between !important;
+            margin-bottom: 12px !important;
+            padding-bottom: 8px !important;
+            border-bottom: 1px solid #f1f5f9 !important;
           }
           .cd-card-hdr-left {
-            display: flex;
-            align-items: center;
-            gap: 7px;
+            display: flex !important;
+            align-items: center !important;
+            gap: 8px !important;
           }
           .cd-card-hdr-title {
             font-size: 13.5px !important;
-            font-weight: 600 !important;
+            font-weight: 700 !important;
             color: #0f172a !important;
           }
           .cd-card-hdr-link {
             font-size: 12px !important;
-            color: #0284c7 !important;
-            font-weight: 500 !important;
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-            cursor: pointer;
+            color: #2563eb !important;
+            font-weight: 600 !important;
+            text-decoration: none !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            gap: 4px !important;
+            cursor: pointer !important;
           }
           .cd-card-hdr-link:hover {
-            text-decoration: underline;
+            text-decoration: underline !important;
           }
           .cd-about-body {
             font-size: 12px !important;
             font-weight: 400 !important;
             line-height: 1.65 !important;
-            color: #475569;
+            color: #475569 !important;
           }
 
           /* ── Recent Activity Timeline ── */
           .cd-timeline-list {
-            position: relative;
-            padding-left: 28px;
+            position: relative !important;
+            padding-left: 28px !important;
           }
           .cd-timeline-list::before {
-            content: "";
-            position: absolute;
-            top: 14px;
-            bottom: 14px;
-            left: 13px;
-            width: 1.5px;
-            background: #e2e8f0;
+            content: "" !important;
+            position: absolute !important;
+            top: 14px !important;
+            bottom: 14px !important;
+            left: 13px !important;
+            width: 1.5px !important;
+            background: #e2e8f0 !important;
           }
           .cd-tl-item {
-            position: relative;
-            display: flex;
-            align-items: flex-start;
-            justify-content: space-between;
-            gap: 12px;
-            padding: 8px 0;
-            border-bottom: 1px dashed #f1f5f9;
+            position: relative !important;
+            display: flex !important;
+            align-items: flex-start !important;
+            justify-content: space-between !important;
+            gap: 12px !important;
+            padding: 8px 0 !important;
+            border-bottom: 1px dashed #f1f5f9 !important;
           }
           .cd-tl-item:last-child {
-            border-bottom: none;
-            padding-bottom: 0;
+            border-bottom: none !important;
+            padding-bottom: 0 !important;
           }
           .cd-tl-item:first-child {
-            padding-top: 0;
+            padding-top: 0 !important;
           }
           .cd-tl-dot {
-            position: absolute;
-            left: -28px;
-            top: 9px;
-            width: 26px;
-            height: 26px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            position: absolute !important;
+            left: -28px !important;
+            top: 9px !important;
+            width: 26px !important;
+            height: 26px !important;
+            border-radius: 50 !important;
+            border-radius: 50% !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
             font-size: 11.5px !important;
-            border: 2px solid #ffffff;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.06);
-            z-index: 1;
+            border: 2px solid #ffffff !important;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.06) !important;
+            z-index: 1 !important;
           }
-          .cd-tl-dot-green  { background: #dcfce7; color: #16a34a; }
-          .cd-tl-dot-purple { background: #f3e8ff; color: #7c3aed; }
-          .cd-tl-dot-orange { background: #ffedd5; color: #ea580c; }
-          .cd-tl-dot-blue   { background: #e0f2fe; color: #0284c7; }
+          .cd-tl-dot-green  { background: #ecfdf5 !important; color: #059669 !important; }
+          .cd-tl-dot-purple { background: #f5f3ff !important; color: #7c3aed !important; }
+          .cd-tl-dot-orange { background: #fff7ed !important; color: #ea580c !important; }
+          .cd-tl-dot-blue   { background: #eff6ff !important; color: #2563eb !important; }
           .cd-tl-info {
-            flex: 1;
-            min-width: 0;
+            flex: 1 !important;
+            min-width: 0 !important;
           }
           .cd-tl-heading {
             font-size: 12.5px !important;
             font-weight: 600 !important;
-            color: #0f172a;
-            line-height: 1.25;
+            color: #0f172a !important;
+            line-height: 1.25 !important;
           }
           .cd-tl-sub {
             font-size: 11px !important;
             font-weight: 400 !important;
-            color: #64748b;
-            line-height: 1.25;
-            margin-top: 2px;
+            color: #64748b !important;
+            line-height: 1.25 !important;
+            margin-top: 2px !important;
           }
           .cd-tl-role {
             font-size: 12px !important;
             font-weight: 500 !important;
-            color: #334155;
-            min-width: 120px;
-            text-align: left;
+            color: #334155 !important;
+            min-width: 120px !important;
+            text-align: left !important;
           }
           .cd-tl-meta-right {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            flex-shrink: 0;
+            display: flex !important;
+            align-items: center !important;
+            gap: 10px !important;
+            flex-shrink: 0 !important;
           }
           .cd-tl-time {
             font-size: 11px !important;
             font-weight: 400 !important;
-            color: #94a3b8;
-            white-space: nowrap;
+            color: #94a3b8 !important;
+            white-space: nowrap !important;
           }
           .cd-tl-badge {
             font-size: 10.5px !important;
-            font-weight: 500 !important;
-            padding: 2.5px 8px;
-            border-radius: 12px;
-            line-height: 1.2;
-            white-space: nowrap;
+            font-weight: 600 !important;
+            padding: 2.5px 8px !important;
+            border-radius: 6px !important;
+            line-height: 1.2 !important;
+            white-space: nowrap !important;
           }
-          .cd-tl-badge-blue   { background: #e0f2fe; color: #0284c7; }
-          .cd-tl-badge-amber  { background: #fef3c7; color: #b45309; }
-          .cd-tl-badge-orange { background: #ffedd5; color: #c2410c; }
-          .cd-tl-badge-green  { background: #dcfce7; color: #15803d; }
+          .cd-tl-badge-blue   { background: #eff6ff !important; color: #2563eb !important; border: 1px solid #bfdbfe !important; }
+          .cd-tl-badge-amber  { background: #fffbeb !important; color: #d97706 !important; border: 1px solid #fde68a !important; }
+          .cd-tl-badge-orange { background: #fff7ed !important; color: #ea580c !important; border: 1px solid #fed7aa !important; }
+          .cd-tl-badge-green  { background: #ecfdf5 !important; color: #059669 !important; border: 1px solid #a7f3d0 !important; }
 
-          /* ── Client Information Rows ── */
-          .cd-kv-row {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 7px 0;
-            border-bottom: 1px dashed #f1f5f9;
-            gap: 12px;
+          /* ── Overview Discrete Sub-Cards Grid ── */
+          .cd-overview-subcards-grid {
+            display: grid !important;
+            grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+            gap: 8px !important;
+            width: 100% !important;
           }
-          .cd-kv-row:last-child {
-            border-bottom: none;
-            padding-bottom: 0;
+          @media (max-width: 640px) {
+            .cd-overview-subcards-grid {
+              grid-template-columns: 1fr !important;
+            }
           }
-          .cd-kv-lbl {
-            font-size: 11.5px !important;
-            color: #64748b;
-            font-weight: 400 !important;
-            flex-shrink: 0;
+          .cd-overview-subcard {
+            background: #f8fafc !important;
+            border: 1px solid #e2e8f0 !important;
+            border-radius: 8px !important;
+            padding: 8px 10px !important;
+            display: flex !important;
+            align-items: center !important;
+            gap: 10px !important;
+            min-width: 0 !important;
+            transition: all 0.15s ease-in-out !important;
           }
-          .cd-kv-val {
+          .cd-overview-subcard:hover {
+            border-color: #cbd5e1 !important;
+            background: #ffffff !important;
+            transform: translateY(-1px) !important;
+            box-shadow: 0 2px 4px rgba(15, 23, 42, 0.04) !important;
+          }
+          .cd-ov-icon-box {
+            width: 30px !important;
+            height: 30px !important;
+            border-radius: 6px !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
             font-size: 12px !important;
-            color: #0f172a;
-            font-weight: 500 !important;
-            text-align: right;
-            word-break: break-word;
+            flex-shrink: 0 !important;
           }
-          .cd-kv-val a {
-            color: #0284c7;
-            text-decoration: none;
+          .cd-ov-content {
+            flex: 1 !important;
+            min-width: 0 !important;
           }
-          .cd-kv-val a:hover {
-            text-decoration: underline;
+          .cd-ov-label {
+            display: block !important;
+            font-size: 9.5px !important;
+            font-weight: 700 !important;
+            color: #94a3b8 !important;
+            text-transform: uppercase !important;
+            letter-spacing: 0.4px !important;
+            line-height: 1.1 !important;
+          }
+          .cd-ov-value {
+            display: block !important;
+            font-size: 11.5px !important;
+            font-weight: 600 !important;
+            color: #0f172a !important;
+            white-space: nowrap !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+            line-height: 1.25 !important;
+            margin-top: 1px !important;
+          }
+          .cd-ov-link {
+            color: #2563eb !important;
+            text-decoration: none !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            gap: 3px !important;
+            font-size: 11.5px !important;
+            font-weight: 600 !important;
+            white-space: nowrap !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+          }
+          .cd-ov-link:hover {
+            text-decoration: underline !important;
           }
 
-          /* ── Primary Contact Card ── */
-          .cd-contact-preview {
-            display: flex;
-            align-items: center;
-            gap: 12px;
+          /* ── Primary SPOC Master Sub-Card ── */
+          .cd-contact-master-subcard {
+            background: #f8fafc !important;
+            border: 1px solid #e2e8f0 !important;
+            border-radius: 8px !important;
+            padding: 12px !important;
           }
-          .cd-contact-avatar {
-            width: 42px;
-            height: 42px;
-            border-radius: 50%;
-            background: #dcfce7;
-            color: #15803d;
-            font-size: 13px !important;
-            font-weight: 600 !important;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-shrink: 0;
-            border: 1.5px solid #bbf7d0;
+          .cd-contact-master-top {
+            display: flex !important;
+            align-items: center !important;
+            gap: 12px !important;
+            margin-bottom: 10px !important;
           }
-          .cd-contact-meta {
-            flex: 1;
-            min-width: 0;
+          .cd-contact-avatar-box {
+            width: 44px !important;
+            height: 44px !important;
+            border-radius: 10px !important;
+            background: #eff6ff !important;
+            color: #2563eb !important;
+            border: 1px solid #bfdbfe !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            font-size: 14px !important;
+            font-weight: 700 !important;
+            flex-shrink: 0 !important;
           }
-          .cd-contact-name-row {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            line-height: 1.2;
-          }
-          .cd-contact-name {
-            font-size: 13px !important;
-            font-weight: 600 !important;
-            color: #0f172a;
+          .cd-contact-master-info {
+            flex: 1 !important;
+            min-width: 0 !important;
           }
           .cd-contact-primary-tag {
-            font-size: 10.5px !important;
-            font-weight: 500 !important;
-            background: #dcfce7;
-            color: #15803d;
-            padding: 1.5px 7px;
-            border-radius: 10px;
+            display: inline-flex !important;
+            align-items: center !important;
+            gap: 3px !important;
+            background: #fef3c7 !important;
+            color: #92400e !important;
+            border: 1px solid #fde68a !important;
+            border-radius: 4px !important;
+            padding: 1.5px 6px !important;
+            font-size: 10px !important;
+            font-weight: 700 !important;
           }
-          .cd-contact-title {
+          .cd-contact-channels-grid {
+            display: grid !important;
+            grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+            gap: 8px !important;
+          }
+          .cd-contact-channel-item {
+            background: #ffffff !important;
+            border: 1px solid #e2e8f0 !important;
+            border-radius: 6px !important;
+            padding: 6px 10px !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: space-between !important;
+            gap: 6px !important;
+            text-decoration: none !important;
+            color: #334155 !important;
             font-size: 11px !important;
+            font-weight: 500 !important;
+            transition: all 0.15s !important;
+          }
+          .cd-contact-channel-item:hover {
+            background: #eff6ff !important;
+            border-color: #bfdbfe !important;
+            color: #2563eb !important;
+          }
+          .cd-channel-text {
+            white-space: nowrap !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+            flex: 1 !important;
+          }
             font-weight: 400 !important;
             color: #64748b;
             margin-top: 2px;
@@ -820,11 +1654,678 @@ use Carbon\Carbon;
             background: #f0f9ff;
           }
 
-          /* ── Contacts Tab Header & Search ── */
-          .cd-contacts .cd-tabcard-title { font-size: 13.5px !important; font-weight: 600 !important; color: #0f172a; }
-          .cd-contacts .cd-tabcard-sub { font-size: 11.5px !important; color: #64748b; margin-top: 2px; }
-          .cd-contacts .cd-search input { height: 32px; font-size: 12px !important; border-radius: 6px; border: 1px solid #e2e8f0; padding-left: 30px; padding-right: 12px; width: 220px; }
-          .cd-contacts .cd-search i { position: absolute; left: 10px; top: 10px; font-size: 12px; color: #94a3b8; }
+          /* ── Contacts Tab Modern Card + Sub-Card Enterprise Design ── */
+          .cd-contact-tab-container {
+            background: #ffffff;
+            border-radius: 12px;
+            padding: 12px 14px 18px;
+            margin: 8px 10px 16px;
+            border: 1px solid #edf2f7;
+            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.02);
+            overflow: hidden;
+          }
+
+          /* TIER 1: Searchbar & Filter Toolbar Card */
+          .cd-contact-toolbar-card {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 10px 14px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            flex-wrap: wrap;
+            box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03);
+          }
+          .cd-contact-toolbar-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex: 1 1 300px;
+          }
+          .cd-contact-title-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            background: #eff6ff;
+            color: #009ef7;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 15px;
+            flex-shrink: 0;
+            border: 1px solid #dbeafe;
+          }
+          .cd-contact-title-wrap {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+          }
+          .cd-contact-title {
+            font-size: 14.5px;
+            font-weight: 700;
+            color: #0f172a;
+            margin: 0;
+            line-height: 1.2;
+          }
+          .cd-contact-subtitle {
+            font-size: 11.5px;
+            color: #64748b;
+            margin: 0;
+            line-height: 1.2;
+          }
+          .cd-contact-count-badge {
+            background: #eff6ff;
+            color: #1d4ed8;
+            border: 1px solid #dbeafe;
+            border-radius: 6px;
+            padding: 1px 8px;
+            font-size: 11px;
+            font-weight: 600;
+          }
+          .cd-contact-scope-pill {
+            background: #eff6ff;
+            color: #1d4ed8;
+            border: 1px solid #bfdbfe;
+            border-radius: 6px;
+            padding: 1px 7px;
+            font-size: 10.5px;
+            font-weight: 600;
+          }
+          .cd-contact-toolbar-right {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+          }
+
+          /* Search Sub-Card */
+          .cd-contact-search-subcard {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 0 10px 0 12px;
+            height: 36px;
+            width: 100%;
+            max-width: 360px;
+            transition: all 0.15s ease-in-out;
+            position: relative;
+          }
+          .cd-contact-search-subcard:focus-within {
+            background: #ffffff;
+            border-color: #009ef7;
+            box-shadow: 0 0 0 3px rgba(0, 158, 247, 0.12);
+          }
+          .cd-contact-search-subcard i.fa-search {
+            color: #94a3b8;
+            font-size: 12px;
+            flex-shrink: 0;
+          }
+          .cd-contact-search-subcard input {
+            border: none !important;
+            background: transparent !important;
+            outline: none !important;
+            box-shadow: none !important;
+            font-size: 12px !important;
+            color: #0f172a !important;
+            width: 100%;
+            padding: 0 !important;
+            line-height: 36px;
+            font-family: inherit;
+          }
+          .cd-contact-search-subcard input::placeholder {
+            color: #94a3b8;
+            font-weight: 400;
+          }
+          .cd-contact-search-clear {
+            border: none;
+            background: transparent;
+            color: #94a3b8;
+            cursor: pointer;
+            padding: 2px 4px;
+            font-size: 11px;
+            transition: color 0.15s;
+          }
+          .cd-contact-search-clear:hover {
+            color: #ef4444;
+          }
+
+          .cd-contact-action-subcard {
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+            background: #f8fafc;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            color: #64748b;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            padding: 0;
+          }
+          .cd-contact-action-subcard:hover {
+            background: #eff6ff;
+            color: #009ef7;
+            border-color: #bfdbfe;
+          }
+
+          /* TIER 2: Sub-Tabs Filter Card */
+          .cd-contact-tabs-card {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 6px 8px;
+            margin-bottom: 12px;
+            box-shadow: 0 1px 2px rgba(15, 23, 42, 0.02);
+          }
+          .cd-contact-tabs-list {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            overflow-x: auto;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+            padding: 2px 0;
+          }
+          .cd-contact-tabs-list::-webkit-scrollbar {
+            display: none;
+          }
+          .cd-contact-subtab {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            border-radius: 7px;
+            border: 1px solid #e2e8f0;
+            background: #f8fafc;
+            color: #475569;
+            font-size: 11.5px;
+            font-weight: 500;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: all 0.15s ease;
+            user-select: none;
+          }
+          .cd-contact-subtab:hover {
+            background: #f1f5f9;
+            color: #0f172a;
+            border-color: #cbd5e1;
+          }
+          .cd-contact-subtab.active {
+            background: #009ef7 !important;
+            color: #ffffff !important;
+            border-color: #009ef7 !important;
+            font-weight: 600 !important;
+            box-shadow: 0 2px 6px rgba(0, 158, 247, 0.28) !important;
+          }
+          .cd-contact-subtab-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 18px;
+            height: 18px;
+            padding: 0 5px;
+            border-radius: 10px;
+            font-size: 10px;
+            font-weight: 700;
+            background: #e2e8f0;
+            color: #475569;
+          }
+          .cd-contact-subtab.active .cd-contact-subtab-badge {
+            background: rgba(255, 255, 255, 0.28) !important;
+            color: #ffffff !important;
+          }
+
+          /* TIER 3: Contact Cards Stream */
+          .cd-contact-stream-wrap {
+            width: 100%;
+            overflow-x: hidden;
+          }
+          .cd-contact-stream {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            width: 100%;
+          }
+
+          /* Individual Contact Master Card */
+          .cd-contact-card {
+            background: #ffffff !important;
+            border: 1px solid #e2e8f0 !important;
+            border-radius: 10px !important;
+            box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03) !important;
+            transition: all 0.15s ease-in-out !important;
+            overflow: hidden !important;
+            width: 100% !important;
+            max-width: 100% !important;
+          }
+          .cd-contact-card:hover {
+            border-color: #cbd5e1 !important;
+            box-shadow: 0 4px 14px rgba(15, 23, 42, 0.06) !important;
+            transform: translateY(-1px) !important;
+          }
+
+          /* Discrete Sub-Cards Grid */
+          .cd-contact-card-grid {
+            display: grid !important;
+            grid-template-columns: minmax(0, 2.2fr) minmax(0, 2.2fr) minmax(0, 1.4fr) minmax(0, 1.2fr) minmax(0, 1.4fr) !important;
+            gap: 8px !important;
+            padding: 10px 12px !important;
+            width: 100% !important;
+            max-width: 100% !important;
+            align-items: stretch !important;
+          }
+
+          /* Discrete Sub-Card Container */
+          .cd-contact-subcard {
+            background: #f8fafc !important;
+            border: 1px solid #edf2f7 !important;
+            border-radius: 8px !important;
+            padding: 7px 9px !important;
+            display: flex !important;
+            flex-direction: column !important;
+            justify-content: space-between !important;
+            min-width: 0 !important;
+            overflow: hidden !important;
+          }
+          .cd-contact-subcard-hdr {
+            display: flex !important;
+            align-items: center !important;
+            justify-content: space-between !important;
+            margin-bottom: 5px !important;
+            gap: 4px !important;
+            line-height: 1 !important;
+          }
+          .cd-contact-subcard-label {
+            font-size: 9.5px !important;
+            font-weight: 700 !important;
+            text-transform: uppercase !important;
+            letter-spacing: 0.3px !important;
+            color: #64748b !important;
+            white-space: nowrap !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+          }
+          .cd-contact-subcard-body {
+            display: flex !important;
+            flex-direction: column !important;
+            justify-content: center !important;
+            gap: 3px !important;
+            flex: 1 1 auto !important;
+            min-width: 0 !important;
+            overflow: hidden !important;
+          }
+
+          /* Sub-Card 1: Profile Elements */
+          .cd-contact-profile-row {
+            display: flex !important;
+            align-items: center !important;
+            gap: 9px !important;
+            min-width: 0 !important;
+          }
+          .cd-contact-avatar-box {
+            width: 38px !important;
+            height: 38px !important;
+            min-width: 38px !important;
+            border-radius: 8px !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            font-size: 13.5px !important;
+            font-weight: 700 !important;
+            color: #ffffff !important;
+            flex-shrink: 0 !important;
+            text-transform: uppercase !important;
+          }
+          .cd-contact-profile-meta {
+            flex: 1 1 auto !important;
+            min-width: 0 !important;
+            overflow: hidden !important;
+          }
+          .cd-contact-card-name {
+            font-size: 13px !important;
+            font-weight: 700 !important;
+            color: #0f172a !important;
+            line-height: 1.25 !important;
+            display: block !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+            white-space: nowrap !important;
+          }
+          .cd-contact-card-desig {
+            font-size: 11px !important;
+            font-weight: 500 !important;
+            color: #475569 !important;
+            line-height: 1.2 !important;
+            margin-top: 2px !important;
+            display: block !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+            white-space: nowrap !important;
+          }
+          .cd-badge-primary-spoc {
+            display: inline-flex !important;
+            align-items: center !important;
+            padding: 1px 6px !important;
+            border-radius: 4px !important;
+            font-size: 9.5px !important;
+            font-weight: 700 !important;
+            background: #fef3c7 !important;
+            color: #92400e !important;
+            border: 1px solid #fde68a !important;
+          }
+          .cd-badge-secondary-contact {
+            display: inline-flex !important;
+            align-items: center !important;
+            padding: 1px 5px !important;
+            border-radius: 4px !important;
+            font-size: 9.5px !important;
+            font-weight: 600 !important;
+            background: #f1f5f9 !important;
+            color: #475569 !important;
+            border: 1px solid #e2e8f0 !important;
+          }
+
+          /* Sub-Card 2: Communication Elements */
+          .cd-comm-item {
+            display: flex !important;
+            align-items: center !important;
+            gap: 6px !important;
+            font-size: 11.5px !important;
+            color: #334155 !important;
+            min-width: 0 !important;
+            line-height: 1.3 !important;
+          }
+          .cd-comm-item i {
+            font-size: 11px !important;
+            width: 14px !important;
+            text-align: center !important;
+            flex-shrink: 0 !important;
+          }
+          .cd-comm-link {
+            color: #0f172a !important;
+            text-decoration: none !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+            white-space: nowrap !important;
+            font-weight: 500 !important;
+            transition: color 0.12s ease !important;
+          }
+          .cd-comm-link:hover {
+            color: #009ef7 !important;
+            text-decoration: underline !important;
+          }
+          .cd-copy-btn {
+            background: transparent !important;
+            border: none !important;
+            color: #94a3b8 !important;
+            cursor: pointer !important;
+            padding: 1px 3px !important;
+            font-size: 10.5px !important;
+            border-radius: 3px !important;
+            transition: all 0.12s ease !important;
+            flex-shrink: 0 !important;
+          }
+          .cd-copy-btn:hover {
+            color: #009ef7 !important;
+            background: #eff6ff !important;
+          }
+
+          /* Sub-Card 3: Org & Scope */
+          .cd-org-client {
+            font-size: 11.5px !important;
+            font-weight: 600 !important;
+            color: #1e293b !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+            white-space: nowrap !important;
+            display: flex !important;
+            align-items: center !important;
+            gap: 5px !important;
+          }
+          .cd-org-role-badge {
+            display: inline-flex !important;
+            align-items: center !important;
+            gap: 4px !important;
+            padding: 1px 6px !important;
+            border-radius: 4px !important;
+            font-size: 10px !important;
+            font-weight: 600 !important;
+            background: #eff6ff !important;
+            color: #2563eb !important;
+            border: 1px solid #dbeafe !important;
+            max-width: 100% !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+            white-space: nowrap !important;
+          }
+
+          /* Sub-Card 4: Linked Jobs */
+          .cd-linked-jobs-stat {
+            font-size: 11.5px !important;
+            font-weight: 600 !important;
+            color: #0f172a !important;
+            display: flex !important;
+            align-items: center !important;
+            gap: 5px !important;
+          }
+          .cd-view-jobs-link {
+            font-size: 10.5px !important;
+            color: #009ef7 !important;
+            font-weight: 600 !important;
+            text-decoration: none !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            gap: 3px !important;
+            margin-top: 2px !important;
+            cursor: pointer !important;
+          }
+          .cd-view-jobs-link:hover {
+            text-decoration: underline !important;
+            color: #007bb5 !important;
+          }
+
+          /* Sub-Card 5: Actions */
+          .cd-contact-actions-row {
+            display: flex !important;
+            align-items: center !important;
+            gap: 5px !important;
+            flex-wrap: nowrap !important;
+          }
+          .cd-contact-btn-call {
+            padding: 4px 8px !important;
+            font-size: 11px !important;
+            font-weight: 600 !important;
+            border-radius: 6px !important;
+            background: #eff6ff !important;
+            color: #2563eb !important;
+            border: 1px solid #bfdbfe !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            gap: 4px !important;
+            text-decoration: none !important;
+            transition: all 0.12s ease !important;
+          }
+          .cd-contact-btn-call:hover {
+            background: #2563eb !important;
+            color: #ffffff !important;
+          }
+          .cd-contact-btn-mail {
+            padding: 4px 8px !important;
+            font-size: 11px !important;
+            font-weight: 600 !important;
+            border-radius: 6px !important;
+            background: #eff6ff !important;
+            color: #009ef7 !important;
+            border: 1px solid #bae6fd !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            gap: 4px !important;
+            text-decoration: none !important;
+            transition: all 0.12s ease !important;
+          }
+          .cd-contact-btn-mail:hover {
+            background: #009ef7 !important;
+            color: #ffffff !important;
+          }
+          .cd-contact-btn-wa {
+            padding: 4px 7px !important;
+            font-size: 11px !important;
+            border-radius: 6px !important;
+            background: #f0fdf4 !important;
+            color: #16a34a !important;
+            border: 1px solid #bbf7d0 !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            text-decoration: none !important;
+            transition: all 0.12s ease !important;
+          }
+          .cd-contact-btn-wa:hover {
+            background: #16a34a !important;
+            color: #ffffff !important;
+          }
+
+          /* Status Badges */
+          .cd-contact-status-active {
+            display: inline-flex !important;
+            align-items: center !important;
+            gap: 4px !important;
+            padding: 1px 6px !important;
+            border-radius: 4px !important;
+            font-size: 9.5px !important;
+            font-weight: 700 !important;
+            background: #dcfce7 !important;
+            color: #15803d !important;
+            border: 1px solid #bbf7d0 !important;
+          }
+          .cd-contact-status-active i {
+            font-size: 6px !important;
+          }
+          .cd-contact-status-inactive {
+            display: inline-flex !important;
+            align-items: center !important;
+            gap: 4px !important;
+            padding: 1px 6px !important;
+            border-radius: 4px !important;
+            font-size: 9.5px !important;
+            font-weight: 700 !important;
+            background: #f1f5f9 !important;
+            color: #64748b !important;
+            border: 1px solid #e2e8f0 !important;
+          }
+
+          /* Sub-Card 6: Bottom Activity Strip */
+          .cd-contact-card-bottom {
+            background: #fbfcfe !important;
+            border-top: 1px solid #f1f5f9 !important;
+            padding: 6px 12px !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: space-between !important;
+            gap: 10px !important;
+            flex-wrap: wrap !important;
+          }
+          .cd-contact-bottom-left {
+            display: flex !important;
+            align-items: center !important;
+            gap: 12px !important;
+            font-size: 11px !important;
+            color: #64748b !important;
+          }
+          .cd-contact-meta-item {
+            display: inline-flex !important;
+            align-items: center !important;
+            gap: 4px !important;
+          }
+          .cd-contact-bottom-right {
+            display: flex !important;
+            align-items: center !important;
+            gap: 6px !important;
+          }
+          .cd-contact-tag-pill {
+            display: inline-flex !important;
+            align-items: center !important;
+            gap: 4px !important;
+            padding: 1px 7px !important;
+            border-radius: 4px !important;
+            font-size: 10px !important;
+            font-weight: 500 !important;
+            background: #f1f5f9 !important;
+            color: #475569 !important;
+            border: 1px solid #e2e8f0 !important;
+          }
+
+          /* Skeleton Loader */
+          .cd-contact-skeleton-card {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 12px;
+            margin-bottom: 10px;
+            display: flex;
+            gap: 10px;
+          }
+          .cd-contact-skeleton-pulse {
+            background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%);
+            background-size: 200% 100%;
+            animation: cdContactPulse 1.4s ease infinite;
+            border-radius: 6px;
+          }
+          @keyframes cdContactPulse {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+          }
+
+          /* Empty State */
+          .cd-contact-empty-state {
+            background: #ffffff;
+            border: 1px dashed #cbd5e1;
+            border-radius: 10px;
+            padding: 36px 20px;
+            text-align: center;
+            margin: 10px 0;
+          }
+          .cd-contact-empty-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: #f1f5f9;
+            color: #94a3b8;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            margin-bottom: 10px;
+          }
+          .cd-contact-empty-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #0f172a;
+            margin-bottom: 4px;
+          }
+          .cd-contact-empty-sub {
+            font-size: 12px;
+            color: #64748b;
+            margin-bottom: 12px;
+          }
+
+          @media (max-width: 1200px) {
+            .cd-contact-card-grid {
+              grid-template-columns: minmax(0, 1.8fr) minmax(0, 1.8fr) minmax(0, 1.4fr) !important;
+            }
+          }
+          @media (max-width: 768px) {
+            .cd-contact-card-grid {
+              grid-template-columns: 1fr !important;
+            }
+          }
 
           /* ── Drawer Footer ── */
           .cd-drawer-footer {
@@ -1373,6 +2874,797 @@ use Carbon\Carbon;
               grid-template-columns: 1fr;
             }
           }
+
+          /* ── Candidates Tab God-Level Card & Sub-Card Redesign ── */
+          .cd-cand-tab-container {
+            background: #ffffff;
+            border-radius: 12px;
+            padding: 12px 14px 18px;
+            margin: 8px 10px 16px;
+            border: 1px solid #edf2f7;
+            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.02);
+            overflow: hidden;
+          }
+
+          /* TIER 1: Searchbar & Filter Toolbar Card */
+          .cd-cand-toolbar-card {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 10px 14px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            flex-wrap: wrap;
+            box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03);
+          }
+          .cd-cand-toolbar-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex: 1 1 300px;
+          }
+          .cd-cand-title-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            background: #eff6ff;
+            color: #009ef7;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 15px;
+            flex-shrink: 0;
+            border: 1px solid #dbeafe;
+          }
+          .cd-cand-title-wrap {
+            display: flex;
+            flex-direction: column;
+            gap: 1px;
+          }
+          .cd-cand-title {
+            font-size: 14.5px;
+            font-weight: 700;
+            color: #0f172a;
+            margin: 0;
+            line-height: 1.2;
+          }
+          .cd-cand-subtitle {
+            font-size: 11.5px;
+            color: #64748b;
+            margin: 0;
+            line-height: 1.2;
+          }
+          .cd-cand-count-badge {
+            background: #eff6ff;
+            color: #1d4ed8;
+            border: 1px solid #dbeafe;
+            border-radius: 6px;
+            padding: 1px 8px;
+            font-size: 11px;
+            font-weight: 600;
+          }
+          .cd-cand-toolbar-right {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+          }
+
+          /* Search Sub-Card */
+          .cd-cand-search-subcard {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 0 10px 0 12px;
+            height: 36px;
+            width: 100%;
+            max-width: 380px;
+            transition: all 0.15s ease-in-out;
+            position: relative;
+          }
+          .cd-cand-search-subcard:focus-within {
+            background: #ffffff;
+            border-color: #009ef7;
+            box-shadow: 0 0 0 3px rgba(0, 158, 247, 0.12);
+          }
+          .cd-cand-search-subcard i.fa-search {
+            color: #94a3b8;
+            font-size: 12px;
+            flex-shrink: 0;
+          }
+          .cd-cand-search-subcard input {
+            border: none !important;
+            background: transparent !important;
+            outline: none !important;
+            box-shadow: none !important;
+            font-size: 12px !important;
+            color: #0f172a !important;
+            width: 100%;
+            padding: 0 !important;
+            line-height: 36px;
+            font-family: inherit;
+          }
+          .cd-cand-search-subcard input::placeholder {
+            color: #94a3b8;
+            font-weight: 400;
+          }
+          .cd-cand-search-clear {
+            border: none;
+            background: transparent;
+            color: #94a3b8;
+            cursor: pointer;
+            padding: 2px 4px;
+            font-size: 11px;
+            transition: color 0.15s;
+          }
+          .cd-cand-search-clear:hover {
+            color: #ef4444;
+          }
+
+          .cd-cand-action-subcard {
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+            background: #f8fafc;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            color: #64748b;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            padding: 0;
+          }
+          .cd-cand-action-subcard:hover {
+            background: #eff6ff;
+            color: #009ef7;
+            border-color: #bfdbfe;
+          }
+
+          /* TIER 2: Sub-Tabs Pipeline Card */
+          .cd-cand-tabs-card {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 6px 8px;
+            margin-bottom: 12px;
+            box-shadow: 0 1px 2px rgba(15, 23, 42, 0.02);
+          }
+          .cd-cand-tabs-list {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            overflow-x: auto;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+            padding: 2px 0;
+          }
+          .cd-cand-tabs-list::-webkit-scrollbar {
+            display: none;
+          }
+          .cd-cand-subtab {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            border-radius: 7px;
+            border: 1px solid #e2e8f0;
+            background: #f8fafc;
+            color: #475569;
+            font-size: 11.5px;
+            font-weight: 500;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: all 0.15s ease;
+            user-select: none;
+          }
+          .cd-cand-subtab:hover {
+            background: #f1f5f9;
+            color: #0f172a;
+            border-color: #cbd5e1;
+          }
+          .cd-cand-subtab.active {
+            background: #009ef7 !important;
+            color: #ffffff !important;
+            border-color: #009ef7 !important;
+            font-weight: 600 !important;
+            box-shadow: 0 2px 6px rgba(0, 158, 247, 0.28) !important;
+          }
+          .cd-cand-subtab-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 18px;
+            height: 18px;
+            padding: 0 5px;
+            border-radius: 10px;
+            font-size: 10px;
+            font-weight: 700;
+            background: #e2e8f0;
+            color: #475569;
+          }
+          .cd-cand-subtab.active .cd-cand-subtab-badge {
+            background: rgba(255, 255, 255, 0.28) !important;
+            color: #ffffff !important;
+          }
+
+          /* TIER 3: Candidate Card Stream */
+          .cd-cand-stream-wrap {
+            width: 100%;
+            overflow-x: hidden;
+          }
+          .cd-cand-stream {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            width: 100%;
+          }
+
+          /* Individual Candidate Master Card (Card + Sub-Card Enterprise Standard) */
+          .cd-cand-card {
+            background: #ffffff !important;
+            border: 1px solid #e2e8f0 !important;
+            border-radius: 10px !important;
+            box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03) !important;
+            transition: all 0.15s ease-in-out !important;
+            overflow: hidden !important;
+            width: 100% !important;
+            max-width: 100% !important;
+          }
+          .cd-cand-card:hover {
+            border-color: #cbd5e1 !important;
+            box-shadow: 0 4px 14px rgba(15, 23, 42, 0.06) !important;
+            transform: translateY(-1px) !important;
+          }
+
+          /* 6 Discrete Sub-Cards Grid */
+          .cd-cand-card-grid {
+            display: grid !important;
+            grid-template-columns: minmax(0, 1.85fr) minmax(0, 1.35fr) minmax(0, 1.25fr) minmax(0, 2.35fr) minmax(0, 1.55fr) minmax(0, 1.25fr) !important;
+            gap: 8px !important;
+            padding: 10px 12px !important;
+            width: 100% !important;
+            max-width: 100% !important;
+            align-items: stretch !important;
+          }
+
+          /* Discrete Sub-Card Container */
+          .cd-cand-subcard {
+            background: #f8fafc !important;
+            border: 1px solid #edf2f7 !important;
+            border-radius: 8px !important;
+            padding: 7px 9px !important;
+            display: flex !important;
+            flex-direction: column !important;
+            justify-content: space-between !important;
+            min-width: 0 !important;
+            overflow: hidden !important;
+          }
+          .cd-cand-subcard-hdr {
+            display: flex !important;
+            align-items: center !important;
+            justify-content: space-between !important;
+            margin-bottom: 5px !important;
+            gap: 4px !important;
+            line-height: 1 !important;
+          }
+          .cd-cand-subcard-label {
+            font-size: 9.5px !important;
+            font-weight: 700 !important;
+            text-transform: uppercase !important;
+            letter-spacing: 0.3px !important;
+            color: #64748b !important;
+            white-space: nowrap !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+          }
+          .cd-cand-subcard-body {
+            display: flex !important;
+            flex-direction: column !important;
+            justify-content: center !important;
+            gap: 2.5px !important;
+            flex: 1 1 auto !important;
+            min-width: 0 !important;
+            overflow: hidden !important;
+          }
+
+          /* Sub-Card 1: Profile */
+          .cd-cand-profile-row {
+            display: flex !important;
+            align-items: center !important;
+            gap: 8px !important;
+            min-width: 0 !important;
+          }
+          .cd-cand-avatar-box {
+            width: 36px !important;
+            height: 36px !important;
+            min-width: 36px !important;
+            border-radius: 8px !important;
+            background: #eff6ff !important;
+            color: #2563eb !important;
+            border: 1px solid #dbeafe !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            font-size: 13px !important;
+            font-weight: 700 !important;
+            flex-shrink: 0 !important;
+          }
+          .cd-cand-profile-meta {
+            flex: 1 1 auto !important;
+            min-width: 0 !important;
+            overflow: hidden !important;
+          }
+          .cd-cand-name {
+            font-size: 13px !important;
+            font-weight: 700 !important;
+            color: #0f172a !important;
+            line-height: 1.25 !important;
+            display: block !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+            white-space: nowrap !important;
+            text-decoration: none !important;
+            transition: color 0.12s ease !important;
+          }
+          .cd-cand-name:hover {
+            color: #009ef7 !important;
+          }
+          .cd-cand-desig {
+            font-size: 11px !important;
+            font-weight: 500 !important;
+            color: #475569 !important;
+            line-height: 1.2 !important;
+            margin-top: 1px !important;
+            display: block !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+            white-space: nowrap !important;
+          }
+          .cd-cand-employer {
+            font-size: 10.5px !important;
+            color: #64748b !important;
+            line-height: 1.2 !important;
+            margin-top: 2px !important;
+            display: block !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+            white-space: nowrap !important;
+          }
+
+          /* Sub-Card 2: Comp */
+          .cd-val-salary {
+            font-size: 12px !important;
+            font-weight: 700 !important;
+            color: #0f172a !important;
+            white-space: nowrap !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+            line-height: 1.3 !important;
+          }
+          .cd-val-exp {
+            font-size: 10.5px !important;
+            font-weight: 500 !important;
+            color: #475569 !important;
+            margin-top: 2px !important;
+            display: flex !important;
+            align-items: center !important;
+            gap: 4px !important;
+            white-space: nowrap !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+            line-height: 1.3 !important;
+          }
+          .cd-val-notice {
+            font-size: 10.5px !important;
+            font-weight: 600 !important;
+            margin-top: 2px !important;
+            white-space: nowrap !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+            line-height: 1.3 !important;
+          }
+          .cd-notice-clean {
+            font-weight: 600 !important;
+            background: transparent !important;
+            border: none !important;
+            padding: 0 !important;
+          }
+          .cd-notice-immediate { color: #16a34a !important; }
+          .cd-notice-snp { color: #7c3aed !important; }
+          .cd-notice-days { color: #d97706 !important; }
+          .cd-notice-default { color: #475569 !important; }
+
+          /* Sub-Card 3: Location & Degree */
+          .cd-loc-val {
+            font-size: 11.5px !important;
+            font-weight: 600 !important;
+            color: #0f172a !important;
+            white-space: nowrap !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+            line-height: 1.3 !important;
+          }
+          .cd-loc-mode {
+            font-size: 10.5px !important;
+            color: #64748b !important;
+            margin-top: 2px !important;
+            display: flex !important;
+            align-items: center !important;
+            gap: 4px !important;
+            white-space: nowrap !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+            line-height: 1.3 !important;
+          }
+          .cd-loc-edu {
+            font-size: 10.5px !important;
+            color: #64748b !important;
+            margin-top: 2px !important;
+            display: flex !important;
+            align-items: center !important;
+            gap: 4px !important;
+            white-space: nowrap !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+            line-height: 1.3 !important;
+          }
+
+          /* Sub-Card 4: Target Requisition */
+          .cd-header-badges {
+            display: inline-flex !important;
+            align-items: center !important;
+            gap: 4px !important;
+            flex-shrink: 0 !important;
+          }
+          .cd-badge-client-type {
+            font-size: 8.5px !important;
+            font-weight: 700 !important;
+            padding: 1px 6px !important;
+            border-radius: 4px !important;
+            text-transform: uppercase !important;
+            letter-spacing: 0.2px !important;
+            line-height: 1.3 !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            gap: 3px !important;
+            white-space: nowrap !important;
+            flex-shrink: 0 !important;
+          }
+          .cd-badge-client-type.type-direct {
+            background: #ecfdf5 !important;
+            color: #059669 !important;
+            border: 1px solid #a7f3d0 !important;
+          }
+          .cd-badge-client-type.type-internal {
+            background: #eff6ff !important;
+            color: #2563eb !important;
+            border: 1px solid #bfdbfe !important;
+          }
+          .cd-status-badge {
+            font-size: 8.5px !important;
+            font-weight: 700 !important;
+            padding: 1px 6px !important;
+            border-radius: 4px !important;
+            text-transform: uppercase !important;
+            letter-spacing: 0.2px !important;
+            line-height: 1.3 !important;
+            flex-shrink: 0 !important;
+          }
+          .status-hiring   { background: #dcfce7 !important; color: #15803d !important; }
+          .status-hold     { background: #fef3c7 !important; color: #b45309 !important; }
+          .status-closed   { background: #fee2e2 !important; color: #b91c1c !important; }
+          .status-inactive { background: #f1f5f9 !important; color: #64748b !important; }
+
+          .cd-job-row {
+            display: flex !important;
+            align-items: center !important;
+            gap: 7px !important;
+            min-width: 0 !important;
+          }
+          .cd-job-logo-box {
+            width: 26px !important;
+            height: 26px !important;
+            min-width: 26px !important;
+            border-radius: 6px !important;
+            background: #eff6ff !important;
+            color: #2563eb !important;
+            font-size: 11px !important;
+            font-weight: 700 !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            border: 1px solid #dbeafe !important;
+            flex-shrink: 0 !important;
+          }
+          .cd-job-meta-wrap {
+            flex: 1 1 auto !important;
+            min-width: 0 !important;
+            overflow: hidden !important;
+          }
+          .cd-job-title-link {
+            font-size: 12px !important;
+            font-weight: 700 !important;
+            color: #0f172a !important;
+            line-height: 1.25 !important;
+            display: block !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+            white-space: nowrap !important;
+            text-decoration: none !important;
+            transition: color 0.12s ease !important;
+          }
+          .cd-job-title-link:hover {
+            color: #009ef7 !important;
+          }
+          .cd-job-submeta {
+            font-size: 10px !important;
+            color: #64748b !important;
+            line-height: 1.2 !important;
+            margin-top: 1px !important;
+            white-space: nowrap !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+          }
+          .cd-job-footer-line {
+            font-size: 10px !important;
+            color: #64748b !important;
+            line-height: 1.2 !important;
+            margin-top: 2px !important;
+            white-space: nowrap !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+          }
+
+          /* Sub-Card 5: Recruiter & Sourcing */
+          .cd-recruiter-name {
+            font-size: 11.5px !important;
+            font-weight: 600 !important;
+            color: #0f172a !important;
+            line-height: 1.3 !important;
+            white-space: nowrap !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+          }
+          .cd-recruiter-company {
+            font-size: 10.5px !important;
+            color: #64748b !important;
+            margin-top: 2px !important;
+            line-height: 1.3 !important;
+            white-space: nowrap !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+          }
+          .cd-recruiter-time {
+            font-size: 10px !important;
+            color: #94a3b8 !important;
+            margin-top: 2px !important;
+            line-height: 1.3 !important;
+            white-space: nowrap !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+          }
+
+          /* Sub-Card 6: Pipeline & Stage */
+          .cd-stage-chip {
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: space-between !important;
+            gap: 4px !important;
+            padding: 2px 7px !important;
+            border-radius: 6px !important;
+            font-size: 10.5px !important;
+            font-weight: 600 !important;
+            line-height: 1.3 !important;
+            text-decoration: none !important;
+            cursor: pointer !important;
+            transition: filter 0.15s ease !important;
+            max-width: 100% !important;
+            overflow: hidden !important;
+            white-space: nowrap !important;
+          }
+          .cd-stage-chip:hover {
+            filter: brightness(0.95) !important;
+          }
+          .cd-stage-sub {
+            font-size: 10.5px !important;
+            color: #64748b !important;
+            margin-top: 2px !important;
+            line-height: 1.2 !important;
+            white-space: nowrap !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+          }
+          .cd-stage-action {
+            font-size: 10.5px !important;
+            line-height: 1.2 !important;
+            margin-top: 2px !important;
+            white-space: nowrap !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+          }
+          .cd-action-link {
+            color: #009ef7 !important;
+            font-weight: 600 !important;
+            text-decoration: none !important;
+          }
+          .cd-action-link:hover {
+            color: #007bb5 !important;
+            text-decoration: underline !important;
+          }
+
+          /* Sub-Card 7: Full-Width Intelligence Strip */
+          .cd-cand-bottom-strip {
+            display: flex !important;
+            align-items: center !important;
+            justify-content: space-between !important;
+            gap: 10px !important;
+            padding: 6px 12px !important;
+            background: #ffffff !important;
+            border-top: 1px solid #f1f5f9 !important;
+            width: 100% !important;
+            overflow: hidden !important;
+          }
+          .cd-cand-bottom-left {
+            display: flex !important;
+            align-items: center !important;
+            gap: 8px !important;
+            min-width: 0 !important;
+            flex: 1 1 auto !important;
+            overflow: hidden !important;
+          }
+          .cd-cand-bottom-right {
+            display: flex !important;
+            align-items: center !important;
+            gap: 8px !important;
+            flex-shrink: 0 !important;
+            white-space: nowrap !important;
+          }
+          .cd-bottom-skills-scroll {
+            display: flex !important;
+            align-items: center !important;
+            gap: 4px !important;
+            overflow-x: auto !important;
+            overflow-y: hidden !important;
+            scrollbar-width: none !important;
+            -ms-overflow-style: none !important;
+            white-space: nowrap !important;
+            min-width: 0 !important;
+          }
+          .cd-bottom-skills-scroll::-webkit-scrollbar {
+            display: none !important;
+          }
+
+          /* CV Tracker Match % & Skills Pill Styles */
+          .cd-match-badge-cv {
+            display: inline-flex !important;
+            align-items: center !important;
+            gap: 3px !important;
+            padding: 1.5px 7px !important;
+            border-radius: 4px !important;
+            font-size: 10px !important;
+            font-weight: 700 !important;
+            line-height: 1.3 !important;
+            white-space: nowrap !important;
+            flex-shrink: 0 !important;
+          }
+          .cd-match-green {
+            background: #dcfce7 !important;
+            color: #15803d !important;
+            border: 1px solid #bbf7d0 !important;
+          }
+          .cd-match-amber {
+            background: #fef3c7 !important;
+            color: #b45309 !important;
+            border: 1px solid #fde68a !important;
+          }
+          .cd-match-red {
+            background: #fee2e2 !important;
+            color: #dc2626 !important;
+            border: 1px solid #fecdd3 !important;
+          }
+
+          .cd-skill-pill-cv {
+            display: inline-flex !important;
+            align-items: center !important;
+            padding: 1px 7px !important;
+            border-radius: 4px !important;
+            background: #f8fafc !important;
+            color: #334155 !important;
+            font-size: 10px !important;
+            font-weight: 500 !important;
+            border: 1px solid #e2e8f0 !important;
+            white-space: nowrap !important;
+            line-height: 1.4 !important;
+            flex-shrink: 0 !important;
+          }
+
+          /* Dynamic LinkedIn & Visa Status Badges */
+          .cd-cand-linkedin-pill {
+            display: inline-flex !important;
+            align-items: center !important;
+            gap: 4px !important;
+            padding: 1.5px 8px !important;
+            border-radius: 4px !important;
+            background: #eff6ff !important;
+            color: #1d4ed8 !important;
+            border: 1px solid #bfdbfe !important;
+            font-size: 10px !important;
+            font-weight: 600 !important;
+            text-decoration: none !important;
+            line-height: 1.4 !important;
+            white-space: nowrap !important;
+            flex-shrink: 0 !important;
+            transition: all 0.15s ease !important;
+          }
+          .cd-cand-linkedin-pill:hover {
+            background: #dbeafe !important;
+            color: #1e40af !important;
+            border-color: #93c5fd !important;
+          }
+          .cd-cand-visa-pill {
+            display: inline-flex !important;
+            align-items: center !important;
+            gap: 4px !important;
+            padding: 1.5px 8px !important;
+            border-radius: 4px !important;
+            background: #f8fafc !important;
+            color: #334155 !important;
+            border: 1px solid #e2e8f0 !important;
+            font-size: 10px !important;
+            font-weight: 600 !important;
+            line-height: 1.4 !important;
+            white-space: nowrap !important;
+            flex-shrink: 0 !important;
+          }
+
+          /* Responsive Scaling for 15.6" Laptops (1366x768 & 1920x1080) and Smaller */
+          @media (max-width: 1440px) {
+            .cd-cand-card-grid {
+              grid-template-columns: minmax(0, 1.8fr) minmax(0, 1.3fr) minmax(0, 1.2fr) minmax(0, 2.2fr) minmax(0, 1.45fr) minmax(0, 1.2fr) !important;
+              gap: 6px !important;
+              padding: 8px 10px !important;
+            }
+            .cd-cand-subcard {
+              padding: 6px 8px !important;
+            }
+          }
+          @media (max-width: 1100px) {
+            .cd-cand-card-grid {
+              grid-template-columns: minmax(0, 1.7fr) minmax(0, 1.2fr) minmax(0, 1.1fr) minmax(0, 2fr) minmax(0, 1.4fr) minmax(0, 1.1fr) !important;
+              gap: 5px !important;
+              padding: 6px 8px !important;
+            }
+            .cd-cand-bottom-strip {
+              flex-direction: column !important;
+              align-items: flex-start !important;
+              gap: 6px !important;
+            }
+          }
+
+          /* Skeleton Sub-Cards */
+          .cd-cand-skeleton-card {
+            background: #ffffff;
+            border: 1px solid #eef2f6;
+            border-radius: 10px;
+            padding: 14px 16px;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            box-shadow: 0 1px 2px rgba(15, 23, 42, 0.02);
+          }
+          .cd-cand-skeleton-pulse {
+            background: #f1f5f9;
+            border-radius: 6px;
+            animation: cdpulse 1.5s infinite;
+          }
         </style>
 
         @php
@@ -1478,146 +3770,211 @@ use Carbon\Carbon;
         @endphp
 
         <div class="cd-scope">
-          <!-- ── Top Action Header Bar (Internal: Followup, Edit Client, Add Contact, Add Job) ── -->
+          <!-- ── TIER 1: TOP ACTION HEADER TOOLBAR CARD ── -->
           <div class="cd-top-bar">
+            <div class="cd-top-bar-left">
+              <div class="cd-top-bar-icon">
+                <i class="fas fa-building fa-solid"></i>
+              </div>
+              <div class="cd-top-bar-title-wrap">
+                <h3 class="cd-top-bar-title">{{ $detailName }}</h3>
+                <span class="cd-top-bar-id">#{{ $client->id }}</span>
+                <span class="cd-pill-scope-internal">
+                  <i class="fas fa-building fa-solid"></i> Internal Client
+                </span>
+              </div>
+            </div>
             <div class="cd-top-actions">
-              <button type="button" class="cd-hdr-btn cd-hdr-btn-outline cd-btn-followup" data-client-id="{{ $client->id }}">
-                <i class="fas fa-calendar-check fa-solid" style="color:#0284c7;"></i> Follow Up
+              <button type="button" class="cd-hdr-btn cd-hdr-btn-outline cd-btn-followup" data-client-id="{{ $client->id }}" title="Schedule Follow Up">
+                <i class="fas fa-calendar-check fa-solid text-primary"></i> Follow Up
               </button>
               @if(in_array('edit_clients', $userPermissions))
-              <a href="{{ route('service_company.clients.edit', GeneralMethod::value_encrypt($client->id)) }}" class="cd-hdr-btn cd-hdr-btn-white-edit" style="color:#009ef7 !important;">
-                <i class="fas fa-pen-to-square fa-solid" style="color:#009ef7;"></i> Edit Client
+              <a href="{{ route('service_company.clients.edit', GeneralMethod::value_encrypt($client->id)) }}" class="cd-hdr-btn cd-hdr-btn-white-edit" title="Edit Client Information">
+                <i class="fas fa-pen-to-square fa-solid text-primary"></i> Edit Client
               </a>
               @endif
-              <button type="button" class="cd-hdr-btn cd-hdr-btn-outline cd-btn-add-contact">
-                <i class="fas fa-user-plus fa-solid" style="color:#10b981;"></i> Add Contact
+              <button type="button" class="cd-hdr-btn cd-hdr-btn-outline cd-btn-add-contact" title="Add New Client Contact">
+                <i class="fas fa-user-plus fa-solid text-success"></i> Add Contact
               </button>
               @if(in_array('add_jobs', $userPermissions))
-              <a href="{{ url('service_company/jobs/curstomcreate/' . $client->id) }}" class="cd-hdr-btn cd-hdr-btn-outline">
-                <i class="fas fa-briefcase fa-solid" style="color:#8b5cf6;"></i> Add Job
+              <a href="{{ url('service_company/jobs/curstomcreate/' . $client->id) }}" class="cd-hdr-btn cd-hdr-btn-primary" title="Post New Job Opening">
+                <i class="fas fa-plus me-1"></i> Add Job
               </a>
               @endif
+              <button type="button" class="cd-hdr-btn-close cd-close-drawer" id="kt_activitiesClient_close_btn" title="Close Drawer (Esc)">
+                <i class="fas fa-times fa-solid"></i>
+              </button>
             </div>
-            <button type="button" class="cd-hdr-btn-close cd-close-drawer" id="kt_activitiesClient_close_btn" title="Close Drawer">
-              <i class="fas fa-times fa-solid fa-xmark" style="color:#64748b;"></i>
-            </button>
           </div>
 
-          <!-- ── Hero Banner: Internal Client (Clean Neutral Enterprise UI) ── -->
-          <div class="cd-hero-banner-blue">
-            <div class="cd-hero-top">
-              <div class="cd-hero-left">
-                <div class="cd-avatar-wrap">
-                  <div class="cd-avatar-circle">
+          <!-- ── HERO MASTER CARD: CONTINUOUS MINIMALIST HEADER (Option 2) ── -->
+          <div class="cd-hero-card">
+            <div class="cd-hero-continuous-main">
+              <!-- Left: Brand Identity & Status -->
+              <div class="cd-hero-continuous-left">
+                <div class="cd-hero-avatar-wrap">
+                  <div class="cd-hero-avatar">
                     @if (!empty($detailLogo))
                       <img src="{{ $detailLogo }}" alt="{{ $detailName }}">
                     @else
                       {{ $detailInitials }}
                     @endif
                   </div>
-                  <div class="cd-verified-badge" title="Verified Client">
-                    <i class="fas fa-check fa-solid"></i>
+                  <div class="cd-hero-verified-check" title="Verified Internal Client">
+                    <i class="fas fa-check"></i>
                   </div>
                 </div>
-                <div class="cd-hero-details">
-                  <div class="cd-title-row">
-                    <span class="cd-client-name">{{ $detailName }}</span>
-                    <span class="cd-pill-type-internal"><i class="fas fa-building fa-solid" style="color:#2563eb;"></i> Internal Client</span>
+                <div class="cd-hero-identity-body">
+                  <div class="cd-hero-title-row">
+                    <h2 class="cd-hero-name" title="{{ $detailName }}">{{ $detailName }}</h2>
+                    <span class="cd-hero-id-badge">#CL-{{ $client->id ?? ($id ?? '') }}</span>
                   </div>
-                  <div class="cd-meta-row">
-                    <span><i class="fas fa-building fa-solid me-1" style="color:#3b82f6;"></i>{{ $industries_name ?: 'Computer Software' }}</span>
-                    <span class="cd-meta-sep">|</span>
-                    <span><i class="fas fa-map-marker-alt fa-solid fa-location-dot me-1" style="color:#ef4444;"></i>{{ ucwords($city_name ?: 'Mumbai') }}@if($country_name), {{ ucwords($country_name) }}@else, India @endif</span>
-                    <span class="cd-meta-sep">|</span>
-                    @php $webClean = @$client->website ?: 'teslal.com'; @endphp
-                    <a href="{{ str_starts_with($webClean, 'http') ? $webClean : 'https://'.$webClean }}" target="_blank" class="cd-meta-link">
-                      <i class="fas fa-link fa-solid me-1" style="color:#06b6d4;"></i>{{ $webClean }} <i class="fas fa-external-link-alt fa-solid fa-arrow-up-right-from-square" style="font-size:8.5px;"></i>
-                    </a>
-                    @if(!empty(@$client->vendor_id))
-                    <span class="cd-meta-sep">|</span>
-                    <span>Vendor ID: <span style="font-weight:500; color:#0f172a;">{{ @$client->vendor_id }}</span></span>
+                  <div class="cd-hero-subtitle" title="{{ $company_type_val ?: ($industries_name ?: 'Internal Corporate Client') }}">
+                    {{ $company_type_val ?: ($industries_name ?: 'Internal Corporate Client') }}
+                  </div>
+                  <div class="cd-hero-badge-row">
+                    <span class="cd-pill-scope-internal">
+                      <i class="far fa-building fa-regular me-1"></i> Internal Client
+                    </span>
+                    @if ($isClientActive)
+                      <span class="cd-status-badge-active" title="Client is actively hiring">
+                        <span class="cd-pulse-emerald"></span> Client Active
+                      </span>
+                    @else
+                      <span class="cd-status-badge-inactive" title="No active job requisitions">
+                        <span class="cd-pulse-dot cd-pulse-grey"></span> Client Inactive
+                      </span>
                     @endif
-                  </div>
-                  <div class="cd-tag-row">
-                    @foreach ($tagsArr as $val)
-                      <span class="cd-tag-pill">{{ ucwords($val) }}</span>
-                    @endforeach
                   </div>
                 </div>
               </div>
-              <div class="cd-hero-right">
-                <div class="cd-status-group">
-                  @if ($isClientActive)
-                    <div class="cd-status-card cd-status-card-green">
-                      <span class="cd-pulse-dot cd-pulse-green"></span>
-                      <div>
-                        <div class="cd-status-card-title text-success">Client Active</div>
-                        <div class="cd-status-card-sub text-success">{{ $kpiActive }} active {{ $kpiActive == 1 ? 'job' : 'jobs' }}</div>
-                      </div>
-                    </div>
-                  @else
-                    <div class="cd-status-card cd-status-card-grey">
-                      <span class="cd-pulse-dot cd-pulse-grey"></span>
-                      <div>
-                        <div class="cd-status-card-title" style="color:#64748b;">Client Inactive</div>
-                        <div class="cd-status-card-sub" style="color:#94a3b8;">No active jobs</div>
-                      </div>
-                    </div>
-                  @endif
+
+              <!-- Right: Corporate DNA Parameters (2-Column Hairline Grid) -->
+              <div class="cd-hero-continuous-right">
+                <div class="cd-hero-meta-item" title="Industry">
+                  <i class="fas fa-industry"></i>
+                  <span>{{ $industries_name ?: 'Computer Software' }}</span>
                 </div>
-                <div class="cd-hero-meta-time">
-                  Client since {{ $clientSinceYear }} <span class="mx-1">|</span> Last activity: {{ $clientUpdatedAt }}
+                <div class="cd-hero-meta-item" title="Headquarters">
+                  <i class="fas fa-location-dot"></i>
+                  <span>{{ ucwords($city_name ?: 'Mumbai') }}@if($country_name), {{ ucwords($country_name) }}@else, India @endif</span>
+                </div>
+                <div class="cd-hero-meta-item" title="Website">
+                  <i class="fas fa-globe"></i>
+                  @php $webClean = @$client->website ?: 'website.com'; @endphp
+                  <a href="{{ str_starts_with($webClean, 'http') ? $webClean : 'https://'.$webClean }}" target="_blank" class="cd-hero-link">
+                    {{ $webClean }} <i class="fas fa-arrow-up-right-from-square" style="font-size:9px;"></i>
+                  </a>
+                </div>
+                <div class="cd-hero-meta-item" title="Company Type">
+                  <i class="fas fa-briefcase"></i>
+                  <span title="{{ $company_type_val ?: 'Enterprise Service' }}">{{ $company_type_val ?: 'Enterprise Service' }}</span>
+                </div>
+                <div class="cd-hero-meta-item" title="Workforce Scale">
+                  <i class="fas fa-users"></i>
+                  <span>{{ is_numeric(@$client->company_sizes) ? number_format((float)@$client->company_sizes) . '+' : (@$client->company_sizes ?: '200+') }} Employees</span>
+                </div>
+                <div class="cd-hero-meta-item" title="Founded Year / Vendor Reference">
+                  @if(!empty(@$client->vendor_id))
+                    <i class="fas fa-id-badge"></i>
+                    <span>VID: {{ @$client->vendor_id }}</span>
+                  @else
+                    <i class="fas fa-calendar-days"></i>
+                    <span>Founded: {{ @$client->founded ?: '2010' }}</span>
+                  @endif
                 </div>
               </div>
             </div>
+
+            <!-- Full-Width Bottom Continuous Strip -->
+            <div class="cd-hero-continuous-bottom">
+              <div class="cd-strip-left">
+                <span class="cd-strip-metric">
+                  <i class="fas fa-bolt text-warning me-1"></i><strong>{{ $kpiActive }}</strong> Active {{ $kpiActive == 1 ? 'Role' : 'Roles' }}
+                </span>
+                <span class="cd-strip-sep">•</span>
+                <span class="cd-strip-item">
+                  <i class="fas fa-calendar-check text-primary me-1"></i>Onboarded {{ $clientSinceYear }}
+                </span>
+                <span class="cd-strip-sep">•</span>
+                <span class="cd-strip-item">
+                  <i class="fas fa-clock text-amber-500 me-1"></i>Active {{ $clientUpdatedAt }}
+                </span>
+              </div>
+              @if(!empty($tagsArr) && count($tagsArr) > 0)
+              <div class="cd-strip-right">
+                <span class="cd-strip-tags-lbl">Tags:</span>
+                @foreach (array_slice($tagsArr, 0, 3) as $val)
+                  <span class="cd-strip-tag-pill">{{ ucwords($val) }}</span>
+                @endforeach
+                @if(count($tagsArr) > 3)
+                  <span class="cd-strip-tag-more">+{{ count($tagsArr) - 3 }}</span>
+                @endif
+              </div>
+              @endif
+            </div>
           </div>
 
-          <!-- ── 5 Metric KPI Stat Cards Row ── -->
+          <!-- ── 5 METRIC KPI SUB-CARDS ROW (Click to Navigate Tabs) ── -->
           <div class="cd-kpi-grid">
-            <div class="cd-kpi-card" data-target-tab="#requisitions">
-              <div class="d-flex align-items-center gap-3">
-                <div class="cd-kpi-icon cd-kpi-icon-blue"><i class="fas fa-briefcase fa-solid" style="color:#2563eb;"></i></div>
-                <div>
+            <div class="cd-kpi-card" data-target-tab="#requisitions" title="View Active Job Requisitions">
+              <div class="d-flex align-items-center gap-3 min-w-0">
+                <div class="cd-kpi-icon cd-kpi-icon-blue">
+                  <i class="fas fa-briefcase fa-solid" style="color:#2563eb;"></i>
+                </div>
+                <div class="min-w-0">
                   <div class="cd-kpi-num">{{ $kpiActive }}</div>
                   <div class="cd-kpi-lbl">Active Jobs</div>
                 </div>
               </div>
               <i class="fas fa-chevron-right fa-solid cd-kpi-arrow"></i>
             </div>
-            <div class="cd-kpi-card" data-target-tab="#candidate_list">
-              <div class="d-flex align-items-center gap-3">
-                <div class="cd-kpi-icon cd-kpi-icon-purple"><i class="fas fa-users fa-solid" style="color:#7c3aed;"></i></div>
-                <div>
+
+            <div class="cd-kpi-card" data-target-tab="#candidate_list" title="View Candidates Pipeline">
+              <div class="d-flex align-items-center gap-3 min-w-0">
+                <div class="cd-kpi-icon cd-kpi-icon-purple">
+                  <i class="fas fa-users fa-solid" style="color:#7c3aed;"></i>
+                </div>
+                <div class="min-w-0">
                   <div class="cd-kpi-num">{{ $kpiSubmitted }}</div>
                   <div class="cd-kpi-lbl">Candidates</div>
                 </div>
               </div>
               <i class="fas fa-chevron-right fa-solid cd-kpi-arrow"></i>
             </div>
-            <div class="cd-kpi-card" data-target-tab="#interview_tracker">
-              <div class="d-flex align-items-center gap-3">
-                <div class="cd-kpi-icon cd-kpi-icon-amber"><i class="fas fa-calendar-days fa-solid" style="color:#d97706;"></i></div>
-                <div>
+
+            <div class="cd-kpi-card" data-target-tab="#interview_tracker" title="View Interview Tracker">
+              <div class="d-flex align-items-center gap-3 min-w-0">
+                <div class="cd-kpi-icon cd-kpi-icon-amber">
+                  <i class="fas fa-calendar-days fa-solid" style="color:#d97706;"></i>
+                </div>
+                <div class="min-w-0">
                   <div class="cd-kpi-num" id="kpiInterviewsScheduledCountShow">{{ $kpiInterviews }}</div>
                   <div class="cd-kpi-lbl">Interviews</div>
                 </div>
               </div>
               <i class="fas fa-chevron-right fa-solid cd-kpi-arrow"></i>
             </div>
-            <div class="cd-kpi-card" data-target-tab="#candidate_joining" data-segment="offers">
-              <div class="d-flex align-items-center gap-3">
-                <div class="cd-kpi-icon cd-kpi-icon-orange"><i class="fas fa-file-lines fa-solid" style="color:#ea580c;"></i></div>
-                <div>
+
+            <div class="cd-kpi-card" data-target-tab="#candidate_joining" data-segment="offers" title="View Extended Offers">
+              <div class="d-flex align-items-center gap-3 min-w-0">
+                <div class="cd-kpi-icon cd-kpi-icon-orange">
+                  <i class="fas fa-file-lines fa-solid" style="color:#ea580c;"></i>
+                </div>
+                <div class="min-w-0">
                   <div class="cd-kpi-num" id="kpiOffersCountInternal">{{ $kpiOffers }}</div>
                   <div class="cd-kpi-lbl">Offers</div>
                 </div>
               </div>
               <i class="fas fa-chevron-right fa-solid cd-kpi-arrow"></i>
             </div>
-            <div class="cd-kpi-card" data-target-tab="#candidate_joining" data-segment="joined">
-              <div class="d-flex align-items-center gap-3">
-                <div class="cd-kpi-icon cd-kpi-icon-green"><i class="fas fa-user-check fa-solid" style="color:#059669;"></i></div>
-                <div>
+
+            <div class="cd-kpi-card" data-target-tab="#candidate_joining" data-segment="joined" title="View Joined & Onboarded Candidates">
+              <div class="d-flex align-items-center gap-3 min-w-0">
+                <div class="cd-kpi-icon cd-kpi-icon-green">
+                  <i class="fas fa-user-check fa-solid" style="color:#059669;"></i>
+                </div>
+                <div class="min-w-0">
                   <div class="cd-kpi-num" id="kpiJoinsCountInternal">{{ $kpiJoins }}</div>
                   <div class="cd-kpi-lbl">Joined</div>
                 </div>
@@ -1626,52 +3983,62 @@ use Carbon\Carbon;
             </div>
           </div>
 
-          <!-- ── Tabs Navigation Bar ── -->
-          <div class="cd-tabs-bar">
-            <ul class="nav nav-tabs border-0 flex-nowrap" role="tablist">
+          <!-- ── TIER 2: SUB-TABS CARD WITH WHITE BACKGROUND (Rule 20 Compliant) ── -->
+          <div class="cd-drawer-tabs-card">
+            <ul class="cd-drawer-tabs-list nav nav-tabs border-0 flex-nowrap" role="tablist">
               <li class="nav-item">
-                <a class="nav-link active" data-toggle="tab" href="#overview">
-                  <i class="fas fa-house fa-solid" style="color:#3b82f6;"></i> Overview
+                <a class="cd-tab-pill-btn nav-link active" data-toggle="tab" href="#overview">
+                  <i class="fas fa-house fa-solid"></i>
+                  <span>Overview</span>
                 </a>
               </li>
               <li class="nav-item">
-                <a class="nav-link cd-tab-black" data-toggle="tab" href="#recent_activity">
-                  <i class="fas fa-clock fa-solid" style="color:#f59e0b;"></i> Recent Activity
+                <a class="cd-tab-pill-btn nav-link" data-toggle="tab" href="#recent_activity">
+                  <i class="fas fa-clock fa-solid"></i>
+                  <span>Recent Activity</span>
                 </a>
               </li>
               <li class="nav-item">
-                <a class="nav-link" data-toggle="tab" href="#contacts">
-                  <i class="fas fa-address-book fa-solid" style="color:#10b981;"></i> Contacts
+                <a class="cd-tab-pill-btn nav-link" data-toggle="tab" href="#contacts">
+                  <i class="fas fa-address-book fa-solid"></i>
+                  <span>Contacts</span>
+                  @php $contactInitCount = isset($client_contact_info) ? count($client_contact_info) : 0; @endphp
+                  <span class="cd-tab-pill-badge" id="cdContactNavBadgeInternal" style="{{ $contactInitCount > 0 ? '' : 'display:none;' }}">{{ $contactInitCount }}</span>
                 </a>
               </li>
               <li class="nav-item">
-                <a class="nav-link" data-toggle="tab" href="#requisitions">
-                  <i class="fas fa-briefcase fa-solid" style="color:#8b5cf6;"></i> Jobs
-                  @if($kpiActive > 0)<span class="cd-tab-badge">{{ $kpiActive }}</span>@endif
+                <a class="cd-tab-pill-btn nav-link" data-bs-toggle="tab" data-toggle="tab" href="#requisitions">
+                  <i class="fas fa-briefcase fa-solid"></i>
+                  <span>Jobs</span>
+                  <span class="cd-tab-pill-badge" id="cdJobsNavBadgeInternal" style="{{ $kpiActive > 0 ? '' : 'display:none;' }}">{{ $kpiActive }}</span>
                 </a>
               </li>
               <li class="nav-item">
-                <a class="nav-link" data-toggle="tab" href="#candidate_list">
-                  <i class="fas fa-user-tie fa-solid" style="color:#06b6d4;"></i> Candidates
-                  @if($kpiSubmitted > 0)<span class="cd-tab-badge">{{ $kpiSubmitted }}</span>@endif
+                <a class="cd-tab-pill-btn nav-link" data-toggle="tab" href="#candidate_list">
+                  <i class="fas fa-user-tie fa-solid"></i>
+                  <span>Candidates</span>
+                  <span class="cd-tab-pill-badge" id="cdCandidatesNavBadgeInternal" style="{{ $kpiSubmitted > 0 ? '' : 'display:none;' }}">{{ $kpiSubmitted }}</span>
                 </a>
               </li>
               <li class="nav-item">
-                <a class="nav-link" data-toggle="tab" href="#interview_tracker">
-                  <i class="fas fa-calendar-days fa-solid" style="color:#f43f5e;"></i> Interviews
-                  <span class="cd-tab-badge" id="tabBadgeInterviewTrackerShow" @if($kpiInterviews <= 0) style="display:none;" @endif>{{ $kpiInterviews }}</span>
+                <a class="cd-tab-pill-btn nav-link" data-toggle="tab" href="#interview_tracker">
+                  <i class="fas fa-calendar-days fa-solid"></i>
+                  <span>Interviews</span>
+                  <span class="cd-tab-pill-badge" id="tabBadgeInterviewTrackerShow" @if($kpiInterviews <= 0) style="display:none;" @endif>{{ $kpiInterviews }}</span>
                 </a>
               </li>
               <li class="nav-item">
-                <a class="nav-link" data-toggle="tab" href="#candidate_joining">
-                  <i class="fas fa-file-signature fa-solid" style="color:#d97706;"></i> Offers &amp; Joinings
+                <a class="cd-tab-pill-btn nav-link" data-toggle="tab" href="#candidate_joining">
+                  <i class="fas fa-file-signature fa-solid"></i>
+                  <span>Offers &amp; Joinings</span>
                   @php $totalOffersJoinsInternal = ($kpiOffers ?? 0) + ($kpiJoins ?? 0); @endphp
-                  <span class="cd-tab-badge" id="ojInternalTabBadge" @if($totalOffersJoinsInternal <= 0) style="display:none;" @endif>{{ $totalOffersJoinsInternal }}</span>
+                  <span class="cd-tab-pill-badge" id="ojInternalTabBadge" @if($totalOffersJoinsInternal <= 0) style="display:none;" @endif>{{ $totalOffersJoinsInternal }}</span>
                 </a>
               </li>
               <li class="nav-item">
-                <a class="nav-link" data-toggle="tab" href="#candidateDashboard">
-                  <i class="fas fa-chart-column fa-solid" style="color:#6366f1;"></i> Performance
+                <a class="cd-tab-pill-btn nav-link" data-toggle="tab" href="#candidateDashboard">
+                  <i class="fas fa-chart-column fa-solid"></i>
+                  <span>Performance</span>
                 </a>
               </li>
             </ul>
@@ -1688,40 +4055,46 @@ use Carbon\Carbon;
                   <div class="cd-card-panel">
                     <div class="cd-card-hdr">
                       <div class="cd-card-hdr-left">
-                        <i class="fas fa-building fa-solid" style="color:#3b82f6; font-size:12px;"></i>
+                        <div class="cd-top-bar-icon" style="width:28px; height:28px; font-size:12px;">
+                          <i class="fas fa-building fa-solid"></i>
+                        </div>
                         <span class="cd-card-hdr-title">About the Client</span>
                       </div>
+                      @if(!empty($webClean))
                       <a href="{{ str_starts_with($webClean, 'http') ? $webClean : 'https://'.$webClean }}" target="_blank" class="cd-card-hdr-link">
-                        {{ $webClean }} <i class="fas fa-external-link-alt fa-solid fa-arrow-up-right-from-square" style="font-size:8.5px;"></i>
+                        {{ $webClean }} <i class="fas fa-external-link-alt fa-solid" style="font-size:9px;"></i>
                       </a>
+                      @endif
                     </div>
                     <div class="cd-about-body">
                       @if (!empty(@$client->description))
                         {!! @$client->description !!}
                       @else
-                        {{ $detailName }} is a leading organization specializing in Information Technology / SaaS, providing scalable industry solutions. They focus on building innovative products and enterprise platforms with a strong global presence.
+                        {{ $detailName }} is an established corporate enterprise specializing in {{ $industries_name ?: 'Technology Solutions' }}, providing scalable services and talent solutions with a strong market presence.
                       @endif
                     </div>
                   </div>
 
-                  <!-- Card: Recent Activity (Timeline matching mockup) -->
+                  <!-- Card: Recent Activity (Timeline Stream) -->
                   <div class="cd-card-panel">
                     <div class="cd-card-hdr">
                       <div class="cd-card-hdr-left">
-                        <i class="fas fa-clock-rotate-left fa-solid" style="color:#f59e0b; font-size:12px;"></i>
+                        <div class="cd-top-bar-icon" style="width:28px; height:28px; font-size:12px; background:#fffbeb; color:#d97706;">
+                          <i class="fas fa-clock-rotate-left fa-solid"></i>
+                        </div>
                         <span class="cd-card-hdr-title">Recent Activity</span>
                       </div>
-                      <a href="javascript:void(0);" class="cd-card-hdr-link cd-view-all-activity">
+                      <a href="javascript:void(0);" class="cd-card-hdr-link cd-view-all-activity" onclick="$('.cd-tab-pill-btn[href=\'#recent_activity\']').tab('show');">
                         View all activity <i class="fas fa-arrow-right fa-solid ms-1" style="font-size:9px;"></i>
                       </a>
                     </div>
                     <div class="cd-timeline-list">
                       <!-- Node 1: Candidates Submitted -->
                       <div class="cd-tl-item">
-                        <div class="cd-tl-dot cd-tl-dot-green"><i class="fas fa-users fa-solid" style="color:#10b981;"></i></div>
+                        <div class="cd-tl-dot cd-tl-dot-green"><i class="fas fa-users fa-solid"></i></div>
                         <div class="cd-tl-info">
                           <div class="cd-tl-heading">2 candidates submitted</div>
-                          <div class="cd-tl-sub">{{ auth()->user()->name ?? 'Vibhanshu Jaiswal' }} submitted 2 candidates</div>
+                          <div class="cd-tl-sub">{{ auth()->user()->name ?? 'Recruiter' }} submitted profiles to client review</div>
                         </div>
                         <div class="cd-tl-role">Senior Java Developer</div>
                         <div class="cd-tl-meta-right">
@@ -1732,24 +4105,24 @@ use Carbon\Carbon;
 
                       <!-- Node 2: Interview Scheduled -->
                       <div class="cd-tl-item">
-                        <div class="cd-tl-dot cd-tl-dot-purple"><i class="fas fa-calendar-days fa-solid" style="color:#8b5cf6;"></i></div>
+                        <div class="cd-tl-dot cd-tl-dot-purple"><i class="fas fa-calendar-days fa-solid"></i></div>
                         <div class="cd-tl-info">
                           <div class="cd-tl-heading">Interview scheduled</div>
-                          <div class="cd-tl-sub">Interview scheduled with client panel</div>
+                          <div class="cd-tl-sub">Technical Round 1 scheduled with client panel</div>
                         </div>
                         <div class="cd-tl-role">Chief Java Architect</div>
                         <div class="cd-tl-meta-right">
                           <span class="cd-tl-time">1 day ago</span>
-                          <span class="cd-tl-badge cd-tl-badge-amber">Interview Scheduled</span>
+                          <span class="cd-tl-badge cd-tl-badge-amber">Interview</span>
                         </div>
                       </div>
 
                       <!-- Node 3: Offer Generated -->
                       <div class="cd-tl-item">
-                        <div class="cd-tl-dot cd-tl-dot-orange"><i class="fas fa-file-lines fa-solid" style="color:#f97316;"></i></div>
+                        <div class="cd-tl-dot cd-tl-dot-orange"><i class="fas fa-file-lines fa-solid"></i></div>
                         <div class="cd-tl-info">
-                          <div class="cd-tl-heading">Offer generated</div>
-                          <div class="cd-tl-sub">Offer letter sent to candidate</div>
+                          <div class="cd-tl-heading">Offer letter released</div>
+                          <div class="cd-tl-sub">Formal offer extended to candidate</div>
                         </div>
                         <div class="cd-tl-role">Software Engineer</div>
                         <div class="cd-tl-meta-right">
@@ -1760,24 +4133,24 @@ use Carbon\Carbon;
 
                       <!-- Node 4: New Job Requirement -->
                       <div class="cd-tl-item">
-                        <div class="cd-tl-dot cd-tl-dot-blue"><i class="fas fa-briefcase fa-solid" style="color:#3b82f6;"></i></div>
+                        <div class="cd-tl-dot cd-tl-dot-blue"><i class="fas fa-briefcase fa-solid"></i></div>
                         <div class="cd-tl-info">
-                          <div class="cd-tl-heading">New job requirement received</div>
-                          <div class="cd-tl-sub">New hiring requirement added by client</div>
+                          <div class="cd-tl-heading">New job requirement posted</div>
+                          <div class="cd-tl-sub">New hiring opening assigned to recruitment team</div>
                         </div>
                         <div class="cd-tl-role">DevOps Engineer</div>
                         <div class="cd-tl-meta-right">
                           <span class="cd-tl-time">3 days ago</span>
-                          <span class="cd-tl-badge cd-tl-badge-blue">New Requirement</span>
+                          <span class="cd-tl-badge cd-tl-badge-blue">New Opening</span>
                         </div>
                       </div>
 
                       <!-- Node 5: Candidate Joined -->
                       <div class="cd-tl-item">
-                        <div class="cd-tl-dot cd-tl-dot-green"><i class="fas fa-user-check fa-solid" style="color:#059669;"></i></div>
+                        <div class="cd-tl-dot cd-tl-dot-green"><i class="fas fa-user-check fa-solid"></i></div>
                         <div class="cd-tl-info">
                           <div class="cd-tl-heading">1 candidate joined</div>
-                          <div class="cd-tl-sub">Candidate successfully joined</div>
+                          <div class="cd-tl-sub">Candidate successfully joined client organization</div>
                         </div>
                         <div class="cd-tl-role">Full Stack Developer</div>
                         <div class="cd-tl-meta-right">
@@ -1791,79 +4164,106 @@ use Carbon\Carbon;
 
                 <!-- Right Column -->
                 <div>
-                  <!-- Card: Client Information -->
+                  <!-- Card: Client Information (Discrete Sub-Cards Grid) -->
                   <div class="cd-card-panel">
                     <div class="cd-card-hdr">
                       <div class="cd-card-hdr-left">
-                        <i class="fas fa-circle-info fa-solid" style="color:#6366f1; font-size:12px;"></i>
+                        <div class="cd-top-bar-icon" style="width:28px; height:28px; font-size:12px; background:#f5f3ff; color:#7c3aed;">
+                          <i class="fas fa-circle-info fa-solid"></i>
+                        </div>
                         <span class="cd-card-hdr-title">Client Information</span>
                       </div>
                     </div>
-                    <div class="cd-info-list">
-                      <div class="cd-kv-row">
-                        <span class="cd-kv-lbl">Headquarters</span>
-                        <span class="cd-kv-val">{{ ucwords($city_name ?: 'Mumbai') }}@if($country_name), {{ ucwords($country_name) }}@else, India @endif</span>
+                    <div class="cd-overview-subcards-grid">
+                      <div class="cd-overview-subcard">
+                        <div class="cd-ov-icon-box bg-light-danger text-danger"><i class="fas fa-map-marker-alt"></i></div>
+                        <div class="cd-ov-content">
+                          <span class="cd-ov-label">Headquarters</span>
+                          <span class="cd-ov-value">{{ ucwords($city_name ?: 'Mumbai') }}@if($country_name), {{ ucwords($country_name) }}@else, India @endif</span>
+                        </div>
                       </div>
-                      <div class="cd-kv-row">
-                        <span class="cd-kv-lbl">Website</span>
-                        <span class="cd-kv-val">
-                          <a href="{{ str_starts_with($webClean, 'http') ? $webClean : 'https://'.$webClean }}" target="_blank">
-                            {{ $webClean }} <i class="fas fa-external-link-alt fa-solid fa-arrow-up-right-from-square" style="font-size:8.5px;"></i>
-                          </a>
-                        </span>
+                      <div class="cd-overview-subcard">
+                        <div class="cd-ov-icon-box bg-light-info text-info"><i class="fas fa-globe"></i></div>
+                        <div class="cd-ov-content">
+                          <span class="cd-ov-label">Website</span>
+                          <a href="{{ str_starts_with($webClean, 'http') ? $webClean : 'https://'.$webClean }}" target="_blank" class="cd-ov-link">{{ $webClean }} <i class="fas fa-external-link-alt" style="font-size:9px;"></i></a>
+                        </div>
                       </div>
-                      <div class="cd-kv-row">
-                        <span class="cd-kv-lbl">Industry</span>
-                        <span class="cd-kv-val">{{ $industries_name ?: 'Computer Software' }}</span>
+                      <div class="cd-overview-subcard">
+                        <div class="cd-ov-icon-box bg-light-primary text-primary"><i class="fas fa-building"></i></div>
+                        <div class="cd-ov-content">
+                          <span class="cd-ov-label">Industry</span>
+                          <span class="cd-ov-value">{{ $industries_name ?: 'Computer Software' }}</span>
+                        </div>
                       </div>
-                      <div class="cd-kv-row">
-                        <span class="cd-kv-lbl">Company Type</span>
-                        <span class="cd-kv-val">{{ $company_type_val }}</span>
+                      <div class="cd-overview-subcard">
+                        <div class="cd-ov-icon-box bg-light-warning text-warning"><i class="fas fa-briefcase"></i></div>
+                        <div class="cd-ov-content">
+                          <span class="cd-ov-label">Company Type</span>
+                          <span class="cd-ov-value">{{ $company_type_val ?: 'Enterprise Service' }}</span>
+                        </div>
+                      </div>
+                      <div class="cd-overview-subcard">
+                        <div class="cd-ov-icon-box bg-light-success text-success"><i class="fas fa-users"></i></div>
+                        <div class="cd-ov-content">
+                          <span class="cd-ov-label">Employees</span>
+                          <span class="cd-ov-value">{{ is_numeric(@$client->company_sizes) ? number_format((float)@$client->company_sizes) . '+' : (@$client->company_sizes ?: '200+') }}</span>
+                        </div>
+                      </div>
+                      <div class="cd-overview-subcard">
+                        <div class="cd-ov-icon-box bg-light-warning text-amber-600"><i class="fas fa-calendar-alt"></i></div>
+                        <div class="cd-ov-content">
+                          <span class="cd-ov-label">Founded</span>
+                          <span class="cd-ov-value">{{ @$client->founded ?: '2023' }}</span>
+                        </div>
                       </div>
                       @if(!empty(@$client->vendor_id))
-                      <div class="cd-kv-row">
-                        <span class="cd-kv-lbl">Vendor ID</span>
-                        <span class="cd-kv-val">{{ @$client->vendor_id }}</span>
+                      <div class="cd-overview-subcard" style="grid-column: 1 / -1;">
+                        <div class="cd-ov-icon-box bg-light-primary text-primary"><i class="fas fa-hashtag"></i></div>
+                        <div class="cd-ov-content">
+                          <span class="cd-ov-label">Vendor ID</span>
+                          <span class="cd-ov-value">{{ @$client->vendor_id }}</span>
+                        </div>
                       </div>
                       @endif
-                      <div class="cd-kv-row">
-                        <span class="cd-kv-lbl">Founded</span>
-                        <span class="cd-kv-val">{{ @$client->founded ?: '2023' }}</span>
-                      </div>
-                      <div class="cd-kv-row">
-                        <span class="cd-kv-lbl">Number of Employees</span>
-                        <span class="cd-kv-val">{{ is_numeric(@$client->company_sizes) ? number_format((float)@$client->company_sizes) . '+' : (@$client->company_sizes ?: '200+') }}</span>
-                      </div>
                     </div>
                   </div>
 
-                  <!-- Card: Primary Contact -->
+                  <!-- Card: Primary Key Contact (Master Sub-Card) -->
                   <div class="cd-card-panel">
                     <div class="cd-card-hdr">
                       <div class="cd-card-hdr-left">
-                        <i class="fas fa-id-badge fa-solid" style="color:#10b981; font-size:12px;"></i>
-                        <span class="cd-card-hdr-title">Primary Contact</span>
+                        <div class="cd-top-bar-icon" style="width:28px; height:28px; font-size:12px; background:#ecfdf5; color:#059669;">
+                          <i class="fas fa-id-badge fa-solid"></i>
+                        </div>
+                        <span class="cd-card-hdr-title">Primary Key Contact</span>
                       </div>
-                      <a href="javascript:void(0);" class="cd-card-hdr-link cd-view-all-contacts">
+                      <a href="javascript:void(0);" class="cd-card-hdr-link cd-view-all-contacts" onclick="$('.cd-tab-pill-btn[href=\'#contacts\']').tab('show');">
                         View all contacts <i class="fas fa-arrow-right fa-solid ms-1" style="font-size:9px;"></i>
                       </a>
                     </div>
-                    <div class="cd-contact-preview">
-                      <div class="cd-contact-avatar">{{ $primaryInitials }}</div>
-                      <div class="cd-contact-meta">
-                        <div class="cd-contact-name-row">
-                          <span class="cd-contact-name">{{ $primaryName }}</span>
-                          <span class="cd-contact-primary-tag">Primary</span>
+                    <div class="cd-contact-master-subcard">
+                      <div class="cd-contact-master-top">
+                        <div class="cd-contact-avatar-box">{{ $primaryInitials }}</div>
+                        <div class="cd-contact-master-info">
+                          <div class="d-flex align-items-center gap-2 mb-1">
+                            <span class="fw-bold text-gray-900 fs-7">{{ $primaryName }}</span>
+                            <span class="cd-contact-primary-tag"><i class="fas fa-star text-warning me-1"></i>Primary SPOC</span>
+                          </div>
+                          <div class="text-gray-600 fs-8 fw-500">{{ $primaryDesignation }}</div>
                         </div>
-                        <div class="cd-contact-title">{{ $primaryDesignation }}</div>
-                        <div class="cd-contact-links">
-                          <a href="mailto:{{ $primaryEmail }}" class="cd-contact-link-item">
-                            <i class="fas fa-envelope fa-solid" style="color:#2563eb;"></i> {{ $primaryEmail }}
-                          </a>
-                          <span class="cd-contact-link-item">
-                            <i class="fas fa-phone fa-solid" style="color:#10b981;"></i> {{ $primaryPhone }}
-                          </span>
-                        </div>
+                      </div>
+                      <div class="cd-contact-channels-grid">
+                        <a href="mailto:{{ $primaryEmail }}" class="cd-contact-channel-item" title="Send Email">
+                          <i class="fas fa-envelope text-primary"></i>
+                          <span class="cd-channel-text">{{ $primaryEmail }}</span>
+                          <i class="fas fa-paper-plane text-gray-400" style="font-size:10px;"></i>
+                        </a>
+                        <a href="tel:{{ $primaryPhone }}" class="cd-contact-channel-item" title="Call Contact">
+                          <i class="fas fa-phone text-success"></i>
+                          <span class="cd-channel-text">{{ $primaryPhone }}</span>
+                          <i class="fas fa-phone-flip text-gray-400" style="font-size:10px;"></i>
+                        </a>
                       </div>
                     </div>
                   </div>
@@ -1872,247 +4272,515 @@ use Carbon\Carbon;
                   <div class="cd-card-panel">
                     <div class="cd-card-hdr">
                       <div class="cd-card-hdr-left">
-                        <i class="fas fa-layer-group fa-solid" style="color:#ec4899; font-size:12px;"></i>
-                        <span class="cd-card-hdr-title">Client Services</span>
+                        <div class="cd-top-bar-icon" style="width:28px; height:28px; font-size:12px; background:#fdf2f8; color:#ec4899;">
+                          <i class="fas fa-layer-group fa-solid"></i>
+                        </div>
+                        <span class="cd-card-hdr-title">Client Services &amp; Capabilities</span>
                       </div>
+                      <span class="badge bg-light-primary text-primary fs-8 fw-bold">{{ count($tagsArr) }} Tags</span>
                     </div>
-                    <div class="cd-tags-cloud">
-                      @foreach ($tagsArr as $tag)
-                        <span class="cd-tag-pill">{{ ucwords($tag) }}</span>
-                      @endforeach
+                    <div class="d-flex flex-wrap gap-2">
+                      @forelse ($tagsArr as $tag)
+                        <span class="cd-hero-tag px-3 py-1 fs-8 fw-500">{{ ucwords($tag) }}</span>
+                      @empty
+                        <span class="text-muted fs-8">No specific service tags defined.</span>
+                      @endforelse
                     </div>
                   </div>
                 </div>
               </div>
             </div>
 
-            <!-- ── TAB 2: RECENT ACTIVITY (Dedicated Black Card for Discussion) ── -->
+            <!-- ── TAB 2: RECENT ACTIVITY & AUDIT LOGS (Modern Card + Sub-Card Standard) ── -->
             <div class="tab-pane" id="recent_activity" role="tabpanel">
-              <div class="p-4">
-                <div class="cd-card-panel p-5" style="background:#000000; color:#ffffff; border-color:#1e293b; border-radius:10px;">
-                  <div class="d-flex align-items-center justify-content-between mb-3 border-bottom border-secondary pb-3">
-                    <div class="d-flex align-items-center gap-2">
-                      <i class="fas fa-clock fa-solid text-warning" style="font-size:14px;"></i>
-                      <h4 class="text-white mb-0" style="font-size:13.5px; font-weight:600;">Recent Activity &amp; Audit Logs</h4>
+              <div class="px-3 py-2">
+                <!-- Tier 1: Toolbar Header Card -->
+                <div class="cd-jobs-header-card mb-3">
+                  <div class="cd-jobs-header-left">
+                    <div class="cd-jobs-header-icon" style="background:#fffbeb; color:#d97706;">
+                      <i class="fas fa-clock-rotate-left"></i>
                     </div>
-                    <span class="badge bg-secondary text-white" style="font-size:10.5px;">Pending Discussion</span>
+                    <div>
+                      <div class="cd-jobs-header-title">Recent Activity &amp; Audit Trail</div>
+                      <div class="cd-jobs-header-sub">Chronological recruitment timeline, interview events, and administrative milestones.</div>
+                    </div>
                   </div>
-                  <p class="text-gray-400 mb-0" style="font-size:12px; line-height:1.6;">
-                    This section captures comprehensive timeline actions: candidate submissions, interview logs, offer letter events, job requisitions, and administrative audit trails. Additional widgets and configurations will be integrated as discussed.
-                  </p>
+                  <div class="cd-jobs-header-right">
+                    <div class="cd-jobs-search-subcard" style="width:240px;">
+                      <i class="fas fa-search"></i>
+                      <input type="text" placeholder="Filter activity by keyword..." autocomplete="off">
+                    </div>
+                    <button type="button" class="btn btn-sm btn-light fw-bold" style="height:36px; border:1px solid #e2e8f0; border-radius:8px;">
+                      <i class="fas fa-sync-alt me-1"></i> Refresh
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Tier 2: Sub-Tabs Filter Card -->
+                <div class="cd-jobs-tabs-card mb-3">
+                  <div class="cd-jobs-tabs-group">
+                    <button type="button" class="cd-jobs-tab-btn active">
+                      <span>All Events</span>
+                      <span class="cd-jobs-tab-badge">7</span>
+                    </button>
+                    <button type="button" class="cd-jobs-tab-btn">
+                      <span>Submissions</span>
+                      <span class="cd-jobs-tab-badge">2</span>
+                    </button>
+                    <button type="button" class="cd-jobs-tab-btn">
+                      <span>Interviews</span>
+                      <span class="cd-jobs-tab-badge">1</span>
+                    </button>
+                    <button type="button" class="cd-jobs-tab-btn">
+                      <span>Offers &amp; Joining</span>
+                      <span class="cd-jobs-tab-badge">2</span>
+                    </button>
+                    <button type="button" class="cd-jobs-tab-btn">
+                      <span>Requisitions</span>
+                      <span class="cd-jobs-tab-badge">1</span>
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Tier 3: Master Activity Cards Stream -->
+                <div class="d-flex flex-column gap-3">
+                  <!-- Activity Card 1 -->
+                  <div class="card p-4 border" style="border-radius:10px; border-color:#e2e8f0; background:#ffffff; box-shadow:0 1px 3px rgba(15, 23, 42, 0.03);">
+                    <div class="d-flex align-items-center justify-content-between mb-2 flex-wrap gap-2">
+                      <div class="d-flex align-items-center gap-3">
+                        <div class="cd-tl-dot-green rounded-circle d-flex align-items-center justify-content-center" style="width:34px; height:34px; font-size:13px;">
+                          <i class="fas fa-users"></i>
+                        </div>
+                        <div>
+                          <div class="fw-bold text-gray-900 fs-7">2 Candidates Submitted to Client</div>
+                          <div class="text-muted fs-8">{{ auth()->user()->name ?? 'Recruiter' }} shortlisted and submitted 2 candidates for Senior Java Developer role.</div>
+                        </div>
+                      </div>
+                      <div class="d-flex align-items-center gap-2">
+                        <span class="badge bg-light-primary text-primary fw-bold fs-8">Candidate Pipeline</span>
+                        <span class="text-muted fs-8"><i class="fas fa-clock me-1"></i>2 hours ago</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Activity Card 2 -->
+                  <div class="card p-4 border" style="border-radius:10px; border-color:#e2e8f0; background:#ffffff; box-shadow:0 1px 3px rgba(15, 23, 42, 0.03);">
+                    <div class="d-flex align-items-center justify-content-between mb-2 flex-wrap gap-2">
+                      <div class="d-flex align-items-center gap-3">
+                        <div class="cd-tl-dot-purple rounded-circle d-flex align-items-center justify-content-center" style="width:34px; height:34px; font-size:13px;">
+                          <i class="fas fa-calendar-days"></i>
+                        </div>
+                        <div>
+                          <div class="fw-bold text-gray-900 fs-7">Technical Interview Round 1 Scheduled</div>
+                          <div class="text-muted fs-8">Candidate scheduled with client technical evaluation panel via Google Meet.</div>
+                        </div>
+                      </div>
+                      <div class="d-flex align-items-center gap-2">
+                        <span class="badge bg-light-warning text-warning fw-bold fs-8">Interview</span>
+                        <span class="text-muted fs-8"><i class="fas fa-clock me-1"></i>1 day ago</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Activity Card 3 -->
+                  <div class="card p-4 border" style="border-radius:10px; border-color:#e2e8f0; background:#ffffff; box-shadow:0 1px 3px rgba(15, 23, 42, 0.03);">
+                    <div class="d-flex align-items-center justify-content-between mb-2 flex-wrap gap-2">
+                      <div class="d-flex align-items-center gap-3">
+                        <div class="cd-tl-dot-orange rounded-circle d-flex align-items-center justify-content-center" style="width:34px; height:34px; font-size:13px;">
+                          <i class="fas fa-file-lines"></i>
+                        </div>
+                        <div>
+                          <div class="fw-bold text-gray-900 fs-7">Formal Offer Letter Extended</div>
+                          <div class="text-muted fs-8">Offer rolled out for Software Engineer requirement after budget clearance.</div>
+                        </div>
+                      </div>
+                      <div class="d-flex align-items-center gap-2">
+                        <span class="badge bg-light-danger text-danger fw-bold fs-8">Offer Letter</span>
+                        <span class="text-muted fs-8"><i class="fas fa-clock me-1"></i>2 days ago</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Activity Card 4 -->
+                  <div class="card p-4 border" style="border-radius:10px; border-color:#e2e8f0; background:#ffffff; box-shadow:0 1px 3px rgba(15, 23, 42, 0.03);">
+                    <div class="d-flex align-items-center justify-content-between mb-2 flex-wrap gap-2">
+                      <div class="d-flex align-items-center gap-3">
+                        <div class="cd-tl-dot-blue rounded-circle d-flex align-items-center justify-content-center" style="width:34px; height:34px; font-size:13px;">
+                          <i class="fas fa-briefcase"></i>
+                        </div>
+                        <div>
+                          <div class="fw-bold text-gray-900 fs-7">New Job Requirement Assigned</div>
+                          <div class="text-muted fs-8">Client SPOC created requirement for DevOps Engineer (5+ Yrs, Pune).</div>
+                        </div>
+                      </div>
+                      <div class="d-flex align-items-center gap-2">
+                        <span class="badge bg-light-info text-info fw-bold fs-8">Requisition</span>
+                        <span class="text-muted fs-8"><i class="fas fa-clock me-1"></i>3 days ago</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Activity Card 5 -->
+                  <div class="card p-4 border" style="border-radius:10px; border-color:#e2e8f0; background:#ffffff; box-shadow:0 1px 3px rgba(15, 23, 42, 0.03);">
+                    <div class="d-flex align-items-center justify-content-between mb-2 flex-wrap gap-2">
+                      <div class="d-flex align-items-center gap-3">
+                        <div class="cd-tl-dot-green rounded-circle d-flex align-items-center justify-content-center" style="width:34px; height:34px; font-size:13px; background:#ecfdf5; color:#059669;">
+                          <i class="fas fa-user-check"></i>
+                        </div>
+                        <div>
+                          <div class="fw-bold text-gray-900 fs-7">Candidate Successfully Joined &amp; Onboarded</div>
+                          <div class="text-muted fs-8">Full Stack Developer successfully completed Day 1 onboarding formalities.</div>
+                        </div>
+                      </div>
+                      <div class="d-flex align-items-center gap-2">
+                        <span class="badge bg-light-success text-success fw-bold fs-8">Joined</span>
+                        <span class="text-muted fs-8"><i class="fas fa-clock me-1"></i>5 days ago</span>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
-                    <div class="tab-pane" id="contacts" role="tabpanel">
-                        <div class="cd-tabcard cd-contacts">
-                            <div class="cd-tabcard-head" style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;">
-                                <div>
-                                    <div class="cd-tabcard-title">Contacts</div>
-                                    <div class="cd-tabcard-sub">Manage and view all contacts associated with this client.</div>
+                    <div class="tab-pane" id="contacts" role="tabpanel" style="background:#ffffff; min-height: 520px;">
+                        <div class="cd-contact-tab-container">
+
+                            <!-- TIER 1: TOP HEADER TOOLBAR CARD -->
+                            <div class="cd-contact-toolbar-card">
+                                <div class="cd-contact-toolbar-left">
+                                    <div class="cd-contact-title-avatar">
+                                        <i class="fas fa-address-book fa-solid"></i>
+                                    </div>
+                                    <div class="cd-contact-title-wrap">
+                                        <div class="d-flex align-items-center gap-2">
+                                            <h4 class="cd-contact-title">Client Contacts</h4>
+                                            <span class="cd-contact-count-badge" id="cdContactCountBadgeInternal">
+                                                <span id="cdContactCountTextInternal">{{ $contactInitCount ?? 0 }}</span> Contacts
+                                            </span>
+                                            <span class="cd-contact-scope-pill">
+                                                <i class="fas fa-building text-primary me-1"></i> Internal Client
+                                            </span>
+                                        </div>
+                                        <div class="cd-contact-subtitle">Authoritative directory of key stakeholders, hiring managers, and primary coordinators.</div>
+                                    </div>
                                 </div>
-                                <div class="cd-tabcard-actions">
-                                    <div class="cd-search"><i class="fas fa-search"></i><input type="text" id="contactSearchInput" placeholder="Search contacts..." /></div>
+                                <div class="cd-contact-toolbar-right">
+                                    <!-- Search Contacts Sub-Card with Clear Button -->
+                                    <div class="cd-contact-search-subcard">
+                                        <i class="fas fa-search fa-solid"></i>
+                                        <input type="text" id="cdContactSearchInputInternal" placeholder="Search contacts by name, role, email, phone..." autocomplete="off">
+                                        <button type="button" class="cd-contact-search-clear" id="cdContactSearchClearInternal" style="display: none;" title="Clear search">
+                                            <i class="fas fa-times fa-solid"></i>
+                                        </button>
+                                    </div>
+                                    <!-- Quick Refresh / Reset Button -->
+                                    <button type="button" id="cdContactResetBtnInternal" class="cd-contact-action-subcard" title="Reset Filters &amp; Refresh">
+                                        <i class="fas fa-sync-alt fa-solid"></i>
+                                    </button>
+                                    @if(in_array('edit_clients', $userPermissions))
+                                    <a href="{{ route('service_company.clients.edit', GeneralMethod::value_encrypt($client->id)) }}" class="btn btn-sm btn-primary fw-bold" style="height:36px; display:inline-flex; align-items:center; border-radius:8px; font-size:12px;">
+                                        <i class="fas fa-user-plus me-1"></i> Add / Edit Contacts
+                                    </a>
+                                    @endif
                                 </div>
                             </div>
-                            <div style="overflow-x:auto;">
-                                <table class="data-table" id="contactList">
-                                    <thead>
-                                        <tr>
-                                            <th style="width:40px;"><input type="checkbox" class="table-checkbox" /></th>
-                                            <th style="width:28%;">Contact <i class="fas fa-sort"></i></th>
-                                            <th style="width:18%;">Designation <i class="fas fa-sort"></i></th>
-                                            <th style="width:24%;">Email <i class="fas fa-sort"></i></th>
-                                            <th style="width:20%;">Phone <i class="fas fa-sort"></i></th>
-                                            <th style="width:10%;">Status <i class="fas fa-sort"></i></th>
-                                        </tr>
-                                    </thead>
-                                    <tbody></tbody>
-                                </table>
+
+                            <!-- TIER 2: SUB-TABS FILTER CARD -->
+                            <div class="cd-contact-tabs-card">
+                                <div class="cd-contact-tabs-list">
+                                    <button type="button" class="cd-contact-subtab active" data-filter="all" id="cdContactTabAllInternal">
+                                        <span>All Contacts</span>
+                                        <span class="cd-contact-subtab-badge" id="contactTabCountAllInternal">0</span>
+                                    </button>
+                                    <button type="button" class="cd-contact-subtab" data-filter="primary" id="cdContactTabPrimaryInternal">
+                                        <span><i class="fas fa-star text-amber-500 me-1" style="font-size:10px;"></i> Primary SPOCs</span>
+                                        <span class="cd-contact-subtab-badge" id="contactTabCountPrimaryInternal">0</span>
+                                    </button>
+                                    <button type="button" class="cd-contact-subtab" data-filter="manager" id="cdContactTabManagerInternal">
+                                        <span>Hiring Managers &amp; Leads</span>
+                                        <span class="cd-contact-subtab-badge" id="contactTabCountManagerInternal">0</span>
+                                    </button>
+                                    <button type="button" class="cd-contact-subtab" data-filter="hr" id="cdContactTabHrInternal">
+                                        <span>Coordinators &amp; HR</span>
+                                        <span class="cd-contact-subtab-badge" id="contactTabCountHrInternal">0</span>
+                                    </button>
+                                    <button type="button" class="cd-contact-subtab" data-filter="active" id="cdContactTabActiveInternal">
+                                        <span>Active</span>
+                                        <span class="cd-contact-subtab-badge" id="contactTabCountActiveInternal">0</span>
+                                    </button>
+                                </div>
                             </div>
+
+                            <!-- Local Skeleton Loader Cards -->
+                            <div id="cdContactSkeletonLoaderInternal" style="display:none;" class="py-2">
+                                <div class="cd-contact-skeleton-card">
+                                    <div class="cd-contact-skeleton-pulse" style="width: 25%; height: 50px;"></div>
+                                    <div class="cd-contact-skeleton-pulse" style="width: 25%; height: 50px;"></div>
+                                    <div class="cd-contact-skeleton-pulse" style="width: 20%; height: 50px;"></div>
+                                    <div class="cd-contact-skeleton-pulse" style="width: 15%; height: 50px;"></div>
+                                    <div class="cd-contact-skeleton-pulse" style="width: 15%; height: 50px;"></div>
+                                </div>
+                                <div class="cd-contact-skeleton-card">
+                                    <div class="cd-contact-skeleton-pulse" style="width: 25%; height: 50px;"></div>
+                                    <div class="cd-contact-skeleton-pulse" style="width: 25%; height: 50px;"></div>
+                                    <div class="cd-contact-skeleton-pulse" style="width: 20%; height: 50px;"></div>
+                                    <div class="cd-contact-skeleton-pulse" style="width: 15%; height: 50px;"></div>
+                                    <div class="cd-contact-skeleton-pulse" style="width: 15%; height: 50px;"></div>
+                                </div>
+                            </div>
+
+                            <!-- TIER 3: Modern Contact Cards Stream -->
+                            <div class="cd-contact-stream-wrap">
+                                <div id="cdContactCardsStreamInternal" class="cd-contact-stream"></div>
+                            </div>
+
+                            <!-- Empty State -->
+                            <div id="cdContactEmptyStateInternal" class="cd-contact-empty-state" style="display:none;">
+                                <div class="cd-contact-empty-icon">
+                                    <i class="fas fa-address-book fa-solid"></i>
+                                </div>
+                                <div class="cd-contact-empty-title">No Contacts Found</div>
+                                <div class="cd-contact-empty-sub">No contacts match the selected criteria or search term.</div>
+                                <button type="button" class="btn btn-sm btn-light-primary fw-bold" id="cdContactClearFilterBtnInternal">
+                                    <i class="fas fa-undo me-1"></i> Reset Filters
+                                </button>
+                            </div>
+
                         </div>
                     </div>
                     <!--end::Contacts Content-->
 
                     <!--begin::candidate_list Candidate List-->
-                    <div class="tab-pane" id="candidate_list" role="tabpanel">
-                        <!-- Candidate Search & Filter Toolbar -->
-                        <div class="card-header border-0 pt-3 pb-2 px-0 d-flex flex-wrap align-items-center justify-content-between gap-3">
-                            <div class="d-flex align-items-center gap-2 flex-grow-1" style="max-width: 420px;">
-                                <div class="position-relative w-100">
-                                    <span class="position-absolute top-50 translate-middle-y ms-3 text-muted">
+                    <div class="tab-pane" id="candidate_list" role="tabpanel" style="background:#ffffff; min-height: 520px;">
+                        <div class="cd-cand-tab-container">
+
+                            <!-- TIER 1: TOP HEADER TOOLBAR CARD -->
+                            <div class="cd-cand-toolbar-card">
+                                <div class="cd-cand-toolbar-left">
+                                    <div class="cd-cand-title-avatar">
+                                        <i class="fas fa-user-check fa-solid"></i>
+                                    </div>
+                                    <div class="cd-cand-title-wrap">
+                                        <div class="d-flex align-items-center gap-2">
+                                            <h4 class="cd-cand-title">Candidates</h4>
+                                            <span class="cd-cand-count-badge" id="cdCandidateCountBadge">
+                                                <span id="cdCandidateCountText">0</span> Candidates
+                                            </span>
+                                        </div>
+                                        <div class="cd-cand-subtitle">Pipeline and submitted talent for this client</div>
+                                    </div>
+                                </div>
+                                <div class="cd-cand-toolbar-right">
+                                    <!-- Search Candidates Sub-Card with Clear Button -->
+                                    <div class="cd-cand-search-subcard">
                                         <i class="fas fa-search fa-solid"></i>
-                                    </span>
-                                    <input type="text" id="cdCandSearchInput" class="form-control form-control-sm form-control-solid ps-9" placeholder="Search candidates by name, email, skills..." autocomplete="off">
+                                        <input type="text" id="cdCandSearchInput" placeholder="Search candidates by name, designation, skills, company..." autocomplete="off">
+                                        <button type="button" class="cd-cand-search-clear" id="cdCandSearchClear" style="display: none;" title="Clear search">
+                                            <i class="fas fa-times fa-solid"></i>
+                                        </button>
+                                    </div>
+                                    <!-- Quick Refresh / Reset Button -->
+                                    <button type="button" id="cdCandResetBtn" class="cd-cand-action-subcard" title="Reset Filters &amp; Refresh">
+                                        <i class="fas fa-sync-alt fa-solid"></i>
+                                    </button>
                                 </div>
                             </div>
-                            <div class="d-flex align-items-center gap-2">
-                                <select id="cdCandStatusFilter" class="form-select form-select-sm form-select-solid" style="min-width: 140px;">
-                                    <option value="">All Statuses</option>
-                                    <option value="1">Sourced</option>
-                                    <option value="2">Screening</option>
-                                    <option value="3">Interview</option>
-                                    <option value="4">Shortlisted</option>
-                                    <option value="5">Offer</option>
-                                    <option value="6">Joined</option>
-                                    <option value="7">On Hold</option>
-                                    <option value="8">Rejected</option>
-                                </select>
-                                <button type="button" id="cdCandResetBtn" class="btn btn-sm btn-icon btn-light-secondary" title="Reset Filters">
-                                    <i class="fas fa-sync-alt fa-solid"></i>
-                                </button>
-                                <span class="badge badge-light-primary fw-bolder fs-7 px-3 py-2" id="cdCandidateCountBadge">
-                                    <span id="cdCandidateCountText">0</span> Candidates
-                                </span>
-                            </div>
-                        </div>
 
-                        <!-- Local Skeleton Loader (Zero Main-Thread / Full-Screen Freeze) -->
-                        <div id="cdCandSkeletonLoader" style="display:none;" class="py-4">
-                            <div class="p-3 mb-2 bg-light rounded" style="height: 52px; animation: pulse 1.5s infinite;"></div>
-                            <div class="p-3 mb-2 bg-light rounded" style="height: 52px; animation: pulse 1.5s infinite;"></div>
-                            <div class="p-3 mb-2 bg-light rounded" style="height: 52px; animation: pulse 1.5s infinite;"></div>
-                            <div class="p-3 mb-2 bg-light rounded" style="height: 52px; animation: pulse 1.5s infinite;"></div>
-                        </div>
-
-                        <!-- Empty State -->
-                        <div id="cdCandEmptyState" class="text-center py-12" style="display:none;">
-                            <div class="text-muted fs-5 fw-bold mb-2">No candidates found</div>
-                            <div class="text-gray-400 fs-7">Try adjusting your search query or filters.</div>
-                        </div>
-
-                        <div class="card-body px-0 py-2" id="cdCandidateTableWrap">
-                            <!--begin::Table-->
-                            <div class="table-responsive">
-                                <table class="table align-middle table-row-dashed fs-7 gy-4">
-                                    <!--begin::Table head-->
-                                    <thead>
-                                        <tr class="fw-bolder text-muted text-uppercase fs-8 gs-0">
-                                            <th class="min-w-200px">Name</th>
-                                            <th class="min-w-70px">Exp.</th>
-                                            <th class="min-w-100px">Salary</th>
-                                            <th class="min-w-90px">Notice</th>
-                                            <th class="min-w-110px">Location</th>
-                                            <th class="min-w-110px">Source</th>
-                                            <th class="min-w-80px">Added</th>
-                                            <th class="min-w-120px">Job</th>
-                                            <th class="min-w-90px text-end">Stage</th>
-                                        </tr>
-                                    </thead>
-                                    <!--end::Table head-->
-                                    <tbody id="candidatetList">
-                                    </tbody>
-                                </table>
+                            <!-- TIER 2: SUB-TABS PIPELINE CARD -->
+                            <div class="cd-cand-tabs-card">
+                                <div class="cd-cand-tabs-list">
+                                    <button type="button" class="cd-cand-subtab active" data-status="">
+                                        <span>All Candidates</span>
+                                        <span class="cd-cand-subtab-badge" id="candTabCountAll">0</span>
+                                    </button>
+                                    <button type="button" class="cd-cand-subtab" data-status="2">
+                                        <span>Screening</span>
+                                        <span class="cd-cand-subtab-badge" id="candTabCountScreening"></span>
+                                    </button>
+                                    <button type="button" class="cd-cand-subtab" data-status="3">
+                                        <span>Interview</span>
+                                        <span class="cd-cand-subtab-badge" id="candTabCountInterview"></span>
+                                    </button>
+                                    <button type="button" class="cd-cand-subtab" data-status="4">
+                                        <span>Shortlisted</span>
+                                        <span class="cd-cand-subtab-badge" id="candTabCountShortlisted"></span>
+                                    </button>
+                                    <button type="button" class="cd-cand-subtab" data-status="5">
+                                        <span>Offer</span>
+                                        <span class="cd-cand-subtab-badge" id="candTabCountOffer"></span>
+                                    </button>
+                                    <button type="button" class="cd-cand-subtab" data-status="6">
+                                        <span>Joined</span>
+                                        <span class="cd-cand-subtab-badge" id="candTabCountJoined"></span>
+                                    </button>
+                                    <button type="button" class="cd-cand-subtab" data-status="7">
+                                        <span>On Hold</span>
+                                        <span class="cd-cand-subtab-badge" id="candTabCountOnHold"></span>
+                                    </button>
+                                    <button type="button" class="cd-cand-subtab" data-status="8">
+                                        <span>Rejected</span>
+                                        <span class="cd-cand-subtab-badge" id="candTabCountRejected"></span>
+                                    </button>
+                                </div>
                             </div>
-                            <!--end::Table-->
-                            <div id="paginationcandidate" class="d-flex align-items-center justify-content-between pt-4">
-                                <!-- Pagination links rendered dynamically by ClientCandidateStore -->
+
+                            <!-- Local Skeleton Loader Cards -->
+                            <div id="cdCandSkeletonLoader" style="display:none;" class="py-2">
+                                <div class="cd-cand-skeleton-card">
+                                    <div class="cd-cand-skeleton-pulse" style="width: 25%; height: 24px;"></div>
+                                    <div class="cd-cand-skeleton-pulse" style="width: 18%; height: 24px;"></div>
+                                    <div class="cd-cand-skeleton-pulse" style="width: 16%; height: 24px;"></div>
+                                    <div class="cd-cand-skeleton-pulse" style="width: 28%; height: 50px;"></div>
+                                    <div class="cd-cand-skeleton-pulse" style="width: 13%; height: 24px;"></div>
+                                </div>
+                                <div class="cd-cand-skeleton-card">
+                                    <div class="cd-cand-skeleton-pulse" style="width: 25%; height: 24px;"></div>
+                                    <div class="cd-cand-skeleton-pulse" style="width: 18%; height: 24px;"></div>
+                                    <div class="cd-cand-skeleton-pulse" style="width: 16%; height: 24px;"></div>
+                                    <div class="cd-cand-skeleton-pulse" style="width: 28%; height: 50px;"></div>
+                                    <div class="cd-cand-skeleton-pulse" style="width: 13%; height: 24px;"></div>
+                                </div>
                             </div>
+
+                            <!-- Empty State Card -->
+                            <div id="cdCandEmptyState" class="text-center py-12" style="display:none; background:#ffffff; border-radius:10px; border:1px dashed #cbd5e1; margin:8px 0;">
+                                <div class="symbol symbol-50px mx-auto mb-3">
+                                    <span class="symbol-label bg-light-primary text-primary fs-2">
+                                        <i class="fas fa-user-slash fa-solid"></i>
+                                    </span>
+                                </div>
+                                <div class="text-dark fs-6 fw-bold mb-1">No candidates found</div>
+                                <div class="text-muted fs-7">Try adjusting your search query or pipeline filter.</div>
+                            </div>
+
+                            <!-- TIER 3: PRIMARY CANDIDATE CARD STREAM -->
+                            <div class="cd-cand-stream-wrap" id="cdCandidateTableWrap">
+                                <div id="candidatetList" class="cd-cand-stream">
+                                    <!-- Dynamic Candidate Cards (.cd-cand-card) rendered by ClientCandidateStore -->
+                                </div>
+                                <div id="paginationcandidate" class="d-flex align-items-center justify-content-between pt-4">
+                                    <!-- Dynamic Pagination Links -->
+                                </div>
+                            </div>
+
                         </div>
                     </div>
                     <!--end::candidate_list Candidate List-->
 
                     <!--begin::interview_tracker Candidate List-->
                     <div class="tab-pane" id="interview_tracker" role="tabpanel">
-                        <div class="cd-tabcard"><div class="cd-tabcard-head"><div class="cd-tabcard-title">Interview Tracker</div><div class="cd-tabcard-sub">Interviews scheduled with this client's candidates.</div></div><div class="cd-tabwrap">
+                        <div class="it-main-card">
+                            <!-- 1. Top Card Header Toolbar (Heading in Card + Search Bar) -->
+                            <div class="it-toolbar-card">
+                                <div class="it-toolbar-left">
+                                    <div class="it-title-wrap">
+                                        <div class="d-flex align-items-center gap-2">
+                                            <h4 class="it-title">Interview Tracker</h4>
+                                            <span class="it-badge-count" id="itTotalCountBadgeInternal">0</span>
+                                        </div>
+                                        <div class="it-subtitle">Interviews scheduled with this client's candidates.</div>
+                                    </div>
+                                </div>
+                                <div class="it-toolbar-right">
+                                    <div class="it-search-subcard">
+                                        <i class="fas fa-search"></i>
+                                        <input type="text" id="itSearchInputInternal" placeholder="Search candidate, job, interviewer, stage..." autocomplete="off">
+                                        <button type="button" class="it-search-clear" id="itSearchClearInternal" style="display: none;" title="Clear search">
+                                            <i class="fas fa-times"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
 
-                        <div class="card-body px-0 py-7">
-                            <!--begin::Table-->
-                            <table class="table align-middle table-row-dashed fs-6 gy-5">
-                                <!--begin::Table head-->
-                                <thead>
-                                    <!--begin::Table row-->
+                            <!-- 2. Proportional Column Header Strip & Cards Container -->
+                            <div class="it-card-container">
+                                <div class="it-card-header">
+                                    <div class="it-col-th it-th-cand">Candidate</div>
+                                    <div class="it-col-th it-th-job">Job Requisitions</div>
+                                    <div class="it-col-th it-th-datetime">Interview Date &amp; Time</div>
+                                    <div class="it-col-th it-th-interviewers">Interviewers</div>
+                                    <div class="it-col-th it-th-source">Source</div>
+                                    <div class="it-col-th it-th-stage">Stage</div>
+                                    <div class="it-col-th it-th-feedback">Feedback</div>
+                                </div>
 
-                                    <tr class="fw-bolder text-muted fs-7">
-                                        <th style="width: 18%;">Candidate</th>
-                                        <th style="width: 16%;">Job &amp; ID</th>
-                                        <th style="width: 13%;">Mode &amp; Round</th>
-                                        <th style="width: 14%;"><i class="fa fa-users me-1 text-gray-500"></i> Interviewers</th>
-                                        <th style="width: 13%;"><i class="fas fa-calendar-alt me-1 text-gray-500"></i> Date</th>
-                                        <th style="width: 11%;">Status</th>
-                                        <th style="width: 7%;"><i class="fas fa-star me-1 text-warning"></i> Rating</th>
-                                        <th style="width: 8%; text-align: right;">Actions</th>
-                                    </tr>
-                                    <!--end::Table row-->
-                                </thead>
-                                <!--end::Table head-->
-                                <tbody id="candidatetListinterviewtracker" data-role="interview-list">
+                                <!-- Primary Cards List -->
+                                <div id="candidatetListinterviewtracker" class="it-cards-list" data-role="interview-list">
+                                </div>
+                            </div>
 
-                                </tbody>
-
-                            </table>
-                            <!--end::Table-->
-                            <div id="paginationcandidateinterviewtracker" data-role="interview-pagination">
-                                <!-- Pagination links will be appended here -->
+                            <!-- 3. Enterprise Pagination Card (Minimum 10 rows) -->
+                            <div id="paginationcandidateinterviewtracker" class="it-pagination-card" data-role="interview-pagination">
                             </div>
                         </div>
-                        <!--end::Contacts Content-->
-                        </div></div>
                     </div>
                     <!--end::interview_tracker Candidate List-->
 
                     <!--begin::candidate_joining Candidate List-->
-                    <div class="tab-pane" id="candidate_joining" role="tabpanel">
-
-                        <div class="card-body px-0 py-7">
-                            <!--begin::Offer & Joining Milestone Filter Toolbar-->
-                            <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-5 px-2">
-                                <div class="btn-group btn-group-sm" role="group" id="ojSegmentGroupInternal" aria-label="Offer and Joining Milestone Filter">
-                                    <button type="button" class="btn btn-sm btn-outline-secondary active fw-bold cd-oj-seg-btn" data-segment="all">
-                                        All <span class="badge badge-secondary ms-1" id="ojCountAllInternal">{{ ($kpiOffers ?? 0) + ($kpiJoins ?? 0) }}</span>
-                                    </button>
-                                    <button type="button" class="btn btn-sm btn-outline-secondary fw-bold cd-oj-seg-btn" data-segment="offers">
-                                        Offers <span class="badge badge-light-warning text-warning ms-1" id="ojCountOffersInternal">{{ $kpiOffers ?? 0 }}</span>
-                                    </button>
-                                    <button type="button" class="btn btn-sm btn-outline-secondary fw-bold cd-oj-seg-btn" data-segment="joining">
-                                        Joining <span class="badge badge-light-primary text-primary ms-1" id="ojCountJoiningInternal">0</span>
-                                    </button>
-                                    <button type="button" class="btn btn-sm btn-outline-secondary fw-bold cd-oj-seg-btn" data-segment="joined">
-                                        Joined <span class="badge badge-light-success text-success ms-1" id="ojCountJoinedInternal">{{ $kpiJoins ?? 0 }}</span>
-                                    </button>
-                                </div>
-                                <div class="d-flex align-items-center gap-2">
-                                    <div class="position-relative">
-                                        <span class="position-absolute top-50 start-0 translate-middle-y ps-3 text-muted">
-                                            <i class="fas fa-search fs-7"></i>
-                                        </span>
-                                        <input type="text" id="ojSearchInputInternal" class="form-control form-control-sm ps-9 fs-7 font-poppins" placeholder="Search offers & joined..." style="width: 220px; border-radius: 6px;">
+                    <div class="tab-pane" id="candidate_joining" role="tabpanel" style="background:#ffffff; min-height: 520px;">
+                        <div class="cd-oj-wrapper">
+                            <!-- TIER 1: TOP HEADER TOOLBAR CARD -->
+                            <div class="cd-oj-header-card">
+                                <div class="cd-oj-header-left">
+                                    <div class="cd-oj-header-icon">
+                                        <i class="fas fa-handshake"></i>
+                                    </div>
+                                    <div>
+                                        <div class="d-flex align-items-center gap-2">
+                                            <h4 class="cd-oj-header-title">Offer &amp; Joining</h4>
+                                            <span class="cd-oj-header-badge" id="cdOjCountBadgeInternal">
+                                                <span id="cdOjCountTextInternal">{{ ($kpiOffers ?? 0) + ($kpiJoins ?? 0) }}</span> Offers &amp; Joinings
+                                            </span>
+                                        </div>
+                                        <div class="cd-oj-header-sub">Track candidate offers extended, joining confirmations, and onboarding milestones.</div>
                                     </div>
                                 </div>
+                                <div class="cd-oj-header-right">
+                                    <div class="cd-oj-search-subcard">
+                                        <i class="fas fa-search"></i>
+                                        <input type="text" id="ojSearchInputInternal" placeholder="Search candidate, job, CTC, status..." autocomplete="off">
+                                        <button type="button" class="cd-oj-search-clear" id="ojSearchClearInternal" style="display: none;" title="Clear search">
+                                            <i class="fas fa-times"></i>
+                                        </button>
+                                    </div>
+                                    <button type="button" id="ojResetBtnInternal" class="cd-oj-action-subcard" title="Reset Filters &amp; Refresh">
+                                        <i class="fas fa-sync-alt"></i>
+                                    </button>
+                                </div>
                             </div>
-                            <!--end::Offer & Joining Milestone Filter Toolbar-->
 
-                            <!--begin::Table-->
-                            <table class="table align-middle table-row-dashed fs-6 gy-5">
-                                <!--begin::Table head-->
-                                <thead>
-                                    <!--begin::Table row-->
+                            <!-- TIER 2: SUB-TABS CARD WITH WHITE BACKGROUND -->
+                            <div class="cd-oj-tabs-card">
+                                <div class="cd-oj-tabs-group" id="ojSegmentGroupInternal">
+                                    <button type="button" class="cd-oj-tab-btn active cd-oj-seg-btn" data-segment="all">
+                                        <span>All Records</span>
+                                        <span class="cd-oj-tab-badge" id="ojCountAllInternal">{{ ($kpiOffers ?? 0) + ($kpiJoins ?? 0) }}</span>
+                                    </button>
+                                    <button type="button" class="cd-oj-tab-btn cd-oj-seg-btn" data-segment="offers">
+                                        <span class="cd-oj-dot dot-warning"></span>
+                                        <span>Offers Extended</span>
+                                        <span class="cd-oj-tab-badge badge-warning" id="ojCountOffersInternal">{{ $kpiOffers ?? 0 }}</span>
+                                    </button>
+                                    <button type="button" class="cd-oj-tab-btn cd-oj-seg-btn" data-segment="joining">
+                                        <span class="cd-oj-dot dot-primary"></span>
+                                        <span>Joining Soon</span>
+                                        <span class="cd-oj-tab-badge badge-primary" id="ojCountJoiningInternal">0</span>
+                                    </button>
+                                    <button type="button" class="cd-oj-tab-btn cd-oj-seg-btn" data-segment="joined">
+                                        <span class="cd-oj-dot dot-success"></span>
+                                        <span>Joined &amp; Onboarded</span>
+                                        <span class="cd-oj-tab-badge badge-success" id="ojCountJoinedInternal">{{ $kpiJoins ?? 0 }}</span>
+                                    </button>
+                                </div>
+                            </div>
 
-                                    <tr class="fw-bolder text-muted">
-
-                                        <th class="min-w-150px">Name</th>
-                                        <th class="min-w-15px">Exp.</th>
-                                        <th class="min-w-15px">Salary</th>
-                                        <th class="min-w-15px">Notice</th>
-                                        <th class="min-w-15px">Location</th>
-                                        <th class="min-w-15px"> Source</th>
-                                        <th class="min-w-15px">Upload</th>
-                                        <th class="min-w-15px">Jobs</th>
-                                        <th class="min-w-15px">Stage</th>
-                                    </tr>
-                                    <!--end::Table row-->
-                                </thead>
-                                <!--end::Table head-->
-                                <tbody id="candidatetListJoin">
-
-                                </tbody>
-
-                            </table>
-                            <!--end::Table-->
-                            <div id="paginationcandidatejoin">
-                                <!-- Pagination links will be appended here -->
+                            <!-- TIER 3: PRIMARY CARDS LIST STREAM (Populated via AJAX) -->
+                            <div class="cd-oj-stream-wrap">
+                                <div id="candidatetListJoin" class="cd-oj-stream" data-role="offer-joining-list">
+                                </div>
+                            </div>
+                            <div id="paginationcandidatejoin" class="mt-3">
                             </div>
                         </div>
-                        <!--end::Contacts Content-->
                     </div>
                     <!--end::candidate_joining Candidate List-->
 
@@ -2593,632 +5261,83 @@ use Carbon\Carbon;
 
                     <!--begin::Requisitions Content-->
                     <div class="tab-pane" id="requisitions" role="tabpanel">
-                        <div class="cd-tabcard"><div class="cd-tabcard-head"><div class="cd-tabcard-title">Jobs</div><div class="cd-tabcard-sub">Roles open with this client.</div></div><div class="cd-tabwrap">
-                        <!--begin::Sub tabs-->
-                        {{-- <ul class="nav nav-tabs nav-line-tabs nav-line-tabs-2x mb-5 fs-6 border-bottom-0">
-                        <li class="nav-item"> <a class="nav-link active" data-bs-toggle="tab" href="#all-requisitions">All Req.</a> 
-                        </li> --}}
-                        {{-- <li class="nav-item"> <a class="nav-link" data-bs-toggle="tab" href="#client-requisitions">HCL Req.</a> </li>
-                        <li class="nav-item"> <a class="nav-link" data-bs-toggle="tab" href="#custom-requisitions">Custom Req.</a> </li>
-                        <li class="nav-item"> <a class="nav-link" data-bs-toggle="tab" href="#jobs">Jobs</a> </li> --}}
-                        {{-- </ul> --}}
-                        <!--end::Sub tabs-->
-                        <!--begin::Requisitions Content-->
-                        <div class="tab-content" id="myTabContent">
-                            <!--begin::All Req.-->
-                            <div class="tab-pane fade show active" id="all-requisitions" role="tabpanel">
-                                <!--begin::All Req. header-->
-                                <div class="card-header cursor-pointer px-0 d-none">
-                                    <!--begin::Card title-->
-                                    <div class="card-title m-0">
-                                        <h3 class="fw-bolder m-0">All Jobs</h3>
-                                    </div>
-                                    <!--end::Card title-->
-                                    <!--begin::Actions-->
-                                    <div class="d-flex align-items-center py-1">
-                                        <!--begin::Search-->
-                                        <div class="d-flex align-items-center position-relative my-1 me-3">
-                                            <!--begin::Svg Icon | path: icons/duotune/general/gen021.svg-->
-                                            <span class="svg-icon svg-icon-1 position-absolute ms-6">
-                                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
-                                                    viewBox="0 0 24 24" fill="none">
-                                                    <rect opacity="0.5" x="17.0365" y="15.1223" width="8.15546"
-                                                        height="2" rx="1"
-                                                        transform="rotate(45 17.0365 15.1223)" fill="black" />
-                                                    <path
-                                                        d="M11 19C6.55556 19 3 15.4444 3 11C3 6.55556 6.55556 3 11 3C15.4444 3 19 6.55556 19 11C19 15.4444 15.4444 19 11 19ZM11 5C7.53333 5 5 7.53333 5 11C5 14.4667 7.53333 17 11 17C14.4667 17 17 14.4667 17 11C17 7.53333 14.4667 5 11 5Z"
-                                                        fill="black" />
-                                                </svg>
-                                            </span>
-                                            <!--end::Svg Icon-->
-                                            <input type="text" id="inputJobSearch" name="inputJobSearch"
-                                                class="form-control form-control-solid w-250px ps-14"
-                                                style="padding: .6rem 1rem;" placeholder="Search..." />
-                                        </div>
-                                        <!--end::Search-->
-                                        <div class="card-toolbar">
-                                            <!--begin::Toolbar-->
-                                            <div class="d-flex justify-content-end" data-kt-user-table-toolbar="base">
-
-
-
-                                                @if (in_array('add_jobs', $userPermissions))
-                                                    <!--begin::Add Requisitions-->
-                                                    {{-- echo url('service_company/jobs/create'); --}}
-                                                    <a
-                                                        href="{{ url('service_company/jobs/curstomcreate/' . $client->id) }}">
-                                                        <button type="button"
-                                                            class="btn btn-sm btn-flex btn-primary btn-active-primary fw-bolder me-3">
-                                                            <!--begin::Svg Icon | path: icons/duotune/arrows/arr078.svg-->
-                                                            <span class="svg-icon svg-icon-primary svg-icon-1x">
-                                                                <svg xmlns="http://www.w3.org/2000/svg"
-                                                                    xmlns:xlink="http://www.w3.org/1999/xlink"
-                                                                    width="24px" height="24px" viewBox="0 0 24 24"
-                                                                    version="1.1">
-                                                                    <g stroke="none" stroke-width="1" fill="none"
-                                                                        fill-rule="evenodd">
-                                                                        <polygon points="0 0 24 0 24 24 0 24" />
-                                                                        <path
-                                                                            d="M18,8 L16,8 C15.4477153,8 15,7.55228475 15,7 C15,6.44771525 15.4477153,6 16,6 L18,6 L18,4 C18,3.44771525 18.4477153,3 19,3 C19.5522847,3 20,3.44771525 20,4 L20,6 L22,6 C22.5522847,6 23,6.44771525 23,7 C23,7.55228475 22.5522847,8 22,8 L20,8 L20,10 C20,10.5522847 19.5522847,11 19,11 C18.4477153,11 18,10.5522847 18,10 L18,8 Z M9,11 C6.790861,11 5,9.209139 5,7 C5,4.790861 6.790861,3 9,3 C11.209139,3 13,4.790861 13,7 C13,9.209139 11.209139,11 9,11 Z"
-                                                                            fill="#000000" fill-rule="nonzero"
-                                                                            opacity="0.3" />
-                                                                        <path
-                                                                            d="M0.00065168429,20.1992055 C0.388258525,15.4265159 4.26191235,13 8.98334134,13 C13.7712164,13 17.7048837,15.2931929 17.9979143,20.2 C18.0095879,20.3954741 17.9979143,21 17.2466999,21 C13.541124,21 8.03472472,21 0.727502227,21 C0.476712155,21 -0.0204617505,20.45918 0.00065168429,20.1992055 Z"
-                                                                            fill="#000000" fill-rule="nonzero" />
-                                                                    </g>
-                                                                </svg>
-                                                            </span> Add Jobs</button>
-                                                    </a>
-                                                    <!--end::Add Requisitions-->
-                                                @endif
-                                            </div>
-                                            <!--end::Toolbar-->
-                                        </div>
-                                    </div>
-                                    <!--end::Actions-->
+                        <!-- 1. Top Header Card with Dynamic Search Bar at Right Corner -->
+                        <div class="cd-jobs-header-card">
+                            <div class="cd-jobs-header-left">
+                                <div class="cd-jobs-header-icon">
+                                    <i class="fas fa-briefcase"></i>
                                 </div>
-                                <!--end::All Req. header-->
-                                <!--begin::All Req. Content-->
-                                <div class="card-body px-0 py-4">
-                                    @if (in_array('view_jobs', $userPermissions))
-                                        <div class="jobx">
-                                            <div class="table-card">
-                                                <div class="table-header">
-                                                    <div class="th">Job Details</div>
-                                                    <div class="th">Experience</div>
-                                                    <div class="th">Hiring &amp; Location</div>
-                                                    <div class="th">Hiring Manager</div>
-                                                    <div class="th"><i class="fa fa-users me-1"></i> Team</div>
-                                                    <div class="th"><i class="fa fa-handshake me-1"></i> Agency</div>
-                                                    <div class="th">Hiring Pipeline <i class="fas fa-info-circle ms-1" style="opacity:.4;font-size:10px;"></i></div>
-                                                </div>
-                                                <div id="clientJobsListajax"></div>
-                                            </div>
-                                        </div>
-                                        <div id="paginationclientjobs" class="mt-3"></div>
-                                    @endif
+                                <div>
+                                    <div class="cd-jobs-header-title">Jobs</div>
+                                    <div class="cd-jobs-header-sub">Roles open with this client.</div>
                                 </div>
-                                <!--end::All Req. Content-->
                             </div>
-                            <!--end::All Req.-->
-                            <!--end::Client Req.-->
-                            <div class="tab-pane fade" id="client-requisitions" role="tabpanel">
-                                <!--begin::Client Req. header-->
-                                <div class="card-header cursor-pointer px-0">
-                                    <!--begin::Card title-->
-                                    <div class="card-title m-0">
-                                        <h3 class="fw-bolder m-0">HCL Jobs</h3>
-                                    </div>
-                                    <!--end::Card title-->
+                            <div class="cd-jobs-header-right">
+                                <div class="cd-jobs-search-subcard">
+                                    <i class="fas fa-search"></i>
+                                    <input type="text" id="inputJobSearch" name="inputJobSearch" placeholder="Search jobs by title, skills, ID..." autocomplete="off">
+                                    <button type="button" class="cd-jobs-search-clear" id="btnJobSearchClear" style="display: none;" title="Clear search">
+                                        <i class="fas fa-times"></i>
+                                    </button>
                                 </div>
-                                <!--end::Client Req. header-->
-                                <!--begin::Client Req. Content-->
-                                <div class="card-body px-0 py-7">
-                                    <!--begin:Table-->
-                                    <table class="table align-middle table-row-dashed fs-6 gy-5" id="kt_table_users">
-                                        <!--begin::Table head-->
-                                        <thead>
-                                            <!--begin::Table row-->
-                                            <tr class="fw-bolder text-muted">
-                                                <th class="w-10px pe-0">
-                                                    <div
-                                                        class="form-check form-check-sm form-check-custom form-check-solid me-3">
-                                                        <input class="form-check-input" type="checkbox"
-                                                            data-kt-check="true"
-                                                            data-kt-check-target="#kt_table_users .form-check-input2"
-                                                            value="1" />
-                                                    </div>
-                                                </th>
-                                                <th class="">Jobs</th>
-                                                <th class="">Exp.</th>
-                                                <th class="">Salary</th>
-                                                <th class="">Location</th>
-                                                <th class="">Status</th>
-                                                <th class="">Date</th>
-                                                <th class="">HM | CP</th>
-                                                <th class="">S.Partners</th>
-                                                <th class="">TOT</th>
-                                                <th class="">SOU</th>
-                                                <th class="">SCR</th>
-                                                <th class="">EVA</th>
-                                                <th class="">NEO</th>
-                                                <th class="">OFF</th>
-                                                <th class="">JOI</th>
-                                                <th class="">REJ</th>
-                                            </tr>
-                                            <!--end::Table row-->
-                                        </thead>
-                                        <!--end::Table head-->
-                                        <!--begin::Table body-->
-                                        <tbody class="text-gray-600 fw-bold">
-                                            <!--begin::Table row-->
-                                            <tr class="">
-                                                <!--begin::Checkbox-->
-                                                <td class="">
-                                                    <div
-                                                        class="form-check form-check-sm form-check-custom form-check-solid">
-                                                        <input class="form-check-input form-check-input2"
-                                                            type="checkbox" value="1" />
-                                                    </div>
-                                                </td>
-                                                <!--end::Checkbox-->
-                                                <!--begin::Requisitions=-->
-                                                <td class="d-flex align-items-center border-0"><!--begin:: Avatar -->
-                                                    <div
-                                                        class="symbol symbol-circle symbol-40px overflow-hidden me-2 border-radius-5">
-                                                        <a href="javascript:void(0);">
-                                                            <div
-                                                                class="symbol-label fs-3 bg-light-warning text-warning border-radius-5">
-                                                                U</div>
-                                                        </a>
-                                                    </div>
-                                                    <!--end::Avatar-->
-                                                    <!--begin::User details-->
-                                                    <div class="d-flex flex-column"> <a href="javascript:void(0);"
-                                                            class="text-dark fw-bolder text-hover-primary fs-6">UI/UX
-                                                            Designer</a> <a href="javascript:void(0);"
-                                                            class="fw-bold text-muted d-block fs-7 text-hover-primary">Wipro</a>
-                                                    </div>
-                                                    <!--begin::User details-->
-                                                </td>
-                                                <!--end::Requisitions-->
-                                                <!--begin::Exp.-->
-                                                <td class="">
-                                                    <div class="d-flex flex-column">
-                                                         <span
-                                                            class="text-dark fw-bolder fs-6">22+</span> 
-                                                        <span
-                                                            class="text-muted fw-bold text-muted d-block fs-7">18+</span>
-                                                    </div>
-                                                </td>
-                                                <!--end::Exp.-->
-                                                <!--begin::Salary-->
-                                                <td class="">
-                                                    <div class="d-flex flex-column"> 
-                                                        <span
-                                                            class="text-dark fw-bolder fs-6">50 LPA</span> 
-                                                            <span
-                                                            class="fw-bold d-block fs-7">30 LPA</span> 
-                                                    </div>
-                                                </td>
-                                                <!--end::Salary-->
-                                                <!--begin::Location-->
-                                                <td class="">
-                                                    <div class="d-flex flex-column"> 
-                                                        <span
-                                                            class="text-dark fw-bolder fs-6">Gurgaon</span>
-                                                        <div class="d-flex align-items-center"> <span
-                                                                class="fw-bold text-muted d-block fs-7">Haryana</span>
-                                                            &nbsp;|&nbsp; <span
-                                                                class="fw-bold text-muted d-block fs-7">INDIA</span>
-                                                            <div> </div>
-                                                        </div>
-                                                    </div>
-                                                </td>
-                                                <!--end::Location-->
-                                                <!--begin::Status | Requisition ID-->
-                                                <td class="">
-                                                    <div class="d-flex flex-column"> <a href="javascript:void(0);"
-                                                            class="fs-6 hold-bg text-hover-warning">Hold</a> <span
-                                                            class="fw-bold text-muted d-block fs-7">R2</span> 
-                                                    </div>
-                                                </td>
-                                                <!--end::Status | Requisition ID-->
-                                                <!--begin::Date | Openings-->
-                                                <td class="">
-                                                    <div class="d-flex flex-column">
-                                                         <span
-                                                            class="text-dark fw-bolder fs-6">28-Apr-2021</span> <span
-                                                            class="text-muted fw-bold d-block fs-7">774</span> 
-                                                    </div>
-                                                </td>
-                                                <!--end::Date | Openings-->
-                                                <!--begin::Hiring Manager | Contact Person-->
-                                                <td class="">
-                                                    <div class="d-flex flex-column">
-                                                        <div class="symbol-group symbol-hover">
-                                                            <div class="symbol symbol-30 symbol-circle"
-                                                                data-bs-toggle="tooltip" data-bs-placement="top"
-                                                                title="Pawan"> <img alt="Pic"
-                                                                    src="https://preview.keenthemes.com//metronic/theme/html/demo1/dist/assets/media/users/300_4.jpg">
-                                                            </div>
-                                                            <div class="symbol symbol-30 symbol-circle symbol-light"
-                                                                data-bs-toggle="tooltip" data-bs-placement="top"
-                                                                title=""
-                                                                data-original-title="More users list.."> <span
-                                                                    class="symbol-label font-weight-bold">1+</span>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-
-                                                </td>
-
-                                                <!--end::Hiring Manager | Contact Person-->
-                                                <!--begin::Staffing Partners-->
-                                                <td class="">
-                                                    <div class="d-flex flex-column">
-                                                        <div class="symbol-group symbol-hover">
-                                                            <div class="symbol symbol-30 symbol-circle" data-bs-toggle="tooltip"
-                                                                data-bs-placement="top" title="" data-original-title="Pradeep">
-                                                                <img alt="Pic"
-                                                                    src="https://preview.keenthemes.com//metronic/theme/html/demo1/dist/assets/media/users/300_23.jpg">
-                                                            </div>
-                                                            <div class="symbol symbol-30 symbol-circle" data-bs-toggle="tooltip"
-                                                                data-bs-placement="top" title="" data-original-title="Abinesh">
-                                                                <img alt="Pic"
-                                                                    src="https://preview.keenthemes.com//metronic/theme/html/demo1/dist/assets/media/users/300_24.jpg">
-                                                            </div>
-                                                            <div class="symbol symbol-30 symbol-circle symbol-light"
-                                                                data-bs-toggle="tooltip" data-bs-placement="top" title=""
-                                                                data-original-title="More users list.."> <span
-                                                                    class="symbol-label font-weight-bold">2+</span> </div>
-                                                        </div>
-                                                    </div>
-                                                </td>
-                                                <!--end::Staffing Partners-->
-                                                <!--begin::TOT-->
-                                                <td class="">
-                                                    <div class="d-flex flex-column"> <a href="javascript:void(0);"
-                                                            class="text-dark fw-bolder fs-6 text-hover-primary">65</a> <a
-                                                            href="javascript:void(0);"
-                                                            class="text-muted fw-bold d-block fs-7 text-hover-primary">10</a>
-                                                    </div>
-                                                </td>
-                                                <!--end::TOT-->
-                                                <!--begin::SOU-->
-                                                <td class="">
-                                                    <div class="d-flex flex-column"> <a href="javascript:void(0);"
-                                                            class="text-dark fw-bolder fs-6 text-hover-primary">0</a> 
-                                                    </div>
-                                                </td>
-                                                <!--end::SOU-->
-                                                <!--begin::SCR-->
-                                                <td class="">
-                                                    <div class="d-flex flex-column"> <a href="javascript:void(0);"
-                                                            class="text-dark fw-bolder fs-6 text-hover-primary">23</a> 
-                                                    </div>
-                                                </td>
-                                                <!--end::SCR-->
-                                                <!--begin::EVA-->
-                                                <td class="">
-                                                    <div class="d-flex flex-column"> <a href="javascript:void(0);"
-                                                            class="text-dark fw-bolder fs-6 text-hover-primary">0</a> 
-                                                    </div>
-                                                </td>
-                                                <!--end::EVA-->
-                                                <!--begin::NEO-->
-                                                <td class="">
-                                                    <div class="d-flex flex-column"> <a href="javascript:void(0);"
-                                                            class="text-dark fw-bolder fs-6 text-hover-primary">24</a> 
-                                                    </div>
-                                                </td>
-                                                <!--end::NEO-->
-                                                <!--begin::OFF-->
-                                                <td class="">
-                                                    <div class="d-flex flex-column"> <a href="javascript:void(0);"
-                                                            class="text-dark fw-bolder fs-6 text-hover-primary">83</a> 
-                                                    </div>
-                                                </td>
-                                                <!--end::OFF-->
-                                                <!--begin::JOI-->
-                                                <td class="">
-                                                    <div class="d-flex flex-column"> <a href="javascript:void(0);"
-                                                            class="text-dark fw-bolder fs-6 text-hover-primary">49</a> 
-                                                    </div>
-                                                </td>
-                                                <!--end::JOI-->
-                                                <!--begin::REJ-->
-                                                <td class="">
-                                                    <div class="d-flex flex-column"> <a href="javascript:void(0);"
-                                                            class="text-dark fw-bolder fs-6 text-hover-primary">0</a> 
-                                                    </div>
-                                                </td>
-                                                <!--end::REJ-->
-                                            </tr>
-                                         <!--end::Table row-->
-                                        </tbody>
-
-                                     <!--end::Table body-->
-                                    </table>
-                                    <!--end::Table-->
-                                </div>
-                             <!--end::Client Req. Content-->
+                                @if (in_array('add_jobs', $userPermissions))
+                                    <a href="{{ url('service_company/jobs/curstomcreate/' . $client->id) }}" class="btn btn-sm btn-primary fw-bold cd-jobs-add-btn">
+                                        <i class="fas fa-plus me-1"></i> Add Jobs
+                                    </a>
+                                @endif
                             </div>
-                        <!--end::Client Req.-->
-                        <!--begin::Custom Req.-->
-                        <div class="tab-pane fade" id="custom-requisitions" role="tabpanel">
-                            <!--begin::Custom Req. header-->
-                            <div class="card-header cursor-pointer px-0">
-                                <!--begin::Card title-->
-                                <div class="card-title m-0">
-                                    <h3 class="fw-bolder m-0">Custom Jobs</h3>
-                                </div>
-                                <!--end::Card title-->
-                                <!--begin::Actions-->
-                                <div class="d-flex align-items-center py-1">
-                                    <div class="card-toolbar">
-                                        <!--begin::Toolbar-->
-                                        <div class="d-flex justify-content-end" data-kt-user-table-toolbar="base">
-                                            <!--begin::Add Requisitions-->
-                                            <a href="{{ url('service_company/jobs/create') }}">
-                                                <button type="button"
-                                                    class="btn btn-sm btn-flex btn-primary btn-active-primary fw-bolder me-3">
-                                                    <!--begin::Svg Icon-->
-                                                    <span class="svg-icon svg-icon-primary svg-icon-1x">
-                                                        <svg xmlns="http://www.w3.org/2000/svg"
-                                                            xmlns:xlink="http://www.w3.org/1999/xlink" width="24px"
-                                                            height="24px" viewBox="0 0 24 24" version="1.1">
-                                                            <g stroke="none" stroke-width="1" fill="none"
-                                                                fill-rule="evenodd">
-                                                                <polygon points="0 0 24 0 24 24 0 24" />
-                                                                <path
-                                                                    d="M18,8 L16,8 C15.4477153,8 15,7.55228475 15,7 C15,6.44771525 15.4477153,6 16,6 L18,6 L18,4 C18,3.44771525 18.4477153,3 19,3 C19.5522847,3 20,3.44771525 20,4 L20,6 L22,6 C22.5522847,6 23,6.44771525 23,7 C23,7.55228475 22.5522847,8 22,8 L20,8 L20,10 C20,10.5522847 19.5522847,11 19,11 C18.4477153,11 18,10.5522847 18,10 L18,8 Z M9,11 C6.790861,11 5,9.209139 5,7 C5,4.790861 6.790861,3 9,3 C11.209139,3 13,4.790861 13,7 C13,9.209139 11.209139,11 9,11 Z"
-                                                                    fill="#000000" fill-rule="nonzero"
-                                                                    opacity="0.3" />
-                                                                <path
-                                                                    d="M0.00065168429,20.1992055 C0.388258525,15.4265159 4.26191235,13 8.98334134,13 C13.7712164,13 17.7048837,15.2931929 17.9979143,20.2 C18.0095879,20.3954741 17.9979143,21 17.2466999,21 C13.541124,21 8.03472472,21 0.727502227,21 C0.476712155,21 -0.0204617505,20.45918 0.00065168429,20.1992055 Z"
-                                                                    fill="#000000" fill-rule="nonzero" />
-                                                            </g>
-                                                        </svg>
-                                                    </span>
-                                                    <!--end::Svg Icon-->
-                                                    Add Jobs </button>
-                                            </a>
-                                            <!--end::Add Requisitions-->
-                                        </div>
-                                        <!--end::Toolbar-->
-                                    </div>
-                                </div>
-                                <!--end::Actions-->
-                            </div>
-                            <!--end::Custom Req. header-->
-                            <!--begin::Custom Req. Content-->
-                            <div class="card-body px-0 py-7">
-                                <!--begin:Table-->
-                                <table class="table align-middle table-row-dashed fs-6 gy-5" id="kt_table_users">
-                                    <!--begin::Table head-->
-                                    <thead>
-                                        <!--begin::Table row-->
-                                        <tr class="fw-bolder text-muted">
-                                            <th class="w-10px pe-0">
-                                                <div
-                                                    class="form-check form-check-sm form-check-custom form-check-solid me-3">
-                                                    <input class="form-check-input" type="checkbox"
-                                                        data-kt-check="true"
-                                                        data-kt-check-target="#kt_table_users .form-check-input3"
-                                                        value="1" />
-                                                </div>
-                                            </th>
-                                            <th class="">Jobs</th>
-                                            <th class="">Exp.</th>
-                                            <th class="">Salary</th>
-                                            <th class="">Location</th>
-                                            <th class="">Status</th>
-                                            <th class="">Date</th>
-                                            <th class="">HM | CP</th>
-                                            <th class="">S.Partners</th>
-                                            <th class="">TOT</th>
-                                            <th class="">SOU</th>
-                                            <th class="">SCR</th>
-                                            <th class="">EVA</th>
-                                            <th class="">NEO</th>
-                                            <th class="">OFF</th>
-                                            <th class="">JOI</th>
-                                            <th class="">REJ</th>
-                                        </tr>
-                                        <!--end::Table row-->
-                                    </thead>
-                                    <!--end::Table head-->
-                                    <!--begin::Table body-->
-                                    <tbody class="text-gray-600 fw-bold">
-                                        <!--begin::Table row-->
-                                        <tr class="">
-                                            <!--begin::Checkbox-->
-                                            <td class="">
-                                                <div
-                                                    class="form-check form-check-sm form-check-custom form-check-solid">
-                                                    <input class="form-check-input form-check-input3" type="checkbox"
-                                                        value="1" />
-                                                </div>
-                                            </td>
-                                            <!--end::Checkbox-->
-                                            <!--begin::Requisitions=-->
-                                            <td class="d-flex align-items-center border-0"><!--begin:: Avatar -->
-                                                <div
-                                                    class="symbol symbol-circle symbol-40px overflow-hidden me-2  border-radius-5">
-                                                    <a href="javascript:void(0);">
-                                                        <div class="symbol-label border-radius-5"> <img
-                                                                src="https://www.hcltech.com/sites/default/files/styles/large/public/images/guideline_based_vectors-square.png?itok=KEUChzF3"
-                                                                alt="Company Logo" class="border-radius-5 w-100">
-                                                        </div>
-                                                    </a>
-                                                </div>
-                                                <!--end::Avatar-->
-                                                <!--begin::User details-->
-                                                <div class="d-flex flex-column"> <a href="javascript:void(0);"
-                                                        class="text-dark fw-bolder text-hover-primary fs-6">Frontend
-                                                        Developer</a> <a href="javascript:void(0);"
-                                                        class="fw-bold text-muted d-block fs-7 text-hover-primary">HCl
-                                                        Technologies</a> </div>
-                                                <!--begin::User details-->
-                                            </td>
-                                            <!--end::Requisitions-->
-                                            <!--begin::Exp.-->
-                                            <td class="">
-                                                <div class="d-flex flex-column"> <span
-                                                        class="text-dark fw-bolder fs-6">30+</span> <span
-                                                        class="text-muted fw-bold text-muted d-block fs-7">27+</span>
-                                                </div>
-                                            </td>
-                                            <!--end::Exp.-->
-                                            <!--begin::Salary-->
-                                            <td class="">
-                                                <div class="d-flex flex-column"> <span
-                                                        class="text-dark fw-bolder fs-6">70 LPA</span> <span
-                                                        class="fw-bold d-block fs-7">67 LPA</span> </div>
-                                            </td>
-                                            <!--end::Salary-->
-                                            <!--begin::Location-->
-                                            <td class="">
-                                                <div class="d-flex flex-column">
-                                                    <span class="text-dark fw-bolder fs-6">Noida</span>
-                                                    <div class="d-flex align-items-center">
-                                                        <span class="fw-bold text-muted d-block fs-7">U.P</span>
-                                                        &nbsp;|&nbsp; <span
-                                                            class="fw-bold text-muted d-block fs-7">INDIA</span>
-                                                        <div> </div>
-                                            </td>
-                                            <!--end::Location-->
-                                            <!--begin::Status | Requisition ID-->
-                                            <td class="">
-                                                <div class="d-flex flex-column"> <a href="javascript:void(0);"
-                                                        class="fs-6 closed-bg text-hover-danger">Closed</a> <span
-                                                        class="fw-bold text-muted d-block fs-7">R3-Custom</span> </div>
-                                            </td>
-                                            <!--end::Status | Requisition ID-->
-                                            <!--begin::Date | Openings-->
-                                            <td class="">
-                                                <div class="d-flex flex-column"> <span
-                                                        class="text-dark fw-bolder fs-6">29-Aug-2021</span> <span
-                                                        class="text-muted fw-bold d-block fs-7">33</span> </div>
-                                            </td>
-                                            <!--end::Date | Openings-->
-                                            <!--begin::Hiring Manager | Contact Person-->
-                                            <td class="">
-                                                <div class="d-flex flex-column">
-                                                    <div class="symbol-group symbol-hover">
-                                                        <div class="symbol symbol-30 symbol-circle"
-                                                            data-bs-toggle="tooltip" data-bs-placement="top"
-                                                            title="Priyanka"> <img alt="Pic"
-                                                                src="https://preview.keenthemes.com//metronic/theme/html/demo1/dist/assets/media/users/300_20.jpg">
-                                                        </div>
-                                                        <div class="symbol symbol-30 symbol-circle symbol-light"
-                                                            data-bs-toggle="tooltip" data-bs-placement="top"
-                                                            title="" data-original-title="More users list..">
-                                                            <span class="symbol-label font-weight-bold">1+</span>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </td>
-                                            <!--end::Hiring Manager | Contact Person-->
-                                            <!--begin::Staffing Partners-->
-                                            <td class="">
-                                                <div class="d-flex flex-column">
-                                                    <div class="symbol-group symbol-hover">
-                                                        <div class="symbol symbol-30 symbol-circle"
-                                                            data-bs-toggle="tooltip" data-bs-placement="top"
-                                                            title="" data-original-title="One"> <img
-                                                                alt="Pic"
-                                                                src="https://preview.keenthemes.com//metronic/theme/html/demo1/dist/assets/media/users/300_1.jpg">
-                                                        </div>
-                                                        <div class="symbol symbol-30 symbol-circle"
-                                                            data-bs-toggle="tooltip" data-bs-placement="top"
-                                                            title="" data-original-title="Two"> <img
-                                                                alt="Pic"
-                                                                src="https://preview.keenthemes.com//metronic/theme/html/demo1/dist/assets/media/users/300_2.jpg">
-                                                        </div>
-                                                        <div class="symbol symbol-30 symbol-circle symbol-light"
-                                                            data-bs-toggle="tooltip" data-bs-placement="top"
-                                                            title="" data-original-title="More users list..">
-                                                            <span class="symbol-label font-weight-bold">2+</span>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </td>
-                                            <!--end::Staffing Partners-->
-                                            <!--begin::TOT-->
-                                            <td class="">
-                                                <div class="d-flex flex-column"> <a href="javascript:void(0);"
-                                                        class="text-dark fw-bolder fs-6 text-hover-primary">425</a> <a
-                                                        href="javascript:void(0);"
-                                                        class="text-muted fw-bold d-block fs-7 text-hover-primary">64</a>
-                                                </div>
-                                            </td>
-                                            <!--end::TOT-->
-                                            <!--begin::SOU-->
-                                            <td class="">
-                                                <div class="d-flex flex-column"> <a href="javascript:void(0);"
-                                                        class="text-dark fw-bolder fs-6 text-hover-primary">345</a>
-                                                </div>
-                                            </td>
-                                            <!--end::SOU-->
-                                            <!--begin::SCR-->
-                                            <td class="">
-                                                <div class="d-flex flex-column"> <a href="javascript:void(0);"
-                                                        class="text-dark fw-bolder fs-6 text-hover-primary">0</a>
-                                                </div>
-                                            </td>
-                                            <!--end::SCR-->
-                                            <!--begin::EVA-->
-                                            <td class="">
-                                                <div class="d-flex flex-column"> <a href="javascript:void(0);"
-                                                        class="text-dark fw-bolder fs-6 text-hover-primary">94</a>
-                                                </div>
-                                            </td>
-                                            <!--end::EVA-->
-                                            <!--begin::NEO-->
-                                            <td class="">
-                                                <div class="d-flex flex-column"> <a href="javascript:void(0);"
-                                                        class="text-dark fw-bolder fs-6 text-hover-primary">03</a>
-                                                </div>
-                                            </td>
-                                            <!--end::NEO-->
-                                            <!--begin::OFF-->
-                                            <td class="">
-                                                <div class="d-flex flex-column"> <a href="javascript:void(0);"
-                                                        class="text-dark fw-bolder fs-6 text-hover-primary">0</a>
-                                                </div>
-                                            </td>
-                                            <!--end::OFF-->
-                                            <!--begin::JOI-->
-                                            <td class="">
-                                                <div class="d-flex flex-column"> <a href="javascript:void(0);"
-                                                        class="text-dark fw-bolder fs-6 text-hover-primary">45</a>
-                                                </div>
-                                            </td>
-                                            <!--end::JOI-->
-                                            <!--begin::REJ-->
-                                            <td class="">
-                                                <div class="d-flex flex-column"> <a href="javascript:void(0);"
-                                                        class="text-dark fw-bolder fs-6 text-hover-primary">540</a>
-                                                </div>
-                                            </td>
-                                            <!--end::REJ-->
-                                        </tr>
-                                        <!--end::Table row-->
-                                    </tbody>
-                                    <!--end::Table body-->
-                                </table>
-                                <!--end::Table-->
-                            </div>
-                            <!--end::Custom Req. Content-->
                         </div>
-                        <!--end::Custom Req.-->
-                        <div class="tab-pane fade" id="jobs" role="tabpanel">Jobs - Content</div>
+                        <div class="cd-tabwrap">
+                            @if (in_array('view_jobs', $userPermissions))
+                                <div class="jobx">
+                                    <!-- Tier 2: Sub-Tabs in Card-Based Design with White Background -->
+                                    <div class="cd-jobs-tabs-card">
+                                        <div class="cd-jobs-tabs-group">
+                                            <button type="button"
+                                                    class="cd-jobs-tab-btn js-job-filter-btn active"
+                                                    data-status="all">
+                                                <span>All Jobs</span>
+                                                <span class="cd-jobs-tab-badge" id="filterCountAll">{{ $kpiActive ?? 0 }}</span>
+                                            </button>
+                                            <button type="button"
+                                                    class="cd-jobs-tab-btn js-job-filter-btn"
+                                                    data-status="hiring">
+                                                <span>Hiring</span>
+                                                <span class="cd-jobs-tab-badge badge-hiring" id="filterCountHiring">{{ $kpiActive ?? 0 }}</span>
+                                            </button>
+                                            <button type="button"
+                                                    class="cd-jobs-tab-btn js-job-filter-btn"
+                                                    data-status="hold">
+                                                <span>On Hold</span>
+                                                <span class="cd-jobs-tab-badge badge-hold" id="filterCountHold">0</span>
+                                            </button>
+                                            <button type="button"
+                                                    class="cd-jobs-tab-btn js-job-filter-btn"
+                                                    data-status="closed">
+                                                <span>Closed</span>
+                                                <span class="cd-jobs-tab-badge badge-closed" id="filterCountClosed">0</span>
+                                            </button>
+                                            <button type="button"
+                                                    class="cd-jobs-tab-btn js-job-filter-btn"
+                                                    data-status="inactive">
+                                                <span>Inactive</span>
+                                                <span class="cd-jobs-tab-badge badge-inactive" id="filterCountInactive">0</span>
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    <!-- Tier 3: Card-Based Jobs Stream -->
+                                    <div id="clientJobsListajax" class="cd-jobs-stream"></div>
+                                </div>
+                                <div id="paginationclientjobs" class="mt-3"></div>
+                            @else
+                                <div class="cd-empty-card p-5 text-center text-muted">
+                                    <i class="fas fa-lock fs-2 mb-2 text-muted"></i>
+                                    <div>You do not have permission to view jobs for this client.</div>
+                                </div>
+                            @endif
                         </div>
-                    <!--end::Requisitions Content-->
-                        </div></div>
-                </div>
+                    </div>
                 <!--end::Requisitions Content-->
             </div>
         </div>
@@ -3688,41 +5807,493 @@ use Carbon\Carbon;
 </script>
 
 <script>
-    function initContactsDataTable() {
-        if ($.fn.DataTable.isDataTable('#contactList')) {
-            return;
-        }
-        var table = $('#contactList').dataTable({
-            responsive: true,
-            processing: true,
-            serverSide: true,
-            destroy: true,
-            ordering: false, //disable ordering			
-            "bLengthChange": false, //thought this line could hide the LengthMenu
-            sDom: 'lrtip',
-            oLanguage: {
-                sLengthMenu: "_MENU_",
-            },
-            ajax: {
-                'url': '{!! route('service_company.clients.contactdata') !!}?clientId=' + {{ @$client->id }},
-                "data": function(d) {
-                    d.search = $('#contactSearchInput').val() || $('#inputSearch').val()
+    /**
+     * ── InternalClientContactsManager (Client-First RAM & Card Stream Engine) ──
+     * God-Level Modern Card + Sub-Card Enterprise Implementation.
+     * 100% Client-First Local Filtering, 300ms Debounce, Copy Actions, Zero Horizontal Overflow.
+     */
+    window.InternalClientContactsManager = {
+        clientId: {{ (int) @$client->id }},
+        companyId: {{ (int) auth()->user()->company_id }},
+        clientName: '{{ addslashes($detailName ?? @$client->company_name ?? "Internal Client") }}',
+        allContacts: [],
+        filteredContacts: [],
+        activeFilter: 'all',
+        searchTerm: '',
+        searchDebounceTimer: null,
+        isInitialized: false,
+        isLoading: false,
+
+        avatarPalette: ['#2563eb', '#059669', '#7c3aed', '#d97706', '#db2777', '#0284c7', '#4f46e5', '#0d9488', '#ea580c'],
+
+        init: function(clientId) {
+            if (clientId) this.clientId = clientId;
+            if (!this.isInitialized) {
+                this.bindEvents();
+                this.isInitialized = true;
+            }
+            this.fetch();
+        },
+
+        bindEvents: function() {
+            var self = this;
+
+            // 1. Debounced live search
+            $(document).off('input', '#cdContactSearchInputInternal');
+            $(document).on('input', '#cdContactSearchInputInternal', function() {
+                var val = $(this).val();
+                if (val && val.length > 0) {
+                    $('#cdContactSearchClearInternal').show();
+                } else {
+                    $('#cdContactSearchClearInternal').hide();
                 }
-            },
-            "drawCallback": function(settings) {
-                $('[data-toggle="tooltip1"]').tooltip();
-                $('[data-toggle="tooltip2"]').tooltip();
-            },
-            columns: [
-                { data: 'chkbox', name: 'chkbox', searchable: false, orderable: false, width: '40px' },
-                { data: 'Contact', name: 'Contact', searchable: false, orderable: false },
-                { data: 'Designation', name: 'Designation', searchable: false, orderable: false },
-                { data: 'Email', name: 'Email', searchable: false, orderable: false },
-                { data: 'Phone', name: 'Phone', searchable: false, orderable: false },
-                { data: 'Status', name: 'Status', searchable: false, orderable: false, width: '90px' }
-            ]
-        });
-        new $.fn.dataTable.FixedHeader(table);
+                clearTimeout(self.searchDebounceTimer);
+                self.searchDebounceTimer = setTimeout(function() {
+                    self.searchTerm = (val || '').trim().toLowerCase();
+                    self.filterAndRender();
+                }, 300);
+            });
+
+            // 2. Interactive clear search button
+            $(document).off('click', '#cdContactSearchClearInternal');
+            $(document).on('click', '#cdContactSearchClearInternal', function() {
+                $('#cdContactSearchInputInternal').val('');
+                $(this).hide();
+                self.searchTerm = '';
+                self.filterAndRender();
+            });
+
+            // 3. Reset filters & refresh button
+            $(document).off('click', '#cdContactResetBtnInternal, #cdContactClearFilterBtnInternal');
+            $(document).on('click', '#cdContactResetBtnInternal, #cdContactClearFilterBtnInternal', function() {
+                $('#cdContactSearchInputInternal').val('');
+                $('#cdContactSearchClearInternal').hide();
+                self.searchTerm = '';
+                self.activeFilter = 'all';
+                $('.cd-contact-subtab').removeClass('active');
+                $('#cdContactTabAllInternal').addClass('active');
+                self.fetch();
+            });
+
+            // 4. Sub-tab filter buttons
+            $(document).off('click', '.cd-contact-tabs-card .cd-contact-subtab');
+            $(document).on('click', '.cd-contact-tabs-card .cd-contact-subtab', function() {
+                var filter = $(this).data('filter') || 'all';
+                $('.cd-contact-tabs-card .cd-contact-subtab').removeClass('active');
+                $(this).addClass('active');
+                self.activeFilter = filter;
+                self.filterAndRender();
+            });
+
+            // 5. One-click copy with visual tooltip / checkmark
+            $(document).off('click', '.js-copy-data');
+            $(document).on('click', '.js-copy-data', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                var text = $(this).data('copy') || $(this).attr('data-copy');
+                if (!text) return;
+                var $btn = $(this);
+                var origHtml = $btn.html();
+
+                var showSuccess = function() {
+                    $btn.html('<i class="fas fa-check text-success" style="font-size:10px;"></i>');
+                    setTimeout(function() { $btn.html(origHtml); }, 1400);
+                };
+
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    navigator.clipboard.writeText(text).then(showSuccess).catch(function() {
+                        self.fallbackCopy(text, showSuccess);
+                    });
+                } else {
+                    self.fallbackCopy(text, showSuccess);
+                }
+            });
+
+            // 6. View Requisitions button: switch to #requisitions tab
+            $(document).off('click', '.js-contact-view-jobs');
+            $(document).on('click', '.js-contact-view-jobs', function(e) {
+                e.preventDefault();
+                $('a[href="#requisitions"]').tab('show');
+            });
+        },
+
+        fallbackCopy: function(text, cb) {
+            var textArea = document.createElement('textarea');
+            textArea.value = text;
+            textArea.style.position = 'fixed';
+            textArea.style.left = '-9999px';
+            document.body.appendChild(textArea);
+            textArea.focus();
+            textArea.select();
+            try {
+                document.execCommand('copy');
+                if (typeof cb === 'function') cb();
+            } catch (err) {}
+            document.body.removeChild(textArea);
+        },
+
+        fetch: function() {
+            var self = this;
+            this.isLoading = true;
+            $('#cdContactSkeletonLoaderInternal').show();
+            $('#cdContactCardsStreamInternal').hide();
+            $('#cdContactEmptyStateInternal').hide();
+
+            var clientId = this.clientId;
+            $.ajax({
+                url: '{!! route('service_company.clients.contactdata') !!}?clientId=' + clientId,
+                type: 'GET',
+                dataType: 'json',
+                success: function(res) {
+                    self.isLoading = false;
+                    $('#cdContactSkeletonLoaderInternal').hide();
+                    $('#cdContactCardsStreamInternal').show();
+
+                    var list = (res && res.data && Array.isArray(res.data)) ? res.data : [];
+                    self.allContacts = list;
+                    self.updateCounts(list);
+                    self.filterAndRender();
+                },
+                error: function() {
+                    self.isLoading = false;
+                    $('#cdContactSkeletonLoaderInternal').hide();
+                    $('#cdContactCardsStreamInternal').show();
+                    self.allContacts = [];
+                    self.filterAndRender();
+                }
+            });
+        },
+
+        updateCounts: function(list) {
+            var total = list.length;
+            var primaryCount = 0;
+            var managerCount = 0;
+            var hrCount = 0;
+            var activeCount = 0;
+
+            var managerKeywords = ['manager', 'lead', 'head', 'vp', 'director', 'chief', 'principal', 'president', 'officer', 'lead'];
+            var hrKeywords = ['hr', 'recruiter', 'recruiting', 'talent', 'sourcer', 'coordinator', 'people', 'admin'];
+
+            list.forEach(function(item, idx) {
+                var desig = (item.contact_person_designation || item.Designation || item.display_name || '').toLowerCase();
+                var isPrimary = (item.is_primary == 1) || (idx === 0);
+                if (isPrimary) primaryCount++;
+
+                var isMgr = managerKeywords.some(function(k) { return desig.indexOf(k) !== -1; });
+                if (isMgr) managerCount++;
+
+                var isHr = hrKeywords.some(function(k) { return desig.indexOf(k) !== -1; });
+                if (isHr) hrCount++;
+
+                var status = (item.status || item.Status || 'active').toLowerCase();
+                if (status.indexOf('active') !== -1) activeCount++;
+            });
+
+            $('#cdContactCountTextInternal').text(total);
+            $('#contactTabCountAllInternal').text(total);
+            $('#contactTabCountPrimaryInternal').text(primaryCount);
+            $('#contactTabCountManagerInternal').text(managerCount);
+            $('#contactTabCountHrInternal').text(hrCount);
+            $('#contactTabCountActiveInternal').text(activeCount);
+
+            // Update main tab badge
+            var $navBadge = $('#cdContactNavBadgeInternal');
+            if ($navBadge.length) {
+                $navBadge.text(total);
+                if (total > 0) $navBadge.show(); else $navBadge.hide();
+            }
+        },
+
+        filterAndRender: function() {
+            var self = this;
+            var list = this.allContacts.slice();
+
+            var managerKeywords = ['manager', 'lead', 'head', 'vp', 'director', 'chief', 'principal', 'president', 'officer'];
+            var hrKeywords = ['hr', 'recruiter', 'recruiting', 'talent', 'sourcer', 'coordinator', 'people', 'admin'];
+
+            // 1. Sub-tab filter
+            if (this.activeFilter === 'primary') {
+                list = list.filter(function(item, idx) {
+                    return (item.is_primary == 1) || (idx === 0);
+                });
+            } else if (this.activeFilter === 'manager') {
+                list = list.filter(function(item) {
+                    var desig = (item.contact_person_designation || item.Designation || item.display_name || '').toLowerCase();
+                    return managerKeywords.some(function(k) { return desig.indexOf(k) !== -1; });
+                });
+            } else if (this.activeFilter === 'hr') {
+                list = list.filter(function(item) {
+                    var desig = (item.contact_person_designation || item.Designation || item.display_name || '').toLowerCase();
+                    return hrKeywords.some(function(k) { return desig.indexOf(k) !== -1; });
+                });
+            } else if (this.activeFilter === 'active') {
+                list = list.filter(function(item) {
+                    var status = (item.status || item.Status || 'active').toLowerCase();
+                    return status.indexOf('active') !== -1;
+                });
+            }
+
+            // 2. Search query filter
+            if (this.searchTerm) {
+                var q = this.searchTerm;
+                list = list.filter(function(item) {
+                    var name = (item.contact_person_name || item.name || '').toLowerCase();
+                    var desig = (item.contact_person_designation || item.Designation || item.display_name || '').toLowerCase();
+                    var email = (item.contact_person_email || item.email || '').toLowerCase();
+                    var phone = (item.clean_phone || item.contact_person_number || item.mobile || '').toLowerCase();
+                    var client = (item.client_name || self.clientName || '').toLowerCase();
+                    return name.indexOf(q) !== -1 || desig.indexOf(q) !== -1 || email.indexOf(q) !== -1 || phone.indexOf(q) !== -1 || client.indexOf(q) !== -1;
+                });
+            }
+
+            this.filteredContacts = list;
+
+            var $stream = $('#cdContactCardsStreamInternal');
+            var $empty = $('#cdContactEmptyStateInternal');
+
+            if (!list || list.length === 0) {
+                $stream.empty().hide();
+                $empty.show();
+                return;
+            }
+
+            $empty.hide();
+            var html = '';
+            list.forEach(function(item, idx) {
+                html += self.renderCard(item, idx);
+            });
+            $stream.html(html).show();
+        },
+
+        getInitials: function(name) {
+            if (!name) return 'CC';
+            var parts = name.trim().split(/\s+/);
+            if (parts.length === 1) return parts[0].substring(0, 2).toUpperCase();
+            return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+        },
+
+        getAvatarColor: function(name) {
+            var sum = 0;
+            var str = name || 'Internal Contact';
+            for (var i = 0; i < str.length; i++) {
+                sum += str.charCodeAt(i);
+            }
+            return this.avatarPalette[sum % this.avatarPalette.length];
+        },
+
+        renderCard: function(row, index) {
+            var self = this;
+            var cid = row.id || (index + 1);
+            var rawName = (row.contact_person_name || row.name || 'Client Contact').trim();
+            var initials = this.getInitials(rawName);
+            var avatarBg = this.getAvatarColor(rawName);
+            var rawDesig = (row.contact_person_designation || row.Designation || row.display_name || 'Key Stakeholder').trim();
+            var email = (row.contact_person_email || row.email || '').trim();
+            var phone = (row.clean_phone || (row.calling_code ? (row.calling_code + ' ' + (row.contact_person_number || '')) : (row.contact_person_number || ''))).trim();
+            var cleanPhoneForTel = phone.replace(/[^0-9+]/g, '');
+            var isPrimary = (row.is_primary == 1) || (index === 0);
+            var clientName = (row.client_name || this.clientName || 'Internal Client').trim();
+            var linkedJobs = parseInt(row.linked_jobs_count || 0, 10);
+            var createdFormatted = row.created_formatted || 'Active Member';
+            var statusStr = (row.status || 'active').toLowerCase();
+            var isActive = (statusStr.indexOf('active') !== -1);
+
+            // Sub-Card 1: Primary vs Secondary Badge
+            var primaryBadgeHtml = isPrimary
+                ? `<span class="cd-badge-primary-spoc"><i class="fas fa-star text-amber-500 me-1"></i>Primary SPOC</span>`
+                : `<span class="cd-badge-secondary-contact">Contact</span>`;
+
+            // Sub-Card 2: Communication Elements
+            var copyAllText = `Name: ${rawName} | Email: ${email || 'N/A'} | Phone: ${phone || 'N/A'} | Client: ${clientName}`;
+
+            var emailHtml = email
+                ? `<a href="mailto:${email}" class="cd-comm-link text-truncate" title="Send email to ${email}">${email}</a>`
+                : `<span class="text-muted" style="font-size:11px;">No email on file</span>`;
+
+            var emailCopyBtn = email
+                ? `<button type="button" class="cd-copy-btn js-copy-data" data-copy="${email}" title="Copy Email"><i class="far fa-copy"></i></button>`
+                : '';
+
+            var phoneHtml = phone
+                ? `<a href="tel:${cleanPhoneForTel}" class="cd-comm-link text-truncate" title="Call ${phone}">${phone}</a>`
+                : `<span class="text-muted" style="font-size:11px;">No phone on file</span>`;
+
+            var phoneCopyBtn = phone
+                ? `<button type="button" class="cd-copy-btn js-copy-data" data-copy="${phone}" title="Copy Phone"><i class="far fa-copy"></i></button>`
+                : '';
+
+            // Sub-Card 3: Role Scope Classification
+            var desigLower = rawDesig.toLowerCase();
+            var roleBadgeText = 'Account Coordinator';
+            if (desigLower.indexOf('director') !== -1 || desigLower.indexOf('vp') !== -1 || desigLower.indexOf('chief') !== -1) {
+                roleBadgeText = 'Executive SPOC';
+            } else if (desigLower.indexOf('manager') !== -1 || desigLower.indexOf('lead') !== -1 || desigLower.indexOf('head') !== -1) {
+                roleBadgeText = 'Hiring Authority';
+            } else if (desigLower.indexOf('hr') !== -1 || desigLower.indexOf('recruit') !== -1 || desigLower.indexOf('talent') !== -1) {
+                roleBadgeText = 'Talent Partner';
+            }
+
+            // Sub-Card 4: Linked Jobs
+            var jobsCountText = linkedJobs > 0 ? `<strong>${linkedJobs}</strong> Active Roles` : `Client Requisitions`;
+            var jobsBadgeText = linkedJobs > 0 ? `${linkedJobs} Roles` : 'Internal';
+
+            // Sub-Card 5: Status & Quick Actions
+            var statusPillHtml = isActive
+                ? `<span class="cd-contact-status-active"><i class="fas fa-circle"></i> Active</span>`
+                : `<span class="cd-contact-status-inactive"><i class="fas fa-circle"></i> Inactive</span>`;
+
+            var callBtnHtml = phone
+                ? `<a href="tel:${cleanPhoneForTel}" class="cd-contact-btn-call" title="Call ${rawName}"><i class="fas fa-phone-alt"></i> Call</a>`
+                : `<button type="button" class="cd-contact-btn-call disabled" style="opacity:0.4; pointer-events:none;"><i class="fas fa-phone-alt"></i> Call</button>`;
+
+            var mailBtnHtml = email
+                ? `<a href="mailto:${email}" class="cd-contact-btn-mail" title="Email ${rawName}"><i class="fas fa-envelope"></i> Email</a>`
+                : `<button type="button" class="cd-contact-btn-mail disabled" style="opacity:0.4; pointer-events:none;"><i class="fas fa-envelope"></i> Email</button>`;
+
+            var waPhoneClean = cleanPhoneForTel.replace('+', '');
+            var waBtnHtml = phone
+                ? `<a href="https://wa.me/${waPhoneClean}" target="_blank" class="cd-contact-btn-wa" title="WhatsApp ${rawName}"><i class="fab fa-whatsapp"></i></a>`
+                : '';
+
+            return `
+                <div class="cd-contact-card" data-contact-id="${cid}">
+                    <div class="cd-contact-card-grid">
+
+                        <!-- SUB-CARD 1: Contact Identity & Profile -->
+                        <div class="cd-contact-subcard cd-contact-subcard-profile">
+                            <div class="cd-contact-subcard-hdr">
+                                <span class="cd-contact-subcard-label">CONTACT PROFILE</span>
+                                ${primaryBadgeHtml}
+                            </div>
+                            <div class="cd-contact-subcard-body">
+                                <div class="cd-contact-profile-row">
+                                    <div class="cd-contact-avatar-box" style="background: ${avatarBg};">
+                                        ${initials}
+                                    </div>
+                                    <div class="cd-contact-profile-meta">
+                                        <span class="cd-contact-card-name text-truncate" title="${rawName}">${rawName}</span>
+                                        <span class="cd-contact-card-desig text-truncate" title="${rawDesig}">${rawDesig}</span>
+                                        <div class="d-flex align-items-center gap-1 mt-1">
+                                            <span class="text-muted" style="font-size: 10px; font-weight: 600;">#C-${cid}</span>
+                                            <span class="text-slate-300">•</span>
+                                            <span class="text-muted" style="font-size: 10px;">Internal Client</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- SUB-CARD 2: Direct Communication Channels -->
+                        <div class="cd-contact-subcard cd-contact-subcard-comm">
+                            <div class="cd-contact-subcard-hdr">
+                                <span class="cd-contact-subcard-label">COMMUNICATION</span>
+                                <button type="button" class="cd-copy-btn js-copy-data" data-copy="${copyAllText}" title="Copy email &amp; phone details">
+                                    <i class="far fa-clone"></i>
+                                </button>
+                            </div>
+                            <div class="cd-contact-subcard-body">
+                                <div class="cd-comm-item" title="${email}">
+                                    <i class="far fa-envelope text-primary"></i>
+                                    ${emailHtml}
+                                    ${emailCopyBtn}
+                                </div>
+                                <div class="cd-comm-item" title="${phone}">
+                                    <i class="fas fa-phone-alt text-success"></i>
+                                    ${phoneHtml}
+                                    ${phoneCopyBtn}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- SUB-CARD 3: Organization & Role Scope -->
+                        <div class="cd-contact-subcard cd-contact-subcard-org">
+                            <div class="cd-contact-subcard-hdr">
+                                <span class="cd-contact-subcard-label">CLIENT &amp; SCOPE</span>
+                                <span class="cd-org-role-badge text-truncate" title="${roleBadgeText}">
+                                    <i class="fas fa-user-shield me-1"></i>${roleBadgeText}
+                                </span>
+                            </div>
+                            <div class="cd-contact-subcard-body">
+                                <div class="cd-org-client text-truncate" title="${clientName}">
+                                    <i class="far fa-building text-slate-400"></i>
+                                    <span class="text-truncate">${clientName}</span>
+                                </div>
+                                <div class="d-flex align-items-center gap-1 mt-1">
+                                    <span class="badge badge-light-primary fw-bold" style="font-size:9.5px; padding:2px 6px;">
+                                        Authorized POC
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- SUB-CARD 4: Linked Jobs & Pipeline -->
+                        <div class="cd-contact-subcard cd-contact-subcard-jobs">
+                            <div class="cd-contact-subcard-hdr">
+                                <span class="cd-contact-subcard-label">REQUISITIONS</span>
+                                <span class="badge badge-light-info fw-bold" style="font-size:9.5px; padding:2px 5px;">
+                                    ${jobsBadgeText}
+                                </span>
+                            </div>
+                            <div class="cd-contact-subcard-body">
+                                <div class="cd-linked-jobs-stat text-truncate">
+                                    <i class="fas fa-briefcase text-info"></i>
+                                    <span>${jobsCountText}</span>
+                                </div>
+                                <div>
+                                    <a href="javascript:void(0);" class="cd-view-jobs-link js-contact-view-jobs" title="View client job requisitions">
+                                        View Jobs <i class="fas fa-arrow-right ms-1" style="font-size:8px;"></i>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- SUB-CARD 5: Status & Quick Reach Actions -->
+                        <div class="cd-contact-subcard cd-contact-subcard-actions">
+                            <div class="cd-contact-subcard-hdr">
+                                <span class="cd-contact-subcard-label">STATUS &amp; ACTIONS</span>
+                                ${statusPillHtml}
+                            </div>
+                            <div class="cd-contact-subcard-body">
+                                <div class="cd-contact-actions-row">
+                                    ${callBtnHtml}
+                                    ${mailBtnHtml}
+                                    ${waBtnHtml}
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <!-- SUB-CARD 6: Bottom Activity & Metadata Strip -->
+                    <div class="cd-contact-card-bottom">
+                        <div class="cd-contact-bottom-left">
+                            <span class="cd-contact-meta-item">
+                                <i class="far fa-calendar-check text-slate-400"></i> Member since ${createdFormatted}
+                            </span>
+                            <span class="text-slate-300">•</span>
+                            <span class="cd-contact-meta-item">
+                                <i class="fas fa-check-double text-success"></i> Verified Point of Contact
+                            </span>
+                        </div>
+                        <div class="cd-contact-bottom-right">
+                            <span class="cd-contact-tag-pill">
+                                <i class="fas fa-id-badge text-primary"></i> Internal Stakeholder
+                            </span>
+                            <span class="cd-contact-tag-pill">
+                                <i class="fas fa-bolt text-amber-500"></i> Quick Reach
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+    };
+
+    function initContactsDataTable() {
+        window.InternalClientContactsManager.init();
+    }
+    function initContactsManager() {
+        window.InternalClientContactsManager.init();
     }
 </script>
 
@@ -3764,11 +6335,21 @@ use Carbon\Carbon;
         } else if ($('#contacts').hasClass('active') || $('a[href="#contacts"]').hasClass('active')) {
             initContactsDataTable();
             loadedTabs['contacts'] = true;
+        } else if ($('#requisitions').hasClass('active') || $('a[href="#requisitions"]').hasClass('active')) {
+            fetchJobsClient();
+            loadedTabs['requisitions'] = true;
         } else if ($('#candidateDashboard').hasClass('active') || $('a[href="#candidateDashboard"]').hasClass('active')) {
             initPerformanceDashboard();
             fetchInternalClientDashboardAnalytics();
             loadedTabs['candidateDashboard'] = true;
         }
+
+        $(document).on('click', 'a[href="#requisitions"], .cd-kpi-card[data-target-tab="#requisitions"]', function(e) {
+            if (!loadedTabs['requisitions']) {
+                fetchJobsClient();
+                loadedTabs['requisitions'] = true;
+            }
+        });
 
         $(document).on('shown.bs.tab', 'a[data-toggle="tab"], a[data-bs-toggle="tab"]', function (e) {
             var target = $(e.target).attr('href');
@@ -3815,18 +6396,24 @@ use Carbon\Carbon;
             }
         });
 
-        $(document).on('keyup', '#contactSearchInput', function() {
-            if ($.fn.DataTable.isDataTable('#contactList')) {
-                $('#contactList').DataTable().search($(this).val()).draw();
+        var jobSearchTimer = null;
+        $(document).on('keyup', '#inputJobSearch', function() {
+            clearTimeout(jobSearchTimer);
+            var searchVal = $(this).val();
+            if (searchVal.length > 0) {
+                $('#btnJobSearchClear').show();
+            } else {
+                $('#btnJobSearchClear').hide();
             }
+            jobSearchTimer = setTimeout(function() {
+                fetchJobsClient(1, searchVal, window.currentJobStatusInternal || 'all');
+            }, 300);
         });
 
-        var jobSearchTimer = null;
-        $('#inputJobSearch').on('keyup', function() {
-            clearTimeout(jobSearchTimer);
-            jobSearchTimer = setTimeout(function() {
-                fetchJobsClient();
-            }, 300);
+        $(document).on('click', '#btnJobSearchClear', function() {
+            $('#inputJobSearch').val('');
+            $(this).hide();
+            fetchJobsClient(1, '', window.currentJobStatusInternal || 'all');
         });
 
         var searchTimer = null;
@@ -4071,19 +6658,25 @@ use Carbon\Carbon;
             var formatted = (relation === 'gte') ? (num.toLocaleString() + '+') : num.toLocaleString();
             $('#cdCandidateCountText').text(formatted);
             $('#tabBadgeCandidates').text(formatted).show();
+
+            var activeTab = $('.cd-cand-subtab.active');
+            activeTab.find('.cd-cand-subtab-badge').text(formatted).show();
+            if (!this.filters.status_id) {
+                $('#candTabCountAll').text(formatted).show();
+            }
         },
 
         renderRows: function() {
             if (!this.data || this.data.length === 0) {
                 $('#candidatetList').empty();
                 $('#cdCandEmptyState').show();
-                $('#cdCandidateTableWrap table').hide();
+                $('#cdCandidateTableWrap').hide();
                 $('#paginationcandidate').empty();
                 return;
             }
 
             $('#cdCandEmptyState').hide();
-            $('#cdCandidateTableWrap table').show();
+            $('#cdCandidateTableWrap').show();
 
             var html = '';
             var self = this;
@@ -4097,95 +6690,449 @@ use Carbon\Carbon;
         },
 
         buildRowHtml: function(row) {
-            var cid = row.id || row.wiseId || 0;
-            var fullName = (row.full_name || ((row.first_name || '') + ' ' + (row.last_name || ''))).trim() || 'Candidate';
-            var firstChar = (fullName.charAt(0) || 'C').toUpperCase();
-            var designation = row.current_designation || '----';
+            var cid = row.id || row.wiseId || row.candidate_id || 0;
+            var jobId = row.jobId || row.job_id || 0;
 
-            var code = firstChar.charCodeAt(0) % 5;
-            var badgeClasses = ['bg-light-primary text-primary', 'bg-light-success text-success', 'bg-light-warning text-warning', 'bg-light-danger text-danger', 'bg-light-info text-info'];
-            var avatarClass = badgeClasses[code];
+            // Acronym-preserving sentence/title case formatter
+            var formatWithAcronyms = function(str) {
+                if (!str || typeof str !== 'string') return '';
+                var s = str.trim();
+                if (!s) return '';
+                var acronyms = {
+                    'php': 'PHP', 'aws': 'AWS', 'gcp': 'GCP', 'azure': 'Azure', 'api': 'API',
+                    'sql': 'SQL', 'mysql': 'MySQL', 'nosql': 'NoSQL', 'ui': 'UI', 'ux': 'UX',
+                    'qa': 'QA', 'hr': 'HR', 'ats': 'ATS', 'crm': 'CRM', 'erp': 'ERP',
+                    'in': 'IN', 'us': 'US', 'uk': 'UK', 'uae': 'UAE', 'ca': 'CA', 'sg': 'SG', 'au': 'AU',
+                    'b.tech': 'B.Tech', 'b.e': 'B.E', 'm.tech': 'M.Tech', 'm.e': 'M.E',
+                    'bca': 'BCA', 'mca': 'MCA', 'mba': 'MBA', 'b.sc': 'B.Sc', 'm.sc': 'M.Sc',
+                    'wfo': 'WFO', 'wfh': 'WFH', 'it': 'IT'
+                };
+                return s.split(/(\s+|[/\-+&])/).map(function(token) {
+                    var lower = token.toLowerCase();
+                    if (acronyms[lower]) return acronyms[lower];
+                    if (token.length <= 1) return token.toUpperCase();
+                    return token.charAt(0).toUpperCase() + token.slice(1).toLowerCase();
+                }).join('');
+            };
 
-            var totalExp = (row.total_exp !== undefined && row.total_exp !== null && row.total_exp !== '') ? (row.total_exp + ' Y') : '----';
-            var relExp = (row.rel_exp !== undefined && row.rel_exp !== null && row.rel_exp !== '') ? (row.rel_exp + ' Y rel.') : '';
+            // Word limiter helper: allows up to maxWords
+            var limitWords = function(str, maxWords) {
+                if (!str || typeof str !== 'string') return '';
+                var words = str.trim().split(/\s+/);
+                if (words.length <= maxWords) return str.trim();
+                return words.slice(0, maxWords).join(' ') + '...';
+            };
 
-            var salCur = row.salary_currency || row.job_currency || '₹';
-            var ectc = (row.salary || row.ectc_yearly) ? (salCur + ' ' + (row.salary || row.ectc_yearly)) : '----';
-            var ctc = row.ctc_yearly ? (salCur + ' ' + row.ctc_yearly) : '';
+            // Initials generator for candidate avatar monogram
+            var getInitials = function(name) {
+                if (!name || typeof name !== 'string') return 'C';
+                var parts = name.trim().split(/\s+/).filter(Boolean);
+                if (parts.length === 0) return 'C';
+                if (parts.length === 1) return parts[0].substring(0, 2).toUpperCase();
+                return (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase();
+            };
 
-            var notice = row.notice ? (row.notice + ' Days') : 'Immediate';
-            var currentCo = row.current_company || '----';
+            // Relative time formatted helper
+            var formatTimeAgo = function(createdVal) {
+                if (!createdVal) return 'Recently';
+                var time;
+                if (typeof createdVal === 'number') {
+                    time = (createdVal > 1e11) ? createdVal : createdVal * 1000;
+                } else {
+                    time = Date.parse(createdVal);
+                }
+                if (isNaN(time)) return 'Recently';
+                var diff = Math.floor((Date.now() - time) / 1000);
+                if (diff < 60) return 'Just now';
+                if (diff < 3600) return Math.floor(diff / 60) + 'm ago';
+                if (diff < 86400) return Math.floor(diff / 3600) + 'h ago';
+                if (diff < 2592000) {
+                    var days = Math.floor(diff / 86400);
+                    return days === 1 ? '1 day ago' : (days + ' days ago');
+                }
+                var months = Math.floor(diff / 2592000);
+                return months === 1 ? '1 mo ago' : (months + ' mos ago');
+            };
 
-            var location = row.city_name || '----';
-            if (row.country_name && row.country_name !== '----') {
-                location += ', ' + row.country_name.substring(0, 2).toUpperCase();
+            // Experience number cleaner without trailing dots
+            var cleanExpNum = function(val) {
+                if (val === undefined || val === null || val === '') return null;
+                var s = String(val).trim().replace(/\.+$/, '');
+                var n = parseFloat(s);
+                if (isNaN(n)) return s;
+                return (n % 1 === 0) ? n.toString() : n.toFixed(1);
+            };
+
+            // Compact salary formatting (converts thousands to K: 250,000 -> 250K)
+            var formatCompactSalary = function(val) {
+                if (val === null || val === undefined || val === '') return null;
+                var num = Number(String(val).replace(/,/g, '').trim());
+                if (isNaN(num) || num <= 0) return null;
+                if (num >= 1000) {
+                    var kVal = num / 1000;
+                    var formatted = (kVal % 1 === 0) ? kVal.toString() : kVal.toFixed(1).replace(/\.0$/, '');
+                    return formatted + 'K';
+                }
+                return num.toLocaleString();
+            };
+
+            // 1. Sub-Card 1: Candidate Profile
+            var rawFullName = (row.full_name || ((row.first_name || '') + ' ' + (row.last_name || ''))).trim() || 'Candidate';
+            var rawDesignation = (row.current_designation || '----').trim();
+            var currCompany = (row.current_company || '----').trim();
+
+            var displayName = formatWithAcronyms(limitWords(rawFullName, 15));
+            var displayDesig = formatWithAcronyms(limitWords(rawDesignation, 15));
+            var currCompanyClean = formatWithAcronyms(limitWords(currCompany, 10));
+            var candInitials = getInitials(rawFullName);
+
+            // 2. Sub-Card 2: Compensation & Experience
+            var currencySymbol = row.current_ctc_cur || row.salary_currency || row.job_currency || '₹';
+            if (currencySymbol === '0' || !currencySymbol || currencySymbol === 'INR') currencySymbol = '₹';
+            if (currencySymbol === 'USD' || currencySymbol === '4') currencySymbol = '$';
+            if (currencySymbol === 'EUR' || currencySymbol === '1') currencySymbol = '€';
+            if (currencySymbol === 'GBP' || currencySymbol === '3') currencySymbol = '£';
+            if (currencySymbol === 'AED' || currencySymbol === '5') currencySymbol = 'AED ';
+
+            var ectcVal = formatCompactSalary(row.ectc_yearly || row.ectc || row.salary);
+            var ctcVal = formatCompactSalary(row.ctc_yearly || row.ctc);
+            // Single currency symbol formatting (guaranteed no double symbols)
+            var salaryPrimaryHtml = ectcVal
+                ? `<span class="fw-bold text-dark">${currencySymbol}${ectcVal}</span> <span class="text-muted fs-8">/ Yr</span>`
+                : (ctcVal ? `<span class="fw-bold text-dark">${currencySymbol}${ctcVal}</span> <span class="text-muted fs-8">/ Yr</span>` : '<span class="text-muted">----</span>');
+
+            var totalExpNum = cleanExpNum(row.total_exp);
+            var relExpNum = cleanExpNum(row.rel_exp);
+            var totalExpStr = totalExpNum !== null ? (totalExpNum + ' Yrs Total') : '----';
+            if (relExpNum !== null && relExpNum !== '0' && relExpNum !== totalExpNum) {
+                totalExpStr += ` (${relExpNum} Rel)`;
             }
 
-            var source = row.source || 'Direct';
-            var postedBy = row.posted_by_name || row.submitted_by_company_name || 'Recruiter';
-            var addedDate = row.created_at ? row.created_at.substring(0, 10) : '----';
+            // Notice: Clean colored text ONLY (NO background/pill)
+            var noticeText = 'Immediate';
+            var noticeColorClass = 'cd-notice-immediate';
+            var rawNotice = String(row.np_id || row.notice || '').trim();
 
-            var jobTitle = row.job_title || ('Job #' + (row.jobId || '----'));
-            var stageName = row.child_status_name || row.master_status_name || 'Sourced';
-            var stageCss = row.master_status_css || 'badge-light-primary';
+            if (row.serving_notice_period_mode == 1 || (rawNotice && rawNotice.includes('-'))) {
+                var cleanDate = rawNotice.replace('SNP LWD', '').trim();
+                noticeText = 'SNP LWD ' + cleanDate;
+                noticeColorClass = 'cd-notice-snp';
+            } else if (rawNotice === 'Immediate' || rawNotice === '0' || rawNotice === '') {
+                noticeText = 'Immediate';
+                noticeColorClass = 'cd-notice-immediate';
+            } else if (!isNaN(Number(rawNotice))) {
+                noticeText = rawNotice + ' Days';
+                noticeColorClass = 'cd-notice-days';
+            } else {
+                noticeText = rawNotice;
+                noticeColorClass = 'cd-notice-default';
+            }
+
+            // 3. Sub-Card 3: Location & Education
+            var city = row.city_name || row.city || '----';
+            var country = row.country_name || '';
+            var locLine1 = city;
+            if (country && country !== '----') {
+                var cShort = country.length > 2 ? country.substring(0, 2).toUpperCase() : country.toUpperCase();
+                locLine1 += ', ' + cShort;
+            }
+            var locLine1Clean = formatWithAcronyms(locLine1);
+
+            var rawWorkMode = String(row.job_mode || '').toLowerCase();
+            var workModeClean = 'Work From Office';
+            if (rawWorkMode.includes('remote') || rawWorkMode === '3') {
+                workModeClean = 'Remote';
+            } else if (rawWorkMode.includes('hybrid') || rawWorkMode === '2') {
+                workModeClean = 'Hybrid';
+            } else if (rawWorkMode.includes('office') || rawWorkMode.includes('wfo') || rawWorkMode === '1') {
+                workModeClean = 'Work From Office';
+            }
+
+            var qualification = row.qualification_name || '----';
+            var qualificationClean = formatWithAcronyms(limitWords(qualification, 8));
+
+            // 4. Sub-Card 4: Target Job Requisition
+            var jobTitle = row.title || row.job_title || ('Job #' + jobId);
+            var jobTitleFormatted = formatWithAcronyms(limitWords(jobTitle, 15));
+            var companyName = row.cur_company_name || row.client_name || '{{ addslashes($detailName ?? "Client") }}';
+            var companyNameFormatted = formatWithAcronyms(limitWords(companyName, 12));
+            var jobUrl = jobId ? `{{ url('service_company/jobs') }}/${jobId}` : 'javascript:void(0);';
+
+            var jobInitial = (jobTitle && jobTitle.length > 0) ? jobTitle.charAt(0).toUpperCase() : 'J';
+            var deptFormatted = formatWithAcronyms(row.industry_name || row.department || 'Technology');
+            var jobTypeClean = (row.job_type || 'Full-Time');
+
+            var scopeTag = this.clientType === 'direct' ? 'Direct Client' : 'Direct Client';
+            var scopeCls = 'type-direct';
+            if (row.client_type === 'internal' || this.clientType === 'internal') {
+                scopeTag = 'Internal Client';
+                scopeCls = 'type-internal';
+            }
+
+            var rawJobStatus = String(row.job_status || 'active').toLowerCase();
+            var statusPillText = 'Hiring';
+            var statusChipClass = 'status-hiring';
+            if (rawJobStatus === 'active' || rawJobStatus === 'hiring') {
+                statusPillText = 'Hiring';
+                statusChipClass = 'status-hiring';
+            } else if (rawJobStatus === 'hold') {
+                statusPillText = 'Hold';
+                statusChipClass = 'status-hold';
+            } else if (rawJobStatus === 'inactive' || rawJobStatus === 'closed') {
+                statusPillText = 'Closed';
+                statusChipClass = 'status-closed';
+            }
+
+            // 5. Sub-Card 5: Recruiter & Sourcing
+            var recruiter = row.posted_by_name || row.posted_by || row.submitted_by_name || row.agency_root_name || 'Recruiter';
+            var submitterCompany = row.submitted_by_company_name || row.post_company_name || row.apl_company_name || row.company_name || 'Agency';
+            var recruiterFormatted = formatWithAcronyms(limitWords(recruiter, 12));
+            var submitterFormatted = formatWithAcronyms(limitWords(submitterCompany, 12));
+            var submittedAgo = formatTimeAgo(row.created_at);
+
+            // 6. Sub-Card 6: Pipeline & Stage
+            var stageName = row.child_status_name || row.master_status_name || row.name || 'InReview';
+            var stageChipStyle = 'background:#fef9c3;color:#854d0e;border:1px solid #fde047;';
+            if (stageName.toLowerCase().includes('offer')) {
+                stageChipStyle = 'background:#cffafe;color:#0e7490;border:1px solid #a5f3fc;';
+            } else if (stageName.toLowerCase().includes('join')) {
+                stageChipStyle = 'background:#dcfce7;color:#16a34a;border:1px solid #bbf7d0;';
+            } else if (stageName.toLowerCase().includes('reject')) {
+                stageChipStyle = 'background:#fee2e2;color:#dc2626;border:1px solid #fecdd3;';
+            } else if (stageName.toLowerCase().includes('source') || stageName.toLowerCase().includes('screen')) {
+                stageChipStyle = 'background:#e0e7ff;color:#4338ca;border:1px solid #c7d2fe;';
+            }
+            var subStageText = row.childStatus ? (row.child_status_name || 'Private') : 'Private';
+
+            // 7. Sub-Card 7 (Bottom Strip): Skills, CV Match, LinkedIn Verified, Visa Status
+            var matchPct = (row.skill_match !== undefined && row.skill_match !== null) ? Math.round(row.skill_match) : 0;
+            var matchBadgeClass = 'cd-match-red';
+            if (matchPct >= 85) {
+                matchBadgeClass = 'cd-match-green';
+            } else if (matchPct >= 50) {
+                matchBadgeClass = 'cd-match-amber';
+            }
+
+            var skillsList = [];
+            if (Array.isArray(row.skills)) {
+                skillsList = row.skills;
+            } else if (typeof row.skills === 'string' && row.skills.trim()) {
+                skillsList = row.skills.split(',').map(function(s) { return s.trim(); }).filter(Boolean);
+            }
+
+            var skillsPillsHtml = '';
+            if (skillsList.length > 0) {
+                skillsList.forEach(function(s) {
+                    var cleanSkill = $('<div>').text(formatWithAcronyms(s)).html();
+                    skillsPillsHtml += `<span class="cd-skill-pill-cv">${cleanSkill}</span>`;
+                });
+            } else {
+                skillsPillsHtml = `<span class="text-muted fs-8">No specific skills tagged</span>`;
+            }
+
+            // LinkedIn Verified Pill: If LinkedIn ID/URL is available, otherwise hides
+            var rawLinkedin = String(row.linkedin || row.ci_linkedin || '').trim();
+            var linkedinHtml = '';
+            if (rawLinkedin && rawLinkedin !== '0' && rawLinkedin.toLowerCase() !== 'none' && rawLinkedin.toLowerCase() !== 'null' && rawLinkedin !== '----') {
+                var linkedinUrl = rawLinkedin;
+                if (!linkedinUrl.startsWith('http://') && !linkedinUrl.startsWith('https://')) {
+                    if (linkedinUrl.includes('linkedin.com')) {
+                        linkedinUrl = 'https://' + linkedinUrl;
+                    } else {
+                        linkedinUrl = 'https://www.linkedin.com/in/' + linkedinUrl.replace(/^@/, '');
+                    }
+                }
+                linkedinHtml = `
+                    <a href="${linkedinUrl}" target="_blank" rel="noopener noreferrer" class="cd-cand-linkedin-pill" title="LinkedIn Profile Verified">
+                        <i class="fab fa-linkedin text-primary"></i><span>LinkedIn Verified</span>
+                    </a>
+                `;
+            }
+
+            // Visa Status Badge: (country short name, Visa Name) - if available, otherwise hides
+            var rawVisa = String(row.visastatu || row.visa_status || row.visa || '').trim();
+            var visaHtml = '';
+            if (rawVisa && rawVisa !== '0' && rawVisa.toLowerCase() !== 'none' && rawVisa.toLowerCase() !== 'null' && rawVisa !== '----') {
+                var visaCountryShort = '';
+                var rawCountry = String(row.country_name || '').trim().toUpperCase();
+                if (rawCountry && rawCountry !== '----') {
+                    visaCountryShort = rawCountry.length > 2 ? rawCountry.substring(0, 2) : rawCountry;
+                }
+
+                var vLower = rawVisa.toLowerCase();
+                if (vLower.includes('us') || vLower.includes('h-1b') || vLower.includes('h1b') || vLower.includes('green card') || vLower.includes('gc-ead') || vLower.includes('opt') || vLower.includes('cpt') || vLower.includes('tn permit')) {
+                    if (!visaCountryShort) visaCountryShort = 'US';
+                } else if (vLower.includes('canada') || vLower.includes('canadian')) {
+                    if (!visaCountryShort) visaCountryShort = 'CA';
+                } else if (vLower.includes('india') || vLower.includes('indian')) {
+                    if (!visaCountryShort) visaCountryShort = 'IN';
+                } else if (vLower.includes('uk') || vLower.includes('british')) {
+                    if (!visaCountryShort) visaCountryShort = 'UK';
+                } else if (vLower.includes('uae') || vLower.includes('dubai')) {
+                    if (!visaCountryShort) visaCountryShort = 'UAE';
+                } else if (vLower.includes('singapore')) {
+                    if (!visaCountryShort) visaCountryShort = 'SG';
+                } else if (vLower.includes('australia')) {
+                    if (!visaCountryShort) visaCountryShort = 'AU';
+                }
+                if (!visaCountryShort) visaCountryShort = 'Visa';
+
+                var cleanVisaName = rawVisa
+                    .replace(/^(US|United States|Canada|Canadian|India|Indian|UK|UAE|Dubai|Singapore|Australia)\s+/i, '')
+                    .trim();
+                if (!cleanVisaName) cleanVisaName = rawVisa;
+                cleanVisaName = formatWithAcronyms(cleanVisaName);
+
+                var visaDisplay = `(${visaCountryShort}, ${cleanVisaName})`;
+                visaHtml = `
+                    <span class="cd-cand-visa-pill" title="Visa Status: ${$('<div>').text(rawVisa).html()}">
+                        <i class="fas fa-passport text-muted"></i><span>${$('<div>').text(visaDisplay).html()}</span>
+                    </span>
+                `;
+            }
 
             return `
-                <tr data-candidate-id="${cid}">
-                    <td>
-                        <div class="d-flex align-items-center">
-                            <div class="symbol symbol-circle symbol-35px me-3">
-                                <span class="symbol-label fw-bolder ${avatarClass}">${firstChar}</span>
+                <div class="cd-cand-card" data-candidate-id="${cid}">
+                    <div class="cd-cand-card-grid">
+                        <!-- Sub-Card 1: CANDIDATE INFO -->
+                        <div class="cd-cand-subcard cd-cand-subcard-info">
+                            <div class="cd-cand-subcard-hdr">
+                                <span class="cd-cand-subcard-label">CANDIDATE INFO</span>
                             </div>
-                            <div class="d-flex flex-column">
-                                <a href="javascript:void(0);" class="text-dark fw-bolder text-hover-primary fs-6 show-application-detail" data-row-id="${cid}">
-                                    ${fullName}
-                                </a>
-                                <span class="text-muted fw-bold fs-8">${designation}</span>
+                            <div class="cd-cand-subcard-body">
+                                <div class="cd-cand-profile-row">
+                                    <div class="cd-cand-avatar-box">${candInitials}</div>
+                                    <div class="cd-cand-profile-meta">
+                                        <a href="javascript:void(0);" class="cd-cand-name show-application-detail" data-row-id="${cid}" title="${$('<div>').text(rawFullName).html()}">
+                                            ${displayName}
+                                        </a>
+                                        <div class="cd-cand-desig" title="${$('<div>').text(rawDesignation).html()}">${displayDesig}</div>
+                                        <div class="cd-cand-employer" title="${$('<div>').text(currCompany).html()}">
+                                            <i class="fas fa-building text-muted me-1" style="font-size:9.5px;"></i>${currCompanyClean}
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
-                    </td>
-                    <td>
-                        <div class="d-flex flex-column">
-                            <span class="text-dark fw-bold fs-7">${totalExp}</span>
-                            <span class="text-muted fs-8">${relExp}</span>
+
+                        <!-- Sub-Card 2: COMPENSATION & EXP -->
+                        <div class="cd-cand-subcard cd-cand-subcard-comp">
+                            <div class="cd-cand-subcard-hdr">
+                                <span class="cd-cand-subcard-label">COMPENSATION &amp; EXP</span>
+                            </div>
+                            <div class="cd-cand-subcard-body">
+                                <div class="cd-val-salary" title="${ectcVal || ctcVal || ''}">
+                                    ${salaryPrimaryHtml}
+                                </div>
+                                <div class="cd-val-exp" title="${totalExpStr}">
+                                    <i class="far fa-clock text-muted me-1" style="font-size:10px;"></i><span>${totalExpStr}</span>
+                                </div>
+                                <div class="cd-val-notice" title="${noticeText}">
+                                    <span class="cd-notice-clean ${noticeColorClass}">${noticeText}</span>
+                                </div>
+                            </div>
                         </div>
-                    </td>
-                    <td>
-                        <div class="d-flex flex-column">
-                            <span class="text-dark fw-bold fs-7">${ectc}</span>
-                            ${ctc ? `<span class="text-muted fs-8">${ctc}</span>` : ''}
+
+                        <!-- Sub-Card 3: LOCATION & DEGREE -->
+                        <div class="cd-cand-subcard cd-cand-subcard-loc">
+                            <div class="cd-cand-subcard-hdr">
+                                <span class="cd-cand-subcard-label">LOCATION &amp; DEGREE</span>
+                            </div>
+                            <div class="cd-cand-subcard-body">
+                                <div class="cd-loc-val" title="${$('<div>').text(locLine1Clean).html()}">
+                                    <i class="fas fa-map-marker-alt text-muted me-1" style="font-size:10px;"></i>${locLine1Clean}
+                                </div>
+                                <div class="cd-loc-mode" title="${workModeClean}">
+                                    <i class="fas fa-building text-muted me-1" style="font-size:9.5px;"></i>${workModeClean}
+                                </div>
+                                <div class="cd-loc-edu" title="${$('<div>').text(qualification).html()}">
+                                    <i class="fas fa-graduation-cap text-muted me-1" style="font-size:10px;"></i>${qualificationClean}
+                                </div>
+                            </div>
                         </div>
-                    </td>
-                    <td>
-                        <div class="d-flex flex-column">
-                            <span class="text-dark fw-bold fs-7">${notice}</span>
-                            <span class="text-muted fs-8 text-truncate" style="max-width: 100px;">${currentCo}</span>
+
+                        <!-- Sub-Card 4: TARGET REQUISITION -->
+                        <div class="cd-cand-subcard cd-cand-subcard-job">
+                            <div class="cd-cand-subcard-hdr">
+                                <span class="cd-cand-subcard-label">TARGET REQUISITION</span>
+                                <div class="cd-header-badges">
+                                    <span class="cd-badge-client-type ${scopeCls}">${scopeTag}</span>
+                                    <span class="cd-status-badge ${statusChipClass}">${statusPillText}</span>
+                                </div>
+                            </div>
+                            <div class="cd-cand-subcard-body">
+                                <div class="cd-job-row">
+                                    <div class="cd-job-logo-box">${jobInitial}</div>
+                                    <div class="cd-job-meta-wrap">
+                                        <a href="${jobUrl}" target="_blank" class="cd-job-title-link" title="${$('<div>').text(jobTitle).html()}">
+                                            ${jobTitleFormatted}
+                                        </a>
+                                        <div class="cd-job-submeta">
+                                            <span class="text-primary fw-bold">#${jobId}</span> &bull; <span>${deptFormatted}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="cd-job-footer-line">
+                                    <span class="fw-semibold text-dark">${companyNameFormatted}</span> &bull; <span><i class="fas fa-briefcase text-primary me-1" style="font-size:9px;"></i>${jobTypeClean}</span>
+                                </div>
+                            </div>
                         </div>
-                    </td>
-                    <td>
-                        <span class="text-dark fw-bold fs-7">${location}</span>
-                    </td>
-                    <td>
-                        <div class="d-flex flex-column">
-                            <span class="text-dark fw-bold fs-7">${source}</span>
-                            <span class="text-muted fs-8">${postedBy}</span>
+
+                        <!-- Sub-Card 5: RECRUITER & SOURCING -->
+                        <div class="cd-cand-subcard cd-cand-subcard-recruiter">
+                            <div class="cd-cand-subcard-hdr">
+                                <span class="cd-cand-subcard-label"><i class="fa fa-user-tie me-1 text-muted"></i>RECRUITER &amp; SOURCING</span>
+                            </div>
+                            <div class="cd-cand-subcard-body">
+                                <div class="cd-recruiter-name" title="${$('<div>').text(recruiter).html()}">
+                                    <i class="fas fa-user-circle text-primary me-1" style="font-size:10.5px;"></i>${recruiterFormatted}
+                                </div>
+                                <div class="cd-recruiter-company" title="${$('<div>').text(submitterCompany).html()}">
+                                    <i class="fas fa-building text-muted me-1" style="font-size:9.5px;"></i>${submitterFormatted}
+                                </div>
+                                <div class="cd-recruiter-time" title="${submittedAgo}">
+                                    <i class="far fa-calendar-alt text-muted me-1" style="font-size:9.5px;"></i>Submitted: ${submittedAgo}
+                                </div>
+                            </div>
                         </div>
-                    </td>
-                    <td>
-                        <span class="text-muted fw-bold fs-7">${addedDate}</span>
-                    </td>
-                    <td>
-                        <div class="d-flex flex-column">
-                            <span class="text-dark fw-bold fs-7 text-truncate" style="max-width: 130px;" title="${jobTitle}">${jobTitle}</span>
-                            <span class="text-muted fs-8">#${row.jobId || ''}</span>
+
+                        <!-- Sub-Card 6: PIPELINE & STAGE -->
+                        <div class="cd-cand-subcard cd-cand-subcard-stage">
+                            <div class="cd-cand-subcard-hdr">
+                                <span class="cd-cand-subcard-label">PIPELINE &amp; STAGE</span>
+                            </div>
+                            <div class="cd-cand-subcard-body">
+                                <div>
+                                    <a href="javascript:void(0);" class="cd-stage-chip stage_sub_stage" data-row-id="${cid}" data-toggle="modal" data-target="#stage_sub_stage" style="${stageChipStyle}" title="${stageName}">
+                                        <span>${stageName}</span> <i class="fas fa-caret-down ms-1" style="font-size:9px;"></i>
+                                    </a>
+                                </div>
+                                <div class="cd-stage-sub" title="${subStageText}">
+                                    <span class="text-muted">Sub-stage:</span> <span class="fw-medium text-dark">${subStageText}</span>
+                                </div>
+                                <div class="cd-stage-action">
+                                    <a href="javascript:void(0);" class="cd-action-link show-application-detail" data-row-id="${cid}" title="View details">
+                                        <i class="far fa-id-badge text-primary me-1" style="font-size:9.5px;"></i>View Details
+                                    </a>
+                                </div>
+                            </div>
                         </div>
-                    </td>
-                    <td class="text-end">
-                        <a href="javascript:void(0);" class="badge ${stageCss} fs-8 fw-bolder stage_sub_stage" data-row-id="${cid}" data-toggle="modal" data-target="#stage_sub_stage">
-                            ${stageName}
-                        </a>
-                    </td>
-                </tr>
+                    </div>
+
+                    <!-- Sub-Card 7: Full-Width Intelligence Strip (CV Match, Skills, LinkedIn Verified, Visa Status) -->
+                    <div class="cd-cand-bottom-strip">
+                        <div class="cd-cand-bottom-left">
+                            <span class="cd-match-badge-cv ${matchBadgeClass}">Match ${matchPct}%</span>
+                            <div class="cd-bottom-skills-scroll">
+                                ${skillsPillsHtml}
+                            </div>
+                        </div>
+                        <div class="cd-cand-bottom-right">
+                            ${linkedinHtml}
+                            ${visaHtml}
+                        </div>
+                    </div>
+                </div>
             `;
         },
 
@@ -4226,6 +7173,11 @@ use Carbon\Carbon;
             $(document).off('input', '#cdCandSearchInput');
             $(document).on('input', '#cdCandSearchInput', function() {
                 var val = $(this).val();
+                if (val && val.length > 0) {
+                    $('#cdCandSearchClear').show();
+                } else {
+                    $('#cdCandSearchClear').hide();
+                }
                 clearTimeout(searchDebounceTimer);
                 searchDebounceTimer = setTimeout(function() {
                     self.filters.search = val;
@@ -4235,9 +7187,22 @@ use Carbon\Carbon;
                 }, 300);
             });
 
-            $(document).off('change', '#cdCandStatusFilter');
-            $(document).on('change', '#cdCandStatusFilter', function() {
-                self.filters.status_id = $(this).val();
+            $(document).off('click', '#cdCandSearchClear');
+            $(document).on('click', '#cdCandSearchClear', function() {
+                $('#cdCandSearchInput').val('');
+                $(this).hide();
+                self.filters.search = '';
+                self.filters.page = 1;
+                self.filters.cursor = null;
+                self.fetch(1);
+            });
+
+            $(document).off('click', '.cd-cand-subtab');
+            $(document).on('click', '.cd-cand-subtab', function() {
+                var status = $(this).data('status');
+                $('.cd-cand-subtab').removeClass('active');
+                $(this).addClass('active');
+                self.filters.status_id = (status !== undefined && status !== null && status !== '') ? String(status) : '';
                 self.filters.page = 1;
                 self.filters.cursor = null;
                 self.fetch(1);
@@ -4246,13 +7211,23 @@ use Carbon\Carbon;
             $(document).off('click', '#cdCandResetBtn');
             $(document).on('click', '#cdCandResetBtn', function() {
                 $('#cdCandSearchInput').val('');
-                $('#cdCandStatusFilter').val('');
+                $('#cdCandSearchClear').hide();
+                $('.cd-cand-subtab').removeClass('active');
+                $('.cd-cand-subtab[data-status=""]').addClass('active');
                 self.filters.search = '';
                 self.filters.status_id = '';
                 self.filters.job_id = '';
                 self.filters.page = 1;
                 self.filters.cursor = null;
                 self.fetch(1);
+            });
+
+            $(document).off('wheel', '.cd-cand-bottom-strip, .cd-bottom-skills-scroll');
+            $(document).on('wheel', '.cd-cand-bottom-strip, .cd-bottom-skills-scroll', function(e) {
+                if (e.originalEvent && e.originalEvent.deltaY !== 0) {
+                    this.scrollLeft += e.originalEvent.deltaY;
+                    e.preventDefault();
+                }
             });
 
             $(document).off('click', '#cdCandNextBtn');
@@ -4464,6 +7439,15 @@ use Carbon\Carbon;
                     $('#ojCountOffersInternal').text(response.counts.offers || 0);
                     $('#ojCountJoiningInternal').text(response.counts.joining || 0);
                     $('#ojCountJoinedInternal').text(response.counts.joined || 0);
+                    if ($('#cdOjCountTextInternal').length) {
+                        $('#cdOjCountTextInternal').text(response.counts.all || 0);
+                    }
+                    if ($('#cdOjCountBadgeInternal').length) {
+                        $('#cdOjCountBadgeInternal').html('<span id="cdOjCountTextInternal">' + (response.counts.all || 0) + '</span> Offers &amp; Joinings');
+                    }
+                    if ($('#ojCountAllBadgeInternal').length) {
+                        $('#ojCountAllBadgeInternal').text(response.counts.all || 0);
+                    }
                     if ($('#ojInternalTabBadge').length) {
                         if (response.counts.all > 0) {
                             $('#ojInternalTabBadge').text(response.counts.all).show();
@@ -4498,9 +7482,29 @@ use Carbon\Carbon;
     $(document).on('keyup', '#ojSearchInputInternal', function() {
         clearTimeout(ojSearchTimerInternal);
         var search = $(this).val();
+        if (search && search.length > 0) {
+            $('#ojSearchClearInternal').show();
+        } else {
+            $('#ojSearchClearInternal').hide();
+        }
         ojSearchTimerInternal = setTimeout(function() {
             fetchCandidatesJoin(1, search, window.currentOjSegmentInternal || 'all');
         }, 300);
+    });
+
+    $(document).on('click', '#ojSearchClearInternal', function() {
+        $('#ojSearchInputInternal').val('');
+        $(this).hide();
+        fetchCandidatesJoin(1, '', window.currentOjSegmentInternal || 'all');
+    });
+
+    $(document).on('click', '#ojResetBtnInternal', function() {
+        $('#ojSearchInputInternal').val('');
+        $('#ojSearchClearInternal').hide();
+        window.currentOjSegmentInternal = 'all';
+        $('.cd-oj-seg-btn').removeClass('active');
+        $('.cd-oj-seg-btn[data-segment="all"]').addClass('active');
+        fetchCandidatesJoin(1, '', 'all');
     });
 
     // ══════════════════════════════════════════════════════════════════════════
@@ -4514,6 +7518,9 @@ use Carbon\Carbon;
         const subscriptions = new Map();
         const activeRequests = new Map();
         let requestSequence = 0;
+
+        let currentSearch = '';
+        let pageSize = 10; // Minimum 10 rows default
 
         function getCompositeKey(clientId) {
             const companyId = window.authCompanyId || '{{ auth()->user()->company_id ?? 0 }}';
@@ -4546,6 +7553,52 @@ use Carbon\Carbon;
                     const direction = $btn.attr('data-direction');
                     navigatePagination(clientId, direction);
                 });
+
+            // 4. Page Size Selector Change
+            $(document)
+                .off('change.internalInterviewPageSize', '#itPageSizeSelectInternal')
+                .on('change.internalInterviewPageSize', '#itPageSizeSelectInternal', function() {
+                    pageSize = Math.max(10, parseInt($(this).val(), 10) || 10);
+                    const cacheKey = getCompositeKey(clientId);
+                    const entry = store.get(cacheKey);
+                    if (entry) {
+                        entry.cursorStack = [null];
+                        entry.cursorIndex = 0;
+                    }
+                    fetchInterviews(clientId, null, true, currentSearch);
+                });
+
+            // 5. Search Bar Input Listener with Debounce
+            let searchDebounceTimer = null;
+            $('#itSearchInputInternal').off('input').on('input', function() {
+                const val = $(this).val().trim();
+                $('#itSearchClearInternal').toggle(val.length > 0);
+                clearTimeout(searchDebounceTimer);
+                searchDebounceTimer = setTimeout(function() {
+                    currentSearch = val;
+                    const cacheKey = getCompositeKey(clientId);
+                    const entry = store.get(cacheKey);
+                    if (entry) {
+                        entry.cursorStack = [null];
+                        entry.cursorIndex = 0;
+                    }
+                    fetchInterviews(clientId, null, true, currentSearch);
+                }, 250);
+            });
+
+            // 6. Search Bar Clear Button
+            $('#itSearchClearInternal').off('click').on('click', function() {
+                $('#itSearchInputInternal').val('');
+                $(this).hide();
+                currentSearch = '';
+                const cacheKey = getCompositeKey(clientId);
+                const entry = store.get(cacheKey);
+                if (entry) {
+                    entry.cursorStack = [null];
+                    entry.cursorIndex = 0;
+                }
+                fetchInterviews(clientId, null, true, '');
+            });
         }
 
         function subscribeChannel(clientId) {
@@ -4602,30 +7655,33 @@ use Carbon\Carbon;
             if (direction === 'prev' && entry.cursorIndex > 0) {
                 entry.cursorIndex--;
                 const prevCursor = entry.cursorStack[entry.cursorIndex];
-                fetchInterviews(clientId, prevCursor);
+                fetchInterviews(clientId, prevCursor, false, currentSearch);
             } else if (direction === 'next') {
-                const currentCursorKey = entry.cursorStack[entry.cursorIndex] || 'initial';
+                const currentCursorKey = (entry.cursorStack[entry.cursorIndex] || 'initial') + '_' + (currentSearch || '') + '_' + pageSize;
                 const currentPage = entry.pages.get(currentCursorKey);
                 if (currentPage && currentPage.next_cursor) {
                     entry.cursorIndex++;
                     if (entry.cursorIndex >= entry.cursorStack.length) {
                         entry.cursorStack.push(currentPage.next_cursor);
                     }
-                    fetchInterviews(clientId, currentPage.next_cursor);
+                    fetchInterviews(clientId, currentPage.next_cursor, false, currentSearch);
                 }
             }
         }
 
-        function fetchInterviews(clientId, cursor = null, forceRevalidate = false) {
+        function fetchInterviews(clientId, cursor = null, forceRevalidate = false, search = null) {
+            if (search !== null) {
+                currentSearch = search;
+            }
             const cacheKey = getCompositeKey(clientId);
-            const cursorKey = cursor || 'initial';
+            const cursorKey = (cursor || 'initial') + '_' + (currentSearch || '') + '_' + pageSize;
             let entry = store.get(cacheKey);
 
             // Zero-Latency User RAM Render
             if (entry && entry.state === 'READY' && !forceRevalidate && entry.pages.has(cursorKey)) {
                 const pageData = entry.pages.get(cursorKey);
                 renderTableRows(pageData.data);
-                renderPagination(entry.cursorIndex, entry.cursorStack.length, pageData.next_cursor);
+                renderPagination(entry.cursorIndex, entry.cursorStack.length, pageData.next_cursor, entry.total, pageData.data.length);
                 updateBadgeAndKPI(entry.total);
                 return;
             }
@@ -4657,17 +7713,16 @@ use Carbon\Carbon;
             const $list = $('#candidatetListinterviewtracker');
             if (!forceRevalidate) {
                 $list.html(`
-                    <tr>
-                      <td colspan="8" class="text-center py-8">
+                    <div class="it-loading-card">
                         <span class="spinner-border spinner-border-sm text-primary me-2"></span>
                         <span class="text-gray-600 fs-7">Loading Authoritative Interview Projection...</span>
-                      </td>
-                    </tr>
+                    </div>
                 `);
             }
 
-            let url = `{{ url('service_company/client-candidate-interview-tracker') }}?clientid=${clientId}&clienttype=internal&size=20`;
+            let url = `{{ url('service_company/client-candidate-interview-tracker') }}?clientid=${clientId}&clienttype=internal&size=${pageSize}`;
             if (cursor) url += `&cursor=${encodeURIComponent(cursor)}`;
+            if (currentSearch) url += `&search=${encodeURIComponent(currentSearch)}`;
 
             $.ajax({
                 url: url,
@@ -4689,7 +7744,7 @@ use Carbon\Carbon;
                         });
 
                         renderTableRows(res.data);
-                        renderPagination(entry.cursorIndex, entry.cursorStack.length, res.next_cursor);
+                        renderPagination(entry.cursorIndex, entry.cursorStack.length, res.next_cursor, res.total, res.data.length);
                         updateBadgeAndKPI(res.total);
                     } else if (res && res.html) {
                         $list.html(res.html);
@@ -4703,15 +7758,13 @@ use Carbon\Carbon;
 
                     entry.state = 'ERROR';
                     $list.html(`
-                        <tr>
-                          <td colspan="8" class="text-center py-6 text-danger fs-7">
+                        <div class="it-error-card">
                             <i class="fas fa-exclamation-circle me-1"></i> Failed to retrieve interviews.
                             <button type="button" class="btn btn-sm btn-link text-primary ms-2 p-0" id="btnRetryInternalInterviews">Retry</button>
-                          </td>
-                        </tr>
+                        </div>
                     `);
                     $('#btnRetryInternalInterviews').one('click', function() {
-                        fetchInterviews(clientId, cursor, true);
+                        fetchInterviews(clientId, cursor, true, currentSearch);
                     });
                 }
             });
@@ -4721,154 +7774,224 @@ use Carbon\Carbon;
             const $list = $('#candidatetListinterviewtracker');
             if (!rows || !rows.length) {
                 $list.html(`
-                    <tr>
-                      <td colspan="8" class="text-center py-10 text-muted fs-7">
+                    <div class="it-empty-card">
                         <i class="fas fa-calendar-times fs-2 text-gray-300 d-block mb-2"></i>
                         No interviews scheduled for this client.
-                      </td>
-                    </tr>
+                    </div>
                 `);
                 return;
             }
 
             const html = rows.map(function(intv) {
                 const cand = intv.candidate || {};
+                const fu = intv.followup || {};
                 const job = intv.job || {};
                 const sch = intv.schedule || {};
-                const att = intv.attendance || {};
-                const evalOutcome = intv.evaluation || {};
-                const act = intv.actions || {};
-                const lead = (intv.interviewers && intv.interviewers[0]) ? intv.interviewers[0] : null;
-                const extraCount = Math.max(0, (intv.interviewers ? intv.interviewers.length : 0) - 1);
+                const intvs = intv.interviewers_summary || {};
+                const src = intv.source_info || {};
+                const stg = intv.stage || {};
+                const fb = intv.feedback_view || {};
 
-                let stars = '';
-                const rating = evalOutcome.star_rating;
-                if (rating !== null && rating !== undefined && rating > 0) {
-                    for (let s = 1; s <= 5; s++) {
-                        stars += `<i class="fas fa-star ${s <= rating ? 'cit-star-fill' : 'cit-star-empty'}"></i>`;
+                // Followup pill
+                let followupHtml = '';
+                if (fu.label) {
+                    followupHtml = `
+                        <div class="it-cand-meta">
+                            <span class="it-meta-tag ${fu.style_class || 'info'}">
+                                ${fu.label}
+                            </span>
+                            ${fu.formatted_at ? `<span class="it-meta-date">${fu.formatted_at}</span>` : ''}
+                        </div>
+                    `;
+                }
+
+                // Meeting link / Address
+                let linkHtml = '';
+                if (sch.meeting_link) {
+                    if (sch.link_type === 'address') {
+                        linkHtml = `
+                            <span class="it-dt-link" title="${sch.meeting_link}">
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                                <span>${sch.link_label || 'View Address'}</span>
+                            </span>
+                        `;
+                    } else if (sch.link_type === 'link') {
+                        linkHtml = `
+                            <a href="${sch.meeting_link}" target="_blank" rel="noopener noreferrer" class="it-dt-link">
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+                                <span>${sch.link_label || 'Interview Link'}</span>
+                            </a>
+                        `;
                     }
+                }
+
+                // Mode icon SVG
+                let modeSvg = '';
+                if (sch.mode_icon_type === 'phone') {
+                    modeSvg = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>';
+                } else if (sch.mode_icon_type === 'map-marker') {
+                    modeSvg = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>';
                 } else {
-                    stars = '<span class="text-muted fs-8">No rating</span>';
+                    modeSvg = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>';
+                }
+
+                // Feedback icon SVG
+                let fbIconSvg = '';
+                if (fb.status_icon === 'check') {
+                    fbIconSvg = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
+                } else if (fb.status_icon === 'times') {
+                    fbIconSvg = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
+                } else if (fb.status_icon === 'exclamation-triangle') {
+                    fbIconSvg = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>';
+                } else if (fb.status_icon === 'exclamation-circle') {
+                    fbIconSvg = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>';
+                } else {
+                    fbIconSvg = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>';
+                }
+
+                // Recommendation pill
+                let recHtml = '';
+                if (fb.recommendation) {
+                    recHtml = `<span class="it-rec-pill" style="background:${fb.recommendation.bg};color:${fb.recommendation.color};">${fb.recommendation.label}</span>`;
                 }
 
                 return `
-                    <tr>
-                      <!-- Candidate Column (18%) -->
-                      <td>
-                        <div class="d-flex align-items-center gap-2">
-                          <div class="symbol symbol-32px symbol-circle bg-light-primary text-primary fw-bold fs-7 d-flex align-items-center justify-content-center">
-                            ${cand.initial || 'C'}
-                          </div>
-                          <div class="d-flex flex-column text-truncate">
-                            <a href="javascript:void(0);" class="text-dark fw-bolder text-hover-primary fs-7 text-truncate" data-action="open-candidate" data-id="${cand.id}">
-                              ${cand.name || 'Candidate'}
-                            </a>
-                            <span class="text-muted fs-8 text-truncate">${cand.designation || '—'}</span>
-                          </div>
+                    <div class="it-primary-card" data-interview-id="${intv.id}">
+                      <!-- 1. Candidate Sub-Card (2.2fr) -->
+                      <div class="it-subcard it-subcard-cand">
+                        <div class="it-cand-avatar ${cand.avatar_color_class || 'it-avatar-blue'}">
+                          ${cand.initial || 'C'}
                         </div>
-                      </td>
-
-                      <!-- Job & ID Column (16%) -->
-                      <td>
-                        <div class="d-flex flex-column text-truncate">
-                          <a href="javascript:void(0);" class="text-dark fw-bold text-hover-primary fs-7 text-truncate" data-action="open-job" data-id="${job.id}">
-                            ${job.title || 'Job Position'}
-                          </a>
-                          <div class="d-flex align-items-center gap-1 mt-1">
-                            <span class="text-muted fs-8 fw-semibold">${job.id ? '#' + job.id : ''}</span>
-                            <span class="text-muted fs-8">·</span>
-                            <span class="text-muted fs-8 text-truncate" style="max-width: 110px;">${job.client_name || ''}</span>
+                        <div class="it-cand-info">
+                          <div class="it-cand-name" title="${cand.name || 'Candidate'}">
+                            ${cand.name || 'Candidate'}
                           </div>
+                          <div class="it-cand-role" title="${cand.designation || '—'}">
+                            ${cand.designation || '—'}
+                          </div>
+                          ${followupHtml}
                         </div>
-                      </td>
+                      </div>
 
-                      <!-- Mode & Round Column (13%) -->
-                      <td>
-                        <div class="d-flex flex-column">
-                          <span class="fs-7 fw-semibold text-gray-800 d-inline-flex align-items-center gap-1">
-                            <i class="fas ${sch.mode_icon || 'fa-video'} fa-xs"></i> ${sch.mode_label || 'Video'}
+                      <!-- 2. Job Requisition Sub-Card (2.3fr) -->
+                      <div class="it-subcard it-subcard-job">
+                        <div class="it-job-title" title="${job.title || 'Job Position'}">
+                          ${job.title || 'Job Position'}
+                        </div>
+                        <div class="it-job-company" title="${job.display_company_name || job.client_name || ''}">
+                          ${job.display_company_name || job.client_name || 'Client Account'}
+                        </div>
+                        <div class="it-job-tags">
+                          <span class="it-job-type ${job.job_type_class || 'it-job-type-internal'}">${job.job_type_label || 'Internal'}</span>
+                          ${job.job_id_display ? `
+                            <span class="it-dot-sep"></span>
+                            <span class="it-job-id">${job.job_id_display}</span>
+                          ` : ''}
+                        </div>
+                      </div>
+
+                      <!-- 3. Interview Schedule Sub-Card (1.75fr) -->
+                      <div class="it-subcard it-subcard-datetime">
+                        <div class="it-dt-row it-dt-date">
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+                          </svg>
+                          <span>${sch.date_formatted || '—'}</span>
+                        </div>
+                        ${sch.time_formatted ? `
+                          <div class="it-dt-row it-dt-time">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                              <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+                            </svg>
+                            <span>${sch.time_formatted}</span>
+                          </div>
+                        ` : ''}
+                        <div class="it-dt-row it-dt-mode">
+                          ${modeSvg}
+                          <span>${sch.mode_label || 'Video Call'}</span>
+                        </div>
+                        ${linkHtml}
+                      </div>
+
+                      <!-- 4. Interviewers Sub-Card (1.1fr) -->
+                      <div class="it-subcard it-subcard-interviewers">
+                        <div class="it-lead-name">${intvs.lead_name || 'N/A'}</div>
+                        <div class="it-lead-comp">${intvs.lead_company || 'Panel'}</div>
+                        ${intvs.extra_count > 0 ? `
+                          <div class="it-extra-wrap">
+                            <span class="it-extra-pill">${intvs.extra_label}</span>
+                            <span class="it-extra-lbl">${intvs.extra_count + 1} Interviewers</span>
+                          </div>
+                        ` : ''}
+                      </div>
+
+                      <!-- 5. Source Sub-Card (1.1fr) -->
+                      <div class="it-subcard it-subcard-source">
+                        <div class="it-src-name" title="${src.name || '—'}">
+                          ${src.name || '—'}
+                        </div>
+                        <div class="it-src-comp" title="${src.company_name || ''}">
+                          ${src.company_name || ''}
+                        </div>
+                      </div>
+
+                      <!-- 6. Stage Sub-Card (0.75fr) -->
+                      <div class="it-subcard it-subcard-stage">
+                        <span class="it-badge ${stg.badge_class || 'it-badge-blue'}">
+                          ${stg.master_status_name || 'Interview'}
+                        </span>
+                        ${stg.child_status_name ? `
+                          <span class="it-stage-sub">
+                            ${stg.child_status_name}
                           </span>
-                          <span class="text-muted fs-8 text-truncate" style="max-width: 130px;">${sch.round_name || 'Interview'}</span>
-                        </div>
-                      </td>
+                        ` : ''}
+                      </div>
 
-                      <!-- Interviewers Column (14%) -->
-                      <td>
-                        <div class="d-flex flex-column text-truncate">
-                          ${lead ? `
-                            <span class="fs-7 fw-semibold text-gray-800 text-truncate" title="${lead.name}">
-                              ${lead.name}
-                              ${extraCount > 0 ? `<span class="badge badge-light-primary fs-9 ms-1">+${extraCount}</span>` : ''}
-                            </span>
-                            <span class="text-muted fs-8 text-truncate">${lead.company_name || 'Panel'}</span>
-                          ` : '<span class="text-muted fs-7">Not Assigned</span>'}
-                        </div>
-                      </td>
-
-                      <!-- Schedule Date Column (13%) -->
-                      <td>
-                        <div class="d-flex flex-column">
-                          <span class="fs-7 fw-bolder text-gray-800">${sch.date_formatted || '—'}</span>
-                          <span class="text-muted fs-8">${sch.time_formatted || ''}</span>
-                        </div>
-                      </td>
-
-                      <!-- Status Column (11%) -->
-                      <td>
-                        <div class="d-flex flex-column align-items-start gap-1">
-                          <span class="cit-fb-pill ${att.css_class || 'cit-fb-default'}">${att.label || 'Scheduled'}</span>
-                          ${evalOutcome.label && evalOutcome.label !== '—' ? `<span class="fs-8 ${evalOutcome.css_class || 'text-muted'}">${evalOutcome.label}</span>` : ''}
-                        </div>
-                      </td>
-
-                      <!-- Rating Column (7%) -->
-                      <td>
-                        <div class="d-flex align-items-center gap-1">
-                          <div class="cit-stars">${stars}</div>
-                        </div>
-                      </td>
-
-                      <!-- Actions Column (8%) -->
-                      <td style="text-align: right;">
-                        <div class="d-flex align-items-center justify-content-end gap-1">
-                          ${act.join_allowed && sch.meeting_link ? `
-                            <a href="${sch.meeting_link}" target="_blank" rel="noopener noreferrer" class="btn btn-icon btn-sm btn-light-primary" style="height:26px; width:26px;" title="Join Video Call">
-                              <i class="fas fa-video fa-xs"></i>
-                            </a>
-                          ` : ''}
-                          ${act.feedback_view_allowed ? `
-                            <button type="button" class="btn btn-icon btn-sm btn-light-success" style="height:26px; width:26px;" data-action="view-feedback" data-interview-id="${intv.id}" title="View Feedback">
-                              <i class="fas fa-clipboard-check fa-xs"></i>
-                            </button>
-                          ` : ''}
-                        </div>
-                      </td>
-                    </tr>
+                      <!-- 7. Feedback Sub-Card (0.8fr) -->
+                      <div class="it-subcard it-subcard-feedback">
+                        <span class="it-fb-status" style="color:${fb.status_color || '#f59e0b'};">
+                          ${fbIconSvg}
+                          <span>${fb.status_text || 'Pending'}</span>
+                        </span>
+                        ${recHtml}
+                      </div>
+                    </div>
                 `;
             }).join('');
 
             $list.html(html);
         }
 
-        function renderPagination(cursorIndex, stackLength, nextCursor) {
+        function renderPagination(cursorIndex, stackLength, nextCursor, total, currentCount) {
             const $pagi = $('#paginationcandidateinterviewtracker');
+            const totalItems = typeof total === 'number' ? total : 0;
+            const count = typeof currentCount === 'number' ? currentCount : 0;
             const hasPrev = cursorIndex > 0;
             const hasNext = Boolean(nextCursor);
 
-            if (!hasPrev && !hasNext) {
-                $pagi.empty();
-                return;
-            }
+            const fromItem = totalItems === 0 ? 0 : (cursorIndex * pageSize + 1);
+            const toItem = totalItems === 0 ? 0 : Math.min(totalItems, cursorIndex * pageSize + count);
 
             $pagi.html(`
-                <div class="d-flex align-items-center justify-content-between w-100 py-2">
-                  <button type="button" class="btn btn-sm btn-light ${!hasPrev ? 'disabled' : ''}" data-direction="prev">
-                    <i class="fas fa-chevron-left me-1"></i> Previous
-                  </button>
-                  <span class="fs-8 text-muted">Page ${cursorIndex + 1}</span>
-                  <button type="button" class="btn btn-sm btn-light ${!hasNext ? 'disabled' : ''}" data-direction="next">
-                    Next <i class="fas fa-chevron-right ms-1"></i>
-                  </button>
+                <div class="it-pagi-info">
+                    Showing <strong>${fromItem} - ${toItem}</strong> of <strong>${totalItems}</strong> interviews
+                </div>
+                <div class="it-pagi-controls">
+                    <div class="d-flex align-items-center gap-2 me-2">
+                        <span class="text-muted" style="font-size:11px;">Rows:</span>
+                        <select class="it-pagi-size-select" id="itPageSizeSelectInternal">
+                            <option value="10" ${pageSize === 10 ? 'selected' : ''}>10 / page</option>
+                            <option value="25" ${pageSize === 25 ? 'selected' : ''}>25 / page</option>
+                            <option value="50" ${pageSize === 50 ? 'selected' : ''}>50 / page</option>
+                        </select>
+                    </div>
+                    <button type="button" class="it-pagi-btn ${!hasPrev ? 'disabled' : ''}" data-direction="prev">
+                        <i class="fas fa-chevron-left" style="font-size:10px;"></i> Previous
+                    </button>
+                    <span class="it-pagi-page-indicator">Page ${cursorIndex + 1}</span>
+                    <button type="button" class="it-pagi-btn ${!hasNext ? 'disabled' : ''}" data-direction="next">
+                        Next <i class="fas fa-chevron-right" style="font-size:10px;"></i>
+                    </button>
                 </div>
             `);
         }
@@ -4880,6 +8003,7 @@ use Carbon\Carbon;
                     $badge.text(total).toggle(total > 0);
                 }
                 $('#kpiInterviewsScheduledCountShow').text(total);
+                $('#itTotalCountBadgeInternal').text(total);
             }
         }
 
@@ -4892,7 +8016,7 @@ use Carbon\Carbon;
     function fetchCandidatesInverViewTracker(page = 1, search = '') {
         const clientid = parseInt('{{ $client->id ?? 0 }}', 10);
         if (clientid) {
-            ClientInterviewStoreInternal.fetch(clientid, null);
+            ClientInterviewStoreInternal.fetch(clientid, null, false, search);
         }
     }
 
@@ -4980,9 +8104,10 @@ use Carbon\Carbon;
         }
     });
 
-    function fetchJobsClient(page = 1, search = '', status = 'all') {
+    window.fetchJobsClient = function(page = 1, search = '', status = 'all') {
         $('.page-loader').css('display', 'flex');
         var activeStatus = status || window.currentJobStatusInternal || 'all';
+        var clientName = $('.cd-client-name').first().text().trim() || '{{ addslashes($detailName ?? "") }}';
         return $.ajax({
             url: `{{ url('service_company/jobs_side_bar_job_ajax/data') }}?page=${page}`,
             type: 'GET',
@@ -4990,6 +8115,7 @@ use Carbon\Carbon;
                 search: search || $('#inputJobSearch').val() || '',
                 status: activeStatus,
                 client_id: $('#hid_client_id').val(),
+                client_name: clientName,
                 custom: true
             },
             success: function(response) {
@@ -4998,21 +8124,26 @@ use Carbon\Carbon;
                 $('#paginationclientjobs').html(response.pagination);
 
                 if (response.kpi) {
-                    $('.cd-kpi-card[data-target-tab="#requisitions"] .cd-kpi-val').text(response.kpi.hiring);
-                    $('a[href="#requisitions"] .badge').text(response.kpi.hiring);
+                    $('.cd-kpi-card[data-target-tab="#requisitions"] .cd-kpi-num').text(response.kpi.hiring);
+                    $('a[href="#requisitions"] .cd-tab-badge').text(response.kpi.hiring);
+                    $('#filterCountAll').text(response.kpi.total);
+                    $('#filterCountHiring').text(response.kpi.hiring);
+                    $('#filterCountHold').text(response.kpi.hold);
+                    $('#filterCountClosed').text(response.kpi.closed);
+                    $('#filterCountInactive').text(response.kpi.inactive);
                 }
             },
             error: function() {
                 $('.page-loader').css('display', 'none');
             }
         });
-    }
+    };
 
     // Internal Client Jobs Tab: Filter Button Interaction
-    $(document).on('click', '#clientJobsListajax .js-job-filter-btn', function() {
+    $(document).on('click', '.js-job-filter-btn', function() {
         var status = $(this).data('status') || 'all';
         window.currentJobStatusInternal = status;
-        $('#clientJobsListajax .js-job-filter-btn').removeClass('active');
+        $('.js-job-filter-btn').removeClass('active');
         $(this).addClass('active');
         fetchJobsClient(1, $('#inputJobSearch').val(), status);
     });

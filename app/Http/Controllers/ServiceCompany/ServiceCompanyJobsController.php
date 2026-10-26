@@ -85,6 +85,59 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
 
     }
 
+    /**
+     * Tenancy & Resilience Note: Guarantees user permissions array is always a valid array
+     * under Octane / FrankenPHP / PHP 8.2 so in_array never throws TypeError.
+     */
+    protected function getUserPermissions(): array
+    {
+        if (is_array($this->userPermissions) && ! empty($this->userPermissions)) {
+            return $this->userPermissions;
+        }
+
+        $user = $this->user ?? auth()->user();
+        if (! $user) {
+            $this->userPermissions = [];
+            return [];
+        }
+        $this->user = $user;
+
+        $perms = Cache::remember(
+            "user_permissions:{$user->id}:{$user->company_id}",
+            3600,
+            function () use ($user) {
+                $roles = $user->getRoleNames();
+                if (empty($roles[0])) {
+                    return [];
+                }
+
+                $roleRow = DB::table('roles')
+                    ->select('roles.id')
+                    ->where('roles.company_id', $user->company_id)
+                    ->where('roles.name', $roles[0])
+                    ->first();
+
+                if (! $roleRow) {
+                    return [];
+                }
+
+                $rawList = DB::table('role_has_permissions')
+                    ->where('role_id', $roleRow->id)
+                    ->pluck('permission_id')
+                    ->toArray();
+
+                return DB::table('permissions')
+                    ->whereIn('id', $rawList)
+                    ->pluck('name')
+                    ->toArray();
+            }
+        );
+
+        $this->userPermissions = is_array($perms) ? $perms : [];
+
+        return $this->userPermissions;
+    }
+
     public function getJobSuggestions(Request $request)
     {
         $search = strtolower(trim((string) $request->input('search')));
@@ -1361,7 +1414,8 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
         }
 
         $chkAdminRole = $this->user->hasRole('admin');
-        $isAdmin = ($chkAdminRole > 0) && in_array('all_requisition', $this->userPermissions) && in_array('view_jobs', $this->userPermissions);
+        $userPerms = (array) ($this->userPermissions ?? $this->getUserPermissions());
+        $isAdmin = ($chkAdminRole > 0) && in_array('all_requisition', $userPerms) && in_array('view_jobs', $userPerms);
         $isNonAdmin = ! $isAdmin;
 
         $userAssignedJobIds = [];
@@ -1626,6 +1680,7 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
                 'closed'   => $viewModel->closedCount,
                 'inactive' => $viewModel->inactiveCount,
             ],
+            'tabs'       => $viewModel->tabs,
             'pagination' => view('service_company.ajax_pages.pagination', ['pagination' => array_merge(['listType' => 'client_jobs'], $viewModel->pagination)])->render(),
         ]);
     }
@@ -2099,7 +2154,8 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
                         $showCount++;
 
                     }
-                    if (in_array('add_team_on_requisition', $this->userPermissions)) {
+                    $userPerms = (array) ($this->userPermissions ?? $this->getUserPermissions());
+                    if (in_array('add_team_on_requisition', $userPerms)) {
                         $html .= '<div class="symbol symbol-30 symbol-circle symbol-light" data-bs-placement="top" data-toggle="tooltip2" title="More Comtact list.."><span class="symbol-label font-weight-bold">'.$partnersCount.'+</span></div>';
                     }
                     $html .= '</div></div><div class="fs-7 fw-bold text-muted">Client</div>';
@@ -2510,7 +2566,7 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
             'user_id' => $this->user->id,
             'custom_search' => $custom_search,
             'requisition_type' => $requisition_type,
-            'v' => 'status_v14',
+            'v' => 'status_v15',
         ];
 
         // Two-axis version key: user (personal filter changes) + company (job creates/updates by any team member).
@@ -2747,7 +2803,8 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
         }
 
         // 5. RESTRICT TO ASSIGNED USERS (if not admin)
-        $isNonAdmin = ! (($chkAdminRole > 0) && in_array('all_requisition', $this->userPermissions) && in_array('view_jobs', $this->userPermissions));
+        $userPerms = (array) ($this->userPermissions ?? $this->getUserPermissions());
+        $isNonAdmin = ! (($chkAdminRole > 0) && in_array('all_requisition', $userPerms) && in_array('view_jobs', $userPerms));
         $userAssignedJobIds = [];
         if ($isNonAdmin) {
             $userAssignedJobIds = DB::table('job_assign')
@@ -3129,8 +3186,63 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
 
                 $client_city_jobs = $row->client_city_jobs ?? [];
                 $firstCity = collect($client_city_jobs)->first();
-                $cityName = $firstCity['city_name'] ?? '';
-                $countryName = $firstCity['country_name'] ?? '';
+                $cityName = trim((string) ($firstCity['city_name'] ?? ''));
+                $countryName = trim((string) ($firstCity['country_name'] ?? ''));
+
+                $allCities = [];
+                $workLocations = [];
+                $seenCityKeys = [];
+
+                if (! empty($client_city_jobs) && is_array($client_city_jobs)) {
+                    foreach ($client_city_jobs as $ccj) {
+                        $ccjArr = (array) $ccj;
+                        $cName = trim((string) ($ccjArr['city_name'] ?? ''));
+                        $cKey = mb_strtolower($cName);
+                        if ($cName !== '' && ! isset($seenCityKeys[$cKey])) {
+                            $seenCityKeys[$cKey] = true;
+                            $allCities[] = $cName;
+                            $workLocations[] = [
+                                'city_id' => (int) ($ccjArr['city_id'] ?? 0),
+                                'city_name' => $cName,
+                                'country_id' => (int) ($ccjArr['country_id'] ?? 0),
+                                'country_name' => trim((string) ($ccjArr['country_name'] ?? '')),
+                            ];
+                        }
+                    }
+                }
+
+                // Pure CQRS fallback: If client_city_jobs is empty in ES, inspect client_location inside ES document (0% MySQL reads)
+                if (empty($allCities) && ! empty($row->client_location) && is_array($row->client_location)) {
+                    foreach ($row->client_location as $locItem) {
+                        $locObj = (object) $locItem;
+                        $cName = trim((string) ($locObj->city ?? ''));
+                        $cKey = mb_strtolower($cName);
+                        if ($cName !== '' && ! isset($seenCityKeys[$cKey])) {
+                            $seenCityKeys[$cKey] = true;
+                            $allCities[] = $cName;
+                            $workLocations[] = [
+                                'city_id' => (int) ($locObj->city_id ?? 0),
+                                'city_name' => $cName,
+                                'country_id' => (int) ($locObj->country_id ?? 0),
+                                'country_name' => '',
+                            ];
+                        }
+                    }
+                }
+
+                // Sane Payload Guardrail: Cap at 50 work locations per job to protect client RAM & DOM
+                $MAX_WORK_LOCATIONS = 50;
+                if (count($workLocations) > $MAX_WORK_LOCATIONS) {
+                    \Illuminate\Support\Facades\Log::warning("Job {$row->id} exceeded maximum work location limit of {$MAX_WORK_LOCATIONS}: " . count($workLocations));
+                    $workLocations = array_slice($workLocations, 0, $MAX_WORK_LOCATIONS);
+                    $allCities = array_slice($allCities, 0, $MAX_WORK_LOCATIONS);
+                }
+
+                if (empty($cityName) && ! empty($allCities[0])) {
+                    $cityName = $allCities[0];
+                } elseif (! empty($cityName) && empty($allCities)) {
+                    $allCities = [$cityName];
+                }
 
                 $hiringManager = '';
                 $hiringManagerdesignation = '';
@@ -3271,7 +3383,10 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
                     'salary_visibility' => $isSalaryConfidential ? 'confidential' : $normSalaryVis,
                     'is_salary_confidential' => $isSalaryConfidential,
                     'work_type' => $work_type,
+                    'primary_city' => $cityName,
                     'city' => $cityName,
+                    'cities' => $allCities,
+                    'work_locations' => $workLocations,
                     'country' => $countryName,
                     'badge' => $badge,
                     'recommendation_text' => $recommendation_text,
@@ -3716,7 +3831,8 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
         ];
 
         // 5. RESTRICT TO ASSIGNED USERS (if not admin)
-        if (! (($chkAdminRole > 0) && in_array('all_requisition', $this->userPermissions) && in_array('view_jobs', $this->userPermissions))) {
+        $userPerms = (array) ($this->userPermissions ?? $this->getUserPermissions());
+        if (! (($chkAdminRole > 0) && in_array('all_requisition', $userPerms) && in_array('view_jobs', $userPerms))) {
             $must[] = [
                 'nested' => [
                     'path' => 'job_assign',
@@ -3966,7 +4082,8 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
         ];
 
         // 5. RESTRICT TO ASSIGNED USERS (if not admin)
-        if (! (($chkAdminRole > 0) && in_array('all_requisition', $this->userPermissions) && in_array('view_jobs', $this->userPermissions))) {
+        $userPerms = (array) ($this->userPermissions ?? $this->getUserPermissions());
+        if (! (($chkAdminRole > 0) && in_array('all_requisition', $userPerms) && in_array('view_jobs', $userPerms))) {
             $must[] = [
                 'nested' => [
                     'path' => 'job_assign',
@@ -6008,7 +6125,7 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
                     $locationsByClient[$loc->client_id] = [];
                 }
                 if (count($locationsByClient[$loc->client_id]) < 3) {
-                    $cityName = $loc->country_id == 101 ? $loc->city_name : $loc->city;
+                    $cityName = ! empty($loc->city_name) ? $loc->city_name : ($loc->city ?? '');
                     $addressPart = $loc->address ? ucwords($loc->address) : '';
                     $cityPart = $cityName ? ucwords($cityName) : '';
                     $statePart = $loc->state_name ? ucwords($loc->state_name) : '';
@@ -6142,7 +6259,7 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
 
             $locList = [];
             foreach ($locations as $loc) {
-                $cityName = $loc->country_id == 101 ? $loc->city_name : $loc->city;
+                $cityName = ! empty($loc->city_name) ? $loc->city_name : ($loc->city ?? '');
                 $addressPart = $loc->address ? ucwords($loc->address) : '';
                 $cityPart = $cityName ? ucwords($cityName) : '';
                 $statePart = $loc->state_name ? ucwords($loc->state_name) : '';
@@ -6478,11 +6595,8 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
             if (count(@$locInfo) > 0) {
                 foreach ($locInfo as $lArr) {
 
-                    $city_name = $lArr->city;
+                    $city_name = ! empty($lArr->city_name) ? $lArr->city_name : (! empty($lArr->city) ? $lArr->city : '');
                     $selected = '';
-                    if ($lArr->country_id == 101) {
-                        $city_name = $lArr->city_name;
-                    }
                     if (in_array($lArr->id, $jobLocation)) {
                         $selected = 'selected';
                     }
@@ -6586,7 +6700,7 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
 
         $resolvedCity = '';
         if ($locRecord) {
-            $resolvedCity = ($locRecord->country_id == 101 && ! empty($locRecord->city_name))
+            $resolvedCity = ! empty($locRecord->city_name)
                 ? $locRecord->city_name
                 : ($locRecord->city ?? '');
         }
@@ -7197,6 +7311,11 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
         // $url = $request->fullUrl();
 
         // dd($request->all());
+        $this->user = $this->user ?? auth()->user();
+        if (! $this->user) {
+            return response()->json(['status' => 'error', 'message' => 'Unauthorized'], 401);
+        }
+        $this->getUserPermissions();
         $userId = $this->user->id;
 
         abort_if(Gate::denies('view_jobs'), 403);
@@ -7217,9 +7336,11 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
         $this->currency = GeneralMethod::currency();
         $this->employmentType = GeneralMethod::employmentType();
 
+        $jobVersion = Cache::get('jobDetails_version_job_'.$id, 1);
         $cachePayload = [
             'company' => $company_id,
             'job_id' => $id,
+            'job_version' => $jobVersion,
             'bechshowtab' => @$request->bechshowtab,
             'user_id' => $this->user->id,
             // Intent: make cached drawer HTML expire when the company Agency Agreement is edited.
@@ -7231,7 +7352,7 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
             $this->benchshowtabclose = false;
         }
 
-        $versionKey = 'jobDetails_v2_version_user_'.$this->user->id;
+        $versionKey = 'jobDetails_v3_version_user_'.$this->user->id;
         $version = cache()->get($versionKey, 1);
         $cacheKeySet = 'ats:jobDetails:'.$this->user->id.':'.$version.':'.md5(json_encode($cachePayload));
         /* ----------------------------
@@ -7549,25 +7670,72 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
         // dd(auth()->user()->id,$company_id,$this->job->id);
 
         $client_city_jobs = $this->job->client_city_jobs ?? [];
-        $this->jobLocationCount = is_array($client_city_jobs) ? count($client_city_jobs) : 0;
-        $clientLocation = collect($client_city_jobs);
-        $this->jobCitySel = $clientLocation
-            ->filter(fn ($row) => ! empty($row['city_name']))
-            ->pluck('city_name')
-            ->map(fn ($c) => ucwords($c))
-            ->values()
-            ->all();
+        $extractedCities = [];
+        if (! empty($client_city_jobs) && is_iterable($client_city_jobs)) {
+            foreach ($client_city_jobs as $ccj) {
+                $cName = trim((string) (data_get($ccj, 'city_name') ?: data_get($ccj, 'city') ?: ''));
+                if ($cName !== '') {
+                    $extractedCities[] = $cName;
+                }
+            }
+        }
+
+        // Pure CQRS fallback: If client_city_jobs is empty in ES, inspect client_location in ES document (0% MySQL reads)
+        if (empty($extractedCities) && ! empty($this->job->client_location) && is_iterable($this->job->client_location)) {
+            foreach ($this->job->client_location as $locItem) {
+                $cName = trim((string) (data_get($locItem, 'city_name') ?: data_get($locItem, 'city') ?: ''));
+                if ($cName !== '') {
+                    $extractedCities[] = $cName;
+                }
+            }
+        }
+
+        // Resilient DB fallback if ES document had not indexed locations yet (e.g. freshly created or updated job)
+        if (empty($extractedCities)) {
+            $dbCityRows = DB::table('client_city_jobs')
+                ->leftJoin('city_list', 'city_list.city_id', '=', 'client_city_jobs.city_id')
+                ->where('client_city_jobs.job_id', $this->job->id ?? $id)
+                ->pluck('city_list.city')
+                ->toArray();
+            foreach ($dbCityRows as $dbc) {
+                $cleanDbc = trim((string) $dbc);
+                if ($cleanDbc !== '') {
+                    $extractedCities[] = $cleanDbc;
+                }
+            }
+        }
+
+        $seenKeys = [];
+        $dedupedCities = [];
+        foreach ($extractedCities as $cName) {
+            $displayName = $cName;
+            if (strpos($displayName, '/') !== false) {
+                $slashParts = explode('/', $displayName);
+                $displayName = end($slashParts);
+            }
+            $k = mb_strtolower(trim($displayName));
+            if ($k !== '' && ! isset($seenKeys[$k])) {
+                $seenKeys[$k] = true;
+                $dedupedCities[] = trim($displayName);
+            }
+        }
+        if (count($dedupedCities) > 50) {
+            $dedupedCities = array_slice($dedupedCities, 0, 50);
+        }
+        $this->jobCitySel = $dedupedCities;
+        $this->jobLocationCount = count($this->jobCitySel);
 
         $work_type = $this->job->work_type ?? 'no';
         if ($work_type == 'yes') {
             $this->jobCitySelected = 'Remote';
         } elseif ($work_type == 'no') {
-            $this->jobCitySelected = implode(',', $this->jobCitySel);
+            $this->jobCitySelected = implode(', ', $this->jobCitySel);
         } elseif ($work_type == 'any') {
-            $this->jobCitySelected = 'Remote/'.implode(',', $this->jobCitySel);
+            $this->jobCitySelected = count($this->jobCitySel) > 0 ? ('Remote / '.implode(', ', $this->jobCitySel)) : 'Remote';
         } elseif ($work_type == 'other') {
-            $this->jobCitySelected = ''.implode(',', $this->jobCitySel);
+            $this->jobCitySelected = implode(', ', $this->jobCitySel);
         }
+        $this->jobCities = $this->jobCitySel;
 
         $jobId = $this->job->id ?? $id;
 
@@ -7728,11 +7896,12 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
         // $chkAdminRole = DB::table('roles')->select('roles.id')->where('id', $this->user->role->role_id)->where('name', 'admin')->count();
 
         $userId = $this->user->id;
+        $userPerms = (array) ($this->userPermissions ?? $this->getUserPermissions());
 
         if (
-            ($chkAdminRole > 0) && (in_array('all_requisition', $this->userPermissions) && in_array(
+            ($chkAdminRole > 0) && (in_array('all_requisition', $userPerms) && in_array(
                 'view_jobs',
-                $this->userPermissions
+                $userPerms
             )
             )
         ) {
@@ -10725,7 +10894,7 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
             }
             if (! empty($currentJobLocation)) {
                 foreach ($currentJobLocation as $cloc) {
-                    if ($cloc->country_id == 101) {
+                    if (! empty($cloc->city_id)) {
                         $matchQuery->orWhere('client_location.city_id', $cloc->city_id);
                     } else {
                         $matchQuery->orWhere('client_location.city', 'like', "%{$cloc->city}%");
@@ -10871,7 +11040,7 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
 
             if (! empty($currentJobLocation)) {
                 foreach ($currentJobLocation as $cloc) {
-                    if ($cloc->country_id == 101) {
+                    if (! empty($cloc->city_id)) {
                         $recommended_Location = $recommended_Location->orWhere('client_location.city_id', $cloc->city_id);
                     } else {
                         $recommended_Location = $recommended_Location->orWhere('client_location.city', 'like', "%{$cloc->city}%");
@@ -14724,7 +14893,9 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
         try {
             $jobService->updateJob($job, $request->all(), auth()->user());
 
-            /* Intent: Invalidate tenant career Redis caches so public page shows updated job details immediately */
+            /* Intent: Invalidate tenant career and Job Drawer Redis/Dragonfly caches so pages show updated job details immediately */
+            Cache::increment('jobDetails_version_job_'.$id);
+            Cache::increment('jobDetails_v3_version_user_'.auth()->id());
             GeneralMethod::invalidateCareerTenantCache($company_id, $id);
 
             return Reply::redirect(route('service_company.jobs.index'), __('menu.jobs').' '.__('messages.updatedSuccessfully'));

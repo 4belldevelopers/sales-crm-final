@@ -267,74 +267,7 @@ class JobService
             }
 
             // 5. Batch Work City Processing
-            $workCity = $requestData['kt_tagify_work_location'] ?? null;
-            if (! empty($workCity)) {
-                $workCityAll = is_array($workCity) ? $workCity : json_decode($workCity, true);
-                if (is_array($workCityAll) && count($workCityAll) > 0) {
-                    $cityNames = [];
-                    $countryNames = [];
-                    $cityPairs = [];
-
-                    foreach ($workCityAll as $cVal) {
-                        $rawVal = (string) ($cVal['value'] ?? '');
-                        $parts = strpos($rawVal, '|') !== false ? explode('|', $rawVal) : explode(',', $rawVal);
-                        if (count($parts) >= 3) {
-                            $cName = trim($parts[0]);
-                            $coName = trim(end($parts));
-                            $cityNames[] = $cName;
-                            $countryNames[] = $coName;
-                            $cityPairs[] = ['city' => $cName, 'country' => $coName];
-                        } elseif (count($parts) >= 1 && trim($parts[0]) !== '') {
-                            $cName = trim($parts[0]);
-                            $cityNames[] = $cName;
-                            $cityPairs[] = ['city' => $cName, 'country' => null];
-                        }
-                    }
-
-                    if (count($cityNames) > 0) {
-                        $cityQuery = DB::table('city_list')
-                            ->join('state_list', 'state_list.id', '=', 'city_list.state_id')
-                            ->join('countries', 'countries.id', '=', 'state_list.country_id')
-                            ->select('city_list.city_id', 'city_list.city', 'countries.id as country_id', 'countries.country_name')
-                            ->whereIn('city_list.city', array_unique($cityNames));
-                        $nonEmptyCountries = array_values(array_filter($countryNames));
-                        if (! empty($nonEmptyCountries)) {
-                            $cityQuery->whereIn('countries.country_name', array_unique($nonEmptyCountries));
-                        }
-                        $cityRows = $cityQuery->get();
-
-                        $batchCityInsert = [];
-                        foreach ($cityPairs as $pair) {
-                            $match = $cityRows->first(function ($item) use ($pair) {
-                                $itemCity = trim((string) $item->city);
-                                $pairCity = trim((string) $pair['city']);
-
-                                if (empty($pair['country'])) {
-                                    return strcasecmp($itemCity, $pairCity) === 0;
-                                }
-
-                                $itemCountry = trim((string) $item->country_name);
-                                $pairCountry = trim((string) $pair['country']);
-
-                                return strcasecmp($itemCity, $pairCity) === 0
-                                    && strcasecmp($itemCountry, $pairCountry) === 0;
-                            });
-                            if ($match) {
-                                $batchCityInsert[] = [
-                                    'company_id' => $user->company_id,
-                                    'city_id' => $match->city_id,
-                                    'country_id' => $match->country_id,
-                                    'job_id' => $job->id,
-                                ];
-                            }
-                        }
-
-                        if (count($batchCityInsert) > 0) {
-                            DB::table('client_city_jobs')->insert($batchCityInsert);
-                        }
-                    }
-                }
-            }
+            $this->syncJobCities($job, $requestData['kt_tagify_work_location'] ?? null, $user, $requestData);
 
             // 6. Job Countries Processing
             if (! empty($requestData['kt_select2_4']) && is_array($requestData['kt_select2_4'])) {
@@ -695,13 +628,23 @@ class JobService
             throw $e;
         }
 
-        // Post-commit Asynchronous Elasticsearch Indexing via Dedicated Queue
+        // Post-commit Elasticsearch Indexing (Immediate + Async Dedicated Queue)
         try {
+            GeneralMethod::elasticJobsAddEditUpdateIndex($job->id);
             if (class_exists(ElasticJobsIndexJob::class)) {
                 ElasticJobsIndexJob::dispatch($job->id)->onQueue('es-index');
             }
         } catch (\Throwable $e) {
-            Log::error('[JobService@createJob] ES Indexing queue dispatch failed: '.$e->getMessage());
+            Log::error('[JobService@createJob] ES Indexing failed: '.$e->getMessage());
+        }
+
+        // Multi-Tenant Atomic Cache Invalidation & Job Drawer Cache Purge
+        try {
+            \Illuminate\Support\Facades\Cache::increment('jobDetails_version_job_'.$job->id);
+            \Illuminate\Support\Facades\Cache::increment('jobDetails_v3_version_user_'.$user->id);
+            GeneralMethod::invalidateCareerTenantCache($user->company_id, $job->id);
+        } catch (\Throwable $e) {
+            Log::warning('[JobService@createJob] Cache invalidation warning: '.$e->getMessage());
         }
 
         return $job;
@@ -787,13 +730,13 @@ class JobService
         ];
 
         $tenantDefaultCurrencyKey = \App\Services\CurrencyService::getTenantCurrencyKey($job->company_id);
-        $job->min_salary_currency = (!isset($requestData['min_salary_currency']) || $requestData['min_salary_currency'] === '' || $requestData['min_salary_currency'] === null)
+        $job->min_salary_currency = (! isset($requestData['min_salary_currency']) || $requestData['min_salary_currency'] === '' || $requestData['min_salary_currency'] === null)
             ? $tenantDefaultCurrencyKey
             : (int) $requestData['min_salary_currency'];
         $job->min_salary = (! empty($requestData['minimum_salary']) && is_numeric($requestData['minimum_salary'])) ? (int) $requestData['minimum_salary'] : 0;
         $job->min_sal_mode = $requestData['min_sal_mode'] ?? null;
 
-        $job->max_salary_currency = (!isset($requestData['max_salary_currency']) || $requestData['max_salary_currency'] === '' || $requestData['max_salary_currency'] === null)
+        $job->max_salary_currency = (! isset($requestData['max_salary_currency']) || $requestData['max_salary_currency'] === '' || $requestData['max_salary_currency'] === null)
             ? $job->min_salary_currency
             : (int) $requestData['max_salary_currency'];
         $job->max_salary = (! empty($requestData['maximum_salary']) && is_numeric($requestData['maximum_salary'])) ? (int) $requestData['maximum_salary'] : 0;
@@ -933,79 +876,8 @@ class JobService
                 ]);
             }
 
-            // Batch Work City Processing (Replaced wildcard pattern search with exact batch lookup)
-            $workCity = $requestData['kt_tagify_work_location'] ?? null;
-            if (! empty($workCity)) {
-                DB::table('client_city_jobs')->where('job_id', $job->id)->delete();
-                $workCityAll = is_array($workCity) ? $workCity : json_decode($workCity, true);
-
-                if (is_array($workCityAll) && count($workCityAll) > 0) {
-                    $cityNames = [];
-                    $countryNames = [];
-                    $cityPairs = [];
-
-                    foreach ($workCityAll as $cVal) {
-                        $rawVal = (string) ($cVal['value'] ?? '');
-                        $parts = strpos($rawVal, '|') !== false ? explode('|', $rawVal) : explode(',', $rawVal);
-                        if (count($parts) >= 3) {
-                            $cName = trim($parts[0]);
-                            $coName = trim(end($parts));
-                            $cityNames[] = $cName;
-                            $countryNames[] = $coName;
-                            $cityPairs[] = ['city' => $cName, 'country' => $coName];
-                        } elseif (count($parts) >= 1 && trim($parts[0]) !== '') {
-                            $cName = trim($parts[0]);
-                            $cityNames[] = $cName;
-                            $cityPairs[] = ['city' => $cName, 'country' => null];
-                        }
-                    }
-
-                    if (count($cityNames) > 0) {
-                        $cityQuery = DB::table('city_list')
-                            ->join('state_list', 'state_list.id', '=', 'city_list.state_id')
-                            ->join('countries', 'countries.id', '=', 'state_list.country_id')
-                            ->select('city_list.city_id', 'city_list.city', 'countries.id as country_id', 'countries.country_name')
-                            ->whereIn('city_list.city', array_unique($cityNames));
-                        $nonEmptyCountries = array_values(array_filter($countryNames));
-                        if (! empty($nonEmptyCountries)) {
-                            $cityQuery->whereIn('countries.country_name', array_unique($nonEmptyCountries));
-                        }
-                        $cityRows = $cityQuery->get();
-
-                        $batchCityInsert = [];
-                        foreach ($cityPairs as $pair) {
-                            $match = $cityRows->first(function ($item) use ($pair) {
-                                $itemCity = trim((string) $item->city);
-                                $pairCity = trim((string) $pair['city']);
-
-                                if (empty($pair['country'])) {
-                                    return strcasecmp($itemCity, $pairCity) === 0;
-                                }
-
-                                $itemCountry = trim((string) $item->country_name);
-                                $pairCountry = trim((string) $pair['country']);
-
-                                return strcasecmp($itemCity, $pairCity) === 0
-                                    && strcasecmp($itemCountry, $pairCountry) === 0;
-                            });
-
-                            if ($match) {
-
-                                $batchCityInsert[] = [
-                                    'company_id' => $user->company_id,
-                                    'city_id' => $match->city_id,
-                                    'country_id' => $match->country_id,
-                                    'job_id' => $job->id,
-                                ];
-                            }
-                        }
-
-                        if (count($batchCityInsert) > 0) {
-                            DB::table('client_city_jobs')->insert($batchCityInsert);
-                        }
-                    }
-                }
-            }
+            // Batch Work City Processing
+            $this->syncJobCities($job, $requestData['kt_tagify_work_location'] ?? null, $user, $requestData);
 
             // Job Countries
             if (! empty($requestData['kt_select2_4']) && is_array($requestData['kt_select2_4'])) {
@@ -1236,7 +1108,10 @@ class JobService
 
         // Multi-Tenant Atomic Cache Invalidation & Reverb Synchronization
         try {
-            // A. Bust Job Caches across Redis
+            // A. Bust Job Caches across Redis / Dragonfly & Atomic Drawer Invalidation
+            \Illuminate\Support\Facades\Cache::increment('jobDetails_version_job_'.$job->id);
+            \Illuminate\Support\Facades\Cache::increment('jobDetails_v3_version_user_'.$user->id);
+            GeneralMethod::invalidateCareerTenantCache($user->company_id, $job->id);
             \Illuminate\Support\Facades\Cache::forget('jobDetails_version_company_'.$user->company_id);
             \Illuminate\Support\Facades\Cache::forget('v3:status_job:'.$job->id);
             \Illuminate\Support\Facades\Cache::forget('v3:status_log:'.$job->id);
@@ -1277,5 +1152,168 @@ class JobService
         }
 
         return $job;
+    }
+
+    /**
+     * Synchronize work locations for a job into client_city_jobs with full database alias support,
+     * multi-country disambiguation, and resilient country fallback.
+     */
+    protected function syncJobCities($job, $workCity, $user, array $requestData): void
+    {
+        DB::table('client_city_jobs')->where('job_id', $job->id)->delete();
+
+        if (! empty($workCity)) {
+            $workCityAll = is_array($workCity) ? $workCity : json_decode($workCity, true);
+            if (is_array($workCityAll) && count($workCityAll) > 0) {
+                $cityPairs = [];
+                $allCityVariants = [];
+
+                foreach ($workCityAll as $cVal) {
+                    $rawVal = trim((string) (is_array($cVal) ? ($cVal['value'] ?? '') : $cVal));
+                    if ($rawVal === '') {
+                        continue;
+                    }
+
+                    $cName = $rawVal;
+                    $coName = null;
+
+                    // Support parenthesized chips e.g. "London (England, United Kingdom)"
+                    if (preg_match('/^([^(]+)\(([^)]+)\)/', $rawVal, $m)) {
+                        $cName = trim($m[1]);
+                        $insideParts = array_map('trim', explode(',', $m[2]));
+                        $coName = trim(end($insideParts));
+                    } elseif (strpos($rawVal, '|') !== false) {
+                        $parts = array_map('trim', explode('|', $rawVal));
+                        $cName = trim($parts[0]);
+                        if (count($parts) >= 2) {
+                            $coName = trim(end($parts));
+                        }
+                    } elseif (strpos($rawVal, ',') !== false) {
+                        $parts = array_map('trim', explode(',', $rawVal));
+                        $cName = trim($parts[0]);
+                        if (count($parts) >= 2) {
+                            $coName = trim(end($parts));
+                        }
+                    }
+
+                    if ($cName === '') {
+                        continue;
+                    }
+
+                    $cityPairs[] = ['city' => $cName, 'country' => $coName];
+
+                    // Expand known database aliases in city_list
+                    $variants = [$cName];
+                    if (strcasecmp($cName, 'Bengaluru') === 0 || strcasecmp($cName, 'Bangalore') === 0) {
+                        $variants[] = 'Bangalore/Bengaluru';
+                        $variants[] = 'Bangalore';
+                        $variants[] = 'Bengaluru';
+                    }
+                    if (strcasecmp($cName, 'Gurugram') === 0 || strcasecmp($cName, 'Gurgaon') === 0) {
+                        $variants[] = 'Gurgaon/Gurugram';
+                        $variants[] = 'Gurgaon';
+                        $variants[] = 'Gurugram';
+                    }
+                    if (strcasecmp($cName, 'New York') === 0 || strcasecmp($cName, 'New York City') === 0) {
+                        $variants[] = 'New York City';
+                        $variants[] = 'New York';
+                    }
+                    if (strcasecmp($cName, 'Delhi NCR') === 0) {
+                        $variants[] = 'New Delhi';
+                        $variants[] = 'Delhi';
+                    }
+
+                    foreach ($variants as $v) {
+                        $allCityVariants[] = $v;
+                    }
+                }
+
+                if (count($allCityVariants) > 0) {
+                    $cityRows = DB::table('city_list')
+                        ->join('state_list', 'state_list.id', '=', 'city_list.state_id')
+                        ->join('countries', 'countries.id', '=', 'state_list.country_id')
+                        ->select('city_list.city_id', 'city_list.city', 'countries.id as country_id', 'countries.country_name')
+                        ->whereIn('city_list.city', array_unique($allCityVariants))
+                        ->get();
+
+                    $batchCityInsert = [];
+                    $seenInsertedCityIds = [];
+
+                    foreach ($cityPairs as $pair) {
+                        $c = $pair['city'];
+                        $co = $pair['country'];
+                        $isUsPair = $co && in_array(strtolower($co), ['united states', 'usa', 'us', 'america (usa)', 'united states of america']);
+
+                        // 1. Try matching City AND Country (with alias mapping)
+                        $match = $cityRows->first(function ($r) use ($c, $co, $isUsPair) {
+                            $rCity = trim((string) $r->city);
+                            $cityMatch = strcasecmp($rCity, $c) === 0 || stripos($rCity, $c) !== false || stripos($c, $rCity) !== false;
+                            if (! $cityMatch) {
+                                return false;
+                            }
+                            if (empty($co)) {
+                                return true;
+                            }
+                            $rCountry = strtolower(trim((string) $r->country_name));
+                            if ($isUsPair && in_array($rCountry, ['united states', 'usa', 'us', 'america (usa)', 'united states of america'])) {
+                                return true;
+                            }
+
+                            return strcasecmp($r->country_name, $co) === 0 || stripos($r->country_name, $co) !== false || stripos($co, $r->country_name) !== false;
+                        });
+
+                        // 2. Resilient Fallback: Match by City name
+                        if (! $match) {
+                            $match = $cityRows->first(function ($r) use ($c) {
+                                $rCity = trim((string) $r->city);
+
+                                return strcasecmp($rCity, $c) === 0 || stripos($rCity, $c) !== false || stripos($c, $rCity) !== false;
+                            });
+                        }
+
+                        if ($match && ! isset($seenInsertedCityIds[$match->city_id])) {
+                            $seenInsertedCityIds[$match->city_id] = true;
+                            $batchCityInsert[] = [
+                                'company_id' => $user->company_id,
+                                'city_id' => $match->city_id,
+                                'country_id' => $match->country_id,
+                                'job_id' => $job->id,
+                            ];
+                        }
+                    }
+
+                    if (count($batchCityInsert) > 0) {
+                        DB::table('client_city_jobs')->insert($batchCityInsert);
+                    }
+                }
+            }
+        }
+
+        // Resilience: If client_city_jobs is still empty after processing, auto-populate from client location/address
+        $hasCity = DB::table('client_city_jobs')->where('job_id', $job->id)->exists();
+        if (! $hasCity && ! empty($requestData['address_id'])) {
+            $addrId = (int) $requestData['address_id'];
+            $locRecord = DB::table('client_location')->where('id', $addrId)->first();
+            if (! $locRecord) {
+                $locRecord = DB::table('client_location')->where('city_id', $addrId)->first();
+            }
+            if ($locRecord && ! empty($locRecord->city_id)) {
+                DB::table('client_city_jobs')->insert([
+                    'company_id' => $user->company_id,
+                    'city_id' => $locRecord->city_id,
+                    'country_id' => $locRecord->country_id ?? 101,
+                    'job_id' => $job->id,
+                ]);
+            } elseif ($addrId > 0 && DB::table('city_list')->where('city_id', $addrId)->exists()) {
+                $cityRow = DB::table('city_list')->where('city_id', $addrId)->first();
+                $stateRow = DB::table('state_list')->where('id', $cityRow->state_id ?? 0)->first();
+                DB::table('client_city_jobs')->insert([
+                    'company_id' => $user->company_id,
+                    'city_id' => $addrId,
+                    'country_id' => $stateRow->country_id ?? 101,
+                    'job_id' => $job->id,
+                ]);
+            }
+        }
     }
 }

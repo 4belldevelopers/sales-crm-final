@@ -817,7 +817,7 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
             $pendingRequests = [];
             $pendingJobsCountMap = [];
 
-            if ($tabFilter === 'all' && (int)$page === 1 && ! $hiringFilter && ! $inactiveFilter && $this->elasticService->indexExists(ELASTIC_CLIENT_REQUEST)) {
+            if ($tabFilter === 'all' && (int) $page === 1 && ! $hiringFilter && ! $inactiveFilter && $this->elasticService->indexExists(ELASTIC_CLIENT_REQUEST)) {
                 try {
                     $reqBool = [
                         'must' => [
@@ -889,7 +889,8 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
                                 foreach ($jobReqResp['aggregations']['by_from_company']['buckets'] ?? [] as $b) {
                                     $pendingJobsCountMap[(int) $b['key']] = (int) $b['doc_count'];
                                 }
-                            } catch (\Throwable $e) {}
+                            } catch (\Throwable $e) {
+                            }
                         }
 
                         foreach ($pendingRequests as &$pItem) {
@@ -902,7 +903,7 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
                         $total += count($pendingRequests);
                     }
                 } catch (\Throwable $esReqEx) {
-                    \Log::warning('Error querying ELASTIC_CLIENT_REQUEST for All Clients pinned tab: ' . $esReqEx->getMessage());
+                    \Log::warning('Error querying ELASTIC_CLIENT_REQUEST for All Clients pinned tab: '.$esReqEx->getMessage());
                 }
             }
 
@@ -1082,6 +1083,7 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
                         'days_ago' => (string) $daysAgo,
                         'projection_version' => (int) $tenantVersion,
                     ];
+
                     continue;
                 }
 
@@ -2704,8 +2706,6 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
      * and request correlation headers.
      *
      * @param  int  $id  Client ID (or Direct Client company ID)
-     * @param  Request  $request
-     * @param  ClientPerformanceAnalyticsService  $analyticsService
      * @return \Illuminate\Http\JsonResponse
      */
     public function performanceAnalyticsV1($id, Request $request, ClientPerformanceAnalyticsService $analyticsService)
@@ -2735,18 +2735,18 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
                 ->header('X-Schema-Version', $dashboard['meta']['schema_version']);
         } catch (\Illuminate\Auth\Access\AuthorizationException $e) {
             return response()->json([
-                'status'  => 'error',
+                'status' => 'error',
                 'message' => $e->getMessage(),
             ], 403);
         } catch (\Throwable $e) {
             \Log::error('performanceAnalyticsV1 error: '.$e->getMessage(), [
-                'client_id'  => $id,
+                'client_id' => $id,
                 'company_id' => $companyId,
-                'trace'      => $e->getTraceAsString(),
+                'trace' => $e->getTraceAsString(),
             ]);
 
             return response()->json([
-                'status'  => 'error',
+                'status' => 'error',
                 'message' => 'Unable to generate performance analytics. Please try again.',
             ], 500);
         }
@@ -2760,9 +2760,25 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
         $clientId = (int) $request->input('clientId');
         $companyId = (int) auth()->user()->company_id;
 
+        $client = DB::table('clients')->select('contact_person', 'company_name')->where('id', $clientId)->first();
+        $primaryContactName = strtolower(trim((string) @$client->contact_person));
+        $clientCompanyName = (string) (@$client->company_name ?? 'Client');
+
         $schedule = DB::table('client_contact_info')
-            ->select('id', 'contact_person_name', 'calling_code', 'contact_person_email', 'contact_person_number', 'contact_person_designation')
-            ->where('client_id', $clientId);
+            ->leftJoin('client_contact_info_jobs', 'client_contact_info_jobs.client_contact_info_id', '=', 'client_contact_info.id')
+            ->select(
+                'client_contact_info.id',
+                'client_contact_info.client_id',
+                'client_contact_info.contact_person_name',
+                'client_contact_info.calling_code',
+                'client_contact_info.contact_person_email',
+                'client_contact_info.contact_person_number',
+                'client_contact_info.contact_person_designation',
+                'client_contact_info.created_at',
+                DB::raw('COUNT(DISTINCT client_contact_info_jobs.job_id) as linked_jobs_count')
+            )
+            ->where('client_contact_info.client_id', $clientId)
+            ->groupBy('client_contact_info.id');
 
         // Avatar colour palette
         $avatarColors = ['#c084fc', '#60a5fa', '#fbbf24', '#34d399', '#f472b6', '#38bdf8', '#fb923c'];
@@ -2804,6 +2820,30 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
 							<a href="mailto:'.$row->contact_person_email.'" class="action-btn-table" title="Email"><i class="fas fa-envelope"></i></a>
 						</div>';
             })
+            ->addColumn('is_primary', function ($row) use ($primaryContactName) {
+                $name = strtolower(trim((string) @$row->contact_person_name));
+
+                return ($name !== '' && $primaryContactName !== '' && ($name === $primaryContactName || str_contains($primaryContactName, $name) || str_contains($name, $primaryContactName))) ? 1 : 0;
+            })
+            ->addColumn('client_name', function () use ($clientCompanyName) {
+                return $clientCompanyName;
+            })
+            ->addColumn('clean_phone', function ($row) {
+                $calling = trim((string) @$row->calling_code);
+                $num = trim((string) @$row->contact_person_number);
+
+                return $calling ? ($calling.' '.$num) : $num;
+            })
+            ->addColumn('created_formatted', function ($row) {
+                if (! empty($row->created_at)) {
+                    try {
+                        return \Carbon\Carbon::parse($row->created_at)->format('d M Y');
+                    } catch (\Exception $e) {
+                    }
+                }
+
+                return 'Active Member';
+            })
             ->rawColumns(['chkbox', 'Contact', 'Email', 'Phone', 'Status', 'Actions'])
             ->addIndexColumn()->make(true);
 
@@ -2830,7 +2870,7 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
 
         $versionKey = 'clientsdviewmore_version_user_'.$userId;
         $version = cache()->get($versionKey, 1);
-        $cacheKeySet = 'ats:clientsdviewmore_v11:'.$userId.':'.$version.':'.md5(json_encode($cachePayload));
+        $cacheKeySet = 'ats:clientsdviewmore_v12:'.$userId.':'.$version.':'.md5(json_encode($cachePayload));
         /* ----------------------------
         ⚡ Check DragonflyDB first
         ----------------------------- */
@@ -3170,8 +3210,10 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
                 'users.image',
                 'users.status',
                 'users.calling_code',
+                'users.created_at as user_created_at',
                 'recommendation_relation.from_user_id',
-                'users_profile.designation as display_name'
+                'users_profile.designation as display_name',
+                DB::raw('COUNT(DISTINCT job_assign.job_id) as linked_jobs_count')
             );
         $directContactList = $directContactList->join('roles', 'roles.company_id', '=', 'companies.id');
         $directContactList = $directContactList->join('role_user', 'role_user.role_id', '=', 'roles.id');
@@ -3230,6 +3272,40 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
 							<a href="tel:'.$call.'" class="action-btn-table" title="Call"><i class="fas fa-phone"></i></a>
 							<a href="mailto:'.$row->email.'" class="action-btn-table" title="Email"><i class="fas fa-envelope"></i></a>
 						</div>';
+            })
+            ->addColumn('is_primary', function ($row) {
+                return ! empty($row->from_user_id) ? 1 : 0;
+            })
+            ->addColumn('client_name', function ($row) {
+                return (string) @$row->company_name;
+            })
+            ->addColumn('contact_person_name', function ($row) {
+                return (string) @$row->name;
+            })
+            ->addColumn('contact_person_email', function ($row) {
+                return (string) @$row->email;
+            })
+            ->addColumn('contact_person_number', function ($row) {
+                return (string) @$row->mobile;
+            })
+            ->addColumn('contact_person_designation', function ($row) {
+                return (string) @$row->display_name;
+            })
+            ->addColumn('clean_phone', function ($row) {
+                $calling = trim((string) @$row->calling_code);
+                $num = trim((string) @$row->mobile);
+
+                return $calling ? ($calling.' '.$num) : $num;
+            })
+            ->addColumn('created_formatted', function ($row) {
+                if (! empty($row->user_created_at)) {
+                    try {
+                        return \Carbon\Carbon::parse($row->user_created_at)->format('d M Y');
+                    } catch (\Exception $e) {
+                    }
+                }
+
+                return 'Active Member';
             })
             ->rawColumns(['chkbox', 'Contact', 'Email', 'Phone', 'Status', 'Actions'])
             ->addIndexColumn()->make(true);
@@ -4978,9 +5054,13 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
                 ]);
 
             if ($affected === 0) {
-                try { $lock->release(); } catch (\Throwable $e) {}
+                try {
+                    $lock->release();
+                } catch (\Throwable $e) {
+                }
                 $existingInv = DB::table('staffing_company_invitation')->where('id', $invitation_id)->first();
-                $alreadyStatus = ($existingInv && (int)$existingInv->to_invitation_status === 1) ? 'Accepted' : 'Ignored';
+                $alreadyStatus = ($existingInv && (int) $existingInv->to_invitation_status === 1) ? 'Accepted' : 'Ignored';
+
                 return response()->json([
                     'status' => 'conflict',
                     'code' => 'REQUEST_ALREADY_PROCESSED',

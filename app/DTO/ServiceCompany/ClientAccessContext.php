@@ -35,7 +35,7 @@ class ClientAccessContext
     public static function fromRequest(Request $request): self
     {
         $user = auth()->user();
-        if (!$user) {
+        if (! $user) {
             return new self(
                 tenantId: 0,
                 serviceCompanyId: 0,
@@ -93,6 +93,9 @@ class ClientAccessContext
             // 4-Level Boundary for Direct Clients:
             // Partner relationship must be pre-authorized
             $partnerCompanyId = (int) ($request->input('partner_company_id') ?: $request->input('from_company_id') ?: 0);
+            if ($partnerCompanyId <= 0 && $rawClientId > 0) {
+                $partnerCompanyId = $rawClientId;
+            }
 
             $authCacheKey = "ats:auth_context:direct:{$serviceCompanyId}:{$partnerCompanyId}:{$rawClientId}";
             $cachedStatus = Redis::get($authCacheKey);

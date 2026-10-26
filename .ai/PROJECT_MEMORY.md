@@ -20,7 +20,72 @@ Last updated: 2026-10-22 (Super Admin Companies Page UI Redesign, 100% CQRS Read
 - **Test coverage:** `TenantIsolationTest`, `BenchToJobAppTrackerPipelineContractTest`, `BenchTalentRequestPipelineContractTest`, `SuperAdminCompanyLoadTest`, `SuperAdminSubscriptionLoadTest`, `SuperAdminDashboardLoadTest` (100% green).
 - **V2_login blocking-scenarios architecture:** session-epoch pattern + Reverb `UserAccountSuspended` event + `SyncUserStatusAction` (cross-tenant-safe) + `BlockCompanyAction` (static bulk helper) + `block_log` audit table + drop all 20 `refresh:true` ES sites + grep-lint guard. See [docs/V2_login/BLOCKING_SCENARIOS_AUDIT.md](../docs/V2_login/BLOCKING_SCENARIOS_AUDIT.md), [ADR 0007](../docs/adr/0007-blocking-scenarios-architecture.md). Code not yet landed.
 
-<<<<<<< HEAD
+- *2026-10-26* — **Client Drawer Modern Card + Sub-Card Overhaul & Linear/Stripe Continuous Hero Header (100% COMPLETED & VERIFIED)**:
+  - **Scope**: Internal Client Drawer (`resources/views/service_company/client/show.blade.php`), Direct Client Drawer (`resources/views/service_company/client/dviewMore.blade.php`), Direct Client Terms/Request Drawer (`resources/views/service_company/client/requestviewmore.blade.php`).
+  - **Implementation**:
+    - Overhauled all 3 client drawers to the authoritative **Modern Card + Sub-Card Enterprise Design System** (`docs/UI_UX_CARD_SUB_CARD_DESIGN_STANDARD.md`).
+    - Standardized Tier 1 executive toolbar card, Tier 2 sub-tabs card, Tier 3 card stream, and removed 500+ lines of dead mock tables in `#requisitions`.
+    - Implemented **Option 2: "The Linear / Stripe Continuous Header"** for the Hero section (`.cd-hero-card` with `padding: 0; overflow: hidden;`):
+      - Left executive identity anchor (`.cd-hero-continuous-left`) with brand logo, `#CL-{id}` ID tag, scope pills (`[🏢 Internal Client]` / `[🤝 Direct Client]`), and active status indicators.
+      - Right 2-column hairline metadata grid (`.cd-hero-continuous-right`) with Industry, Location, direct external Website link (`domain.com ↗`), Company Type, Workforce Size, and Founded/VID.
+      - Full-width continuous bottom activity strip (`.cd-hero-continuous-bottom`) featuring active roles (`⚡ X Active Roles`), onboarded date, last activity time, and discrete tag pills.
+    - Verified 15.6" screen responsiveness (`1366×768` and `1920×1080`), zero horizontal scroll, and 0% MySQL reads.
+  - **Verification**: `php -l` passed clean with 0 syntax errors, `php artisan view:clear` passed, committed and pushed to `origin/staging`.
+
+- *2026-10-25* — **Client Drawer Jobs Tab: Client Scope Header Classification (Option 2 Implementation 100% COMPLETED & VERIFIED)**:
+  - **User Request & Requirements**:
+    - Audit and implement the missing "Direct Client" vs "Internal Client" classification indicator on the Jobs tab.
+    - User selected Option 2: Place the classification pill badge inside the header of Sub-Card 1 (Job Details) positioned immediately beside the Canonical Status Badge (`HIRING`).
+  - **Architectural Implementation**:
+    - `JobsTabViewModel`: Added `public readonly string $clientType = 'internal'` to state contract.
+    - `ClientJobsReadService`: Populated `clientType: $query->clientType` from the authorized query contract.
+    - `client_jobs_side_bar_ajax.blade.php`:
+      - Dynamically resolved client scope across 4 fallback layers: job's `self_company`, `job->client_type`, request context `$custom`, and `$viewModel->clientType`.
+      - Rendered `.cd-header-badges` in Sub-Card 1 header holding the Client Scope Pill (`.cd-badge-client-type`) alongside `.cd-status-badge`.
+      - **Direct Client**: Emerald Green badge (`#ecfdf5`, border `#a7f3d0`, text `#059669`) with building icon.
+      - **Internal Client**: Primary Blue badge (`#eff6ff`, border `#bfdbfe`, text `#2563eb`) with building icon.
+    - `tab-jobs-style.blade.php`: Added scoped styling for `.cd-header-badges`, `.cd-badge-client-type.type-direct`, and `.cd-badge-client-type.type-internal`.
+    - `docs/UI_UX_CARD_SUB_CARD_DESIGN_STANDARD.md` & `docs/UI_UX_STANDARDS.md`: Codified Option 2 header dual badge requirement into the authoritative standards.
+  - **Verification**: `ClientJobsCqrsReadTest` (1 passed, 11 assertions, 0 MySQL reads), `ClientAccessContextSecurityTest` (3 passed, 5 assertions), Pint clean.
+
+- *2026-10-23* — **Client Drawer Jobs Tab Card/Sub-Card Information Placement Refinement (100% COMPLETED & VERIFIED)**:
+  - **User Request & Requirements**:
+    1. **Move Full-Time**: Remove "Full-Time" from the Compensation card and move it to the Job Details card, placed in the same row immediately next to the client name.
+    2. **Use Client Name**: In the Job Details card, replace Company Name with the actual, dynamically populated Client Name (never static/hardcoded company name).
+    3. **Experience Position**: In the Compensation & Location card (labeled `COMPENSATION & EXP`), place Experience in the second row with a clock icon (`🕒 X - Y Yrs`), keeping Row 1 for bold salary (`₹5,000 - 2.50 L`).
+    4. **Work Mode Text**: Standardize work mode text to "Work From Office" everywhere in this section (never just "Office").
+    5. **Final UI Requirements**: Compact, visually aligned, 15.6" screen responsive, free from unnecessary whitespace, strictly CQRS compliant (0% MySQL reads).
+  - **Architectural Implementation**:
+    - `JobsTabViewModel`: Added `public readonly ?string $clientName = null` to expose dynamically resolved client name to views.
+    - `ClientJobsQuery`: Accepted optional `clientName` parameter passed from drawer contexts.
+    - `ClientJobsReadService`: Resolved authoritative client name with strictly 0% MySQL reads (Dragonfly/Redis cache `ats:client_display_name` with fallback to `ELASTIC_CLIENT_LIST` / `ELASTIC_COMPANIES_INDEX`), injecting it into `$viewModel` and any job document missing `client_name`.
+    - `JobProjectionService`: Updated canonical document assembler to resolve `$client->name` for `client_name` and `client_company`.
+    - `client_jobs_side_bar_ajax.blade.php`:
+      - Sub-Card 1 (Job Details): Replaced company name with dynamic `$clientDisplayName` and inline `$empType` badge (`CLIENT NAME • 💼 Full-Time`).
+      - Sub-Card 2 (Compensation & Exp): Updated header label to `COMPENSATION & EXP`, Row 1 to salary only, Row 2 to dedicated experience (`<i class="far fa-clock"></i> {{ $expText }}`), and Row 3 to location and `"Work From Office"`.
+    - `tab-jobs-style.blade.php`: Styled `.cd-job-client-row`, `.cd-job-client-name`, `.cd-job-emp-type`, and updated `.cd-val-exp` with icon spacing.
+    - `show.blade.php` & `dviewMore.blade.php`: Updated AJAX caller to pass `client_name` dynamically from the open client drawer.
+    - Synchronized documentation in `docs/UI_UX_CARD_SUB_CARD_DESIGN_STANDARD.md` and `docs/UI_UX_STANDARDS.md`.
+  - **Verification**: `ClientJobsCqrsReadTest` (1 passed, 11 assertions, 0 MySQL reads), `ClientAccessContextSecurityTest` (3 passed, 5 assertions), `./vendor/bin/pint --test` 100% clean.
+
+- *2026-10-23* — **Modern Enterprise Card + Sub-Card Design System Standard (100% CODIFIED & MANDATED ACROSS SYSTEM)**:
+  - **User Request & Requirements**:
+    - Formally document and establish the **Modern Card + Sub-Card Design System** (specifically the 3-tier architecture established for the Client Drawer Jobs tab with white-background toolbar card, dynamic right-corner search bar, and white-background sub-tabs card) as the mandatory UI/UX format for all AI coding models and UI/UX design systems across JERO.
+    - Any future module, drawer tab, or entity listing must and only use this format.
+  - **Architectural Implementation**:
+    - **Created Authoritative Standard**: [`docs/UI_UX_CARD_SUB_CARD_DESIGN_STANDARD.md`](../docs/UI_UX_CARD_SUB_CARD_DESIGN_STANDARD.md) detailing:
+      - **Tier 1 (Top Header Toolbar Card)**: Standalone pure white card (`background: #ffffff`, `border: 1px solid #e2e8f0`, `border-radius: 10px`, `box-shadow: 0 1px 3px rgba(15,23,42,0.04)`), left squircle icon box (`38×38px`, `#eff6ff`) with bold title (15px) & subtitle (11.5px), and right dynamic search sub-card (`.cd-*-search-subcard`) with debounced keyup (300ms) + interactive clear button (`✕`) + primary action button (`btn-primary`).
+      - **Tier 2 (Sub-Tabs Card)**: Standalone pure white container card (`#ffffff`, border `#e2e8f0`, radius 10px) with card buttons (`.cd-*-tab-btn`), dynamic semantic count pills, and single active primary blue highlight (`background: #009ef7 !important; color: #ffffff !important`). All inactive tabs remain neutral white.
+      - **Tier 3 (Primary Card Stream)**: High-density cards (`border: 1px solid #e2e8f0`, radius 10px) with 5 modular upper sub-cards (Details with company logo, Compensation & Location, Team without placeholder matching badges, Agency with hired count without placeholder matching badges, Pipeline with authoritative stage counters) and light bottom activity strip (`#f8fafc`).
+      - **15.6" Screen Fit**: Responsive CSS grid utilizing `minmax(0, ...fr)` with `overflow-x: hidden` guaranteeing 0% horizontal scroll on `1366×768` and `1920×1080` displays.
+      - Copy-paste ready HTML/Blade templates and JavaScript controller patterns.
+    - **Integrated into System Guidelines**:
+      - `docs/UI_UX_STANDARDS.md`: Added Section 13 codifying the Card + Sub-Card standard as mandatory for all future entity lists and drawers.
+      - `AGENTS.md`: Added Rule 20 to Non-negotiable Rules.
+      - `CLAUDE.md`: Added Directive 14 and Rule 16 mandating this format across all AI agents and engineers.
+      - `docs/AI_RULES.md`: Added Rule 19 under architectural fit and coding standards.
+  - **Verification**: `php -l`, Pint, and automated test suite (`ClientJobsCqrsReadTest`, `ClientAccessContextSecurityTest`) 100% green. 0 MySQL reads.
+
 - *2026-10-22* — **Super Admin Drawer Redesign — Company Details, Wallet & Billing (COMPLETED & VERIFIED)**:
   - **Objective**: Modernize drawers across Super Admin Company (`/super-admin/company`) and Subscription (`/super-admin/subscription/all`) pages using Service Company Consultancy (`service_company/consultancy` `dviewMore.blade.php`) as the primary design reference.
   - **Audit & Implementation Plan**: Formally documented in `docs/superadmin/SUPER_ADMIN_COMPANY_drawer-redesign-audit-implementation-plan.md`. Approved by user.
@@ -374,7 +439,7 @@ Last updated: 2026-10-22 (Super Admin Companies Page UI Redesign, 100% CQRS Read
     - `php -l` passed with 0 syntax errors across all modified files.
     - `pint` formatted with 0 style issues.
     - PHPUnit feature suite `SuperAdminSubscriptionLoadTest` passed 100% green (5 tests, 23 assertions).
-=======
+
 - *2026-10-22* — **Client Drawer UI/UX Redesign: Typography & Visual Hierarchy Optimization (100% COMPLETED & VERIFIED)**:
   - **User Request & Requirements**:
     - Correct typography and visual hierarchy throughout the entire Client Drawer for both Internal Client (`show.blade.php`) and Direct Client (`dviewMore.blade.php`).
@@ -439,7 +504,6 @@ Last updated: 2026-10-22 (Super Admin Companies Page UI Redesign, 100% CQRS Read
     - In `resources/views/service_company/client/custom_client.blade.php` & `direct_client.blade.php`:
       - Synced column header sub-card label to "Date".
   - **Verification**: `php -l` and Pint test passed with 0 errors across all modified blade files and stylesheets.
->>>>>>> df9c7db01acb4eb552eac3a7e2fd0bd018786ab7
 
 - *2026-10-21* — **Service Company Clients Listing: Restore "Connected On" on Date Column (100% COMPLETED & VERIFIED)**:
   - **User Request & Requirements**:

@@ -28,7 +28,7 @@ class JobProjectionService
     {
         $snapshot = DB::transaction(function () use ($jobId) {
             $job = DB::table('jobs')->where('id', $jobId)->first();
-            if (!$job) {
+            if (! $job) {
                 return null;
             }
 
@@ -44,7 +44,7 @@ class JobProjectionService
             $completeDocument['projection_version'] = $vStart;
 
             return [
-                'version'  => $vStart,
+                'version' => $vStart,
                 'document' => $completeDocument,
             ];
         });
@@ -53,8 +53,8 @@ class JobProjectionService
             $index = defined('ELASTIC_JOBS') ? ELASTIC_JOBS : 'ats_jobs_elastic';
             $this->elasticService->getClient()->index([
                 'index' => $index,
-                'id'    => (string) $jobId,
-                'body'  => $snapshot['document'],
+                'id' => (string) $jobId,
+                'body' => $snapshot['document'],
             ]);
 
             return true;
@@ -81,40 +81,40 @@ class JobProjectionService
             ->select('id', 'from_company_id', 'to_company_id', 'final_status', 'created_at')
             ->where('job_id', $jobId)
             ->get()
-            ->map(fn($r) => (array) $r)
+            ->map(fn ($r) => (array) $r)
             ->toArray();
 
         return [
-            'id'                        => $jobId,
-            'title'                     => (string) ($job->title ?? ''),
-            'status'                    => (string) ($job->status ?? 'active'),
-            'min_exp'                   => (int) ($job->min_exp ?? 0),
-            'max_exp'                   => (int) ($job->max_exp ?? 0),
-            'min_salary'                => $job->min_salary ?? null,
-            'max_salary'                => $job->max_salary ?? null,
-            'min_salary_currency'       => $job->min_salary_currency ?? '$',
-            'max_salary_currency'       => $job->max_salary_currency ?? '$',
-            'min_sal_mode'              => $job->min_sal_mode ?? null,
-            'max_sal_mode'              => $job->max_sal_mode ?? null,
-            'created_at'                => $job->created_at ? date('Y-m-d H:i:s', strtotime((string)$job->created_at)) : now()->toDateTimeString(),
-            'updated_at'                => $job->updated_at ? date('Y-m-d H:i:s', strtotime((string)$job->updated_at)) : now()->toDateTimeString(),
-            'hiring_manager'            => (string) ($job->hiring_manager ?? ''),
-            'skills'                    => (string) ($job->skills ?? ''),
-            'total_positions'           => (int) ($job->total_positions ?? 1),
-            'client_id'                 => (int) ($job->client_id ?? 0),
-            'comId'                     => $companyId,
-            'location_id'               => (int) ($job->location_id ?? 0),
-            'category_id'               => (int) ($job->job_category_id ?? 0),
-            'client_name'               => (string) ($client->client_name ?? ''),
-            'client_company'            => (string) ($client->client_company ?? ''),
-            'company_name'              => (string) ($company->company_name ?? ''),
-            'self_company'              => (int) ($job->self_company ?? 0),
-            'work_type'                 => (string) ($job->work_type ?? 'no'),
-            'employment_type'           => (int) ($job->employment_type ?? 0),
-            'department_name'           => (string) ($category->name ?? 'General Role'),
-            'category_name'             => (string) ($category->name ?? 'General Role'),
-            'state_version'             => (int) ($job->state_version ?? $job->aggregate_version ?? 1),
-            'recommendation_relation'   => $recommendations,
+            'id' => $jobId,
+            'title' => (string) ($job->title ?? ''),
+            'status' => (string) ($job->status ?? 'active'),
+            'min_exp' => (int) ($job->min_exp ?? 0),
+            'max_exp' => (int) ($job->max_exp ?? 0),
+            'min_salary' => $job->min_salary ?? null,
+            'max_salary' => $job->max_salary ?? null,
+            'min_salary_currency' => $job->min_salary_currency ?? '$',
+            'max_salary_currency' => $job->max_salary_currency ?? '$',
+            'min_sal_mode' => $job->min_sal_mode ?? null,
+            'max_sal_mode' => $job->max_sal_mode ?? null,
+            'created_at' => $job->created_at ? date('Y-m-d H:i:s', strtotime((string) $job->created_at)) : now()->toDateTimeString(),
+            'updated_at' => $job->updated_at ? date('Y-m-d H:i:s', strtotime((string) $job->updated_at)) : now()->toDateTimeString(),
+            'hiring_manager' => (string) ($job->hiring_manager ?? ''),
+            'skills' => (string) ($job->skills ?? ''),
+            'total_positions' => (int) ($job->total_positions ?? 1),
+            'client_id' => (int) ($job->client_id ?? 0),
+            'comId' => $companyId,
+            'location_id' => (int) ($job->location_id ?? 0),
+            'category_id' => (int) ($job->job_category_id ?? 0),
+            'client_name' => (string) ($client->name ?? ($client->client_name ?? '')),
+            'client_company' => (string) ($client->name ?? ($client->client_company ?? '')),
+            'company_name' => (string) ($company->company_name ?? ''),
+            'self_company' => (int) ($job->self_company ?? 0),
+            'work_type' => (string) ($job->work_type ?? 'no'),
+            'employment_type' => (int) ($job->employment_type ?? 0),
+            'department_name' => (string) ($category->name ?? 'General Role'),
+            'category_name' => (string) ($category->name ?? 'General Role'),
+            'state_version' => (int) ($job->state_version ?? $job->aggregate_version ?? 1),
+            'recommendation_relation' => $recommendations,
         ];
     }
 }

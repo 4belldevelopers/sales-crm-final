@@ -4689,6 +4689,34 @@ END:VCALENDAR";
                 $array[$code] = $html;
             }
 
+            // Universal mapping of all numeric currency keys from CurrencyService (e.g. 132 => INR, 1002 => USD)
+            if (! empty($data['key_to_code'])) {
+                foreach ($data['key_to_code'] as $key => $code) {
+                    $codeUpper = strtoupper(trim($code));
+                    $html = $array[$codeUpper] ?? ($iconMap[$codeUpper] ?? ('<span class="fw-bold">'.e($codeUpper).' </span>'));
+                    $array[(int) $key] = $html;
+                    if ((int) $key < 1000) {
+                        $array[(int) $key + 1000] = $html;
+                    }
+                }
+            }
+
+            // Master currencies mapping (items have 'id', 'code', 'symbol')
+            if (! empty($data['master_currencies'])) {
+                foreach ($data['master_currencies'] as $curr) {
+                    if (is_array($curr) && ! empty($curr['code']) && isset($curr['id'])) {
+                        $codeUpper = strtoupper(trim((string) $curr['code']));
+                        $html = $array[$codeUpper] ?? ($iconMap[$codeUpper] ?? ('<span class="fw-bold">'.e((string) ($curr['symbol'] ?? $codeUpper)).' </span>'));
+                        $array[(int) $curr['id']] = $html;
+                    }
+                }
+            }
+
+            // Default safe key 0 fallback
+            if (! isset($array[0])) {
+                $array[0] = $iconMap['INR'];
+            }
+
             return $array;
         });
     }
@@ -5355,6 +5383,18 @@ END:VCALENDAR";
                     $symbolsValue[$code] = $row['getKey'];
                     $symbols[$code] = $row['currency_symbol'];
                     $getKey[$row['getKey']] = $code;
+                }
+
+                // Map extended keys from CurrencyService JSON into getKey and symbolsValue
+                if (! empty($data['key_to_code'])) {
+                    foreach ($data['key_to_code'] as $k => $c) {
+                        $kInt = (int) $k;
+                        $cUpper = strtoupper(trim($c));
+                        $getKey[$kInt] = $cUpper;
+                        if (! isset($symbolsValue[$cUpper])) {
+                            $symbolsValue[$cUpper] = $kInt;
+                        }
+                    }
                 }
 
                 return [
@@ -13547,7 +13587,7 @@ END:VCALENDAR";
         $sal_mode = $jobs_details->min_sal_mode;
         $currency = self::currency();  // Currency code
 
-        $currencyCheck = $currency[$min_salary_currency];
+        $currencyCheck = $currency[$min_salary_currency] ?? \App\Services\CurrencyService::resolveCurrencyCode($min_salary_currency);
 
         // dd($currencyCheck,$min_salary_currency);
         $convertedAmount = $max_salary; // $job->max_salary;
@@ -16745,6 +16785,7 @@ END:VCALENDAR";
             }
 
             if ($jobId) {
+                Cache::increment("jobDetails_version_job_{$jobId}");
                 Cache::forget("job_details_public_bundle:{$jobId}:{$company_id}");
                 Cache::forget("job_apply_spec:{$jobId}:{$company_id}");
                 Cache::forget("job_company_details_logo:{$jobId}:{$company_id}");

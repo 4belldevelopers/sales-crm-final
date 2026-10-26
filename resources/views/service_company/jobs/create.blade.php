@@ -8561,16 +8561,81 @@ $currency_code = GeneralMethod::defaultCurrency();
             return String(val || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'");
         }
 
-        function isCitySelected(canonical, label) {
+        function getCityVariants(raw) {
+            if (!raw) return [];
+            var str = String(raw).toLowerCase().trim();
+            var primary = str.split(/[,|(]/)[0].trim();
+            if (!primary) return [];
+
+            var variants = [primary];
+            if (primary.indexOf('/') !== -1) {
+                primary.split('/').forEach(function(sub) {
+                    sub = sub.trim();
+                    if (sub) variants.push(sub);
+                });
+            }
+
+            var expanded = [];
+            variants.forEach(function(v) {
+                expanded.push(v);
+                if (typeof citySynonymAliases !== 'undefined' && citySynonymAliases[v]) {
+                    expanded.push(citySynonymAliases[v].toLowerCase());
+                }
+                if (v === 'new york' || v === 'new york city' || v === 'nyc' || v === 'ny') {
+                    expanded.push('new york', 'new york city', 'nyc', 'ny');
+                }
+                if (v === 'delhi' || v === 'new delhi' || v === 'delhi ncr') {
+                    expanded.push('delhi', 'new delhi', 'delhi ncr');
+                }
+                if (v === 'bengaluru' || v === 'bangalore') {
+                    expanded.push('bengaluru', 'bangalore');
+                }
+                if (v === 'gurgaon' || v === 'gurugram') {
+                    expanded.push('gurgaon', 'gurugram');
+                }
+                if (v === 'mumbai' || v === 'bombay') {
+                    expanded.push('mumbai', 'bombay');
+                }
+                if (v === 'kolkata' || v === 'calcutta') {
+                    expanded.push('kolkata', 'calcutta');
+                }
+                if (v === 'chennai' || v === 'madras') {
+                    expanded.push('chennai', 'madras');
+                }
+                if (v === 'pune' || v === 'poona') {
+                    expanded.push('pune', 'poona');
+                }
+            });
+
+            return Array.from(new Set(expanded.filter(Boolean)));
+        }
+
+        function isCityMatch(item, canonical, label) {
+            if (!item) return false;
+            var itNorm = String(item).toLowerCase().trim();
             var cNorm = String(canonical || '').toLowerCase().trim();
             var lNorm = String(label || '').toLowerCase().trim();
+
+            if (cNorm && (itNorm === cNorm || itNorm.indexOf(cNorm) === 0)) return true;
+            if (lNorm && (itNorm === lNorm || itNorm.indexOf(lNorm) === 0)) return true;
+
+            var itemVariants = getCityVariants(item);
+            var queryVariants = [];
+            if (label) queryVariants = queryVariants.concat(getCityVariants(label));
+            if (canonical) queryVariants = queryVariants.concat(getCityVariants(canonical));
+
+            for (var i = 0; i < itemVariants.length; i++) {
+                var iv = itemVariants[i];
+                for (var j = 0; j < queryVariants.length; j++) {
+                    if (iv === queryVariants[j]) return true;
+                }
+            }
+            return false;
+        }
+
+        function isCitySelected(canonical, label) {
             return selectedCities.some(function(item) {
-                var it = String(item || '').toLowerCase().trim();
-                if (it === cNorm || (lNorm && it === lNorm)) return true;
-                var cityPart = it.split(/[,|]/)[0].trim();
-                if (lNorm && cityPart === lNorm) return true;
-                if (cNorm && it.indexOf(cNorm) === 0) return true;
-                return false;
+                return isCityMatch(item, canonical, label);
             });
         }
 
@@ -8588,10 +8653,7 @@ $currency_code = GeneralMethod::defaultCurrency();
 
         function togglePopularPill(canonical, label) {
             var existingIdx = selectedCities.findIndex(function(item) {
-                var it = String(item || '').toLowerCase().trim();
-                var cNorm = String(canonical || '').toLowerCase().trim();
-                var lNorm = String(label || '').toLowerCase().trim();
-                return it === cNorm || (lNorm && it === lNorm) || (lNorm && it.split(/[,|]/)[0].trim() === lNorm);
+                return isCityMatch(item, canonical, label);
             });
             if (existingIdx !== -1) {
                 selectedCities.splice(existingIdx, 1);
@@ -8947,17 +9009,11 @@ $currency_code = GeneralMethod::defaultCurrency();
             if (isManual !== false) {
                 isLocationManuallyModified = true;
             }
-            var cNorm = String(city || '').toLowerCase().trim();
-            var lNorm = cNorm.split(/[,|]/)[0].trim();
-            if (lastAutoSyncedLocation) {
-                var lastNorm = String(lastAutoSyncedLocation).toLowerCase().trim();
-                if (lastNorm === cNorm || (lNorm && lastNorm.indexOf(lNorm) === 0)) {
-                    lastAutoSyncedLocation = null;
-                }
+            if (lastAutoSyncedLocation && isCityMatch(lastAutoSyncedLocation, city, city)) {
+                lastAutoSyncedLocation = null;
             }
             selectedCities = selectedCities.filter(function(c) {
-                var it = String(c || '').toLowerCase().trim();
-                return !(it === cNorm || (lNorm && it === lNorm) || (lNorm && it.split(/[,|]/)[0].trim() === lNorm));
+                return !isCityMatch(c, city, city);
             });
             renderSelectedCities();
         }
@@ -9995,11 +10051,19 @@ $currency_code = GeneralMethod::defaultCurrency();
                     if (data.status == 'success') {
                         resetPublishBtn($btn);
                         if (isEditPage) {
+                            try {
+                                localStorage.setItem('job_drawer_bust', Date.now());
+                                if (window.opener && window.opener.jobDrawerCache) {
+                                    window.opener.jobDrawerCache = {};
+                                }
+                            } catch (e) {}
                             showToast('Job updated successfully!', 'success');
                             setTimeout(function() { window.location = __indexUrl; }, 600);
                         } else if (data.check_ready_url && data.job_id) {
+                            try { localStorage.setItem('job_drawer_bust', Date.now()); } catch (e) {}
                             launchJobReadinessVerificationGate(data.job_id, data.check_ready_url, __indexUrl);
                         } else {
+                            try { localStorage.setItem('job_drawer_bust', Date.now()); } catch (e) {}
                             showToast('Job saved successfully!', 'success');
                             setTimeout(function() { window.location = __indexUrl; }, 600);
                         }

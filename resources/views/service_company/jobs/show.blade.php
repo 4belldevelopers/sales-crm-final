@@ -1723,8 +1723,31 @@ $end_date   =	date('d-M-Y', $date);
                                     <div class="info-row"><span class="info-label">Gender</span><span class="info-value">{{@$job->required_columns ?? 'Rather Not Say'}}</span></div>
                                     <div class="info-row"><span class="info-label">No. of Openings</span><span class="info-value">
                                     {{ @$job->total_positions }}</span></div>
-                                    <div class="info-row"><span class="info-label">Job Location</span><span class="info-value">
-                                    {{ ucwords(@$jobCitySelected) }}</span></div>
+                                    <div class="info-row align-items-start"><span class="info-label" style="margin-top: 3px;">Job Location</span><span class="info-value">
+                                        @php
+                                            $displayCities = !empty($jobCities) && is_array($jobCities) ? $jobCities : (!empty($jobCitySel) && is_array($jobCitySel) ? $jobCitySel : []);
+                                            if (empty($displayCities) && !empty($jobCitySelected) && !in_array(strtolower(trim($jobCitySelected)), ['remote', 'n/a'])) {
+                                                $displayCities = array_filter(array_map('trim', explode(',', $jobCitySelected)));
+                                            }
+                                        @endphp
+                                        @if(!empty($displayCities) && count($displayCities) > 0)
+                                            <div class="d-flex flex-wrap gap-1 align-items-center" style="gap: 5px; max-width: 100%;">
+                                                @foreach($displayCities as $cCity)
+                                                    <span class="badge badge-light-primary fw-semibold px-2 py-1 text-nowrap" style="font-size: 11px; background: #f1faff; color: #009ef7; border: 1px solid rgba(0, 158, 247, 0.25); border-radius: 4px; display: inline-flex; align-items: center; gap: 4px;">
+                                                        <i class="fas fa-map-marker-alt text-primary" style="font-size: 9.5px;"></i>{{ trim($cCity) }}
+                                                    </span>
+                                                @endforeach
+                                            </div>
+                                        @else
+                                            @if(!empty($jobCitySelected) && strtolower(trim($jobCitySelected)) !== 'n/a')
+                                                <span class="badge badge-light-primary fw-semibold px-2 py-1 text-nowrap" style="font-size: 11px; background: #f1faff; color: #009ef7; border: 1px solid rgba(0, 158, 247, 0.25); border-radius: 4px; display: inline-flex; align-items: center; gap: 4px;">
+                                                    <i class="fas fa-map-marker-alt text-primary" style="font-size: 9.5px;"></i>{{ trim($jobCitySelected) }}
+                                                </span>
+                                            @else
+                                                <span class="text-muted" style="color: #a1a5b7;">Location not specified</span>
+                                            @endif
+                                        @endif
+                                    </span></div>
                                     <div class="info-row"><span class="info-label">Work Mode</span><span class="info-value">{{@$work_type}}</span></div>
                                     <div class="info-row"><span class="info-label">Work Shift</span><span class="info-value">{{ @$job->work_shifts }}</span></div>
                                 </div>
@@ -3200,6 +3223,18 @@ $end_date   =	date('d-M-Y', $date);
             });
         }
 
+        function toggleDrawerExtraCities(btn) {
+            const container = btn.parentElement;
+            if (!container) return;
+            const extraPills = container.querySelectorAll('.js-drawer-extra-city');
+            const isExpanded = btn.getAttribute('data-expanded') === 'true';
+            extraPills.forEach(function(p) {
+                p.style.display = isExpanded ? 'none' : 'inline-flex';
+            });
+            btn.innerText = isExpanded ? ('+' + extraPills.length + ' more') : 'Show less';
+            btn.setAttribute('data-expanded', isExpanded ? 'false' : 'true');
+        }
+
         // Robust copy function that works on every card
         function copyCardText(cardId) {
             const card = document.getElementById(cardId);
@@ -3210,6 +3245,7 @@ $end_date   =	date('d-M-Y', $date);
 
             // Clone the card so we can strip out buttons/icons without affecting the page
             const clone = card.cloneNode(true);
+            clone.querySelectorAll('.js-drawer-extra-city').forEach(el => el.style.display = 'inline');
             clone.querySelectorAll('button, .info-card-actions, .info-card-edit, .copy-btn, .view-more, .view-all-btn, i.fas, i.far, i.fab').forEach(el => el.remove());
 
             // Gather text exactly as the user sees it
