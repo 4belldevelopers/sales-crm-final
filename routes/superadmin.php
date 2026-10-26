@@ -299,6 +299,10 @@ Route::group(['middleware' => 'auth'], function () {
         Route::get('jdlist/data', [SuperAdminCompanyController::class, 'jdlistdata'])->name('company.jdlistdata');
         Route::get('createjd/{entryType}/{id?}', [SuperAdminCompanyController::class, 'createjd'])->name('company.createjd');
         Route::post('jdgoogle-sheet-get-data', [SuperAdminCompanyController::class, 'jdgoogleSheetInsertdataInDatabase'])->name('company.jdgoogleSheetInsertdataInDatabase');
+        // Phase 5: Transactional Outbox & Idempotency JD Mutation Routes
+        Route::post('jd/status/{id}', [SuperAdminCompanyController::class, 'updateJdStatus'])->name('company.updateJdStatus');
+        Route::post('jd/batch-status', [SuperAdminCompanyController::class, 'batchUpdateJdStatus'])->name('company.batchUpdateJdStatus');
+        Route::delete('jd/{id}', [SuperAdminCompanyController::class, 'deleteJd'])->name('company.deleteJd');
 
         Route::get('jobs/hiring_manager/{id?}', [SuperAdminCompanyController::class, 'hiring_manager'])->name('company.hiring_manager');
         Route::get('jobs/recruiter/{id?}', [SuperAdminCompanyController::class, 'recruiter'])->name('company.recruiter');

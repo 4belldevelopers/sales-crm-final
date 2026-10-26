@@ -36,3 +36,9 @@ Broadcast::channel('superadmin.custom-plans', function ($user) {
 Broadcast::channel('superadmin.companies', function ($user) {
     return (bool) ($user && ! empty($user->is_superadmin));
 });
+
+// Super Admin private channel for JD Catalog real-time delta synchronization
+Broadcast::channel('superadmin.jd-catalog', function ($user) {
+    return (bool) ($user && (! empty($user->is_superadmin) || ! empty($user->root_user)));
+});
+

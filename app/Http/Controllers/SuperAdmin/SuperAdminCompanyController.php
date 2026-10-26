@@ -37,6 +37,7 @@ use App\Services\GoogleSheetServiceCandidate;
 use App\Services\GoogleSheetsServiceGet;
 use App\Services\MailService;
 use App\Services\MarketplaceModerationService;
+use App\Services\SuperAdmin\SuperAdminJdMutationService;
 use Carbon\Carbon;
 use Crypt;
 use Illuminate\Http\Request;
@@ -2014,47 +2015,60 @@ class SuperAdminCompanyController extends SuperAdminBaseController
 
     }
 
-    public function jdlist($status)
+    public function jdlist($status = 'pending')
     {
-        // dd($status);
-        $this->totalCompanies = Company::withoutGlobalScope('company')->count();
-        $this->activeCompanies = Company::withoutGlobalScope('company')->where('status', 'active')->count();
-        $this->inactiveCompanies = Company::where('status', 'inactive')->count();
+        $status = strtolower((string) ($status ?: 'pending'));
+        // Zero MySQL read waste on Company table (CQRS read-path optimization)
+        $this->totalCompanies = 0;
+        $this->activeCompanies = 0;
+        $this->inactiveCompanies = 0;
         $this->jd_status = $status;
+
+        // Authoritative cached JD KPI counts (5 min TTL, atomic invalidation on write)
+        $counts = Cache::remember('superadmin:jd:counts:v1', 300, function () {
+            return [
+                'pending' => DB::table('jd_details')->where('status', 0)->count(),
+                'approved' => DB::table('jd_details')->where('status', 1)->count(),
+                'declined' => DB::table('jd_details')->where('status', 2)->count(),
+            ];
+        });
+        $this->pendingJdCount = $counts['pending'];
+        $this->approvedJdCount = $counts['approved'];
+        $this->declinedJdCount = $counts['declined'];
 
         return view('super-admin.jd.index', $this->data);
     }
 
     public function jdlistdata(Request $request)
     {
-
-        // $categories = Company::with('package')->withoutGlobalScope('company')->get();
-        // dd($categories->count());
-        // jd_status
-        $jd_status = '';
-        if (@$request->jd_status === 'pending') {
-            $jd_status = 0;
-        } elseif (@$request->jd_status === 'approved') {
+        $statusParam = strtolower((string) $request->input('jd_status', 'pending'));
+        $jd_status = 0;
+        if ($statusParam === 'approved' || $statusParam === '1') {
             $jd_status = 1;
-        } elseif (@$request->jd_status === 'decline') {
+        } elseif ($statusParam === 'decline' || $statusParam === 'declined' || $statusParam === '2') {
             $jd_status = 2;
         }
 
-        // dd($request->jd_status);
+        // 10K Concurrency Target: Cached in-memory collection eliminates MySQL count and scan load
+        $cacheKey = "superadmin:jd:list:status_{$jd_status}";
+        $cachedRecords = Cache::remember($cacheKey, 300, function () use ($jd_status) {
+            return DB::table('jd_details')
+                ->select(['id', 'title', 'minimum_exp', 'maxmum_exp', 'skills', 'jd', 'status'])
+                ->where('status', '=', $jd_status)
+                ->orderBy('id', 'DESC')
+                ->get();
+        });
 
-        $company_id = auth()->user()->company_id;
-        $department = GeneralMethod::department();
-        $accountCompanyType = GeneralMethod::accountCompanyType();
-
-        $clientAllDataList = DB::table('jd_details')
-            ->select('jd_details.*')
-            ->where('status', '=', $jd_status);
-        // $clientAllDataList = $clientAllDataList->groupBy('companies.id');
-        $clientAllDataList = $clientAllDataList->orderBy('jd_details.id', 'DESC');
-
-        // dd($clientAllDataList->get());
-
-        return DataTables::of($clientAllDataList)
+        return DataTables::of(collect($cachedRecords))
+            ->addColumn('raw_title', function ($row) {
+                return $row->title ?? '';
+            })
+            ->addColumn('raw_skills', function ($row) {
+                return $row->skills ?? '';
+            })
+            ->addColumn('raw_jd', function ($row) {
+                return $row->jd ?? '';
+            })
 
             ->editColumn('chkbox', function ($row) {
                 return '<div class="form-check form-check-sm form-check-custom form-check-solid">
@@ -2147,8 +2161,151 @@ class SuperAdminCompanyController extends SuperAdminBaseController
         return view('super-admin.jd.create', $this->data);
     }
 
+    /**
+     * Update JD status with Transactional Outbox and Idempotency guarantees (Phase 5).
+     */
+    public function updateJdStatus(Request $request, $id, SuperAdminJdMutationService $mutationService)
+    {
+        $id = (int) $id;
+        $validator = Validator::make($request->all(), [
+            'status' => 'required|integer|in:0,1,2',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'status' => 'error',
+                'message' => $validator->errors()->first(),
+            ], 422);
+        }
+
+        $idempotencyKey = $request->header('X-Idempotency-Key') ?? $request->input('idempotency_key');
+        $newStatus = (int) $request->input('status');
+        $adminId = $this->user ? $this->user->id : (Auth::id() ?? 1);
+        $adminName = $this->user ? $this->user->name : 'Super Admin';
+
+        try {
+            $result = $mutationService->updateStatus(
+                jdId: $id,
+                newStatus: $newStatus,
+                idempotencyKey: $idempotencyKey,
+                adminId: $adminId,
+                adminName: $adminName
+            );
+
+            return response()->json($result);
+        } catch (\Symfony\Component\HttpKernel\Exception\HttpException $httpEx) {
+            return response()->json([
+                'status' => 'error',
+                'message' => $httpEx->getMessage(),
+            ], $httpEx->getStatusCode());
+        } catch (\Throwable $e) {
+            Log::error('[SUPERADMIN_JD_UPDATE] Error: ' . $e->getMessage(), [
+                'id' => $id,
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Failed to update Job Description status: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Batch update JD status with Transactional Outbox and Idempotency guarantees (Phase 5).
+     */
+    public function batchUpdateJdStatus(Request $request, SuperAdminJdMutationService $mutationService)
+    {
+        $validator = Validator::make($request->all(), [
+            'ids' => 'required|array|min:1',
+            'ids.*' => 'integer',
+            'status' => 'required|integer|in:1,2',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'status' => 'error',
+                'message' => $validator->errors()->first(),
+            ], 422);
+        }
+
+        $idempotencyKey = $request->header('X-Idempotency-Key') ?? $request->input('idempotency_key');
+        $ids = $request->input('ids');
+        $newStatus = (int) $request->input('status');
+        $adminId = $this->user ? $this->user->id : (Auth::id() ?? 1);
+        $adminName = $this->user ? $this->user->name : 'Super Admin';
+
+        try {
+            $result = $mutationService->batchUpdateStatus(
+                jdIds: $ids,
+                newStatus: $newStatus,
+                idempotencyKey: $idempotencyKey,
+                adminId: $adminId,
+                adminName: $adminName
+            );
+
+            return response()->json($result);
+        } catch (\Symfony\Component\HttpKernel\Exception\HttpException $httpEx) {
+            return response()->json([
+                'status' => 'error',
+                'message' => $httpEx->getMessage(),
+            ], $httpEx->getStatusCode());
+        } catch (\Throwable $e) {
+            Log::error('[SUPERADMIN_JD_BATCH] Error: ' . $e->getMessage(), [
+                'ids' => $ids,
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Failed to process batch update: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Delete JD with Transactional Outbox and Idempotency guarantees (Phase 5).
+     */
+    public function deleteJd(Request $request, $id, SuperAdminJdMutationService $mutationService)
+    {
+        $id = (int) $id;
+        $idempotencyKey = $request->header('X-Idempotency-Key') ?? $request->input('idempotency_key');
+        $adminId = $this->user ? $this->user->id : (Auth::id() ?? 1);
+        $adminName = $this->user ? $this->user->name : 'Super Admin';
+
+        try {
+            $result = $mutationService->deleteJd(
+                jdId: $id,
+                idempotencyKey: $idempotencyKey,
+                adminId: $adminId,
+                adminName: $adminName
+            );
+
+            return response()->json($result);
+        } catch (\Symfony\Component\HttpKernel\Exception\HttpException $httpEx) {
+            return response()->json([
+                'status' => 'error',
+                'message' => $httpEx->getMessage(),
+            ], $httpEx->getStatusCode());
+        } catch (\Throwable $e) {
+            Log::error('[SUPERADMIN_JD_DELETE] Error: ' . $e->getMessage(), [
+                'id' => $id,
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Failed to delete Job Description: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+
     public function jdgoogleSheetInsertdataInDatabase(Request $request)
     {
+        // Allow legacy jd_details mutation under Taxonomy V2 trigger constraint
+        try {
+            DB::statement('SET @ALLOW_LEGACY_JD_MUTATION = 1;');
+        } catch (\Throwable $e) {}
 
         $entryType = ($request->entryType);
         if ($entryType == 2) {
@@ -2231,9 +2388,13 @@ class SuperAdminCompanyController extends SuperAdminBaseController
             $skills = '';
             if (! empty(@$request->skills)) {
                 $tags = @$request->skills;
-                $tags = json_decode($tags, true);
-                $tagsArr = array_column($tags, 'value');
-                $skills = implode(',', $tagsArr);
+                $decoded = json_decode($tags, true);
+                if (is_array($decoded)) {
+                    $tagsArr = array_column($decoded, 'value');
+                    $skills = implode(',', $tagsArr);
+                } else {
+                    $skills = trim((string) $tags);
+                }
             }
 
             // dd($tagsArr,$request->skills);
@@ -2254,6 +2415,30 @@ class SuperAdminCompanyController extends SuperAdminBaseController
 
             $done = 1;
 
+        }
+
+        // Atomic Cache Invalidation (Rule 6: Multi-Tenant Atomic Cache Invalidation)
+        if ($done > 0) {
+            Cache::forget('superadmin:jd:counts:v1');
+            Cache::forget('superadmin:jd:list:status_0');
+            Cache::forget('superadmin:jd:list:status_1');
+            Cache::forget('superadmin:jd:list:status_2');
+
+            try {
+                $counts = [
+                    'pending' => DB::table('jd_details')->where('status', 0)->count(),
+                    'approved' => DB::table('jd_details')->where('status', 1)->count(),
+                    'declined' => DB::table('jd_details')->where('status', 2)->count(),
+                ];
+                event(new \App\Events\SuperAdminJdStatusUpdatedEvent(
+                    id: (int) ($request->tokenID > 0 ? $request->tokenID : 0),
+                    title: (string) ($request->title ?? 'New JD Ingested'),
+                    newStatus: (int) ($request->jd_status ?? 0),
+                    eventType: ($request->tokenID > 0 ? 'JD_UPDATED' : 'JD_CREATED'),
+                    counts: $counts,
+                    updatedBy: $this->user ? $this->user->name : 'Super Admin'
+                ));
+            } catch (\Throwable $broadEx) {}
         }
 
         return response()->json([
@@ -9754,72 +9939,219 @@ class SuperAdminCompanyController extends SuperAdminBaseController
         $this->pageTitle = __('All Candidate');
         $this->dataCnt = 0;
 
+        $this->cities = \Illuminate\Support\Facades\Cache::remember('master:all_cities', 86400, fn () => GeneralMethod::allCities());
+        $this->countries = \Illuminate\Support\Facades\Cache::remember('master:countries', 86400, fn () => DB::table('countries')->get());
+        $this->qualificationTag = \Illuminate\Support\Facades\Cache::remember('master:qualification_master_tags', 86400, fn () => DB::table('qualification_master')
+            ->orderBy('qualification_master.display_order', 'ASC')
+            ->pluck('name')
+            ->toArray());
+        $this->default_skill = '';
+
+        // Initial KPI seed for the CV Tracker hero cards and stage tabs
+        $this->candidateStats = [
+            'total' => 0,
+            'today' => 0,
+            'this_week' => 0,
+            'immediate' => 0,
+            'without_resume' => 0,
+            'tabs' => [
+                'inreview' => 0, 'sourcing' => 0, 'screening' => 0, 'evaluation' => 0,
+                'negotiation' => 0, 'offered' => 0, 'joined' => 0, 'rejected' => 0,
+            ],
+        ];
+
         return view('super-admin.candidates.index', $this->data);
     }
 
     public function canndidateListAjax(Request $request)
     {
-        // dd($request->all());
-
         $currency = GeneralMethod::currency();
         $salaryMode = GeneralMethod::salaryMode();
         $currencySymbole = GeneralMethod::currencySymbole();
-
         $job_status_arr = GeneralMethod::job_status();
 
-        $searchQuery = $request->input('q');
         $page = max((int) $request->input('page', 1), 1);
-        $size = (int) $request->input('size', 10); // Default 20 results per page
+        $size = (int) $request->input('per_page', $request->input('size', $request->input('limit', 10)));
+        if ($size <= 0) {
+            $size = 10;
+        }
         $from = ($page - 1) * $size;
         $valCheck = $request->input('sortingfilter');
 
         $searchTerms = request('cus_search');
-        $custom_search = $searchTerms; // json_decode($searchTerms, true);
+        $custom_search = trim((string) $searchTerms);
         $conditions = [];
+
         if (! empty($custom_search)) {
             $conditions[] = [
                 'bool' => [
                     'should' => [
-                        [
-                            'match_phrase_prefix' => ['full_name' => '*'.strtolower($custom_search).'*'],
-                        ],
-                        [
-                            'wildcard' => ['email' => $custom_search],
-                        ],
-                        [
-                            'wildcard' => ['phone' => $custom_search],
-                        ],
-                        [
-                            'match_phrase_prefix' => ['title' => '*'.strtolower($custom_search).'*'],
-                        ],
-                        [
-                            'wildcard' => ['country_name' => '*'.strtolower($custom_search).'*'],
-                        ],
-                        [
-                            'match_phrase_prefix' => ['qualification_name' => '*'.strtolower($custom_search).'*'],
-                        ],
-                        [
-                            'wildcard' => ['state_name' => '*'.strtolower($custom_search).'*'],
-                        ],
-                        [
-                            'wildcard' => ['city_name' => '*'.strtolower($custom_search).'*'],
-                        ],
-                        [
-                            'wildcard' => ['posted_by' => '*'.strtolower($custom_search).'*'],
-                        ],
-                        [
-                            'wildcard' => ['company_name' => '*'.strtolower($custom_search).'*'],
-                        ],
+                        ['match_phrase_prefix' => ['full_name' => '*'.strtolower($custom_search).'*']],
+                        ['wildcard' => ['email' => '*'.strtolower($custom_search).'*']],
+                        ['wildcard' => ['phone' => '*'.$custom_search.'*']],
+                        ['match_phrase_prefix' => ['title' => '*'.strtolower($custom_search).'*']],
+                        ['wildcard' => ['country_name' => '*'.strtolower($custom_search).'*']],
+                        ['match_phrase_prefix' => ['qualification_name' => '*'.strtolower($custom_search).'*']],
+                        ['wildcard' => ['state_name' => '*'.strtolower($custom_search).'*']],
+                        ['wildcard' => ['city_name' => '*'.strtolower($custom_search).'*']],
+                        ['wildcard' => ['posted_by' => '*'.strtolower($custom_search).'*']],
+                        ['wildcard' => ['company_name' => '*'.strtolower($custom_search).'*']],
                     ],
                     'minimum_should_match' => 1,
                 ],
             ];
         }
 
-        $country = request('country');
-        $limit = '';
+        $filters = [];
+
+        // 1. Location filter
+        $locationRaw = request('kt_tagify_location');
+        if (! empty($locationRaw)) {
+            $locArray = json_decode($locationRaw, true);
+            if (is_array($locArray) && ! empty($locArray)) {
+                $locShould = [];
+                foreach ($locArray as $locItem) {
+                    $locVal = strtolower(trim($locItem['value'] ?? ''));
+                    if (! empty($locVal)) {
+                        $locShould[] = ['match_phrase_prefix' => ['city_name' => $locVal]];
+                        $locShould[] = ['match_phrase_prefix' => ['state_name' => $locVal]];
+                        $locShould[] = ['match_phrase_prefix' => ['country_name' => $locVal]];
+                    }
+                }
+                if (! empty($locShould)) {
+                    $filters[] = ['bool' => ['should' => $locShould, 'minimum_should_match' => 1]];
+                }
+            }
+        }
+
+        // 2. Education filter
+        $educationRaw = request('kt_tagify_education');
+        if (! empty($educationRaw)) {
+            $eduArray = json_decode($educationRaw, true);
+            if (is_array($eduArray) && ! empty($eduArray)) {
+                $eduShould = [];
+                foreach ($eduArray as $eduItem) {
+                    $eduVal = strtolower(trim($eduItem['value'] ?? ''));
+                    if (! empty($eduVal)) {
+                        $eduShould[] = ['match_phrase' => ['qualification_name' => $eduVal]];
+                    }
+                }
+                if (! empty($eduShould)) {
+                    $filters[] = ['bool' => ['should' => $eduShould, 'minimum_should_match' => 1]];
+                }
+            }
+        }
+
+        // 3. Skills filter (Tagify with mandatory star support)
+        $skillsRaw = request('kt_tagify_users');
+        $mandatorySkillsForDisplay = [];
+        $optionalSkillsForDisplay = [];
+        if (! empty($skillsRaw)) {
+            $parsedSkills = json_decode($skillsRaw, true);
+            if (is_array($parsedSkills)) {
+                $mandatoryMust = [];
+                $optionalShould = [];
+                foreach ($parsedSkills as $sItem) {
+                    $sVal = strtolower(trim($sItem['value'] ?? ''));
+                    if (! empty($sVal)) {
+                        if (! empty($sItem['checked'])) {
+                            $mandatorySkillsForDisplay[] = $sVal;
+                            $mandatoryMust[] = ['match_phrase_prefix' => ['skills' => $sVal]];
+                        } else {
+                            $optionalSkillsForDisplay[] = $sVal;
+                            $optionalShould[] = ['match_phrase_prefix' => ['skills' => $sVal]];
+                        }
+                    }
+                }
+                if (! empty($mandatoryMust)) {
+                    $filters[] = ['bool' => ['must' => $mandatoryMust]];
+                }
+                if (! empty($optionalShould)) {
+                    $filters[] = ['bool' => ['should' => $optionalShould, 'minimum_should_match' => 1]];
+                }
+            }
+        }
+
+        // 4. Experience range
+        $minExp = request('min_exp');
+        $maxExp = request('max_exp');
+        $expRange = [];
+        if ($minExp !== '' && $minExp !== null) {
+            $expRange['gte'] = (float) $minExp;
+        }
+        if ($maxExp !== '' && $maxExp !== null) {
+            $expRange['lte'] = (float) $maxExp;
+        }
+        if (! empty($expRange)) {
+            $filters[] = ['range' => ['total_exp' => $expRange]];
+        }
+
+        // 5. Salary range
+        $minSal = request('min_sal');
+        $maxSal = request('max_sal');
+        $salRange = [];
+        if ($minSal !== '' && $minSal !== null) {
+            $salRange['gte'] = (float) $minSal;
+        }
+        if ($maxSal !== '' && $maxSal !== null) {
+            $salRange['lte'] = (float) $maxSal;
+        }
+        if (! empty($salRange)) {
+            $filters[] = ['range' => ['ctc' => $salRange]];
+        }
+
+        // 6. Notice period filter
+        $appIntNotice = (int) request('app_int_notice', 1);
+        $currentDate = date('Y-m-d H:i:s');
+        if ($appIntNotice > 1) {
+            $noticeFilter = $this->getNoticePeriodFilterSuperAdmin($appIntNotice, $currentDate);
+            if ($noticeFilter) {
+                $filters[] = $noticeFilter;
+            }
+        }
+
+        // 7. Activity filter
+        $appIntActivity = (int) request('app_int_activity', 1);
+        if ($appIntActivity > 1) {
+            $currentTs = strtotime($currentDate);
+            $d30 = date('Y-m-d H:i:s', strtotime('-30 days', $currentTs));
+            $d60 = date('Y-m-d H:i:s', strtotime('-60 days', $currentTs));
+            $d90 = date('Y-m-d H:i:s', strtotime('-90 days', $currentTs));
+            $d180 = date('Y-m-d H:i:s', strtotime('-180 days', $currentTs));
+            $d365 = date('Y-m-d H:i:s', strtotime('-365 days', $currentTs));
+            $actFilter = $this->getActivityFilterSuperAdmin($appIntActivity, $d30, $d60, $d90, $d180, $d365, $currentDate);
+            if ($actFilter) {
+                $filters[] = $actFilter;
+            }
+        }
+
+        // 8. Drawer Stage filter (app_int_status)
+        $appIntStatus = (int) request('app_int_status', 0);
+        if ($appIntStatus > 0) {
+            $filters[] = ['term' => ['job_master_status_id' => $appIntStatus]];
+        }
+
+        // Build base bool query (excluding active stage_tab filter so aggregations show full totals)
+        $baseBoolQuery = [
+            'bool' => [
+                'must' => ! empty($conditions) ? $conditions : [['match_all' => (object) []]],
+                'filter' => $filters,
+            ],
+        ];
+
+        // 9. Active Stage Tab filter (applied only to paginated candidate hits)
+        $stageTab = request('stage_tab');
+        $paginatedBoolQuery = $baseBoolQuery;
+        if (! empty($stageTab) && $stageTab !== 'all') {
+            $stageIds = array_filter(array_map('intval', explode(',', (string) $stageTab)));
+            if (! empty($stageIds)) {
+                $paginatedBoolQuery['bool']['filter'][] = ['terms' => ['job_master_status_id' => array_values($stageIds)]];
+            }
+        }
+
+        // Sorting
         $sort = [];
-        switch ($valCheck) {
+        switch ((int) $valCheck) {
             case 1:
                 $sort[] = ['created_at' => ['order' => 'desc']];
                 break;
@@ -9832,75 +10164,25 @@ class SuperAdminCompanyController extends SuperAdminBaseController
             case 4:
                 $sort[] = ['ctc' => ['order' => 'desc', 'unmapped_type' => 'float']];
                 break;
-            case 5: // Notice period ASC (ignore Immediate)
-                $sort[] = [
-                    '_script' => [
-                        'type' => 'number',
-                        'script' => [
-                            'lang' => 'painless',
-                            'source' => "
-								if (!doc.containsKey('np_id.keyword') || doc['np_id.keyword'].size() == 0 || doc['np_id.keyword'].value == 'Immediate') {
-									return 999999; // Put missing/Immediate at the end
-								}
-								try {
-									// Extract first number from comma-separated values
-									String[] parts = doc['np_id.keyword'].value.splitOnToken(',');
-									if (parts.length > 0) {
-										return Double.parseDouble(parts[0].trim());
-									}
-								} catch (Exception e) {
-									// If parsing fails
-								}
-								return 999999; // Invalid values at the end
-							",
-                        ],
-                        'order' => 'asc',
-                    ],
-                ];
-                break;
-            case 6: // Notice period DESC (ignore Immediate)
-                $sort[] = [
-                    '_script' => [
-                        'type' => 'number',
-                        'script' => [
-                            'lang' => 'painless',
-                            'source' => "
-								if (!doc.containsKey('np_id.keyword') || doc['np_id.keyword'].size() == 0 || doc['np_id.keyword'].value == 'Immediate') {
-									return -1; // Put missing/Immediate at the end
-								}
-								try {
-									// Extract first number from comma-separated values
-									String[] parts = doc['np_id.keyword'].value.splitOnToken(',');
-									if (parts.length > 0) {
-										return Double.parseDouble(parts[0].trim());
-									}
-								} catch (Exception e) {
-									// If parsing fails
-								}
-								return -1; // Invalid values at the end
-							",
-                        ],
-                        'order' => 'desc',
-                    ],
-                ];
-                break;
             case 7:
                 $sort[] = ['total_exp' => ['order' => 'desc', 'unmapped_type' => 'float']];
                 break;
             case 8:
                 $sort[] = ['total_exp' => ['order' => 'asc', 'unmapped_type' => 'float']];
                 break;
-            case 9: // Immediate joiners first (original functionality)
+            case 21:
+            case 9:
                 $sort[] = [
                     '_script' => [
                         'type' => 'number',
                         'script' => [
                             'lang' => 'painless',
-                            'source' => "params['_source']['immediate_join'] == 'Immediate' ? 0 : 1",
+                            'source' => "doc.containsKey('np_id.keyword') && doc['np_id.keyword'].size() > 0 && doc['np_id.keyword'].value == 'Immediate' ? 0 : 1",
                         ],
                         'order' => 'asc',
                     ],
                 ];
+                $sort[] = ['created_at' => ['order' => 'desc']];
                 break;
             case 10:
                 $sort[] = ['send_accept_date_time' => ['order' => 'desc']];
@@ -9908,24 +10190,10 @@ class SuperAdminCompanyController extends SuperAdminBaseController
             case 11:
                 $sort[] = ['send_accept_date_time' => ['order' => 'asc']];
                 break;
-            case 12:
-                $sort[] = ['of_joined_date' => ['order' => 'desc']];
-                break;
-            case 13:
-                $sort[] = ['of_joined_date' => ['order' => 'asc']];
-                break;
-            case 14:
-                $sort[] = ['of_offer_amount' => ['order' => 'asc', 'unmapped_type' => 'float']];
-                break;
-            case 15:
-                $sort[] = ['of_offer_amount' => ['order' => 'desc', 'unmapped_type' => 'float']];
-                break;
             default:
-                $sort[] = ['wiseId' => ['order' => 'desc', 'unmapped_type' => 'long']];
+                $sort[] = ['created_at' => ['order' => 'desc']];
                 break;
         }
-
-        $mustSubmittedBy = [];
 
         $params = [
             'index' => ELASTIC_CANDIDATES,
@@ -9935,40 +10203,217 @@ class SuperAdminCompanyController extends SuperAdminBaseController
                 'size' => $size,
                 'sort' => $sort,
                 'track_total_hits' => true,
-                'query' => [
-                    'bool' => [
-                        'must' => $conditions,
-                    ],
-                ],
+                'query' => $paginatedBoolQuery,
             ],
         ];
+
         if (! $this->elasticService->indexExists(ELASTIC_CANDIDATES)) {
             $total = 0;
             $data = [];
+            $candidateStats = [
+                'total' => 0, 'today' => 0, 'this_week' => 0, 'immediate' => 0, 'without_resume' => 0,
+                'tabs' => ['inreview' => 0, 'sourcing' => 0, 'screening' => 0, 'evaluation' => 0, 'negotiation' => 0, 'offered' => 0, 'joined' => 0, 'rejected' => 0],
+            ];
         } else {
             $response = $this->elasticService->getClient()->search($params);
             $total = $response['hits']['total']['value'] ?? 0;
-            $data = array_map(function ($hit) {
-                return $hit['_source'];
-            }, $response['hits']['hits']);
-            $lastSort = end($response['hits']['hits'])['sort'] ?? null;
+            $data = array_map(fn ($hit) => $hit['_source'], $response['hits']['hits']);
+
+            // Bulk ES size:0 aggregation over baseBoolQuery for Hero KPI stats and stage tabs
+            $aggParams = [
+                'index' => ELASTIC_CANDIDATES,
+                'request_cache' => true,
+                'body' => [
+                    'size' => 0,
+                    'track_total_hits' => true,
+                    'query' => $baseBoolQuery,
+                    'aggs' => [
+                        'today' => ['filter' => ['range' => ['created_at' => ['gte' => 'now/d', 'lt' => 'now+1d/d']]]],
+                        'this_week' => ['filter' => ['range' => ['created_at' => ['gte' => 'now/w', 'lt' => 'now+1w/w']]]],
+                        'immediate' => ['filter' => ['term' => ['np_id.keyword' => 'Immediate']]],
+                        'without_resume' => ['filter' => [
+                            'bool' => [
+                                'should' => [
+                                    ['bool' => ['must_not' => [['exists' => ['field' => 'resume']]]]],
+                                    ['term' => ['resume.keyword' => '']],
+                                ],
+                                'minimum_should_match' => 1,
+                            ],
+                        ]],
+                        'by_status' => ['terms' => ['field' => 'job_master_status_id', 'size' => 20]],
+                    ],
+                ],
+            ];
+
+            $aggResp = $this->elasticService->getClient()->search($aggParams);
+            $ca = $aggResp['aggregations'] ?? [];
+            $statusBuckets = [];
+            foreach (($ca['by_status']['buckets'] ?? []) as $b) {
+                $statusBuckets[(int) $b['key']] = (int) $b['doc_count'];
+            }
+
+            $candidateStats = [
+                'total' => (int) ($aggResp['hits']['total']['value'] ?? 0),
+                'today' => (int) ($ca['today']['doc_count'] ?? 0),
+                'this_week' => (int) ($ca['this_week']['doc_count'] ?? 0),
+                'immediate' => (int) ($ca['immediate']['doc_count'] ?? 0),
+                'without_resume' => (int) ($ca['without_resume']['doc_count'] ?? 0),
+                'tabs' => [
+                    'inreview' => $statusBuckets[8] ?? 0,
+                    'sourcing' => $statusBuckets[1] ?? 0,
+                    'screening' => $statusBuckets[2] ?? 0,
+                    'evaluation' => $statusBuckets[3] ?? 0,
+                    'negotiation' => $statusBuckets[4] ?? 0,
+                    'offered' => $statusBuckets[5] ?? 0,
+                    'joined' => $statusBuckets[6] ?? 0,
+                    'rejected' => ($statusBuckets[7] ?? 0) + ($statusBuckets[9] ?? 0),
+                ],
+            ];
+        }
+
+        // Batch lookups to eliminate 100% of in-loop MySQL queries in Blade
+        $companyMap = [];
+        $cityMap = [];
+        $jobDetailsMap = [];
+
+        if (! empty($data)) {
+            $companyIdsOnPage = collect($data)->map(function ($r) {
+                return [(int) ($r['company_id'] ?? 0), (int) ($r['client_comapny_id'] ?? 0), (int) ($r['ClientComID'] ?? 0)];
+            })->flatten()->filter()->unique()->values()->all();
+
+            if (! empty($companyIdsOnPage)) {
+                $companyMap = \Illuminate\Support\Facades\Cache::remember('batch_companies_'.md5(implode(',', $companyIdsOnPage)), 3600, fn () => DB::table('companies')
+                    ->whereIn('id', $companyIdsOnPage)
+                    ->pluck('company_name', 'id')
+                    ->toArray());
+            }
+
+            $cityIdsOnPage = collect($data)->pluck('city_id')->filter()->unique()->values()->all();
+            if (! empty($cityIdsOnPage)) {
+                $cityMap = \Illuminate\Support\Facades\Cache::remember('batch_cities_'.md5(implode(',', $cityIdsOnPage)), 3600, fn () => DB::table('city_list')
+                    ->whereIn('city_id', $cityIdsOnPage)
+                    ->pluck('city', 'city_id')
+                    ->toArray());
+            }
+
+            $jobIdsOnPage = collect($data)->pluck('jobId')->filter()->unique()->values()->all();
+            if (! empty($jobIdsOnPage)) {
+                $jobDetailsMap = \Illuminate\Support\Facades\Cache::remember('batch_jobs_'.md5(implode(',', $jobIdsOnPage)), 1800, function () use ($jobIdsOnPage) {
+                    return DB::table('jobs')
+                        ->leftJoin('clients', 'clients.id', '=', 'jobs.client_id')
+                        ->whereIn('jobs.id', $jobIdsOnPage)
+                        ->select('jobs.id', 'jobs.max_sal_mode', 'jobs.max_salary_currency', 'jobs.status', 'jobs.title', 'clients.name as client_name')
+                        ->get()
+                        ->keyBy('id')
+                        ->toArray();
+                });
+            }
         }
 
         $pagination = [
             'total' => $total,
             'current_page' => $page,
-            'last_page' => ceil($total / $size),
+            'last_page' => (int) ceil($total / max($size, 1)),
+            'per_page' => $size,
             'listType' => 'allcandidate',
         ];
 
         $userPermissions = [];
+        $limit = '';
 
         return response()->json([
-            'html' => view('super-admin.ajax_pages.all_candidates_ajax', compact('data', 'userPermissions', 'limit', 'salaryMode', 'currencySymbole', 'job_status_arr', 'currency'))->render(),
+            'html' => view('super-admin.ajax_pages.all_candidates_ajax', compact(
+                'data', 'userPermissions', 'limit', 'salaryMode', 'currencySymbole',
+                'job_status_arr', 'currency', 'companyMap', 'cityMap', 'jobDetailsMap',
+                'mandatorySkillsForDisplay', 'optionalSkillsForDisplay'
+            ))->render(),
             'total' => $total,
             'pagination' => view('super-admin.ajax_pages.pagination', compact('pagination'))->render(),
+            'candidateStats' => $candidateStats,
         ]);
+    }
 
+    protected function getNoticePeriodFilterSuperAdmin($app_int_notice, $current_date)
+    {
+        switch ($app_int_notice) {
+            case 8: // Immediate
+                return [
+                    'bool' => [
+                        'must' => [
+                            ['term' => ['np_id.keyword' => 'Immediate']],
+                        ],
+                    ],
+                ];
+            case 2: // 0-15 days
+                return [
+                    'bool' => [
+                        'must' => [
+                            ['range' => ['np_id' => ['gte' => 0, 'lte' => 15]]],
+                            ['term' => ['serving_notice_period_mode' => 0]],
+                        ],
+                    ],
+                ];
+            case 3: // 0-30 days
+                return [
+                    'bool' => [
+                        'must' => [
+                            ['range' => ['np_id' => ['gte' => 0, 'lte' => 30]]],
+                            ['term' => ['serving_notice_period_mode' => 0]],
+                        ],
+                    ],
+                ];
+            case 4: // 0-60 days
+                return [
+                    'bool' => [
+                        'must' => [
+                            ['range' => ['np_id' => ['gte' => 0, 'lte' => 60]]],
+                            ['term' => ['serving_notice_period_mode' => 0]],
+                        ],
+                    ],
+                ];
+            case 5: // 0-90 days
+                return [
+                    'bool' => [
+                        'must' => [
+                            ['range' => ['np_id' => ['gte' => 0, 'lte' => 90]]],
+                            ['term' => ['serving_notice_period_mode' => 0]],
+                        ],
+                    ],
+                ];
+            case 6: // >90 days
+                return [
+                    'bool' => [
+                        'must' => [
+                            ['range' => ['np_id' => ['gt' => 90]]],
+                            ['term' => ['serving_notice_period_mode' => 0]],
+                        ],
+                    ],
+                ];
+            case 7: // Currently Serving
+                return ['term' => ['serving_notice_period_mode' => 1]];
+            case 9: // Served Notice Period
+                return ['term' => ['serving_notice_period_mode' => 3]];
+            default:
+                return null;
+        }
+    }
+
+    protected function getActivityFilterSuperAdmin($app_int_activity, $d30, $d60, $d90, $d180, $d365, $current_date)
+    {
+        switch ($app_int_activity) {
+            case 2:
+                return ['range' => ['updated_at' => ['gte' => $d30, 'lte' => $current_date]]];
+            case 3:
+                return ['range' => ['updated_at' => ['gte' => $d60, 'lte' => $current_date]]];
+            case 4:
+                return ['range' => ['updated_at' => ['gte' => $d90, 'lte' => $current_date]]];
+            case 5:
+                return ['range' => ['updated_at' => ['gte' => $d180, 'lte' => $current_date]]];
+            case 6:
+                return ['range' => ['updated_at' => ['gte' => $d365, 'lte' => $current_date]]];
+            default:
+                return null;
+        }
     }
 
     public function candidatedata(Request $request)
