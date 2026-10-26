@@ -2199,14 +2199,14 @@ class SuperAdminCompanyController extends SuperAdminBaseController
                 'message' => $httpEx->getMessage(),
             ], $httpEx->getStatusCode());
         } catch (\Throwable $e) {
-            Log::error('[SUPERADMIN_JD_UPDATE] Error: ' . $e->getMessage(), [
+            Log::error('[SUPERADMIN_JD_UPDATE] Error: '.$e->getMessage(), [
                 'id' => $id,
                 'trace' => $e->getTraceAsString(),
             ]);
 
             return response()->json([
                 'status' => 'error',
-                'message' => 'Failed to update Job Description status: ' . $e->getMessage(),
+                'message' => 'Failed to update Job Description status: '.$e->getMessage(),
             ], 500);
         }
     }
@@ -2251,14 +2251,14 @@ class SuperAdminCompanyController extends SuperAdminBaseController
                 'message' => $httpEx->getMessage(),
             ], $httpEx->getStatusCode());
         } catch (\Throwable $e) {
-            Log::error('[SUPERADMIN_JD_BATCH] Error: ' . $e->getMessage(), [
+            Log::error('[SUPERADMIN_JD_BATCH] Error: '.$e->getMessage(), [
                 'ids' => $ids,
                 'trace' => $e->getTraceAsString(),
             ]);
 
             return response()->json([
                 'status' => 'error',
-                'message' => 'Failed to process batch update: ' . $e->getMessage(),
+                'message' => 'Failed to process batch update: '.$e->getMessage(),
             ], 500);
         }
     }
@@ -2288,14 +2288,14 @@ class SuperAdminCompanyController extends SuperAdminBaseController
                 'message' => $httpEx->getMessage(),
             ], $httpEx->getStatusCode());
         } catch (\Throwable $e) {
-            Log::error('[SUPERADMIN_JD_DELETE] Error: ' . $e->getMessage(), [
+            Log::error('[SUPERADMIN_JD_DELETE] Error: '.$e->getMessage(), [
                 'id' => $id,
                 'trace' => $e->getTraceAsString(),
             ]);
 
             return response()->json([
                 'status' => 'error',
-                'message' => 'Failed to delete Job Description: ' . $e->getMessage(),
+                'message' => 'Failed to delete Job Description: '.$e->getMessage(),
             ], 500);
         }
     }
@@ -2305,7 +2305,8 @@ class SuperAdminCompanyController extends SuperAdminBaseController
         // Allow legacy jd_details mutation under Taxonomy V2 trigger constraint
         try {
             DB::statement('SET @ALLOW_LEGACY_JD_MUTATION = 1;');
-        } catch (\Throwable $e) {}
+        } catch (\Throwable $e) {
+        }
 
         $entryType = ($request->entryType);
         if ($entryType == 2) {
@@ -2438,7 +2439,8 @@ class SuperAdminCompanyController extends SuperAdminBaseController
                     counts: $counts,
                     updatedBy: $this->user ? $this->user->name : 'Super Admin'
                 ));
-            } catch (\Throwable $broadEx) {}
+            } catch (\Throwable $broadEx) {
+            }
         }
 
         return response()->json([
@@ -13299,40 +13301,75 @@ class SuperAdminCompanyController extends SuperAdminBaseController
 
     }
 
+    /**
+     * Display the Super Admin Master Salary Breakup Configuration page.
+     * Route: GET /super-admin/offer-amount-change (superadmin.company.offerAmountChange)
+     *
+     * Performance Optimization (CQRS Read & Client-First Execution):
+     * - Consolidates 4 separate synchronous database queries into a single cached query.
+     * - Caches master points for 24 hours (`master_salary_offer_points`) with instant invalidation on save.
+     * - Partitions master offer points in-memory (0 DB reads on cache hits) into earnings, deductions,
+     *   hourly earnings, and hourly deductions.
+     *
+     * @return \Illuminate\View\View
+     */
     public function offerAmountChange()
     {
+        // NOTE: Master salary templates are platform-global fallback points for all companies.
+        $allMasterPoints = Cache::remember('master_salary_offer_points', 86400, function () {
+            return DB::table('offer_points')
+                ->select('offer_points.*')
+                ->orderByDesc('sorting')
+                ->orderBy('id', 'asc')
+                ->get();
+        });
 
-        // $company_id      			=	auth()->user()->company_id;
+        // In-memory partitioning without database roundtrips
+        $this->offer_points = $allMasterPoints
+            ->where('section_divided', 0)
+            ->where('section_type', 0)
+            ->values();
 
-        $offer_points = DB::table('offer_points')->select('offer_points.*')->where('offer_points.section_divided', '=', 0)->where('offer_points.section_type', '=', 0)->orderByDesc('sorting')->get();
+        $this->offer_point_other = $allMasterPoints
+            ->where('section_divided', 0)
+            ->where('section_type', 1)
+            ->values();
 
-        $offer_point_other = DB::table('offer_points')->select('offer_points.*')->where('offer_points.section_divided', '=', 0)->where('offer_points.section_type', '=', 1)->orderByDesc('sorting')->get();
+        $this->offer_point_hourly = $allMasterPoints
+            ->where('section_divided', 1)
+            ->where('section_type', 0)
+            ->values();
 
-        $offer_point_hourly = DB::table('offer_points')->select('offer_points.*')->where('offer_points.section_divided', '=', 1)->where('offer_points.section_type', '=', 0)->orderByDesc('sorting')->get();
-
-        $offer_point_other_hourly = DB::table('offer_points')->select('offer_points.*')->where('offer_points.section_divided', '=', 1)->where('offer_points.section_type', '=', 1)->orderByDesc('sorting')->get();
-
-        // dd( $offer_point_hourly, $offer_point_other_hourly);
-
-        $this->offer_points = $offer_points;
-        $this->offer_point_other = $offer_point_other;
-
-        $this->offer_point_hourly = $offer_point_hourly;
-        $this->offer_point_other_hourly = $offer_point_other_hourly;
+        $this->offer_point_other_hourly = $allMasterPoints
+            ->where('section_divided', 1)
+            ->where('section_type', 1)
+            ->values();
 
         $this->offer_id = 0;
         $this->section_other = '';
         $this->section_hourly = 'd-none';
 
         return view('super-admin.account.offerAmountChange', $this->data);
-
     }
 
+    /**
+     * Save the Super Admin Master Salary Breakup Configuration.
+     * Route: POST /super-admin/companysavecreateoffer (superadmin.company.companysavecreateoffer)
+     *
+     * Performance & Reliability Optimizations:
+     * - Replaces N+1 single-row insert queries with a single atomic batch insert.
+     * - Float-safe 100% summation validation with 0.01 tolerance (avoids IEEE 754 precision issues).
+     * - Array sanitization against blank/whitespace-only input components.
+     * - Multi-Tenant Atomic Cache Invalidation (Cache::forget) to ensure zero stale data across tenants.
+     * - Strict DB transaction safety with automatic rollback on error.
+     *
+     * @return \Illuminate\Http\JsonResponse
+     */
     public function companysavecreateoffer(Request $request)
     {
-        $company_id = auth()->user()->company_id;
-        // dd($request->all());
-        if ($request->current_ctc_mode == 2 || $request->current_ctc_mode == 1 || $request->current_ctc_mode == 3) {
+        $isHourly = in_array((int) $request->current_ctc_mode, [1, 2, 3], true);
+
+        if ($isHourly) {
             $validator = Validator::make($request->all(), [
                 'offer_point_hourly.*' => 'sometimes|required',
                 'option_percentage_hourly.*' => 'sometimes|required',
@@ -13341,12 +13378,10 @@ class SuperAdminCompanyController extends SuperAdminBaseController
             ], [
                 'offer_point_hourly.*.required' => 'Offer point is required.',
                 'option_percentage_hourly.*.required' => 'Option percentage is required.',
-
                 'bonus_point_hourly.*.required' => 'Bonus point is required.',
                 'bonus_option_percentage_hourly.*.required' => 'Bonus option percentage is required.',
             ]);
         } else {
-
             $validator = Validator::make($request->all(), [
                 'offer_point.*' => 'sometimes|required',
                 'option_percentage.*' => 'sometimes|required',
@@ -13355,7 +13390,6 @@ class SuperAdminCompanyController extends SuperAdminBaseController
             ], [
                 'offer_point.*.required' => 'Offer point is required.',
                 'option_percentage.*.required' => 'Option percentage is required.',
-
                 'bonus_points.*.required' => 'Other point is required.',
                 'bonus_option_percentage.*.required' => 'Other option percentage is required.',
             ]);
@@ -13368,107 +13402,148 @@ class SuperAdminCompanyController extends SuperAdminBaseController
             ], 422);
         }
 
-        if ($request->current_ctc_mode == 2 || $request->current_ctc_mode == 1 || $request->current_ctc_mode == 3) {
-            $totalSum = array_sum($request->option_percentage_hourly);
-        } else {
-            $totalSum = array_sum($request->option_percentage);
+        // Percentage validation with float-safe summation
+        $percentages = $isHourly
+            ? ($request->option_percentage_hourly ?? [])
+            : ($request->option_percentage ?? []);
+
+        $totalSum = 0.0;
+        if (is_array($percentages)) {
+            foreach ($percentages as $pct) {
+                if ($pct !== null && $pct !== '') {
+                    $totalSum += (float) $pct;
+                }
+            }
         }
 
-        if ($totalSum != 100) {
-            return response()->json(['status' => 'errors', 'message' => 'Please check Percentage and complete 100%']);
+        // Strict 100% check with 0.01 floating-point rounding tolerance
+        if (abs(round($totalSum, 2) - 100.0) > 0.01) {
+            return response()->json([
+                'status' => 'errors',
+                'message' => 'Please check Percentage and complete 100%',
+            ]);
         }
-        // dd($totalSum,$request->current_ctc_mode,$request->option_percentage);
-
-        $offer_id = 0;
 
         try {
-            // Start the transaction
             DB::beginTransaction();
 
-            if ($request->current_ctc_mode == 2 || $request->current_ctc_mode == 1 || $request->current_ctc_mode == 3) {
+            $batchInserts = [];
 
-                // Prepare the main offer data
+            if ($isHourly) {
+                // Clear existing hourly/daily/weekly configuration (section_divided = 1)
                 DB::table('offer_points')->where('section_divided', 1)->delete();
 
-                // Check if offer points exist and insert them
-                if (! empty($request->offer_point_hourly)) {
+                // Prepare Hourly Main Earnings (section_type = 0, section_divided = 1)
+                if (! empty($request->offer_point_hourly) && is_array($request->offer_point_hourly)) {
                     foreach ($request->offer_point_hourly as $bp => $point) {
-                        $basic_offer_points = [
-                            'points' => $point,
-                            'percentage' => $request->option_percentage_hourly[$bp],
-                            'condition_check' => $request->option_salarymode_hourly[$bp],
+                        $trimmedPoint = trim((string) $point);
+                        if ($trimmedPoint === '') {
+                            continue;
+                        }
+                        $batchInserts[] = [
+                            'points' => $trimmedPoint,
+                            'percentage' => (float) ($request->option_percentage_hourly[$bp] ?? 0),
+                            'condition_check' => (int) ($request->option_salarymode_hourly[$bp] ?? 0),
+                            'view_type' => null,
                             'section_type' => 0,
                             'section_divided' => 1,
+                            'sorting' => 0,
+                            'deleteded' => 1,
                         ];
-                        DB::table('offer_points')->insert($basic_offer_points);
                     }
                 }
-                if (! empty($request->bonus_point_hourly)) {
+
+                // Prepare Hourly Deductions / Bonus (section_type = 1, section_divided = 1)
+                if (! empty($request->bonus_point_hourly) && is_array($request->bonus_point_hourly)) {
                     foreach ($request->bonus_point_hourly as $bp => $point) {
-                        $bonus_offer_points = [
-                            'points' => $point,
-                            'percentage' => $request->bonus_option_percentage_hourly[$bp],
-                            'condition_check' => $request->bonus_option_salarymode_hourly[$bp],
+                        $trimmedPoint = trim((string) $point);
+                        if ($trimmedPoint === '') {
+                            continue;
+                        }
+                        $batchInserts[] = [
+                            'points' => $trimmedPoint,
+                            'percentage' => (float) ($request->bonus_option_percentage_hourly[$bp] ?? 0),
+                            'condition_check' => (int) ($request->bonus_option_salarymode_hourly[$bp] ?? 0),
+                            'view_type' => null,
                             'section_type' => 1,
                             'section_divided' => 1,
+                            'sorting' => 0,
+                            'deleteded' => 1,
                         ];
-                        DB::table('offer_points')->insert($bonus_offer_points);
                     }
                 }
-
             } else {
-                // dd("dsl");
-                // Prepare the main offer data
+                // Clear existing Annual/Monthly configuration (section_divided = 0)
                 DB::table('offer_points')->where('section_divided', 0)->delete();
-                // Check if offer points exist and insert them
-                if (! empty($request->offer_point)) {
+
+                // Prepare Standard Main Earnings (section_type = 0, section_divided = 0)
+                if (! empty($request->offer_point) && is_array($request->offer_point)) {
                     foreach ($request->offer_point as $bp => $point) {
-                        $basic_offer_points = [
-                            'points' => $point,
-                            'percentage' => $request->option_percentage[$bp],
-                            'condition_check' => $request->option_salarymode[$bp],
-                            'view_type' => $request->basic_view[$bp],
+                        $trimmedPoint = trim((string) $point);
+                        if ($trimmedPoint === '') {
+                            continue;
+                        }
+                        $batchInserts[] = [
+                            'points' => $trimmedPoint,
+                            'percentage' => (float) ($request->option_percentage[$bp] ?? 0),
+                            'condition_check' => (int) ($request->option_salarymode[$bp] ?? 0),
+                            'view_type' => isset($request->basic_view[$bp]) ? (int) $request->basic_view[$bp] : 0,
                             'section_type' => 0,
                             'section_divided' => 0,
+                            'sorting' => 0,
+                            'deleteded' => 1,
                         ];
-                        DB::table('offer_points')->insert($basic_offer_points);
                     }
                 }
 
-                if (! empty($request->bonus_points)) {
+                // Prepare Standard Deductions / Other (section_type = 1, section_divided = 0)
+                if (! empty($request->bonus_points) && is_array($request->bonus_points)) {
                     foreach ($request->bonus_points as $bp => $point) {
-                        $bonus_offer_points = [
-                            'points' => $point,
-                            'percentage' => $request->bonus_option_percentage[$bp],
-                            'condition_check' => $request->bonus_option_salarymode[$bp],
-                            'view_type' => $request->bonus_view[$bp],
+                        $trimmedPoint = trim((string) $point);
+                        if ($trimmedPoint === '') {
+                            continue;
+                        }
+                        $batchInserts[] = [
+                            'points' => $trimmedPoint,
+                            'percentage' => (float) ($request->bonus_option_percentage[$bp] ?? 0),
+                            'condition_check' => (int) ($request->bonus_option_salarymode[$bp] ?? 0),
+                            'view_type' => isset($request->bonus_view[$bp]) ? (int) $request->bonus_view[$bp] : 0,
                             'section_type' => 1,
                             'section_divided' => 0,
+                            'sorting' => 0,
+                            'deleteded' => 1,
                         ];
-                        DB::table('offer_points')->insert($bonus_offer_points);
                     }
                 }
-
             }
 
-            // Commit the transaction if all operations are successful
+            // High-speed single batch insert replacing sequential row loops
+            if (! empty($batchInserts)) {
+                DB::table('offer_points')->insert($batchInserts);
+            }
+
             DB::commit();
 
-            // Return a success response
-            return response()->json(['status' => 'success', 'message' => 'Offer Created successfully.']);
+            // Multi-Tenant Atomic Cache Invalidation (Rule 6)
+            Cache::forget('master_salary_offer_points');
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Offer Created successfully.',
+            ]);
 
         } catch (\Exception $e) {
-            // Rollback the transaction if any operation fails
             DB::rollBack();
 
-            // Log the exception message (optional)
-            \Log::error('Transaction failed: '.$e->getMessage());
-            // dd($e->getMessage());
+            Log::error('SuperAdmin master salary configuration failed: '.$e->getMessage(), [
+                'trace' => $e->getTraceAsString(),
+            ]);
 
-            // Return an error response
-            return response()->json(['status' => 'failed', 'message' => 'Failed to save data. Please try again.'], 500);
+            return response()->json([
+                'status' => 'failed',
+                'message' => 'Failed to save data. Please try again.',
+            ], 500);
         }
-
     }
 
     public function ticketList(Request $request)

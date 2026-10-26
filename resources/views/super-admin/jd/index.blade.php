@@ -207,21 +207,27 @@ body {
     display: flex;
     align-items: center;
     flex-wrap: wrap;
-    gap: 10px;
+    gap: 12px;
     flex: 1;
+    min-width: 0;
 }
 .jd-toolbar-right {
     display: flex;
     align-items: center;
     gap: 12px;
+    flex-shrink: 0;
 }
 .jd-search-wrapper {
     position: relative;
-    width: 290px;
+    flex: 1 1 360px;
+    max-width: 520px;
+    min-width: 240px;
 }
 @media (max-width: 768px) {
     .jd-search-wrapper {
+        flex: 1 1 100%;
         width: 100%;
+        max-width: 100%;
     }
 }
 .jd-search-wrapper i.fa-search {
@@ -274,6 +280,14 @@ body {
     cursor: pointer;
     outline: none;
     transition: all 0.15s ease;
+    flex-shrink: 0;
+    min-width: 135px;
+}
+#jd-filter-experience {
+    min-width: 140px;
+}
+#jd-filter-skills {
+    min-width: 125px;
 }
 .jd-filter-select:hover {
     border-color: #cbd5e1;
