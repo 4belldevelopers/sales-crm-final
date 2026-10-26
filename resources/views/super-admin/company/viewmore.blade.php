@@ -1840,6 +1840,354 @@
         outline: 2px solid #009ef7 !important;
         outline-offset: 2px !important;
     }
+
+    /* ── High-End Operational & Sales Package Architecture (Card + Sub-Card Enterprise Standard) ── */
+    .sa-company-drawer .pkg-toolbar-card {
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 10px;
+        padding: 14px 20px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 14px;
+        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03);
+        margin-bottom: 16px;
+    }
+
+    .sa-company-drawer .pkg-toolbar-left {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .sa-company-drawer .pkg-toolbar-icon {
+        width: 42px;
+        height: 42px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 17px;
+        flex-shrink: 0;
+    }
+
+    .sa-company-drawer .pkg-icon-blue {
+        background: #f0f7ff;
+        color: #009ef7;
+        border: 1px solid #dbeafe;
+    }
+
+    .sa-company-drawer .pkg-icon-purple {
+        background: #f8f5ff;
+        color: #7239ea;
+        border: 1px solid #ede9fe;
+    }
+
+    .sa-company-drawer .pkg-icon-amber {
+        background: #fff8dd;
+        color: #f6a723;
+        border: 1px solid #fef3c7;
+    }
+
+    .sa-company-drawer .pkg-toolbar-title {
+        font-size: 15px;
+        font-weight: 700;
+        color: #0f172a;
+        line-height: 1.3;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+
+    .sa-company-drawer .pkg-toolbar-subtitle {
+        font-size: 11.5px;
+        color: #64748b;
+        margin-top: 2px;
+    }
+
+    .sa-company-drawer .pkg-badge-pill {
+        display: inline-flex;
+        align-items: center;
+        padding: 2px 8px;
+        background: #f1f5f9;
+        color: #475569;
+        font-size: 11px;
+        font-weight: 600;
+        border-radius: 20px;
+    }
+
+    .sa-company-drawer .pkg-action-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 8px 16px;
+        font-size: 12px;
+        font-weight: 600;
+        border-radius: 8px;
+        background: #009ef7;
+        color: #ffffff !important;
+        border: none;
+        transition: all 0.2s ease;
+        box-shadow: 0 2px 4px rgba(0, 158, 247, 0.2);
+        text-decoration: none !important;
+    }
+
+    .sa-company-drawer .pkg-action-btn:hover {
+        background: #0086d4;
+        color: #ffffff !important;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 8px rgba(0, 158, 247, 0.28);
+    }
+
+    .sa-company-drawer .pkg-overview-grid {
+        display: grid;
+        grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);
+        gap: 16px;
+        align-items: stretch;
+        margin-bottom: 16px;
+    }
+
+    @media (max-width: 991.98px) {
+        .sa-company-drawer .pkg-overview-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    .sa-company-drawer .pkg-card {
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 10px;
+        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03);
+        overflow: hidden;
+        transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        margin-bottom: 16px;
+    }
+
+    .sa-company-drawer .pkg-card:hover {
+        border-color: #cbd5e1;
+        box-shadow: 0 4px 12px rgba(15, 23, 42, 0.05);
+    }
+
+    .sa-company-drawer .pkg-card-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 13px 18px;
+        border-bottom: 1px solid #f1f5f9;
+        gap: 10px;
+        flex-wrap: wrap;
+        background: #ffffff;
+    }
+
+    .sa-company-drawer .pkg-tier-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 14px;
+        font-weight: 700;
+        color: #0f172a;
+    }
+
+    .sa-company-drawer .pkg-type-tag {
+        display: inline-block;
+        font-size: 10.5px;
+        font-weight: 600;
+        padding: 2px 8px;
+        background: #eff6ff;
+        color: #009ef7;
+        border-radius: 4px;
+        border: 1px solid #dbeafe;
+    }
+
+    .sa-company-drawer .pkg-type-tag-purple {
+        background: #f8f5ff;
+        color: #7239ea;
+        border: 1px solid #ede9fe;
+    }
+
+    .sa-company-drawer .pkg-card-body {
+        padding: 16px 18px;
+    }
+
+    .sa-company-drawer .pkg-stat-boxes {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 10px;
+    }
+
+    @media (max-width: 575.98px) {
+        .sa-company-drawer .pkg-stat-boxes {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    .sa-company-drawer .pkg-stat-box {
+        background: #f8fafc;
+        border: 1px solid #eff2f5;
+        border-radius: 8px;
+        padding: 10px 12px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        min-width: 0;
+    }
+
+    .sa-company-drawer .pkg-stat-primary {
+        background: #f0f7ff;
+        border-color: #dbeafe;
+    }
+
+    .sa-company-drawer .pkg-stat-label {
+        font-size: 9.5px;
+        font-weight: 700;
+        color: #64748b;
+        letter-spacing: 0.5px;
+        text-transform: uppercase;
+        margin-bottom: 4px;
+    }
+
+    .sa-company-drawer .pkg-stat-val {
+        font-size: 15px;
+        font-weight: 700;
+        line-height: 1.25;
+        display: flex;
+        align-items: center;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .sa-company-drawer .pkg-stat-sub {
+        font-size: 11px;
+        color: #94a3b8;
+        margin-top: 3px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .sa-company-drawer .pkg-status-dot {
+        display: inline-block;
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+    }
+
+    .sa-company-drawer .pkg-info-banner {
+        display: flex;
+        align-items: flex-start;
+        padding: 10px 12px;
+        background: #f8fafc;
+        border: 1px dashed #e2e8f0;
+        border-radius: 8px;
+        font-size: 11px;
+        color: #64748b;
+        line-height: 1.45;
+    }
+
+    .sa-company-drawer .pkg-table-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 14px 18px;
+        border-bottom: 1px solid #f1f5f9;
+        gap: 12px;
+        flex-wrap: wrap;
+    }
+
+    .sa-company-drawer .pkg-search-box {
+        display: inline-flex;
+        align-items: center;
+        position: relative;
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        padding: 0 10px;
+        height: 34px;
+        width: 250px;
+        max-width: 100%;
+        transition: all 0.2s ease;
+    }
+
+    .sa-company-drawer .pkg-search-box:focus-within {
+        background: #ffffff;
+        border-color: #009ef7;
+        box-shadow: 0 0 0 3px rgba(0, 158, 247, 0.12);
+    }
+
+    .sa-company-drawer .pkg-search-box i.fa-search {
+        color: #94a3b8;
+        font-size: 11px;
+        margin-right: 6px;
+    }
+
+    .sa-company-drawer .pkg-search-input {
+        border: none;
+        outline: none;
+        background: transparent;
+        font-size: 11.5px;
+        font-family: 'Poppins', sans-serif;
+        width: 100%;
+        color: #1e293b;
+    }
+
+    .sa-company-drawer .pkg-search-clear {
+        background: none;
+        border: none;
+        color: #94a3b8;
+        font-size: 11px;
+        cursor: pointer;
+        padding: 0 4px;
+    }
+
+    .sa-company-drawer .pkg-search-clear:hover {
+        color: #475569;
+    }
+
+    .sa-company-drawer .pkg-rules-table thead th {
+        background: #f8fafc;
+        font-size: 10.5px;
+        font-weight: 700;
+        letter-spacing: 0.5px;
+        color: #64748b;
+        text-transform: uppercase;
+        border-bottom: 1px solid #e2e8f0;
+        padding: 11px 14px;
+        white-space: nowrap;
+    }
+
+    .sa-company-drawer .pkg-rules-table tbody td {
+        padding: 11px 14px;
+        border-bottom: 1px solid #f1f5f9;
+        vertical-align: middle;
+        font-size: 12px;
+        color: #334155;
+    }
+
+    .sa-company-drawer .pkg-rules-table tbody tr:hover {
+        background-color: #fbfcfe;
+    }
+
+    .sa-company-drawer .pkg-event-icon-box {
+        width: 32px;
+        height: 32px;
+        border-radius: 6px;
+        background: #f1f5f9;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 12px;
+        flex-shrink: 0;
+    }
+
+    .sa-company-drawer .pkg-rules-scroll-wrap {
+        max-height: 480px;
+        overflow-y: auto;
+        scrollbar-width: thin;
+    }
 </style>
 <div class="card-body position-relative px-0 py-0 sa-company-drawer" id="kt_activities_body">
     <input type="hidden" name="hid_client_id" id="hid_client_id" value="{{ $client->id }}" />
@@ -2320,195 +2668,334 @@
                     <!--end::Contacts Content-->
                     <!--begin::invoices Content-->
                     <div class="tab-pane" id="invoices" role="tabpanel" aria-labelledby="tab-invoices">
-                        <div class="card-header cursor-pointer px-0" style="display: block;">
+                        @php
+                            $salesFreePack = DB::table('coin_packages')
+                                ->join('coin_package_types', 'coin_package_types.id', '=', 'coin_packages.coin_package_type_id')
+                                ->where('coin_packages.custome_pck', 2)
+                                ->where('coin_packages.event_type', '=', 'sales')
+                                ->select('coin_packages.*', 'coin_package_types.title')
+                                ->first();
 
-                            <table class="table table-row-dashed table-row-gray-300 align-middle gs-0 gy-4"
-                                id="">
+                            $salesFreeStatus = DB::table('company_coins')
+                                ->where('company_id', $client->id)
+                                ->where('event_type', 'sales')
+                                ->value('free_pack_status') ?? 'inactive';
+                        @endphp
 
-
-                                <thead id="">
-                                    <tr class="fw-bolder text-muted">
-                                        <th class="min-w-200px">Package</th>
-                                        <th class="min-w-150px">Duration</th>
-                                        <th class="min-w-150px">Total Coins</th>
-                                        <th class="min-w-150px">Status</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="">
-                                    @php
-
-                                        $coin_packages_free = DB::table('coin_packages')
-                                            ->join(
-                                                'coin_package_types',
-                                                'coin_package_types.id',
-                                                '=',
-                                                'coin_packages.coin_package_type_id',
-                                            )
-                                            ->join(
-                                                'coin_orders',
-                                                'coin_orders.coin_package_id',
-                                                '=',
-                                                'coin_packages.id',
-                                            )
-                                            ->join('companies', 'companies.id', '=', 'coin_orders.company_id')
-                                            ->join('company_coins', 'company_coins.company_id', '=', 'companies.id')
-                                            ->select(
-                                                'coin_packages.*',
-                                                'coin_package_types.title',
-                                                'company_coins.free_pack_status',
-                                            )
-                                            ->where('coin_packages.custome_pck', 2)
-                                            ->where('coin_packages.event_type', '=', 'sales')
-                                            ->orderByDesc('coin_orders.id')
-                                            ->take(1)
-                                            ->get();
-                                    @endphp
-                                    @if ($coin_packages_free)
-                                        @foreach ($coin_packages_free as $packages_free)
-                                            <tr class="fw-bolder text-muted">
-                                                <td class="min-w-200px">{{ $packages_free->title }}</td>
-                                                <td class="min-w-150px">
-                                                    {{ $packages_free->days ? $packages_free->days : 0 }} Days</td>
-                                                <td class="min-w-150px">{{ $packages_free->coins }}</td>
-                                                <td class="min-w-150px">
-                                                    <div class="col-sm-6 col-md-12">
-                                                        <div class="form-group">
-                                                            <label class="control-label col-sm-8"></label>
-
-                                                            <div class="col-sm-4">
-                                                                <div
-                                                                    class="switchery-demo form-check form-switch form-switch-sm form-check-custom form-check-solid">
-                                                                    <input type="checkbox"
-                                                                        class="js-switch form-check-input checkStatusSales"
-                                                                        name="checkStatusSales"
-                                                                        @if (@$packages_free->free_pack_status == 'active') checked @endif
-                                                                        data-color="#99d683" data-size="small" />
-                                                                </div>
-
-                                                                <a href="javascript:void(0);"
-                                                                    class="text-muted fw-bold d-block fs-7 checkStatusSales_text">{{ @$packages_free->free_pack_status == 'active' ? 'Active' : 'Inactive' }}</a>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-
-                                                </td>
-                                            </tr>
-                                        @endforeach
-                                    @endif
-
-
-                                </tbody>
-                            </table>
-
-                            <div class="card-title m-0">
-                                <h3 class="fw-bolder m-0">
-                                    Current Package
-                                </h3>
-
-                                <a href="<?php echo url('super-admin/custompackages/create/' . @$client->id); ?>?packageType={{ encrypt('sales') }}"
-                                    class="btn btn-primary align-self-center"
-                                    style="position: absolute; right: 18px;">New Package</a>
+                        <!-- Tier 1: Section Header Toolbar Card -->
+                        <div class="pkg-toolbar-card">
+                            <div class="pkg-toolbar-left">
+                                <div class="pkg-toolbar-icon pkg-icon-purple">
+                                    <i class="fas fa-chart-line"></i>
+                                </div>
+                                <div>
+                                    <div class="pkg-toolbar-title">
+                                        Sales Package & Credit Architecture
+                                        <span class="pkg-badge-pill">{{ count($company_coins_sales ?? []) }} Active Assigned</span>
+                                    </div>
+                                    <div class="pkg-toolbar-subtitle">
+                                        Manage sales quota allocation, business development wallet balances, trial tier onboarding, and lead deduction rules
+                                    </div>
+                                </div>
                             </div>
+                            <div class="pkg-toolbar-right">
+                                <a href="{{ url('super-admin/custompackages/create/' . @$client->id) }}?packageType={{ encrypt('sales') }}" class="pkg-action-btn" style="background: #7239ea; box-shadow: 0 2px 4px rgba(114, 57, 234, 0.2);">
+                                    <i class="fas fa-plus"></i>
+                                    <span>New Sales Package</span>
+                                </a>
+                            </div>
+                        </div>
 
-                            <div class="card-body px-0 py-7">
-                                <div class="table-responsive">
+                        <!-- Tier 2: Overview Dual-Card Grid (Current Plan Hero + Onboarding Free Tier) -->
+                        <div class="pkg-overview-grid">
+                            <!-- Sub-Card A: Current Active Sales Package -->
+                            @if (!empty($company_coins_sales) && count($company_coins_sales) > 0)
+                                @foreach ($company_coins_sales as $package_sales)
+                                    @php
+                                        $pkgTitle = is_array($package_sales) ? ($package_sales['title'] ?? '') : ($package_sales->title ?? '');
+                                        $pkgStatus = is_array($package_sales) ? ($package_sales['status'] ?? '') : ($package_sales->status ?? '');
+                                        $pkgStartDate = is_array($package_sales) ? ($package_sales['start_date'] ?? '') : ($package_sales->start_date ?? '');
+                                        $pkgEndDate = is_array($package_sales) ? ($package_sales['end_date'] ?? '') : ($package_sales->end_date ?? '');
+                                        $pkgOrderCoins = (float)(is_array($package_sales) ? ($package_sales['order_coins'] ?? 0) : ($package_sales->order_coins ?? 0));
+                                        $pkgCoins = (float)(is_array($package_sales) ? ($package_sales['coins'] ?? 0) : ($package_sales->coins ?? 0));
+                                        $isActivePlan = strtotime($pkgEndDate) >= strtotime(date('Y-m-d')) && $pkgStatus == 'valid';
 
-                                    <table class="table table-row-dashed table-row-gray-300 align-middle gs-0 gy-4"
-                                        id="">
+                                        $daysLeft = 0;
+                                        if (!empty($pkgEndDate)) {
+                                            $diff = strtotime($pkgEndDate) - time();
+                                            $daysLeft = (int) ceil($diff / 86400);
+                                        }
 
+                                        $pct = $pkgOrderCoins > 0 ? min(100, max(0, round(($pkgCoins / $pkgOrderCoins) * 100))) : 0;
+                                    @endphp
+                                    <div class="pkg-card mb-0">
+                                        <div class="pkg-card-header">
+                                            <div class="d-flex align-items-center gap-2">
+                                                <div class="pkg-tier-badge">
+                                                    <i class="fas fa-gem text-primary"></i>
+                                                    <span class="fw-bold">{{ $pkgTitle ?: 'Custom Sales Plan' }}</span>
+                                                </div>
+                                                <span class="pkg-type-tag pkg-type-tag-purple">Sales Engine</span>
+                                            </div>
+                                            <div>
+                                                @if ($isActivePlan)
+                                                    <span class="badge bg-light-success text-success px-3 py-2 fw-bold fs-8">
+                                                        <span class="pkg-status-dot bg-success me-1"></span> Active Plan
+                                                    </span>
+                                                @else
+                                                    <span class="badge bg-light-danger text-danger px-3 py-2 fw-bold fs-8">
+                                                        <span class="pkg-status-dot bg-danger me-1"></span> Expired
+                                                    </span>
+                                                @endif
+                                            </div>
+                                        </div>
+                                        <div class="pkg-card-body">
+                                            <div class="pkg-stat-boxes">
+                                                <!-- Stat 1: Remaining Coins -->
+                                                <div class="pkg-stat-box" style="background: #f8f5ff; border-color: #ede9fe;">
+                                                    <div class="pkg-stat-label">REMAINING COINS</div>
+                                                    <div class="pkg-stat-val" style="color: #7239ea;">
+                                                        <i class="fas fa-coins me-1 fs-6 text-warning"></i>
+                                                        {{ number_format($pkgCoins, 1) }}
+                                                    </div>
+                                                    <div class="pkg-stat-sub">Live sales balance</div>
+                                                </div>
+                                                <!-- Stat 2: Total Granted -->
+                                                <div class="pkg-stat-box">
+                                                    <div class="pkg-stat-label">TOTAL ALLOCATED</div>
+                                                    <div class="pkg-stat-val text-dark">
+                                                        {{ number_format($pkgOrderCoins) }}
+                                                    </div>
+                                                    <div class="pkg-stat-sub">Purchased capacity</div>
+                                                </div>
+                                                <!-- Stat 3: Validity Period -->
+                                                <div class="pkg-stat-box">
+                                                    <div class="pkg-stat-label">VALIDITY WINDOW</div>
+                                                    <div class="pkg-stat-val text-dark fs-8 fw-bold">
+                                                        {{ $pkgStartDate ? date('d M Y', strtotime($pkgStartDate)) : '—' }}
+                                                        <span class="text-muted fw-normal px-1">to</span>
+                                                        {{ $pkgEndDate ? date('d M Y', strtotime($pkgEndDate)) : '—' }}
+                                                    </div>
+                                                    <div class="pkg-stat-sub">
+                                                        @if ($daysLeft > 0)
+                                                            <span class="text-success fw-semibold"><i class="fas fa-check-circle text-success me-1 fs-9"></i>{{ $daysLeft }} days left</span>
+                                                        @elseif ($daysLeft === 0)
+                                                            <span class="text-warning fw-semibold"><i class="fas fa-exclamation-circle text-warning me-1 fs-9"></i>Expires today</span>
+                                                        @else
+                                                            <span class="text-danger fw-semibold"><i class="fas fa-times-circle text-danger me-1 fs-9"></i>Expired {{ abs($daysLeft) }}d ago</span>
+                                                        @endif
+                                                    </div>
+                                                </div>
+                                            </div>
 
-                                        <tbody id="">
-                                            @if (@$company_coins_sales)
+                                            <div class="pkg-progress-wrap mt-3">
+                                                <div class="d-flex justify-content-between align-items-center mb-1 fs-8">
+                                                    <span class="text-muted fw-semibold">Quota Utilization</span>
+                                                    <span class="fw-bold text-dark">{{ $pkgCoins > $pkgOrderCoins ? 'Top-up Balance Augmented' : ($pct . '% available') }}</span>
+                                                </div>
+                                                <div class="progress" style="height: 6px; border-radius: 4px; background: #e2e8f0;">
+                                                    <div class="progress-bar" role="progressbar" style="width: {{ min(100, $pct) }}%; border-radius: 4px; background: #7239ea;"></div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                @endforeach
+                            @else
+                                <div class="pkg-card d-flex flex-column align-items-center justify-content-center p-6 text-center mb-0" style="min-height: 180px;">
+                                    <div class="pkg-empty-icon mb-2">
+                                        <i class="fas fa-chart-pie fa-2x text-muted opacity-50"></i>
+                                    </div>
+                                    <div class="fw-bold fs-6 text-gray-800">No Sales Package Assigned</div>
+                                    <div class="fs-8 text-muted mt-1 mb-3">Create and assign a custom sales package to allocate credits for sales outreach, lead discovery, and BD tools.</div>
+                                    <a href="{{ url('super-admin/custompackages/create/' . @$client->id) }}?packageType={{ encrypt('sales') }}" class="btn btn-sm btn-primary">
+                                        <i class="fas fa-plus"></i> Assign Sales Package
+                                    </a>
+                                </div>
+                            @endif
 
-                                                @foreach ($company_coins_sales as $package_sales)
-                                                    <tr class="fw-bolder text-muted">
-                                                        <th class="min-w-200px">Package</th>
-                                                        <th class="min-w-200px">Status</th>
-                                                        <th class="min-w-150px">Duration</th>
-                                                        <th class="min-w-150px">Total Coins</th>
-                                                        <th class="min-w-150px">Remaining Coins</th>
-                                                    </tr>
+                            <!-- Sub-Card B: Onboarding / Free Trial Sales Tier -->
+                            <div class="pkg-card mb-0">
+                                <div class="pkg-card-header">
+                                    <div class="d-flex align-items-center gap-2">
+                                        <div class="pkg-toolbar-icon pkg-icon-amber" style="width: 32px; height: 32px; font-size: 13px;">
+                                            <i class="fas fa-gift"></i>
+                                        </div>
+                                        <div>
+                                            <span class="fw-bold fs-7 text-dark">{{ $salesFreePack->title ?? 'Free Trial' }} Tier</span>
+                                            <span class="pkg-type-tag ms-1">Onboarding Default</span>
+                                        </div>
+                                    </div>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <div class="form-check form-switch form-switch-sm form-check-custom form-check-solid m-0">
+                                            <input type="checkbox"
+                                                class="js-switch form-check-input checkStatusSales cursor-pointer"
+                                                name="checkStatusSales"
+                                                id="switchSalesFree"
+                                                @if ($salesFreeStatus == 'active') checked @endif />
+                                        </div>
+                                        <span class="badge {{ $salesFreeStatus == 'active' ? 'bg-light-success text-success' : 'bg-light text-muted' }} px-2 py-1 fw-bold fs-8 checkStatusSales_text">
+                                            {{ $salesFreeStatus == 'active' ? 'Active' : 'Inactive' }}
+                                        </span>
+                                    </div>
+                                </div>
+                                <div class="pkg-card-body">
+                                    <div class="pkg-stat-boxes" style="grid-template-columns: repeat(2, 1fr);">
+                                        <div class="pkg-stat-box">
+                                            <div class="pkg-stat-label">TRIAL DURATION</div>
+                                            <div class="pkg-stat-val text-dark">
+                                                <i class="fas fa-clock text-info me-1 fs-6"></i>
+                                                {{ !empty($salesFreePack->days) ? $salesFreePack->days : 0 }} Days
+                                            </div>
+                                            <div class="pkg-stat-sub">Standard trial period</div>
+                                        </div>
+                                        <div class="pkg-stat-box">
+                                            <div class="pkg-stat-label">FREE SALES COINS</div>
+                                            <div class="pkg-stat-val text-dark">
+                                                <i class="fas fa-coins text-warning me-1 fs-6"></i>
+                                                {{ number_format((float)(@$salesFreePack->coins ?? 0)) }} Coins
+                                            </div>
+                                            <div class="pkg-stat-sub">Complimentary allowance</div>
+                                        </div>
+                                    </div>
 
-
-                                                    <tr class="fw-bolder text-muted">
-                                                        <td class="text-dark fs-6"><?php echo @$package_sales['title'] ? @$package_sales['title'] : ''; ?></td>
-                                                        <td class="text-dark fs-6">
-                                                            @if (strtotime(@$package_sales['end_date']) >= strtotime(date('Y-m-d')) && @$package_sales['status'] == 'valid')
-                                                                Active
-                                                            @else
-                                                                Expired
-                                                            @endif
-                                                        </td>
-                                                        <td class="text-dark fs-6"><?php echo @$package_sales['start_date'] ? date('d-M-Y', strtotime(@$package_sales['start_date'])) : ''; ?> to
-                                                            <?php echo @$package_sales['end_date'] ? date('d-M-Y', strtotime(@$package_sales['end_date'])) : ''; ?></td>
-                                                        <td class="text-dark fs-6"><?php echo @$package_sales['order_coins']; ?></td>
-                                                        <td class="text-dark fs-6"><?php echo @$package_sales['coins']; ?></td>
-                                                    </tr>
-
-                                                    <tr>
-                                                        <td colspan="5">
-                                                            <h3 class="fw-bolder m-0">
-                                                                Credit Usage Overview per Activity
-                                                            </h3>
-                                                        </td>
-                                                    </tr>
-
-                                                    {{-- <tr>
-                                                    <td colspan="4">
-                                                        <span class="badge bg-primary"><?php echo @$package_sales['title'] ? @$package_sales['title'] : ''; ?></span>
-                                                        <span class="badge bg-info"><?php echo @$package_sales['start_date'] ? date('d-M-Y', strtotime(@$package_sales['start_date'])) : ''; ?> to <?php echo @$package_sales['end_date'] ? date('d-M-Y', strtotime(@$package_sales['end_date'])) : ''; ?></span>
-                                                        <span class="badge bg-success">Total Coins - <?php echo @$package_sales['order_coins']; ?></span>
-                                                        <span class="badge bg-warning">Remain Coins - <?php echo @$package_sales['coins']; ?></span>  
-                                                    </td>
-                                                    </tr> --}}
-
-
-
-                                                    <tr class="fw-bolder text-muted">
-                                                        <th colspan="2" class="min-w-200px">Event</th>
-                                                        <th class="min-w-150px">Deductions</th>
-                                                        <th class="min-w-150px">Deduction Type</th>
-                                                        <th class="min-w-150px">Minimum Coins Required</th>
-                                                    </tr>
-
-                                                    @foreach ($package_sales['coin_order_events'] as $package_value)
-                                                        <tr>
-                                                            <td colspan="2">
-                                                                <a href="javascript:void(0);"
-                                                                    class="text-dark fw-bolder text-hover-primary d-block fs-6">
-                                                                    {{ @$package_value->title }}
-                                                                </a>
-                                                            </td>
-                                                            <td>
-                                                                <a href="javascript:void(0);"
-                                                                    class="text-dark fw-bolder text-hover-primary d-block fs-6">
-                                                                    {{ @$package_value->deductions }}
-                                                                </a>
-                                                            </td>
-                                                            <td>
-                                                                <a href="javascript:void(0);"
-                                                                    class="text-dark fw-bolder text-hover-primary d-block fs-6">
-                                                                    {{ @$package_value->deduction_type }}
-                                                                </a>
-                                                            </td>
-                                                            <td>
-                                                                <a href="javascript:void(0);"
-                                                                    class="text-dark fw-bolder text-hover-primary d-block fs-6">
-                                                                    {{ @$package_value->required_coin }}
-                                                                </a>
-                                                            </td>
-
-                                                        </tr>
-                                                    @endforeach
-                                                @endforeach
-
-                                            @endif
-
-                                        </tbody>
-                                    </table>
+                                    <div class="pkg-info-banner mt-3">
+                                        <i class="fas fa-info-circle text-primary me-2"></i>
+                                        <span>Controls whether this workspace is granted initial sales coins upon provisioning to explore BD and marketplace features.</span>
+                                    </div>
                                 </div>
                             </div>
                         </div>
+
+                        <!-- Tier 3: Credit Usage Overview per Activity (High Density Table Sub-Card) -->
+                        @if (!empty($company_coins_sales))
+                            @foreach ($company_coins_sales as $package_sales)
+                                @php
+                                    $eventsSales = is_array($package_sales) ? ($package_sales['coin_order_events'] ?? []) : ($package_sales->coin_order_events ?? []);
+                                @endphp
+                                <div class="pkg-card mt-4">
+                                    <div class="pkg-table-header">
+                                        <div class="d-flex align-items-center gap-2">
+                                            <div class="pkg-toolbar-icon pkg-icon-purple" style="width: 32px; height: 32px; font-size: 13px;">
+                                                <i class="fas fa-sliders-h"></i>
+                                            </div>
+                                            <div>
+                                                <h4 class="fw-bold text-dark m-0 fs-6">
+                                                    Sales Credit Usage Rules by Activity
+                                                    <span class="pkg-badge-pill ms-2" id="salesRulesCountBadge">
+                                                        {{ count($eventsSales) }} Rules Configured
+                                                    </span>
+                                                </h4>
+                                                <div class="text-muted fs-8">Authoritative deduction schedule governing sales events and outreach consumption</div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Quick filter search bar -->
+                                        <div class="pkg-search-box">
+                                            <i class="fas fa-search"></i>
+                                            <input type="text" class="pkg-search-input" id="searchSalesActivityEvents" placeholder="Search sales rules..." autocomplete="off">
+                                            <button type="button" class="pkg-search-clear" id="clearSalesActivityEvents" style="display: none;">✕</button>
+                                        </div>
+                                    </div>
+
+                                    <div class="table-responsive pkg-rules-scroll-wrap">
+                                        <table class="table align-middle pkg-rules-table mb-0" id="tableSalesActivityRules">
+                                            <thead>
+                                                <tr>
+                                                    <th style="min-width: 230px;">EVENT / ACTIVITY</th>
+                                                    <th style="min-width: 140px;">DEDUCTION RATE</th>
+                                                    <th style="min-width: 140px;">BILLING FREQUENCY</th>
+                                                    <th style="min-width: 170px;">MINIMUM REQUIRED COINS</th>
+                                                    <th style="min-width: 100px; text-align: right;">STATUS</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                @forelse ($eventsSales as $package_value)
+                                                    @php
+                                                        $evTitle = is_array($package_value) ? ($package_value['title'] ?? '') : ($package_value->title ?? '');
+                                                        $evDeductions = is_array($package_value) ? ($package_value['deductions'] ?? 0) : ($package_value->deductions ?? 0);
+                                                        $evType = is_array($package_value) ? ($package_value['deduction_type'] ?? '') : ($package_value->deduction_type ?? '');
+                                                        $evReqCoin = is_array($package_value) ? ($package_value['required_coin'] ?? 0) : ($package_value->required_coin ?? 0);
+
+                                                        $lower = strtolower($evTitle);
+                                                        $iconClass = 'fas fa-hand-holding-usd text-primary';
+                                                        if (str_contains($lower, 'lead')) $iconClass = 'fas fa-funnel-dollar text-success';
+                                                        elseif (str_contains($lower, 'client')) $iconClass = 'fas fa-building text-info';
+                                                        elseif (str_contains($lower, 'call') || str_contains($lower, 'phone')) $iconClass = 'fas fa-phone-alt text-primary';
+                                                        elseif (str_contains($lower, 'mail') || str_contains($lower, 'email')) $iconClass = 'fas fa-envelope text-warning';
+                                                        elseif (str_contains($lower, 'proposal')) $iconClass = 'fas fa-file-invoice-dollar text-purple';
+                                                        elseif (str_contains($lower, 'deal')) $iconClass = 'fas fa-handshake text-success';
+                                                        elseif (str_contains($lower, 'meeting')) $iconClass = 'fas fa-calendar-check text-danger';
+                                                        elseif (str_contains($lower, 'export')) $iconClass = 'fas fa-file-export text-danger';
+                                                    @endphp
+                                                    <tr class="pkg-rule-row" data-search="{{ strtolower($evTitle . ' ' . $evType . ' ' . $evDeductions) }}">
+                                                        <td>
+                                                            <div class="d-flex align-items-center gap-2">
+                                                                <div class="pkg-event-icon-box">
+                                                                    <i class="{{ $iconClass }}"></i>
+                                                                </div>
+                                                                <div>
+                                                                    <span class="fw-bold text-dark fs-7 d-block">{{ $evTitle ?: 'System Event' }}</span>
+                                                                    <span class="text-muted fs-8">Sales wallet action</span>
+                                                                </div>
+                                                            </div>
+                                                        </td>
+                                                        <td>
+                                                            <div class="d-flex align-items-center gap-1">
+                                                                <i class="fas fa-coins text-warning fs-8"></i>
+                                                                <span class="fw-bold text-dark fs-7">{{ (float)$evDeductions > 0 ? (float)$evDeductions . ' Coins' : 'Free (0)' }}</span>
+                                                            </div>
+                                                        </td>
+                                                        <td>
+                                                            @if (strtolower($evType) == 'daily')
+                                                                <span class="badge bg-light-warning text-warning px-2 py-1 fw-bold fs-8">
+                                                                    <i class="fas fa-redo-alt fs-9 me-1"></i> DAILY
+                                                                </span>
+                                                            @else
+                                                                <span class="badge bg-light-primary text-primary px-2 py-1 fw-bold fs-8">
+                                                                    <i class="fas fa-bolt fs-9 me-1"></i> ONE-TIME
+                                                                </span>
+                                                            @endif
+                                                        </td>
+                                                        <td>
+                                                            @if ((float)$evReqCoin > 0)
+                                                                <div class="d-flex align-items-center gap-1 text-danger fw-semibold fs-7">
+                                                                    <i class="fas fa-shield-alt text-danger fs-8"></i>
+                                                                    <span>Min. {{ number_format((float)$evReqCoin) }} Coins</span>
+                                                                </div>
+                                                            @else
+                                                                <span class="text-muted fs-8">None (0 Coins)</span>
+                                                            @endif
+                                                        </td>
+                                                        <td style="text-align: right;">
+                                                            <span class="badge bg-light-success text-success px-2 py-1 fs-8 fw-semibold">
+                                                                <i class="fas fa-check-circle text-success fs-9 me-1"></i> Active
+                                                            </span>
+                                                        </td>
+                                                    </tr>
+                                                @empty
+                                                    <tr>
+                                                        <td colspan="5" class="text-center py-6 text-muted fs-7">
+                                                            <i class="fas fa-info-circle text-muted fs-3 mb-2 d-block"></i>
+                                                            No event credit deductions configured for this sales package.
+                                                        </td>
+                                                    </tr>
+                                                @endforelse
+                                            </tbody>
+                                        </table>
+                                        <div class="pkg-no-rules text-center py-6 text-muted fs-7" id="noSalesRulesMatch" style="display: none;">
+                                            <i class="fas fa-search text-muted opacity-50 fs-2 mb-2 d-block"></i>
+                                            No sales activity rules match your search query.
+                                        </div>
+                                    </div>
+                                </div>
+                            @endforeach
+                        @else
+                            <div class="pkg-card mt-4 p-6 text-center text-muted">
+                                <i class="fas fa-shield-alt fa-2x text-muted opacity-40 mb-2 d-block"></i>
+                                <div class="fw-bold fs-7 text-dark">No Active Sales Rules</div>
+                                <div class="fs-8 text-muted mt-1">Assign an active sales package above to view and configure activity deduction thresholds.</div>
+                            </div>
+                        @endif
                     </div>
                     <!--end::invoices Content-->
                     <!--begin::transactionhistory Content-->
@@ -3525,195 +4012,338 @@
                     <!--end::migration Content-->
                     <!--begin::packages Content-->
                     <div class="tab-pane" id="packages" role="tabpanel" aria-labelledby="tab-packages">
-                        <!--begin::Contacts header-->
-                        <div class="card-header cursor-pointer px-0" style="display: block;">
+                        @php
+                            $opFreePack = DB::table('coin_packages')
+                                ->join('coin_package_types', 'coin_package_types.id', '=', 'coin_packages.coin_package_type_id')
+                                ->where('coin_packages.custome_pck', 2)
+                                ->where('coin_packages.event_type', '=', 'operational')
+                                ->select('coin_packages.*', 'coin_package_types.title')
+                                ->first();
 
-                            <table class="table table-row-dashed table-row-gray-300 align-middle gs-0 gy-4" id="">
+                            $opFreeStatus = DB::table('company_coins')
+                                ->where('company_id', $client->id)
+                                ->where('event_type', 'operational')
+                                ->value('free_pack_status') ?? 'inactive';
+                        @endphp
 
-
-                                <thead id="">
-                                    <tr class="fw-bolder text-muted">
-                                        <th class="min-w-200px">Package</th>
-                                        <th class="min-w-150px">Duration</th>
-                                        <th class="min-w-150px">Total Coins</th>
-                                        <th class="min-w-150px">Status</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="">
-                                    @php
-
-                                        $coin_packages_free = DB::table('coin_packages')
-                                            ->join(
-                                                'coin_package_types',
-                                                'coin_package_types.id',
-                                                '=',
-                                                'coin_packages.coin_package_type_id',
-                                            )
-                                            ->join('coin_orders', 'coin_orders.coin_package_id', '=', 'coin_packages.id')
-                                            ->join('companies', 'companies.id', '=', 'coin_orders.company_id')
-                                            ->join('company_coins', 'company_coins.company_id', '=', 'companies.id')
-                                            ->select(
-                                                'coin_packages.*',
-                                                'coin_package_types.title',
-                                                'company_coins.free_pack_status',
-                                            )
-                                            ->where('coin_packages.custome_pck', 2)
-                                            ->where('coin_packages.event_type', '=', 'operational')
-                                            ->orderByDesc('coin_orders.id')
-                                            ->take(1)
-                                            ->get();
-                                    @endphp
-                                    @if ($coin_packages_free)
-                                        @foreach ($coin_packages_free as $packages_free)
-                                            <tr class="fw-bolder text-muted">
-                                                <td class="min-w-200px">{{ $packages_free->title }}</td>
-                                                <td class="min-w-150px">
-                                                    {{ $packages_free->days ? $packages_free->days : 0 }} Days</td>
-                                                <td class="min-w-150px">{{ $packages_free->coins }}</td>
-                                                <td class="min-w-150px">
-                                                    <div class="col-sm-6 col-md-12">
-                                                        <div class="form-group">
-                                                            <label class="control-label col-sm-8"></label>
-
-                                                            <div class="col-sm-4">
-                                                                <div
-                                                                    class="switchery-demo form-check form-switch form-switch-sm form-check-custom form-check-solid">
-                                                                    <input type="checkbox"
-                                                                        class="js-switch form-check-input checkStatusOperational"
-                                                                        name="checkStatusOperational"
-                                                                        @if (@$packages_free->free_pack_status == 'active') checked @endif
-                                                                        data-color="#99d683" data-size="small" />
-                                                                </div>
-                                                                <a href="javascript:void(0);"
-                                                                    class="text-muted fw-bold d-block fs-7 checkStatusOperational_text">{{ @$packages_free->free_pack_status == 'active' ? 'Active' : 'Inactive' }}</a>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        @endforeach
-                                    @endif
-                                </tbody>
-                            </table>
-
-
-                            <!--begin::Card title-->
-                            <div class="card-title m-0">
-                                <h3 class="fw-bolder m-0">
-                                    Current Package
-                                </h3>
-
-                                <a href="<?php echo url('super-admin/custompackages/create/' . @$client->id); ?>?packageType={{ encrypt('operational') }}"
-                                    class="btn btn-primary align-self-center" style="position: absolute; right: 18px;">New
-                                    Package</a>
-                            </div>
-
-                            <div class="card-body px-0 py-7">
-                                <div class="table-responsive">
-
-                                    <table class="table table-row-dashed table-row-gray-300 align-middle gs-0 gy-4"
-                                        id="">
-
-                                        <tbody id="">
-                                            @if (@$company_coins)
-
-                                                @foreach ($company_coins as $package)
-                                                    <tr class="fw-bolder text-muted">
-                                                        <th class="min-w-200px">Package</th>
-                                                        <th class="min-w-200px">Status</th>
-                                                        <th class="min-w-150px">Duration</th>
-                                                        <th class="min-w-150px">Total Coins</th>
-                                                        <th class="min-w-150px">Remaining Coins</th>
-                                                    </tr>
-
-
-                                                    <tr class="fw-bolder text-muted">
-                                                        <td class="text-dark fs-6"><?php echo @$package['title'] ? @$package['title'] : ''; ?></td>
-                                                        <td class="text-dark fs-6">
-                                                            @if (strtotime(@$package['end_date']) >= strtotime(date('Y-m-d')) && @$package['status'] == 'valid')
-                                                                Active
-                                                            @else
-                                                                Expired
-                                                            @endif
-                                                        </td>
-                                                        <td class="text-dark fs-6"><?php echo @$package['start_date'] ? date('d-M-Y', strtotime(@$package['start_date'])) : ''; ?> to
-                                                            <?php echo @$package['end_date'] ? date('d-M-Y', strtotime(@$package['end_date'])) : ''; ?></td>
-                                                        <td class="text-dark fs-6"><?php echo @$package['order_coins']; ?></td>
-                                                        <td class="text-dark fs-6"><?php echo @$package['coins']; ?></td>
-                                                    </tr>
-
-                                                    <tr>
-                                                        <td colspan="5">
-                                                            <h3 class="fw-bolder m-0">
-                                                                Credit Usage Overview per Activity
-                                                            </h3>
-                                                        </td>
-                                                    </tr>
-
-
-                                                    {{-- <tr>
-                                        <td colspan="4">
-                                        <span class="badge bg-primary"><?php echo @$package['title'] ? @$package['title'] : ''; ?></span>
-                                        <span class="badge bg-info"><?php echo @$package['start_date'] ? date('d-M-Y', strtotime(@$package['start_date'])) : ''; ?> to <?php echo @$package['end_date'] ? date('d-M-Y', strtotime(@$package['end_date'])) : ''; ?></span>
-                                        <span class="badge bg-success">Total Coins - <?php echo @$package['order_coins']; ?></span>
-                                        <span class="badge bg-warning">Remain Coins - <?php echo @$package['coins']; ?></span>  
-                                        </td>
-                                    </tr> --}}
-
-                                                    <tr class="fw-bolder text-muted">
-                                                        <th colspan="2" class="min-w-200px">Event</th>
-                                                        <th class="min-w-150px">Deductions</th>
-                                                        <th class="min-w-150px">Deduction Type</th>
-                                                        <th class="min-w-150px">Minimum Coins Required</th>
-                                                    </tr>
-
-                                                    @foreach ($package['coin_order_events'] as $package_active)
-                                                        <tr>
-                                                            <td colspan="2">
-                                                                <a href="javascript:void(0);"
-                                                                    class="text-dark fw-bolder text-hover-primary d-block fs-6">
-                                                                    {{ @$package_active->title }}
-                                                                </a>
-                                                            </td>
-                                                            <td>
-                                                                <a href="javascript:void(0);"
-                                                                    class="text-dark fw-bolder text-hover-primary d-block fs-6">
-                                                                    {{ @$package_active->deductions }}
-                                                                </a>
-                                                            </td>
-                                                            <td>
-                                                                <a href="javascript:void(0);"
-                                                                    class="text-dark fw-bolder text-hover-primary d-block fs-6">
-                                                                    {{ @$package_active->deduction_type }}
-                                                                </a>
-                                                            </td>
-                                                            <td>
-                                                                <a href="javascript:void(0);"
-                                                                    class="text-dark fw-bolder text-hover-primary d-block fs-6">
-                                                                    {{ @$package_active->required_coin }}
-                                                                </a>
-                                                            </td>
-
-                                                        </tr>
-                                                    @endforeach
-                                                @endforeach
-
-                                            @endif
-
-                                        </tbody>
-                                    </table>
+                        <!-- Tier 1: Section Header Toolbar Card -->
+                        <div class="pkg-toolbar-card">
+                            <div class="pkg-toolbar-left">
+                                <div class="pkg-toolbar-icon pkg-icon-blue">
+                                    <i class="fas fa-boxes"></i>
+                                </div>
+                                <div>
+                                    <div class="pkg-toolbar-title">
+                                        Operational Package & Credit Architecture
+                                        <span class="pkg-badge-pill">{{ count($company_coins ?? []) }} Active Assigned</span>
+                                    </div>
+                                    <div class="pkg-toolbar-subtitle">
+                                        Manage operational subscription, wallet balances, free tier onboarding, and per-event deduction rules
+                                    </div>
                                 </div>
                             </div>
-
-                            <!--end::Card title-->
-                            <!--begin::Action-->
-                            <!--<a href="javascript:void(0);" class="btn btn-primary align-self-center">Add Contact</a>-->
-                            <!--end::Action-->
+                            <div class="pkg-toolbar-right">
+                                <a href="{{ url('super-admin/custompackages/create/' . @$client->id) }}?packageType={{ encrypt('operational') }}" class="pkg-action-btn">
+                                    <i class="fas fa-plus"></i>
+                                    <span>New Operational Package</span>
+                                </a>
+                            </div>
                         </div>
-                        <!--end::Contacts header-->
-                        <!--begin::Contacts Content-->
 
-                        <!--end::Contacts Content-->
+                        <!-- Tier 2: Overview Dual-Card Grid (Current Plan Hero + Onboarding Free Tier) -->
+                        <div class="pkg-overview-grid">
+                            <!-- Sub-Card A: Current Active Operational Package -->
+                            @if (!empty($company_coins) && count($company_coins) > 0)
+                                @foreach ($company_coins as $package)
+                                    @php
+                                        $pkgTitle = is_array($package) ? ($package['title'] ?? '') : ($package->title ?? '');
+                                        $pkgStatus = is_array($package) ? ($package['status'] ?? '') : ($package->status ?? '');
+                                        $pkgStartDate = is_array($package) ? ($package['start_date'] ?? '') : ($package->start_date ?? '');
+                                        $pkgEndDate = is_array($package) ? ($package['end_date'] ?? '') : ($package->end_date ?? '');
+                                        $pkgOrderCoins = (float)(is_array($package) ? ($package['order_coins'] ?? 0) : ($package->order_coins ?? 0));
+                                        $pkgCoins = (float)(is_array($package) ? ($package['coins'] ?? 0) : ($package->coins ?? 0));
+                                        $isActivePlan = strtotime($pkgEndDate) >= strtotime(date('Y-m-d')) && $pkgStatus == 'valid';
+
+                                        $daysLeft = 0;
+                                        if (!empty($pkgEndDate)) {
+                                            $diff = strtotime($pkgEndDate) - time();
+                                            $daysLeft = (int) ceil($diff / 86400);
+                                        }
+
+                                        $pct = $pkgOrderCoins > 0 ? min(100, max(0, round(($pkgCoins / $pkgOrderCoins) * 100))) : 0;
+                                    @endphp
+                                    <div class="pkg-card mb-0">
+                                        <div class="pkg-card-header">
+                                            <div class="d-flex align-items-center gap-2">
+                                                <div class="pkg-tier-badge">
+                                                    <i class="fas fa-crown text-warning"></i>
+                                                    <span class="fw-bold">{{ $pkgTitle ?: 'Custom Operational Plan' }}</span>
+                                                </div>
+                                                <span class="pkg-type-tag">Operational Engine</span>
+                                            </div>
+                                            <div>
+                                                @if ($isActivePlan)
+                                                    <span class="badge bg-light-success text-success px-3 py-2 fw-bold fs-8">
+                                                        <span class="pkg-status-dot bg-success me-1"></span> Active Plan
+                                                    </span>
+                                                @else
+                                                    <span class="badge bg-light-danger text-danger px-3 py-2 fw-bold fs-8">
+                                                        <span class="pkg-status-dot bg-danger me-1"></span> Expired
+                                                    </span>
+                                                @endif
+                                            </div>
+                                        </div>
+                                        <div class="pkg-card-body">
+                                            <div class="pkg-stat-boxes">
+                                                <!-- Stat 1: Remaining Coins -->
+                                                <div class="pkg-stat-box pkg-stat-primary">
+                                                    <div class="pkg-stat-label">REMAINING COINS</div>
+                                                    <div class="pkg-stat-val text-primary">
+                                                        <i class="fas fa-coins me-1 fs-6 text-warning"></i>
+                                                        {{ number_format($pkgCoins, 1) }}
+                                                    </div>
+                                                    <div class="pkg-stat-sub">Live operational balance</div>
+                                                </div>
+                                                <!-- Stat 2: Total Granted -->
+                                                <div class="pkg-stat-box">
+                                                    <div class="pkg-stat-label">TOTAL ALLOCATED</div>
+                                                    <div class="pkg-stat-val text-dark">
+                                                        {{ number_format($pkgOrderCoins) }}
+                                                    </div>
+                                                    <div class="pkg-stat-sub">Purchased capacity</div>
+                                                </div>
+                                                <!-- Stat 3: Validity Period -->
+                                                <div class="pkg-stat-box">
+                                                    <div class="pkg-stat-label">VALIDITY WINDOW</div>
+                                                    <div class="pkg-stat-val text-dark fs-8 fw-bold">
+                                                        {{ $pkgStartDate ? date('d M Y', strtotime($pkgStartDate)) : '—' }}
+                                                        <span class="text-muted fw-normal px-1">to</span>
+                                                        {{ $pkgEndDate ? date('d M Y', strtotime($pkgEndDate)) : '—' }}
+                                                    </div>
+                                                    <div class="pkg-stat-sub">
+                                                        @if ($daysLeft > 0)
+                                                            <span class="text-success fw-semibold"><i class="fas fa-check-circle text-success me-1 fs-9"></i>{{ $daysLeft }} days left</span>
+                                                        @elseif ($daysLeft === 0)
+                                                            <span class="text-warning fw-semibold"><i class="fas fa-exclamation-circle text-warning me-1 fs-9"></i>Expires today</span>
+                                                        @else
+                                                            <span class="text-danger fw-semibold"><i class="fas fa-times-circle text-danger me-1 fs-9"></i>Expired {{ abs($daysLeft) }}d ago</span>
+                                                        @endif
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div class="pkg-progress-wrap mt-3">
+                                                <div class="d-flex justify-content-between align-items-center mb-1 fs-8">
+                                                    <span class="text-muted fw-semibold">Balance Utilization</span>
+                                                    <span class="fw-bold text-dark">{{ $pkgCoins > $pkgOrderCoins ? 'Top-up Balance Augmented' : ($pct . '% available') }}</span>
+                                                </div>
+                                                <div class="progress" style="height: 6px; border-radius: 4px; background: #e2e8f0;">
+                                                    <div class="progress-bar bg-primary" role="progressbar" style="width: {{ min(100, $pct) }}%; border-radius: 4px;"></div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                @endforeach
+                            @else
+                                <div class="pkg-card d-flex flex-column align-items-center justify-content-center p-6 text-center mb-0" style="min-height: 180px;">
+                                    <div class="pkg-empty-icon mb-2">
+                                        <i class="fas fa-box-open fa-2x text-muted opacity-50"></i>
+                                    </div>
+                                    <div class="fw-bold fs-6 text-gray-800">No Operational Package Assigned</div>
+                                    <div class="fs-8 text-muted mt-1 mb-3">Create and assign a custom operational package to fund candidate searches, jobs, and workflows.</div>
+                                    <a href="{{ url('super-admin/custompackages/create/' . @$client->id) }}?packageType={{ encrypt('operational') }}" class="btn btn-sm btn-primary">
+                                        <i class="fas fa-plus"></i> Assign Package
+                                    </a>
+                                </div>
+                            @endif
+
+                            <!-- Sub-Card B: Onboarding / Free Trial Operational Tier -->
+                            <div class="pkg-card mb-0">
+                                <div class="pkg-card-header">
+                                    <div class="d-flex align-items-center gap-2">
+                                        <div class="pkg-toolbar-icon pkg-icon-amber" style="width: 32px; height: 32px; font-size: 13px;">
+                                            <i class="fas fa-gift"></i>
+                                        </div>
+                                        <div>
+                                            <span class="fw-bold fs-7 text-dark">{{ $opFreePack->title ?? 'Free Trial' }} Tier</span>
+                                            <span class="pkg-type-tag ms-1">Onboarding Default</span>
+                                        </div>
+                                    </div>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <div class="form-check form-switch form-switch-sm form-check-custom form-check-solid m-0">
+                                            <input type="checkbox"
+                                                class="js-switch form-check-input checkStatusOperational cursor-pointer"
+                                                name="checkStatusOperational"
+                                                id="switchOperationalFree"
+                                                @if ($opFreeStatus == 'active') checked @endif />
+                                        </div>
+                                        <span class="badge {{ $opFreeStatus == 'active' ? 'bg-light-success text-success' : 'bg-light text-muted' }} px-2 py-1 fw-bold fs-8 checkStatusOperational_text">
+                                            {{ $opFreeStatus == 'active' ? 'Active' : 'Inactive' }}
+                                        </span>
+                                    </div>
+                                </div>
+                                <div class="pkg-card-body">
+                                    <div class="pkg-stat-boxes" style="grid-template-columns: repeat(2, 1fr);">
+                                        <div class="pkg-stat-box">
+                                            <div class="pkg-stat-label">TRIAL DURATION</div>
+                                            <div class="pkg-stat-val text-dark">
+                                                <i class="fas fa-clock text-info me-1 fs-6"></i>
+                                                {{ !empty($opFreePack->days) ? $opFreePack->days : 0 }} Days
+                                            </div>
+                                            <div class="pkg-stat-sub">Valid from onboarding</div>
+                                        </div>
+                                        <div class="pkg-stat-box">
+                                            <div class="pkg-stat-label">FREE COIN GRANT</div>
+                                            <div class="pkg-stat-val text-dark">
+                                                <i class="fas fa-coins text-warning me-1 fs-6"></i>
+                                                {{ number_format((float)(@$opFreePack->coins ?? 0)) }} Coins
+                                            </div>
+                                            <div class="pkg-stat-sub">Auto-credited allowance</div>
+                                        </div>
+                                    </div>
+
+                                    <div class="pkg-info-banner mt-3">
+                                        <i class="fas fa-info-circle text-primary me-2"></i>
+                                        <span>Controls whether this workspace is granted initial operational coins upon provisioning to explore recruitment and candidate matching.</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Tier 3: Credit Usage Overview per Activity (High Density Table Sub-Card) -->
+                        @if (!empty($company_coins))
+                            @foreach ($company_coins as $package)
+                                @php
+                                    $eventsOp = is_array($package) ? ($package['coin_order_events'] ?? []) : ($package->coin_order_events ?? []);
+                                @endphp
+                                <div class="pkg-card mt-4">
+                                    <div class="pkg-table-header">
+                                        <div class="d-flex align-items-center gap-2">
+                                            <div class="pkg-toolbar-icon pkg-icon-blue" style="width: 32px; height: 32px; font-size: 13px;">
+                                                <i class="fas fa-sliders-h"></i>
+                                            </div>
+                                            <div>
+                                                <h4 class="fw-bold text-dark m-0 fs-6">
+                                                    Operational Credit Usage Rules by Activity
+                                                    <span class="pkg-badge-pill ms-2" id="opRulesCountBadge">
+                                                        {{ count($eventsOp) }} Rules Configured
+                                                    </span>
+                                                </h4>
+                                                <div class="text-muted fs-8">Authoritative deduction schedule per system action in this workspace</div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Quick filter search bar -->
+                                        <div class="pkg-search-box">
+                                            <i class="fas fa-search"></i>
+                                            <input type="text" class="pkg-search-input" id="searchOpActivityEvents" placeholder="Search operational rules..." autocomplete="off">
+                                            <button type="button" class="pkg-search-clear" id="clearOpActivityEvents" style="display: none;">✕</button>
+                                        </div>
+                                    </div>
+
+                                    <div class="table-responsive pkg-rules-scroll-wrap">
+                                        <table class="table align-middle pkg-rules-table mb-0" id="tableOpActivityRules">
+                                            <thead>
+                                                <tr>
+                                                    <th style="min-width: 230px;">EVENT / ACTIVITY</th>
+                                                    <th style="min-width: 140px;">DEDUCTION RATE</th>
+                                                    <th style="min-width: 140px;">BILLING FREQUENCY</th>
+                                                    <th style="min-width: 170px;">MINIMUM REQUIRED COINS</th>
+                                                    <th style="min-width: 100px; text-align: right;">STATUS</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                @forelse ($eventsOp as $package_active)
+                                                    @php
+                                                        $evTitle = is_array($package_active) ? ($package_active['title'] ?? '') : ($package_active->title ?? '');
+                                                        $evDeductions = is_array($package_active) ? ($package_active['deductions'] ?? 0) : ($package_active->deductions ?? 0);
+                                                        $evType = is_array($package_active) ? ($package_active['deduction_type'] ?? '') : ($package_active->deduction_type ?? '');
+                                                        $evReqCoin = is_array($package_active) ? ($package_active['required_coin'] ?? 0) : ($package_active->required_coin ?? 0);
+
+                                                        $lower = strtolower($evTitle);
+                                                        $iconClass = 'fas fa-cog text-primary';
+                                                        if (str_contains($lower, 'team')) $iconClass = 'fas fa-users-cog text-primary';
+                                                        elseif (str_contains($lower, 'job')) $iconClass = 'fas fa-briefcase text-success';
+                                                        elseif (str_contains($lower, 'candidate')) $iconClass = 'fas fa-user-check text-info';
+                                                        elseif (str_contains($lower, 'talent')) $iconClass = 'fas fa-layer-group text-warning';
+                                                        elseif (str_contains($lower, 'partner')) $iconClass = 'fas fa-handshake text-primary';
+                                                        elseif (str_contains($lower, 'mail') || str_contains($lower, 'email')) $iconClass = 'fas fa-envelope text-info';
+                                                        elseif (str_contains($lower, 'bench')) $iconClass = 'fas fa-id-badge text-purple';
+                                                        elseif (str_contains($lower, 'interview')) $iconClass = 'fas fa-video text-danger';
+                                                        elseif (str_contains($lower, 'offer')) $iconClass = 'fas fa-file-signature text-success';
+                                                        elseif (str_contains($lower, 'whatsapp')) $iconClass = 'fab fa-whatsapp text-success';
+                                                        elseif (str_contains($lower, 'cv')) $iconClass = 'fas fa-file-alt text-info';
+                                                        elseif (str_contains($lower, 'export')) $iconClass = 'fas fa-file-export text-danger';
+                                                    @endphp
+                                                    <tr class="pkg-rule-row" data-search="{{ strtolower($evTitle . ' ' . $evType . ' ' . $evDeductions) }}">
+                                                        <td>
+                                                            <div class="d-flex align-items-center gap-2">
+                                                                <div class="pkg-event-icon-box">
+                                                                    <i class="{{ $iconClass }}"></i>
+                                                                </div>
+                                                                <div>
+                                                                    <span class="fw-bold text-dark fs-7 d-block">{{ $evTitle ?: 'System Event' }}</span>
+                                                                    <span class="text-muted fs-8">Automated workflow action</span>
+                                                                </div>
+                                                            </div>
+                                                        </td>
+                                                        <td>
+                                                            <div class="d-flex align-items-center gap-1">
+                                                                <i class="fas fa-coins text-warning fs-8"></i>
+                                                                <span class="fw-bold text-dark fs-7">{{ (float)$evDeductions > 0 ? (float)$evDeductions . ' Coins' : 'Free (0)' }}</span>
+                                                            </div>
+                                                        </td>
+                                                        <td>
+                                                            @if (strtolower($evType) == 'daily')
+                                                                <span class="badge bg-light-warning text-warning px-2 py-1 fw-bold fs-8">
+                                                                    <i class="fas fa-redo-alt fs-9 me-1"></i> DAILY
+                                                                </span>
+                                                            @else
+                                                                <span class="badge bg-light-primary text-primary px-2 py-1 fw-bold fs-8">
+                                                                    <i class="fas fa-bolt fs-9 me-1"></i> ONE-TIME
+                                                                </span>
+                                                            @endif
+                                                        </td>
+                                                        <td>
+                                                            @if ((float)$evReqCoin > 0)
+                                                                <div class="d-flex align-items-center gap-1 text-danger fw-semibold fs-7">
+                                                                    <i class="fas fa-shield-alt text-danger fs-8"></i>
+                                                                    <span>Min. {{ number_format((float)$evReqCoin) }} Coins</span>
+                                                                </div>
+                                                            @else
+                                                                <span class="text-muted fs-8">None (0 Coins)</span>
+                                                            @endif
+                                                        </td>
+                                                        <td style="text-align: right;">
+                                                            <span class="badge bg-light-success text-success px-2 py-1 fs-8 fw-semibold">
+                                                                <i class="fas fa-check-circle text-success fs-9 me-1"></i> Active
+                                                            </span>
+                                                        </td>
+                                                    </tr>
+                                                @empty
+                                                    <tr>
+                                                        <td colspan="5" class="text-center py-6 text-muted fs-7">
+                                                            <i class="fas fa-info-circle text-muted fs-3 mb-2 d-block"></i>
+                                                            No event credit deductions configured for this operational package.
+                                                        </td>
+                                                    </tr>
+                                                @endforelse
+                                            </tbody>
+                                        </table>
+                                        <div class="pkg-no-rules text-center py-6 text-muted fs-7" id="noOpRulesMatch" style="display: none;">
+                                            <i class="fas fa-search text-muted opacity-50 fs-2 mb-2 d-block"></i>
+                                            No operational activity rules match your search query.
+                                        </div>
+                                    </div>
+                                </div>
+                            @endforeach
+                        @else
+                            <div class="pkg-card mt-4 p-6 text-center text-muted">
+                                <i class="fas fa-shield-alt fa-2x text-muted opacity-40 mb-2 d-block"></i>
+                                <div class="fw-bold fs-7 text-dark">No Active Operational Rules</div>
+                                <div class="fs-8 text-muted mt-1">Assign an active operational package above to view and configure activity deduction thresholds.</div>
+                            </div>
+                        @endif
                     </div>
                     <!--end::packages Content-->
                     <!--begin::Requisitions Content-->
@@ -4981,6 +5611,82 @@ var input = document.querySelector('input[name=tags]');
     });
     new $.fn.dataTable.FixedHeader(myPackageHistory);
 
+    /* ── Client-Side Package Activity Rules Filter & Reactive Switch Badges (0% Server Strain) ── */
+    $(document).on('keyup', '#searchOpActivityEvents', function() {
+        var query = $(this).val().toLowerCase().trim();
+        if (query.length > 0) {
+            $('#clearOpActivityEvents').show();
+        } else {
+            $('#clearOpActivityEvents').hide();
+        }
+        var visibleCount = 0;
+        $('#tableOpActivityRules tbody tr.pkg-rule-row').each(function() {
+            var searchData = $(this).attr('data-search') || $(this).text().toLowerCase();
+            if (searchData.indexOf(query) !== -1) {
+                $(this).show();
+                visibleCount++;
+            } else {
+                $(this).hide();
+            }
+        });
+        if (visibleCount === 0) {
+            $('#noOpRulesMatch').show();
+        } else {
+            $('#noOpRulesMatch').hide();
+        }
+    });
 
+    $(document).on('click', '#clearOpActivityEvents', function() {
+        $('#searchOpActivityEvents').val('').trigger('keyup');
+    });
+
+    $(document).on('keyup', '#searchSalesActivityEvents', function() {
+        var query = $(this).val().toLowerCase().trim();
+        if (query.length > 0) {
+            $('#clearSalesActivityEvents').show();
+        } else {
+            $('#clearSalesActivityEvents').hide();
+        }
+        var visibleCount = 0;
+        $('#tableSalesActivityRules tbody tr.pkg-rule-row').each(function() {
+            var searchData = $(this).attr('data-search') || $(this).text().toLowerCase();
+            if (searchData.indexOf(query) !== -1) {
+                $(this).show();
+                visibleCount++;
+            } else {
+                $(this).hide();
+            }
+        });
+        if (visibleCount === 0) {
+            $('#noSalesRulesMatch').show();
+        } else {
+            $('#noSalesRulesMatch').hide();
+        }
+    });
+
+    $(document).on('click', '#clearSalesActivityEvents', function() {
+        $('#searchSalesActivityEvents').val('').trigger('keyup');
+    });
+
+    // Reactive styling synchronization on toggle switch state change
+    $(document).on('change', '.checkStatusOperational', function() {
+        var isChecked = $(this).is(':checked');
+        var $badge = $('.checkStatusOperational_text');
+        if (isChecked) {
+            $badge.removeClass('bg-light text-muted bg-light-danger text-danger').addClass('bg-light-success text-success').text('Active');
+        } else {
+            $badge.removeClass('bg-light-success text-success').addClass('bg-light text-muted').text('Inactive');
+        }
+    });
+
+    $(document).on('change', '.checkStatusSales', function() {
+        var isChecked = $(this).is(':checked');
+        var $badge = $('.checkStatusSales_text');
+        if (isChecked) {
+            $badge.removeClass('bg-light text-muted bg-light-danger text-danger').addClass('bg-light-success text-success').text('Active');
+        } else {
+            $badge.removeClass('bg-light-success text-success').addClass('bg-light text-muted').text('Inactive');
+        }
+    });
 
 </script>

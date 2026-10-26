@@ -1,557 +1,1226 @@
-@php 
-   use App\Helper\GeneralMethod;
+@php
+    use App\Helper\GeneralMethod;
+
+    $photo = url('public/avatar.png');
+    if (!empty($benchApplication->photo) && file_exists(public_path('user-uploads/bench_photos/' . $benchApplication->photo))) {
+        $photo = url('/public/user-uploads/bench_photos/' . $benchApplication->photo);
+    }
+
+    $country_id = @$benchApplication->country ?: 101;
+    $country_name_Arr = GeneralMethod::getCountryName($country_id);
+    $country_name = '';
+    foreach ($country_name_Arr as $cval) {
+        $country_name = ucwords($cval['name']);
+    }
+
+    // Server-Authoritative State & City Resolution
+    $state_name = @$benchApplication->state_name;
+    $city_name = @$benchApplication->city_name ?: @$benchApplication->city;
+
+    $currencySymbole = GeneralMethod::currencySymbole();
+    $currencySymboleforexcell = GeneralMethod::currencySymboleforexcell();
+    $current_ctc_cur = $currencySymbole[@$benchApplication->pay_rate_currency ?? 0] ?? '₹';
+    $current_ectc_cur = $currencySymbole[@$benchApplication->bill_rate_currency ?? 0] ?? '₹';
+    $current_cur = $currencySymboleforexcell[@$benchApplication->bill_rate_currency ?? 0] ?? 'INR';
+    $posted_by_company = @$benchApplication->company_name ?: (auth()->user()->company->company_name ?? '—');
+
+    // Experience formatting
+    $experience = trim((string) @$benchApplication->total_exp);
+    if (strpos($experience, '.') !== false) {
+        $parts = explode('.', $experience);
+        $formattedExperience = (isset($parts[1]) && $parts[1] === '00') ? $parts[0] : $experience;
+    } else {
+        $formattedExperience = $experience;
+    }
+    if (empty($formattedExperience)) $formattedExperience = '0';
+
+    $rel_experience = trim((string) @$benchApplication->rel_exp);
+    if (strpos($rel_experience, '.') !== false) {
+        $parts = explode('.', $rel_experience);
+        $rel_formattedExperience = (isset($parts[1]) && $parts[1] === '00') ? $parts[0] : $rel_experience;
+    } else {
+        $rel_formattedExperience = $rel_experience;
+    }
+    if (empty($rel_formattedExperience)) $rel_formattedExperience = '0';
+
+    // Notice Period / Availability
+    $np = '';
+    if ((@$benchApplication->serving_notice_period_mode == 0) || (@$benchApplication->serving_notice_period_mode == 1)) {
+        $np = @$benchApplication->np_id;
+        if (!empty($np) && strtotime($np) !== false) {
+            $np = 'Available ' . date("d M Y", strtotime($np));
+        }
+    } else {
+        $np = @$benchApplication->np_id;
+    }
+    if (empty($np)) $np = '—';
+
+    // Initials for avatar
+    $fullName = trim((string) @$benchApplication->full_name);
+    $initials = '';
+    if ($fullName !== '') {
+        $parts = preg_split('/\s+/', $fullName);
+        $initials = strtoupper(substr($parts[0] ?? '', 0, 1) . (isset($parts[1]) ? substr($parts[1], 0, 1) : ''));
+    }
+    if ($initials === '') { $initials = 'BC'; }
+
+    // Skills array & count
+    $skillsRaw = trim((string) @$benchApplication->skills);
+    $skillsArr = $skillsRaw !== '' ? array_values(array_filter(array_map('trim', explode(',', $skillsRaw)), 'strlen')) : [];
+    $totalSkillsCount = !empty($skillExperiencesCount) ? (int)$skillExperiencesCount : count($skillsArr);
+    $skillsCountDisplay = $totalSkillsCount . ' ' . ($totalSkillsCount === 1 ? 'Skill' : 'Skills');
+
+    // Country short-code mapping & Work Auth resolver
+    $countryCodeShortMap = [
+        'united states' => 'USA', 'usa' => 'USA', 'us' => 'USA',
+        'india' => 'IND', 'in' => 'IND',
+        'canada' => 'CAN', 'ca' => 'CAN',
+        'united kingdom' => 'UK', 'uk' => 'UK', 'great britain' => 'UK', 'gb' => 'UK',
+        'united arab emirates' => 'UAE', 'uae' => 'UAE', 'ae' => 'UAE',
+        'australia' => 'AUS', 'au' => 'AUS',
+        'singapore' => 'SG', 'sg' => 'SG',
+        'new zealand' => 'NZ', 'nz' => 'NZ',
+        'saudi arabia' => 'KSA', 'sa' => 'KSA',
+        'germany' => 'GER', 'de' => 'GER',
+        'france' => 'FRA', 'fr' => 'FRA',
+        'netherlands' => 'NLD', 'nl' => 'NLD',
+        'ireland' => 'IRL', 'ie' => 'IRL',
+        'switzerland' => 'SUI', 'ch' => 'SUI',
+        'south africa' => 'ZAF', 'za' => 'ZAF',
+        'malaysia' => 'MYS', 'my' => 'MYS',
+        'philippines' => 'PHL', 'ph' => 'PHL',
+        'qatar' => 'QAT', 'qa' => 'QAT',
+        'kuwait' => 'KWT', 'kw' => 'KWT',
+        'oman' => 'OMN', 'om' => 'OMN',
+        'bahrain' => 'BHR', 'bh' => 'BHR',
+    ];
+
+    $defaultCountryShort = '';
+    if (!empty($country_name)) {
+        $cNameLower = strtolower(trim($country_name));
+        $defaultCountryShort = $countryCodeShortMap[$cNameLower] ?? strtoupper(substr($cNameLower, 0, 3));
+    }
+
+    $rawVisa = trim((string) @$benchApplication->visastatu);
+    $formatWorkAuthWithCountry = function($visa, $defaultCountryShort) use ($countryCodeShortMap) {
+        if (empty($visa)) {
+            return !empty($defaultCountryShort) ? "{$defaultCountryShort} - Authorised" : 'Authorised';
+        }
+        $vLower = strtolower($visa);
+
+        // US specific visa types
+        if (preg_match('/^(h-?1b|green card|gc-ead|h-?4 ead|l-?2 ead|tn permit|tn visa|opt-?ead|cpt|e-?3|o-?1|l-?1|other us ead|us citizen|usc)/i', $visa)) {
+            $cleaned = preg_replace('/^(us citizen|usc)/i', 'Citizen', $visa);
+            return 'USA - ' . (strtoupper($cleaned) === 'H1B' ? 'H1B' : $cleaned);
+        }
+        if (preg_match('/^canad(a|ian)/i', $visa)) {
+            $cleaned = preg_replace('/^canad(a|ian)\s+/i', '', $visa);
+            return 'CAN - ' . $cleaned;
+        }
+        if (preg_match('/^(india|indian|oci)/i', $visa)) {
+            $cleaned = preg_replace('/^indi(a|an)\s+/i', '', $visa);
+            return 'IND - ' . $cleaned;
+        }
+        if (preg_match('/^(uk|united kingdom)/i', $visa)) {
+            $cleaned = preg_replace('/^(uk|united kingdom)\s+/i', '', $visa);
+            return 'UK - ' . $cleaned;
+        }
+        if (preg_match('/^(uae|saudi|gcc)/i', $visa)) {
+            return (str_starts_with($vLower, 'saudi') ? 'KSA - ' : 'UAE - ') . preg_replace('/^(uae|saudi)\s+/i', '', $visa);
+        }
+        if (preg_match('/^singapore/i', $visa)) {
+            $cleaned = preg_replace('/^singapore\s+/i', '', $visa);
+            return 'SG - ' . $cleaned;
+        }
+        if (preg_match('/^australi(a|an)/i', $visa)) {
+            $cleaned = preg_replace('/^australi(a|an)\s+/i', '', $visa);
+            return 'AUS - ' . $cleaned;
+        }
+        if (preg_match('/^new zealand/i', $visa)) {
+            $cleaned = preg_replace('/^new zealand\s+/i', '', $visa);
+            return 'NZ - ' . $cleaned;
+        }
+        if (preg_match('/^eu/i', $visa)) {
+            return 'EU - ' . preg_replace('/^eu\s+/i', '', $visa);
+        }
+        if (str_contains($visa, ' - ')) {
+            $parts = explode(' - ', $visa, 2);
+            $p0Lower = strtolower(trim($parts[0]));
+            $short = $countryCodeShortMap[$p0Lower] ?? strtoupper(substr($p0Lower, 0, 3));
+            return $short . ' - ' . trim($parts[1]);
+        }
+        if (!empty($defaultCountryShort)) {
+            return "{$defaultCountryShort} - {$visa}";
+        }
+        return $visa;
+    };
+
+    $workAuthShortDisplay = $formatWorkAuthWithCountry($rawVisa, $defaultCountryShort);
+
+    // Added Date with 12-hour AM/PM and IST Timezone
+    $created_at = @$benchApplication->created_at;
+    $addedDate = !empty($created_at) ? date("d-M-Y h:i A", strtotime($created_at)) . ' IST' : '—';
+
+    // Phone Normalizer for server-rendered flags
+    $isoToDialMap = [
+        'in' => '+91', 'us' => '+1', 'gb' => '+44', 'ae' => '+971', 'ca' => '+1',
+        'au' => '+61', 'sg' => '+65', 'sa' => '+966', 'de' => '+49', 'fr' => '+33',
+        'qa' => '+974', 'kw' => '+965', 'om' => '+968', 'bh' => '+973', 'my' => '+60',
+        'ph' => '+63', 'id' => '+62', 'nz' => '+64', 'za' => '+27', 'ie' => '+353',
+        'nl' => '+31', 'se' => '+46', 'ch' => '+41', 'es' => '+34', 'it' => '+39',
+    ];
+    $dialToIsoMap = [
+        '+91' => 'in', '+1' => 'us', '+44' => 'gb', '+971' => 'ae',
+        '+61' => 'au', '+65' => 'sg', '+966' => 'sa', '+49' => 'de',
+        '+33' => 'fr', '+974' => 'qa', '+965' => 'kw', '+968' => 'om',
+        '+973' => 'bh', '+60' => 'my', '+63' => 'ph', '+62' => 'id',
+        '+64' => 'nz', '+27' => 'za', '+353' => 'ie', '+31' => 'nl',
+    ];
+
+    $resolvePhone = function($rawCode) use ($isoToDialMap, $dialToIsoMap) {
+        $raw = trim((string) $rawCode);
+        $lower = strtolower($raw);
+        if (isset($isoToDialMap[$lower])) {
+            return ['iso' => $lower, 'dial' => $isoToDialMap[$lower]];
+        }
+        $withPlus = str_starts_with($raw, '+') ? $raw : ('+' . $raw);
+        if (isset($dialToIsoMap[$withPlus])) {
+            return ['iso' => $dialToIsoMap[$withPlus], 'dial' => $withPlus];
+        }
+        return ['iso' => 'in', 'dial' => ($raw !== '' ? $withPlus : '+91')];
+    };
+
+    $candidatePhoneData = $resolvePhone(@$benchApplication->phone_code);
+
+    // Dynamic international WhatsApp phone number resolution
+    $cleanPhone = preg_replace('/[^0-9]/', '', (string) @$benchApplication->phone);
+    $dialDigits = preg_replace('/[^0-9]/', '', $candidatePhoneData['dial']);
+    if (empty($dialDigits)) { $dialDigits = '91'; }
+    $whatsAppPhone = str_starts_with($cleanPhone, $dialDigits) ? $cleanPhone : ($dialDigits . $cleanPhone);
+
+    // Resume Download URL
+    $resumeDownloadUrl = '';
+    if (!empty($benchApplication->resume)) {
+        if (str_starts_with($benchApplication->resume, 'http://') || str_starts_with($benchApplication->resume, 'https://')) {
+            $resumeDownloadUrl = $benchApplication->resume;
+        } elseif (file_exists(public_path('user-uploads/resumes/' . $benchApplication->resume))) {
+            $resumeDownloadUrl = asset('user-uploads/resumes/' . $benchApplication->resume);
+        } elseif (file_exists(public_path('user-uploads/documents/' . $benchApplication->id . '/' . $benchApplication->resume))) {
+            $resumeDownloadUrl = asset('user-uploads/documents/' . $benchApplication->id . '/' . $benchApplication->resume);
+        } else {
+            $resumeDownloadUrl = asset('user-uploads/resumes/' . $benchApplication->resume);
+        }
+    }
+    $isPdfResume = !empty($benchApplication->resume) && strtolower(pathinfo($benchApplication->resume, PATHINFO_EXTENSION)) === 'pdf';
 @endphp
+
+<link href="{{ asset('demo/css/candidates-details.css') }}{{ TM_VERSION }}" rel="stylesheet" type="text/css" />
+
 <style>
-.text-justify {text-align: justify!important;}
+.text-justify { text-align: justify !important; }
+.iti__flag { margin-top: 0 !important; }
+
+/* ===== GLOBAL TYPOGRAPHY & DRAWER STABILITY ===== */
+#kt_activitiesBenchApplication,
+#kt_activitiesBenchApplication * {
+    font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+    box-sizing: border-box !important;
+}
+
+#kt_activitiesBenchApplication {
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    max-height: 100vh !important;
+    height: 100vh !important;
+    background: #f1f5f9 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    display: block !important;
+    box-sizing: border-box !important;
+}
+
+@media only screen and (max-width: 1023px) {
+    #kt_activitiesBenchApplication { width: 95% !important; max-width: 100% !important; }
+}
+@media only screen and (min-width: 1024px) and (max-width: 1440px) {
+    #kt_activitiesBenchApplication { width: 1025px !important; max-width: 100% !important; }
+}
+@media only screen and (min-width: 1440px) {
+    #kt_activitiesBenchApplication { width: 1200px !important; max-width: 100% !important; }
+}
+
+#bench_application_show_right_bar {
+    min-height: 100vh;
+    overflow-y: visible !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 100% !important;
+    border: none !important;
+    box-shadow: none !important;
+    background: #f1f5f9 !important;
+    box-sizing: border-box !important;
+    display: block !important;
+}
+
+/* ===== THREE-CARD LAYOUT & BALANCED SIDE GAPS ===== */
+#kt_activitiesBenchApplication .page-wrapper,
+#bench_application_show_right_bar_wrapper,
+.page-wrapper {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 12px !important;
+    background: #f1f5f9 !important;
+    min-height: 100vh !important;
+    padding: 0 0 24px 0 !important;
+    margin: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 100% !important;
+    box-sizing: border-box !important;
+    overflow-y: visible !important;
+    overflow-x: hidden !important;
+}
+
+#kt_activitiesBenchApplication .cdr-outer-card,
+#kt_activitiesBenchApplication .cdr-tabs-card,
+#kt_activitiesBenchApplication .content-card:not(#bench_application_show_right_bar) {
+    background: #fff !important;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 8px !important;
+    box-shadow: 0 1px 3px rgba(15,23,42,.04), 0 4px 12px rgba(15,23,42,.03) !important;
+    overflow: hidden !important;
+    flex-shrink: 0 !important;
+    margin: 0 16px !important;
+    width: calc(100% - 32px) !important;
+    max-width: calc(100% - 32px) !important;
+    box-sizing: border-box !important;
+}
+
+/* ===== TOP ACTION BAR — Spans Full Drawer Width with Zero Outer Gutters ===== */
+#kt_activitiesBenchApplication .cdr-topbar {
+    display: flex !important;
+    align-items: center !important;
+    flex-wrap: nowrap !important;
+    gap: 8px !important;
+    padding: 12px 16px !important;
+    background: #fff !important;
+    border-bottom: 1px solid #e2e8f0 !important;
+    justify-content: space-between !important;
+    position: relative !important;
+    z-index: 1000 !important;
+    overflow: visible !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 100% !important;
+    margin: 0 !important;
+    box-sizing: border-box !important;
+}
+#kt_activitiesBenchApplication .cdr-topbar-group {
+    display: flex !important;
+    align-items: center;
+    gap: 8px;
+    flex: 1 1 auto;
+    min-width: 0;
+    flex-wrap: nowrap;
+    overflow: visible !important;
+}
+#kt_activitiesBenchApplication .cdr-action-btn {
+    display: inline-flex !important;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 14px;
+    border: 1.5px solid #d1d5db;
+    border-radius: 8px;
+    background: #fff;
+    color: #374151;
+    font-family: 'Poppins', sans-serif;
+    font-size: 12.5px;
+    font-weight: 500;
+    cursor: pointer;
+    text-decoration: none;
+    white-space: nowrap;
+    line-height: 1;
+    transition: all 0.15s ease;
+}
+#kt_activitiesBenchApplication .cdr-action-btn.cdr-btn-primary { background: #3b82f6; color: #fff; border-color: #3b82f6; }
+#kt_activitiesBenchApplication .cdr-action-btn.cdr-btn-primary:hover { background: #2563eb; color: #fff; }
+#kt_activitiesBenchApplication .cdr-action-btn.cdr-btn-stage { background: #059669; color: #fff; border-color: #059669; font-weight: 600; }
+#kt_activitiesBenchApplication .cdr-action-btn.cdr-btn-stage:hover { background: #047857; color: #fff; }
+#kt_activitiesBenchApplication .cdr-action-btn.cdr-btn-secondary { background: #fff; color: #475569; border-color: #e2e8f0; }
+#kt_activitiesBenchApplication .cdr-action-btn.cdr-btn-secondary:hover { background: #f8fafc; border-color: #cbd5e1; color: #0f172a; }
+#kt_activitiesBenchApplication .cdr-action-btn.cdr-btn-dl-center:hover { background: #f0fdf4; border-color: #86efac; color: #15803d; }
+#kt_activitiesBenchApplication .cdr-action-btn svg { width: 14px; height: 14px; flex-shrink: 0; }
+#kt_activitiesBenchApplication .cdr-topbar-split { width: 1px; height: 20px; background: #e2e8f0; flex-shrink: 0; margin: 0 2px; }
+#kt_activitiesBenchApplication .cdr-topbar-close {
+    width: 34px;
+    height: 34px;
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: none;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 8px;
+    cursor: pointer;
+    color: #6b7280;
+    padding: 0;
+    margin-left: 4px;
+    transition: all 0.15s ease;
+}
+#kt_activitiesBenchApplication .cdr-topbar-close:hover { background: #fee2e2; border-color: #fca5a5; color: #dc2626; }
+
+/* ===== HERO CARD ===== */
+#kt_activitiesBenchApplication .cdr-hero-card { display: grid !important; grid-template-columns: 1.4fr 1fr; background: #fff; border-bottom: 1px solid #f0f4f8; }
+#kt_activitiesBenchApplication .cdr-subcard-id { display: flex !important; flex-direction: column !important; gap: 0 !important; align-items: stretch !important; padding: 18px 20px; border-right: 1px solid #f1f5f9; }
+#kt_activitiesBenchApplication .cdr-id-top { display: flex; gap: 14px; align-items: flex-start; }
+#kt_activitiesBenchApplication .cdr-avatar-wrap { position: relative; flex-shrink: 0; align-self: flex-start; }
+#kt_activitiesBenchApplication .cdr-avatar-sq {
+    width: 88px;
+    height: 88px;
+    border-radius: 16px;
+    background: #eef2ff;
+    color: #1e3a8a;
+    font-family: 'Poppins', sans-serif;
+    font-weight: 700;
+    font-size: 26px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    overflow: hidden;
+}
+#kt_activitiesBenchApplication .cdr-avatar-sq img { width: 100%; height: 100%; object-fit: cover; }
+#kt_activitiesBenchApplication .cdr-id-body { flex: 1 1 auto; min-width: 0; }
+#kt_activitiesBenchApplication .cdr-name-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+#kt_activitiesBenchApplication .cdr-name { margin: 0; font-size: 18px; font-weight: 700; color: #0f172a; line-height: 1.2; font-family: 'Poppins', sans-serif; }
+#kt_activitiesBenchApplication .cdr-role { margin: 3px 0 0 0; font-size: 13px; font-weight: 600; color: #2563eb; line-height: 1.3; font-family: 'Poppins', sans-serif; }
+#kt_activitiesBenchApplication .cdr-meta-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 10px; margin-top: 10px; }
+#kt_activitiesBenchApplication .cdr-meta-grid .cdr-meta-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 6px;
+    font-size: 11.5px !important;
+    font-weight: 500;
+    color: #475569;
+    font-family: 'Poppins', sans-serif;
+    white-space: normal;
+    overflow: visible;
+    word-break: break-word;
+    line-height: 1.4;
+    min-width: 0;
+}
+#kt_activitiesBenchApplication .cdr-meta-grid .cdr-meta-item svg { width: 13px; height: 13px; flex-shrink: 0; color: #94a3b8; margin-top: 2px; }
+#kt_activitiesBenchApplication .cdr-skills-bar { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 12px; padding-top: 12px; border-top: 1px solid #f1f5f9; }
+#kt_activitiesBenchApplication .cdr-skill-tag { display: inline-flex; align-items: center; font-size: 11px; font-weight: 500; padding: 3px 9px; border-radius: 4px; font-family: 'Poppins', sans-serif; line-height: 1.5; white-space: nowrap; border: 1px solid #e2e8f0; background: #f8fafc; color: #64748b; letter-spacing: .01em; }
+
+/* ===== METRICS SUBCARD ===== */
+#kt_activitiesBenchApplication .cdr-subcard-metrics { padding: 0; }
+#kt_activitiesBenchApplication .cdr-metric-list { display: flex; flex-direction: column; height: 100%; justify-content: space-evenly; padding: 8px 20px 8px 16px; }
+#kt_activitiesBenchApplication .cdr-metric-row { display: flex; align-items: center; gap: 12px; padding: 9px 0; border-bottom: 1px solid #f0f4f8; }
+#kt_activitiesBenchApplication .cdr-metric-row:last-child { border-bottom: none; }
+#kt_activitiesBenchApplication .cdr-metric-icon { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+#kt_activitiesBenchApplication .cdr-metric-icon svg { width: 16px; height: 16px; }
+#kt_activitiesBenchApplication .cdr-metric-icon.ci-blue { background: #eff6ff; color: #2563eb; }
+#kt_activitiesBenchApplication .cdr-metric-icon.ci-green { background: #ecfdf5; color: #16a34a; }
+#kt_activitiesBenchApplication .cdr-metric-icon.ci-amber { background: #fffbeb; color: #d97706; }
+#kt_activitiesBenchApplication .cdr-metric-icon.ci-purple { background: #f5f3ff; color: #7c3aed; }
+#kt_activitiesBenchApplication .cdr-metric-label { flex: 1 1 auto; font-size: 12.5px; font-weight: 500; color: #475569; font-family: 'Poppins', sans-serif; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#kt_activitiesBenchApplication .cdr-metric-val { font-size: 13px; font-weight: 700; color: #0f172a; text-align: right; white-space: nowrap; font-family: 'Poppins', sans-serif; }
+
+/* ===== CARD 2: PIPELINE STAT SUB-CARDS ===== */
+#kt_activitiesBenchApplication .cdr-pipeline-section {
+    display: grid !important;
+    grid-template-columns: repeat(6, minmax(0, 1fr)) !important;
+    gap: 10px !important;
+    flex-shrink: 0 !important;
+    margin: 0 16px !important;
+    width: calc(100% - 32px) !important;
+    max-width: calc(100% - 32px) !important;
+    box-sizing: border-box !important;
+}
+#kt_activitiesBenchApplication .cdr-pipeline-card { background: #fff; border-radius: 8px !important; padding: 14px 12px; border: 1px solid #e2e8f0; display: flex; align-items: center; gap: 10px; box-shadow: 0 1px 2px rgba(15,23,42,.04); transition: box-shadow .18s ease, transform .18s ease, border-color .18s ease; cursor: default; min-width: 0; }
+#kt_activitiesBenchApplication .cdr-pipeline-card:hover { box-shadow: 0 4px 14px rgba(15,23,42,.08); transform: translateY(-2px); border-color: #bfdbfe; }
+#kt_activitiesBenchApplication .cdr-pipeline-icon { width: 38px; height: 38px; border-radius: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+#kt_activitiesBenchApplication .cdr-pipeline-icon svg { width: 16px !important; height: 16px !important; flex-shrink: 0; }
+#kt_activitiesBenchApplication .cpi-blue { background: #dbeafe; color: #1d4ed8; }
+#kt_activitiesBenchApplication .cpi-green { background: #d1fae5; color: #059669; }
+#kt_activitiesBenchApplication .cpi-purple { background: #ede9fe; color: #7c3aed; }
+#kt_activitiesBenchApplication .cpi-amber { background: #fef3c7; color: #d97706; }
+#kt_activitiesBenchApplication .cpi-teal { background: #ccfbf1; color: #0d9488; }
+#kt_activitiesBenchApplication .cpi-indigo { background: #e0e7ff; color: #4338ca; }
+#kt_activitiesBenchApplication .cdr-pipeline-info { flex: 1; min-width: 0; }
+#kt_activitiesBenchApplication .cdr-pipeline-label { font-size: 10.5px; color: #94a3b8; font-weight: 500; font-family: 'Poppins', sans-serif; margin-bottom: 4px; white-space: nowrap; }
+#kt_activitiesBenchApplication .cdr-pipeline-value { font-size: 13px; font-weight: 700; color: #0f172a; font-family: 'Poppins', sans-serif; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.3; }
+#kt_activitiesBenchApplication .cpi-unit { font-size: 11px; font-weight: 500; color: #64748b; font-family: 'Poppins', sans-serif; }
+
+/* ===== CARD 3: TABS CARD ===== */
+#kt_activitiesBenchApplication .cdr-tabs-card .page-tabs { border-radius: 0; background: #fff; border-bottom: 1px solid #e2e8f0; display: flex; padding: 0 16px; gap: 8px; }
+#kt_activitiesBenchApplication .cdr-tabs-card .page-tabs .tab {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 14px 16px;
+    font-size: 13px !important;
+    font-weight: 500;
+    color: #64748b;
+    border-bottom: 2px solid transparent;
+    text-decoration: none;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+#kt_activitiesBenchApplication .cdr-tabs-card .page-tabs .tab:hover { color: #0f172a; }
+#kt_activitiesBenchApplication .cdr-tabs-card .page-tabs .tab.tab-active {
+    color: #2563eb;
+    border-bottom-color: #2563eb;
+    font-weight: 600;
+}
+#kt_activitiesBenchApplication .cdr-tabs-card .page-tabs .tab-icon { width: 16px; height: 16px; }
+#kt_activitiesBenchApplication .cdr-tabs-card .page-content { background: #f8fafc; border-radius: 0 0 8px 8px; padding: 16px 20px; min-height: 400px; }
+
+/* ===== PROFILE OVERVIEW 2-COL GRID & CARDSHOW ===== */
+#kt_activitiesBenchApplication #personal_details .content-split { display: grid !important; grid-template-columns: minmax(0, 1fr) 370px; gap: 16px; align-items: start; }
+@media (max-width: 860px) { #kt_activitiesBenchApplication #personal_details .content-split { grid-template-columns: 1fr !important; } }
+
+#kt_activitiesBenchApplication #personal_details .cardshow {
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0,0,0,.05), 0 4px 12px rgba(0,0,0,.03);
+    margin-bottom: 16px;
+    padding: 0 !important;
+}
+#kt_activitiesBenchApplication #personal_details .card-header-sidebar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 0 !important;
+    padding: 12px 16px !important;
+    background: #fff;
+    border-bottom: 1px solid #f0f4f8;
+}
+#kt_activitiesBenchApplication #personal_details .card-header-sidebar .card-icon {
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+#kt_activitiesBenchApplication #personal_details .card-header-sidebar .card-icon svg { width: 14px; height: 14px; }
+#kt_activitiesBenchApplication #personal_details .card-title {
+    font-size: 13px !important;
+    font-weight: 700 !important;
+    color: #0f172a;
+    margin: 0;
+    font-family: 'Poppins', sans-serif;
+}
+#kt_activitiesBenchApplication #personal_details .summary-text {
+    font-size: 12.5px !important;
+    line-height: 1.65 !important;
+    color: #334155;
+    padding: 14px 16px !important;
+    margin: 0 !important;
+    font-family: 'Poppins', sans-serif;
+    word-break: break-word;
+    text-align: left !important;
+}
+#kt_activitiesBenchApplication #personal_details .skills-table {
+    padding: 0 16px 14px 16px !important;
+    width: 100% !important;
+}
+#kt_activitiesBenchApplication #personal_details .skills-thead {
+    font-size: 12px !important;
+    display: grid;
+    grid-template-columns: 1fr 100px 140px;
+    gap: 16px;
+    padding: 10px 0;
+    border-bottom: 1px solid #e2e8f0;
+    font-weight: 600;
+    color: #64748b;
+}
+#kt_activitiesBenchApplication #personal_details .skills-row {
+    display: grid;
+    grid-template-columns: 1fr 100px 140px;
+    gap: 16px;
+    padding: 11px 0;
+    border-bottom: 1px solid #f1f5f9;
+    align-items: center;
+}
+#kt_activitiesBenchApplication #personal_details .skill-name-cell { font-size: 12px !important; }
+#kt_activitiesBenchApplication #personal_details .skill-exp-cell { font-size: 12px !important; color: #475569; }
+#kt_activitiesBenchApplication #personal_details .skill-rating-cell { display: flex; align-items: center; gap: 6px; }
+#kt_activitiesBenchApplication #personal_details .stars { display: flex; gap: 2px; }
+#kt_activitiesBenchApplication #personal_details .star-skill { width: 13px; height: 13px; color: #eab308; }
+#kt_activitiesBenchApplication #personal_details .star-empty { color: #e2e8f0; }
+#kt_activitiesBenchApplication #personal_details .rating-text { font-size: 12px !important; color: #64748b; font-weight: 500; }
+
+#kt_activitiesBenchApplication #personal_details .comp-list { padding: 6px 16px 14px 16px !important; }
+#kt_activitiesBenchApplication #personal_details .comp-row { display: flex; align-items: center; justify-content: space-between; padding: 7px 0; border-bottom: 1px solid #f1f5f9; }
+#kt_activitiesBenchApplication #personal_details .comp-row:last-child { border-bottom: none; }
+#kt_activitiesBenchApplication #personal_details .comp-label { font-size: 12px !important; color: #64748b; }
+#kt_activitiesBenchApplication #personal_details .comp-value { font-size: 12px !important; font-weight: 600 !important; color: #0f172a; }
+#kt_activitiesBenchApplication #personal_details .comp-badge { font-size: 11px !important; padding: 2px 7px; border-radius: 4px; background: #eef2ff; color: #2563eb; font-weight: 600; }
+
+#kt_activitiesBenchApplication #personal_details .contact-list { padding: 8px 16px 10px 16px !important; }
+#kt_activitiesBenchApplication #personal_details .contact-row { display: flex; align-items: center; justify-content: space-between; padding: 7px 0; border-bottom: 1px solid #f1f5f9; }
+#kt_activitiesBenchApplication #personal_details .contact-row:last-child { border-bottom: none; }
+#kt_activitiesBenchApplication #personal_details .contact-label { display: flex; align-items: center; gap: 6px; font-size: 12px !important; color: #64748b; }
+#kt_activitiesBenchApplication #personal_details .contact-label svg { width: 13px; height: 13px; color: #94a3b8; }
+#kt_activitiesBenchApplication #personal_details .contact-value { font-size: 12px !important; font-weight: 600 !important; color: #0f172a; text-decoration: none; }
+
+#kt_activitiesBenchApplication #personal_details .contact-actions {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 8px !important;
+    padding: 0 16px 14px 16px !important;
+}
+#kt_activitiesBenchApplication #personal_details .contact-actions .btn-whatsapp,
+#kt_activitiesBenchApplication #personal_details .contact-actions .btn-linkedin {
+    width: 100% !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 6px !important;
+    font-size: 12px !important;
+    font-weight: 600 !important;
+    padding: 8px 12px !important;
+    border-radius: 8px !important;
+    white-space: nowrap !important;
+    text-align: center !important;
+    box-sizing: border-box !important;
+    border: none;
+    cursor: pointer;
+    text-decoration: none !important;
+}
+#kt_activitiesBenchApplication #personal_details .contact-actions .btn-whatsapp {
+    background: #25d366 !important;
+    color: #fff !important;
+}
+#kt_activitiesBenchApplication #personal_details .contact-actions .btn-whatsapp:hover { background: #1ebd5a !important; color: #fff; }
+#kt_activitiesBenchApplication #personal_details .contact-actions .btn-linkedin {
+    background: #0a66c2 !important;
+    color: #fff !important;
+}
+#kt_activitiesBenchApplication #personal_details .contact-actions .btn-linkedin:hover { background: #004182 !important; color: #fff; }
+#kt_activitiesBenchApplication #personal_details .contact-actions .btn-icon { width: 14px !important; height: 14px !important; flex-shrink: 0 !important; }
+
+#kt_activitiesBenchApplication #personal_details .rm-comments-body {
+    padding: 14px 16px !important;
+    font-size: 12.5px !important;
+    line-height: 1.6 !important;
+    color: #334155;
+    font-family: 'Poppins', sans-serif;
+    word-break: break-word;
+}
+#kt_activitiesBenchApplication #personal_details .rm-details-body { padding: 14px 16px !important; }
+#kt_activitiesBenchApplication #personal_details .rm-card-content h4 { font-size: 13px !important; font-weight: 700 !important; color: #0f172a; margin: 0 0 6px 0 !important; }
+#kt_activitiesBenchApplication #personal_details .rm-contact-list { display: flex; flex-direction: column; gap: 6px !important; }
+#kt_activitiesBenchApplication #personal_details .rm-contact-item { display: flex; align-items: center; gap: 8px !important; font-size: 12px !important; color: #334155 !important; }
+#kt_activitiesBenchApplication #personal_details .rm-contact-item svg { width: 13px !important; height: 13px !important; color: #64748b !important; }
+
+#kt_activitiesBenchApplication .confidentiality-banner {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: #fffbeb;
+    border: 1px solid #fef3c7;
+    border-radius: 8px;
+    padding: 10px 14px;
+    margin-top: 16px;
+    font-size: 12px;
+    color: #92400e;
+}
+#kt_activitiesBenchApplication .confidentiality-banner svg { width: 16px; height: 16px; flex-shrink: 0; color: #d97706; }
+#kt_activitiesBenchApplication .confidentiality-banner p { margin: 0; }
+
+@media (max-width: 1100px) { #kt_activitiesBenchApplication .cdr-pipeline-section { grid-template-columns: repeat(3, minmax(0, 1fr)) !important; gap: 8px !important; } }
+@media (max-width: 640px) { #kt_activitiesBenchApplication .cdr-pipeline-section { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; } #kt_activitiesBenchApplication .cdr-hero-card { grid-template-columns: 1fr !important; } }
 </style>
-<script>
-   $("timeline-item:last-child").addClass("timeline-item:last-child");
-</script>
-@php 
-		  
-   $resume_url			=	'<i class="fa fa-download" aria-hidden="true" style="color:#003300"></i>';	
-   $photo  				=	url('public/avatar.png');
-   if(!empty($application->photo)){
-      $photo			=	 url('/public/user-uploads/bench_photos/'.$application->photo);	
-   }   
-   $country_id			=	$country_name	= $state_name	=	$state	=	$city_name	=	$posted_by_company	=	'';	
-   $country_id			=	@$benchApplication->country;
-   $state				=	@$benchApplication->state;
-   if(@$country_id > 0)
-   {
-			$country_name_Arr	= GeneralMethod::getCountryName($country_id);	
-			foreach($country_name_Arr as $cval){
-				$country_name	= ucwords($cval['name']);	
-			}
-		   
-			if($country_id == 101){
-				$state_name	= @$benchApplication->state_name;
-					$city_name	= @$benchApplication->city_name; 	
-				}else{		
-				if( $state > 0){
-									$state_name_Arr		= GeneralMethod::getStateName($country_id, $state);	
-									foreach($state_name_Arr as $sval){
-										$state_name	= ucwords($sval['name']);	
-				}	
-			}
-         $city_name	= @$benchApplication->city;
-	   }
-   		$currencySymbole 	=	GeneralMethod::currencySymbole(); 
-   		$current_ctc_cur	=	$current_ectc_cur	=	"";
-   		$current_ctc_cur	=	$currencySymbole[@$benchApplication->pay_rate_currency ?? 0];
-	   	$current_ectc_cur	=	$currencySymbole[@$benchApplication->bill_rate_currency ?? 0];
-   }	
-   	$posted_by_company		=	@$benchApplication->company_name; 												
-@endphp 
 
-<div class="card-header px-5 py-0" id="kt_activities_header">
-	<div class="d-flex align-items-center py-1">
-		<h3 class="card-title fw-bolder text-dark d-none">Candidate Profile</h3>
-		<span class="h-20px border-gray-200 border-start mx-4 d-none"></span> 
-	</div>
-  	<div class="card-toolbar">
-		<button type="button" class="btn btn-sm btn-icon btn-active-light-primary me-n5" id="kt_activitiesBenchApplication_close"> <span class="svg-icon svg-icon-1">
-		<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="24px" height="24px" viewBox="0 0 24 24" version="1.1">
-		  <g transform="translate(12.000000, 12.000000) rotate(-45.000000) translate(-12.000000, -12.000000) translate(4.000000, 4.000000)" fill="#000000">
-			<rect fill="#000000" x="0" y="7" width="16" height="2" rx="1" />
-			<rect fill="#000000" opacity="0.5" transform="translate(8.000000, 8.000000) rotate(-270.000000) translate(-8.000000, -8.000000)" x="0" y="7" width="16" height="2" rx="1" />
-		  </g>
-		</svg>
-		</span> </button>
-  	</div>
-</div>
+<div class="page-wrapper" id="bench_application_show_right_bar_wrapper">
+  {{-- ===== TOP ACTION BAR ===== --}}
+  <div class="cdr-topbar" aria-label="Bench candidate approval actions">
+    <div class="cdr-topbar-group">
+      {{-- Super Admin Marketplace Clearance Governance Action --}}
+      @if((int)@$benchApplication->superadminstatus === 1)
+        <span class="badge badge-light-success fw-bolder px-3 py-2 fs-7 me-1" style="background:#e8fff3; color:#17c653; border:1px solid #b7f5d0;">
+          <i class="fa fa-check-circle me-1 text-success"></i> Market Approved (Live)
+        </span>
+        <button type="button" onclick="rejectCandidateFromDrawer({{ $benchApplication->id }})" class="cdr-action-btn cdr-btn-secondary text-danger border-danger" title="Reject candidate from marketplace">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-danger"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          Reject Clearance
+        </button>
+      @else
+        <button type="button" onclick="approveCandidateFromDrawer({{ $benchApplication->id }})" class="cdr-action-btn cdr-btn-stage" id="btnDrawerApproveCandidate" title="Approve candidate for global marketplace clearance">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+          Approve Clearance
+        </button>
+        @if((int)@$benchApplication->superadminstatus !== 2)
+          <button type="button" onclick="rejectCandidateFromDrawer({{ $benchApplication->id }})" class="cdr-action-btn cdr-btn-secondary text-danger" title="Reject candidate from marketplace">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            Reject Clearance
+          </button>
+        @endif
+      @endif
 
-<div class="card-body position-relative px-0 py-0" id="kt_activitiesBenchApplication_body">
-  <div id="kt_activities_scroll" class="position-relative scroll-y bg-light pt-2" data-kt-scroll="true" data-kt-scroll-height="auto" data-kt-scroll-wrappers="#kt_activities_body" data-kt-scroll-dependencies="#kt_activities_header, #kt_activities_footer" data-kt-scroll-offset="5px">
-    <div class="card mb-5 mb-xl-5 mx-2">
-      <div class="card-body pt-5 pb-0 px-5">
-        <div class="d-flex flex-wrap flex-sm-nowrap mb-3">
-          <div class="me-7 mb-4">
-            <div class="symbol symbol-100px symbol-lg-140px symbol-fixed position-relative"> <img src="{{ @$photo }}" alt="image">
-              <div class="position-absolute translate-middle bottom-0 start-100 mb-6 bg-success rounded-circle border border-4 border-white h-20px w-20px"></div>
+      @if(!empty($resumeDownloadUrl))
+        <a href="{{ $resumeDownloadUrl }}" target="_blank" download class="cdr-action-btn cdr-btn-secondary cdr-btn-dl-center" title="Download candidate résumé">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Download Resume
+        </a>
+      @endif
+    </div>
+
+    <button type="button" class="cdr-topbar-close" id="kt_activitiesBenchApplication_close" aria-label="Close">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+      </svg>
+    </button>
+  </div>
+
+  {{-- ===== CARD 1: HERO IDENTITY + KEY HIGHLIGHTS ===== --}}
+  <div class="cdr-outer-card">
+    <div class="cdr-hero-card">
+
+      {{-- Sub-Card A: Candidate Identity --}}
+      <div class="cdr-subcard cdr-subcard-id">
+        <div class="cdr-id-top">
+          <div class="cdr-avatar-wrap">
+            <div class="cdr-avatar-sq" aria-hidden="true">
+              @if(!empty($benchApplication->photo) && file_exists(public_path('user-uploads/bench_photos/' . $benchApplication->photo)))
+                <img src="{{ $photo }}" alt="{{ $benchApplication->full_name }}" />
+              @else
+                {{ $initials }}
+              @endif
             </div>
           </div>
-          <div class="flex-grow-1">
-            <div class="d-flex justify-content-between align-items-start flex-wrap mb-2">
-              <div class="d-flex flex-column">
-                <div class="d-flex align-items-center mb-2"> <span class="text-gray-900 fs-2 fw-bolder me-2">{{ ucwords(@$benchApplication->full_name) }}</span> </div>
-                <div class="d-flex flex-wrap fw-bold fs-6 pe-2"> <a href="javascript:void(0);" class="d-flex align-items-center text-gray-400 text-hover-primary me-5 mb-2"> <span class="svg-icon svg-icon-4 me-1">
-                  <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="24px" height="24px" viewBox="0 0 24 24" version="1.1">
-                    <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
-                      <rect x="0" y="0" width="24" height="24"/>
-                      <path d="M5.84026576,8 L18.1597342,8 C19.1999115,8 20.0664437,8.79732479 20.1528258,9.83390904 L20.8194924,17.833909 C20.9112219,18.9346631 20.0932459,19.901362 18.9924919,19.9930915 C18.9372479,19.9976952 18.8818364,20 18.8264009,20 L5.1735991,20 C4.0690296,20 3.1735991,19.1045695 3.1735991,18 C3.1735991,17.9445645 3.17590391,17.889153 3.18050758,17.833909 L3.84717425,9.83390904 C3.93355627,8.79732479 4.80008849,8 5.84026576,8 Z M10.5,10 C10.2238576,10 10,10.2238576 10,10.5 L10,11.5 C10,11.7761424 10.2238576,12 10.5,12 L13.5,12 C13.7761424,12 14,11.7761424 14,11.5 L14,10.5 C14,10.2238576 13.7761424,10 13.5,10 L10.5,10 Z" fill="#000000"/>
-                      <path d="M10,8 L8,8 L8,7 C8,5.34314575 9.34314575,4 11,4 L13,4 C14.6568542,4 16,5.34314575 16,7 L16,8 L14,8 L14,7 C14,6.44771525 13.5522847,6 13,6 L11,6 C10.4477153,6 10,6.44771525 10,7 L10,8 Z" fill="#000000" fill-rule="nonzero" opacity="0.3"/>
-                    </g>
-                  </svg>
-                  </span> {{ ucwords(@$benchApplication->total_exp) }} Years </a> 
-				  <a href="javascript:void(0);" class="d-flex align-items-center text-gray-400 text-hover-primary me-5 mb-2">                 
-                  <span class="svg-icon svg-icon-4 me-1">
-                  <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="24px" height="24px" viewBox="0 0 24 24" version="1.1">
-                    <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
-                      <rect x="0" y="0" width="24" height="24"/>
-                      <rect fill="#000000" opacity="0.3" x="2" y="2" width="10" height="12" rx="2"/>
-                      <path d="M4,6 L20,6 C21.1045695,6 22,6.8954305 22,8 L22,20 C22,21.1045695 21.1045695,22 20,22 L4,22 C2.8954305,22 2,21.1045695 2,20 L2,8 C2,6.8954305 2.8954305,6 4,6 Z M18,16 C19.1045695,16 20,15.1045695 20,14 C20,12.8954305 19.1045695,12 18,12 C16.8954305,12 16,12.8954305 16,14 C16,15.1045695 16.8954305,16 18,16 Z" fill="#000000"/>
-                    </g>
-                  </svg>
-                  </span>
-                 {!! @$current_ctc_cur !!} &nbsp; {{ @$benchApplication->pay_rate_amount }} - {{ @$benchApplication->bill_rate_amount }}
-                  @php 
-                                 $pay_rate_mode		=	"";
-                                 $pay_rate_mode		=	@$benchApplication->pay_rate_mode ?? 0;
-                                 echo $salaryMode[$pay_rate_mode];			
-                  @endphp
-                  </a> 
-				  <a href="javascript:void(0);" class="d-flex align-items-center text-gray-400 text-hover-primary mb-2"> <span class="svg-icon svg-icon-4 me-1">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
-                    <path opacity="0.3" d="M18.0624 15.3453L13.1624 20.7453C12.5624 21.4453 11.5624 21.4453 10.9624 20.7453L6.06242 15.3453C4.56242 13.6453 3.76242 11.4453 4.06242 8.94534C4.56242 5.34534 7.46242 2.44534 11.0624 2.04534C15.8624 1.54534 19.9624 5.24534 19.9624 9.94534C20.0624 12.0453 19.2624 13.9453 18.0624 15.3453Z" fill="black"></path>
-                    <path d="M12.0624 13.0453C13.7193 13.0453 15.0624 11.7022 15.0624 10.0453C15.0624 8.38849 13.7193 7.04535 12.0624 7.04535C10.4056 7.04535 9.06241 8.38849 9.06241 10.0453C9.06241 11.7022 10.4056 13.0453 12.0624 13.0453Z" fill="black"></path>
-                  </svg>
-                  </span> {{ ucwords(@$city_name) }}, {{ ucwords(@$state_name) }}, {{ ucwords(@$country_name) }} 
-				  </a> 
-				  </div>
-              </div>
-              <div class="d-flex mt-4"> 
-			  <a href="javascript:void(0);" type="button" class="btn btn-sm btn-flex btn-light-success btn-active-primary fw-bolder me-3 fs-6"> <span class="svg-icon svg-icon-success svg-icon-2x">
-                <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="24px" height="24px" viewBox="0 0 24 24" version="1.1">
-                  <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
-                    <rect x="0" y="0" width="24" height="24"/>
-                    <polygon fill="#000000" opacity="0.3" points="5 15 3 21.5 9.5 19.5"/>
-                    <path d="M13,2 C18.5228475,2 23,6.4771525 23,12 C23,17.5228475 18.5228475,22 13,22 C7.4771525,22 3,17.5228475 3,12 C3,6.4771525 7.4771525,2 13,2 Z M7.16794971,13.5547002 C8.67758127,15.8191475 10.6456687,17 13,17 C15.3543313,17 17.3224187,15.8191475 18.8320503,13.5547002 C19.1384028,13.0951715 19.0142289,12.4743022 18.5547002,12.1679497 C18.0951715,11.8615972 17.4743022,11.9857711 17.1679497,12.4452998 C16.0109146,14.1808525 14.6456687,15 13,15 C11.3543313,15 9.9890854,14.1808525 8.83205029,12.4452998 C8.52569784,11.9857711 7.90482849,11.8615972 7.4452998,12.1679497 C6.98577112,12.4743022 6.86159725,13.0951715 7.16794971,13.5547002 Z" fill="#000000"/>
-                  </g>
-                </svg>
-                </span> Whatsapp </a> 
-				<a href="javascript:void(0);" type="button" class="btn btn-sm btn-flex btn-light-primary btn-active-primary fw-bolder me-3 fs-6"> <span class="svg-icon svg-icon-primary svg-icon-2x">
-                <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="24px" height="24px" viewBox="0 0 24 24" version="1.1">
-                  <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
-                    <rect x="0" y="0" width="24" height="24"/>
-                    <path d="M5,6 L19,6 C20.1045695,6 21,6.8954305 21,8 L21,17 C21,18.1045695 20.1045695,19 19,19 L5,19 C3.8954305,19 3,18.1045695 3,17 L3,8 C3,6.8954305 3.8954305,6 5,6 Z M18.1444251,7.83964668 L12,11.1481833 L5.85557487,7.83964668 C5.4908718,7.6432681 5.03602525,7.77972206 4.83964668,8.14442513 C4.6432681,8.5091282 4.77972206,8.96397475 5.14442513,9.16035332 L11.6444251,12.6603533 C11.8664074,12.7798822 12.1335926,12.7798822 12.3555749,12.6603533 L18.8555749,9.16035332 C19.2202779,8.96397475 19.3567319,8.5091282 19.1603533,8.14442513 C18.9639747,7.77972206 18.5091282,7.6432681 18.1444251,7.83964668 Z" fill="#000000"/>
-                  </g>
-                </svg>
-                </span> Email </a> </div>
+
+          <div class="cdr-id-body">
+            <div class="cdr-name-row">
+              <h2 class="cdr-name">{{ ucwords(@$benchApplication->full_name ?: '—') }}</h2>
+              @if((int)@$benchApplication->superadminstatus === 1)
+                <span class="badge badge-light-success fw-bolder">Approved (Live)</span>
+              @elseif((int)@$benchApplication->superadminstatus === 2)
+                <span class="badge badge-light-danger fw-bolder">Rejected</span>
+              @else
+                <span class="badge badge-light-warning fw-bolder">Pending Clearance</span>
+              @endif
             </div>
-            <div class="d-flex flex-wrap flex-stack">
-              <div class="d-flex flex-column flex-grow-1 pe-8">
-                <div class="row w-75"> <span class="">
-					@php
-						$skills				=	'';
-						$skills				=	@$benchApplication->skills;
-					@endphp	
-					@if(!empty($skills))
-						@php 
-							$skillsArr		=	'';
-							$skillsArr		=	explode(',', $skills);
-						@endphp
-						@foreach($skillsArr as $sval)
-							{!! '<span class="badge badge-light me-3">'.@$sval.'</span>' !!}
-						@endforeach
-					@endif
-                </div>
-              </div>
+
+            <p class="cdr-role">{{ ucwords(@$benchApplication->current_designation ?: '—') }}</p>
+
+            <div class="cdr-meta-grid">
+              {{-- Row 1: Sponsoring Company | Location --}}
+              <span class="cdr-meta-item" title="{{ ucwords($posted_by_company) }}">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18"/><path d="M5 21V7l7-4 7 4v14"/></svg>
+                {{ ucwords($posted_by_company) }}
+              </span>
+
+              <span class="cdr-meta-item" title="{{ @$city_name ? $city_name . ', ' : '' }}{{ @$state_name ? ucwords($state_name) . ', ' : '' }}{{ ucwords(@$country_name) }}">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                {{ @$city_name ? $city_name . ', ' : '' }}{{ @$state_name ? ucwords($state_name) . ', ' : '' }}{{ ucwords(@$country_name) ?: '—' }}
+              </span>
+
+              {{-- Row 2: Bench ID | Upload Date --}}
+              <span class="cdr-meta-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+                Bench ID: BJ-{{ @$benchApplication->id }}
+              </span>
+
+              <span class="cdr-meta-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                Upload: {{ @$addedDate }}
+              </span>
             </div>
           </div>
         </div>
-        <div class="separator separator-solid my-7"></div>
-        <div class="d-flex align-items-center flex-wrap pb-7">
-          <div class="d-flex align-items-center flex-lg-fill mr-5 my-1"> <span class="svg-icon svg-icon-dark-800 svg-icon-3x me-2">
-            <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="24px" height="24px" viewBox="0 0 24 24" version="1.1">
-              <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
-                <rect x="0" y="0" width="24" height="24"/>
-                <path d="M12,15 C10.3431458,15 9,13.6568542 9,12 C9,10.3431458 10.3431458,9 12,9 C13.6568542,9 15,10.3431458 15,12 C15,13.6568542 13.6568542,15 12,15 Z" fill="#000000" fill-rule="nonzero"/>
-                <path d="M19.5,10.5 L21,10.5 C21.8284271,10.5 22.5,11.1715729 22.5,12 C22.5,12.8284271 21.8284271,13.5 21,13.5 L19.5,13.5 C18.6715729,13.5 18,12.8284271 18,12 C18,11.1715729 18.6715729,10.5 19.5,10.5 Z M16.0606602,5.87132034 L17.1213203,4.81066017 C17.7071068,4.22487373 18.6568542,4.22487373 19.2426407,4.81066017 C19.8284271,5.39644661 19.8284271,6.34619408 19.2426407,6.93198052 L18.1819805,7.99264069 C17.5961941,8.57842712 16.6464466,8.57842712 16.0606602,7.99264069 C15.4748737,7.40685425 15.4748737,6.45710678 16.0606602,5.87132034 Z M16.0606602,18.1819805 C15.4748737,17.5961941 15.4748737,16.6464466 16.0606602,16.0606602 C16.6464466,15.4748737 17.5961941,15.4748737 18.1819805,16.0606602 L19.2426407,17.1213203 C19.8284271,17.7071068 19.8284271,18.6568542 19.2426407,19.2426407 C18.6568542,19.8284271 17.7071068,19.8284271 17.1213203,19.2426407 L16.0606602,18.1819805 Z M3,10.5 L4.5,10.5 C5.32842712,10.5 6,11.1715729 6,12 C6,12.8284271 5.32842712,13.5 4.5,13.5 L3,13.5 C2.17157288,13.5 1.5,12.8284271 1.5,12 C1.5,11.1715729 2.17157288,10.5 3,10.5 Z M12,1.5 C12.8284271,1.5 13.5,2.17157288 13.5,3 L13.5,4.5 C13.5,5.32842712 12.8284271,6 12,6 C11.1715729,6 10.5,5.32842712 10.5,4.5 L10.5,3 C10.5,2.17157288 11.1715729,1.5 12,1.5 Z M12,18 C12.8284271,18 13.5,18.6715729 13.5,19.5 L13.5,21 C13.5,21.8284271 12.8284271,22.5 12,22.5 C11.1715729,22.5 10.5,21.8284271 10.5,21 L10.5,19.5 C10.5,18.6715729 11.1715729,18 12,18 Z M4.81066017,4.81066017 C5.39644661,4.22487373 6.34619408,4.22487373 6.93198052,4.81066017 L7.99264069,5.87132034 C8.57842712,6.45710678 8.57842712,7.40685425 7.99264069,7.99264069 C7.40685425,8.57842712 6.45710678,8.57842712 5.87132034,7.99264069 L4.81066017,6.93198052 C4.22487373,6.34619408 4.22487373,5.39644661 4.81066017,4.81066017 Z M4.81066017,19.2426407 C4.22487373,18.6568542 4.22487373,17.7071068 4.81066017,17.1213203 L5.87132034,16.0606602 C6.45710678,15.4748737 7.40685425,15.4748737 7.99264069,16.0606602 C8.57842712,16.6464466 8.57842712,17.5961941 7.99264069,18.1819805 L6.93198052,19.2426407 C6.34619408,19.8284271 5.39644661,19.8284271 4.81066017,19.2426407 Z" fill="#000000" fill-rule="nonzero" opacity="0.3"/>
-              </g>
-            </svg>
-            </span>
-            <div class="d-flex flex-column text-dark-75"> 
-			<span class="fw-bolder fs-6">Designation</span> 
-			<span class="fw-bolder fs-3" data-toggle="tooltip" title="{{ ucwords((@$benchApplication->current_designation)) }}"> {{ ucwords(substr(@$benchApplication->current_designation, 0, 10)) }} </span> </div>
-          </div>
-          <div class="d-flex align-items-center flex-lg-fill mr-5 my-1"> <span class="svg-icon svg-icon-dark-800 svg-icon-3x me-2">
-            <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="24px" height="24px" viewBox="0 0 24 24" version="1.1">
-              <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
-                <rect x="0" y="0" width="24" height="24"/>
-                <path d="M13.5,21 L13.5,18 C13.5,17.4477153 13.0522847,17 12.5,17 L11.5,17 C10.9477153,17 10.5,17.4477153 10.5,18 L10.5,21 L5,21 L5,4 C5,2.8954305 5.8954305,2 7,2 L17,2 C18.1045695,2 19,2.8954305 19,4 L19,21 L13.5,21 Z M9,4 C8.44771525,4 8,4.44771525 8,5 L8,6 C8,6.55228475 8.44771525,7 9,7 L10,7 C10.5522847,7 11,6.55228475 11,6 L11,5 C11,4.44771525 10.5522847,4 10,4 L9,4 Z M14,4 C13.4477153,4 13,4.44771525 13,5 L13,6 C13,6.55228475 13.4477153,7 14,7 L15,7 C15.5522847,7 16,6.55228475 16,6 L16,5 C16,4.44771525 15.5522847,4 15,4 L14,4 Z M9,8 C8.44771525,8 8,8.44771525 8,9 L8,10 C8,10.5522847 8.44771525,11 9,11 L10,11 C10.5522847,11 11,10.5522847 11,10 L11,9 C11,8.44771525 10.5522847,8 10,8 L9,8 Z M9,12 C8.44771525,12 8,12.4477153 8,13 L8,14 C8,14.5522847 8.44771525,15 9,15 L10,15 C10.5522847,15 11,14.5522847 11,14 L11,13 C11,12.4477153 10.5522847,12 10,12 L9,12 Z M14,12 C13.4477153,12 13,12.4477153 13,13 L13,14 C13,14.5522847 13.4477153,15 14,15 L15,15 C15.5522847,15 16,14.5522847 16,14 L16,13 C16,12.4477153 15.5522847,12 15,12 L14,12 Z" fill="#000000"/>
-                <rect fill="#FFFFFF" x="13" y="8" width="3" height="3" rx="1"/>
-                <path d="M4,21 L20,21 C20.5522847,21 21,21.4477153 21,22 L21,22.4 C21,22.7313708 20.7313708,23 20.4,23 L3.6,23 C3.26862915,23 3,22.7313708 3,22.4 L3,22 C3,21.4477153 3.44771525,21 4,21 Z" fill="#000000" opacity="0.3"/>
-              </g>
-            </svg>
-            </span>
-			
-			<div class="d-flex flex-column text-dark-75"> 
-				<span class="fw-bolder fs-6">Origination</span> 
-				<span class="fw-bolder fs-3" data-toggle="tooltip" title="{{ ucwords((@$benchApplication->company_name)) }}"> {{ ucwords(substr(@$benchApplication->company_name, 0, 10)) }} </span> 
-			</div>
 
+        @if(!empty($skillsArr))
+          <div class="cdr-skills-bar">
+            @foreach($skillsArr as $sval)
+              <span class="cdr-skill-tag">{{ ucwords(strtolower(trim($sval))) }}</span>
+            @endforeach
           </div>
-          <div class="d-flex align-items-center flex-lg-fill mr-5 my-1"> <span class="svg-icon svg-icon-dark-800 svg-icon-3x me-2">
-            <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="24px" height="24px" viewBox="0 0 24 24" version="1.1">
-              <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
-                <polygon points="0 0 24 0 24 24 0 24"></polygon>
-                <path d="M18.5,8 C17.1192881,8 16,6.88071187 16,5.5 C16,4.11928813 17.1192881,3 18.5,3 C19.8807119,3 21,4.11928813 21,5.5 C21,6.88071187 19.8807119,8 18.5,8 Z M18.5,21 C17.1192881,21 16,19.8807119 16,18.5 C16,17.1192881 17.1192881,16 18.5,16 C19.8807119,16 21,17.1192881 21,18.5 C21,19.8807119 19.8807119,21 18.5,21 Z M5.5,21 C4.11928813,21 3,19.8807119 3,18.5 C3,17.1192881 4.11928813,16 5.5,16 C6.88071187,16 8,17.1192881 8,18.5 C8,19.8807119 6.88071187,21 5.5,21 Z" fill="#000000" opacity="0.3"></path>
-                <path d="M5.5,8 C4.11928813,8 3,6.88071187 3,5.5 C3,4.11928813 4.11928813,3 5.5,3 C6.88071187,3 8,4.11928813 8,5.5 C8,6.88071187 6.88071187,8 5.5,8 Z M11,4 L13,4 C13.5522847,4 14,4.44771525 14,5 C14,5.55228475 13.5522847,6 13,6 L11,6 C10.4477153,6 10,5.55228475 10,5 C10,4.44771525 10.4477153,4 11,4 Z M11,18 L13,18 C13.5522847,18 14,18.4477153 14,19 C14,19.5522847 13.5522847,20 13,20 L11,20 C10.4477153,20 10,19.5522847 10,19 C10,18.4477153 10.4477153,18 11,18 Z M5,10 C5.55228475,10 6,10.4477153 6,11 L6,13 C6,13.5522847 5.55228475,14 5,14 C4.44771525,14 4,13.5522847 4,13 L4,11 C4,10.4477153 4.44771525,10 5,10 Z M19,10 C19.5522847,10 20,10.4477153 20,11 L20,13 C20,13.5522847 19.5522847,14 19,14 C18.4477153,14 18,13.5522847 18,13 L18,11 C18,10.4477153 18.4477153,10 19,10 Z" fill="#000000"></path>
-              </g>
-            </svg>
-            </span>
-            <div class="d-flex flex-column text-dark-75"> <span class="fw-bolder fs-6">Notice Period</span> <span class="fw-bolder fs-3"> 
-              @php
+        @endif
+      </div>
 
-            $npDate = $benchApplication->np_id;
-                    if ($benchApplication->serving_notice_period_mode == 0){
-                      $npDate = ($benchApplication->np_id==1) ? $benchApplication->np_id.' Day' : $benchApplication->np_id.' Days';
-                    }elseif($benchApplication->serving_notice_period_mode == 1) {
-                      $originalDate = $benchApplication->np_id;
-                      $npDate = date("d-M-y", strtotime($originalDate));
-                    }
-
-
-              @endphp
-              
-              {{ $npDate }} &nbsp; </span> </div>
-          </div>
-          <div class="d-flex align-items-center flex-lg-fill mr-5 my-1"> <span class="svg-icon svg-icon-dark-800 svg-icon-3x me-2">
-            <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="24px" height="24px" viewBox="0 0 24 24" version="1.1">
-              <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
-                <rect x="0" y="0" width="24" height="24"/>
-                <path d="M8,3 L8,3.5 C8,4.32842712 8.67157288,5 9.5,5 L14.5,5 C15.3284271,5 16,4.32842712 16,3.5 L16,3 L18,3 C19.1045695,3 20,3.8954305 20,5 L20,21 C20,22.1045695 19.1045695,23 18,23 L6,23 C4.8954305,23 4,22.1045695 4,21 L4,5 C4,3.8954305 4.8954305,3 6,3 L8,3 Z" fill="#000000" opacity="0.3"/>
-                <path d="M11,2 C11,1.44771525 11.4477153,1 12,1 C12.5522847,1 13,1.44771525 13,2 L14.5,2 C14.7761424,2 15,2.22385763 15,2.5 L15,3.5 C15,3.77614237 14.7761424,4 14.5,4 L9.5,4 C9.22385763,4 9,3.77614237 9,3.5 L9,2.5 C9,2.22385763 9.22385763,2 9.5,2 L11,2 Z" fill="#000000"/>
-                <rect fill="#000000" opacity="0.3" x="7" y="10" width="5" height="2" rx="1"/>
-                <rect fill="#000000" opacity="0.3" x="7" y="14" width="9" height="2" rx="1"/>
-              </g>
-            </svg>
-            </span>
-            <div class="d-flex flex-column text-dark-75"> <span class="fw-bolder fs-6">Qualification</span> <span class="fw-bolder fs-3"> {{ ucwords(@$benchApplication->qualification_name) }} &nbsp;</span> </div>
-          </div>
-          <div class="d-flex align-items-center flex-lg-fill mr-5 my-1"> <span class="svg-icon svg-icon-dark-800 svg-icon-3x me-2">
-            <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="24px" height="24px" viewBox="0 0 24 24" version="1.1">
-              <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
-                <rect x="0" y="0" width="24" height="24"/>
-                <path d="M9,10 L9,19 L5,19 L5,10 L5,6 L18,6 L18,10 L9,10 Z" fill="#000000" transform="translate(11.500000, 12.500000) scale(-1, 1) translate(-11.500000, -12.500000) "/>
-                <circle fill="#000000" opacity="0.3" cx="8" cy="16" r="2"/>
-              </g>
-            </svg>
-            </span>
-            <div class="d-flex flex-column text-dark-75"> <span class="fw-bolder fs-6">Status</span> <span class="fw-bolder fs-3">{{ ucwords(@$benchApplication->master_status_name) }}&nbsp;</span> </div>
-          </div>
-          <div class="d-flex align-items-center flex-lg-fill my-1"> <span class="svg-icon svg-icon-dark-800 svg-icon-3x me-2">
-            <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="24px" height="24px" viewBox="0 0 24 24" version="1.1">
-              <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
-                <rect x="0" y="0" width="24" height="24"/>
-                <path d="M16,15.6315789 L16,12 C16,10.3431458 14.6568542,9 13,9 L6.16183229,9 L6.16183229,5.52631579 C6.16183229,4.13107011 7.29290239,3 8.68814808,3 L20.4776218,3 C21.8728674,3 23.0039375,4.13107011 23.0039375,5.52631579 L23.0039375,13.1052632 L23.0206157,17.786793 C23.0215995,18.0629336 22.7985408,18.2875874 22.5224001,18.2885711 C22.3891754,18.2890457 22.2612702,18.2363324 22.1670655,18.1421277 L19.6565168,15.6315789 L16,15.6315789 Z" fill="#000000"/>
-                <path d="M1.98505595,18 L1.98505595,13 C1.98505595,11.8954305 2.88048645,11 3.98505595,11 L11.9850559,11 C13.0896254,11 13.9850559,11.8954305 13.9850559,13 L13.9850559,18 C13.9850559,19.1045695 13.0896254,20 11.9850559,20 L4.10078614,20 L2.85693427,21.1905292 C2.65744295,21.3814685 2.34093638,21.3745358 2.14999706,21.1750444 C2.06092565,21.0819836 2.01120804,20.958136 2.01120804,20.8293182 L2.01120804,18.32426 C1.99400175,18.2187196 1.98505595,18.1104045 1.98505595,18 Z M6.5,14 C6.22385763,14 6,14.2238576 6,14.5 C6,14.7761424 6.22385763,15 6.5,15 L11.5,15 C11.7761424,15 12,14.7761424 12,14.5 C12,14.2238576 11.7761424,14 11.5,14 L6.5,14 Z M9.5,16 C9.22385763,16 9,16.2238576 9,16.5 C9,16.7761424 9.22385763,17 9.5,17 L11.5,17 C11.7761424,17 12,16.7761424 12,16.5 C12,16.2238576 11.7761424,16 11.5,16 L9.5,16 Z" fill="#000000" opacity="0.3"/>
-              </g>
-            </svg>
-            </span>
-            @php 
-                     $posted_by_image			=	$posted_by			=	'';
-                     $posted_by					=	@$benchApplication->company_name;
-					 $posted_by_image			=	url('img/default.png');
-                     if(!empty($application->posted_by_image)){	
-                     	$posted_by_image		=	url('public/user-uploads/team_profile_img/'.@$benchApplication->posted_by_image);
-                     }	       				  
-            @endphp
-            <div class="symbol-group symbol-hover">
-              	<div class="symbol symbol1 symbol-30 symbol-circle" data-toggle="tooltip" title="" data-original-title="{{ @$posted_by }}"> 
-			  		<img alt="Pic" src="{!! @$posted_by_image !!}"> 
-				</div>
+      {{-- Sub-Card B: Availability, Skills & Work Authorisation --}}
+      <div class="cdr-subcard cdr-subcard-metrics">
+        <div class="cdr-metric-list" role="list" aria-label="Candidate availability metrics">
+          <div class="cdr-metric-row" role="listitem">
+            <div class="cdr-metric-icon ci-purple">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
             </div>
+            <span class="cdr-metric-label">Skills & Expertise</span>
+            <span class="cdr-metric-val">{{ $skillsCountDisplay }}</span>
+          </div>
+
+          <div class="cdr-metric-row" role="listitem">
+            <div class="cdr-metric-icon ci-amber">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            </div>
+            <span class="cdr-metric-label">Availability</span>
+            <span class="cdr-metric-val">{{ @$np }}</span>
+          </div>
+
+          <div class="cdr-metric-row" role="listitem">
+            <div class="cdr-metric-icon ci-green">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+            </div>
+            <span class="cdr-metric-label">Engagement Type</span>
+            <span class="cdr-metric-val">{{ ucwords(@$benchApplication->employmentType ?: 'Full Time') }}</span>
+          </div>
+
+          <div class="cdr-metric-row" role="listitem">
+            <div class="cdr-metric-icon ci-blue">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            </div>
+            <span class="cdr-metric-label">Work Auth / Visa</span>
+            <span class="cdr-metric-val" title="{{ $workAuthShortDisplay }}">{{ $workAuthShortDisplay }}</span>
           </div>
         </div>
+      </div>
+
+    </div>
+  </div>
+
+  {{-- ===== CARD 2: 6 PIPELINE STAT CARDS ===== --}}
+  <div class="cdr-pipeline-section" aria-label="Candidate at-a-glance">
+    <div class="cdr-pipeline-card">
+      <div class="cdr-pipeline-icon cpi-blue">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+      </div>
+      <div class="cdr-pipeline-info">
+        <div class="cdr-pipeline-label">Total Experience</div>
+        <div class="cdr-pipeline-value">{{ @$formattedExperience }}<span class="cpi-unit"> Yrs</span></div>
       </div>
     </div>
-    <div class="card card-custom mx-2">
-      <div class="card-header card-header-tabs-line">
-        <div class="card-toolbar">
-          <ul class="nav nav-tabs nav-tabs-space-lg nav-tabs-line nav-tabs-bold nav-tabs-line-3x" role="tablist">
-            <li class="nav-item me-3"> <a class="nav-link active" data-toggle="tab" href="#personal_details"><span class="nav-text font-weight-bold">Personal Detail & Notes</span></a> </li>
-            {{-- <li class="nav-item me-3"> <a class="nav-link" data-toggle="tab" href="#timeline"><span class="nav-text font-weight-bold">Timeline</span></a> </li>
-            <li class="nav-item me-3"> <a class="nav-link" data-toggle="tab" href="#offer_tracker"><span class="nav-text font-weight-bold">Offer Tracker</span></a> </li> --}}
-          </ul>
-        </div>
+
+    <div class="cdr-pipeline-card">
+      <div class="cdr-pipeline-icon cpi-green">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/></svg>
       </div>
-      <div class="card-body py-0">
-       
-	    <div class="tab-content pt-5">
-          <div class="tab-pane active" id="personal_details" role="tabpanel">
-            <div class="card-header cursor-pointer px-0">
-              <div class="card-title m-0">
-                <h3 class="fw-bolder m-0">Personal Details</h3>
-              </div>
-              
-			  </div>
-            <div class="card-body px-0 py-7">
-              <div class="row">
-                <div class="col-lg-6">
-                  <div class="row mb-7">
-                    <label class="col-lg-4 fw-bold text-muted fs-6">Name</label>
-                    <div class="col-lg-8"><span class="fw-bolder text-gray-800 fs-6">{{ ucwords(@$benchApplication->full_name) }}</span> </div>
-                  </div>
-                  <div class="row mb-7">
-                    <label class="col-lg-4 fw-bold text-muted fs-6">Primary Number</label>
-                    <div class="col-lg-8"><span class="fw-bolder text-gray-800 fs-6">{{ @$benchApplication->phone }}</span> </div>
-                  </div>
-                  <div class="row mb-7">
-                    <label class="col-lg-4 fw-bold text-muted fs-6">Primary Email</label>
-                    <div class="col-lg-8"><span class="fw-bolder text-gray-800 fs-6">{{ @$benchApplication->email }}</span></div>
-                  </div>
-                 
-                  <div class="row mb-7">                    
-                    <label class="col-lg-4 fw-bold text-muted fs-6">Company</label>                    
-                    <div class="col-lg-8"><span class="fw-bolder text-gray-800 fs-6">{{ ucwords((@$benchApplication->company_name)) }}</span></div>
-                  </div>
-                 
-                  <div class="row mb-7">                    
-                    <label class="col-lg-4 fw-bold text-muted fs-6">Desigination</label>                  
-                    <div class="col-lg-8"><span class="fw-bolder text-gray-800 fs-6">{{ ucwords(@$benchApplication->current_designation) }}</span></div>
-                  </div>
-                 
-                  <div class="row mb-7">                   
-                    <label class="col-lg-4 fw-bold text-muted fs-6">Total Experience</label>                   
-                    <div class="col-lg-8"><span class="fw-bolder text-gray-800 fs-6">{{ @$benchApplication->total_exp }} Years</span></div>                    
-                  </div>
-				                    
-                  <div class="row mb-7">
-                    <label class="col-lg-4 fw-bold text-muted fs-6" data-toggle="tooltip" title="Relevant Experience">Rel. Experience</label>
-                    <div class="col-lg-8"> <span class="fw-bolder text-gray-800 fs-6"> {{ @$benchApplication->rel_exp }} Years</span> </div>
-                  </div>
-				  
-                  <div class="row">
-                    <label class="col-lg-4 fw-bold text-muted fs-6">Pay Rate</label>
-                    <div class="col-lg-8">
-                      <div class="row">
-                        <div class="col-lg-12"> <span class="fw-bolder text-gray-800 fs-6">{!! $current_ctc_cur !!}{{ @$benchApplication->pay_rate_amount }}
-                          @php 
-                                             $pay_rate_mode	=	"";
-                                             $pay_rate_mode	=	@$benchApplication->pay_rate_mode ?? 0;
-                                             echo $salaryMode[$pay_rate_mode];			
-                           @endphp 
-                          </span> </div>
-                        <div class="col-lg-3"> <span class="fw-bolder text-gray-800 fs-6"> &nbsp; </span> </div>
-                        <div class="col-lg-7"> <span class="fw-bolder text-gray-800 fs-6">&nbsp;</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
+      <div class="cdr-pipeline-info">
+        <div class="cdr-pipeline-label">Relevant Exp</div>
+        <div class="cdr-pipeline-value">{{ @$rel_formattedExperience }}<span class="cpi-unit"> Yrs</span></div>
+      </div>
+    </div>
 
-                  <div class="row">
-                    <label class="col-lg-4 fw-bold text-muted fs-6">Bill Rate</label>
-                    <div class="col-lg-8">
-                      <div class="row">
-                        <div class="col-lg-12"> <span class="fw-bolder text-gray-800 fs-6">{!! $current_ectc_cur !!} {{ @$benchApplication->bill_rate_amount }}
-							@php 
-									$bill_rate_mode	=	"";
-									$bill_rate_mode	=	@$benchApplication->bill_rate_mode ?? 0;
-									echo $salaryMode[$bill_rate_mode];			
-							@endphp 
-                          </span> </div>
-                        <div class="col-lg-3"> <span class="fw-bolder text-gray-800 fs-6"> &nbsp; </span> </div>
-                        <div class="col-lg-7"> <span class="fw-bolder text-gray-800 fs-6"> &nbsp; </span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                
-                  <div class="row mb-7">
-                    <label class="col-lg-4 fw-bold text-muted fs-6">Comission type</label>
-                    <div class="col-lg-8">
-                      <div class="row">
-                        <div class="col-lg-12"> 
-							<span class="fw-bolder text-gray-800 fs-6">
-								@php 
-											$comission_type 	=	$comission_type_name	= 	'';
-											$comission_type 	=	@$benchApplication->comission_type;
-											if($comission_type == 1){
-												$comission_type_name	= 	'Free';	
-											}else if($comission_type == 2){
-												$comission_type_name	= 	'Paid';	
-											}
-											echo @$comission_type_name; 
-								@endphp
-							</span> 
-						</div>
-                      </div>
-                    </div>
-                  </div>
-                 
-                  <div class="row mb-7">
-                    <label class="col-lg-4 fw-bold text-muted fs-6">Offer Amount</label>
-                    <div class="col-lg-8">
-                      <div class="row">
-                        <div class="col-md-12"> <span class="fw-bolder text-gray-800 fs-6">----------</span> </div>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div class="row mb-7">
-                    <label class="col-lg-4 fw-bold text-muted fs-6">Resume</label>
-                    <div class="col-lg-8">
-                      <div class="row">
-                        <div class="col-md-12"> <span class="fw-bolder text-gray-800 fs-6">						
-							@if(!empty(@$benchApplication->resume))
-								@php
-										$resumePath			=	public_path('user-uploads/bench_resume/').@$benchApplication->resume;
-										$resume_status		=	0;
-										if (file_exists($resumePath)){
-											$resume_status		=	1;
-										}
-								@endphp 
-								<a type="button" class="btn btn-light-primary btn-sm py-1" href="{{ @$benchApplication->resume }}" target="_blank" download> 
-									Download&nbsp;&nbsp;<i class="fa fa-download"></i>
-								</a>
-							@endif	
-                          </span> </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              
-                <div class="col-lg-6">
-                  <div class="row mb-7">
-                    <label class="col-lg-4 fw-bold text-muted fs-6">Notice Period</label>
-                    <div class="col-lg-8"> 
-						<span class="fw-bolder fs-6 text-gray-800 fs-6">						
-							@php 
-										$np				=	'';
-							@endphp 						
-							@if((@$benchApplication->serving_notice_period_mode == 0) || (@$benchApplication->serving_notice_period_mode == 1) )
-								@php
-										$np				=	@$benchApplication->np_id;
-										$np 			=	'Available from '.date("dM Y", strtotime($np)); 
-								@endphp
-							@else
-								@php
-									$np					=	@$benchApplication->np_id;
-								@endphp
-							@endif		
-							{{ $np }}				
-                      </span> 
-					</div>
-                  </div>
+    <div class="cdr-pipeline-card">
+      <div class="cdr-pipeline-icon cpi-purple">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      </div>
+      <div class="cdr-pipeline-info">
+        <div class="cdr-pipeline-label">Gender</div>
+        <div class="cdr-pipeline-value">{{ ucwords(@$benchApplication->gender ?: '—') }}</div>
+      </div>
+    </div>
 
-                  <div class="row mb-7">
-                    <label class="col-lg-4 fw-bold text-muted fs-6">Secondary Number</label>
-                    <div class="col-lg-8"> <span class="fw-bolder fs-6 text-gray-800 fs-6"> {{ @$benchApplication->secondary_mobile }} </span> </div>
-                  </div>
-                  
-                  <div class="row mb-7">
-                    <label class="col-lg-4 fw-bold text-muted fs-6">Employee Number</label>
-                    <div class="col-lg-8"> <span class="fw-bolder fs-6 text-gray-800 fs-6"> {{ @$benchApplication->employee_number }} </span> </div>
-                  </div>
-				  
-                  <div class="row mb-7">
-                    <label class="col-lg-4 fw-bold text-muted fs-6">Location</label>
-                    <div class="col-lg-8">
-                      <div class="row">
-                        <div class="col-lg-12"> <span class="fw-bolder text-gray-800 fs-6">{{ @$city_name }} &nbsp; {{ ucwords(@$state_name) }}&nbsp; {{ ucwords(@$country_name) }}&nbsp; {{ $benchApplication->pincode }} </span> </div>
-                      </div>
-                    </div>
-                  </div>
-                 
-                  <div class="row mb-7">
-                    <label class="col-lg-4 fw-bold text-muted fs-6">Qualification</label> 
-                    <div class="col-lg-8"> <span class="fw-bolder text-gray-800 fs-6"> {{ ucwords(@$benchApplication->qualification_name) }} </span> </div>
-                  </div>
-                
-                  <div class="row mb-7">
-                    <label class="col-lg-4 fw-bold text-muted fs-6">Date of Birth</label>
-                    <div class="col-lg-8"> <span class="fw-bolder text-gray-800 fs-6">
-                      @php 
-                                    $originalDate 	= @$benchApplication->dob;
-                                    $newDate 		= date("d-M-Y", strtotime($originalDate)); 
-                       @endphp 
-					   {{ @$newDate }}                       
-                      </span> </div>
-                  </div>
-                  
-                  <div class="row mb-7">
-                    <label class="col-lg-4 fw-bold text-muted fs-6">Candidate ID</label>                   
-                    <div class="col-lg-8"> <span class="fw-bolder fs-6 text-gray-800 fs-6"> C-{{ @$benchApplication->id }} </span> </div>
-                  </div>
-                  
-                  <div class="row mb-7">
-                    <label class="col-lg-4 fw-bold text-muted fs-6">Reffered By</label>
-                    <div class="col-lg-8"> <span class="fw-bolder fs-6 text-gray-800 fs-6">{{ @$posted_by }}</span></div>
-                  </div>
+    <div class="cdr-pipeline-card">
+      <div class="cdr-pipeline-icon cpi-amber">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+      </div>
+      <div class="cdr-pipeline-info">
+        <div class="cdr-pipeline-label">Nationality</div>
+        <div class="cdr-pipeline-value" title="{{ ucwords(@$benchApplication->nationality) }}">{{ \Illuminate\Support\Str::limit(ucwords(@$benchApplication->nationality), 10, '…') ?: '—' }}</div>
+      </div>
+    </div>
 
-                  <div class="row mb-7">
-                    <label class="col-lg-4 fw-bold text-muted fs-6">Hiring HR</label>
-                    <div class="col-lg-8"> <span class="fw-bolder fs-6 text-gray-800 fs-6">
-						@if(!empty($bench_assign))
-							@foreach($bench_assign as $cpn)
-								{!! @$cpn->name .' &nbsp;&nbsp; ' !!}
-							@endforeach	
-						@endif
-                      </span> </div> 
-                  </div>
-                 
-                  <div class="row mb-7">
-                    <label class="col-lg-4 fw-bold text-muted fs-6">Added Date</label>
-                    <div class="col-lg-8"> <span class="fw-bolder fs-6 text-gray-800 fs-6">
-                      @php 
-                                    $originalDate 	= @$benchApplication->created_at;
-                                    $newDate 		= date("d-M-Y", strtotime($originalDate)); 
-                      @endphp
-					  {{ @$newDate }}              
-                      </span> </div>
-                  </div>
-                 
-				  
-                  <div class="row mb-7">                   
-                    <label class="col-lg-4 fw-bold text-muted fs-6">Last Active Date</label>
-                    <div class="col-lg-8"> 
-						<span class="fw-bolder text-gray-800 fs-6">
-						@php
-									$updated_at			=	@$benchApplication->updated_at;
-									$updated_at 		=	date("d-M-Y", strtotime($updated_at)); 
-						@endphp					
-						{{ ucwords(@$updated_at) }}
-						</span> 
-					</div>
-                  </div>
-				  
-                  <div class="row mb-7">
-                    <label class="col-lg-4 fw-bold text-muted fs-6">Status</label>
-                    <div class="col-lg-8"> <span class="fw-bolder fs-6 text-gray-800 fs-6"> {{ ucwords(@$benchApplication->master_status_name) }} </span> </div>   
-                  </div>
-                </div>
-                
-              </div>
-              <div class="card-title m-0 border-bottom py-7">
-                <h3 class="fw-bolder m-0">Custom Details</h3>
-              </div>
-              <div class="row pt-7 border-bottom pb-7">
-@php 
-		   if(!empty($job_additional_detail)){
-			
-				$customTitleId	=	1;
-				$html		=	'';
-				$inc_first	=	0;
-				$inc_last	=	1;
-				foreach($job_additional_detail as $aDetailArr){
-					
-					if($inc_first %2 == 0) {
-						$html	.=	'<div class="col-lg-6">';	
-					}	
-					$html		.=	'<div class="row mb-7">
-													<label class="col-lg-4 fw-bold text-muted fs-6">'.strtoupper($aDetailArr->custom_keys).'</label> 
-													<div class="col-lg-8"> <span class="fw-bolder text-gray-800 fs-6">'.strtoupper($aDetailArr->custom_keys_value).'</span> </div>
-											</div>';
-									 
-					if(($inc_last %2 == 0)&& $inc_last > 0){
-						$html		.='</div>';
-					}
-					$inc_first++;
-					$inc_last++;
-					$customTitleId++;				
-				}
-				echo $html;		   
-	  }	                           
-@endphp 
-              </div>
-			                
-            </div>
-          </div>
-        </div>
+    <div class="cdr-pipeline-card">
+      <div class="cdr-pipeline-icon cpi-teal">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+      </div>
+      <div class="cdr-pipeline-info">
+        <div class="cdr-pipeline-label">Work Mode</div>
+        <div class="cdr-pipeline-value">{{ ucwords(@$benchApplication->wm ?: '—') }}</div>
+      </div>
+    </div>
 
+    <div class="cdr-pipeline-card">
+      <div class="cdr-pipeline-icon cpi-indigo">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c0 1.66 1.79 3 4 3s4-1.34 4-3v-5"/></svg>
+      </div>
+      <div class="cdr-pipeline-info">
+        <div class="cdr-pipeline-label">Education</div>
+        <div class="cdr-pipeline-value" title="{{ ucwords(@$benchApplication->qualification_name) }}">{{ \Illuminate\Support\Str::limit(ucwords(@$benchApplication->qualification_name), 12, '…') ?: '—' }}</div>
       </div>
     </div>
   </div>
+
+  {{-- ===== CARD 3: TABS & CONTENT CARD ===== --}}
+  <div class="cdr-outer-card cdr-tabs-card">
+    <nav class="page-tabs" aria-label="Profile sections" role="tablist">
+      <a href="#personal_details" class="tab tab-active" aria-selected="true" data-tab-target="#personal_details">
+        <svg class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+          <circle cx="12" cy="7" r="4"/>
+        </svg>
+        Profile Overview
+      </a>
+      @if(!empty($resumeDownloadUrl))
+        <a href="#resume_cv" class="tab" aria-selected="false" data-tab-target="#resume_cv">
+          <svg class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+            <polyline points="14 2 14 8 20 8"/>
+            <line x1="16" y1="13" x2="8" y2="13"/>
+            <line x1="16" y1="17" x2="8" y2="17"/>
+          </svg>
+          Resume / CV
+        </a>
+      @endif
+    </nav>
+
+    <main class="page-content">
+      {{-- Tab 1: Profile Overview --}}
+      <div class="tab-pane show active" id="personal_details">
+        <h2 class="overview-title" style="font-size:14px;font-weight:700;color:#0f172a;margin-bottom:14px;">Profile Overview</h2>
+
+        <div class="content-split">
+          {{-- Main Column --}}
+          <div class="content-main">
+            {{-- Professional Summary --}}
+            <section class="cardshow">
+              <div class="card-header-sidebar">
+                <div class="card-icon" style="background: #f3e8ff; color: #a855f7;">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                    <polyline points="14 2 14 8 20 8"/>
+                    <line x1="16" y1="13" x2="8" y2="13"/>
+                    <line x1="16" y1="17" x2="8" y2="17"/>
+                  </svg>
+                </div>
+                <h3 class="card-title">Professional Summary</h3>
+              </div>
+              <p class="summary-text">{{ @$benchApplication->careersummary ?: 'No summary provided.' }}</p>
+            </section>
+
+            {{-- Key Skills & Experiences Table --}}
+            <section class="cardshow">
+              <div class="card-header-sidebar">
+                <div class="card-icon" style="background: #f0fdf4; color: #16a34a;">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                    <circle cx="9" cy="7" r="4"/>
+                    <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                    <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                  </svg>
+                </div>
+                <h3 class="card-title">Talent Key Skills & Experiences</h3>
+              </div>
+              <div class="skills-table">
+                <div class="skills-thead">
+                  <div>Skill</div>
+                  <div>Experience</div>
+                  <div>Ratings</div>
+                </div>
+                @if(!empty($skillExperiencesCount) && $skillExperiencesCount > 0)
+                  @foreach($skillExperiences as $exp)
+                    <div class="skills-row">
+                      <div class="skill-name-cell">
+                        <span class="skill-name-text" style="font-weight: 600; color: #1e293b;">{{ e($exp->skill_key) }}</span>
+                      </div>
+                      <div class="skill-exp-cell">{{ e($exp->year ?? '0') }}.{{ e($exp->month ?? '0') }} Years</div>
+                      <div class="skill-rating-cell">
+                        <div class="stars">
+                          @for($i = 1; $i <= 5; $i++)
+                            <svg class="star-skill {{ (@$exp->rating >= $i ? '' : 'star-empty') }}" viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                          @endfor
+                        </div>
+                        <span class="rating-text">{{ e(@$exp->rating ?? 0) }} / 5</span>
+                      </div>
+                    </div>
+                  @endforeach
+                @elseif(!empty($skillsArr))
+                  @foreach($skillsArr as $skillItem)
+                    <div class="skills-row">
+                      <div class="skill-name-cell">
+                        <span class="skill-name-text" style="font-weight: 600; color: #1e293b;">{{ ucwords(strtolower(trim($skillItem))) }}</span>
+                      </div>
+                      <div class="skill-exp-cell">{{ $formattedExperience }} Yrs</div>
+                      <div class="skill-rating-cell">
+                        <div class="stars">
+                          <svg class="star-skill" viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                          <svg class="star-skill" viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                          <svg class="star-skill" viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                          <svg class="star-skill star-empty" viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                          <svg class="star-skill star-empty" viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                        </div>
+                        <span class="rating-text">3 / 5</span>
+                      </div>
+                    </div>
+                  @endforeach
+                @else
+                  <div class="text-muted p-4 text-center" style="font-size:12px;">No skills mapped.</div>
+                @endif
+              </div>
+            </section>
+
+            {{-- Additional Details / Work History --}}
+            @if(!empty($job_additional_detail) && count($job_additional_detail) > 0)
+              <section class="cardshow">
+                <div class="card-header-sidebar">
+                  <div class="card-icon" style="background: #eef2ff; color: #4338ca;">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>
+                    </svg>
+                  </div>
+                  <h3 class="card-title">Additional Profile Details</h3>
+                </div>
+                <div style="padding: 10px 16px 14px 16px;">
+                  @foreach($job_additional_detail as $addVal)
+                    <div style="display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #f1f5f9; font-size: 12px;">
+                      <span style="color: #64748b; font-weight: 500;">{{ ucwords(str_replace('_', ' ', $addVal->custom_keys ?? '')) }}</span>
+                      <span style="color: #0f172a; font-weight: 600;">{{ $addVal->custom_keys_value ?? '—' }}</span>
+                    </div>
+                  @endforeach
+                </div>
+              </section>
+            @endif
+          </div>
+
+          {{-- Sidebar Column --}}
+          <aside class="content-sidebar">
+            {{-- Relationship Manager Comments --}}
+            <section class="cardshow">
+              <div class="card-header-sidebar">
+                <div class="card-icon" style="background: #eff6ff; color: #2563eb;">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                  </svg>
+                </div>
+                <h3 class="card-title">Relationship Manager Comments</h3>
+              </div>
+              <div class="rm-comments-body">
+                @php
+                  $displayRmComment = !empty($benchApplication->rm_comments) ? $benchApplication->rm_comments : @$benchApplication->recruiter_note;
+                @endphp
+                @if(!empty($displayRmComment))
+                  <div class="rm-comments-content">
+                    @if(strip_tags($displayRmComment) !== $displayRmComment)
+                      {!! clean($displayRmComment) !!}
+                    @else
+                      {!! nl2br(e($displayRmComment)) !!}
+                    @endif
+                  </div>
+                @else
+                  <p class="text-muted font-italic mb-0" style="font-size: 12px; color: #94a3b8; font-style: italic; margin: 0;">No Relationship Manager comments added yet.</p>
+                @endif
+              </div>
+            </section>
+
+            {{-- Compensation & Financial Details --}}
+            <section class="cardshow">
+              <div class="card-header-sidebar">
+                <div class="card-icon" style="background: #fffbeb; color: #d97706;">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="1" y="4" width="22" height="16" rx="2" ry="2"/>
+                    <line x1="1" y1="10" x2="23" y2="10"/>
+                  </svg>
+                </div>
+                <h3 class="card-title">Compensation Details</h3>
+              </div>
+              <div class="comp-list">
+                @php
+                  $pay_rate_mode = (@$benchApplication->pay_rate_mode) ? @$benchApplication->pay_rate_mode : 0;
+                  $bill_rate_mode = (@$benchApplication->bill_rate_mode) ? @$benchApplication->bill_rate_mode : 0;
+                  $comission_type = @$benchApplication->comission_type;
+                  $comission_type_name = ($comission_type == 1) ? 'Free' : (($comission_type == 2) ? 'Paid' : 'Free');
+                @endphp
+                <div class="comp-row">
+                  <span class="comp-label">Pay Rate</span>
+                  <span class="comp-value">{!! $current_ctc_cur !!} {{ @$benchApplication->pay_rate_amount }} / {{ $salaryMode[$pay_rate_mode] ?? 'Annual' }}</span>
+                </div>
+                <div class="comp-row">
+                  <span class="comp-label">Bill Rate</span>
+                  <span class="comp-value">{!! @$current_ectc_cur !!} {{ @$benchApplication->bill_rate_amount }} / {{ $salaryMode[$bill_rate_mode] ?? 'Annual' }}</span>
+                </div>
+                <div class="comp-row">
+                  <span class="comp-label">Payment Model</span>
+                  <span class="comp-badge">{{ $salaryMode[$bill_rate_mode] ?? 'Annual' }}</span>
+                </div>
+                <div class="comp-row">
+                  <span class="comp-label">Currency</span>
+                  <span class="comp-value">{{ $current_cur ?: 'INR' }}</span>
+                </div>
+                <div class="comp-row">
+                  <span class="comp-label">Commercial Model</span>
+                  <span class="comp-value">{{ @$comission_type_name }} Service</span>
+                </div>
+                <div class="comp-row">
+                  <span class="comp-label">Engagement Type</span>
+                  <span class="comp-value">{{ @$benchApplication->employmentType ?: 'Full Time' }}</span>
+                </div>
+              </div>
+            </section>
+
+            {{-- Contact Details --}}
+            <section class="cardshow">
+              <div class="card-header-sidebar">
+                <div class="card-icon" style="background: #eff6ff; color: #2563eb;">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                    <circle cx="12" cy="7" r="4"/>
+                  </svg>
+                </div>
+                <h3 class="card-title">Contact Details</h3>
+              </div>
+              <div class="contact-list">
+                <div class="contact-row">
+                  <span class="contact-label">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                    Email ID
+                  </span>
+                  <a href="mailto:{{ @$benchApplication->email }}" class="contact-value">{{ @$benchApplication->email ?: '—' }}</a>
+                </div>
+                <div class="contact-row">
+                  <span class="contact-label">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+                    Contact Number
+                  </span>
+                  <a href="tel:{{ $candidatePhoneData['dial'] }}{{ $cleanPhone }}" class="contact-value" style="display: flex; align-items: center;">
+                    <div class="fw-bolder text-gray-800 fs-6" style="display: flex; align-items: center; gap: 4px;">
+                      <div class="iti__flag iti__{{ $candidatePhoneData['iso'] }}"></div>
+                      <span>{{ $candidatePhoneData['dial'] }}</span>
+                    </div>
+                    <span class="fw-bolder text-gray-800 fs-6" style="margin-left: 6px;">{{ @$benchApplication->phone }}</span>
+                  </a>
+                </div>
+              </div>
+              <div class="contact-actions">
+                <a href="https://api.whatsapp.com/send?phone={{ $whatsAppPhone }}" target="_blank" class="btn btn-sm btn-whatsapp">
+                  <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/>
+                  </svg>
+                  Chat on WhatsApp
+                </a>
+                @php
+                  $linkedin = @$benchApplication->linkedin;
+                  if (!empty($linkedin) && !preg_match('/^(https?:\/\/|www\.)/i', $linkedin)) {
+                      $linkedin = 'https://' . $linkedin;
+                  }
+                @endphp
+                @if(!empty(@$benchApplication->linkedin))
+                  <a href="{{ $linkedin ?? 'javascript:;' }}" target="{{ $linkedin ? '_blank' : '_self' }}" class="btn btn-sm btn-linkedin">
+                    <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/>
+                      <rect x="2" y="9" width="4" height="12"/>
+                      <circle cx="4" cy="4" r="2"/>
+                    </svg>
+                    Connect on LinkedIn
+                  </a>
+                @endif
+              </div>
+            </section>
+
+            {{-- Relationship Manager Details --}}
+            <section class="cardshow">
+              <div class="card-header-sidebar">
+                <div class="card-icon" style="background: #f3e8ff; color: #a855f7;">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                    <circle cx="9" cy="7" r="4"/>
+                    <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                    <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                  </svg>
+                </div>
+                <h3 class="card-title">Relationship Manager Details</h3>
+              </div>
+              <div class="rm-details-body">
+                @if(!empty($bench_assign_row) && count($bench_assign_row) > 0)
+                  @foreach($bench_assign_row as $key => $assignVal)
+                    @php
+                      $rmPhoneData = $resolvePhone($assignVal->calling_code ?? 'in');
+                    @endphp
+                    <div class="rm-card-content" style="{{ !$loop->first ? 'margin-top: 10px; padding-top: 10px; border-top: 1px solid #f1f5f9;' : '' }}">
+                      <h4>{{ ucwords(@$assignVal->name ?: '—') }}</h4>
+                      <div class="rm-contact-list">
+                        @if(!empty(@$assignVal->mobile))
+                          <div class="rm-contact-item">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+                            <span style="display: inline-flex; align-items: center; gap: 4px;">
+                              <span class="iti__flag iti__{{ $rmPhoneData['iso'] }}" style="display: inline-block;"></span>
+                              <span style="font-weight: 600; color: #0f172a;">{{ $rmPhoneData['dial'] }}</span>
+                            </span>
+                            <span style="font-weight: 500; color: #334155;">{{ @$assignVal->mobile }}</span>
+                          </div>
+                        @endif
+                        @if(!empty(@$assignVal->email))
+                          <div class="rm-contact-item">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                            <a href="mailto:{{ @$assignVal->email }}">{{ @$assignVal->email }}</a>
+                          </div>
+                        @endif
+                      </div>
+                    </div>
+                  @endforeach
+                @else
+                  <div style="padding: 10px 0; font-size: 12px; color: #94a3b8; font-style: italic;">No Relationship Manager assigned yet.</div>
+                @endif
+              </div>
+            </section>
+          </aside>
+        </div>
+      </div>
+
+      {{-- Tab 2: Resume / CV Preview --}}
+      @if(!empty($resumeDownloadUrl))
+        <div class="tab-pane" id="resume_cv" style="display:none;">
+          <div class="cardshow" style="padding: 16px;">
+            <div class="d-flex align-items-center justify-content-between mb-4">
+              <h3 class="card-title" style="font-size:14px; font-weight:700; color:#0f172a; margin:0;">
+                Candidate Résumé Preview
+              </h3>
+              <a href="{{ $resumeDownloadUrl }}" target="_blank" download class="btn btn-sm btn-primary">
+                <i class="fa fa-download me-1"></i> Download Résumé
+              </a>
+            </div>
+
+            @if($isPdfResume)
+              <div style="width:100%; height:750px; border-radius:8px; overflow:hidden; border:1px solid #e2e8f0; background:#fff;">
+                <iframe src="{{ $resumeDownloadUrl }}" style="width:100%; height:100%; border:none;"></iframe>
+              </div>
+            @else
+              <div class="text-center p-12" style="background:#f8fafc; border:1px dashed #cbd5e1; border-radius:8px;">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="mb-3">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>
+                </svg>
+                <h4 style="font-size:14px; font-weight:600; color:#1e293b; margin-bottom:6px;">Office Document Résumé</h4>
+                <p style="font-size:12px; color:#64748b; margin-bottom:14px;">This candidate has uploaded a DOC/DOCX document résumé.</p>
+                <a href="{{ $resumeDownloadUrl }}" target="_blank" download class="btn btn-primary btn-sm">
+                  <i class="fa fa-download me-1"></i> Download Document ({{ strtoupper(pathinfo($benchApplication->resume, PATHINFO_EXTENSION)) }})
+                </a>
+              </div>
+            @endif
+          </div>
+        </div>
+      @endif
+
+      {{-- Confidentiality Banner --}}
+      <div class="confidentiality-banner" role="note">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/>
+        </svg>
+        <p>All candidate information is confidential and intended for Super Administrator governance & clearance only.</p>
+      </div>
+    </main>
+  </div>
 </div>
+
+<script>
+(function() {
+    // Tab switching inside drawer
+    $('.page-tabs .tab').on('click', function(e) {
+        e.preventDefault();
+        $('.page-tabs .tab').removeClass('tab-active').attr('aria-selected', 'false');
+        $(this).addClass('tab-active').attr('aria-selected', 'true');
+
+        var targetSelector = $(this).attr('data-tab-target') || $(this).attr('href');
+        $('.page-content .tab-pane').hide().removeClass('show active');
+        $(targetSelector).show().addClass('show active');
+    });
+})();
+</script>

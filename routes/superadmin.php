@@ -167,7 +167,7 @@ Route::group(['middleware' => 'auth'], function () {
         Route::post('features-list/add-edit', [SuperAdminCompanyController::class, 'addEditfeaturesListupdate'])->name('company.addEditfeaturesListupdate');
 
         Route::get('bench-candidates/{status?}', [SuperAdminCompanyController::class, 'bernchNewCandidates'])->name('company.new-bench-candidates');
-        Route::get('showdetails-bench-candidates', [SuperAdminCompanyController::class, 'bernchDetailsCandidates'])->name('company.showdetails-bench-candidates');
+        Route::get('showdetails-bench-candidates/{id?}', [SuperAdminCompanyController::class, 'bernchDetailsCandidates'])->name('company.showdetails-bench-candidates');
 
         // =========================================================================
         // SUPER ADMIN MARKETPLACE OPERATIONS COMMAND CENTER (100% CQRS)
