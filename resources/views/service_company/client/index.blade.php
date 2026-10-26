@@ -912,6 +912,9 @@
 
 @push('footer-script')
 <script src="{{ asset('demo/cdn/js/dataTables.fixedHeader.min.js') }}{{ TM_VERSION }}"></script>
+<!-- JERO Distributed Client Runtime (JDCR V5.2) Local Persistent Engine & Incremental Renderer -->
+<script src="{{ asset('assets/service_company/client/cl-entity-db.js') }}{{ TM_VERSION }}"></script>
+<script src="{{ asset('assets/service_company/client/cl-drawer-view.js') }}{{ TM_VERSION }}"></script>
 <script>
 $(document).ready(function() {
     var searchTimer = null;
@@ -1513,6 +1516,142 @@ window.ClientSessionRecoveryManager = {
 };
 
 // ── Canonical Architecture & Deterministic State Machine for Client Management ──
+// ─── JDCR V5.2: L1 In-Memory Working RAM Store (Bounded to 25 active graphs) ───
+window.ClientMemoryStore = {
+    cache: new Map(),
+    maxSize: 25,
+    get: function(id) {
+        return this.cache.get(Number(id)) || null;
+    },
+    set: function(id, data) {
+        if (!data) return;
+        if (this.cache.size >= this.maxSize) {
+            var firstKey = this.cache.keys().next().value;
+            this.cache.delete(firstKey);
+        }
+        this.cache.set(Number(id), data);
+    },
+    delete: function(id) {
+        this.cache.delete(Number(id));
+    },
+    clear: function() {
+        this.cache.clear();
+    }
+};
+
+// ─── JDCR V5.2: Single Synchronization Authority (SyncSupervisor) ───
+window.SyncSupervisor = {
+    tenantId: {{ (int) (auth()->user()->company_id ?? 0) }},
+    inFlightRequests: new Map(),
+    dirtyEntities: new Set(),
+    coalesceTimer: null,
+
+    notifyHint: function(clientId) {
+        if (!clientId) return;
+        this.dirtyEntities.add(Number(clientId));
+        if (this.coalesceTimer) return;
+        var self = this;
+        this.coalesceTimer = setTimeout(function() {
+            self.flush();
+            self.coalesceTimer = null;
+        }, 150);
+    },
+
+    flush: function() {
+        var self = this;
+        this.dirtyEntities.forEach(function(cid) {
+            self.reconcile(cid);
+        });
+        this.dirtyEntities.clear();
+    },
+
+    reconcile: function(clientId) {
+        var self = this;
+        var cid = Number(clientId);
+        var currentSelected = Number(window.ClientStateManager ? window.ClientStateManager.getSelectedClientId() : 0);
+        if (currentSelected === cid && window.ClientIncrementalRenderer) {
+            ClientIncrementalRenderer.patchSyncStatus(cid, 'syncing', 'Syncing...');
+        }
+
+        var dedupeKey = `${this.tenantId}:client:${cid}:graph`;
+        if (this.inFlightRequests.has(dedupeKey)) {
+            return this.inFlightRequests.get(dedupeKey);
+        }
+
+        var endpoint = "{{ route('service_company.clients.api.v2.graph', ':id') }}".replace(':id', cid);
+        var fetchPromise = $.ajax({
+            type: 'GET',
+            url: endpoint,
+            cache: false,
+            success: function(res) {
+                if (res && res.data) {
+                    window.ClientMemoryStore.set(cid, res.data);
+                    if (window.ClientEntityDB) {
+                        window.ClientEntityDB.put(self.tenantId, cid, res);
+                    }
+                    if (Number(window.ClientStateManager.getSelectedClientId()) === cid) {
+                        if (window.ClientIncrementalRenderer) {
+                            ClientIncrementalRenderer.patchSyncStatus(cid, 'uptodate', 'Up to Date');
+                        }
+                    }
+                }
+            },
+            error: function(xhr) {
+                if (Number(window.ClientStateManager.getSelectedClientId()) === cid) {
+                    if (window.ClientIncrementalRenderer) {
+                        ClientIncrementalRenderer.patchSyncStatus(cid, 'stale', 'Offline / Stale');
+                    }
+                }
+            },
+            complete: function() {
+                self.inFlightRequests.delete(dedupeKey);
+            }
+        });
+
+        this.inFlightRequests.set(dedupeKey, fetchPromise);
+        return fetchPromise;
+    }
+};
+
+// ─── JDCR V5.2: Multi-Tab BroadcastChannel Coordination ───
+if (typeof window.BroadcastChannel !== 'undefined') {
+    try {
+        window.jdcrTabChannel = new BroadcastChannel('JERO_TAB_SYNC');
+        window.jdcrTabChannel.onmessage = function(ev) {
+            if (ev.data && ev.data.type === 'CLIENT_MUTATED' && ev.data.client_id) {
+                window.SyncSupervisor.notifyHint(ev.data.client_id);
+            }
+        };
+    } catch (e) {}
+}
+
+// ─── JDCR V5.2: Centralized Event Delegation (Zero Inline Handlers) ───
+$(document).on('click', '[data-action="switch-tab"]', function(e) {
+    e.preventDefault();
+    var tabName = $(this).data('tab');
+    var cid = $(this).data('client-id');
+    if (window.ClientStateManager && typeof window.ClientStateManager.switchDrawerTab === 'function') {
+        window.ClientStateManager.switchDrawerTab(cid, tabName);
+    }
+});
+
+$(document).on('click', '[data-action="close-drawer"]', function(e) {
+    e.preventDefault();
+    if (window.ClientStateManager && typeof window.ClientStateManager.clearDrawerState === 'function') {
+        window.ClientStateManager.clearDrawerState();
+    }
+});
+
+// ─── JDCR V5.2: Formal Idle-Tab Lifecycle State Machine ───
+document.addEventListener('visibilitychange', function() {
+    if (document.visibilityState === 'visible') {
+        var selId = window.ClientStateManager ? window.ClientStateManager.getSelectedClientId() : null;
+        if (selId && window.SyncSupervisor) {
+            window.SyncSupervisor.notifyHint(selId);
+        }
+    }
+});
+
 window.ClientStateManager = {
     state: {
         activeTab: {!! json_encode($initialTab ?? 'all') !!},
@@ -1715,6 +1854,18 @@ window.ClientStateManager = {
         openClientDrawer(targetDrawerId, toggleId);
         $(otherBodyId).empty();
 
+        var tenantId = {{ (int) (auth()->user()->company_id ?? 0) }};
+
+        // ─── JDCR V5.2 Tier 1: Check L1 Working RAM (< 5ms) ───
+        var ramCached = window.ClientMemoryStore.get(clientId);
+        if (ramCached && window.ClientIncrementalRenderer && type !== 'request') {
+            $(bodyId).html(ClientIncrementalRenderer.renderDrawerShell(ramCached, 'overview'));
+            self.state.drawerStatus = 'loaded';
+            self.markTabLoaded(clientId, 'overview');
+            window.SyncSupervisor.notifyHint(clientId);
+            return;
+        }
+
         // Loading skeleton
         var baseurl = "{{ asset('assets/images/Loading2.gif') }}";
         var loadingText = (type === 'request') ? 'Loading Request & Commercial Terms...' : (isDirect ? 'Loading Direct Client Details...' : 'Loading Client Details...');
@@ -1765,6 +1916,76 @@ window.ClientStateManager = {
             });
         };
 
+        var fetchDrawerViaGateway = function() {
+            var graphEndpoint = "{{ route('service_company.clients.api.v2.graph', ':id') }}".replace(':id', clientId);
+            if (type !== 'request') {
+                self.activeDrawerXhr = $.ajax({
+                    type: 'GET',
+                    url: graphEndpoint,
+                    cache: false,
+                    success: function(res) {
+                        var activeCtx = self.state.currentDrawerContext;
+                        if (!activeCtx || activeCtx.contextToken !== contextToken || self.state.drawerRequestToken !== requestToken || self.state.selectedClientId !== clientId) return;
+
+                        if (res && res.data && window.ClientIncrementalRenderer) {
+                            window.ClientMemoryStore.set(clientId, res.data);
+                            if (window.ClientEntityDB) {
+                                window.ClientEntityDB.put(tenantId, clientId, res);
+                            }
+                            $(bodyId).html(ClientIncrementalRenderer.renderDrawerShell(res.data, 'overview'));
+                            self.state.drawerStatus = 'loaded';
+                            self.markTabLoaded(clientId, 'overview');
+                            return;
+                        }
+
+                        // Fallback to legacy Blade AJAX
+                        ClientSessionRecoveryManager.executeWithRetry(fetchDrawerData, 1);
+                    },
+                    error: function(xhr, status) {
+                        if (status === 'abort') return;
+                        // Fallback to legacy Blade AJAX
+                        ClientSessionRecoveryManager.executeWithRetry(fetchDrawerData, 1);
+                    }
+                });
+            } else {
+                ClientSessionRecoveryManager.executeWithRetry(fetchDrawerData, 1);
+            }
+        };
+
+        // ─── JDCR V5.2 Tier 2: Check L2 Persistent IndexedDB (< 50ms) ───
+        if (window.ClientEntityDB && type !== 'request') {
+            window.ClientEntityDB.get(tenantId, clientId).then(function(idbRecord) {
+                var activeCtx = self.state.currentDrawerContext;
+                if (!activeCtx || activeCtx.contextToken !== contextToken || self.state.drawerRequestToken !== requestToken || self.state.selectedClientId !== clientId) return;
+
+                if (idbRecord && idbRecord.data && window.ClientIncrementalRenderer) {
+                    window.ClientMemoryStore.set(clientId, idbRecord.data);
+                    $(bodyId).html(ClientIncrementalRenderer.renderDrawerShell(idbRecord.data, 'overview'));
+                    self.state.drawerStatus = 'loaded';
+                    self.markTabLoaded(clientId, 'overview');
+                    window.SyncSupervisor.notifyHint(clientId);
+                    return;
+                }
+
+                fetchDrawerViaGateway();
+            }).catch(function() {
+                fetchDrawerViaGateway();
+            });
+            return;
+        }
+
+        fetchDrawerViaGateway();
+                        self.state.drawerStatus = 'error';
+                        if (typeof doneCallback === 'function') doneCallback(false, null);
+                    }
+                },
+                error: function(xhr, status) {
+                    if (status === 'abort') return;
+                    if (typeof doneCallback === 'function') doneCallback(false, null, xhr);
+                }
+            });
+        };
+
         ClientSessionRecoveryManager.executeWithRetry(fetchDrawerData, 1, function(xhr) {
             var activeCtx = self.state.currentDrawerContext;
             if (!activeCtx || activeCtx.contextToken !== contextToken || self.state.drawerRequestToken !== requestToken) return;
@@ -1789,6 +2010,20 @@ window.ClientStateManager = {
                 </div>
             `);
         });
+    },
+
+    // ─── JDCR V5.2: Client-Side Sub-Tab Switcher (< 5ms) ───
+    switchDrawerTab: function(clientId, tabName) {
+        this.state.selectedClientTab = tabName;
+        var cid = Number(clientId);
+        var client = window.ClientMemoryStore ? window.ClientMemoryStore.get(cid) : null;
+        if (client && window.ClientIncrementalRenderer) {
+            var surfaceHtml = ClientIncrementalRenderer.renderTabContent(client, tabName);
+            $(`#jdcr-tab-surface-${cid}`).html(surfaceHtml);
+            $('#jdcr-tabs-list .nav-link').removeClass('active text-primary border-primary border-bottom-2');
+            $(`#jdcr-tabs-list [data-tab="${tabName}"]`).addClass('active text-primary border-primary border-bottom-2');
+            this.markTabLoaded(cid, tabName);
+        }
     },
 
     renderTabHeaders: function(tabName) {
@@ -3133,12 +3368,13 @@ function handleClientMutationEvent(data) {
     // Invalidate main browser RAM stores
     ClientStore.clear();
 
-    // Invalidate drawer cache
+    // Invalidate drawer cache and notify SyncSupervisor (JDCR V5.2)
     if (typeof DrawerLRUCache !== 'undefined' && typeof DrawerLRUCache.clear === 'function') {
         DrawerLRUCache.clear();
     }
-    if (typeof ClientStateManager !== 'undefined' && data.client && ClientStateManager.getSelectedClientId() == data.client.id) {
-        ClientStateManager.clearDrawerState();
+    const targetCid = (data.client && data.client.id) ? data.client.id : (data.client_id || data.id);
+    if (targetCid && window.SyncSupervisor) {
+        window.SyncSupervisor.notifyHint(targetCid);
     }
 
     // If a specific client record is attached, delta-upsert directly in Worker
