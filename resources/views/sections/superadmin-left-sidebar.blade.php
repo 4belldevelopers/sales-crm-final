@@ -456,8 +456,9 @@
                  <!--end::JD Salary Breakup-->
 
                 <!--begin::Bench Candidates-->
-                <div data-kt-menu-trigger="click" class="menu-item menu-accordion {{ request()->is('super-admin/bench-candidates*') ? 'show' : '' }} ">
-                    <span class="menu-link">
+                <div class="menu-item">
+                    <a class="menu-link {{ request()->is('super-admin/bench-candidates*') ? 'active' : '' }}"
+                        href="{{ route('superadmin.company.new-bench-candidates', 'approve') }}">
                         <span class="menu-icon">
                             <!--begin::Svg Icon-->
                             <span class="svg-icon svg-icon-2">
@@ -473,66 +474,8 @@
                             </span>
                             <!--end::Svg Icon-->
                         </span>
-                        <span class="menu-title">Bench Candidates</span><span class="menu-arrow"></span>
-                    </span>
-                    <div class="menu-sub menu-sub-accordion">
-
-                        <!--begin::cmsGeneral-->
-                        <div class="menu-item">
-                            <a href="{{ route('superadmin.company.new-bench-candidates', 'pending') }}"
-                                class="menu-link {{ request()->is('super-admin/bench-candidates/pending') ? 'active' : '' }}"">
-                                <span class="menu-bullet">
-                                    <span class="bullet bullet-dot"></span>
-                                </span>
-                                <span class="menu-title">All Bench Pending</span>
-                            </a>
-                        </div>
-                        <!--end::cmsGeneral-->
-                        <!--begin::cmsGeneral-->
-                        <div class="menu-item">
-                            <a href="{{ route('superadmin.company.new-bench-candidates', 'approve') }}"
-                                class="menu-link {{ request()->is('super-admin/bench-candidates/approve') ? 'active' : '' }}"">
-                                <span class="menu-bullet">
-                                    <span class="bullet bullet-dot"></span>
-                                </span>
-                                <span class="menu-title">All Market Bench</span>
-                            </a>
-                        </div>
-                        <!--end::cmsGeneral-->
-                        <!--begin::cmsGeneral-->
-                        <div class="menu-item">
-                            <a href="{{ route('superadmin.company.new-bench-candidates', 'reject') }}"
-                                class="menu-link {{ request()->is('super-admin/bench-candidates/reject') ? 'active' : '' }}"">
-                                <span class="menu-bullet">
-                                    <span class="bullet bullet-dot"></span>
-                                </span>
-                                <span class="menu-title">All Reject Bench</span>
-                            </a>
-                        </div>
-                        <!--end::cmsGeneral-->
-                        <!--begin::cmsGeneral-->
-                        <div class="menu-item">
-                            <a href="{{ route('superadmin.company.new-bench-candidates', 'place') }}"
-                                class="menu-link {{ request()->is('super-admin/bench-candidates/place') ? 'active' : '' }}"">
-                                <span class="menu-bullet">
-                                    <span class="bullet bullet-dot"></span>
-                                </span>
-                                <span class="menu-title">All Place Bench</span>
-                            </a>
-                        </div>
-                        <!--end::cmsGeneral-->
-                        <!--begin::cmsGeneral-->
-                        <div class="menu-item">
-                            <a href="{{ route('superadmin.company.new-bench-candidates', 'pool') }}"
-                                class="menu-link {{ request()->is('super-admin/bench-candidates/pool') ? 'active' : '' }}"">
-                                <span class="menu-bullet">
-                                    <span class="bullet bullet-dot"></span>
-                                </span>
-                                <span class="menu-title">All Bench Pool</span>
-                            </a>
-                        </div>
-                        <!--end::cmsGeneral-->
-                    </div>
+                        <span class="menu-title">Bench Candidates</span>
+                    </a>
                 </div>
                  <!--end::Bench Candidates-->
 

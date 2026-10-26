@@ -42,3 +42,7 @@ Broadcast::channel('superadmin.jd-catalog', function ($user) {
     return (bool) ($user && (! empty($user->is_superadmin) || ! empty($user->root_user)));
 });
 
+// Super Admin private channel for Bench Candidates approval and governance delta synchronization
+Broadcast::channel('superadmin.bench-candidates', function ($user) {
+    return (bool) ($user && (! empty($user->is_superadmin) || ! empty($user->root_user)));
+});

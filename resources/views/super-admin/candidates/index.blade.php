@@ -29,6 +29,7 @@
         @media only screen and (min-width: 1024px) and (max-width: 1440px) {
             #kt_activitiesApplication {
                 width: 1025px;
+                z-index: 999999 !important;
             }
             #kt_client_activitiesApplication {
                 width: 1025px;
@@ -44,6 +45,7 @@
         @media only screen and (min-width: 1440px) and (max-width: 2560px) {
             #kt_activitiesApplication {
                 width: 1200px;
+                z-index: 999999 !important;
             }
             #kt_client_activitiesApplication {
                 width: 1200px;
@@ -1648,6 +1650,64 @@
                 Swal.fire('Error', 'Stage submission failed. Please try again.', 'error');
             }
         });
+    });
+
+    // ===== CANDIDATE DETAILS DRAWER: SSOT FAST RAM CACHE & INSTANT LOAD =====
+    window.__saCandidateDrawerCache = window.__saCandidateDrawerCache || new Map();
+    $(document).on('click', '.show-application-detail', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        if (e.stopImmediatePropagation) e.stopImmediatePropagation();
+
+        var id = $(this).attr('data-row-id') || $(this).data('row-id') || $(this).closest('[data-row-id]').attr('data-row-id');
+        if (!id) return;
+        id = String(id);
+
+        $('#kt_activitiesApplication_toggle').trigger('click');
+
+        if (window.__saCandidateDrawerCache.has(id)) {
+            $('#application_show_right_bar').html(window.__saCandidateDrawerCache.get(id));
+            if (typeof KTMenu !== 'undefined') KTMenu.createInstances();
+            return;
+        }
+
+        var loaderHtml = 
+            '<div class="d-flex flex-column align-items-center justify-content-center p-10" style="min-height: 380px;">' +
+            '  <div class="spinner-border text-primary mb-4" role="status" style="width: 2.8rem; height: 2.8rem;"></div>' +
+            '  <div class="text-gray-800 fw-bold fs-5 mb-1">Loading Candidate Profile…</div>' +
+            '  <div class="text-muted fs-7">Retrieving verified application details</div>' +
+            '</div>';
+        $('#application_show_right_bar').html(loaderHtml);
+
+        var url = "{{ url('super-admin/candidatedatashow') }}/" + id;
+        $.ajax({
+            type: 'GET',
+            url: url,
+            success: function(resp) {
+                if (resp && resp.view) {
+                    window.__saCandidateDrawerCache.set(id, resp.view);
+                    $('#application_show_right_bar').html(resp.view);
+                    if (typeof KTMenu !== 'undefined') KTMenu.createInstances();
+                }
+            },
+            error: function() {
+                $('#application_show_right_bar').html(
+                    '<div class="card card-flush m-6 p-8 text-center border border-dashed border-danger">' +
+                    '  <div class="text-danger fw-bold fs-4 mb-2">Error Loading Profile</div>' +
+                    '  <div class="text-gray-700 fs-6">Unable to load candidate details. Please try again.</div>' +
+                    '</div>'
+                );
+            }
+        });
+    });
+
+    $(document).on('click', '#kt_activitiesApplication_close', function(e) {
+        e.preventDefault();
+        var drawerEl = document.getElementById('kt_activitiesApplication');
+        if (drawerEl && typeof KTDrawer !== 'undefined') {
+            var drawer = KTDrawer.getInstance(drawerEl);
+            if (drawer) drawer.hide();
+        }
     });
 </script>
 @endpush
