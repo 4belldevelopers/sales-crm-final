@@ -20,6 +20,25 @@ Last updated: 2026-10-22 (Super Admin Companies Page UI Redesign, 100% CQRS Read
 - **Test coverage:** `TenantIsolationTest`, `BenchToJobAppTrackerPipelineContractTest`, `BenchTalentRequestPipelineContractTest`, `SuperAdminCompanyLoadTest`, `SuperAdminSubscriptionLoadTest`, `SuperAdminDashboardLoadTest` (100% green).
 - **V2_login blocking-scenarios architecture:** session-epoch pattern + Reverb `UserAccountSuspended` event + `SyncUserStatusAction` (cross-tenant-safe) + `BlockCompanyAction` (static bulk helper) + `block_log` audit table + drop all 20 `refresh:true` ES sites + grep-lint guard. See [docs/V2_login/BLOCKING_SCENARIOS_AUDIT.md](../docs/V2_login/BLOCKING_SCENARIOS_AUDIT.md), [ADR 0007](../docs/adr/0007-blocking-scenarios-architecture.md). Code not yet landed.
 
+- *2026-10-26* — **Client Drawer Sub-Tabs Box Height & Symmetrical Vertical Padding Calibration (100% COMPLETED & VERIFIED)**:
+  - **User Feedback & Problem**:
+    - Tab buttons in the sub-tabs card were touching the bottom border of `.cd-drawer-tabs-card` (see screenshot verification).
+    - Top and bottom vertical breathing space was asymmetric (`padding: 5px 8px !important;`), resulting in cramped 29px buttons touching the card edge.
+  - **Architectural & Geometry Fix**:
+    1. **Card Container Height & Centering (`.cd-drawer-tabs-card`)**:
+       - Increased vertical padding to balanced `8px 10px !important;`.
+       - Enforced `min-height: 48px !important; display: flex !important; align-items: center !important;`.
+       - All 4 corners, borders (`#e2e8f0`), and soft box-shadows retain full integrity with 8px balanced vertical breathing room on both top and bottom.
+    2. **Tab Button Height & Internal Proportions (`.cd-tab-pill-btn`)**:
+       - Upgraded tab pill height to `32px !important;` (up from 29px) with `padding: 0 9.5px !important; line-height: 1 !important; box-sizing: border-box !important;`.
+       - Centered all flex elements: `display: inline-flex !important; align-items: center !important; justify-content: center !important;`.
+       - Badges scaled to `height: 16px !important; min-width: 17px !important; line-height: 16px !important; padding: 0 4.5px !important;`.
+       - Container and item list: `.cd-drawer-tabs-list` and `.cd-drawer-tabs-list .nav-item` now have matched `height: 32px !important; display: flex !important; align-items: center !important; gap: 5px !important;`.
+    3. **15.6" Screen Fit Preserved**:
+       - Total width across all 8 tabs is **889px**, maintaining over **200px of breathing room** on 1366×768 screens (which provide ~1092px in an 80% drawer).
+  - **Scope**: Applied identically across `show.blade.php`, `dviewMore.blade.php`, and `requestviewmore.blade.php`.
+  - **Verification**: `php -l` passed clean with 0 errors across all 3 view templates; `php artisan view:clear` executed successfully.
+
 - *2026-10-26* — **Client Drawer Sub-Tabs: 15.6" Screen Responsive Fit & Complete Box Visibility (100% COMPLETED & VERIFIED)**:
   - **User Feedback & Problem**:
     - On standard 15.6" screens (`1366×768` and `1920×1080` at 125% OS scaling), the 8 drawer sub-tabs overflowed horizontally, cutting off the last tab ("Performance" as `Perform...`) on the right.
