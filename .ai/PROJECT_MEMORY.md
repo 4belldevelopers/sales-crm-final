@@ -20,6 +20,34 @@ Last updated: 2026-10-22 (Super Admin Companies Page UI Redesign, 100% CQRS Read
 - **Test coverage:** `TenantIsolationTest`, `BenchToJobAppTrackerPipelineContractTest`, `BenchTalentRequestPipelineContractTest`, `SuperAdminCompanyLoadTest`, `SuperAdminSubscriptionLoadTest`, `SuperAdminDashboardLoadTest` (100% green).
 - **V2_login blocking-scenarios architecture:** session-epoch pattern + Reverb `UserAccountSuspended` event + `SyncUserStatusAction` (cross-tenant-safe) + `BlockCompanyAction` (static bulk helper) + `block_log` audit table + drop all 20 `refresh:true` ES sites + grep-lint guard. See [docs/V2_login/BLOCKING_SCENARIOS_AUDIT.md](../docs/V2_login/BLOCKING_SCENARIOS_AUDIT.md), [ADR 0007](../docs/adr/0007-blocking-scenarios-architecture.md). Code not yet landed.
 
+- *2026-10-26* — **Client Drawer Top Header Bar: Clean Action Toolbar Alignment (100% COMPLETED & VERIFIED)**:
+  - **User Feedback & Request**:
+    - Completely eliminate duplicate company title, `#ID`, and scope badge from the top sticky header toolbar card (`.cd-top-bar`).
+    - Shift all action buttons (`Follow Up`, `Edit Client`, `Add Contact`, `Add Job`) to the LEFT side of the top header toolbar card.
+    - Keep the close drawer button (`[ ✕ ]`) pinned to the far right.
+  - **Implementation**:
+    - Removed `.cd-top-bar-left` containing redundant company name, ID pill, and scope badge (which are already prominently featured in the streamlined Hero card directly below).
+    - Shifted `.cd-top-actions` (`Follow Up`, `Edit Client`, `Add Contact`, `Add Job`) to the left of `.cd-top-bar`.
+    - Pinned `.cd-top-close-wrap` with `#kt_activitiesClient_close_btn` on the far right.
+    - Applied across `show.blade.php`, `dviewMore.blade.php`, and `requestviewmore.blade.php`.
+  - **Verification**: `php -l` passed clean on all 3 templates; `php artisan view:clear` passed; programmatic render test confirmed complete removal of duplicate company name/badges from top bar, clean placement of all 4 action buttons on the left, and close button on the right.
+
+- *2026-10-26* — **Client Information Address & Multi-Location Enterprise Card Architecture (100% COMPLETED & VERIFIED)**:
+  - **User Feedback & Problem**:
+    - Address and location badges in the Client Information card had flex layout squishing: `HQ` and `Branch 1` broke into awkward vertical letters (`BRANCH \n 1`), while long city/state names collided with country badges on the same flex row.
+    - User requested: Fix address design issues, clearly label locations as **"Location 1"**, **"Location 2"**, etc., and upgrade the visual presentation to god-level enterprise standards.
+  - **Enterprise Redesign Architecture**:
+    - **Numbered Hierarchy**: Distinct, unconstrained badges: `[ 📍 Location 1 ]` with solid `[ HQ ]` tag for primary office, and `[ 📍 Location 2 ]`, `[ 📍 Location 3 ]`, etc. for branch facilities (`white-space: nowrap !important; flex-shrink: 0 !important;`).
+    - **Discrete Country Pill**: Clean white badge with subtle slate border and globe icon positioned on the far right of the card header (`.cd-loc-header`), eliminating all horizontal collision with city/state text.
+    - **Dedicated City & State Row**: City and State (`.cd-loc-city-line`) now render on their own full-width row (`font-size: 12px; font-weight: 700; color: #0f172a`), allowing long locations like `Courbevoie, Île-de-France` to render naturally with zero awkward wrapping.
+    - **Tactile Street & Postal Lines**: Full street addresses render with a top-aligned red map pin (`<i class="fas fa-map-pin text-danger"></i>`), and postal codes render in clean metadata chips (`.cd-loc-meta-chip`).
+    - **Card Styling & Accent Borders**:
+      - Location 1 / Primary: `#f8fbff` background with `border-left: 3.5px solid #2563eb` and `#dbeafe` border.
+      - Location 2+ / Branches: `#ffffff` background with `border-left: 3.5px solid #94a3b8` and `#e2e8f0` border.
+    - **Label Column Breathing Room**: Optimized `.cd-vinfo-key` flex basis from `145px` to `132px`, freeing up 13px more width for address and metadata content on 15.6" screens (`1366×768` and `1920×1080`).
+  - **Scope**: Applied identically across all 3 client drawer templates: `resources/views/service_company/client/show.blade.php`, `resources/views/service_company/client/dviewMore.blade.php`, and `resources/views/service_company/client/requestviewmore.blade.php`.
+  - **Verification**: `php -l` passed clean (0 errors) on all 3 views; `php artisan view:clear` passed; rendering simulation confirmed clean generation of `Location 1`, `HQ`, `Location 2`, country pills, city/state lines, and address markers without clipping.
+
 - *2026-10-26* — **Client Drawer Hero Section: Streamlined Executive Minimalist Redesign (100% COMPLETED & VERIFIED)**:
   - **Scope**: Internal Client Drawer (`show.blade.php`), Direct Client Drawer (`dviewMore.blade.php`), Direct Client Mandate Drawer (`requestviewmore.blade.php`).
   - **Design Specification & Duplication Elimination**:
