@@ -1266,17 +1266,20 @@ use Carbon\Carbon;
             background: #ffffff !important;
             border: 1px solid #e2e8f0 !important;
             border-radius: 10px !important;
-            padding: 5px 8px !important;
+            padding: 8px 10px !important;
             margin: 0 14px 12px 14px !important;
             box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04) !important;
             width: auto !important;
             box-sizing: border-box !important;
             overflow: hidden !important;
+            display: flex !important;
+            align-items: center !important;
+            min-height: 48px !important;
           }
           .cd-drawer-tabs-list {
             display: flex !important;
             align-items: center !important;
-            gap: 4px !important;
+            gap: 5px !important;
             overflow-x: auto !important;
             overflow-y: hidden !important;
             -webkit-overflow-scrolling: touch !important;
@@ -1287,6 +1290,7 @@ use Carbon\Carbon;
             margin: 0 !important;
             flex-wrap: nowrap !important;
             width: 100% !important;
+            height: 32px !important;
           }
           .cd-drawer-tabs-list::-webkit-scrollbar {
             height: 3px !important;
@@ -1300,20 +1304,25 @@ use Carbon\Carbon;
           }
           .cd-drawer-tabs-list .nav-item {
             margin: 0 !important;
+            padding: 0 !important;
             flex-shrink: 0 !important;
+            display: flex !important;
+            align-items: center !important;
+            height: 32px !important;
           }
           .cd-tab-pill-btn {
             background: #f8fafc !important;
             border: 1px solid #e2e8f0 !important;
             border-radius: 7px !important;
-            padding: 5px 8.5px !important;
+            padding: 0 9.5px !important;
             font-size: 11px !important;
             font-weight: 600 !important;
             color: #475569 !important;
             display: inline-flex !important;
             align-items: center !important;
+            justify-content: center !important;
             gap: 5px !important;
-            height: 29px !important;
+            height: 32px !important;
             text-decoration: none !important;
             box-shadow: 0 1px 2px rgba(15, 23, 42, 0.02) !important;
             transition: all 0.15s ease-in-out !important;
@@ -1321,6 +1330,7 @@ use Carbon\Carbon;
             white-space: nowrap !important;
             flex-shrink: 0 !important;
             line-height: 1 !important;
+            box-sizing: border-box !important;
           }
           .cd-tab-pill-btn i {
             font-size: 11px !important;
@@ -1349,14 +1359,14 @@ use Carbon\Carbon;
             align-items: center !important;
             justify-content: center !important;
             min-width: 17px !important;
-            height: 15px !important;
-            padding: 0 4px !important;
+            height: 16px !important;
+            padding: 0 4.5px !important;
             border-radius: 999px !important;
             font-size: 9.5px !important;
             font-weight: 700 !important;
             background: #eff6ff !important;
             color: #2563eb !important;
-            line-height: 1 !important;
+            line-height: 16px !important;
           }
           .cd-tab-pill-btn.active .cd-tab-pill-badge {
             background: rgba(255, 255, 255, 0.28) !important;
@@ -1364,7 +1374,7 @@ use Carbon\Carbon;
           }
           @media (max-width: 1200px) {
             .cd-tab-pill-btn {
-              padding: 4.5px 7px !important;
+              padding: 0 7.5px !important;
               font-size: 10.5px !important;
               gap: 4px !important;
             }
