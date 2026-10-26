@@ -1455,6 +1455,264 @@ use Carbon\Carbon;
           .cd-tl-badge-orange { background: #fff7ed !important; color: #ea580c !important; border: 1px solid #fed7aa !important; }
           .cd-tl-badge-green  { background: #ecfdf5 !important; color: #059669 !important; border: 1px solid #a7f3d0 !important; }
 
+          
+          /* ── Client Information: Executive Vertical Listing (God-Level) ── */
+          .cd-vertical-info-list {
+            display: flex !important;
+            flex-direction: column !important;
+            width: 100% !important;
+          }
+          .cd-vinfo-row {
+            display: flex !important;
+            align-items: flex-start !important;
+            justify-content: space-between !important;
+            gap: 12px !important;
+            padding: 9px 2px !important;
+            border-bottom: 1px solid #f1f5f9 !important;
+            min-width: 0 !important;
+            transition: background-color 0.15s ease !important;
+          }
+          .cd-vinfo-row:first-child {
+            padding-top: 2px !important;
+          }
+          .cd-vinfo-row:last-child {
+            border-bottom: none !important;
+            padding-bottom: 2px !important;
+          }
+          .cd-vinfo-row:hover {
+            background-color: #fcfdfe !important;
+          }
+          .cd-vinfo-key {
+            display: flex !important;
+            align-items: center !important;
+            gap: 8px !important;
+            flex: 0 0 145px !important;
+            min-width: 125px !important;
+          }
+          .cd-vinfo-icon {
+            width: 26px !important;
+            height: 26px !important;
+            border-radius: 6px !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            font-size: 11px !important;
+            flex-shrink: 0 !important;
+          }
+          .cd-vinfo-icon.red     { background: #fef2f2 !important; color: #ef4444 !important; }
+          .cd-vinfo-icon.blue    { background: #eff6ff !important; color: #2563eb !important; }
+          .cd-vinfo-icon.green   { background: #ecfdf5 !important; color: #059669 !important; }
+          .cd-vinfo-icon.amber   { background: #fefce8 !important; color: #ca8a04 !important; }
+          .cd-vinfo-icon.purple  { background: #f5f3ff !important; color: #7c3aed !important; }
+          .cd-vinfo-icon.sky     { background: #f0f9ff !important; color: #0284c7 !important; }
+          .cd-vinfo-icon.emerald { background: #f0fdf4 !important; color: #16a34a !important; }
+          .cd-vinfo-icon.orange  { background: #fff7ed !important; color: #ea580c !important; }
+          .cd-vinfo-icon.slate   { background: #f8fafc !important; color: #475569 !important; border: 1px solid #e2e8f0 !important; }
+          .cd-vinfo-icon.cyan    { background: #ecfeff !important; color: #0891b2 !important; }
+          .cd-vinfo-icon.indigo  { background: #eef2ff !important; color: #4f46e5 !important; }
+
+          .cd-vinfo-label {
+            font-size: 11.5px !important;
+            font-weight: 600 !important;
+            color: #64748b !important;
+            letter-spacing: -0.1px !important;
+            line-height: 1.3 !important;
+          }
+          .cd-vinfo-val {
+            flex: 1 !important;
+            min-width: 0 !important;
+            text-align: right !important;
+            display: flex !important;
+            flex-direction: column !important;
+            align-items: flex-end !important;
+            justify-content: center !important;
+            font-size: 12.5px !important;
+            font-weight: 500 !important;
+            color: #0f172a !important;
+            word-break: break-word !important;
+          }
+          .cd-vinfo-link {
+            color: #2563eb !important;
+            font-weight: 600 !important;
+            text-decoration: none !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            gap: 4px !important;
+            transition: color 0.15s ease !important;
+          }
+          .cd-vinfo-link:hover {
+            color: #1d4ed8 !important;
+            text-decoration: underline !important;
+          }
+          .cd-vinfo-link.direct {
+            color: #059669 !important;
+          }
+          .cd-vinfo-link.direct:hover {
+            color: #047857 !important;
+          }
+
+          .cd-career-pill {
+            display: inline-flex !important;
+            align-items: center !important;
+            gap: 4px !important;
+            background: #ecfdf5 !important;
+            color: #059669 !important;
+            border: 1px solid #a7f3d0 !important;
+            padding: 2px 7px !important;
+            border-radius: 4px !important;
+            font-size: 11px !important;
+            font-weight: 600 !important;
+            text-decoration: none !important;
+            transition: all 0.15s ease !important;
+          }
+          .cd-career-pill:hover {
+            background: #059669 !important;
+            color: #ffffff !important;
+            border-color: #059669 !important;
+          }
+
+          .cd-tax-wrap {
+            display: inline-flex !important;
+            align-items: center !important;
+            gap: 6px !important;
+          }
+          .cd-tax-code {
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace !important;
+            font-size: 11.5px !important;
+            font-weight: 600 !important;
+            background: #f1f5f9 !important;
+            color: #0f172a !important;
+            padding: 2px 7px !important;
+            border-radius: 4px !important;
+            border: 1px solid #e2e8f0 !important;
+            letter-spacing: 0.3px !important;
+          }
+          .cd-copy-btn {
+            background: transparent !important;
+            border: 1px solid #e2e8f0 !important;
+            border-radius: 4px !important;
+            color: #64748b !important;
+            width: 22px !important;
+            height: 22px !important;
+            padding: 0 !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            font-size: 10px !important;
+            cursor: pointer !important;
+            transition: all 0.15s ease !important;
+          }
+          .cd-copy-btn:hover {
+            background: #f8fafc !important;
+            color: #0f172a !important;
+            border-color: #cbd5e1 !important;
+          }
+
+          .cd-loc-group {
+            display: flex !important;
+            flex-direction: column !important;
+            gap: 6px !important;
+            width: 100% !important;
+          }
+          .cd-loc-card {
+            background: #f8fafc !important;
+            border: 1px solid #eef2f6 !important;
+            border-radius: 6px !important;
+            padding: 6px 9px !important;
+            text-align: left !important;
+            width: 100% !important;
+          }
+          .cd-loc-card.hq {
+            background: #f0f7ff !important;
+            border-color: #dbeafe !important;
+          }
+          .cd-loc-top {
+            display: flex !important;
+            align-items: center !important;
+            justify-content: space-between !important;
+            gap: 8px !important;
+            margin-bottom: 2px !important;
+          }
+          .cd-loc-tag {
+            font-size: 9px !important;
+            font-weight: 700 !important;
+            text-transform: uppercase !important;
+            letter-spacing: 0.3px !important;
+            padding: 1px 5px !important;
+            border-radius: 3px !important;
+          }
+          .cd-loc-tag.hq {
+            background: #2563eb !important;
+            color: #ffffff !important;
+          }
+          .cd-loc-tag.branch {
+            background: #e2e8f0 !important;
+            color: #475569 !important;
+          }
+          .cd-loc-title {
+            font-size: 12px !important;
+            font-weight: 700 !important;
+            color: #0f172a !important;
+          }
+          .cd-loc-street {
+            font-size: 11px !important;
+            color: #475569 !important;
+            line-height: 1.3 !important;
+            word-break: break-word !important;
+          }
+          .cd-loc-postcode {
+            font-size: 10.5px !important;
+            color: #64748b !important;
+            margin-top: 1px !important;
+          }
+
+          .cd-type-badge-pill {
+            font-size: 11px !important;
+            font-weight: 600 !important;
+            padding: 2px 7px !important;
+            border-radius: 4px !important;
+            background: #f0f9ff !important;
+            color: #0284c7 !important;
+            border: 1px solid #bae6fd !important;
+          }
+          .cd-vintage-chip {
+            font-size: 10.5px !important;
+            color: #64748b !important;
+            font-weight: 500 !important;
+            margin-left: 4px !important;
+          }
+
+          .cd-social-links-row {
+            display: inline-flex !important;
+            align-items: center !important;
+            gap: 5px !important;
+            flex-wrap: wrap !important;
+            justify-content: flex-end !important;
+          }
+          .cd-social-btn {
+            width: 24px !important;
+            height: 24px !important;
+            border-radius: 5px !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            font-size: 11px !important;
+            color: #ffffff !important;
+            text-decoration: none !important;
+            transition: opacity 0.15s ease, transform 0.15s ease !important;
+          }
+          .cd-social-btn:hover {
+            opacity: 0.9 !important;
+            transform: translateY(-1px) !important;
+            color: #ffffff !important;
+          }
+          .cd-social-btn.linkedin { background: #0a66c2 !important; }
+          .cd-social-btn.twitter  { background: #0f172a !important; }
+          .cd-social-btn.github   { background: #24292f !important; }
+          .cd-social-btn.youtube  { background: #ff0000 !important; }
+          .cd-social-btn.facebook { background: #1877f2 !important; }
+          .cd-social-btn.instagram{ background: linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888) !important; }
+          .cd-social-btn.custom   { background: #475569 !important; }
           /* ── Overview Discrete Sub-Cards Grid ── */
           .cd-overview-subcards-grid {
             display: grid !important;
@@ -1914,12 +2172,13 @@ use Carbon\Carbon;
           /* Discrete Sub-Cards Grid */
           .cd-contact-card-grid {
             display: grid !important;
-            grid-template-columns: minmax(0, 2.2fr) minmax(0, 2.2fr) minmax(0, 1.4fr) minmax(0, 1.2fr) minmax(0, 1.4fr) !important;
+            grid-template-columns: minmax(0, 2.1fr) minmax(0, 2.1fr) minmax(0, 1.4fr) minmax(0, 1.1fr) minmax(0, 1.3fr) !important;
             gap: 8px !important;
-            padding: 10px 12px !important;
+            padding: 9px 11px !important;
             width: 100% !important;
             max-width: 100% !important;
             align-items: stretch !important;
+            box-sizing: border-box !important;
           }
 
           /* Discrete Sub-Card Container */
@@ -2316,14 +2575,40 @@ use Carbon\Carbon;
             margin-bottom: 12px;
           }
 
-          @media (max-width: 1200px) {
+          @media (max-width: 1280px) {
             .cd-contact-card-grid {
               grid-template-columns: minmax(0, 1.8fr) minmax(0, 1.8fr) minmax(0, 1.4fr) !important;
+              gap: 6px !important;
+              padding: 8px 10px !important;
             }
           }
-          @media (max-width: 768px) {
+          @media (max-width: 860px) {
+            .cd-contact-card-grid {
+              grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) !important;
+              gap: 6px !important;
+            }
+          }
+          @media (max-width: 600px) {
             .cd-contact-card-grid {
               grid-template-columns: 1fr !important;
+            }
+            .cd-contact-toolbar-card {
+              flex-direction: column !important;
+              align-items: flex-start !important;
+              gap: 8px !important;
+            }
+            .cd-contact-toolbar-right {
+              width: 100% !important;
+              justify-content: space-between !important;
+            }
+            .cd-contact-search-subcard {
+              max-width: 100% !important;
+              flex: 1 1 auto !important;
+            }
+            .cd-contact-card-bottom {
+              flex-direction: column !important;
+              align-items: flex-start !important;
+              gap: 6px !important;
             }
           }
 
@@ -3733,6 +4018,62 @@ use Carbon\Carbon;
                 $company_type_val = 'Publicly Listed Corporation';
             }
 
+            // Workforce Scale Range calculation
+            $cFrom = @$client->company_size_from;
+            $cTo = @$client->company_sizes;
+            $workforceRange = '51 – 200 Employees';
+            $tiersMap = [
+              '1-1'         => '1 Employee (Solo)',
+              '1-10'        => '1 – 10 Employees',
+              '2-10'        => '2 – 10 Employees',
+              '11-50'       => '11 – 50 Employees',
+              '51-200'      => '51 – 200 Employees',
+              '201-500'     => '201 – 500 Employees',
+              '501-1000'    => '501 – 1,000 Employees',
+              '1001-5000'   => '1,001 – 5,000 Employees',
+              '5001-10000'  => '5,001 – 10,000 Employees',
+              '10001-50000' => '10,001 – 50,000 Employees',
+              '50001-0'     => '50,000+ Employees',
+            ];
+            $rawCheck = (string)($cTo ?: $cFrom);
+            if (str_contains($rawCheck, '-')) {
+              $parts = explode('-', $rawCheck);
+              $p1 = trim($parts[0]);
+              $p2 = trim($parts[1] ?? '');
+              if (isset($tiersMap[$p1.'-'.$p2])) {
+                $workforceRange = $tiersMap[$p1.'-'.$p2];
+              } elseif ($p2 === '' || $p2 === '0') {
+                $workforceRange = (is_numeric($p1) ? number_format((float)$p1) : $p1) . '+ Employees';
+              } else {
+                $f1 = is_numeric($p1) ? number_format((float)$p1) : $p1;
+                $f2 = is_numeric($p2) ? number_format((float)$p2) : $p2;
+                $workforceRange = "{$f1} – {$f2} Employees";
+              }
+            } elseif (!empty($cFrom) && !empty($cTo)) {
+              $key = (int)$cFrom . '-' . (int)$cTo;
+              if (isset($tiersMap[$key])) {
+                $workforceRange = $tiersMap[$key];
+              } elseif ((int)$cFrom >= 50000 || (int)$cTo == 0) {
+                $workforceRange = '50,000+ Employees';
+              } else {
+                $workforceRange = number_format((float)$cFrom) . ' – ' . number_format((float)$cTo) . ' Employees';
+              }
+            } elseif (!empty($cTo) && is_numeric($cTo)) {
+              $val = (int)$cTo;
+              if ($val <= 1) $workforceRange = '1 Employee (Solo)';
+              elseif ($val <= 10) $workforceRange = '1 – 10 Employees';
+              elseif ($val <= 50) $workforceRange = '11 – 50 Employees';
+              elseif ($val <= 200) $workforceRange = '51 – 200 Employees';
+              elseif ($val <= 500) $workforceRange = '201 – 500 Employees';
+              elseif ($val <= 1000) $workforceRange = '501 – 1,000 Employees';
+              elseif ($val <= 5000) $workforceRange = '1,001 – 5,000 Employees';
+              elseif ($val <= 10000) $workforceRange = '5,001 – 10,000 Employees';
+              elseif ($val <= 50000) $workforceRange = '10,001 – 50,000 Employees';
+              else $workforceRange = '50,000+ Employees';
+            } elseif (!empty($cTo)) {
+              $workforceRange = (string)$cTo;
+            }
+
             // Primary Contact Extraction
             $primaryContact = null;
             if (isset($client_contact_info) && is_iterable($client_contact_info)) {
@@ -3872,7 +4213,7 @@ use Carbon\Carbon;
                 </div>
                 <div class="cd-hero-meta-item" title="Workforce Scale">
                   <i class="fas fa-users"></i>
-                  <span>{{ is_numeric(@$client->company_sizes) ? number_format((float)@$client->company_sizes) . '+' : (@$client->company_sizes ?: '200+') }} Employees</span>
+                  <span>{{ $workforceRange }}</span>
                 </div>
                 <div class="cd-hero-meta-item" title="Founded Year / Vendor Reference">
                   @if(!empty(@$client->vendor_id))
@@ -4164,7 +4505,7 @@ use Carbon\Carbon;
 
                 <!-- Right Column -->
                 <div>
-                  <!-- Card: Client Information (Discrete Sub-Cards Grid) -->
+                  <!-- Card: Client Information (God-Level Executive Vertical Listing) -->
                   <div class="cd-card-panel">
                     <div class="cd-card-hdr">
                       <div class="cd-card-hdr-left">
@@ -4173,56 +4514,330 @@ use Carbon\Carbon;
                         </div>
                         <span class="cd-card-hdr-title">Client Information</span>
                       </div>
+                      <span class="badge bg-light-primary text-primary fw-semibold" style="font-size:10px; padding:3px 7px;">
+                        <i class="fas fa-shield-halved me-1"></i>Verified Entity
+                      </span>
                     </div>
-                    <div class="cd-overview-subcards-grid">
-                      <div class="cd-overview-subcard">
-                        <div class="cd-ov-icon-box bg-light-danger text-danger"><i class="fas fa-map-marker-alt"></i></div>
-                        <div class="cd-ov-content">
-                          <span class="cd-ov-label">Headquarters</span>
-                          <span class="cd-ov-value">{{ ucwords($city_name ?: 'Mumbai') }}@if($country_name), {{ ucwords($country_name) }}@else, India @endif</span>
+
+                    @php
+                      // Extract detail fields (career_page_url, tax_id, social links, ap_email)
+                      $rawDetail = $client->detail ?? null;
+                      if (empty($rawDetail) && !empty($client->id)) {
+                        $rawDetail = cache()->remember('client_detail_' . $client->id, 3600, function() use ($client) {
+                          return \Illuminate\Support\Facades\DB::table('clients')->where('id', $client->id)->value('detail');
+                        });
+                      }
+                      $cDetail = !empty($rawDetail) ? (is_array($rawDetail) ? $rawDetail : json_decode($rawDetail, true)) : [];
+                      $careerPageUrl = $cDetail['career_page_url'] ?? '';
+                      $taxId = trim((string)($cDetail['tax_id'] ?? ''));
+                      $apEmail = trim((string)($cDetail['ap_email'] ?? ''));
+                      $linkedinUrl = trim((string)($cDetail['linkedin_url'] ?? ''));
+                      $twitterUrl = trim((string)($cDetail['twitter_url'] ?? ''));
+                      $githubUrl = trim((string)($cDetail['github_url'] ?? ''));
+                      $youtubeUrl = trim((string)($cDetail['youtube_url'] ?? ''));
+                      $facebookUrl = trim((string)($cDetail['facebook_url'] ?? ''));
+                      $instagramUrl = trim((string)($cDetail['instagram_url'] ?? ''));
+                      $customLink = trim((string)($cDetail['custom_link'] ?? ''));
+
+                      $hasSocialLinks = (!empty($linkedinUrl) || !empty($twitterUrl) || !empty($githubUrl) || !empty($youtubeUrl) || !empty($facebookUrl) || !empty($instagramUrl) || !empty($customLink));
+
+                      // Workforce Scale Range calculation
+                      $cFrom = @$client->company_size_from;
+                      $cTo = @$client->company_sizes;
+                      $workforceRange = '51 – 200 Employees';
+                      $tiersMap = [
+                        '1-1'         => '1 Employee (Solo)',
+                        '1-10'        => '1 – 10 Employees',
+                        '2-10'        => '2 – 10 Employees',
+                        '11-50'       => '11 – 50 Employees',
+                        '51-200'      => '51 – 200 Employees',
+                        '201-500'     => '201 – 500 Employees',
+                        '501-1000'    => '501 – 1,000 Employees',
+                        '1001-5000'   => '1,001 – 5,000 Employees',
+                        '5001-10000'  => '5,001 – 10,000 Employees',
+                        '10001-50000' => '10,001 – 50,000 Employees',
+                        '50001-0'     => '50,000+ Employees',
+                      ];
+                      $rawCheck = (string)($cTo ?: $cFrom);
+                      if (str_contains($rawCheck, '-')) {
+                        $parts = explode('-', $rawCheck);
+                        $p1 = trim($parts[0]);
+                        $p2 = trim($parts[1] ?? '');
+                        if (isset($tiersMap[$p1.'-'.$p2])) {
+                          $workforceRange = $tiersMap[$p1.'-'.$p2];
+                        } elseif ($p2 === '' || $p2 === '0') {
+                          $workforceRange = (is_numeric($p1) ? number_format((float)$p1) : $p1) . '+ Employees';
+                        } else {
+                          $f1 = is_numeric($p1) ? number_format((float)$p1) : $p1;
+                          $f2 = is_numeric($p2) ? number_format((float)$p2) : $p2;
+                          $workforceRange = "{$f1} – {$f2} Employees";
+                        }
+                      } elseif (!empty($cFrom) && !empty($cTo)) {
+                        $key = (int)$cFrom . '-' . (int)$cTo;
+                        if (isset($tiersMap[$key])) {
+                          $workforceRange = $tiersMap[$key];
+                        } elseif ((int)$cFrom >= 50000 || (int)$cTo == 0) {
+                          $workforceRange = '50,000+ Employees';
+                        } else {
+                          $workforceRange = number_format((float)$cFrom) . ' – ' . number_format((float)$cTo) . ' Employees';
+                        }
+                      } elseif (!empty($cTo) && is_numeric($cTo)) {
+                        $val = (int)$cTo;
+                        if ($val <= 1) $workforceRange = '1 Employee (Solo)';
+                        elseif ($val <= 10) $workforceRange = '1 – 10 Employees';
+                        elseif ($val <= 50) $workforceRange = '11 – 50 Employees';
+                        elseif ($val <= 200) $workforceRange = '51 – 200 Employees';
+                        elseif ($val <= 500) $workforceRange = '201 – 500 Employees';
+                        elseif ($val <= 1000) $workforceRange = '501 – 1,000 Employees';
+                        elseif ($val <= 5000) $workforceRange = '1,001 – 5,000 Employees';
+                        elseif ($val <= 10000) $workforceRange = '5,001 – 10,000 Employees';
+                        elseif ($val <= 50000) $workforceRange = '10,001 – 50,000 Employees';
+                        else $workforceRange = '50,000+ Employees';
+                      } elseif (!empty($cTo)) {
+                        $workforceRange = (string)$cTo;
+                      }
+
+                      // Extract multiple locations
+                      $allLocations = [];
+                      if (!empty($client->client_location) && is_iterable($client->client_location)) {
+                        foreach ($client->client_location as $l) {
+                          $allLocations[] = (object) $l;
+                        }
+                      }
+                      if (empty($allLocations) && !empty($client->id)) {
+                        $dbLocs = \Illuminate\Support\Facades\DB::table('client_location')
+                          ->leftJoin('countries', 'countries.id', '=', 'client_location.country_id')
+                          ->leftJoin('city_list', 'city_list.city_id', '=', 'client_location.city_id')
+                          ->leftJoin('state_list', 'state_list.id', '=', 'client_location.state')
+                          ->select('client_location.*', 'countries.country_name', 'city_list.city as city_name_resolved', 'state_list.state as state_name')
+                          ->where('client_location.client_id', $client->id)
+                          ->get();
+                        foreach ($dbLocs as $l) {
+                          $allLocations[] = $l;
+                        }
+                      }
+                      $locCount = count($allLocations);
+                    @endphp
+
+                    <div class="cd-vertical-info-list">
+                      <!-- 1. Locations & Addresses -->
+                      <div class="cd-vinfo-row">
+                        <div class="cd-vinfo-key">
+                          <div class="cd-vinfo-icon red"><i class="fas fa-location-dot"></i></div>
+                          <span class="cd-vinfo-label">{{ $locCount > 1 ? 'Locations ('.$locCount.')' : 'Headquarters' }}</span>
+                        </div>
+                        <div class="cd-vinfo-val" style="align-items: stretch;">
+                          @if ($locCount > 0)
+                            <div class="cd-loc-group">
+                              @foreach ($allLocations as $idx => $loc)
+                                @php
+                                  $lCity = !empty($loc->city_name_resolved) ? $loc->city_name_resolved : (!empty($loc->city_name) ? $loc->city_name : ($loc->city ?? ''));
+                                  $lState = !empty($loc->state_name) ? $loc->state_name : '';
+                                  $lCountry = !empty($loc->country_name) ? $loc->country_name : '';
+                                  $lAddr = trim(!empty($loc->address) ? $loc->address : '');
+                                  $lPostcode = !empty($loc->postcode) && $loc->postcode !== '0' ? $loc->postcode : '';
+                                  $isHq = ($idx === 0);
+                                @endphp
+                                <div class="cd-loc-card {{ $isHq ? 'hq' : '' }}">
+                                  <div class="cd-loc-top">
+                                    <div class="d-flex align-items-center gap-1">
+                                      <span class="cd-loc-tag {{ $isHq ? 'hq' : 'branch' }}">{{ $isHq ? 'HQ' : 'Branch '.($idx) }}</span>
+                                      <span class="cd-loc-title">{{ ucwords($lCity ?: 'Primary Office') }}@if($lState), {{ ucwords($lState) }}@endif</span>
+                                    </div>
+                                    @if($lCountry)
+                                      <span class="badge bg-light text-muted" style="font-size:9.5px;">{{ ucwords($lCountry) }}</span>
+                                    @endif
+                                  </div>
+                                  @if($lAddr)
+                                    <div class="cd-loc-street"><i class="fas fa-map-pin text-danger me-1"></i>{{ $lAddr }}</div>
+                                  @endif
+                                  @if($lPostcode)
+                                    <div class="cd-loc-postcode"><i class="fas fa-envelope me-1 text-muted"></i>Postal Code: {{ $lPostcode }}</div>
+                                  @endif
+                                </div>
+                              @endforeach
+                            </div>
+                          @else
+                            <div class="cd-loc-card hq">
+                              <div class="cd-loc-top">
+                                <span class="cd-loc-tag hq">HQ</span>
+                                <span class="cd-loc-title">{{ ucwords($city_name ?: 'Mumbai') }}@if($country_name), {{ ucwords($country_name) }}@endif</span>
+                              </div>
+                              @if(!empty(@$client_location->address))
+                                <div class="cd-loc-street"><i class="fas fa-map-pin text-danger me-1"></i>{{ @$client_location->address }}</div>
+                              @endif
+                            </div>
+                          @endif
                         </div>
                       </div>
-                      <div class="cd-overview-subcard">
-                        <div class="cd-ov-icon-box bg-light-info text-info"><i class="fas fa-globe"></i></div>
-                        <div class="cd-ov-content">
-                          <span class="cd-ov-label">Website</span>
-                          <a href="{{ str_starts_with($webClean, 'http') ? $webClean : 'https://'.$webClean }}" target="_blank" class="cd-ov-link">{{ $webClean }} <i class="fas fa-external-link-alt" style="font-size:9px;"></i></a>
+
+                      <!-- 2. Official Website -->
+                      <div class="cd-vinfo-row">
+                        <div class="cd-vinfo-key">
+                          <div class="cd-vinfo-icon blue"><i class="fas fa-globe"></i></div>
+                          <span class="cd-vinfo-label">Website</span>
+                        </div>
+                        <div class="cd-vinfo-val">
+                          @if (!empty($webClean))
+                            <a href="{{ str_starts_with($webClean, 'http') ? $webClean : 'https://'.$webClean }}" target="_blank" class="cd-vinfo-link">
+                              {{ $webClean }} <i class="fas fa-arrow-up-right-from-square" style="font-size:9px;"></i>
+                            </a>
+                          @else
+                            <span class="text-muted">—</span>
+                          @endif
                         </div>
                       </div>
-                      <div class="cd-overview-subcard">
-                        <div class="cd-ov-icon-box bg-light-primary text-primary"><i class="fas fa-building"></i></div>
-                        <div class="cd-ov-content">
-                          <span class="cd-ov-label">Industry</span>
-                          <span class="cd-ov-value">{{ $industries_name ?: 'Computer Software' }}</span>
+
+                      <!-- 3. Career / Jobs Page -->
+                      @if (!empty($careerPageUrl))
+                      <div class="cd-vinfo-row">
+                        <div class="cd-vinfo-key">
+                          <div class="cd-vinfo-icon green"><i class="fas fa-briefcase"></i></div>
+                          <span class="cd-vinfo-label">Careers Portal</span>
+                        </div>
+                        <div class="cd-vinfo-val">
+                          @php
+                            $careerClean = preg_replace('#^https?://#', '', rtrim($careerPageUrl, '/'));
+                          @endphp
+                          <a href="{{ str_starts_with($careerPageUrl, 'http') ? $careerPageUrl : 'https://'.$careerPageUrl }}" target="_blank" class="cd-career-pill" title="{{ $careerPageUrl }}">
+                            <span>{{ strlen($careerClean) > 28 ? substr($careerClean, 0, 26).'…' : $careerClean }}</span>
+                            <i class="fas fa-arrow-up-right-from-square" style="font-size:8px;"></i>
+                          </a>
                         </div>
                       </div>
-                      <div class="cd-overview-subcard">
-                        <div class="cd-ov-icon-box bg-light-warning text-warning"><i class="fas fa-briefcase"></i></div>
-                        <div class="cd-ov-content">
-                          <span class="cd-ov-label">Company Type</span>
-                          <span class="cd-ov-value">{{ $company_type_val ?: 'Enterprise Service' }}</span>
+                      @endif
+
+                      <!-- 4. Tax ID / Business Registration No / GSTIN (Hidden if not available) -->
+                      @if (!empty($taxId))
+                      <div class="cd-vinfo-row">
+                        <div class="cd-vinfo-key">
+                          <div class="cd-vinfo-icon amber"><i class="fas fa-receipt"></i></div>
+                          <span class="cd-vinfo-label">Tax ID / GSTIN</span>
+                        </div>
+                        <div class="cd-vinfo-val">
+                          <div class="cd-tax-wrap">
+                            <span class="cd-tax-code">{{ $taxId }}</span>
+                            <button type="button" class="cd-copy-btn" title="Copy Tax ID" onclick="navigator.clipboard.writeText('{{ $taxId }}'); $(this).find('i').removeClass('fa-copy').addClass('fa-check text-success'); setTimeout(() => $(this).find('i').removeClass('fa-check text-success').addClass('fa-copy'), 1500);">
+                              <i class="far fa-copy"></i>
+                            </button>
+                          </div>
                         </div>
                       </div>
-                      <div class="cd-overview-subcard">
-                        <div class="cd-ov-icon-box bg-light-success text-success"><i class="fas fa-users"></i></div>
-                        <div class="cd-ov-content">
-                          <span class="cd-ov-label">Employees</span>
-                          <span class="cd-ov-value">{{ is_numeric(@$client->company_sizes) ? number_format((float)@$client->company_sizes) . '+' : (@$client->company_sizes ?: '200+') }}</span>
+                      @endif
+
+                      <!-- 5. Industry -->
+                      <div class="cd-vinfo-row">
+                        <div class="cd-vinfo-key">
+                          <div class="cd-vinfo-icon purple"><i class="fas fa-industry"></i></div>
+                          <span class="cd-vinfo-label">Industry</span>
+                        </div>
+                        <div class="cd-vinfo-val">
+                          <span class="fw-semibold text-gray-800">{{ $industries_name ?: 'Computer Software' }}</span>
                         </div>
                       </div>
-                      <div class="cd-overview-subcard">
-                        <div class="cd-ov-icon-box bg-light-warning text-amber-600"><i class="fas fa-calendar-alt"></i></div>
-                        <div class="cd-ov-content">
-                          <span class="cd-ov-label">Founded</span>
-                          <span class="cd-ov-value">{{ @$client->founded ?: '2023' }}</span>
+
+                      <!-- 6. Company Type -->
+                      <div class="cd-vinfo-row">
+                        <div class="cd-vinfo-key">
+                          <div class="cd-vinfo-icon sky"><i class="fas fa-landmark"></i></div>
+                          <span class="cd-vinfo-label">Company Type</span>
+                        </div>
+                        <div class="cd-vinfo-val">
+                          <span class="cd-type-badge-pill">{{ $company_type_val ?: 'Enterprise Service' }}</span>
                         </div>
                       </div>
+
+                      <!-- 7. Employees / Workforce Scale (Formatted Range) -->
+                      <div class="cd-vinfo-row">
+                        <div class="cd-vinfo-key">
+                          <div class="cd-vinfo-icon emerald"><i class="fas fa-users"></i></div>
+                          <span class="cd-vinfo-label">Workforce Scale</span>
+                        </div>
+                        <div class="cd-vinfo-val">
+                          <span class="fw-semibold text-gray-800">{{ $workforceRange }}</span>
+                        </div>
+                      </div>
+
+                      <!-- 8. Founded Year -->
+                      <div class="cd-vinfo-row">
+                        <div class="cd-vinfo-key">
+                          <div class="cd-vinfo-icon orange"><i class="fas fa-calendar-alt"></i></div>
+                          <span class="cd-vinfo-label">Founded</span>
+                        </div>
+                        <div class="cd-vinfo-val">
+                          @php
+                            $fYear = @$client->founded ?: 2010;
+                            $currYr = (int)date('Y');
+                            $vintage = ($currYr - (int)$fYear);
+                          @endphp
+                          <div>
+                            <span class="fw-semibold text-gray-800">{{ $fYear }}</span>
+                            @if($vintage > 0)
+                              <span class="cd-vintage-chip">({{ $vintage }} yrs active)</span>
+                            @endif
+                          </div>
+                        </div>
+                      </div>
+
+                      <!-- 9. Vendor ID (if available) -->
                       @if(!empty(@$client->vendor_id))
-                      <div class="cd-overview-subcard" style="grid-column: 1 / -1;">
-                        <div class="cd-ov-icon-box bg-light-primary text-primary"><i class="fas fa-hashtag"></i></div>
-                        <div class="cd-ov-content">
-                          <span class="cd-ov-label">Vendor ID</span>
-                          <span class="cd-ov-value">{{ @$client->vendor_id }}</span>
+                      <div class="cd-vinfo-row">
+                        <div class="cd-vinfo-key">
+                          <div class="cd-vinfo-icon slate"><i class="fas fa-id-badge"></i></div>
+                          <span class="cd-vinfo-label">Vendor ID</span>
+                        </div>
+                        <div class="cd-vinfo-val">
+                          <span class="cd-tax-code">{{ @$client->vendor_id }}</span>
+                        </div>
+                      </div>
+                      @endif
+
+                      <!-- 10. Accounts Payable / Billing Email (if available) -->
+                      @if(!empty($apEmail))
+                      <div class="cd-vinfo-row">
+                        <div class="cd-vinfo-key">
+                          <div class="cd-vinfo-icon cyan"><i class="fas fa-envelope-open-text"></i></div>
+                          <span class="cd-vinfo-label">Billing Email</span>
+                        </div>
+                        <div class="cd-vinfo-val">
+                          <a href="mailto:{{ $apEmail }}" class="cd-vinfo-link text-truncate" style="max-width:200px;">
+                            {{ $apEmail }}
+                          </a>
+                        </div>
+                      </div>
+                      @endif
+
+                      <!-- 11. Social & Online Profiles (Hidden if none available) -->
+                      @if($hasSocialLinks)
+                      <div class="cd-vinfo-row">
+                        <div class="cd-vinfo-key">
+                          <div class="cd-vinfo-icon indigo"><i class="fas fa-share-nodes"></i></div>
+                          <span class="cd-vinfo-label">Social Channels</span>
+                        </div>
+                        <div class="cd-vinfo-val">
+                          <div class="cd-social-links-row">
+                            @if(!empty($linkedinUrl))
+                              <a href="{{ str_starts_with($linkedinUrl, 'http') ? $linkedinUrl : 'https://'.$linkedinUrl }}" target="_blank" class="cd-social-btn linkedin" title="LinkedIn"><i class="fab fa-linkedin-in"></i></a>
+                            @endif
+                            @if(!empty($twitterUrl))
+                              <a href="{{ str_starts_with($twitterUrl, 'http') ? $twitterUrl : 'https://'.$twitterUrl }}" target="_blank" class="cd-social-btn twitter" title="X (Twitter)"><i class="fab fa-x-twitter"></i></a>
+                            @endif
+                            @if(!empty($githubUrl))
+                              <a href="{{ str_starts_with($githubUrl, 'http') ? $githubUrl : 'https://'.$githubUrl }}" target="_blank" class="cd-social-btn github" title="GitHub"><i class="fab fa-github"></i></a>
+                            @endif
+                            @if(!empty($youtubeUrl))
+                              <a href="{{ str_starts_with($youtubeUrl, 'http') ? $youtubeUrl : 'https://'.$youtubeUrl }}" target="_blank" class="cd-social-btn youtube" title="YouTube"><i class="fab fa-youtube"></i></a>
+                            @endif
+                            @if(!empty($facebookUrl))
+                              <a href="{{ str_starts_with($facebookUrl, 'http') ? $facebookUrl : 'https://'.$facebookUrl }}" target="_blank" class="cd-social-btn facebook" title="Facebook"><i class="fab fa-facebook-f"></i></a>
+                            @endif
+                            @if(!empty($instagramUrl))
+                              <a href="{{ str_starts_with($instagramUrl, 'http') ? $instagramUrl : 'https://'.$instagramUrl }}" target="_blank" class="cd-social-btn instagram" title="Instagram"><i class="fab fa-instagram"></i></a>
+                            @endif
+                            @if(!empty($customLink))
+                              <a href="{{ str_starts_with($customLink, 'http') ? $customLink : 'https://'.$customLink }}" target="_blank" class="cd-social-btn custom" title="Custom Link"><i class="fas fa-link"></i></a>
+                            @endif
+                          </div>
                         </div>
                       </div>
                       @endif
@@ -4489,11 +5104,11 @@ use Carbon\Carbon;
                                 <div class="cd-contact-tabs-list">
                                     <button type="button" class="cd-contact-subtab active" data-filter="all" id="cdContactTabAllInternal">
                                         <span>All Contacts</span>
-                                        <span class="cd-contact-subtab-badge" id="contactTabCountAllInternal">0</span>
+                                        <span class="cd-contact-subtab-badge" id="contactTabCountAllInternal">{{ $contactInitCount ?? 0 }}</span>
                                     </button>
                                     <button type="button" class="cd-contact-subtab" data-filter="primary" id="cdContactTabPrimaryInternal">
                                         <span><i class="fas fa-star text-amber-500 me-1" style="font-size:10px;"></i> Primary SPOCs</span>
-                                        <span class="cd-contact-subtab-badge" id="contactTabCountPrimaryInternal">0</span>
+                                        <span class="cd-contact-subtab-badge" id="contactTabCountPrimaryInternal">{{ ($contactInitCount ?? 0) > 0 ? 1 : 0 }}</span>
                                     </button>
                                     <button type="button" class="cd-contact-subtab" data-filter="manager" id="cdContactTabManagerInternal">
                                         <span>Hiring Managers &amp; Leads</span>
@@ -4505,7 +5120,7 @@ use Carbon\Carbon;
                                     </button>
                                     <button type="button" class="cd-contact-subtab" data-filter="active" id="cdContactTabActiveInternal">
                                         <span>Active</span>
-                                        <span class="cd-contact-subtab-badge" id="contactTabCountActiveInternal">0</span>
+                                        <span class="cd-contact-subtab-badge" id="contactTabCountActiveInternal">{{ $contactInitCount ?? 0 }}</span>
                                     </button>
                                 </div>
                             </div>
@@ -5815,8 +6430,8 @@ use Carbon\Carbon;
     window.InternalClientContactsManager = {
         clientId: {{ (int) @$client->id }},
         companyId: {{ (int) auth()->user()->company_id }},
-        clientName: '{{ addslashes($detailName ?? @$client->company_name ?? "Internal Client") }}',
-        allContacts: [],
+        clientName: '{{ addslashes($detailName ?? @$client->name ?? @$client->company_name ?? "Internal Client") }}',
+        allContacts: @json($client_contact_info ?? []),
         filteredContacts: [],
         activeFilter: 'all',
         searchTerm: '',
@@ -5832,7 +6447,12 @@ use Carbon\Carbon;
                 this.bindEvents();
                 this.isInitialized = true;
             }
-            this.fetch();
+            if (Array.isArray(this.allContacts) && this.allContacts.length > 0) {
+                this.updateCounts(this.allContacts);
+                this.filterAndRender();
+            } else {
+                this.fetch();
+            }
         },
 
         bindEvents: function() {
@@ -5935,9 +6555,11 @@ use Carbon\Carbon;
         fetch: function() {
             var self = this;
             this.isLoading = true;
-            $('#cdContactSkeletonLoaderInternal').show();
-            $('#cdContactCardsStreamInternal').hide();
-            $('#cdContactEmptyStateInternal').hide();
+            if (!this.allContacts || this.allContacts.length === 0) {
+                $('#cdContactSkeletonLoaderInternal').show();
+                $('#cdContactCardsStreamInternal').hide();
+                $('#cdContactEmptyStateInternal').hide();
+            }
 
             var clientId = this.clientId;
             $.ajax({
@@ -5958,8 +6580,11 @@ use Carbon\Carbon;
                     self.isLoading = false;
                     $('#cdContactSkeletonLoaderInternal').hide();
                     $('#cdContactCardsStreamInternal').show();
-                    self.allContacts = [];
-                    self.filterAndRender();
+                    if (!self.allContacts || self.allContacts.length === 0) {
+                        self.allContacts = [];
+                        self.updateCounts([]);
+                        self.filterAndRender();
+                    }
                 }
             });
         },

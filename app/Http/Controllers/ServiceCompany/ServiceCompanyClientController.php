@@ -2075,7 +2075,66 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
             }
         }
 
-        $this->client_contact_info = DB::table('client_contact_info')->select('*')->where('client_id', $id)->get();
+        $clientPrimaryName = strtolower(trim((string) (@$this->client->contact_person_name ?? '')));
+        $clientCompName = (string) (@$this->client->name ?? @$this->client->company_name ?? 'Internal Client');
+
+        $contactsQuery = DB::table('client_contact_info')
+            ->leftJoin('client_contact_info_jobs', 'client_contact_info_jobs.client_contact_info_id', '=', 'client_contact_info.id')
+            ->select(
+                'client_contact_info.id',
+                'client_contact_info.client_id',
+                'client_contact_info.contact_person_name',
+                'client_contact_info.calling_code',
+                'client_contact_info.contact_person_email',
+                'client_contact_info.contact_person_number',
+                'client_contact_info.contact_person_designation',
+                'client_contact_info.created_at',
+                DB::raw('COUNT(DISTINCT client_contact_info_jobs.job_id) as linked_jobs_count')
+            )
+            ->where('client_contact_info.client_id', $id)
+            ->groupBy(
+                'client_contact_info.id',
+                'client_contact_info.client_id',
+                'client_contact_info.contact_person_name',
+                'client_contact_info.calling_code',
+                'client_contact_info.contact_person_email',
+                'client_contact_info.contact_person_number',
+                'client_contact_info.contact_person_designation',
+                'client_contact_info.created_at'
+            )
+            ->get();
+
+        $this->client_contact_info = $contactsQuery->map(function ($row, $idx) use ($clientPrimaryName, $clientCompName) {
+            $name = strtolower(trim((string) @$row->contact_person_name));
+            $isPrimary = ($idx === 0) || ($name !== '' && $clientPrimaryName !== '' && ($name === $clientPrimaryName || str_contains($clientPrimaryName, $name) || str_contains($name, $clientPrimaryName))) ? 1 : 0;
+            $calling = trim((string) @$row->calling_code);
+            $num = trim((string) @$row->contact_person_number);
+            $cleanPhone = $calling ? ($calling.' '.$num) : $num;
+            $createdFormatted = 'Active Member';
+            if (! empty($row->created_at)) {
+                try {
+                    $createdFormatted = \Carbon\Carbon::parse($row->created_at)->format('d M Y');
+                } catch (\Exception $e) {
+                }
+            }
+
+            return (object) [
+                'id' => $row->id,
+                'client_id' => $row->client_id,
+                'contact_person_name' => $row->contact_person_name,
+                'calling_code' => $row->calling_code,
+                'contact_person_email' => $row->contact_person_email,
+                'contact_person_number' => $row->contact_person_number,
+                'contact_person_designation' => $row->contact_person_designation,
+                'created_at' => $row->created_at,
+                'linked_jobs_count' => (int) $row->linked_jobs_count,
+                'is_primary' => $isPrimary,
+                'client_name' => $clientCompName,
+                'clean_phone' => $cleanPhone,
+                'created_formatted' => $createdFormatted,
+                'status' => 'active',
+            ];
+        });
         $this->active_requisition = DB::table('jobs')->select('jobs.id')->where('jobs.client_id', $id)->where('jobs.status', 'active')->count();
 
         $startOfMonth = Carbon::now()->startOfMonth()->subMonths(3);
@@ -2760,101 +2819,125 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
         $clientId = (int) $request->input('clientId');
         $companyId = (int) auth()->user()->company_id;
 
-        $client = DB::table('clients')->select('contact_person', 'company_name')->where('id', $clientId)->first();
-        $primaryContactName = strtolower(trim((string) @$client->contact_person));
-        $clientCompanyName = (string) (@$client->company_name ?? 'Client');
+        try {
+            // Fetch client metadata safely using correct schema columns (name and contact_person_name)
+            $client = DB::table('clients')->select('contact_person_name', 'name')->where('id', $clientId)->first();
+            $primaryContactName = strtolower(trim((string) @$client->contact_person_name));
+            $clientCompanyName = (string) (@$client->name ?? 'Internal Client');
 
-        $schedule = DB::table('client_contact_info')
-            ->leftJoin('client_contact_info_jobs', 'client_contact_info_jobs.client_contact_info_id', '=', 'client_contact_info.id')
-            ->select(
-                'client_contact_info.id',
-                'client_contact_info.client_id',
-                'client_contact_info.contact_person_name',
-                'client_contact_info.calling_code',
-                'client_contact_info.contact_person_email',
-                'client_contact_info.contact_person_number',
-                'client_contact_info.contact_person_designation',
-                'client_contact_info.created_at',
-                DB::raw('COUNT(DISTINCT client_contact_info_jobs.job_id) as linked_jobs_count')
-            )
-            ->where('client_contact_info.client_id', $clientId)
-            ->groupBy('client_contact_info.id');
+            $schedule = DB::table('client_contact_info')
+                ->leftJoin('client_contact_info_jobs', 'client_contact_info_jobs.client_contact_info_id', '=', 'client_contact_info.id')
+                ->select(
+                    'client_contact_info.id',
+                    'client_contact_info.client_id',
+                    'client_contact_info.contact_person_name',
+                    'client_contact_info.calling_code',
+                    'client_contact_info.contact_person_email',
+                    'client_contact_info.contact_person_number',
+                    'client_contact_info.contact_person_designation',
+                    'client_contact_info.created_at',
+                    DB::raw('COUNT(DISTINCT client_contact_info_jobs.job_id) as linked_jobs_count')
+                )
+                ->where('client_contact_info.client_id', $clientId)
+                ->groupBy(
+                    'client_contact_info.id',
+                    'client_contact_info.client_id',
+                    'client_contact_info.contact_person_name',
+                    'client_contact_info.calling_code',
+                    'client_contact_info.contact_person_email',
+                    'client_contact_info.contact_person_number',
+                    'client_contact_info.contact_person_designation',
+                    'client_contact_info.created_at'
+                );
 
-        // Avatar colour palette
-        $avatarColors = ['#c084fc', '#60a5fa', '#fbbf24', '#34d399', '#f472b6', '#38bdf8', '#fb923c'];
+            // Avatar colour palette
+            $avatarColors = ['#c084fc', '#60a5fa', '#fbbf24', '#34d399', '#f472b6', '#38bdf8', '#fb923c'];
 
-        $response = DataTables::of($schedule)
-            ->editColumn('chkbox', function ($row) {
-                return '<input type="checkbox" class="table-checkbox" />';
-            })
-            ->editColumn('Contact', function ($row) use ($avatarColors) {
-                $name = trim((string) @$row->contact_person_name);
-                $initials = strtoupper(implode('', array_map(fn ($w) => mb_substr($w, 0, 1),
-                    array_slice(array_filter(explode(' ', $name)), 0, 2))));
-                $color = $avatarColors[(ord(strtolower(substr($name, 0, 1) ?: 'a'))) % count($avatarColors)];
+            $response = DataTables::of($schedule)
+                ->editColumn('chkbox', function ($row) {
+                    return '<input type="checkbox" class="table-checkbox" />';
+                })
+                ->editColumn('Contact', function ($row) use ($avatarColors) {
+                    $name = trim((string) @$row->contact_person_name);
+                    $initials = strtoupper(implode('', array_map(fn ($w) => mb_substr($w, 0, 1),
+                        array_slice(array_filter(explode(' ', $name)), 0, 2))));
+                    $color = $avatarColors[(ord(strtolower(substr($name, 0, 1) ?: 'a'))) % count($avatarColors)];
 
-                return '<div class="contact-cell">
-							<div class="contact-avatar-table" style="background:'.$color.'">'.$initials.'</div>
-							<div class="contact-info-table">
-								<div class="contact-name-table">'.ucwords($name).'</div>
-							</div>
-						</div>';
-            })
-            ->editColumn('Designation', function ($row) {
-                return ucwords((string) @$row->contact_person_designation);
-            })
-            ->editColumn('Email', function ($row) {
-                return '<span class="email-cell">'.@$row->contact_person_email.'</span>';
-            })
-            ->editColumn('Phone', function ($row) {
-                return GeneralMethod::formatContactPhoneHtml($row->calling_code, $row->contact_person_number);
-            })
-            ->editColumn('Status', function ($row) {
-                return '<span class="status-badge-table active"><i class="fas fa-circle"></i>Active</span>';
-            })
-            ->editColumn('Actions', function ($row) {
-                $call = GeneralMethod::formatContactPhoneForTel($row->calling_code, $row->contact_person_number);
+                    return '<div class="contact-cell">
+                                <div class="contact-avatar-table" style="background:'.$color.'">'.$initials.'</div>
+                                <div class="contact-info-table">
+                                    <div class="contact-name-table">'.ucwords($name).'</div>
+                                </div>
+                            </div>';
+                })
+                ->editColumn('Designation', function ($row) {
+                    return ucwords((string) @$row->contact_person_designation);
+                })
+                ->editColumn('Email', function ($row) {
+                    return '<span class="email-cell">'.@$row->contact_person_email.'</span>';
+                })
+                ->editColumn('Phone', function ($row) {
+                    return GeneralMethod::formatContactPhoneHtml($row->calling_code, $row->contact_person_number);
+                })
+                ->editColumn('Status', function ($row) {
+                    return '<span class="status-badge-table active"><i class="fas fa-circle"></i>Active</span>';
+                })
+                ->editColumn('Actions', function ($row) {
+                    $call = GeneralMethod::formatContactPhoneForTel($row->calling_code, $row->contact_person_number);
 
-                return '<div class="action-btns">
-							<a href="tel:'.$call.'" class="action-btn-table" title="Call"><i class="fas fa-phone"></i></a>
-							<a href="mailto:'.$row->contact_person_email.'" class="action-btn-table" title="Email"><i class="fas fa-envelope"></i></a>
-						</div>';
-            })
-            ->addColumn('is_primary', function ($row) use ($primaryContactName) {
-                $name = strtolower(trim((string) @$row->contact_person_name));
+                    return '<div class="action-btns">
+                                <a href="tel:'.$call.'" class="action-btn-table" title="Call"><i class="fas fa-phone"></i></a>
+                                <a href="mailto:'.$row->contact_person_email.'" class="action-btn-table" title="Email"><i class="fas fa-envelope"></i></a>
+                            </div>';
+                })
+                ->addColumn('is_primary', function ($row) use ($primaryContactName) {
+                    $name = strtolower(trim((string) @$row->contact_person_name));
 
-                return ($name !== '' && $primaryContactName !== '' && ($name === $primaryContactName || str_contains($primaryContactName, $name) || str_contains($name, $primaryContactName))) ? 1 : 0;
-            })
-            ->addColumn('client_name', function () use ($clientCompanyName) {
-                return $clientCompanyName;
-            })
-            ->addColumn('clean_phone', function ($row) {
-                $calling = trim((string) @$row->calling_code);
-                $num = trim((string) @$row->contact_person_number);
+                    return ($name !== '' && $primaryContactName !== '' && ($name === $primaryContactName || str_contains($primaryContactName, $name) || str_contains($name, $primaryContactName))) ? 1 : 0;
+                })
+                ->addColumn('client_name', function () use ($clientCompanyName) {
+                    return $clientCompanyName;
+                })
+                ->addColumn('clean_phone', function ($row) {
+                    $calling = trim((string) @$row->calling_code);
+                    $num = trim((string) @$row->contact_person_number);
 
-                return $calling ? ($calling.' '.$num) : $num;
-            })
-            ->addColumn('created_formatted', function ($row) {
-                if (! empty($row->created_at)) {
-                    try {
-                        return \Carbon\Carbon::parse($row->created_at)->format('d M Y');
-                    } catch (\Exception $e) {
+                    return $calling ? ($calling.' '.$num) : $num;
+                })
+                ->addColumn('created_formatted', function ($row) {
+                    if (! empty($row->created_at)) {
+                        try {
+                            return \Carbon\Carbon::parse($row->created_at)->format('d M Y');
+                        } catch (\Exception $e) {
+                        }
                     }
-                }
 
-                return 'Active Member';
-            })
-            ->rawColumns(['chkbox', 'Contact', 'Email', 'Phone', 'Status', 'Actions'])
-            ->addIndexColumn()->make(true);
+                    return 'Active Member';
+                })
+                ->rawColumns(['chkbox', 'Contact', 'Email', 'Phone', 'Status', 'Actions'])
+                ->addIndexColumn()->make(true);
 
-        \Log::info('CLIENT_DETAILS_APM: contactdata DataTables completed', [
-            'client_id' => $clientId,
-            'company_id' => $companyId,
-            'latency_ms' => round((microtime(true) - $startTime) * 1000, 2),
-        ]);
+            \Log::info('CLIENT_DETAILS_APM: contactdata DataTables completed', [
+                'client_id' => $clientId,
+                'company_id' => $companyId,
+                'latency_ms' => round((microtime(true) - $startTime) * 1000, 2),
+            ]);
 
-        return $response;
+            return $response;
+        } catch (\Throwable $e) {
+            \Log::error('CLIENT_DETAILS_APM: contactdata error: '.$e->getMessage(), [
+                'client_id' => $clientId,
+                'company_id' => $companyId,
+                'trace' => $e->getTraceAsString(),
+            ]);
 
+            return response()->json([
+                'draw' => (int) $request->input('draw', 0),
+                'recordsTotal' => 0,
+                'recordsFiltered' => 0,
+                'data' => [],
+            ]);
+        }
     }
 
     public function dviewMore($id)
@@ -3126,8 +3209,77 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
             }
         }
 
-        $this->client_contact_info = DB::table('client_contact_info')->select('*')->where('client_id', $id)->take(1)->get();
-        $this->client_contact_count = DB::table('client_contact_info')->select('*')->where('client_id', $id)->count();
+        $directCompanyId = (int) ($from_company_id ?: (@$this->directClientDetail->companies_id ?? $id));
+        $dContactsQuery = DB::table('companies')
+            ->select(
+                'companies.id',
+                'companies.company_name',
+                'companies.logo',
+                'companies.industries',
+                'companies.company_type',
+                'users.name',
+                'users.id as userId',
+                'users.email',
+                'users.mobile',
+                'users.image',
+                'users.status',
+                'users.calling_code',
+                'users.created_at as user_created_at',
+                'recommendation_relation.from_user_id',
+                'users_profile.designation as display_name',
+                DB::raw('COUNT(DISTINCT job_assign.job_id) as linked_jobs_count')
+            )
+            ->join('roles', 'roles.company_id', '=', 'companies.id')
+            ->join('role_user', 'role_user.role_id', '=', 'roles.id')
+            ->join('users', 'users.id', '=', 'role_user.user_id')
+            ->join('users_profile', 'users_profile.user_id', '=', 'users.id')
+            ->leftJoin('job_assign', 'job_assign.spok_user_id', '=', 'users.id')
+            ->leftJoin('recommendation_relation', function ($join) {
+                $join->on('recommendation_relation.from_user_id', '=', 'users.id')
+                    ->where('recommendation_relation.final_status', '=', 1);
+            })
+            ->where('companies.id', '=', $directCompanyId)
+            ->groupBy('users.id')
+            ->get();
+
+        $directClientCompName = (string) (@$this->directClientDetail->name ?? @$this->directClientDetail->company_name ?? 'Direct Client');
+        $this->client_contact_arr = $dContactsQuery->map(function ($row, $idx) use ($directClientCompName) {
+            $calling = trim((string) @$row->calling_code);
+            $num = trim((string) @$row->mobile);
+            $cleanPhone = $calling ? ($calling.' '.$num) : $num;
+            $createdFormatted = 'Active Member';
+            if (! empty($row->user_created_at)) {
+                try {
+                    $createdFormatted = \Carbon\Carbon::parse($row->user_created_at)->format('d M Y');
+                } catch (\Exception $e) {
+                }
+            }
+
+            return (object) [
+                'id' => $row->userId ?? ($idx + 1),
+                'client_id' => $row->id,
+                'contact_person_name' => $row->name,
+                'name' => $row->name,
+                'calling_code' => $row->calling_code,
+                'contact_person_email' => $row->email,
+                'email' => $row->email,
+                'contact_person_number' => $row->mobile,
+                'mobile' => $row->mobile,
+                'contact_person_designation' => $row->display_name,
+                'Designation' => $row->display_name,
+                'display_name' => $row->display_name,
+                'user_created_at' => $row->user_created_at,
+                'linked_jobs_count' => (int) $row->linked_jobs_count,
+                'is_primary' => ! empty($row->from_user_id) ? 1 : ($idx === 0 ? 1 : 0),
+                'client_name' => $directClientCompName,
+                'company_name' => $directClientCompName,
+                'clean_phone' => $cleanPhone,
+                'created_formatted' => $createdFormatted,
+                'status' => $row->status ?? 'active',
+            ];
+        });
+        $this->client_contact_count = count($this->client_contact_arr);
+        $this->client_contact_info = $this->client_contact_arr;
 
         // Scoped strictly to the specific direct client, partner company, and active recommendation relation
         $this->active_requisition = DB::table('jobs')
@@ -3219,12 +3371,14 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
         $directContactList = $directContactList->join('role_user', 'role_user.role_id', '=', 'roles.id');
         $directContactList = $directContactList->join('users', 'users.id', '=', 'role_user.user_id');
         $directContactList = $directContactList->join('users_profile', 'users_profile.user_id', '=', 'users.id');
-        $directContactList = $directContactList->join('job_assign', 'job_assign.spok_user_id', '=', 'users.id');
-        $directContactList = $directContactList->join('recommendation_relation', 'recommendation_relation.from_user_id', '=', 'users.id');
+        $directContactList = $directContactList->leftJoin('job_assign', 'job_assign.spok_user_id', '=', 'users.id');
+        $directContactList = $directContactList->leftJoin('recommendation_relation', function ($join) {
+            $join->on('recommendation_relation.from_user_id', '=', 'users.id')
+                ->where('recommendation_relation.final_status', '=', 1);
+        });
 
-        $direct_company = request('company_id');
+        $direct_company = (int) request('company_id');
         $directContactList = $directContactList->where('companies.id', '=', $direct_company);
-        $directContactList = $directContactList->where('recommendation_relation.final_status', '=', 1);
         $directContactList = $directContactList->groupBy('users.id');
         // $directContactList = $directContactList->where('roles.display_name', '=', 'Administrator');
 
@@ -5388,7 +5542,66 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
             }
         }
 
-        $this->client_contact_info = DB::table('client_contact_info')->select('*')->where('client_id', $id)->get();
+        $clientPrimaryName = strtolower(trim((string) (@$this->client->contact_person_name ?? '')));
+        $clientCompName = (string) (@$this->client->name ?? @$this->client->company_name ?? 'Internal Client');
+
+        $contactsQuery = DB::table('client_contact_info')
+            ->leftJoin('client_contact_info_jobs', 'client_contact_info_jobs.client_contact_info_id', '=', 'client_contact_info.id')
+            ->select(
+                'client_contact_info.id',
+                'client_contact_info.client_id',
+                'client_contact_info.contact_person_name',
+                'client_contact_info.calling_code',
+                'client_contact_info.contact_person_email',
+                'client_contact_info.contact_person_number',
+                'client_contact_info.contact_person_designation',
+                'client_contact_info.created_at',
+                DB::raw('COUNT(DISTINCT client_contact_info_jobs.job_id) as linked_jobs_count')
+            )
+            ->where('client_contact_info.client_id', $id)
+            ->groupBy(
+                'client_contact_info.id',
+                'client_contact_info.client_id',
+                'client_contact_info.contact_person_name',
+                'client_contact_info.calling_code',
+                'client_contact_info.contact_person_email',
+                'client_contact_info.contact_person_number',
+                'client_contact_info.contact_person_designation',
+                'client_contact_info.created_at'
+            )
+            ->get();
+
+        $this->client_contact_info = $contactsQuery->map(function ($row, $idx) use ($clientPrimaryName, $clientCompName) {
+            $name = strtolower(trim((string) @$row->contact_person_name));
+            $isPrimary = ($idx === 0) || ($name !== '' && $clientPrimaryName !== '' && ($name === $clientPrimaryName || str_contains($clientPrimaryName, $name) || str_contains($name, $clientPrimaryName))) ? 1 : 0;
+            $calling = trim((string) @$row->calling_code);
+            $num = trim((string) @$row->contact_person_number);
+            $cleanPhone = $calling ? ($calling.' '.$num) : $num;
+            $createdFormatted = 'Active Member';
+            if (! empty($row->created_at)) {
+                try {
+                    $createdFormatted = \Carbon\Carbon::parse($row->created_at)->format('d M Y');
+                } catch (\Exception $e) {
+                }
+            }
+
+            return (object) [
+                'id' => $row->id,
+                'client_id' => $row->client_id,
+                'contact_person_name' => $row->contact_person_name,
+                'calling_code' => $row->calling_code,
+                'contact_person_email' => $row->contact_person_email,
+                'contact_person_number' => $row->contact_person_number,
+                'contact_person_designation' => $row->contact_person_designation,
+                'created_at' => $row->created_at,
+                'linked_jobs_count' => (int) $row->linked_jobs_count,
+                'is_primary' => $isPrimary,
+                'client_name' => $clientCompName,
+                'clean_phone' => $cleanPhone,
+                'created_formatted' => $createdFormatted,
+                'status' => 'active',
+            ];
+        });
         $this->active_requisition = DB::table('jobs')->select('jobs.id')->where('jobs.client_id', $id)->where('jobs.status', 'active')->count();
 
         $view = view('service_company.client.requestviewmore', $this->data)->render();

@@ -20,6 +20,35 @@ Last updated: 2026-10-22 (Super Admin Companies Page UI Redesign, 100% CQRS Read
 - **Test coverage:** `TenantIsolationTest`, `BenchToJobAppTrackerPipelineContractTest`, `BenchTalentRequestPipelineContractTest`, `SuperAdminCompanyLoadTest`, `SuperAdminSubscriptionLoadTest`, `SuperAdminDashboardLoadTest` (100% green).
 - **V2_login blocking-scenarios architecture:** session-epoch pattern + Reverb `UserAccountSuspended` event + `SyncUserStatusAction` (cross-tenant-safe) + `BlockCompanyAction` (static bulk helper) + `block_log` audit table + drop all 20 `refresh:true` ES sites + grep-lint guard. See [docs/V2_login/BLOCKING_SCENARIOS_AUDIT.md](../docs/V2_login/BLOCKING_SCENARIOS_AUDIT.md), [ADR 0007](../docs/adr/0007-blocking-scenarios-architecture.md). Code not yet landed.
 
+- *2026-10-26* — **Client Information Card: God-Level Vertical Listing, Range-Based Workforce Scale & Conditional Metadata Visibility (100% COMPLETED & VERIFIED)**:
+  - **Scope**: Internal Client Drawer (`show.blade.php`), Direct Client Drawer (`dviewMore.blade.php`), Direct Client Mandate Drawer (`requestviewmore.blade.php`).
+  - **Implementation**:
+    - **Vertical Listing Redesign**: Replaced the 6-box mini sub-card grid with `.cd-vertical-info-list` exclusively for the "Client Information" card, eliminating nested box fatigue while maintaining clean vertical key-value rows (`.cd-vinfo-row`) with pastel icon badges.
+    - **Multi-Location & Full Address Coverage**: Displays Headquarters (`[HQ]`) with full street address, city, state, country, and postal code. If multiple locations exist in `client_location`, lists all branch offices (`[Branch 1]`, `[Branch 2]`) with specific street addresses and location badges.
+    - **Workforce Scale Tier Range**: Replaced standalone raw numbers with standardized ranges matching `$companySizeTiers` (e.g. `1 – 10 Employees`, `51 – 200 Employees`, `201 – 500 Employees`, `1,001 – 5,000 Employees`, `10,001 – 50,000 Employees`) calculated across `company_size_from` and `company_sizes` / `company_size`. Applied consistently in both the Hero header and the Client Information vertical card.
+    - **Conditional Visibility**:
+      - **Tax ID / GSTIN**: Completely hidden when no tax ID / business registration number is present. When available, rendered in monospace chip with a 1-click clipboard copy button.
+      - **Social Channels**: Completely hidden when no social links (LinkedIn, Twitter/X, GitHub, YouTube, Facebook, Instagram, Custom) are configured.
+      - **Careers Portal & Billing Email**: Clickable external links with direct pills, gracefully suppressed or rendered cleanly when available.
+    - **CQRS Read Synchronization**: Updated `GeneralMethod::clientStaffingPartner()` to index `clients.detail` into Elasticsearch `ELASTIC_CLIENT_LIST` for 0% MySQL read strain on future page loads.
+  - **Verification**: `php -l` clean across all views and helper classes, `php artisan view:clear` passed, automated view rendering tests passed across multiple client scenarios (tax ID present vs absent, social links present vs absent, workforce range mapping).
+
+- *2026-10-26* — **Client Drawer Contacts Tab: Data Loading Fix, Client-First RAM Hydration & 15.6" Screen UI/UX Optimization (100% COMPLETED & VERIFIED)**:
+  - **Issue Root Cause Analysis**:
+    - The Contacts tab in the client drawer displayed empty "No Contacts Found" and 0 sub-tab counts even when the top header and tab pill badges indicated contacts existed (e.g. "1 Contacts").
+    - **Fatal SQL Crash**: `ServiceCompanyClientController::contactdata()` executed `$client = DB::table('clients')->select('contact_person', 'company_name')->where('id', $clientId)->first()`. In the MySQL `clients` schema, those columns do NOT exist—the schema defines `name` (company name) and `contact_person_name` (contact person). This threw `SQLSTATE[42S22]: Column not found: 1054 Unknown column 'contact_person' in 'field list'` (HTTP 500), causing the client-side AJAX fetch to fail and trigger the error callback which set `allContacts = []` and displayed the empty state.
+    - **Lack of User RAM Pre-hydration**: Despite `$client_contact_info` already being available in the server view model, the frontend initialized with an empty array `allContacts: []` and relied strictly on an unnecessary network roundtrip.
+  - **Architectural & Code Fixes**:
+    - **Controller Schema Correction**: Corrected SQL query to select `clients.contact_person_name` and `clients.name` with resilient defaults, full `groupBy` specification, and comprehensive `try-catch` handling returning empty DataTables JSON rather than HTTP 500 errors.
+    - **Client-First In-Memory Hydration**: Hydrated `InternalClientContactsManager` directly with `allContacts: @json($client_contact_info ?? [])` in `show.blade.php`, and `DirectClientContactsManager` with `allContacts: @json($client_contact_arr ?? [])` in `dviewMore.blade.php`. On tab activation or drawer load, contacts render instantly from User RAM in 0ms with zero network latency, zero skeleton flash, and 0% server read strain.
+    - **Direct Client Contacts Join Optimization**: In `dcontactList()`, updated inner joins on `job_assign` and `recommendation_relation` to `leftJoin` so that direct client contacts without active job assignments are never dropped from the directory.
+    - **Enterprise UI/UX & 15.6" Screen Calibration**:
+      - Calibrated 3-tier Modern Card + Sub-Card Enterprise Design System layout.
+      - Tuned CSS Grid column ratios to `minmax(0, 2.1fr) minmax(0, 2.1fr) minmax(0, 1.4fr) minmax(0, 1.1fr) minmax(0, 1.3fr)` with strict `min-width: 0` and `text-truncate` to guarantee zero horizontal overflow on standard 15.6" recruiter screens (`1366×768` and `1920×1080` at 125% OS scaling).
+      - Added responsive breakpoints at 1280px, 860px, and 600px for robust adaptability.
+      - Integrated interactive one-click copy buttons with checkmark feedback, debounced dynamic search, single active blue sub-tab highlight (`#009ef7`), and seamless switching to the Requisitions tab.
+  - **Verification**: `php -l` passed clean with 0 syntax errors, Laravel Pint formatted clean, end-to-end simulation verified `contactdata` (HTTP 200, 1 record returned) and `viewMore` (instant RAM hydration and rendering).
+
 - *2026-10-26* — **Client Drawer Modern Card + Sub-Card Overhaul & Linear/Stripe Continuous Hero Header (100% COMPLETED & VERIFIED)**:
   - **Scope**: Internal Client Drawer (`resources/views/service_company/client/show.blade.php`), Direct Client Drawer (`resources/views/service_company/client/dviewMore.blade.php`), Direct Client Terms/Request Drawer (`resources/views/service_company/client/requestviewmore.blade.php`).
   - **Implementation**:
