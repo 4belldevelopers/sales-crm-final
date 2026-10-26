@@ -8400,6 +8400,12 @@
     window.currentOjSegmentDirect = 'all';
 
     function directfetchCandidatesJoin(page = 1, search = '', segment = null) {
+        var activeSelectedId = window.ClientStateManager ? window.ClientStateManager.getSelectedClientId() : null;
+        var directCurrentId = parseInt('{{ $directClientDetail->client_id ?: ($directClientDetail->from_company_id ?: $directClientDetail->company_id) }}', 10);
+        if (activeSelectedId && directCurrentId && activeSelectedId !== directCurrentId) {
+            return;
+        }
+
         if (segment === null || segment === undefined) {
             segment = window.currentOjSegmentDirect || 'all';
         } else {
@@ -8407,7 +8413,7 @@
         }
 
         if (search === null || search === undefined) {
-            search = $('#ojSearchInputDirect').val() || '';
+            search = $('#kt_activitiesDirectClient #ojSearchInputDirect').val() || '';
         }
 
         $('.page-loader').css('display', 'flex');
@@ -8422,6 +8428,9 @@
             },
             success: function(response) {
                 $('.page-loader').css('display', 'none');
+                if (window.ClientStateManager && window.ClientStateManager.getSelectedClientId() !== directCurrentId) {
+                    return;
+                }
                 $('#candidatetListJoin').html(response.html);
                 $('#paginationcandidatejoin').html(response.pagination);
                 if (response.counts) {
@@ -8456,41 +8465,41 @@
         });
     }
 
-    $(document).on('click', '.cd-oj-seg-btn-direct', function() {
+    $(document).on('click.directDrawer', '#kt_activitiesDirectClient .cd-oj-seg-btn-direct', function() {
         var segment = $(this).data('segment');
-        $('.cd-oj-seg-btn-direct').removeClass('active');
+        $('#kt_activitiesDirectClient .cd-oj-seg-btn-direct').removeClass('active');
         $(this).addClass('active');
         window.currentOjSegmentDirect = segment;
-        var search = $('#ojSearchInputDirect').val() || '';
+        var search = $('#kt_activitiesDirectClient #ojSearchInputDirect').val() || '';
         directfetchCandidatesJoin(1, search, segment);
     });
 
     var ojSearchTimerDirect = null;
-    $(document).on('keyup', '#ojSearchInputDirect', function() {
+    $(document).on('keyup.directDrawer', '#kt_activitiesDirectClient #ojSearchInputDirect', function() {
         clearTimeout(ojSearchTimerDirect);
         var search = $(this).val();
         if (search && search.length > 0) {
-            $('#ojSearchClearDirect').show();
+            $('#kt_activitiesDirectClient #ojSearchClearDirect').show();
         } else {
-            $('#ojSearchClearDirect').hide();
+            $('#kt_activitiesDirectClient #ojSearchClearDirect').hide();
         }
         ojSearchTimerDirect = setTimeout(function() {
             directfetchCandidatesJoin(1, search, window.currentOjSegmentDirect || 'all');
         }, 300);
     });
 
-    $(document).on('click', '#ojSearchClearDirect', function() {
-        $('#ojSearchInputDirect').val('');
+    $(document).on('click.directDrawer', '#kt_activitiesDirectClient #ojSearchClearDirect', function() {
+        $('#kt_activitiesDirectClient #ojSearchInputDirect').val('');
         $(this).hide();
         directfetchCandidatesJoin(1, '', window.currentOjSegmentDirect || 'all');
     });
 
-    $(document).on('click', '#ojResetBtnDirect', function() {
-        $('#ojSearchInputDirect').val('');
-        $('#ojSearchClearDirect').hide();
+    $(document).on('click.directDrawer', '#kt_activitiesDirectClient #ojResetBtnDirect', function() {
+        $('#kt_activitiesDirectClient #ojSearchInputDirect').val('');
+        $('#kt_activitiesDirectClient #ojSearchClearDirect').hide();
         window.currentOjSegmentDirect = 'all';
-        $('.cd-oj-seg-btn-direct').removeClass('active');
-        $('.cd-oj-seg-btn-direct[data-segment="all"]').addClass('active');
+        $('#kt_activitiesDirectClient .cd-oj-seg-btn-direct').removeClass('active');
+        $('#kt_activitiesDirectClient .cd-oj-seg-btn-direct[data-segment="all"]').addClass('active');
         directfetchCandidatesJoin(1, '', 'all');
     });
 
