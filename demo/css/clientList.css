@@ -875,18 +875,19 @@
   justify-content: center !important;
   padding: 0 4px !important;
   border-radius: 6px !important;
-  font-size: 12.5px !important;
+  font-size: 12px !important;
   font-weight: 700 !important;
   line-height: 1 !important;
   text-align: center !important;
+  font-variant-numeric: tabular-nums !important;
   transition: all 0.15s ease !important;
   border: 1px solid transparent !important;
 }
 
-/* Active Count (> 0): Elevated Pill Badge with Soft Tint */
+/* Active Count (> 0): Elevated Pill Badge with Soft Tint (Exact Same 12px Font Size for Perfect Baseline Symmetry) */
 .cl-pipe-step.has-count .cl-pipe-pill {
-  font-size: 13px !important;
-  font-weight: 800 !important;
+  font-size: 12px !important;
+  font-weight: 700 !important;
   box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06) !important;
   transform: translateY(-0.5px) !important;
 }
@@ -1400,9 +1401,10 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 700;
   line-height: 1;
+  font-variant-numeric: tabular-nums;
   border: none;
   background: transparent;
 }
