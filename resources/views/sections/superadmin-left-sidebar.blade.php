@@ -574,7 +574,7 @@
 
 
                 <!--begin::Coins Settings-->
-                <div data-kt-menu-trigger="click" class="menu-item menu-accordion {{ request()->is('super-admin/coin-features') || request()->is('super-admin/coin-packages') || request()->is('super-admin/add-edit-coin-featutes') || request()->is('super-admin/add-edit-coin-packages') || request()->is('super-admin/coupons*') ? 'show' : '' }}  ">
+                <div data-kt-menu-trigger="click" class="menu-item menu-accordion {{ request()->is('super-admin/coin-features*') || request()->is('super-admin/coin-packages*') || request()->is('super-admin/add-edit-coin-featutes*') || request()->is('super-admin/add-edit-coin-packages*') || request()->is('super-admin/topup-coin-packages*') || request()->is('super-admin/add-edit-top-up-coin-packages*') || request()->is('super-admin/coupons*') ? 'here show' : '' }} ">
                     <span class="menu-link">
                         <span class="menu-icon">
                             <!--begin::Svg Icon-->
@@ -598,7 +598,7 @@
                         <!--begin::Coins Events-->
                         <div class="menu-item">
                             <a href="{{ route('superadmin.company.coinFeatures') }}"
-                                class="menu-link {{ request()->is('super-admin/coin-features') ? 'active' : '' }}"">
+                                class="menu-link {{ request()->is('super-admin/coin-features*') || request()->is('super-admin/add-edit-coin-featutes*') ? 'active' : '' }}">
                                 <span class="menu-bullet">
                                     <span class="bullet bullet-dot"></span>
                                 </span>
@@ -609,7 +609,7 @@
                         <!--begin::Coins Packages-->
                         <div class="menu-item">
                             <a href="{{ route('superadmin.company.coinPackages') }}"
-                                class="menu-link {{ request()->is('super-admin/coin-packages') ? 'active' : '' }}"">
+                                class="menu-link {{ request()->is('super-admin/coin-packages*') || request()->is('super-admin/add-edit-coin-packages*') ? 'active' : '' }}">
                                 <span class="menu-bullet">
                                     <span class="bullet bullet-dot"></span>
                                 </span>
@@ -618,7 +618,7 @@
                         </div>
                         <!--end::Coins Packages-->
 
-                         <!--begin::Coins Packages-->
+                         <!--begin::Coin Top Up package-->
                          <div class="menu-item">
                             <a href="{{ route('superadmin.company.topUpCoinPackages') }}"
                                 class="menu-link {{ request()->is('super-admin/topup-coin-packages*') || request()->is('super-admin/add-edit-top-up-coin-packages*') ? 'active' : '' }}">
@@ -628,7 +628,7 @@
                                 <span class="menu-title">Coin Top Up package</span>
                             </a>
                         </div>
-                        <!--end::Coins Packages-->
+                        <!--end::Coin Top Up package-->
 
                         <!--begin::Coupons-->
                         <div class="menu-item">
