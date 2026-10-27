@@ -1003,7 +1003,7 @@
   font-weight: 600;
 }
 
-/* ── Hiring Pipeline Funnel (No arrows, max 12px) ── */
+/* ── Hiring Pipeline Funnel (Original Design: No boxes, capsule pills, max 12px) ── */
 .tbl-cell-pipeline {
   min-width: 0;
 }
@@ -1032,12 +1032,15 @@
   font-size: 10.5px;
   font-weight: 700;
   line-height: 1;
+  border: none;
 }
-.pill-sourced    { background: #f1f5f9; color: #475569; }
-.pill-evaluated  { background: #eff6ff; color: #2563eb; }
-.pill-interviews { background: #faf5ff; color: #7c3aed; }
-.pill-offers     { background: #fff7ed; color: #ea580c; }
-.pill-joined     { background: #ecfdf5; color: #059669; }
+.pill-sourcing, .pill-sourced         { background: #efefef; color: #000000; }
+.pill-screening                       { background: #f7deff; color: #c000ff; }
+.pill-evaluation, .pill-evaluated     { background: #f0f8ff; color: #2896ff; }
+.pill-negotiations, .pill-negotiation { background: #ffe6f2; color: #ff4098; }
+.pill-offer, .pill-offers             { background: #fff9ed; color: #ffab00; }
+.pill-joined                          { background: #d4ffde; color: #06c732; }
+.pill-interviews                      { background: #f0f8ff; color: #2896ff; }
 
 .cl-pipe-arrow {
   display: none !important;
