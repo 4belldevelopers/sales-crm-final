@@ -865,7 +865,7 @@
                                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z"/></svg>
                                 <span>Hiring Pipeline</span>
                             </div>
-                            <svg class="tbl-th-info" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-toggle="tooltip" title="Funnel: Sourced → Evaluated → Interviews → Offers → Joined"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+                            <svg class="tbl-th-info" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-toggle="tooltip" title="Pipeline: Sourcing → Screening → Evaluation → Negotiations → Offer → Joined"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
                         </div>
                     </div>
 
@@ -2487,11 +2487,14 @@ function renderClientRows(rows) {
         const jobHold = r.jobs ? (r.jobs.hold || 0) : 0;
         const jobClosed = r.jobs ? (r.jobs.closed || 0) : 0;
 
+        const applications = r.pipeline ? (r.pipeline.applications || 0) : 0;
         const sourced = r.pipeline ? (r.pipeline.sourced || 0) : 0;
+        const screening = r.pipeline ? (r.pipeline.screening || 0) : 0;
         const evaluated = r.pipeline ? (r.pipeline.evaluated || 0) : 0;
-        const interviews = r.pipeline ? (r.pipeline.interviews || 0) : 0;
+        const negotiations = r.pipeline ? (r.pipeline.negotiations || 0) : 0;
         const offers = r.pipeline ? (r.pipeline.offers || 0) : 0;
         const joined = r.pipeline ? (r.pipeline.joined || 0) : 0;
+        const interviews = r.pipeline ? (r.pipeline.interviews || 0) : 0;
 
         const daysAgo = r.days_ago || '';
         const clientTypeClass = r.is_direct ? 'type-direct' : 'type-internal';
@@ -2556,25 +2559,39 @@ function renderClientRows(rows) {
             </div>
             <div class="tbl-cell-pipeline">
                 <div class="cl-pipeline-flow">
-                    <div class="cl-pipe-step">
-                        <span class="cl-pipe-pill pill-sourced">${sourced}</span>
-                        <span class="cl-pipe-label">Sourced</span>
+                    <div class="cl-pipe-step" title="Sourcing: ${sourced}">
+                        <span class="cl-pipe-pill pill-sourcing">${sourced}</span>
+                        <span class="cl-pipe-label">Sourcing</span>
                     </div>
-                    <div class="cl-pipe-step">
-                        <span class="cl-pipe-pill pill-evaluated">${evaluated}</span>
-                        <span class="cl-pipe-label">Evaluated</span>
+                    <div class="cl-pipe-step" title="Screening: ${screening}">
+                        <span class="cl-pipe-pill pill-screening">${screening}</span>
+                        <span class="cl-pipe-label">Screening</span>
                     </div>
-                    <div class="cl-pipe-step">
-                        <span class="cl-pipe-pill pill-interviews">${interviews}</span>
-                        <span class="cl-pipe-label">Interviews</span>
+                    <div class="cl-pipe-step" title="Evaluation: ${evaluated}">
+                        <span class="cl-pipe-pill pill-evaluation">${evaluated}</span>
+                        <span class="cl-pipe-label">Evaluation</span>
                     </div>
-                    <div class="cl-pipe-step">
-                        <span class="cl-pipe-pill pill-offers">${offers}</span>
-                        <span class="cl-pipe-label">Offers</span>
+                    <div class="cl-pipe-step" title="Negotiations: ${negotiations}">
+                        <span class="cl-pipe-pill pill-negotiations">${negotiations}</span>
+                        <span class="cl-pipe-label">Negotiations</span>
                     </div>
-                    <div class="cl-pipe-step">
+                    <div class="cl-pipe-step" title="Offer: ${offers}">
+                        <span class="cl-pipe-pill pill-offer">${offers}</span>
+                        <span class="cl-pipe-label">Offer</span>
+                    </div>
+                    <div class="cl-pipe-step" title="Joined: ${joined}">
                         <span class="cl-pipe-pill pill-joined">${joined}</span>
                         <span class="cl-pipe-label">Joined</span>
+                    </div>
+                </div>
+                <div class="cl-pipeline-aggregates">
+                    <div class="cl-pipe-agg-pill agg-application" title="Total Applications: ${applications}">
+                        <span class="cl-pipe-agg-label">Application:</span>
+                        <span class="cl-pipe-agg-val">${applications}</span>
+                    </div>
+                    <div class="cl-pipe-agg-pill agg-interview" title="Total Interviews: ${interviews}">
+                        <span class="cl-pipe-agg-label">Interview:</span>
+                        <span class="cl-pipe-agg-val">${interviews}</span>
                     </div>
                 </div>
             </div>

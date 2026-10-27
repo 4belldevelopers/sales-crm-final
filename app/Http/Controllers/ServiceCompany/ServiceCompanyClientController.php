@@ -1324,8 +1324,11 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
                             'active' => $reqCount,
                         ],
                         'pipeline' => [
+                            'applications' => 0,
                             'sourced' => 0,
+                            'screening' => 0,
                             'evaluated' => 0,
+                            'negotiations' => 0,
                             'interviews' => 0,
                             'offers' => 0,
                             'joined' => 0,
@@ -1393,11 +1396,14 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
                 $job_closed = (int) ($jobsCount->job_inactive ?? 0);
                 $job_hold = (int) ($jobsCount->job_hold ?? 0);
 
+                $applications = (int) ($perf->all_candidates ?? 0);
                 $sourced = (int) ($perf->sourced ?? 0);
+                $screening = (int) ($perf->screening ?? 0);
                 $evaluated = (int) ($perf->evaluated ?? 0);
-                $interviews = (int) ($perf->all_interview ?? 0);
+                $negotiations = (int) ($perf->negotiations ?? ($perf->negotiation ?? 0));
                 $offers = (int) ($perf->offers ?? 0);
-                $joined = (int) ($perf->Joined ?? 0);
+                $joined = (int) ($perf->Joined ?? ($perf->joined ?? 0));
+                $interviews = (int) ($perf->all_interview ?? 0);
 
                 if (($recommendation_id ?? 0) > 0 && ($to_company_id ?? 0) == auth()->user()->company_id) {
                     $createdTimestamp = $from_created_at ?: ($rowObj->created_at ?? null);
@@ -1521,11 +1527,14 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
                         'active' => $job_active,
                     ],
                     'pipeline' => [
+                        'applications' => $applications,
                         'sourced' => $sourced,
+                        'screening' => $screening,
                         'evaluated' => $evaluated,
-                        'interviews' => $interviews,
+                        'negotiations' => $negotiations,
                         'offers' => $offers,
                         'joined' => $joined,
+                        'interviews' => $interviews,
                     ],
                     'connected_on' => (string) $newDate,
                     'days_ago' => (string) $daysAgo,

@@ -244,11 +244,14 @@
             $pKey = 'internal_' . $client_id;
             $perf = $candidateCountsMap[$pKey] ?? GeneralMethod::InternalClientCandidatesCountList($client_id);
         }
+        $allCandidates = (int)($perf->all_candidates ?? 0);
         $sourced       = (int)($perf->sourced ?? 0);
+        $screening     = (int)($perf->screening ?? 0);
         $evaluated     = (int)($perf->evaluated ?? 0);
-        $interviews    = (int)($perf->all_interview ?? 0);
+        $negotiations  = (int)($perf->negotiations ?? ($perf->negotiation ?? 0));
         $offers        = (int)($perf->offers ?? 0);
-        $joined        = (int)($perf->Joined ?? 0);
+        $joined        = (int)($perf->Joined ?? ($perf->joined ?? 0));
+        $interviews    = (int)($perf->all_interview ?? 0);
 
         /* ── connected on ── */
         if ($row->staffing_company_relation_id > 0 && ($row->to_company_id ?? 0) == auth()->user()->company_id) {
@@ -420,28 +423,42 @@
             </div>
         </div>
 
-        {{-- Hiring Pipeline Funnel (No arrows) --}}
+        {{-- Redesigned Hiring Pipeline Column: Sourcing, Screening, Evaluation, Negotiations, Offer, Joined + Application: and Interview --}}
         <div class="tbl-cell-pipeline">
             <div class="cl-pipeline-flow">
-                <div class="cl-pipe-step">
-                    <span class="cl-pipe-pill pill-sourced">{{ $sourced }}</span>
-                    <span class="cl-pipe-label">Sourced</span>
+                <div class="cl-pipe-step" title="Sourcing: {{ $sourced }}">
+                    <span class="cl-pipe-pill pill-sourcing">{{ $sourced }}</span>
+                    <span class="cl-pipe-label">Sourcing</span>
                 </div>
-                <div class="cl-pipe-step">
-                    <span class="cl-pipe-pill pill-evaluated">{{ $evaluated }}</span>
-                    <span class="cl-pipe-label">Evaluated</span>
+                <div class="cl-pipe-step" title="Screening: {{ $screening }}">
+                    <span class="cl-pipe-pill pill-screening">{{ $screening }}</span>
+                    <span class="cl-pipe-label">Screening</span>
                 </div>
-                <div class="cl-pipe-step">
-                    <span class="cl-pipe-pill pill-interviews">{{ $interviews }}</span>
-                    <span class="cl-pipe-label">Interviews</span>
+                <div class="cl-pipe-step" title="Evaluation: {{ $evaluated }}">
+                    <span class="cl-pipe-pill pill-evaluation">{{ $evaluated }}</span>
+                    <span class="cl-pipe-label">Evaluation</span>
                 </div>
-                <div class="cl-pipe-step">
-                    <span class="cl-pipe-pill pill-offers">{{ $offers }}</span>
-                    <span class="cl-pipe-label">Offers</span>
+                <div class="cl-pipe-step" title="Negotiations: {{ $negotiations }}">
+                    <span class="cl-pipe-pill pill-negotiations">{{ $negotiations }}</span>
+                    <span class="cl-pipe-label">Negotiations</span>
                 </div>
-                <div class="cl-pipe-step">
+                <div class="cl-pipe-step" title="Offer: {{ $offers }}">
+                    <span class="cl-pipe-pill pill-offer">{{ $offers }}</span>
+                    <span class="cl-pipe-label">Offer</span>
+                </div>
+                <div class="cl-pipe-step" title="Joined: {{ $joined }}">
                     <span class="cl-pipe-pill pill-joined">{{ $joined }}</span>
                     <span class="cl-pipe-label">Joined</span>
+                </div>
+            </div>
+            <div class="cl-pipeline-aggregates">
+                <div class="cl-pipe-agg-pill agg-application" title="Total Applications: {{ $allCandidates }}">
+                    <span class="cl-pipe-agg-label">Application:</span>
+                    <span class="cl-pipe-agg-val">{{ $allCandidates }}</span>
+                </div>
+                <div class="cl-pipe-agg-pill agg-interview" title="Total Interviews: {{ $interviews }}">
+                    <span class="cl-pipe-agg-label">Interview:</span>
+                    <span class="cl-pipe-agg-val">{{ $interviews }}</span>
                 </div>
             </div>
         </div>
