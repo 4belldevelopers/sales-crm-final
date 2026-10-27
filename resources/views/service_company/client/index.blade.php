@@ -1463,6 +1463,23 @@ window.ClientSessionRecoveryManager = {
                         console.log('[Session Recovery] Auto-recovering failed drawer for client', selId);
                         window.ClientStateManager.openClientDrawer(selId, selType);
                     }
+                } else if (window.ClientStateManager && window.ClientStateManager.state.drawerStatus === 'loaded') {
+                    // Auto-heal idle/wake-up empty tab panes if drawer was left open
+                    var curSelId = window.ClientStateManager.getSelectedClientId();
+                    var curType = window.ClientStateManager.state.selectedClientType;
+                    if (curSelId) {
+                        if (curType === 'direct' && typeof window.loadDirectTabContent === 'function') {
+                            var curDirectTab = $('#kt_activitiesDirectClient .tab-pane.active').attr('id');
+                            if (curDirectTab && curDirectTab !== 'overview' && curDirectTab !== 'recent_activity') {
+                                window.loadDirectTabContent(curDirectTab, false);
+                            }
+                        } else if (typeof window.loadInternalTabContent === 'function') {
+                            var curInternalTab = $('#kt_activitiesClient .tab-pane.active').attr('id');
+                            if (curInternalTab && curInternalTab !== 'overview' && curInternalTab !== 'recent_activity') {
+                                window.loadInternalTabContent(curInternalTab, false);
+                            }
+                        }
+                    }
                 }
             });
         }
