@@ -6,12 +6,56 @@
    ========================================================================== */
 
 /* Universal Box Sizing & Font Stack */
-.cd-client-wrapper, .cd-client-wrapper *,
-.cd-client-header-card, .cd-client-header-card *,
-.cd-client-tabs-card, .cd-client-tabs-card *,
-.cd-client-stream, .cd-client-stream * {
-    font-family: 'Poppins', -apple-system, BlinkMacSystemFont, sans-serif !important;
+.cd-client-wrapper,
+.cd-client-header-card,
+.cd-client-tabs-card,
+.cd-client-stream,
+.cd-client-card {
+    font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+}
+
+.cd-client-wrapper *,
+.cd-client-header-card *:not(i):not([class*="fa-"]):not([class*="bi-"]):not([class*="ki-"]):not(.svg-icon),
+.cd-client-tabs-card *:not(i):not([class*="fa-"]):not([class*="bi-"]):not([class*="ki-"]):not(.svg-icon),
+.cd-client-stream *:not(i):not([class*="fa-"]):not([class*="bi-"]):not([class*="ki-"]):not(.svg-icon),
+.cd-client-card *:not(i):not([class*="fa-"]):not([class*="bi-"]):not([class*="ki-"]):not(.svg-icon) {
     box-sizing: border-box !important;
+}
+
+/* ── Explicit FontAwesome Glyphs Preservation (Strict Protection Against Poppins Override) ── */
+.cd-client-wrapper i[class*="fa-"],
+.cd-client-header-card i[class*="fa-"],
+.cd-client-tabs-card i[class*="fa-"],
+.cd-client-stream i[class*="fa-"],
+.cd-client-card i[class*="fa-"],
+i.fas, i.fa-solid, [class*="fa-solid"], [class*="fas "] {
+    font-family: "Font Awesome 6 Free", "FontAwesome" !important;
+    font-weight: 900 !important;
+    font-style: normal !important;
+    display: inline-block !important;
+}
+
+.cd-client-wrapper i.far,
+.cd-client-header-card i.far,
+.cd-client-tabs-card i.far,
+.cd-client-stream i.far,
+.cd-client-card i.far,
+i.far, i.fa-regular, [class*="fa-regular"], [class*="far "] {
+    font-family: "Font Awesome 6 Free", "FontAwesome" !important;
+    font-weight: 400 !important;
+    font-style: normal !important;
+    display: inline-block !important;
+}
+
+.cd-client-wrapper i.fab,
+.cd-client-header-card i.fab,
+.cd-client-tabs-card i.fab,
+.cd-client-stream i.fab,
+.cd-client-card i.fab,
+i.fab, i.fa-brands, [class*="fa-brands"], [class*="fab "] {
+    font-family: "Font Awesome 6 Brands", "FontAwesome" !important;
+    font-style: normal !important;
+    display: inline-block !important;
 }
 
 .cd-client-wrapper,
@@ -255,23 +299,40 @@
     width: 100% !important;
 }
 
-.cd-client-card {
+.cd-client-card,
+.cd-client-card.tbl-r,
+.tbl-req .cd-client-card.tbl-r,
+div.cd-client-card.tbl-r {
+    display: flex !important;
+    flex-direction: column !important;
+    grid-template-columns: none !important;
+    column-gap: 0 !important;
+    row-gap: 0 !important;
+    min-width: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 0 !important;
+    margin: 0 0 10px 0 !important;
     background: #ffffff !important;
     border: 1px solid #e2e8f0 !important;
     border-radius: 10px !important;
     transition: all 0.18s ease-in-out !important;
-    width: 100% !important;
     overflow: hidden !important;
     box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03) !important;
+    box-sizing: border-box !important;
+    align-items: stretch !important;
 }
 
-.cd-client-card:hover {
+.cd-client-card:hover,
+.cd-client-card.tbl-r:hover {
+    background: #ffffff !important;
     border-color: #cbd5e1 !important;
     box-shadow: 0 4px 14px rgba(15, 23, 42, 0.06) !important;
 }
 
 /* Pending Request Card Highlight */
-.cd-client-card.is-pending-request {
+.cd-client-card.is-pending-request,
+.cd-client-card.tbl-r.is-pending-request {
     border-left: 4px solid #f59e0b !important;
     background: linear-gradient(90deg, #fffbeb 0%, #ffffff 16%) !important;
 }
@@ -283,7 +344,10 @@
     gap: 8px !important;
     padding: 10px 14px !important;
     width: 100% !important;
+    max-width: 100% !important;
     align-items: stretch !important;
+    box-sizing: border-box !important;
+    min-width: 0 !important;
 }
 
 @media (max-width: 1200px) {
@@ -631,14 +695,18 @@
 .cd-client-card-bottom {
     background: #fafbfc !important;
     border-top: 1px solid #f1f5f9 !important;
-    padding: 6px 14px !important;
+    padding: 8px 14px !important;
     display: flex !important;
+    flex-direction: row !important;
     align-items: center !important;
     justify-content: space-between !important;
     gap: 10px !important;
-    flex-wrap: wrap !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
     font-size: 11px !important;
     color: #64748b !important;
+    min-height: 38px !important;
 }
 
 .cd-bottom-left {
@@ -646,6 +714,7 @@
     align-items: center !important;
     gap: 12px !important;
     flex-wrap: wrap !important;
+    min-width: 0 !important;
 }
 
 .cd-bottom-left strong {
@@ -656,6 +725,7 @@
     display: flex !important;
     align-items: center !important;
     gap: 6px !important;
+    flex-shrink: 0 !important;
 }
 
 .cd-btn-quick-drawer {
