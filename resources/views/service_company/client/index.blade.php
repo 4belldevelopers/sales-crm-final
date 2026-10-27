@@ -2692,7 +2692,7 @@ function renderClientRows(rows) {
                     </div>
                 </div>
             </div>
-        </div>`;`;
+        </div>`;
     }).join('');
 }
 
