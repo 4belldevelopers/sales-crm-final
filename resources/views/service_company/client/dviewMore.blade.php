@@ -7068,11 +7068,17 @@
         avatarPalette: ['#059669', '#2563eb', '#7c3aed', '#d97706', '#db2777', '#0284c7', '#4f46e5', '#0d9488', '#ea580c'],
 
         init: function(companyId) {
-            if (companyId) this.companyId = companyId;
-            if (!this.isInitialized) {
-                this.bindEvents();
-                this.isInitialized = true;
+            if (companyId) {
+                var cid = parseInt(companyId, 10);
+                if (this.companyId && parseInt(this.companyId, 10) !== cid) {
+                    this.companyId = cid;
+                    this.allContacts = [];
+                } else {
+                    this.companyId = cid;
+                }
             }
+            this.bindEvents();
+            this.isInitialized = true;
             if (Array.isArray(this.allContacts) && this.allContacts.length > 0) {
                 this.updateCounts(this.allContacts);
                 this.filterAndRender();
@@ -7516,10 +7522,12 @@
     };
 
     function initDContactsDataTable() {
-        window.DirectClientContactsManager.init();
+        var cid = (typeof dcClientId !== 'undefined') ? dcClientId : (window.ClientStateManager && typeof window.ClientStateManager.getSelectedClientId === 'function' ? window.ClientStateManager.getSelectedClientId() : null);
+        window.DirectClientContactsManager.init(cid);
     }
     function initDContactsManager() {
-        window.DirectClientContactsManager.init();
+        var cid = (typeof dcClientId !== 'undefined') ? dcClientId : (window.ClientStateManager && typeof window.ClientStateManager.getSelectedClientId === 'function' ? window.ClientStateManager.getSelectedClientId() : null);
+        window.DirectClientContactsManager.init(cid);
     }
 </script>
 
@@ -7541,13 +7549,17 @@
 </div>
 
 <script>
-    $(document).ready(function() {
+    (function() {
         var dcClientId = parseInt('{{ $directClientDetail->client_id ?: ($directClientDetail->from_company_id ?: $directClientDetail->company_id) }}', 10);
         var currentCompanyId = parseInt('{{ auth()->user()->company_id }}', 10);
 
         function loadDirectTabContent(target, force) {
             if (!target) return;
-            if (window.ClientStateManager && window.ClientStateManager.getSelectedClientId() !== dcClientId) {
+            var activeSelId = window.ClientStateManager && typeof window.ClientStateManager.getSelectedClientId === 'function'
+                ? window.ClientStateManager.getSelectedClientId()
+                : (window.activeSelectedClientId || null);
+            if (activeSelId && parseInt(activeSelId, 10) !== dcClientId) {
+                console.warn('[Direct Client Drawer Shield] Discarded tab load for inactive client', activeSelId, 'vs current', dcClientId);
                 return;
             }
 
@@ -7617,7 +7629,7 @@
             $(this).addClass('active');
             $('#kt_activitiesDirectClient .tab-pane').removeClass('active show');
             $(`#kt_activitiesDirectClient #${target}`).addClass('active show');
-            loadDirectTabContent(target);
+            loadDirectTabContent(target, true);
         });
 
         // Scoped Click Handler for Metric KPI Cards
@@ -8642,9 +8654,11 @@
     window.currentOjSegmentDirect = 'all';
 
     function directfetchCandidatesJoin(page = 1, search = '', segment = null) {
-        var activeSelectedId = window.ClientStateManager ? window.ClientStateManager.getSelectedClientId() : null;
+        var activeSelectedId = window.ClientStateManager && typeof window.ClientStateManager.getSelectedClientId === 'function'
+            ? window.ClientStateManager.getSelectedClientId()
+            : (window.activeSelectedClientId || null);
         var directCurrentId = parseInt('{{ $directClientDetail->client_id ?: ($directClientDetail->from_company_id ?: $directClientDetail->company_id) }}', 10);
-        if (activeSelectedId && directCurrentId && activeSelectedId !== directCurrentId) {
+        if (activeSelectedId && directCurrentId && parseInt(activeSelectedId, 10) !== directCurrentId) {
             return;
         }
 
@@ -8670,7 +8684,10 @@
             },
             success: function(response) {
                 $('.page-loader').css('display', 'none');
-                if (window.ClientStateManager && window.ClientStateManager.getSelectedClientId() !== directCurrentId) {
+                var curSelId = window.ClientStateManager && typeof window.ClientStateManager.getSelectedClientId === 'function'
+                    ? window.ClientStateManager.getSelectedClientId()
+                    : (window.activeSelectedClientId || null);
+                if (curSelId && parseInt(curSelId, 10) !== directCurrentId) {
                     return;
                 }
                 $('#candidatetListJoin').html(response.html);
@@ -9252,9 +9269,11 @@
     })();
 
     function directfetchCandidatesInverViewTracker(page = 1, search = '') {
-        var activeSelectedId = window.ClientStateManager ? window.ClientStateManager.getSelectedClientId() : null;
+        var activeSelectedId = window.ClientStateManager && typeof window.ClientStateManager.getSelectedClientId === 'function'
+            ? window.ClientStateManager.getSelectedClientId()
+            : (window.activeSelectedClientId || null);
         var directCurrentId = parseInt('{{ $directClientDetail->client_id ?: ($directClientDetail->from_company_id ?: $directClientDetail->company_id) }}', 10);
-        if (activeSelectedId && directCurrentId && activeSelectedId !== directCurrentId) {
+        if (activeSelectedId && directCurrentId && parseInt(activeSelectedId, 10) !== directCurrentId) {
             return;
         }
         if (directCurrentId) {
@@ -9267,9 +9286,11 @@
     });
 
     function fetchJobsClientdirect(page = 1, search = '', status = 'all') {
-        var activeSelectedId = window.ClientStateManager ? window.ClientStateManager.getSelectedClientId() : null;
+        var activeSelectedId = window.ClientStateManager && typeof window.ClientStateManager.getSelectedClientId === 'function'
+            ? window.ClientStateManager.getSelectedClientId()
+            : (window.activeSelectedClientId || null);
         var directCurrentId = parseInt('{{ $directClientDetail->client_id ?: ($directClientDetail->from_company_id ?: $directClientDetail->company_id) }}', 10);
-        if (activeSelectedId && directCurrentId && activeSelectedId !== directCurrentId) {
+        if (activeSelectedId && directCurrentId && parseInt(activeSelectedId, 10) !== directCurrentId) {
             return;
         }
 
@@ -9293,7 +9314,10 @@
             },
             success: function(response) {
                 $('.page-loader').css('display', 'none');
-                if (window.ClientStateManager && window.ClientStateManager.getSelectedClientId() !== directCurrentId) {
+                var curSelId = window.ClientStateManager && typeof window.ClientStateManager.getSelectedClientId === 'function'
+                    ? window.ClientStateManager.getSelectedClientId()
+                    : (window.activeSelectedClientId || null);
+                if (curSelId && parseInt(curSelId, 10) !== directCurrentId) {
                     return;
                 }
                 $('#directclientJobsListajax').html(response.html);
@@ -9435,5 +9459,5 @@
                 }
             });
         }
-    });
+    })();
 </script>
