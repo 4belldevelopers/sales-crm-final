@@ -286,6 +286,8 @@ Route::group(['middleware' => 'auth'], function () {
         Route::get('topup-coin-packages', [SuperAdminCompanyController::class, 'topUpCoinPackages'])->name('company.topUpCoinPackages');
         Route::get('add-edit-top-up-coin-packages/{id?}', [SuperAdminCompanyController::class, 'addEditTopUpcoinPackages'])->name('company.addEditTopUpcoinPackages');
         Route::post('top-upcoin-package-store', [SuperAdminCompanyController::class, 'topUpCoinPackageStore'])->name('company.topUpCoinPackageStore');
+        Route::post('top-upcoin-package/toggle-status', [SuperAdminCompanyController::class, 'toggleTopUpCoinPackageStatus'])->name('company.toggleTopUpCoinPackageStatus');
+        Route::post('top-upcoin-package/destroy', [SuperAdminCompanyController::class, 'destroyTopUpCoinPackage'])->name('company.destroyTopUpCoinPackage');
 
         Route::post('topup-coins-added', [SuperAdminCompanyController::class, 'topUpCoinsAdded'])->name('company.topUpCoinsAdded');
         Route::post('topuptypegetprice', [SuperAdminCompanyController::class, 'topuptypegetprice'])->name('company.topuptypegetprice');

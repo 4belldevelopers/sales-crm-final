@@ -1,378 +1,345 @@
 @extends('layouts.superadmin_layout')
 
-@push('head-script')
-    <link rel="stylesheet" href="{{ asset('assets/node_modules/switchery/dist/switchery.min.css') }}">
-@endpush
-
 @section('content')
-    <div class="row">
-        <div class="col-12">
-            <div class="card">
-                <div class="card-body">
-                    <h4 class="card-title">Create New Top Up</h4>
+<style>
+.sa-topup-form-card {
+    background: #ffffff !important;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 10px !important;
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03) !important;
+    font-family: 'Poppins', sans-serif !important;
+}
 
-                    <form id="editSettings" class="ajax-form">
-                        @csrf
+.sa-topup-form-header {
+    padding: 18px 24px !important;
+    border-bottom: 1px solid #e2e8f0 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    background: #ffffff !important;
+}
 
-                        <div class="row">
-                            <div class="col-md-2">
-                                <label for="company_name">Total Coins</label>
-                                <input type="number" class="form-control form-control-solid" name="total_coins"
-                                id="total_coins" value="{{ ($update && $coin_packages->coins) ? $coin_packages->coins : '0' }}" placeholder="0.00" >
-                                <span class="form-text text-muted"></span>
-                                <div class="fv-plugins-message-container "></div>
-                            </div>
-                            <div class="col-md-2">
-                                <div class="form-group">
-                                    <label for="coin_package">Discount(%):</label>
-                                    <input type="number" class="form-control form-control-solid" name="discount"
-                                    id="discount" value="{{ ($update && $coin_packages->discount) ? $coin_packages->discount : '' }}" placeholder="0.00">
-                                </div>
-                            </div>
-                            <div class="col-md-2">
-                                <div class="form-group">
-                                    @php
-                                        $actualPrice = 0;
-                                        if ($update) {
-                                            $actualPrice =
-                                                $coin_packages->price / (1 - $coin_packages->discount / 100);
-                                        }
+.sa-topup-form-body {
+    padding: 24px !important;
+}
 
-                                    @endphp
+.sa-topup-preview-box {
+    background: #eff6ff !important;
+    border: 1px dashed #bfdbfe !important;
+    border-radius: 8px !important;
+    padding: 16px 20px !important;
+    margin-top: 14px !important;
+}
 
-                                    <label for="price_label">Price(INR)</label>
-                                    <input type="number" class="form-control form-control-solid" name="price"
-                                            id="price" value="{{ ($update && $coin_packages->price) ? $actualPrice : '0' }}" placeholder="0.00" style="background-color:#FFFF99;">
-                                </div>
-                            </div>
-                            <div class="col-md-2">
-                                <div class="form-group">
-                                    <label for="price_label">Total Price(INR)</label>
-                                    <input type="number" class="form-control form-control-solid" name="total_price"
-                                            id="total_price" value="{{ ($update && $coin_packages->price) ? $coin_packages->price : '0' }}" placeholder="0.00" readonly style="background-color:#FFFF99;">
-                                </div>
-                            </div>
+.sa-topup-preview-grid {
+    display: grid !important;
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+    gap: 12px !important;
+}
+</style>
 
-                            <div class="col-md-2">
-                                <div class="form-group">
-                                    @php
-                                        $actualPriceusd = 0;
-                                        if ($update) {
-                                            $actualPriceusd =
-                                                $coin_packages->price_usd / (1 - $coin_packages->discount / 100);
-                                        }
+<div class="toolbar mb-5" id="kt_toolbar">
+    <div id="kt_toolbar_container" class="container-fluid d-flex flex-stack p-0">
+        <div class="page-title d-flex align-items-center flex-wrap me-3">
+            <h1 class="d-flex align-items-center text-dark fw-bolder fs-3 my-1">
+                {{ $update ? 'Edit Top-Up Coin Package' : 'Create New Top-Up Coin Package' }}
+            </h1>
+        </div>
+        <div class="d-flex align-items-center py-1">
+            <a href="{{ route('superadmin.company.topUpCoinPackages') }}" class="btn btn-sm btn-light-primary fw-bold">
+                <i class="fas fa-arrow-left me-1"></i> Back to Coin Packages
+            </a>
+        </div>
+    </div>
+</div>
 
-                                    @endphp
-                                    <label for="price_usd_label">Price (USD)</label>
-                                    <input type="number" class="form-control form-control-solid" name="price_usd"
-                                            id="price_usd" value="{{ ($update && $coin_packages->price_usd) ? $actualPriceusd : '0' }}" placeholder="0.00" style="background-color:#FFFF99;">
-                                </div>
-                            </div>
-                            <div class="col-md-2">
-                                <div class="form-group">
-                                    <label for="price_usd_label">Total Price (USD)</label>
-                                    <input type="number" class="form-control form-control-solid" name="total_price_usd"
-                                            id="total_price_usd" value="{{ ($update && $coin_packages->price_usd) ? $coin_packages->price_usd : '0' }}" placeholder="0.00" readonly style="background-color:#FFFF99;">
-                                </div>
-                            </div>
-
-                           
-                        </div>
-                        
-                        <div class="row">                        
-                          
-                            <label class="form-label" style="padding-top:10px;">&nbsp;</label>
-                            <input type="hidden" class="form-control" value="{{ ($update && $coin_packages->id) ? $coin_packages->id : '' }}" id="token_id" name="token_id">
-                        </div>
-
-                    
-
-                       
-
-                        <div class="mb-5">
-                            <div class="flex-column">
-                                <div class="form-group row fv-row mb-10 fv-plugins-icon-container row seven-cols">
-                                    <div class="col-md-7">&nbsp;</div>
-                                    <div class="col-md-1">
-                                        <label class="form-label" style="padding-top:10px;">@lang('app.status')</label>
-                                    </div>
-
-                                    <div class="col-md-3">
-                                        <div class="switchery-demo">
-                                            <label class="form-label" style="padding-top:10px;">&nbsp;</label>
-                                            <input type="checkbox" {{ ($update && $coin_packages->status==1) ? 'checked' : '' }}  class="js-switch" name="status"
-                                                data-color="#99d683" data-size="small" />
-                                        </div>
-                                    </div>
-
-
-                                    <div class="col-md-7">&nbsp;</div>
-                                    <div class="col-md-1">
-                                        <label class="form-label" style="padding-top:10px;">Per Coin Price: </label>
-                                    </div>
-
-                                    <div class="col-md-3">
-                                        <div class="switchery-demo">
-                                            <label class="form-label per_coin_rate_text" style="padding-top:10px;">{{ ($update && $coin_packages->per_coin_rate) ? $coin_packages->per_coin_rate : '' }}/Coins</label>
-                                            <input type="hidden"  class="js-switch per_coin_rate" name="per_coin_rate" value="{{ ($update && $coin_packages->per_coin_rate) ? $coin_packages->per_coin_rate : '' }}" />
-                                        </div>
-                                    </div>
-
-                                    <div class="col-md-7">&nbsp;</div>
-                                    <div class="col-md-1">
-                                        <label class="form-label" style="padding-top:10px;">Per Coin Price(USD): </label>
-                                    </div>
-
-                                    <div class="col-md-3">
-                                        <div class="switchery-demo">
-                                            <label class="form-label per_coin_rate_text_usd" style="padding-top:10px;">{{ ($update && $coin_packages->per_coin_rate_usd) ? $coin_packages->per_coin_rate_usd : '' }}/Coins</label>
-                                            <input type="hidden"  class="js-switch per_coin_rate_usd" name="per_coin_rate_usd" value="{{ ($update && $coin_packages->per_coin_rate_usd) ? $coin_packages->per_coin_rate_usd : '' }}" />
-                                        </div>
-                                    </div>
-
-
-
-
-                                </div>
-                            </div>
-                        </div>
-
-                       
-
-                        <div class="form-row row fv-row">
-                            <div class="col-12 text-center py-10">
-
-                            <button type="button" id="save-form" class="btn btn-success waves-effect waves-light m-r-10">
-                                @lang('app.save')
-                            </button>
-                            <button type="reset" class="btn btn-inverse waves-effect waves-light">@lang('app.reset')</button>
-
+<div class="row">
+    <div class="col-12">
+        <div class="card sa-topup-form-card">
+            <div class="sa-topup-form-header">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="symbol symbol-40px bg-light-primary rounded d-flex align-items-center justify-content-center text-primary fs-4">
+                        <i class="fa-solid fa-coins"></i>
+                    </div>
+                    <div>
+                        <h4 class="card-title text-dark fw-bolder mb-1">
+                            {{ $update ? 'Edit Top-Up Coin Package' : 'Create New Top-Up Coin Package' }}
+                        </h4>
+                        <div class="text-muted fs-7">
+                            Configure bundle coins, pricing, discounts, and real-time per-coin rates.
                         </div>
                     </div>
-                    </form>
                 </div>
+            </div>
+
+            <div class="sa-topup-form-body">
+                <form id="editSettings" class="ajax-form">
+                    @csrf
+                    <input type="hidden" name="token_id" id="token_id" value="{{ ($update && @$coin_packages->id) ? $coin_packages->id : '' }}">
+                    <input type="hidden" name="per_coin_rate" id="per_coin_rate" value="{{ ($update && @$coin_packages->per_coin_rate) ? $coin_packages->per_coin_rate : '' }}">
+                    <input type="hidden" name="per_coin_rate_usd" id="per_coin_rate_usd" value="{{ ($update && @$coin_packages->per_coin_rate_usd) ? $coin_packages->per_coin_rate_usd : '' }}">
+
+                    @php
+                        $discountVal = ($update && @$coin_packages->discount) ? (float)$coin_packages->discount : 0;
+                        $finalInr = ($update && @$coin_packages->price) ? (float)$coin_packages->price : 0;
+                        $finalUsd = ($update && @$coin_packages->price_usd) ? (float)$coin_packages->price_usd : 0;
+                        $baseInr = ($discountVal > 0 && $discountVal < 100) ? ($finalInr / (1 - $discountVal / 100)) : $finalInr;
+                        $baseUsd = ($discountVal > 0 && $discountVal < 100) ? ($finalUsd / (1 - $discountVal / 100)) : $finalUsd;
+                    @endphp
+
+                    <!-- Row 1: Scope & Package Mode -->
+                    <div class="row mb-5">
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold text-dark fs-7 required">Coin Package Scope</label>
+                            <select class="form-select form-select-solid" name="event_type" id="event_type" required>
+                                <option value="operational" {{ ($update && @$coin_packages->event_type == 'operational') ? 'selected' : '' }}>
+                                    Operational Coins (ATS Pipeline)
+                                </option>
+                                <option value="sales" {{ ($update && @$coin_packages->event_type == 'sales') ? 'selected' : '' }}>
+                                    Sales Coins (Marketplace Candidate Trading)
+                                </option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold text-dark fs-7">Package Type</label>
+                            <div class="form-check mt-3">
+                                <input class="form-check-input" type="checkbox" name="custome_chk" id="custome_chk" value="1"
+                                       {{ ($update && @$coin_packages->custome_chk == 1) ? 'checked' : '' }}>
+                                <label class="form-check-label fs-7 fw-semibold" for="custome_chk">
+                                    Custom Configurable Pack (Allows client custom coin quantity)
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Row 2: Coins & Discount -->
+                    <div class="row mb-5">
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold text-dark fs-7 required">Total Coins</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light border-0"><i class="fa-solid fa-coins text-warning"></i></span>
+                                <input type="number" class="form-control form-control-solid" name="total_coins" id="total_coins"
+                                       value="{{ ($update && @$coin_packages->coins) ? $coin_packages->coins : '' }}" placeholder="e.g. 1000" min="0" step="1" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold text-dark fs-7">Discount (%)</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light border-0"><i class="fas fa-percent text-danger"></i></span>
+                                <input type="number" class="form-control form-control-solid" name="discount" id="discount"
+                                       value="{{ ($update && @$coin_packages->discount) ? $coin_packages->discount : '' }}" placeholder="0.00" min="0" max="100" step="0.01">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Row 3: INR Pricing -->
+                    <div class="row mb-5">
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold text-dark fs-7 required">Catalog Base Price (INR ₹)</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light border-0">₹</span>
+                                <input type="number" class="form-control form-control-solid" name="price" id="price"
+                                       value="{{ $update ? number_format($baseInr, 2, '.', '') : '' }}" placeholder="0.00" min="0" step="0.01" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold text-dark fs-7 required">Final Total Price (INR ₹)</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light border-0">₹</span>
+                                <input type="number" class="form-control form-control-solid bg-light text-dark fw-bold" name="total_price" id="total_price"
+                                       value="{{ ($update && @$coin_packages->price) ? $coin_packages->price : '' }}" placeholder="0.00" readonly>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Row 4: USD Pricing -->
+                    <div class="row mb-5">
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold text-dark fs-7">Catalog Base Price (USD $)</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light border-0">$</span>
+                                <input type="number" class="form-control form-control-solid" name="price_usd" id="price_usd"
+                                       value="{{ $update ? number_format($baseUsd, 2, '.', '') : '' }}" placeholder="0.00" min="0" step="0.01">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold text-dark fs-7">Final Total Price (USD $)</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light border-0">$</span>
+                                <input type="number" class="form-control form-control-solid bg-light text-dark fw-bold" name="total_price_usd" id="total_price_usd"
+                                       value="{{ ($update && @$coin_packages->price_usd) ? $coin_packages->price_usd : '' }}" placeholder="0.00" readonly>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Row 5: Status -->
+                    <div class="row mb-6">
+                        <div class="col-12">
+                            <div class="p-4 bg-light rounded d-flex align-items-center justify-content-between">
+                                <div>
+                                    <div class="fw-bold text-dark fs-6">Package Active Status</div>
+                                    <div class="text-muted fs-7">Enable this package for immediate purchasing in organization coin top-up drawers.</div>
+                                </div>
+                                <div class="form-check form-switch p-0 m-0">
+                                    <input class="form-check-input" type="checkbox" role="switch" name="status" id="status" value="1"
+                                           {{ (!$update || @$coin_packages->status == 1) ? 'checked' : '' }} style="width: 44px; height: 22px;">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Live Math Preview Card -->
+                    <div class="sa-topup-preview-box mb-6">
+                        <div class="fw-bold text-primary fs-7 text-uppercase mb-3">
+                            <i class="fas fa-calculator me-1"></i> Real-Time Calculation & Unit Economics
+                        </div>
+                        <div class="sa-topup-preview-grid">
+                            <div>
+                                <div class="text-muted fs-8">Final INR Price</div>
+                                <div class="fs-5 fw-bolder text-dark" id="txt_preview_inr">₹0.00</div>
+                            </div>
+                            <div>
+                                <div class="text-muted fs-8">Final USD Price</div>
+                                <div class="fs-5 fw-bolder text-dark" id="txt_preview_usd">$0.00</div>
+                            </div>
+                            <div>
+                                <div class="text-muted fs-8">Rate / Coin (INR)</div>
+                                <div class="fs-5 fw-bolder text-dark" id="txt_preview_rate_inr">₹0.0000</div>
+                            </div>
+                            <div>
+                                <div class="text-muted fs-8">Rate / Coin (USD)</div>
+                                <div class="fs-5 fw-bolder text-dark" id="txt_preview_rate_usd">$0.0000</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="d-flex align-items-center justify-content-end gap-3 pt-4 border-top">
+                        <a href="{{ route('superadmin.company.topUpCoinPackages') }}" class="btn btn-light">
+                            Cancel
+                        </a>
+                        <button type="submit" id="save-form" class="btn btn-primary fw-bold px-6">
+                            <i class="fas fa-check-circle me-1"></i> @lang('app.save')
+                        </button>
+                    </div>
+
+                </form>
             </div>
         </div>
     </div>
+</div>
 @endsection
+
 @push('footer-script')
-    <script src="{{ asset('assets/node_modules/switchery/dist/switchery.min.js') }}"></script>
+<script>
+$(document).ready(function() {
 
-    <script>
-
-       
-
-
-    $(document).ready(function() {
-
-
-
-       $('#coin_package').change(function(e){
-
-        var selectElement = document.getElementById("coin_package");
-        var selectedOption = selectElement.options[selectElement.selectedIndex];
-         var daysValue = selectedOption.getAttribute("data-days");
-         $('#durations').val(daysValue);
-         if (daysValue > 0) {
-            $('#durations').prop('readonly', true);
-            $('label[for="durations_label"]').text('Duration (In Days)');
-        } else {
-            $('#durations').prop('readonly', false);
-            $('label[for="durations_label"]').text('Custom Duration (In Days)');
+    $.ajaxSetup({
+        headers: {
+            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
         }
-       });
-
-       $('#total_coins').keyup(function(e){
-        total_coins();
-        per_coin_rate();
-        per_coin_rate_usd();
-       });
-       $('#discount').keyup(function(e){
-        total_coins();
-        per_coin_rate();
-        per_coin_rate_usd();
-      });
-
-      $('#total_price').keyup(function(e){
-         total_coins()
-         per_coin_rate();
-      });
-
-      $('#total_price_usd').keyup(function(e){
-         total_coins()
-          per_coin_rate_usd();
-      });
-      $('#price_usd').keyup(function(e){
-          total_coins()
-          per_coin_rate_usd();
-      });
-
-
-        function total_coins(){
-                let value = parseFloat($('#price').val());
-                let value_usd = parseFloat($('#price_usd').val());
-                let percentage = parseFloat($('#discount').val());
-
-                if (isNaN(value)) {
-                    value = 0; // Default to 0 if invalid
-                }
-                if (isNaN(value_usd)) {
-                    value_usd = 0; // Default to 0 if invalid
-                }
-                if (isNaN(percentage)) {
-                    percentage = 0; // Default to 0 if invalid
-                }
-
-                var total_coins = value; // Add the percentage amount to the original value
-                var total_coins_usd = value_usd; // Add the percentage amount to the original value
-                if(percentage !=''){
-                    let additionalAmount = (percentage / 100) * value;
-                    var total_coins = value - additionalAmount; // Add the percentage amount to the original value
-
-                    let additionalAmountusd= (percentage / 100) * value_usd;
-                    var total_coins_usd = value_usd - additionalAmountusd; // Add the percentage amount to the original value
-
-                }
-                
-            
-                $('#total_price').val(total_coins.toFixed(2)); // Set the value with two decimal points
-                $('#total_price_usd').val(total_coins_usd.toFixed(2)); // Set the value with two decimal points
-                per_coin_rate_usd();
-                per_coin_rate();
-        }
-
-
-
     });
 
-    function per_coin_rate(){
-        let price = parseFloat($('#total_coins').val());
-        let coins = parseFloat($('#total_price').val());
+    $('#total_coins, #discount, #price, #price_usd').on('input keyup change', function() {
+        calculatePricing();
+    });
 
-        if (coins !== 0) {
-            let perCoinPrice = (coins/price).toFixed(5);
-            $('.per_coin_rate_text').text(perCoinPrice);
-            $('.per_coin_rate').val(perCoinPrice);
-            // console.log();
-        } else {
-            $('.per_coin_rate_text').text("Number of coins cannot be zero.");
-            $('.per_coin_rate').val('');
+    function calculatePricing() {
+        var coins = parseFloat($('#total_coins').val()) || 0;
+        var inr = parseFloat($('#price').val()) || 0;
+        var usd = parseFloat($('#price_usd').val()) || 0;
+        var discount = parseFloat($('#discount').val()) || 0;
+
+        if (discount < 0) discount = 0;
+        if (discount > 100) discount = 100;
+
+        var finalInr = inr;
+        var finalUsd = usd;
+
+        if (discount > 0) {
+            finalInr = inr - (inr * (discount / 100));
+            finalUsd = usd - (usd * (discount / 100));
         }
+
+        $('#total_price').val(finalInr.toFixed(2));
+        $('#total_price_usd').val(finalUsd.toFixed(2));
+
+        var perCoinInr = (coins > 0) ? (finalInr / coins) : 0;
+        var perCoinUsd = (coins > 0) ? (finalUsd / coins) : 0;
+
+        $('#per_coin_rate').val(perCoinInr > 0 ? perCoinInr.toFixed(5) : '');
+        $('#per_coin_rate_usd').val(perCoinUsd > 0 ? perCoinUsd.toFixed(5) : '');
+
+        $('#txt_preview_inr').text('₹' + finalInr.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
+        $('#txt_preview_usd').text('$' + finalUsd.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
+        $('#txt_preview_rate_inr').text('₹' + perCoinInr.toFixed(4));
+        $('#txt_preview_rate_usd').text('$' + perCoinUsd.toFixed(4));
     }
 
-    function per_coin_rate_usd(){
-        let price = parseFloat($('#total_coins').val());
-        let coins = parseFloat($('#total_price_usd').val());
+    calculatePricing();
 
-        if (coins !== 0) {
-            let perCoinPrice = (coins/price).toFixed(5);
-            $('.per_coin_rate_text_usd').text(perCoinPrice);
-            $('.per_coin_rate_usd').val(perCoinPrice);
-            // console.log();
-        } else {
-            $('.per_coin_rate_text_usd').text("Number of coins cannot be zero.");
-            $('.per_coin_rate_usd').val('');
-        }
-    }
-    
-   
+    $('#editSettings').on('submit', function(e) {
+        e.preventDefault();
 
+        var $btn = $('#save-form');
+        var originalText = $btn.html();
+        $btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin me-1"></i> Saving...');
 
-    // total_coins total_price per_coin_rate
+        var formData = new FormData(this);
 
-      
-      var elems = Array.prototype.slice.call(document.querySelectorAll('.js-switch'));
-        $('.js-switch').each(function() {
-            new Switchery($(this)[0], $(this).data());
+        $.ajax({
+            url: '{{ route('superadmin.company.topUpCoinPackageStore') }}',
+            type: "POST",
+            data: formData,
+            processData: false,
+            contentType: false,
+            success: function(response) {
+                $btn.prop('disabled', false).html(originalText);
 
+                if (response.status === 'success') {
+                    Swal.fire({
+                        text: response.message,
+                        icon: "success",
+                        buttonsStyling: false,
+                        confirmButtonText: "Ok, got it!",
+                        customClass: { confirmButton: "btn btn-primary" }
+                    }).then(function() {
+                        window.location = response.url;
+                    });
+                } else {
+                    Swal.fire({
+                        text: response.message || "Failed to save settings.",
+                        icon: "error",
+                        buttonsStyling: false,
+                        confirmButtonText: "Ok",
+                        customClass: { confirmButton: "btn btn-primary" }
+                    });
+                }
+            },
+            error: function(xhr) {
+                $btn.prop('disabled', false).html(originalText);
+
+                if (xhr.responseJSON && xhr.responseJSON.errors) {
+                    var errorMessages = Object.values(xhr.responseJSON.errors).flat().join('<br>');
+                    Swal.fire({
+                        html: '<p class="fw-bold">Validation Errors:</p><p class="text-danger text-start">' + errorMessages + '</p>',
+                        icon: "error",
+                        buttonsStyling: false,
+                        confirmButtonText: "Ok",
+                        customClass: { confirmButton: "btn btn-primary" }
+                    });
+                } else {
+                    Swal.fire({
+                        text: "An error occurred while saving. Please try again.",
+                        icon: "error",
+                        buttonsStyling: false,
+                        confirmButtonText: "Ok",
+                        customClass: { confirmButton: "btn btn-primary" }
+                    });
+                }
+            }
         });
-
-      
-
-        $('#save-form').click(function() {
-            $.ajaxSetup({
-                headers: {
-                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-                }
-            });
-            var formData = new FormData($('#editSettings')[0]);
-            $.ajax({
-                url: '{{ route('superadmin.company.topUpCoinPackageStore') }}',
-                type: "POST",
-                data: formData,
-                processData: false, // tell jQuery not to process the data
-                contentType: false, // tell jQuery not to set contentType
-                //container		: '#createForm',
-                redirect: true,
-                file: true,
-                //data			: $('#createForm').serialize(),
-                success: function(response) {
-                    console.log(response);
-                    if (response.status == 'success') {
-                        Swal.fire({
-                            text: response.message,
-                            icon: "success",
-                            buttonsStyling: false,
-                            confirmButtonText: "Ok, got it!",
-                            customClass: {
-                                confirmButton: "btn btn-primary"
-                            }
-                        }).then(function(result) {
-                            window.location = response.url;
-                        });
-                    } else {
-                        Swal.fire({
-                            text: "Sorry, looks like there are some errors, please try again.",
-                            icon: "error",
-                            buttonsStyling: false,
-                            confirmButtonText: "Ok, got it!",
-                            customClass: {
-                                confirmButton: "btn btn-primary"
-                            }
-                        });
-                    }
-
-                },
-                error: function(response) {
-
-                    if (response.responseJSON && response.responseJSON.errors) {
-                            let errorMessages = Object.values(response.responseJSON.errors).flat().join('<br>');
-
-                            Swal.fire({
-                                html: `<p>Sorry, looks like there are some validation:</p><p style="color: red;text-align: left;">${errorMessages}</p>`,
-                                icon: "error",
-                                buttonsStyling: false,
-                                confirmButtonText: "Ok, got it!",
-                                customClass: {
-                                    confirmButton: "btn btn-primary"
-                                }
-                            });
-                    } else {
-                        Swal.fire({
-                            text: "Sorry, looks like there was an issue. Please try again.",
-                            icon: "error",
-                            buttonsStyling: false,
-                            confirmButtonText: "Ok, got it!",
-                            customClass: {
-                                confirmButton: "btn btn-primary"
-                            }
-                        });
-                    }
-                }
-            })
-
+    });
 
 });
-
-
-        $('#save-form').click(function() {
-            $.easyAjax({
-                url: '{{ route('superadmin.packages.store') }}',
-                container: '#editSettings',
-                type: "POST",
-                redirect: true,
-                file: true
-            })
-        });
-    </script>
+</script>
 @endpush
