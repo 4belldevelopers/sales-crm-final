@@ -6732,11 +6732,43 @@ class SuperAdminCompanyController extends SuperAdminBaseController
         return Reply::dataOnly(['status' => 'success', 'view' => $view]);
     }
 
-    public function coinFeatures()
+    public function coinFeatures(Request $request)
     {
-        $coinEvents = DB::table('coin_events')
-            ->select('*');
-        $this->coinEvents = $coinEvents->paginate(20);
+        $query = DB::table('coin_events');
+
+        if ($request->filled('search')) {
+            $search = trim($request->search);
+            $query->where(function ($q) use ($search) {
+                $q->where('title', 'like', "%{$search}%")
+                    ->orWhere('description', 'like', "%{$search}%")
+                    ->orWhere('id', 'like', "%{$search}%");
+            });
+        }
+
+        if ($request->filled('event_type') && in_array($request->event_type, ['operational', 'sales'])) {
+            $query->where('event_type', $request->event_type);
+        }
+
+        if ($request->filled('deduction_type') && in_array($request->deduction_type, ['daily', 'onetime'])) {
+            $query->where('deduction_type', $request->deduction_type);
+        }
+
+        if ($request->has('status') && $request->status !== '' && $request->status !== null) {
+            $query->where('status', (int) $request->status);
+        }
+
+        $perPage = (int) $request->get('per_page', 100);
+        $this->coinEvents = $query->orderBy('id', 'asc')->paginate($perPage)->appends($request->except('page'));
+
+        // High-level KPI aggregations for Tier 1 & Tier 2 headers
+        $allEvents = DB::table('coin_events')->get();
+        $this->kpiTotal = $allEvents->count();
+        $this->kpiActive = $allEvents->where('status', 1)->count();
+        $this->kpiInactive = $allEvents->where('status', 0)->count();
+        $this->kpiOperational = $allEvents->where('event_type', 'operational')->count();
+        $this->kpiSales = $allEvents->where('event_type', 'sales')->count();
+        $this->kpiDaily = $allEvents->where('deduction_type', 'daily')->count();
+        $this->kpiOnetime = $allEvents->where('deduction_type', 'onetime')->count();
 
         return view('super-admin.coin-settings.coin-events', $this->data);
     }
@@ -6779,16 +6811,27 @@ class SuperAdminCompanyController extends SuperAdminBaseController
         $decryptedValue = ($request->id);
         $this->update = false;
         if ($decryptedValue != null) {
-            $id = decrypt($request->id);
+            try {
+                $id = decrypt($request->id);
+            } catch (\Exception $e) {
+                $id = (int) $request->id;
+            }
             $coin_events = DB::table('coin_events')->where('id', $id)->first();
             $this->update = true;
             $this->coin_packages = $coin_events;
-            // dd($coin_packages);
         }
 
         $coin_package_types = DB::table('coin_package_types')
             ->select('*');
         $this->coinPackageType = $coin_package_types->get();
+
+        if ($request->ajax()) {
+            return response()->json([
+                'status' => 'success',
+                'data' => $this->coin_packages ?? null,
+                'update' => $this->update,
+            ]);
+        }
 
         return view('super-admin.coin-settings.add-edit-coin-events', $this->data);
     }
@@ -11385,7 +11428,7 @@ class SuperAdminCompanyController extends SuperAdminBaseController
             'add_notes',
             'view_notes',
             'edit_notes',
-            'delete_notes'
+            'delete_notes',
         ];
         $this->CaptainCompanyid = auth()->user()->company_id ?? 0;
         $this->editprofile = true;
@@ -11394,12 +11437,12 @@ class SuperAdminCompanyController extends SuperAdminBaseController
         $this->notVisiableBench = true;
         $this->editComman = true;
         $this->skillAndQuestions = true;
-        $this->resumeAwsPath = !empty($this->application->resume);
+        $this->resumeAwsPath = ! empty($this->application->resume);
         $this->interview_mode = DB::table('interview_mode')->select('*')->orderBy('interview_mode.id', 'ASC')->get();
 
         $effectiveJobId = $this->application->jobId ?? $this->application->job_id ?? $jobId;
-        $this->jobData = !empty($effectiveJobId) ? DB::table('jobs')->select('max_sal_mode as jobMode', 'max_salary_currency as jobCurrency')->where('id', '=', $effectiveJobId)->first() : null;
-        $this->job = !empty($effectiveJobId) ? Job::withoutGlobalScopes()->find($effectiveJobId) : null;
+        $this->jobData = ! empty($effectiveJobId) ? DB::table('jobs')->select('max_sal_mode as jobMode', 'max_salary_currency as jobCurrency')->where('id', '=', $effectiveJobId)->first() : null;
+        $this->job = ! empty($effectiveJobId) ? Job::withoutGlobalScopes()->find($effectiveJobId) : null;
 
         $this->jobSkill = DB::table('job_metronics_skills')
             ->leftJoin('candidate_job_skill_exp', function ($join) {
@@ -11426,7 +11469,7 @@ class SuperAdminCompanyController extends SuperAdminBaseController
                 }
             }
         }
-        $this->skillShow = (!empty($this->jobSkill) && count($this->jobSkill) > 0);
+        $this->skillShow = (! empty($this->jobSkill) && count($this->jobSkill) > 0);
 
         $this->child_status_name = 'N/A';
         if ($this->application->child_status_id > 0) {
