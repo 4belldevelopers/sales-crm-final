@@ -423,8 +423,8 @@
             </div>
         </div>
 
-        {{-- Redesigned Hiring Pipeline Column: Sourcing, Screening, Evaluation, Negotiations, Offer, Joined + Application: and Interview --}}
-        <div class="tbl-cell-pipeline">
+        {{-- Hiring Pipeline Funnel (Original Design: No box, adjusted text) --}}
+        <div class="tbl-cell-pipeline" title="Applications: {{ $allCandidates }} | Interviews: {{ $interviews }}">
             <div class="cl-pipeline-flow">
                 <div class="cl-pipe-step" title="Sourcing: {{ $sourced }}">
                     <span class="cl-pipe-pill pill-sourcing">{{ $sourced }}</span>
@@ -449,16 +449,6 @@
                 <div class="cl-pipe-step" title="Joined: {{ $joined }}">
                     <span class="cl-pipe-pill pill-joined">{{ $joined }}</span>
                     <span class="cl-pipe-label">Joined</span>
-                </div>
-            </div>
-            <div class="cl-pipeline-aggregates">
-                <div class="cl-pipe-agg-pill agg-application" title="Total Applications: {{ $allCandidates }}">
-                    <span class="cl-pipe-agg-label">Application:</span>
-                    <span class="cl-pipe-agg-val">{{ $allCandidates }}</span>
-                </div>
-                <div class="cl-pipe-agg-pill agg-interview" title="Total Interviews: {{ $interviews }}">
-                    <span class="cl-pipe-agg-label">Interview:</span>
-                    <span class="cl-pipe-agg-val">{{ $interviews }}</span>
                 </div>
             </div>
         </div>
