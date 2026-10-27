@@ -663,7 +663,7 @@
 /* ── Table Grid (Header & Rows) ── */
 /* 7 columns: Checkbox, Company Name, Location, Date, Last Activity, Jobs, Hiring Pipeline */
 /* Column widths tightly tuned to content with zero wasted space; Hiring Pipeline expanded for full stage visibility */
-.tbl-h, .tbl-r {
+.tbl-h, .tbl-r:not(.cd-client-card) {
   display: grid;
   grid-template-columns: 32px minmax(180px, 1.2fr) minmax(115px, 125px) minmax(102px, 110px) minmax(108px, 116px) minmax(72px, 80px) minmax(310px, 2fr);
   align-items: center;
@@ -674,13 +674,13 @@
 }
 
 @media (min-width: 1200px) {
-  .tbl-h, .tbl-r {
+  .tbl-h, .tbl-r:not(.cd-client-card) {
     min-width: 100%;
   }
 }
 
 /* Requests 5-column variant: Checkbox, Company Name, Location, Request Date, Action */
-.tbl-req .tbl-h, .tbl-req .tbl-r {
+.tbl-req .tbl-h, .tbl-req .tbl-r:not(.cd-client-card) {
   grid-template-columns: 32px minmax(200px, 1.8fr) minmax(130px, 1.2fr) minmax(120px, 1fr) minmax(150px, 1.2fr);
   column-gap: 8px;
   padding: 8px 12px;
@@ -688,7 +688,7 @@
   box-sizing: border-box;
 }
 @media (min-width: 1200px) {
-  .tbl-req .tbl-h, .tbl-req .tbl-r {
+  .tbl-req .tbl-h, .tbl-req .tbl-r:not(.cd-client-card) {
     min-width: 100%;
   }
 }
@@ -793,16 +793,16 @@
 .dot-orange { background: #f59e0b; }
 .dot-red    { background: #ef4444; }
 
-.tbl-r {
+.tbl-r:not(.cd-client-card) {
   border-bottom: 1px solid #f1f5f9;
   background: #ffffff;
   padding: 7px 12px;
   transition: background-color 0.15s ease;
 }
-.tbl-r:hover {
+.tbl-r:not(.cd-client-card):hover {
   background: #f8fafc;
 }
-.tbl-r:last-child {
+.tbl-r:not(.cd-client-card):last-child {
   border-bottom: none;
 }
 
@@ -1191,12 +1191,12 @@
 }
 
 /* ── Pending Request Ambient Accent (Approved Standard) ── */
-.tbl-r.is-pending-request {
+.tbl-r.is-pending-request:not(.cd-client-card) {
   border-left: 3px solid #f59e0b !important;
   background: #fffdfa !important;
   transition: background-color 0.15s ease, border-color 0.15s ease;
 }
-.tbl-r.is-pending-request:hover {
+.tbl-r.is-pending-request:not(.cd-client-card):hover {
   background: #fff9ed !important;
 }
 

@@ -662,6 +662,7 @@
 <script src="{{ asset('assets/service_company/client/cl-entity-db.js') }}{{ TM_VERSION }}"></script>
 <script src="{{ asset('assets/service_company/client/cl-drawer-view.js') }}{{ TM_VERSION }}"></script>
 <script>
+window.canAddJobs = {{ in_array('add_jobs', $userPermissions) ? 'true' : 'false' }};
 $(document).ready(function() {
     var searchTimer = null;
     $('#kt_tagify_2').on('keyup input', function() {
@@ -2396,6 +2397,11 @@ function renderClientRows(rows) {
                     <button type="button" class="cd-btn-quick-drawer ${clientTypeCss}" data-row-id="${r.id}">
                         <i class="fas fa-folder-open me-1"></i>View Drawer
                     </button>
+                    ${(!r.is_direct && window.canAddJobs) ? `
+                    <a href="/service_company/jobs/curstomcreate/${r.client_id || r.id}" class="cd-btn-quick-post">
+                        <i class="fas fa-plus me-1"></i>Post Job
+                    </a>
+                    ` : ''}
                 </div>
             </div>
         </div>`;
