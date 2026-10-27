@@ -452,9 +452,16 @@
                 </div>
             </div>
             <div class="cl-pipeline-meta">
-                <span class="cl-pipeline-meta-item">Application: <strong>{{ $allCandidates }}</strong></span>
-                <span class="cl-pipeline-meta-divider">|</span>
-                <span class="cl-pipeline-meta-item">Interview: <strong>{{ $interviews }}</strong></span>
+                <span class="cl-pipeline-meta-item">
+                    <span class="cl-meta-dot dot-apps"></span>
+                    <span class="cl-meta-lbl">Applications:</span>
+                    <strong class="cl-meta-val">{{ $allCandidates }}</strong>
+                </span>
+                <span class="cl-pipeline-meta-item">
+                    <span class="cl-meta-dot dot-interview"></span>
+                    <span class="cl-meta-lbl">Interview:</span>
+                    <strong class="cl-meta-val">{{ $interviews }}</strong>
+                </span>
             </div>
         </div>
     </div>
