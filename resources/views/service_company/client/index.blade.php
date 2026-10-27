@@ -1305,8 +1305,9 @@ function exportClientsToCsv() {
         var name = $r.find('.cl-name').text().trim();
         var ind = $r.find('.cl-ind').text().trim();
         var locCity = $r.find('.cl-loc-city').text().trim();
+        var locState = $r.find('.cl-loc-state').text().trim();
         var locCountry = $r.find('.cl-loc-country').text().trim();
-        var loc = locCity + (locCity && locCountry ? ', ' : '') + locCountry;
+        var loc = [locCity, locState, locCountry].filter(Boolean).join(', ');
         var hiringJobs = $r.find('.tbl-cell-jobs .cl-job-line:eq(0) .cl-job-num').text().trim();
         var holdJobs = $r.find('.tbl-cell-jobs .cl-job-line:eq(1) .cl-job-num').text().trim();
         var closedJobs = $r.find('.tbl-cell-jobs .cl-job-line:eq(2) .cl-job-num').text().trim();
@@ -2299,19 +2300,23 @@ function renderClientRows(rows) {
         const indHtml = r.industry ? `<div class="cl-ind" title="${escapeAttr(r.industry)}">${escapeAttr(r.industry)}</div>` : '';
         const sizeHtml = r.company_size ? `<div class="cl-size">${escapeAttr(r.company_size)}</div>` : '';
 
-        let locCityState = '';
-        if (r.city && r.state) {
-            locCityState = r.city + ', ' + r.state;
-        } else if (r.location_main) {
-            locCityState = r.location_main;
-        } else if (r.city) {
-            locCityState = r.city;
-        }
-
         let locHtml = '';
-        if (locCityState) locHtml += `<div class="cl-loc-city" title="${escapeAttr(locCityState)}">${escapeAttr(locCityState)}</div>`;
-        if (r.country) locHtml += `<div class="cl-loc-country" title="${escapeAttr(r.country)}">${escapeAttr(r.country)}</div>`;
-        if (!locHtml) locHtml = `<div class="cl-loc-empty">—</div>`;
+        if (r.city) {
+            locHtml += `<div class="cl-loc-city" title="${escapeAttr(r.city)}">${escapeAttr(r.city)}</div>`;
+        }
+        if (r.state) {
+            locHtml += `<div class="cl-loc-state" title="${escapeAttr(r.state)}">${escapeAttr(r.state)}</div>`;
+        }
+        if (r.country) {
+            locHtml += `<div class="cl-loc-country" title="${escapeAttr(r.country)}">${escapeAttr(r.country)}</div>`;
+        }
+        if (!locHtml) {
+            if (r.location_main) {
+                locHtml = `<div class="cl-loc-city" title="${escapeAttr(r.location_main)}">${escapeAttr(r.location_main)}</div>`;
+            } else {
+                locHtml = `<div class="cl-loc-empty">—</div>`;
+            }
+        }
 
         if (r.is_pending_request) {
             const invId = r.staffing_company_invitation_id || r.id;
