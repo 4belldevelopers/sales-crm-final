@@ -7027,11 +7027,22 @@ class SuperAdminCompanyController extends SuperAdminBaseController
 
     public function topUpCoinPackages()
     {
-        $coinEvents = DB::table('top_up_coin_packages')
-            ->select('top_up_coin_packages.*');
-        $this->coinEvents = $coinEvents->paginate(20);
+        $allPackages = DB::table('top_up_coin_packages')
+            ->orderBy('event_type', 'asc')
+            ->orderBy('coins', 'asc')
+            ->get();
 
-        // dd($coinEvents->get());
+        $this->coinEvents = $allPackages;
+
+        // Executive KPI Metrics
+        $this->totalPackages = $allPackages->count();
+        $this->activePackages = $allPackages->where('status', 1)->count();
+        $this->inactivePackages = $allPackages->where('status', 0)->count();
+        $this->operationalPackages = $allPackages->where('event_type', 'operational')->count();
+        $this->salesPackages = $allPackages->where('event_type', 'sales')->count();
+        $this->customPackages = $allPackages->where('custome_chk', 1)->count();
+        $this->maxDiscount = (float) $allPackages->max('discount');
+
         return view('super-admin.coin-settings.topup-coin-package', $this->data);
     }
 
@@ -7089,7 +7100,18 @@ class SuperAdminCompanyController extends SuperAdminBaseController
                 'updated_at' => date('Y-m-d H:i:s'),
                 'status' => ($req->status) ? 1 : 0,
             ];
+            if ($req->filled('event_type')) {
+                $value['event_type'] = $req->event_type;
+            }
+            if ($req->has('custome_chk')) {
+                $value['custome_chk'] = $req->custome_chk ? 1 : 0;
+            }
             DB::table('top_up_coin_packages')->insert($value);
+
+            // Atomic multi-tenant cache invalidation
+            Cache::forget('top_up_coin_packages_op');
+            Cache::forget('top_up_coin_packages_sal');
+
             $message = 'Top Up Coin Created Successfully';
             $status = 'success';
         } else {
@@ -7103,8 +7125,19 @@ class SuperAdminCompanyController extends SuperAdminBaseController
                 'updated_at' => date('Y-m-d H:i:s'),
                 'status' => ($req->status) ? 1 : 0,
             ];
+            if ($req->filled('event_type')) {
+                $value['event_type'] = $req->event_type;
+            }
+            if ($req->has('custome_chk')) {
+                $value['custome_chk'] = $req->custome_chk ? 1 : 0;
+            }
             $id = ($req->token_id);
             DB::table('top_up_coin_packages')->where('id', $id)->update($value);
+
+            // Atomic multi-tenant cache invalidation
+            Cache::forget('top_up_coin_packages_op');
+            Cache::forget('top_up_coin_packages_sal');
+
             $message = 'Top Up Coin updated Successfully';
             $status = 'success';
         }
@@ -7112,6 +7145,79 @@ class SuperAdminCompanyController extends SuperAdminBaseController
         $data = ['status' => $status, 'message' => $message, 'url' => route('superadmin.company.topUpCoinPackages')];
 
         return response()->json($data);
+    }
+
+    /**
+     * Instant toggle status for Top Up Coin Package (Active / Inactive)
+     * TENANCY: Global catalog table (Rule 6 Multi-tenant cache invalidation)
+     */
+    public function toggleTopUpCoinPackageStatus(Request $request)
+    {
+        $request->validate([
+            'id' => 'required',
+        ]);
+
+        $package = DB::table('top_up_coin_packages')->where('id', $request->id)->first();
+        if (! $package) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Top Up Coin Package not found.',
+            ], 404);
+        }
+
+        $newStatus = $package->status == 1 ? 0 : 1;
+        DB::table('top_up_coin_packages')
+            ->where('id', $request->id)
+            ->update([
+                'status' => $newStatus,
+                'updated_at' => now(),
+            ]);
+
+        // Atomic multi-tenant cache invalidation
+        Cache::forget('top_up_coin_packages_op');
+        Cache::forget('top_up_coin_packages_sal');
+
+        return response()->json([
+            'status' => 'success',
+            'new_status' => $newStatus,
+            'status_label' => $newStatus == 1 ? 'Active' : 'Inactive',
+            'message' => 'Package status updated to '.($newStatus == 1 ? 'Active' : 'Inactive').' successfully.',
+        ]);
+    }
+
+    /**
+     * Safe delete or deactivate Top Up Coin Package
+     */
+    public function destroyTopUpCoinPackage(Request $request)
+    {
+        $id = $request->id;
+        if (! $id) {
+            return response()->json(['status' => 'error', 'message' => 'Package ID required.'], 400);
+        }
+
+        $inCart = DB::table('carts')->where('pck_top_id', $id)->exists();
+        if ($inCart) {
+            // Cannot physically delete historic purchases; deactivate instead
+            DB::table('top_up_coin_packages')->where('id', $id)->update(['status' => 0, 'updated_at' => now()]);
+            Cache::forget('top_up_coin_packages_op');
+            Cache::forget('top_up_coin_packages_sal');
+
+            return response()->json([
+                'status' => 'success',
+                'deactivated' => true,
+                'message' => 'Package has associated purchase history, so it was set to Inactive instead of being deleted.',
+            ]);
+        }
+
+        DB::table('top_up_coin_packages')->where('id', $id)->delete();
+        Cache::forget('top_up_coin_packages_op');
+        Cache::forget('top_up_coin_packages_sal');
+
+        return response()->json([
+            'status' => 'success',
+            'deleted' => true,
+            'message' => 'Package deleted successfully.',
+        ]);
     }
 
     public function createOrderTopup(Request $request) {}
