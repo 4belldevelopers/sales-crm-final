@@ -2516,39 +2516,44 @@ function renderClientRows(rows) {
                     </div>
                 </div>
 
-                <!-- SUB-CARD 4: Hiring Pipeline (Dynamic Active vs Zero Highlighting) -->
+                <!-- SUB-CARD 4: Hiring Pipeline (Restored Vibrant Color Combinations Even If 0) -->
                 <div class="cl-subcard cl-subcard-pipeline">
                     <div class="cl-subcard-head">
-                        <span class="cl-subcard-title">Hiring Pipeline</span>
+                        <div class="cl-subcard-title-wrap">
+                            <svg class="cl-subcard-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z"/>
+                            </svg>
+                            <span class="cl-subcard-title">Hiring Pipeline</span>
+                        </div>
                     </div>
                     <div class="cl-pipe-body tbl-cell-pipeline" title="Total Applications: ${applications} | Interviews: ${interviews}">
                         <div class="cl-pipeline-flow">
-                            <div class="cl-pipe-step ${sourced > 0 ? 'stage-active step-sourcing' : 'stage-zero'}" title="Sourcing: ${sourced}">
+                            <div class="cl-pipe-step step-sourcing ${sourced > 0 ? 'has-count' : ''}" title="Sourcing: ${sourced}">
                                 <span class="cl-pipe-pill pill-sourcing">${sourced}</span>
                                 <span class="cl-pipe-label">Sourcing</span>
                             </div>
-                            <div class="cl-pipe-step ${screening > 0 ? 'stage-active step-screening' : 'stage-zero'}" title="Screening: ${screening}">
+                            <div class="cl-pipe-step step-screening ${screening > 0 ? 'has-count' : ''}" title="Screening: ${screening}">
                                 <span class="cl-pipe-pill pill-screening">${screening}</span>
                                 <span class="cl-pipe-label">Screening</span>
                             </div>
-                            <div class="cl-pipe-step ${evaluated > 0 ? 'stage-active step-evaluation' : 'stage-zero'}" title="Evaluation: ${evaluated}">
+                            <div class="cl-pipe-step step-evaluation ${evaluated > 0 ? 'has-count' : ''}" title="Evaluation: ${evaluated}">
                                 <span class="cl-pipe-pill pill-evaluation">${evaluated}</span>
                                 <span class="cl-pipe-label">Evaluation</span>
                             </div>
-                            <div class="cl-pipe-step ${negotiations > 0 ? 'stage-active step-negotiations' : 'stage-zero'}" title="Negotiations: ${negotiations}">
+                            <div class="cl-pipe-step step-negotiations ${negotiations > 0 ? 'has-count' : ''}" title="Negotiations: ${negotiations}">
                                 <span class="cl-pipe-pill pill-negotiations">${negotiations}</span>
                                 <span class="cl-pipe-label">Negotiations</span>
                             </div>
-                            <div class="cl-pipe-step ${offers > 0 ? 'stage-active step-offer' : 'stage-zero'}" title="Offer: ${offers}">
+                            <div class="cl-pipe-step step-offer ${offers > 0 ? 'has-count' : ''}" title="Offer: ${offers}">
                                 <span class="cl-pipe-pill pill-offer">${offers}</span>
                                 <span class="cl-pipe-label">Offer</span>
                             </div>
-                            <div class="cl-pipe-step ${joined > 0 ? 'stage-active step-joined' : 'stage-zero'}" title="Joined: ${joined}">
+                            <div class="cl-pipe-step step-joined ${joined > 0 ? 'has-count' : ''}" title="Joined: ${joined}">
                                 <span class="cl-pipe-pill pill-joined">${joined}</span>
                                 <span class="cl-pipe-label">Joined</span>
                             </div>
                             <div class="cl-pipe-divider" aria-hidden="true"></div>
-                            <div class="cl-pipe-step ${interviews > 0 ? 'stage-active step-interview' : 'stage-zero'}" title="Interview: ${interviews}">
+                            <div class="cl-pipe-step step-interview ${interviews > 0 ? 'has-count' : ''}" title="Interview: ${interviews}">
                                 <span class="cl-pipe-pill pill-interview">${interviews}</span>
                                 <span class="cl-pipe-label">Interview</span>
                             </div>
