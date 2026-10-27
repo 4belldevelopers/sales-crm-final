@@ -5098,138 +5098,331 @@ class SuperAdminCompanyController extends SuperAdminBaseController
         return view('super-admin.features.index', $this->data);
     }
 
+    /**
+     * Display listing of SuperAdmin global WhatsApp templates.
+     *
+     * Intent: CQRS Read path. Queries Elasticsearch index ELASTIC_EMAIL_TEMPLATE with temptype=9.
+     * Tenancy: Global templates for SuperAdmin (applied across all organizations).
+     * Fault Tolerance: Defensive try/catch with resilient fallback to MySQL th_email_template.
+     */
     public function whatsappThemes()
     {
+        $templates = collect();
 
-        $params = [
-            'index' => ELASTIC_EMAIL_TEMPLATE,
-            'body' => [
-                'size' => 10000,
-                'query' => [
-                    'bool' => [
-                        'filter' => [
-                            ['term' => ['temptype' => 9]],
+        try {
+            $params = [
+                'index' => ELASTIC_EMAIL_TEMPLATE,
+                'body' => [
+                    'size' => 10000,
+                    'query' => [
+                        'bool' => [
+                            'filter' => [
+                                ['term' => ['temptype' => 9]],
+                            ],
                         ],
                     ],
+                    'sort' => [
+                        ['orderByShow' => ['order' => 'asc', 'unmapped_type' => 'long']],
+                        ['e_temp_id' => ['order' => 'asc', 'unmapped_type' => 'long']],
+                    ],
                 ],
-                'sort' => [
-                    ['orderByShow' => ['order' => 'asc']], // ✅ order by id
-                ],
-            ],
+            ];
+
+            $response = $this->elasticService->getClient()->search($params);
+
+            $templates = collect($response['hits']['hits'] ?? [])
+                ->map(function ($hit) {
+                    return (object) $hit['_source'];
+                });
+        } catch (\Throwable $e) {
+            \Log::error('ES search error in whatsappThemes: '.$e->getMessage());
+        }
+
+        // Resilient fallback to MySQL if ES empty or failed
+        if ($templates->isEmpty()) {
+            $templates = DB::table('th_email_template')
+                ->where('temptype', 9)
+                ->orderByRaw('CASE WHEN orderByShow IS NULL OR orderByShow = 0 THEN 999999 ELSE orderByShow END ASC')
+                ->orderBy('e_temp_id', 'ASC')
+                ->get();
+        } else {
+            // Natural sort by orderByShow ascending (nulls last) then e_temp_id ascending
+            $templates = $templates->sortBy(function ($t) {
+                $order = isset($t->orderByShow) && is_numeric($t->orderByShow) && (int) $t->orderByShow > 0 ? (int) $t->orderByShow : 999999;
+                $id = (int) ($t->e_temp_id ?? $t->id ?? 0);
+
+                return sprintf('%06d_%06d', $order, $id);
+            })->values();
+        }
+
+        $this->th_email_template = $templates;
+
+        // Calculate KPI Metrics for Header Badges and Sub-Tab Filters
+        $this->kpi = [
+            'total' => $templates->count(),
+            'active' => $templates->where('status', 1)->count(),
+            'inactive' => $templates->where('status', 0)->count(),
+            'reminders' => $templates->filter(function ($t) {
+                $name = strtolower($t->display_name ?? $t->template_name ?? '');
+
+                return str_contains($name, 'reminder') || str_contains($name, 'notification automatic');
+            })->count(),
+            'interview' => $templates->filter(function ($t) {
+                $name = strtolower($t->display_name ?? $t->template_name ?? '');
+
+                return str_contains($name, 'interview');
+            })->count(),
+            'call' => $templates->filter(function ($t) {
+                $name = strtolower($t->display_name ?? $t->template_name ?? '');
+
+                return str_contains($name, 'call') || str_contains($name, 'answer');
+            })->count(),
+            'offer_joining' => $templates->filter(function ($t) {
+                $name = strtolower($t->display_name ?? $t->template_name ?? '');
+
+                return str_contains($name, 'offer') || str_contains($name, 'joining');
+            })->count(),
         ];
-
-        $response = $this->elasticService->getClient()->search($params);
-
-        $this->th_email_template = collect($response['hits']['hits'] ?? [])
-            ->map(function ($hit) {
-                return (object) $hit['_source'];
-            });
-
-        // $this->th_email_template =  isset($response['hits']['hits'][0]) ? (object) $response['hits']['hits'][0]['_source'] : null;
 
         return view('super-admin.comman.index_whatsapp', $this->data);
     }
 
+    /**
+     * Display edit or create form for a SuperAdmin WhatsApp template.
+     *
+     * Intent: CQRS Read path. If Id > 0, retrieves template from ELASTIC_EMAIL_TEMPLATE with MySQL fallback.
+     * If Id <= 0, initializes a clean DTO with default values without unnecessary ES roundtrips.
+     */
     public function whatsappThemesupdate(Request $request, $Id)
     {
-        // dd($Id);
+        $templateId = (int) $Id;
+        $template = null;
 
-        $params = [
-            'index' => ELASTIC_EMAIL_TEMPLATE,
-            'body' => [
-                'size' => 10000,
-                'query' => [
-                    'bool' => [
-                        'must' => [
-                            ['term' => ['e_temp_id' => (int) $Id]],
+        if ($templateId > 0) {
+            try {
+                $params = [
+                    'index' => ELASTIC_EMAIL_TEMPLATE,
+                    'body' => [
+                        'size' => 1,
+                        'query' => [
+                            'bool' => [
+                                'must' => [
+                                    ['term' => ['e_temp_id' => $templateId]],
+                                ],
+                            ],
                         ],
                     ],
-                ],
-            ],
-        ];
+                ];
 
-        $response = $this->elasticService->getClient()->search($params);
-        $this->th_email_template = isset($response['hits']['hits'][0]) ? (object) $response['hits']['hits'][0]['_source'] : null;
+                $response = $this->elasticService->getClient()->search($params);
+                $template = isset($response['hits']['hits'][0]) ? (object) $response['hits']['hits'][0]['_source'] : null;
+            } catch (\Throwable $e) {
+                \Log::error('ES search error in whatsappThemesupdate: '.$e->getMessage());
+            }
+
+            // Resilient fallback to MySQL
+            if (! $template) {
+                $template = DB::table('th_email_template')->where('e_temp_id', $templateId)->first();
+            }
+        }
+
+        // Clean default template object if creating new (Id <= 0) or template not found
+        if (! $template) {
+            $nextOrder = DB::table('th_email_template')->where('temptype', 9)->max('orderByShow');
+            $template = (object) [
+                'e_temp_id' => 0,
+                'id' => 0,
+                'template_name' => '',
+                'display_name' => '',
+                'template_subject' => '',
+                'template_description' => '',
+                'status' => 1,
+                'orderByShow' => ($nextOrder ? (int) $nextOrder + 1 : 1),
+                'temptype' => 9,
+                'tempForInterview' => 1,
+                'client_required' => 0,
+            ];
+        }
+
+        $this->th_email_template = $template;
 
         return view('super-admin.comman.add-edit-whatsapp', $this->data);
     }
 
+    /**
+     * Create or update a WhatsApp template.
+     *
+     * Intent: CQRS Write path. Validates input, executes atomic write to MySQL th_email_template,
+     * and synchronizes to Elasticsearch index ELASTIC_EMAIL_TEMPLATE with refresh=true.
+     * Tenancy: Enforces temptype=9 (WhatsApp template) for global ATS usage.
+     */
     public function addEditwhatsappThemesupdate(Request $request)
     {
-        // dd($request->tokenId);
-        if ($request->tokenId == 0) {
-            //  dd($request->all());
+        $validator = \Validator::make($request->all(), [
+            'template' => 'required|string|max:255',
+            'editor1' => 'required|string',
+            'orderByShow' => 'nullable|integer|min:0',
+            'status_is' => 'required|in:0,1',
+        ], [
+            'template.required' => 'Please enter the Template Name.',
+            'editor1.required' => 'Please enter the WhatsApp message body content.',
+            'status_is.required' => 'Please select the template status.',
+        ]);
+
+        if ($validator->fails()) {
+            return Reply::error($validator->errors()->first());
+        }
+
+        $tokenId = (int) ($request->tokenId ?? 0);
+        $statusVal = (int) $request->status_is;
+        $orderByShowVal = ! is_null($request->orderByShow) && $request->orderByShow !== '' ? (int) $request->orderByShow : null;
+        $templateName = trim((string) $request->template);
+        $subject = trim((string) ($request->subject ?? $request->template));
+        $content = (string) $request->editor1;
+
+        if ($tokenId === 0) {
             $values = [
-                'template_name' => $request->template,
-                'display_name' => $request->template,
-                'template_subject' => $request->subject,
-                'template_description' => $request->editor1,
-                'status' => $request->status_is,
-                'orderByShow' => $request->orderByShow,
-                'temptype' => $request->temptype_is,
-                'curr_date' => date('Y-m-d'),
+                'template_name' => $templateName,
+                'display_name' => $templateName,
+                'template_subject' => $subject,
+                'template_description' => $content,
+                'status' => $statusVal,
+                'orderByShow' => $orderByShowVal,
+                'temptype' => 9, // Strictly enforced WhatsApp Template
+                'tempForInterview' => 1,
+                'client_required' => 0,
+                'curr_date' => now(),
             ];
+
             $e_temp_id = DB::table('th_email_template')->insertGetId($values);
 
-            $response = $this->elasticService->getClient()->update([
+            try {
+                $this->elasticService->getClient()->update([
+                    'index' => ELASTIC_EMAIL_TEMPLATE,
+                    'id' => (string) $e_temp_id,
+                    'retry_on_conflict' => 5,
+                    'refresh' => true,
+                    'body' => [
+                        'doc' => [
+                            'id' => (int) $e_temp_id,
+                            'e_temp_id' => (int) $e_temp_id,
+                            'template_name' => $templateName,
+                            'display_name' => $templateName,
+                            'template_subject' => $subject,
+                            'template_description' => $content,
+                            'status' => $statusVal,
+                            'orderByShow' => $orderByShowVal,
+                            'tempForInterview' => 1,
+                            'client_required' => 0,
+                            'temptype' => 9,
+                            'curr_date' => now()->toIso8601String(),
+                        ],
+                        'doc_as_upsert' => true,
+                        'detect_noop' => false,
+                    ],
+                ]);
+            } catch (\Throwable $e) {
+                \Log::error('ES insert error in addEditwhatsappThemesupdate: '.$e->getMessage());
+            }
+
+            return Reply::successWithData('WhatsApp template created successfully.', [
+                'status' => 'success',
+                'url' => route('superadmin.company.whatsappthemes'),
+            ]);
+        } else {
+            $values = [
+                'template_name' => $templateName,
+                'display_name' => $templateName,
+                'template_subject' => $subject,
+                'template_description' => $content,
+                'status' => $statusVal,
+                'orderByShow' => $orderByShowVal,
+                'temptype' => 9, // Strictly enforced WhatsApp Template
+                'curr_date' => now(),
+            ];
+
+            DB::table('th_email_template')->where('e_temp_id', $tokenId)->update($values);
+
+            try {
+                $this->elasticService->getClient()->update([
+                    'index' => ELASTIC_EMAIL_TEMPLATE,
+                    'id' => (string) $tokenId,
+                    'retry_on_conflict' => 5,
+                    'refresh' => true,
+                    'body' => [
+                        'doc' => [
+                            'id' => (int) $tokenId,
+                            'e_temp_id' => (int) $tokenId,
+                            'template_name' => $templateName,
+                            'display_name' => $templateName,
+                            'template_subject' => $subject,
+                            'template_description' => $content,
+                            'status' => $statusVal,
+                            'orderByShow' => $orderByShowVal,
+                            'temptype' => 9,
+                            'curr_date' => now()->toIso8601String(),
+                        ],
+                        'doc_as_upsert' => true,
+                        'detect_noop' => false,
+                    ],
+                ]);
+            } catch (\Throwable $e) {
+                \Log::error('ES update error in addEditwhatsappThemesupdate: '.$e->getMessage());
+            }
+
+            return Reply::successWithData('WhatsApp template updated successfully.', [
+                'status' => 'success',
+                'url' => route('superadmin.company.whatsappthemes'),
+            ]);
+        }
+    }
+
+    /**
+     * Instant toggle active/inactive status for a WhatsApp template via AJAX.
+     *
+     * Intent: CQRS Write path. Synchronizes MySQL status and Elasticsearch status atomically.
+     * Tenancy: Enforces temptype=9 for safety.
+     */
+    public function toggleWhatsappTemplateStatus(Request $request)
+    {
+        $id = (int) $request->id;
+        $status = (int) $request->status;
+
+        if ($id <= 0) {
+            return Reply::error('Invalid template ID.');
+        }
+
+        DB::table('th_email_template')
+            ->where('e_temp_id', $id)
+            ->where('temptype', 9)
+            ->update([
+                'status' => $status,
+                'curr_date' => now(),
+            ]);
+
+        try {
+            $this->elasticService->getClient()->update([
                 'index' => ELASTIC_EMAIL_TEMPLATE,
-                'id' => $e_temp_id,
+                'id' => (string) $id,
                 'retry_on_conflict' => 5,
+                'refresh' => true,
                 'body' => [
                     'doc' => [
-                        'id' => $e_temp_id,
-                        'e_temp_id' => $e_temp_id,
-                        'template_name' => $request->template,
-                        'display_name' => $request->template,
-                        'template_subject' => $request->subject,
-                        'template_description' => $request->editor1,
-                        'status' => $request->status_is,
-                        'orderByShow' => $request->orderByShow,
-                        'tempForInterview' => 1,
-                        'temptype' => $request->temptype_is,
+                        'status' => $status,
                         'curr_date' => now()->toIso8601String(),
                     ],
                     'doc_as_upsert' => true,
-                    'detect_noop' => false,
                 ],
             ]);
-
-        } else {
-            $values = [
-                'template_name' => $request->template,
-                'display_name' => $request->template,
-                'template_subject' => $request->subject,
-                'template_description' => $request->editor1,
-                'status' => $request->status_is,
-                'orderByShow' => $request->orderByShow,
-                'temptype' => $request->temptype_is,
-            ];
-            DB::table('th_email_template')->where('e_temp_id', '=', $request->tokenId)->update($values);
-            $response = $this->elasticService->getClient()->update([
-                'index' => ELASTIC_EMAIL_TEMPLATE,
-                'id' => $request->tokenId,
-                'retry_on_conflict' => 5,
-                'body' => [
-                    'doc' => [
-                        'id' => $request->tokenId,
-                        'e_temp_id' => $request->tokenId,
-                        'template_name' => $request->template,
-                        'display_name' => $request->template,
-                        'template_subject' => $request->subject,
-                        'template_description' => $request->editor1,
-                        'status' => $request->status_is,
-                        'orderByShow' => $request->orderByShow,
-                        'temptype' => $request->temptype_is,
-                    ],
-                    'doc_as_upsert' => true,
-                    'detect_noop' => false,
-                ],
-            ]);
-
+        } catch (\Throwable $e) {
+            \Log::error('ES toggle whatsapp status error: '.$e->getMessage());
         }
 
-        return Reply::dataOnly(['status' => 'success']);
-
+        return Reply::successWithData('WhatsApp template status updated successfully.', [
+            'id' => $id,
+            'template_status' => $status,
+            'status_text' => $status == 1 ? 'Active' : 'Inactive',
+        ]);
     }
 
     public function featuresListupdate(Request $request, $Id)
@@ -6777,7 +6970,6 @@ class SuperAdminCompanyController extends SuperAdminBaseController
      * Display a listing of Coin Packages with CQRS / Elasticsearch sync,
      * live filtering, search, and KPI aggregation.
      *
-     * @param Request $request
      * @return \Illuminate\Contracts\View\View|\Illuminate\Http\JsonResponse
      */
     public function coinPackages(Request $request)
@@ -6825,29 +7017,29 @@ class SuperAdminCompanyController extends SuperAdminBaseController
         // Live Search Filter (Package Title, Event Type, Coins, Price)
         if ($search !== '') {
             $query->where(function ($q) use ($search) {
-                $q->where('coin_package_types.title', 'LIKE', '%' . $search . '%')
-                  ->orWhere('coin_packages.event_type', 'LIKE', '%' . $search . '%');
+                $q->where('coin_package_types.title', 'LIKE', '%'.$search.'%')
+                    ->orWhere('coin_packages.event_type', 'LIKE', '%'.$search.'%');
                 if (is_numeric($search)) {
                     $q->orWhere('coin_packages.id', (int) $search)
-                      ->orWhere('coin_packages.coins', (float) $search)
-                      ->orWhere('coin_packages.price', (float) $search)
-                      ->orWhere('coin_packages.price_usd', (float) $search)
-                      ->orWhere('coin_packages.days', (int) $search);
+                        ->orWhere('coin_packages.coins', (float) $search)
+                        ->orWhere('coin_packages.price', (float) $search)
+                        ->orWhere('coin_packages.price_usd', (float) $search)
+                        ->orWhere('coin_packages.days', (int) $search);
                 }
             });
         }
 
         // Deterministic Enterprise Ordering
         $query->orderByDesc('coin_packages.status')
-              ->orderBy('coin_packages.custome_pck', 'asc')
-              ->orderBy('coin_packages.price', 'asc');
+            ->orderBy('coin_packages.custome_pck', 'asc')
+            ->orderBy('coin_packages.price', 'asc');
 
         $coinEvents = $query->paginate($perPage)->appends($request->query());
 
         // 3. Eager load package points for all loaded packages in 1 query to prevent N+1
         $packageIds = $coinEvents->pluck('id')->toArray();
         $packagePoints = [];
-        if (!empty($packageIds)) {
+        if (! empty($packageIds)) {
             $pointsRows = DB::table('coin_package_points')
                 ->whereIn('coin_package_id', $packageIds)
                 ->get();
@@ -6864,6 +7056,7 @@ class SuperAdminCompanyController extends SuperAdminBaseController
         // If AJAX request, return partial view and counts for smooth dynamic updates
         if ($request->ajax()) {
             $view = view('super-admin.coin-settings.partials.package-cards', $this->data)->render();
+
             return response()->json([
                 'status' => 'success',
                 'html' => $view,
@@ -7089,22 +7282,21 @@ class SuperAdminCompanyController extends SuperAdminBaseController
      * Toggle active/inactive status of a coin package.
      * Synchronizes to MySQL and Elasticsearch.
      *
-     * @param Request $request
      * @return \Illuminate\Http\JsonResponse
      */
     public function coinPackageToggleStatus(Request $request)
     {
         $id = $request->input('id');
-        if (!$id) {
+        if (! $id) {
             return response()->json(['status' => 'error', 'message' => 'Package ID is required.'], 400);
         }
 
         $package = DB::table('coin_packages')->where('id', $id)->first();
-        if (!$package) {
+        if (! $package) {
             return response()->json(['status' => 'error', 'message' => 'Coin package not found.'], 404);
         }
 
-        $newStatus = ((int)$package->status === 1) ? 0 : 1;
+        $newStatus = ((int) $package->status === 1) ? 0 : 1;
         $now = date('Y-m-d H:i:s');
         DB::table('coin_packages')->where('id', $id)->update([
             'status' => $newStatus,
@@ -7116,7 +7308,7 @@ class SuperAdminCompanyController extends SuperAdminBaseController
 
         return response()->json([
             'status' => 'success',
-            'message' => 'Coin package status switched to ' . ($newStatus ? 'Active' : 'Inactive') . '.',
+            'message' => 'Coin package status switched to '.($newStatus ? 'Active' : 'Inactive').'.',
             'new_status' => $newStatus,
         ]);
     }
@@ -7125,18 +7317,17 @@ class SuperAdminCompanyController extends SuperAdminBaseController
      * Delete a coin package and its associated points.
      * Synchronizes deletion to Elasticsearch.
      *
-     * @param Request $request
      * @return \Illuminate\Http\JsonResponse
      */
     public function coinPackageDestroy(Request $request)
     {
         $id = $request->input('id');
-        if (!$id) {
+        if (! $id) {
             return response()->json(['status' => 'error', 'message' => 'Package ID is required.'], 400);
         }
 
         $package = DB::table('coin_packages')->where('id', $id)->first();
-        if (!$package) {
+        if (! $package) {
             return response()->json(['status' => 'error', 'message' => 'Coin package not found.'], 404);
         }
 
@@ -7155,7 +7346,7 @@ class SuperAdminCompanyController extends SuperAdminBaseController
                 ]);
             }
         } catch (\Throwable $e) {
-            \Log::warning('ElasticSearch coin package deletion: ' . $e->getMessage());
+            \Log::warning('ElasticSearch coin package deletion: '.$e->getMessage());
         }
 
         return response()->json([
@@ -7167,7 +7358,7 @@ class SuperAdminCompanyController extends SuperAdminBaseController
     /**
      * Synchronize a coin package record to Elasticsearch index ELASTIC_COIN_PACKAGES.
      *
-     * @param int $id
+     * @param  int  $id
      * @return void
      */
     private function syncCoinPackageToElastic($id)
@@ -7179,7 +7370,7 @@ class SuperAdminCompanyController extends SuperAdminBaseController
                 ->select('coin_packages.*', 'coin_package_types.title')
                 ->first();
 
-            if (!$row) {
+            if (! $row) {
                 return;
             }
 
@@ -7217,7 +7408,7 @@ class SuperAdminCompanyController extends SuperAdminBaseController
                 ]);
             }
         } catch (\Throwable $e) {
-            \Log::warning('ElasticSearch coin package sync: ' . $e->getMessage());
+            \Log::warning('ElasticSearch coin package sync: '.$e->getMessage());
         }
     }
 
