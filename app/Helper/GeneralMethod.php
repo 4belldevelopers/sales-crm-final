@@ -15760,7 +15760,7 @@ END:VCALENDAR";
                             'sourced' => ['filter' => ['term' => ['job_master_status_id' => 1]]],
                             'screening' => ['filter' => ['term' => ['job_master_status_id' => 2]]],
                             'evaluated' => ['filter' => ['term' => ['job_master_status_id' => 3]]],
-                            'negotiation' => ['filter' => ['term' => ['job_master_status_id' => 4]]],
+                            'negotiations' => ['filter' => ['term' => ['job_master_status_id' => 4]]],
                             'offers' => ['filter' => ['exists' => ['field' => 'of_created_date']]],
                         ],
                     ],
@@ -15771,7 +15771,7 @@ END:VCALENDAR";
                 $sourced = $response['aggregations']['sourced']['doc_count'] ?? 0;
                 $screening = $response['aggregations']['screening']['doc_count'] ?? 0;
                 $evaluated = $response['aggregations']['evaluated']['doc_count'] ?? 0;
-                $negotiation = $response['aggregations']['negotiation']['doc_count'] ?? 0;
+                $negotiations = $response['aggregations']['negotiations']['doc_count'] ?? 0;
                 $offers = $response['aggregations']['offers']['doc_count'] ?? 0;
             }
 
@@ -15808,7 +15808,7 @@ END:VCALENDAR";
                 'sourced' => $sourced,
                 'screening' => $screening,
                 'evaluated' => $evaluated,
-                'negotiation' => $negotiation,
+                'negotiations' => $negotiations,
                 'offers' => $offers,
                 'all_interview' => $allInterview,
             ];
@@ -15919,7 +15919,7 @@ END:VCALENDAR";
                             'sourced' => ['filter' => ['term' => ['job_master_status_id' => 1]]],
                             'screening' => ['filter' => ['term' => ['job_master_status_id' => 2]]],
                             'evaluated' => ['filter' => ['term' => ['job_master_status_id' => 3]]],
-                            'negotiation' => ['filter' => ['term' => ['job_master_status_id' => 4]]],
+                            'negotiations' => ['filter' => ['term' => ['job_master_status_id' => 4]]],
                             'offers' => ['filter' => ['exists' => ['field' => 'of_created_date']]],
                         ],
                     ],
@@ -15931,7 +15931,7 @@ END:VCALENDAR";
                 $sourced = $response['aggregations']['sourced']['doc_count'] ?? 0;
                 $screening = $response['aggregations']['screening']['doc_count'] ?? 0;
                 $evaluated = $response['aggregations']['evaluated']['doc_count'] ?? 0;
-                $negotiation = $response['aggregations']['negotiation']['doc_count'] ?? 0;
+                $negotiations = $response['aggregations']['negotiations']['doc_count'] ?? 0;
                 $offers = $response['aggregations']['offers']['doc_count'] ?? 0;
             }
 
@@ -15959,7 +15959,7 @@ END:VCALENDAR";
                 'sourced' => $sourced,
                 'screening' => $screening,
                 'evaluated' => $evaluated,
-                'negotiation' => $negotiation,
+                'negotiations' => $negotiations,
                 'offers' => $offers,
                 'all_interview' => $allInterview,
             ];
