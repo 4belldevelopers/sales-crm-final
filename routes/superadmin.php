@@ -274,6 +274,8 @@ Route::group(['middleware' => 'auth'], function () {
         Route::get('coin-packages', [SuperAdminCompanyController::class, 'coinPackages'])->name('company.coinPackages');
         Route::get('add-edit-coin-packages/{id?}', [SuperAdminCompanyController::class, 'addEditcoinPackages'])->name('company.addEditcoinPackages');
         Route::post('coin-package-store', [SuperAdminCompanyController::class, 'coinPackageStore'])->name('company.coinPackageStore');
+        Route::post('coin-package-toggle-status', [SuperAdminCompanyController::class, 'coinPackageToggleStatus'])->name('company.coinPackageToggleStatus');
+        Route::post('coin-package-destroy', [SuperAdminCompanyController::class, 'coinPackageDestroy'])->name('company.coinPackageDestroy');
 
         Route::post('coin-event-status', [SuperAdminCompanyController::class, 'coinEventStatus'])->name('company.coinEventStatus');
 
