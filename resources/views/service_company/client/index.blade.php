@@ -2455,7 +2455,7 @@ function renderClientRows(rows) {
         const editUrl = '{{ url("service_company/client/edit") }}/' + r.id;
 
         return `
-        <div class="cl-primary-card tbl-r ${clientTypeCss}" data-row-id="${r.id}" data-client-type="${clientTypeAttr}">
+        <div class="cl-primary-card tbl-r ${clientTypeCss} ${jobActive > 0 ? 'is-active-client' : 'is-inactive-client'}" data-row-id="${r.id}" data-client-type="${clientTypeAttr}">
             <div class="cl-subcards-grid">
                 <!-- SUB-CARD 1: Client Identity (Internal & Active at TOP) -->
                 <div class="cl-subcard cl-subcard-identity">
@@ -2545,9 +2545,9 @@ function renderClientRows(rows) {
                                 <span class="cl-pipe-pill pill-evaluation">${evaluated}</span>
                                 <span class="cl-pipe-label">Evaluation</span>
                             </div>
-                            <div class="cl-pipe-step step-negotiations ${negotiations > 0 ? 'has-count' : ''}" title="Negotiations: ${negotiations}">
+                            <div class="cl-pipe-step step-negotiations ${negotiations > 0 ? 'has-count' : ''}" title="Negotiation: ${negotiations}">
                                 <span class="cl-pipe-pill pill-negotiations">${negotiations}</span>
-                                <span class="cl-pipe-label">Negotiations</span>
+                                <span class="cl-pipe-label">Negotiation</span>
                             </div>
                             <div class="cl-pipe-step step-offer ${offers > 0 ? 'has-count' : ''}" title="Offer: ${offers}">
                                 <span class="cl-pipe-pill pill-offer">${offers}</span>
