@@ -2390,6 +2390,7 @@ function renderClientRows(rows) {
                 </div>
                 <div class="tbl-cell-loc">${locHtml}</div>
                 <div class="tbl-cell-type">
+                    <div class="cl-type-name type-direct fw-bold" style="color:#2563eb; font-size:11px;">Direct Client</div>
                     <div class="cl-date-box">
                         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
@@ -2400,15 +2401,14 @@ function renderClientRows(rows) {
                         <span class="fw-bold text-gray-800">${escapeAttr(r.connected_on || '-')}</span>
                     </div>
                     <div class="cl-conn-caption text-danger" style="font-size:11px; font-weight:500;">Expires ${escapeAttr(expiresFormatted)}</div>
-                    <div class="cl-type-name type-direct fw-bold" style="color:#2563eb; font-size:11px;">Direct Client</div>
                 </div>
                 <div class="tbl-cell-activity">
-                    <div class="cl-act-main fw-bold text-gray-800">Received ${escapeAttr(daysAgo)}</div>
-                    <div class="cl-act-desc text-muted">Active in system</div>
-                    <div class="d-flex align-items-center gap-1 mt-1">
+                    <div class="d-flex align-items-center gap-1">
                         <span class="bullet bullet-dot bg-warning animate-pulse" style="width:7px; height:7px;"></span>
                         <span class="text-warning fw-bold" style="font-size:11px;">Action Needed</span>
                     </div>
+                    <div class="cl-act-main fw-bold text-gray-800">Received ${escapeAttr(daysAgo)}</div>
+                    <div class="cl-act-desc text-muted">Active in system</div>
                 </div>
                 <div class="tbl-cell-jobs">
                     <div class="cl-job-line ${hiringCount > 0 ? 'has-count cl-job-hiring' : 'no-count'}">
@@ -2470,6 +2470,9 @@ function renderClientRows(rows) {
             </div>
             <div class="tbl-cell-loc">${locHtml}</div>
             <div class="tbl-cell-type">
+                <div class="cl-type-name ${clientTypeClass} ${clientTypeCss}" data-row-id="${r.id}">
+                    ${escapeAttr(clientTypeLabel)}
+                </div>
                 <div class="cl-date-box">
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
@@ -2480,17 +2483,14 @@ function renderClientRows(rows) {
                     <span>${escapeAttr(r.connected_on || '-')}</span>
                 </div>
                 <div class="cl-conn-caption">Connected on</div>
-                <div class="cl-type-name ${clientTypeClass} ${clientTypeCss}" data-row-id="${r.id}">
-                    ${escapeAttr(clientTypeLabel)}
-                </div>
             </div>
             <div class="tbl-cell-activity">
-                <div class="cl-act-main">${escapeAttr(daysAgo || 'No activity yet')}</div>
-                <div class="cl-act-desc">${daysAgo ? 'Active in system' : 'Be the first to add a job or candidate.'}</div>
                 <div class="cl-act-status ${jobActive > 0 ? 'status-active' : 'status-inactive'}">
                     <span class="cl-act-status-dot"></span>
                     <span>${jobActive > 0 ? 'Active' : 'Inactive'}</span>
                 </div>
+                <div class="cl-act-main">${escapeAttr(daysAgo || 'No activity yet')}</div>
+                <div class="cl-act-desc">${daysAgo ? 'Active in system' : 'Be the first to add a job or candidate.'}</div>
             </div>
             <div class="tbl-cell-jobs">
                 <div class="cl-job-line ${jobActive > 0 ? 'has-count cl-job-hiring' : 'no-count'}">

@@ -117,8 +117,9 @@
                 @endif
             </div>
 
-            {{-- Col 4: Date (3 Lines: Received Date, Expiration SLA, Direct Client) --}}
+            {{-- Col 4: Date (3 Lines: Direct Client at top, Received Date, Expiration SLA) --}}
             <div class="tbl-cell-type">
+                <div class="cl-type-name type-direct fw-bold" style="color:#2563eb; font-size:11px;">Direct Client</div>
                 <div class="cl-date-box">
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
@@ -129,17 +130,16 @@
                     <span class="fw-bold text-gray-800">{{ $newDate }}</span>
                 </div>
                 <div class="cl-conn-caption text-danger" style="font-size:11px; font-weight:500;">Expires {{ $expiresFormatted }}</div>
-                <div class="cl-type-name type-direct fw-bold" style="color:#2563eb; font-size:11px;">Direct Client</div>
             </div>
 
-            {{-- Col 5: Last Activity (3 Lines: Received X ago, Active in system, Action Needed) --}}
+            {{-- Col 5: Last Activity (3 Lines: Action Needed at top, Received X ago, Active in system) --}}
             <div class="tbl-cell-activity">
-                <div class="cl-act-main fw-bold text-gray-800">Received {{ $daysAgo }}</div>
-                <div class="cl-act-desc text-muted">Active in system</div>
-                <div class="d-flex align-items-center gap-1 mt-1">
+                <div class="d-flex align-items-center gap-1">
                     <span class="bullet bullet-dot bg-warning animate-pulse" style="width:7px; height:7px;"></span>
                     <span class="text-warning fw-bold" style="font-size:11px;">Action Needed</span>
                 </div>
+                <div class="cl-act-main fw-bold text-gray-800">Received {{ $daysAgo }}</div>
+                <div class="cl-act-desc text-muted">Active in system</div>
             </div>
 
             {{-- Col 6: Jobs (Order: Hiring, Hold, Closed) --}}
@@ -377,8 +377,11 @@
             @endif
         </div>
 
-        {{-- Connected On & Type --}}
+        {{-- Connected On & Type (Client type at top, Connected date below) --}}
         <div class="tbl-cell-type">
+            <div class="cl-type-name {{ $isDirect ? 'type-direct' : 'type-internal' }} {{ $client_type_css }}" data-row-id="{{ $rowTargetId }}">
+                {{ $client_type }}
+            </div>
             <div class="cl-date-box">
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
@@ -389,19 +392,16 @@
                 <span>{{ $newDate }}</span>
             </div>
             <div class="cl-conn-caption">Connected on</div>
-            <div class="cl-type-name {{ $isDirect ? 'type-direct' : 'type-internal' }} {{ $client_type_css }}" data-row-id="{{ $rowTargetId }}">
-                {{ $client_type }}
-            </div>
         </div>
 
-        {{-- Last Activity --}}
+        {{-- Last Activity (Active status at top, Activity time below) --}}
         <div class="tbl-cell-activity">
-            <div class="cl-act-main">{{ $daysAgo ? $daysAgo : 'No activity yet' }}</div>
-            <div class="cl-act-desc">{{ $daysAgo ? 'Active in system' : 'Be the first to add a job or candidate.' }}</div>
             <div class="cl-act-status {{ $job_active > 0 ? 'status-active' : 'status-inactive' }}">
                 <span class="cl-act-status-dot"></span>
                 <span>{{ $job_active > 0 ? 'Active' : 'Inactive' }}</span>
             </div>
+            <div class="cl-act-main">{{ $daysAgo ? $daysAgo : 'No activity yet' }}</div>
+            <div class="cl-act-desc">{{ $daysAgo ? 'Active in system' : 'Be the first to add a job or candidate.' }}</div>
         </div>
 
         {{-- Jobs (Order: Hiring, Hold, Closed with conditional status colors) --}}
