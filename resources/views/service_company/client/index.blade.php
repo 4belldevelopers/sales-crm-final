@@ -758,66 +758,6 @@
             </div>
         </div>
 
-        <!-- ── TABS BAR ── -->
-        <div class="cl-nav-tabs">
-            <a href="#" onclick="setClientTab('all', this); return false;" class="cl-tab-item cl-tab-filter active" data-tab="all">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-                    <circle cx="9" cy="7" r="4"/>
-                    <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
-                    <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
-                </svg>
-                <span>All Clients</span>
-                <span class="cl-tab-badge" id="tabBadgeAll">{{ $totalClientsCount }}</span>
-            </a>
-
-            <a href="#" onclick="setClientTab('internal', this); return false;" class="cl-tab-item cl-tab-filter" data-tab="internal">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
-                    <polyline points="9 22 9 12 15 12 15 22"/>
-                </svg>
-                <span>Internal Clients</span>
-                <span class="cl-tab-badge" id="tabBadgeInternal">{{ $internalClientsCount }}</span>
-            </a>
-
-            <a href="#" onclick="setClientTab('direct', this); return false;" class="cl-tab-item cl-tab-filter" data-tab="direct">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-                    <circle cx="12" cy="7" r="4"/>
-                </svg>
-                <span>Direct Clients</span>
-                <span class="cl-tab-badge" id="tabBadgeDirect">{{ $directClientsCount }}</span>
-            </a>
-
-            <a href="#" onclick="setClientTab('hiring', this); return false;" class="cl-tab-item cl-tab-filter" id="tab-hiring" data-tab="hiring">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <rect x="2" y="7" width="20" height="14" rx="2"/>
-                    <path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/>
-                </svg>
-                <span>Active Companies</span>
-                <span class="cl-tab-badge" id="tabBadgeHiring">{{ $hiringClientsCount }}</span>
-            </a>
-
-            <a href="#" onclick="setClientTab('inactive', this); return false;" class="cl-tab-item cl-tab-filter" id="tab-inactive" data-tab="inactive">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <circle cx="12" cy="12" r="10"/>
-                    <line x1="10" y1="15" x2="10" y2="9"/>
-                    <line x1="14" y1="15" x2="14" y2="9"/>
-                </svg>
-                <span>Inactive Companies</span>
-                <span class="cl-tab-badge" id="tabBadgeInactive">{{ $inactiveClientsCount }}</span>
-            </a>
-
-            <a href="#" onclick="setClientTab('request', this); return false;" class="cl-tab-item cl-tab-filter" data-tab="request">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-                    <polyline points="14 2 14 8 20 8"/>
-                </svg>
-                <span>Pending Requests</span>
-                <span class="cl-tab-badge" id="tabBadgeRequest">{{ $pendingRequestsCount }}</span>
-            </a>
-        </div>
-
         @if(in_array("view_clients", $userPermissions))
         <!-- ── TABLE ── -->
         <div class="tbl">
@@ -2004,10 +1944,7 @@ window.ClientStateManager = {
 
     renderTabHeaders: function(tabName) {
         $('.cl-stat-filter').removeClass('active');
-        $('.cl-tab-filter').removeClass('active');
-
         $(`.cl-stat-filter[data-tab="${tabName}"]`).addClass('active');
-        $(`.cl-tab-filter[data-tab="${tabName}"]`).addClass('active');
 
         if (tabName === 'request') {
             $('.tbl').addClass('tbl-req');
