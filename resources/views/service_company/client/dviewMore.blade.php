@@ -7484,6 +7484,13 @@
         function loadDirectTabContent(target, force) {
             if (!target) return;
             target = target.replace('#', '');
+
+            // P0: Forward directly to Scoped ClientDrawerInstance TabCoordinator V3.0
+            if (window.__activeClientDrawer && window.__activeClientDrawer.coordinator) {
+                window.__activeClientDrawer.coordinator.activateTab(target, { force: force });
+                return;
+            }
+
             var activeSelId = window.ClientStateManager && typeof window.ClientStateManager.getSelectedClientId === 'function'
                 ? window.ClientStateManager.getSelectedClientId()
                 : (window.activeSelectedClientId || null);
@@ -9378,7 +9385,11 @@
         window.currentJobStatusDirect = status;
         $('#kt_activitiesDirectClient #requisitions .js-job-filter-btn').removeClass('active');
         $(this).addClass('active');
-        fetchJobsClientdirect(1, $('#kt_activitiesDirectClient #requisitions #inputJobSearch').val(), status);
+        if (window.__activeClientDrawer && window.__activeClientDrawer.coordinator) {
+            window.__activeClientDrawer.coordinator.setFilter('jobs', status);
+        } else if (typeof fetchJobsClientdirect === 'function') {
+            fetchJobsClientdirect(1, $('#kt_activitiesDirectClient #requisitions #inputJobSearch').val(), status);
+        }
     });
 
     // Direct Client Jobs Tab: Click Routing (Fixing Drawer Click Collision Bug)
