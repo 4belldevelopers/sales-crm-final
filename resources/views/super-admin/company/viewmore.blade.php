@@ -2188,6 +2188,256 @@
         overflow-y: auto;
         scrollbar-width: thin;
     }
+
+    /* ── Top-Up Coins & Financial Engine Sub-System ── */
+    .sa-company-drawer .pkg-topup-grid {
+        display: grid;
+        grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
+        gap: 16px;
+        align-items: stretch;
+        margin-bottom: 16px;
+    }
+
+    @media (max-width: 991.98px) {
+        .sa-company-drawer .pkg-topup-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    .sa-company-drawer .pkg-section-title {
+        font-size: 13px;
+        font-weight: 700;
+        color: #0f172a;
+        margin-bottom: 12px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .sa-company-drawer .pkg-calc-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 8px 0;
+        border-bottom: 1px dashed #eff2f5;
+        font-size: 12px;
+    }
+
+    .sa-company-drawer .pkg-calc-row:last-child {
+        border-bottom: none;
+    }
+
+    .sa-company-drawer .pkg-calc-label {
+        color: #64748b;
+        font-weight: 500;
+    }
+
+    .sa-company-drawer .pkg-calc-val {
+        color: #0f172a;
+        font-weight: 700;
+    }
+
+    .sa-company-drawer .pkg-calc-total {
+        background: #f8fafc;
+        border-radius: 8px;
+        padding: 10px 14px;
+        margin-top: 10px;
+        border: 1px solid #e2e8f0;
+    }
+
+    /* ── Migration 3-Step Flow Strip ── */
+    .sa-company-drawer .pkg-step-strip {
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 10px;
+        padding: 16px 20px;
+        margin-bottom: 16px;
+        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03);
+    }
+
+    .sa-company-drawer .pkg-step-flow {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 14px;
+    }
+
+    @media (max-width: 991.98px) {
+        .sa-company-drawer .pkg-step-flow {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    .sa-company-drawer .pkg-step-box {
+        background: #f8fafc;
+        border: 1px solid #eff2f5;
+        border-radius: 8px;
+        padding: 14px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        gap: 10px;
+    }
+
+    .sa-company-drawer .pkg-step-head {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .sa-company-drawer .pkg-step-num {
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        background: #009ef7;
+        color: #ffffff;
+        font-size: 11px;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+    }
+
+    .sa-company-drawer .pkg-step-title {
+        font-size: 12px;
+        font-weight: 700;
+        color: #0f172a;
+    }
+
+    .sa-company-drawer .pkg-step-desc {
+        font-size: 11px;
+        color: #64748b;
+        line-height: 1.45;
+    }
+
+    .sa-company-drawer .pkg-copy-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 5px 10px;
+        background: #ffffff;
+        border: 1px solid #cbd5e1;
+        border-radius: 6px;
+        font-size: 11px;
+        font-weight: 600;
+        color: #2563eb;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        text-decoration: none !important;
+    }
+
+    .sa-company-drawer .pkg-copy-pill:hover {
+        background: #eff6ff;
+        border-color: #009ef7;
+        color: #009ef7;
+    }
+
+    .sa-company-drawer .pkg-template-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 5px 10px;
+        background: #ffffff;
+        border: 1px solid #cbd5e1;
+        border-radius: 6px;
+        font-size: 11px;
+        font-weight: 600;
+        color: #0f172a;
+        cursor: pointer;
+        text-decoration: none !important;
+        transition: all 0.2s ease;
+    }
+
+    .sa-company-drawer .pkg-template-btn:hover {
+        background: #f1f5f9;
+        border-color: #94a3b8;
+        color: #009ef7;
+    }
+
+    .sa-company-drawer .pkg-migration-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 16px;
+        align-items: stretch;
+    }
+
+    @media (max-width: 1199.98px) {
+        .sa-company-drawer .pkg-migration-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    /* ── Settings Sub-Cards Grid ── */
+    .sa-company-drawer .pkg-setting-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 16px;
+        align-items: stretch;
+    }
+
+    @media (max-width: 991.98px) {
+        .sa-company-drawer .pkg-setting-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    .sa-company-drawer .pkg-setting-card {
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 10px;
+        padding: 18px 20px;
+        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03);
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        gap: 14px;
+        transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .sa-company-drawer .pkg-setting-card:hover {
+        border-color: #cbd5e1;
+        box-shadow: 0 4px 12px rgba(15, 23, 42, 0.05);
+    }
+
+    .sa-company-drawer .pkg-setting-top {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .sa-company-drawer .pkg-setting-icon {
+        width: 38px;
+        height: 38px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 15px;
+        flex-shrink: 0;
+    }
+
+    /* ── Boost Keyword Suggestions ── */
+    .sa-company-drawer .pkg-suggest-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        padding: 4px 10px;
+        background: #f1f5f9;
+        border: 1px solid #e2e8f0;
+        border-radius: 20px;
+        font-size: 11px;
+        font-weight: 500;
+        color: #475569;
+        cursor: pointer;
+        transition: all 0.15s ease;
+    }
+
+    .sa-company-drawer .pkg-suggest-pill:hover {
+        background: #e0f2fe;
+        border-color: #7dd3fc;
+        color: #0369a1;
+        transform: translateY(-1px);
+    }
 </style>
 <div class="card-body position-relative px-0 py-0 sa-company-drawer" id="kt_activities_body">
     <input type="hidden" name="hid_client_id" id="hid_client_id" value="{{ $client->id }}" />
@@ -3000,1016 +3250,827 @@
                     <!--end::invoices Content-->
                     <!--begin::transactionhistory Content-->
                     <div class="tab-pane" id="transactionhistory" role="tabpanel" aria-labelledby="tab-transactionhistory">
-                        <div class="card-header cursor-pointer px-0" style="display: block;">
-                            <div class="row">
-                                <table
-                                    class="table align-middle table-row-dashed fs-6 gy-5 table-custom-class dataTable no-footer"
-                                    id="myTable" role="grid" aria-describedby="myTable_info"
-                                    style="width: 1270px;">
+                        <!-- Tier 1: Section Header Toolbar Card -->
+                        <div class="pkg-toolbar-card">
+                            <div class="pkg-toolbar-left">
+                                <div class="pkg-toolbar-icon pkg-icon-blue">
+                                    <i class="fas fa-file-invoice-dollar"></i>
+                                </div>
+                                <div>
+                                    <div class="pkg-toolbar-title">
+                                        Transaction & Billing Ledger
+                                        <span class="pkg-badge-pill" id="txnCountBadge">{{ count($cart_transaction_history ?? []) }} Invoices Recorded</span>
+                                    </div>
+                                    <div class="pkg-toolbar-subtitle">
+                                        Authoritative financial history, coin order settlements, transaction references, and official tax receipts
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="pkg-toolbar-right">
+                                <div class="pkg-search-box">
+                                    <i class="fas fa-search"></i>
+                                    <input type="text" class="pkg-search-input" id="searchTransactionHistory" placeholder="Search orders or receipts..." autocomplete="off">
+                                    <button type="button" class="pkg-search-clear" id="clearTransactionHistory" style="display: none;">✕</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Tier 2: Transaction Ledger Sub-Card Table -->
+                        <div class="pkg-card">
+                            <div class="table-responsive pkg-rules-scroll-wrap">
+                                <table class="table align-middle pkg-rules-table mb-0" id="myTable">
                                     <thead>
-                                        <tr class="fw-bolder text-muted" role="row">
-                                            <th class="w-10px pe-0 sorting_disabled" rowspan="1" colspan="1"
-                                                style="width: 40px;">
-                                                <div
-                                                    class="form-check form-check-sm form-check-custom form-check-solid me-3">
-                                                    <input class="form-check-input datatable_chk chk_list"
-                                                        type="checkbox" data-kt-check="true"
-                                                        data-kt-check-target="#myTable .form-check-input"
-                                                        value="1">
+                                        <tr>
+                                            <th class="w-10px pe-0" style="width: 35px;">
+                                                <div class="form-check form-check-sm form-check-custom form-check-solid">
+                                                    <input class="form-check-input datatable_chk chk_list" type="checkbox" data-kt-check="true" data-kt-check-target="#myTable .form-check-input" value="1">
                                                 </div>
                                             </th>
-                                            <th class="sorting_disabled" rowspan="1" colspan="1"
-                                                style="width: 103px;">Order ID</th>
-                                            <th class="sorting_disabled" rowspan="1" colspan="1"
-                                                style="width: 103px;">Package</th>
-                                            <th class="sorting_disabled" rowspan="1" colspan="1"
-                                                style="width: 103px;">Credits</th>
-                                            <th class="sorting_disabled" rowspan="1" colspan="1"
-                                                style="width: 103px;">Amount</th>
-                                            <th class="sorting_disabled" rowspan="1" colspan="1"
-                                                style="width: 103px;">Transection</th>
-                                            <th class="sorting_disabled" rowspan="1" colspan="1"
-                                                style="width: 103px;">Status</th>
-                                            <th class="sorting_disabled" rowspan="1" colspan="1"
-                                                style="width: 103px;">Download</th>
+                                            <th style="min-width: 140px;">ORDER ID & DATE</th>
+                                            <th style="min-width: 180px;">PACKAGE ORDERED</th>
+                                            <th style="min-width: 120px;">CREDITS</th>
+                                            <th style="min-width: 130px;">TOTAL AMOUNT</th>
+                                            <th style="min-width: 160px;">REFERENCE / ID</th>
+                                            <th style="min-width: 130px;">STATUS</th>
+                                            <th style="min-width: 120px; text-align: right;">TAX RECEIPT</th>
                                         </tr>
                                     </thead>
-                                    <tbody class="text-gray-600 fw-bold">
-                                        @if ($cart_transaction_history)
-                                            @foreach ($cart_transaction_history as $val)
-                                                <tr role="row" class="odd">
+                                    <tbody class="text-gray-700">
+                                        @forelse ($cart_transaction_history as $val)
+                                            @php
+                                                $ordno = sprintf('%05d', $val->id);
+                                                if ($val->payment_mode != 'Payment Link' && $val->status == 'created') {
+                                                    $status_color = 'danger';
+                                                    $status_text = 'Failed';
+                                                    $status_bg = '#fff5f8';
+                                                    $status_fg = '#f1416c';
+                                                } else {
+                                                    $status_get = GeneralMethod::paymentstatus($val->status, 'razorpay');
+                                                    $status_color = @$status_get->status_color ?: 'success';
+                                                    $status_text = @$status_get->status_text ?: 'Paid';
+                                                    $status_bg = ($status_text === 'Paid' || $status_text === 'Success') ? '#e8fff3' : (($status_text === 'Initiated') ? '#fff8dd' : '#fff5f8');
+                                                    $status_fg = ($status_text === 'Paid' || $status_text === 'Success') ? '#50cd89' : (($status_text === 'Initiated') ? '#f6a723' : '#f1416c');
+                                                }
 
-                                                    <td>
-                                                        <div
-                                                            class="form-check form-check-sm form-check-custom form-check-solid">
-                                                            <input class="form-check-input chk_list_item "
-                                                                name="chk_list_item[]" type="checkbox"
-                                                                data-jobid="11" value="1015">
+                                                $link_payments = DB::table('link_payments')->select('*')->where('payment_link_id', @$val->payment_link_id)->orderByDesc('id')->first();
+                                                
+                                                $refText = '—';
+                                                if ($val->payment_mode === 'Cash') {
+                                                    $refText = 'Cash Settlement';
+                                                } elseif ($val->payment_mode === 'Cheque') {
+                                                    $refText = $val->chequenumber ? 'Chq: ' . $val->chequenumber : 'Cheque';
+                                                } elseif ($val->payment_mode === 'Bank Transfer') {
+                                                    $refText = $val->transactionid ? 'UTR: ' . $val->transactionid : 'Bank Transfer';
+                                                } else {
+                                                    $refText = $val->payment_Id ?: ($val->payment_mode ?: 'Online');
+                                                }
+                                            @endphp
+                                            <tr class="pkg-txn-row" data-search="{{ strtolower($ordno . ' ' . $val->product_name . ' ' . $val->payment_mode . ' ' . $status_text . ' ' . $refText) }}">
+                                                <td>
+                                                    <div class="form-check form-check-sm form-check-custom form-check-solid">
+                                                        <input class="form-check-input chk_list_item" name="chk_list_item[]" type="checkbox" value="{{ $val->id }}">
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    <div class="d-flex align-items-center gap-2">
+                                                        <div class="pkg-event-icon-box">
+                                                            <i class="fas fa-receipt text-primary"></i>
                                                         </div>
-                                                    </td>
-                                                    <td>
-                                                        <div class="d-flex flex-column">
-                                                            @php
-                                                                $number = $val->id;
-                                                                $ordno = sprintf('%05d', $number);
-                                                            @endphp
-                                                            <a href="javascript:void(0);"
-                                                                class="text-dark fw-bolder text-hover-primary fs-6">#{{ $ordno }}</a>
-                                                            <span
-                                                                class="fw-bold text-muted d-block fs-7">{{ $val->updated_at }}</span>
+                                                        <div>
+                                                            <span class="fw-bold text-dark fs-7 d-block">#{{ $ordno }}</span>
+                                                            <span class="text-muted fs-8">{{ $val->updated_at ? date('d M Y, h:i A', strtotime($val->updated_at)) : '—' }}</span>
                                                         </div>
-                                                    </td>
-                                                    <td>
-                                                        <div class="d-flex flex-column">
-                                                            <a href="javascript:void(0);"
-                                                                class="text-dark fw-bolder text-hover-primary fs-6">{{ $val->product_name }}</a>
-                                                            <span class="fw-bold text-muted d-block fs-7">&nbsp;</span>
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    <span class="fw-bold text-dark fs-7 d-block">{{ $val->product_name ?: 'Custom Coin Bundle' }}</span>
+                                                    <span class="pkg-type-tag mt-1">Wallet Top-Up</span>
+                                                </td>
+                                                <td>
+                                                    <div class="d-flex align-items-center gap-1">
+                                                        <i class="fas fa-coins text-warning fs-8"></i>
+                                                        <span class="fw-bold text-dark fs-7">+{{ number_format((float)($val->credit ?? 0)) }}</span>
+                                                    </div>
+                                                    <span class="text-muted fs-8">Coins Credited</span>
+                                                </td>
+                                                <td>
+                                                    <div class="fw-bold text-dark fs-7">
+                                                        <i class="fa fa-{{ $val->currency == 'INR' ? 'inr' : 'usd' }} fs-8"></i>
+                                                        {{ number_format((float)($val->total_price ?? 0), 2) }}
+                                                    </div>
+                                                    <span class="text-muted fs-8">{{ $val->payment_mode === 'Payment Link' || $val->payment_mode === 'Online' ? 'Gateway (Online)' : ($val->payment_mode ?: 'Standard') }}</span>
+                                                </td>
+                                                <td>
+                                                    <span class="fw-semibold text-gray-800 fs-7 d-block font-monospace" style="word-break: break-all;">{{ $refText }}</span>
+                                                    <span class="text-muted fs-8">Settlement Ref</span>
+                                                </td>
+                                                <td>
+                                                    <span class="badge px-3 py-2 fs-8 fw-bold" style="background: {{ $status_bg }}; color: {{ $status_fg }};">
+                                                        <span class="pkg-status-dot me-1" style="background: {{ $status_fg }};"></span>
+                                                        {{ $status_text }}
+                                                    </span>
+                                                    @if($status_text === 'Initiated' && !empty($link_payments->payment_link))
+                                                        <div class="mt-1 d-flex align-items-center gap-1">
+                                                            <span class="paymentLinktextToCopy text-truncate fs-8 text-muted" style="max-width: 110px;">{{ $link_payments->payment_link }}</span>
+                                                            <button type="button" class="btn btn-icon btn-xs btn-light-primary" onclick="paymentLinkcopyText('{{ $link_payments->payment_link }}')" title="Copy Payment Link">
+                                                                <i class="fa fa-copy fs-9"></i>
+                                                            </button>
                                                         </div>
-                                                    </td>
-                                                    <td>
-                                                        <div class="d-flex flex-column">
-                                                            <a href="javascript:void(0);"
-                                                                class="text-dark fw-bolder text-hover-primary fs-6">{{ $val->credit }}</a>
-                                                            <span class="fw-bold text-muted d-block fs-7">Credit</span>
-                                                        </div>
-                                                    </td>
-                                                    
-                                                    <td>
-                                                        <div class="d-flex flex-column">
-                                                            <a href="javascript:void(0);"
-                                                                class="text-dark fw-bolder text-hover-primary fs-6"><i
-                                                                    class="fa fa-{{ $val->currency == 'INR' ? 'inr' : 'usd' }}"
-                                                                    aria-hidden="true"></i>
-                                                                {{ $val->total_price }}</a>
-                                                            <span
-                                                                class="fw-bold text-muted d-block fs-7">{{ $val->payment_mode === 'Payment Link' || $val->payment_mode === 'Online' ? 'Online' : ucfirst($val->payment_gateway) }}</span>
-                                                        </div>
-                                                    </td>
-                                                    <td>
-                                                        @if($val->payment_mode === 'Cash')
-                                                                {{ 'Cash' }}
-                                                        @elseif($val->payment_mode === 'Cheque')
-                                                        {{ ($val->chequenumber) ? $val->chequenumber : '-----------' }}
-                                                        @elseif($val->payment_mode === 'Bank Transfer')
-                                                        {{ ($val->transactionid) ? $val->transactionid :'-----------' }}
-                                                        @elseif($val->payment_mode === 'Online')
-                                                        {{ ($val->payment_Id) ? $val->payment_Id : '------------'}}
-                                                        @elseif($val->payment_mode === 'Payment Link')
-                                                        {{ ($val->payment_Id) ? $val->payment_Id : '------------'}}
-                                                        @endif
-                                                    </td>  
-                                                    <td>
-                                                        <div class="">
-                                                            @php
-                                                                if (
-                                                                    $val->payment_mode != 'Payment Link' &&
-                                                                    $val->status == 'created'
-                                                                ) {
-                                                                    $status_color = 'danger';
-                                                                    $status_text = 'Failed';
-                                                                } else {
-                                                                    $status_get = GeneralMethod::paymentstatus($val->status,'razorpay');
-                                                                    $status_color = @$status_get->status_color;
-                                                                    $status_text = @$status_get->status_text;
-                                                                }
-
-                                                                $link_payments =	DB::table('link_payments')->select('*')->where('payment_link_id', @$val->payment_link_id)->orderByDesc('id')->first();
-
-
-                                                            @endphp
-
-                                                            <span
-                                                                class="fw-bolder fs-6 text-{{ @$status_color }}">{{ @$status_text }}
-                                                            </span>
-                                                            <span
-                                                                class="fw-bold text-muted d-block fs-7">{{ ($val->payment_mode === 'Online') ? 'Website' : $val->payment_mode }}</span>
-                                                                @if($status_text==='Initiated')
-                                                                <p><span class="paymentLinktextToCopy">{{ $link_payments->payment_link }}</span> <button class="copy-button" onclick="paymentLinkcopyText('{{$link_payments->payment_link}}')"><i class="fa fa-clipboard"></i></button></p>
-                                                                @endif
-                                                        </div>
-                                                    </td>
-                                                    <td>
-                                                        <div class="d-flex flex-column">
-                                                            <a href="{{ route('superadmin.company.receiptdownload', [encrypt($val->cart_id)]) }}?company_id={{ $val->company_id }}"
-                                                                class="text-danger fw-bolder text-hover-primary fs-6">Download&nbsp;
-                                                                <svg xmlns="http://www.w3.org/2000/svg"
-                                                                    xmlns:xlink="http://www.w3.org/1999/xlink"
-                                                                    width="18px" height="18px" viewBox="0 0 24 24"
-                                                                    version="1.1" class="kt-svg-icon">
-                                                                    <g stroke="none" stroke-width="1" fill="none"
-                                                                        fill-rule="evenodd">
-                                                                        <rect id="bound" x="0" y="0"
-                                                                            width="24" height="24" />
-                                                                        <path
-                                                                            d="M2,13 C2,12.5 2.5,12 3,12 C3.5,12 4,12.5 4,13 C4,13.3333333 4,15 4,18 C4,19.1045695 4.8954305,20 6,20 L18,20 C19.1045695,20 20,19.1045695 20,18 L20,13 C20,12.4477153 20.4477153,12 21,12 C21.5522847,12 22,12.4477153 22,13 L22,18 C22,20.209139 20.209139,22 18,22 L6,22 C3.790861,22 2,20.209139 2,18 C2,15 2,13.3333333 2,13 Z"
-                                                                            id="Path-57" fill="red"
-                                                                            fill-rule="nonzero" opacity="0.3" />
-                                                                        <rect id="Rectangle" fill="red"
-                                                                            opacity="0.3"
-                                                                            transform="translate(12.000000, 8.000000) rotate(-180.000000) translate(-12.000000, -8.000000) "
-                                                                            x="11" y="1" width="2" height="14"
-                                                                            rx="1" />
-                                                                        <path
-                                                                            d="M7.70710678,15.7071068 C7.31658249,16.0976311 6.68341751,16.0976311 6.29289322,15.7071068 C5.90236893,15.3165825 5.90236893,14.6834175 6.29289322,14.2928932 L11.2928932,9.29289322 C11.6689749,8.91681153 12.2736364,8.90091039 12.6689647,9.25670585 L17.6689647,13.7567059 C18.0794748,14.1261649 18.1127532,14.7584547 17.7432941,15.1689647 C17.3738351,15.5794748 16.7415453,15.6127532 16.3310353,15.2432941 L12.0362375,11.3779761 L7.70710678,15.7071068 Z"
-                                                                            id="Path-102" fill="#000000"
-                                                                            fill-rule="nonzero"
-                                                                            transform="translate(12.000004, 12.499999) rotate(-180.000000) translate(-12.000004, -12.499999) " />
-                                                                    </g>
-                                                                </svg>
-                                                            </a>
-
-                                                        </div>
-                                                    </td>
-                                                </tr>
-                                            @endforeach
-                                        @endif
+                                                    @endif
+                                                </td>
+                                                <td style="text-align: right;">
+                                                    <a href="{{ route('superadmin.company.receiptdownload', [encrypt($val->cart_id)]) }}?company_id={{ $val->company_id }}" class="btn btn-sm btn-light-primary px-3 py-2 fs-8 fw-semibold" target="_blank" title="Download Tax Invoice">
+                                                        <i class="fas fa-file-pdf me-1"></i> Receipt
+                                                    </a>
+                                                </td>
+                                            </tr>
+                                        @empty
+                                            <tr>
+                                                <td colspan="8" class="text-center py-8 text-muted fs-7">
+                                                    <i class="fas fa-receipt fa-2x text-muted opacity-40 mb-2 d-block"></i>
+                                                    No financial transactions or order invoices recorded for this company yet.
+                                                </td>
+                                            </tr>
+                                        @endforelse
                                     </tbody>
                                 </table>
+                                <div class="pkg-no-rules text-center py-6 text-muted fs-7" id="noTxnMatch" style="display: none;">
+                                    <i class="fas fa-search text-muted opacity-50 fs-2 mb-2 d-block"></i>
+                                    No transaction orders match your search query.
+                                </div>
                             </div>
-
                         </div>
                     </div>
                     <!--end::transactionhistory Content-->
                     <!--begin::codeSetting Content-->
                     <div class="tab-pane" id="codeSetting" role="tabpanel" aria-labelledby="tab-codeSetting">
-                        <div class="card-header cursor-pointer px-0" style="display: block;">
-                            <div class="row">
-                                <table class="table align-middle table-row-dashed fs-6 gy-5 table-custom-class dataTable no-footer"
-                                    id="myTable" role="grid" aria-describedby="myTable_info"
-                                    style="width: 1270px;">
-                                    <thead>
-                                        <tr class="fw-bolder text-muted" role="row">
-                                            <th class="sorting_disabled" rowspan="1" colspan="1"
-                                                style="width: 103px;">Purpose</th>
-                                            <th class="sorting_disabled" rowspan="1" colspan="1"
-                                                style="width: 103px;">Login Url</th>
-                                            <th class="sorting_disabled" rowspan="1" colspan="1"
-                                                style="width: 103px;">Action</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody class="text-gray-600 fw-bold">
-                                        <tr role="row" class="odd">
-                                            <td class="sorting_disabled" rowspan="1" colspan="1"
-                                                style="width: 103px;">Login
-                                                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-                                                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-                                                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-                                                &nbsp;
-                                            <td class="sorting_disabled" rowspan="1" colspan="1"
-                                                style="width: 103px;">
-                                                <span id="copyText"
-                                                    style="cursor: pointer; color: black; background: #f1e8e8; padding: 6px; border-radius: 8px;">Url
-                                                    Copy</span>&nbsp;&nbsp;&nbsp;
-                                                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-                                                &nbsp;&nbsp;&nbsp;&nbsp;
-                                                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-                                                &nbsp;
-                                            </td>
-                                            <td class="sorting_disabled" rowspan="1" colspan="1"
-                                                style="width: 103px;">
+                        <!-- Tier 1: Toolbar Card -->
+                        <div class="pkg-toolbar-card">
+                            <div class="pkg-toolbar-left">
+                                <div class="pkg-toolbar-icon pkg-icon-blue">
+                                    <i class="fas fa-sliders-h"></i>
+                                </div>
+                                <div>
+                                    <div class="pkg-toolbar-title">
+                                        Tenant Access & Account Preferences
+                                        <span class="pkg-badge-pill">Security & Access</span>
+                                    </div>
+                                    <div class="pkg-toolbar-subtitle">
+                                        Configure organization activation status, administrative login entry points, and emergency access tokens.
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
 
-                                                <div class="d-flex flex-column">
-                                                    {{ @$users->email }}
-                                                    <span class="fw-bolder code_generator text-success fs-6"
-                                                        id="row_{{ $users->id }}" data-id="{{ $users->id }}"
-                                                        style="cursor: pointer;">Code Generate <i
-                                                            class="fa fa-refresh"></i></span>
-                                                </div>
-                                            </td>
-                                        </tr>
+                        <!-- Tier 2: 3-Sub-Card Grid -->
+                        <div class="pkg-setting-grid">
+                            <!-- Sub-Card 1: Company Activation -->
+                            <div class="pkg-setting-card">
+                                <div>
+                                    <div class="pkg-setting-top mb-3">
+                                        <div class="pkg-setting-icon" style="background: #e8fff3; color: #50cd89;">
+                                            <i class="fas fa-power-off"></i>
+                                        </div>
+                                        <div>
+                                            <h4 class="fs-6 fw-bolder text-gray-900 mb-0">Company Activation</h4>
+                                            <span class="fs-8 text-muted">Organization account enforcement</span>
+                                        </div>
+                                    </div>
+                                    <p class="fs-7 text-gray-600 mb-4" style="line-height: 1.5;">
+                                        Toggle company tenancy state. Suspending an account locks all organizational members from accessing their workspace dashboard.
+                                    </p>
+                                </div>
+                                <div class="d-flex align-items-center justify-content-between p-3 rounded" style="background: #f8fafc; border: 1px solid #e2e8f0;">
+                                    <div class="d-flex align-items-center gap-2">
+                                        <span class="fs-7 fw-bold text-gray-700">Account State:</span>
+                                        <span class="checkActivetext badge badge-light-{{ @$users->status === 'active' ? 'success' : 'danger' }} text-{{ @$users->status === 'active' ? 'success' : 'danger' }} fw-bold fs-7">
+                                            {{ @$users->status === 'active' ? 'Active' : 'Suspend' }}
+                                        </span>
+                                    </div>
+                                    <div class="switchery-demo form-check form-switch form-switch-sm form-check-custom form-check-solid m-0">
+                                        <input type="checkbox" class="js-switch form-check-input checkActive"
+                                            name="checkActive" @if (@$users->status === 'active') checked @endif
+                                            data-color="#99d683" data-size="small" style="width: 44px; height: 24px; cursor: pointer;" />
+                                    </div>
+                                </div>
+                            </div>
 
-                                        <tr role="row" class="odd">
-                                            <td class="sorting_disabled" rowspan="1" colspan="1" style="width: 103px;">
-                                                Company Status &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-                                                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-                                                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;
-                                            <td class="sorting_disabled" rowspan="1" colspan="1" style="width: 103px;">
-                                                <span
-                                                    class="checkActivetext text-{{ @$users->status === 'active' ? 'success' : 'danger' }}"
-                                                    id="">{{ @$users->status === 'active' ? 'Active' : 'Suspend' }}</span>
-                                            </td>
-                                            <td class="sorting_disabled" rowspan="1" colspan="1" style="width: 103px;">
+                            <!-- Sub-Card 2: Direct SuperAdmin Login URL -->
+                            <div class="pkg-setting-card">
+                                <div>
+                                    <div class="pkg-setting-top mb-3">
+                                        <div class="pkg-setting-icon" style="background: #f0f7ff; color: #009ef7;">
+                                            <i class="fas fa-link"></i>
+                                        </div>
+                                        <div>
+                                            <h4 class="fs-6 fw-bolder text-gray-900 mb-0">Direct Login URL</h4>
+                                            <span class="fs-8 text-muted">Universal workspace portal URL</span>
+                                        </div>
+                                    </div>
+                                    <p class="fs-7 text-gray-600 mb-4" style="line-height: 1.5;">
+                                        Copy the administrative login entry URL to distribute to designated client stakeholders or for immediate portal redirection.
+                                    </p>
+                                </div>
+                                <div class="d-flex align-items-center justify-content-between p-3 rounded" style="background: #f8fafc; border: 1px solid #e2e8f0;">
+                                    <code class="text-gray-700 fs-8 text-truncate me-2" style="max-width: 170px;" title="{{ route('super.login.form') }}">
+                                        {{ route('super.login.form') }}
+                                    </code>
+                                    <button type="button" class="btn btn-sm btn-light-primary fw-bold px-3 py-2 text-nowrap d-inline-flex align-items-center gap-1" id="copyText">
+                                        <i class="fas fa-copy fs-8"></i>
+                                        <span>Url Copy</span>
+                                    </button>
+                                </div>
+                            </div>
 
-                                                <div
-                                                    class="switchery-demo form-check form-switch form-switch-sm form-check-custom form-check-solid">
-                                                    <input type="checkbox" class="js-switch form-check-input checkActive"
-                                                        name="checkActive" @if (@$users->status === 'active') checked @endif
-                                                        data-color="#99d683" data-size="small" style="width: 43px; height: 24px;" />
-                                                </div>
-                                                <div>
-                                                    <span
-                                                        class="checkActivetext text-{{ @$users->status === 'active' ? 'success' : 'danger' }}"
-                                                        id="">{{ @$users->status === 'active' ? 'Active' : 'Suspend' }}</span>
-                                                </div>
-
-                                            </td>
-
-                                        </tr>
-                                    </tbody>
-                                </table>
+                            <!-- Sub-Card 3: Admin One-Time Access Code -->
+                            <div class="pkg-setting-card">
+                                <div>
+                                    <div class="pkg-setting-top mb-3">
+                                        <div class="pkg-setting-icon" style="background: #fff8dd; color: #f6a723;">
+                                            <i class="fas fa-key"></i>
+                                        </div>
+                                        <div>
+                                            <h4 class="fs-6 fw-bolder text-gray-900 mb-0">Access Code Generator</h4>
+                                            <span class="fs-8 text-muted">Administrative passkey token</span>
+                                        </div>
+                                    </div>
+                                    <p class="fs-7 text-gray-600 mb-4" style="line-height: 1.5;">
+                                        Generate an instantaneous one-time administrative sign-in code assigned specifically to the registered admin account:
+                                        <span class="d-block fw-bold text-gray-800 text-truncate mt-1" title="{{ @$users->email }}">
+                                            <i class="fas fa-envelope fs-8 text-muted me-1"></i>{{ @$users->email ?? 'admin@domain.com' }}
+                                        </span>
+                                    </p>
+                                </div>
+                                <div class="d-flex align-items-center justify-content-between p-3 rounded" style="background: #f8fafc; border: 1px solid #e2e8f0;">
+                                    <span class="fs-8 text-muted fw-semibold">Click to generate token:</span>
+                                    <span class="btn btn-sm btn-light-success fw-bolder px-3 py-2 text-nowrap code_generator d-inline-flex align-items-center gap-1"
+                                        id="row_{{ @$users->id }}" data-id="{{ @$users->id }}" style="cursor: pointer;">
+                                        <i class="fas fa-sync-alt fs-8"></i>
+                                        <span>Code Generate</span>
+                                    </span>
+                                </div>
                             </div>
                         </div>
                     </div>
                     <!--end::codeSetting Content-->
                     <!--begin::migration Content-->
                     <div class="tab-pane" id="migration" role="tabpanel" aria-labelledby="tab-migration">
-                        <div class="card-header cursor-pointer px-0">
-                            <!--begin::Card title-->
-
-                            <div class="card-body px-0 py-7">
-                                <p><strong>Step 1.</strong> Kindly share your Google Sheet to this below ID<br>
-                                    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span
-                                        id="textToCopy">get-google-api-data@get-goolge-sheet.iam.gserviceaccount.com</span>
-                                    <button class="copy-button" onclick="copyText()">Click to Copy Text</button></p>
-
-                                <p><strong>Step 2.</strong> Find out your Google Sheet ID from URL and in between d and Edit
-                                    </span>
-                                    <img alt="Pic"
-                                        src="{{ str_replace('index.php', '', url('public/tracker-teams-image.png')) }}">
-                                </p>
-
-                                <p><strong>Step 3.</strong> Arrange the google sheet in below format for Client and Candidate
-                                    Data Migration </span><br>
-                                    <a href="{{ str_replace('index.php', '', url('public/Book1-client.xlsx')) }}"
-                                        download><button class="copy-button">Client Format <i
-                                                class="fa fa-download"></i></button></a>
-                                    <a href="{{ str_replace('index.php', '', url('public/Book1-candidate.xlsx')) }}"
-                                        download><button class="copy-button">Candidate Format <i
-                                                class="fa fa-download"></i></button></a>
-                                    <a href="{{ str_replace('index.php', '', url('public/Book1-jobs.xlsx')) }}"
-                                    download><button class="copy-button">Job Format <i
-                                    class="fa fa-download"></i></button></a>
-                                </p>
-
-                                <div class="row">
-                                    <div class="col-xxl-4 mb-5 mb-xl-10">
-                                        <!--begin::Chart widget 8-->
-                                        <div class="card card-flush h-xl-100">
-                                            <!--begin::Header-->
-                                            <div class="card-header"  style="padding: 6px;">
-                                                <!--begin::Title-->
-                                                <h3 class="card-title align-items-start flex-column">
-                                                    <span class="card-label fw-bold text-gray-900">Client Migrations</span> 
-                                                    <span class="card-label fw-bold text-gray-900"><a href="https://docs.google.com/spreadsheets/d/17oawy1WWLysg4M3IRLuSBArn2Rl_Igj18Jp2G9TztOg/edit?gid=0#gid=0" target="_blank"> Click To Open</a></span>
-                                                </h3>
-                                                <!--end::Title-->
-
-                                            </div>
-
-                                            <!--end::Header-->
-
-                                            <!--begin::Body-->
-                                            <div class="card-body" style="padding: 6px;">
-                                                <!--begin::Tab content-->
-                                                <div class="tab-content">
-                                                    <!--begin::Tab pane-->
-                                                    <div class="modal-body scroll-y" style="padding: 0px;">
-                                                        <!--begin::Form-->
-                                                        <form id="client_new_form" class="form" action="#">
-                                                            <!--begin::Input group-->
-                                                            <div class="d-flex flex-column mb-7 fv-row">
-                                                                <!--begin::Label-->
-                                                                <label
-                                                                    class="d-flex align-items-center fs-6 fw-semibold form-label mb-2">
-                                                                    <span class="required">Client Google Sheet Id</span>
-
-
-                                                                    <span class="ms-1" data-bs-toggle="tooltip"
-                                                                        title="Specify a card holder's name">
-                                                                        <i
-                                                                            class="ki-outline ki-information-5 text-gray-500 fs-6"></i></span>
-                                                                </label>
-                                                                <!--end::Label-->
-
-                                                                <input type="text" class="form-control form-control-solid"
-                                                                    placeholder="" name="googlesheetid" value="" />
-                                                                <input type="hidden" value="{{ @$client->id }}"
-                                                                    name="company_id">
-                                                            </div>
-                                                            <div class="d-flex flex-column mb-7 fv-row">
-                                                                <label
-                                                                    class="required fs-6 fw-semibold form-label mb-2">Teams</label>
-                                                                <select name="teams" class="form-select form-select-solid"
-                                                                    data-control="select2" data-hide-search="true" required>
-                                                                    <option value="">Select Team</option>
-                                                                    @if (@$teams)
-                                                                        @foreach (@$teams as $valuser)
-                                                                            <option value="{{ $valuser->id }}">
-                                                                                {{ $valuser->name }}</option>
-                                                                        @endforeach
-                                                                    @endif
-                                                                </select>
-                                                            </div>
-
-
-                                                            <button id="successButtonclient" class="btn btn-success"
-                                                                style="margin: 1px; width: 100%;"></button>
-                                                            <button id="errorButtonclient" class="btn btn-danger"
-                                                                style="margin: 1px; width: 100%;"></button>
-                                                            <!--begin::Actions-->
-                                                            <div class="text-center pt-15">
-
-
-                                                                <button type="submit" id="client_new_submit"
-                                                                    class="btn btn-primary">
-                                                                    <span class="indicator-label indicator-label-client">
-                                                                        Submit
-                                                                    </span>
-                                                                    <span class="indicator-progress indicator-progress-client">
-                                                                        Please wait... <span
-                                                                            class="spinner-border spinner-border-sm align-middle ms-2"></span>
-                                                                    </span>
-                                                                </button>
-                                                            </div>
-                                                            <!--end::Actions-->
-                                                        </form>
-                                                        <!--end::Form-->
-                                                    </div>
-                                                </div>
-                                                <!--end::Tab content-->
-                                            </div>
-                                            <!--end::Body-->
-                                        </div>
-                                        <!--end::Chart widget 8-->
+                        <!-- Tier 1: Toolbar Card -->
+                        <div class="pkg-toolbar-card">
+                            <div class="pkg-toolbar-left">
+                                <div class="pkg-toolbar-icon pkg-icon-blue">
+                                    <i class="fas fa-cloud-upload-alt"></i>
+                                </div>
+                                <div>
+                                    <div class="pkg-toolbar-title">
+                                        Google Sheets Data Migration Hub
+                                        <span class="pkg-badge-pill">Bulk ETL Ingestion</span>
                                     </div>
-
-                                    <div class="col-xxl-4 mb-5 mb-xl-10">
-                                    <!--begin::Chart widget 8-->
-                                    <div class="card card-flush h-xl-100">
-                                        <!--begin::Header-->
-                                        <div class="card-header" style="padding: 6px;">
-                                            <!--begin::Title-->
-                                            <h3 class="card-title align-items-start flex-column">
-                                                <span class="card-label fw-bold text-gray-900">Jobs Migrations</span>
-                                                <span class="card-label fw-bold text-gray-900"><a href="https://docs.google.com/spreadsheets/d/1rQBpcFxDprxxr1wDG3fn7vhnUGgqZCqpe_gxK6fwgeo/edit?gid=0#gid=0" target="_blank"> Click To Open</a></span> 
-                                            </h3>
-                                            <!--end::Title-->
-                                        </div>
-                                        <!--end::Header-->
-
-                                        <!--begin::Body-->
-                                        <div class="card-body" style="padding: 6px;">
-                                            <!--begin::Tab content-->
-                                            <div class="tab-content">
-
-                                                <div class="modal-body scroll-y" style="padding: 0px;">
-                                                    <!--begin::Form-->
-                                                    <form id="candidate_new_form_job" class="form" action=""
-                                                        method="POST">
-                                                        <!--begin::Input group-->
-                                                        <div class="d-flex flex-column mb-7 fv-row">
-                                                            <!--begin::Label-->
-                                                            <label
-                                                                class="d-flex align-items-center fs-6 fw-semibold form-label mb-2">
-                                                                <span class="required">Jobs Google Sheet Id</span>
-
-
-                                                                <span class="ms-1" data-bs-toggle="tooltip"
-                                                                    title="Specify a card holder's name">
-                                                                    <i
-                                                                        class="ki-outline ki-information-5 text-gray-500 fs-6"></i></span>
-                                                            </label>
-                                                            <!--end::Label-->
-
-                                                            <input type="text" class="form-control form-control-solid"
-                                                                placeholder="" name="googlesheetid" value=""
-                                                                required />
-                                                            <input type="hidden" value="{{ @$client->id }}"
-                                                                name="company_id">
-                                                        </div>
-                                                        <div class="d-flex flex-column mb-7 fv-row">
-                                                            <label
-                                                                class="required fs-6 fw-semibold form-label mb-2">Clients</label>
-                                                            <select name="client_id" id="clientID" class="form-select form-select-solid"
-                                                                data-control="select2" data-hide-search="true" required>
-                                                                <option value="">Select Client</option>
-                                                                @if(@$clientlist)
-                                                                    @foreach($clientlist as $val)  
-                                                                        <option value="{{ $val->id }}"> {{ $val->name }}</option>
-                                                                    @endforeach
-
-                                                                @endif
-                                                            </select>
-                                                        </div>
-
-                                                        <div class="d-flex flex-column mb-7 fv-row">
-                                                            <label
-                                                                class="required fs-6 fw-semibold form-label mb-2">Hiring Manager/HR </label>
-                                                            <select name="hiring_namager" id="hiring_namager" class="form-select form-select-solid"
-                                                                data-control="select2" data-hide-search="true" required>
-                                                                <option value="">Select Hiring Manager</option>
-                                                                
-                                                            </select>
-                                                        </div>
-                                                        <div class="d-flex flex-column mb-7 fv-row">
-                                                            <label
-                                                                class="required fs-6 fw-semibold form-label mb-2">Teams</label>
-                                                            <select class="form-select form-select-solid"
-                                                                arial-label="Select Currency" name="recruiter"
-                                                                id="teamsId">
-                                                                <option value="">Select Team</option>
-                                                                @if (@$teams)
-                                                                    @foreach (@$teams as $valuser)
-                                                                        <option value="{{ $valuser->name }}">
-                                                                            {{ $valuser->name }}</option>
-                                                                    @endforeach
-                                                                @endif
-                                                            </select>
-                                                        </div>
-
-
-
-
-                                                        <button id="successButtoncanJob" class="btn btn-success"
-                                                            style="margin: 1px; width: 100%;"></button>
-                                                        <button id="errorButtoncanJob" class="btn btn-danger"
-                                                            style="margin: 1px; width: 100%;"></button>
-                                                        <!--begin::Actions-->
-                                                        <div class="text-center pt-15">
-
-                                                            <button type="submit" id="candidate_new_submit_job"
-                                                                class="btn btn-primary">
-                                                                <span class="indicator-label-can-job indicator-label">
-                                                                    Submit
-                                                                </span>
-                                                                <span class="indicator-progress-can-job indicator-progress">
-                                                                    Please wait... <span
-                                                                        class="spinner-border spinner-border-sm align-middle ms-2"></span>
-                                                                </span>
-                                                            </button>
-
-                                                        </div>
-                                                        <!--end::Actions-->
-                                                    </form>
-                                                    <!--end::Form-->
-                                                </div>
-
-
-                                            </div>
-                                            <!--end::Tab content-->
-                                        </div>
-                                        <!--end::Body-->
+                                    <div class="pkg-toolbar-subtitle">
+                                        Ingest legacy client accounts, job requisitions, and candidate talent directly from linked Google Spreadsheets into the ATS.
                                     </div>
-                                    <!--end::Chart widget 8-->
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Tier 2: 3-Step Guided Workflow Strip -->
+                        <div class="pkg-step-strip mb-4">
+                            <div class="pkg-step-flow">
+                                <!-- Step 1 -->
+                                <div class="pkg-step-box">
+                                    <div class="pkg-step-head">
+                                        <div class="pkg-step-num">1</div>
+                                        <div class="pkg-step-title">Share Sheet with Service ID</div>
                                     </div>
-
-                                    <div class="col-xxl-4 mb-5 mb-xl-10">
-                                        <!--begin::Chart widget 8-->
-                                        <div class="card card-flush h-xl-100">
-                                            <!--begin::Header-->
-                                            <div class="card-header"  style="padding: 6px;">
-                                                <!--begin::Title-->
-                                                <h3 class="card-title align-items-start flex-column">
-                                                    <span class="card-label fw-bold text-gray-900">Candidate Migrations</span>
-                                                    <span class="card-label fw-bold text-gray-900"><a href="https://docs.google.com/spreadsheets/d/1oMkFyIZKX56IWGi0-4kB3om0RPib3NnwLyQcjaIUabs/edit?gid=0#gid=0" target="_blank"> Click To Open</a></span> 
-                                                </h3>
-                                                <!--end::Title-->
-                                            </div>
-                                            <!--end::Header-->
-
-                                            <!--begin::Body-->
-                                            <div class="card-body" style="padding: 6px;">
-                                                <!--begin::Tab content-->
-                                                <div class="tab-content">
-
-                                                    <div class="modal-body scroll-y" style="padding: 0px;">
-                                                        <!--begin::Form-->
-                                                        <form id="candidate_new_form" class="form" action=""
-                                                            method="POST">
-                                                            <!--begin::Input group-->
-                                                            <div class="d-flex flex-column mb-7 fv-row">
-                                                                <!--begin::Label-->
-                                                                <label
-                                                                    class="d-flex align-items-center fs-6 fw-semibold form-label mb-2">
-                                                                    <span class="required">Candidate Google Sheet Id</span>
-
-
-                                                                    <span class="ms-1" data-bs-toggle="tooltip"
-                                                                        title="Specify a card holder's name">
-                                                                        <i
-                                                                            class="ki-outline ki-information-5 text-gray-500 fs-6"></i></span>
-                                                                </label>
-                                                                <!--end::Label-->
-
-                                                                <input type="text" class="form-control form-control-solid"
-                                                                    placeholder="" name="googlesheetid" value=""
-                                                                    required />
-                                                                <input type="hidden" value="{{ @$client->id }}"
-                                                                    name="company_id">
-                                                            </div>
-                                                            <div class="d-flex flex-column mb-7 fv-row">
-                                                                <label
-                                                                    class="required fs-6 fw-semibold form-label mb-2">Jobs</label>
-                                                                <select name="job_id" class="form-select form-select-solid"
-                                                                    data-control="select2" data-hide-search="true" required>
-                                                                    <option value="">Select Job</option>
-                                                                    @if (@$jobsforcandidate)
-                                                                        @foreach (@$jobsforcandidate as $val_job)
-                                                                            <option value="{{ $val_job->id }}">
-                                                                                J{{ $val_job->id }}, {{ $val_job->title }}
-                                                                                ({{ $val_job->clients_name }})</option>
-                                                                        @endforeach
-
-                                                                    @endif
-                                                                </select>
-                                                            </div>
-
-                                                            <div class="d-flex flex-column mb-7 fv-row">
-                                                                <label
-                                                                    class="required fs-6 fw-semibold form-label mb-2">Teams</label>
-                                                                <select name="teams" class="form-select form-select-solid"
-                                                                    data-control="select2" data-hide-search="true" required>
-                                                                    <option value="">Select Team</option>
-                                                                    @if (@$teams)
-                                                                        @foreach (@$teams as $valuser)
-                                                                            <option value="{{ $valuser->id }}">
-                                                                                {{ $valuser->name }}</option>
-                                                                        @endforeach
-                                                                    @endif
-                                                                </select>
-                                                            </div>
-
-                                                            <div class="d-flex flex-column mb-7 fv-row">
-                                                                <label
-                                                                    class="required fs-6 fw-semibold form-label mb-2">Currency</label>
-                                                                <select class="form-select form-select-solid"
-                                                                    arial-label="Select Currency" id="current_ctc_cur"
-                                                                    name="current_ctc_cur">
-                                                                    <option value="0" selected="selected">INR</option>
-                                                                    <option value="1">EUR</option>
-                                                                    <option value="2">JPY</option>
-                                                                    <option value="3">GBP</option>
-                                                                    <option value="4">USD</option>
-                                                                </select>
-                                                            </div>
-
-                                                            <div class="d-flex flex-column mb-7 fv-row">
-                                                                <label
-                                                                    class="required fs-6 fw-semibold form-label mb-2">Currency
-                                                                    Mode</label>
-                                                                <select class="form-select form-select-solid"
-                                                                    arial-label="Select Currency" name="current_ctc_mode"
-                                                                    id="current_ctc_mode">
-                                                                    <option value="0" selected="selected">Annual</option>
-                                                                    <option value="1">Monthly</option>
-                                                                    <option value="2">Hourly</option>
-                                                                </select>
-                                                            </div>
-
-
-
-
-                                                            <button id="successButtoncan" class="btn btn-success"
-                                                                style="margin: 1px; width: 100%;"></button>
-                                                            <button id="errorButtoncan" class="btn btn-danger"
-                                                                style="margin: 1px; width: 100%;"></button>
-                                                            <!--begin::Actions-->
-                                                            <div class="text-center pt-15">
-
-                                                                <button type="submit" id="candidate_new_submit"
-                                                                    class="btn btn-primary">
-                                                                    <span class="indicator-label-can indicator-label">
-                                                                        Submit
-                                                                    </span>
-                                                                    <span class="indicator-progress-can indicator-progress">
-                                                                        Please wait... <span
-                                                                            class="spinner-border spinner-border-sm align-middle ms-2"></span>
-                                                                    </span>
-                                                                </button>
-
-                                                            </div>
-                                                            <!--end::Actions-->
-                                                        </form>
-                                                        <!--end::Form-->
-                                                    </div>
-
-
-                                                </div>
-                                                <!--end::Tab content-->
-                                            </div>
-                                            <!--end::Body-->
-                                        </div>
-                                        <!--end::Chart widget 8-->
+                                    <div class="pkg-step-desc">
+                                        Grant <strong>Viewer</strong> or <strong>Editor</strong> permission on your Google Sheet to the JERO migration account:
                                     </div>
-
+                                    <div class="d-flex align-items-center justify-content-between p-2 rounded border border-dashed border-gray-300 bg-white">
+                                        <span class="fs-8 text-primary fw-bold text-truncate me-1" id="textToCopy" style="max-width: 170px;" title="get-google-api-data@get-goolge-sheet.iam.gserviceaccount.com">
+                                            get-google-api-data@get-goolge-sheet.iam.gserviceaccount.com
+                                        </span>
+                                        <button type="button" class="copy-button btn btn-xs btn-light-primary fw-bold px-2 py-1" onclick="copyText()" title="Copy Email Address">
+                                            <i class="fas fa-copy me-1"></i>Copy
+                                        </button>
+                                    </div>
                                 </div>
 
+                                <!-- Step 2 -->
+                                <div class="pkg-step-box">
+                                    <div class="pkg-step-head">
+                                        <div class="pkg-step-num">2</div>
+                                        <div class="pkg-step-title">Extract Google Sheet ID</div>
+                                    </div>
+                                    <div class="pkg-step-desc">
+                                        Extract the alphanumeric hash located between <code>/d/</code> and <code>/edit</code> in your sheet browser URL:
+                                    </div>
+                                    <div class="text-center p-1 rounded bg-white border border-gray-200">
+                                        <img alt="Google Sheet ID Location Reference" src="{{ str_replace('index.php', '', url('public/tracker-teams-image.png')) }}" style="max-height: 38px; width: auto; object-fit: contain;">
+                                    </div>
+                                </div>
 
+                                <!-- Step 3 -->
+                                <div class="pkg-step-box">
+                                    <div class="pkg-step-head">
+                                        <div class="pkg-step-num">3</div>
+                                        <div class="pkg-step-title">Download Standard Templates</div>
+                                    </div>
+                                    <div class="pkg-step-desc">
+                                        Ensure columns and headers strictly adhere to JERO schema specifications:
+                                    </div>
+                                    <div class="d-flex flex-wrap gap-1">
+                                        <a href="{{ str_replace('index.php', '', url('public/Book1-client.xlsx')) }}" download class="pkg-template-btn">
+                                            <i class="fas fa-file-excel text-success fs-8"></i>Client
+                                        </a>
+                                        <a href="{{ str_replace('index.php', '', url('public/Book1-jobs.xlsx')) }}" download class="pkg-template-btn">
+                                            <i class="fas fa-file-excel text-primary fs-8"></i>Jobs
+                                        </a>
+                                        <a href="{{ str_replace('index.php', '', url('public/Book1-candidate.xlsx')) }}" download class="pkg-template-btn">
+                                            <i class="fas fa-file-excel text-warning fs-8"></i>Candidate
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Tier 3: 3 Migration Ingestion Hub Cards -->
+                        <div class="pkg-migration-grid">
+                            <!-- Ingestion Hub 1: Client Ingestion -->
+                            <div class="pkg-card">
+                                <div class="pkg-card-header">
+                                    <div class="d-flex align-items-center gap-2">
+                                        <div class="pkg-event-icon-box" style="background: #e0f2fe; color: #0284c7;">
+                                            <i class="fas fa-user-tie"></i>
+                                        </div>
+                                        <div>
+                                            <h4 class="fs-6 fw-bolder text-gray-900 mb-0">Client Migration</h4>
+                                            <span class="fs-8 text-muted">Corporate account records</span>
+                                        </div>
+                                    </div>
+                                    <a href="https://docs.google.com/spreadsheets/d/17oawy1WWLysg4M3IRLuSBArn2Rl_Igj18Jp2G9TztOg/edit?gid=0#gid=0" target="_blank" class="fs-8 text-primary fw-semibold d-inline-flex align-items-center gap-1">
+                                        <i class="fas fa-external-link-alt fs-9"></i>Sample Sheet
+                                    </a>
+                                </div>
+                                <div class="pkg-card-body">
+                                    <form id="client_new_form" class="form" action="#">
+                                        <input type="hidden" value="{{ @$client->id }}" name="company_id">
+                                        
+                                        <div class="mb-4">
+                                            <label class="form-label required fs-7 fw-bold text-gray-700">Client Google Sheet ID</label>
+                                            <input type="text" class="form-control form-control-solid" placeholder="Paste Sheet ID here..." name="googlesheetid" value="" required />
+                                        </div>
+
+                                        <div class="mb-5">
+                                            <label class="form-label required fs-7 fw-bold text-gray-700">Assigned Team</label>
+                                            <select name="teams" class="form-select form-select-solid" data-control="select2" data-hide-search="true" required>
+                                                <option value="">Select Team</option>
+                                                @if (@$teams)
+                                                    @foreach (@$teams as $valuser)
+                                                        <option value="{{ $valuser->id }}">{{ $valuser->name }}</option>
+                                                    @endforeach
+                                                @endif
+                                            </select>
+                                        </div>
+
+                                        <button id="successButtonclient" class="btn btn-success" style="display: none; width: 100%; margin-bottom: 10px;"></button>
+                                        <button id="errorButtonclient" class="btn btn-danger" style="display: none; width: 100%; margin-bottom: 10px;"></button>
+
+                                        <button type="submit" id="client_new_submit" class="btn btn-primary w-100 fw-bold">
+                                            <span class="indicator-label indicator-label-client">
+                                                <i class="fas fa-file-import me-1"></i>Import Clients
+                                            </span>
+                                            <span class="indicator-progress indicator-progress-client">
+                                                Please wait... <span class="spinner-border spinner-border-sm align-middle ms-2"></span>
+                                            </span>
+                                        </button>
+                                    </form>
+                                </div>
                             </div>
 
+                            <!-- Ingestion Hub 2: Jobs Ingestion -->
+                            <div class="pkg-card">
+                                <div class="pkg-card-header">
+                                    <div class="d-flex align-items-center gap-2">
+                                        <div class="pkg-event-icon-box" style="background: #eff6ff; color: #2563eb;">
+                                            <i class="fas fa-briefcase"></i>
+                                        </div>
+                                        <div>
+                                            <h4 class="fs-6 fw-bolder text-gray-900 mb-0">Jobs Migration</h4>
+                                            <span class="fs-8 text-muted">Active open requisitions</span>
+                                        </div>
+                                    </div>
+                                    <a href="https://docs.google.com/spreadsheets/d/1rQBpcFxDprxxr1wDG3fn7vhnUGgqZCqpe_gxK6fwgeo/edit?gid=0#gid=0" target="_blank" class="fs-8 text-primary fw-semibold d-inline-flex align-items-center gap-1">
+                                        <i class="fas fa-external-link-alt fs-9"></i>Sample Sheet
+                                    </a>
+                                </div>
+                                <div class="pkg-card-body">
+                                    <form id="candidate_new_form_job" class="form" action="" method="POST">
+                                        <input type="hidden" value="{{ @$client->id }}" name="company_id">
+
+                                        <div class="mb-3">
+                                            <label class="form-label required fs-7 fw-bold text-gray-700">Jobs Google Sheet ID</label>
+                                            <input type="text" class="form-control form-control-solid" placeholder="Paste Sheet ID here..." name="googlesheetid" value="" required />
+                                        </div>
+
+                                        <div class="mb-3">
+                                            <label class="form-label required fs-7 fw-bold text-gray-700">Client</label>
+                                            <select name="client_id" id="clientID" class="form-select form-select-solid" data-control="select2" data-hide-search="true" required>
+                                                <option value="">Select Client</option>
+                                                @if(@$clientlist)
+                                                    @foreach($clientlist as $val)  
+                                                        <option value="{{ $val->id }}">{{ $val->name }}</option>
+                                                    @endforeach
+                                                @endif
+                                            </select>
+                                        </div>
+
+                                        <div class="mb-3">
+                                            <label class="form-label required fs-7 fw-bold text-gray-700">Hiring Manager / HR</label>
+                                            <select name="hiring_namager" id="hiring_namager" class="form-select form-select-solid" data-control="select2" data-hide-search="true" required>
+                                                <option value="">Select Hiring Manager</option>
+                                            </select>
+                                        </div>
+
+                                        <div class="mb-5">
+                                            <label class="form-label required fs-7 fw-bold text-gray-700">Recruiter Team</label>
+                                            <select class="form-select form-select-solid" name="recruiter" id="teamsId">
+                                                <option value="">Select Team</option>
+                                                @if (@$teams)
+                                                    @foreach (@$teams as $valuser)
+                                                        <option value="{{ $valuser->name }}">{{ $valuser->name }}</option>
+                                                    @endforeach
+                                                @endif
+                                            </select>
+                                        </div>
+
+                                        <button id="successButtoncanJob" class="btn btn-success" style="display: none; width: 100%; margin-bottom: 10px;"></button>
+                                        <button id="errorButtoncanJob" class="btn btn-danger" style="display: none; width: 100%; margin-bottom: 10px;"></button>
+
+                                        <button type="submit" id="candidate_new_submit_job" class="btn btn-primary w-100 fw-bold">
+                                            <span class="indicator-label-can-job indicator-label">
+                                                <i class="fas fa-file-import me-1"></i>Import Jobs
+                                            </span>
+                                            <span class="indicator-progress-can-job indicator-progress">
+                                                Please wait... <span class="spinner-border spinner-border-sm align-middle ms-2"></span>
+                                            </span>
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+
+                            <!-- Ingestion Hub 3: Candidate Ingestion -->
+                            <div class="pkg-card">
+                                <div class="pkg-card-header">
+                                    <div class="d-flex align-items-center gap-2">
+                                        <div class="pkg-event-icon-box" style="background: #e8fff3; color: #50cd89;">
+                                            <i class="fas fa-user-graduate"></i>
+                                        </div>
+                                        <div>
+                                            <h4 class="fs-6 fw-bolder text-gray-900 mb-0">Candidate Migration</h4>
+                                            <span class="fs-8 text-muted">Talent profiles & applications</span>
+                                        </div>
+                                    </div>
+                                    <a href="https://docs.google.com/spreadsheets/d/1oMkFyIZKX56IWGi0-4kB3om0RPib3NnwLyQcjaIUabs/edit?gid=0#gid=0" target="_blank" class="fs-8 text-primary fw-semibold d-inline-flex align-items-center gap-1">
+                                        <i class="fas fa-external-link-alt fs-9"></i>Sample Sheet
+                                    </a>
+                                </div>
+                                <div class="pkg-card-body">
+                                    <form id="candidate_new_form" class="form" action="" method="POST">
+                                        <input type="hidden" value="{{ @$client->id }}" name="company_id">
+
+                                        <div class="mb-3">
+                                            <label class="form-label required fs-7 fw-bold text-gray-700">Candidate Google Sheet ID</label>
+                                            <input type="text" class="form-control form-control-solid" placeholder="Paste Sheet ID here..." name="googlesheetid" value="" required />
+                                        </div>
+
+                                        <div class="mb-3">
+                                            <label class="form-label required fs-7 fw-bold text-gray-700">Target Job Requisition</label>
+                                            <select name="job_id" class="form-select form-select-solid" data-control="select2" data-hide-search="true" required>
+                                                <option value="">Select Job</option>
+                                                @if (@$jobsforcandidate)
+                                                    @foreach (@$jobsforcandidate as $val_job)
+                                                        <option value="{{ $val_job->id }}">J{{ $val_job->id }}, {{ $val_job->title }} ({{ $val_job->clients_name }})</option>
+                                                    @endforeach
+                                                @endif
+                                            </select>
+                                        </div>
+
+                                        <div class="mb-3">
+                                            <label class="form-label required fs-7 fw-bold text-gray-700">Assigned Team</label>
+                                            <select name="teams" class="form-select form-select-solid" data-control="select2" data-hide-search="true" required>
+                                                <option value="">Select Team</option>
+                                                @if (@$teams)
+                                                    @foreach (@$teams as $valuser)
+                                                        <option value="{{ $valuser->id }}">{{ $valuser->name }}</option>
+                                                    @endforeach
+                                                @endif
+                                            </select>
+                                        </div>
+
+                                        <div class="row g-2 mb-5">
+                                            <div class="col-6">
+                                                <label class="form-label required fs-7 fw-bold text-gray-700">CTC Currency</label>
+                                                <select class="form-select form-select-solid" id="current_ctc_cur" name="current_ctc_cur">
+                                                    <option value="0" selected="selected">INR</option>
+                                                    <option value="1">EUR</option>
+                                                    <option value="2">JPY</option>
+                                                    <option value="3">GBP</option>
+                                                    <option value="4">USD</option>
+                                                </select>
+                                            </div>
+                                            <div class="col-6">
+                                                <label class="form-label required fs-7 fw-bold text-gray-700">CTC Frequency</label>
+                                                <select class="form-select form-select-solid" name="current_ctc_mode" id="current_ctc_mode">
+                                                    <option value="0" selected="selected">Annual</option>
+                                                    <option value="1">Monthly</option>
+                                                    <option value="2">Hourly</option>
+                                                </select>
+                                            </div>
+                                        </div>
+
+                                        <button id="successButtoncan" class="btn btn-success" style="display: none; width: 100%; margin-bottom: 10px;"></button>
+                                        <button id="errorButtoncan" class="btn btn-danger" style="display: none; width: 100%; margin-bottom: 10px;"></button>
+
+                                        <button type="submit" id="candidate_new_submit" class="btn btn-primary w-100 fw-bold">
+                                            <span class="indicator-label-can indicator-label">
+                                                <i class="fas fa-file-import me-1"></i>Import Candidates
+                                            </span>
+                                            <span class="indicator-progress-can indicator-progress">
+                                                Please wait... <span class="spinner-border spinner-border-sm align-middle ms-2"></span>
+                                            </span>
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
                         </div>
                     </div>
                     <!--end::migration Content-->
                     <!--begin::topupcoins Content-->
                     <div class="tab-pane" id="topupcoins" role="tabpanel" aria-labelledby="tab-topupcoins">
-                        <div class="card-header cursor-pointer px-0">
-                            <!--begin::Card title-->
-
-                            <div class="card-body px-0 py-7">
-
-                                <div class="row">
-                                    <div class="col-xxl-12 mb-5 mb-xl-10">
-                                        <!--begin::Chart widget 8-->
-                                        <div class="card card-flush h-xl-100">
-                                            <!--begin::Header-->
-                                            <div class="card-header pt-5">
-                                                <!--begin::Title-->
-                                                <h3 class="card-title align-items-start flex-column">
-                                                    <span class="card-label fw-bold text-gray-900">Top-Up Operational
-                                                        Coins</span>
-                                                </h3>
-                                                <!--end::Title-->
-
-                                            </div>
-
-                                            <!--end::Header-->
-
-                                            <!--begin::Body-->
-                                            <div class="card-body pt-6">
-                                                <!--begin::Tab content-->
-                                                <div class="tab-content">
-                                                    <!--begin::Tab pane-->
-                                                    <div class="modal-body scroll-y mx-5 mx-xl-15 my-7">
-                                                        <!--begin::Form-->
-                                                        <form id="operational_top_up_new_form" class="form" action="#">
-                                                            <!--begin::Input group-->
-
-                                                            <input type="hidden" name="paymentLinkPaymentstatus" id="paymentLinkPaymentstatus" value="" />
-                                                            <input type="hidden" name="paymentLinkpayment_orderId" id="paymentLinkpayment_orderId" value="" />
-                                                            <input type="hidden" name="paymentLinkshort_url" id="paymentLinkshort_url" value="" />
-
-
-                                                            <div class="row">
-                                                                <div class="col-xxl-4 mb-5 mb-xl-10">
-                                                                    <label
-                                                                        class="required fs-6 fw-semibold form-label mb-2">Currency</label>
-                                                                    <select name="currency" id="currency_get"
-                                                                        class="form-select form-select-solid"
-                                                                        data-control="select2" data-hide-search="true"
-                                                                        required>
-                                                                        <option value="INR"><i class="fa fa-inr"
-                                                                                aria-hidden="true"></i> INR</option>
-                                                                        <option value="USD"><i class="fa fa-usd"
-                                                                                aria-hidden="true"></i> USD</option>
-                                                                    </select>
-                                                                </div>
-                                                                <div class="col-xxl-2 mb-5 mb-xl-10">
-                                                                    <label
-                                                                        class="required fs-6 fw-semibold form-label mb-2">GST</label>
-                                                                    <select name="gst_on" id="gst_on_get"
-                                                                        class="form-select form-select-solid"
-                                                                        data-control="select2" data-hide-search="true"
-                                                                        required>
-                                                                        <option value="Yes">Yes</option>
-                                                                        <option value="No">No</option>
-                                                                    </select>
-                                                                </div>
-
-                                                                <div class="col-xxl-6 mb-5 mb-xl-10">
-                                                                    <label
-                                                                        class="required fs-6 fw-semibold form-label mb-2">Top-up
-                                                                        Type</label>
-                                                                    <select name="topUptype" id="topUptype"
-                                                                        class="form-select form-select-solid"
-                                                                        data-control="select2" data-hide-search="true"
-                                                                        required>
-                                                                        <option value="">Select Top-up Type</option>
-                                                                        <option value="operational">Operational</option>
-                                                                        <option value="sales">Sales</option>
-                                                                    </select>
-                                                                </div>
-                                                            </div>
-
-
-                                                            <div class="d-flex flex-column mb-8">
-                                                                <label class="form-label required">Amount</label>
-                                                                <div class="row py-5 mb-3" id="currencyPrice">
-
-                                                                </div>
-                                                            </div>
-
-
-
-
-                                                            <div class="row">
-
-
-                                                                <div class="col-xxl-6 mb-5 mb-xl-10">
-                                                                    <label
-                                                                        class="d-flex align-items-center fs-6 fw-semibold form-label mb-2">
-                                                                        <span class="required">Coins</span>
-
-
-                                                                        <span class="ms-1" data-bs-toggle="tooltip"
-                                                                            title="Specify a card holder's name">
-                                                                            <i
-                                                                                class="ki-outline ki-information-5 text-gray-500 fs-6"></i></span>
-                                                                    </label>
-                                                                    <!--end::Label-->
-
-                                                                    <input type="text"
-                                                                        class="form-control form-control-solid coins_get"
-                                                                        placeholder="" name="coins" value="" />
-
-                                                                </div>
-                                                                <div class="col-xxl-6 mb-5 mb-xl-10">
-                                                                    <!--begin::Label-->
-                                                                    <label
-                                                                        class="d-flex align-items-center fs-6 fw-semibold form-label mb-2">
-                                                                        <span class="required">Price</span>
-
-
-                                                                        <span class="ms-1" data-bs-toggle="tooltip"
-                                                                            title="Specify a card holder's name">
-                                                                            <i
-                                                                                class="ki-outline ki-information-5 text-gray-500 fs-6"></i></span>
-                                                                    </label>
-                                                                    <!--end::Label-->
-
-                                                                    <input type="text"
-                                                                        class="form-control form-control-solid price_get"
-                                                                        placeholder="" name="price" value="" />
-                                                                    <input type="hidden" value="{{ @$client->id }}"
-                                                                        name="company_id" id="company_id_topup">
-
-
-                                                                    {{-- <input type="hidden" value="" class="gsttax_hidden_value" name="gst"> --}}
-
-                                                                    <div class="d-flex justify-content-end">
-                                                                        <!--begin::Section-->
-                                                                        <div class="mw-300px">
-                                                                            
-                                                                            <br>
-
-                                                                            <div class="d-flex flex-stack mb-3">
-                                                                                <div class="fw-semibold pe-10 text-gray-600 fs-7"
-                                                                                    style="display:contents;">
-                                                                                    <label class="form-label"
-                                                                                        style="padding-top:10px;">Discount(%)
-                                                                                    </label>
-
-                                                                                    <input type="number"
-                                                                                        class="form-control form-control-solid"
-                                                                                        name="discount" id="discount"
-                                                                                        value="" placeholder="0.00"
-                                                                                        style="width: 190px;">
-
-
-                                                                                </div>
-
-                                                                            </div>
-
-                                                                            <!--begin::Item-->
-                                                                            <div class="d-flex flex-stack mb-3">
-                                                                                <!--begin::Accountname-->
-                                                                                <div class="fw-semibold pe-10 text-gray-600 fs-7"
-                                                                                    style="display:contents;">
-                                                                                    <label class="form-label"
-                                                                                        style="padding-top:10px;">GST(%):
-                                                                                    </label>
-                                                                                    <input type="number"
-                                                                                        class="form-control form-control-solid gsttax_hidden_value"
-                                                                                        name="gst" id="gst"
-                                                                                        value="" placeholder="0.00"
-                                                                                        style="width: 190px;">
-                                                                                    <input type="hidden" value=""
-                                                                                        class="gst_amount_hidden_value"
-                                                                                        name="gst_amount">
-                                                                                </div>
-                                                                                <!--end::Accountname-->
-
-                                                                                
-                                                                            </div>
-                                                                            <!--end::Item-->
-
-
-                                                                            <!--begin::Item-->
-                                                                            <div class="d-flex flex-stack mb-3">
-                                                                                <!--begin::Code-->
-                                                                                <div class="fw-semibold pe-10 text-gray-600 fs-7"
-                                                                                    style="display:contents;">
-                                                                                    <label class="form-label"
-                                                                                        style="padding-top:10px;"> Total
-                                                                                    </label>
-
-                                                                                    <input type="text" value=""
-                                                                                        class="form-control form-control-solid total_price_hidden_value"
-                                                                                        name="total_price"
-                                                                                        style="width: 190px;">
-                                                                                </div>
-                                                                                <!--end::Code-->
-
-                                                                                
-                                                                            </div>
-                                                                            <!--end::Item-->
-                                                                        </div>
-                                                                        <!--end::Section-->
-                                                                    </div>
-
-
-                                                                </div>
-
-                                                            </div>
-
-
-                                                            {{-- ////////////////////////////////// --}}
-
-                                                            <div class="row">
-                                                                <div class="col-xxl-6 mb-5 mb-xl-10">
-                                                                    <select id="payment-mode-selector"
-                                                                        name="paymentmodeselector"
-                                                                        class="form-select form-select-solid">
-                                                                        <option value="">Select Payment Mode</option>
-                                                                        <option value="Cash">Cash</option>
-                                                                        <option value="Cheque">Cheque</option>
-                                                                        <option value="Bank Transfer">Bank Transfer</option>
-                                                                        <option value="Payment Link">Payment Link</option>
-                                                                    </select>
-                                                                </div>
-                                                                <div class="col-xxl-6 mb-5 mb-xl-10">
-                                                                    <select id="payment-method-selector"
-                                                                        name="paymentmethodselector"
-                                                                        class="form-select form-select-solid">
-
-                                                                    </select>
-                                                                </div>
-                                                            </div>
-
-                                                            <div id="cash" class="payment-method">
-                                                                <p>Please provide the cash amount directly to our
-                                                                    representative.</p>
-                                                            </div>
-
-                                                            <!-- Cheque Payment -->
-                                                            <div id="cheque" class="payment-method">
-                                                                <p>
-                                                                    Please issue a cheque in favor of <strong>Company
-                                                                        Name</strong> and provide the following details:
-                                                                </p>
-                                                                <div class="row">
-                                                                    <div class="col-xxl-4 mb-5 mb-xl-10">
-                                                                        <label for="cheque-number">Cheque Number:</label>
-                                                                        <input type="text"
-                                                                            class="form-control form-control-solid"
-                                                                            id="cheque-number" name="chequenumber">
-                                                                    </div>
-                                                                    <div class="col-xxl-4 mb-5 mb-xl-10">
-                                                                        <label for="cheque-date">Cheque Date:</label>
-                                                                        <input type="date"
-                                                                            class="form-control form-control-solid"
-                                                                            id="cheque-date" name="chequedate">
-                                                                    </div>
-                                                                    <div class="col-xxl-4 mb-5 mb-xl-10">
-                                                                        <label for="bank-name">Bank Name:</label>
-                                                                        <input type="text"
-                                                                            class="form-control form-control-solid"
-                                                                            id="bank-name" name="bankname">
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-
-                                                            <!-- Bank Transfer -->
-                                                            <div id="bank_transfer" class="payment-method">
-                                                                <p>
-                                                                    After completing the transfer, please provide the
-                                                                    transaction ID and the bank reference number below.
-                                                                </p>
-                                                                <div class="row">
-                                                                    <div class="col-xxl-6 mb-5 mb-xl-10">
-                                                                        <label for="transaction-id">Transaction ID:</label>
-                                                                        <input type="text"
-                                                                            class="form-control form-control-solid"
-                                                                            id="transaction-id" name="transactionid">
-                                                                    </div>
-                                                                    <div class="col-xxl-6 mb-5 mb-xl-10">
-                                                                        <label for="bank-reference">Bank Reference
-                                                                            Number:</label>
-                                                                        <input type="text"
-                                                                            class="form-control form-control-solid"
-                                                                            id="bank-reference" name="bankreference">
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-
-                                                            <!-- Online Payment -->
-                                                            <div id="online" class="payment-method">
-                                                                <p>Please click the button below to proceed to our secure online
-                                                                    payment gateway. <button type="button" class="paymentLinkGenerate" onclick="paymentLinkGenerate()">Payment Link Generate</button></p>
-                                                            </div>
-                                                            <div class="paymentLinkshow" style="display:none">
-                                                                <label class="form-label">Payment Link</label>
-                                                                <input type="text" class="form-control form-control-solid" id="paymentLinkshow" value="" readonly/>
-                                                            </div>
-
-                                                            {{-- //////////////////////////////////////////// --}}
-
-
-                                                            <div class="row">
-                                                                <div class="col-sm-9">
-                                                                    <div class="fw-bold fs-6 text-gray-800">Billing Details</div>
-                                                                    <p><span id="usernamebill">{{ @$user_name }}</span><p>
-                                                                    <p>{{ @$company_name }}
-                                                                    <p>
-                                                                    <p><span id="billing_address">{{ @$locArr }}</span> <p>
-                                                                    <p><span id="billing_gst">{{ @$gstin }}</span> <p>
-                                                                    <p><span id="billing_pan">{{ @$pan_no }}</span> <p>
-                                                                </div>
-                                                                <div class="col-sm-3">
-                                                                    <a href="javascript:;" data-id="{{ $client->company_id }}" class="btn btn-primary show-billing-address"
-                                                                        id="" style="float: right;">Edit Details</a>
-                                                                </div>
-                                                            </div>
-
-
-
-
-                                                            <button id="successButtonoperationaltopup" class="btn btn-success"
-                                                                style="margin: 1px; width: 100%;"></button>
-                                                            <button id="errorButtonoperationaltopup" class="btn btn-danger"
-                                                                style="margin: 1px; width: 100%;"></button>
-                                                            <!--begin::Actions-->
-                                                            <div class="text-center pt-15">
-
-
-                                                                <button type="submit" id="operational_top_up_new_submit"
-                                                                    class="btn btn-primary">
-                                                                    <span class="indicator-label indicator-label-top-up">
-                                                                        Submit
-                                                                    </span>
-                                                                    <span class="indicator-progress indicator-progress-top-up">
-                                                                        Please wait... <span
-                                                                            class="spinner-border spinner-border-sm align-middle ms-2"></span>
-                                                                    </span>
-                                                                </button>
-                                                            </div>
-                                                            <!--end::Actions-->
-                                                        </form>
-                                                        <!--end::Form-->
-                                                    </div>
-                                                </div>
-                                                <!--end::Tab content-->
-                                                @if ($link_payments)
-                                                    <p><strong>1.</strong>Pending Payment<br>
-                                                        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span
-                                                            id="paymentLinktextToCopy">{{ $link_payments->payment_link }}</span>
-                                                        <button class="copy-button" onclick="paymentLinkcopyText('{{ $link_payments->payment_link}}')">Click to
-                                                            Copy Link</button></p>
-                                                @endif
-
-                                            </div>
-                                            <!--end::Body-->
-                                        </div>
-                                        <!--end::Chart widget 8-->
+                        <!-- Tier 1: Toolbar Card -->
+                        <div class="pkg-toolbar-card">
+                            <div class="pkg-toolbar-left">
+                                <div class="pkg-toolbar-icon pkg-icon-amber">
+                                    <i class="fas fa-coins"></i>
+                                </div>
+                                <div>
+                                    <div class="pkg-toolbar-title">
+                                        Wallet Recharge & Coin Top-Up
+                                        <span class="pkg-badge-pill">Billing & Credits</span>
                                     </div>
+                                    <div class="pkg-toolbar-subtitle">
+                                        Allocate operational or sales coins to this company wallet, manage payment settlements, and issue official order tax receipts.
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
 
+                        <!-- Tier 2: 2-Column Grid inside Form -->
+                        <form id="operational_top_up_new_form" class="form" action="#">
+                            <input type="hidden" name="paymentLinkPaymentstatus" id="paymentLinkPaymentstatus" value="" />
+                            <input type="hidden" name="paymentLinkpayment_orderId" id="paymentLinkpayment_orderId" value="" />
+                            <input type="hidden" name="paymentLinkshort_url" id="paymentLinkshort_url" value="" />
+                            <input type="hidden" value="{{ @$client->id }}" name="company_id" id="company_id_topup">
+                            <input type="hidden" value="" class="gst_amount_hidden_value" name="gst_amount">
+
+                            <div class="pkg-topup-grid">
+                                <!-- Left Sub-Card: Allocation Parameters -->
+                                <div class="pkg-card">
+                                    <div class="pkg-card-header">
+                                        <div class="d-flex align-items-center gap-2">
+                                            <div class="pkg-event-icon-box" style="background: #fff8dd; color: #f6a723;">
+                                                <i class="fas fa-sliders-h"></i>
+                                            </div>
+                                            <div>
+                                                <h4 class="fs-6 fw-bolder text-gray-900 mb-0">Recharge Parameters</h4>
+                                                <span class="fs-8 text-muted">Currency, tax scope, and coin volume</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="pkg-card-body">
+                                        <div class="row g-3 mb-4">
+                                            <div class="col-md-5">
+                                                <label class="form-label required fs-7 fw-bold text-gray-700">Currency</label>
+                                                <select name="currency" id="currency_get" class="form-select form-select-solid" data-control="select2" data-hide-search="true" required>
+                                                    <option value="INR"><i class="fa fa-inr" aria-hidden="true"></i> INR</option>
+                                                    <option value="USD"><i class="fa fa-usd" aria-hidden="true"></i> USD</option>
+                                                </select>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <label class="form-label required fs-7 fw-bold text-gray-700">GST Apply</label>
+                                                <select name="gst_on" id="gst_on_get" class="form-select form-select-solid" data-control="select2" data-hide-search="true" required>
+                                                    <option value="Yes">Yes</option>
+                                                    <option value="No">No</option>
+                                                </select>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <label class="form-label required fs-7 fw-bold text-gray-700">Top-up Type</label>
+                                                <select name="topUptype" id="topUptype" class="form-select form-select-solid" data-control="select2" data-hide-search="true" required>
+                                                    <option value="">Select Type</option>
+                                                    <option value="operational">Operational</option>
+                                                    <option value="sales">Sales</option>
+                                                </select>
+                                            </div>
+                                        </div>
+
+                                        <div class="mb-4">
+                                            <label class="form-label required fs-7 fw-bold text-gray-700">Predefined Coin Bundles</label>
+                                            <div class="row py-2 mb-1" id="currencyPrice">
+                                                <!-- Dynamic bundle buttons loaded via AJAX -->
+                                            </div>
+                                        </div>
+
+                                        <div class="row g-3">
+                                            <div class="col-6">
+                                                <label class="form-label required fs-7 fw-bold text-gray-700">Coins Amount</label>
+                                                <input type="text" class="form-control form-control-solid coins_get" placeholder="e.g. 500" name="coins" value="" />
+                                            </div>
+                                            <div class="col-6">
+                                                <label class="form-label required fs-7 fw-bold text-gray-700">Base Price</label>
+                                                <input type="text" class="form-control form-control-solid price_get" placeholder="0.00" name="price" value="" />
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
 
+                                <!-- Right Sub-Card: Calculation & Payment Mode -->
+                                <div class="pkg-card">
+                                    <div class="pkg-card-header">
+                                        <div class="d-flex align-items-center gap-2">
+                                            <div class="pkg-event-icon-box" style="background: #e8fff3; color: #50cd89;">
+                                                <i class="fas fa-receipt"></i>
+                                            </div>
+                                            <div>
+                                                <h4 class="fs-6 fw-bolder text-gray-900 mb-0">Cost Calculation & Settlement</h4>
+                                                <span class="fs-8 text-muted">Discount, taxes, and payment instrument</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="pkg-card-body">
+                                        <div class="p-4 rounded mb-4" style="background: #f8fafc; border: 1px solid #e2e8f0;">
+                                            <div class="d-flex align-items-center justify-content-between mb-3">
+                                                <label class="form-label fs-7 fw-bold text-gray-700 mb-0">Discount (%):</label>
+                                                <input type="number" class="form-control form-control-solid" name="discount" id="discount" value="" placeholder="0.00" style="width: 140px; text-align: right;">
+                                            </div>
+                                            <div class="d-flex align-items-center justify-content-between mb-3">
+                                                <label class="form-label fs-7 fw-bold text-gray-700 mb-0">GST (%):</label>
+                                                <input type="number" class="form-control form-control-solid gsttax_hidden_value" name="gst" id="gst" value="" placeholder="0.00" style="width: 140px; text-align: right;">
+                                            </div>
+                                            <div class="d-flex align-items-center justify-content-between pt-3 border-top border-gray-300">
+                                                <label class="form-label fs-6 fw-bolder text-gray-900 mb-0">Net Total:</label>
+                                                <input type="text" value="" class="form-control form-control-solid total_price_hidden_value fw-bolder text-primary fs-6" name="total_price" style="width: 140px; text-align: right;" placeholder="0.00">
+                                            </div>
+                                        </div>
 
+                                        <div class="row g-3 mb-3">
+                                            <div class="col-6">
+                                                <label class="form-label fs-7 fw-bold text-gray-700">Payment Mode</label>
+                                                <select id="payment-mode-selector" name="paymentmodeselector" class="form-select form-select-solid">
+                                                    <option value="">Select Payment Mode</option>
+                                                    <option value="Cash">Cash</option>
+                                                    <option value="Cheque">Cheque</option>
+                                                    <option value="Bank Transfer">Bank Transfer</option>
+                                                    <option value="Payment Link">Payment Link</option>
+                                                </select>
+                                            </div>
+                                            <div class="col-6">
+                                                <label class="form-label fs-7 fw-bold text-gray-700">Payment Method</label>
+                                                <select id="payment-method-selector" name="paymentmethodselector" class="form-select form-select-solid">
+                                                </select>
+                                            </div>
+                                        </div>
+
+                                        <!-- Cash Settlement -->
+                                        <div id="cash" class="payment-method p-3 rounded bg-light border border-dashed border-gray-300 mb-3">
+                                            <p class="fs-7 text-gray-700 mb-0">
+                                                <i class="fas fa-hand-holding-usd text-success me-1"></i>Please collect the cash settlement directly through authorized corporate representative.
+                                            </p>
+                                        </div>
+
+                                        <!-- Cheque Payment -->
+                                        <div id="cheque" class="payment-method p-3 rounded bg-light border border-dashed border-gray-300 mb-3">
+                                            <p class="fs-7 text-gray-700 mb-2">Issue cheque in favor of <strong>Company Name</strong>:</p>
+                                            <div class="row g-2">
+                                                <div class="col-md-4">
+                                                    <label for="cheque-number" class="form-label fs-8 text-gray-600 mb-1">Cheque Number</label>
+                                                    <input type="text" class="form-control form-control-solid form-control-sm" id="cheque-number" name="chequenumber">
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <label for="cheque-date" class="form-label fs-8 text-gray-600 mb-1">Cheque Date</label>
+                                                    <input type="date" class="form-control form-control-solid form-control-sm" id="cheque-date" name="chequedate">
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <label for="bank-name" class="form-label fs-8 text-gray-600 mb-1">Bank Name</label>
+                                                    <input type="text" class="form-control form-control-solid form-control-sm" id="bank-name" name="bankname">
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Bank Transfer -->
+                                        <div id="bank_transfer" class="payment-method p-3 rounded bg-light border border-dashed border-gray-300 mb-3">
+                                            <p class="fs-7 text-gray-700 mb-2">Record wire transfer reconciliation reference details:</p>
+                                            <div class="row g-2">
+                                                <div class="col-6">
+                                                    <label for="transaction-id" class="form-label fs-8 text-gray-600 mb-1">Transaction ID (UTR)</label>
+                                                    <input type="text" class="form-control form-control-solid form-control-sm" id="transaction-id" name="transactionid">
+                                                </div>
+                                                <div class="col-6">
+                                                    <label for="bank-reference" class="form-label fs-8 text-gray-600 mb-1">Bank Reference</label>
+                                                    <input type="text" class="form-control form-control-solid form-control-sm" id="bank-reference" name="bankreference">
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Online Payment Link -->
+                                        <div id="online" class="payment-method p-3 rounded bg-light border border-dashed border-gray-300 mb-3">
+                                            <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+                                                <p class="fs-7 text-gray-700 mb-0">Generate a secure payment gateway checkout link:</p>
+                                                <button type="button" class="btn btn-sm btn-light-primary fw-bold paymentLinkGenerate" onclick="paymentLinkGenerate()">
+                                                    <i class="fas fa-magic me-1"></i>Generate Payment Link
+                                                </button>
+                                            </div>
+                                        </div>
+
+                                        <div class="paymentLinkshow mb-3" style="display:none">
+                                            <label class="form-label fs-8 text-gray-600 mb-1">Active Checkout Link</label>
+                                            <input type="text" class="form-control form-control-solid" id="paymentLinkshow" value="" readonly/>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
 
-                        </div>
+                            <!-- Bottom Sub-Card: Official Invoicing Entity -->
+                            <div class="pkg-card mb-4">
+                                <div class="pkg-card-header">
+                                    <div class="d-flex align-items-center gap-2">
+                                        <div class="pkg-event-icon-box" style="background: #f1f5f9; color: #475569;">
+                                            <i class="fas fa-building"></i>
+                                        </div>
+                                        <div>
+                                            <h4 class="fs-6 fw-bolder text-gray-900 mb-0">Official Invoicing Entity</h4>
+                                            <span class="fs-8 text-muted">Billing address and organizational tax identifiers</span>
+                                        </div>
+                                    </div>
+                                    <a href="javascript:;" data-id="{{ $client->company_id }}" class="btn btn-sm btn-light-primary fw-bold show-billing-address">
+                                        <i class="fas fa-edit me-1"></i>Edit Billing Details
+                                    </a>
+                                </div>
+                                <div class="pkg-card-body">
+                                    <div class="row g-4 align-items-center">
+                                        <div class="col-md-3">
+                                            <span class="fs-8 text-muted d-block text-uppercase fw-bold">Billing Contact</span>
+                                            <span id="usernamebill" class="fw-bold text-gray-900 fs-7">{{ @$user_name }}</span>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <span class="fs-8 text-muted d-block text-uppercase fw-bold">Company Legal Entity</span>
+                                            <span class="fw-bold text-gray-900 fs-7">{{ @$company_name }}</span>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <span class="fs-8 text-muted d-block text-uppercase fw-bold">Tax Registration</span>
+                                            <div class="d-flex align-items-center gap-2 mt-1">
+                                                <span class="badge bg-light text-dark fw-bold fs-8">GST: <span id="billing_gst">{{ @$gstin ?: 'N/A' }}</span></span>
+                                                <span class="badge bg-light text-dark fw-bold fs-8">PAN: <span id="billing_pan">{{ @$pan_no ?: 'N/A' }}</span></span>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <span class="fs-8 text-muted d-block text-uppercase fw-bold">Billing Address</span>
+                                            <span id="billing_address" class="text-gray-700 fs-8 text-truncate d-block" title="{{ @$locArr }}">{{ @$locArr ?: 'Not specified' }}</span>
+                                        </div>
+                                    </div>
+
+                                    <button id="successButtonoperationaltopup" class="btn btn-success" style="display: none; width: 100%; margin: 12px 0;"></button>
+                                    <button id="errorButtonoperationaltopup" class="btn btn-danger" style="display: none; width: 100%; margin: 12px 0;"></button>
+
+                                    <div class="text-end pt-4 border-top border-gray-200 mt-4">
+                                        <button type="submit" id="operational_top_up_new_submit" class="btn btn-primary px-8 fw-bold">
+                                            <span class="indicator-label indicator-label-top-up">
+                                                <i class="fas fa-check-circle me-1"></i>Confirm Top-Up Order
+                                            </span>
+                                            <span class="indicator-progress indicator-progress-top-up">
+                                                Please wait... <span class="spinner-border spinner-border-sm align-middle ms-2"></span>
+                                            </span>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </form>
+
+                        @if ($link_payments)
+                            <div class="p-4 rounded border border-warning bg-light-warning d-flex align-items-center justify-content-between flex-wrap gap-2 mb-4">
+                                <div class="d-flex align-items-center gap-2">
+                                    <i class="fas fa-exclamation-circle text-warning fs-4"></i>
+                                    <div>
+                                        <span class="fw-bold text-gray-900 fs-7">Pending Checkout Payment:</span>
+                                        <code class="text-primary fs-8 ms-2" id="paymentLinktextToCopy">{{ $link_payments->payment_link }}</code>
+                                    </div>
+                                </div>
+                                <button type="button" class="btn btn-xs btn-light-warning fw-bold" onclick="paymentLinkcopyText('{{ $link_payments->payment_link }}')">
+                                    <i class="fas fa-copy me-1"></i>Click to Copy Link
+                                </button>
+                            </div>
+                        @endif
                     </div>
-                    <!--end::migration Content-->
+                    <!--end::topupcoins Content-->
                     <!--begin::packages Content-->
                     <div class="tab-pane" id="packages" role="tabpanel" aria-labelledby="tab-packages">
                         @php
@@ -4819,30 +4880,83 @@
 
                     <!--begin::boost keyword Content-->
                     <div class="tab-pane" id="boostkeyword" role="tabpanel" aria-labelledby="tab-boostkeyword">
-                            <form id="boost_keyword_form" class="form" action="#">
-                                    <div class="card-body px-0 py-7">
-                                        
-                                            <div class="col-lg-12 mt-7">
-                                                <input type="hidden" name="keyword_compant_id" id="keyword_compant_id" value="{{ @$client->id }}" />
-                                                <label class="form-label required fw-bolder">Enter Keywords:</label>
-                                                <input class="form-control form-control-solid" name="tags" value="{{ $boostkeywords }}" placeholder="Enter Keywords" value="" id="tags"/>
-                                                <span class="form-text text-muted">Please select your keywords</span> </div>
-                                            <!--end::Tags-->
-                                            </div>
-                                            <div class="text-center pt-15">
-            
-            
-                                                <button type="submit" id="operational_top_up_new_submit" class="btn btn-primary">
-                                                    <span class="indicator-label indicator-label-top-up">
-                                                        Submit
-                                                    </span>
-                                                    <span class="indicator-progress indicator-progress-top-up">
-                                                        Please wait... <span class="spinner-border spinner-border-sm align-middle ms-2"></span>
-                                                    </span>
-                                                </button>
+                        <!-- Tier 1: Toolbar Card -->
+                        <div class="pkg-toolbar-card">
+                            <div class="pkg-toolbar-left">
+                                <div class="pkg-toolbar-icon pkg-icon-purple">
+                                    <i class="fas fa-rocket"></i>
+                                </div>
+                                <div>
+                                    <div class="pkg-toolbar-title">
+                                        Marketplace Search Boost & Discovery Keywords
+                                        <span class="pkg-badge-pill">Discovery & Matching</span>
                                     </div>
-                            </form>
+                                    <div class="pkg-toolbar-subtitle">
+                                        Assign strategic industry, domain, and role keywords to enhance candidate discovery algorithms and priority requisition matching.
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
 
+                        <!-- Tier 2: Enterprise Sub-Card -->
+                        <div class="pkg-card">
+                            <div class="pkg-card-header">
+                                <div class="d-flex align-items-center gap-2">
+                                    <div class="pkg-event-icon-box" style="background: #f8f5ff; color: #7239ea;">
+                                        <i class="fas fa-tags"></i>
+                                    </div>
+                                    <div>
+                                        <h4 class="fs-6 fw-bolder text-gray-900 mb-0">Target Boost Keywords</h4>
+                                        <span class="fs-8 text-muted">Elasticsearch talent marketplace indexing</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="pkg-card-body">
+                                <form id="boost_keyword_form" class="form" action="#">
+                                    <input type="hidden" name="keyword_compant_id" id="keyword_compant_id" value="{{ @$client->id }}" />
+
+                                    <div class="mb-4">
+                                        <label class="form-label required fs-7 fw-bold text-gray-700">Configured Keywords</label>
+                                        <input class="form-control form-control-solid" name="tags" value="{{ $boostkeywords }}" placeholder="Type keywords and press Enter..." id="tags"/>
+                                        <span class="fs-8 text-muted mt-1 d-block">Press Enter, Tab, or Comma after each tag to lock the keyword.</span>
+                                    </div>
+
+                                    <div class="mb-4">
+                                        <label class="fs-8 fw-bold text-uppercase text-muted d-block mb-2">Recommended Suggestions (Click to Add):</label>
+                                        <div class="d-flex flex-wrap gap-2" id="suggestedKeywordsStrip">
+                                            <span class="pkg-suggest-pill" data-keyword="IT Services"><i class="fas fa-plus fs-9"></i> IT Services</span>
+                                            <span class="pkg-suggest-pill" data-keyword="Staffing & Recruiting"><i class="fas fa-plus fs-9"></i> Staffing & Recruiting</span>
+                                            <span class="pkg-suggest-pill" data-keyword="Fintech"><i class="fas fa-plus fs-9"></i> Fintech</span>
+                                            <span class="pkg-suggest-pill" data-keyword="Healthcare"><i class="fas fa-plus fs-9"></i> Healthcare</span>
+                                            <span class="pkg-suggest-pill" data-keyword="SaaS Enterprise"><i class="fas fa-plus fs-9"></i> SaaS Enterprise</span>
+                                            <span class="pkg-suggest-pill" data-keyword="Artificial Intelligence"><i class="fas fa-plus fs-9"></i> Artificial Intelligence</span>
+                                            <span class="pkg-suggest-pill" data-keyword="Cloud Computing"><i class="fas fa-plus fs-9"></i> Cloud Computing</span>
+                                            <span class="pkg-suggest-pill" data-keyword="Executive Search"><i class="fas fa-plus fs-9"></i> Executive Search</span>
+                                            <span class="pkg-suggest-pill" data-keyword="Product Development"><i class="fas fa-plus fs-9"></i> Product Development</span>
+                                            <span class="pkg-suggest-pill" data-keyword="Remote Workforce"><i class="fas fa-plus fs-9"></i> Remote Workforce</span>
+                                        </div>
+                                    </div>
+
+                                    <div class="p-3 rounded mb-4" style="background: #f8fafc; border: 1px dashed #cbd5e1;">
+                                        <div class="d-flex align-items-center gap-2">
+                                            <i class="fas fa-lightbulb text-warning fs-5"></i>
+                                            <span class="fs-8 text-gray-600">Companies with 5+ strategic boost keywords receive up to <strong>40% higher candidate requisition engagement</strong> across the talent marketplace.</span>
+                                        </div>
+                                    </div>
+
+                                    <div class="text-end pt-3 border-top border-gray-200">
+                                        <button type="submit" id="boost_keyword_submit" class="btn btn-primary px-8 fw-bold">
+                                            <span class="indicator-label indicator-label-top-up">
+                                                <i class="fas fa-save me-1"></i>Save Boost Keywords
+                                            </span>
+                                            <span class="indicator-progress indicator-progress-top-up">
+                                                Please wait... <span class="spinner-border spinner-border-sm align-middle ms-2"></span>
+                                            </span>
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
                     </div>
                     <!--end::boost keyword Content-->
 
@@ -4876,8 +4990,8 @@
 <script>
 
 var input = document.querySelector('input[name=tags]'); 
-   // initialize Tagify on the above input node reference
-   new Tagify(input)
+// initialize Tagify on the above input node reference
+window.tagifyInstance = new Tagify(input);
 
 
         var country_id = "{{ $countrie_id }}";
@@ -5686,6 +5800,53 @@ var input = document.querySelector('input[name=tags]');
             $badge.removeClass('bg-light text-muted bg-light-danger text-danger').addClass('bg-light-success text-success').text('Active');
         } else {
             $badge.removeClass('bg-light-success text-success').addClass('bg-light text-muted').text('Inactive');
+        }
+    });
+
+    $(document).on('change', '.checkActive', function() {
+        var isChecked = $(this).is(':checked');
+        var $badge = $('.checkActivetext');
+        if (isChecked) {
+            $badge.removeClass('badge-light-danger text-danger').addClass('badge-light-success text-success').text('Active');
+        } else {
+            $badge.removeClass('badge-light-success text-success').addClass('badge-light-danger text-danger').text('Suspend');
+        }
+    });
+
+    /* ── Client-Side Transaction History Filter (0% Server Strain) ── */
+    $(document).on('keyup', '#searchTransactionHistory', function() {
+        var query = $(this).val().toLowerCase().trim();
+        if (query.length > 0) {
+            $('#clearTransactionHistory').show();
+        } else {
+            $('#clearTransactionHistory').hide();
+        }
+        var visibleCount = 0;
+        $('#myTable tbody tr.pkg-txn-row').each(function() {
+            var searchData = $(this).attr('data-search') || $(this).text().toLowerCase();
+            if (searchData.indexOf(query) !== -1) {
+                $(this).show();
+                visibleCount++;
+            } else {
+                $(this).hide();
+            }
+        });
+        if (visibleCount === 0) {
+            $('#noTxnMatch').show();
+        } else {
+            $('#noTxnMatch').hide();
+        }
+    });
+
+    $(document).on('click', '#clearTransactionHistory', function() {
+        $('#searchTransactionHistory').val('').trigger('keyup');
+    });
+
+    /* ── Click-to-add for Recommended Boost Keyword Pills ── */
+    $(document).on('click', '.pkg-suggest-pill', function() {
+        var kw = $(this).attr('data-keyword');
+        if (window.tagifyInstance && kw) {
+            window.tagifyInstance.addTags([kw]);
         }
     });
 
