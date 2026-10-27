@@ -13,6 +13,7 @@ use Carbon\Carbon;
   @endphp
 @include('service_company.client.components.tab-jobs-style')
 @include('service_company.client.components.tab-offers-joinings-style')
+@include('service_company.client.components.tab-activity-style')
 <style>
     /* Scoped Interview Tracker Styling (Metronic Theme Aligned) */
     .cit-fb-pill {
@@ -5083,154 +5084,10 @@ use Carbon\Carbon;
               </div>
             </div>
 
-            <!-- ── TAB 2: RECENT ACTIVITY & AUDIT LOGS (Modern Card + Sub-Card Standard) ── -->
+            <!-- ── TAB 2: RECENT ACTIVITY (3-Tier Dynamic Card + Sub-Card Master Standard) ── -->
             <div class="tab-pane" id="recent_activity" role="tabpanel">
               <div class="px-3 py-2">
-                <!-- Tier 1: Toolbar Header Card -->
-                <div class="cd-jobs-header-card mb-3">
-                  <div class="cd-jobs-header-left">
-                    <div class="cd-jobs-header-icon" style="background:#fffbeb; color:#d97706;">
-                      <i class="fas fa-clock-rotate-left"></i>
-                    </div>
-                    <div>
-                      <div class="cd-jobs-header-title">Recent Activity &amp; Audit Trail</div>
-                      <div class="cd-jobs-header-sub">Chronological recruitment timeline, interview events, and administrative milestones.</div>
-                    </div>
-                  </div>
-                  <div class="cd-jobs-header-right">
-                    <div class="cd-jobs-search-subcard" style="width:240px;">
-                      <i class="fas fa-search"></i>
-                      <input type="text" placeholder="Filter activity by keyword..." autocomplete="off">
-                    </div>
-                    <button type="button" class="btn btn-sm btn-light fw-bold" style="height:36px; border:1px solid #e2e8f0; border-radius:8px;">
-                      <i class="fas fa-sync-alt me-1"></i> Refresh
-                    </button>
-                  </div>
-                </div>
-
-                <!-- Tier 2: Sub-Tabs Filter Card -->
-                <div class="cd-jobs-tabs-card mb-3">
-                  <div class="cd-jobs-tabs-group">
-                    <button type="button" class="cd-jobs-tab-btn active">
-                      <span>All Events</span>
-                      <span class="cd-jobs-tab-badge">7</span>
-                    </button>
-                    <button type="button" class="cd-jobs-tab-btn">
-                      <span>Submissions</span>
-                      <span class="cd-jobs-tab-badge">2</span>
-                    </button>
-                    <button type="button" class="cd-jobs-tab-btn">
-                      <span>Interviews</span>
-                      <span class="cd-jobs-tab-badge">1</span>
-                    </button>
-                    <button type="button" class="cd-jobs-tab-btn">
-                      <span>Offers &amp; Joining</span>
-                      <span class="cd-jobs-tab-badge">2</span>
-                    </button>
-                    <button type="button" class="cd-jobs-tab-btn">
-                      <span>Requisitions</span>
-                      <span class="cd-jobs-tab-badge">1</span>
-                    </button>
-                  </div>
-                </div>
-
-                <!-- Tier 3: Master Activity Cards Stream -->
-                <div class="d-flex flex-column gap-3">
-                  <!-- Activity Card 1 -->
-                  <div class="card p-4 border" style="border-radius:10px; border-color:#e2e8f0; background:#ffffff; box-shadow:0 1px 3px rgba(15, 23, 42, 0.03);">
-                    <div class="d-flex align-items-center justify-content-between mb-2 flex-wrap gap-2">
-                      <div class="d-flex align-items-center gap-3">
-                        <div class="cd-tl-dot-green rounded-circle d-flex align-items-center justify-content-center" style="width:34px; height:34px; font-size:13px;">
-                          <i class="fas fa-users"></i>
-                        </div>
-                        <div>
-                          <div class="fw-bold text-gray-900 fs-7">2 Candidates Submitted to Client</div>
-                          <div class="text-muted fs-8">{{ auth()->user()->name ?? 'Recruiter' }} shortlisted and submitted 2 candidates for Senior Java Developer role.</div>
-                        </div>
-                      </div>
-                      <div class="d-flex align-items-center gap-2">
-                        <span class="badge bg-light-primary text-primary fw-bold fs-8">Candidate Pipeline</span>
-                        <span class="text-muted fs-8"><i class="fas fa-clock me-1"></i>2 hours ago</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <!-- Activity Card 2 -->
-                  <div class="card p-4 border" style="border-radius:10px; border-color:#e2e8f0; background:#ffffff; box-shadow:0 1px 3px rgba(15, 23, 42, 0.03);">
-                    <div class="d-flex align-items-center justify-content-between mb-2 flex-wrap gap-2">
-                      <div class="d-flex align-items-center gap-3">
-                        <div class="cd-tl-dot-purple rounded-circle d-flex align-items-center justify-content-center" style="width:34px; height:34px; font-size:13px;">
-                          <i class="fas fa-calendar-days"></i>
-                        </div>
-                        <div>
-                          <div class="fw-bold text-gray-900 fs-7">Technical Interview Round 1 Scheduled</div>
-                          <div class="text-muted fs-8">Candidate scheduled with client technical evaluation panel via Google Meet.</div>
-                        </div>
-                      </div>
-                      <div class="d-flex align-items-center gap-2">
-                        <span class="badge bg-light-warning text-warning fw-bold fs-8">Interview</span>
-                        <span class="text-muted fs-8"><i class="fas fa-clock me-1"></i>1 day ago</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <!-- Activity Card 3 -->
-                  <div class="card p-4 border" style="border-radius:10px; border-color:#e2e8f0; background:#ffffff; box-shadow:0 1px 3px rgba(15, 23, 42, 0.03);">
-                    <div class="d-flex align-items-center justify-content-between mb-2 flex-wrap gap-2">
-                      <div class="d-flex align-items-center gap-3">
-                        <div class="cd-tl-dot-orange rounded-circle d-flex align-items-center justify-content-center" style="width:34px; height:34px; font-size:13px;">
-                          <i class="fas fa-file-lines"></i>
-                        </div>
-                        <div>
-                          <div class="fw-bold text-gray-900 fs-7">Formal Offer Letter Extended</div>
-                          <div class="text-muted fs-8">Offer rolled out for Software Engineer requirement after budget clearance.</div>
-                        </div>
-                      </div>
-                      <div class="d-flex align-items-center gap-2">
-                        <span class="badge bg-light-danger text-danger fw-bold fs-8">Offer Letter</span>
-                        <span class="text-muted fs-8"><i class="fas fa-clock me-1"></i>2 days ago</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <!-- Activity Card 4 -->
-                  <div class="card p-4 border" style="border-radius:10px; border-color:#e2e8f0; background:#ffffff; box-shadow:0 1px 3px rgba(15, 23, 42, 0.03);">
-                    <div class="d-flex align-items-center justify-content-between mb-2 flex-wrap gap-2">
-                      <div class="d-flex align-items-center gap-3">
-                        <div class="cd-tl-dot-blue rounded-circle d-flex align-items-center justify-content-center" style="width:34px; height:34px; font-size:13px;">
-                          <i class="fas fa-briefcase"></i>
-                        </div>
-                        <div>
-                          <div class="fw-bold text-gray-900 fs-7">New Job Requirement Assigned</div>
-                          <div class="text-muted fs-8">Client SPOC created requirement for DevOps Engineer (5+ Yrs, Pune).</div>
-                        </div>
-                      </div>
-                      <div class="d-flex align-items-center gap-2">
-                        <span class="badge bg-light-info text-info fw-bold fs-8">Requisition</span>
-                        <span class="text-muted fs-8"><i class="fas fa-clock me-1"></i>3 days ago</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <!-- Activity Card 5 -->
-                  <div class="card p-4 border" style="border-radius:10px; border-color:#e2e8f0; background:#ffffff; box-shadow:0 1px 3px rgba(15, 23, 42, 0.03);">
-                    <div class="d-flex align-items-center justify-content-between mb-2 flex-wrap gap-2">
-                      <div class="d-flex align-items-center gap-3">
-                        <div class="cd-tl-dot-green rounded-circle d-flex align-items-center justify-content-center" style="width:34px; height:34px; font-size:13px; background:#ecfdf5; color:#059669;">
-                          <i class="fas fa-user-check"></i>
-                        </div>
-                        <div>
-                          <div class="fw-bold text-gray-900 fs-7">Candidate Successfully Joined &amp; Onboarded</div>
-                          <div class="text-muted fs-8">Full Stack Developer successfully completed Day 1 onboarding formalities.</div>
-                        </div>
-                      </div>
-                      <div class="d-flex align-items-center gap-2">
-                        <span class="badge bg-light-success text-success fw-bold fs-8">Joined</span>
-                        <span class="text-muted fs-8"><i class="fas fa-clock me-1"></i>5 days ago</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
+                @include('service_company.client.components.tab-activity')
               </div>
             </div>
                     <div class="tab-pane" id="contacts" role="tabpanel" style="background:#ffffff; min-height: 520px;">
@@ -7229,6 +7086,11 @@ use Carbon\Carbon;
                     fetchInternalClientDashboardAnalytics();
                 }
                 if (window.ClientStateManager) window.ClientStateManager.markTabLoaded(currentClientId, target);
+            } else if (target === 'recent_activity') {
+                if (window.ClientActivityManager) {
+                    window.ClientActivityManager.initClient(currentClientId, true, null);
+                }
+                if (window.ClientStateManager) window.ClientStateManager.markTabLoaded(currentClientId, target);
             }
         }
         window.loadInternalTabContent = loadInternalTabContent;
@@ -7241,7 +7103,7 @@ use Carbon\Carbon;
         // Initialize active tab immediately on drawer mount
         var $initActiveTab = $('#kt_activitiesClient .tab-pane.active');
         var initTarget = $initActiveTab.length ? $initActiveTab.attr('id') : 'overview';
-        if (initTarget && initTarget !== 'overview' && initTarget !== 'recent_activity') {
+        if (initTarget && initTarget !== 'overview') {
             loadInternalTabContent(initTarget, true);
         }
 
@@ -7303,7 +7165,7 @@ use Carbon\Carbon;
                 if ($drawer.hasClass('drawer-on') || $drawer.is(':visible')) {
                     var $activePane = $drawer.find('.tab-pane.active');
                     var activeTab = $activePane.length ? $activePane.attr('id') : null;
-                    if (activeTab && activeTab !== 'overview' && activeTab !== 'recent_activity') {
+                    if (activeTab && activeTab !== 'overview') {
                         loadInternalTabContent(activeTab, false);
                     }
                 }
@@ -9329,7 +9191,7 @@ use Carbon\Carbon;
         // Check initially active tab on mount
         var $activePane = $('#kt_activitiesClient .tab-pane.active');
         var initialTarget = $activePane.length ? $activePane.attr('id') : 'overview';
-        if (initialTarget && initialTarget !== 'overview' && initialTarget !== 'recent_activity' && typeof window.loadInternalTabContent === 'function') {
+        if (initialTarget && initialTarget !== 'overview' && typeof window.loadInternalTabContent === 'function') {
             window.loadInternalTabContent(initialTarget, true);
         }
 

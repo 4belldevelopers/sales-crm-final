@@ -118,6 +118,10 @@ Route::group(['middleware' => 'auth'], function () {
                 });
 
                 // #############       	START CLIENT MANAGEMENT
+                // ─── ATS Client Drawer Dynamic Activity Tab CQRS Route (0% MySQL Reads) ───
+                Route::get('clients/activity-data', [\App\Http\Controllers\ServiceCompany\ServiceCompanyClientActivityController::class, 'getActivityData'])->name('clients.activity_data_ajax');
+                Route::get('client_activity_ajax/data', [\App\Http\Controllers\ServiceCompany\ServiceCompanyClientActivityController::class, 'getActivityData'])->name('clients.activity_data');
+
                 // ─── JDCR V5.2 Client-First Thin JSON API Routes ───
                 Route::get('clients/api/v2/{id}/graph', [ServiceCompanyClientController::class, 'clientGraphV2'])->name('clients.api.v2.graph');
                 Route::get('clients/api/v2/delta-sync', [ServiceCompanyClientController::class, 'deltaSyncV2'])->name('clients.api.v2.deltaSync');

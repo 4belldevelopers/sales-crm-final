@@ -13,6 +13,7 @@
   @endphp
 @include('service_company.client.components.tab-jobs-style')
 @include('service_company.client.components.tab-offers-joinings-style')
+@include('service_company.client.components.tab-activity-style')
 <style>
     /* Scoped Interview Tracker Styling (Metronic Theme Aligned) */
     .cit-fb-pill {
@@ -5358,83 +5359,10 @@
               </div>
             </div>
 
-            <!-- ── TAB 2: RECENT ACTIVITY (3-Tier Activity & Audit Log Standard) ── -->
+            <!-- ── TAB 2: RECENT ACTIVITY (3-Tier Dynamic Card + Sub-Card Master Standard) ── -->
             <div class="tab-pane" id="recent_activity" role="tabpanel">
-              <div class="cd-activity-tab-wrap p-4">
-                <!-- Tier 1: Toolbar Header Card -->
-                <div class="cd-activity-header-card">
-                  <div class="cd-activity-header-left">
-                    <div class="cd-activity-icon-box">
-                      <i class="fas fa-clock-rotate-left"></i>
-                    </div>
-                    <div>
-                      <h4 class="cd-activity-main-title">Activity &amp; Audit Logs</h4>
-                      <p class="cd-activity-sub-title">Chronological timeline of submissions, interview events, candidate offers, and direct client engagements.</p>
-                    </div>
-                  </div>
-                  <div class="cd-activity-header-right">
-                    <span class="cd-activity-status-chip">
-                      <i class="fas fa-check-circle text-success me-1"></i> Live Audit Feed
-                    </span>
-                  </div>
-                </div>
-
-                <!-- Tier 2: Quick Filter Sub-Tabs Card -->
-                <div class="cd-activity-filter-card">
-                  <div class="cd-activity-filter-list">
-                    <button type="button" class="cd-act-filter-btn active" data-act-filter="all">All Events</button>
-                    <button type="button" class="cd-act-filter-btn" data-act-filter="submissions">Submissions</button>
-                    <button type="button" class="cd-act-filter-btn" data-act-filter="interviews">Interviews</button>
-                    <button type="button" class="cd-act-filter-btn" data-act-filter="offers">Offers &amp; Onboarding</button>
-                  </div>
-                </div>
-
-                <!-- Tier 3: Timeline Stream Card -->
-                <div class="cd-timeline-stream-card">
-                  <div class="cd-stream-node">
-                    <div class="cd-stream-node-dot green"><i class="fas fa-user-plus"></i></div>
-                    <div class="cd-stream-node-content">
-                      <div class="cd-stream-node-header">
-                        <span class="cd-stream-node-title">Candidate Pipeline Engagement</span>
-                        <span class="cd-stream-node-time">Today, 2:45 PM</span>
-                      </div>
-                      <p class="cd-stream-node-desc">Direct talent profiles forwarded to client hiring coordinator for active roles.</p>
-                      <div class="cd-stream-node-tags">
-                        <span class="cd-stream-tag green">Pipeline</span>
-                        <span class="cd-stream-tag blue">{{ $detailName }}</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div class="cd-stream-node">
-                    <div class="cd-stream-node-dot purple"><i class="fas fa-calendar-check"></i></div>
-                    <div class="cd-stream-node-content">
-                      <div class="cd-stream-node-header">
-                        <span class="cd-stream-node-title">Interview Slot Confirmation</span>
-                        <span class="cd-stream-node-time">Yesterday, 11:30 AM</span>
-                      </div>
-                      <p class="cd-stream-node-desc">Client confirmed evaluation interview with technical team panel.</p>
-                      <div class="cd-stream-node-tags">
-                        <span class="cd-stream-tag purple">Interview</span>
-                        <span class="cd-stream-tag amber">Evaluation</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div class="cd-stream-node">
-                    <div class="cd-stream-node-dot blue"><i class="fas fa-briefcase"></i></div>
-                    <div class="cd-stream-node-content">
-                      <div class="cd-stream-node-header">
-                        <span class="cd-stream-node-title">Direct Client Mandate Synchronized</span>
-                        <span class="cd-stream-node-time">3 days ago</span>
-                      </div>
-                      <p class="cd-stream-node-desc">Requirements aligned with client terms and live requisition board.</p>
-                      <div class="cd-stream-node-tags">
-                        <span class="cd-stream-tag blue">Direct Mandate</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
+              <div class="px-3 py-2">
+                @include('service_company.client.components.tab-activity')
               </div>
             </div>
 <div class="tab-pane" id="contacts" role="tabpanel" style="background:#ffffff; min-height: 520px;">
@@ -7657,6 +7585,11 @@
                     directfetchCandidatesJoin(1, search, window.currentOjSegmentDirect || 'all');
                 }
                 if (window.ClientStateManager) window.ClientStateManager.markTabLoaded(dcClientId, target);
+            } else if (target === 'recent_activity') {
+                if (window.ClientActivityManager) {
+                    window.ClientActivityManager.initClient(dcClientId, false, dcClientId);
+                }
+                if (window.ClientStateManager) window.ClientStateManager.markTabLoaded(dcClientId, target);
             }
         }
         window.loadDirectTabContent = loadDirectTabContent;
@@ -7669,7 +7602,7 @@
         // Initialize active tab immediately on drawer mount
         var $initActiveTabDirect = $('#kt_activitiesDirectClient .tab-pane.active');
         var initTargetDirect = $initActiveTabDirect.length ? $initActiveTabDirect.attr('id') : 'overview';
-        if (initTargetDirect && initTargetDirect !== 'overview' && initTargetDirect !== 'recent_activity') {
+        if (initTargetDirect && initTargetDirect !== 'overview') {
             loadDirectTabContent(initTargetDirect, true);
         }
 
@@ -7731,7 +7664,7 @@
                 if ($drawer.hasClass('drawer-on') || $drawer.is(':visible')) {
                     var $activePane = $drawer.find('.tab-pane.active');
                     var activeTab = $activePane.length ? $activePane.attr('id') : null;
-                    if (activeTab && activeTab !== 'overview' && activeTab !== 'recent_activity') {
+                    if (activeTab && activeTab !== 'overview') {
                         loadDirectTabContent(activeTab, false);
                     }
                 }
