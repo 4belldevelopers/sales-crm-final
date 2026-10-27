@@ -2557,7 +2557,7 @@ function renderClientRows(rows) {
                     <span class="cl-job-label">Closed</span>
                 </div>
             </div>
-            <div class="tbl-cell-pipeline" title="Applications: ${applications} | Interviews: ${interviews}">
+            <div class="tbl-cell-pipeline">
                 <div class="cl-pipeline-flow">
                     <div class="cl-pipe-step" title="Sourcing: ${sourced}">
                         <span class="cl-pipe-pill pill-sourcing">${sourced}</span>
@@ -2583,6 +2583,11 @@ function renderClientRows(rows) {
                         <span class="cl-pipe-pill pill-joined">${joined}</span>
                         <span class="cl-pipe-label">Joined</span>
                     </div>
+                </div>
+                <div class="cl-pipeline-meta">
+                    <span class="cl-pipeline-meta-item">Application: <strong>${applications}</strong></span>
+                    <span class="cl-pipeline-meta-divider">|</span>
+                    <span class="cl-pipeline-meta-item">Interview: <strong>${interviews}</strong></span>
                 </div>
             </div>
         </div>`;
