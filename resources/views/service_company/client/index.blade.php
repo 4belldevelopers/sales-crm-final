@@ -5,7 +5,6 @@
 <link href="{{ asset('demo/css/filterStyle.css') }}{{ TM_VERSION }}" rel="stylesheet" type="text/css" />
 <link href="{{ asset('demo/css/topCard.css') }}{{ TM_VERSION }}" rel="stylesheet" type="text/css" />
 <link href="{{ asset('demo/css/clientList.css') }}?v={{ time() }}" rel="stylesheet" type="text/css" />
-@include('service_company.client.components.tab-client-style')
 <style>
 /* ── Guaranteed Card-Based Header Design ── */
 .cl-header, .cl-header-card {
@@ -434,198 +433,453 @@
     <!--begin::Container-->
     <div id="kt_content_container" class="container-fluid px-3">
 
-        <!-- ── TIER 1: TOP HEADER TOOLBAR CARD ── -->
-        <div class="cd-client-header-card">
-            <div class="cd-client-header-left">
-                <div class="cd-client-header-icon">
-                    <i class="fas fa-building"></i>
+        <!-- ── HEADER CARD ── -->
+        <div class="cl-header cl-header-card">
+            <div class="cl-header-left">
+                <div class="cl-header-icon-box">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#d97706" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+                        <circle cx="9" cy="7" r="4"/>
+                        <path d="M22 21v-2a4 4 0 0 0-3-3.87"/>
+                        <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                    </svg>
                 </div>
                 <div>
-                    <h1 class="cd-client-header-title">Clients Directory</h1>
-                    <div class="cd-client-header-sub">Manage client relationships, hiring activity and recruitment performance.</div>
+                    <div class="cl-header-title-row">
+                        <h1 class="cl-header-title">Clients Tracker</h1>
+                        <span class="cl-verified-badge" title="Verified ATS Module">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                                <path d="m9 12 2 2 4-4" stroke-width="2.5"/>
+                            </svg>
+                        </span>
+                    </div>
+                    <div class="cl-header-subtitle">Manage client relationships, hiring activity and recruitment performance.</div>
                 </div>
             </div>
 
-            <div class="cd-client-header-right">
-                <!-- Dynamic Search Sub-Card (300ms Debounce + Clear Button) -->
-                <div class="cd-client-search-subcard">
-                    <i class="fas fa-search"></i>
-                    <input type="text" id="kt_tagify_2" name="inputJobSearch" placeholder="Search clients by name, industry, location..." autocomplete="off" />
-                    <button type="button" class="cd-client-search-clear" id="btnClientSearchClear" style="display: none;" title="Clear search">
-                        <i class="fas fa-times"></i>
-                    </button>
-                    <div id="loader_search" class="loader_search hidden_search" style="display: none;"></div>
-                </div>
-
-                <!-- Export CSV Action Button -->
-                <button type="button" class="btn btn-sm btn-light fw-bold text-gray-800" onclick="exportClientsToCsv()" style="height: 36px; border: 1px solid #e2e8f0; border-radius: 8px;">
-                    <i class="fas fa-download me-1 text-muted"></i> Export
+            <div class="cl-header-actions">
+                <button type="button" class="cl-export-btn" onclick="exportClientsToCsv()">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0f172a" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                        <polyline points="7 10 12 15 17 10"/>
+                        <line x1="12" y1="15" x2="12" y2="3"/>
+                    </svg>
+                    <span>Export</span>
                 </button>
 
-                <!-- Primary Action: Add Client -->
                 @if(in_array("add_clients", $userPermissions))
-                <a href="{{ url('service_company/clients/create') }}" class="btn btn-sm btn-primary fw-bold cd-client-add-btn">
-                    <i class="fas fa-plus me-1"></i> Add Internal Client
+                <a href="{{ url('service_company/clients/create') }}" class="cl-add-btn-primary">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0f172a" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="12" y1="5" x2="12" y2="19"/>
+                        <line x1="5" y1="12" x2="19" y2="12"/>
+                    </svg>
+                    <span>Add Internal Client</span>
                 </a>
                 @endif
             </div>
         </div>
 
-        <!-- ── TIER 2: SUB-TABS & QUICK FILTER CARD ── -->
-        <div class="cd-client-tabs-card">
-            <!-- Left: Sub-Tabs Group with Authoritative Counts -->
-            <div class="cd-client-tabs-group">
-                <button type="button" onclick="setClientTab('all', this)" class="cd-client-tab-btn cl-tab-filter active" data-tab="all">
-                    <span>All Clients</span>
-                    <span class="cd-client-tab-badge" id="tabBadgeAll">{{ $totalClientsCount }}</span>
-                </button>
-                <button type="button" onclick="setClientTab('direct', this)" class="cd-client-tab-btn cl-tab-filter" data-tab="direct">
-                    <span>Direct Clients</span>
-                    <span class="cd-client-tab-badge badge-direct" id="tabBadgeDirect">{{ $directClientsCount }}</span>
-                </button>
-                <button type="button" onclick="setClientTab('internal', this)" class="cd-client-tab-btn cl-tab-filter" data-tab="internal">
-                    <span>Internal Clients</span>
-                    <span class="cd-client-tab-badge badge-internal" id="tabBadgeInternal">{{ $internalClientsCount }}</span>
-                </button>
-                <button type="button" onclick="setClientTab('hiring', this)" class="cd-client-tab-btn cl-tab-filter" id="tab-hiring" data-tab="hiring">
-                    <span>Active Companies</span>
-                    <span class="cd-client-tab-badge badge-hiring" id="tabBadgeHiring">{{ $hiringClientsCount }}</span>
-                </button>
-                <button type="button" onclick="setClientTab('inactive', this)" class="cd-client-tab-btn cl-tab-filter" id="tab-inactive" data-tab="inactive">
-                    <span>Inactive Companies</span>
-                    <span class="cd-client-tab-badge badge-inactive" id="tabBadgeInactive">{{ $inactiveClientsCount }}</span>
-                </button>
-                <button type="button" onclick="setClientTab('request', this)" class="cd-client-tab-btn cl-tab-filter" data-tab="request">
-                    <span>Pending Requests</span>
-                    <span class="cd-client-tab-badge badge-request" id="tabBadgeRequest">{{ $pendingRequestsCount }}</span>
-                </button>
+        <!-- ── 6 STAT CARDS ── -->
+        <div class="cl-stat-grid">
+            {{-- Card 1: Total Clients --}}
+            <a href="#" onclick="setClientTab('all', this); return false;" class="cl-card cl-stat-filter active" data-tab="all">
+                <div class="cl-card-top">
+                    <div class="cl-card-icon blue">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+                            <circle cx="9" cy="7" r="4"/>
+                            <path d="M22 21v-2a4 4 0 0 0-3-3.87"/>
+                            <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                        </svg>
+                    </div>
+                    <div class="cl-card-meta">
+                        <div class="cl-card-num" id="span_clientAll">{{ $totalClientsCount }}</div>
+                        <div class="cl-card-lbl">Total Clients</div>
+                    </div>
+                </div>
+                <div class="cl-card-sub green">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m18 15-6-6-6 6"/></svg>
+                    <span>+{{ max($totalClientsCount, 1) }} this month</span>
+                </div>
+            </a>
+
+            {{-- Card 2: Internal Clients --}}
+            <a href="#" onclick="setClientTab('internal', this); return false;" class="cl-card cl-stat-filter" data-tab="internal">
+                <div class="cl-card-top">
+                    <div class="cl-card-icon indigo">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+                            <polyline points="9 22 9 12 15 12 15 22"/>
+                        </svg>
+                    </div>
+                    <div class="cl-card-meta">
+                        <div class="cl-card-num" id="span_clientCustom">{{ $internalClientsCount }}</div>
+                        <div class="cl-card-lbl">Internal Clients</div>
+                    </div>
+                </div>
+                <div class="cl-card-sub blue">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m18 15-6-6-6 6"/></svg>
+                    <span>{{ $internalClientsCount > 0 ? $internalClientsCount . ' active internal' : 'No internal clients yet' }}</span>
+                </div>
+            </a>
+
+            {{-- Card 3: Direct Clients --}}
+            <a href="#" onclick="setClientTab('direct', this); return false;" class="cl-card cl-stat-filter" data-tab="direct">
+                <div class="cl-card-top">
+                    <div class="cl-card-icon green">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="4" y="2" width="16" height="20" rx="2" ry="2"/>
+                            <path d="M9 22v-4h6v4"/>
+                            <path d="M8 6h.01"/>
+                            <path d="M16 6h.01"/>
+                            <path d="M8 10h.01"/>
+                            <path d="M16 10h.01"/>
+                            <path d="M8 14h.01"/>
+                            <path d="M16 14h.01"/>
+                        </svg>
+                    </div>
+                    <div class="cl-card-meta">
+                        <div class="cl-card-num" id="span_clientDirect">{{ $directClientsCount }}</div>
+                        <div class="cl-card-lbl">Direct Clients</div>
+                    </div>
+                </div>
+                <div class="cl-card-sub green">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                        <circle cx="8.5" cy="7" r="4"/>
+                        <polyline points="17 11 19 13 23 9"/>
+                    </svg>
+                    <span>{{ $directPercent }}% of total clients</span>
+                </div>
+            </a>
+
+            {{-- Card 4: Active Companies --}}
+            <a href="#" onclick="setClientTab('hiring', this); return false;" class="cl-card cl-stat-filter" data-tab="hiring">
+                <div class="cl-card-top">
+                    <div class="cl-card-icon green">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="2" y="7" width="20" height="14" rx="2"/>
+                            <path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/>
+                            <line x1="12" y1="12" x2="12" y2="12.01"/>
+                        </svg>
+                    </div>
+                    <div class="cl-card-meta">
+                        <div class="cl-card-num" id="span_clientHiring">{{ $hiringClientsCount }}</div>
+                        <div class="cl-card-lbl">Active Companies</div>
+                    </div>
+                </div>
+                <div class="cl-card-sub green">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="4" y1="9" x2="20" y2="9"/>
+                        <line x1="4" y1="15" x2="20" y2="15"/>
+                        <line x1="10" y1="3" x2="8" y2="21"/>
+                        <line x1="16" y1="3" x2="14" y2="21"/>
+                    </svg>
+                    <span>{{ $activeJobsCount > 0 ? $activeJobsCount . ' active position' . ($activeJobsCount > 1 ? 's' : '') : 'No active jobs' }}</span>
+                </div>
+            </a>
+
+            {{-- Card 5: Inactive Companies --}}
+            <a href="#" onclick="setClientTab('inactive', this); return false;" class="cl-card cl-stat-filter" data-tab="inactive">
+                <div class="cl-card-top">
+                    <div class="cl-card-icon pink">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="10"/>
+                            <line x1="10" y1="15" x2="10" y2="9"/>
+                            <line x1="14" y1="15" x2="14" y2="9"/>
+                        </svg>
+                    </div>
+                    <div class="cl-card-meta">
+                        <div class="cl-card-num" id="span_clientInactive">{{ $inactiveClientsCount }}</div>
+                        <div class="cl-card-lbl">Inactive Companies</div>
+                    </div>
+                </div>
+                <div class="cl-card-sub pink">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"/>
+                        <line x1="8" y1="12" x2="16" y2="12"/>
+                    </svg>
+                    <span>0 active positions</span>
+                </div>
+            </a>
+
+            {{-- Card 6: Pending Requests --}}
+            <a href="#" onclick="setClientTab('request', this); return false;" class="cl-card cl-stat-filter" data-tab="request">
+                <div class="cl-card-top">
+                    <div class="cl-card-icon purple">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                            <polyline points="14 2 14 8 20 8"/>
+                            <line x1="16" y1="13" x2="8" y2="13"/>
+                            <line x1="16" y1="17" x2="8" y2="17"/>
+                            <polyline points="10 9 9 9 8 9"/>
+                        </svg>
+                    </div>
+                    <div class="cl-card-meta">
+                        <div class="cl-card-num" id="span_clientRequest">{{ $pendingRequestsCount }}</div>
+                        <div class="cl-card-lbl">Pending Requests</div>
+                    </div>
+                </div>
+                <div class="cl-card-sub purple">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"/>
+                        <polyline points="12 6 12 12 14 14"/>
+                    </svg>
+                    <span>{{ $pendingRequestsCount > 0 ? $pendingRequestsCount . ' action needed' : "You're all caught up" }}</span>
+                </div>
+            </a>
+        </div>
+
+        <!-- ── SEARCH & FILTER BAR ── -->
+        <div class="cl-filter-bar">
+            {{-- Search Input --}}
+            <div class="cl-search-box">
+                <svg class="cl-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="11" cy="11" r="8"/>
+                    <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                </svg>
+                <input type="text" class="cl-search-inp" name="inputJobSearch" value="" placeholder="Search clients by name, industry, location..." id="kt_tagify_2" onchange="filtersdataget()" />
+                <div id="loader_search" class="loader_search hidden_search" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);"></div>
             </div>
 
-            <!-- Right: Dynamic Filter Controls Suite -->
-            <div class="cd-client-filter-controls">
-                {{-- Filter 1: Location Combobox --}}
-                <div class="cl-loc-dropdown-wrapper" id="clLocDropdownWrapper">
-                    <div class="cl-loc-combobox-btn" id="clLocBtn" onclick="toggleLocationDropdown(event)" style="height: 36px; border-radius: 8px;">
-                        <div class="cl-pill-icon">
-                            <i class="fas fa-map-marker-alt text-muted" style="font-size: 12px;"></i>
-                        </div>
-                        <div class="cl-pill-texts">
-                            <span class="cl-pill-val" id="locationDisplay" style="font-size: 11.5px; font-weight: 600;">All Locations</span>
-                        </div>
-                        <div class="cl-pill-chevron">
-                            <i class="fas fa-chevron-down text-muted" style="font-size: 10px;"></i>
-                        </div>
-                    </div>
-
-                    <div class="cl-loc-dropdown-panel" id="clLocDropdownPanel">
-                        <div class="cl-loc-search-box">
-                            <i class="fas fa-search cl-loc-search-icon"></i>
-                            <input type="text" class="cl-loc-search-inp" id="clLocSearchInp" placeholder="Search countries or cities..." autocomplete="off" oninput="handleLocationSearchInput(this.value)" />
-                            <span class="cl-loc-search-clear" id="clLocSearchClear" onclick="clearLocationSearch()">✕</span>
-                        </div>
-                        <div class="cl-loc-dropdown-body" id="clLocDropdownBody"></div>
-                    </div>
-
-                    {{-- Preserved Location Hidden Inputs --}}
-                    <input type="hidden" id="country" name="country" value="" />
-                    <input type="hidden" id="country_name" name="country_name" value="" />
-                    <input type="hidden" id="city_id" name="city_id" value="" />
-                    <input type="hidden" id="city_name" name="city_name" value="" />
-                    <input type="hidden" id="unspecified_location" name="unspecified_location" value="0" />
-                </div>
-
-                {{-- Filter 2: Industry Native Combobox --}}
-                <div class="cl-dropdown-pill" id="industryPill" style="height: 36px; border-radius: 8px;">
+            {{-- Filter 1: Location Combobox --}}
+            <div class="cl-loc-dropdown-wrapper" id="clLocDropdownWrapper">
+                <div class="cl-loc-combobox-btn" id="clLocBtn" onclick="toggleLocationDropdown(event)">
                     <div class="cl-pill-icon">
-                        <i class="fas fa-briefcase text-muted" style="font-size: 12px;"></i>
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+                            <circle cx="12" cy="10" r="3"/>
+                        </svg>
                     </div>
                     <div class="cl-pill-texts">
-                        <span class="cl-pill-val" id="industryDisplay" style="font-size: 11.5px; font-weight: 600;">All Industries</span>
+                        <span class="cl-pill-lbl">Location</span>
+                        <span class="cl-pill-val" id="locationDisplay">All Locations</span>
                     </div>
                     <div class="cl-pill-chevron">
-                        <i class="fas fa-chevron-down text-muted" style="font-size: 10px;"></i>
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
                     </div>
-                    <select class="cl-pill-select-native" id="industryFilter" onchange="handleIndustryChange(this)">
-                        <option value="" selected>All Industries</option>
-                        @if (!empty($industries))
-                            @foreach ($industries as $ind)
-                                <option value="{{ $ind->ind_id }}">{{ $ind->ind_name }}</option>
-                            @endforeach
-                        @endif
-                    </select>
                 </div>
 
-                {{-- Filter 3: Activity Status Native Combobox --}}
-                <div class="cl-dropdown-pill" id="activityPill" style="height: 36px; border-radius: 8px;">
-                    <div class="cl-pill-icon">
-                        <i class="fas fa-bolt text-muted" style="font-size: 12px;"></i>
+                {{-- Dropdown popover panel --}}
+                <div class="cl-loc-dropdown-panel" id="clLocDropdownPanel">
+                    <div class="cl-loc-search-box">
+                        <svg class="cl-loc-search-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                            <circle cx="11" cy="11" r="8"/>
+                            <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                        </svg>
+                        <input type="text" class="cl-loc-search-inp" id="clLocSearchInp" placeholder="Search countries or cities..." autocomplete="off" oninput="handleLocationSearchInput(this.value)" />
+                        <span class="cl-loc-search-clear" id="clLocSearchClear" onclick="clearLocationSearch()">✕</span>
                     </div>
-                    <div class="cl-pill-texts">
-                        <span class="cl-pill-val" id="activityDisplay" style="font-size: 11.5px; font-weight: 600;">All Activity</span>
+                    <div class="cl-loc-dropdown-body" id="clLocDropdownBody">
+                        {{-- Rendered dynamically from window.initialLocationFacets & window.allCountriesList --}}
                     </div>
-                    <div class="cl-pill-chevron">
-                        <i class="fas fa-chevron-down text-muted" style="font-size: 10px;"></i>
-                    </div>
-                    <select class="cl-pill-select-native" id="activityFilter" onchange="handleActivityChange(this)">
-                        <option value="" selected>All Activity</option>
-                        <option value="hiring">Hiring Now (Active Jobs)</option>
-                        <option value="pipeline">Pipeline Active</option>
-                        <option value="dormant">Dormant / Inactive</option>
-                    </select>
                 </div>
 
-                {{-- Filter 4: Sort Selector --}}
-                <div class="cl-dropdown-pill" id="sortPill" style="height: 36px; border-radius: 8px;">
-                    <div class="cl-pill-icon">
-                        <i class="fas fa-sort text-muted" style="font-size: 12px;"></i>
-                    </div>
-                    <div class="cl-pill-texts">
-                        <span class="cl-pill-val" id="sortDisplay" style="font-size: 11.5px; font-weight: 600;">Recently Added</span>
-                    </div>
-                    <div class="cl-pill-chevron">
-                        <i class="fas fa-chevron-down text-muted" style="font-size: 10px;"></i>
-                    </div>
-                    <select class="cl-pill-select-native" id="sortingfilter" onchange="handleSortChange(this)">
-                        <option value="recent" selected>Recently Added</option>
-                        <option value="oldest">Oldest First</option>
-                        <option value="name_asc">Client Name (A → Z)</option>
-                        <option value="name_desc">Client Name (Z → A)</option>
-                        <option value="jobs_desc">Most Active Jobs</option>
-                    </select>
+                {{-- Hidden inputs to preserve backward compatibility --}}
+                <input type="hidden" id="country" name="country" value="" />
+                <input type="hidden" id="country_name" name="country_name" value="" />
+                <input type="hidden" id="city_id" name="city_id" value="" />
+                <input type="hidden" id="city_name" name="city_name" value="" />
+                <input type="hidden" id="unspecified_location" name="unspecified_location" value="0" />
+            </div>
+
+            {{-- Filter 2: Industry Filter --}}
+            <div class="cl-dropdown-pill" id="industryPill">
+                <div class="cl-pill-icon">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="2" y="7" width="20" height="14" rx="2" ry="2"/>
+                        <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>
+                    </svg>
                 </div>
+                <div class="cl-pill-texts">
+                    <span class="cl-pill-lbl">Industry</span>
+                    <span class="cl-pill-val" id="industryDisplay">All Industries</span>
+                </div>
+                <div class="cl-pill-chevron">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+                </div>
+                <select class="cl-pill-select-native" id="industryFilter" onchange="handleIndustryChange(this)">
+                    <option value="" selected>All Industries</option>
+                    @if (!empty($industries))
+                        @foreach ($industries as $ind)
+                            <option value="{{ $ind->ind_id }}">{{ $ind->ind_name }}</option>
+                        @endforeach
+                    @endif
+                </select>
+            </div>
+
+            {{-- Filter 3: Activity Filter --}}
+            <div class="cl-dropdown-pill" id="activityPill">
+                <div class="cl-pill-icon">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+                    </svg>
+                </div>
+                <div class="cl-pill-texts">
+                    <span class="cl-pill-lbl">Activity</span>
+                    <span class="cl-pill-val" id="activityDisplay">All Activity</span>
+                </div>
+                <div class="cl-pill-chevron">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+                </div>
+                <select class="cl-pill-select-native" id="activityFilter" onchange="handleActivityChange(this)">
+                    <option value="" selected>All Activity</option>
+                    <option value="hiring">Hiring Now (Active Jobs)</option>
+                    <option value="pipeline">Pipeline Active</option>
+                    <option value="dormant">Dormant / Inactive</option>
+                </select>
+            </div>
+
+            {{-- Filter 4: Sort --}}
+            <div class="cl-dropdown-pill" id="sortPill">
+                <div class="cl-pill-icon">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="7" y1="4" x2="7" y2="20"/>
+                        <polyline points="3 8 7 4 11 8"/>
+                        <line x1="17" y1="4" x2="17" y2="20"/>
+                        <polyline points="13 16 17 20 21 16"/>
+                    </svg>
+                </div>
+                <div class="cl-pill-texts">
+                    <span class="cl-pill-lbl">Sort</span>
+                    <span class="cl-pill-val" id="sortDisplay">Recently Added</span>
+                </div>
+                <div class="cl-pill-chevron">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+                </div>
+                <select class="cl-pill-select-native" id="sortingfilter" onchange="handleSortChange(this)">
+                    <option value="recent" selected>Recently Added</option>
+                    <option value="oldest">Oldest First</option>
+                    <option value="name_asc">Client Name (A → Z)</option>
+                    <option value="name_desc">Client Name (Z → A)</option>
+                    <option value="jobs_desc">Most Active Jobs</option>
+                </select>
             </div>
         </div>
 
-        {{-- Hidden Backward-Compatibility Elements for Legacy JS/Stat References --}}
-        <div style="display:none;">
-            <span id="span_clientAll">{{ $totalClientsCount }}</span>
-            <span id="span_clientCustom">{{ $internalClientsCount }}</span>
-            <span id="span_clientDirect">{{ $directClientsCount }}</span>
-            <span id="span_clientHiring">{{ $hiringClientsCount }}</span>
-            <span id="span_clientInactive">{{ $inactiveClientsCount }}</span>
-            <span id="span_clientRequest">{{ $pendingRequestsCount }}</span>
-            <div id="clientTableHead">
-                <input class="tbl-cb" type="checkbox" id="clientCheckAll" onclick="toggleSelectAllClients(this)" />
-            </div>
+        <!-- ── TABS BAR ── -->
+        <div class="cl-nav-tabs">
+            <a href="#" onclick="setClientTab('all', this); return false;" class="cl-tab-item cl-tab-filter active" data-tab="all">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                    <circle cx="9" cy="7" r="4"/>
+                    <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                    <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                </svg>
+                <span>All Clients</span>
+                <span class="cl-tab-badge" id="tabBadgeAll">{{ $totalClientsCount }}</span>
+            </a>
+
+            <a href="#" onclick="setClientTab('internal', this); return false;" class="cl-tab-item cl-tab-filter" data-tab="internal">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+                    <polyline points="9 22 9 12 15 12 15 22"/>
+                </svg>
+                <span>Internal Clients</span>
+                <span class="cl-tab-badge" id="tabBadgeInternal">{{ $internalClientsCount }}</span>
+            </a>
+
+            <a href="#" onclick="setClientTab('direct', this); return false;" class="cl-tab-item cl-tab-filter" data-tab="direct">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                    <circle cx="12" cy="7" r="4"/>
+                </svg>
+                <span>Direct Clients</span>
+                <span class="cl-tab-badge" id="tabBadgeDirect">{{ $directClientsCount }}</span>
+            </a>
+
+            <a href="#" onclick="setClientTab('hiring', this); return false;" class="cl-tab-item cl-tab-filter" id="tab-hiring" data-tab="hiring">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="2" y="7" width="20" height="14" rx="2"/>
+                    <path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/>
+                </svg>
+                <span>Active Companies</span>
+                <span class="cl-tab-badge" id="tabBadgeHiring">{{ $hiringClientsCount }}</span>
+            </a>
+
+            <a href="#" onclick="setClientTab('inactive', this); return false;" class="cl-tab-item cl-tab-filter" id="tab-inactive" data-tab="inactive">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"/>
+                    <line x1="10" y1="15" x2="10" y2="9"/>
+                    <line x1="14" y1="15" x2="14" y2="9"/>
+                </svg>
+                <span>Inactive Companies</span>
+                <span class="cl-tab-badge" id="tabBadgeInactive">{{ $inactiveClientsCount }}</span>
+            </a>
+
+            <a href="#" onclick="setClientTab('request', this); return false;" class="cl-tab-item cl-tab-filter" data-tab="request">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                    <polyline points="14 2 14 8 20 8"/>
+                </svg>
+                <span>Pending Requests</span>
+                <span class="cl-tab-badge" id="tabBadgeRequest">{{ $pendingRequestsCount }}</span>
+            </a>
         </div>
 
-        <!-- ── TIER 3: PRIMARY CLIENT CARD STREAM CONTAINER ── -->
         @if(in_array("view_clients", $userPermissions))
-        <div class="cd-client-container">
-            <div class="loadingMessage" style="display:none; position:fixed; left:50%; top:50%; transform:translate(-50%, -50%); z-index:1050; background:rgba(255,255,255,0.95); padding:12px 24px; border-radius:8px; box-shadow:0 4px 15px rgba(0,0,0,0.15); font-weight:600; color:#0f172a;">
-                <div class="spinner-border spinner-border-sm text-primary me-2" role="status"></div> Loading Clients...
-            </div>
-            <div id="cl_search_sync_banner" class="cl-sync-banner" style="display:none; margin: 8px 0 12px 0;">
-                <i class="fas fa-info-circle text-info me-1"></i>
-                <span>Showing cached clients. Live search projection is syncing in the background...</span>
-            </div>
+        <!-- ── TABLE ── -->
+        <div class="tbl">
+            <div class="tbl-w">
+                <div class="tbl-scroll-container">
+                    <div class="tbl-h" id="clientTableHead">
+                        <div class="tbl-th-subcard tbl-th-check">
+                            <input class="tbl-cb" type="checkbox" id="clientCheckAll" onclick="toggleSelectAllClients(this)" />
+                        </div>
+                        <div class="tbl-th-subcard cl-sortable-th" data-sort-field="name" title="Click to sort by Company Name (A-Z / Z-A)" onclick="handleHeaderSort('name')">
+                            <div class="tbl-th-label">
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+                                <span>Company Name</span>
+                            </div>
+                            <svg class="tbl-th-sort" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+                        </div>
+                        <div class="tbl-th-subcard" title="Location">
+                            <div class="tbl-th-label">
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 2a8 8 0 0 0-8 8c0 5.25 8 12 8 12s8-6.75 8-12a8 8 0 0 0-8-8z"/><circle cx="12" cy="10" r="3"/></svg>
+                                <span>Location</span>
+                            </div>
+                        </div>
+                        <div class="tbl-th-subcard cl-sortable-th" data-sort-field="date" title="Click to sort by Date Added (Newest / Oldest)" onclick="handleHeaderSort('date')">
+                            <div class="tbl-th-label">
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                                <span>Date</span>
+                            </div>
+                            <svg class="tbl-th-sort" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+                        </div>
+                        <div class="tbl-th-subcard" title="Last Activity">
+                            <div class="tbl-th-label">
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                                <span>Last Activity</span>
+                            </div>
+                        </div>
+                        <div class="tbl-th-subcard cl-sortable-th" data-sort-field="jobs" title="Click to sort by Most Active Jobs" onclick="handleHeaderSort('jobs')">
+                            <div class="tbl-th-label">
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+                                <span>Jobs</span>
+                            </div>
+                            <svg class="tbl-th-sort" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+                        </div>
+                        <div class="tbl-th-subcard" title="Hiring Pipeline">
+                            <div class="tbl-th-label">
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z"/></svg>
+                                <span>Hiring Pipeline</span>
+                            </div>
+                            <svg class="tbl-th-info" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-toggle="tooltip" title="Funnel: Sourced → Evaluated → Interviews → Offers → Joined"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+                        </div>
+                    </div>
 
-            <div id="allClients">
-                {!! $initialHtml ?? '' !!}
-            </div>
+                    <div class="loadingMessage" style="display:none; position:absolute; left:50%; top:50%; transform:translate(-50%, -50%); z-index:10; background:rgba(255,255,255,0.9); padding:10px 20px; border-radius:8px; box-shadow:0 2px 10px rgba(0,0,0,0.1);">Processing...</div>
+                    <div id="cl_search_sync_banner" class="cl-sync-banner" style="display:none; margin: 8px 12px 4px 12px;">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                        <span>Showing cached clients. Live search projection is syncing in the background...</span>
+                    </div>
+                    <div id="allClients">{!! $initialHtml ?? '' !!}</div>
+                </div>
 
-            <!-- ── PAGINATION BAR ── -->
-            <div id="pagination" class="mt-3">{!! $initialPagination ?? '' !!}</div>
+                <!-- ── PAGINATION BAR ── -->
+                <div id="pagination">{!! $initialPagination ?? '' !!}</div>
+            </div>
         </div>
         @endif
 
@@ -662,17 +916,10 @@
 <script src="{{ asset('assets/service_company/client/cl-entity-db.js') }}{{ TM_VERSION }}"></script>
 <script src="{{ asset('assets/service_company/client/cl-drawer-view.js') }}{{ TM_VERSION }}"></script>
 <script>
-window.canAddJobs = {{ in_array('add_jobs', $userPermissions) ? 'true' : 'false' }};
 $(document).ready(function() {
     var searchTimer = null;
     $('#kt_tagify_2').on('keyup input', function() {
         clearTimeout(searchTimer);
-        var q = $(this).val();
-        if (q && q.trim().length > 0) {
-            $('#btnClientSearchClear').show();
-        } else {
-            $('#btnClientSearchClear').hide();
-        }
         searchTimer = setTimeout(function() {
             if (typeof loadClientList === 'function') {
                 loadClientList(1);
@@ -680,11 +927,6 @@ $(document).ready(function() {
                 fetchCandidates(1);
             }
         }, 300);
-    });
-
-    $(document).on('click', '#btnClientSearchClear', function() {
-        $('#kt_tagify_2').val('').trigger('input');
-        $(this).hide();
     });
 });
 
@@ -2143,28 +2385,31 @@ let pendingWorkerQuery = null;
 function renderClientRows(rows) {
     if (!rows || rows.length === 0) {
         return `
-        <div class="cd-client-empty">
-            <i class="fas fa-building fa-2x mb-3 text-muted d-block"></i>
-            <div class="fw-bold fs-6 text-gray-700 mb-1">No Clients Found</div>
-            <div class="text-muted fs-7">No clients match your selected filters or search query.</div>
+        <div class="cl-empty-state">
+            <div class="cl-empty-icon">
+                <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="10" r="10"/>
+                    <line x1="8" y1="12" x2="16" y2="12"/>
+                </svg>
+            </div>
+            <div class="cl-empty-title">No clients found</div>
+            <div class="cl-empty-desc">No clients match your selected filters or search query.</div>
         </div>`;
     }
 
-    return `<div class="cd-client-stream">` + rows.map(function(r) {
+    return rows.map(function(r) {
         const logoHtml = (r.logo_url && r.logo_url.length > 10)
-            ? `<img src="${r.logo_url}" alt="${escapeAttr(r.initials)}" onerror="this.style.display='none'; if(this.nextElementSibling){this.nextElementSibling.style.display='flex';}">
-               <span class="${r.bg_color || 'bg-light-primary text-primary'}" style="display:none;">${escapeAttr(r.initials)}</span>`
-            : `<span class="${r.bg_color || 'bg-light-primary text-primary'}">${escapeAttr(r.initials)}</span>`;
+            ? `<img src="${r.logo_url}" alt="${escapeAttr(r.initials)}" class="cl-logo-img" onerror="this.style.display='none'; if(this.nextElementSibling){this.nextElementSibling.style.display='flex';}">
+               <span class="cl-initials-fallback ${r.bg_color || 'bg-light-primary text-primary'}" style="display:none;">${escapeAttr(r.initials)}</span>`
+            : `<span class="cl-initials-fallback ${r.bg_color || 'bg-light-primary text-primary'}">${escapeAttr(r.initials)}</span>`;
 
-        const indHtml = r.industry ? `<div class="cd-client-meta" title="${escapeAttr(r.industry)}"><i class="fas fa-briefcase text-muted me-1"></i>${escapeAttr(r.industry)}${r.company_size ? `<span class="mx-1">&bull;</span><span>👥 ${escapeAttr(r.company_size)}</span>` : ''}</div>` : '';
+        const indHtml = r.industry ? `<div class="cl-ind" title="${escapeAttr(r.industry)}">${escapeAttr(r.industry)}</div>` : '';
+        const sizeHtml = r.company_size ? `<div class="cl-size">${escapeAttr(r.company_size)}</div>` : '';
 
         let locHtml = '';
-        if (r.location_main) locHtml += escapeAttr(r.location_main);
-        if (r.country) locHtml += (locHtml ? ', ' : '') + escapeAttr(r.country);
-        if (!locHtml) locHtml = 'Location Not Set';
-
-        const locationCount = (r.locations && Array.isArray(r.locations)) ? r.locations.length : 0;
-        const locBadgeHtml = locationCount > 1 ? `<span class="cd-loc-badge" title="${locationCount} client locations">+${locationCount - 1} Hubs</span>` : '';
+        if (r.location_main) locHtml += `<div class="cl-loc-city" title="${escapeAttr(r.location_main)}">${escapeAttr(r.location_main)}</div>`;
+        if (r.country) locHtml += `<div class="cl-loc-country">${escapeAttr(r.country)}</div>`;
+        if (!locHtml) locHtml = `<div class="cl-loc-empty">-</div>`;
 
         if (r.is_pending_request) {
             const invId = r.staffing_company_invitation_id || r.id;
@@ -2175,76 +2420,65 @@ function renderClientRows(rows) {
             const daysAgo = r.days_ago || 'Just now';
 
             return `
-            <div class="cd-client-card tbl-r is-pending-request" data-row-id="${targetId}" data-pending-id="${invId}">
-                <div class="cd-client-card-grid">
-                    <div class="cd-client-subcard cd-subcard-client-details">
-                        <div class="cd-subcard-header">
-                            <span class="cd-subcard-label">Client Profile</span>
-                            <div class="cd-header-badges">
-                                <span class="cd-status-badge status-request"><i class="fas fa-bolt text-warning me-1"></i>Request</span>
-                                <span class="cd-badge-client-type type-direct">Direct Client</span>
+            <div class="tbl-r is-pending-request" data-pending-id="${invId}">
+                <div class="tbl-cell-check">
+                    <input type="checkbox" class="tbl-cb" value="${targetId}" onclick="event.stopPropagation()">
+                </div>
+                <div class="tbl-cell-client show-detail-direct" data-row-id="${targetId}" title="${escapeAttr(r.name)}">
+                    <div class="cl-company-wrapper">
+                        <div class="cl-logo-box">${logoHtml}</div>
+                        <div class="cl-details-box">
+                            <div class="d-flex align-items-center gap-2">
+                                <span class="cl-name">${escapeAttr(r.name)}</span>
+                                <span class="badge" style="background:#fef3c7; color:#d97706; font-size:10px; font-weight:700; padding:2px 6px; border-radius:4px; border:1px solid #fde68a;">⚡ Request</span>
                             </div>
-                        </div>
-                        <div class="cd-details-body">
-                            <input type="checkbox" class="tbl-cb me-1" value="${targetId}" onclick="event.stopPropagation()" style="margin-top: 10px;">
-                            <div class="cd-logo-box">${logoHtml}</div>
-                            <div class="cd-details-text">
-                                <a href="javascript:void(0);" class="cd-client-title show-detail-direct" data-row-id="${targetId}" title="${escapeAttr(r.name)}">
-                                    ${escapeAttr(r.name)}
-                                </a>
-                                <div class="cd-client-meta">
-                                    <i class="fas fa-briefcase text-muted me-1"></i>${escapeAttr(r.industry || 'Direct Client Partner')}
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="cd-client-subcard cd-subcard-client-loc">
-                        <div class="cd-subcard-header">
-                            <span class="cd-subcard-label">Location &amp; HQ</span>
-                        </div>
-                        <div>
-                            <div class="cd-val-loc"><i class="fas fa-map-marker-alt text-danger me-1"></i>${locHtml}</div>
-                            <div class="cd-val-sub"><i class="far fa-calendar-alt text-muted me-1"></i>Received: ${escapeAttr(r.connected_on || '-')}</div>
-                        </div>
-                    </div>
-                    <div class="cd-client-subcard cd-subcard-client-jobs">
-                        <div class="cd-subcard-header">
-                            <span class="cd-subcard-label">Requisitions</span>
-                        </div>
-                        <div>
-                            <div class="cd-val-jobs-main text-primary"><i class="fas fa-briefcase me-1"></i>${hiringCount} Positions</div>
-                            <div class="cd-jobs-breakdown"><span>Ready to staff upon acceptance</span></div>
-                        </div>
-                    </div>
-                    <div class="cd-client-subcard cd-subcard-client-gov">
-                        <div class="cd-subcard-header">
-                            <span class="cd-subcard-label">Terms &amp; SLA</span>
-                        </div>
-                        <div>
-                            <div class="cd-team-lead text-danger fw-bold" style="font-size: 11px;"><i class="far fa-clock me-1"></i>Expires ${escapeAttr(expiresFormatted)}</div>
-                            <div class="cd-team-meta text-warning fw-semibold"><span class="bullet bullet-dot bg-warning me-1"></span>Action Required</div>
-                        </div>
-                    </div>
-                    <div class="cd-client-subcard cd-subcard-client-pipeline" style="justify-content: center;">
-                        <div class="cd-subcard-header">
-                            <span class="cd-subcard-label">Partnership Decision</span>
-                        </div>
-                        <div class="d-flex align-items-center gap-2 mt-1">
-                            <button type="button" class="btn btn-sm fw-bold px-3 py-1.5 request_event" data-row-id="${invId}" data-row-event="1" data-row-from_company="${fromComp}" style="background:#10b981; color:#fff; border:none; border-radius:6px; font-size:11px;" title="Accept Direct Client Partnership"><i class="fas fa-check text-white me-1"></i>Accept</button>
-                            <button type="button" class="btn btn-sm fw-bold px-3 py-1.5 request_event" data-row-id="${invId}" data-row-event="-1" data-row-from_company="${fromComp}" style="background:#ef4444; color:#fff; border:none; border-radius:6px; font-size:11px;" title="Decline Partnership Request"><i class="fas fa-times text-white me-1"></i>Decline</button>
-                            <button type="button" class="btn btn-sm btn-light fw-bold px-2 py-1.5 show-detail-direct" data-row-id="${targetId}" style="background:#f1f5f9; color:#2563eb; border:1px solid #e2e8f0; border-radius:6px; font-size:11px;" title="View Client Details & Terms">Terms</button>
+                            ${indHtml}
                         </div>
                     </div>
                 </div>
-                <div class="cd-client-card-bottom">
-                    <div class="cd-bottom-left">
-                        <span><i class="far fa-clock text-muted me-1"></i>Received <strong>${escapeAttr(daysAgo)}</strong></span>
-                        <span>&bull;</span>
-                        <span class="text-warning fw-semibold"><i class="fas fa-exclamation-circle text-warning me-1"></i>Direct client partnership invitation awaiting decision</span>
+                <div class="tbl-cell-loc">${locHtml}</div>
+                <div class="tbl-cell-type">
+                    <div class="cl-date-box">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                            <line x1="16" y1="2" x2="16" y2="6"/>
+                            <line x1="8" y1="2" x2="8" y2="6"/>
+                            <line x1="3" y1="10" x2="21" y2="10"/>
+                        </svg>
+                        <span class="fw-bold text-gray-800">${escapeAttr(r.connected_on || '-')}</span>
                     </div>
-                    <div class="cd-bottom-actions">
-                        <button type="button" class="cd-btn-quick-drawer show-detail-direct" data-row-id="${targetId}"><i class="fas fa-file-contract me-1"></i>Review Agreement</button>
+                    <div class="cl-conn-caption text-danger" style="font-size:11px; font-weight:500;">Expires ${escapeAttr(expiresFormatted)}</div>
+                    <div class="cl-type-name type-direct fw-bold" style="color:#2563eb; font-size:11px;">Direct Client</div>
+                </div>
+                <div class="tbl-cell-activity">
+                    <div class="cl-act-main fw-bold text-gray-800">Received ${escapeAttr(daysAgo)}</div>
+                    <div class="cl-act-desc text-muted">Active in system</div>
+                    <div class="d-flex align-items-center gap-1 mt-1">
+                        <span class="bullet bullet-dot bg-warning animate-pulse" style="width:7px; height:7px;"></span>
+                        <span class="text-warning fw-bold" style="font-size:11px;">Action Needed</span>
                     </div>
+                </div>
+                <div class="tbl-cell-jobs">
+                    <div class="cl-job-line ${hiringCount > 0 ? 'has-count cl-job-hiring' : 'no-count'}">
+                        <span class="cl-job-bullet ${hiringCount > 0 ? 'bullet-hiring' : 'bullet-neutral'}"></span>
+                        <span class="cl-job-num">${hiringCount}</span>
+                        <span class="cl-job-label">Hiring</span>
+                    </div>
+                    <div class="cl-job-line no-count">
+                        <span class="cl-job-bullet bullet-neutral"></span>
+                        <span class="cl-job-num">0</span>
+                        <span class="cl-job-label">Hold</span>
+                    </div>
+                    <div class="cl-job-line no-count">
+                        <span class="cl-job-bullet bullet-neutral"></span>
+                        <span class="cl-job-num">0</span>
+                        <span class="cl-job-label">Closed</span>
+                    </div>
+                </div>
+                <div class="tbl-cell-req-actions">
+                    <button type="button" class="btn btn-sm fw-bold px-3 py-1.5 request_event" data-row-id="${invId}" data-row-event="1" data-row-from_company="${fromComp}" style="background:#10b981; color:#fff; border:none;" title="Accept Direct Client Partnership">Accept</button>
+                    <button type="button" class="btn btn-sm fw-bold px-3 py-1.5 request_event" data-row-id="${invId}" data-row-event="-1" data-row-from_company="${fromComp}" style="background:#ef4444; color:#fff; border:none;" title="Decline Partnership Request">Decline</button>
+                    <button type="button" class="btn btn-sm btn-light fw-bold px-2 py-1.5 show-detail-direct" data-row-id="${targetId}" style="background:#f1f5f9; color:#2563eb; border:1px solid #e2e8f0;" title="View Client Details & Terms">Terms</button>
                 </div>
             </div>`;
         }
@@ -2253,11 +2487,8 @@ function renderClientRows(rows) {
         const jobHold = r.jobs ? (r.jobs.hold || 0) : 0;
         const jobClosed = r.jobs ? (r.jobs.closed || 0) : 0;
 
-        const applications = r.pipeline ? (r.pipeline.applications || 0) : 0;
         const sourced = r.pipeline ? (r.pipeline.sourced || 0) : 0;
-        const screening = r.pipeline ? (r.pipeline.screening || 0) : 0;
         const evaluated = r.pipeline ? (r.pipeline.evaluated || 0) : 0;
-        const negotiation = r.pipeline ? (r.pipeline.negotiation || 0) : 0;
         const interviews = r.pipeline ? (r.pipeline.interviews || 0) : 0;
         const offers = r.pipeline ? (r.pipeline.offers || 0) : 0;
         const joined = r.pipeline ? (r.pipeline.joined || 0) : 0;
@@ -2266,146 +2497,89 @@ function renderClientRows(rows) {
         const clientTypeClass = r.is_direct ? 'type-direct' : 'type-internal';
         const clientTypeCss = r.client_type_css || (r.is_direct ? 'show-detail-direct' : 'show-detail');
         const clientTypeLabel = r.client_type || (r.is_direct ? 'Direct Client' : 'Internal Client');
-        const clientIcon = r.is_direct ? 'fa-handshake' : 'fa-building';
 
         return `
-        <div class="cd-client-card tbl-r" data-row-id="${r.id}">
-            <div class="cd-client-card-grid">
-                <div class="cd-client-subcard cd-subcard-client-details">
-                    <div class="cd-subcard-header">
-                        <span class="cd-subcard-label">Client Profile</span>
-                        <div class="cd-header-badges">
-                            <span class="cd-badge-client-type ${clientTypeClass}"><i class="fas ${clientIcon} me-1"></i>${escapeAttr(clientTypeLabel)}</span>
-                            <span class="cd-status-badge ${jobActive > 0 ? 'status-hiring' : 'status-inactive'}">${jobActive > 0 ? 'Hiring' : 'Inactive'}</span>
-                        </div>
-                    </div>
-                    <div class="cd-details-body">
-                        <input type="checkbox" class="tbl-cb me-1" value="${r.id}" onclick="event.stopPropagation()" style="margin-top: 10px;">
-                        <div class="cd-logo-box">${logoHtml}</div>
-                        <div class="cd-details-text">
-                            <a href="javascript:void(0);" class="cd-client-title ${clientTypeCss}" data-row-id="${r.id}" title="${escapeAttr(r.name)}">
-                                ${escapeAttr(r.name)}
-                            </a>
-                            ${indHtml}
-                        </div>
-                    </div>
-                </div>
-
-                <div class="cd-client-subcard cd-subcard-client-loc">
-                    <div class="cd-subcard-header">
-                        <span class="cd-subcard-label">Location &amp; HQ</span>
-                        ${locBadgeHtml}
-                    </div>
-                    <div>
-                        <div class="cd-val-loc" title="${locHtml}">
-                            <i class="fas fa-map-marker-alt text-danger me-1"></i>${locHtml}
-                        </div>
-                        <div class="cd-val-sub">
-                            <i class="far fa-calendar-check text-muted me-1"></i>Connected: ${escapeAttr(r.connected_on || '-')}
-                        </div>
-                    </div>
-                </div>
-
-                <div class="cd-client-subcard cd-subcard-client-jobs">
-                    <div class="cd-subcard-header">
-                        <span class="cd-subcard-label">Job Requisitions</span>
-                    </div>
-                    <div>
-                        <div class="cd-val-jobs-main ${jobActive > 0 ? 'text-success' : 'text-muted'}">
-                            <span class="bullet bullet-dot ${jobActive > 0 ? 'bg-success' : 'bg-secondary'} me-1"></span>
-                            ${jobActive > 0 ? jobActive + ' Active Roles' : '0 Active Roles'}
-                        </div>
-                        <div class="cd-jobs-breakdown">
-                            <span title="Hiring"><span class="cd-jobs-pill-count hiring">${jobActive}</span> Hiring</span>
-                            <span>&bull;</span>
-                            <span title="On Hold"><span class="cd-jobs-pill-count hold">${jobHold}</span> Hold</span>
-                            <span>&bull;</span>
-                            <span title="Closed"><span class="cd-jobs-pill-count closed">${jobClosed}</span> Closed</span>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="cd-client-subcard cd-subcard-client-gov">
-                    <div class="cd-subcard-header">
-                        <span class="cd-subcard-label">Governance</span>
-                    </div>
-                    <div>
-                        <div class="cd-team-lead">
-                            <i class="fas fa-user-tie text-primary me-1"></i>${r.is_direct ? 'Direct Partnership' : 'Internal Account'}
-                        </div>
-                        <div class="cd-team-meta">
-                            <i class="fas fa-shield-alt text-muted me-1"></i>Standard SLA Active
-                        </div>
-                    </div>
-                </div>
-
-                <div class="cd-client-subcard cd-subcard-client-pipeline">
-                    <div class="cd-subcard-header">
-                        <span class="cd-subcard-label">Talent Pipeline</span>
-                    </div>
-                    <div>
-                        <div class="cd-pipeline-track">
-                            <div class="cd-track-stage" title="Sourcing: ${sourced}">
-                                <span class="cd-track-badge s-sou">${sourced}</span>
-                                <span class="cd-track-label">Sourcing</span>
-                            </div>
-                            <div class="cd-track-stage" title="Screening: ${screening}">
-                                <span class="cd-track-badge s-scr">${screening}</span>
-                                <span class="cd-track-label">Screening</span>
-                            </div>
-                            <div class="cd-track-stage" title="Evaluation: ${evaluated}">
-                                <span class="cd-track-badge s-eva">${evaluated}</span>
-                                <span class="cd-track-label">Evaluation</span>
-                            </div>
-                            <div class="cd-track-stage" title="Negotiation: ${negotiation}">
-                                <span class="cd-track-badge s-neg">${negotiation}</span>
-                                <span class="cd-track-label">Negotiation</span>
-                            </div>
-                            <div class="cd-track-stage" title="Offer: ${offers}">
-                                <span class="cd-track-badge s-off">${offers}</span>
-                                <span class="cd-track-label">Offer</span>
-                            </div>
-                            <div class="cd-track-stage" title="Joining: ${joined}">
-                                <span class="cd-track-badge s-joi">${joined}</span>
-                                <span class="cd-track-label">Joining</span>
-                            </div>
-                        </div>
-
-                        <div class="cd-pipeline-summary-bar">
-                            <div class="cd-pipe-metric-pill pill-apps" title="Total Applications: ${applications}">
-                                <i class="fas fa-file-alt text-primary"></i>
-                                <span>Applications:</span>
-                                <strong>${applications}</strong>
-                            </div>
-                            <div class="cd-pipe-metric-pill pill-int" title="Total Interviews: ${interviews}">
-                                <i class="fas fa-video text-info"></i>
-                                <span>Interviews:</span>
-                                <strong>${interviews}</strong>
-                            </div>
-                        </div>
+        <div class="tbl-r">
+            <div class="tbl-cell-check">
+                <input type="checkbox" class="tbl-cb" value="${r.id}" onclick="event.stopPropagation()">
+            </div>
+            <div class="tbl-cell-client ${clientTypeCss}" data-row-id="${r.id}" title="${escapeAttr(r.name)}">
+                <div class="cl-company-wrapper">
+                    <div class="cl-logo-box">${logoHtml}</div>
+                    <div class="cl-details-box">
+                        <div class="cl-name">${escapeAttr(r.name)}</div>
+                        ${indHtml}
+                        ${sizeHtml}
                     </div>
                 </div>
             </div>
-
-            <div class="cd-client-card-bottom">
-                <div class="cd-bottom-left">
-                    <span><i class="far fa-clock text-muted me-1"></i>${daysAgo ? 'Active ' + escapeAttr(daysAgo) : 'No recent activity'}</span>
-                    <span>&bull;</span>
-                    <span><i class="far fa-calendar-alt text-muted me-1"></i>Connected: <strong>${escapeAttr(r.connected_on || '-')}</strong></span>
+            <div class="tbl-cell-loc">${locHtml}</div>
+            <div class="tbl-cell-type">
+                <div class="cl-date-box">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                        <line x1="16" y1="2" x2="16" y2="6"/>
+                        <line x1="8" y1="2" x2="8" y2="6"/>
+                        <line x1="3" y1="10" x2="21" y2="10"/>
+                    </svg>
+                    <span>${escapeAttr(r.connected_on || '-')}</span>
                 </div>
-                <div class="cd-bottom-actions">
-                    <button type="button" class="cd-btn-quick-drawer ${clientTypeCss}" data-row-id="${r.id}">
-                        <i class="fas fa-folder-open me-1"></i>View Drawer
-                    </button>
-                    ${(!r.is_direct && window.canAddJobs) ? `
-                    <a href="/service_company/jobs/curstomcreate/${r.client_id || r.id}" class="cd-btn-quick-post">
-                        <i class="fas fa-plus me-1"></i>Post Job
-                    </a>
-                    ` : ''}
+                <div class="cl-conn-caption">Connected on</div>
+                <div class="cl-type-name ${clientTypeClass} ${clientTypeCss}" data-row-id="${r.id}">
+                    ${escapeAttr(clientTypeLabel)}
+                </div>
+            </div>
+            <div class="tbl-cell-activity">
+                <div class="cl-act-main">${escapeAttr(daysAgo || 'No activity yet')}</div>
+                <div class="cl-act-desc">${daysAgo ? 'Active in system' : 'Be the first to add a job or candidate.'}</div>
+                <div class="cl-act-status ${jobActive > 0 ? 'status-active' : 'status-inactive'}">
+                    <span class="cl-act-status-dot"></span>
+                    <span>${jobActive > 0 ? 'Active' : 'Inactive'}</span>
+                </div>
+            </div>
+            <div class="tbl-cell-jobs">
+                <div class="cl-job-line ${jobActive > 0 ? 'has-count cl-job-hiring' : 'no-count'}">
+                    <span class="cl-job-bullet ${jobActive > 0 ? 'bullet-hiring' : 'bullet-neutral'}"></span>
+                    <span class="cl-job-num">${jobActive}</span>
+                    <span class="cl-job-label">Hiring</span>
+                </div>
+                <div class="cl-job-line ${jobHold > 0 ? 'has-count cl-job-hold' : 'no-count'}">
+                    <span class="cl-job-bullet ${jobHold > 0 ? 'bullet-hold' : 'bullet-neutral'}"></span>
+                    <span class="cl-job-num">${jobHold}</span>
+                    <span class="cl-job-label">Hold</span>
+                </div>
+                <div class="cl-job-line ${jobClosed > 0 ? 'has-count cl-job-closed' : 'no-count'}">
+                    <span class="cl-job-bullet ${jobClosed > 0 ? 'bullet-closed' : 'bullet-neutral'}"></span>
+                    <span class="cl-job-num">${jobClosed}</span>
+                    <span class="cl-job-label">Closed</span>
+                </div>
+            </div>
+            <div class="tbl-cell-pipeline">
+                <div class="cl-pipeline-flow">
+                    <div class="cl-pipe-step">
+                        <span class="cl-pipe-pill pill-sourced">${sourced}</span>
+                        <span class="cl-pipe-label">Sourced</span>
+                    </div>
+                    <div class="cl-pipe-step">
+                        <span class="cl-pipe-pill pill-evaluated">${evaluated}</span>
+                        <span class="cl-pipe-label">Evaluated</span>
+                    </div>
+                    <div class="cl-pipe-step">
+                        <span class="cl-pipe-pill pill-interviews">${interviews}</span>
+                        <span class="cl-pipe-label">Interviews</span>
+                    </div>
+                    <div class="cl-pipe-step">
+                        <span class="cl-pipe-pill pill-offers">${offers}</span>
+                        <span class="cl-pipe-label">Offers</span>
+                    </div>
+                    <div class="cl-pipe-step">
+                        <span class="cl-pipe-pill pill-joined">${joined}</span>
+                        <span class="cl-pipe-label">Joined</span>
+                    </div>
                 </div>
             </div>
         </div>`;
-    }).join('') + `</div>`;
+    }).join('');
 }
 
 function renderClientPagination(pagi) {
