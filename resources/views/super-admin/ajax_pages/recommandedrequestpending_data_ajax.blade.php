@@ -75,17 +75,9 @@
 
                     $skilltag = '';
                     $skilltagclass = '';
-                    if (empty($limit)) {
-                        $skillArr = DB::table('job_metronics_skills')
-                            ->select('*')
-                            ->where('job_id', $row->job_id)
-                            ->where('company_id', '=', $row->from_company_id)
-                            ->get();
-                        if (!empty($skillArr)) {
-                            foreach ($skillArr as $sval) {
-                                $skilltag .=
-                                    '<span class="badge badge-light my-1">' . ucfirst($sval->skill_name) . '</span>  ';
-                            }
+                    if (!empty($row->skillArr) && is_array($row->skillArr)) {
+                        foreach ($row->skillArr as $sval) {
+                            $skilltag .= '<span class="badge badge-light my-1">' . htmlspecialchars(ucfirst($sval)) . '</span> ';
                         }
                     } else {
                         $skilltagclass = 'd-none';
@@ -168,142 +160,30 @@
             </td>
             <td class="">
                 @php
-                    $country_id = $country_name = '';
-                    $jobid = $row->job_id;
-                    $client_loc = DB::table('client_location_jobs')
-                        ->join('client_location', 'client_location.id', '=', 'client_location_jobs.client_location_id')
-                        ->leftJoin('city_list', 'city_list.city_id', '=', 'client_location.city_id')
-                        ->select(
-                            'client_location.address',
-                            'client_location.city',
-                            'client_location.postcode',
-                            'client_location.country_id',
-                            'city_list.city as city_name',
-                        )
-                        ->where('client_location_jobs.job_id', $jobid)
-                        ->first();
-
-                    $country_id = @$client_loc->country_id;
-                    if (@$country_id > 0) {
-                        $country_name = GeneralMethod::getCountryName($country_id);
-                        foreach ($country_name as $cval) {
-                            $country_name = ucwords($cval['sortname']);
-                        }
-                    }
-
-                    $city = mb_substr(@$client_loc->city, 0, 6);
-                    // if (@$client_loc->country_id == 101) {
-                    $city = mb_substr(@$client_loc->city_name, 0, 6);
-                    // }
-
-                    $jobLocation = DB::table('client_location_jobs')
-                        ->where('client_location_jobs.job_id', $jobid)
-                        ->count();
-
-                    $jobCitySelected = DB::table('client_city_jobs')->where('client_city_jobs.job_id', $jobid)->count();
-
-                    $employment_type = 'Full-time';
-                    if ($row->employment_type == 1) {
-                        $employment_type = 'Contract';
-                    }
+                    $cityName = !empty($row->city_name) ? mb_substr($row->city_name, 0, 20) : 'Flexible';
+                    $employment_type = ($row->employment_type == 1) ? 'Contract' : 'Full-time';
 
                     if ($row->work_type == 'yes') {
-                        echo ' <div class="d-flex flex-column">
-						<span class="text-dark fw-bolder fs-6">Remote</span>
-						<div class="d-flex align-items-center">
-						  <span class="fw-bold text-muted d-block fs-7" data-toggle="tooltip4" title="' .
-                            ucwords(@$employment_type) .
-                            '" >' .
-                            ucwords(mb_substr(@$employment_type, 0, 10)) .
-                            '</span>
-						  </div>
-						</div>
-					  </div>';
+                        echo '<div class="d-flex flex-column">
+                                <span class="text-dark fw-bolder fs-6">Remote</span>
+                                <div class="d-flex align-items-center">
+                                    <span class="fw-bold text-muted d-block fs-7" data-toggle="tooltip4" title="' . ucwords($employment_type) . '">' . ucwords(mb_substr($employment_type, 0, 10)) . '</span>
+                                </div>
+                              </div>';
                     } elseif ($row->work_type == 'no') {
-                        if ($jobCitySelected == 1 || $jobCitySelected == 0) {
-                            $client_loc = DB::table('client_city_jobs')
-                                ->leftJoin('city_list', 'city_list.city_id', '=', 'client_city_jobs.city_id')
-                                ->leftJoin('state_list', 'state_list.id', '=', 'city_list.state_id')
-                                ->leftJoin('countries', 'countries.id', '=', 'state_list.country_id')
-                                ->select('city_list.city as city_name', 'countries.country_name')
-                                ->where('client_city_jobs.job_id', $jobid)
-                                ->first();
-                            $city = mb_substr(@$client_loc->city_name, 0, 21);
-                            $country_name = mb_substr(@$client_loc->country_name, 0, 6);
-
-                            echo ' <div class="d-flex flex-column">
-							<div class="d-flex align-items-center">
-								  <span class="text-dark fw-bolder fs-6">' .
-                                ucwords(mb_substr(@$city, 0, 10)) .
-                                '</span>
-								</div>
-								
-							  <span class="fw-bold text-muted d-block fs-7" data-toggle="tooltip4" title="' .
-                                ucwords(@$employment_type) .
-                                '" >' .
-                                ucwords(mb_substr(@$employment_type, 0, 10)) .
-                                '</span>
-							  </div>
-							</div>
-						  </div>';
-                        } else {
-                            echo ' <div class="d-flex flex-column">
-							<div class="d-flex align-items-center">
-								  <span class="text-dark fw-bolder fs-6">Multiple</span>
-								</div>
-							<span class="fw-bold text-muted d-block fs-7" data-toggle="tooltip4" title="' .
-                                ucwords(@$employment_type) .
-                                '" >' .
-                                ucwords(mb_substr(@$employment_type, 0, 10)) .
-                                '</span>
-						  </div>
-						</div>
-					  </div>';
-                        }
-                    } elseif ($row->work_type == 'any') {
-                        if ($jobCitySelected == 1 || $jobCitySelected == 0) {
-                            $client_loc = DB::table('client_city_jobs')
-                                ->leftJoin('city_list', 'city_list.city_id', '=', 'client_city_jobs.city_id')
-                                ->leftJoin('state_list', 'state_list.id', '=', 'city_list.state_id')
-                                ->leftJoin('countries', 'countries.id', '=', 'state_list.country_id')
-                                ->select('city_list.city as city_name', 'countries.country_name')
-                                ->where('client_city_jobs.job_id', $jobid)
-                                ->first();
-                            $city = mb_substr(@$client_loc->city_name, 0, 21);
-                            $country_name = mb_substr(@$client_loc->country_name, 0, 6);
-
-                            echo ' <div class="d-flex flex-column">
-							<div class="d-flex align-items-center">
-								  <span class="text-dark fw-bolder fs-6">' .
-                                ucwords(mb_substr(@$city, 0, 10)) .
-                                '</span>
-								</div>
-								
-							<span class="fw-bold text-muted d-block fs-7" data-toggle="tooltip4" title="' .
-                                ucwords(@$employment_type) .
-                                '" >' .
-                                ucwords(mb_substr(@$employment_type, 0, 10)) .
-                                '</span>
-							  </div>
-							</div>
-						  </div>';
-                        } else {
-                            echo ' <div class="d-flex flex-column">
-						<div class="d-flex align-items-center">
-						  <span class="text-dark fw-bolder fs-6">Remote</span>
-						  &nbsp;|&nbsp;
-								  <span class="text-dark fw-bolder fs-6">Multiple</span>
-								</div>
-							<span class="fw-bold text-muted d-block fs-7" data-toggle="tooltip4" title="' .
-                                ucwords(@$employment_type) .
-                                '" >' .
-                                ucwords(mb_substr(@$employment_type, 0, 10)) .
-                                '</span>
-
-						  </div>
-						</div>
-					  </div>';
-                        }
+                        echo '<div class="d-flex flex-column">
+                                <div class="d-flex align-items-center">
+                                    <span class="text-dark fw-bolder fs-6">' . ucwords($cityName) . '</span>
+                                </div>
+                                <span class="fw-bold text-muted d-block fs-7" data-toggle="tooltip4" title="' . ucwords($employment_type) . '">' . ucwords(mb_substr($employment_type, 0, 10)) . '</span>
+                              </div>';
+                    } else {
+                        echo '<div class="d-flex flex-column">
+                                <div class="d-flex align-items-center">
+                                    <span class="text-dark fw-bolder fs-6">Hybrid</span>
+                                </div>
+                                <span class="fw-bold text-muted d-block fs-7" data-toggle="tooltip4" title="' . ucwords($employment_type) . '">' . ucwords(mb_substr($employment_type, 0, 10)) . '</span>
+                              </div>';
                     }
                 @endphp
             </td>

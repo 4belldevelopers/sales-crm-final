@@ -3485,10 +3485,17 @@ class SuperAdminCompanyController extends SuperAdminBaseController
 
     public function receiptdownload(Request $request)
     {
+        try {
+            $id = is_numeric($request->id) ? (int) $request->id : decrypt($request->id);
+        } catch (\Illuminate\Contracts\Encryption\DecryptException $e) {
+            abort(404, 'Invalid or expired receipt identifier.');
+        }
 
-        $id = decrypt($request->id);
-        // dd($id);
         $carts = DB::table('carts')->where('id', '=', $id)->first();
+        if (! $carts) {
+            abort(404, 'Receipt record not found.');
+        }
+
         if ($id > 0) {
             $company_id = $carts->company_id;
             // dd($company_id);
@@ -5662,8 +5669,7 @@ class SuperAdminCompanyController extends SuperAdminBaseController
      *         variable token definitions, public route mappings, and fallback starter copy.
      * Tenancy & CQRS: Reads the global_settings singleton and cached agency commercial defaults (< 1ms).
      *
-     * @param Request $request
-     * @param string $ecrypt_id
+     * @param  string  $ecrypt_id
      * @return \Illuminate\View\View
      */
     public function defaultTerms(Request $request, $ecrypt_id)
@@ -5793,7 +5799,7 @@ class SuperAdminCompanyController extends SuperAdminBaseController
         } elseif ($id == 10) {
             $offerTermsColumn = Schema::hasColumn('global_settings', 'agency_offer_terms') ? 'agency_offer_terms' : 'offer_terms';
             $rawFieldVal = DB::table('global_settings')->value($offerTermsColumn);
-            if (empty(trim(strip_tags((string)$rawFieldVal)))) {
+            if (empty(trim(strip_tags((string) $rawFieldVal)))) {
                 $this->fallbackNotice = 'Currently inherits Fulltime Offer Letter (#2) as editable starter copy.';
             }
             $this->th_email_template = DB::table('global_settings')->select(DB::raw("COALESCE(NULLIF(global_settings.{$offerTermsColumn}, ''), global_settings.offer_terms) as terms"))->first();
@@ -5808,7 +5814,7 @@ class SuperAdminCompanyController extends SuperAdminBaseController
         } elseif ($id == 11) {
             $offerTermsColumn = Schema::hasColumn('global_settings', 'internship_offer_terms') ? 'internship_offer_terms' : 'offer_terms';
             $rawFieldVal = DB::table('global_settings')->value($offerTermsColumn);
-            if (empty(trim(strip_tags((string)$rawFieldVal)))) {
+            if (empty(trim(strip_tags((string) $rawFieldVal)))) {
                 $this->fallbackNotice = 'Currently inherits Fulltime Offer Letter (#2) as editable starter copy.';
             }
             $this->th_email_template = DB::table('global_settings')->select(DB::raw("COALESCE(NULLIF(global_settings.{$offerTermsColumn}, ''), global_settings.offer_terms) as terms"))->first();
@@ -5823,7 +5829,7 @@ class SuperAdminCompanyController extends SuperAdminBaseController
         } elseif ($id == 12) {
             $offerTermsColumn = Schema::hasColumn('global_settings', 'contract_offer_terms') ? 'contract_offer_terms' : 'offer_terms';
             $rawFieldVal = DB::table('global_settings')->value($offerTermsColumn);
-            if (empty(trim(strip_tags((string)$rawFieldVal)))) {
+            if (empty(trim(strip_tags((string) $rawFieldVal)))) {
                 $this->fallbackNotice = 'Currently inherits Fulltime Offer Letter (#2) as editable starter copy.';
             }
             $this->th_email_template = DB::table('global_settings')->select(DB::raw("COALESCE(NULLIF(global_settings.{$offerTermsColumn}, ''), global_settings.offer_terms) as terms"))->first();
@@ -5851,10 +5857,10 @@ class SuperAdminCompanyController extends SuperAdminBaseController
 
         $rawText = (string) (@$this->th_email_template->terms ?? '');
         $stripped = trim(strip_tags($rawText));
-        $this->isConfigured = strlen($stripped) > 0 || ($id === 13 && !empty($this->agencyCommercialDefaults));
+        $this->isConfigured = strlen($stripped) > 0 || ($id === 13 && ! empty($this->agencyCommercialDefaults));
         $this->charCount = strlen($stripped);
         $this->wordCount = $this->charCount > 0 ? str_word_count($stripped) : 0;
-        $this->pageTitle = 'Edit ' . $this->title;
+        $this->pageTitle = 'Edit '.$this->title;
 
         return view('super-admin.default-terms', $this->data);
         // default-terms-list.blade.php
@@ -6090,7 +6096,7 @@ class SuperAdminCompanyController extends SuperAdminBaseController
                 'icon' => 'fa-building-columns',
                 'db_field' => 'agency_commercial_terms',
                 'storage' => 'agency_commercial_terms',
-                'raw_content' => !empty($agencyDefaults) ? json_encode($agencyDefaults, JSON_PRETTY_PRINT) : '',
+                'raw_content' => ! empty($agencyDefaults) ? json_encode($agencyDefaults, JSON_PRETTY_PRINT) : '',
                 'fallback_to' => null,
                 'tokens' => $commercialTokens,
                 'scope_note' => 'Global fallback commission rates, CTC % success fees, replacement & payment days.',
@@ -6112,8 +6118,8 @@ class SuperAdminCompanyController extends SuperAdminBaseController
 
             if ($id === 13) {
                 // Agency commercial defaults has structured object
-                $isConfigured = !empty($agencyDefaults) && !empty((array) $agencyDefaults);
-                $stripped = 'Full-Time Model: ' . ($agencyDefaults->fulltime_fee_model ?? 'percentage') . ' (' . ($agencyDefaults->fulltime_success_fee_percentage ?? 8.33) . '% CTC), Payment Days: ' . ($agencyDefaults->fulltime_payment_terms_days ?? 30) . ', Replacement: ' . ($agencyDefaults->fulltime_replacement_period_days ?? 90) . ' Days; Contract Model: ' . ($agencyDefaults->contract_billing_model ?? 'monthly') . ' (' . ($agencyDefaults->contract_billing_cycle ?? 'Monthly in Advance') . ')';
+                $isConfigured = ! empty($agencyDefaults) && ! empty((array) $agencyDefaults);
+                $stripped = 'Full-Time Model: '.($agencyDefaults->fulltime_fee_model ?? 'percentage').' ('.($agencyDefaults->fulltime_success_fee_percentage ?? 8.33).'% CTC), Payment Days: '.($agencyDefaults->fulltime_payment_terms_days ?? 30).', Replacement: '.($agencyDefaults->fulltime_replacement_period_days ?? 90).' Days; Contract Model: '.($agencyDefaults->contract_billing_model ?? 'monthly').' ('.($agencyDefaults->contract_billing_cycle ?? 'Monthly in Advance').')';
             }
 
             if ($isConfigured) {
@@ -6139,8 +6145,8 @@ class SuperAdminCompanyController extends SuperAdminBaseController
                 $cleanText = preg_replace('/\s+/', ' ', $stripped);
                 $excerpt = mb_strimwidth($cleanText, 0, 140, '...');
             } else {
-                $excerpt = !empty($def['fallback_to'])
-                    ? 'No custom template configured. Automatically inherits ' . $def['fallback_to'] . ' as starter copy.'
+                $excerpt = ! empty($def['fallback_to'])
+                    ? 'No custom template configured. Automatically inherits '.$def['fallback_to'].' as starter copy.'
                     : 'No content configured yet. Click Edit to establish master policy.';
             }
 
@@ -8578,45 +8584,288 @@ class SuperAdminCompanyController extends SuperAdminBaseController
 
     }
 
-    public function transactionhistory()
+    public function transactionhistory(Request $request)
     {
-        $this->cart_transaction_history = DB::table('cart_transaction_history')
-            ->join('companies', 'companies.id', 'cart_transaction_history.company_id')
-            ->leftJoin('billing_address_by_orders', 'billing_address_by_orders.cart_transaction_id', 'cart_transaction_history.id')
+        $this->user = auth()->user();
+
+        // ---------------------------------------------------------------------
+        // Tier 0: Executive Financial KPI Aggregations (Cached in Redis for 10K Concurrency)
+        // Consolidated single-query scan: replaces 8 sequential queries with 1 consolidated SQL scan
+        // ---------------------------------------------------------------------
+        $this->kpiMetrics = Cache::remember('superadmin:tx:kpi:v1', 60, function () {
+            $row = DB::table('cart_transaction_history')
+                ->selectRaw("
+                    COALESCE(SUM(CASE WHEN status = 'captured' AND currency = 'INR' THEN total_price ELSE 0 END), 0) as totalRevenueInr,
+                    COALESCE(SUM(CASE WHEN status = 'captured' AND currency = 'USD' THEN total_price ELSE 0 END), 0) as totalRevenueUsd,
+                    COUNT(*) as totalTransactions,
+                    COUNT(CASE WHEN status = 'captured' THEN 1 END) as capturedCount,
+                    COUNT(CASE WHEN status = 'failed' THEN 1 END) as failedCount,
+                    COUNT(CASE WHEN status IN ('created', 'authorized') THEN 1 END) as pendingCount,
+                    COALESCE(SUM(CASE WHEN status = 'captured' THEN credit ELSE 0 END), 0) as totalCoinsIssued,
+                    COUNT(CASE WHEN invoice_approval = 'Yes' THEN 1 END) as approvedInvoiceCount
+                ")
+                ->first();
+
+            return [
+                'totalRevenueInr' => (float) ($row->totalRevenueInr ?? 0),
+                'totalRevenueUsd' => (float) ($row->totalRevenueUsd ?? 0),
+                'totalTransactions' => (int) ($row->totalTransactions ?? 0),
+                'capturedCount' => (int) ($row->capturedCount ?? 0),
+                'failedCount' => (int) ($row->failedCount ?? 0),
+                'pendingCount' => (int) ($row->pendingCount ?? 0),
+                'totalCoinsIssued' => (float) ($row->totalCoinsIssued ?? 0),
+                'approvedInvoiceCount' => (int) ($row->approvedInvoiceCount ?? 0),
+            ];
+        });
+
+        // ---------------------------------------------------------------------
+        // Primary Ledger Query: Left joins to safeguard orphaned/soft-deleted records
+        // ---------------------------------------------------------------------
+        $query = DB::table('cart_transaction_history')
+            ->leftJoin('companies', 'companies.id', '=', 'cart_transaction_history.company_id')
+            ->leftJoin('billing_address_by_orders', 'billing_address_by_orders.cart_transaction_id', '=', 'cart_transaction_history.id')
             ->leftJoin('countries', 'countries.id', '=', 'billing_address_by_orders.country_id')
             ->leftJoin('state_list', 'state_list.id', '=', 'billing_address_by_orders.state_id')
             ->leftJoin('city_list', 'city_list.city_id', '=', 'billing_address_by_orders.city')
-            ->select('cart_transaction_history.*', 'companies.company_name', 'billing_address_by_orders.gstin', 'countries.country_name', 'state_list.state', 'city_list.city')
-            ->orderByDesc('id')->paginate(50);
+            ->select([
+                'cart_transaction_history.*',
+                'companies.company_name',
+                'companies.logo as company_logo',
+                'companies.company_email',
+                'companies.company_phone',
+                'billing_address_by_orders.organization',
+                'billing_address_by_orders.first_name as billing_first_name',
+                'billing_address_by_orders.last_name as billing_last_name',
+                'billing_address_by_orders.phone as billing_phone',
+                'billing_address_by_orders.building as billing_building',
+                'billing_address_by_orders.street as billing_street',
+                'billing_address_by_orders.postal_code as billing_postal_code',
+                'billing_address_by_orders.gstin',
+                'billing_address_by_orders.pan_no',
+                'billing_address_by_orders.sold_organization',
+                'billing_address_by_orders.sold_gstin',
+                'billing_address_by_orders.sold_pan_no',
+                'billing_address_by_orders.sold_phone',
+                'billing_address_by_orders.sold_street',
+                'billing_address_by_orders.sold_building',
+                'billing_address_by_orders.sold_postal_code',
+                'countries.country_name',
+                'state_list.state',
+                'city_list.city',
+            ]);
 
-        // dd($this->cart_transaction_history);
+        // Filter: Global Search
+        if ($request->filled('search')) {
+            $search = trim($request->search);
+            // Handle padded order numbers like #00002 or 00002
+            $cleanNumeric = ltrim(ltrim($search, '#'), '0');
+
+            $query->where(function ($q) use ($search, $cleanNumeric) {
+                if (! empty($cleanNumeric) && is_numeric($cleanNumeric)) {
+                    $q->orWhere('cart_transaction_history.id', '=', (int) $cleanNumeric);
+                }
+                $q->orWhere('companies.company_name', 'LIKE', "%{$search}%")
+                    ->orWhere('cart_transaction_history.product_name', 'LIKE', "%{$search}%")
+                    ->orWhere('cart_transaction_history.payment_Id', 'LIKE', "%{$search}%")
+                    ->orWhere('cart_transaction_history.payment_orderId', 'LIKE', "%{$search}%")
+                    ->orWhere('cart_transaction_history.transactionid', 'LIKE', "%{$search}%")
+                    ->orWhere('cart_transaction_history.bankname', 'LIKE', "%{$search}%")
+                    ->orWhere('cart_transaction_history.invoiceId', 'LIKE', "%{$search}%")
+                    ->orWhere('cart_transaction_history.approval_invoice_no', 'LIKE', "%{$search}%")
+                    ->orWhere('billing_address_by_orders.gstin', 'LIKE', "%{$search}%")
+                    ->orWhere('billing_address_by_orders.organization', 'LIKE', "%{$search}%");
+            });
+        }
+
+        // Filter: Payment Status
+        if ($request->filled('status') && $request->status !== 'all') {
+            $query->where('cart_transaction_history.status', '=', $request->status);
+        }
+
+        // Filter: Payment Mode
+        if ($request->filled('payment_mode') && $request->payment_mode !== 'all') {
+            $query->where('cart_transaction_history.payment_mode', '=', $request->payment_mode);
+        }
+
+        // Filter: Invoice Approval
+        if ($request->filled('invoice_approval') && $request->invoice_approval !== 'all') {
+            $query->where('cart_transaction_history.invoice_approval', '=', $request->invoice_approval);
+        }
+
+        $this->cart_transaction_history = $query->orderByDesc('cart_transaction_history.id')
+            ->paginate(25)
+            ->withQueryString();
+
         return view('super-admin.subscription.transactionhistory', $this->data);
     }
 
+    /**
+     * Update Tax Invoice Approval or Official Invoice Number.
+     * Guaranteed Idempotency via sys_idempotency_keys & Asynchronous Outbox logging to sys_outbox_events.
+     * Complies with CQRS write standard and 10K concurrency directives.
+     */
     public function invoiceupdate(Request $request)
     {
+        try {
+            $rawId = $request->input('dataValue') ?? $request->input('transaction_id');
+            if (empty($rawId)) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Missing transaction identifier.',
+                ], 422);
+            }
 
-        // dd($request->all());
-        $id = decrypt($request->dataValue);
-        $message = '';
-        if ($request->gst_on == 1) {
-            DB::table('cart_transaction_history')->where('id', '=', $id)->update([
-                'invoice_approval' => $request->invoice_no,
+            // Handle encrypted token or raw integer ID safely
+            try {
+                $id = is_numeric($rawId) ? (int) $rawId : decrypt($rawId);
+            } catch (\Illuminate\Contracts\Encryption\DecryptException $e) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Invalid or expired transaction token.',
+                ], 422);
+            }
+
+            $idempotencyKey = $request->header('X-Idempotency-Key') ?: $request->input('idempotency_key');
+            $adminUser = auth()->user();
+            $adminId = $adminUser ? $adminUser->id : 0;
+            $adminName = $adminUser ? ($adminUser->name ?? 'Super Admin') : 'Super Admin';
+
+            $mutationService = app(\App\Services\SuperAdmin\SuperAdminTransactionMutationService::class);
+            $actionType = $request->input('action_type');
+
+            // Case 1: Combined Update (Tax Approval + Invoice Number in a single atomic transaction)
+            if ($actionType === 'update_full_invoice' || ($request->has('invoice_approval') && $request->has('approval_invoice_no'))) {
+                $approvalVal = $request->input('invoice_approval');
+                $invoiceNo = $request->input('approval_invoice_no');
+                $result = $mutationService->updateFullInvoice(
+                    transactionId: $id,
+                    invoiceApproval: $approvalVal !== null ? (string) $approvalVal : null,
+                    approvalInvoiceNo: $invoiceNo !== null ? (string) $invoiceNo : null,
+                    idempotencyKey: $idempotencyKey,
+                    adminId: $adminId,
+                    adminName: $adminName
+                );
+            }
+            // Case 2: Toggle Tax Invoice Approval (Yes / No)
+            elseif ($actionType === 'toggle_approval' || ($request->has('gst_on') && (string) $request->gst_on === '1')) {
+                $approvalVal = $request->input('invoice_approval') ?? $request->input('invoice_no');
+                $result = $mutationService->updateInvoiceApproval(
+                    transactionId: $id,
+                    invoiceApproval: (string) $approvalVal,
+                    idempotencyKey: $idempotencyKey,
+                    adminId: $adminId,
+                    adminName: $adminName
+                );
+            }
+            // Case 3: Update Approval Invoice Number & Timestamp
+            else {
+                $invoiceNo = $request->input('approval_invoice_no') ?? $request->input('invoice_no');
+                $result = $mutationService->updateInvoiceNumber(
+                    transactionId: $id,
+                    approvalInvoiceNo: $invoiceNo ? (string) $invoiceNo : null,
+                    idempotencyKey: $idempotencyKey,
+                    adminId: $adminId,
+                    adminName: $adminName
+                );
+            }
+
+            return response()->json($result);
+        } catch (\Symfony\Component\HttpKernel\Exception\HttpException $httpEx) {
+            return response()->json([
+                'status' => 'error',
+                'message' => $httpEx->getMessage(),
+            ], $httpEx->getStatusCode());
+        } catch (\Throwable $e) {
+            Log::error('SuperAdmin invoiceupdate error: '.$e->getMessage(), [
+                'exception' => $e,
+                'request' => $request->all(),
             ]);
-            $message = 'Invoice file successfully';
-        } else {
-            DB::table('cart_transaction_history')->where('id', '=', $id)->update([
-                'approval_invoice_no' => $request->invoice_no,
-                'approval_invoice_date' => date('Y-m-d H:i:s'),
-            ]);
-            $message = 'Invoice updated successfully';
+
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Failed to update invoice: '.$e->getMessage(),
+            ], 500);
         }
-        $data = ['status' => 'success', 'message' => $message];
+    }
 
-        return response()->json($data);
+    /**
+     * Retrieve complete transaction audit payload and buyer/seller billing details.
+     * Cached in Redis for 300 seconds to eliminate repeat MySQL joins.
+     */
+    public function transactionDetails(Request $request, $id)
+    {
+        try {
+            $recordId = is_numeric($id) ? (int) $id : decrypt($id);
 
-        // dd($id);
+            $cacheKey = "superadmin:tx:detail:{$recordId}";
+            $transaction = Cache::remember($cacheKey, 300, function () use ($recordId) {
+                $tx = DB::table('cart_transaction_history')
+                    ->leftJoin('companies', 'companies.id', '=', 'cart_transaction_history.company_id')
+                    ->leftJoin('billing_address_by_orders', 'billing_address_by_orders.cart_transaction_id', '=', 'cart_transaction_history.id')
+                    ->leftJoin('countries', 'countries.id', '=', 'billing_address_by_orders.country_id')
+                    ->leftJoin('state_list', 'state_list.id', '=', 'billing_address_by_orders.state_id')
+                    ->leftJoin('city_list', 'city_list.city_id', '=', 'billing_address_by_orders.city')
+                    ->select([
+                        'cart_transaction_history.*',
+                        'companies.company_name',
+                        'companies.logo as company_logo',
+                        'companies.company_email',
+                        'companies.company_phone',
+                        'billing_address_by_orders.organization',
+                        'billing_address_by_orders.first_name as billing_first_name',
+                        'billing_address_by_orders.last_name as billing_last_name',
+                        'billing_address_by_orders.phone as billing_phone',
+                        'billing_address_by_orders.building as billing_building',
+                        'billing_address_by_orders.street as billing_street',
+                        'billing_address_by_orders.postal_code as billing_postal_code',
+                        'billing_address_by_orders.gstin',
+                        'billing_address_by_orders.pan_no',
+                        'billing_address_by_orders.sold_organization',
+                        'billing_address_by_orders.sold_gstin',
+                        'billing_address_by_orders.sold_pan_no',
+                        'billing_address_by_orders.sold_phone',
+                        'billing_address_by_orders.sold_street',
+                        'billing_address_by_orders.sold_building',
+                        'billing_address_by_orders.sold_postal_code',
+                        'countries.country_name',
+                        'state_list.state',
+                        'city_list.city',
+                    ])
+                    ->where('cart_transaction_history.id', '=', $recordId)
+                    ->first();
 
+                if ($tx) {
+                    $soldFixed = Cache::remember('platform:sold_by_address:static', 86400, function () {
+                        return DB::table('sold_by_address')->first();
+                    });
+                    $tx->platform_organization = $tx->sold_organization ?: ($soldFixed->organization ?? 'JERO');
+                    $tx->platform_gstin = $tx->sold_gstin ?: ($soldFixed->gstin ?? 'N/A');
+                    $tx->platform_pan = $tx->sold_pan_no ?: ($soldFixed->pan_no ?? 'N/A');
+                    $tx->platform_phone = $tx->sold_phone ?: ($soldFixed->phone ?? 'N/A');
+                    $tx->platform_address = trim(($tx->sold_building ?: ($soldFixed->building ?? '')).' '.($tx->sold_street ?: ($soldFixed->street ?? '')));
+                }
+
+                return $tx;
+            });
+
+            if (! $transaction) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Transaction not found.',
+                ], 404);
+            }
+
+            return response()->json([
+                'status' => 'success',
+                'data' => $transaction,
+                'receipt_url' => route('superadmin.company.receiptdownload', [encrypt($transaction->cart_id)]),
+            ]);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Unable to load transaction details: '.$e->getMessage(),
+            ], 422);
+        }
     }
 
     private function createRazorpayPaymentLink($apiKey, $apiSecret, $paymentLinkData)
@@ -9139,154 +9388,244 @@ class SuperAdminCompanyController extends SuperAdminBaseController
 
     public function job_request($id)
     {
-        $this->pageTitle = __('Job Request');
-        $this->dataCnt = 0;
+        $this->pageTitle = __('Job Collaboration Requests');
+
+        $pendingCount = 0;
+        $acceptedCount = 0;
+        if ($this->elasticService->indexExists(ELASTIC_JOB_REQUEST)) {
+            try {
+                $pRes = $this->elasticService->getClient()->count([
+                    'index' => ELASTIC_JOB_REQUEST,
+                    'body' => ['query' => ['term' => ['final_status' => 0]]],
+                ]);
+                $pendingCount = $pRes['count'] ?? 0;
+
+                $aRes = $this->elasticService->getClient()->count([
+                    'index' => ELASTIC_JOB_REQUEST,
+                    'body' => ['query' => ['terms' => ['final_status' => [1, 2, 3]]]],
+                ]);
+                $acceptedCount = $aRes['count'] ?? 0;
+            } catch (\Throwable $e) {
+                // Keep 0 fallback
+            }
+        }
+
+        $this->dataCnt = [
+            'jobRequest' => $pendingCount,
+            'jobAccepted' => $acceptedCount,
+        ];
 
         return view('super-admin.jobs.job_request', $this->data);
     }
 
+    /**
+     * Intent: Formats an Elasticsearch document from local_jobs_request into a clean, compact DTO for Super Admin.
+     * Tenancy: Universal Super Admin read scope across all company collaboration requests.
+     */
+    protected function formatJobRequestDto(array $src, array $salaryMode, array $currencySymbole, array $job_status, array $feedback_status): array
+    {
+        $id = (int) ($src['id'] ?? $src['recommendation_relation_id'] ?? 0);
+        $jobId = (int) ($src['job_id'] ?? 0);
+        $title = $src['title'] ?? 'Requisition';
+        $companyName = $src['company_name'] ?? 'Company';
+        $companyNameTo = $src['company_name_to'] ?? 'Partner Company';
+        $clientName = ! empty($src['clients_name']) ? $src['clients_name'] : $companyName;
+
+        $logo = ! empty($src['logo']) && strlen($src['logo']) > 10 ? $src['logo'] : asset('img/client-default.png');
+        $logoTo = ! empty($src['logo_to']) && strlen($src['logo_to']) > 10 ? $src['logo_to'] : asset('img/client-default.png');
+        $clientLogo = ! empty($src['logo_logical_path']) && strlen($src['logo_logical_path']) > 10 ? $src['logo_logical_path'] : $logo;
+
+        // Salary formatting
+        $minSalMode = $salaryMode[$src['min_sal_mode'] ?? ''] ?? 'Month';
+        $maxSalMode = $salaryMode[$src['max_sal_mode'] ?? ''] ?? $minSalMode;
+        $currencyRaw = $currencySymbole[$src['min_salary_currency'] ?? ''] ?? ($currencySymbole[$src['max_salary_currency'] ?? ''] ?? '₹');
+        $currency = strip_tags($currencyRaw);
+        if (empty($currency)) {
+            $currency = '₹';
+        }
+        $minSalary = isset($src['min_salary']) && $src['min_salary'] > 0 ? GeneralMethod::thousandsCurrencyFormat($src['min_salary']) : '0';
+        $maxSalary = isset($src['max_salary']) && $src['max_salary'] > 0 ? GeneralMethod::thousandsCurrencyFormat($src['max_salary']) : '0';
+        $salaryDisplay = ($maxSalary !== '0') ? "{$currency}{$minSalary} - {$maxSalary} / {$minSalMode}" : "{$currency}{$minSalary} / {$minSalMode}";
+
+        // Experience
+        $minExp = (int) ($src['min_exp'] ?? 0);
+        $maxExp = (int) ($src['max_exp'] ?? 0);
+        $expDisplay = ($maxExp > 0) ? "{$minExp} - {$maxExp} Yrs" : "{$minExp}+ Yrs";
+
+        // Work mode & employment type
+        $workType = strtolower($src['work_type'] ?? 'no');
+        $workModeLabel = ($workType === 'yes') ? 'Remote' : (($workType === 'any' || $workType === 'other') ? 'Hybrid' : 'Work From Office');
+
+        $empType = (int) ($src['employment_type'] ?? 0);
+        $empTypeLabel = ($empType === 1) ? 'Contract' : (($empType === 2) ? 'Freelance' : (($empType === 3) ? 'Part Time' : 'Full-Time'));
+
+        // Location
+        $cityName = ! empty($src['city_name']) ? $src['city_name'] : 'Flexible';
+
+        // Status & final status
+        $finalStatus = (int) ($src['final_status'] ?? 0);
+        $rawStatus = strtolower($src['status'] ?? 'active');
+        $statusLabel = ($finalStatus === 0) ? 'Pending' : (($finalStatus === 1) ? 'Accepted' : 'Closed');
+        $statusBadgeClass = ($finalStatus === 0) ? 'badge-light-warning' : (($finalStatus === 1) ? 'badge-light-success' : 'badge-light-danger');
+
+        // Skills array
+        $skills = is_array($src['skillArr'] ?? null) ? $src['skillArr'] : [];
+
+        // Dates
+        $createdAt = ! empty($src['from_created_at']) ? Carbon::parse($src['from_created_at'])->format('d M, Y') : (! empty($src['created_at']) ? Carbon::parse($src['created_at'])->format('d M, Y') : '—');
+
+        // Conversation feedback
+        $convStatus = isset($src['conversations_status']) ? (string) $src['conversations_status'] : null;
+        $convFeedback = ($convStatus !== null && $convStatus !== '' && isset($feedback_status[$convStatus]['name']))
+            ? $feedback_status[$convStatus]['name']
+            : (! empty($src['conversation_id']) ? 'Conversation Notes' : 'Add Note');
+
+        return [
+            'id' => $id,
+            'recommendation_relation_id' => $id,
+            'job_id' => $jobId,
+            'title' => $title,
+            'company_name' => $companyName,
+            'company_name_to' => $companyNameTo,
+            'clients_name' => $clientName,
+            'logo' => $logo,
+            'logo_to' => $logoTo,
+            'client_logo' => $clientLogo,
+            'salary_display' => $salaryDisplay,
+            'currency' => $currency,
+            'min_salary' => $minSalary,
+            'max_salary' => $maxSalary,
+            'min_sal_mode' => $minSalMode,
+            'max_sal_mode' => $maxSalMode,
+            'exp_display' => $expDisplay,
+            'min_exp' => $minExp,
+            'max_exp' => $maxExp,
+            'work_mode' => $workModeLabel,
+            'employment_type' => $empTypeLabel,
+            'city_name' => $cityName,
+            'total_positions' => (int) ($src['total_positions'] ?? 1),
+            'status' => $rawStatus,
+            'final_status' => $finalStatus,
+            'status_label' => $statusLabel,
+            'status_badge_class' => $statusBadgeClass,
+            'skills' => $skills,
+            'created_at' => $createdAt,
+            'conversation_id' => $src['conversation_id'] ?? null,
+            'conversation_feedback' => $convFeedback,
+            'accepterms' => ! empty($src['accepterms']) ? (string) $src['accepterms'] : null,
+        ];
+    }
+
+    /**
+     * Intent: Serves Super Admin Pending Job Requests via strict CQRS from ELASTIC_JOB_REQUEST.
+     * Tenancy: Universal Super Admin read scope; zero MySQL reads on query/filter paths.
+     */
     public function all_recommandedrequest_data_ajax(Request $request)
     {
-        $company_id = auth()->user()->company_id;
-
         $job_status = GeneralMethod::job_status();
         $salaryMode = GeneralMethod::salaryMode();
         $currencySymbole = GeneralMethod::currencySymbole();
         $feedback_status = GeneralMethod::conversation_status();
 
-        $searchQuery = $request->input('q');
+        $searchQuery = trim((string) $request->input('search', $request->input('q', '')));
         $page = max((int) $request->input('page', 1), 1);
-        $size = (int) $request->input('size', 10); // Default 20 results per page
+        $size = min(max((int) $request->input('size', 10), 5), 100);
         $from = ($page - 1) * $size;
-        $valCheck = $request->input('sortingfilter');
-        $mstatus_id = $request->input('mstatus_id');
-        $sort = [];
-        $country = '';
-        $filters = [];
-        $sort[] = ['final_status' => ['order' => 'asc', 'unmapped_type' => 'long']];
-        $boolQuery = [
-            'bool' => [
-                'should' => [
-                    [
-                        'bool' => [
-                            'must' => array_merge([
-                                ['terms' => ['final_status' => [0]]],
-                            ]),
-                        ],
-                    ],
-                ],
-                'minimum_should_match' => 1,
-                'filter' => $filters, // We'll add all filters here
-                'must_not' => [],
-            ],
+
+        $must = [
+            ['terms' => ['final_status' => [0]]],
         ];
+
+        if ($searchQuery !== '') {
+            $must[] = [
+                'multi_match' => [
+                    'query' => $searchQuery,
+                    'fields' => [
+                        'title^3',
+                        'company_name^2',
+                        'company_name_to^2',
+                        'clients_name^2',
+                        'skillArr',
+                        'city_name',
+                    ],
+                    'type' => 'best_fields',
+                    'fuzziness' => 'AUTO',
+                ],
+            ];
+        }
+
         $params = [
             'index' => ELASTIC_JOB_REQUEST,
             'request_cache' => true,
             'body' => [
                 'from' => $from,
                 'size' => $size,
-                'sort' => $sort,
-                'query' => $boolQuery,
+                'sort' => [
+                    ['id' => ['order' => 'desc', 'unmapped_type' => 'long']],
+                ],
+                'query' => [
+                    'bool' => [
+                        'must' => $must,
+                    ],
+                ],
             ],
         ];
 
-        if (! $this->elasticService->indexExists(ELASTIC_JOB_REQUEST)) {
-            $total = 0;
-            $data = [];
-        } else {
-            $response = $this->elasticService->getClient()->search($params);
-            $total = $response['hits']['total']['value'] ?? 0;
-            $data = array_map(function ($hit) {
-                return $hit['_source'];
-            }, $response['hits']['hits']);
+        $total = 0;
+        $data = [];
+        $pendingCount = 0;
+        $acceptedCount = 0;
+
+        if ($this->elasticService->indexExists(ELASTIC_JOB_REQUEST)) {
+            try {
+                $response = $this->elasticService->getClient()->search($params);
+                $total = $response['hits']['total']['value'] ?? 0;
+                $data = array_map(function ($hit) {
+                    return $hit['_source'];
+                }, $response['hits']['hits']);
+
+                $pRes = $this->elasticService->getClient()->count([
+                    'index' => ELASTIC_JOB_REQUEST,
+                    'body' => ['query' => ['term' => ['final_status' => 0]]],
+                ]);
+                $pendingCount = $pRes['count'] ?? 0;
+
+                $aRes = $this->elasticService->getClient()->count([
+                    'index' => ELASTIC_JOB_REQUEST,
+                    'body' => ['query' => ['terms' => ['final_status' => [1, 2, 3]]]],
+                ]);
+                $acceptedCount = $aRes['count'] ?? 0;
+            } catch (\Throwable $e) {
+                Log::error('SuperAdmin all_recommandedrequest_data_ajax ES Error: '.$e->getMessage());
+            }
+        }
+
+        // Format DTOs for client-first in-RAM rendering
+        $formattedData = [];
+        foreach ($data as $row) {
+            $formattedData[] = $this->formatJobRequestDto($row, $salaryMode, $currencySymbole, $job_status, $feedback_status);
         }
 
         $pagination = [
             'total' => $total,
             'current_page' => $page,
-            'last_page' => ceil($total / $size),
+            'last_page' => (int) ceil($total / $size),
             'listType' => 'allcandidate',
         ];
         $userPermissions = [];
 
         return response()->json([
+            'status' => 'success',
+            'data' => $formattedData,
+            'raw_data' => $data,
+            'total' => $total,
+            'pendingCount' => $pendingCount,
+            'acceptedCount' => $acceptedCount,
+            'current_page' => $page,
+            'last_page' => (int) ceil($total / $size),
+            'size' => $size,
             'html' => view('super-admin.ajax_pages.recommandedrequestpending_data_ajax', compact('data', 'userPermissions', 'salaryMode', 'currencySymbole', 'job_status', 'feedback_status'))->render(),
-            'total' => $total,
-            'pagination' => view('super-admin.ajax_pages.pagination', compact('pagination'))->render(),
         ]);
-
-        $categories = DB::table('jobs')
-            ->select(
-                'jobs.id',
-                'jobs.title',
-                'jobs.total_positions',
-                'jobs.work_type',
-                'jobs.employment_type',
-                'jobs.priority',
-                'jobs.status',
-                'jobs.min_exp',
-                'jobs.max_exp',
-                'jobs.created_at',
-                'jobs.start_date',
-                'jobs.end_date',
-                'jobs.min_salary',
-                'jobs.max_salary',
-                'jobs.min_sal_mode',
-                'jobs.max_sal_mode',
-                'jobs.company_id as from_company_id',
-                'jobs.min_salary_currency',
-                'jobs.max_salary_currency',
-                'recommendation_relation.to_company_id',
-                'clients.name as clients_name',
-                'clients.logo_logical_path',
-                'recommendation_relation.id as recommendation_relation_id',
-                'recommendation_relation.final_status',
-                'recommendation_relation.from_created_at',
-                'companies.logo',
-                'conversations.status as conversations_status',
-                'conversations.id as conversations_id',
-                'companies.company_name',
-                'to_com.company_name as company_name_to'
-            )
-            ->join('clients', 'clients.id', 'jobs.client_id')
-            ->join('companies', 'companies.id', 'clients.company_id')
-            ->join('recommendation_relation', 'recommendation_relation.job_id', 'jobs.id')
-            ->leftJoin('companies as to_com', 'to_com.id', '=', 'recommendation_relation.to_company_id')
-            ->leftJoin('conversations', 'conversations.id', '=', 'recommendation_relation.conversation_id')
-            ->where('jobs.id', '>', '0');
-
-        if (\request('search') != '') {
-            $search = request('search');
-            $categories->where('jobs.title', 'LIKE', "%$search%");
-        }
-
-        $categories->whereIn('recommendation_relation.final_status', [0]);
-
-        $categories->orderBy('jobs.id', 'DESC');
-
-        $perPage = 10;
-        $page = $request->get('page', 1);
-
-        $total = count($categories->get());
-
-        $data = $categories->skip(($page - 1) * $perPage)->take($perPage)->get();
-
-        $pagination = [
-            'total' => $total,
-            'current_page' => $page,
-            'last_page' => ceil($total / $perPage),
-            'listType' => 'allcandidate',
-        ];
-
-        $userPermissions = [];
-
-        return response()->json([
-            'html' => view('super-admin.ajax_pages.recommandedrequestpending_data_ajax', compact('data', 'userPermissions', 'feedback_status', 'salaryMode', 'currencySymbole', 'job_status', 'company_id'))->render(),
-            'total' => $total,
-            'pagination' => view('super-admin.ajax_pages.pagination', compact('pagination'))->render(),
-        ]);
-
     }
 
     public function recommandedrequest(Request $request)
@@ -12537,208 +12876,251 @@ class SuperAdminCompanyController extends SuperAdminBaseController
 
     public function job_request_accept($id)
     {
-        $this->pageTitle = __('Job Request');
-        $this->dataCnt = 0;
+        $this->pageTitle = __('Job Collaboration Requests - Accepted');
+
+        $pendingCount = 0;
+        $acceptedCount = 0;
+        if ($this->elasticService->indexExists(ELASTIC_JOB_REQUEST)) {
+            try {
+                $pRes = $this->elasticService->getClient()->count([
+                    'index' => ELASTIC_JOB_REQUEST,
+                    'body' => ['query' => ['term' => ['final_status' => 0]]],
+                ]);
+                $pendingCount = $pRes['count'] ?? 0;
+
+                $aRes = $this->elasticService->getClient()->count([
+                    'index' => ELASTIC_JOB_REQUEST,
+                    'body' => ['query' => ['terms' => ['final_status' => [1, 2, 3]]]],
+                ]);
+                $acceptedCount = $aRes['count'] ?? 0;
+            } catch (\Throwable $e) {
+                // Keep 0 fallback
+            }
+        }
+
+        $this->dataCnt = [
+            'jobRequest' => $pendingCount,
+            'jobAccepted' => $acceptedCount,
+        ];
 
         return view('super-admin.jobs.job_request_accept', $this->data);
     }
 
+    /**
+     * Intent: Serves Super Admin Accepted Job Requests via strict CQRS from ELASTIC_JOB_REQUEST.
+     * Tenancy: Universal Super Admin read scope; zero MySQL reads on query/filter paths.
+     */
     public function recommandedrequest_accept_ajax(Request $request)
     {
-        $company_id = auth()->user()->company_id;
-
         $job_status = GeneralMethod::job_status();
         $salaryMode = GeneralMethod::salaryMode();
         $currencySymbole = GeneralMethod::currencySymbole();
         $feedback_status = GeneralMethod::conversation_status();
 
-        $searchQuery = $request->input('q');
+        $searchQuery = trim((string) $request->input('search', $request->input('q', '')));
         $page = max((int) $request->input('page', 1), 1);
-        $size = (int) $request->input('size', 10); // Default 20 results per page
+        $size = min(max((int) $request->input('size', 10), 5), 100);
         $from = ($page - 1) * $size;
-        $valCheck = $request->input('sortingfilter');
-        $mstatus_id = $request->input('mstatus_id');
-        $sort = [];
-        $country = '';
-        $filters = [];
-        $sort[] = ['final_status' => ['order' => 'asc', 'unmapped_type' => 'long']];
-        $boolQuery = [
-            'bool' => [
-                'should' => [
-                    [
-                        'bool' => [
-                            'must' => array_merge([
-                                ['terms' => ['final_status' => [1, 2, 3]]],
-                            ]),
-                        ],
-                    ],
-                ],
-                'minimum_should_match' => 1,
-                'filter' => $filters, // We'll add all filters here
-                'must_not' => [],
-            ],
+
+        $must = [
+            ['terms' => ['final_status' => [1, 2, 3]]],
         ];
+
+        if ($searchQuery !== '') {
+            $must[] = [
+                'multi_match' => [
+                    'query' => $searchQuery,
+                    'fields' => [
+                        'title^3',
+                        'company_name^2',
+                        'company_name_to^2',
+                        'clients_name^2',
+                        'skillArr',
+                        'city_name',
+                    ],
+                    'type' => 'best_fields',
+                    'fuzziness' => 'AUTO',
+                ],
+            ];
+        }
+
         $params = [
             'index' => ELASTIC_JOB_REQUEST,
             'request_cache' => true,
             'body' => [
                 'from' => $from,
                 'size' => $size,
-                'sort' => $sort,
-                'query' => $boolQuery,
+                'sort' => [
+                    ['id' => ['order' => 'desc', 'unmapped_type' => 'long']],
+                ],
+                'query' => [
+                    'bool' => [
+                        'must' => $must,
+                    ],
+                ],
             ],
         ];
 
-        if (! $this->elasticService->indexExists(ELASTIC_JOB_REQUEST)) {
-            $total = 0;
-            $data = [];
-        } else {
-            $response = $this->elasticService->getClient()->search($params);
-            $total = $response['hits']['total']['value'] ?? 0;
-            $data = array_map(function ($hit) {
-                return $hit['_source'];
-            }, $response['hits']['hits']);
+        $total = 0;
+        $data = [];
+        $pendingCount = 0;
+        $acceptedCount = 0;
+
+        if ($this->elasticService->indexExists(ELASTIC_JOB_REQUEST)) {
+            try {
+                $response = $this->elasticService->getClient()->search($params);
+                $total = $response['hits']['total']['value'] ?? 0;
+                $data = array_map(function ($hit) {
+                    return $hit['_source'];
+                }, $response['hits']['hits']);
+
+                $pRes = $this->elasticService->getClient()->count([
+                    'index' => ELASTIC_JOB_REQUEST,
+                    'body' => ['query' => ['term' => ['final_status' => 0]]],
+                ]);
+                $pendingCount = $pRes['count'] ?? 0;
+
+                $aRes = $this->elasticService->getClient()->count([
+                    'index' => ELASTIC_JOB_REQUEST,
+                    'body' => ['query' => ['terms' => ['final_status' => [1, 2, 3]]]],
+                ]);
+                $acceptedCount = $aRes['count'] ?? 0;
+            } catch (\Throwable $e) {
+                Log::error('SuperAdmin recommandedrequest_accept_ajax ES Error: '.$e->getMessage());
+            }
+        }
+
+        // Format DTOs for client-first in-RAM rendering
+        $formattedData = [];
+        foreach ($data as $row) {
+            $formattedData[] = $this->formatJobRequestDto($row, $salaryMode, $currencySymbole, $job_status, $feedback_status);
         }
 
         $pagination = [
             'total' => $total,
             'current_page' => $page,
-            'last_page' => ceil($total / $size),
+            'last_page' => (int) ceil($total / $size),
             'listType' => 'allcandidate',
         ];
         $userPermissions = [];
 
         return response()->json([
-            'html' => view('super-admin.ajax_pages.recommandedrequestaccept_data_ajax', compact('data', 'userPermissions', 'salaryMode', 'currencySymbole', 'job_status', 'feedback_status'))->render(),
+            'status' => 'success',
+            'data' => $formattedData,
+            'raw_data' => $data,
             'total' => $total,
-            'pagination' => view('super-admin.ajax_pages.pagination', compact('pagination'))->render(),
-        ]);
-
-        $categories = DB::table('jobs')
-            ->select(
-                'jobs.id',
-                'jobs.title',
-                'jobs.total_positions',
-                'jobs.work_type',
-                'jobs.employment_type',
-                'jobs.priority',
-                'jobs.status',
-                'jobs.min_exp',
-                'jobs.max_exp',
-                'jobs.created_at',
-                'jobs.start_date',
-                'jobs.company_id as companyidcount',
-                'jobs.end_date',
-                'jobs.min_salary',
-                'jobs.max_salary',
-                'jobs.min_sal_mode',
-                'jobs.max_sal_mode',
-                'jobs.company_id as from_company_id',
-                'jobs.min_salary_currency',
-                'jobs.max_salary_currency',
-                'recommendation_relation.to_company_id',
-                'clients.name as clients_name',
-                'clients.logo_logical_path',
-                DB::raw('COUNT(job_applications.id) as allCandidate'),
-                DB::raw('SUM(CASE WHEN job_applications.master_status_id = 1 THEN 1 ELSE 0 END) AS Sourcing'),
-                DB::raw('SUM(CASE WHEN job_applications.master_status_id = 2 THEN 1 ELSE 0 END) AS Screening'),
-                DB::raw('SUM(CASE WHEN job_applications.master_status_id = 3 THEN 1 ELSE 0 END) AS Interview'),
-                DB::raw('SUM(CASE WHEN job_applications.master_status_id = 4 THEN 1 ELSE 0 END) AS Negotiation'),
-                DB::raw('SUM(CASE WHEN job_applications.master_status_id = 5 THEN 1 ELSE 0 END) AS Offered'),
-                DB::raw('SUM(CASE WHEN job_applications.master_status_id = 6 THEN 1 ELSE 0 END) AS Joined'),
-                DB::raw('SUM(CASE WHEN job_applications.master_status_id = 7 THEN 1 ELSE 0 END) AS Rejected'),
-                DB::raw('SUM(CASE WHEN job_applications.master_status_id = 8 THEN 1 ELSE 0 END) AS InReview'),
-                'recommendation_relation.id as recommendation_relation_id',
-                'recommendation_relation.id as recommendation_id',
-                'recommendation_relation.final_status',
-                'recommendation_relation.from_created_at',
-                'companies.logo',
-                'conversations.status as conversations_status',
-                'conversations.id as conversations_id',
-                'companies.company_name',
-                'to_com.company_name as company_name_to'
-            )
-            ->join('clients', 'clients.id', 'jobs.client_id')
-            ->join('companies', 'companies.id', 'clients.company_id')
-            ->join('recommendation_relation', 'recommendation_relation.job_id', 'jobs.id')
-            ->leftJoin('companies as to_com', 'to_com.id', '=', 'recommendation_relation.to_company_id')
-            ->leftJoin('add_job_wise_condidates as job_applications', 'job_applications.job_id', '=', 'jobs.id')
-            ->leftJoin('conversations', 'conversations.id', '=', 'recommendation_relation.conversation_id')
-            ->where('jobs.id', '>', '0');
-
-        if (\request('search') != '') {
-            $search = request('search');
-            $categories->where('jobs.title', 'LIKE', "%$search%");
-        }
-        // $categories->where('recommendation_relation.to_company_id', $company_id);
-        $categories->whereIn('recommendation_relation.final_status', [1, 2, 3]);
-        $categories->groupBy('jobs.id');
-        $categories->orderBy('jobs.id', 'DESC');
-
-        $perPage = 10;
-        $page = $request->get('page', 1);
-        // dd($page);
-        $total = count($categories->get());
-        // dd($total);
-        $data = $categories->skip(($page - 1) * $perPage)->take($perPage)->get();
-
-        $pagination = [
-            'total' => $total,
+            'pendingCount' => $pendingCount,
+            'acceptedCount' => $acceptedCount,
             'current_page' => $page,
-            'last_page' => ceil($total / $perPage),
-            'listType' => 'allcandidate',
-        ];
-        // dd($pagination);
-        $userPermissions = [];
-
-        return response()->json([
+            'last_page' => (int) ceil($total / $size),
+            'size' => $size,
             'html' => view('super-admin.ajax_pages.recommandedrequestaccept_data_ajax', compact('data', 'userPermissions', 'salaryMode', 'currencySymbole', 'job_status', 'feedback_status'))->render(),
-            'total' => $total,
             'pagination' => view('super-admin.ajax_pages.pagination', compact('pagination'))->render(),
         ]);
+    }
 
-        return DataTables::of($categories)
+    /**
+     * Handle state-changing actions (accept, reject, update terms, batch) for Job Collaboration Requests.
+     * Enforces strict idempotency and transactional outbox persistence via SuperAdminJobRequestMutationService.
+     *
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function jobRequestAction(Request $request)
+    {
+        $action = (string) $request->input('action'); // 'accept', 'reject', 'close', 'terms', 'batch_accept', 'batch_reject'
+        $recRelationId = (int) $request->input('rec_relation_id');
+        $idempotencyKey = $request->header('X-Idempotency-Key') ?? $request->input('idempotency_key');
+        $adminId = auth()->id() ?? $this->user->id ?? 0;
+        $adminName = auth()->user()?->name ?? $this->user?->name ?? 'Super Admin';
 
-            ->editColumn('chkbox', function ($row) {})
-            ->editColumn('Requisition', function ($row) {})
-            ->editColumn('Exp', function ($row) {})
-            ->editColumn('Salary', function ($row) {})
-            ->editColumn('Location', function ($row) {
+        /** @var \App\Services\SuperAdmin\SuperAdminJobRequestMutationService $mutationService */
+        $mutationService = app(\App\Services\SuperAdmin\SuperAdminJobRequestMutationService::class);
 
-                // dd($row);
+        try {
+            switch ($action) {
+                case 'accept':
+                    $accepterms = $request->input('accepterms');
+                    $result = $mutationService->updateJobRequestStatus(
+                        recRelationId: $recRelationId,
+                        finalStatus: 1,
+                        idempotencyKey: $idempotencyKey,
+                        adminId: $adminId,
+                        adminName: $adminName,
+                        accepterms: $accepterms
+                    );
 
-            })
-            ->editColumn('Status', function ($row) {})
-            ->editColumn('Date', function ($row) {})
-            ->editColumn('HM', function ($row) {})
-            ->editColumn('Terms', function ($row) {
-                $html = '<div data-row-id="'.$row->id.'" data-row-recommendation_relation_id="'.$row->recommendation_relation_id.'" class="client-terms-listing"><i class="fa-solid fa-eye" style="font-size: 20px;"></i></div>';
+                    return response()->json($result);
 
-                return $html;
-            })
-            ->editColumn('company_name_to', function ($row) {})
-            ->editColumn('TOT', function ($row) {})
-            ->editColumn('SOU', function ($row) {})
-            ->editColumn('SCR', function ($row) {})
-            ->editColumn('EVA', function ($row) {})
-            ->editColumn('NEO', function ($row) {})
-            ->editColumn('OFF', function ($row) {})
-            ->editColumn('JOI', function ($row) {})
-            ->editColumn('REJ', function ($row) {})
-            ->editColumn('Action', function ($row) {
-                return '<div class="d-flex my-4"> 
-				<a href="javascript:void(0);" data-row-status="ignore" data-row-id="'.$row->id.'"  data-row-recommendation_relation_id="'.$row->recommendation_relation_id.'" class="btn btn-sm btn-light me-2 request_approval">
-					Ignore
-				</a> 
-				<a href="javascript:void(0);" data-row-status="accept" data-row-id="'.$row->id.'" data-row-recommendation_relation_id="'.$row->recommendation_relation_id.'" class="btn btn-sm btn-primary request_approval">
-					Accept
-				</a> 
-				</div>';
-            })
+                case 'reject':
+                    $result = $mutationService->updateJobRequestStatus(
+                        recRelationId: $recRelationId,
+                        finalStatus: 2,
+                        idempotencyKey: $idempotencyKey,
+                        adminId: $adminId,
+                        adminName: $adminName
+                    );
 
-            ->rawColumns(['chkbox', 'Requisition', 'Exp', 'Salary', 'Location', 'Status', 'Date', 'HM', 'Terms', 'Action', 'company_name_to', 'TOT', 'SOU', 'SCR', 'EVA', 'NEO', 'OFF', 'JOI', 'REJ'])
-            ->addIndexColumn()
-            ->make(true);
+                    return response()->json($result);
+
+                case 'close':
+                    $result = $mutationService->updateJobRequestStatus(
+                        recRelationId: $recRelationId,
+                        finalStatus: 3,
+                        idempotencyKey: $idempotencyKey,
+                        adminId: $adminId,
+                        adminName: $adminName
+                    );
+
+                    return response()->json($result);
+
+                case 'terms':
+                    $terms = (string) $request->input('accepterms', '');
+                    $result = $mutationService->updateJobRequestTerms(
+                        recRelationId: $recRelationId,
+                        terms: $terms,
+                        idempotencyKey: $idempotencyKey,
+                        adminId: $adminId,
+                        adminName: $adminName
+                    );
+
+                    return response()->json($result);
+
+                case 'batch_accept':
+                case 'batch_reject':
+                    $ids = (array) $request->input('ids', []);
+                    $status = ($action === 'batch_accept') ? 1 : 2;
+                    $result = $mutationService->batchUpdateStatus(
+                        recRelationIds: $ids,
+                        finalStatus: $status,
+                        idempotencyKey: $idempotencyKey,
+                        adminId: $adminId,
+                        adminName: $adminName
+                    );
+
+                    return response()->json($result);
+
+                default:
+                    return response()->json([
+                        'status' => 'error',
+                        'message' => 'Invalid or unsupported action.',
+                    ], 400);
+            }
+        } catch (\Symfony\Component\HttpKernel\Exception\HttpException $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => $e->getMessage(),
+            ], $e->getStatusCode());
+        } catch (\Throwable $e) {
+            Log::error('SuperAdmin jobRequestAction Error: '.$e->getMessage(), [
+                'action' => $action,
+                'rec_relation_id' => $recRelationId,
+            ]);
+
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Failed to process request: '.$e->getMessage(),
+            ], 500);
+        }
     }
 
     public function recommandedrequest_accept(Request $request)
@@ -13354,31 +13736,61 @@ class SuperAdminCompanyController extends SuperAdminBaseController
 
     public function showfeedback(Request $request, $id)
     {
-        //  dd($request->all());
         $this->interviewSchedule = $available_status = $feedback_status = '';
-        //  dd($id);
 
-        $this->conversations = DB::table('conversations')
+        $conversationsId = $request->conversations_id;
+        $recommendationRelationId = $request->recommendation_relation_id;
+        $jobId = $request->id ?: $id;
+
+        // If conversations_id is empty, attempt resolution via recommendation_relation or ES index
+        if (empty($conversationsId) && ! empty($recommendationRelationId)) {
+            $recRel = DB::table('recommendation_relation')->where('id', $recommendationRelationId)->first();
+            if ($recRel && ! empty($recRel->conversation_id)) {
+                $conversationsId = $recRel->conversation_id;
+            } elseif ($this->elasticService->indexExists(ELASTIC_JOB_REQUEST)) {
+                try {
+                    $esDoc = $this->elasticService->getClient()->get([
+                        'index' => ELASTIC_JOB_REQUEST,
+                        'id' => (string) $recommendationRelationId,
+                    ]);
+                    if (! empty($esDoc['_source']['conversation_id'])) {
+                        $conversationsId = $esDoc['_source']['conversation_id'];
+                    }
+                } catch (\Throwable $e) {
+                }
+            }
+        }
+
+        // If still empty, check if conversations table has a thread for this job_id
+        if (empty($conversationsId) && ! empty($jobId)) {
+            $existingConv = DB::table('conversations')
+                ->where('job_id', $jobId)
+                ->orderBy('id', 'DESC')
+                ->first();
+            if ($existingConv) {
+                $conversationsId = $existingConv->id;
+            }
+        }
+
+        $this->conversations = ! empty($conversationsId) ? DB::table('conversations')
             ->select('conversations.*')
-            ->where('conversations.id', @$request->conversations_id)
+            ->where('conversations.id', $conversationsId)
             ->orderBy('conversations.id', 'DESC')
-            ->first();
+            ->first() : null;
 
-        $this->conversations_log = DB::table('conversations')
+        $this->conversations_log = ! empty($conversationsId) ? DB::table('conversations')
             ->join('conversation_log', 'conversation_log.conversation_id', '=', 'conversations.id')
             ->select('conversation_log.*')
-            ->where('conversations.id', @$request->conversations_id)
+            ->where('conversations.id', $conversationsId)
             ->orderBy('conversation_log.id', 'DESC')
-            ->get();
+            ->get() : collect();
 
         $this->available_status = GeneralMethod::available_status();
         $this->feedback_status = GeneralMethod::conversation_status();
 
-        $this->conversations_id = $request->conversations_id;
-        $this->recommendation_relation_id = $request->recommendation_relation_id;
-        $this->job_id = $request->id;
-
-        // dd( $this->data);
+        $this->conversations_id = $conversationsId;
+        $this->recommendation_relation_id = $recommendationRelationId;
+        $this->job_id = $jobId;
 
         $view = view('super-admin.jobs.showfeedback', $this->data)->render();
 
@@ -13387,58 +13799,73 @@ class SuperAdminCompanyController extends SuperAdminBaseController
 
     public function updateInterview(Request $request)
     {
-
-        $interview_id = $app_int_status = $app_int_feedback_status = $feedback_comment = $application_id = $rating = '';
-
         $interview_id = @$request->id;
-
         $app_int_feedback_status = @$request->app_int_feedback_status;
         $feedback_comment = @$request->feedback_comment;
         $rating = @$request->rating;
         $conversations_id = $request->conversations_id;
-        // dd($conversations_id);
         $recommendation_relation_id = $request->recommendation_relation_id;
         $job_id = @$request->job_id;
 
-        $recommendation_relation = DB::table('recommendation_relation')->select('recommendation_relation.*')->where('id', '=', $recommendation_relation_id)->first();
+        $recommendation_relation = ! empty($recommendation_relation_id)
+            ? DB::table('recommendation_relation')->where('id', '=', $recommendation_relation_id)->first()
+            : null;
 
-        // 		dd($request->all());
+        $fromCompanyId = $recommendation_relation->from_company_id ?? null;
+        $toCompanyId = $recommendation_relation->to_company_id ?? null;
 
+        // Fallback to ES document if recommendation_relation row was missing
+        if (empty($fromCompanyId) && ! empty($recommendation_relation_id) && $this->elasticService->indexExists(ELASTIC_JOB_REQUEST)) {
+            try {
+                $esDoc = $this->elasticService->getClient()->get([
+                    'index' => ELASTIC_JOB_REQUEST,
+                    'id' => (string) $recommendation_relation_id,
+                ]);
+                $fromCompanyId = $esDoc['_source']['from_company_id'] ?? null;
+                $toCompanyId = $esDoc['_source']['to_company_id'] ?? null;
+            } catch (\Throwable $e) {
+            }
+        }
+
+        $now = date('Y-m-d H:i:s');
         $values = [
             'status' => @$app_int_feedback_status,
             'comment' => @$feedback_comment,
             'job_id' => @$job_id,
-            'from_company_id' => @$recommendation_relation->from_company_id,
-            'to_company_id' => @$recommendation_relation->to_company_id,
+            'from_company_id' => $fromCompanyId,
+            'to_company_id' => $toCompanyId,
             'rating' => @$rating,
-            'created_by' => auth()->user()->id,
-            'created_at' => date('Y-m-d:H:i:s'),
-            'updated_at' => date('Y-m-d:H:i:s'),
+            'created_by' => auth()->user()->id ?? 1,
+            'created_at' => $now,
+            'updated_at' => $now,
         ];
-        if ($request->conversations_id == '') {
+
+        if (empty($conversations_id)) {
             $conversationsId = DB::table('conversations')->insertGetId($values);
         } else {
             unset($values['created_at']);
-            $conversationsId = DB::table('conversations')->where('id', '=', $conversations_id)->update($values);
+            DB::table('conversations')->where('id', '=', $conversations_id)->update($values);
             $conversationsId = $conversations_id;
         }
-        DB::table('recommendation_relation')->where('id', '=', $recommendation_relation_id)->update(['conversation_id' => @$conversationsId]);
 
-        $values = [
+        if (! empty($recommendation_relation_id)) {
+            DB::table('recommendation_relation')->where('id', '=', $recommendation_relation_id)->update(['conversation_id' => @$conversationsId]);
+        }
+
+        $logValues = [
             'conversation_id' => @$conversationsId,
             'status' => @$app_int_feedback_status,
             'comment' => @$feedback_comment,
             'job_id' => @$job_id,
-            'from_company_id' => @$recommendation_relation->from_company_id,
-            'to_company_id' => @$recommendation_relation->to_company_id,
+            'from_company_id' => $fromCompanyId,
+            'to_company_id' => $toCompanyId,
             'rating' => @$rating,
-            'created_by' => auth()->user()->id,
-            'created_at' => date('Y-m-d:H:i:s'),
-            'updated_at' => date('Y-m-d:H:i:s'),
+            'created_by' => auth()->user()->id ?? 1,
+            'created_at' => $now,
+            'updated_at' => $now,
         ];
-        $log_id = DB::table('conversation_log')->insertGetId($values);
+        $log_id = DB::table('conversation_log')->insertGetId($logValues);
 
-        $updateTime = now()->toIso8601String();
         $updateParams = [
             'index' => ELASTIC_JOB_REQUEST,
             'body' => [
@@ -13450,7 +13877,7 @@ class SuperAdminCompanyController extends SuperAdminBaseController
                     'lang' => 'painless',
                     'params' => [
                         'conversation_id' => $conversationsId,
-                        'conversations_status' => @$app_int_feedback_status,
+                        'conversations_status' => (string) @$app_int_feedback_status,
                     ],
                 ],
                 'query' => [
@@ -13461,16 +13888,32 @@ class SuperAdminCompanyController extends SuperAdminBaseController
                     ],
                 ],
             ],
-            'refresh' => false, // Eventual consistency for 10K concurrent scale
+            'refresh' => true,
         ];
-        // Elastic Execute the bulk update
-        if ($this->elasticService->indexExists(ELASTIC_JOB_REQUEST)) {
-            $response = $this->elasticService->getClient()->updateByQuery($updateParams);
 
+        if ($this->elasticService->indexExists(ELASTIC_JOB_REQUEST)) {
+            try {
+                $this->elasticService->getClient()->updateByQuery($updateParams);
+            } catch (\Throwable $e) {
+                Log::error('ES updateInterview error: '.$e->getMessage());
+            }
         }
 
-        return Reply::dataOnly(['status' => 'success', 'logsValue' => $values, 'log_id' => $log_id, 'date_set' => date('d M Y h:i: A'), 'msg' => 'feedback update successfully.']);
+        $feedback_status = GeneralMethod::conversation_status();
+        $statusName = $feedback_status[$app_int_feedback_status]['name'] ?? ('Conversation '.$app_int_feedback_status);
 
+        return Reply::dataOnly([
+            'status' => 'success',
+            'conversation_id' => $conversationsId,
+            'recommendation_relation_id' => $recommendation_relation_id,
+            'status_name' => $statusName,
+            'conversation_feedback' => $statusName,
+            'conversations_status' => (string) $app_int_feedback_status,
+            'logsValue' => $logValues,
+            'log_id' => $log_id,
+            'date_set' => date('d M Y h:i A'),
+            'msg' => 'Interview Feedback submitted successfully.',
+        ]);
     }
 
     public function notedestroy(Request $request)
