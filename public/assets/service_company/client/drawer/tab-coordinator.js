@@ -28,7 +28,8 @@
             candidates:      { status: 'UNINITIALIZED', filter: 'all', requestId: null, correlationId: null, lastLoadedAt: null },
             contacts:        { status: 'UNINITIALIZED', filter: 'all', requestId: null, correlationId: null, lastLoadedAt: null },
             interviews:      { status: 'UNINITIALIZED', filter: 'all', requestId: null, correlationId: null, lastLoadedAt: null },
-            offers:          { status: 'UNINITIALIZED', filter: 'all', requestId: null, correlationId: null, lastLoadedAt: null }
+            offers:          { status: 'UNINITIALIZED', filter: 'all', requestId: null, correlationId: null, lastLoadedAt: null },
+            performance:     { status: 'UNINITIALIZED', filter: 'all', requestId: null, correlationId: null, lastLoadedAt: null }
         };
         this.activeTab = 'overview';
     }
@@ -41,12 +42,14 @@
     ClientDrawerTabCoordinator.prototype.normalizeTabName = function(rawTab) {
         if (!rawTab) return 'overview';
         var clean = String(rawTab).replace('#', '').trim().toLowerCase();
-        if (clean === 'requisitions') return 'jobs';
-        if (clean === 'candidate_list') return 'candidates';
-        if (clean === 'interview_tracker') return 'interviews';
-        if (clean === 'candidate_joining' || clean === 'joining') return 'offers';
-        if (clean === 'activity') return 'recent_activity';
-        if (clean === 'client_overview') return 'overview';
+        if (clean === 'requisitions' || clean === 'jobs' || clean === 'job') return 'jobs';
+        if (clean === 'candidate_list' || clean === 'candidates') return 'candidates';
+        if (clean === 'interview_tracker' || clean === 'interviews') return 'interviews';
+        if (clean === 'candidate_joining' || clean === 'joining' || clean === 'offers') return 'offers';
+        if (clean === 'activity' || clean === 'recent_activity') return 'recent_activity';
+        if (clean === 'contacts' || clean === 'client_contacts') return 'contacts';
+        if (clean === 'client_overview' || clean === 'overview') return 'overview';
+        if (clean === 'candidatedashboard' || clean === 'performance' || clean === 'dashboard' || clean === 'analytics') return 'performance';
         return clean;
     };
 
@@ -126,7 +129,19 @@
             }
         }
 
-        var adapter = window.ClientDrawerTabs ? window.ClientDrawerTabs[key] : null;
+        // Delegate to active drawer's blade loader if available and not called from loader
+        if (!options.fromLoader) {
+            var isDirect = this.instance.context.clientType === 'direct';
+            if (isDirect && typeof window.loadDirectTabContent === 'function') {
+                window.loadDirectTabContent(key, options.force || false, filter);
+                return;
+            } else if (!isDirect && typeof window.loadInternalTabContent === 'function') {
+                window.loadInternalTabContent(key, options.force || false, filter);
+                return;
+            }
+        }
+
+        var adapter = window.ClientDrawerTabs ? (window.ClientDrawerTabs[key] || window.ClientDrawerTabs[tabName]) : null;
         if (!adapter || typeof adapter.load !== 'function') {
             console.warn('[TabCoordinator] No adapter found for tab: ' + key);
             return;
