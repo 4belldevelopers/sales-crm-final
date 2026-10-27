@@ -6732,11 +6732,43 @@ class SuperAdminCompanyController extends SuperAdminBaseController
         return Reply::dataOnly(['status' => 'success', 'view' => $view]);
     }
 
-    public function coinFeatures()
+    public function coinFeatures(Request $request)
     {
-        $coinEvents = DB::table('coin_events')
-            ->select('*');
-        $this->coinEvents = $coinEvents->paginate(20);
+        $query = DB::table('coin_events');
+
+        if ($request->filled('search')) {
+            $search = trim($request->search);
+            $query->where(function ($q) use ($search) {
+                $q->where('title', 'like', "%{$search}%")
+                    ->orWhere('description', 'like', "%{$search}%")
+                    ->orWhere('id', 'like', "%{$search}%");
+            });
+        }
+
+        if ($request->filled('event_type') && in_array($request->event_type, ['operational', 'sales'])) {
+            $query->where('event_type', $request->event_type);
+        }
+
+        if ($request->filled('deduction_type') && in_array($request->deduction_type, ['daily', 'onetime'])) {
+            $query->where('deduction_type', $request->deduction_type);
+        }
+
+        if ($request->has('status') && $request->status !== '' && $request->status !== null) {
+            $query->where('status', (int) $request->status);
+        }
+
+        $perPage = (int) $request->get('per_page', 100);
+        $this->coinEvents = $query->orderBy('id', 'asc')->paginate($perPage)->appends($request->except('page'));
+
+        // High-level KPI aggregations for Tier 1 & Tier 2 headers
+        $allEvents = DB::table('coin_events')->get();
+        $this->kpiTotal = $allEvents->count();
+        $this->kpiActive = $allEvents->where('status', 1)->count();
+        $this->kpiInactive = $allEvents->where('status', 0)->count();
+        $this->kpiOperational = $allEvents->where('event_type', 'operational')->count();
+        $this->kpiSales = $allEvents->where('event_type', 'sales')->count();
+        $this->kpiDaily = $allEvents->where('deduction_type', 'daily')->count();
+        $this->kpiOnetime = $allEvents->where('deduction_type', 'onetime')->count();
 
         return view('super-admin.coin-settings.coin-events', $this->data);
     }
@@ -6889,16 +6921,27 @@ class SuperAdminCompanyController extends SuperAdminBaseController
         $decryptedValue = ($request->id);
         $this->update = false;
         if ($decryptedValue != null) {
-            $id = decrypt($request->id);
+            try {
+                $id = decrypt($request->id);
+            } catch (\Exception $e) {
+                $id = (int) $request->id;
+            }
             $coin_events = DB::table('coin_events')->where('id', $id)->first();
             $this->update = true;
             $this->coin_packages = $coin_events;
-            // dd($coin_packages);
         }
 
         $coin_package_types = DB::table('coin_package_types')
             ->select('*');
         $this->coinPackageType = $coin_package_types->get();
+
+        if ($request->ajax()) {
+            return response()->json([
+                'status' => 'success',
+                'data' => $this->coin_packages ?? null,
+                'update' => $this->update,
+            ]);
+        }
 
         return view('super-admin.coin-settings.add-edit-coin-events', $this->data);
     }
@@ -7261,11 +7304,22 @@ class SuperAdminCompanyController extends SuperAdminBaseController
 
     public function topUpCoinPackages()
     {
-        $coinEvents = DB::table('top_up_coin_packages')
-            ->select('top_up_coin_packages.*');
-        $this->coinEvents = $coinEvents->paginate(20);
+        $allPackages = DB::table('top_up_coin_packages')
+            ->orderBy('event_type', 'asc')
+            ->orderBy('coins', 'asc')
+            ->get();
 
-        // dd($coinEvents->get());
+        $this->coinEvents = $allPackages;
+
+        // Executive KPI Metrics
+        $this->totalPackages = $allPackages->count();
+        $this->activePackages = $allPackages->where('status', 1)->count();
+        $this->inactivePackages = $allPackages->where('status', 0)->count();
+        $this->operationalPackages = $allPackages->where('event_type', 'operational')->count();
+        $this->salesPackages = $allPackages->where('event_type', 'sales')->count();
+        $this->customPackages = $allPackages->where('custome_chk', 1)->count();
+        $this->maxDiscount = (float) $allPackages->max('discount');
+
         return view('super-admin.coin-settings.topup-coin-package', $this->data);
     }
 
@@ -7323,7 +7377,18 @@ class SuperAdminCompanyController extends SuperAdminBaseController
                 'updated_at' => date('Y-m-d H:i:s'),
                 'status' => ($req->status) ? 1 : 0,
             ];
+            if ($req->filled('event_type')) {
+                $value['event_type'] = $req->event_type;
+            }
+            if ($req->has('custome_chk')) {
+                $value['custome_chk'] = $req->custome_chk ? 1 : 0;
+            }
             DB::table('top_up_coin_packages')->insert($value);
+
+            // Atomic multi-tenant cache invalidation
+            Cache::forget('top_up_coin_packages_op');
+            Cache::forget('top_up_coin_packages_sal');
+
             $message = 'Top Up Coin Created Successfully';
             $status = 'success';
         } else {
@@ -7337,8 +7402,19 @@ class SuperAdminCompanyController extends SuperAdminBaseController
                 'updated_at' => date('Y-m-d H:i:s'),
                 'status' => ($req->status) ? 1 : 0,
             ];
+            if ($req->filled('event_type')) {
+                $value['event_type'] = $req->event_type;
+            }
+            if ($req->has('custome_chk')) {
+                $value['custome_chk'] = $req->custome_chk ? 1 : 0;
+            }
             $id = ($req->token_id);
             DB::table('top_up_coin_packages')->where('id', $id)->update($value);
+
+            // Atomic multi-tenant cache invalidation
+            Cache::forget('top_up_coin_packages_op');
+            Cache::forget('top_up_coin_packages_sal');
+
             $message = 'Top Up Coin updated Successfully';
             $status = 'success';
         }
@@ -7346,6 +7422,79 @@ class SuperAdminCompanyController extends SuperAdminBaseController
         $data = ['status' => $status, 'message' => $message, 'url' => route('superadmin.company.topUpCoinPackages')];
 
         return response()->json($data);
+    }
+
+    /**
+     * Instant toggle status for Top Up Coin Package (Active / Inactive)
+     * TENANCY: Global catalog table (Rule 6 Multi-tenant cache invalidation)
+     */
+    public function toggleTopUpCoinPackageStatus(Request $request)
+    {
+        $request->validate([
+            'id' => 'required',
+        ]);
+
+        $package = DB::table('top_up_coin_packages')->where('id', $request->id)->first();
+        if (! $package) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Top Up Coin Package not found.',
+            ], 404);
+        }
+
+        $newStatus = $package->status == 1 ? 0 : 1;
+        DB::table('top_up_coin_packages')
+            ->where('id', $request->id)
+            ->update([
+                'status' => $newStatus,
+                'updated_at' => now(),
+            ]);
+
+        // Atomic multi-tenant cache invalidation
+        Cache::forget('top_up_coin_packages_op');
+        Cache::forget('top_up_coin_packages_sal');
+
+        return response()->json([
+            'status' => 'success',
+            'new_status' => $newStatus,
+            'status_label' => $newStatus == 1 ? 'Active' : 'Inactive',
+            'message' => 'Package status updated to '.($newStatus == 1 ? 'Active' : 'Inactive').' successfully.',
+        ]);
+    }
+
+    /**
+     * Safe delete or deactivate Top Up Coin Package
+     */
+    public function destroyTopUpCoinPackage(Request $request)
+    {
+        $id = $request->id;
+        if (! $id) {
+            return response()->json(['status' => 'error', 'message' => 'Package ID required.'], 400);
+        }
+
+        $inCart = DB::table('carts')->where('pck_top_id', $id)->exists();
+        if ($inCart) {
+            // Cannot physically delete historic purchases; deactivate instead
+            DB::table('top_up_coin_packages')->where('id', $id)->update(['status' => 0, 'updated_at' => now()]);
+            Cache::forget('top_up_coin_packages_op');
+            Cache::forget('top_up_coin_packages_sal');
+
+            return response()->json([
+                'status' => 'success',
+                'deactivated' => true,
+                'message' => 'Package has associated purchase history, so it was set to Inactive instead of being deleted.',
+            ]);
+        }
+
+        DB::table('top_up_coin_packages')->where('id', $id)->delete();
+        Cache::forget('top_up_coin_packages_op');
+        Cache::forget('top_up_coin_packages_sal');
+
+        return response()->json([
+            'status' => 'success',
+            'deleted' => true,
+            'message' => 'Package deleted successfully.',
+        ]);
     }
 
     public function createOrderTopup(Request $request) {}
@@ -11662,7 +11811,7 @@ class SuperAdminCompanyController extends SuperAdminBaseController
             'add_notes',
             'view_notes',
             'edit_notes',
-            'delete_notes'
+            'delete_notes',
         ];
         $this->CaptainCompanyid = auth()->user()->company_id ?? 0;
         $this->editprofile = true;
@@ -11671,12 +11820,12 @@ class SuperAdminCompanyController extends SuperAdminBaseController
         $this->notVisiableBench = true;
         $this->editComman = true;
         $this->skillAndQuestions = true;
-        $this->resumeAwsPath = !empty($this->application->resume);
+        $this->resumeAwsPath = ! empty($this->application->resume);
         $this->interview_mode = DB::table('interview_mode')->select('*')->orderBy('interview_mode.id', 'ASC')->get();
 
         $effectiveJobId = $this->application->jobId ?? $this->application->job_id ?? $jobId;
-        $this->jobData = !empty($effectiveJobId) ? DB::table('jobs')->select('max_sal_mode as jobMode', 'max_salary_currency as jobCurrency')->where('id', '=', $effectiveJobId)->first() : null;
-        $this->job = !empty($effectiveJobId) ? Job::withoutGlobalScopes()->find($effectiveJobId) : null;
+        $this->jobData = ! empty($effectiveJobId) ? DB::table('jobs')->select('max_sal_mode as jobMode', 'max_salary_currency as jobCurrency')->where('id', '=', $effectiveJobId)->first() : null;
+        $this->job = ! empty($effectiveJobId) ? Job::withoutGlobalScopes()->find($effectiveJobId) : null;
 
         $this->jobSkill = DB::table('job_metronics_skills')
             ->leftJoin('candidate_job_skill_exp', function ($join) {
@@ -11703,7 +11852,7 @@ class SuperAdminCompanyController extends SuperAdminBaseController
                 }
             }
         }
-        $this->skillShow = (!empty($this->jobSkill) && count($this->jobSkill) > 0);
+        $this->skillShow = (! empty($this->jobSkill) && count($this->jobSkill) > 0);
 
         $this->child_status_name = 'N/A';
         if ($this->application->child_status_id > 0) {
