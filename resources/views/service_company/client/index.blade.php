@@ -874,6 +874,12 @@
                         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
                         <span>Showing cached clients. Live search projection is syncing in the background...</span>
                     </div>
+                    <div class="cl-selection-bar">
+                        <label class="cl-select-all-lbl">
+                            <input class="tbl-cb" type="checkbox" id="clientCheckAll" onclick="toggleSelectAllClients(this)">
+                            <span>Select All Clients</span>
+                        </label>
+                    </div>
                     <div id="allClients">{!! $initialHtml ?? '' !!}</div>
                 </div>
 
@@ -2000,20 +2006,6 @@ window.ClientStateManager = {
             return;
         }
     },
-            return;
-        }
-
-        if (window.ClientEntityDB) {
-            var self = this;
-            window.ClientEntityDB.get(tenantId, cid).then(function(rec) {
-                if (rec && rec.data) {
-                    if (window.ClientMemoryStore) window.ClientMemoryStore.set(cid, rec.data);
-                    renderTab(rec.data);
-                    self.markTabLoaded(cid, tabName);
-                }
-            }).catch(function() {});
-        }
-    },
 
     renderTabHeaders: function(tabName) {
         $('.cl-stat-filter').removeClass('active');
@@ -2120,6 +2112,11 @@ function openClientDrawer(drawerId, toggleId) {
         otherDrawerEl.style.removeProperty('z-index');
     }
 
+    if (typeof openMetronicDrawer === 'function') {
+        openMetronicDrawer(drawerId, '#' + toggleId);
+        return;
+    }
+
     var drawerEl = document.getElementById(drawerId);
     if (!drawerEl) return;
 
@@ -2156,23 +2153,22 @@ function openClientDrawer(drawerId, toggleId) {
         }
     }
 
-    // 4. Guaranteed DOM fallback: ensures drawer is visibly sliding in and on screen
-    setTimeout(function() {
-        if (drawerEl && !drawerEl.classList.contains('drawer-on')) {
-            drawerEl.classList.add('drawer', 'drawer-end', 'drawer-on');
-            drawerEl.style.transform = 'none';
-            drawerEl.style.zIndex = '999999';
-            if (!document.querySelector('.drawer-overlay')) {
-                var overlay = document.createElement('div');
-                overlay.className = 'drawer-overlay custom-cand-drawer-overlay';
-                overlay.style.zIndex = '999998';
-                overlay.onclick = function() {
-                    ClientStateManager.clearDrawerState();
-                };
-                document.body.appendChild(overlay);
-            }
-        }
-    }, 40);
+    // 4. Guaranteed DOM fallback: ensures drawer is visibly sliding in and on screen immediately
+    if (!drawerEl.classList.contains('drawer')) {
+        drawerEl.classList.add('drawer', 'drawer-end');
+    }
+    drawerEl.classList.add('drawer-on');
+    drawerEl.style.transform = 'none';
+    drawerEl.style.zIndex = '999999';
+    if (!document.querySelector('.drawer-overlay')) {
+        var overlay = document.createElement('div');
+        overlay.className = 'drawer-overlay custom-cand-drawer-overlay';
+        overlay.style.zIndex = '999998';
+        overlay.onclick = function() {
+            ClientStateManager.clearDrawerState();
+        };
+        document.body.appendChild(overlay);
+    }
 }
 
 function closeClientDrawers() {
@@ -2226,6 +2222,17 @@ $(document).on('click', '.view-request-terms', function (e) {
     var id = $(this).data('client-id') || $(this).data('row-id') || $(this).closest('[data-row-id]').data('row-id');
     if (!id) return;
     ClientStateManager.openClientDrawer(id, 'request');
+});
+
+// Row-level delegation: ensure clicking any row whitespace or cell opens the drawer
+$(document).on('click', '.tbl-r', function(e) {
+    if ($(e.target).closest('input, button, a, .tbl-cb, .tbl-cell-check, .request_event, .dropdown-menu').length > 0) {
+        return;
+    }
+    var $detail = $(this).find('.show-detail, .show-detail-direct, .view-request-terms').first();
+    if ($detail.length) {
+        $detail.trigger('click');
+    }
 });
 
 $(document).on('click', '#kt_activitiesClient_close, #kt_activitiesDirectClient_close, .cd-close-drawer, #kt_activitiesClient_close_btn, #kt_activitiesDirectClient_close_btn', function(e) {
@@ -2372,65 +2379,112 @@ function renderClientRows(rows) {
             const daysAgo = r.days_ago || 'Just now';
 
             return `
-            <div class="tbl-r is-pending-request" data-pending-id="${invId}">
-                <div class="tbl-cell-check">
-                    <input type="checkbox" class="tbl-cb" value="${targetId}" onclick="event.stopPropagation()">
-                </div>
-                <div class="tbl-cell-client show-detail-direct" data-row-id="${targetId}" title="${escapeAttr(r.name)}">
-                    <div class="cl-company-wrapper">
-                        <div class="cl-logo-box">${logoHtml}</div>
-                        <div class="cl-details-box">
-                            <div class="d-flex align-items-center gap-2">
-                                <span class="cl-name">${escapeAttr(r.name)}</span>
-                                <span class="badge" style="background:#fef3c7; color:#d97706; font-size:10px; font-weight:700; padding:2px 6px; border-radius:4px; border:1px solid #fde68a;">⚡ Request</span>
+            <div class="cl-primary-card tbl-r is-pending-request" data-pending-id="${invId}">
+                <div class="cl-subcards-grid">
+                    <!-- SUB-CARD 1: Client Identity -->
+                    <div class="cl-subcard cl-subcard-identity">
+                        <div class="cl-subcard-head">
+                            <span class="cl-subcard-title">Client Identity</span>
+                            <div class="cl-subcard-badges">
+                                <span class="cl-scope-pill pill-direct">Direct Client</span>
+                                <span class="badge" style="background:#fef3c7; color:#d97706; font-size:9px; font-weight:700; padding:1.5px 6px; border-radius:4px; border:1px solid #fde68a;">⚡ Request</span>
                             </div>
-                            ${indHtml}
+                        </div>
+                        <div class="cl-identity-body">
+                            <div class="cl-identity-check">
+                                <input type="checkbox" class="tbl-cb" value="${targetId}" onclick="event.stopPropagation()">
+                            </div>
+                            <div class="cl-logo-box">${logoHtml}</div>
+                            <div class="cl-details-box">
+                                <div class="cl-name show-detail-direct" data-row-id="${targetId}">${escapeAttr(r.name)}</div>
+                                ${indHtml || '<div class="cl-ind text-muted">—</div>'}
+                                <div class="cl-size text-muted">—</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- SUB-CARD 2: Location -->
+                    <div class="cl-subcard cl-subcard-loc">
+                        <div class="cl-subcard-head">
+                            <span class="cl-subcard-title">Location</span>
+                        </div>
+                        <div class="cl-loc-body">
+                            <svg class="cl-loc-pin" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M12 2a8 8 0 0 0-8 8c0 5.25 8 12 8 12s8-6.75 8-12a8 8 0 0 0-8-8z"/>
+                                <circle cx="12" cy="10" r="3"/>
+                            </svg>
+                            <div class="cl-loc-lines">
+                                ${locHtml}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- SUB-CARD 3: Jobs Status -->
+                    <div class="cl-subcard cl-subcard-jobs">
+                        <div class="cl-subcard-head">
+                            <span class="cl-subcard-title">Jobs Status</span>
+                        </div>
+                        <div class="cl-jobs-body tbl-cell-jobs">
+                            <div class="cl-job-line ${hiringCount > 0 ? 'has-count cl-job-hiring' : 'no-count'}">
+                                <span class="cl-job-bullet ${hiringCount > 0 ? 'bullet-hiring' : 'bullet-neutral'}"></span>
+                                <span class="cl-job-num">${hiringCount}</span>
+                                <span class="cl-job-label">Hiring</span>
+                            </div>
+                            <div class="cl-job-line no-count">
+                                <span class="cl-job-bullet bullet-neutral"></span>
+                                <span class="cl-job-num">0</span>
+                                <span class="cl-job-label">Hold</span>
+                            </div>
+                            <div class="cl-job-line no-count">
+                                <span class="cl-job-bullet bullet-neutral"></span>
+                                <span class="cl-job-num">0</span>
+                                <span class="cl-job-label">Closed</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- SUB-CARD 4: Request Status & SLA -->
+                    <div class="cl-subcard cl-subcard-pipeline">
+                        <div class="cl-subcard-head">
+                            <span class="cl-subcard-title">Request Status & SLA</span>
+                        </div>
+                        <div class="cl-pipe-body d-flex flex-column gap-1 align-items-start" style="padding-top:2px;">
+                            <div class="d-flex align-items-center gap-1">
+                                <span class="bullet bullet-dot bg-warning animate-pulse" style="width:7px; height:7px;"></span>
+                                <span class="text-warning fw-bold" style="font-size:11px;">Action Needed</span>
+                            </div>
+                            <div class="text-danger fw-semibold" style="font-size:10.5px;">Expires ${escapeAttr(expiresFormatted)}</div>
+                            <div class="text-muted" style="font-size:10.5px;">Active in system</div>
                         </div>
                     </div>
                 </div>
-                <div class="tbl-cell-loc">${locHtml}</div>
-                <div class="tbl-cell-type">
-                    <div class="cl-type-name type-direct fw-bold" style="color:#2563eb; font-size:11px;">Direct Client</div>
-                    <div class="cl-date-box">
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
-                            <line x1="16" y1="2" x2="16" y2="6"/>
-                            <line x1="8" y1="2" x2="8" y2="6"/>
-                            <line x1="3" y1="10" x2="21" y2="10"/>
-                        </svg>
-                        <span class="fw-bold text-gray-800">${escapeAttr(r.connected_on || '-')}</span>
+
+                <!-- BOTTOM STRIP: Received date, Last Activity, and Accept/Decline action buttons -->
+                <div class="cl-card-bottom-strip">
+                    <div class="cl-bottom-meta">
+                        <span class="cl-meta-item">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                                <line x1="16" y1="2" x2="16" y2="6"/>
+                                <line x1="8" y1="2" x2="8" y2="6"/>
+                                <line x1="3" y1="10" x2="21" y2="10"/>
+                            </svg>
+                            <span>Received: <strong>${escapeAttr(r.connected_on || '-')}</strong></span>
+                        </span>
+                        <span class="cl-meta-dot">•</span>
+                        <span class="cl-meta-item">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="12" cy="12" r="10"/>
+                                <polyline points="12 6 12 12 16 14"/>
+                            </svg>
+                            <span>Activity: <strong>${escapeAttr(daysAgo)}</strong></span>
+                        </span>
                     </div>
-                    <div class="cl-conn-caption text-danger" style="font-size:11px; font-weight:500;">Expires ${escapeAttr(expiresFormatted)}</div>
-                </div>
-                <div class="tbl-cell-activity">
-                    <div class="d-flex align-items-center gap-1">
-                        <span class="bullet bullet-dot bg-warning animate-pulse" style="width:7px; height:7px;"></span>
-                        <span class="text-warning fw-bold" style="font-size:11px;">Action Needed</span>
+                    <div class="cl-bottom-actions tbl-cell-req-actions">
+                        <button type="button" class="btn btn-sm fw-bold px-3 py-1.5 request_event" data-row-id="${invId}" data-row-event="1" data-row-from_company="${fromComp}" style="background:#10b981; color:#fff; border:none; border-radius:6px; font-size:11px;" title="Accept Direct Client Partnership">Accept</button>
+                        <button type="button" class="btn btn-sm fw-bold px-3 py-1.5 request_event" data-row-id="${invId}" data-row-event="-1" data-row-from_company="${fromComp}" style="background:#ef4444; color:#fff; border:none; border-radius:6px; font-size:11px;" title="Decline Partnership Request">Decline</button>
+                        <button type="button" class="btn btn-sm btn-light fw-bold px-2 py-1.5 show-detail-direct" data-row-id="${targetId}" style="background:#f1f5f9; color:#2563eb; border:1px solid #e2e8f0; border-radius:6px; font-size:11px;" title="View Client Details & Terms">Terms</button>
                     </div>
-                    <div class="cl-act-main fw-bold text-gray-800">Received ${escapeAttr(daysAgo)}</div>
-                    <div class="cl-act-desc text-muted">Active in system</div>
-                </div>
-                <div class="tbl-cell-jobs">
-                    <div class="cl-job-line ${hiringCount > 0 ? 'has-count cl-job-hiring' : 'no-count'}">
-                        <span class="cl-job-bullet ${hiringCount > 0 ? 'bullet-hiring' : 'bullet-neutral'}"></span>
-                        <span class="cl-job-num">${hiringCount}</span>
-                        <span class="cl-job-label">Hiring</span>
-                    </div>
-                    <div class="cl-job-line no-count">
-                        <span class="cl-job-bullet bullet-neutral"></span>
-                        <span class="cl-job-num">0</span>
-                        <span class="cl-job-label">Hold</span>
-                    </div>
-                    <div class="cl-job-line no-count">
-                        <span class="cl-job-bullet bullet-neutral"></span>
-                        <span class="cl-job-num">0</span>
-                        <span class="cl-job-label">Closed</span>
-                    </div>
-                </div>
-                <div class="tbl-cell-req-actions">
-                    <button type="button" class="btn btn-sm fw-bold px-3 py-1.5 request_event" data-row-id="${invId}" data-row-event="1" data-row-from_company="${fromComp}" style="background:#10b981; color:#fff; border:none;" title="Accept Direct Client Partnership">Accept</button>
-                    <button type="button" class="btn btn-sm fw-bold px-3 py-1.5 request_event" data-row-id="${invId}" data-row-event="-1" data-row-from_company="${fromComp}" style="background:#ef4444; color:#fff; border:none;" title="Decline Partnership Request">Decline</button>
-                    <button type="button" class="btn btn-sm btn-light fw-bold px-2 py-1.5 show-detail-direct" data-row-id="${targetId}" style="background:#f1f5f9; color:#2563eb; border:1px solid #e2e8f0;" title="View Client Details & Terms">Terms</button>
                 </div>
             </div>`;
         }
@@ -2452,97 +2506,193 @@ function renderClientRows(rows) {
         const clientTypeClass = r.is_direct ? 'type-direct' : 'type-internal';
         const clientTypeCss = r.client_type_css || (r.is_direct ? 'show-detail-direct' : 'show-detail');
         const clientTypeLabel = r.client_type || (r.is_direct ? 'Direct Client' : 'Internal Client');
+        const editUrl = '{{ url("service_company/client/edit") }}/' + r.id;
 
         return `
-        <div class="tbl-r">
-            <div class="tbl-cell-check">
-                <input type="checkbox" class="tbl-cb" value="${r.id}" onclick="event.stopPropagation()">
-            </div>
-            <div class="tbl-cell-client ${clientTypeCss}" data-row-id="${r.id}" title="${escapeAttr(r.name)}">
-                <div class="cl-company-wrapper">
-                    <div class="cl-logo-box">${logoHtml}</div>
-                    <div class="cl-details-box">
-                        <div class="cl-name">${escapeAttr(r.name)}</div>
-                        ${indHtml}
-                        ${sizeHtml}
+        <div class="cl-primary-card tbl-r ${clientTypeCss}" data-row-id="${r.id}">
+            <div class="cl-subcards-grid">
+                <!-- SUB-CARD 1: Client Identity (Internal & Active at TOP) -->
+                <div class="cl-subcard cl-subcard-identity">
+                    <div class="cl-subcard-head">
+                        <span class="cl-subcard-title">Client Identity</span>
+                        <div class="cl-subcard-badges">
+                            <span class="cl-scope-pill ${clientTypeClass} ${clientTypeCss}" data-row-id="${r.id}">
+                                ${escapeAttr(clientTypeLabel)}
+                            </span>
+                            <span class="cl-status-pill ${jobActive > 0 ? 'pill-active' : 'pill-inactive'}">
+                                <span class="cl-status-pill-dot"></span>
+                                <span>${jobActive > 0 ? 'Active' : 'Inactive'}</span>
+                            </span>
+                        </div>
+                    </div>
+                    <div class="cl-identity-body">
+                        <div class="cl-identity-check">
+                            <input type="checkbox" class="tbl-cb" value="${r.id}" onclick="event.stopPropagation()">
+                        </div>
+                        <div class="cl-logo-box">${logoHtml}</div>
+                        <div class="cl-details-box">
+                            <div class="cl-name show-detail-direct" data-row-id="${r.id}">${escapeAttr(r.name)}</div>
+                            ${indHtml || '<div class="cl-ind text-muted">—</div>'}
+                            ${sizeHtml || '<div class="cl-size text-muted">—</div>'}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SUB-CARD 2: Location -->
+                <div class="cl-subcard cl-subcard-loc">
+                    <div class="cl-subcard-head">
+                        <span class="cl-subcard-title">Location</span>
+                    </div>
+                    <div class="cl-loc-body">
+                        <svg class="cl-loc-pin" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M12 2a8 8 0 0 0-8 8c0 5.25 8 12 8 12s8-6.75 8-12a8 8 0 0 0-8-8z"/>
+                            <circle cx="12" cy="10" r="3"/>
+                        </svg>
+                        <div class="cl-loc-lines">
+                            ${locHtml}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SUB-CARD 3: Jobs Status -->
+                <div class="cl-subcard cl-subcard-jobs">
+                    <div class="cl-subcard-head">
+                        <span class="cl-subcard-title">Jobs Status</span>
+                    </div>
+                    <div class="cl-jobs-body tbl-cell-jobs">
+                        <div class="cl-job-line ${jobActive > 0 ? 'has-count cl-job-hiring' : 'no-count'}">
+                            <span class="cl-job-bullet ${jobActive > 0 ? 'bullet-hiring' : 'bullet-neutral'}"></span>
+                            <span class="cl-job-num">${jobActive}</span>
+                            <span class="cl-job-label">Hiring</span>
+                        </div>
+                        <div class="cl-job-line ${jobHold > 0 ? 'has-count cl-job-hold' : 'no-count'}">
+                            <span class="cl-job-bullet ${jobHold > 0 ? 'bullet-hold' : 'bullet-neutral'}"></span>
+                            <span class="cl-job-num">${jobHold}</span>
+                            <span class="cl-job-label">Hold</span>
+                        </div>
+                        <div class="cl-job-line ${jobClosed > 0 ? 'has-count cl-job-closed' : 'no-count'}">
+                            <span class="cl-job-bullet ${jobClosed > 0 ? 'bullet-closed' : 'bullet-neutral'}"></span>
+                            <span class="cl-job-num">${jobClosed}</span>
+                            <span class="cl-job-label">Closed</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SUB-CARD 4: Hiring Pipeline & Activity -->
+                <div class="cl-subcard cl-subcard-pipeline">
+                    <div class="cl-subcard-head">
+                        <span class="cl-subcard-title">Hiring Pipeline & Activity</span>
+                    </div>
+                    <div class="cl-pipe-body tbl-cell-pipeline" title="Total Applications: ${applications} | Interviews: ${interviews}">
+                        <div class="cl-pipeline-flow">
+                            <div class="cl-pipe-step" title="Sourcing: ${sourced}">
+                                <span class="cl-pipe-pill pill-sourcing">${sourced}</span>
+                                <span class="cl-pipe-label">Sou</span>
+                            </div>
+                            <div class="cl-pipe-step" title="Screening: ${screening}">
+                                <span class="cl-pipe-pill pill-screening">${screening}</span>
+                                <span class="cl-pipe-label">Scr</span>
+                            </div>
+                            <div class="cl-pipe-step" title="Evaluation: ${evaluated}">
+                                <span class="cl-pipe-pill pill-evaluation">${evaluated}</span>
+                                <span class="cl-pipe-label">Eva</span>
+                            </div>
+                            <div class="cl-pipe-step" title="Negotiations: ${negotiations}">
+                                <span class="cl-pipe-pill pill-negotiations">${negotiations}</span>
+                                <span class="cl-pipe-label">Neg</span>
+                            </div>
+                            <div class="cl-pipe-step" title="Offer: ${offers}">
+                                <span class="cl-pipe-pill pill-offer">${offers}</span>
+                                <span class="cl-pipe-label">Off</span>
+                            </div>
+                            <div class="cl-pipe-step" title="Joined: ${joined}">
+                                <span class="cl-pipe-pill pill-joined">${joined}</span>
+                                <span class="cl-pipe-label">Joi</span>
+                            </div>
+                            <div class="cl-pipe-divider" aria-hidden="true">|</div>
+                            <div class="cl-pipe-step step-interview" title="Interview: ${interviews}">
+                                <span class="cl-pipe-pill pill-interview">${interviews}</span>
+                                <span class="cl-pipe-label">Int</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
-            <div class="tbl-cell-loc">${locHtml}</div>
-            <div class="tbl-cell-type">
-                <div class="cl-type-name ${clientTypeClass} ${clientTypeCss}" data-row-id="${r.id}">
-                    ${escapeAttr(clientTypeLabel)}
+
+            <!-- BOTTOM STRIP: Connected Date, Last Activity, Applications & Sleek Actions -->
+            <div class="cl-card-bottom-strip">
+                <div class="cl-bottom-meta">
+                    <span class="cl-meta-item">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                            <line x1="16" y1="2" x2="16" y2="6"/>
+                            <line x1="8" y1="2" x2="8" y2="6"/>
+                            <line x1="3" y1="10" x2="21" y2="10"/>
+                        </svg>
+                        <span>Connected: <strong>${escapeAttr(r.connected_on || '-')}</strong></span>
+                    </span>
+                    <span class="cl-meta-dot">•</span>
+                    <span class="cl-meta-item">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="10"/>
+                            <polyline points="12 6 12 12 16 14"/>
+                        </svg>
+                        <span>Last Activity: <strong>${escapeAttr(daysAgo || 'No activity yet')}</strong></span>
+                    </span>
+                    <span class="cl-meta-dot">•</span>
+                    <span class="cl-meta-item">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                            <circle cx="9" cy="7" r="4"/>
+                            <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                            <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                        </svg>
+                        <span>Total Applications: <strong>${applications}</strong></span>
+                    </span>
                 </div>
-                <div class="cl-date-box">
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
-                        <line x1="16" y1="2" x2="16" y2="6"/>
-                        <line x1="8" y1="2" x2="8" y2="6"/>
-                        <line x1="3" y1="10" x2="21" y2="10"/>
-                    </svg>
-                    <span>${escapeAttr(r.connected_on || '-')}</span>
+                <div class="cl-bottom-actions tbl-cell-actions">
+                    <button type="button" class="cl-btn-act show-detail-direct" data-row-id="${r.id}" title="Quick View">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                            <circle cx="12" cy="12" r="3"/>
+                        </svg>
+                    </button>
+                    <a href="${editUrl}" class="cl-btn-act" title="Edit Client">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                        </svg>
+                    </a>
+                    <div class="dropdown">
+                        <button type="button" class="cl-btn-act" data-bs-toggle="dropdown" aria-expanded="false" title="More options">
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="12" cy="12" r="1"/>
+                                <circle cx="12" cy="5" r="1"/>
+                                <circle cx="12" cy="19" r="1"/>
+                            </svg>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end shadow-sm" style="border-radius:8px; border:1px solid #e2e8f0; font-size:12px; min-width:140px; padding:4px 0;">
+                            <li>
+                                <a class="dropdown-item py-1.5 px-3 text-gray-700 show-detail-direct" href="javascript:void(0);" data-row-id="${r.id}">
+                                    <i class="fas fa-eye text-primary me-2"></i> View Details
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item py-1.5 px-3 text-gray-700" href="${editUrl}">
+                                    <i class="fas fa-edit text-info me-2"></i> Edit Client
+                                </a>
+                            </li>
+                            <li><hr class="dropdown-divider my-1 border-gray-200"></li>
+                            <li>
+                                <a class="dropdown-item py-1.5 px-3 text-danger delete-client-btn" href="javascript:void(0);" data-row-id="${r.id}">
+                                    <i class="fas fa-trash-alt text-danger me-2"></i> Delete
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
                 </div>
-                <div class="cl-conn-caption">Connected on</div>
             </div>
-            <div class="tbl-cell-activity">
-                <div class="cl-act-status ${jobActive > 0 ? 'status-active' : 'status-inactive'}">
-                    <span class="cl-act-status-dot"></span>
-                    <span>${jobActive > 0 ? 'Active' : 'Inactive'}</span>
-                </div>
-                <div class="cl-act-main">${escapeAttr(daysAgo || 'No activity yet')}</div>
-                <div class="cl-act-desc">${daysAgo ? 'Active in system' : 'Be the first to add a job or candidate.'}</div>
-            </div>
-            <div class="tbl-cell-jobs">
-                <div class="cl-job-line ${jobActive > 0 ? 'has-count cl-job-hiring' : 'no-count'}">
-                    <span class="cl-job-bullet ${jobActive > 0 ? 'bullet-hiring' : 'bullet-neutral'}"></span>
-                    <span class="cl-job-num">${jobActive}</span>
-                    <span class="cl-job-label">Hiring</span>
-                </div>
-                <div class="cl-job-line ${jobHold > 0 ? 'has-count cl-job-hold' : 'no-count'}">
-                    <span class="cl-job-bullet ${jobHold > 0 ? 'bullet-hold' : 'bullet-neutral'}"></span>
-                    <span class="cl-job-num">${jobHold}</span>
-                    <span class="cl-job-label">Hold</span>
-                </div>
-                <div class="cl-job-line ${jobClosed > 0 ? 'has-count cl-job-closed' : 'no-count'}">
-                    <span class="cl-job-bullet ${jobClosed > 0 ? 'bullet-closed' : 'bullet-neutral'}"></span>
-                    <span class="cl-job-num">${jobClosed}</span>
-                    <span class="cl-job-label">Closed</span>
-                </div>
-            </div>
-            <div class="tbl-cell-pipeline" title="Total Applications: ${applications} | Interviews: ${interviews}">
-                <div class="cl-pipeline-flow">
-                    <div class="cl-pipe-step" title="Sourcing: ${sourced}">
-                        <span class="cl-pipe-pill pill-sourcing">${sourced}</span>
-                        <span class="cl-pipe-label">Sourcing</span>
-                    </div>
-                    <div class="cl-pipe-step" title="Screening: ${screening}">
-                        <span class="cl-pipe-pill pill-screening">${screening}</span>
-                        <span class="cl-pipe-label">Screening</span>
-                    </div>
-                    <div class="cl-pipe-step" title="Evaluation: ${evaluated}">
-                        <span class="cl-pipe-pill pill-evaluation">${evaluated}</span>
-                        <span class="cl-pipe-label">Evaluation</span>
-                    </div>
-                    <div class="cl-pipe-step" title="Negotiations: ${negotiations}">
-                        <span class="cl-pipe-pill pill-negotiations">${negotiations}</span>
-                        <span class="cl-pipe-label">Negotiations</span>
-                    </div>
-                    <div class="cl-pipe-step" title="Offer: ${offers}">
-                        <span class="cl-pipe-pill pill-offer">${offers}</span>
-                        <span class="cl-pipe-label">Offer</span>
-                    </div>
-                    <div class="cl-pipe-step" title="Joined: ${joined}">
-                        <span class="cl-pipe-pill pill-joined">${joined}</span>
-                        <span class="cl-pipe-label">Joined</span>
-                    </div>
-                    <div class="cl-pipe-divider" aria-hidden="true"></div>
-                    <div class="cl-pipe-step step-interview" title="Interview: ${interviews}">
-                        <span class="cl-pipe-pill pill-interview">${interviews}</span>
-                        <span class="cl-pipe-label">Interview</span>
-                    </div>
-                </div>
-            </div>
-        </div>`;
+        </div>`;`;
     }).join('');
 }
 

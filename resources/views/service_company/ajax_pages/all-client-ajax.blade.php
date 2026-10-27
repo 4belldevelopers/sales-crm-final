@@ -75,97 +75,132 @@
             }
         @endphp
 
-        <div class="tbl-r is-pending-request" data-pending-id="{{ $invitationId }}">
-            {{-- Col 1: Checkbox --}}
-            <div class="tbl-cell-check">
-                <input type="checkbox" class="tbl-cb" value="{{ $rowTargetId }}" onclick="event.stopPropagation()">
-            </div>
-
-            {{-- Col 2: Company Logo + Name + [⚡ Request] Pill + Industry/Size --}}
-            <div class="tbl-cell-client show-detail-direct" data-row-id="{{ $rowTargetId }}" title="{{ $company_name }}">
-                <div class="cl-company-wrapper">
-                    <div class="cl-logo-box">
-                        @if (!empty($background_image) && strlen($background_image) > 10)
-                            <img src="{{ $background_image }}" alt="{{ $initials }}" class="cl-logo-img" onerror="this.style.display='none'; if(this.nextElementSibling){this.nextElementSibling.style.display='flex';}">
-                            <span class="cl-initials-fallback {{ $bgTextDecore }}" style="display:none;">{{ $initials }}</span>
-                        @else
-                            <span class="cl-initials-fallback {{ $bgTextDecore }}">{{ $initials }}</span>
-                        @endif
-                    </div>
-                    <div class="cl-details-box">
-                        <div class="d-flex align-items-center gap-2">
-                            <span class="cl-name">{{ $company_name }}</span>
-                            <span class="badge" style="background:#fef3c7; color:#d97706; font-size:10px; font-weight:700; padding:2px 6px; border-radius:4px; border:1px solid #fde68a;">⚡ Request</span>
+        <div class="cl-primary-card tbl-r is-pending-request" data-pending-id="{{ $invitationId }}">
+            {{-- Upper 4 Discrete Sub-Cards Grid --}}
+            <div class="cl-subcards-grid">
+                {{-- SUB-CARD 1: Client Identity --}}
+                <div class="cl-subcard cl-subcard-identity">
+                    <div class="cl-subcard-head">
+                        <span class="cl-subcard-title">Client Identity</span>
+                        <div class="cl-subcard-badges">
+                            <span class="cl-scope-pill pill-direct">Direct Client</span>
+                            <span class="badge" style="background:#fef3c7; color:#d97706; font-size:9px; font-weight:700; padding:1.5px 6px; border-radius:4px; border:1px solid #fde68a;">⚡ Request</span>
                         </div>
-                        @if(!empty($departmentArr))
-                            <div class="cl-ind" title="{{ $departmentArr }}">{{ $departmentArr }}</div>
-                        @endif
+                    </div>
+                    <div class="cl-identity-body">
+                        <div class="cl-identity-check">
+                            <input type="checkbox" class="tbl-cb" value="{{ $rowTargetId }}" onclick="event.stopPropagation()">
+                        </div>
+                        <div class="cl-logo-box">
+                            @if (!empty($background_image) && strlen($background_image) > 10)
+                                <img src="{{ $background_image }}" alt="{{ $initials }}" class="cl-logo-img" onerror="this.style.display='none'; if(this.nextElementSibling){this.nextElementSibling.style.display='flex';}">
+                                <span class="cl-initials-fallback {{ $bgTextDecore }}" style="display:none;">{{ $initials }}</span>
+                            @else
+                                <span class="cl-initials-fallback {{ $bgTextDecore }}">{{ $initials }}</span>
+                            @endif
+                        </div>
+                        <div class="cl-details-box">
+                            <div class="cl-name show-detail-direct" data-row-id="{{ $rowTargetId }}" title="{{ $company_name }}">{{ $company_name }}</div>
+                            @if(!empty($departmentArr))
+                                <div class="cl-ind" title="{{ $departmentArr }}">{{ $departmentArr }}</div>
+                            @else
+                                <div class="cl-ind text-muted">—</div>
+                            @endif
+                            <div class="cl-size text-muted">—</div>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- SUB-CARD 2: Location --}}
+                <div class="cl-subcard cl-subcard-loc">
+                    <div class="cl-subcard-head">
+                        <span class="cl-subcard-title">Location</span>
+                    </div>
+                    <div class="cl-loc-body">
+                        <svg class="cl-loc-pin" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M12 2a8 8 0 0 0-8 8c0 5.25 8 12 8 12s8-6.75 8-12a8 8 0 0 0-8-8z"/>
+                            <circle cx="12" cy="10" r="3"/>
+                        </svg>
+                        <div class="cl-loc-lines">
+                            @if(!empty($city))
+                                <div class="cl-loc-city" title="{{ $city }}">{{ $city }}</div>
+                            @endif
+                            @if(!empty($country_name))
+                                <div class="cl-loc-country">{{ ucwords($country_name) }}</div>
+                            @endif
+                            @if(empty($city) && empty($country_name))
+                                <div class="cl-loc-empty">—</div>
+                            @endif
+                        </div>
+                    </div>
+                </div>
+
+                {{-- SUB-CARD 3: Jobs Status --}}
+                <div class="cl-subcard cl-subcard-jobs">
+                    <div class="cl-subcard-head">
+                        <span class="cl-subcard-title">Jobs Status</span>
+                    </div>
+                    <div class="cl-jobs-body tbl-cell-jobs">
+                        <div class="cl-job-line {{ $requisitionCount > 0 ? 'has-count cl-job-hiring' : 'no-count' }}">
+                            <span class="cl-job-bullet {{ $requisitionCount > 0 ? 'bullet-hiring' : 'bullet-neutral' }}"></span>
+                            <span class="cl-job-num">{{ $requisitionCount }}</span>
+                            <span class="cl-job-label">Hiring</span>
+                        </div>
+                        <div class="cl-job-line no-count">
+                            <span class="cl-job-bullet bullet-neutral"></span>
+                            <span class="cl-job-num">0</span>
+                            <span class="cl-job-label">Hold</span>
+                        </div>
+                        <div class="cl-job-line no-count">
+                            <span class="cl-job-bullet bullet-neutral"></span>
+                            <span class="cl-job-num">0</span>
+                            <span class="cl-job-label">Closed</span>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- SUB-CARD 4: Request SLA & Activity --}}
+                <div class="cl-subcard cl-subcard-pipeline">
+                    <div class="cl-subcard-head">
+                        <span class="cl-subcard-title">Request Status & SLA</span>
+                    </div>
+                    <div class="cl-pipe-body d-flex flex-column gap-1 align-items-start" style="padding-top:2px;">
+                        <div class="d-flex align-items-center gap-1">
+                            <span class="bullet bullet-dot bg-warning animate-pulse" style="width:7px; height:7px;"></span>
+                            <span class="text-warning fw-bold" style="font-size:11px;">Action Needed</span>
+                        </div>
+                        <div class="text-danger fw-semibold" style="font-size:10.5px;">Expires {{ $expiresFormatted }}</div>
+                        <div class="text-muted" style="font-size:10.5px;">Active in system</div>
                     </div>
                 </div>
             </div>
 
-            {{-- Col 3: Location --}}
-            <div class="tbl-cell-loc">
-                @if(!empty($city))
-                    <div class="cl-loc-city" title="{{ $city }}">{{ $city }}</div>
-                @endif
-                @if(!empty($country_name))
-                    <div class="cl-loc-country">{{ ucwords($country_name) }}</div>
-                @endif
-                @if(empty($city) && empty($country_name))
-                    <div class="cl-loc-empty">-</div>
-                @endif
-            </div>
-
-            {{-- Col 4: Date (3 Lines: Direct Client at top, Received Date, Expiration SLA) --}}
-            <div class="tbl-cell-type">
-                <div class="cl-type-name type-direct fw-bold" style="color:#2563eb; font-size:11px;">Direct Client</div>
-                <div class="cl-date-box">
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
-                        <line x1="16" y1="2" x2="16" y2="6"/>
-                        <line x1="8" y1="2" x2="8" y2="6"/>
-                        <line x1="3" y1="10" x2="21" y2="10"/>
-                    </svg>
-                    <span class="fw-bold text-gray-800">{{ $newDate }}</span>
+            {{-- BOTTOM STRIP: Received date, Last Activity, and Accept/Decline action buttons --}}
+            <div class="cl-card-bottom-strip">
+                <div class="cl-bottom-meta">
+                    <span class="cl-meta-item">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                            <line x1="16" y1="2" x2="16" y2="6"/>
+                            <line x1="8" y1="2" x2="8" y2="6"/>
+                            <line x1="3" y1="10" x2="21" y2="10"/>
+                        </svg>
+                        <span>Received: <strong>{{ $newDate }}</strong></span>
+                    </span>
+                    <span class="cl-meta-dot">•</span>
+                    <span class="cl-meta-item">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="10"/>
+                            <polyline points="12 6 12 12 16 14"/>
+                        </svg>
+                        <span>Activity: <strong>{{ $daysAgo }}</strong></span>
+                    </span>
                 </div>
-                <div class="cl-conn-caption text-danger" style="font-size:11px; font-weight:500;">Expires {{ $expiresFormatted }}</div>
-            </div>
-
-            {{-- Col 5: Last Activity (3 Lines: Action Needed at top, Received X ago, Active in system) --}}
-            <div class="tbl-cell-activity">
-                <div class="d-flex align-items-center gap-1">
-                    <span class="bullet bullet-dot bg-warning animate-pulse" style="width:7px; height:7px;"></span>
-                    <span class="text-warning fw-bold" style="font-size:11px;">Action Needed</span>
+                <div class="cl-bottom-actions tbl-cell-req-actions">
+                    <button type="button" class="btn btn-sm fw-bold px-3 py-1.5 request_event" data-row-id="{{ $invitationId }}" data-row-event="1" data-row-from_company="{{ $from_company_id }}" style="background:#10b981; color:#fff; border:none; border-radius:6px; font-size:11px;" title="Accept Direct Client Partnership">Accept</button>
+                    <button type="button" class="btn btn-sm fw-bold px-3 py-1.5 request_event" data-row-id="{{ $invitationId }}" data-row-event="-1" data-row-from_company="{{ $from_company_id }}" style="background:#ef4444; color:#fff; border:none; border-radius:6px; font-size:11px;" title="Decline Partnership Request">Decline</button>
+                    <button type="button" class="btn btn-sm btn-light fw-bold px-2 py-1.5 show-detail-direct" data-row-id="{{ $rowTargetId }}" style="background:#f1f5f9; color:#2563eb; border:1px solid #e2e8f0; border-radius:6px; font-size:11px;" title="View Client Details & Terms">Terms</button>
                 </div>
-                <div class="cl-act-main fw-bold text-gray-800">Received {{ $daysAgo }}</div>
-                <div class="cl-act-desc text-muted">Active in system</div>
-            </div>
-
-            {{-- Col 6: Jobs (Order: Hiring, Hold, Closed) --}}
-            <div class="tbl-cell-jobs">
-                <div class="cl-job-line {{ $requisitionCount > 0 ? 'has-count cl-job-hiring' : 'no-count' }}">
-                    <span class="cl-job-bullet {{ $requisitionCount > 0 ? 'bullet-hiring' : 'bullet-neutral' }}"></span>
-                    <span class="cl-job-num">{{ $requisitionCount }}</span>
-                    <span class="cl-job-label">Hiring</span>
-                </div>
-                <div class="cl-job-line no-count">
-                    <span class="cl-job-bullet bullet-neutral"></span>
-                    <span class="cl-job-num">0</span>
-                    <span class="cl-job-label">Hold</span>
-                </div>
-                <div class="cl-job-line no-count">
-                    <span class="cl-job-bullet bullet-neutral"></span>
-                    <span class="cl-job-num">0</span>
-                    <span class="cl-job-label">Closed</span>
-                </div>
-            </div>
-
-            {{-- Col 7: Action Hub (Accept / Decline / Terms) --}}
-            <div class="tbl-cell-req-actions">
-                <button type="button" class="btn btn-sm fw-bold px-3 py-1.5 request_event" data-row-id="{{ $invitationId }}" data-row-event="1" data-row-from_company="{{ $from_company_id }}" style="background:#10b981; color:#fff; border:none;" title="Accept Direct Client Partnership">Accept</button>
-                <button type="button" class="btn btn-sm fw-bold px-3 py-1.5 request_event" data-row-id="{{ $invitationId }}" data-row-event="-1" data-row-from_company="{{ $from_company_id }}" style="background:#ef4444; color:#fff; border:none;" title="Decline Partnership Request">Decline</button>
-                <button type="button" class="btn btn-sm btn-light fw-bold px-2 py-1.5 show-detail-direct" data-row-id="{{ $rowTargetId }}" style="background:#f1f5f9; color:#2563eb; border:1px solid #e2e8f0;" title="View Client Details & Terms">Terms</button>
             </div>
         </div>
     @else
@@ -333,127 +368,221 @@
         }
     @endphp
 
-    <div class="tbl-r">
-        {{-- Checkbox --}}
-        <div class="tbl-cell-check">
-            <input type="checkbox" class="tbl-cb" value="{{ $rowTargetId }}" onclick="event.stopPropagation()">
-        </div>
-
-        {{-- Client (with Company Logo / Initials Avatar) --}}
-        <div class="tbl-cell-client {{ $client_type_css }}" data-row-id="{{ $rowTargetId }}" title="{{ ucwords(@$client_Or_CompanyName) }}">
-            <div class="cl-company-wrapper">
-                <div class="cl-logo-box">
-                    @if (!empty($background_image) && strlen($background_image) > 10)
-                        <img src="{{ $background_image }}" alt="{{ $initials }}" class="cl-logo-img" onerror="this.style.display='none'; if(this.nextElementSibling){this.nextElementSibling.style.display='flex';}">
-                        <span class="cl-initials-fallback {{ $bgTextDecore }}" style="display:none;">{{ $initials }}</span>
-                    @else
-                        <span class="cl-initials-fallback {{ $bgTextDecore }}">{{ $initials }}</span>
-                    @endif
-                </div>
-                <div class="cl-details-box">
-                    <div class="cl-name">
-                        {{ ucwords(@$client_Or_CompanyName) }}
+    <div class="cl-primary-card tbl-r {{ $client_type_css }}" data-row-id="{{ $rowTargetId }}">
+        {{-- Upper 4 Discrete Sub-Cards Grid --}}
+        <div class="cl-subcards-grid">
+            {{-- SUB-CARD 1: Client Identity (Internal & Active at TOP) --}}
+            <div class="cl-subcard cl-subcard-identity">
+                <div class="cl-subcard-head">
+                    <span class="cl-subcard-title">Client Identity</span>
+                    <div class="cl-subcard-badges">
+                        <span class="cl-scope-pill {{ $isDirect ? 'pill-direct' : 'pill-internal' }} {{ $client_type_css }}" data-row-id="{{ $rowTargetId }}">
+                            {{ $client_type }}
+                        </span>
+                        <span class="cl-status-pill {{ $job_active > 0 ? 'pill-active' : 'pill-inactive' }}">
+                            <span class="cl-status-pill-dot"></span>
+                            <span>{{ $job_active > 0 ? 'Active' : 'Inactive' }}</span>
+                        </span>
                     </div>
-                    @if(!empty($departmentArr))
-                        <div class="cl-ind" title="{{ @$departmentArr }}">{{ @$departmentArr }}</div>
-                    @endif
-                    @if(!empty($companySizeText))
-                        <div class="cl-size">{{ $companySizeText }}</div>
-                    @endif
+                </div>
+                <div class="cl-identity-body">
+                    <div class="cl-identity-check">
+                        <input type="checkbox" class="tbl-cb" value="{{ $rowTargetId }}" onclick="event.stopPropagation()">
+                    </div>
+                    <div class="cl-logo-box">
+                        @if (!empty($background_image) && strlen($background_image) > 10)
+                            <img src="{{ $background_image }}" alt="{{ $initials }}" class="cl-logo-img" onerror="this.style.display='none'; if(this.nextElementSibling){this.nextElementSibling.style.display='flex';}">
+                            <span class="cl-initials-fallback {{ $bgTextDecore }}" style="display:none;">{{ $initials }}</span>
+                        @else
+                            <span class="cl-initials-fallback {{ $bgTextDecore }}">{{ $initials }}</span>
+                        @endif
+                    </div>
+                    <div class="cl-details-box">
+                        <div class="cl-name show-detail-direct" data-row-id="{{ $rowTargetId }}" title="{{ ucwords(@$client_Or_CompanyName) }}">
+                            {{ ucwords(@$client_Or_CompanyName) }}
+                        </div>
+                        @if(!empty($departmentArr))
+                            <div class="cl-ind" title="{{ @$departmentArr }}">{{ @$departmentArr }}</div>
+                        @else
+                            <div class="cl-ind text-muted">—</div>
+                        @endif
+                        @if(!empty($companySizeText))
+                            <div class="cl-size">{{ $companySizeText }}</div>
+                        @else
+                            <div class="cl-size text-muted">—</div>
+                        @endif
+                    </div>
+                </div>
+            </div>
+
+            {{-- SUB-CARD 2: Location --}}
+            <div class="cl-subcard cl-subcard-loc">
+                <div class="cl-subcard-head">
+                    <span class="cl-subcard-title">Location</span>
+                </div>
+                <div class="cl-loc-body">
+                    <svg class="cl-loc-pin" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 2a8 8 0 0 0-8 8c0 5.25 8 12 8 12s8-6.75 8-12a8 8 0 0 0-8-8z"/>
+                        <circle cx="12" cy="10" r="3"/>
+                    </svg>
+                    <div class="cl-loc-lines">
+                        @if(!empty($city))
+                            <div class="cl-loc-city" title="{{ $city }}">{{ ucwords($city) }}</div>
+                        @endif
+                        @if(!empty($stateName))
+                            <div class="cl-loc-state" title="{{ $stateName }}">{{ ucwords($stateName) }}</div>
+                        @endif
+                        @if(!empty($country_name))
+                            <div class="cl-loc-country">{{ ucwords($country_name) }}</div>
+                        @endif
+                        @if(empty($city) && empty($stateName) && empty($country_name))
+                            <div class="cl-loc-empty">—</div>
+                        @endif
+                    </div>
+                </div>
+            </div>
+
+            {{-- SUB-CARD 3: Jobs Status --}}
+            <div class="cl-subcard cl-subcard-jobs">
+                <div class="cl-subcard-head">
+                    <span class="cl-subcard-title">Jobs Status</span>
+                </div>
+                <div class="cl-jobs-body tbl-cell-jobs">
+                    <div class="cl-job-line {{ $job_active > 0 ? 'has-count cl-job-hiring' : 'no-count' }}">
+                        <span class="cl-job-bullet {{ $job_active > 0 ? 'bullet-hiring' : 'bullet-neutral' }}"></span>
+                        <span class="cl-job-num">{{ $job_active }}</span>
+                        <span class="cl-job-label">Hiring</span>
+                    </div>
+                    <div class="cl-job-line {{ $job_hold > 0 ? 'has-count cl-job-hold' : 'no-count' }}">
+                        <span class="cl-job-bullet {{ $job_hold > 0 ? 'bullet-hold' : 'bullet-neutral' }}"></span>
+                        <span class="cl-job-num">{{ $job_hold }}</span>
+                        <span class="cl-job-label">Hold</span>
+                    </div>
+                    <div class="cl-job-line {{ $job_closed > 0 ? 'has-count cl-job-closed' : 'no-count' }}">
+                        <span class="cl-job-bullet {{ $job_closed > 0 ? 'bullet-closed' : 'bullet-neutral' }}"></span>
+                        <span class="cl-job-num">{{ $job_closed }}</span>
+                        <span class="cl-job-label">Closed</span>
+                    </div>
+                </div>
+            </div>
+
+            {{-- SUB-CARD 4: Hiring Pipeline & Activity --}}
+            <div class="cl-subcard cl-subcard-pipeline">
+                <div class="cl-subcard-head">
+                    <span class="cl-subcard-title">Hiring Pipeline & Activity</span>
+                </div>
+                <div class="cl-pipe-body tbl-cell-pipeline" title="Total Applications: {{ $allCandidates }} | Interviews: {{ $interviews }}">
+                    <div class="cl-pipeline-flow">
+                        <div class="cl-pipe-step" title="Sourcing: {{ $sourced }}">
+                            <span class="cl-pipe-pill pill-sourcing">{{ $sourced }}</span>
+                            <span class="cl-pipe-label">Sou</span>
+                        </div>
+                        <div class="cl-pipe-step" title="Screening: {{ $screening }}">
+                            <span class="cl-pipe-pill pill-screening">{{ $screening }}</span>
+                            <span class="cl-pipe-label">Scr</span>
+                        </div>
+                        <div class="cl-pipe-step" title="Evaluation: {{ $evaluated }}">
+                            <span class="cl-pipe-pill pill-evaluation">{{ $evaluated }}</span>
+                            <span class="cl-pipe-label">Eva</span>
+                        </div>
+                        <div class="cl-pipe-step" title="Negotiations: {{ $negotiations }}">
+                            <span class="cl-pipe-pill pill-negotiations">{{ $negotiations }}</span>
+                            <span class="cl-pipe-label">Neg</span>
+                        </div>
+                        <div class="cl-pipe-step" title="Offer: {{ $offers }}">
+                            <span class="cl-pipe-pill pill-offer">{{ $offers }}</span>
+                            <span class="cl-pipe-label">Off</span>
+                        </div>
+                        <div class="cl-pipe-step" title="Joined: {{ $joined }}">
+                            <span class="cl-pipe-pill pill-joined">{{ $joined }}</span>
+                            <span class="cl-pipe-label">Joi</span>
+                        </div>
+                        <div class="cl-pipe-divider" aria-hidden="true">|</div>
+                        <div class="cl-pipe-step step-interview" title="Interview: {{ $interviews }}">
+                            <span class="cl-pipe-pill pill-interview">{{ $interviews }}</span>
+                            <span class="cl-pipe-label">Int</span>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
 
-        {{-- Location (NO ICON as requested) --}}
-        <div class="tbl-cell-loc">
-            @if(!empty($locMain))
-                <div class="cl-loc-city" title="{{ $locMain }}">{{ $locMain }}</div>
-            @endif
-            @if(!empty($country_name))
-                <div class="cl-loc-country">{{ ucwords($country_name) }}</div>
-            @endif
-            @if(empty($locMain) && empty($country_name))
-                <div class="cl-loc-empty">-</div>
-            @endif
-        </div>
-
-        {{-- Connected On & Type (Client type at top, Connected date below) --}}
-        <div class="tbl-cell-type">
-            <div class="cl-type-name {{ $isDirect ? 'type-direct' : 'type-internal' }} {{ $client_type_css }}" data-row-id="{{ $rowTargetId }}">
-                {{ $client_type }}
+        {{-- BOTTOM STRIP: Connected Date, Last Activity, Applications & Sleek Actions --}}
+        <div class="cl-card-bottom-strip">
+            <div class="cl-bottom-meta">
+                <span class="cl-meta-item">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                        <line x1="16" y1="2" x2="16" y2="6"/>
+                        <line x1="8" y1="2" x2="8" y2="6"/>
+                        <line x1="3" y1="10" x2="21" y2="10"/>
+                    </svg>
+                    <span>Connected: <strong>{{ $newDate }}</strong></span>
+                </span>
+                <span class="cl-meta-dot">•</span>
+                <span class="cl-meta-item">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"/>
+                        <polyline points="12 6 12 12 16 14"/>
+                    </svg>
+                    <span>Last Activity: <strong>{{ $daysAgo ? $daysAgo : 'No activity yet' }}</strong></span>
+                </span>
+                <span class="cl-meta-dot">•</span>
+                <span class="cl-meta-item">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                        <circle cx="9" cy="7" r="4"/>
+                        <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                        <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                    </svg>
+                    <span>Total Applications: <strong>{{ $allCandidates }}</strong></span>
+                </span>
             </div>
-            <div class="cl-date-box">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
-                    <line x1="16" y1="2" x2="16" y2="6"/>
-                    <line x1="8" y1="2" x2="8" y2="6"/>
-                    <line x1="3" y1="10" x2="21" y2="10"/>
-                </svg>
-                <span>{{ $newDate }}</span>
-            </div>
-            <div class="cl-conn-caption">Connected on</div>
-        </div>
-
-        {{-- Last Activity (Active status at top, Activity time below) --}}
-        <div class="tbl-cell-activity">
-            <div class="cl-act-status {{ $job_active > 0 ? 'status-active' : 'status-inactive' }}">
-                <span class="cl-act-status-dot"></span>
-                <span>{{ $job_active > 0 ? 'Active' : 'Inactive' }}</span>
-            </div>
-            <div class="cl-act-main">{{ $daysAgo ? $daysAgo : 'No activity yet' }}</div>
-            <div class="cl-act-desc">{{ $daysAgo ? 'Active in system' : 'Be the first to add a job or candidate.' }}</div>
-        </div>
-
-        {{-- Jobs (Order: Hiring, Hold, Closed with conditional status colors) --}}
-        <div class="tbl-cell-jobs">
-            <div class="cl-job-line {{ $job_active > 0 ? 'has-count cl-job-hiring' : 'no-count' }}">
-                <span class="cl-job-bullet {{ $job_active > 0 ? 'bullet-hiring' : 'bullet-neutral' }}"></span>
-                <span class="cl-job-num">{{ $job_active }}</span>
-                <span class="cl-job-label">Hiring</span>
-            </div>
-            <div class="cl-job-line {{ $job_hold > 0 ? 'has-count cl-job-hold' : 'no-count' }}">
-                <span class="cl-job-bullet {{ $job_hold > 0 ? 'bullet-hold' : 'bullet-neutral' }}"></span>
-                <span class="cl-job-num">{{ $job_hold }}</span>
-                <span class="cl-job-label">Hold</span>
-            </div>
-            <div class="cl-job-line {{ $job_closed > 0 ? 'has-count cl-job-closed' : 'no-count' }}">
-                <span class="cl-job-bullet {{ $job_closed > 0 ? 'bullet-closed' : 'bullet-neutral' }}"></span>
-                <span class="cl-job-num">{{ $job_closed }}</span>
-                <span class="cl-job-label">Closed</span>
-            </div>
-        </div>
-
-        {{-- Hiring Pipeline Funnel: 6 Stages | Interview (Single Compact Row) --}}
-        <div class="tbl-cell-pipeline" title="Total Applications: {{ $allCandidates }} | Interviews: {{ $interviews }}">
-            <div class="cl-pipeline-flow">
-                <div class="cl-pipe-step" title="Sourcing: {{ $sourced }}">
-                    <span class="cl-pipe-pill pill-sourcing">{{ $sourced }}</span>
-                    <span class="cl-pipe-label">Sourcing</span>
-                </div>
-                <div class="cl-pipe-step" title="Screening: {{ $screening }}">
-                    <span class="cl-pipe-pill pill-screening">{{ $screening }}</span>
-                    <span class="cl-pipe-label">Screening</span>
-                </div>
-                <div class="cl-pipe-step" title="Evaluation: {{ $evaluated }}">
-                    <span class="cl-pipe-pill pill-evaluation">{{ $evaluated }}</span>
-                    <span class="cl-pipe-label">Evaluation</span>
-                </div>
-                <div class="cl-pipe-step" title="Negotiations: {{ $negotiations }}">
-                    <span class="cl-pipe-pill pill-negotiations">{{ $negotiations }}</span>
-                    <span class="cl-pipe-label">Negotiations</span>
-                </div>
-                <div class="cl-pipe-step" title="Offer: {{ $offers }}">
-                    <span class="cl-pipe-pill pill-offer">{{ $offers }}</span>
-                    <span class="cl-pipe-label">Offer</span>
-                </div>
-                <div class="cl-pipe-step" title="Joined: {{ $joined }}">
-                    <span class="cl-pipe-pill pill-joined">{{ $joined }}</span>
-                    <span class="cl-pipe-label">Joined</span>
-                </div>
-                <div class="cl-pipe-divider" aria-hidden="true"></div>
-                <div class="cl-pipe-step step-interview" title="Interview: {{ $interviews }}">
-                    <span class="cl-pipe-pill pill-interview">{{ $interviews }}</span>
-                    <span class="cl-pipe-label">Interview</span>
+            <div class="cl-bottom-actions tbl-cell-actions">
+                <button type="button" class="cl-btn-act show-detail-direct" data-row-id="{{ $rowTargetId }}" title="Quick View">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                        <circle cx="12" cy="12" r="3"/>
+                    </svg>
+                </button>
+                @if(in_array("edit_clients", $userPermissions ?? []))
+                    <a href="{{ url('service_company/client/edit/'.$rowTargetId) }}" class="cl-btn-act" title="Edit Client">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                        </svg>
+                    </a>
+                @endif
+                <div class="dropdown">
+                    <button type="button" class="cl-btn-act" data-bs-toggle="dropdown" aria-expanded="false" title="More options">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="1"/>
+                            <circle cx="12" cy="5" r="1"/>
+                            <circle cx="12" cy="19" r="1"/>
+                        </svg>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end shadow-sm" style="border-radius:8px; border:1px solid #e2e8f0; font-size:12px; min-width:140px; padding:4px 0;">
+                        <li>
+                            <a class="dropdown-item py-1.5 px-3 text-gray-700 show-detail-direct" href="javascript:void(0);" data-row-id="{{ $rowTargetId }}">
+                                <i class="fas fa-eye text-primary me-2"></i> View Details
+                            </a>
+                        </li>
+                        @if(in_array("edit_clients", $userPermissions ?? []))
+                        <li>
+                            <a class="dropdown-item py-1.5 px-3 text-gray-700" href="{{ url('service_company/client/edit/'.$rowTargetId) }}">
+                                <i class="fas fa-edit text-info me-2"></i> Edit Client
+                            </a>
+                        </li>
+                        @endif
+                        @if(in_array("delete_clients", $userPermissions ?? []))
+                        <li><hr class="dropdown-divider my-1 border-gray-200"></li>
+                        <li>
+                            <a class="dropdown-item py-1.5 px-3 text-danger delete-client-btn" href="javascript:void(0);" data-row-id="{{ $rowTargetId }}">
+                                <i class="fas fa-trash-alt text-danger me-2"></i> Delete
+                            </a>
+                        </li>
+                        @endif
+                    </ul>
                 </div>
             </div>
         </div>
