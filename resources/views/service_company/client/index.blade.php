@@ -865,7 +865,7 @@
                                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z"/></svg>
                                 <span>Hiring Pipeline</span>
                             </div>
-                            <svg class="tbl-th-info" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-toggle="tooltip" title="Pipeline: Sourcing → Screening → Evaluation → Negotiations → Offer → Joined"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+                            <svg class="tbl-th-info" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-toggle="tooltip" title="Pipeline: Sourcing → Screening → Evaluation → Negotiations → Offer → Joined | Interview (Total Applications on hover)"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
                         </div>
                     </div>
 
@@ -915,6 +915,18 @@
 <!-- JERO Distributed Client Runtime (JDCR V5.2) Local Persistent Engine & Incremental Renderer -->
 <script src="{{ asset('assets/service_company/client/cl-entity-db.js') }}{{ TM_VERSION }}"></script>
 <script src="{{ asset('assets/service_company/client/cl-drawer-view.js') }}{{ TM_VERSION }}"></script>
+<!-- JERO Service Company Drawer - Scoped Instance Architecture V3.0 (Enterprise Master Standard) -->
+<script src="{{ asset('assets/service_company/client/drawer/request-manager.js') }}{{ TM_VERSION }}"></script>
+<script src="{{ asset('assets/service_company/client/drawer/ui-state-renderer.js') }}{{ TM_VERSION }}"></script>
+<script src="{{ asset('assets/service_company/client/drawer/tab-coordinator.js') }}{{ TM_VERSION }}"></script>
+<script src="{{ asset('assets/service_company/client/drawer/tabs/overview.js') }}{{ TM_VERSION }}"></script>
+<script src="{{ asset('assets/service_company/client/drawer/tabs/activity.js') }}{{ TM_VERSION }}"></script>
+<script src="{{ asset('assets/service_company/client/drawer/tabs/jobs.js') }}{{ TM_VERSION }}"></script>
+<script src="{{ asset('assets/service_company/client/drawer/tabs/candidates.js') }}{{ TM_VERSION }}"></script>
+<script src="{{ asset('assets/service_company/client/drawer/tabs/contacts.js') }}{{ TM_VERSION }}"></script>
+<script src="{{ asset('assets/service_company/client/drawer/tabs/interviews.js') }}{{ TM_VERSION }}"></script>
+<script src="{{ asset('assets/service_company/client/drawer/tabs/offers.js') }}{{ TM_VERSION }}"></script>
+<script src="{{ asset('assets/service_company/client/drawer/drawer-instance.js') }}{{ TM_VERSION }}"></script>
 <script>
 $(document).ready(function() {
     var searchTimer = null;
@@ -1731,6 +1743,10 @@ window.ClientStateManager = {
         window.perfClientCache = {};
 
         // 5. Teardown sub-card state machines
+        if (window.__activeClientDrawer && typeof window.__activeClientDrawer.destroy === 'function') {
+            try { window.__activeClientDrawer.destroy(); } catch (e) {}
+            window.__activeClientDrawer = null;
+        }
         if (window.ClientCandidateStore && typeof window.ClientCandidateStore.destroy === 'function') {
             try { window.ClientCandidateStore.destroy(); } catch (e) {}
         }
@@ -1877,18 +1893,6 @@ window.ClientStateManager = {
 
         var tenantId = {{ (int) (auth()->user()->company_id ?? 0) }};
 
-        // ─── JDCR V5.2 Tier 1: Check L1 Working RAM (< 5ms) ───
-        var ramCached = window.ClientMemoryStore ? window.ClientMemoryStore.get(numericClientId) : null;
-        if (ramCached && window.ClientIncrementalRenderer && typeof ClientIncrementalRenderer.renderDrawerShell === 'function' && type !== 'request') {
-            $(bodyId).html(ClientIncrementalRenderer.renderDrawerShell(ramCached, 'overview'));
-            self.state.drawerStatus = 'loaded';
-            self.markTabLoaded(numericClientId, 'overview');
-            if (window.SyncSupervisor && typeof window.SyncSupervisor.notifyHint === 'function') {
-                window.SyncSupervisor.notifyHint(numericClientId);
-            }
-            return;
-        }
-
         // Loading skeleton
         var baseurl = "{{ asset('assets/images/Loading2.gif') }}";
         var loadingText = (type === 'request') ? 'Loading Request & Commercial Terms...' : (isDirect ? 'Loading Direct Client Details...' : 'Loading Client Details...');
@@ -1925,6 +1929,20 @@ window.ClientStateManager = {
                         $(bodyId).html(response.view);
                         self.state.drawerStatus = 'loaded';
                         self.markTabLoaded(numericClientId, 'overview');
+
+                        // Initialize Scoped ClientDrawerInstance V3.0 (Enterprise Master Standard)
+                        if (typeof window.ClientDrawerInstance === 'function') {
+                            if (window.__activeClientDrawer && typeof window.__activeClientDrawer.destroy === 'function') {
+                                try { window.__activeClientDrawer.destroy(); } catch(e){}
+                            }
+                            new window.ClientDrawerInstance({
+                                canonicalClientId: numericClientId,
+                                clientType: isDirect ? 'direct' : 'internal',
+                                companyId: tenantId,
+                                container: bodyId
+                            });
+                        }
+
                         if (window.SyncSupervisor && typeof window.SyncSupervisor.notifyHint === 'function') {
                             window.SyncSupervisor.notifyHint(numericClientId);
                         }
@@ -1969,85 +1987,19 @@ window.ClientStateManager = {
             });
         };
 
-        var fetchDrawerViaGateway = function() {
-            var graphEndpoint = "{{ route('service_company.clients.api.v2.graph', ':id') }}".replace(':id', clientId);
-            if (type !== 'request') {
-                self.activeDrawerXhr = $.ajax({
-                    type: 'GET',
-                    url: graphEndpoint,
-                    cache: false,
-                    success: function(res) {
-                        var activeCtx = self.state.currentDrawerContext;
-                        if (!activeCtx || activeCtx.contextToken !== contextToken || self.state.drawerRequestToken !== requestToken || parseInt(self.state.selectedClientId, 10) !== parseInt(clientId, 10)) return;
-
-                        if (res && res.data && window.ClientIncrementalRenderer && typeof ClientIncrementalRenderer.renderDrawerShell === 'function') {
-                            if (window.ClientMemoryStore) window.ClientMemoryStore.set(numericClientId, res.data);
-                            if (window.ClientEntityDB) {
-                                window.ClientEntityDB.put(tenantId, numericClientId, res);
-                            }
-                            $(bodyId).html(ClientIncrementalRenderer.renderDrawerShell(res.data, 'overview'));
-                            self.state.drawerStatus = 'loaded';
-                            self.markTabLoaded(numericClientId, 'overview');
-                            return;
-                        }
-
-                        // Fallback to legacy Blade AJAX
-                        executeLegacyDrawerFetch();
-                    },
-                    error: function(xhr, status) {
-                        if (status === 'abort') return;
-                        // Fallback to legacy Blade AJAX
-                        executeLegacyDrawerFetch();
-                    }
-                });
-            } else {
-                executeLegacyDrawerFetch();
-            }
-        };
-
-        // ─── JDCR V5.2 Tier 2: Check L2 Persistent IndexedDB (< 50ms) ───
-        if (window.ClientEntityDB && type !== 'request') {
-            window.ClientEntityDB.get(tenantId, numericClientId).then(function(idbRecord) {
-                var activeCtx = self.state.currentDrawerContext;
-                if (!activeCtx || activeCtx.contextToken !== contextToken || self.state.drawerRequestToken !== requestToken || parseInt(self.state.selectedClientId, 10) !== parseInt(clientId, 10)) return;
-
-                if (idbRecord && idbRecord.data && window.ClientIncrementalRenderer && typeof ClientIncrementalRenderer.renderDrawerShell === 'function') {
-                    if (window.ClientMemoryStore) window.ClientMemoryStore.set(numericClientId, idbRecord.data);
-                    $(bodyId).html(ClientIncrementalRenderer.renderDrawerShell(idbRecord.data, 'overview'));
-                    self.state.drawerStatus = 'loaded';
-                    self.markTabLoaded(numericClientId, 'overview');
-                    if (window.SyncSupervisor) window.SyncSupervisor.notifyHint(numericClientId);
-                    return;
-                }
-
-                fetchDrawerViaGateway();
-            }).catch(function() {
-                fetchDrawerViaGateway();
-            });
-            return;
-        }
-
-        fetchDrawerViaGateway();
+        // Authoritative Workflow (Option A Master Standard):
+        // Always render through authoritative Blade view with Scoped ClientDrawerInstance
+        executeLegacyDrawerFetch();
     },
 
-    // ─── JDCR V5.2: Client-Side Sub-Tab Switcher (< 5ms) ───
+    // ─── Scoped Drawer Tab Switcher V3.0 (< 5ms) ───
     switchDrawerTab: function(clientId, tabName) {
         this.state.selectedClientTab = tabName;
-        var cid = Number(clientId);
-        var tenantId = {{ (int) (auth()->user()->company_id ?? 0) }};
-        var renderTab = function(c) {
-            if (c && window.ClientIncrementalRenderer) {
-                var surfaceHtml = ClientIncrementalRenderer.renderTabContent(c, tabName);
-                $(`#jdcr-tab-surface-${cid}`).html(surfaceHtml);
-                $('#jdcr-tabs-list .nav-link').removeClass('active text-primary border-primary border-bottom-2');
-                $(`#jdcr-tabs-list [data-tab="${tabName}"]`).addClass('active text-primary border-primary border-bottom-2');
-            }
-        };
-
-        var client = window.ClientMemoryStore ? window.ClientMemoryStore.get(cid) : null;
-        if (client) {
-            renderTab(client);
-            this.markTabLoaded(cid, tabName);
+        if (window.__activeClientDrawer && typeof window.__activeClientDrawer.coordinator.activateTab === 'function') {
+            window.__activeClientDrawer.coordinator.activateTab(tabName);
+            return;
+        }
+    },
             return;
         }
 
@@ -2557,7 +2509,7 @@ function renderClientRows(rows) {
                     <span class="cl-job-label">Closed</span>
                 </div>
             </div>
-            <div class="tbl-cell-pipeline">
+            <div class="tbl-cell-pipeline" title="Total Applications: ${applications} | Interviews: ${interviews}">
                 <div class="cl-pipeline-flow">
                     <div class="cl-pipe-step" title="Sourcing: ${sourced}">
                         <span class="cl-pipe-pill pill-sourcing">${sourced}</span>
@@ -2583,18 +2535,11 @@ function renderClientRows(rows) {
                         <span class="cl-pipe-pill pill-joined">${joined}</span>
                         <span class="cl-pipe-label">Joined</span>
                     </div>
-                </div>
-                <div class="cl-pipeline-meta">
-                    <span class="cl-pipeline-meta-item">
-                        <span class="cl-meta-dot dot-apps"></span>
-                        <span class="cl-meta-lbl">Applications:</span>
-                        <strong class="cl-meta-val">${applications}</strong>
-                    </span>
-                    <span class="cl-pipeline-meta-item">
-                        <span class="cl-meta-dot dot-interview"></span>
-                        <span class="cl-meta-lbl">Interview:</span>
-                        <strong class="cl-meta-val">${interviews}</strong>
-                    </span>
+                    <div class="cl-pipe-divider" aria-hidden="true"></div>
+                    <div class="cl-pipe-step step-interview" title="Interview: ${interviews}">
+                        <span class="cl-pipe-pill pill-interview">${interviews}</span>
+                        <span class="cl-pipe-label">Interview</span>
+                    </div>
                 </div>
             </div>
         </div>`;
