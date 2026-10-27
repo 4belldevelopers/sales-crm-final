@@ -216,6 +216,7 @@ Route::group(['middleware' => 'auth'], function () {
 
         Route::get('jobs/recommandedrequest', [SuperAdminCompanyController::class, 'recommandedrequest'])->name('company.recommandedrequest');
         Route::get('jobs-recommandedrequest-ajax', [SuperAdminCompanyController::class, 'all_recommandedrequest_data_ajax'])->name('company.all_recommandedrequest_data_ajax');
+        Route::post('jobs/job-request/action', [SuperAdminCompanyController::class, 'jobRequestAction'])->name('company.job_request.action');
 
         Route::get('jobs/job-lists/{id?}', [SuperAdminCompanyController::class, 'jobLists'])->name('company.all_jobs');
         Route::get('jobs/joblists', [SuperAdminCompanyController::class, 'all_jobs_data'])->name('company.all_jobs_data');
@@ -321,9 +322,10 @@ Route::group(['middleware' => 'auth'], function () {
         Route::post('storeticketcreate', [SuperAdminCompanyController::class, 'storeticketCreate'])->name('tickets.store');
         Route::post('comments/store', [SuperAdminCompanyController::class, 'storetComment'])->name('comments.store');
 
-        Route::get('transaction-history', [SuperAdminCompanyController::class, 'transactionhistory'])->name('comments.transactionhistory');
+        Route::get('transaction-history', [SuperAdminCompanyController::class, 'transactionhistory'])->name('company.transactionhistory');
+        Route::get('transaction-details/{id}', [SuperAdminCompanyController::class, 'transactionDetails'])->name('company.transactionDetails');
 
-        Route::get('invoiceupdate', [SuperAdminCompanyController::class, 'invoiceupdate'])->name('company.invoiceupdate');
+        Route::match(['get', 'post'], 'invoiceupdate', [SuperAdminCompanyController::class, 'invoiceupdate'])->name('company.invoiceupdate');
 
         // ///////////////////////////////////////////////////////////////
 

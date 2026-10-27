@@ -19,7 +19,7 @@
                         @for ($j = 0; $j <= 5; $j++)
                             @php
                                 $sel = '';
-                                if (@$conversations->status == $j) {
+                                if (isset($conversations->status) && $conversations->status !== null && $conversations->status !== '' && (int)$conversations->status === $j) {
                                     $sel = 'checked="checked"';
                                 }
                             @endphp
@@ -236,36 +236,66 @@
 
 
 <script>
-    $('#submit-frm-btn').click(function() {
+    // Real-Time Radio Button Change: Instantly reflect status on the background card button
+    $('input[name="app_int_feedback_status"]').off('change').on('change', function() {
+        var selectedStatusVal = $(this).val();
+        var selectedStatusName = $(this).next('label').text().trim();
+        var recId = $('#recommendation_relation_id').val();
+
+        if (recId && selectedStatusName) {
+            // Update the button on the card behind the modal immediately!
+            var $btn = $(`.show-feedback[data-row-recommendation_relation_id="${recId}"]`);
+            if ($btn.length) {
+                $btn.html(`
+                    <i class="fas fa-comment-dots text-primary me-1"></i>
+                    <span>${selectedStatusName}</span>
+                    <span class="badge badge-light-primary ms-1 px-1 py-0 fs-9">Active</span>
+                `);
+                $btn.css('transition', 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)')
+                    .css('box-shadow', '0 0 0 3px rgba(0, 158, 247, 0.4)')
+                    .css('background', '#eff6ff');
+                setTimeout(function() {
+                    $btn.css('box-shadow', '').css('background', '');
+                }, 1200);
+            }
+
+            // Update in-memory state object so search/filtering doesn't revert it
+            if (window.jobRequestsState && window.jobRequestsState.all) {
+                var item = window.jobRequestsState.all.find(function(x) { return String(x.id) === String(recId); });
+                if (item) {
+                    item.conversation_feedback = selectedStatusName;
+                    item.conversations_status = String(selectedStatusVal);
+                }
+            }
+        }
+    });
+
+    $('#submit-frm-btn').off('click').on('click', function(e) {
+        e.preventDefault();
 
         var app_int_feedback_status = $('input[name="app_int_feedback_status"]:checked').val();
-        //var  rating2					=	$('input[name="rating2"]:checked').val();   
-        var feedback_comment = $('#feedback_comment').val();
-
+        var selectedStatusName = $('input[name="app_int_feedback_status"]:checked').next('label').text().trim() || ('Conversation ' + (app_int_feedback_status || ''));
+        var feedback_comment = $.trim($('#feedback_comment').val());
         var id = $('#conversations_id').val();
         var job_id = $('#job_id').val();
         var recommendation_relation_id = $('#recommendation_relation_id').val();
-        var rating = $("input[name='rating']:checked").val();
-        var url = "{{ route('superadmin.company.updateInterview', ':id') }}";
-        url = url.replace(':id', id);
+        var rating = $("input[name='rating']:checked").val() || 0;
+        var url = "{{ route('superadmin.company.updateInterview') }}";
         var token = "{{ csrf_token() }}";
-        var baseurl = "{{ asset('assets/images/Loading2.gif') }}";
-        if (feedback_comment == '') {
-            Swal.fire("Required", "Comment is required", "warning")
-            return false;
+
+        // Auto-populate comment if empty so status changes are never blocked!
+        if (feedback_comment === '') {
+            feedback_comment = 'Updated status to ' + selectedStatusName;
+            $('#feedback_comment').val(feedback_comment);
         }
 
         $("#submit-frm-btn").prop("disabled", true);
         $('.indicator-label').hide();
         $('.indicator-progress').show();
+
         $.ajax({
             type: 'POST',
             url: url,
-            beforeSend: function() {
-                $('#modal-content-body').html('<img src="' + baseurl +
-                    '" height="35px" width="100%">');
-            },
-
             data: {
                 '_token': token,
                 '_method': 'POST',
@@ -278,44 +308,158 @@
                 'recommendation_relation_id': recommendation_relation_id
             },
             success: function(response) {
-                if (response.status == "success") {
-                  $("#submit-frm-btn").prop("disabled", false);
-                  $('.indicator-label').show();
-                  $('.indicator-progress').hide();
-                    // table._fnDraw();
-                    fetchJobRequestAcceptAjax();
-                    fetchjobrequestpending();
-                    // alert(response.date_set);
-                    // console.log(response.logsValue);
-                    Swal.fire("Success", "Interview Feedback submit successfully!", "success").then(
-                        function() {
-                          var list = '<li class="media timeline-items"> <div class="timeline-item"> <div class="timeline-media"> <span class="svg-icon svg-icon-warning svg-icon-2x"> <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="24px" height="24px" viewBox="0 0 24 24" version="1.1"> <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd"> <polygon points="0 0 24 0 24 24 0 24"></polygon> <path d="M12.9336061,16.072447 L19.36,10.9564761 L19.5181585,10.8312381 C20.1676248,10.3169571 20.2772143,9.3735535 19.7629333,8.72408713 C19.6917232,8.63415859 19.6104327,8.55269514 19.5206557,8.48129411 L12.9336854,3.24257445 C12.3871201,2.80788259 11.6128799,2.80788259 11.0663146,3.24257445 L4.47482784,8.48488609 C3.82645598,9.00054628 3.71887192,9.94418071 4.23453211,10.5925526 C4.30500305,10.6811601 4.38527899,10.7615046 4.47382636,10.8320511 L4.63,10.9564761 L11.0659024,16.0730648 C11.6126744,16.5077525 12.3871218,16.5074963 12.9336061,16.072447 Z" fill="#000000" fill-rule="nonzero"></path> <path d="M11.0563554,18.6706981 L5.33593024,14.122919 C4.94553994,13.8125559 4.37746707,13.8774308 4.06710397,14.2678211 C4.06471678,14.2708238 4.06234874,14.2738418 4.06,14.2768747 L4.06,14.2768747 C3.75257288,14.6738539 3.82516916,15.244888 4.22214834,15.5523151 C4.22358765,15.5534297 4.2250303,15.55454 4.22647627,15.555646 L11.0872776,20.8031356 C11.6250734,21.2144692 12.371757,21.2145375 12.909628,20.8033023 L19.7677785,15.559828 C20.1693192,15.2528257 20.2459576,14.6784381 19.9389553,14.2768974 C19.9376429,14.2751809 19.9363245,14.2734691 19.935,14.2717619 L19.935,14.2717619 C19.6266937,13.8743807 19.0546209,13.8021712 18.6572397,14.1104775 C18.654352,14.112718 18.6514778,14.1149757 18.6486172,14.1172508 L12.9235044,18.6705218 C12.377022,19.1051477 11.6029199,19.1052208 11.0563554,18.6706981 Z" fill="#000000" opacity="0.3"></path> </g> </svg> </span> </div> <div class="timeline-content"> <div class="d-flex align-items-center justify-content-between mb-3"> <div class="me-2 fs-6"> <a href="javascript:void(0);" class="text-dark text-hover-primary fw-bolder me-2"><span class="text-muted me-2">'+response.date_set+'</span></a>  </div> <div class="dropdown ml-2" data-toggle="tooltip" title="" data-placement="left" data-original-title="New Project"> <a href="javascript:;" class="delete-note" data-note-id="'+response.log_id+'"><svg class="svg-inline--fa fa-trash ml-1 text-danger" aria-hidden="true" focusable="false" data-prefix="fas" data-icon="trash" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512" data-fa-i2svg=""> <path fill="currentColor" d="M53.21 467c1.562 24.84 23.02 45 47.9 45h245.8c24.88 0 46.33-20.16 47.9-45L416 128H32L53.21 467zM432 32H320l-11.58-23.16c-2.709-5.42-8.25-8.844-14.31-8.844H153.9c-6.061 0-11.6 3.424-14.31 8.844L128 32H16c-8.836 0-16 7.162-16 16V80c0 8.836 7.164 16 16 16h416c8.838 0 16-7.164 16-16V48C448 39.16 440.8 32 432 32z"> </path> </svg><!-- <i class="fa fa-trash ml-1 text-danger"></i> Font Awesome fontawesome.com --></a> </div> </div> <p class="p-0 fs-6 comment-para note-text">'+response.logsValue.comment+'</p> <div class="note-textarea"></div> </div> </div> </li>';
-                            $('#feedback_comment').val('');
-                            $('.list-unstyled').prepend(list);
-                        });
+                $("#submit-frm-btn").prop("disabled", false);
+                $('.indicator-label').show();
+                $('.indicator-progress').hide();
+
+                if (response.status === "success") {
+                    var statusName = response.status_name || response.conversation_feedback || selectedStatusName;
+
+                    if (response.conversation_id) {
+                        $('#conversations_id').val(response.conversation_id);
+                    }
+
+                    if (recommendation_relation_id) {
+                        var $btn = $(`.show-feedback[data-row-recommendation_relation_id="${recommendation_relation_id}"]`);
+                        if ($btn.length) {
+                            if (response.conversation_id) {
+                                $btn.attr('data-row-conversations_id', response.conversation_id);
+                            }
+                            $btn.html(`
+                                <i class="fas fa-comment-dots text-primary me-1"></i>
+                                <span>${statusName}</span>
+                                <span class="badge badge-light-primary ms-1 px-1 py-0 fs-9">Active</span>
+                            `);
+                            $btn.css('transition', 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)')
+                                .css('box-shadow', '0 0 0 3px rgba(16, 185, 129, 0.45)')
+                                .css('background', '#dcfce7');
+                            setTimeout(function() {
+                                $btn.css('box-shadow', '').css('background', '');
+                            }, 1500);
+                        }
+
+                        // Update in-RAM store
+                        if (window.jobRequestsState && window.jobRequestsState.all) {
+                            var item = window.jobRequestsState.all.find(function(x) { return String(x.id) === String(recommendation_relation_id); });
+                            if (item) {
+                                item.conversation_feedback = statusName;
+                                item.conversations_status = String(response.conversations_status || app_int_feedback_status);
+                                if (response.conversation_id) {
+                                    item.conversation_id = response.conversation_id;
+                                }
+                            }
+                        }
+
+                        // Broadcast across open browser tabs
+                        try {
+                            var bc = window.crossTabChannel || (('BroadcastChannel' in window) ? new BroadcastChannel('jero_superadmin_job_requests') : null);
+                            if (bc) {
+                                bc.postMessage({
+                                    type: 'job_request_updated',
+                                    payload: {
+                                        rec_relation_id: recommendation_relation_id,
+                                        conversation_feedback: statusName,
+                                        conversation_id: response.conversation_id,
+                                        conversations_status: response.conversations_status
+                                    }
+                                });
+                            }
+                        } catch (e) {
+                            console.warn('BroadcastChannel sync note:', e);
+                        }
+                    }
+
+                    var commentText = $('<div>').text(response.logsValue ? response.logsValue.comment : feedback_comment).html();
+                    var dateText = response.date_set || 'Just now';
+                    var logId = response.log_id || '';
+
+                    var list = `
+                        <li class="media timeline-items mb-3">
+                            <div class="timeline-item d-flex align-items-start gap-3">
+                                <div class="timeline-media">
+                                    <span class="svg-icon svg-icon-primary svg-icon-2x">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" viewBox="0 0 24 24" fill="none">
+                                            <path d="M12.9336061,16.072447 L19.36,10.9564761 L19.5181585,10.8312381 C20.1676248,10.3169571 20.2772143,9.3735535 19.7629333,8.72408713 C19.6917232,8.63415859 19.6104327,8.55269514 19.5206557,8.48129411 L12.9336854,3.24257445 C12.3871201,2.80788259 11.6128799,2.80788259 11.0663146,3.24257445 L4.47482784,8.48488609 C3.82645598,9.00054628 3.71887192,9.94418071 4.23453211,10.5925526 C4.30500305,10.6811601 4.38527899,10.7615046 4.47382636,10.8320511 L4.63,10.9564761 L11.0659024,16.0730648 C11.6126744,16.5077525 12.3871218,16.5074963 12.9336061,16.072447 Z" fill="#009ef7"/>
+                                        </svg>
+                                    </span>
+                                </div>
+                                <div class="timeline-content flex-grow-1">
+                                    <div class="d-flex align-items-center justify-content-between mb-1">
+                                        <div class="fs-7 fw-bold text-muted">${dateText}</div>
+                                        <div>
+                                            <a href="javascript:;" class="delete-note text-danger" data-note-id="${logId}" title="Delete Note">
+                                                <i class="fas fa-trash-alt text-danger"></i>
+                                            </a>
+                                        </div>
+                                    </div>
+                                    <p class="p-0 fs-6 comment-para note-text text-dark mb-0">${commentText}</p>
+                                </div>
+                            </div>
+                        </li>
+                    `;
+
+                    $('.list-unstyled').prepend(list);
+                    $('#feedback_comment').val('');
+
+                    if (typeof fetchJobRequests === 'function') {
+                        fetchJobRequests(window.jobRequestsState ? window.jobRequestsState.currentPage : 1, $('#inputJobRequestSearch').val() || '');
+                    } else if (typeof window.fetchJobRequests === 'function') {
+                        window.fetchJobRequests(window.jobRequestsState ? window.jobRequestsState.currentPage : 1, $('#inputJobRequestSearch').val() || '');
+                    } else if (typeof fetchjobrequestpending === 'function') {
+                        fetchjobrequestpending();
+                    } else if (typeof fetchJobRequestAcceptAjax === 'function') {
+                        fetchJobRequestAcceptAjax();
+                    }
+
+                    Swal.fire({
+                        title: "Success",
+                        text: "Interview Feedback submitted successfully!",
+                        icon: "success",
+                        timer: 1500,
+                        showConfirmButton: false
+                    });
+                } else {
+                    Swal.fire("Error", response.msg || "Failed to submit feedback.", "error");
                 }
+            },
+            error: function() {
+                $("#submit-frm-btn").prop("disabled", false);
+                $('.indicator-label').show();
+                $('.indicator-progress').hide();
+                Swal.fire("Error", "Server error while saving feedback.", "error");
             }
         });
     });
-   $('.delete-note').click(function(){
-        let noteId = $(this).data('note-id');
-        var ele = $(this);
-        var url 		= "{{ route('superadmin.company.notedestroy', ':noteId') }}";
-        url 			= url.replace(':id', noteId);
-        var token 		= '{{ csrf_token() }}';
-        $.ajax({
-   							type: 'POST',
-   							url: url,
-   							data: {'_token':token, '_method': 'POST','noteId':noteId},
-   							success: function (response) {
-   								if(response.status == 'success') {
-                    Swal.fire("Success", "Your text note has been deleted", "success");
-                    ele.closest('.timeline-items').remove();	
-   								}
-   							}
-   						});
-         return false;
-   });
-  
 
+    $(document).off('click', '.delete-note').on('click', '.delete-note', function(e) {
+        e.preventDefault();
+        var noteId = $(this).data('note-id');
+        var ele = $(this);
+        var url = "{{ route('superadmin.company.notedestroy') }}";
+        var token = '{{ csrf_token() }}';
+
+        if (!noteId) return;
+
+        Swal.fire({
+            title: "Delete Note?",
+            text: "Are you sure you want to delete this comment?",
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonText: "Yes, delete it"
+        }).then(function(result) {
+            if (result.isConfirmed) {
+                $.ajax({
+                    type: 'POST',
+                    url: url,
+                    data: {'_token': token, 'noteId': noteId},
+                    success: function (response) {
+                        if (response.status === 'success') {
+                            Swal.fire("Deleted", "Your text note has been deleted", "success");
+                            ele.closest('.timeline-items').fadeOut(250, function() { $(this).remove(); });
+                        }
+                    }
+                });
+            }
+        });
+    });
 </script>

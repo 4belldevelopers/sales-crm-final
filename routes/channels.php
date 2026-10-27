@@ -46,3 +46,14 @@ Broadcast::channel('superadmin.jd-catalog', function ($user) {
 Broadcast::channel('superadmin.bench-candidates', function ($user) {
     return (bool) ($user && (! empty($user->is_superadmin) || ! empty($user->root_user)));
 });
+
+// Super Admin private channel for Transaction History & Invoicing real-time delta synchronization
+Broadcast::channel('superadmin.transactions', function ($user) {
+    return (bool) ($user && (! empty($user->is_superadmin) || ! empty($user->root_user)));
+});
+
+// Super Admin channel for Job Collaboration Requests real-time delta synchronization
+Broadcast::channel('superadmin-job-requests', function ($user) {
+    return (bool) ($user && (! empty($user->is_superadmin) || ! empty($user->root_user)));
+});
+
