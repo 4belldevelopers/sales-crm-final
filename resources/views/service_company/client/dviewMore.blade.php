@@ -6720,6 +6720,8 @@
     function initPerformanceDashboard() {
         cdPerfFetchData(window.perfCurrentRange, window.perfCurrentCompare, false);
     }
+    window.initPerformanceDashboard = initPerformanceDashboard;
+    window.fetchDirectClientDashboardAnalytics = initPerformanceDashboard;
 </script>
 
 
@@ -7056,13 +7058,21 @@
             });
 
             // 4. Sub-tab filter buttons
-            $(document).off('click', '.cd-contact-tabs-card .cd-contact-subtab');
-            $(document).on('click', '.cd-contact-tabs-card .cd-contact-subtab', function() {
+            $(document).off('click.directDrawerContacts', '#kt_activitiesDirectClient .cd-contact-tabs-card .cd-contact-subtab');
+            $(document).on('click.directDrawerContacts', '#kt_activitiesDirectClient .cd-contact-tabs-card .cd-contact-subtab', function(e) {
+                if (e && typeof e.preventDefault === 'function') e.preventDefault();
                 var filter = $(this).data('filter') || 'all';
-                $('.cd-contact-tabs-card .cd-contact-subtab').removeClass('active');
+                $('#kt_activitiesDirectClient .cd-contact-tabs-card .cd-contact-subtab').removeClass('active');
                 $(this).addClass('active');
                 self.activeFilter = filter;
-                self.filterAndRender();
+                if (window.__activeClientDrawer && window.__activeClientDrawer.coordinator) {
+                    window.__activeClientDrawer.coordinator.setFilter('contacts', filter);
+                }
+                if (Array.isArray(self.allContacts) && self.allContacts.length > 0) {
+                    self.filterAndRender();
+                } else {
+                    self.fetch();
+                }
             });
 
             // 5. One-click copy with visual tooltip / checkmark
@@ -7481,9 +7491,10 @@
         var dcClientId = parseInt('{{ $directClientDetail->client_id ?: ($directClientDetail->from_company_id ?: $directClientDetail->company_id) }}', 10);
         var currentCompanyId = parseInt('{{ auth()->user()->company_id }}', 10);
 
-        function loadDirectTabContent(target, force) {
+        function loadDirectTabContent(target, force, filter) {
             if (!target) return;
-            target = target.replace('#', '');
+            target = target.replace('#', '').trim();
+
             var activeSelId = window.ClientStateManager && typeof window.ClientStateManager.getSelectedClientId === 'function'
                 ? window.ClientStateManager.getSelectedClientId()
                 : (window.activeSelectedClientId || null);
@@ -7492,23 +7503,34 @@
                 return;
             }
 
-            // Inspect DOM empty state to guarantee preloading when container has no rendered items
-            var isTargetEmpty = false;
-            if (target === 'contacts') {
-                isTargetEmpty = $('#kt_activitiesDirectClient #cdContactCardsStreamDirect').children().length === 0;
-            } else if (target === 'requisitions') {
-                isTargetEmpty = $('#kt_activitiesDirectClient #directclientJobsListajax').children().length === 0;
-            } else if (target === 'candidate_list') {
-                isTargetEmpty = !window.ClientCandidateStoreDirect || window.ClientCandidateStoreDirect.state === 'IDLE' || $('#kt_activitiesDirectClient #cdCandCardsStreamDirect').children().length === 0;
-            } else if (target === 'interview_tracker') {
-                isTargetEmpty = $('#kt_activitiesDirectClient #direct_interview_tracker_body').children().length === 0;
-            } else if (target === 'candidate_joining') {
-                isTargetEmpty = $('#kt_activitiesDirectClient #candidatetListJoin').children().length === 0;
+            var normTab = 'overview';
+            if (target === 'requisitions' || target === 'jobs' || target === 'job') normTab = 'jobs';
+            else if (target === 'candidate_list' || target === 'candidates') normTab = 'candidates';
+            else if (target === 'interview_tracker' || target === 'interviews') normTab = 'interviews';
+            else if (target === 'candidate_joining' || target === 'offers' || target === 'joining') normTab = 'offers';
+            else if (target === 'recent_activity' || target === 'activity') normTab = 'recent_activity';
+            else if (target === 'contacts' || target === 'client_contacts') normTab = 'contacts';
+            else if (target === 'candidateDashboard' || target === 'performance' || target === 'dashboard' || target === 'analytics') normTab = 'performance';
+            else if (target === 'overview' || target === 'client_overview') normTab = 'overview';
+
+            var coord = (window.__activeClientDrawer && window.__activeClientDrawer.coordinator) ? window.__activeClientDrawer.coordinator : null;
+
+            // FSM Request Deduplication via Coordinator: drop only if already in-flight LOADING with same filter
+            if (coord && !force) {
+                var st = coord.getState(normTab);
+                if (st && st.status === 'LOADING' && (!filter || st.filter === filter)) {
+                    return;
+                }
+            }
+            if (coord) {
+                coord.transition(normTab, 'LOADING', { filter: filter || 'all' });
             }
 
-            if (target === 'candidateDashboard') {
+            if (normTab === 'performance') {
                 if (typeof initPerformanceDashboard === 'function') {
                     initPerformanceDashboard();
+                } else if (typeof window.fetchDirectClientDashboardAnalytics === 'function') {
+                    window.fetchDirectClientDashboardAnalytics();
                 }
                 setTimeout(function() {
                     if (window.perfChartInstances) {
@@ -7517,41 +7539,87 @@
                         });
                     }
                 }, 60);
+                if (coord) coord.transition(normTab, 'READY');
                 if (window.ClientStateManager) window.ClientStateManager.markTabLoaded(dcClientId, target);
                 return;
             }
 
-            if (target === 'candidate_list') {
-                if (!window.ClientCandidateStoreDirect || !window.ClientCandidateStoreDirect.companyId || window.ClientCandidateStoreDirect.clientId !== dcClientId || window.ClientCandidateStoreDirect.state === 'IDLE' || isTargetEmpty || force) {
-                    if (window.ClientCandidateStoreDirect && typeof window.ClientCandidateStoreDirect.init === 'function') {
-                        window.ClientCandidateStoreDirect.init(currentCompanyId, dcClientId, 'direct');
+            if (normTab === 'candidates') {
+                var activeCandBtn = $('#kt_activitiesDirectClient #candidate_list .cd-cand-subtab-direct.active');
+                var activeCandStatus = activeCandBtn.length ? activeCandBtn.data('status') : '';
+                var candStatus = (filter !== undefined && filter !== null) ? filter : activeCandStatus;
+
+                if (filter !== undefined && filter !== null) {
+                    $('#kt_activitiesDirectClient #candidate_list .cd-cand-subtab-direct').removeClass('active');
+                    var $matchBtn = $('#kt_activitiesDirectClient #candidate_list .cd-cand-subtab-direct[data-status="' + candStatus + '"]');
+                    if ($matchBtn.length) {
+                        $matchBtn.addClass('active');
+                    } else if (candStatus === '' || candStatus === 'all') {
+                        $('#kt_activitiesDirectClient #candidate_list .cd-cand-subtab-direct[data-status=""]').addClass('active');
                     }
-                } else if (window.ClientCandidateStoreDirect && typeof window.ClientCandidateStoreDirect.reconcileVersion === 'function') {
-                    window.ClientCandidateStoreDirect.reconcileVersion();
+                } else if (!activeCandBtn.length) {
+                    $('#kt_activitiesDirectClient #candidate_list .cd-cand-subtab-direct[data-status=""]').addClass('active');
                 }
+
+                if (window.ClientCandidateStoreDirect) {
+                    if (!window.ClientCandidateStoreDirect.companyId || window.ClientCandidateStoreDirect.clientId !== dcClientId || window.ClientCandidateStoreDirect.state === 'IDLE') {
+                        if (typeof window.ClientCandidateStoreDirect.init === 'function') {
+                            window.ClientCandidateStoreDirect.init(currentCompanyId, dcClientId, 'direct');
+                        }
+                    } else {
+                        window.ClientCandidateStoreDirect.filters.status_id = (candStatus !== '' && candStatus !== 'all') ? String(candStatus) : '';
+                        window.ClientCandidateStoreDirect.filters.page = 1;
+                        window.ClientCandidateStoreDirect.fetch(1);
+                    }
+                }
+                if (coord) coord.transition(normTab, 'READY');
                 if (window.ClientStateManager) window.ClientStateManager.markTabLoaded(dcClientId, target);
                 return;
             }
 
-            if (!force && !isTargetEmpty && window.ClientStateManager && window.ClientStateManager.isTabLoaded(dcClientId, target)) {
-                return;
-            }
+            if (normTab === 'contacts') {
+                var activeContactBtn = $('#kt_activitiesDirectClient .cd-contact-tabs-card .cd-contact-subtab.active');
+                var activeContactFilter = activeContactBtn.length ? (activeContactBtn.data('filter') || 'all') : 'all';
+                var contactFilter = filter ? filter : activeContactFilter;
 
-            if (target === 'contacts') {
+                if (filter) {
+                    $('#kt_activitiesDirectClient .cd-contact-tabs-card .cd-contact-subtab').removeClass('active');
+                    $('#kt_activitiesDirectClient .cd-contact-tabs-card .cd-contact-subtab[data-filter="' + contactFilter + '"]').addClass('active');
+                } else if (!activeContactBtn.length) {
+                    $('#kt_activitiesDirectClient .cd-contact-tabs-card .cd-contact-subtab[data-filter="all"]').addClass('active');
+                }
+
                 if (typeof initDContactsDataTable === 'function') {
                     initDContactsDataTable();
                 } else if (window.DirectClientContactsManager) {
                     window.DirectClientContactsManager.init(dcClientId);
                 }
-                if (window.DirectClientContactsManager && $('#kt_activitiesDirectClient #cdContactCardsStreamDirect').children().length === 0) {
+                if (window.DirectClientContactsManager) {
+                    window.DirectClientContactsManager.activeFilter = contactFilter;
                     if (Array.isArray(window.DirectClientContactsManager.allContacts) && window.DirectClientContactsManager.allContacts.length > 0) {
                         window.DirectClientContactsManager.filterAndRender();
                     } else {
                         window.DirectClientContactsManager.fetch();
                     }
                 }
+                if (coord) coord.transition(normTab, 'READY', { filter: contactFilter });
                 if (window.ClientStateManager) window.ClientStateManager.markTabLoaded(dcClientId, target);
-            } else if (target === 'requisitions') {
+                return;
+            }
+
+            if (normTab === 'jobs') {
+                var activeJobBtn = $('#kt_activitiesDirectClient #requisitions .js-job-filter-btn.active');
+                var currentActiveStatus = activeJobBtn.length ? (activeJobBtn.data('status') || 'all') : (window.currentJobStatusDirect || 'all');
+                var jobStatus = filter ? filter : currentActiveStatus;
+
+                if (filter) {
+                    $('#kt_activitiesDirectClient #requisitions .js-job-filter-btn').removeClass('active');
+                    $('#kt_activitiesDirectClient #requisitions .js-job-filter-btn[data-status="' + jobStatus + '"]').addClass('active');
+                } else if (!activeJobBtn.length) {
+                    $('#kt_activitiesDirectClient #requisitions .js-job-filter-btn[data-status="' + jobStatus + '"]').addClass('active');
+                }
+                window.currentJobStatusDirect = jobStatus;
+
                 if (typeof fetchJobsClientdirect === 'function') {
                     var $directJobsList = $('#kt_activitiesDirectClient #directclientJobsListajax');
                     if ($directJobsList.length && $directJobsList.children().length === 0) {
@@ -7562,15 +7630,45 @@
                             </div>
                         `);
                     }
-                    fetchJobsClientdirect(1, $('#kt_activitiesDirectClient #requisitions #inputJobSearch').val() || '', window.currentJobStatusDirect || 'all');
+                    fetchJobsClientdirect(1, $('#kt_activitiesDirectClient #requisitions #inputJobSearch').val() || '', jobStatus);
                 }
+                if (coord) coord.transition(normTab, 'READY', { filter: jobStatus });
                 if (window.ClientStateManager) window.ClientStateManager.markTabLoaded(dcClientId, target);
-            } else if (target === 'interview_tracker') {
+                return;
+            }
+
+            if (normTab === 'interviews') {
                 if (typeof directfetchCandidatesInverViewTracker === 'function') {
-                    directfetchCandidatesInverViewTracker();
+                    var $dirItBody = $('#kt_activitiesDirectClient #direct_interview_tracker_body');
+                    if ($dirItBody.length && $dirItBody.children().length === 0) {
+                        $dirItBody.html(`
+                            <tr class="it-loading-row"><td colspan="8" class="text-center py-8 text-muted font-poppins fs-7">
+                                <div class="spinner-border spinner-border-sm text-primary me-2"></div> Loading interviews schedule...
+                            </td></tr>
+                        `);
+                    }
+                    directfetchCandidatesInverViewTracker(1, '');
+                } else if (window.ClientInterviewStoreDirect && typeof window.ClientInterviewStoreDirect.fetch === 'function') {
+                    window.ClientInterviewStoreDirect.fetch(dcClientId, null, false, '');
                 }
+                if (coord) coord.transition(normTab, 'READY');
                 if (window.ClientStateManager) window.ClientStateManager.markTabLoaded(dcClientId, target);
-            } else if (target === 'candidate_joining') {
+                return;
+            }
+
+            if (normTab === 'offers') {
+                var activeSegBtn = $('#kt_activitiesDirectClient #candidate_joining .cd-oj-seg-btn-direct.active');
+                var currentActiveSeg = activeSegBtn.length ? (activeSegBtn.data('segment') || 'all') : (window.currentOjSegmentDirect || 'all');
+                var segStatus = filter ? filter : currentActiveSeg;
+
+                if (filter) {
+                    $('#kt_activitiesDirectClient #candidate_joining .cd-oj-seg-btn-direct').removeClass('active');
+                    $('#kt_activitiesDirectClient #candidate_joining .cd-oj-seg-btn-direct[data-segment="' + segStatus + '"]').addClass('active');
+                } else if (!activeSegBtn.length) {
+                    $('#kt_activitiesDirectClient #candidate_joining .cd-oj-seg-btn-direct[data-segment="all"]').addClass('active');
+                }
+                window.currentOjSegmentDirect = segStatus;
+
                 var search = $('#kt_activitiesDirectClient #ojSearchInputDirect').val() || '';
                 if (typeof directfetchCandidatesJoin === 'function') {
                     var $directOjList = $('#kt_activitiesDirectClient #candidatetListJoin');
@@ -7582,14 +7680,26 @@
                             </div>
                         `);
                     }
-                    directfetchCandidatesJoin(1, search, window.currentOjSegmentDirect || 'all');
+                    directfetchCandidatesJoin(1, search, segStatus);
                 }
+                if (coord) coord.transition(normTab, 'READY', { filter: segStatus });
                 if (window.ClientStateManager) window.ClientStateManager.markTabLoaded(dcClientId, target);
-            } else if (target === 'recent_activity') {
-                if (window.ClientActivityManager) {
+                return;
+            }
+
+            if (normTab === 'recent_activity') {
+                if (window.ClientActivityManager && typeof window.ClientActivityManager.initClient === 'function') {
                     window.ClientActivityManager.initClient(dcClientId, false, dcClientId);
                 }
+                if (coord) coord.transition(normTab, 'READY');
                 if (window.ClientStateManager) window.ClientStateManager.markTabLoaded(dcClientId, target);
+                return;
+            }
+
+            if (normTab === 'overview') {
+                if (coord) coord.transition(normTab, 'READY');
+                if (window.ClientStateManager) window.ClientStateManager.markTabLoaded(dcClientId, target);
+                return;
             }
         }
         window.loadDirectTabContent = loadDirectTabContent;
@@ -7611,6 +7721,9 @@
 
         // Scoped Click Handler for Drawer Tab Nav Links (handling clicks on link, icon, text, badge)
         $(document).on('click.directDrawer', '#kt_activitiesDirectClient .cd-drawer-tabs-list .nav-link, #kt_activitiesDirectClient .cd-tab-pill-btn', function(e) {
+            if (e && typeof e.preventDefault === 'function') {
+                e.preventDefault();
+            }
             var $link = $(this);
             var target = ($link.attr('href') || $link.attr('data-bs-target') || '').replace('#', '');
             if (!target) return;
@@ -7623,6 +7736,9 @@
 
         // Scoped Click Handler for Metric KPI Cards
         $(document).on('click.directDrawer', '#kt_activitiesDirectClient .cd-kpi-card', function(e) {
+            if (e && typeof e.preventDefault === 'function') {
+                e.preventDefault();
+            }
             var target = $(this).data('target-tab') || $(this).attr('data-target-tab');
             if (!target) return;
             target = target.replace('#', '');
@@ -7646,15 +7762,23 @@
                 $('#kt_activitiesDirectClient .cd-oj-seg-btn-direct').removeClass('active');
                 $(`#kt_activitiesDirectClient .cd-oj-seg-btn-direct[data-segment="${segment}"]`).addClass('active');
             }
-            loadDirectTabContent(target, true);
+            loadDirectTabContent(target, true, segment);
         });
 
-        // Scoped Bootstrap tab event listener
+        // Scoped Bootstrap tab event listener & Direct tab click
+        $(document).off('shown.bs.tab.directDrawer', '#kt_activitiesDirectClient a[data-bs-toggle="tab"], #kt_activitiesDirectClient a[data-toggle="tab"]');
         $(document).on('shown.bs.tab.directDrawer', '#kt_activitiesDirectClient a[data-bs-toggle="tab"], #kt_activitiesDirectClient a[data-toggle="tab"]', function (e) {
             var $link = $(this);
             var target = ($link.attr('href') || $link.attr('data-bs-target') || (e.target ? $(e.target).closest('a').attr('href') : '') || '').replace('#', '');
             if (!target) return;
-            loadDirectTabContent(target, false);
+            loadDirectTabContent(target, true);
+        });
+
+        $(document).off('click.directDrawerTab', '#kt_activitiesDirectClient .cd-tab-pill-btn');
+        $(document).on('click.directDrawerTab', '#kt_activitiesDirectClient .cd-tab-pill-btn', function (e) {
+            var target = ($(this).attr('href') || $(this).data('bs-target') || '').replace('#', '');
+            if (!target) return;
+            loadDirectTabContent(target, true);
         });
 
         // Tab visibility & idle wake-up listener
@@ -8452,12 +8576,16 @@
                 self.fetch(1);
             });
 
-            $(document).off('click', '.cd-cand-subtab-direct');
-            $(document).on('click', '.cd-cand-subtab-direct', function() {
+            $(document).off('click.directDrawerCand', '#kt_activitiesDirectClient .cd-cand-subtab-direct');
+            $(document).on('click.directDrawerCand', '#kt_activitiesDirectClient .cd-cand-subtab-direct', function(e) {
+                if (e && typeof e.preventDefault === 'function') e.preventDefault();
                 var status = $(this).data('status');
-                $('.cd-cand-subtab-direct').removeClass('active');
+                $('#kt_activitiesDirectClient .cd-cand-subtab-direct').removeClass('active');
                 $(this).addClass('active');
-                self.filters.status_id = (status !== undefined && status !== null && status !== '') ? String(status) : '';
+                if (window.__activeClientDrawer && window.__activeClientDrawer.coordinator) {
+                    window.__activeClientDrawer.coordinator.transition('candidates', 'LOADING', { filter: String(status || '') });
+                }
+                self.filters.status_id = (status !== undefined && status !== null && status !== '' && status !== 'all') ? String(status) : '';
                 self.filters.page = 1;
                 self.filters.cursor = null;
                 self.fetch(1);
@@ -8734,14 +8862,22 @@
             }
         });
     }
+    window.directfetchCandidatesJoin = directfetchCandidatesJoin;
 
-    $(document).on('click.directDrawer', '#kt_activitiesDirectClient .cd-oj-seg-btn-direct', function() {
-        var segment = $(this).data('segment');
+    $(document).off('click.directDrawerOffers', '#kt_activitiesDirectClient .cd-oj-seg-btn-direct');
+    $(document).on('click.directDrawerOffers', '#kt_activitiesDirectClient .cd-oj-seg-btn-direct', function(e) {
+        if (e && typeof e.preventDefault === 'function') e.preventDefault();
+        var segment = $(this).data('segment') || 'all';
         $('#kt_activitiesDirectClient .cd-oj-seg-btn-direct').removeClass('active');
         $(this).addClass('active');
         window.currentOjSegmentDirect = segment;
         var search = $('#kt_activitiesDirectClient #ojSearchInputDirect').val() || '';
-        directfetchCandidatesJoin(1, search, segment);
+        if (window.__activeClientDrawer && window.__activeClientDrawer.coordinator) {
+            window.__activeClientDrawer.coordinator.setFilter('offers', segment);
+        }
+        if (typeof directfetchCandidatesJoin === 'function') {
+            directfetchCandidatesJoin(1, search, segment);
+        }
     });
 
     var ojSearchTimerDirect = null;
@@ -9291,6 +9427,7 @@
             ClientInterviewStoreDirect.fetch(directCurrentId, null, false, search);
         }
     }
+    window.directfetchCandidatesInverViewTracker = directfetchCandidatesInverViewTracker;
 
     $(document).ready(function() {
         ClientInterviewStoreDirect.init();
@@ -9373,12 +9510,19 @@
     });
 
     // Direct Client Jobs Tab: Filter Button Interaction
-    $(document).on('click.directDrawer', '#kt_activitiesDirectClient #requisitions .js-job-filter-btn', function() {
+    $(document).off('click.directDrawerJobs', '#kt_activitiesDirectClient #requisitions .js-job-filter-btn');
+    $(document).on('click.directDrawerJobs', '#kt_activitiesDirectClient #requisitions .js-job-filter-btn', function(e) {
+        if (e && typeof e.preventDefault === 'function') e.preventDefault();
         var status = $(this).data('status') || 'all';
         window.currentJobStatusDirect = status;
         $('#kt_activitiesDirectClient #requisitions .js-job-filter-btn').removeClass('active');
         $(this).addClass('active');
-        fetchJobsClientdirect(1, $('#kt_activitiesDirectClient #requisitions #inputJobSearch').val(), status);
+        if (window.__activeClientDrawer && window.__activeClientDrawer.coordinator) {
+            window.__activeClientDrawer.coordinator.setFilter('jobs', status);
+        }
+        if (typeof fetchJobsClientdirect === 'function') {
+            fetchJobsClientdirect(1, $('#kt_activitiesDirectClient #requisitions #inputJobSearch').val() || '', status);
+        }
     });
 
     // Direct Client Jobs Tab: Click Routing (Fixing Drawer Click Collision Bug)

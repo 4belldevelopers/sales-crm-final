@@ -43,81 +43,14 @@
     const ClientIncrementalRenderer = {
         /**
          * Render the complete Drawer Shell adhering to the 3-Tier Enterprise Card Standard
+         *
+         * [Hard Architectural Decision - Option A]:
+         * Excised from JDCR to prevent dual-runtime collision with the authoritative Blade drawer.
+         * The authoritative workflow is Scoped DrawerInstance -> Authoritative Blade Drawer -> CQRS APIs.
          */
         renderDrawerShell: function(client, activeTab) {
-            activeTab = activeTab || 'overview';
-            const clientId = Number(client.id || client.client_id || 0);
-            const clientName = client.name || client.company_name || 'Client #' + clientId;
-            const industry = client.industry_name || client.industry || 'General';
-            const logo = sanitizeAssetUrl(client.logo_url || client.logo_logical_path, '/assets/media/avatars/blank.png');
-            const isActive = Number(client.status) === 1;
-
-            return `
-                <div id="jdcr-client-drawer-${clientId}" class="d-flex flex-column h-100 bg-slate-50" style="font-family: 'Poppins', sans-serif;">
-                    <!-- ─── TIER 1: Pure White Toolbar Card (#ffffff, border #e2e8f0, radius 10px) ─── -->
-                    <div class="card bg-white border border-slate-200 rounded-3 p-3 mb-2 shadow-xs" style="border-radius: 10px; border-color: #e2e8f0;">
-                        <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
-                            <div class="d-flex align-items-center gap-3">
-                                <img src="${logo}" alt="${escapeHtml(clientName)}" class="w-40px h-40px rounded-2 border object-cover shadow-xs" style="object-fit: cover;" onerror="this.src='/assets/media/avatars/blank.png';" />
-                                <div>
-                                    <div class="d-flex align-items-center gap-2">
-                                        <h4 class="text-gray-900 fw-bolder mb-0 fs-5">${escapeHtml(clientName)}</h4>
-                                        <span class="badge ${isActive ? 'badge-light-success' : 'badge-light-danger'} fs-8 fw-semibold px-2 py-1">
-                                            ${isActive ? 'Active' : 'Inactive'}
-                                        </span>
-                                    </div>
-                                    <div class="text-muted fs-8">
-                                        ID: #${clientId} • <span class="text-gray-600">${escapeHtml(industry)}</span>
-                                        ${client.city_name ? ` • <span>${escapeHtml(client.city_name)}</span>` : ''}
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="d-flex align-items-center gap-2">
-                                <div id="jdcr-sync-badge-${clientId}">
-                                    <span class="badge badge-light-success fs-8 fw-medium px-2 py-1">
-                                        <i class="ki-outline ki-check-circle fs-8 text-success me-1"></i>Up to Date
-                                    </span>
-                                </div>
-                                <button type="button" class="btn btn-sm btn-icon btn-light-secondary" data-action="close-drawer" title="Close Drawer">
-                                    <i class="ki-outline ki-cross fs-4"></i>
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- ─── TIER 2: Pure White Sub-Tabs Card (Single Active Blue #009ef7) ─── -->
-                    <div class="card bg-white border border-slate-200 rounded-3 px-3 py-1 mb-2 shadow-xs" style="border-radius: 10px; border-color: #e2e8f0;">
-                        <ul class="nav nav-tabs nav-line-tabs border-0 fs-7 fw-semibold flex-nowrap overflow-x-auto text-nowrap gap-1" id="jdcr-tabs-list" style="overflow-x: auto; -webkit-overflow-scrolling: touch;">
-                            <li class="nav-item">
-                                <a class="nav-link px-3 py-2 text-gray-700 ${activeTab === 'overview' ? 'active text-primary border-primary border-bottom-2' : ''}" href="javascript:void(0);" data-action="switch-tab" data-tab="overview" data-client-id="${clientId}">Overview</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link px-3 py-2 text-gray-700 ${activeTab === 'jobs' ? 'active text-primary border-primary border-bottom-2' : ''}" href="javascript:void(0);" data-action="switch-tab" data-tab="jobs" data-client-id="${clientId}">Jobs (${Number(client.active_jobs_count || 0)})</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link px-3 py-2 text-gray-700 ${activeTab === 'candidates' ? 'active text-primary border-primary border-bottom-2' : ''}" href="javascript:void(0);" data-action="switch-tab" data-tab="candidates" data-client-id="${clientId}">Candidates</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link px-3 py-2 text-gray-700 ${activeTab === 'interviews' ? 'active text-primary border-primary border-bottom-2' : ''}" href="javascript:void(0);" data-action="switch-tab" data-tab="interviews" data-client-id="${clientId}">Interviews</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link px-3 py-2 text-gray-700 ${activeTab === 'offers' ? 'active text-primary border-primary border-bottom-2' : ''}" href="javascript:void(0);" data-action="switch-tab" data-tab="offers" data-client-id="${clientId}">Offers</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link px-3 py-2 text-gray-700 ${activeTab === 'joining' ? 'active text-primary border-primary border-bottom-2' : ''}" href="javascript:void(0);" data-action="switch-tab" data-tab="joining" data-client-id="${clientId}">Joining</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link px-3 py-2 text-gray-700 ${activeTab === 'contacts' ? 'active text-primary border-primary border-bottom-2' : ''}" href="javascript:void(0);" data-action="switch-tab" data-tab="contacts" data-client-id="${clientId}">Contacts (${(client.contacts && client.contacts.length) || 0})</a>
-                            </li>
-                        </ul>
-                    </div>
-
-                    <!-- ─── TIER 3: Primary Information Surface Container ─── -->
-                    <div id="jdcr-tab-surface-${clientId}" class="flex-grow-1 overflow-y-auto pe-1" style="max-height: calc(100vh - 180px); overflow-y: auto;">
-                        ${this.renderTabContent(client, activeTab)}
-                    </div>
-                </div>
-            `;
+            return null; // Excised per Option A architecture standard
+        },
         },
 
         /**
