@@ -1672,15 +1672,17 @@ window.ClientStateManager = {
     },
 
     getSelectedClientId: function() {
-        return this.state.selectedClientId;
+        return this.state.selectedClientId ? parseInt(this.state.selectedClientId, 10) : null;
     },
 
     isTabLoaded: function(clientId, tabName) {
-        return !!this.state.drawerLoadedTabs[`${clientId}_${tabName}`];
+        var cid = parseInt(clientId, 10) || clientId;
+        return !!this.state.drawerLoadedTabs[`${cid}_${tabName}`];
     },
 
     markTabLoaded: function(clientId, tabName) {
-        this.state.drawerLoadedTabs[`${clientId}_${tabName}`] = true;
+        var cid = parseInt(clientId, 10) || clientId;
+        this.state.drawerLoadedTabs[`${cid}_${tabName}`] = true;
     },
 
     // ── Teardown Active Drawer (Atomic Clean State Transition) ──
@@ -1723,9 +1725,10 @@ window.ClientStateManager = {
         $('#kt_activitiesClient_body').empty();
         $('#kt_activitiesDirectClient_body').empty();
 
-        // 7. Reset tokens and context
+        // 7. Reset tokens, context, and active drawer loaded tabs
         this.state.drawerRequestToken++;
         this.state.currentDrawerContext = null;
+        this.state.drawerLoadedTabs = {};
 
         if (fullReset) {
             this.state.selectedClientId = null;
@@ -1815,6 +1818,7 @@ window.ClientStateManager = {
         if (!clientId) return;
         var self = this;
         var currentTab = this.state.activeTab;
+        var numericClientId = parseInt(clientId, 10) || clientId;
 
         // Atomic Teardown of previous client drawer without closing container
         this.teardownDrawer(false);
@@ -1831,7 +1835,7 @@ window.ClientStateManager = {
         var drawerContext = {
             contextToken: contextToken,
             requestToken: requestToken,
-            clientId: clientId,
+            clientId: numericClientId,
             clientType: type,
             tab: currentTab,
             openedAt: Date.now()
@@ -1839,12 +1843,12 @@ window.ClientStateManager = {
         this.state.currentDrawerContext = drawerContext;
 
         // Set state - Single Source of Truth
-        this.state.selectedClientId = clientId;
+        this.state.selectedClientId = numericClientId;
         this.state.selectedClientType = type;
         this.state.selectedClientTab = 'overview';
         this.state.drawerStatus = 'loading';
         this.state.drawerError = null;
-        window.activeSelectedClientId = clientId;
+        window.activeSelectedClientId = numericClientId;
 
         // Highlight selected row in current tab listing
         $('[data-row-id]').closest('.tbl-r').removeClass('client-selected');
@@ -1857,13 +1861,13 @@ window.ClientStateManager = {
         var tenantId = {{ (int) (auth()->user()->company_id ?? 0) }};
 
         // ─── JDCR V5.2 Tier 1: Check L1 Working RAM (< 5ms) ───
-        var ramCached = window.ClientMemoryStore ? window.ClientMemoryStore.get(clientId) : null;
-        if (ramCached && window.ClientIncrementalRenderer && type !== 'request') {
+        var ramCached = window.ClientMemoryStore ? window.ClientMemoryStore.get(numericClientId) : null;
+        if (ramCached && window.ClientIncrementalRenderer && typeof ClientIncrementalRenderer.renderDrawerShell === 'function' && type !== 'request') {
             $(bodyId).html(ClientIncrementalRenderer.renderDrawerShell(ramCached, 'overview'));
             self.state.drawerStatus = 'loaded';
-            self.markTabLoaded(clientId, 'overview');
+            self.markTabLoaded(numericClientId, 'overview');
             if (window.SyncSupervisor && typeof window.SyncSupervisor.notifyHint === 'function') {
-                window.SyncSupervisor.notifyHint(clientId);
+                window.SyncSupervisor.notifyHint(numericClientId);
             }
             return;
         }
@@ -1895,7 +1899,7 @@ window.ClientStateManager = {
                 cache: false,
                 success: function(response) {
                     var activeCtx = self.state.currentDrawerContext;
-                    if (!activeCtx || activeCtx.contextToken !== contextToken || self.state.drawerRequestToken !== requestToken || self.state.selectedClientId !== clientId) {
+                    if (!activeCtx || activeCtx.contextToken !== contextToken || self.state.drawerRequestToken !== requestToken || parseInt(self.state.selectedClientId, 10) !== parseInt(clientId, 10)) {
                         console.log(`[Drawer Shield] Discarded stale response for client ${clientId}. Current token: ${activeCtx ? activeCtx.contextToken : 'null'}`);
                         return;
                     }
@@ -1903,7 +1907,10 @@ window.ClientStateManager = {
                     if (response && response.view) {
                         $(bodyId).html(response.view);
                         self.state.drawerStatus = 'loaded';
-                        self.markTabLoaded(clientId, 'overview');
+                        self.markTabLoaded(numericClientId, 'overview');
+                        if (window.SyncSupervisor && typeof window.SyncSupervisor.notifyHint === 'function') {
+                            window.SyncSupervisor.notifyHint(numericClientId);
+                        }
                         if (typeof doneCallback === 'function') doneCallback(true, response);
                     } else {
                         $(bodyId).html('<div class="p-8 text-center text-danger font-poppins fs-7">No client details available for the selected record.</div>');
@@ -1954,16 +1961,16 @@ window.ClientStateManager = {
                     cache: false,
                     success: function(res) {
                         var activeCtx = self.state.currentDrawerContext;
-                        if (!activeCtx || activeCtx.contextToken !== contextToken || self.state.drawerRequestToken !== requestToken || self.state.selectedClientId !== clientId) return;
+                        if (!activeCtx || activeCtx.contextToken !== contextToken || self.state.drawerRequestToken !== requestToken || parseInt(self.state.selectedClientId, 10) !== parseInt(clientId, 10)) return;
 
-                        if (res && res.data && window.ClientIncrementalRenderer) {
-                            if (window.ClientMemoryStore) window.ClientMemoryStore.set(clientId, res.data);
+                        if (res && res.data && window.ClientIncrementalRenderer && typeof ClientIncrementalRenderer.renderDrawerShell === 'function') {
+                            if (window.ClientMemoryStore) window.ClientMemoryStore.set(numericClientId, res.data);
                             if (window.ClientEntityDB) {
-                                window.ClientEntityDB.put(tenantId, clientId, res);
+                                window.ClientEntityDB.put(tenantId, numericClientId, res);
                             }
                             $(bodyId).html(ClientIncrementalRenderer.renderDrawerShell(res.data, 'overview'));
                             self.state.drawerStatus = 'loaded';
-                            self.markTabLoaded(clientId, 'overview');
+                            self.markTabLoaded(numericClientId, 'overview');
                             return;
                         }
 
@@ -1983,16 +1990,16 @@ window.ClientStateManager = {
 
         // ─── JDCR V5.2 Tier 2: Check L2 Persistent IndexedDB (< 50ms) ───
         if (window.ClientEntityDB && type !== 'request') {
-            window.ClientEntityDB.get(tenantId, clientId).then(function(idbRecord) {
+            window.ClientEntityDB.get(tenantId, numericClientId).then(function(idbRecord) {
                 var activeCtx = self.state.currentDrawerContext;
-                if (!activeCtx || activeCtx.contextToken !== contextToken || self.state.drawerRequestToken !== requestToken || self.state.selectedClientId !== clientId) return;
+                if (!activeCtx || activeCtx.contextToken !== contextToken || self.state.drawerRequestToken !== requestToken || parseInt(self.state.selectedClientId, 10) !== parseInt(clientId, 10)) return;
 
-                if (idbRecord && idbRecord.data && window.ClientIncrementalRenderer) {
-                    if (window.ClientMemoryStore) window.ClientMemoryStore.set(clientId, idbRecord.data);
+                if (idbRecord && idbRecord.data && window.ClientIncrementalRenderer && typeof ClientIncrementalRenderer.renderDrawerShell === 'function') {
+                    if (window.ClientMemoryStore) window.ClientMemoryStore.set(numericClientId, idbRecord.data);
                     $(bodyId).html(ClientIncrementalRenderer.renderDrawerShell(idbRecord.data, 'overview'));
                     self.state.drawerStatus = 'loaded';
-                    self.markTabLoaded(clientId, 'overview');
-                    if (window.SyncSupervisor) window.SyncSupervisor.notifyHint(clientId);
+                    self.markTabLoaded(numericClientId, 'overview');
+                    if (window.SyncSupervisor) window.SyncSupervisor.notifyHint(numericClientId);
                     return;
                 }
 
