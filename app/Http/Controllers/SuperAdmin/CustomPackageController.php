@@ -107,8 +107,17 @@ class CustomPackageController extends SuperAdminBaseController
 
     public function create($company_id = null)
     {
-        $packageType = decrypt((request('packageType')));
-        //  dd( $packageType);
+        try {
+            $rawPackageType = request('packageType');
+            $packageType = $rawPackageType ? (is_string($rawPackageType) && strlen($rawPackageType) > 40 ? decrypt($rawPackageType) : $rawPackageType) : 'operational';
+        } catch (\Exception $e) {
+            $packageType = request('packageType', 'operational');
+        }
+        if (! in_array($packageType, ['operational', 'sales'])) {
+            $packageType = 'operational';
+        }
+
+        $this->packageType = $packageType;
         $this->company_id = $company_id;
         $this->company = DB::table('companies')->select('*')->where('companies.id', $this->company_id)->first();
         $this->package_features_operations = PackageFeature::where('features_type', '=', '1')->get();
@@ -116,9 +125,15 @@ class CustomPackageController extends SuperAdminBaseController
         $this->packages = DB::table('coin_packages')
             ->join('coin_package_types', 'coin_package_types.id', '=', 'coin_packages.coin_package_type_id')
             ->where('coin_packages.event_type', '=', $packageType)
-            ->select('coin_packages.*', 'coin_package_types.title', 'coin_package_types.days')->get(); // Package::where('status', '=', '1')->get();
-        // $this->paymentSetting = PaymentSetting::first();
-        $this->link_payments = DB::table('link_payments')->select('*')->where('status', '=', 0)->where('subscription_type', '=', 'yes')->where('company_id', $company_id)->orderByDesc('id')->first();
+            ->select('coin_packages.*', 'coin_package_types.title', 'coin_package_types.days')
+            ->get();
+        $this->link_payments = DB::table('link_payments')
+            ->select('*')
+            ->where('status', '=', 0)
+            ->where('subscription_type', '=', 'yes')
+            ->where('company_id', $company_id)
+            ->orderByDesc('id')
+            ->first();
 
         $clients = DB::table('clients')->leftJoin('companies', 'companies.id', '=', 'clients.company_id')
             ->select('clients.id', 'companies.company_name', 'users.name')
@@ -127,31 +142,34 @@ class CustomPackageController extends SuperAdminBaseController
             ->where('clients.self_company', '=', 1)
             ->first();
 
-        $locInfo = DB::table('client_location')
-            ->leftJoin('countries', 'countries.id', '=', 'client_location.country_id')
-            ->leftJoin('city_list', 'city_list.city_id', '=', 'client_location.city_id')
-            ->leftJoin('state_list', 'state_list.id', '=', 'client_location.state')
-            ->select(
-                'client_location.id',
-                'client_location.city',
-                'client_location.city_id',
-                'client_location.state as state_id',
-                'client_location.address',
-                'client_location.postcode',
-                'client_location.country_id',
-                'city_list.city as city_name',
-                'state_list.state as state_name',
-                'countries.country_name'
-            )
-            ->where('client_id', $clients->id)
-            ->first();
+        $clientId = $clients ? $clients->id : null;
+        $locInfo = null;
+        if ($clientId) {
+            $locInfo = DB::table('client_location')
+                ->leftJoin('countries', 'countries.id', '=', 'client_location.country_id')
+                ->leftJoin('city_list', 'city_list.city_id', '=', 'client_location.city_id')
+                ->leftJoin('state_list', 'state_list.id', '=', 'client_location.state')
+                ->select(
+                    'client_location.id',
+                    'client_location.city',
+                    'client_location.city_id',
+                    'client_location.state as state_id',
+                    'client_location.address',
+                    'client_location.postcode',
+                    'client_location.country_id',
+                    'city_list.city as city_name',
+                    'state_list.state as state_name',
+                    'countries.country_name'
+                )
+                ->where('client_id', $clientId)
+                ->first();
+        }
 
-        // dd( $locInfo);
         $this->countrie_id = ($locInfo) ? $locInfo->country_id : '';
         $this->city_id = ($locInfo) ? $locInfo->city_id : '';
         $this->state_id = ($locInfo) ? $locInfo->state_id : '';
 
-        $this->phone = auth()->user()->mobile;
+        $this->phone = auth()->check() ? auth()->user()->mobile : '';
         $this->building = '';
         $this->postal_code = '';
         $this->gstin = '';
@@ -159,10 +177,12 @@ class CustomPackageController extends SuperAdminBaseController
 
         $company_id = $this->company_id;
 
-        // dd($this->countrie_id);
-
-        $this->company_name = @$clients->company_name;
+        $this->company_name = @$clients->company_name ?: (@$this->company->company_name ?: 'Company #'.$this->company_id);
         $this->user_name = @$clients->name;
+        if (empty($this->user_name)) {
+            $ownerUser = DB::table('users')->where('company_id', $this->company_id)->first();
+            $this->user_name = $ownerUser ? $ownerUser->name : (auth()->check() ? auth()->user()->name : 'Admin');
+        }
         $nameParts = explode(' ', $this->user_name);
         $this->firstName = $nameParts[0];
         $this->lastName = isset($nameParts[1]) ? $nameParts[1] : '';
@@ -170,7 +190,6 @@ class CustomPackageController extends SuperAdminBaseController
         $this->locArr = '';
         if ($locInfo) {
             $city_name = @$locInfo->city;
-
             $this->locArr = ucwords(@$locInfo->address).' '.ucwords($city_name).' , '.ucwords(@$locInfo->state_name).' , '.ucwords(@$locInfo->country_name);
         }
 
@@ -193,64 +212,72 @@ class CustomPackageController extends SuperAdminBaseController
             $this->gstin = ($billing_address_companies) ? $billing_address_companies->gstin : '';
             $this->pan_no = ($billing_address_companies) ? $billing_address_companies->pan_no : '';
             $this->user_name = ($billing_address_companies) ? $billing_address_companies->first_name.' '.$billing_address_companies->last_name : '';
-
         }
 
         return view('super-admin.custompackages.create', $this->data);
-
     }
 
     public function packageFeature(Request $request)
     {
+        if (empty($request->package_id)) {
+            return Reply::dataOnly(['status' => 'empty', 'view' => '', 'check' => false]);
+        }
 
-        // dd($request->package_id);
         $coin_packages = DB::table('coin_packages')->select('*')->where('id', '=', $request->package_id)->first();
-        // dd($coin_packages->event_type);
+        if (! $coin_packages) {
+            return Reply::dataOnly(['status' => 'error', 'message' => 'Package not found', 'check' => false]);
+        }
+
         $package_coin_events = DB::table('coin_events')
             ->where('status', '=', 1)
             ->where('event_type', '=', $coin_packages->event_type)
             ->get();
 
-        $currency = $request->currency_get;
-        $gst_on_get = $request->gst_on_get;
-        // dd($currency);
+        $currency = $request->currency_get ?: 'INR';
+        $gst_on_get = $request->gst_on_get ?: 'Yes';
 
         $this->coin_events = $package_coin_events;
-        $price = ($currency == 'INR') ? $coin_packages->price : $coin_packages->price_usd;
-        $this->price = ($currency == 'INR') ? $coin_packages->price : $coin_packages->price_usd;
+        $price = ($currency == 'INR') ? (float) $coin_packages->price : (float) $coin_packages->price_usd;
+        $this->price = $price;
+
+        $discount = (float) ($coin_packages->discount ?? 0);
+        $discount_amount = ($price * $discount) / 100;
+        $discounted_price = $price - $discount_amount;
 
         if ($currency == 'INR' && $gst_on_get == 'Yes') {
             $gst = 18;
-            $gst_amount = ($price * $gst) / 100;
-            $total_price = $price + $gst_amount;
+            $gst_amount = ($discounted_price * $gst) / 100;
+            $total_price = $discounted_price + $gst_amount;
         } else {
-            $gst = 0; // GST might not apply for USD or set appropriate tax value
-            $gst_amount = ($price * $gst) / 100; // Modify this if other tax applies
-            $total_price = $price + $gst_amount; // Total price in USD
+            $gst = 0;
+            $gst_amount = 0;
+            $total_price = $discounted_price;
         }
-        $this->gst = $gst; // GST might not apply for USD or set appropriate tax value
-        $this->gst_amount = $gst_amount; // Modify this if other tax applies
-        $this->total_price = $total_price; // Total price in USD
 
-        // dd($this->price,$coin_packages->price,$coin_packages->price_usd);
+        $this->gst = $gst;
+        $this->gst_amount = $gst_amount;
+        $this->total_price = $total_price;
         $this->coins = $coin_packages->coins;
-        $this->discount = $coin_packages->discount;
+        $this->discount = $discount;
         $this->event_type = $coin_packages->event_type;
-        // dd($package_coin_events);
+        $this->currency = $currency;
 
         $view = view('super-admin.custompackages.viewmorepackagefeature', $this->data)->render();
 
-        $this->package = DB::table('coin_packages')->select('*')->where('id', '=', $request->package_id)->first(); // Package::findOrfail($request->package_id);
-        $check = false;
-        if ($this->package) {
-            $check = true;
-        }
+        $check = (bool) ($coin_packages->custome_pck ?? false);
 
-        // dd($view);
-        return Reply::dataOnly(['status' => 'success', 'view' => $view, 'check' => $check]);
-
-        // dd($this->package_features_salse);
-
+        return Reply::dataOnly([
+            'status' => 'success',
+            'view' => $view,
+            'check' => $check,
+            'price' => number_format($price, 2, '.', ''),
+            'discount' => $discount,
+            'gst' => $gst,
+            'gst_amount' => number_format($gst_amount, 2, '.', ''),
+            'total_price' => number_format($total_price, 2, '.', ''),
+            'coins' => $coin_packages->coins,
+            'event_type' => $coin_packages->event_type,
+        ]);
     }
 
     public function packageFeatureOld(Request $request)
@@ -279,46 +306,54 @@ class CustomPackageController extends SuperAdminBaseController
 
     public function lastdate(Request $request)
     {
-        // $this->package = Package::findOrfail($request->package_id);
         $this->package = DB::table('coin_packages')->select('*')->where('id', '=', $request->package_id)->first();
-        $newDate = date('Y-m-d');
-        // dd($this->package);
+        $startDate = $request->cvaccess_startdate ? date('Y-m-d', strtotime($request->cvaccess_startdate)) : date('Y-m-d');
+        $newDate = $startDate;
         $check = false;
-        if (! @$this->package->custome_pck) {
-            if ($this->package) {
-                $days = $this->package->days;
-                $currentDate = date('Y-m-d', strtotime($request->cvaccess_startdate)); // Get current date in YYYY-MM-DD format
-                $newDate = date('Y-m-d', strtotime($currentDate.' +'.$this->package->days.' days')); // Add 356 days to the current date
-                // dd($newDate,$this->package->trial_duration);
-                $custome_pck = $this->package->custome_pck;
-                if (@$this->package->custome_pck) {
-                    $check = true;
-                }
 
-                return Reply::dataOnly(['status' => 'success', 'newDate' => $newDate, 'check' => $check]);
-
-            }
+        if ($this->package) {
+            $days = (int) ($this->package->days ?? 0);
+            $newDate = date('Y-m-d', strtotime($startDate.' +'.$days.' days'));
+            $check = (bool) ($this->package->custome_pck ?? false);
         }
 
         return Reply::dataOnly(['status' => 'success', 'newDate' => $newDate, 'check' => $check]);
-
     }
 
     public function generatecustompackages(Request $request)
     {
-
         $company_id = $request->company_id;
-        $total_price = $request->total_price;
-        $currency = $request->currency_get;
+        $total_price = (float) $request->total_price;
+        $currency = $request->currency_get ?: 'INR';
         $packages_id = $request->packages_id;
-        $mainType = $request->mainType;
-        $amount = $total_price * 100; // Amount in paise
+        $mainType = $request->mainType ?: 1;
+        $amount = (int) round($total_price * 100);
+
+        if ($amount <= 0) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Total price must be greater than zero to generate a payment link.',
+            ], 422);
+        }
 
         $payment_settings = DB::table('payment_settings')->select('payment_settings.*')->first();
+        if (! $payment_settings || empty($payment_settings->razorpay_key) || empty($payment_settings->razorpay_secret)) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Razorpay payment gateway credentials are not configured.',
+            ], 422);
+        }
+
         $apiKey = $payment_settings->razorpay_key;
         $apiSecret = $payment_settings->razorpay_secret;
 
         $company_details = DB::table('companies')->where('id', '=', $company_id)->first();
+        if (! $company_details) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Company not found.',
+            ], 404);
+        }
 
         if ($mainType == 1) {
             $packages = DB::table('coin_packages')
@@ -326,9 +361,8 @@ class CustomPackageController extends SuperAdminBaseController
                 ->where('coin_packages.id', '=', $packages_id)
                 ->select('coin_packages.*', 'coin_package_types.title', 'coin_package_types.days')->first();
 
-            $product_name = ($packages) ? @$packages->title : '';
-            $event_type = ($packages) ? $packages->event_type : '';
-
+            $product_name = ($packages) ? @$packages->title : 'Custom Package';
+            $event_type = ($packages) ? $packages->event_type : 'operational';
         } else {
             $top_up_coins_cart = DB::table('top_up_coin_packages')
                 ->where('top_up_coin_packages.id', $packages_id)
@@ -336,153 +370,177 @@ class CustomPackageController extends SuperAdminBaseController
                 ->first();
 
             $product_name = 'Top-up Coins';
-            $event_type = ($top_up_coins_cart) ? $top_up_coins_cart->event_type : '';
-
+            $event_type = ($top_up_coins_cart) ? $top_up_coins_cart->event_type : 'operational';
         }
 
         $paymentLinkData = [
             'amount' => $amount,
             'currency' => $currency,
-            'description' => $product_name.' - '.$event_type,
+            'description' => $product_name.' - '.ucfirst($event_type),
             'callback_url' => url('link-payment-callback/'),
             'callback_method' => 'get',
             'customer' => [
-                'name' => $company_details->company_name,
-                'contact' => $company_details->company_phone,
-                'email' => $company_details->company_email,
+                'name' => $company_details->company_name ?? 'Client',
+                'contact' => $company_details->company_phone ?? '',
+                'email' => $company_details->company_email ?? '',
             ],
             'notify' => [
-                'sms' => true,
-                'email' => true,
+                'sms' => ! empty($company_details->company_phone),
+                'email' => ! empty($company_details->company_email),
             ],
         ];
 
-        //  dd($paymentLinkData);
+        try {
+            $paymentLinkResponse = $this->createRazorpayPaymentLink($apiKey, $apiSecret, $paymentLinkData);
+            if (! empty($paymentLinkResponse['short_url'])) {
+                return response()->json([
+                    'status' => 'success',
+                    'message' => 'Payment link created successfully.',
+                    'short_url' => $paymentLinkResponse['short_url'],
+                    'Paymentstatus' => $paymentLinkResponse['status'] ?? 'created',
+                    'payment_orderId' => $paymentLinkResponse['id'] ?? '',
+                ]);
+            } else {
+                $err = $paymentLinkResponse['error']['description'] ?? 'Unable to create payment link via Razorpay.';
 
-        // Create payment link using cURL
-
-        $paymentLinkResponse = $this->createRazorpayPaymentLink($apiKey, $apiSecret, $paymentLinkData);
-
-        $paymentLink = $paymentLinkResponse['short_url'];
-        $Paymentstatus = $paymentLinkResponse['status'];
-        $payment_orderId = $paymentLinkResponse['id'];
-
-        return response()->json([
-            'message' => '',
-            'status' => 'success',
-            'short_url' => $paymentLink,
-            'Paymentstatus' => $Paymentstatus,
-            'payment_orderId' => $payment_orderId,
-        ]);
-
-        //  dd( $paymentLinkResponse);
-
+                return response()->json([
+                    'status' => 'error',
+                    'message' => $err,
+                ], 422);
+            }
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Payment link error: '.$e->getMessage(),
+            ], 500);
+        }
     }
 
     public function createInvoice(Request $request)
     {
-        // $call_back_url		=	url('link-payment-callback/');
+        // 1. Robust Server-side Validation
+        $validator = \Validator::make($request->all(), [
+            'company_id' => 'required',
+            'packages_id' => 'required',
+            'cvaccess_startdate' => 'required|date',
+            'cvaccess_enddate' => 'required|date',
+            'paymentmodeselector' => 'required|string',
+        ], [
+            'packages_id.required' => 'Please select a package.',
+            'cvaccess_startdate.required' => 'Please provide the package start date.',
+            'cvaccess_enddate.required' => 'Please provide the package end date.',
+            'paymentmodeselector.required' => 'Please select a payment mode.',
+        ]);
 
-        // echo '<pre>'; print_r($_REQUEST); exit;
+        if ($validator->fails()) {
+            return response()->json([
+                'status' => 'error',
+                'message' => $validator->errors()->first(),
+            ], 422);
+        }
+
+        // Mode specific validation
+        if ($request->paymentmodeselector == 'Cheque') {
+            if (empty($request->chequenumber) || empty($request->chequedate) || empty($request->bankname)) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Please fill in all Cheque payment details (Cheque Number, Date, and Bank Name).',
+                ], 422);
+            }
+        } elseif ($request->paymentmodeselector == 'Bank Transfer') {
+            if (empty($request->transactionid) || empty($request->bankreference)) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Please fill in all Bank Transfer details (Transaction ID and Bank Reference Number).',
+                ], 422);
+            }
+        }
+
         $company_id = $request->company_id;
-        $currency = $request->currency;
-        $price = $request->price;
-        $total_price = $request->total_price;
-        $gst_amount = $request->gst_amount;
-        $gst = $request->gst;
+        $currency = $request->currency ?: 'INR';
+        $price = (float) ($request->price ?? 0);
+        $total_price = (float) ($request->total_price ?? 0);
+        $gst_amount = (float) ($request->gst_amount ?? 0);
+        $gst = (float) ($request->gst ?? 0);
         $chequenumber = $request->chequenumber;
         $chequedate = $request->chequedate;
         $bankname = $request->bankname;
         $transactionid = $request->transactionid;
         $bankreference = $request->bankreference;
-        $coins = $request->total_coins;
+        $coins = (float) ($request->total_coins ?? 0);
         $paymentmodeselector = $request->paymentmodeselector;
-        $paymentmethodselector = $request->paymentmethodselector;
+        $paymentmethodselector = $request->paymentmethodselector ?: 'offline';
 
-        $status = '';
         $Paymentstatus = 'captured';
         $payment_orderId = '';
-
         $paymentLink = '';
-        $top_up_logs_status = 1;
 
         $paymentLinkPaymentstatus = $request->paymentLinkPaymentstatus;
         $paymentLinkpayment_orderId = $request->paymentLinkpayment_orderId;
         $paymentLinkshort_url = $request->paymentLinkshort_url;
 
         $company_coins_days = DB::table('coin_packages')->where('id', $request->packages_id)->first();
+        if (! $company_coins_days) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'The selected package was not found.',
+            ], 422);
+        }
+
         $coin_orders = [
             'coin_package_id' => $request->packages_id,
-            'price' => $request->price,
-            'coins' => $request->total_coins,
-            'days' => $company_coins_days->days,
-            'event_type' => $request->event_type,
-            'company_id' => $request->company_id,
-            'discount' => $request->discount,
+            'price' => $price,
+            'coins' => $coins,
+            'days' => $company_coins_days->days ?? 0,
+            'event_type' => $request->event_type ?: ($company_coins_days->event_type ?? 'operational'),
+            'company_id' => $company_id,
+            'discount' => (float) ($request->discount ?? 0),
             'status' => 1,
             'created_at' => date('Y-m-d H:i:s'),
             'updated_at' => date('Y-m-d H:i:s'),
         ];
-        // dd($coin_orders);
-        // $coin_order_id = 1;
+
         $coin_order_id = DB::table('coin_orders')->insertGetId($coin_orders);
 
-        $response = $this->elasticService->getClient()->update([
+        $this->elasticService->getClient()->update([
             'index' => ELASTIC_COIN_ORDERS,
             'id' => $coin_order_id,
             'retry_on_conflict' => 5,
             'body' => [
-                'doc' => [
-                    'id' => $coin_order_id,
-                    'coin_package_id' => $request->packages_id,
-                    'price' => $request->price,
-                    'coins' => $request->total_coins,
-                    'days' => $company_coins_days->days,
-                    'event_type' => $request->event_type,
-                    'company_id' => $request->company_id,
-                    'discount' => $request->discount,
-                    'status' => 1,
+                'doc' => array_merge(['id' => $coin_order_id], $coin_orders, [
                     'updated_at' => now()->toIso8601String(),
                     'created_at' => now()->toIso8601String(),
-                ],
+                ]),
                 'doc_as_upsert' => true,
                 'detect_noop' => false,
             ],
         ]);
 
-        for ($i = 0; $i < count($request->id); $i++) {
-            $coin_order_events = [
-                'company_id' => $request->company_id,
-                'coin_event_id' => $request->id[$i],
-                'deductions' => $request->default_rate[$i],
-                'deduction_type' => $request->deduction_type[$i],
-                'coin_order_id' => $coin_order_id,
-                'required_coin' => $request->minimum_required[$i],
-                'event_type' => $request->event_type,
-            ];
-            // dd($coin_order_events);
-            $eventsId = DB::table('coin_order_events')->insertGetId($coin_order_events);
+        $eventIds = (array) $request->id;
+        for ($i = 0; $i < count($eventIds); $i++) {
+            if (! empty($eventIds[$i])) {
+                $coin_order_events = [
+                    'company_id' => $company_id,
+                    'coin_event_id' => $eventIds[$i],
+                    'deductions' => $request->default_rate[$i] ?? 0,
+                    'deduction_type' => $request->deduction_type[$i] ?? '',
+                    'coin_order_id' => $coin_order_id,
+                    'required_coin' => $request->minimum_required[$i] ?? 0,
+                    'event_type' => $coin_orders['event_type'],
+                ];
+                $eventsId = DB::table('coin_order_events')->insertGetId($coin_order_events);
 
-            $response = $this->elasticService->getClient()->update([
-                'index' => ELASTIC_COIN_ORDER_EVENTS,
-                'id' => $eventsId,
-                'retry_on_conflict' => 5,
-                'body' => [
-                    'doc' => [
-                        'id' => $eventsId,
-                        'company_id' => $request->company_id,
-                        'coin_event_id' => $request->id[$i],
-                        'deductions' => $request->default_rate[$i],
-                        'deduction_type' => $request->deduction_type[$i],
-                        'coin_order_id' => $coin_order_id,
-                        'required_coin' => $request->minimum_required[$i],
-                        'event_type' => $request->event_type,
+                $this->elasticService->getClient()->update([
+                    'index' => ELASTIC_COIN_ORDER_EVENTS,
+                    'id' => $eventsId,
+                    'retry_on_conflict' => 5,
+                    'body' => [
+                        'doc' => array_merge(['id' => $eventsId], $coin_order_events),
+                        'doc_as_upsert' => true,
+                        'detect_noop' => false,
                     ],
-                    'doc_as_upsert' => true,
-                    'detect_noop' => false,
-                ],
-            ]);
-
+                ]);
+            }
         }
 
         $coinEvents = DB::table('coin_orders')
@@ -491,184 +549,100 @@ class CustomPackageController extends SuperAdminBaseController
             ->where('coin_orders.id', $coin_order_id)
             ->select('coin_package_types.title', 'coin_packages.event_type', 'coin_packages.custome_pck')->first();
 
-        $custome_chk = ($coinEvents) ? @$coinEvents->custome_pck : 0;
-
-        // dd($custome_chk,$coinEvents->custome_pck);
+        $product_title = $coinEvents ? $coinEvents->title : ($company_coins_days->title ?? 'Package');
+        $event_type = $coinEvents ? $coinEvents->event_type : ($company_coins_days->event_type ?? 'operational');
 
         if ($paymentmodeselector == 'Payment Link') {
             if ($paymentmethodselector == 'razorpay') {
-                //    dd($total_price,$price);
-
-                $payment_settings = DB::table('payment_settings')->select('payment_settings.*')->first();
-                $apiKey = $payment_settings->razorpay_key;
-                $apiSecret = $payment_settings->razorpay_secret;
-
-                $amount = $total_price * 100; // Amount in paise
-
                 $paymentLink = $paymentLinkshort_url;
-                $Paymentstatus = $paymentLinkPaymentstatus;
+                $Paymentstatus = $paymentLinkPaymentstatus ?: 'pending';
                 $payment_orderId = $paymentLinkpayment_orderId;
 
                 $company_details = DB::table('companies')->where('id', '=', $company_id)->first();
-                $product_name = $coinEvents->title;
-                $event_type = @$coinEvents->event_type;
-                $paymentLinkData = [
-                    'amount' => $amount,
-                    'currency' => $currency,
-                    'description' => $product_name.' - '.$event_type,
-                    'callback_url' => url('link-payment-callback/'),
-                    'callback_method' => 'get',
-                    'customer' => [
-                        'name' => $company_details->company_name,
-                        'contact' => $company_details->company_phone,
-                        'email' => $company_details->company_email,
-                    ],
-                    'notify' => [
-                        'sms' => true,
-                        'email' => true,
-                    ],
-                ];
 
-                // Create payment link using cURL
-
-                // $paymentLinkResponse = $this->createRazorpayPaymentLink($apiKey, $apiSecret, $paymentLinkData);
-
-                if (! empty($paymentLink)) {
-
-                    $basecompany = GeneralMethod::baseCompany();
-                    $senderName = ($basecompany->companyName) ? $basecompany->companyName : '';
-                    $fromAddress = ($basecompany->companyEmail) ? $basecompany->companyEmail : '';
-                    $attachments = [];
-                    $cc = [];
-
-                    $subject = 'Your Payment Link';
-
-                    $message = '
-                        <html>
-                        <head>
-                            <title>Your Payment Link</title>
-                        </head>
-                        <body>
-                            <h1>Hello,</h1>
-                            <p>We have generated a payment link for you. Please use the following link to complete your payment of '.($currency == 'INR' ? '₹' : '$').''.number_format($amount / 100, 2).":</p>
-                            <p><a href='$paymentLink'>$paymentLink</a></p>
-                            <p>Thank you!</p>
-                        </body>
-                        </html>
-                        ";
-
-                    $to_Mail_Id = $company_details->company_email;
-
-                    $datamail = [
-                        'message' => $message,
-                    ];
-                    $result = $this->mailService->sendEmail($to_Mail_Id, $subject, 'email.common.index', (object) $datamail, $attachments, $fromAddress, $senderName, $cc);
-
-                } else {
-                    // return response()->json([
-                    //     'message' => 'Failed to create payment link',
-                    //     'status' => 'error'
-                    // ]);
+                if (! empty($paymentLink) && $company_details && ! empty($company_details->company_email)) {
+                    try {
+                        $basecompany = GeneralMethod::baseCompany();
+                        $senderName = $basecompany->companyName ?? 'JERO';
+                        $fromAddress = $basecompany->companyEmail ?? 'support@jero.works';
+                        $attachments = [];
+                        $cc = [];
+                        $subject = 'Your Payment Link for '.$product_title;
+                        $message = '
+                            <html>
+                            <head><title>Your Payment Link</title></head>
+                            <body style="font-family: Poppins, sans-serif; color: #333;">
+                                <h2>Hello,</h2>
+                                <p>We have generated a payment link for you. Please use the following link to complete your payment of '.($currency == 'INR' ? '₹' : '$').number_format($total_price, 2).':</p>
+                                <p><a href="'.$paymentLink.'" style="background:#009ef7;color:#fff;padding:10px 18px;border-radius:6px;text-decoration:none;display:inline-block;">Pay Now</a></p>
+                                <p>Or copy link: <br><a href="'.$paymentLink.'">'.$paymentLink.'</a></p>
+                                <p>Thank you!</p>
+                            </body>
+                            </html>
+                        ';
+                        $datamail = ['message' => $message];
+                        $this->mailService->sendEmail($company_details->company_email, $subject, 'email.common.index', (object) $datamail, $attachments, $fromAddress, $senderName, $cc);
+                    } catch (\Exception $e) {
+                        \Log::error('Payment link email failed: '.$e->getMessage());
+                    }
                 }
-
                 $status = 'razorpay';
-                $top_up_logs_status = 0;
-
-                //  $createPayment = GeneralMethod::createPayment($total_price, $currency);
-
-                //  $Paymentstatus = $paymentLinkResponse['status'];
-                //  $payment_orderId = $paymentLinkResponse['id'];
-
-                // dd( $paymentLinkResponse);
-
             } else {
-                $createPayment = GeneralMethod::createPayment($total_price, $currency);
                 $status = 'phonepe';
             }
         } else {
-
             $status = 'offline';
-
         }
 
         $subscription_type = 'yes';
-        $product_name = $coinEvents->title;
-        $event_type = @$coinEvents->event_type;
         $duration = 'Existing Package';
-        $credit = $request->total_coins;
+        $credit = $coins;
 
-        if ($coinEvents) {
-            $cartValue = [
-                'company_id' => $company_id,
-                'subscription_type' => $subscription_type,
-                'product_name' => $product_name.' - '.$event_type,
-                'pck_top_id' => $coin_order_id,
-                'event_type' => $event_type,
-                'duration' => $duration,
-                'credit' => $credit,
-                'currency' => $currency,
-                'price' => $price,
-                'gst' => $gst,
-                'status' => 2,
-                'gst_amount' => $gst_amount,
-                'total_price' => $total_price,
-                'user_id' => auth()->user()->id,
-            ];
+        $cartValue = [
+            'company_id' => $company_id,
+            'subscription_type' => $subscription_type,
+            'product_name' => $product_title.' - '.ucfirst($event_type),
+            'pck_top_id' => $coin_order_id,
+            'event_type' => $event_type,
+            'duration' => $duration,
+            'credit' => $credit,
+            'currency' => $currency,
+            'price' => $price,
+            'gst' => $gst,
+            'status' => 2,
+            'gst_amount' => $gst_amount,
+            'total_price' => $total_price,
+            'user_id' => auth()->check() ? auth()->user()->id : 1,
+        ];
 
-            // dd($cartValue);
-            // Insert the cart record
-            DB::table('carts')->insert($cartValue);
-            $cartsInsertedId = DB::getPdo()->lastInsertId();
+        DB::table('carts')->insert($cartValue);
+        $cartsInsertedId = DB::getPdo()->lastInsertId();
 
-            $response = $this->elasticService->getClient()->update([
-                'index' => ELASTIC_CARTS,
-                'id' => $cartsInsertedId,
-                'retry_on_conflict' => 5,
-                'body' => [
-                    'doc' => [
-                        'id' => $cartsInsertedId,
-                        'company_id' => $company_id,
-                        'subscription_type' => $subscription_type,
-                        'product_name' => $product_name.' - '.$event_type,
-                        'pck_top_id' => $coin_order_id,
-                        'event_type' => $event_type,
-                        'duration' => $duration,
-                        'credit' => $credit,
-                        'currency' => $currency,
-                        'price' => $price,
-                        'gst' => $gst,
-                        'gst_amount' => $gst_amount,
-                        'total_price' => $total_price,
-                        'user_id' => auth()->user()->id,
-                        'status' => 2,
-                        'updated_at' => now()->toIso8601String(),
-                        'created_at' => now()->toIso8601String(),
-                    ],
-                    'doc_as_upsert' => true,
-                    'detect_noop' => false,
-                ],
-            ]);
-
-            // dd("kfd");
-        }
-        $topUptype = $event_type;
-
-        $company_coins = DB::table('company_coins')->where('event_type', '=', $topUptype)->where('company_id', '=', $company_id)->whereDate('end_date', '>=', now())->first();
-        $update_coins = $coins;
-        if ($company_coins) {
-            $update_coins = $company_coins->coins + $coins;
-        }
+        $this->elasticService->getClient()->update([
+            'index' => ELASTIC_CARTS,
+            'id' => $cartsInsertedId,
+            'retry_on_conflict' => 5,
+            'body' => [
+                'doc' => array_merge(['id' => $cartsInsertedId], $cartValue, [
+                    'updated_at' => now()->toIso8601String(),
+                    'created_at' => now()->toIso8601String(),
+                ]),
+                'doc_as_upsert' => true,
+                'detect_noop' => false,
+            ],
+        ]);
 
         $row = DB::table('carts')->where('id', '=', $cartsInsertedId)->where('status', '=', 2)->first();
 
         $maxId = DB::table('cart_transaction_history')->max('id');
         $pre_fixed = DB::table('pre_fixed_settings')->where('type', 'invoice')->first();
+        $prePrefix = $pre_fixed ? $pre_fixed->pre_fixed : 'INV-';
         $number = ($maxId > 0) ? $maxId + 1 : 1;
         $padded_number = str_pad($number, 5, '0', STR_PAD_LEFT);
-        $invoices_no = $pre_fixed->pre_fixed.$padded_number;
+        $invoices_no = $prePrefix.$padded_number;
         $invoices_date = date('Y-m-d H:i:s');
 
-        DB::table('cart_transaction_history')->insert([
+        $cartTx = [
             'company_id' => $row->company_id,
             'subscription_type' => $row->subscription_type,
             'pck_top_id' => $row->pck_top_id,
@@ -683,12 +657,12 @@ class CustomPackageController extends SuperAdminBaseController
             'total_price' => $row->total_price,
             'user_id' => $row->user_id,
             'status' => $Paymentstatus,
-            'payment_link_id' => $payment_orderId,
-            'chequenumber' => (@$chequenumber) ? $chequenumber : '',
-            'chequedate' => (@$chequedate) ? date('Y-m-d', strtotime($chequedate)) : '',
-            'bankname' => (@$bankname) ? $bankname : '',
-            'transactionid' => (@$transactionid) ? $transactionid : '',
-            'bankreference' => (@$bankreference) ? $bankreference : '',
+            'payment_link_id' => $payment_orderId ?: '',
+            'chequenumber' => $chequenumber ?: '',
+            'chequedate' => $chequedate ? date('Y-m-d', strtotime($chequedate)) : null,
+            'bankname' => $bankname ?: '',
+            'transactionid' => $transactionid ?: '',
+            'bankreference' => $bankreference ?: '',
             'payment_gateway' => $paymentmethodselector,
             'invoiceId' => $invoices_no,
             'invoice_date' => $invoices_date,
@@ -696,48 +670,123 @@ class CustomPackageController extends SuperAdminBaseController
             'cart_id' => $cartsInsertedId,
             'created_at' => date('Y-m-d H:i:s'),
             'updated_at' => date('Y-m-d H:i:s'),
-        ]);
+        ];
+
+        DB::table('cart_transaction_history')->insert($cartTx);
         $cartsInsertedIdHistoryID = DB::getPdo()->lastInsertId();
 
-        $response = $this->elasticService->getClient()->update([
+        $this->elasticService->getClient()->update([
             'index' => ELASTIC_CART_TRANSACTION_HISTORY,
             'id' => $cartsInsertedIdHistoryID,
             'retry_on_conflict' => 5,
             'body' => [
-                'doc' => [
-                    'id' => $cartsInsertedIdHistoryID,
-                    'company_id' => $row->company_id,
-                    'subscription_type' => $row->subscription_type,
-                    'pck_top_id' => $row->pck_top_id,
-                    'event_type' => $row->event_type,
-                    'product_name' => $row->product_name,
-                    'duration' => $row->duration,
-                    'credit' => $row->credit,
-                    'currency' => $row->currency,
-                    'price' => $row->price,
-                    'gst' => $row->gst,
-                    'gst_amount' => $row->gst_amount,
-                    'total_price' => $row->total_price,
-                    'user_id' => $row->user_id,
-                    'status' => $Paymentstatus,
-                    'payment_link_id' => $payment_orderId,
-                    'chequenumber' => (@$chequenumber) ? $chequenumber : '',
-                    'chequedate' => ($chequedate) ? Carbon::parse($chequedate)->toIso8601String() : null,
-                    'bankname' => (@$bankname) ? $bankname : '',
-                    'transactionid' => (@$transactionid) ? $transactionid : '',
-                    'bankreference' => (@$bankreference) ? $bankreference : '',
-                    'payment_gateway' => $paymentmethodselector,
-                    'invoiceId' => $invoices_no,
-                    'invoice_date' => ($invoices_date) ? Carbon::parse($invoices_date)->toIso8601String() : null,
-                    'payment_mode' => $paymentmodeselector,
-                    'cart_id' => $cartsInsertedId,
+                'doc' => array_merge(['id' => $cartsInsertedIdHistoryID], $cartTx, [
+                    'chequedate' => $chequedate ? Carbon::parse($chequedate)->toIso8601String() : null,
+                    'invoice_date' => Carbon::parse($invoices_date)->toIso8601String(),
                     'created_at' => now()->toIso8601String(),
                     'updated_at' => now()->toIso8601String(),
-                ],
+                ]),
                 'doc_as_upsert' => true,
                 'detect_noop' => false,
             ],
         ]);
+
+        $start_date = date('Y-m-d', strtotime($request->cvaccess_startdate));
+        $end_date = date('Y-m-d', strtotime($request->cvaccess_enddate));
+
+        // Company coins handling
+        $topUptype = $event_type;
+        $company_coins = DB::table('company_coins')
+            ->where('event_type', '=', $topUptype)
+            ->where('company_id', '=', $company_id)
+            ->first();
+
+        if ($paymentmodeselector == 'Payment Link') {
+            $coins_update = 0;
+            $actual_coins_update = 0;
+            $update_coins = 0;
+        } else {
+            $coins_update = ($company_coins && strtotime($company_coins->end_date) >= strtotime(date('Y-m-d'))) ? ($company_coins->coins + $coins) : $coins;
+            $actual_coins_update = $coins;
+            $update_coins = $coins_update;
+
+            if ($company_coins) {
+                DB::table('company_coins')->where('id', '=', $company_coins->id)->update([
+                    'coins' => $coins_update,
+                    'actual_coins' => $actual_coins_update,
+                    'start_date' => $start_date,
+                    'end_date' => $end_date,
+                    'coin_order_id' => $coin_order_id,
+                    'status' => 'valid',
+                    'updated_at' => date('Y-m-d H:i:s'),
+                ]);
+
+                $this->elasticService->getClient()->update([
+                    'index' => ELASTIC_COMPANY_COINS,
+                    'id' => $company_coins->id,
+                    'retry_on_conflict' => 5,
+                    'body' => [
+                        'doc' => [
+                            'coins' => $coins_update,
+                            'actual_coins' => $actual_coins_update,
+                            'start_date' => Carbon::parse($start_date)->toIso8601String(),
+                            'end_date' => Carbon::parse($end_date)->toIso8601String(),
+                            'coin_order_id' => $coin_order_id,
+                            'status' => 'valid',
+                            'updated_at' => now()->toIso8601String(),
+                        ],
+                        'doc_as_upsert' => true,
+                        'detect_noop' => false,
+                    ],
+                ]);
+            } else {
+                $newCompanyCoinId = DB::table('company_coins')->insertGetId([
+                    'coin_order_id' => $coin_order_id,
+                    'company_id' => $company_id,
+                    'event_type' => $topUptype,
+                    'currency' => $currency,
+                    'amount' => $price,
+                    'discount' => (float) ($request->discount ?? 0),
+                    'coins' => $coins_update,
+                    'actual_coins' => $actual_coins_update,
+                    'balance_coin' => 0,
+                    'status' => 'valid',
+                    'free_pack_status' => 'active',
+                    'start_date' => $start_date,
+                    'end_date' => $end_date,
+                    'created_at' => date('Y-m-d H:i:s'),
+                    'updated_at' => date('Y-m-d H:i:s'),
+                ]);
+
+                $this->elasticService->getClient()->update([
+                    'index' => ELASTIC_COMPANY_COINS,
+                    'id' => $newCompanyCoinId,
+                    'retry_on_conflict' => 5,
+                    'body' => [
+                        'doc' => [
+                            'id' => $newCompanyCoinId,
+                            'coin_order_id' => $coin_order_id,
+                            'company_id' => $company_id,
+                            'event_type' => $topUptype,
+                            'currency' => $currency,
+                            'amount' => $price,
+                            'discount' => (float) ($request->discount ?? 0),
+                            'coins' => $coins_update,
+                            'actual_coins' => $actual_coins_update,
+                            'balance_coin' => 0,
+                            'status' => 'valid',
+                            'free_pack_status' => 'active',
+                            'start_date' => Carbon::parse($start_date)->toIso8601String(),
+                            'end_date' => Carbon::parse($end_date)->toIso8601String(),
+                            'created_at' => now()->toIso8601String(),
+                            'updated_at' => now()->toIso8601String(),
+                        ],
+                        'doc_as_upsert' => true,
+                        'detect_noop' => false,
+                    ],
+                ]);
+            }
+        }
 
         DB::table('link_payments')->insert([
             'status' => '0',
@@ -745,229 +794,98 @@ class CustomPackageController extends SuperAdminBaseController
             'coins' => $row->credit,
             'coin_order_id' => $row->pck_top_id,
             'amount' => $total_price,
-            'start_date' => date('Y-m-d', strtotime($request->cvaccess_startdate)),
-            'end_date' => date('Y-m-d', strtotime($request->cvaccess_enddate)),
+            'start_date' => $start_date,
+            'end_date' => $end_date,
             'update_coins' => $update_coins,
             'event_type' => $row->event_type,
             'subscription_type' => $row->subscription_type,
             'cart_id' => $cartsInsertedId,
             'currency' => $currency,
             'payment_link' => $paymentLink,
-            'payment_link_id' => $payment_orderId,
+            'payment_link_id' => $payment_orderId ?: '',
         ]);
 
-        if ($paymentmodeselector == 'Payment Link') {
-            $coins_update = 0;
-            $actual_coins_update = 0;
-            $start_date = date('Y-m-d', strtotime($request->cvaccess_startdate));
-            $end_date = date('Y-m-d', strtotime($request->cvaccess_enddate));
-        } else {
-            $actual_coins = DB::table('cart_transaction_history')->where('id', '=', $cartsInsertedIdHistoryID)->first();
-            // $actual_coins = $update_coins-$company_coins->coins;
+        $coin_transection_logs = [
+            'coin_order_id' => $coin_order_id,
+            'from_company_id' => $company_id,
+            'company_id' => $company_id,
+            'event_by' => 1,
+            'event' => $product_title,
+            'currency' => $currency,
+            'amount' => $price,
+            'coins' => $coins_update,
+            'remain_coins' => 0,
+            'actual_coins' => $actual_coins_update,
+            'transection_type' => 'credit',
+            'settlement_coins' => 0,
+            'event_type' => $topUptype,
+            'payment_link_id' => $payment_orderId ?: '',
+            'start_date' => $start_date,
+            'end_date' => $end_date,
+            'payment_orderId' => $payment_orderId ?: '',
+            'created_at' => date('Y-m-d H:i:s'),
+            'updated_at' => date('Y-m-d H:i:s'),
+        ];
 
-            $actual_coins_update = $actual_coins->credit;
-            $coins_update = $update_coins;
-            $start_date = date('Y-m-d', strtotime($request->cvaccess_startdate));
-            $end_date = date('Y-m-d', strtotime($request->cvaccess_enddate));
+        $transection_logsId = DB::table('coin_transection_logs')->insertGetId($coin_transection_logs);
 
-            DB::table('company_coins')->where('event_type', '=', $topUptype)->where('company_id', '=', $company_id)->update(['coins' => $coins_update, 'actual_coins' => $actual_coins_update, 'start_date' => $start_date, 'coin_order_id' => $coin_order_id, 'end_date' => $end_date, 'updated_at' => date('Y-m-d H:i:s')]);
+        $this->elasticService->getClient()->update([
+            'index' => ELASTIC_COIN_TRANSECTION_LOGS,
+            'id' => $transection_logsId,
+            'retry_on_conflict' => 5,
+            'body' => [
+                'doc' => array_merge(['id' => $transection_logsId], $coin_transection_logs, [
+                    'start_date' => Carbon::parse($start_date)->toIso8601String(),
+                    'end_date' => Carbon::parse($end_date)->toIso8601String(),
+                    'created_at' => now()->toIso8601String(),
+                    'updated_at' => now()->toIso8601String(),
+                ]),
+                'doc_as_upsert' => true,
+                'detect_noop' => false,
+            ],
+        ]);
 
-            $razorpay_start_date = ($start_date) ? Carbon::parse($start_date)->toIso8601String() : null;
-            $razorpay_end_date = ($end_date) ? Carbon::parse($end_date)->toIso8601String() : null;
-
-            $company_coins_up_elastic = [
-                'coins' => $coins_update,
-                'actual_coins' => $actual_coins_update,
-                'start_date' => $razorpay_start_date,
-                'end_date' => $razorpay_end_date,
-                'coin_order_id' => $coin_order_id,
-                'updated_at' => now()->toIso8601String(),
-            ];
-            $params = [
-                'index' => ELASTIC_COMPANY_COINS,
-                'conflicts' => 'proceed', // avoid version conflict failures
-                'body' => [
-                    'script' => [
-                        'lang' => 'painless',
-                        'source' => '
-                            ctx._source.coins    = params.coins;
-                            ctx._source.actual_coins           = params.actual_coins;
-                            ctx._source.start_date         = params.start_date;
-                            ctx._source.end_date            = params.end_date;
-                            ctx._source.coin_order_id     = params.coin_order_id;
-                            ctx._source.updated_at       = params.updated_at;
-                        ',
-                        'params' => $company_coins_up_elastic,
-                    ],
-                    'query' => [
-                        'bool' => [
-                            'must' => [
-                                ['term' => ['company_id' => $company_id]],
-                                ['term' => ['event_type' => $topUptype]],
-                            ],
-                        ],
-                    ],
-                ],
-            ];
-            // 🚀 Execute update
-            $response = $this->elasticService->getClient()->updateByQuery($params);
-
-        }
-
-        if ($company_coins) {
-
-            $coin_transection_logs = [
-                'coin_order_id' => $coin_order_id,
-                'from_company_id' => $company_id,
+        // Billing address by orders record
+        $billing_address_companies = DB::table('billing_address_companies')->where('company_id', '=', $company_id)->first();
+        $sold_by_address = DB::table('sold_by_address')->first();
+        if ($billing_address_companies && $cartsInsertedIdHistoryID) {
+            DB::table('billing_address_by_orders')->insert([
+                'cart_transaction_id' => $cartsInsertedIdHistoryID,
                 'company_id' => $company_id,
-                'event_by' => 1,
-                'event' => $coinEvents->title.' ',
-                'currency' => $currency,
-                'amount' => $price,
-                'coins' => $coins_update,
-                'remain_coins' => 0,
-                'actual_coins' => $actual_coins_update,
-                'transection_type' => 'credit',
-                'settlement_coins' => 0,
-                'event_type' => $topUptype,
-                'payment_link_id' => $payment_orderId,
-                'start_date' => $start_date,
-                'end_date' => $end_date,
-                'payment_orderId' => $payment_orderId,
-                'created_at' => date('Y-m-d H:i:s'),
-                'updated_at' => date('Y-m-d H:i:s'),
-            ];
-
-            $transection_logsId = DB::table('coin_transection_logs')->insertGetId($coin_transection_logs);
-
-            $response = $this->elasticService->getClient()->update([
-                'index' => ELASTIC_COIN_TRANSECTION_LOGS,
-                'id' => $transection_logsId,
-                'retry_on_conflict' => 5,
-                'body' => [
-                    'doc' => [
-                        'coin_order_id' => $coin_order_id,
-                        'from_company_id' => $company_id,
-                        'company_id' => $company_id,
-                        'event_by' => 1,
-                        'event' => $coinEvents->title.' ',
-                        'currency' => $currency,
-                        'amount' => $price,
-                        'coins' => $coins_update,
-                        'remain_coins' => 0,
-                        'actual_coins' => $actual_coins_update,
-                        'transection_type' => 'credit',
-                        'settlement_coins' => 0,
-                        'event_type' => $topUptype,
-                        'payment_link_id' => $payment_orderId,
-                        'payment_orderId' => $payment_orderId,
-                        'start_date' => ($start_date) ? Carbon::parse($start_date)->toIso8601String() : null,
-                        'end_date' => ($end_date) ? Carbon::parse($end_date)->toIso8601String() : null,
-                        'created_at' => now()->toIso8601String(),
-                        'updated_at' => now()->toIso8601String(),
-                    ],
-                    'doc_as_upsert' => true,
-                    'detect_noop' => false,
-                ],
-            ]);
-
-            if (! DB::table('billing_address_companies')->where('company_id', '=', $company_id)->exists()) {
-
-                $clients = DB::table('clients')->leftJoin('companies', 'companies.id', '=', 'clients.company_id')
-                    ->select('clients.id', 'companies.company_name', 'users.name')
-                    ->leftJoin('users', 'users.company_id', '=', 'companies.id')
-                    ->where('clients.company_id', '=', $company_id)
-                    ->where('clients.self_company', '=', 1)
-                    ->first();
-
-                $locInfo = DB::table('client_location')
-                    ->leftJoin('countries', 'countries.id', '=', 'client_location.country_id')
-                    ->leftJoin('city_list', 'city_list.city_id', '=', 'client_location.city_id')
-                    ->leftJoin('state_list', 'state_list.id', '=', 'client_location.state')
-                    ->select(
-                        'client_location.id',
-                        'client_location.city',
-                        'client_location.city_id',
-                        'client_location.state as state_id',
-                        'client_location.address',
-                        'client_location.postcode',
-                        'client_location.country_id',
-                        'city_list.city as city_name',
-                        'state_list.state as state_name',
-                        'countries.country_name'
-                    )
-                    ->where('countries.id', $company_id)
-                    ->first();
-
-                $phone = auth()->user()->mobile;
-
-                $company_name = @$clients->company_name;
-                $user_name = @$clients->name;
-                $nameParts = explode(' ', $user_name);
-                $firstName = $nameParts[0];
-                $lastName = isset($nameParts[1]) ? $nameParts[1] : '';
-
-                $locArr = '';
-                if ($locInfo) {
-                    $city_name = @$locInfo->city;
-
-                    $locArr = ucwords(@$locInfo->address).' '.ucwords($city_name).' , '.ucwords(@$locInfo->state_name).' , '.ucwords(@$locInfo->country_name);
-                }
-
-                DB::table('billing_address_companies')->insert([
-                    'company_id' => $company_id,
-                    'first_name' => $firstName,
-                    'last_name' => $lastName,
-                    'phone' => $phone,
-                    'street' => $locArr,
-                    'organization' => $company_name,
-                ]);
-            }
-
-            $billing_address_companies = DB::table('billing_address_companies')->where('company_id', '=', $company_id)->first();
-            $sold_by_address = DB::table('sold_by_address')->first();
-            if ($billing_address_companies && $cartsInsertedIdHistoryID) {
-
-                DB::table('billing_address_by_orders')->insert([
-                    'cart_transaction_id' => $cartsInsertedIdHistoryID,
-                    'company_id' => $company_id,
-                    'country_id' => ($billing_address_companies) ? $billing_address_companies->country_id : '',
-                    'first_name' => ($billing_address_companies) ? $billing_address_companies->first_name : '',
-                    'last_name' => ($billing_address_companies) ? $billing_address_companies->last_name : '',
-                    'phone' => ($billing_address_companies) ? $billing_address_companies->phone : '',
-                    'building' => ($billing_address_companies) ? $billing_address_companies->building : '',
-                    'street' => ($billing_address_companies) ? $billing_address_companies->street : '',
-                    'state_id' => ($billing_address_companies) ? $billing_address_companies->state_id : '',
-                    'city' => ($billing_address_companies) ? $billing_address_companies->city : '',
-                    'postal_code' => ($billing_address_companies) ? $billing_address_companies->postal_code : '',
-                    'organization' => ($billing_address_companies) ? $billing_address_companies->organization : '',
-                    'pan_no' => ($billing_address_companies) ? $billing_address_companies->pan_no : '',
-                    'gstin' => ($billing_address_companies) ? $billing_address_companies->gstin : '',
-                    'sold_country_id' => ($sold_by_address) ? $sold_by_address->country_id : '',
-                    'sold_first_name' => ($sold_by_address) ? $sold_by_address->first_name : '',
-                    'sold_last_name' => ($sold_by_address) ? $sold_by_address->last_name : '',
-                    'sold_phone' => ($sold_by_address) ? $sold_by_address->phone : '',
-                    'sold_building' => ($sold_by_address) ? $sold_by_address->building : '',
-                    'sold_street' => ($sold_by_address) ? $sold_by_address->street : '',
-                    'sold_state_id' => ($sold_by_address) ? $sold_by_address->state_id : '',
-                    'sold_city' => ($sold_by_address) ? $sold_by_address->city : '',
-                    'sold_postal_code' => ($sold_by_address) ? $sold_by_address->postal_code : '',
-                    'sold_organization' => ($sold_by_address) ? $sold_by_address->organization : '',
-                    'sold_gstin' => ($sold_by_address) ? $sold_by_address->gstin : '',
-                    'sold_pan_no' => ($sold_by_address) ? $sold_by_address->pan_no : '',
-                ]);
-
-            }
-
-            $url = url('super-admin/company/');
-
-            return response()->json([
-                'message' => '',
-                'status' => $status,
-                'url' => $url,
+                'country_id' => $billing_address_companies->country_id ?? '',
+                'first_name' => $billing_address_companies->first_name ?? '',
+                'last_name' => $billing_address_companies->last_name ?? '',
+                'phone' => $billing_address_companies->phone ?? '',
+                'building' => $billing_address_companies->building ?? '',
+                'street' => $billing_address_companies->street ?? '',
+                'state_id' => $billing_address_companies->state_id ?? '',
+                'city' => $billing_address_companies->city ?? '',
+                'postal_code' => $billing_address_companies->postal_code ?? '',
+                'organization' => $billing_address_companies->organization ?? '',
+                'pan_no' => $billing_address_companies->pan_no ?? '',
+                'gstin' => $billing_address_companies->gstin ?? '',
+                'sold_country_id' => $sold_by_address->country_id ?? '',
+                'sold_first_name' => $sold_by_address->first_name ?? '',
+                'sold_last_name' => $sold_by_address->last_name ?? '',
+                'sold_phone' => $sold_by_address->phone ?? '',
+                'sold_building' => $sold_by_address->building ?? '',
+                'sold_street' => $sold_by_address->street ?? '',
+                'sold_state_id' => $sold_by_address->state_id ?? '',
+                'sold_city' => $sold_by_address->city ?? '',
+                'sold_postal_code' => $sold_by_address->postal_code ?? '',
+                'sold_organization' => $sold_by_address->organization ?? '',
+                'sold_gstin' => $sold_by_address->gstin ?? '',
+                'sold_pan_no' => $sold_by_address->pan_no ?? '',
             ]);
         }
 
+        $url = url('super-admin/company');
+
+        return response()->json([
+            'status' => $status,
+            'message' => 'Custom package invoice created successfully!',
+            'url' => $url,
+        ]);
     }
 
     private function createRazorpayPaymentLink($apiKey, $apiSecret, $paymentLinkData)

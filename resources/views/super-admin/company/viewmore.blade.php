@@ -4466,417 +4466,249 @@
                     <!--end::Requisitions Content-->
                     <!--begin::timeline Content-->
                     <div class="tab-pane" id="timeline" role="tabpanel" aria-labelledby="tab-timeline">
-                        {{-- <div class="card-header cursor-pointer px-0">
-                        <div class="card-title m-0">
-                            <h3 class="fw-bolder m-0">Timeline</h3>
-                        </div>
-                        </div> --}}
-                        <div class="card-body px-0 py-7">
-
-                            <div class="card card-custom mx-2">
-                                <div class="card-header card-header-tabs-line">
-                                    <div class="card-toolbar">
-                                        <ul class="nav nav-tabs nav-tabs-space-lg nav-tabs-line nav-tabs-bold nav-tabs-line-3x"
-                                            role="tablist">
-                                            <li class="nav-item me-3"> <a class="nav-link active" data-toggle="tab"
-                                                    href="#salestab"> <span class="nav-text font-weight-bold">Operational
-                                                        Package</span> </a> </li>
-                                            <li class="nav-item me-3"> <a class="nav-link" data-toggle="tab"
-                                                    href="#operationaltab"> <span class="nav-text font-weight-bold">Sales
-                                                        Package</span> </a> </li>
-                                        </ul>
+                        <!-- Tier 1: Toolbar Header Card -->
+                        <div class="pkg-toolbar-card">
+                            <div class="pkg-toolbar-left">
+                                <div class="pkg-toolbar-icon pkg-icon-blue">
+                                    <i class="fas fa-history"></i>
+                                </div>
+                                <div>
+                                    <div class="pkg-toolbar-title">
+                                        Coin Usage & Activity Timeline
+                                        <span class="pkg-badge-pill">Audit Trail</span>
+                                    </div>
+                                    <div class="pkg-toolbar-subtitle">
+                                        Chronological ledger of operational and sales coin deductions, balance top-ups, and activity settlements.
                                     </div>
                                 </div>
-
-                                <div class="card-body py-0">
-                                    <div class="tab-content">
-                                        <div class="tab-pane active" id="salestab" role="tabpanel">
-                                            <div class="card-body px-0 py-7">
-                                                <div class="timeline">
-                                                    @if (@$coin_transection_logs)
-
-                                                        @foreach ($coin_transection_logs as $transection_log)
-                                                            <div class="timeline-item">
-
-                                                                <!--begin::Timeline line-->
-                                                                <div class="timeline-line w-40px"></div>
-                                                                <!--end::Timeline line-->
-                                                                <!--begin::Timeline icon-->
-                                                                <div class="timeline-icon symbol symbol-circle symbol-40px">
-                                                                    <div class="symbol-label bg-light">
-                                                                        <!--begin::Svg Icon-->
-                                                                        <span class="svg-icon svg-icon-2 svg-icon-gray-500">
-                                                                            <svg xmlns="http://www.w3.org/2000/svg"
-                                                                                xmlns:xlink="http://www.w3.org/1999/xlink"
-                                                                                width="24px" height="24px"
-                                                                                viewBox="0 0 24 24" version="1.1">
-                                                                                <g stroke="none" stroke-width="1"
-                                                                                    fill="none" fill-rule="evenodd">
-                                                                                    <polygon points="0 0 24 0 24 24 0 24">
-                                                                                    </polygon>
-                                                                                    <path
-                                                                                        d="M4.85714286,1 L11.7364114,1 C12.0910962,1 12.4343066,1.12568431 12.7051108,1.35473959 L17.4686994,5.3839416 C17.8056532,5.66894833 18,6.08787823 18,6.52920201 L18,19.0833333 C18,20.8738751 17.9795521,21 16.1428571,21 L4.85714286,21 C3.02044787,21 3,20.8738751 3,19.0833333 L3,2.91666667 C3,1.12612489 3.02044787,1 4.85714286,1 Z M8,12 C7.44771525,12 7,12.4477153 7,13 C7,13.5522847 7.44771525,14 8,14 L15,14 C15.5522847,14 16,13.5522847 16,13 C16,12.4477153 15.5522847,12 15,12 L8,12 Z M8,16 C7.44771525,16 7,16.4477153 7,17 C7,17.5522847 7.44771525,18 8,18 L11,18 C11.5522847,18 12,17.5522847 12,17 C12,16.4477153 11.5522847,16 11,16 L8,16 Z"
-                                                                                        fill="#000000" fill-rule="nonzero"
-                                                                                        opacity="0.3">
-                                                                                    </path>
-                                                                                    <path
-                                                                                        d="M6.85714286,3 L14.7364114,3 C15.0910962,3 15.4343066,3.12568431 15.7051108,3.35473959 L20.4686994,7.3839416 C20.8056532,7.66894833 21,8.08787823 21,8.52920201 L21,21.0833333 C21,22.8738751 20.9795521,23 19.1428571,23 L6.85714286,23 C5.02044787,23 5,22.8738751 5,21.0833333 L5,4.91666667 C5,3.12612489 5.02044787,3 6.85714286,3 Z M8,12 C7.44771525,12 7,12.4477153 7,13 C7,13.5522847 7.44771525,14 8,14 L15,14 C15.5522847,14 16,13.5522847 16,13 C16,12.4477153 15.5522847,12 15,12 L8,12 Z M8,16 C7.44771525,16 7,16.4477153 7,17 C7,17.5522847 7.44771525,18 8,18 L11,18 C11.5522847,18 12,17.5522847 12,17 C12,16.4477153 11.5522847,16 11,16 L8,16 Z"
-                                                                                        fill="#000000" fill-rule="nonzero">
-                                                                                    </path>
-                                                                                </g>
-                                                                            </svg>
-                                                                        </span>
-                                                                        <!--end::Svg Icon-->
-                                                                    </div>
-                                                                </div>
-                                                                <!--end::Timeline icon-->
-                                                                <!--begin::Timeline content-->
-                                                                <div class="timeline-content mb-10 mt-n1">
-
-                                                                    <!--begin::Table-->
-                                                                    <table
-                                                                        class="table align-middle table-row-dashed fs-6 gy-0 mb-5"
-                                                                        id="">
-                                                                        <!--begin::Table body-->
-                                                                        <tbody class="text-gray-600 fw-bold">
-                                                                            <!--begin::Table row-->
-                                                                            <tr>
-                                                                                <!--begin::Date-->
-                                                                                <td class="min-w-110px">
-                                                                                    <div class="d-flex flex-column">
-                                                                                        <span class="text-dark fw-bolder fs-6">
-                                                                                            {{ date('d M Y', strtotime($transection_log->created_at)) }}
-                                                                                        </span>
-                                                                                        <span
-                                                                                            class="text-muted fw-bold d-block fs-7">
-                                                                                            {{ date('h:i:A', strtotime($transection_log->created_at)) }}
-                                                                                        </span>
-                                                                                    </div>
-                                                                                </td>
-                                                                                <!--end::Date-->
-
-                                                                                <td class="min-w-285px" style="width: 285px;">
-                                                                                    <div class="d-flex flex-column">
-                                                                                        <span class="text-dark fw-bolder fs-6">
-                                                                                            {{ $transection_log->event }}
-                                                                                        </span>
-                                                                                        <span
-                                                                                            class="fw-bold text-muted d-block fs-7">
-                                                                                            {{ ucwords($transection_log->event_type) }}
-                                                                                        </span>
-                                                                                    </div>
-                                                                                </td>
-
-                                                                                <!--begin::Status-->
-                                                                                <td class="min-w-150px">
-                                                                                    <div class="d-flex flex-column">
-                                                                                        <div class="symbol-group symbol-hover">
-                                                                                            <div class="symbol symbol-30 symbol-circle"
-                                                                                                data-toggle="tooltip"
-                                                                                                data-placement="top"
-                                                                                                title="{{ $transection_log->company_name ? $transection_log->name : 'By Default' }}"
-                                                                                                style="    text-align: center;">
-                                                                                                <div class="symbol symbol-30 symbol-circle"
-                                                                                                    data-bs-placement="top"
-                                                                                                    data-toggle="tooltip2"
-                                                                                                    data-html="true"
-                                                                                                    title="{{ $transection_log->company_name ? $transection_log->name : 'By Default' }}">
-                                                                                                    <div class="symbol symbol-circle symbol-30px overflow-hidden me-2 border-radius-100"
-                                                                                                        style="float:left">
-                                                                                                        <a href="javascript:void(0);"
-                                                                                                            data-row-id="11"
-                                                                                                            class="show-detail border-radius-100"
-                                                                                                            id="kt_activities3_toggle">
-                                                                                                            <div
-                                                                                                                class="symbol-label fs-8 fs-8 bg-dark text-secondary border-radius-100">
-                                                                                                                {{ $transection_log->company_name ? substr($transection_log->name, 0, 1) : 'B' }}
-                                                                                                            </div>
-                                                                                                        </a>
-                                                                                                    </div>
-                                                                                                </div>
-                                                                                                <span
-                                                                                                    class="text-muted fw-bold d-block fs-7">{{ $transection_log->company_name ? $transection_log->company_name : 'By Default' }}
-                                                                                                </span>
-                                                                                            </div>
-
-                                                                                        </div>
-
-                                                                                        <!--                     <a href="javascript:void(0);" class="text-muted fw-bold text-hover-primary d-block fs-7" -->
-                                                                                        <!--data-toggle="tooltip"
-                                                                                        title="User Company2">
-                                                                                        User Co </a> -->
-
-                                                                                    </div>
-                                                                                </td>
-                                                                                <!--end::Stage-->
-
-
-                                                                                <!--begin::Requisitions=-->
-                                                                                @if ($transection_log->settlement_coins <= 0)
-                                                                                    <td class="min-w-120px">
-                                                                                        <div class="d-flex flex-column">
-                                                                                            <span class="text-dark fw-bolder  fs-6"> 
-                                                                                                @if($transection_log->transection_type==='credit')
-                                                                                                {{ ($transection_log->actual_coins) ? $transection_log->actual_coins : $transection_log->coins }} Coins
-                                                                                                @else
-                                                                                                {{ $transection_log->coins }} Coins
-                                                                                                @endif
-                                                                                            </span>
-                                                                                            <span class="fw-bold text-muted d-block fs-7"> 
-                                                                                                {{ ucwords($transection_log->transection_type) }}
-                                                                                            </span>
-                                                                                        </div>
-                                                                                    </td>
-                                                                                @else
-                                                                                    <!--end::Requisitions=-->
-                                                                                    <!--begin::Interview Mode=-->
-                                                                                    <td class="min-w-120px">
-                                                                                        <div class="d-flex flex-column">
-                                                                                            <span
-                                                                                                class="fw-bold text-muted d-block fs-7">Settlement</span>
-                                                                                            <span
-                                                                                                class="text-dark fw-bolder  fs-6">
-                                                                                                {{ $transection_log->settlement_coins }}
-                                                                                                Coins
-                                                                                            </span>
-                                                                                            <span
-                                                                                                class="fw-bold text-muted d-block fs-7">
-                                                                                                {{ ucwords($transection_log->transection_type) }}
-                                                                                            </span>
-                                                                                        </div>
-                                                                                    </td>
-                                                                                @endif
-                                                                                <!--end::Interview Mode=-->
-                                                                                <!--begin::Interviewer Feedback=-->
-                                                                                <td class="min-w-70px">
-                                                                                    <div class="d-flex flex-column">
-                                                                                        <span class="text-dark fw-bolder  fs-6">{{ ($transection_log->remain_coins) ? $transection_log->remain_coins : $transection_log->coins }} Coins</span>
-                                                                                        <span
-                                                                                            class="fw-bold text-muted d-block fs-7">
-                                                                                            Balance
-                                                                                        </span>
-                                                                                    </div>
-                                                                                </td>
-                                                                                <!--end::Interviewer Feedback-->
-                                                                            </tr>
-                                                                            <!--end::Table row-->
-                                                                        </tbody>
-                                                                        <!--end::Table body-->
-                                                                    </table>
-                                                                    <!--end::Table-->
-                                                                </div>
-                                                                <!--end::Timeline content-->
-                                                            </div>
-                                                        @endforeach
-                                                    @else
-                                                        <div class="text-center">
-                                                            <p>No transaction logs available.</p>
-                                                        </div>
-                                                    @endif
-
-
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="tab-pane" id="operationaltab" role="tabpanel">
-                                            <div class="card-body px-0 py-7">
-                                                <div class="timeline">
-                                                    @if (@$coin_transection_logs_sales)
-
-                                                        @foreach ($coin_transection_logs_sales as $transection_log)
-                                                            <div class="timeline-item">
-
-                                                                <!--begin::Timeline line-->
-                                                                <div class="timeline-line w-40px"></div>
-                                                                <!--end::Timeline line-->
-                                                                <!--begin::Timeline icon-->
-                                                                <div class="timeline-icon symbol symbol-circle symbol-40px">
-                                                                    <div class="symbol-label bg-light">
-                                                                        <!--begin::Svg Icon-->
-                                                                        <span class="svg-icon svg-icon-2 svg-icon-gray-500">
-                                                                            <svg xmlns="http://www.w3.org/2000/svg"
-                                                                                xmlns:xlink="http://www.w3.org/1999/xlink"
-                                                                                width="24px" height="24px"
-                                                                                viewBox="0 0 24 24" version="1.1">
-                                                                                <g stroke="none" stroke-width="1"
-                                                                                    fill="none" fill-rule="evenodd">
-                                                                                    <polygon points="0 0 24 0 24 24 0 24">
-                                                                                    </polygon>
-                                                                                    <path
-                                                                                        d="M4.85714286,1 L11.7364114,1 C12.0910962,1 12.4343066,1.12568431 12.7051108,1.35473959 L17.4686994,5.3839416 C17.8056532,5.66894833 18,6.08787823 18,6.52920201 L18,19.0833333 C18,20.8738751 17.9795521,21 16.1428571,21 L4.85714286,21 C3.02044787,21 3,20.8738751 3,19.0833333 L3,2.91666667 C3,1.12612489 3.02044787,1 4.85714286,1 Z M8,12 C7.44771525,12 7,12.4477153 7,13 C7,13.5522847 7.44771525,14 8,14 L15,14 C15.5522847,14 16,13.5522847 16,13 C16,12.4477153 15.5522847,12 15,12 L8,12 Z M8,16 C7.44771525,16 7,16.4477153 7,17 C7,17.5522847 7.44771525,18 8,18 L11,18 C11.5522847,18 12,17.5522847 12,17 C12,16.4477153 11.5522847,16 11,16 L8,16 Z"
-                                                                                        fill="#000000" fill-rule="nonzero"
-                                                                                        opacity="0.3">
-                                                                                    </path>
-                                                                                    <path
-                                                                                        d="M6.85714286,3 L14.7364114,3 C15.0910962,3 15.4343066,3.12568431 15.7051108,3.35473959 L20.4686994,7.3839416 C20.8056532,7.66894833 21,8.08787823 21,8.52920201 L21,21.0833333 C21,22.8738751 20.9795521,23 19.1428571,23 L6.85714286,23 C5.02044787,23 5,22.8738751 5,21.0833333 L5,4.91666667 C5,3.12612489 5.02044787,3 6.85714286,3 Z M8,12 C7.44771525,12 7,12.4477153 7,13 C7,13.5522847 7.44771525,14 8,14 L15,14 C15.5522847,14 16,13.5522847 16,13 C16,12.4477153 15.5522847,12 15,12 L8,12 Z M8,16 C7.44771525,16 7,16.4477153 7,17 C7,17.5522847 7.44771525,18 8,18 L11,18 C11.5522847,18 12,17.5522847 12,17 C12,16.4477153 11.5522847,16 11,16 L8,16 Z"
-                                                                                        fill="#000000" fill-rule="nonzero">
-                                                                                    </path>
-                                                                                </g>
-                                                                            </svg>
-                                                                        </span>
-                                                                        <!--end::Svg Icon-->
-                                                                    </div>
-                                                                </div>
-                                                                <!--end::Timeline icon-->
-                                                                <!--begin::Timeline content-->
-                                                                <div class="timeline-content mb-10 mt-n1">
-
-                                                                    <!--begin::Table-->
-                                                                    <table
-                                                                        class="table align-middle table-row-dashed fs-6 gy-0 mb-5"
-                                                                        id="">
-                                                                        <!--begin::Table body-->
-                                                                        <tbody class="text-gray-600 fw-bold">
-                                                                            <!--begin::Table row-->
-                                                                            <tr>
-                                                                                <!--begin::Date-->
-                                                                                <td class="min-w-110px">
-                                                                                    <div class="d-flex flex-column">
-                                                                                        <span class="text-dark fw-bolder fs-6">
-                                                                                            {{ date('d M Y', strtotime($transection_log->created_at)) }}
-                                                                                        </span>
-                                                                                        <span
-                                                                                            class="text-muted fw-bold d-block fs-7">
-                                                                                            {{ date('h:i:A', strtotime($transection_log->created_at)) }}
-                                                                                        </span>
-                                                                                    </div>
-                                                                                </td>
-                                                                                <!--end::Date-->
-
-                                                                                <td class="min-w-285px" style="width: 285px;">
-                                                                                    <div class="d-flex flex-column">
-                                                                                        <span class="text-dark fw-bolder fs-6">
-                                                                                            {{ $transection_log->event }}
-                                                                                        </span>
-                                                                                        <span
-                                                                                            class="fw-bold text-muted d-block fs-7">
-                                                                                            {{ ucwords($transection_log->event_type) }}
-                                                                                        </span>
-                                                                                    </div>
-                                                                                </td>
-
-                                                                                <!--begin::Status-->
-                                                                                <td class="min-w-150px">
-                                                                                    <div class="d-flex flex-column">
-                                                                                        <div class="symbol-group symbol-hover">
-                                                                                            <div class="symbol symbol-30 symbol-circle"
-                                                                                                data-toggle="tooltip"
-                                                                                                data-placement="top"
-                                                                                                title="{{ $transection_log->company_name ? $transection_log->name : 'By Default' }}"
-                                                                                                style="    text-align: center;">
-                                                                                                <div class="symbol symbol-30 symbol-circle"
-                                                                                                    data-bs-placement="top"
-                                                                                                    data-toggle="tooltip2"
-                                                                                                    data-html="true"
-                                                                                                    title="{{ $transection_log->company_name ? $transection_log->name : 'By Default' }}">
-                                                                                                    <div class="symbol symbol-circle symbol-30px overflow-hidden me-2 border-radius-100"
-                                                                                                        style="float:left">
-                                                                                                        <a href="javascript:void(0);"
-                                                                                                            data-row-id="11"
-                                                                                                            class="show-detail border-radius-100"
-                                                                                                            id="kt_activities3_toggle">
-                                                                                                            <div
-                                                                                                                class="symbol-label fs-8 fs-8 bg-dark text-secondary border-radius-100">
-                                                                                                                {{ $transection_log->company_name ? substr($transection_log->name, 0, 1) : 'B' }}
-                                                                                                            </div>
-                                                                                                        </a>
-                                                                                                    </div>
-                                                                                                </div>
-                                                                                                <span
-                                                                                                    class="text-muted fw-bold d-block fs-7">{{ $transection_log->company_name ? $transection_log->company_name : 'By Default' }}
-                                                                                                </span>
-                                                                                            </div>
-
-                                                                                        </div>
-
-                                                                                        <!--                     <a href="javascript:void(0);" class="text-muted fw-bold text-hover-primary d-block fs-7" -->
-                                                                                        <!--data-toggle="tooltip"
-                                                                                        title="User Company2">
-                                                                                        User Co </a> -->
-
-                                                                                    </div>
-                                                                                </td>
-                                                                                <!--end::Stage-->
-
-
-                                                                                <!--begin::Requisitions=-->
-                                                                                @if ($transection_log->settlement_coins <= 0)
-                                                                                    <td class="min-w-120px">
-                                                                                        <div class="d-flex flex-column">
-                                                                                            <span class="text-dark fw-bolder  fs-6"> 
-                                                                                                @if($transection_log->transection_type==='credit')
-                                                                                                {{ ($transection_log->actual_coins) ? $transection_log->actual_coins : $transection_log->coins }} Coins
-                                                                                                @else
-                                                                                                {{ $transection_log->coins }} Coins
-                                                                                                @endif
-                                                                                            </span>
-                                                                                            <span class="fw-bold text-muted d-block fs-7"> 
-                                                                                                {{ ucwords($transection_log->transection_type) }}
-                                                                                            </span>
-                                                                                        </div>
-                                                                                    </td>
-                                                                                @else
-                                                                                    <!--end::Requisitions=-->
-                                                                                    <!--begin::Interview Mode=-->
-                                                                                    <td class="min-w-120px">
-                                                                                        <div class="d-flex flex-column">
-                                                                                            <span
-                                                                                                class="fw-bold text-muted d-block fs-7">Settlement</span>
-                                                                                            <span
-                                                                                                class="text-dark fw-bolder  fs-6">
-                                                                                                {{ $transection_log->settlement_coins }}
-                                                                                                Coins
-                                                                                            </span>
-                                                                                            <span
-                                                                                                class="fw-bold text-muted d-block fs-7">
-                                                                                                {{ ucwords($transection_log->transection_type) }}
-                                                                                            </span>
-                                                                                        </div>
-                                                                                    </td>
-                                                                                @endif
-                                                                                <!--end::Interview Mode=-->
-                                                                                <!--begin::Interviewer Feedback=-->
-                                                                                <td class="min-w-70px">
-                                                                                    <div class="d-flex flex-column">
-                                                                                        <span class="text-dark fw-bolder  fs-6">{{ ($transection_log->remain_coins) ? $transection_log->remain_coins : $transection_log->coins }} Coins</span>
-                                                                                        <span
-                                                                                            class="fw-bold text-muted d-block fs-7">
-                                                                                            Balance
-                                                                                        </span>
-                                                                                    </div>
-                                                                                </td>
-                                                                                <!--end::Interviewer Feedback-->
-                                                                            </tr>
-                                                                            <!--end::Table row-->
-                                                                        </tbody>
-                                                                        <!--end::Table body-->
-                                                                    </table>
-                                                                    <!--end::Table-->
-                                                                </div>
-                                                                <!--end::Timeline content-->
-                                                            </div>
-                                                        @endforeach
-                                                    @else
-                                                        <div class="text-center">
-                                                            <p>No transaction logs available.</p>
-                                                        </div>
-                                                    @endif
-
-
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                    </div>
-                                </div>
-
-
+                            </div>
+                            <div class="pkg-search-box">
+                                <i class="fas fa-search"></i>
+                                <input type="text" id="searchTimelineEvents" class="pkg-search-input" placeholder="Search events, users, dates..." autocomplete="off">
+                                <button type="button" class="pkg-search-clear" id="clearTimelineEvents" style="display: none;"><i class="fas fa-times"></i></button>
                             </div>
                         </div>
-                        <!--end::timeline Content-->
 
+                        <!-- Tier 2: Sub-Tabs Card -->
+                        <div class="pkg-card mb-4" style="padding: 6px 14px;">
+                            <ul class="nav nav-tabs sa-nav-tabs border-0" role="tablist">
+                                <li class="nav-item me-3" role="presentation">
+                                    <a class="nav-link active" data-toggle="tab" role="tab" href="#salestab">
+                                        <i class="fas fa-cubes me-1"></i>
+                                        <span>Operational Package</span>
+                                        <span class="tab-count ms-1">{{ count($coin_transection_logs ?? []) }}</span>
+                                    </a>
+                                </li>
+                                <li class="nav-item me-3" role="presentation">
+                                    <a class="nav-link" data-toggle="tab" role="tab" href="#operationaltab">
+                                        <i class="fas fa-dollar-sign me-1"></i>
+                                        <span>Sales Package</span>
+                                        <span class="tab-count ms-1">{{ count($coin_transection_logs_sales ?? []) }}</span>
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
 
+                        <!-- Tier 3: Ledger Tables Stream -->
+                        <div class="tab-content pt-0">
+                            <!-- Tab 1: Operational Package Timeline -->
+                            <div class="tab-pane active" id="salestab" role="tabpanel">
+                                <div class="pkg-card mb-4">
+                                    <div class="table-responsive pkg-rules-scroll-wrap">
+                                        <table class="table align-middle pkg-rules-table mb-0">
+                                            <thead>
+                                                <tr>
+                                                    <th style="min-width: 140px;">TIMESTAMP</th>
+                                                    <th style="min-width: 220px;">ACTIVITY / EVENT</th>
+                                                    <th style="min-width: 180px;">EXECUTED BY</th>
+                                                    <th style="min-width: 150px;">TRANSACTION</th>
+                                                    <th style="min-width: 110px; text-align: right;" class="pe-4">WALLET BALANCE</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody class="text-gray-700">
+                                                @forelse ($coin_transection_logs as $transection_log)
+                                                    @php
+                                                        $searchStr = strtolower(
+                                                            $transection_log->event . ' ' .
+                                                            ($transection_log->name ?? '') . ' ' .
+                                                            ($transection_log->company_name ?? '') . ' ' .
+                                                            ($transection_log->transection_type ?? '') . ' ' .
+                                                            date('d M Y', strtotime($transection_log->created_at))
+                                                        );
+                                                    @endphp
+                                                    <tr class="timeline-log-row" data-search="{{ $searchStr }}">
+                                                        <td>
+                                                            <div class="d-flex flex-column">
+                                                                <span class="fw-bold text-gray-900 fs-7">{{ date('d M Y', strtotime($transection_log->created_at)) }}</span>
+                                                                <span class="fs-8 text-muted d-flex align-items-center gap-1 mt-1">
+                                                                    <i class="far fa-clock fs-9"></i> {{ date('h:i A', strtotime($transection_log->created_at)) }}
+                                                                </span>
+                                                            </div>
+                                                        </td>
+                                                        <td>
+                                                            <div class="d-flex align-items-center gap-2">
+                                                                <div class="pkg-event-icon-box" style="background: {{ $transection_log->transection_type === 'credit' ? '#e8fff3' : '#eff6ff' }}; color: {{ $transection_log->transection_type === 'credit' ? '#50cd89' : '#009ef7' }};">
+                                                                    <i class="fas {{ $transection_log->transection_type === 'credit' ? 'fa-arrow-down' : 'fa-arrow-up' }}"></i>
+                                                                </div>
+                                                                <div>
+                                                                    <div class="fw-bold text-gray-900 fs-7">{{ $transection_log->event }}</div>
+                                                                    <span class="badge bg-light text-muted fs-8 py-0 px-2 mt-1">{{ ucwords($transection_log->event_type) }}</span>
+                                                                </div>
+                                                            </div>
+                                                        </td>
+                                                        <td>
+                                                            <div class="d-flex align-items-center gap-2">
+                                                                <div class="symbol symbol-30px symbol-circle bg-light-primary text-primary fw-bolder fs-8 d-flex align-items-center justify-content-center" style="width: 32px; height: 32px; border-radius: 50%; background: #f0f7ff; color: #009ef7; flex-shrink: 0;">
+                                                                    {{ $transection_log->company_name ? strtoupper(substr($transection_log->name, 0, 1)) : 'S' }}
+                                                                </div>
+                                                                <div class="d-flex flex-column" style="min-width: 0;">
+                                                                    <span class="fw-bold text-gray-800 fs-7 text-truncate" style="max-width: 150px;">{{ $transection_log->company_name ? $transection_log->name : 'System Default' }}</span>
+                                                                    <span class="fs-8 text-muted text-truncate" style="max-width: 150px;">{{ $transection_log->company_name ?: 'System' }}</span>
+                                                                </div>
+                                                            </div>
+                                                        </td>
+                                                        <td>
+                                                            @if ($transection_log->settlement_coins <= 0)
+                                                                @if ($transection_log->transection_type === 'credit')
+                                                                    <span class="badge badge-light-success text-success fw-bold fs-7 d-inline-flex align-items-center gap-1">
+                                                                        <i class="fas fa-plus fs-9"></i>{{ ($transection_log->actual_coins) ? $transection_log->actual_coins : $transection_log->coins }} Coins
+                                                                    </span>
+                                                                @else
+                                                                    <span class="badge badge-light-danger text-danger fw-bold fs-7 d-inline-flex align-items-center gap-1">
+                                                                        <i class="fas fa-minus fs-9"></i>{{ $transection_log->coins }} Coins
+                                                                    </span>
+                                                                @endif
+                                                            @else
+                                                                <span class="badge badge-light-info text-info fw-bold fs-7 d-inline-flex align-items-center gap-1">
+                                                                    Settlement: {{ $transection_log->settlement_coins }} Coins
+                                                                </span>
+                                                            @endif
+                                                        </td>
+                                                        <td class="text-end pe-4">
+                                                            <div class="d-inline-flex flex-column align-items-end">
+                                                                <span class="fw-bolder text-gray-900 fs-7">{{ ($transection_log->remain_coins) ? $transection_log->remain_coins : $transection_log->coins }} Coins</span>
+                                                                <span class="fs-8 text-muted">Balance</span>
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                @empty
+                                                    <tr>
+                                                        <td colspan="5" class="text-center py-6 text-muted">
+                                                            <i class="fas fa-history fa-2x text-muted opacity-40 mb-2 d-block"></i>
+                                                            No operational transaction logs recorded for this company yet.
+                                                        </td>
+                                                    </tr>
+                                                @endforelse
+                                            </tbody>
+                                        </table>
+                                        <div class="no-timeline-match text-center py-6 text-muted fs-7" style="display: none;">
+                                            <i class="fas fa-search text-muted opacity-50 fs-2 mb-2 d-block"></i>
+                                            No operational activity logs match your search query.
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Tab 2: Sales Package Timeline -->
+                            <div class="tab-pane" id="operationaltab" role="tabpanel">
+                                <div class="pkg-card mb-4">
+                                    <div class="table-responsive pkg-rules-scroll-wrap">
+                                        <table class="table align-middle pkg-rules-table mb-0">
+                                            <thead>
+                                                <tr>
+                                                    <th style="min-width: 140px;">TIMESTAMP</th>
+                                                    <th style="min-width: 220px;">ACTIVITY / EVENT</th>
+                                                    <th style="min-width: 180px;">EXECUTED BY</th>
+                                                    <th style="min-width: 150px;">TRANSACTION</th>
+                                                    <th style="min-width: 110px; text-align: right;" class="pe-4">WALLET BALANCE</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody class="text-gray-700">
+                                                @forelse ($coin_transection_logs_sales as $transection_log)
+                                                    @php
+                                                        $searchStr = strtolower(
+                                                            $transection_log->event . ' ' .
+                                                            ($transection_log->name ?? '') . ' ' .
+                                                            ($transection_log->company_name ?? '') . ' ' .
+                                                            ($transection_log->transection_type ?? '') . ' ' .
+                                                            date('d M Y', strtotime($transection_log->created_at))
+                                                        );
+                                                    @endphp
+                                                    <tr class="timeline-log-row" data-search="{{ $searchStr }}">
+                                                        <td>
+                                                            <div class="d-flex flex-column">
+                                                                <span class="fw-bold text-gray-900 fs-7">{{ date('d M Y', strtotime($transection_log->created_at)) }}</span>
+                                                                <span class="fs-8 text-muted d-flex align-items-center gap-1 mt-1">
+                                                                    <i class="far fa-clock fs-9"></i> {{ date('h:i A', strtotime($transection_log->created_at)) }}
+                                                                </span>
+                                                            </div>
+                                                        </td>
+                                                        <td>
+                                                            <div class="d-flex align-items-center gap-2">
+                                                                <div class="pkg-event-icon-box" style="background: {{ $transection_log->transection_type === 'credit' ? '#e8fff3' : '#eff6ff' }}; color: {{ $transection_log->transection_type === 'credit' ? '#50cd89' : '#009ef7' }};">
+                                                                    <i class="fas {{ $transection_log->transection_type === 'credit' ? 'fa-arrow-down' : 'fa-arrow-up' }}"></i>
+                                                                </div>
+                                                                <div>
+                                                                    <div class="fw-bold text-gray-900 fs-7">{{ $transection_log->event }}</div>
+                                                                    <span class="badge bg-light text-muted fs-8 py-0 px-2 mt-1">{{ ucwords($transection_log->event_type) }}</span>
+                                                                </div>
+                                                            </div>
+                                                        </td>
+                                                        <td>
+                                                            <div class="d-flex align-items-center gap-2">
+                                                                <div class="symbol symbol-30px symbol-circle bg-light-primary text-primary fw-bolder fs-8 d-flex align-items-center justify-content-center" style="width: 32px; height: 32px; border-radius: 50%; background: #f0f7ff; color: #009ef7; flex-shrink: 0;">
+                                                                    {{ $transection_log->company_name ? strtoupper(substr($transection_log->name, 0, 1)) : 'S' }}
+                                                                </div>
+                                                                <div class="d-flex flex-column" style="min-width: 0;">
+                                                                    <span class="fw-bold text-gray-800 fs-7 text-truncate" style="max-width: 150px;">{{ $transection_log->company_name ? $transection_log->name : 'System Default' }}</span>
+                                                                    <span class="fs-8 text-muted text-truncate" style="max-width: 150px;">{{ $transection_log->company_name ?: 'System' }}</span>
+                                                                </div>
+                                                            </div>
+                                                        </td>
+                                                        <td>
+                                                            @if ($transection_log->settlement_coins <= 0)
+                                                                @if ($transection_log->transection_type === 'credit')
+                                                                    <span class="badge badge-light-success text-success fw-bold fs-7 d-inline-flex align-items-center gap-1">
+                                                                        <i class="fas fa-plus fs-9"></i>{{ ($transection_log->actual_coins) ? $transection_log->actual_coins : $transection_log->coins }} Coins
+                                                                    </span>
+                                                                @else
+                                                                    <span class="badge badge-light-danger text-danger fw-bold fs-7 d-inline-flex align-items-center gap-1">
+                                                                        <i class="fas fa-minus fs-9"></i>{{ $transection_log->coins }} Coins
+                                                                    </span>
+                                                                @endif
+                                                            @else
+                                                                <span class="badge badge-light-info text-info fw-bold fs-7 d-inline-flex align-items-center gap-1">
+                                                                    Settlement: {{ $transection_log->settlement_coins }} Coins
+                                                                </span>
+                                                            @endif
+                                                        </td>
+                                                        <td class="text-end pe-4">
+                                                            <div class="d-inline-flex flex-column align-items-end">
+                                                                <span class="fw-bolder text-gray-900 fs-7">{{ ($transection_log->remain_coins) ? $transection_log->remain_coins : $transection_log->coins }} Coins</span>
+                                                                <span class="fs-8 text-muted">Balance</span>
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                @empty
+                                                    <tr>
+                                                        <td colspan="5" class="text-center py-6 text-muted">
+                                                            <i class="fas fa-history fa-2x text-muted opacity-40 mb-2 d-block"></i>
+                                                            No sales transaction logs recorded for this company yet.
+                                                        </td>
+                                                    </tr>
+                                                @endforelse
+                                            </tbody>
+                                        </table>
+                                        <div class="no-timeline-match text-center py-6 text-muted fs-7" style="display: none;">
+                                            <i class="fas fa-search text-muted opacity-50 fs-2 mb-2 d-block"></i>
+                                            No sales activity logs match your search query.
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
+                    <!--end::timeline Content-->
 
                     <!--begin::boost keyword Content-->
                     <div class="tab-pane" id="boostkeyword" role="tabpanel" aria-labelledby="tab-boostkeyword">
@@ -5848,6 +5680,40 @@ window.tagifyInstance = new Tagify(input);
         if (window.tagifyInstance && kw) {
             window.tagifyInstance.addTags([kw]);
         }
+    });
+
+    /* ── Client-Side Timeline Activity Filter (0% Server Strain) ── */
+    $(document).on('keyup', '#searchTimelineEvents', function() {
+        var query = $(this).val().toLowerCase().trim();
+        if (query.length > 0) {
+            $('#clearTimelineEvents').show();
+        } else {
+            $('#clearTimelineEvents').hide();
+        }
+        var activeTab = $('#timeline .tab-pane.active');
+        var visibleCount = 0;
+        activeTab.find('tbody tr.timeline-log-row').each(function() {
+            var searchData = $(this).attr('data-search') || $(this).text().toLowerCase();
+            if (searchData.indexOf(query) !== -1) {
+                $(this).show();
+                visibleCount++;
+            } else {
+                $(this).hide();
+            }
+        });
+        if (visibleCount === 0) {
+            activeTab.find('.no-timeline-match').show();
+        } else {
+            activeTab.find('.no-timeline-match').hide();
+        }
+    });
+
+    $(document).on('click', '#clearTimelineEvents', function() {
+        $('#searchTimelineEvents').val('').trigger('keyup');
+    });
+
+    $(document).on('shown.bs.tab', '#timeline a[data-toggle="tab"]', function() {
+        $('#searchTimelineEvents').trigger('keyup');
     });
 
 </script>
