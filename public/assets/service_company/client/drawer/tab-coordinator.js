@@ -117,14 +117,10 @@
         this.activeTab = key;
 
         // P0-4: Request Deduplication
-        // If not forced: ignore duplicate activations if already LOADING or READY with identical criteria
+        // If not forced: ignore duplicate activations only if already in-flight LOADING with identical criteria
         if (!options.force) {
             if (state.status === 'LOADING' && state.filter === filter) {
                 console.debug('[TabCoordinator] Deduplicated click: ' + key + ' is currently LOADING');
-                return;
-            }
-            if (state.status === 'READY' && state.filter === filter) {
-                console.debug('[TabCoordinator] Deduplicated click: ' + key + ' is already READY');
                 return;
             }
         }
@@ -165,12 +161,6 @@
 
         var key = this.normalizeTabName(tabName);
         var state = this.getState(key);
-
-        // If filter is unchanged and already READY, do not refetch
-        if (state.filter === filterValue && state.status === 'READY') {
-            console.debug('[TabCoordinator] Sub-tab filter unchanged: ' + filterValue);
-            return;
-        }
 
         state.filter = filterValue;
         this.activateTab(key, { filter: filterValue, force: true });
