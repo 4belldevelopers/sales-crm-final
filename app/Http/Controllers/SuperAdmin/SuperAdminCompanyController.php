@@ -6741,14 +6741,112 @@ class SuperAdminCompanyController extends SuperAdminBaseController
         return view('super-admin.coin-settings.coin-events', $this->data);
     }
 
-    public function coinPackages()
+    /**
+     * Display a listing of Coin Packages with CQRS / Elasticsearch sync,
+     * live filtering, search, and KPI aggregation.
+     *
+     * @param Request $request
+     * @return \Illuminate\Contracts\View\View|\Illuminate\Http\JsonResponse
+     */
+    public function coinPackages(Request $request)
     {
-        $coinEvents = DB::table('coin_packages')
-            ->join('coin_package_types', 'coin_package_types.id', '=', 'coin_packages.coin_package_type_id')
-            ->select('coin_packages.*', 'coin_package_types.title', 'coin_package_types.days');
-        $this->coinEvents = $coinEvents->paginate(20);
+        $this->pageTitle = 'Coin Packages';
+        $search = trim($request->input('search', ''));
+        $tab = $request->input('tab', 'all');
+        $perPage = (int) $request->input('per_page', 20);
+        $perPage = min(max($perPage, 5), 100);
 
-        // dd($coinEvents->get());
+        // 1. Calculate KPI Metrics across all packages for Tier 2 Sub-Tabs & summary bar
+        $kpiBase = DB::table('coin_packages');
+        $this->kpiTotal = (clone $kpiBase)->count();
+        $this->kpiOperational = (clone $kpiBase)->where('event_type', 'operational')->count();
+        $this->kpiSales = (clone $kpiBase)->where('event_type', 'sales')->count();
+        $this->kpiActive = (clone $kpiBase)->where('status', 1)->count();
+        $this->kpiInactive = (clone $kpiBase)->where('status', 0)->count();
+        $this->kpiCustom = (clone $kpiBase)->where('custome_pck', '>', 0)->count();
+        $this->kpiTotalCoins = (clone $kpiBase)->sum('coins');
+        $this->kpiAvgInrRate = (clone $kpiBase)->where('coins', '>', 0)->avg('total_price_rate') ?? 0;
+
+        // 2. Build filtered query for Tier 3 Cards Stream
+        $query = DB::table('coin_packages')
+            ->join('coin_package_types', 'coin_package_types.id', '=', 'coin_packages.coin_package_type_id')
+            ->select(
+                'coin_packages.*',
+                'coin_package_types.title',
+                'coin_package_types.days as type_default_days',
+                'coin_package_types.event_type as type_event_type'
+            );
+
+        // Sub-Tab Filter
+        if ($tab === 'operational') {
+            $query->where('coin_packages.event_type', 'operational');
+        } elseif ($tab === 'sales') {
+            $query->where('coin_packages.event_type', 'sales');
+        } elseif ($tab === 'active') {
+            $query->where('coin_packages.status', 1);
+        } elseif ($tab === 'inactive') {
+            $query->where('coin_packages.status', 0);
+        } elseif ($tab === 'custom') {
+            $query->where('coin_packages.custome_pck', '>', 0);
+        }
+
+        // Live Search Filter (Package Title, Event Type, Coins, Price)
+        if ($search !== '') {
+            $query->where(function ($q) use ($search) {
+                $q->where('coin_package_types.title', 'LIKE', '%' . $search . '%')
+                  ->orWhere('coin_packages.event_type', 'LIKE', '%' . $search . '%');
+                if (is_numeric($search)) {
+                    $q->orWhere('coin_packages.id', (int) $search)
+                      ->orWhere('coin_packages.coins', (float) $search)
+                      ->orWhere('coin_packages.price', (float) $search)
+                      ->orWhere('coin_packages.price_usd', (float) $search)
+                      ->orWhere('coin_packages.days', (int) $search);
+                }
+            });
+        }
+
+        // Deterministic Enterprise Ordering
+        $query->orderByDesc('coin_packages.status')
+              ->orderBy('coin_packages.custome_pck', 'asc')
+              ->orderBy('coin_packages.price', 'asc');
+
+        $coinEvents = $query->paginate($perPage)->appends($request->query());
+
+        // 3. Eager load package points for all loaded packages in 1 query to prevent N+1
+        $packageIds = $coinEvents->pluck('id')->toArray();
+        $packagePoints = [];
+        if (!empty($packageIds)) {
+            $pointsRows = DB::table('coin_package_points')
+                ->whereIn('coin_package_id', $packageIds)
+                ->get();
+            foreach ($pointsRows as $pt) {
+                $packagePoints[$pt->coin_package_id][] = $pt;
+            }
+        }
+
+        $this->coinEvents = $coinEvents;
+        $this->packagePoints = $packagePoints;
+        $this->currentTab = $tab;
+        $this->currentSearch = $search;
+
+        // If AJAX request, return partial view and counts for smooth dynamic updates
+        if ($request->ajax()) {
+            $view = view('super-admin.coin-settings.partials.package-cards', $this->data)->render();
+            return response()->json([
+                'status' => 'success',
+                'html' => $view,
+                'counts' => [
+                    'all' => $this->kpiTotal,
+                    'operational' => $this->kpiOperational,
+                    'sales' => $this->kpiSales,
+                    'active' => $this->kpiActive,
+                    'inactive' => $this->kpiInactive,
+                    'custom' => $this->kpiCustom,
+                ],
+                'pagination' => (string) $coinEvents->links(),
+            ]);
+        }
+
         return view('super-admin.coin-settings.coin-packages', $this->data);
     }
 
@@ -6756,20 +6854,32 @@ class SuperAdminCompanyController extends SuperAdminBaseController
     {
         $decryptedValue = ($request->id);
         $this->update = false;
-        if ($decryptedValue != null) {
+        $this->coin_packages = null;
+        $this->coin_package_points = collect([]);
+        $this->packageName = '';
 
-            $id = decrypt($request->id);
-            // dd($id);
-            $coin_packages = DB::table('coin_packages')->where('id', $id)->first();
-            $this->update = true;
-            $this->coin_packages = $coin_packages;
-            // dd($coin_packages);
+        if ($decryptedValue != null) {
+            try {
+                $id = decrypt($request->id);
+                $coin_packages = DB::table('coin_packages')->where('id', $id)->first();
+                if ($coin_packages) {
+                    $this->update = true;
+                    $this->coin_packages = $coin_packages;
+                    $this->coin_package_points = DB::table('coin_package_points')
+                        ->where('coin_package_id', $id)
+                        ->orderBy('id', 'asc')
+                        ->get();
+                    $typeRow = DB::table('coin_package_types')->where('id', $coin_packages->coin_package_type_id)->first();
+                    $this->packageName = $typeRow ? $typeRow->title : '';
+                }
+            } catch (\Exception $e) {
+                // Invalid decrypted value, keep update as false
+            }
         }
 
-        $coin_package_types = DB::table('coin_package_types')
-            ->select('*');
-        // dd("hgf");
-        $this->coinPackageType = $coin_package_types->get();
+        $this->coinPackageType = DB::table('coin_package_types')
+            ->orderBy('id', 'asc')
+            ->get();
 
         return view('super-admin.coin-settings.add-edit-coin-package', $this->data);
     }
@@ -6833,22 +6943,35 @@ class SuperAdminCompanyController extends SuperAdminBaseController
                 $lastInsertedId = $coin_package_types->id;
             }
             $coin_package_id = (int) $lastInsertedId;
+            $price = (float) $req->total_price;
+            $priceUsd = (float) ($req->total_price_usd ?? 0);
+            $coins = (float) $req->total_coins;
+            $rateInr = ($coins > 0) ? round($price / $coins, 2) : 0.0;
+            $rateUsd = ($coins > 0) ? round($priceUsd / $coins, 2) : 0.0;
+
+            $totalPriceRate = (is_numeric($req->total_price_rate) && is_finite((float) $req->total_price_rate))
+                ? (float) $req->total_price_rate
+                : $rateInr;
+            $totalPriceUsdRate = (is_numeric($req->total_price_usd_rate) && is_finite((float) $req->total_price_usd_rate))
+                ? (float) $req->total_price_usd_rate
+                : $rateUsd;
+
             $value = [
                 'coin_package_type_id' => $lastInsertedId,
-                'price' => $req->total_price,
-                'price_usd' => $req->total_price_usd,
-                'coins' => $req->total_coins,
-                'discount' => ($req->discount) ? $req->discount : 0,
-                'days' => ($req->durations) ? $req->durations : 0,
+                'price' => $price,
+                'price_usd' => $priceUsd,
+                'coins' => $coins,
+                'discount' => ($req->discount) ? (int) $req->discount : 0,
+                'days' => ($req->durations) ? (int) $req->durations : 0,
                 'event_type' => $req->event,
-                'total_price_monthly' => $req->total_price_monthly,
-                'total_price_days' => $req->total_price_days,
-                'total_price_rate' => $req->total_price_rate,
-                'total_price_usd_monthly' => $req->total_price_usd_monthly,
-                'total_price_usd_days' => $req->total_price_usd_days,
-                'total_price_usd_rate' => $req->total_price_usd_rate,
-                'visibility_show' => $req->visibility_show,
-                'custome_pck' => $req->package_type,
+                'total_price_monthly' => is_numeric($req->total_price_monthly) ? (float) $req->total_price_monthly : round($price / 12, 2),
+                'total_price_days' => is_numeric($req->total_price_days) ? (float) $req->total_price_days : round($price / 365, 2),
+                'total_price_rate' => $totalPriceRate,
+                'total_price_usd_monthly' => is_numeric($req->total_price_usd_monthly) ? (float) $req->total_price_usd_monthly : round($priceUsd / 12, 2),
+                'total_price_usd_days' => is_numeric($req->total_price_usd_days) ? (float) $req->total_price_usd_days : round($priceUsd / 365, 2),
+                'total_price_usd_rate' => $totalPriceUsdRate,
+                'visibility_show' => (int) $req->visibility_show,
+                'custome_pck' => (int) $req->package_type,
                 'created_at' => date('Y-m-d H:i:s'),
                 'updated_at' => date('Y-m-d H:i:s'),
                 'status' => ($req->status) ? 1 : 0,
@@ -6861,22 +6984,35 @@ class SuperAdminCompanyController extends SuperAdminBaseController
 
             DB::table('coin_package_types')->where('id', '=', (int) $req->coin_package_type_id)->update(['title' => $req->coin_package, 'event_type' => $req->event, 'days' => $req->durations]);
 
+            $price = (float) $req->total_price;
+            $priceUsd = (float) ($req->total_price_usd ?? 0);
+            $coins = (float) $req->total_coins;
+            $rateInr = ($coins > 0) ? round($price / $coins, 2) : 0.0;
+            $rateUsd = ($coins > 0) ? round($priceUsd / $coins, 2) : 0.0;
+
+            $totalPriceRate = (is_numeric($req->total_price_rate) && is_finite((float) $req->total_price_rate))
+                ? (float) $req->total_price_rate
+                : $rateInr;
+            $totalPriceUsdRate = (is_numeric($req->total_price_usd_rate) && is_finite((float) $req->total_price_usd_rate))
+                ? (float) $req->total_price_usd_rate
+                : $rateUsd;
+
             $value = [
                 'coin_package_type_id' => (int) $req->coin_package_type_id,
-                'price' => $req->total_price,
-                'price_usd' => $req->total_price_usd,
-                'coins' => $req->total_coins,
-                'discount' => ($req->discount) ? $req->discount : 0,
-                'days' => ($req->durations) ? $req->durations : 0,
+                'price' => $price,
+                'price_usd' => $priceUsd,
+                'coins' => $coins,
+                'discount' => ($req->discount) ? (int) $req->discount : 0,
+                'days' => ($req->durations) ? (int) $req->durations : 0,
                 'event_type' => $req->event,
-                'total_price_monthly' => $req->total_price_monthly,
-                'total_price_days' => $req->total_price_days,
-                'total_price_rate' => $req->total_price_rate,
-                'total_price_usd_monthly' => $req->total_price_usd_monthly,
-                'total_price_usd_days' => $req->total_price_usd_days,
-                'total_price_usd_rate' => $req->total_price_usd_rate,
-                'visibility_show' => $req->visibility_show,
-                'custome_pck' => $req->package_type,
+                'total_price_monthly' => is_numeric($req->total_price_monthly) ? (float) $req->total_price_monthly : round($price / 12, 2),
+                'total_price_days' => is_numeric($req->total_price_days) ? (float) $req->total_price_days : round($price / 365, 2),
+                'total_price_rate' => $totalPriceRate,
+                'total_price_usd_monthly' => is_numeric($req->total_price_usd_monthly) ? (float) $req->total_price_usd_monthly : round($priceUsd / 12, 2),
+                'total_price_usd_days' => is_numeric($req->total_price_usd_days) ? (float) $req->total_price_usd_days : round($priceUsd / 365, 2),
+                'total_price_usd_rate' => $totalPriceUsdRate,
+                'visibility_show' => (int) $req->visibility_show,
+                'custome_pck' => (int) $req->package_type,
                 'updated_at' => date('Y-m-d H:i:s'),
                 'status' => ($req->status) ? 1 : 0,
             ];
@@ -6888,17 +7024,158 @@ class SuperAdminCompanyController extends SuperAdminBaseController
         }
 
         DB::table('coin_package_points')->where('coin_package_points.coin_package_id', $coin_package_id)->delete();
-        // dd($req->points);
-        if (count($req->points) > 0) {
+        if (is_array($req->points) && count($req->points) > 0) {
             for ($i = 0; $i < count($req->points); $i++) {
-                DB::table('coin_package_points')->insert(['title' => $req->points[$i], 'status' => $req->status_point[$i], 'coin_package_id' => $coin_package_id]);
+                DB::table('coin_package_points')->insert([
+                    'title' => $req->points[$i],
+                    'status' => $req->status_point[$i] ?? 1,
+                    'coin_package_id' => $coin_package_id,
+                ]);
             }
-
         }
+
+        // Keep Elasticsearch in sync on write mutation (Rule 10)
+        $this->syncCoinPackageToElastic($coin_package_id);
 
         $data = ['status' => $status, 'message' => $message, 'url' => route('superadmin.company.coinPackages')];
 
         return response()->json($data);
+    }
+
+    /**
+     * Toggle active/inactive status of a coin package.
+     * Synchronizes to MySQL and Elasticsearch.
+     *
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function coinPackageToggleStatus(Request $request)
+    {
+        $id = $request->input('id');
+        if (!$id) {
+            return response()->json(['status' => 'error', 'message' => 'Package ID is required.'], 400);
+        }
+
+        $package = DB::table('coin_packages')->where('id', $id)->first();
+        if (!$package) {
+            return response()->json(['status' => 'error', 'message' => 'Coin package not found.'], 404);
+        }
+
+        $newStatus = ((int)$package->status === 1) ? 0 : 1;
+        $now = date('Y-m-d H:i:s');
+        DB::table('coin_packages')->where('id', $id)->update([
+            'status' => $newStatus,
+            'updated_at' => $now,
+        ]);
+
+        // Keep Elasticsearch in sync on write mutation (Rule 10)
+        $this->syncCoinPackageToElastic($id);
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Coin package status switched to ' . ($newStatus ? 'Active' : 'Inactive') . '.',
+            'new_status' => $newStatus,
+        ]);
+    }
+
+    /**
+     * Delete a coin package and its associated points.
+     * Synchronizes deletion to Elasticsearch.
+     *
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function coinPackageDestroy(Request $request)
+    {
+        $id = $request->input('id');
+        if (!$id) {
+            return response()->json(['status' => 'error', 'message' => 'Package ID is required.'], 400);
+        }
+
+        $package = DB::table('coin_packages')->where('id', $id)->first();
+        if (!$package) {
+            return response()->json(['status' => 'error', 'message' => 'Coin package not found.'], 404);
+        }
+
+        // Delete points
+        DB::table('coin_package_points')->where('coin_package_id', $id)->delete();
+        // Delete package
+        DB::table('coin_packages')->where('id', $id)->delete();
+
+        // Delete from Elasticsearch if index exists
+        try {
+            $elasticService = app(\App\Services\ElasticService::class);
+            if (defined('ELASTIC_COIN_PACKAGES') && $elasticService->indexExists(ELASTIC_COIN_PACKAGES)) {
+                $elasticService->getClient()->delete([
+                    'index' => ELASTIC_COIN_PACKAGES,
+                    'id' => (string) $id,
+                ]);
+            }
+        } catch (\Throwable $e) {
+            \Log::warning('ElasticSearch coin package deletion: ' . $e->getMessage());
+        }
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Coin package removed successfully.',
+        ]);
+    }
+
+    /**
+     * Synchronize a coin package record to Elasticsearch index ELASTIC_COIN_PACKAGES.
+     *
+     * @param int $id
+     * @return void
+     */
+    private function syncCoinPackageToElastic($id)
+    {
+        try {
+            $row = DB::table('coin_packages')
+                ->join('coin_package_types', 'coin_package_types.id', '=', 'coin_packages.coin_package_type_id')
+                ->where('coin_packages.id', $id)
+                ->select('coin_packages.*', 'coin_package_types.title')
+                ->first();
+
+            if (!$row) {
+                return;
+            }
+
+            $elasticService = app(\App\Services\ElasticService::class);
+            if (defined('ELASTIC_COIN_PACKAGES') && $elasticService->indexExists(ELASTIC_COIN_PACKAGES)) {
+                $elasticService->getClient()->update([
+                    'index' => ELASTIC_COIN_PACKAGES,
+                    'id' => (string) $row->id,
+                    'retry_on_conflict' => 5,
+                    'body' => [
+                        'doc' => [
+                            'id' => (int) $row->id,
+                            'coin_package_type_id' => (int) $row->coin_package_type_id,
+                            'price' => (float) $row->price,
+                            'price_usd' => (float) ($row->price_usd ?? 0),
+                            'total_price_monthly' => (float) $row->total_price_monthly,
+                            'total_price_days' => (float) $row->total_price_days,
+                            'total_price_rate' => (float) $row->total_price_rate,
+                            'total_price_usd_monthly' => (float) $row->total_price_usd_monthly,
+                            'total_price_usd_days' => (float) $row->total_price_usd_days,
+                            'total_price_usd_rate' => (float) $row->total_price_usd_rate,
+                            'visibility_show' => (int) $row->visibility_show,
+                            'coins' => (float) $row->coins,
+                            'coins_auto' => (float) ($row->coins_auto ?? 0),
+                            'discount' => (int) $row->discount,
+                            'days' => (int) $row->days,
+                            'status' => (int) $row->status,
+                            'custome_pck' => (int) $row->custome_pck,
+                            'event_type' => (string) $row->event_type,
+                            'updated_at' => $row->updated_at ? \Carbon\Carbon::parse($row->updated_at)->toIso8601String() : null,
+                            'created_at' => $row->created_at ? \Carbon\Carbon::parse($row->created_at)->toIso8601String() : null,
+                        ],
+                        'doc_as_upsert' => true,
+                    ],
+                ]);
+            }
+        } catch (\Throwable $e) {
+            \Log::warning('ElasticSearch coin package sync: ' . $e->getMessage());
+        }
     }
 
     public function coinEventsStore(Request $req)
