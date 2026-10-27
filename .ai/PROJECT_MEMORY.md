@@ -23,11 +23,10 @@ Last updated: 2026-10-22 (Super Admin Companies Page UI Redesign, 100% CQRS Read
 - *2026-10-27* — **Service Company Client Listing (Client Cards & Sub-Cards UX Modernization & Refinement)**:
   - **Module & Views**: Service Company Clients (`/service-company/client`, `resources/views/service_company/client/index.blade.php`, `resources/views/service_company/ajax_pages/all-client-ajax.blade.php`, `demo/css/clientList.css`).
   - **Key Enhancements**:
-    - Reordered Sub-Card 2 (Location) into 3 discrete rows across Blade templates and dynamic JS card renderer:
-      - Row 1: City (`.cl-loc-city`, font-size 11.5px, weight 600, color `#1e293b`)
-      - Row 2: State (`.cl-loc-state`, font-size 10.5px, weight 500, color `#475569`)
-      - Row 3: Country (`.cl-loc-country`, font-size 10.5px, weight 400, color `#64748b`)
-    - Added resilient data extraction fallback for city, state, country across Elasticsearch record structures (handling flat fields `city_name`/`city`, `state_name`/`state`, `country_name`/`country` and nested `client_location`).
+    - Reordered Sub-Card 2 (Location) into 3 discrete rows across Blade templates and dynamic JS card renderer (City 1st, State 2nd, Country 3rd) with automatic CSS title-casing (`text-transform: capitalize;`) resolving uncapitalized regions like `ile-de-france`.
+    - Elevated Hiring Pipeline (Sub-Card 4): Crisp high-contrast separator divider (`#cbd5e1`, 1.5px), zero-overlap unique spectrum (Cyan Sourcing, Purple Screening, Indigo Evaluation, Magenta Negotiation, Amber Offer, Green Joined, Royal Blue Interview), elevated soft-tint pill badges for active counts (`> 0`), singular `Negotiation` label, and aligned `Interview` baseline.
+    - Added tabular numeric alignment (`font-variant-numeric: tabular-nums; min-width: 14px;`) to Sub-Card 3 (Jobs Status) for vertical label alignment.
+    - Added subtle 3.5px left border status accents (`border-left: 3.5px solid #10b981` on active clients with hiring, `#cbd5e1` on inactive clients) for rapid peripheral scanning.
     - Updated client-side CSV export (`exportClientsToCsv()`) to extract and combine City, State, and Country.
     - Verified 0 syntax errors (`php -l`), cleared view cache, and committed to `origin/staging`.
 
