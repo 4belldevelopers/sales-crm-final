@@ -7555,6 +7555,7 @@
 
         function loadDirectTabContent(target, force) {
             if (!target) return;
+            target = target.replace('#', '');
             var activeSelId = window.ClientStateManager && typeof window.ClientStateManager.getSelectedClientId === 'function'
                 ? window.ClientStateManager.getSelectedClientId()
                 : (window.activeSelectedClientId || null);
@@ -7563,8 +7564,24 @@
                 return;
             }
 
+            // Inspect DOM empty state to guarantee preloading when container has no rendered items
+            var isTargetEmpty = false;
+            if (target === 'contacts') {
+                isTargetEmpty = $('#kt_activitiesDirectClient #cdContactCardsStreamDirect').children().length === 0;
+            } else if (target === 'requisitions') {
+                isTargetEmpty = $('#kt_activitiesDirectClient #directclientJobsListajax').children().length === 0;
+            } else if (target === 'candidate_list') {
+                isTargetEmpty = !window.ClientCandidateStoreDirect || window.ClientCandidateStoreDirect.state === 'IDLE' || $('#kt_activitiesDirectClient #cdCandCardsStreamDirect').children().length === 0;
+            } else if (target === 'interview_tracker') {
+                isTargetEmpty = $('#kt_activitiesDirectClient #direct_interview_tracker_body').children().length === 0;
+            } else if (target === 'candidate_joining') {
+                isTargetEmpty = $('#kt_activitiesDirectClient #candidatetListJoin').children().length === 0;
+            }
+
             if (target === 'candidateDashboard') {
-                initPerformanceDashboard();
+                if (typeof initPerformanceDashboard === 'function') {
+                    initPerformanceDashboard();
+                }
                 setTimeout(function() {
                     if (window.perfChartInstances) {
                         Object.values(window.perfChartInstances).forEach(function(c) {
@@ -7577,56 +7594,95 @@
             }
 
             if (target === 'candidate_list') {
-                if (!window.ClientCandidateStoreDirect.companyId || window.ClientCandidateStoreDirect.clientId !== dcClientId || window.ClientCandidateStoreDirect.state === 'IDLE' || force) {
-                    window.ClientCandidateStoreDirect.init(currentCompanyId, dcClientId, 'direct');
-                } else {
+                if (!window.ClientCandidateStoreDirect || !window.ClientCandidateStoreDirect.companyId || window.ClientCandidateStoreDirect.clientId !== dcClientId || window.ClientCandidateStoreDirect.state === 'IDLE' || isTargetEmpty || force) {
+                    if (window.ClientCandidateStoreDirect && typeof window.ClientCandidateStoreDirect.init === 'function') {
+                        window.ClientCandidateStoreDirect.init(currentCompanyId, dcClientId, 'direct');
+                    }
+                } else if (window.ClientCandidateStoreDirect && typeof window.ClientCandidateStoreDirect.reconcileVersion === 'function') {
                     window.ClientCandidateStoreDirect.reconcileVersion();
                 }
                 if (window.ClientStateManager) window.ClientStateManager.markTabLoaded(dcClientId, target);
                 return;
             }
 
-            if (!force && window.ClientStateManager && window.ClientStateManager.isTabLoaded(dcClientId, target)) {
+            if (!force && !isTargetEmpty && window.ClientStateManager && window.ClientStateManager.isTabLoaded(dcClientId, target)) {
                 return;
             }
 
             if (target === 'contacts') {
-                initDContactsDataTable();
+                if (typeof initDContactsDataTable === 'function') {
+                    initDContactsDataTable();
+                } else if (window.DirectClientContactsManager) {
+                    window.DirectClientContactsManager.init(dcClientId);
+                }
+                if (window.DirectClientContactsManager && $('#kt_activitiesDirectClient #cdContactCardsStreamDirect').children().length === 0) {
+                    if (Array.isArray(window.DirectClientContactsManager.allContacts) && window.DirectClientContactsManager.allContacts.length > 0) {
+                        window.DirectClientContactsManager.filterAndRender();
+                    } else {
+                        window.DirectClientContactsManager.fetch();
+                    }
+                }
                 if (window.ClientStateManager) window.ClientStateManager.markTabLoaded(dcClientId, target);
             } else if (target === 'requisitions') {
-                fetchJobsClientdirect(1, $('#kt_activitiesDirectClient #requisitions #inputJobSearch').val() || '', window.currentJobStatusDirect || 'all');
+                if (typeof fetchJobsClientdirect === 'function') {
+                    var $directJobsList = $('#kt_activitiesDirectClient #directclientJobsListajax');
+                    if ($directJobsList.length && $directJobsList.children().length === 0) {
+                        $directJobsList.html(`
+                            <div class="d-flex flex-column align-items-center justify-content-center py-10" style="min-height:200px;">
+                                <div class="spinner-border text-primary mb-3" style="width:2rem;height:2rem;" role="status"></div>
+                                <span class="text-gray-600 font-poppins fs-7 fw-semibold">Loading open jobs...</span>
+                            </div>
+                        `);
+                    }
+                    fetchJobsClientdirect(1, $('#kt_activitiesDirectClient #requisitions #inputJobSearch').val() || '', window.currentJobStatusDirect || 'all');
+                }
                 if (window.ClientStateManager) window.ClientStateManager.markTabLoaded(dcClientId, target);
             } else if (target === 'interview_tracker') {
-                directfetchCandidatesInverViewTracker();
+                if (typeof directfetchCandidatesInverViewTracker === 'function') {
+                    directfetchCandidatesInverViewTracker();
+                }
                 if (window.ClientStateManager) window.ClientStateManager.markTabLoaded(dcClientId, target);
             } else if (target === 'candidate_joining') {
                 var search = $('#kt_activitiesDirectClient #ojSearchInputDirect').val() || '';
-                directfetchCandidatesJoin(1, search, window.currentOjSegmentDirect || 'all');
+                if (typeof directfetchCandidatesJoin === 'function') {
+                    var $directOjList = $('#kt_activitiesDirectClient #candidatetListJoin');
+                    if ($directOjList.length && $directOjList.children().length === 0) {
+                        $directOjList.html(`
+                            <div class="d-flex flex-column align-items-center justify-content-center py-10" style="min-height:200px;">
+                                <div class="spinner-border text-primary mb-3" style="width:2rem;height:2rem;" role="status"></div>
+                                <span class="text-gray-600 font-poppins fs-7 fw-semibold">Loading offers &amp; joinings...</span>
+                            </div>
+                        `);
+                    }
+                    directfetchCandidatesJoin(1, search, window.currentOjSegmentDirect || 'all');
+                }
                 if (window.ClientStateManager) window.ClientStateManager.markTabLoaded(dcClientId, target);
             }
         }
+        window.loadDirectTabContent = loadDirectTabContent;
+
+        // Pre-warm in-memory direct contacts manager immediately upon drawer mount
+        if (window.DirectClientContactsManager) {
+            try { window.DirectClientContactsManager.init(dcClientId); } catch(e){}
+        }
 
         // Initialize active tab immediately on drawer mount
-        if ($('#kt_activitiesDirectClient #candidate_list').hasClass('active') || $('#kt_activitiesDirectClient a[href="#candidate_list"]').hasClass('active')) {
-            loadDirectTabContent('candidate_list', true);
-        } else if ($('#kt_activitiesDirectClient #contacts').hasClass('active') || $('#kt_activitiesDirectClient a[href="#contacts"]').hasClass('active')) {
-            loadDirectTabContent('contacts', true);
-        } else if ($('#kt_activitiesDirectClient #requisitions').hasClass('active') || $('#kt_activitiesDirectClient a[href="#requisitions"]').hasClass('active')) {
-            loadDirectTabContent('requisitions', true);
-        } else if ($('#kt_activitiesDirectClient #candidateDashboard').hasClass('active') || $('#kt_activitiesDirectClient a[href="#candidateDashboard"]').hasClass('active')) {
-            loadDirectTabContent('candidateDashboard', true);
+        var $initActiveTabDirect = $('#kt_activitiesDirectClient .tab-pane.active');
+        var initTargetDirect = $initActiveTabDirect.length ? $initActiveTabDirect.attr('id') : 'overview';
+        if (initTargetDirect && initTargetDirect !== 'overview' && initTargetDirect !== 'recent_activity') {
+            loadDirectTabContent(initTargetDirect, true);
         }
 
         // Clean unbind previous namespaced listeners before binding fresh ones
         $(document).off('.directDrawer');
 
-        // Scoped Click Handler for Sub-Tab Pills
-        $(document).on('click.directDrawer', '#kt_activitiesDirectClient .cd-tab-pill-btn', function(e) {
-            var target = $(this).attr('href');
+        // Scoped Click Handler for Drawer Tab Nav Links (handling clicks on link, icon, text, badge)
+        $(document).on('click.directDrawer', '#kt_activitiesDirectClient .cd-drawer-tabs-list .nav-link, #kt_activitiesDirectClient .cd-tab-pill-btn', function(e) {
+            var $link = $(this);
+            var target = ($link.attr('href') || $link.attr('data-bs-target') || '').replace('#', '');
             if (!target) return;
-            target = target.replace('#', '');
-            $('#kt_activitiesDirectClient .cd-tab-pill-btn').removeClass('active');
-            $(this).addClass('active');
+            $('#kt_activitiesDirectClient .cd-drawer-tabs-list .nav-link, #kt_activitiesDirectClient .cd-tab-pill-btn').removeClass('active');
+            $link.addClass('active');
             $('#kt_activitiesDirectClient .tab-pane').removeClass('active show');
             $(`#kt_activitiesDirectClient #${target}`).addClass('active show');
             loadDirectTabContent(target, true);
@@ -7634,7 +7690,7 @@
 
         // Scoped Click Handler for Metric KPI Cards
         $(document).on('click.directDrawer', '#kt_activitiesDirectClient .cd-kpi-card', function(e) {
-            var target = $(this).data('target-tab');
+            var target = $(this).data('target-tab') || $(this).attr('data-target-tab');
             if (!target) return;
             target = target.replace('#', '');
 
@@ -7662,15 +7718,31 @@
 
         // Scoped Bootstrap tab event listener
         $(document).on('shown.bs.tab.directDrawer', '#kt_activitiesDirectClient a[data-bs-toggle="tab"], #kt_activitiesDirectClient a[data-toggle="tab"]', function (e) {
-            var target = $(e.target).attr('href');
+            var $link = $(this);
+            var target = ($link.attr('href') || $link.attr('data-bs-target') || (e.target ? $(e.target).closest('a').attr('href') : '') || '').replace('#', '');
             if (!target) return;
-            target = target.replace('#', '');
-            loadDirectTabContent(target);
+            loadDirectTabContent(target, false);
+        });
+
+        // Tab visibility & idle wake-up listener
+        $(document).on('visibilitychange.directDrawer', function() {
+            if (document.visibilityState === 'visible') {
+                var $drawer = $('#kt_activitiesDirectClient');
+                if ($drawer.hasClass('drawer-on') || $drawer.is(':visible')) {
+                    var $activePane = $drawer.find('.tab-pane.active');
+                    var activeTab = $activePane.length ? $activePane.attr('id') : null;
+                    if (activeTab && activeTab !== 'overview' && activeTab !== 'recent_activity') {
+                        loadDirectTabContent(activeTab, false);
+                    }
+                }
+            }
         });
 
         $(document).on('keyup.directDrawer', '#kt_activitiesDirectClient #search', function() {
             const search = $(this).val();
-            directfetchCandidates(1, search);
+            if (typeof directfetchCandidates === 'function') {
+                directfetchCandidates(1, search);
+            }
         });
 
         $(document).on('click.directDrawer', '#kt_activitiesDirectClient #paginationcandidate [data-page], #kt_activitiesDirectClient #paginationcandidate .page-link, #kt_activitiesDirectClient #paginationcandidate .pagi-page, #kt_activitiesDirectClient #paginationcandidate .pagi-arrow', function(e) {
@@ -7682,7 +7754,9 @@
             if (!page || page < 1 || $btn.hasClass('disabled') || $btn.hasClass('pagi-disabled') || $btn.hasClass('pagi-active-disabled') || $btn.is(':disabled')) return;
 
             var search = $('#kt_activitiesDirectClient #inputSearch').val() || '';
-            directfetchCandidates(page, search);
+            if (typeof directfetchCandidates === 'function') {
+                directfetchCandidates(page, search);
+            }
         });
 
         $(document).on('click.directDrawer', '#kt_activitiesDirectClient #paginationcandidatejoin [data-page], #kt_activitiesDirectClient #paginationcandidatejoin .page-link, #kt_activitiesDirectClient #paginationcandidatejoin .pagi-page, #kt_activitiesDirectClient #paginationcandidatejoin .pagi-arrow', function(e) {
@@ -7695,7 +7769,9 @@
 
             var search = $('#kt_activitiesDirectClient #ojSearchInputDirect').val() || '';
             var segment = window.currentOjSegmentDirect || 'all';
-            directfetchCandidatesJoin(page, search, segment);
+            if (typeof directfetchCandidatesJoin === 'function') {
+                directfetchCandidatesJoin(page, search, segment);
+            }
         });
 
         $(document).on('click.directDrawer', '#kt_activitiesDirectClient #paginationcandidateinterviewtracker [data-page], #kt_activitiesDirectClient #paginationcandidateinterviewtracker .page-link, #kt_activitiesDirectClient #paginationcandidateinterviewtracker .pagi-page, #kt_activitiesDirectClient #paginationcandidateinterviewtracker .pagi-arrow', function(e) {
@@ -7707,7 +7783,9 @@
             if (!page || page < 1 || $btn.hasClass('disabled') || $btn.hasClass('pagi-disabled') || $btn.hasClass('pagi-active-disabled') || $btn.is(':disabled')) return;
 
             var search = $('#kt_activitiesDirectClient #inputSearch').val() || '';
-            directfetchCandidatesInverViewTracker(page, search);
+            if (typeof directfetchCandidatesInverViewTracker === 'function') {
+                directfetchCandidatesInverViewTracker(page, search);
+            }
         });
 
         $(document).on('click.directDrawer', '#kt_activitiesDirectClient #directpaginationclientjobs [data-page], #kt_activitiesDirectClient #directpaginationclientjobs .page-link, #kt_activitiesDirectClient #directpaginationclientjobs .pagi-page, #kt_activitiesDirectClient #directpaginationclientjobs .pagi-arrow', function(e) {
@@ -7719,11 +7797,11 @@
             if (!page || page < 1 || $btn.hasClass('disabled') || $btn.hasClass('pagi-disabled') || $btn.hasClass('pagi-active-disabled') || $btn.is(':disabled')) return;
 
             var search = $('#kt_activitiesDirectClient #requisitions #inputJobSearch').val() || '';
-            fetchJobsClientdirect(page, search);
+            if (typeof fetchJobsClientdirect === 'function') {
+                fetchJobsClientdirect(page, search);
+            }
         });
-
-
-    });
+    })();
 
     /**
      * ── ClientCandidateStoreDirect (User RAM Virtual State Machine & DOM Engine) ──
@@ -9459,5 +9537,5 @@
                 }
             });
         }
-    })();
+    });
 </script>
