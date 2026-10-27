@@ -1019,9 +1019,10 @@
 }
 .cl-pipe-pill {
   font-size: 11.5px !important;
-  font-weight: 700 !important;
+  font-weight: 600 !important;
   line-height: 1.2 !important;
   text-align: center !important;
+  transition: all 0.15s ease !important;
 }
 .cl-pipe-label {
   font-size: 8.5px !important;
@@ -1038,10 +1039,50 @@
   margin: 0 4px !important;
   user-select: none !important;
 }
-.step-interview .cl-pipe-pill,
-.step-interview .cl-pipe-label {
-  color: #2563eb !important;
+
+/* ── Dynamic Pipeline Highlighting: Zeroes Muted vs Active Vibrant ── */
+.cl-pipe-step.stage-zero .cl-pipe-pill {
+  color: #cbd5e1 !important;
+  font-weight: 500 !important;
+}
+.cl-pipe-step.stage-zero .cl-pipe-label {
+  color: #94a3b8 !important;
+  font-weight: 500 !important;
+  opacity: 0.8 !important;
+}
+.cl-pipe-step.stage-active .cl-pipe-pill {
+  font-weight: 800 !important;
+  font-size: 12.5px !important;
+}
+.cl-pipe-step.stage-active .cl-pipe-label {
   font-weight: 700 !important;
+}
+.cl-pipe-step.stage-active.step-sourcing .cl-pipe-pill,
+.cl-pipe-step.stage-active.step-sourcing .cl-pipe-label { color: #0284c7 !important; }
+.cl-pipe-step.stage-active.step-screening .cl-pipe-pill,
+.cl-pipe-step.stage-active.step-screening .cl-pipe-label { color: #0d9488 !important; }
+.cl-pipe-step.stage-active.step-evaluation .cl-pipe-pill,
+.cl-pipe-step.stage-active.step-evaluation .cl-pipe-label { color: #d97706 !important; }
+.cl-pipe-step.stage-active.step-negotiations .cl-pipe-pill,
+.cl-pipe-step.stage-active.step-negotiations .cl-pipe-label { color: #ea580c !important; }
+.cl-pipe-step.stage-active.step-offer .cl-pipe-pill,
+.cl-pipe-step.stage-active.step-offer .cl-pipe-label { color: #7c3aed !important; }
+.cl-pipe-step.stage-active.step-joined .cl-pipe-pill,
+.cl-pipe-step.stage-active.step-joined .cl-pipe-label { color: #16a34a !important; }
+.cl-pipe-step.stage-active.step-interview .cl-pipe-pill,
+.cl-pipe-step.stage-active.step-interview .cl-pipe-label { color: #2563eb !important; }
+
+/* ── Jobs Status Sub-Card Accents ── */
+.cl-job-line.has-count.cl-job-hiring .cl-job-num {
+  font-weight: 800 !important;
+  color: #15803d !important;
+}
+.cl-job-line.has-count.cl-job-hiring .cl-job-label {
+  font-weight: 700 !important;
+  color: #15803d !important;
+}
+.cl-job-line.no-count {
+  opacity: 0.65 !important;
 }
 
 /* Bottom Activity Strip */
@@ -1051,8 +1092,8 @@
   justify-content: space-between !important;
   flex-wrap: wrap !important;
   gap: 8px !important;
-  border-top: 1px solid #f1f5f9 !important;
-  padding-top: 6px !important;
+  border-top: 1px solid #edf2f7 !important;
+  padding-top: 8px !important;
   margin-top: 8px !important;
   width: 100% !important;
 }
@@ -1082,21 +1123,46 @@
   color: #cbd5e1 !important;
   font-size: 8px !important;
 }
+
+/* Applications Metric Pill Badge */
+.cl-apps-badge {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  min-width: 22px !important;
+  height: 19px !important;
+  padding: 0 6px !important;
+  border-radius: 10px !important;
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  background: #f1f5f9 !important;
+  color: #64748b !important;
+  line-height: 1 !important;
+  box-sizing: border-box !important;
+}
+.cl-apps-badge.has-apps {
+  background: #eff6ff !important;
+  color: #2563eb !important;
+  border: 1px solid #bfdbfe !important;
+  font-weight: 800 !important;
+}
+
 .cl-bottom-actions {
   display: inline-flex !important;
   align-items: center !important;
   gap: 4px !important;
   flex-shrink: 0 !important;
 }
+/* Modern Ghost Action Buttons */
 .cl-btn-act {
   display: inline-flex !important;
   align-items: center !important;
   justify-content: center !important;
-  width: 26px !important;
-  height: 26px !important;
+  width: 28px !important;
+  height: 28px !important;
   border-radius: 6px !important;
-  border: 1px solid #e2e8f0 !important;
-  background: #ffffff !important;
+  border: 1px solid transparent !important;
+  background: transparent !important;
   color: #64748b !important;
   transition: all 0.15s ease !important;
   cursor: pointer !important;
@@ -1105,7 +1171,7 @@
 .cl-btn-act:hover {
   background: #eff6ff !important;
   color: #2563eb !important;
-  border-color: #bfdbfe !important;
+  border-color: #dbeafe !important;
 }
 
 @media (max-width: 1024px) {
