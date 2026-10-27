@@ -423,8 +423,8 @@
             </div>
         </div>
 
-        {{-- Hiring Pipeline Funnel (Original Design: No box, adjusted text) --}}
-        <div class="tbl-cell-pipeline" title="Applications: {{ $allCandidates }} | Interviews: {{ $interviews }}">
+        {{-- Hiring Pipeline Funnel (Original Capsule Flow + Clean Row 2 Applications & Interview) --}}
+        <div class="tbl-cell-pipeline">
             <div class="cl-pipeline-flow">
                 <div class="cl-pipe-step" title="Sourcing: {{ $sourced }}">
                     <span class="cl-pipe-pill pill-sourcing">{{ $sourced }}</span>
@@ -450,6 +450,11 @@
                     <span class="cl-pipe-pill pill-joined">{{ $joined }}</span>
                     <span class="cl-pipe-label">Joined</span>
                 </div>
+            </div>
+            <div class="cl-pipeline-meta">
+                <span class="cl-pipeline-meta-item">Application: <strong>{{ $allCandidates }}</strong></span>
+                <span class="cl-pipeline-meta-divider">|</span>
+                <span class="cl-pipeline-meta-item">Interview: <strong>{{ $interviews }}</strong></span>
             </div>
         </div>
     </div>
