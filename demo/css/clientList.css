@@ -369,7 +369,7 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  margin-bottom: 18px;
+  margin-bottom: 14px;
   flex-wrap: wrap;
 }
 .cl-search-box {
@@ -471,186 +471,24 @@
   z-index: 2;
 }
 
-/* ── Tabs Bar ── */
-.cl-nav-tabs {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  border-bottom: 1.5px solid #e2e8f0;
-  margin-bottom: 16px;
-  padding: 2px 0 8px 0;
-  overflow-x: auto;
-  scrollbar-width: none;
-}
-.cl-nav-tabs::-webkit-scrollbar {
-  display: none;
-}
-.cl-tab-item {
-  display: inline-flex;
-  align-items: center;
-  gap: 6.5px;
-  padding: 6.5px 12px;
-  font-size: 12px;
-  font-weight: 500;
-  color: #64748b;
-  text-decoration: none;
-  border: 1px solid transparent;
-  border-radius: 8px;
-  white-space: nowrap;
-  cursor: pointer;
-  transition: all 0.15s ease;
-  user-select: none;
-  background: transparent;
-}
-.cl-tab-item:hover {
-  color: #0f172a;
-  background: #f8fafc;
-  border-color: #e2e8f0;
-  text-decoration: none;
-}
-.cl-tab-item svg {
-  flex-shrink: 0;
-  width: 14.5px;
-  height: 14.5px;
-  transition: color 0.15s ease, stroke 0.15s ease;
-}
-.cl-tab-badge {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 19px;
-  height: 18px;
-  padding: 0 5.5px;
-  border-radius: 9px;
-  font-size: 11px;
-  font-weight: 600;
-  background: #f1f5f9;
-  color: #64748b;
-  line-height: 1;
-  transition: all 0.15s ease;
-}
-
-/* ── Tabs Selected States: Highlighted Background matching corresponding KPI ── */
-/* 1. All Clients (Blue) */
-.cl-tab-item.active[data-tab="all"] {
-  background: #eff6ff !important;
-  color: #1d4ed8 !important;
-  border-color: #bfdbfe !important;
-  font-weight: 600 !important;
-}
-.cl-tab-item.active[data-tab="all"] svg {
-  color: #2563eb !important;
-  stroke: #2563eb !important;
-}
-.cl-tab-item.active[data-tab="all"] .cl-tab-badge {
-  background: #dbeafe !important;
-  color: #1e40af !important;
-  font-weight: 700 !important;
-}
-
-/* 2. Internal Clients (Indigo) */
-.cl-tab-item.active[data-tab="internal"] {
-  background: #eef2ff !important;
-  color: #4338ca !important;
-  border-color: #c7d2fe !important;
-  font-weight: 600 !important;
-}
-.cl-tab-item.active[data-tab="internal"] svg {
-  color: #4f46e5 !important;
-  stroke: #4f46e5 !important;
-}
-.cl-tab-item.active[data-tab="internal"] .cl-tab-badge {
-  background: #e0e7ff !important;
-  color: #3730a3 !important;
-  font-weight: 700 !important;
-}
-
-/* 3. Direct Clients (Green) */
-.cl-tab-item.active[data-tab="direct"] {
-  background: #ecfdf5 !important;
-  color: #047857 !important;
-  border-color: #a7f3d0 !important;
-  font-weight: 600 !important;
-}
-.cl-tab-item.active[data-tab="direct"] svg {
-  color: #059669 !important;
-  stroke: #059669 !important;
-}
-.cl-tab-item.active[data-tab="direct"] .cl-tab-badge {
-  background: #d1fae5 !important;
-  color: #065f46 !important;
-  font-weight: 700 !important;
-}
-
-/* 4. Active Companies (Green) */
-.cl-tab-item.active[data-tab="hiring"] {
-  background: #f0fdf4 !important;
-  color: #15803d !important;
-  border-color: #bbf7d0 !important;
-  font-weight: 600 !important;
-}
-.cl-tab-item.active[data-tab="hiring"] svg {
-  color: #16a34a !important;
-  stroke: #16a34a !important;
-}
-.cl-tab-item.active[data-tab="hiring"] .cl-tab-badge {
-  background: #dcfce7 !important;
-  color: #15803d !important;
-  font-weight: 700 !important;
-}
-
-/* 5. Inactive Companies (Pink) */
-.cl-tab-item.active[data-tab="inactive"] {
-  background: #fdf2f8 !important;
-  color: #be185d !important;
-  border-color: #fbcfe8 !important;
-  font-weight: 600 !important;
-}
-.cl-tab-item.active[data-tab="inactive"] svg {
-  color: #db2777 !important;
-  stroke: #db2777 !important;
-}
-.cl-tab-item.active[data-tab="inactive"] .cl-tab-badge {
-  background: #fce7f3 !important;
-  color: #9d174d !important;
-  font-weight: 700 !important;
-}
-
-/* 6. Pending Requests (Purple) */
-.cl-tab-item.active[data-tab="request"] {
-  background: #faf5ff !important;
-  color: #7e22ce !important;
-  border-color: #e9d5ff !important;
-  font-weight: 600 !important;
-}
-.cl-tab-item.active[data-tab="request"] svg {
-  color: #9333ea !important;
-  stroke: #9333ea !important;
-}
-.cl-tab-item.active[data-tab="request"] .cl-tab-badge {
-  background: #f3e8ff !important;
-  color: #6b21a8 !important;
-  font-weight: 700 !important;
-}
-
 /* ── Table Card Container ── */
 .tbl {
   padding: 0;
   margin-bottom: 24px;
 }
 .tbl-w {
-  background: #ffffff;
-  border-radius: 14px;
-  border: 1px solid #e2e8f0;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
-  overflow: hidden;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  border-radius: 0;
+  overflow: visible;
 }
 .tbl-scroll-container {
   width: 100%;
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
-  scrollbar-width: thin;
-  scrollbar-color: #cbd5e1 transparent;
+  overflow: visible;
+}
+#clientTableHead {
+  display: none !important;
 }
 .tbl-scroll-container::-webkit-scrollbar {
   height: 6px;
@@ -665,7 +503,7 @@
 /* Column widths tightly tuned to content with zero wasted space; Hiring Pipeline expanded for full stage visibility */
 .tbl-h, .tbl-r {
   display: grid;
-  grid-template-columns: 32px minmax(180px, 1.2fr) minmax(115px, 125px) minmax(102px, 110px) minmax(108px, 116px) minmax(72px, 80px) minmax(330px, 2fr);
+  grid-template-columns: 32px minmax(180px, 1.2fr) minmax(115px, 125px) minmax(102px, 110px) minmax(108px, 116px) minmax(72px, 80px) minmax(340px, 2fr);
   align-items: center;
   column-gap: 8px;
   padding: 8px 12px;
@@ -792,6 +630,379 @@
 .dot-green  { background: #16a34a; }
 .dot-orange { background: #f59e0b; }
 .dot-red    { background: #ef4444; }
+
+/* ── PRIMARY CLIENT CARD (Enterprise Card + Sub-Card Standard) ── */
+.cl-primary-card.tbl-r {
+  display: flex !important;
+  flex-direction: column !important;
+  background: #ffffff !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 10px !important;
+  padding: 10px 14px 8px 14px !important;
+  margin-bottom: 10px !important;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03) !important;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  box-sizing: border-box !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  position: relative !important;
+}
+.cl-primary-card.tbl-r:hover {
+  background: #ffffff !important;
+  border-color: #cbd5e1 !important;
+  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.06) !important;
+  transform: translateY(-1px) !important;
+}
+.cl-primary-card.tbl-r.client-selected {
+  border-color: #009ef7 !important;
+  box-shadow: 0 0 0 2px rgba(0, 158, 247, 0.15) !important;
+}
+
+/* 4 Upper Discrete Sub-Cards Grid */
+.cl-subcards-grid {
+  display: grid !important;
+  grid-template-columns: minmax(0, 2.3fr) minmax(0, 1.3fr) minmax(0, 1.1fr) minmax(0, 3.1fr) !important;
+  gap: 8px !important;
+  width: 100% !important;
+  align-items: stretch !important;
+}
+
+/* Individual Sub-Card Frame */
+.cl-subcard {
+  background: #f8fafc !important;
+  border: 1px solid #edf2f7 !important;
+  border-radius: 8px !important;
+  padding: 8px 10px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: flex-start !important;
+  min-width: 0 !important;
+  box-sizing: border-box !important;
+  position: relative !important;
+}
+
+/* Sub-Card Header */
+.cl-subcard-head {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  margin-bottom: 6px !important;
+  gap: 6px !important;
+  min-height: 18px !important;
+}
+.cl-subcard-title {
+  font-size: 9.5px !important;
+  font-weight: 700 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.35px !important;
+  color: #64748b !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+
+/* Dual Badges at TOP of Sub-Card 1 */
+.cl-subcard-badges {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 4px !important;
+  flex-shrink: 0 !important;
+}
+.cl-scope-pill {
+  font-size: 8.5px !important;
+  font-weight: 700 !important;
+  padding: 1.5px 6px !important;
+  border-radius: 4px !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.2px !important;
+  line-height: 1.3 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  white-space: nowrap !important;
+  cursor: pointer !important;
+}
+.cl-scope-pill.pill-direct {
+  background: #ecfdf5 !important;
+  color: #059669 !important;
+  border: 1px solid #a7f3d0 !important;
+}
+.cl-scope-pill.pill-internal {
+  background: #eff6ff !important;
+  color: #2563eb !important;
+  border: 1px solid #bfdbfe !important;
+}
+.cl-status-pill {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 3.5px !important;
+  font-size: 8.5px !important;
+  font-weight: 700 !important;
+  padding: 1.5px 6px !important;
+  border-radius: 4px !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.2px !important;
+  line-height: 1.3 !important;
+  white-space: nowrap !important;
+}
+.cl-status-pill.pill-active {
+  background: #f0fdf4 !important;
+  color: #16a34a !important;
+  border: 1px solid #bbf7d0 !important;
+}
+.cl-status-pill.pill-inactive {
+  background: #fdf2f8 !important;
+  color: #db2777 !important;
+  border: 1px solid #fbcfe8 !important;
+}
+.cl-status-pill-dot {
+  width: 5px !important;
+  height: 5px !important;
+  border-radius: 50% !important;
+  display: inline-block !important;
+  flex-shrink: 0 !important;
+}
+.cl-status-pill.pill-active .cl-status-pill-dot {
+  background: #16a34a !important;
+}
+.cl-status-pill.pill-inactive .cl-status-pill-dot {
+  background: #db2777 !important;
+}
+
+/* Sub-Card 1: Client Identity */
+.cl-identity-body {
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  min-width: 0 !important;
+}
+
+/* Sub-Card 2: Location */
+.cl-loc-body {
+  display: flex !important;
+  align-items: flex-start !important;
+  gap: 6px !important;
+  min-width: 0 !important;
+}
+.cl-loc-pin {
+  flex-shrink: 0 !important;
+  margin-top: 2px !important;
+}
+.cl-loc-lines {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 1.5px !important;
+  min-width: 0 !important;
+  overflow: hidden !important;
+}
+
+/* Sub-Card 3: Jobs Status */
+.cl-jobs-body {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 2.5px !important;
+  min-width: 0 !important;
+}
+
+/* Sub-Card 4: Hiring Pipeline */
+.cl-pipe-body {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  padding-top: 2px !important;
+}
+.cl-pipeline-flow {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 2px !important;
+  width: 100% !important;
+}
+.cl-pipe-step {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  min-width: 0 !important;
+  flex: 1 !important;
+  padding: 0 1px !important;
+}
+.cl-pipe-pill {
+  font-size: 11.5px !important;
+  font-weight: 600 !important;
+  line-height: 1.2 !important;
+  text-align: center !important;
+  transition: all 0.15s ease !important;
+}
+.cl-pipe-label {
+  font-size: 8px !important;
+  font-weight: 600 !important;
+  text-transform: capitalize !important;
+  color: #64748b !important;
+  margin-top: 2px !important;
+  letter-spacing: -0.15px !important;
+  white-space: nowrap !important;
+  line-height: 1.1 !important;
+  text-align: center !important;
+}
+.cl-pipe-divider {
+  width: 1px !important;
+  height: 22px !important;
+  background: #e2e8f0 !important;
+  margin: 0 6px !important;
+  flex-shrink: 0 !important;
+  align-self: center !important;
+}
+
+/* ── Dynamic Pipeline Highlighting: Zeroes Muted vs Active Vibrant ── */
+.cl-pipe-step.stage-zero .cl-pipe-pill {
+  color: #cbd5e1 !important;
+  font-weight: 500 !important;
+}
+.cl-pipe-step.stage-zero .cl-pipe-label {
+  color: #94a3b8 !important;
+  font-weight: 500 !important;
+  opacity: 0.8 !important;
+}
+.cl-pipe-step.stage-active .cl-pipe-pill {
+  font-weight: 800 !important;
+  font-size: 12.5px !important;
+}
+.cl-pipe-step.stage-active .cl-pipe-label {
+  font-weight: 700 !important;
+}
+.cl-pipe-step.stage-active.step-sourcing .cl-pipe-pill,
+.cl-pipe-step.stage-active.step-sourcing .cl-pipe-label { color: #0284c7 !important; }
+.cl-pipe-step.stage-active.step-screening .cl-pipe-pill,
+.cl-pipe-step.stage-active.step-screening .cl-pipe-label { color: #0d9488 !important; }
+.cl-pipe-step.stage-active.step-evaluation .cl-pipe-pill,
+.cl-pipe-step.stage-active.step-evaluation .cl-pipe-label { color: #d97706 !important; }
+.cl-pipe-step.stage-active.step-negotiations .cl-pipe-pill,
+.cl-pipe-step.stage-active.step-negotiations .cl-pipe-label { color: #ea580c !important; }
+.cl-pipe-step.stage-active.step-offer .cl-pipe-pill,
+.cl-pipe-step.stage-active.step-offer .cl-pipe-label { color: #7c3aed !important; }
+.cl-pipe-step.stage-active.step-joined .cl-pipe-pill,
+.cl-pipe-step.stage-active.step-joined .cl-pipe-label { color: #16a34a !important; }
+.cl-pipe-step.stage-active.step-interview .cl-pipe-pill,
+.cl-pipe-step.stage-active.step-interview .cl-pipe-label { color: #2563eb !important; }
+
+/* ── Jobs Status Sub-Card Accents ── */
+.cl-job-line.has-count.cl-job-hiring .cl-job-num {
+  font-weight: 800 !important;
+  color: #15803d !important;
+}
+.cl-job-line.has-count.cl-job-hiring .cl-job-label {
+  font-weight: 700 !important;
+  color: #15803d !important;
+}
+.cl-job-line.no-count {
+  opacity: 0.65 !important;
+}
+
+/* Bottom Activity Strip */
+.cl-card-bottom-strip {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  flex-wrap: wrap !important;
+  gap: 8px !important;
+  border-top: 1px solid #edf2f7 !important;
+  padding-top: 8px !important;
+  margin-top: 8px !important;
+  width: 100% !important;
+}
+.cl-bottom-meta {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  flex-wrap: wrap !important;
+  font-size: 11px !important;
+  color: #64748b !important;
+}
+.cl-meta-item {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 4.5px !important;
+  white-space: nowrap !important;
+}
+.cl-meta-item svg {
+  color: #64748b !important;
+  flex-shrink: 0 !important;
+}
+.cl-meta-item strong {
+  color: #1e293b !important;
+  font-weight: 600 !important;
+}
+.cl-meta-dot {
+  color: #cbd5e1 !important;
+  font-size: 8px !important;
+}
+
+/* Applications Metric Pill Badge */
+.cl-apps-badge {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  min-width: 22px !important;
+  height: 19px !important;
+  padding: 0 6px !important;
+  border-radius: 10px !important;
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  background: #f1f5f9 !important;
+  color: #64748b !important;
+  line-height: 1 !important;
+  box-sizing: border-box !important;
+}
+.cl-apps-badge.has-apps {
+  background: #eff6ff !important;
+  color: #2563eb !important;
+  border: 1px solid #bfdbfe !important;
+  font-weight: 800 !important;
+}
+
+.cl-bottom-actions {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 4px !important;
+  flex-shrink: 0 !important;
+}
+/* Modern Ghost Action Buttons */
+.cl-btn-act {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 28px !important;
+  height: 28px !important;
+  border-radius: 6px !important;
+  border: 1px solid transparent !important;
+  background: transparent !important;
+  color: #64748b !important;
+  transition: all 0.15s ease !important;
+  cursor: pointer !important;
+  padding: 0 !important;
+}
+.cl-btn-act:hover {
+  background: #eff6ff !important;
+  color: #2563eb !important;
+  border-color: #dbeafe !important;
+}
+
+@media (max-width: 1024px) {
+  .cl-subcards-grid {
+    grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr) !important;
+  }
+}
+@media (max-width: 640px) {
+  .cl-subcards-grid {
+    grid-template-columns: 1fr !important;
+  }
+  .cl-card-bottom-strip {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+  }
+}
 
 .tbl-r {
   border-bottom: 1px solid #f1f5f9;
@@ -1003,19 +1214,16 @@
   font-weight: 600;
 }
 
-/* ── Hiring Pipeline Funnel (Original Capsule Design with Clean Text Row 2) ── */
+/* ── Hiring Pipeline Funnel: 6 Stages + Sleek Divider + Interview (Single Line) ── */
 .tbl-cell-pipeline {
   min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
   width: 100%;
 }
 .cl-pipeline-flow {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 3px;
+  gap: 2px;
   width: 100%;
 }
 .cl-pipe-step {
@@ -1026,70 +1234,28 @@
   min-width: 0;
 }
 .cl-pipe-pill {
-  min-width: 20px;
-  height: 18px;
-  padding: 0 4px;
-  border-radius: 9px;
+  min-width: 16px;
+  height: 16px;
+  padding: 0;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-size: 10.5px;
+  font-size: 11px;
   font-weight: 700;
   line-height: 1;
   border: none;
+  background: transparent;
 }
-.pill-sourcing, .pill-sourced         { background: #efefef; color: #000000; }
-.pill-screening                       { background: #f7deff; color: #c000ff; }
-.pill-evaluation, .pill-evaluated     { background: #f0f8ff; color: #2896ff; }
-.pill-negotiations, .pill-negotiation { background: #ffe6f2; color: #ff4098; }
-.pill-offer, .pill-offers             { background: #fff9ed; color: #ffab00; }
-.pill-joined                          { background: #d4ffde; color: #06c732; }
-.pill-interviews                      { background: #f0f8ff; color: #2896ff; }
+.pill-sourcing, .pill-sourced         { background: transparent; color: #0f172a; }
+.pill-screening                       { background: transparent; color: #c000ff; }
+.pill-evaluation, .pill-evaluated     { background: transparent; color: #2896ff; }
+.pill-negotiations, .pill-negotiation { background: transparent; color: #ff4098; }
+.pill-offer, .pill-offers             { background: transparent; color: #ffab00; }
+.pill-joined                          { background: transparent; color: #06c732; }
+.pill-interview, .pill-interviews     { background: transparent; color: #2563eb; }
 
 .cl-pipe-arrow {
   display: none !important;
-}
-.cl-pipe-label {
-  font-size: 8.5px;
-  font-weight: 500;
-  color: #64748b;
-  margin-top: 2px;
-  text-align: center;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  letter-spacing: -0.2px;
-  max-width: 100%;
-  line-height: 1.1;
-}
-
-/* ── Row 2: Aggregate Metrics (Clean Text — Zero Box) ── */
-.cl-pipeline-meta {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  font-size: 9.5px;
-  font-weight: 500;
-  color: #64748b;
-  line-height: 1.2;
-}
-
-.cl-pipeline-meta-item {
-  display: inline-flex;
-  align-items: center;
-  gap: 3px;
-  white-space: nowrap;
-}
-
-.cl-pipeline-meta-item strong {
-  font-weight: 700;
-  color: #0f172a;
-}
-
-.cl-pipeline-meta-divider {
-  color: #cbd5e1;
-  font-weight: 400;
 }
 
 /* ── Metronic Initials Avatar Color Fallbacks ── */
@@ -1128,6 +1294,7 @@
   font-size: 11px;
   font-weight: 700;
   margin-top: 0;
+  margin-bottom: 1px;
   cursor: pointer;
   line-height: 1.2;
 }
@@ -1165,7 +1332,8 @@
   font-size: 10.5px;
   font-weight: 600;
   line-height: 1.2;
-  margin-top: 1px;
+  margin-top: 0;
+  margin-bottom: 1px;
 }
 .cl-act-status.status-active {
   color: #16a34a;
