@@ -932,6 +932,7 @@
 <script src="{{ asset('assets/service_company/client/drawer/tabs/contacts.js') }}{{ TM_VERSION }}"></script>
 <script src="{{ asset('assets/service_company/client/drawer/tabs/interviews.js') }}{{ TM_VERSION }}"></script>
 <script src="{{ asset('assets/service_company/client/drawer/tabs/offers.js') }}{{ TM_VERSION }}"></script>
+<script src="{{ asset('assets/service_company/client/drawer/tabs/performance.js') }}{{ TM_VERSION }}"></script>
 <script src="{{ asset('assets/service_company/client/drawer/drawer-instance.js') }}{{ TM_VERSION }}"></script>
 <script>
 $(document).ready(function() {
@@ -2229,10 +2230,12 @@ $(document).on('click', '.tbl-r', function(e) {
     if ($(e.target).closest('input, button, a, .tbl-cb, .tbl-cell-check, .request_event, .dropdown-menu').length > 0) {
         return;
     }
-    var $detail = $(this).find('.show-detail, .show-detail-direct, .view-request-terms').first();
-    if ($detail.length) {
-        $detail.trigger('click');
-    }
+    var $row = $(this);
+    var id = $row.data('row-id') || $row.find('[data-row-id]').first().data('row-id');
+    if (!id) return;
+
+    var type = $row.data('client-type') || ($row.hasClass('show-detail-direct') ? 'direct' : ($row.hasClass('is-pending-request') ? 'request' : 'internal'));
+    ClientStateManager.openClientDrawer(id, type);
 });
 
 $(document).on('click', '#kt_activitiesClient_close, #kt_activitiesDirectClient_close, .cd-close-drawer, #kt_activitiesClient_close_btn, #kt_activitiesDirectClient_close_btn', function(e) {
@@ -2365,10 +2368,19 @@ function renderClientRows(rows) {
         const indHtml = r.industry ? `<div class="cl-ind" title="${escapeAttr(r.industry)}">${escapeAttr(r.industry)}</div>` : '';
         const sizeHtml = r.company_size ? `<div class="cl-size">${escapeAttr(r.company_size)}</div>` : '';
 
+        let locCityState = '';
+        if (r.city && r.state) {
+            locCityState = r.city + ', ' + r.state;
+        } else if (r.location_main) {
+            locCityState = r.location_main;
+        } else if (r.city) {
+            locCityState = r.city;
+        }
+
         let locHtml = '';
-        if (r.location_main) locHtml += `<div class="cl-loc-city" title="${escapeAttr(r.location_main)}">${escapeAttr(r.location_main)}</div>`;
-        if (r.country) locHtml += `<div class="cl-loc-country">${escapeAttr(r.country)}</div>`;
-        if (!locHtml) locHtml = `<div class="cl-loc-empty">-</div>`;
+        if (locCityState) locHtml += `<div class="cl-loc-city" title="${escapeAttr(locCityState)}">${escapeAttr(locCityState)}</div>`;
+        if (r.country) locHtml += `<div class="cl-loc-country" title="${escapeAttr(r.country)}">${escapeAttr(r.country)}</div>`;
+        if (!locHtml) locHtml = `<div class="cl-loc-empty">—</div>`;
 
         if (r.is_pending_request) {
             const invId = r.staffing_company_invitation_id || r.id;
@@ -2379,7 +2391,7 @@ function renderClientRows(rows) {
             const daysAgo = r.days_ago || 'Just now';
 
             return `
-            <div class="cl-primary-card tbl-r is-pending-request" data-pending-id="${invId}">
+            <div class="cl-primary-card tbl-r is-pending-request" data-pending-id="${invId}" data-row-id="${targetId}" data-client-type="request">
                 <div class="cl-subcards-grid">
                     <!-- SUB-CARD 1: Client Identity -->
                     <div class="cl-subcard cl-subcard-identity">
@@ -2396,7 +2408,7 @@ function renderClientRows(rows) {
                             </div>
                             <div class="cl-logo-box">${logoHtml}</div>
                             <div class="cl-details-box">
-                                <div class="cl-name show-detail-direct" data-row-id="${targetId}">${escapeAttr(r.name)}</div>
+                                <div class="cl-name view-request-terms" data-row-id="${targetId}" data-client-type="request">${escapeAttr(r.name)}</div>
                                 ${indHtml || '<div class="cl-ind text-muted">—</div>'}
                                 <div class="cl-size text-muted">—</div>
                             </div>
@@ -2483,7 +2495,7 @@ function renderClientRows(rows) {
                     <div class="cl-bottom-actions tbl-cell-req-actions">
                         <button type="button" class="btn btn-sm fw-bold px-3 py-1.5 request_event" data-row-id="${invId}" data-row-event="1" data-row-from_company="${fromComp}" style="background:#10b981; color:#fff; border:none; border-radius:6px; font-size:11px;" title="Accept Direct Client Partnership">Accept</button>
                         <button type="button" class="btn btn-sm fw-bold px-3 py-1.5 request_event" data-row-id="${invId}" data-row-event="-1" data-row-from_company="${fromComp}" style="background:#ef4444; color:#fff; border:none; border-radius:6px; font-size:11px;" title="Decline Partnership Request">Decline</button>
-                        <button type="button" class="btn btn-sm btn-light fw-bold px-2 py-1.5 show-detail-direct" data-row-id="${targetId}" style="background:#f1f5f9; color:#2563eb; border:1px solid #e2e8f0; border-radius:6px; font-size:11px;" title="View Client Details & Terms">Terms</button>
+                        <button type="button" class="btn btn-sm btn-light fw-bold px-2 py-1.5 view-request-terms" data-row-id="${targetId}" data-client-type="request" style="background:#f1f5f9; color:#2563eb; border:1px solid #e2e8f0; border-radius:6px; font-size:11px;" title="View Client Details & Terms">Terms</button>
                     </div>
                 </div>
             </div>`;
@@ -2506,17 +2518,18 @@ function renderClientRows(rows) {
         const clientTypeClass = r.is_direct ? 'type-direct' : 'type-internal';
         const clientTypeCss = r.client_type_css || (r.is_direct ? 'show-detail-direct' : 'show-detail');
         const clientTypeLabel = r.client_type || (r.is_direct ? 'Direct Client' : 'Internal Client');
+        const clientTypeAttr = r.is_direct ? 'direct' : 'internal';
         const editUrl = '{{ url("service_company/client/edit") }}/' + r.id;
 
         return `
-        <div class="cl-primary-card tbl-r ${clientTypeCss}" data-row-id="${r.id}">
+        <div class="cl-primary-card tbl-r ${clientTypeCss}" data-row-id="${r.id}" data-client-type="${clientTypeAttr}">
             <div class="cl-subcards-grid">
                 <!-- SUB-CARD 1: Client Identity (Internal & Active at TOP) -->
                 <div class="cl-subcard cl-subcard-identity">
                     <div class="cl-subcard-head">
                         <span class="cl-subcard-title">Client Identity</span>
                         <div class="cl-subcard-badges">
-                            <span class="cl-scope-pill ${clientTypeClass} ${clientTypeCss}" data-row-id="${r.id}">
+                            <span class="cl-scope-pill ${clientTypeClass} ${clientTypeCss}" data-row-id="${r.id}" data-client-type="${clientTypeAttr}">
                                 ${escapeAttr(clientTypeLabel)}
                             </span>
                             <span class="cl-status-pill ${jobActive > 0 ? 'pill-active' : 'pill-inactive'}">
@@ -2531,7 +2544,7 @@ function renderClientRows(rows) {
                         </div>
                         <div class="cl-logo-box">${logoHtml}</div>
                         <div class="cl-details-box">
-                            <div class="cl-name show-detail-direct" data-row-id="${r.id}">${escapeAttr(r.name)}</div>
+                            <div class="cl-name ${clientTypeCss}" data-row-id="${r.id}" data-client-type="${clientTypeAttr}">${escapeAttr(r.name)}</div>
                             ${indHtml || '<div class="cl-ind text-muted">—</div>'}
                             ${sizeHtml || '<div class="cl-size text-muted">—</div>'}
                         </div>
@@ -2578,39 +2591,39 @@ function renderClientRows(rows) {
                     </div>
                 </div>
 
-                <!-- SUB-CARD 4: Hiring Pipeline & Activity -->
+                <!-- SUB-CARD 4: Hiring Pipeline (Dynamic Active vs Zero Highlighting) -->
                 <div class="cl-subcard cl-subcard-pipeline">
                     <div class="cl-subcard-head">
-                        <span class="cl-subcard-title">Hiring Pipeline & Activity</span>
+                        <span class="cl-subcard-title">Hiring Pipeline</span>
                     </div>
                     <div class="cl-pipe-body tbl-cell-pipeline" title="Total Applications: ${applications} | Interviews: ${interviews}">
                         <div class="cl-pipeline-flow">
-                            <div class="cl-pipe-step" title="Sourcing: ${sourced}">
+                            <div class="cl-pipe-step ${sourced > 0 ? 'stage-active step-sourcing' : 'stage-zero'}" title="Sourcing: ${sourced}">
                                 <span class="cl-pipe-pill pill-sourcing">${sourced}</span>
                                 <span class="cl-pipe-label">Sou</span>
                             </div>
-                            <div class="cl-pipe-step" title="Screening: ${screening}">
+                            <div class="cl-pipe-step ${screening > 0 ? 'stage-active step-screening' : 'stage-zero'}" title="Screening: ${screening}">
                                 <span class="cl-pipe-pill pill-screening">${screening}</span>
                                 <span class="cl-pipe-label">Scr</span>
                             </div>
-                            <div class="cl-pipe-step" title="Evaluation: ${evaluated}">
+                            <div class="cl-pipe-step ${evaluated > 0 ? 'stage-active step-evaluation' : 'stage-zero'}" title="Evaluation: ${evaluated}">
                                 <span class="cl-pipe-pill pill-evaluation">${evaluated}</span>
                                 <span class="cl-pipe-label">Eva</span>
                             </div>
-                            <div class="cl-pipe-step" title="Negotiations: ${negotiations}">
+                            <div class="cl-pipe-step ${negotiations > 0 ? 'stage-active step-negotiations' : 'stage-zero'}" title="Negotiations: ${negotiations}">
                                 <span class="cl-pipe-pill pill-negotiations">${negotiations}</span>
                                 <span class="cl-pipe-label">Neg</span>
                             </div>
-                            <div class="cl-pipe-step" title="Offer: ${offers}">
+                            <div class="cl-pipe-step ${offers > 0 ? 'stage-active step-offer' : 'stage-zero'}" title="Offer: ${offers}">
                                 <span class="cl-pipe-pill pill-offer">${offers}</span>
                                 <span class="cl-pipe-label">Off</span>
                             </div>
-                            <div class="cl-pipe-step" title="Joined: ${joined}">
+                            <div class="cl-pipe-step ${joined > 0 ? 'stage-active step-joined' : 'stage-zero'}" title="Joined: ${joined}">
                                 <span class="cl-pipe-pill pill-joined">${joined}</span>
                                 <span class="cl-pipe-label">Joi</span>
                             </div>
                             <div class="cl-pipe-divider" aria-hidden="true">|</div>
-                            <div class="cl-pipe-step step-interview" title="Interview: ${interviews}">
+                            <div class="cl-pipe-step ${interviews > 0 ? 'stage-active step-interview' : 'stage-zero'}" title="Interview: ${interviews}">
                                 <span class="cl-pipe-pill pill-interview">${interviews}</span>
                                 <span class="cl-pipe-label">Int</span>
                             </div>
@@ -2619,7 +2632,7 @@ function renderClientRows(rows) {
                 </div>
             </div>
 
-            <!-- BOTTOM STRIP: Connected Date, Last Activity, Applications & Sleek Actions -->
+            <!-- BOTTOM STRIP: Connected Date, Last Activity, Applications Badge & Ghost Actions -->
             <div class="cl-card-bottom-strip">
                 <div class="cl-bottom-meta">
                     <span class="cl-meta-item">
@@ -2640,18 +2653,19 @@ function renderClientRows(rows) {
                         <span>Last Activity: <strong>${escapeAttr(daysAgo || 'No activity yet')}</strong></span>
                     </span>
                     <span class="cl-meta-dot">•</span>
-                    <span class="cl-meta-item">
+                    <span class="cl-meta-item cl-meta-apps">
                         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
                             <circle cx="9" cy="7" r="4"/>
                             <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
                             <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
                         </svg>
-                        <span>Total Applications: <strong>${applications}</strong></span>
+                        <span>Applications:</span>
+                        <span class="cl-apps-badge ${applications > 0 ? 'has-apps' : ''}">${applications}</span>
                     </span>
                 </div>
                 <div class="cl-bottom-actions tbl-cell-actions">
-                    <button type="button" class="cl-btn-act show-detail-direct" data-row-id="${r.id}" title="Quick View">
+                    <button type="button" class="cl-btn-act ${clientTypeCss}" data-row-id="${r.id}" data-client-type="${clientTypeAttr}" title="Quick View">
                         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
                             <circle cx="12" cy="12" r="3"/>
@@ -2673,7 +2687,7 @@ function renderClientRows(rows) {
                         </button>
                         <ul class="dropdown-menu dropdown-menu-end shadow-sm" style="border-radius:8px; border:1px solid #e2e8f0; font-size:12px; min-width:140px; padding:4px 0;">
                             <li>
-                                <a class="dropdown-item py-1.5 px-3 text-gray-700 show-detail-direct" href="javascript:void(0);" data-row-id="${r.id}">
+                                <a class="dropdown-item py-1.5 px-3 text-gray-700 ${clientTypeCss}" href="javascript:void(0);" data-row-id="${r.id}" data-client-type="${clientTypeAttr}">
                                     <i class="fas fa-eye text-primary me-2"></i> View Details
                                 </a>
                             </li>
