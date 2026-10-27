@@ -1,6 +1,6 @@
 # Super Admin Coin Features & Billing Events — Master Redesign & Implementation Plan
 
-**Document Identifier:** `docs/SUPERADMIN_COIN_FEATURES_REDESIGN_IMPLEMENTATION_PLAN.md`  
+**Document Identifier:** `docs/superadmin/SUPERADMIN_COIN_FEATURES_REDESIGN_IMPLEMENTATION_PLAN.md`  
 **Platform:** JERO B2B Talent Marketplace & GOD-Level ATS (`testing.jero.works`)  
 **Target Route:** `http://localhost/git/JWMaincode28June2026/super-admin/coin-features`  
 **Route Name:** `superadmin.company.coinFeatures`  
