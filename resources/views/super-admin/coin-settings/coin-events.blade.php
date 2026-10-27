@@ -695,30 +695,153 @@
         }
 
         /* ==========================================================================
-           Slide-Over Drawer Styling
+           Slide-Over Drawer Styling (580px Rigid Architecture)
            ========================================================================== */
-        .cf-drawer {
-            z-index: 1002 !important;
-            box-shadow: -4px 0 24px rgba(15, 23, 42, 0.12) !important;
+        #kt_coin_drawer.cf-drawer {
+            position: fixed !important;
+            top: 0 !important;
+            right: 0 !important;
+            bottom: 0 !important;
+            left: auto !important;
+            height: 100vh !important;
+            max-height: 100vh !important;
+            width: 580px !important;
+            max-width: 95vw !important;
+            background: #ffffff !important;
+            box-shadow: -8px 0 32px rgba(15, 23, 42, 0.16) !important;
+            z-index: 1055 !important;
+            overflow: hidden !important;
+            transform: translateX(105%);
+            transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
+        }
+
+        #kt_coin_drawer.cf-drawer.drawer-on {
+            transform: translateX(0) !important;
+        }
+
+        @media (max-width: 767.98px) {
+            #kt_coin_drawer.cf-drawer {
+                width: 95vw !important;
+            }
+        }
+
+        .cf-drawer-card {
+            display: flex !important;
+            flex-direction: column !important;
+            height: 100vh !important;
+            max-height: 100vh !important;
+            overflow: hidden !important;
+            background: #ffffff !important;
+            border: none !important;
+            position: relative !important;
         }
 
         .cf-drawer-header {
-            padding: 18px 24px !important;
+            padding: 16px 22px !important;
             border-bottom: 1px solid #e2e8f0 !important;
             display: flex !important;
             align-items: center !important;
             justify-content: space-between !important;
             background: #ffffff !important;
+            flex-shrink: 0 !important;
+            gap: 12px !important;
+        }
+
+        .cf-drawer-header-left {
+            display: flex !important;
+            align-items: center !important;
+            gap: 12px !important;
+            min-width: 0 !important;
+        }
+
+        .cf-drawer-icon-box {
+            width: 40px !important;
+            height: 40px !important;
+            border-radius: 9px !important;
+            background: #fffbeb !important;
+            border: 1px solid #fef08a !important;
+            color: #d97706 !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            font-size: 17px !important;
+            flex-shrink: 0 !important;
+        }
+
+        .cf-drawer-header-info {
+            display: flex !important;
+            flex-direction: column !important;
+            min-width: 0 !important;
+        }
+
+        .cf-drawer-title-row {
+            display: flex !important;
+            align-items: center !important;
+            gap: 8px !important;
+            flex-wrap: wrap !important;
+        }
+
+        .cf-drawer-title {
+            font-size: 15px !important;
+            font-weight: 700 !important;
+            color: #0f172a !important;
+            line-height: 1.25 !important;
+            margin: 0 !important;
+        }
+
+        .cf-drawer-sub {
+            font-size: 11px !important;
+            color: #64748b !important;
+            margin-top: 2px !important;
+            line-height: 1.2 !important;
+        }
+
+        .cf-drawer-close-btn {
+            width: 32px !important;
+            height: 32px !important;
+            border-radius: 8px !important;
+            background: #f8fafc !important;
+            border: 1px solid #e2e8f0 !important;
+            color: #64748b !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            font-size: 14px !important;
+            cursor: pointer !important;
+            transition: all 0.15s ease !important;
+            flex-shrink: 0 !important;
+        }
+
+        .cf-drawer-close-btn:hover {
+            background: #f1f5f9 !important;
+            color: #0f172a !important;
+            border-color: #cbd5e1 !important;
         }
 
         .cf-drawer-body {
-            padding: 20px 24px !important;
-            max-height: calc(100vh - 145px) !important;
+            flex: 1 1 auto !important;
             overflow-y: auto !important;
+            padding: 20px 22px !important;
+            max-height: calc(100vh - 130px) !important;
+            background: #ffffff !important;
+        }
+
+        .cf-drawer-section-title {
+            font-size: 11px !important;
+            font-weight: 700 !important;
+            color: #475569 !important;
+            text-transform: uppercase !important;
+            letter-spacing: 0.5px !important;
+            display: flex !important;
+            align-items: center !important;
+            gap: 6px !important;
+            margin-bottom: 12px !important;
+            padding-bottom: 6px !important;
+            border-bottom: 1px solid #f1f5f9 !important;
         }
 
         .cf-drawer-footer {
-            padding: 14px 24px !important;
+            padding: 14px 22px !important;
             border-top: 1px solid #e2e8f0 !important;
             background: #ffffff !important;
             display: flex !important;
@@ -728,6 +851,7 @@
             position: sticky !important;
             bottom: 0 !important;
             z-index: 10 !important;
+            flex-shrink: 0 !important;
         }
 
         .cf-form-label {
@@ -735,6 +859,9 @@
             font-weight: 600 !important;
             color: #334155 !important;
             margin-bottom: 6px !important;
+            display: flex !important;
+            align-items: center !important;
+            gap: 4px !important;
         }
 
         .cf-input {
@@ -744,7 +871,7 @@
             font-size: 12.5px !important;
             color: #0f172a !important;
             background: #ffffff !important;
-            height: 38px !important;
+            height: 40px !important;
             width: 100% !important;
             outline: none !important;
             transition: all 0.15s ease !important;
@@ -755,10 +882,28 @@
             box-shadow: 0 0 0 3px rgba(0, 158, 247, 0.12) !important;
         }
 
+        .cf-input-icon-wrap {
+            position: relative !important;
+            width: 100% !important;
+        }
+
+        .cf-input-icon {
+            position: absolute !important;
+            left: 12px !important;
+            top: 50% !important;
+            transform: translateY(-50%) !important;
+            font-size: 13px !important;
+            pointer-events: none !important;
+        }
+
+        .cf-input-with-icon {
+            padding-left: 36px !important;
+        }
+
         .cf-textarea {
             border: 1px solid #e2e8f0 !important;
             border-radius: 8px !important;
-            padding: 8px 12px !important;
+            padding: 10px 12px !important;
             font-size: 12.5px !important;
             color: #0f172a !important;
             background: #ffffff !important;
@@ -766,12 +911,36 @@
             outline: none !important;
             transition: all 0.15s ease !important;
             resize: vertical !important;
-            min-height: 80px !important;
+            min-height: 85px !important;
         }
 
         .cf-textarea:focus {
             border-color: #009ef7 !important;
             box-shadow: 0 0 0 3px rgba(0, 158, 247, 0.12) !important;
+        }
+
+        .cf-status-box {
+            background: #f8fafc !important;
+            border: 1px solid #e2e8f0 !important;
+            border-radius: 8px !important;
+            padding: 12px 14px !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: space-between !important;
+            gap: 12px !important;
+        }
+
+        .drawer-overlay,
+        .cf-drawer-overlay {
+            position: fixed !important;
+            top: 0 !important;
+            left: 0 !important;
+            width: 100vw !important;
+            height: 100vh !important;
+            background: rgba(15, 23, 42, 0.35) !important;
+            z-index: 1050 !important;
+            cursor: pointer !important;
+            backdrop-filter: blur(1px) !important;
         }
     </style>
 @endpush
@@ -1068,137 +1237,177 @@
     </div>
 
     <!-- =====================================================================
-         METRONIC SLIDE-OVER DRAWER FOR ADD & QUICK EDIT
+         METRONIC SLIDE-OVER DRAWER FOR ADD & QUICK EDIT (580px Rigid Flex)
          ===================================================================== -->
     <div id="kt_coin_drawer_toggle" style="display: none;"></div>
     <div id="kt_coin_drawer_close" style="display: none;"></div>
     
     <div id="kt_coin_drawer" 
-         class="bg-white cf-drawer" 
+         class="cf-drawer" 
          data-kt-drawer="true"
          data-kt-drawer-name="coinFeatureDrawer" 
          data-kt-drawer-activate="true" 
          data-kt-drawer-overlay="true"
-         data-kt-drawer-width="{default:'95%', 'sm': '520px'}" 
+         data-kt-drawer-width="{default:'95%', 'sm': '580px'}" 
          data-kt-drawer-direction="end"
          data-kt-drawer-toggle="#kt_coin_drawer_toggle" 
-         data-kt-drawer-close="#kt_coin_drawer_close">
+         data-kt-drawer-close="#btnDrawerCloseIcon, #btnDrawerCancel, #kt_coin_drawer_close">
         
-        <!-- Drawer Header -->
-        <div class="cf-drawer-header">
-            <div>
-                <h3 class="fw-bolder text-dark fs-4 m-0" id="drawerTitle">Add Coin Feature</h3>
-                <div class="text-muted fs-7 mt-1">Configure rate, deduction cycle, and wallet thresholds.</div>
+        <div class="card shadow-none rounded-0 w-100 h-100 cf-drawer-card">
+            
+            <!-- 1. Sticky Drawer Header -->
+            <div class="cf-drawer-header">
+                <div class="cf-drawer-header-left">
+                    <div class="cf-drawer-icon-box">
+                        <i class="fa-solid fa-coins"></i>
+                    </div>
+                    <div class="cf-drawer-header-info">
+                        <div class="cf-drawer-title-row">
+                            <h3 class="cf-drawer-title" id="drawerTitle">Create Coin Feature</h3>
+                            <span class="badge badge-light-primary fw-bold fs-8 d-none" id="drawerEventCodeBadge">#CE-001</span>
+                        </div>
+                        <div class="cf-drawer-sub">Configure platform billing rate, deduction cycle, and wallet limits.</div>
+                    </div>
+                </div>
+                <button type="button" class="cf-drawer-close-btn" id="btnDrawerCloseIcon" data-kt-drawer-dismiss="true" title="Close Drawer">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
             </div>
-            <button type="button" class="btn btn-sm btn-icon btn-active-light-primary" id="btnDrawerCloseIcon">
-                <i class="fa-solid fa-xmark fs-4"></i>
-            </button>
-        </div>
 
-        <!-- Drawer Body Form -->
-        <div class="cf-drawer-body">
-            <form id="coinFeatureDrawerForm" autocomplete="off">
-                @csrf
-                <input type="hidden" name="token_id" id="drawer_token_id" value="">
+            <!-- 2. Scrollable Drawer Body Form -->
+            <div class="cf-drawer-body">
+                <form id="coinFeatureDrawerForm" autocomplete="off">
+                    @csrf
+                    <input type="hidden" name="token_id" id="drawer_token_id" value="">
 
-                <!-- Row 1: Event Type & Deduction Type -->
-                <div class="row g-3 mb-4">
-                    <div class="col-sm-6">
-                        <label class="cf-form-label required">Event Scope Type</label>
-                        <select name="event_type" id="drawer_event_type" class="form-select form-select-solid cf-input" required>
-                            <option value="operational">Operational Feature</option>
-                            <option value="sales">Sales & Marketplace</option>
-                        </select>
+                    <!-- Section 1: Scope & Charging Model -->
+                    <div class="cf-drawer-section-title">
+                        <i class="fa-solid fa-layer-group text-primary fs-8"></i>
+                        <span>Scope & Charging Model</span>
                     </div>
-                    <div class="col-sm-6">
-                        <label class="cf-form-label required">Deduction Model</label>
-                        <select name="deduction_type" id="drawer_deduction_type" class="form-select form-select-solid cf-input" required>
-                            <option value="onetime">One-time Pay-Per-Use</option>
-                            <option value="daily">Daily Recurring</option>
-                        </select>
-                    </div>
-                </div>
 
-                <!-- Row 2: Event Name -->
-                <div class="mb-4">
-                    <label class="cf-form-label required" for="drawer_title">Feature / Event Name</label>
-                    <input type="text" 
-                           class="form-control form-control-solid cf-input" 
-                           id="drawer_title" 
-                           name="title" 
-                           placeholder="e.g. CV Access, Mass Mail, Video Interview" 
-                           required>
-                </div>
-
-                <!-- Row 3: Default Rate & Minimum Required Balance -->
-                <div class="row g-3 mb-4">
-                    <div class="col-sm-6">
-                        <label class="cf-form-label required" for="drawer_default_rate">Default Rate (Coins)</label>
-                        <div class="position-relative">
-                            <input type="number" 
-                                   step="0.01" 
-                                   min="0" 
-                                   class="form-control form-control-solid cf-input ps-9" 
-                                   id="drawer_default_rate" 
-                                   name="default_rate" 
-                                   value="1.00" 
-                                   required>
-                            <span class="position-absolute top-50 start-0 translate-middle-y ms-3 text-warning">
-                                <i class="fa-solid fa-coins fs-7"></i>
-                            </span>
+                    <div class="row g-3 mb-4">
+                        <div class="col-sm-6">
+                            <label class="cf-form-label required" for="drawer_event_type">Event Scope Type</label>
+                            <select name="event_type" id="drawer_event_type" class="form-select cf-input" required>
+                                <option value="operational">Operational Feature</option>
+                                <option value="sales">Sales & Marketplace</option>
+                            </select>
+                            <div class="text-muted fs-8 mt-1">Operational workflows vs sales leads.</div>
                         </div>
-                        <div class="text-muted fs-8 mt-1">Set 0 for Free feature.</div>
-                    </div>
-
-                    <div class="col-sm-6">
-                        <label class="cf-form-label required" for="drawer_minimum_required">Min Wallet Required</label>
-                        <div class="position-relative">
-                            <input type="number" 
-                                   step="1" 
-                                   min="0" 
-                                   class="form-control form-control-solid cf-input ps-9" 
-                                   id="drawer_minimum_required" 
-                                   name="minimum_required" 
-                                   value="0" 
-                                   required>
-                            <span class="position-absolute top-50 start-0 translate-middle-y ms-3 text-primary">
-                                <i class="fa-solid fa-shield-halved fs-7"></i>
-                            </span>
+                        <div class="col-sm-6">
+                            <label class="cf-form-label required" for="drawer_deduction_type">Deduction Cycle Model</label>
+                            <select name="deduction_type" id="drawer_deduction_type" class="form-select cf-input" required>
+                                <option value="onetime">One-time Pay-Per-Use</option>
+                                <option value="daily">Daily Recurring</option>
+                            </select>
+                            <div class="text-muted fs-8 mt-1">Per-action trigger or daily active debit.</div>
                         </div>
-                        <div class="text-muted fs-8 mt-1">Minimum wallet balance to gate access.</div>
                     </div>
-                </div>
 
-                <!-- Row 4: Description -->
-                <div class="mb-4">
-                    <label class="cf-form-label" for="drawer_description">Feature Description</label>
-                    <textarea class="form-control form-control-solid cf-textarea" 
-                              id="drawer_description" 
-                              name="description" 
-                              rows="3" 
-                              placeholder="Describe how coins are deducted and what functionality is unlocked for organizations..."></textarea>
-                </div>
-
-                <!-- Row 5: Active Status Switch -->
-                <div class="p-3 bg-light rounded-3 d-flex align-items-center justify-content-between mb-2">
-                    <div>
-                        <div class="fw-bold text-dark fs-7">Active Operational Status</div>
-                        <div class="text-muted fs-8">Enable or disable this feature across all client organizations.</div>
+                    <!-- Section 2: Feature Identity -->
+                    <div class="cf-drawer-section-title mt-4">
+                        <i class="fa-solid fa-tag text-info fs-8"></i>
+                        <span>Feature Identity</span>
                     </div>
-                    <div class="form-check form-switch form-switch-sm form-check-custom form-check-solid m-0">
-                        <input class="form-check-input" type="checkbox" name="status" id="drawer_status" value="1" checked>
-                    </div>
-                </div>
-            </form>
-        </div>
 
-        <!-- Drawer Sticky Footer -->
-        <div class="cf-drawer-footer">
-            <button type="button" class="btn btn-sm btn-light fw-bold" id="btnDrawerCancel">Cancel</button>
-            <button type="button" class="btn btn-sm btn-primary fw-bold" id="btnSaveDrawerFeature">
-                <span class="indicator-label"><i class="fa-solid fa-floppy-disk me-1"></i> Save Feature</span>
-                <span class="indicator-progress d-none">Please wait... <span class="spinner-border spinner-border-sm align-middle ms-2"></span></span>
-            </button>
+                    <div class="mb-4">
+                        <label class="cf-form-label required" for="drawer_title">Feature / Event Name</label>
+                        <input type="text" 
+                               class="form-control cf-input" 
+                               id="drawer_title" 
+                               name="title" 
+                               placeholder="e.g. CV Access, Mass Mail, Video Interview" 
+                               required>
+                        <div class="text-muted fs-8 mt-1">The display name of the billing event shown in ATS logs.</div>
+                    </div>
+
+                    <!-- Section 3: Coin Economics & Thresholds -->
+                    <div class="cf-drawer-section-title mt-4">
+                        <i class="fa-solid fa-coins text-warning fs-8"></i>
+                        <span>Coin Economics & Wallet Gating</span>
+                    </div>
+
+                    <div class="row g-3 mb-4">
+                        <div class="col-sm-6">
+                            <label class="cf-form-label required" for="drawer_default_rate">Default Coin Rate</label>
+                            <div class="cf-input-icon-wrap">
+                                <span class="cf-input-icon text-warning">
+                                    <i class="fa-solid fa-coins"></i>
+                                </span>
+                                <input type="number" 
+                                       step="0.01" 
+                                       min="0" 
+                                       class="form-control cf-input cf-input-with-icon" 
+                                       id="drawer_default_rate" 
+                                       name="default_rate" 
+                                       value="1.00" 
+                                       required>
+                            </div>
+                            <div class="text-muted fs-8 mt-1">Coins charged per execution (0 for Free).</div>
+                        </div>
+
+                        <div class="col-sm-6">
+                            <label class="cf-form-label required" for="drawer_minimum_required">Min Wallet Required</label>
+                            <div class="cf-input-icon-wrap">
+                                <span class="cf-input-icon text-primary">
+                                    <i class="fa-solid fa-shield-halved"></i>
+                                </span>
+                                <input type="number" 
+                                       step="1" 
+                                       min="0" 
+                                       class="form-control cf-input cf-input-with-icon" 
+                                       id="drawer_minimum_required" 
+                                       name="minimum_required" 
+                                       value="0" 
+                                       required>
+                            </div>
+                            <div class="text-muted fs-8 mt-1">Min balance to unlock this feature.</div>
+                        </div>
+                    </div>
+
+                    <!-- Section 4: Operational Description -->
+                    <div class="cf-drawer-section-title mt-4">
+                        <i class="fa-solid fa-align-left text-primary fs-8"></i>
+                        <span>Description</span>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="cf-form-label" for="drawer_description">Feature Description</label>
+                        <textarea class="form-control cf-textarea" 
+                                  id="drawer_description" 
+                                  name="description" 
+                                  rows="3" 
+                                  placeholder="Provide transparent details on how coins are deducted and what exact workflow action is performed..."></textarea>
+                    </div>
+
+                    <!-- Section 5: Active Operational Status -->
+                    <div class="cf-drawer-section-title mt-4">
+                        <i class="fa-solid fa-toggle-on text-success fs-8"></i>
+                        <span>Operational Availability</span>
+                    </div>
+
+                    <div class="cf-status-box mb-3">
+                        <div>
+                            <div class="fw-bold text-dark fs-7">Active Operational Status</div>
+                            <div class="text-muted fs-8">When disabled, this billing event is paused system-wide.</div>
+                        </div>
+                        <div class="form-check form-switch form-switch-sm form-check-custom form-check-solid m-0">
+                            <input class="form-check-input" type="checkbox" name="status" id="drawer_status" value="1" checked>
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+            <!-- 3. Sticky Drawer Footer -->
+            <div class="cf-drawer-footer">
+                <button type="button" class="btn btn-sm btn-light fw-bold px-5" id="btnDrawerCancel" data-kt-drawer-dismiss="true">Cancel</button>
+                <button type="button" class="btn btn-sm btn-primary fw-bold px-6" id="btnSaveDrawerFeature">
+                    <span class="indicator-label"><i class="fa-solid fa-floppy-disk me-1"></i> Save Feature</span>
+                    <span class="indicator-progress d-none">Saving... <span class="spinner-border spinner-border-sm align-middle ms-2"></span></span>
+                </button>
+            </div>
+
         </div>
     </div>
 @endsection
@@ -1213,14 +1422,37 @@
                 }
             });
 
-            // Metronic Drawer Instance helper
+            // Metronic Drawer Instance helper & Backdrop Lifecycle
             var coinDrawerEl = document.getElementById('kt_coin_drawer');
-            var coinDrawer = null;
-            if (typeof KTDrawer !== 'undefined' && coinDrawerEl) {
-                coinDrawer = KTDrawer.getInstance(coinDrawerEl);
-                if (!coinDrawer) {
-                    coinDrawer = new KTDrawer(coinDrawerEl);
+
+            function getDrawer() {
+                if (coinDrawerEl && typeof KTDrawer !== 'undefined') {
+                    var instance = KTDrawer.getInstance(coinDrawerEl);
+                    if (!instance) {
+                        try {
+                            instance = new KTDrawer(coinDrawerEl);
+                        } catch (e) {}
+                    }
+                    return instance;
                 }
+                return null;
+            }
+
+            function cleanupDrawerState() {
+                $('#kt_coin_drawer').removeClass('drawer-on');
+                $('.drawer-overlay, .cf-drawer-overlay').remove();
+                $('body').removeAttr('data-kt-drawer');
+                $('body').removeAttr('data-kt-drawer-coinFeatureDrawer');
+            }
+
+            var coinDrawer = getDrawer();
+            if (coinDrawer) {
+                coinDrawer.on('kt.drawer.hide', function() {
+                    cleanupDrawerState();
+                });
+                coinDrawer.on('kt.drawer.after.hidden', function() {
+                    cleanupDrawerState();
+                });
             }
 
             // Current state variables for Client-First Execution (User RAM First)
@@ -1425,28 +1657,15 @@
             // =====================================================================
             // 5. Metronic Slide-Over Drawer: Add & Quick Edit Handler
             // =====================================================================
-            function getDrawer() {
-                var drawerEl = document.getElementById('kt_coin_drawer');
-                if (drawerEl && typeof KTDrawer !== 'undefined') {
-                    var instance = KTDrawer.getInstance(drawerEl);
-                    if (!instance) {
-                        try {
-                            instance = new KTDrawer(drawerEl);
-                        } catch (e) {}
-                    }
-                    return instance;
-                }
-                return null;
-            }
-
             function openDrawer() {
                 var d = getDrawer();
                 if (d && typeof d.show === 'function') {
                     d.show();
                 } else {
+                    // Fallback if KTDrawer is not instantiated
                     $('#kt_coin_drawer').addClass('drawer-on');
                     if ($('.cf-drawer-overlay').length === 0) {
-                        $('body').append('<div class="drawer-overlay cf-drawer-overlay" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.3); z-index: 1001;"></div>');
+                        $('body').append('<div class="cf-drawer-overlay"></div>');
                     }
                 }
             }
@@ -1455,23 +1674,32 @@
                 var d = getDrawer();
                 if (d && typeof d.hide === 'function') {
                     d.hide();
-                } else {
-                    $('#kt_coin_drawer').removeClass('drawer-on');
-                    $('.cf-drawer-overlay').remove();
                 }
+                cleanupDrawerState();
             }
 
-            $(document).on('click', '.cf-drawer-overlay', function() {
+            // Click outside on backdrop overlay (Metronic native or fallback) cleanly dismisses
+            $(document).on('click', '.drawer-overlay, .cf-drawer-overlay', function() {
                 closeDrawer();
             });
 
-            $('#btnDrawerCloseIcon, #btnDrawerCancel').on('click', function() {
+            // Escape key closes drawer and removes backdrop
+            $(document).on('keydown', function(e) {
+                if (e.key === 'Escape' && ($('#kt_coin_drawer').hasClass('drawer-on') || $('.drawer-overlay, .cf-drawer-overlay').length > 0)) {
+                    closeDrawer();
+                }
+            });
+
+            // Header close icon and sticky footer cancel button
+            $('#btnDrawerCloseIcon, #btnDrawerCancel').on('click', function(e) {
+                e.preventDefault();
                 closeDrawer();
             });
 
             // Open for Create
             $('#btnOpenAddDrawer').on('click', function() {
-                $('#drawerTitle').text('Create New Coin Feature');
+                $('#drawerTitle').text('Create Coin Feature');
+                $('#drawerEventCodeBadge').addClass('d-none').text('');
                 $('#drawer_token_id').val('');
                 $('#drawer_title').val('');
                 $('#drawer_event_type').val('operational');
@@ -1496,7 +1724,8 @@
                 var desc = $btn.attr('data-desc') || '';
                 var status = $btn.attr('data-status') == '1';
 
-                $('#drawerTitle').text('Edit Coin Feature: ' + title);
+                $('#drawerTitle').text('Edit Feature: ' + title);
+                $('#drawerEventCodeBadge').removeClass('d-none').text('#CE-' + ('000' + id).slice(-3));
                 $('#drawer_token_id').val(id);
                 $('#drawer_title').val(title);
                 $('#drawer_event_type').val(type);
