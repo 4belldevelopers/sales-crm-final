@@ -21,8 +21,9 @@
             $rowTargetId = $rowObj->client_id ?: ($rowObj->from_company_id ?: ($rowObj->id ?? 0));
             $invitationId = $rowObj->staffing_company_invitation_id ?? ($rowObj->id ?? 0);
             $from_company_id = $rowObj->from_company_id ?? 0;
-            $city = $rowObj->city_name ?? '';
-            $country_name = $rowObj->country_name ?? '';
+            $city = $rowObj->city_name ?? ($rowObj->city ?? '');
+            $stateName = $rowObj->state_name ?? ($rowObj->state ?? '');
+            $country_name = $rowObj->country_name ?? ($rowObj->country ?? '');
             $departmentArr = $rowObj->ind_name ?? '';
             $created_at = !empty($rowObj->from_created_at) ? $rowObj->from_created_at : ($rowObj->created_at ?? '');
             $newDate = !empty($created_at) ? date('d M, Y', strtotime($created_at)) : '-';
@@ -119,23 +120,21 @@
                             <circle cx="12" cy="10" r="3"/>
                         </svg>
                         @php
-                            $reqLocCityState = '';
-                            if (!empty($city) && !empty($stateName)) {
-                                $reqLocCityState = ucwords($city) . ', ' . ucwords($stateName);
-                            } elseif (!empty($city)) {
-                                $reqLocCityState = ucwords($city);
-                            } elseif (!empty($stateName)) {
-                                $reqLocCityState = ucwords($stateName);
-                            }
+                            $reqCity = !empty($city) ? ucwords($city) : '';
+                            $reqState = !empty($stateName) ? ucwords($stateName) : '';
+                            $reqCountry = !empty($country_name) ? ucwords($country_name) : '';
                         @endphp
                         <div class="cl-loc-lines">
-                            @if(!empty($reqLocCityState))
-                                <div class="cl-loc-city" title="{{ $reqLocCityState }}">{{ $reqLocCityState }}</div>
+                            @if(!empty($reqCity))
+                                <div class="cl-loc-city" title="{{ $reqCity }}">{{ $reqCity }}</div>
                             @endif
-                            @if(!empty($country_name))
-                                <div class="cl-loc-country" title="{{ ucwords($country_name) }}">{{ ucwords($country_name) }}</div>
+                            @if(!empty($reqState))
+                                <div class="cl-loc-state" title="{{ $reqState }}">{{ $reqState }}</div>
                             @endif
-                            @if(empty($reqLocCityState) && empty($country_name))
+                            @if(!empty($reqCountry))
+                                <div class="cl-loc-country" title="{{ $reqCountry }}">{{ $reqCountry }}</div>
+                            @endif
+                            @if(empty($reqCity) && empty($reqState) && empty($reqCountry))
                                 <div class="cl-loc-empty">—</div>
                             @endif
                         </div>
@@ -255,6 +254,12 @@
             $stateName = $row->client_location[0]['state_name'] ?? '';
             $city = $row->client_location[0]['city_name'] ?? '';
         }
+        if (empty($city) && !empty($row->city_name)) $city = $row->city_name;
+        if (empty($city) && !empty($row->city)) $city = $row->city;
+        if (empty($stateName) && !empty($row->state_name)) $stateName = $row->state_name;
+        if (empty($stateName) && !empty($row->state)) $stateName = $row->state;
+        if (empty($country_name) && !empty($row->country_name)) $country_name = $row->country_name;
+        if (empty($country_name) && !empty($row->country)) $country_name = $row->country;
 
         /* ── company size ── */
         $companySizeText = '';
@@ -430,23 +435,21 @@
                         <circle cx="12" cy="10" r="3"/>
                     </svg>
                     @php
-                        $locCityState = '';
-                        if (!empty($city) && !empty($stateName)) {
-                            $locCityState = ucwords($city) . ', ' . ucwords($stateName);
-                        } elseif (!empty($city)) {
-                            $locCityState = ucwords($city);
-                        } elseif (!empty($stateName)) {
-                            $locCityState = ucwords($stateName);
-                        }
+                        $locCity = !empty($city) ? ucwords($city) : '';
+                        $locState = !empty($stateName) ? ucwords($stateName) : '';
+                        $locCountry = !empty($country_name) ? ucwords($country_name) : '';
                     @endphp
                     <div class="cl-loc-lines">
-                        @if(!empty($locCityState))
-                            <div class="cl-loc-city" title="{{ $locCityState }}">{{ $locCityState }}</div>
+                        @if(!empty($locCity))
+                            <div class="cl-loc-city" title="{{ $locCity }}">{{ $locCity }}</div>
                         @endif
-                        @if(!empty($country_name))
-                            <div class="cl-loc-country" title="{{ ucwords($country_name) }}">{{ ucwords($country_name) }}</div>
+                        @if(!empty($locState))
+                            <div class="cl-loc-state" title="{{ $locState }}">{{ $locState }}</div>
                         @endif
-                        @if(empty($locCityState) && empty($country_name))
+                        @if(!empty($locCountry))
+                            <div class="cl-loc-country" title="{{ $locCountry }}">{{ $locCountry }}</div>
+                        @endif
+                        @if(empty($locCity) && empty($locState) && empty($locCountry))
                             <div class="cl-loc-empty">—</div>
                         @endif
                     </div>
