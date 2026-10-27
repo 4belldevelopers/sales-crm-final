@@ -88,9 +88,6 @@
                         </div>
                     </div>
                     <div class="cl-identity-body">
-                        <div class="cl-identity-check">
-                            <input type="checkbox" class="tbl-cb" value="{{ $rowTargetId }}" onclick="event.stopPropagation()">
-                        </div>
                         <div class="cl-logo-box">
                             @if (!empty($background_image) && strlen($background_image) > 10)
                                 <img src="{{ $background_image }}" alt="{{ $initials }}" class="cl-logo-img" onerror="this.style.display='none'; if(this.nextElementSibling){this.nextElementSibling.style.display='flex';}">
@@ -396,9 +393,6 @@
                     </div>
                 </div>
                 <div class="cl-identity-body">
-                    <div class="cl-identity-check">
-                        <input type="checkbox" class="tbl-cb" value="{{ $rowTargetId }}" onclick="event.stopPropagation()">
-                    </div>
                     <div class="cl-logo-box">
                         @if (!empty($background_image) && strlen($background_image) > 10)
                             <img src="{{ $background_image }}" alt="{{ $initials }}" class="cl-logo-img" onerror="this.style.display='none'; if(this.nextElementSibling){this.nextElementSibling.style.display='flex';}">
@@ -492,32 +486,32 @@
                     <div class="cl-pipeline-flow">
                         <div class="cl-pipe-step {{ $sourced > 0 ? 'stage-active step-sourcing' : 'stage-zero' }}" title="Sourcing: {{ $sourced }}">
                             <span class="cl-pipe-pill pill-sourcing">{{ $sourced }}</span>
-                            <span class="cl-pipe-label">Sou</span>
+                            <span class="cl-pipe-label">Sourcing</span>
                         </div>
                         <div class="cl-pipe-step {{ $screening > 0 ? 'stage-active step-screening' : 'stage-zero' }}" title="Screening: {{ $screening }}">
                             <span class="cl-pipe-pill pill-screening">{{ $screening }}</span>
-                            <span class="cl-pipe-label">Scr</span>
+                            <span class="cl-pipe-label">Screening</span>
                         </div>
                         <div class="cl-pipe-step {{ $evaluated > 0 ? 'stage-active step-evaluation' : 'stage-zero' }}" title="Evaluation: {{ $evaluated }}">
                             <span class="cl-pipe-pill pill-evaluation">{{ $evaluated }}</span>
-                            <span class="cl-pipe-label">Eva</span>
+                            <span class="cl-pipe-label">Evaluation</span>
                         </div>
                         <div class="cl-pipe-step {{ $negotiations > 0 ? 'stage-active step-negotiations' : 'stage-zero' }}" title="Negotiations: {{ $negotiations }}">
                             <span class="cl-pipe-pill pill-negotiations">{{ $negotiations }}</span>
-                            <span class="cl-pipe-label">Neg</span>
+                            <span class="cl-pipe-label">Negotiations</span>
                         </div>
                         <div class="cl-pipe-step {{ $offers > 0 ? 'stage-active step-offer' : 'stage-zero' }}" title="Offer: {{ $offers }}">
                             <span class="cl-pipe-pill pill-offer">{{ $offers }}</span>
-                            <span class="cl-pipe-label">Off</span>
+                            <span class="cl-pipe-label">Offer</span>
                         </div>
                         <div class="cl-pipe-step {{ $joined > 0 ? 'stage-active step-joined' : 'stage-zero' }}" title="Joined: {{ $joined }}">
                             <span class="cl-pipe-pill pill-joined">{{ $joined }}</span>
-                            <span class="cl-pipe-label">Joi</span>
+                            <span class="cl-pipe-label">Joined</span>
                         </div>
-                        <div class="cl-pipe-divider" aria-hidden="true">|</div>
+                        <div class="cl-pipe-divider" aria-hidden="true"></div>
                         <div class="cl-pipe-step {{ $interviews > 0 ? 'stage-active step-interview' : 'stage-zero' }}" title="Interview: {{ $interviews }}">
                             <span class="cl-pipe-pill pill-interview">{{ $interviews }}</span>
-                            <span class="cl-pipe-label">Int</span>
+                            <span class="cl-pipe-label">Interview</span>
                         </div>
                     </div>
                 </div>
