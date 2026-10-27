@@ -5462,73 +5462,206 @@ class SuperAdminCompanyController extends SuperAdminBaseController
 
     }
 
+    /**
+     * Super-Admin Default Legal, Compliance & Offer Terms Edit / View
+     *
+     * Intent: Provide authoring console for the selected term template with enriched metadata,
+     *         variable token definitions, public route mappings, and fallback starter copy.
+     * Tenancy & CQRS: Reads the global_settings singleton and cached agency commercial defaults (< 1ms).
+     *
+     * @param Request $request
+     * @param string $ecrypt_id
+     * @return \Illuminate\View\View
+     */
     public function defaultTerms(Request $request, $ecrypt_id)
     {
         $id = decrypt($ecrypt_id);
+        $this->termId = $id;
+        $this->seqId = sprintf('#TERM-%03d', $id);
+        $this->encrypt_id = $ecrypt_id;
         $this->title = '';
         $this->used = '';
-        $this->encrypt_id = $ecrypt_id;
+        $this->termCategory = 'legal';
+        $this->categoryLabel = 'Legal & Website';
+        $this->termIcon = 'fa-scale-balanced';
+        $this->dbField = 'terms';
+        $this->storageTable = 'global_settings';
+        $this->fallbackNotice = null;
+        $this->publicRoute = null;
+        $this->supportedTokens = [];
+
+        $offerTokens = [
+            '[CANDIDATE_NAME]',
+            '[CANDIDATE_EMAIL]',
+            '[CANDIDATE_MOBILE]',
+            '[COMPANY_NAME]',
+            '[COMPANY_ADDRESS]',
+            '[JOB_TITLE]',
+            '[JOINING_DATE]',
+            '[AGENCY_NAME]',
+            '[AGENCY_ADDRESS]',
+            '[TODAY_DATE]',
+        ];
+
+        $commercialTokens = [
+            '{AGENCY_COMMERCIAL_SUMMARY}',
+            '{FULLTIME_COMMERCIAL_TABLE}',
+            '{FULLTIME_EXPERIENCE_PRICING}',
+            '{CONTRACT_COMMERCIAL_TABLE}',
+            '{CONTRACT_EXPERIENCE_PRICING}',
+        ];
+
         if ($id == 1) {
             $this->th_email_template = DB::table('global_settings')->select('global_settings.terms')->first();
             $this->title = 'Vendor Terms';
             $this->used = 'For Vendors';
+            $this->termCategory = 'agency';
+            $this->categoryLabel = 'Agency & Vendor';
+            $this->termIcon = 'fa-handshake';
+            $this->dbField = 'terms';
+            $this->supportedTokens = ['[COMPANY_NAME]', '[AGENCY_NAME]', '[TODAY_DATE]'];
+            $this->scopeNote = 'Platform vendor onboarding, agency SLAs, and master platform terms.';
         } elseif ($id == 2) {
             $this->th_email_template = DB::table('global_settings')->select('global_settings.offer_terms as terms')->first();
             $this->title = 'Fulltime Offer Letter';
             $this->used = 'For Candidates';
+            $this->termCategory = 'offers';
+            $this->categoryLabel = 'Offer Letters';
+            $this->termIcon = 'fa-briefcase';
+            $this->dbField = 'offer_terms';
+            $this->supportedTokens = array_merge($offerTokens, ['[FULLTIME_COMMERCIAL_TABLE]']);
+            $this->scopeNote = 'Primary default offer letter generated in ATS for Full-Time candidate hires.';
         } elseif ($id == 3) {
             $this->th_email_template = DB::table('global_settings')->select('global_settings.privacy_policy as terms')->first();
-            $this->title = 'Privacy policy';
+            $this->title = 'Privacy Policy';
             $this->used = 'For Website';
+            $this->termCategory = 'legal';
+            $this->categoryLabel = 'Legal & Website';
+            $this->termIcon = 'fa-shield-halved';
+            $this->dbField = 'privacy_policy';
+            $this->publicRoute = '/privacy-policy';
+            $this->scopeNote = 'Public user data protection, cookies disclosure, and GDPR/DPDP policy.';
         } elseif ($id == 4) {
             $this->th_email_template = DB::table('global_settings')->select('global_settings.terms_and_conditions as terms')->first();
             $this->title = 'Terms and Conditions';
             $this->used = 'For Website';
+            $this->termCategory = 'legal';
+            $this->categoryLabel = 'Legal & Website';
+            $this->termIcon = 'fa-scale-balanced';
+            $this->dbField = 'terms_and_conditions';
+            $this->publicRoute = '/terms-and-conditions';
+            $this->scopeNote = 'Master SaaS platform terms of service, platform liabilities, and intellectual property.';
         } elseif ($id == 5) {
             $this->th_email_template = DB::table('global_settings')->select('global_settings.payment_policy as terms')->first();
-            $this->title = 'Payment policy';
+            $this->title = 'Payment Policy';
             $this->used = 'For Website';
+            $this->termCategory = 'legal';
+            $this->categoryLabel = 'Legal & Website';
+            $this->termIcon = 'fa-credit-card';
+            $this->dbField = 'payment_policy';
+            $this->publicRoute = '/payment-terms-and-conditions';
+            $this->scopeNote = 'Billing cycles, invoices, auto-renewal rules, and platform refund terms.';
         } elseif ($id == 6) {
             $this->th_email_template = DB::table('global_settings')->select('global_settings.fraud_alery as terms')->first();
-            $this->title = 'Fraud Alery';
+            $this->title = 'Fraud Alert';
             $this->used = 'For Website';
+            $this->termCategory = 'legal';
+            $this->categoryLabel = 'Legal & Website';
+            $this->termIcon = 'fa-triangle-exclamation';
+            $this->dbField = 'fraud_alery';
+            $this->scopeNote = 'Candidate scam warnings, anti-phishing advisory, and recruiter verification guidance.';
         } elseif ($id == 7) {
             $this->th_email_template = DB::table('global_settings')->select('global_settings.trust_and_safety as terms')->first();
             $this->title = 'Trust and Safety';
             $this->used = 'For Website';
+            $this->termCategory = 'legal';
+            $this->categoryLabel = 'Legal & Website';
+            $this->termIcon = 'fa-user-shield';
+            $this->dbField = 'trust_and_safety';
+            $this->scopeNote = 'Marketplace code of conduct, authenticity verification, and hiring safety standards.';
         } elseif ($id == 8) {
             $this->th_email_template = DB::table('global_settings')->select('global_settings.report_issue as terms')->first();
             $this->title = 'Report Issue';
             $this->used = 'For Website';
+            $this->termCategory = 'legal';
+            $this->categoryLabel = 'Legal & Website';
+            $this->termIcon = 'fa-bug';
+            $this->dbField = 'report_issue';
+            $this->scopeNote = 'Platform issue escalation procedure and security vulnerability reporting SLA.';
         } elseif ($id == 9) {
             $this->th_email_template = DB::table('global_settings')->select('global_settings.grievances as terms')->first();
             $this->title = 'Grievances';
             $this->used = 'For Website';
+            $this->termCategory = 'legal';
+            $this->categoryLabel = 'Legal & Website';
+            $this->termIcon = 'fa-file-shield';
+            $this->dbField = 'grievances';
+            $this->scopeNote = 'Statutory Grievance Officer disclosures and legal compliance escalation path.';
         } elseif ($id == 10) {
-            // Intent: support older live DBs that do not yet have the extra offer-template columns.
             $offerTermsColumn = Schema::hasColumn('global_settings', 'agency_offer_terms') ? 'agency_offer_terms' : 'offer_terms';
+            $rawFieldVal = DB::table('global_settings')->value($offerTermsColumn);
+            if (empty(trim(strip_tags((string)$rawFieldVal)))) {
+                $this->fallbackNotice = 'Currently inherits Fulltime Offer Letter (#2) as editable starter copy.';
+            }
             $this->th_email_template = DB::table('global_settings')->select(DB::raw("COALESCE(NULLIF(global_settings.{$offerTermsColumn}, ''), global_settings.offer_terms) as terms"))->first();
-            $this->title = 'Agency Offer terms';
+            $this->title = 'Agency Offer Terms';
             $this->used = 'For Candidates';
+            $this->termCategory = 'offers';
+            $this->categoryLabel = 'Offer Letters';
+            $this->termIcon = 'fa-file-signature';
+            $this->dbField = 'agency_offer_terms';
+            $this->supportedTokens = array_merge($offerTokens, $commercialTokens);
+            $this->scopeNote = 'Offer letter generated for candidates introduced through recruitment agencies.';
         } elseif ($id == 11) {
-            // Intent: expose the internship offer-letter master text with Candidate Offer terms as the editable starter copy.
             $offerTermsColumn = Schema::hasColumn('global_settings', 'internship_offer_terms') ? 'internship_offer_terms' : 'offer_terms';
+            $rawFieldVal = DB::table('global_settings')->value($offerTermsColumn);
+            if (empty(trim(strip_tags((string)$rawFieldVal)))) {
+                $this->fallbackNotice = 'Currently inherits Fulltime Offer Letter (#2) as editable starter copy.';
+            }
             $this->th_email_template = DB::table('global_settings')->select(DB::raw("COALESCE(NULLIF(global_settings.{$offerTermsColumn}, ''), global_settings.offer_terms) as terms"))->first();
             $this->title = 'Internship Offer Letter';
             $this->used = 'For Candidates';
+            $this->termCategory = 'offers';
+            $this->categoryLabel = 'Offer Letters';
+            $this->termIcon = 'fa-graduation-cap';
+            $this->dbField = 'internship_offer_terms';
+            $this->supportedTokens = $offerTokens;
+            $this->scopeNote = 'Internship agreement with stipend terms, tenure duration, and mentorship conditions.';
         } elseif ($id == 12) {
-            // Intent: expose the contract offer-letter master text with Candidate Offer terms as the editable starter copy.
             $offerTermsColumn = Schema::hasColumn('global_settings', 'contract_offer_terms') ? 'contract_offer_terms' : 'offer_terms';
+            $rawFieldVal = DB::table('global_settings')->value($offerTermsColumn);
+            if (empty(trim(strip_tags((string)$rawFieldVal)))) {
+                $this->fallbackNotice = 'Currently inherits Fulltime Offer Letter (#2) as editable starter copy.';
+            }
             $this->th_email_template = DB::table('global_settings')->select(DB::raw("COALESCE(NULLIF(global_settings.{$offerTermsColumn}, ''), global_settings.offer_terms) as terms"))->first();
             $this->title = 'Contract Offer Letter';
             $this->used = 'For Candidates';
+            $this->termCategory = 'offers';
+            $this->categoryLabel = 'Offer Letters';
+            $this->termIcon = 'fa-file-contract';
+            $this->dbField = 'contract_offer_terms';
+            $this->supportedTokens = array_merge($offerTokens, ['{CONTRACT_COMMERCIAL_TABLE}', '{CONTRACT_EXPERIENCE_PRICING}']);
+            $this->scopeNote = 'Contractual employment agreement with monthly/hourly billing & engagement scope.';
         } elseif ($id == 13) {
-            // Intent: let Super Admin maintain agency commercial defaults separately from client Services/Commercials.
             $this->agencyCommercialDefaults = app(AgencyCommercialTermsService::class)->getGlobalDefault();
             $this->th_email_template = (object) ['terms' => ''];
             $this->title = 'Agency Commercial Defaults';
             $this->used = 'For Agencies';
+            $this->termCategory = 'commercial';
+            $this->categoryLabel = 'Agency & Commercial';
+            $this->termIcon = 'fa-building-columns';
+            $this->dbField = 'agency_commercial_terms';
+            $this->storageTable = 'agency_commercial_terms';
+            $this->supportedTokens = $commercialTokens;
+            $this->scopeNote = 'Global fallback commission rates, CTC % success fees, replacement & payment days.';
         }
+
+        $rawText = (string) (@$this->th_email_template->terms ?? '');
+        $stripped = trim(strip_tags($rawText));
+        $this->isConfigured = strlen($stripped) > 0 || ($id === 13 && !empty($this->agencyCommercialDefaults));
+        $this->charCount = strlen($stripped);
+        $this->wordCount = $this->charCount > 0 ? str_word_count($stripped) : 0;
+        $this->pageTitle = 'Edit ' . $this->title;
 
         return view('super-admin.default-terms', $this->data);
         // default-terms-list.blade.php
