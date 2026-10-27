@@ -423,8 +423,8 @@
             </div>
         </div>
 
-        {{-- Hiring Pipeline Funnel (Original Capsule Flow + Clean Row 2 Applications & Interview) --}}
-        <div class="tbl-cell-pipeline">
+        {{-- Hiring Pipeline Funnel: 6 Stages | Interview (Single Compact Row) --}}
+        <div class="tbl-cell-pipeline" title="Total Applications: {{ $allCandidates }} | Interviews: {{ $interviews }}">
             <div class="cl-pipeline-flow">
                 <div class="cl-pipe-step" title="Sourcing: {{ $sourced }}">
                     <span class="cl-pipe-pill pill-sourcing">{{ $sourced }}</span>
@@ -450,18 +450,11 @@
                     <span class="cl-pipe-pill pill-joined">{{ $joined }}</span>
                     <span class="cl-pipe-label">Joined</span>
                 </div>
-            </div>
-            <div class="cl-pipeline-meta">
-                <span class="cl-pipeline-meta-item">
-                    <span class="cl-meta-dot dot-apps"></span>
-                    <span class="cl-meta-lbl">Applications:</span>
-                    <strong class="cl-meta-val">{{ $allCandidates }}</strong>
-                </span>
-                <span class="cl-pipeline-meta-item">
-                    <span class="cl-meta-dot dot-interview"></span>
-                    <span class="cl-meta-lbl">Interview:</span>
-                    <strong class="cl-meta-val">{{ $interviews }}</strong>
-                </span>
+                <div class="cl-pipe-divider" aria-hidden="true"></div>
+                <div class="cl-pipe-step step-interview" title="Interview: {{ $interviews }}">
+                    <span class="cl-pipe-pill pill-interview">{{ $interviews }}</span>
+                    <span class="cl-pipe-label">Interview</span>
+                </div>
             </div>
         </div>
     </div>
