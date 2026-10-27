@@ -6970,6 +6970,13 @@ use Carbon\Carbon;
         function loadInternalTabContent(target, force) {
             if (!target) return;
             target = target.replace('#', '');
+
+            // P0: Forward directly to Scoped ClientDrawerInstance TabCoordinator V3.0
+            if (window.__activeClientDrawer && window.__activeClientDrawer.coordinator) {
+                window.__activeClientDrawer.coordinator.activateTab(target, { force: force });
+                return;
+            }
+
             var activeSelId = window.ClientStateManager && typeof window.ClientStateManager.getSelectedClientId === 'function'
                 ? window.ClientStateManager.getSelectedClientId()
                 : (window.activeSelectedClientId || null);
@@ -8947,7 +8954,11 @@ use Carbon\Carbon;
         window.currentJobStatusInternal = status;
         $('.js-job-filter-btn').removeClass('active');
         $(this).addClass('active');
-        fetchJobsClient(1, $('#inputJobSearch').val(), status);
+        if (window.__activeClientDrawer && window.__activeClientDrawer.coordinator) {
+            window.__activeClientDrawer.coordinator.setFilter('jobs', status);
+        } else if (typeof fetchJobsClient === 'function') {
+            fetchJobsClient(1, $('#inputJobSearch').val(), status);
+        }
     });
 
     // Internal Client Jobs Tab: Click Routing (Fixing Drawer Click Collision Bug)
