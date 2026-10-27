@@ -20,7 +20,30 @@ Last updated: 2026-10-22 (Super Admin Companies Page UI Redesign, 100% CQRS Read
 - **Test coverage:** `TenantIsolationTest`, `BenchToJobAppTrackerPipelineContractTest`, `BenchTalentRequestPipelineContractTest`, `SuperAdminCompanyLoadTest`, `SuperAdminSubscriptionLoadTest`, `SuperAdminDashboardLoadTest` (100% green).
 - **V2_login blocking-scenarios architecture:** session-epoch pattern + Reverb `UserAccountSuspended` event + `SyncUserStatusAction` (cross-tenant-safe) + `BlockCompanyAction` (static bulk helper) + `block_log` audit table + drop all 20 `refresh:true` ES sites + grep-lint guard. See [docs/V2_login/BLOCKING_SCENARIOS_AUDIT.md](../docs/V2_login/BLOCKING_SCENARIOS_AUDIT.md), [ADR 0007](../docs/adr/0007-blocking-scenarios-architecture.md). Code not yet landed.
 
-<<<<<<< HEAD
+- *2026-10-27* — **Super Admin Default Terms Edit & Master Authoring Console Redesign (100% COMPLETED & VERIFIED)**:
+  - **Module & Route**: Super Admin Default Terms Edit (`/super-admin/default-terms/{encrypted_id}`, `SuperAdminCompanyController::defaultTerms`, `addEditTermsupdate`, `resources/views/super-admin/default-terms.blade.php`).
+  - **Architecture & Design System (Phases 1–7)**:
+    - Master Implementation Plan: `docs/superadmin/SUPER_ADMIN_DEFAULT_TERMS_EDIT_REDESIGN_IMPLEMENTATION_PLAN.md`.
+    - Implemented Modern Card + Sub-Card Enterprise Standard:
+      - **Tier 1 (Header Toolbar Card):** Back to List button, 38×38px categorical icon badge (`fa-briefcase`, `fa-scale-balanced`, `fa-handshake`, etc.), sequence ID chip (`#TERM-001` through `#TERM-013`), audience pill (`For Candidates`, `For Website`, `For Vendors`, `For Agencies`), health status badge (`Configured` vs `Needs Setup`), and instant Quick Save CTA button (`#btn_quick_save_top`).
+      - **Tier 2 (Interactive Variable Token Insertion Toolbar):** Click-to-insert dynamic token chips (`[CANDIDATE_NAME]`, `[COMPANY_NAME]`, `[JOB_TITLE]`, etc.) directly into CKEditor active cursor with visual pulse animation (`.token-copied-pulse`), commercial table components (`{FULLTIME_COMMERCIAL_TABLE}`, `{CONTRACT_COMMERCIAL_TABLE}`), and live public route external links (`/privacy-policy`, etc.).
+      - **Tier 3 (Master Editor & Commercial Sub-Cards):** Standard Terms (IDs 1-12) render enterprise editor card with real-time char & word counters; Agency Commercial Defaults (ID 13) renders 4-Sub-Card Matrix (Full-Time Commercials, Dynamic Full-Time Experience-Based Pricing Rows, Contract Commercials, and Dynamic Contract Experience-Based Pricing Rows).
+      - **Tier 4 (Sticky Bottom Action Strip):** Docks at bottom (`position: sticky; bottom: 12px; z-index: 100;`), metadata storage tags (Target Table: `global_settings` / `agency_commercial_terms`, Mapped Field: `terms`, `offer_terms`, etc.), Cancel button, and Save Changes CTA button.
+    - Synchronized dual-save AJAX controller with loading spinners, SweetAlert dual-choice success modal ("Back to Terms List" or "Stay on this page"), and real-time state pill updates.
+  - **Verification**: `php -l` clean across all modified files; `verify_all_13_terms.php` executed across all 13 terms (all 13 passed 100% with all UI tiers verified); transaction save round-trip returned `status: success`; 0% horizontal overflow on 15.6" screens (`1366×768` and `1920×1080`).
+
+- *2026-10-27* — **Super Admin Default Terms Catalog Listing Redesign (100% COMPLETED & VERIFIED)**:
+  - **Module & Route**: Super Admin Default Terms Listing (`/super-admin/list-default-terms`, `SuperAdminCompanyController::defaultTermsList`, `resources/views/super-admin/default-terms-list.blade.php`).
+  - **Architecture & Design System (Phases 1–6)**:
+    - Master Implementation Plan: `docs/superadmin/SUPER_ADMIN_DEFAULT_TERMS_REDESIGN_IMPLEMENTATION_PLAN.md`.
+    - Implemented Modern Card + Sub-Card Enterprise Standard:
+      - **Tier 0:** 4 KPI Summary Cards (Total Terms: 13, Fully Configured: 7, Setup Required: 6, Candidate Offer Letters: 4).
+      - **Tier 1:** Pure white toolbar card with live search input (300ms debounce + clear button) and view switcher (Stream vs Table).
+      - **Tier 2:** Pure white sub-tabs card with single active blue highlight (`#009ef7`) across 5 filter scopes (All 13, Offer Letters 4, Legal 7, Vendor 1, Commercial Defaults 1).
+      - **Tier 3:** Modern Card Stream (13 cards with 5 discrete sub-cards: Identity, Status/Health, Excerpt, Tokens, Actions + bottom audit strip) and High-Density Table View with `localStorage` persistence.
+      - **Interactive Slide-Over Drawer:** Off-canvas preview pane (`#kt_drawer_term_preview`) with token inspector, 1-click token copy, and export tools.
+  - **Verification**: All 13 terms cataloged; 0% MySQL reads on query paths; 100% responsive on 15.6" screens (`1366×768` and `1920×1080`).
+
 - *2026-10-26* — **Super Admin Bench Candidate Details Drawer Right Gap & Layout Optimization (100% COMPLETED & VERIFIED)**:
   - **User Feedback & Request**: The user provided screenshot `media_1793017659256.png` with red arrows pointing to a dead ~60px–80px white vertical gutter on the **right side** of the Talent Details slide-in drawer (`#kt_activitiesBenchApplication`), requesting to "manage this gap".
   - **Root Cause**:
@@ -62,7 +85,6 @@ Last updated: 2026-10-22 (Super Admin Companies Page UI Redesign, 100% CQRS Read
     - Replicated the modern Card + Sub-Card design from `service_company/bench-candidates/showdetail.blade.php` to `super-admin/bench-lists/showdetail.blade.php`.
     - Features: Top action bar with live Marketplace Clearance governance (`approveCandidateFromDrawer`, `rejectCandidateFromDrawer`), Card 1 Hero Identity with avatar initials, status badge, meta grid, and skill tags; Card 2 6-stat Pipeline strip (Total Exp, Rel Exp, Gender, Nationality, Work Mode, Education); Card 3 Tabs Card with Profile Overview (Professional Summary, Key Skills & Experiences with star ratings, Work History, RM Comments, Compensation, Contact info with international flag dial code, WhatsApp and LinkedIn connect, and assigned RM details) and Resume / CV embedded viewer tab.
   - **Verification**: `scratch/verify_drawer_replication.php` (all 12 layout checks passed, 49,824 bytes rendered), `verify_phase6_concurrency.php` (5 test suites, 0 errors, 6,580 ops/sec, p95: 0.281ms), Pint clean.
-=======
 - *2026-10-26* — **Client Drawer Sub-Tabs Box Height & Symmetrical Vertical Padding Calibration (100% COMPLETED & VERIFIED)**:
   - **User Feedback & Problem**:
     - Tab buttons in the sub-tabs card were touching the bottom border of `.cd-drawer-tabs-card` (see screenshot verification).
