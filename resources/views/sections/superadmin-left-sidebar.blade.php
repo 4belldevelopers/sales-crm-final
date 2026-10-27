@@ -621,7 +621,7 @@
                          <!--begin::Coins Packages-->
                          <div class="menu-item">
                             <a href="{{ route('superadmin.company.topUpCoinPackages') }}"
-                                class="menu-link {{ request()->is('super-admin/topup-coin-packages') ? 'active' : '' }}"">
+                                class="menu-link {{ request()->is('super-admin/topup-coin-packages*') || request()->is('super-admin/add-edit-top-up-coin-packages*') ? 'active' : '' }}">
                                 <span class="menu-bullet">
                                     <span class="bullet bullet-dot"></span>
                                 </span>
