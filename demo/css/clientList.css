@@ -700,6 +700,26 @@
   overflow: hidden !important;
   text-overflow: ellipsis !important;
 }
+.cl-subcard-title-wrap {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 5px !important;
+  min-width: 0 !important;
+}
+.cl-subcard-icon {
+  flex-shrink: 0 !important;
+}
+.cl-subcard.cl-subcard-pipeline {
+  background: #f8fafc !important;
+  border: 1px solid #e2e8f0 !important;
+}
+.cl-subcard.cl-subcard-pipeline:hover {
+  background: #ffffff !important;
+  border-color: #cbd5e1 !important;
+}
+.cl-subcard-pipeline .cl-subcard-title {
+  color: #334155 !important;
+}
 
 /* Dual Badges at TOP of Sub-Card 1 */
 .cl-subcard-badges {
@@ -829,11 +849,15 @@
   padding: 0 1px !important;
 }
 .cl-pipe-pill {
-  font-size: 11.5px !important;
-  font-weight: 600 !important;
+  font-size: 12.5px !important;
+  font-weight: 700 !important;
   line-height: 1.2 !important;
   text-align: center !important;
   transition: all 0.15s ease !important;
+}
+.cl-pipe-step.has-count .cl-pipe-pill {
+  font-size: 13.5px !important;
+  font-weight: 800 !important;
 }
 .cl-pipe-label {
   font-size: 8px !important;
@@ -855,37 +879,63 @@
   align-self: center !important;
 }
 
-/* ── Dynamic Pipeline Highlighting: Zeroes Muted vs Active Vibrant ── */
-.cl-pipe-step.stage-zero .cl-pipe-pill {
-  color: #cbd5e1 !important;
-  font-weight: 500 !important;
+/* ── Restored Hiring Pipeline Color Combinations (Vibrant & Identifiable Even If 0) ── */
+.step-sourcing .cl-pipe-pill,
+.pill-sourcing, .pill-sourced {
+  color: #0284c7 !important;
 }
-.cl-pipe-step.stage-zero .cl-pipe-label {
-  color: #94a3b8 !important;
-  font-weight: 500 !important;
-  opacity: 0.8 !important;
+.step-sourcing .cl-pipe-label {
+  color: #0284c7 !important;
 }
-.cl-pipe-step.stage-active .cl-pipe-pill {
-  font-weight: 800 !important;
-  font-size: 12.5px !important;
+
+.step-screening .cl-pipe-pill,
+.pill-screening {
+  color: #c000ff !important;
 }
-.cl-pipe-step.stage-active .cl-pipe-label {
+.step-screening .cl-pipe-label {
+  color: #a855f7 !important;
+}
+
+.step-evaluation .cl-pipe-pill,
+.pill-evaluation, .pill-evaluated {
+  color: #2896ff !important;
+}
+.step-evaluation .cl-pipe-label {
+  color: #0284c7 !important;
+}
+
+.step-negotiations .cl-pipe-pill,
+.pill-negotiations, .pill-negotiation {
+  color: #ff4098 !important;
+}
+.step-negotiations .cl-pipe-label {
+  color: #db2777 !important;
+}
+
+.step-offer .cl-pipe-pill,
+.pill-offer, .pill-offers {
+  color: #ffab00 !important;
+}
+.step-offer .cl-pipe-label {
+  color: #d97706 !important;
+}
+
+.step-joined .cl-pipe-pill,
+.pill-joined {
+  color: #06c732 !important;
+}
+.step-joined .cl-pipe-label {
+  color: #16a34a !important;
+}
+
+.step-interview .cl-pipe-pill,
+.pill-interview, .pill-interviews {
+  color: #2563eb !important;
+}
+.step-interview .cl-pipe-label {
+  color: #2563eb !important;
   font-weight: 700 !important;
 }
-.cl-pipe-step.stage-active.step-sourcing .cl-pipe-pill,
-.cl-pipe-step.stage-active.step-sourcing .cl-pipe-label { color: #0284c7 !important; }
-.cl-pipe-step.stage-active.step-screening .cl-pipe-pill,
-.cl-pipe-step.stage-active.step-screening .cl-pipe-label { color: #0d9488 !important; }
-.cl-pipe-step.stage-active.step-evaluation .cl-pipe-pill,
-.cl-pipe-step.stage-active.step-evaluation .cl-pipe-label { color: #d97706 !important; }
-.cl-pipe-step.stage-active.step-negotiations .cl-pipe-pill,
-.cl-pipe-step.stage-active.step-negotiations .cl-pipe-label { color: #ea580c !important; }
-.cl-pipe-step.stage-active.step-offer .cl-pipe-pill,
-.cl-pipe-step.stage-active.step-offer .cl-pipe-label { color: #7c3aed !important; }
-.cl-pipe-step.stage-active.step-joined .cl-pipe-pill,
-.cl-pipe-step.stage-active.step-joined .cl-pipe-label { color: #16a34a !important; }
-.cl-pipe-step.stage-active.step-interview .cl-pipe-pill,
-.cl-pipe-step.stage-active.step-interview .cl-pipe-label { color: #2563eb !important; }
 
 /* ── Jobs Status Sub-Card Accents ── */
 .cl-job-line.has-count.cl-job-hiring .cl-job-num {
@@ -1246,7 +1296,7 @@
   border: none;
   background: transparent;
 }
-.pill-sourcing, .pill-sourced         { background: transparent; color: #0f172a; }
+.pill-sourcing, .pill-sourced         { background: transparent; color: #0284c7; }
 .pill-screening                       { background: transparent; color: #c000ff; }
 .pill-evaluation, .pill-evaluated     { background: transparent; color: #2896ff; }
 .pill-negotiations, .pill-negotiation { background: transparent; color: #ff4098; }
