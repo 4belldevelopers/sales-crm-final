@@ -160,6 +160,7 @@ Route::group(['middleware' => 'auth'], function () {
         Route::get('whatsapp-themes', [SuperAdminCompanyController::class, 'whatsappThemes'])->name('company.whatsappthemes');
         Route::any('whatsapp-themes/update/{id}', [SuperAdminCompanyController::class, 'whatsappThemesupdate'])->name('company.whatsappThemesupdate');
         Route::post('whatsapp-themes/add-edit', [SuperAdminCompanyController::class, 'addEditwhatsappThemesupdate'])->name('company.addEditwhatsappThemesupdate');
+        Route::post('whatsapp-themes/toggle-status', [SuperAdminCompanyController::class, 'toggleWhatsappTemplateStatus'])->name('company.toggleWhatsappTemplateStatus');
 
         Route::get('features-list', [SuperAdminCompanyController::class, 'featuresList'])->name('company.featuresList');
         Route::any('features-list/update/{id}', [SuperAdminCompanyController::class, 'featuresListupdate'])->name('company.featuresListupdate');
