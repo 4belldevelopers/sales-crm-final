@@ -678,12 +678,157 @@
   transform: rotate(180deg);
 }
 
+/* ── Guaranteed Enterprise Metronic Sort Combobox ── */
+.cl-sort-dropdown-wrapper {
+  position: relative;
+  display: inline-block;
+}
+.cl-sort-combobox-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 42px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 0 12px;
+  min-width: 155px;
+  max-width: 220px;
+  cursor: pointer;
+  user-select: none;
+  transition: all 0.15s ease;
+  position: relative;
+}
+.cl-sort-combobox-btn:hover,
+.cl-sort-combobox-btn.active {
+  border-color: #cbd5e1;
+  background: #f8fafc;
+}
+.cl-sort-combobox-btn.is-custom-sorted {
+  border-color: #cbd5e1;
+  background: #f8fafc;
+}
+.cl-sort-combobox-btn.is-custom-sorted .cl-pill-val {
+  color: #0f172a;
+  font-weight: 600;
+}
+.cl-sort-dropdown-panel {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  width: 260px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.12), 0 8px 10px -6px rgba(15, 23, 42, 0.06);
+  z-index: 1055;
+  display: none;
+  flex-direction: column;
+  overflow: hidden;
+  padding: 6px 0;
+  animation: clSortFadeIn 0.15s ease-out;
+}
+@keyframes clSortFadeIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.cl-sort-dropdown-panel.show {
+  display: flex;
+}
+.cl-sort-section-hdr {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #94a3b8;
+  padding: 6px 14px 4px 14px;
+  user-select: none;
+}
+.cl-sort-section-hdr:not(:first-child) {
+  border-top: 1px solid #f1f5f9;
+  margin-top: 4px;
+  padding-top: 8px;
+}
+.cl-sort-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 14px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #1e293b;
+  cursor: pointer;
+  transition: all 0.12s ease;
+  user-select: none;
+  outline: none;
+}
+.cl-sort-item:hover,
+.cl-sort-item:focus {
+  background: #f1f5f9;
+  color: #0f172a;
+}
+.cl-sort-item.selected {
+  background: #eff6ff;
+  color: #009ef7;
+  font-weight: 600;
+}
+.cl-sort-item-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  flex: 1;
+}
+.cl-sort-item-icon {
+  color: #64748b;
+  flex-shrink: 0;
+  transition: color 0.12s ease;
+}
+.cl-sort-item:hover .cl-sort-item-icon,
+.cl-sort-item.selected .cl-sort-item-icon {
+  color: #009ef7;
+  stroke: #009ef7;
+}
+.cl-sort-item-title {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.cl-sort-item-right {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+.cl-sort-direction-badge {
+  font-size: 9.5px;
+  font-weight: 600;
+  padding: 1.5px 5.5px;
+  border-radius: 4px;
+  background: #f1f5f9;
+  color: #64748b;
+  letter-spacing: 0.02em;
+}
+.cl-sort-item.selected .cl-sort-direction-badge {
+  background: #dbeafe;
+  color: #0284c7;
+}
+.cl-sort-check {
+  font-size: 11px;
+  font-weight: 700;
+  color: #009ef7;
+  display: inline-flex;
+  align-items: center;
+  width: 14px;
+  justify-content: center;
+}
+
 /* ── 15.6-inch Screen Optimization (1366x768 & 1920x1080) ── */
 @media (max-width: 1400px) {
   .cl-filter-bar {
     gap: 8px !important;
   }
-  .cl-dropdown-pill, .cl-loc-combobox-btn {
+  .cl-dropdown-pill, .cl-loc-combobox-btn, .cl-sort-combobox-btn {
     min-width: 135px !important;
     padding: 0 10px !important;
   }
