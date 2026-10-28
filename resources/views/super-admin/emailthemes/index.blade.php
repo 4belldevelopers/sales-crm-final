@@ -8,6 +8,43 @@
             background-color: #F8FAFC;
         }
 
+        /* =========================================================================
+           TOP GAP COLLAPSE & VIEWPORT SPACING MANAGEMENT (Eliminate Metronic 55px whitespace)
+           ========================================================================= */
+        #kt_body {
+            --kt-toolbar-height: 0px !important;
+            --kt-toolbar-height-tablet-and-mobile: 0px !important;
+        }
+
+        .header-fixed.toolbar-fixed #kt_wrapper,
+        .header-fixed #kt_wrapper,
+        .toolbar-fixed #kt_wrapper,
+        #kt_wrapper {
+            padding-top: calc(65px + 10px) !important;
+        }
+
+        @media (max-width: 991.98px) {
+            .header-tablet-and-mobile-fixed.toolbar-tablet-and-mobile-fixed #kt_wrapper,
+            .header-tablet-and-mobile-fixed #kt_wrapper,
+            #kt_wrapper {
+                padding-top: calc(55px + 10px) !important;
+            }
+        }
+
+        #kt_toolbar {
+            display: none !important;
+            height: 0 !important;
+            min-height: 0 !important;
+            padding: 0 !important;
+            margin: 0 !important;
+        }
+
+        #kt_content,
+        .content {
+            padding-top: 0 !important;
+            margin-top: 0 !important;
+        }
+
         /* Top Action Bar - Compact 15.6" Header */
         .template-top-bar {
             background: #FFFFFF;
@@ -211,9 +248,8 @@
 
         .search-input-box {
             position: relative;
-            flex: 1;
-            min-width: 220px;
-            max-width: 420px;
+            flex: 1 1 auto;
+            min-width: 240px;
         }
 
         .search-input-box input {
@@ -221,7 +257,7 @@
             border-radius: 6px;
             border: 1px solid #CBD5E1;
             padding-left: 32px;
-            padding-right: 10px;
+            padding-right: 28px;
             font-size: 11.5px;
             width: 100%;
             background: #FFFFFF;
@@ -241,6 +277,26 @@
             transform: translateY(-50%);
             color: #94A3B8;
             font-size: 12px;
+            pointer-events: none;
+        }
+
+        .search-clear-btn {
+            position: absolute;
+            right: 8px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            padding: 0;
+            color: #94a3b8;
+            cursor: pointer;
+            font-size: 13px;
+            display: none;
+            line-height: 1;
+        }
+
+        .search-clear-btn:hover {
+            color: #475569;
         }
 
         .filter-dropdown-select {
@@ -780,6 +836,9 @@
             <div class="search-input-box">
                 <i class="bi bi-search search-icon"></i>
                 <input type="text" id="templateSearchInput" placeholder="Search templates by name, subject or variable...">
+                <button type="button" id="templateSearchClear" class="search-clear-btn" title="Clear search">
+                    <i class="bi bi-x-circle-fill"></i>
+                </button>
             </div>
 
             <!-- Filters Group -->
@@ -1246,6 +1305,18 @@
 
             // Live Search
             $('#templateSearchInput').on('input keyup', function() {
+                var query = ($(this).val() || '').trim();
+                if (query.length > 0) {
+                    $('#templateSearchClear').show();
+                } else {
+                    $('#templateSearchClear').hide();
+                }
+                applyListingFilters();
+            });
+
+            $('#templateSearchClear').on('click', function() {
+                $('#templateSearchInput').val('').focus();
+                $(this).hide();
                 applyListingFilters();
             });
 
