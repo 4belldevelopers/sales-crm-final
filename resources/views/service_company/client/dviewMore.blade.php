@@ -5200,8 +5200,11 @@
                                     <div class="cd-cand-title-wrap">
                                         <div class="d-flex align-items-center gap-2">
                                             <h4 class="cd-cand-title">Candidates</h4>
-                                            <span class="cd-cand-count-badge" id="cdCandidateCountBadgeDirect">
+                                            <span class="cd-cand-count-badge" id="cdCandidateCountBadgeDirect" role="button" title="View All Pipeline Candidates" aria-label="View all candidates">
                                                 <span id="cdCandidateCountTextDirect">0</span> Candidates
+                                            </span>
+                                            <span class="badge badge-light-warning text-warning fw-bold fs-8 cursor-pointer" id="cdInReviewCountBadgeDirect" style="display:none; padding:4px 8px; border-radius:6px; border:1px solid #fde047;" role="button" title="View In Review candidates" aria-label="View In Review candidates">
+                                                <span id="cdInReviewCountTextDirect">0</span> In Review
                                             </span>
                                         </div>
                                         <div class="cd-cand-subtitle">Pipeline and submitted talent for this direct client</div>
@@ -7222,6 +7225,12 @@
       </div>
       <div class="modal-body p-6">
         <div class="stage_body_content" id="stage_body_content"></div>
+      </div>
+      <div class="modal-footer flex-stack py-3 px-6">
+        <button type="button" class="btn btn-sm btn-light" data-bs-dismiss="modal" data-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-sm btn-primary" id="custom_stage_submit">
+          <span class="indicator-label"><span class="csdChangeLabel">Submit</span> <i class="fa fa-arrow-right ms-1"></i></span>
+        </button>
       </div>
     </div>
   </div>
