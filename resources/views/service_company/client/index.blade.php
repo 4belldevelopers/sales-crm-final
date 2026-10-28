@@ -2016,6 +2016,14 @@ function closeSortDropdown() {
     $('#clSortBtn').removeClass('active').attr('aria-expanded', 'false');
 }
 
+const clSortLabels = {
+    'recent': 'Recently Added',
+    'oldest': 'Oldest First',
+    'name_asc': 'Client Name (A → Z)',
+    'name_desc': 'Client Name (Z → A)',
+    'jobs_desc': 'Most Active Jobs'
+};
+
 function normalizeSortValue(raw) {
     const s = String(raw || '').toLowerCase().trim();
     if (s === 'oldest' || s === '2') return 'oldest';
@@ -2039,12 +2047,14 @@ function sortDomClientsLocally(sortVal) {
 
     $rows.sort(function(a, b) {
         if (sortVal === 'name_asc' || sortVal === 'name_desc') {
-            const nameA = ($(a).find('.cl-details-title, .cl-name').first().text() || '').trim().toLowerCase();
-            const nameB = ($(b).find('.cl-details-title, .cl-name').first().text() || '').trim().toLowerCase();
+            const nameA = ($(a).attr('data-client-name') || $(a).find('.cl-name, .cl-details-title').first().text() || '').trim().toLowerCase();
+            const nameB = ($(b).attr('data-client-name') || $(b).find('.cl-name, .cl-details-title').first().text() || '').trim().toLowerCase();
             return sortVal === 'name_asc' ? nameA.localeCompare(nameB) : nameB.localeCompare(nameA);
         } else if (sortVal === 'jobs_desc') {
-            const jobsA = parseInt($(a).find('.cl-job-hiring .cl-job-num').first().text() || '0', 10);
-            const jobsB = parseInt($(b).find('.cl-job-hiring .cl-job-num').first().text() || '0', 10);
+            const rawJobsA = $(a).attr('data-active-jobs') ?? $(a).find('.tbl-cell-jobs .cl-job-num, .cl-job-line .cl-job-num').first().text() ?? '0';
+            const rawJobsB = $(b).attr('data-active-jobs') ?? $(b).find('.tbl-cell-jobs .cl-job-num, .cl-job-line .cl-job-num').first().text() ?? '0';
+            const jobsA = parseInt(rawJobsA, 10) || 0;
+            const jobsB = parseInt(rawJobsB, 10) || 0;
             if (jobsB !== jobsA) return jobsB - jobsA;
             const idA = parseInt($(a).data('row-id') || '0', 10);
             const idB = parseInt($(b).data('row-id') || '0', 10);
@@ -2069,12 +2079,13 @@ function sortDomClientsLocally(sortVal) {
     return true;
 }
 
-function selectSortOption(val, text, e) {
-    if (e) { e.stopPropagation(); }
+function selectSortOption(val, text, e, skipFetch = false) {
+    if (e && e.stopPropagation) { e.stopPropagation(); }
     closeSortDropdown();
 
     const canonicalVal = normalizeSortValue(val);
-    $('#sortDisplay').text(text);
+    const displayText = text || clSortLabels[canonicalVal] || 'Recently Added';
+    $('#sortDisplay').text(displayText);
     $('#sortingfilter').val(canonicalVal);
 
     $('#clSortDropdownPanel .cl-sort-item').removeClass('selected').attr('aria-selected', 'false')
@@ -2090,6 +2101,11 @@ function selectSortOption(val, text, e) {
 
     clientListState.sort = canonicalVal;
     updateHeaderSortIndicators(canonicalVal);
+
+    if (skipFetch) {
+        return;
+    }
+
     syncUrlState();
 
     // Option A Performance Optimization: If current working set is hydrated in RAM, sort locally with 0 HTTP calls
@@ -3128,6 +3144,10 @@ window.ClientStateManager = {
         $(`.cl-stat-filter[data-tab="${tabName}"]`).addClass('active');
 
         if (tabName === 'request') {
+            $('#sort-opt-jobs_desc').hide();
+            if (window.clientListState && window.clientListState.sort === 'jobs_desc') {
+                selectSortOption('recent', 'Recently Added', null, true);
+            }
             $('.tbl').addClass('tbl-req');
             $('#clientTableHead').html(`
                 <div class="tbl-th-subcard tbl-th-check">
@@ -3156,6 +3176,7 @@ window.ClientStateManager = {
                 </div>
             `);
         } else {
+            $('#sort-opt-jobs_desc').show();
             $('.tbl').removeClass('tbl-req');
             $('#clientTableHead').html(`
                 <div class="tbl-th-subcard tbl-th-check">
@@ -3653,7 +3674,7 @@ function renderClientRows(rows) {
         const editUrl = '{{ url("service_company/client/edit") }}/' + r.id;
 
         return `
-        <div class="cl-primary-card tbl-r ${clientTypeCss} ${jobActive > 0 ? 'is-active-client' : 'is-inactive-client'}" data-row-id="${r.id}" data-client-type="${clientTypeAttr}">
+        <div class="cl-primary-card tbl-r ${clientTypeCss} ${jobActive > 0 ? 'is-active-client' : 'is-inactive-client'}" data-row-id="${r.id}" data-client-type="${clientTypeAttr}" data-active-jobs="${jobActive}" data-client-name="${escapeAttr(r.name || '')}">
             <div class="cl-subcards-grid">
                 <!-- SUB-CARD 1: Client Identity (Internal & Active at TOP) -->
                 <div class="cl-subcard cl-subcard-identity">
@@ -4147,8 +4168,8 @@ function syncUrlState(replace = false) {
             url.searchParams.delete('activity');
         }
 
-        const sortVal = $('#sortingfilter').val() || 'recent';
-        if (sortVal && sortVal !== 'recent' && sortVal !== 'Show All') {
+        const sortVal = normalizeSortValue($('#sortingfilter').val() || clientListState.sort || 'recent');
+        if (sortVal && sortVal !== 'recent') {
             url.searchParams.set('sort', sortVal);
         } else {
             url.searchParams.delete('sort');
@@ -4219,15 +4240,7 @@ function hydrateStateFromUrl(shouldFetch = true) {
         }
 
         // Hydrate sort
-        $('#sortingfilter').val(sort);
-        clientListState.sort = sort;
-        if (sort && sort !== 'recent' && sort !== 'Show All') {
-            const sortText = $(`#sortingfilter option[value="${sort}"]`).text() || $('#sortingfilter option:selected').text();
-            if (sortText) $('#sortDisplay').text(sortText);
-        } else {
-            $('#sortDisplay').text('Recently Added');
-        }
-        updateHeaderSortIndicators(sort);
+        selectSortOption(sort, null, null, true);
 
         setClientTab(tab, null, false);
         if (shouldFetch) {

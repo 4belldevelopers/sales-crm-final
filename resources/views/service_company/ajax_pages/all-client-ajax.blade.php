@@ -385,7 +385,7 @@
         }
     @endphp
 
-    <div class="cl-primary-card tbl-r {{ $client_type_css }} {{ $job_active > 0 ? 'is-active-client' : 'is-inactive-client' }}" data-row-id="{{ $rowTargetId }}" data-client-type="{{ $isDirect ? 'direct' : 'internal' }}">
+    <div class="cl-primary-card tbl-r {{ $client_type_css }} {{ $job_active > 0 ? 'is-active-client' : 'is-inactive-client' }}" data-row-id="{{ $rowTargetId }}" data-client-type="{{ $isDirect ? 'direct' : 'internal' }}" data-active-jobs="{{ (int)$job_active }}" data-client-name="{{ e($client_Or_CompanyName) }}">
         {{-- Upper 4 Discrete Sub-Cards Grid --}}
         <div class="cl-subcards-grid">
             {{-- SUB-CARD 1: Client Identity (Internal & Active at TOP) --}}
