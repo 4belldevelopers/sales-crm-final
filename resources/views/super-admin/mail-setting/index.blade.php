@@ -653,15 +653,10 @@ body {
 
                         <div class="smtp-subcard-controls">
                             <!-- Daily Quota / Count Tracker -->
-                            <div class="smtp-daily-pill" title="Emails dispatched today across this socket">
+                            <div class="smtp-daily-pill" title="Emails dispatched today across this socket (Live Counter)">
                                 <i class="fa-solid fa-chart-simple text-primary"></i>
                                 <span>Daily Sent:</span>
-                                <input type="number" 
-                                       min="0" 
-                                       name="daily_used[{{ $gid }}]" 
-                                       id="daily_used_{{ $gid }}" 
-                                       value="{{ (int) $val->dailyCount }}"
-                                       title="Edit or reset daily count">
+                                <strong class="text-gray-900 fs-7 ms-1" id="daily_count_display_{{ $gid }}">{{ number_format((int) $val->dailyCount) }}</strong>
                             </div>
 
                             <!-- Provider Quick-Preset Dropdown -->
@@ -770,17 +765,24 @@ body {
                         </div>
 
                         <div class="col-12 col-md-3">
-                            <label class="smtp-field-label" for="mail_password_{{ $gid }}">
-                                SMTP Password <span class="required-dot">*</span>
-                            </label>
+                            <div class="d-flex align-items-center justify-content-between mb-1">
+                                <label class="smtp-field-label mb-0" for="mail_password_{{ $gid }}">
+                                    SMTP Password
+                                </label>
+                                @if(!empty($val->mail_password))
+                                    <span class="badge badge-light-success py-0 px-2 fs-9 fw-semibold" title="Password securely stored in database">Configured</span>
+                                @else
+                                    <span class="badge badge-light-warning py-0 px-2 fs-9 fw-semibold" title="No password configured">Not Set</span>
+                                @endif
+                            </div>
                             <div class="smtp-input-group">
                                 <input type="password" 
                                        class="form-control smtp-input-solid smtp-password-field" 
                                        id="mail_password_{{ $gid }}" 
                                        name="mail_password[{{ $gid }}]" 
-                                       value="{{ $val->mail_password }}" 
-                                       placeholder="Password / Secret Key" 
-                                       required>
+                                       value="" 
+                                       autocomplete="new-password"
+                                       placeholder="•••••••• (Leave blank to keep)">
                                 <button type="button" 
                                         class="smtp-input-group-btn btn-toggle-password" 
                                         data-target="mail_password_{{ $gid }}" 

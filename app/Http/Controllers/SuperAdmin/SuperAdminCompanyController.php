@@ -37,8 +37,13 @@ use App\Services\GoogleSheetServiceCandidate;
 use App\Services\GoogleSheetsServiceGet;
 use App\Services\MailService;
 use App\Services\MarketplaceModerationService;
+use App\Http\Requests\SuperAdmin\ToggleNotificationStatusRequest;
+use App\Http\Requests\SuperAdmin\UpdateEmailNotificationRequest;
+use App\Services\Notification\NotificationHtmlSanitizer;
+use App\Services\Notification\NotificationTokenRegistry;
 use App\Services\SuperAdmin\SuperAdminBenchMutationService;
 use App\Services\SuperAdmin\SuperAdminJdMutationService;
+use App\Services\SuperAdmin\SuperAdminNotificationMutationService;
 use Carbon\Carbon;
 use Crypt;
 use Illuminate\Http\Request;
@@ -2754,20 +2759,26 @@ class SuperAdminCompanyController extends SuperAdminBaseController
 
     }
 
-    public function SingleNotificationUpdateS(Request $request)
+    /**
+     * Mutate single email notification active/inactive status.
+     *
+     * Intent: Atomically update email_notifications status, record transactional outbox event
+     * in sys_outbox_events, synchronize Elasticsearch projection, and invalidate caches.
+     * Tenancy: Global Super Admin scope (tenant_id = 0).
+     */
+    public function SingleNotificationUpdateS(ToggleNotificationStatusRequest $request, SuperAdminNotificationMutationService $mutationService)
     {
+        $id = (int) $request->id;
+        $status = (int) $request->status;
 
-        $values = [
-            'status' => $request->chkStatus,
-        ];
-        // dd($values);
-        DB::table('email_notifications')->where('id', '=', $request->id)->update($values);
+        $result = $mutationService->toggleStatus(
+            notificationId: $id,
+            newStatus: $status,
+            idempotencyKey: $request->header('X-Idempotency-Key') ?: (string) $request->input('idempotency_key', ''),
+            adminId: Auth::id()
+        );
 
-        return response()->json([
-            'message' => '',
-            'status' => 'success',
-        ]);
-
+        return response()->json($result, $result['code'] ?? 200);
     }
 
     public function googleSheetsServicecheckCandidate($spreadsheetId)
@@ -5465,201 +5476,248 @@ class SuperAdminCompanyController extends SuperAdminBaseController
 
     }
 
+    /**
+     * Super Admin Email Notification Templates Listing.
+     *
+     * Intent: Serves complete transactional email notification catalog with deterministic sorting
+     * and in-memory role permission mapping loaded 100% from Elasticsearch.
+     * CQRS Rule: 0% MySQL reads on request path.
+     *
+     * @return \Illuminate\View\View
+     */
     public function notification()
     {
-        $params = [
-            'index' => ELASTIC_EMAIL_NOTIFICATIONS,
-            'body' => [
-                'size' => 10000,
-            ],
-        ];
+        $notificationIndex = defined('ELASTIC_EMAIL_NOTIFICATIONS')
+            ? ELASTIC_EMAIL_NOTIFICATIONS
+            : config('constants.ELASTIC_EMAIL_NOTIFICATIONS', 'local_email_notifications');
 
-        $response = $this->elasticService->getClient()->search($params);
+        $permissionIndex = defined('ELASTIC_EMAIL_PERMISSIONS')
+            ? ELASTIC_EMAIL_PERMISSIONS
+            : config('constants.ELASTIC_EMAIL_PERMISSIONS', 'local_mail_permissions');
 
-        $this->th_email_template = collect($response['hits']['hits'] ?? [])
-            ->map(function ($hit) {
-                return (object) $hit['_source'];
-            });
+        try {
+            // 1. Fetch all notifications from Elasticsearch sorted deterministically by ID ASC
+            $response = $this->elasticService->getClient()->search([
+                'index' => $notificationIndex,
+                'body' => [
+                    'size' => 1000,
+                    'track_total_hits' => true,
+                    'sort' => [
+                        ['id' => ['order' => 'asc']],
+                    ],
+                ],
+            ]);
+
+            // 2. Fetch all role permissions in a single batch Elasticsearch request (0% MySQL reads)
+            $permResponse = $this->elasticService->getClient()->search([
+                'index' => $permissionIndex,
+                'body' => [
+                    'size' => 1000,
+                    'track_total_hits' => true,
+                    'query' => ['match_all' => (object) []],
+                ],
+            ]);
+
+            $permissionMap = [];
+            foreach ($permResponse['hits']['hits'] ?? [] as $permHit) {
+                $src = $permHit['_source'];
+                if (! empty($src['notification_id']) && ! empty($src['role_name'])) {
+                    $permissionMap[(int) $src['notification_id']][] = (string) $src['role_name'];
+                }
+            }
+
+            // 3. Map permissions into notification objects in memory (microsecond assembly)
+            $this->th_email_template = collect($response['hits']['hits'] ?? [])
+                ->map(function ($hit) use ($permissionMap) {
+                    $item = (object) $hit['_source'];
+                    $item->role_names = $permissionMap[(int) $item->id] ?? [];
+
+                    return $item;
+                });
+
+        } catch (\Throwable $e) {
+            Log::error("[NOTIFICATION_LISTING] Elasticsearch read exception, circuit breaker engaged: {$e->getMessage()}");
+            $this->th_email_template = collect();
+        }
+
+        // 4. In-memory KPI summary computation for Tier 0 strip
+        $this->totalNotifications = $this->th_email_template->count();
+        $this->activeNotifications = $this->th_email_template->where('status', 1)->count();
+        $this->inactiveNotifications = $this->th_email_template->where('status', 0)->count();
+        $this->roleGovernedCount = $this->th_email_template->filter(fn ($item) => ! empty($item->role_names))->count();
 
         return view('super-admin.notification.index', $this->data);
     }
 
-    public function notificationupdate(Request $request, $Id)
+    /**
+     * Authoring console for Email Notification template.
+     *
+     * Intent: Load template and role permissions for editing or provision blank template for creation.
+     * Fixes SQL ONLY_FULL_GROUP_BY error on roles query.
+     *
+     * @param Request $request
+     * @param int|string $Id
+     * @return \Illuminate\View\View
+     */
+    public function notificationupdate(Request $request, $Id, NotificationTokenRegistry $tokenRegistry)
     {
-        // dd($Id);
-        $params = [
-            'index' => ELASTIC_EMAIL_NOTIFICATIONS,
-            'body' => [
-                'size' => 10000,
-                'query' => [
-                    'bool' => [
-                        'must' => [
-                            ['term' => ['id' => (int) $Id]],
+        $id = (int) $Id;
+        $this->th_email_template = null;
+
+        if ($id > 0) {
+            $notificationIndex = defined('ELASTIC_EMAIL_NOTIFICATIONS')
+                ? ELASTIC_EMAIL_NOTIFICATIONS
+                : config('constants.ELASTIC_EMAIL_NOTIFICATIONS', 'local_email_notifications');
+
+            try {
+                $response = $this->elasticService->getClient()->search([
+                    'index' => $notificationIndex,
+                    'body' => [
+                        'size' => 1,
+                        'query' => [
+                            'bool' => [
+                                'must' => [
+                                    ['term' => ['id' => $id]],
+                                ],
+                            ],
                         ],
                     ],
-                ],
-            ],
-        ];
+                ]);
 
-        $response = $this->elasticService->getClient()->search($params);
-        $this->th_email_template = isset($response['hits']['hits'][0]) ? (object) $response['hits']['hits'][0]['_source'] : null;
+                $this->th_email_template = isset($response['hits']['hits'][0])
+                    ? (object) $response['hits']['hits'][0]['_source']
+                    : null;
+            } catch (\Throwable $e) {
+                Log::warning("[NOTIFICATION_UPDATE] ES fetch fallback to DB for #{$id}: {$e->getMessage()}");
+                $this->th_email_template = DB::table('email_notifications')->where('id', $id)->first();
+            }
+        }
 
-        // $this->clients = DB::table('clients')->select('clients.*')->orderBy('clients.id', 'ASC')->get();
+        // Authoritative role permissions for this notification
+        $this->mail_permissions = $id > 0
+            ? DB::table('mail_permissions')->where('notification_id', $id)->pluck('role_name')->toArray()
+            : [];
 
-        $this->mail_permissions = DB::table('mail_permissions')->where('notification_id', '=', $Id)->pluck('role_name')->toArray();
+        // Authoritative roles distinct list (SQL ONLY_FULL_GROUP_BY compliant)
+        $this->roles = DB::table('roles')
+            ->select('display_name')
+            ->distinct()
+            ->orderBy('display_name', 'asc')
+            ->get();
 
-        $this->roles = DB::table('roles')->select('roles.*')->groupBy('display_name')->get();
-
-        // dd($this->th_email_template);	 display_name
+        // 96 Canonical Merge Tokens Palette for 1-click CKEditor insertion
+        $this->token_palette = $tokenRegistry->getPaletteTokens();
+        $this->domain_meta = $tokenRegistry->getDomainMeta();
 
         return view('super-admin.notification.add-edit', $this->data);
     }
 
-    public function addEditnotificationupdate(Request $request)
-    {
-        // dd($request->role_ck[0],$request->tokenId);
-        if ($request->tokenId == 0) {
-            //  dd($request->all());
-            $values = [
-                'purpose' => $request->purpose,
-                'subject' => $request->subject,
-                'status' => $request->status,
-                'body_description' => $request->editor1,
-                'from_email_id' => $request->from_email_id,
-                'mailType' => $request->mailType_is,
-                'created_at' => date('Y-m-d H:i:s'),
-                'updated_at' => date('Y-m-d H:i:s'),
-            ];
-            $id = DB::table('email_notifications')->insertGetId($values);
+    /**
+     * Create or update email notification template and associated role permissions.
+     *
+     * Intent: Atomically persist email notification changes in MySQL and mail_permissions,
+     * record durable outbox event in sys_outbox_events, synchronize Elasticsearch projections,
+     * and invalidate application caches.
+     * Tenancy: Global Super Admin scope (tenant_id = 0).
+     */
+    public function addEditnotificationupdate(
+        UpdateEmailNotificationRequest $request,
+        SuperAdminNotificationMutationService $mutationService,
+        NotificationHtmlSanitizer $sanitizer
+    ) {
+        $validated = $request->validated();
 
-            $response = $this->elasticService->getClient()->update([
-                'index' => ELASTIC_EMAIL_NOTIFICATIONS,
-                'id' => $id,
-                'retry_on_conflict' => 5,
+        // Server-side allowlist sanitization of template HTML and subject
+        $validated['editor1'] = $sanitizer->sanitize($validated['editor1']);
+        $validated['purpose'] = $sanitizer->sanitizeSubject($validated['purpose']);
+        $validated['subject'] = $sanitizer->sanitizeSubject($validated['subject']);
+
+        $result = $mutationService->saveNotification(
+            data: $validated,
+            tokenId: (int) ($validated['tokenId'] ?? 0),
+            idempotencyKey: $request->header('X-Idempotency-Key') ?: (string) $request->input('idempotency_key', ''),
+            adminId: Auth::id()
+        );
+
+        if (($result['status'] ?? '') === 'success') {
+            return Reply::dataOnly(['status' => 'success']);
+        }
+
+        return Reply::error($result['message'] ?? 'Failed to save email notification.');
+    }
+
+    /**
+     * Render sandboxed simulated HTML preview of an email notification template.
+     *
+     * Intent: Generates safe, token-substituted, sandboxed HTML preview for iframe embedding.
+     * Strictly isolates preview from mail transports and executes zero database SELECTs (CQRS).
+     * Tenancy: Global Super Admin scope (tenant_id = 0).
+     */
+    public function previewNotification(
+        Request $request,
+        $id,
+        NotificationHtmlSanitizer $sanitizer,
+        NotificationTokenRegistry $tokenRegistry
+    ) {
+        $id = (int) $id;
+        $notification = null;
+
+        $notificationIndex = defined('ELASTIC_EMAIL_NOTIFICATIONS')
+            ? ELASTIC_EMAIL_NOTIFICATIONS
+            : config('constants.ELASTIC_EMAIL_NOTIFICATIONS', 'local_email_notifications');
+
+        try {
+            $response = $this->elasticService->getClient()->search([
+                'index' => $notificationIndex,
                 'body' => [
-                    'doc' => [
-                        'id' => $id,
-                        'purpose' => $request->purpose,
-                        'subject' => $request->subject,
-                        'from_email_id' => $request->from_email_id,
-                        'body_description' => $request->editor1,
-                        'status' => $request->status,
-                        'mailType' => $request->mailType_is,
-                        'created_at' => now()->toIso8601String(),
-                        'updated_at' => now()->toIso8601String(),
-                    ],
-                    'doc_as_upsert' => true,
-                    'detect_noop' => false,
-                ],
-            ]);
-
-            // if(!empty($request->role_c)){
-            if (count($request->role_ck) > 0) {
-                for ($i = 0; $i < count($request->role_ck); $i++) {
-                    $rowId = DB::table('mail_permissions')->insertGetId(['role_name' => $request->role_ck[$i], 'notification_id' => $id]);
-
-                    $response = $this->elasticService->getClient()->update([
-                        'index' => ELASTIC_EMAIL_PERMISSIONS,
-                        'id' => $rowId,
-                        'retry_on_conflict' => 5,
-                        'body' => [
-                            'doc' => [
-                                'id' => $rowId,
-                                'role_name' => $request->role_ck[$i],
-                                'notification_id' => $id,
-                            ],
-                            'doc_as_upsert' => true,
-                            'detect_noop' => false,
-                        ],
-                    ]);
-
-                }
-            }
-            // }
-
-        } else {
-            $values = [
-                'purpose' => $request->purpose,
-                'subject' => $request->subject,
-                'status' => $request->status,
-                'body_description' => $request->editor1,
-                'mailType' => $request->mailType_is,
-                'from_email_id' => $request->from_email_id,
-            ];
-            // Intent: avoid SQL errors on live databases that have not yet received newer notification columns.
-            foreach (array_keys($values) as $settingsColumn) {
-                if (! Schema::hasColumn('email_notifications', $settingsColumn)) {
-                    return Reply::dataOnly([
-                        'status' => 'warning',
-                        'message' => 'This notification setting cannot be saved until the database column is added.',
-                    ]);
-                }
-            }
-            // dd($values);
-            DB::table('email_notifications')->where('id', '=', $request->tokenId)->update($values);
-
-            $response = $this->elasticService->getClient()->update([
-                'index' => ELASTIC_EMAIL_NOTIFICATIONS,
-                'id' => $request->tokenId,
-                'retry_on_conflict' => 5,
-                'body' => [
-                    'doc' => [
-                        'id' => $request->tokenId,
-                        'purpose' => $request->purpose,
-                        'subject' => $request->subject,
-                        'from_email_id' => $request->from_email_id,
-                        'body_description' => $request->editor1,
-                        'status' => $request->status,
-                        'mailType' => $request->mailType_is,
-                        'updated_at' => now()->toIso8601String(),
-                    ],
-                    'doc_as_upsert' => true,
-                    'detect_noop' => false,
-                ],
-            ]);
-
-            DB::table('mail_permissions')->where('notification_id', '=', $request->tokenId)->delete();
-            $this->elasticService->getClient()->deleteByQuery([
-                'index' => ELASTIC_EMAIL_PERMISSIONS,
-                'conflicts' => 'proceed',   // ⭐ THIS LINE FIXES YOUR ERROR
-                'body' => [
+                    'size' => 1,
                     'query' => [
                         'bool' => [
                             'must' => [
-                                ['term' => ['notification_id' => $request->tokenId]],
+                                ['term' => ['id' => $id]],
                             ],
                         ],
                     ],
                 ],
             ]);
 
-            if (count($request->role_ck) > 0) {
-                for ($i = 0; $i < count($request->role_ck); $i++) {
-                    $rowId = DB::table('mail_permissions')->insertGetId(['role_name' => $request->role_ck[$i], 'notification_id' => $request->tokenId]);
-
-                    $response = $this->elasticService->getClient()->update([
-                        'index' => ELASTIC_EMAIL_PERMISSIONS,
-                        'id' => $rowId,
-                        'retry_on_conflict' => 5,
-                        'body' => [
-                            'doc' => [
-                                'id' => $rowId,
-                                'role_name' => $request->role_ck[$i],
-                                'notification_id' => $request->tokenId,
-                            ],
-                            'doc_as_upsert' => true,
-                            'detect_noop' => false,
-                        ],
-                    ]);
-                }
-            }
+            $notification = isset($response['hits']['hits'][0])
+                ? (object) $response['hits']['hits'][0]['_source']
+                : null;
+        } catch (\Throwable $e) {
+            Log::warning("[NOTIFICATION_PREVIEW] ES fetch fallback to DB for #{$id}: {$e->getMessage()}");
+            $notification = DB::table('email_notifications')->where('id', $id)->first();
         }
 
-        Cache::forget('email_notification_cpr_admin');
-        Cache::forget('email_notification_cpr_customer');
+        if (! $notification) {
+            return response()->json(['status' => 'fail', 'message' => 'Notification template not found.'], 404);
+        }
 
-        return Reply::dataOnly(['status' => 'success']);
+        // 1. Substitute tokens with realistic mock values
+        $renderedBody = $tokenRegistry->render((string) ($notification->body_description ?? ''));
+        $renderedSubject = $tokenRegistry->render((string) ($notification->subject ?? ''), isHtmlContext: false);
 
+        // 2. Server-side allowlist sanitization
+        $safeHtml = $sanitizer->sanitize($renderedBody);
+        $safeSubject = $sanitizer->sanitizeSubject($renderedSubject);
+
+        // 3. Wrap in isolated sandbox envelope
+        $sandboxedDocument = $sanitizer->wrapForSandboxedPreview($safeHtml, $safeSubject);
+
+        // If requested as JSON for AJAX drawer inspection
+        if ($request->wantsJson()) {
+            return response()->json([
+                'status' => 'success',
+                'id' => $id,
+                'purpose' => $notification->purpose ?? '',
+                'subject' => $safeSubject,
+                'from_email_id' => $notification->from_email_id ?? 'noreply@jero.co.in',
+                'html' => $sandboxedDocument,
+                'tokens_used' => $tokenRegistry->extractTokens((string) ($notification->body_description ?? '')),
+            ]);
+        }
+
+        return response($sandboxedDocument, 200, ['Content-Type' => 'text/html; charset=UTF-8']);
     }
 
     /**

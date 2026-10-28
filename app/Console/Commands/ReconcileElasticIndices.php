@@ -25,7 +25,7 @@ use Illuminate\Support\Facades\Log;
 class ReconcileElasticIndices extends Command
 {
     protected $signature = 'elastic:reconcile
-                            {--entity=all : Entity to reconcile (companies, candidates, jobs, or all)}
+                            {--entity=all : Entity to reconcile (companies, candidates, jobs, notifications, or all)}
                             {--dry-run : Count drift without dispatching indexing jobs}
                             {--limit=1000 : Maximum records to check per run}';
 
@@ -47,6 +47,10 @@ class ReconcileElasticIndices extends Command
 
         if ($entity === 'all' || $entity === 'jobs') {
             $totalDrift += $this->reconcileJobs($es, $dryRun, $limit);
+        }
+
+        if ($entity === 'all' || $entity === 'notifications') {
+            $totalDrift += $this->reconcileNotifications($es, $dryRun, $limit);
         }
 
         $this->info("Reconciliation complete. Total drift items detected: {$totalDrift}");
@@ -155,6 +159,120 @@ class ReconcileElasticIndices extends Command
         } catch (\Throwable $e) {
             $this->warn("Note on ES index {$indexName}: ".$e->getMessage());
             Log::warning('ES Reconcile Notice (Jobs)', ['message' => $e->getMessage()]);
+
+            return 0;
+        }
+    }
+
+    private function reconcileNotifications(ElasticService $es, bool $dryRun, int $limit): int
+    {
+        $mysqlRows = DB::table('email_notifications')
+            ->orderBy('id', 'asc')
+            ->limit($limit)
+            ->get();
+
+        if ($mysqlRows->isEmpty()) {
+            return 0;
+        }
+
+        $notificationIndex = $this->getIndexName('ELASTIC_EMAIL_NOTIFICATIONS', 'local_email_notifications');
+
+        // Fetch all permissions grouped by notification_id
+        $mysqlPermissions = DB::table('mail_permissions')
+            ->get()
+            ->groupBy('notification_id')
+            ->map(fn ($group) => $group->pluck('role_name')->values()->all())
+            ->all();
+
+        try {
+            $response = $es->getClient()->search([
+                'index' => $notificationIndex,
+                'body' => [
+                    'size' => min(1000, max(count($mysqlRows), 100)),
+                    'query' => ['match_all' => (object) []],
+                    'sort' => [['id' => ['order' => 'asc']]],
+                    'track_total_hits' => true,
+                ],
+            ]);
+
+            $esDocs = [];
+            foreach ($response['hits']['hits'] ?? [] as $hit) {
+                $doc = $hit['_source'];
+                $esDocs[(int) $doc['id']] = $doc;
+            }
+
+            $missingCount = 0;
+            $driftedCount = 0;
+            $repairedCount = 0;
+
+            foreach ($mysqlRows as $row) {
+                $rowId = (int) $row->id;
+                $rowRoles = $mysqlPermissions[$rowId] ?? [];
+                sort($rowRoles);
+
+                $isDrifted = false;
+
+                if (! isset($esDocs[$rowId])) {
+                    $missingCount++;
+                    $isDrifted = true;
+                } else {
+                    $esDoc = $esDocs[$rowId];
+                    $esRoles = $esDoc['role_names'] ?? [];
+                    sort($esRoles);
+
+                    $isDrifted = ((int) ($esDoc['status'] ?? 0) !== (int) $row->status)
+                        || ((int) ($esDoc['mailType'] ?? 0) !== (int) $row->mailType)
+                        || (($esDoc['purpose'] ?? '') !== (string) $row->purpose)
+                        || (($esDoc['subject'] ?? '') !== (string) $row->subject)
+                        || (($esDoc['from_email_id'] ?? '') !== (string) $row->from_email_id)
+                        || ($esRoles !== $rowRoles);
+
+                    if ($isDrifted) {
+                        $driftedCount++;
+                    }
+                }
+
+                if ($isDrifted && ! $dryRun) {
+                    $es->getClient()->update([
+                        'index' => $notificationIndex,
+                        'id' => $rowId,
+                        'retry_on_conflict' => 5,
+                        'refresh' => true,
+                        'body' => [
+                            'doc' => [
+                                'id' => $rowId,
+                                'purpose' => $row->purpose,
+                                'subject' => $row->subject,
+                                'from_email_id' => $row->from_email_id,
+                                'body_description' => $row->body_description,
+                                'status' => (int) $row->status,
+                                'mailType' => (int) $row->mailType,
+                                'role_names' => $mysqlPermissions[$rowId] ?? [],
+                                'updated_at' => now()->toIso8601String(),
+                            ],
+                            'doc_as_upsert' => true,
+                            'detect_noop' => false,
+                        ],
+                    ]);
+                    $repairedCount++;
+                }
+            }
+
+            if ($repairedCount > 0) {
+                try {
+                    $es->getClient()->indices()->refresh(['index' => $notificationIndex]);
+                } catch (\Throwable $e) {
+                    // Best effort refresh
+                }
+            }
+
+            $totalDrift = $missingCount + $driftedCount;
+            $this->info("Notifications: Checked {$mysqlRows->count()} | Missing: {$missingCount} | Out-of-Sync: {$driftedCount} | Repaired: {$repairedCount}");
+
+            return $totalDrift;
+        } catch (\Throwable $e) {
+            $this->warn("Note on ES index {$notificationIndex}: ".$e->getMessage());
+            Log::warning('ES Reconcile Notice (Notifications)', ['message' => $e->getMessage()]);
 
             return 0;
         }
