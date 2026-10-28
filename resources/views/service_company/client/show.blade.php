@@ -3311,20 +3311,35 @@ use Carbon\Carbon;
             gap: 7px !important;
             min-width: 0 !important;
           }
-          .cd-job-logo-box {
-            width: 26px !important;
-            height: 26px !important;
-            min-width: 26px !important;
+          .cd-job-logo-wrap {
+            width: 28px !important;
+            height: 28px !important;
+            min-width: 28px !important;
             border-radius: 6px !important;
-            background: #eff6ff !important;
-            color: #2563eb !important;
-            font-size: 11px !important;
-            font-weight: 700 !important;
+            background: #ffffff !important;
+            border: 1px solid #e2e8f0 !important;
             display: flex !important;
             align-items: center !important;
             justify-content: center !important;
-            border: 1px solid #dbeafe !important;
+            overflow: hidden !important;
             flex-shrink: 0 !important;
+          }
+          .cd-job-logo-img {
+            width: 100% !important;
+            height: 100% !important;
+            object-fit: contain !important;
+            display: block !important;
+          }
+          .cd-job-logo-fallback {
+            width: 100% !important;
+            height: 100% !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            background: #eff6ff !important;
+            color: #009ef7 !important;
+            font-size: 11px !important;
+            font-weight: 700 !important;
           }
           .cd-job-meta-wrap {
             flex: 1 1 auto !important;
@@ -3570,24 +3585,54 @@ use Carbon\Carbon;
           /* Responsive Scaling for 15.6" Laptops (1366x768 & 1920x1080) and Smaller */
           @media (max-width: 1440px) {
             .cd-cand-card-grid {
-              grid-template-columns: minmax(0, 1.8fr) minmax(0, 1.3fr) minmax(0, 1.2fr) minmax(0, 2.2fr) minmax(0, 1.45fr) minmax(0, 1.2fr) !important;
+              grid-template-columns: minmax(0, 1.9fr) minmax(0, 1.3fr) minmax(0, 1.2fr) minmax(0, 2.2fr) minmax(0, 1.45fr) minmax(0, 1.2fr) !important;
               gap: 6px !important;
               padding: 8px 10px !important;
             }
             .cd-cand-subcard {
               padding: 6px 8px !important;
             }
+            .cd-cand-search-subcard {
+              width: 240px !important;
+            }
           }
-          @media (max-width: 1100px) {
+          @media (max-width: 1200px) {
             .cd-cand-card-grid {
-              grid-template-columns: minmax(0, 1.7fr) minmax(0, 1.2fr) minmax(0, 1.1fr) minmax(0, 2fr) minmax(0, 1.4fr) minmax(0, 1.1fr) !important;
-              gap: 5px !important;
-              padding: 6px 8px !important;
+              grid-template-columns: minmax(0, 1.8fr) minmax(0, 1.25fr) minmax(0, 1.15fr) minmax(0, 2fr) minmax(0, 1.4fr) minmax(0, 1.15fr) !important;
+              gap: 6px !important;
+              padding: 8px 10px !important;
+            }
+            .cd-cand-search-subcard {
+              width: 200px !important;
+            }
+          }
+          @media (max-width: 992px) {
+            .cd-cand-card-grid {
+              grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+              gap: 8px !important;
             }
             .cd-cand-bottom-strip {
               flex-direction: column !important;
               align-items: flex-start !important;
               gap: 6px !important;
+            }
+          }
+          @media (max-width: 640px) {
+            .cd-cand-card-grid {
+              grid-template-columns: 1fr !important;
+              gap: 8px !important;
+            }
+            .cd-cand-toolbar-card {
+              flex-direction: column !important;
+              align-items: stretch !important;
+            }
+            .cd-cand-toolbar-right {
+              width: 100% !important;
+              justify-content: space-between !important;
+            }
+            .cd-cand-search-subcard {
+              width: 100% !important;
+              max-width: 100% !important;
             }
           }
 
@@ -4635,7 +4680,7 @@ use Carbon\Carbon;
                                     <div class="cd-cand-title-wrap">
                                         <div class="d-flex align-items-center gap-2">
                                             <h4 class="cd-cand-title">Candidates</h4>
-                                            <span class="cd-cand-count-badge" id="cdCandidateCountBadge">
+                                            <span class="cd-cand-count-badge" id="cdCandidateCountBadge" role="button" title="View All Pipeline Candidates" aria-label="View all candidates">
                                                 <span id="cdCandidateCountText">0</span> Candidates
                                             </span>
                                         </div>
@@ -4652,7 +4697,7 @@ use Carbon\Carbon;
                                         </button>
                                     </div>
                                     <!-- Quick Refresh / Reset Button -->
-                                    <button type="button" id="cdCandResetBtn" class="cd-cand-action-subcard" title="Reset Filters &amp; Refresh">
+                                    <button type="button" id="cdCandResetBtn" class="cd-cand-action-subcard" title="Reset Filters &amp; Refresh" aria-label="Refresh Candidates">
                                         <i class="fas fa-sync-alt fa-solid"></i>
                                     </button>
                                 </div>
@@ -4660,38 +4705,38 @@ use Carbon\Carbon;
 
                             <!-- TIER 2: SUB-TABS PIPELINE CARD -->
                             <div class="cd-cand-tabs-card">
-                                <div class="cd-cand-tabs-list">
-                                    <button type="button" class="cd-cand-subtab active" data-status="">
-                                        <span>All Candidates</span>
-                                        <span class="cd-cand-subtab-badge" id="candTabCountAll">0</span>
+                                <div class="cd-cand-tabs-list" role="tablist">
+                                    <button type="button" class="cd-cand-subtab active" data-stage="sourcing" data-status="1" role="tab" aria-selected="true" title="Sourcing Stage">
+                                        <span>Sourcing</span>
+                                        <span class="cd-cand-subtab-badge" id="candTabCountSourcing">0</span>
                                     </button>
-                                    <button type="button" class="cd-cand-subtab" data-status="2">
+                                    <button type="button" class="cd-cand-subtab" data-stage="screening" data-status="2" role="tab" aria-selected="false" title="Screening Stage">
                                         <span>Screening</span>
-                                        <span class="cd-cand-subtab-badge" id="candTabCountScreening"></span>
+                                        <span class="cd-cand-subtab-badge" id="candTabCountScreening">0</span>
                                     </button>
-                                    <button type="button" class="cd-cand-subtab" data-status="3">
-                                        <span>Interview</span>
-                                        <span class="cd-cand-subtab-badge" id="candTabCountInterview"></span>
+                                    <button type="button" class="cd-cand-subtab" data-stage="evaluation" data-status="3" role="tab" aria-selected="false" title="Evaluation Stage">
+                                        <span>Evaluation</span>
+                                        <span class="cd-cand-subtab-badge" id="candTabCountEvaluation">0</span>
                                     </button>
-                                    <button type="button" class="cd-cand-subtab" data-status="4">
-                                        <span>Shortlisted</span>
-                                        <span class="cd-cand-subtab-badge" id="candTabCountShortlisted"></span>
+                                    <button type="button" class="cd-cand-subtab" data-stage="negotiations" data-status="4" role="tab" aria-selected="false" title="Negotiations Stage">
+                                        <span>Negotiations</span>
+                                        <span class="cd-cand-subtab-badge" id="candTabCountNegotiations">0</span>
                                     </button>
-                                    <button type="button" class="cd-cand-subtab" data-status="5">
+                                    <button type="button" class="cd-cand-subtab" data-stage="offer" data-status="5" role="tab" aria-selected="false" title="Offer Stage">
                                         <span>Offer</span>
-                                        <span class="cd-cand-subtab-badge" id="candTabCountOffer"></span>
+                                        <span class="cd-cand-subtab-badge" id="candTabCountOffer">0</span>
                                     </button>
-                                    <button type="button" class="cd-cand-subtab" data-status="6">
+                                    <button type="button" class="cd-cand-subtab" data-stage="joined" data-status="6" role="tab" aria-selected="false" title="Joined Stage">
                                         <span>Joined</span>
-                                        <span class="cd-cand-subtab-badge" id="candTabCountJoined"></span>
+                                        <span class="cd-cand-subtab-badge" id="candTabCountJoined">0</span>
                                     </button>
-                                    <button type="button" class="cd-cand-subtab" data-status="7">
-                                        <span>On Hold</span>
-                                        <span class="cd-cand-subtab-badge" id="candTabCountOnHold"></span>
-                                    </button>
-                                    <button type="button" class="cd-cand-subtab" data-status="8">
+                                    <button type="button" class="cd-cand-subtab" data-stage="rejected" data-status="7" role="tab" aria-selected="false" title="Rejected Stage">
                                         <span>Rejected</span>
-                                        <span class="cd-cand-subtab-badge" id="candTabCountRejected"></span>
+                                        <span class="cd-cand-subtab-badge" id="candTabCountRejected">0</span>
+                                    </button>
+                                    <button type="button" class="cd-cand-subtab" data-stage="interviews" data-status="interview" role="tab" aria-selected="false" title="Interview Activity">
+                                        <span>Interviews</span>
+                                        <span class="cd-cand-subtab-badge" id="candTabCountInterviews">0</span>
                                     </button>
                                 </div>
                             </div>
