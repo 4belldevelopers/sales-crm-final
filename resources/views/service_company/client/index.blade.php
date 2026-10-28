@@ -1664,8 +1664,26 @@ window.ClientStateManager = {
             this.activeDrawerXhr = null;
         }
 
+        // 1b. Abort standalone tab network requests
+        if (window._activeJobsXhr && window._activeJobsXhr.readyState !== 4) {
+            try { window._activeJobsXhr.abort(); } catch(e) {}
+            window._activeJobsXhr = null;
+        }
+        if (window._activeJobsDirectXhr && window._activeJobsDirectXhr.readyState !== 4) {
+            try { window._activeJobsDirectXhr.abort(); } catch(e) {}
+            window._activeJobsDirectXhr = null;
+        }
+        if (window._activeOjXhr && window._activeOjXhr.readyState !== 4) {
+            try { window._activeOjXhr.abort(); } catch(e) {}
+            window._activeOjXhr = null;
+        }
+        if (window._activeOjDirectXhr && window._activeOjDirectXhr.readyState !== 4) {
+            try { window._activeOjDirectXhr.abort(); } catch(e) {}
+            window._activeOjDirectXhr = null;
+        }
+
         // 2. Detach namespaced drawer DOM event listeners to prevent duplicate triggers
-        $(document).off('.clientDrawer .internalDrawer .directDrawer .drawerTabs');
+        $(document).off('.clientDrawer .internalDrawer .internalDrawerTab .internalDrawerContacts .internalDrawerCand .internalDrawerUI .internalInterviewPagination .internalInterviewPageSize .directDrawer .directDrawerTab .directDrawerContacts .directDrawerCand .directDrawerOffers .directDrawerJobs .directDrawerUI .directInterviewPagination .directInterviewPageSize .drawerTabs .reqDrawer');
 
         // 3. Destroy Chart.js instances cleanly
         if (window.perfChartInstances) {
@@ -1684,7 +1702,7 @@ window.ClientStateManager = {
         // 4. Clear performance analytics RAM cache
         window.perfClientCache = {};
 
-        // 5. Teardown sub-card state machines
+        // 5. Teardown sub-card state machines and stores
         if (window.__activeClientDrawer && typeof window.__activeClientDrawer.destroy === 'function') {
             try { window.__activeClientDrawer.destroy(); } catch (e) {}
             window.__activeClientDrawer = null;
@@ -1694,6 +1712,15 @@ window.ClientStateManager = {
         }
         if (window.ClientCandidateStoreDirect && typeof window.ClientCandidateStoreDirect.destroy === 'function') {
             try { window.ClientCandidateStoreDirect.destroy(); } catch (e) {}
+        }
+        if (window.ClientInterviewStoreInternal && typeof window.ClientInterviewStoreInternal.destroy === 'function') {
+            try { window.ClientInterviewStoreInternal.destroy(); } catch (e) {}
+        }
+        if (window.ClientInterviewStoreDirect && typeof window.ClientInterviewStoreDirect.destroy === 'function') {
+            try { window.ClientInterviewStoreDirect.destroy(); } catch (e) {}
+        }
+        if (window.ClientActivityManager && typeof window.ClientActivityManager.resetState === 'function') {
+            try { window.ClientActivityManager.resetState(); } catch (e) {}
         }
 
         // 6. Empty drawer container DOM elements completely
@@ -1937,9 +1964,14 @@ window.ClientStateManager = {
     // ─── Scoped Drawer Tab Switcher V3.0 (< 5ms) ───
     switchDrawerTab: function(clientId, tabName) {
         this.state.selectedClientTab = tabName;
-        if (window.__activeClientDrawer && typeof window.__activeClientDrawer.coordinator.activateTab === 'function') {
+        if (window.__activeClientDrawer && window.__activeClientDrawer.coordinator && typeof window.__activeClientDrawer.coordinator.activateTab === 'function') {
             window.__activeClientDrawer.coordinator.activateTab(tabName);
             return;
+        }
+        if (typeof window.loadInternalTabContent === 'function') {
+            window.loadInternalTabContent(tabName, false);
+        } else if (typeof window.loadDirectTabContent === 'function') {
+            window.loadDirectTabContent(tabName, false);
         }
     },
 

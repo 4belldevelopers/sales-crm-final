@@ -120,6 +120,7 @@
     }
 
     var ClientActivityManager = {
+        endpoint: '{!! route('service_company.clients.activity_data_ajax') !!}',
         activeClientId: null,
         isCustom: false,
         partnerCompanyId: null,
@@ -242,7 +243,7 @@
             }
 
             this.inFlightXhr = $.ajax({
-                url: '/service_company/clients/activity-data',
+                url: this.endpoint,
                 type: 'GET',
                 data: params,
                 dataType: 'json',
@@ -395,7 +396,7 @@
 
             // Execute catch-up reconciliation
             $.ajax({
-                url: '/service_company/clients/activity-data',
+                url: self.endpoint,
                 type: 'GET',
                 data: {
                     client_id: self.activeClientId,
@@ -451,7 +452,7 @@
         fetchAndPrependEvent: function(eventId, seq) {
             var self = this;
             $.ajax({
-                url: '/service_company/clients/activity-data',
+                url: self.endpoint,
                 type: 'GET',
                 data: {
                     client_id: self.activeClientId,

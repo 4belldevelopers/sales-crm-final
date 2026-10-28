@@ -6494,9 +6494,11 @@ use Carbon\Carbon;
         bindEvents: function() {
             var self = this;
 
+            // Clean unbind previous namespaced listeners
+            $(document).off('.internalDrawerContacts');
+
             // 1. Debounced live search
-            $(document).off('input', '#cdContactSearchInputInternal');
-            $(document).on('input', '#cdContactSearchInputInternal', function() {
+            $(document).on('input.internalDrawerContacts', '#cdContactSearchInputInternal', function() {
                 var val = $(this).val();
                 if (val && val.length > 0) {
                     $('#cdContactSearchClearInternal').show();
@@ -6511,8 +6513,7 @@ use Carbon\Carbon;
             });
 
             // 2. Interactive clear search button
-            $(document).off('click', '#cdContactSearchClearInternal');
-            $(document).on('click', '#cdContactSearchClearInternal', function() {
+            $(document).on('click.internalDrawerContacts', '#cdContactSearchClearInternal', function() {
                 $('#cdContactSearchInputInternal').val('');
                 $(this).hide();
                 self.searchTerm = '';
@@ -6520,8 +6521,7 @@ use Carbon\Carbon;
             });
 
             // 3. Reset filters & refresh button
-            $(document).off('click', '#cdContactResetBtnInternal, #cdContactClearFilterBtnInternal');
-            $(document).on('click', '#cdContactResetBtnInternal, #cdContactClearFilterBtnInternal', function() {
+            $(document).on('click.internalDrawerContacts', '#cdContactResetBtnInternal, #cdContactClearFilterBtnInternal', function() {
                 $('#cdContactSearchInputInternal').val('');
                 $('#cdContactSearchClearInternal').hide();
                 self.searchTerm = '';
@@ -6532,7 +6532,6 @@ use Carbon\Carbon;
             });
 
             // 4. Sub-tab filter buttons
-            $(document).off('click.internalDrawerContacts', '#kt_activitiesClient .cd-contact-tabs-card .cd-contact-subtab');
             $(document).on('click.internalDrawerContacts', '#kt_activitiesClient .cd-contact-tabs-card .cd-contact-subtab', function(e) {
                 if (e && typeof e.preventDefault === 'function') e.preventDefault();
                 var filter = $(this).data('filter') || 'all';
@@ -6550,8 +6549,7 @@ use Carbon\Carbon;
             });
 
             // 5. One-click copy with visual tooltip / checkmark
-            $(document).off('click', '.js-copy-data');
-            $(document).on('click', '.js-copy-data', function(e) {
+            $(document).on('click.internalDrawerContacts', '#kt_activitiesClient .js-copy-data', function(e) {
                 e.preventDefault();
                 e.stopPropagation();
                 var text = $(this).data('copy') || $(this).attr('data-copy');
@@ -6574,10 +6572,13 @@ use Carbon\Carbon;
             });
 
             // 6. View Requisitions button: switch to #requisitions tab
-            $(document).off('click', '.js-contact-view-jobs');
-            $(document).on('click', '.js-contact-view-jobs', function(e) {
+            $(document).on('click.internalDrawerContacts', '#kt_activitiesClient .js-contact-view-jobs', function(e) {
                 e.preventDefault();
-                $('a[href="#requisitions"]').tab('show');
+                if (typeof window.loadInternalTabContent === 'function') {
+                    window.loadInternalTabContent('jobs', false);
+                } else {
+                    $('a[href="#requisitions"]').tab('show');
+                }
             });
         },
 
@@ -6976,27 +6977,64 @@ use Carbon\Carbon;
         var currentClientId = parseInt('{{ $client->id }}', 10);
         var currentCompanyId = parseInt('{{ auth()->user()->company_id }}', 10);
 
+        function mapInternalTabIdentity(rawTarget) {
+            var clean = (rawTarget || '').replace('#', '').trim();
+            var normTab = 'overview';
+            var domPaneId = 'overview';
+
+            if (clean === 'requisitions' || clean === 'jobs' || clean === 'job') {
+                normTab = 'jobs';
+                domPaneId = 'requisitions';
+            } else if (clean === 'candidate_list' || clean === 'candidates') {
+                normTab = 'candidates';
+                domPaneId = 'candidate_list';
+            } else if (clean === 'interview_tracker' || clean === 'interviews') {
+                normTab = 'interviews';
+                domPaneId = 'interview_tracker';
+            } else if (clean === 'candidate_joining' || clean === 'offers' || clean === 'joining') {
+                normTab = 'offers';
+                domPaneId = 'candidate_joining';
+            } else if (clean === 'recent_activity' || clean === 'activity') {
+                normTab = 'recent_activity';
+                domPaneId = 'recent_activity';
+            } else if (clean === 'contacts' || clean === 'client_contacts') {
+                normTab = 'contacts';
+                domPaneId = 'contacts';
+            } else if (clean === 'candidateDashboard' || clean === 'performance' || clean === 'dashboard' || clean === 'analytics') {
+                normTab = 'performance';
+                domPaneId = 'candidateDashboard';
+            } else if (clean === 'overview' || clean === 'client_overview') {
+                normTab = 'overview';
+                domPaneId = 'overview';
+            }
+
+            return { normTab: normTab, domPaneId: domPaneId };
+        }
+
         function loadInternalTabContent(target, force, filter) {
             if (!target) return;
-            target = target.replace('#', '').trim();
+            var tabInfo = mapInternalTabIdentity(target);
+            var normTab = tabInfo.normTab;
+            var domPaneId = tabInfo.domPaneId;
 
             var activeSelId = window.ClientStateManager && typeof window.ClientStateManager.getSelectedClientId === 'function'
                 ? window.ClientStateManager.getSelectedClientId()
                 : (window.activeSelectedClientId || null);
-            if (activeSelId && parseInt(activeSelId, 10) !== currentClientId) {
-                console.warn('[Client Drawer Shield] Discarded tab load for inactive client', activeSelId, 'vs current', currentClientId);
+            var containerClientId = parseInt($('#kt_activitiesClient #hid_client_id').val() || currentClientId, 10);
+            if (activeSelId && parseInt(activeSelId, 10) !== containerClientId) {
+                console.warn('[Client Drawer Shield] Discarded tab load for inactive client', activeSelId, 'vs current', containerClientId);
                 return;
             }
 
-            var normTab = 'overview';
-            if (target === 'requisitions' || target === 'jobs' || target === 'job') normTab = 'jobs';
-            else if (target === 'candidate_list' || target === 'candidates') normTab = 'candidates';
-            else if (target === 'interview_tracker' || target === 'interviews') normTab = 'interviews';
-            else if (target === 'candidate_joining' || target === 'offers' || target === 'joining') normTab = 'offers';
-            else if (target === 'recent_activity' || target === 'activity') normTab = 'recent_activity';
-            else if (target === 'contacts' || target === 'client_contacts') normTab = 'contacts';
-            else if (target === 'candidateDashboard' || target === 'performance' || target === 'dashboard' || target === 'analytics') normTab = 'performance';
-            else if (target === 'overview' || target === 'client_overview') normTab = 'overview';
+            // Synchronize DOM Tab Pills and Panes
+            var $drawer = $('#kt_activitiesClient');
+            $drawer.find('.cd-drawer-tabs-list .nav-link, .cd-tab-pill-btn').removeClass('active');
+            var $targetPill = $drawer.find('.cd-tab-pill-btn[href="#' + domPaneId + '"], .cd-drawer-tabs-list a[href="#' + domPaneId + '"]');
+            if ($targetPill.length) {
+                $targetPill.addClass('active');
+            }
+            $drawer.find('.tab-pane').removeClass('active show');
+            $drawer.find('#' + domPaneId).addClass('active show');
 
             var coord = (window.__activeClientDrawer && window.__activeClientDrawer.coordinator) ? window.__activeClientDrawer.coordinator : null;
 
@@ -7196,21 +7234,17 @@ use Carbon\Carbon;
         }
 
         // Clean unbind previous namespaced listeners before binding fresh ones
-        $(document).off('.internalDrawer');
+        $(document).off('.internalDrawer .internalDrawerTab');
 
-        // Scoped Click Handler for Drawer Tab Nav Links (handling clicks on link, icon, text, badge)
+        // Scoped Click Handler for Drawer Tab Nav Links
         $(document).on('click.internalDrawer', '#kt_activitiesClient .cd-drawer-tabs-list .nav-link, #kt_activitiesClient .cd-tab-pill-btn', function(e) {
             if (e && typeof e.preventDefault === 'function') {
                 e.preventDefault();
             }
             var $link = $(this);
-            var target = ($link.attr('href') || $link.attr('data-bs-target') || '').replace('#', '');
+            var target = ($link.attr('href') || $link.attr('data-bs-target') || '').replace('#', '').trim();
             if (!target) return;
-            $('#kt_activitiesClient .cd-drawer-tabs-list .nav-link, #kt_activitiesClient .cd-tab-pill-btn').removeClass('active');
-            $link.addClass('active');
-            $('#kt_activitiesClient .tab-pane').removeClass('active show');
-            $(`#kt_activitiesClient #${target}`).addClass('active show');
-            loadInternalTabContent(target, true);
+            loadInternalTabContent(target, false);
         });
 
         // Scoped Click Handler for Metric KPI Cards
@@ -7220,44 +7254,15 @@ use Carbon\Carbon;
             }
             var target = $(this).data('target-tab') || $(this).attr('data-target-tab');
             if (!target) return;
-            target = target.replace('#', '');
-
-            var $tabBtn = $(`#kt_activitiesClient .cd-tab-pill-btn[href="#${target}"]`);
-            if ($tabBtn.length) {
-                if (typeof bootstrap !== 'undefined' && bootstrap.Tab) {
-                    try { bootstrap.Tab.getOrCreateInstance($tabBtn[0]).show(); } catch(err){}
-                } else if (typeof $tabBtn.tab === 'function') {
-                    $tabBtn.tab('show');
-                }
-                $('#kt_activitiesClient .cd-tab-pill-btn').removeClass('active');
-                $tabBtn.addClass('active');
-                $('#kt_activitiesClient .tab-pane').removeClass('active show');
-                $(`#kt_activitiesClient #${target}`).addClass('active show');
-            }
+            target = target.replace('#', '').trim();
 
             var segment = $(this).data('segment');
-            if (segment && target === 'candidate_joining') {
+            if (segment && (target === 'candidate_joining' || target === 'offers')) {
                 window.currentOjSegmentInternal = segment;
                 $('#kt_activitiesClient .cd-oj-seg-btn').removeClass('active');
                 $(`#kt_activitiesClient .cd-oj-seg-btn[data-segment="${segment}"]`).addClass('active');
             }
             loadInternalTabContent(target, true, segment);
-        });
-
-        // Scoped Bootstrap tab event listener & Direct tab click
-        $(document).off('shown.bs.tab.internalDrawer', '#kt_activitiesClient a[data-bs-toggle="tab"], #kt_activitiesClient a[data-toggle="tab"]');
-        $(document).on('shown.bs.tab.internalDrawer', '#kt_activitiesClient a[data-bs-toggle="tab"], #kt_activitiesClient a[data-toggle="tab"]', function (e) {
-            var $link = $(this);
-            var target = ($link.attr('href') || $link.attr('data-bs-target') || (e.target ? $(e.target).closest('a').attr('href') : '') || '').replace('#', '');
-            if (!target) return;
-            loadInternalTabContent(target, true);
-        });
-
-        $(document).off('click.internalDrawerTab', '#kt_activitiesClient .cd-tab-pill-btn');
-        $(document).on('click.internalDrawerTab', '#kt_activitiesClient .cd-tab-pill-btn', function (e) {
-            var target = ($(this).attr('href') || $(this).data('bs-target') || '').replace('#', '');
-            if (!target) return;
-            loadInternalTabContent(target, true);
         });
 
         // Tab visibility & idle wake-up listener
@@ -7275,7 +7280,7 @@ use Carbon\Carbon;
         });
 
         var jobSearchTimer = null;
-        $(document).on('keyup', '#inputJobSearch', function() {
+        $(document).on('keyup.internalDrawer', '#inputJobSearch', function() {
             clearTimeout(jobSearchTimer);
             var searchVal = $(this).val();
             if (searchVal.length > 0) {
@@ -7290,7 +7295,7 @@ use Carbon\Carbon;
             }, 300);
         });
 
-        $(document).on('click', '#btnJobSearchClear', function() {
+        $(document).on('click.internalDrawer', '#btnJobSearchClear', function() {
             $('#inputJobSearch').val('');
             $(this).hide();
             if (typeof fetchJobsClient === 'function') {
@@ -7299,9 +7304,9 @@ use Carbon\Carbon;
         });
 
         var searchTimer = null;
-        $('#search').on('keyup', function() {
+        $('#kt_activitiesClient #search').off('keyup.internalDrawer').on('keyup.internalDrawer', function() {
             clearTimeout(searchTimer);
-            const search = $('#search').val();
+            var search = $(this).val();
             searchTimer = setTimeout(function() {
                 if (typeof fetchClientDrawerCandidates === 'function') {
                     fetchClientDrawerCandidates(1, search);
@@ -7309,8 +7314,7 @@ use Carbon\Carbon;
             }, 300);
         });
 
-        $(document).off('click', '#paginationcandidate [data-page], #paginationcandidate .page-link, #paginationcandidate .pagi-page, #paginationcandidate .pagi-arrow');
-        $(document).on('click', '#paginationcandidate [data-page], #paginationcandidate .page-link, #paginationcandidate .pagi-page, #paginationcandidate .pagi-arrow', function(e) {
+        $(document).on('click.internalDrawer', '#paginationcandidate [data-page], #paginationcandidate .page-link, #paginationcandidate .pagi-page, #paginationcandidate .pagi-arrow', function(e) {
             e.preventDefault();
             var $btn = $(e.target).closest('[data-page]');
             if (!$btn.length) return;
@@ -7324,8 +7328,7 @@ use Carbon\Carbon;
             }
         });
 
-        $(document).off('click', '#paginationcandidatejoin [data-page], #paginationcandidatejoin .page-link, #paginationcandidatejoin .pagi-page, #paginationcandidatejoin .pagi-arrow');
-        $(document).on('click', '#paginationcandidatejoin [data-page], #paginationcandidatejoin .page-link, #paginationcandidatejoin .pagi-page, #paginationcandidatejoin .pagi-arrow', function(e) {
+        $(document).on('click.internalDrawer', '#paginationcandidatejoin [data-page], #paginationcandidatejoin .page-link, #paginationcandidatejoin .pagi-page, #paginationcandidatejoin .pagi-arrow', function(e) {
             e.preventDefault();
             var $btn = $(e.target).closest('[data-page]');
             if (!$btn.length) return;
@@ -7340,8 +7343,7 @@ use Carbon\Carbon;
             }
         });
 
-        $(document).off('click', '#paginationcandidateinterviewtracker [data-page], #paginationcandidateinterviewtracker .page-link, #paginationcandidateinterviewtracker .pagi-page, #paginationcandidateinterviewtracker .pagi-arrow');
-        $(document).on('click', '#paginationcandidateinterviewtracker [data-page], #paginationcandidateinterviewtracker .page-link, #paginationcandidateinterviewtracker .pagi-page, #paginationcandidateinterviewtracker .pagi-arrow', function(e) {
+        $(document).on('click.internalDrawer', '#paginationcandidateinterviewtracker [data-page], #paginationcandidateinterviewtracker .page-link, #paginationcandidateinterviewtracker .pagi-page, #paginationcandidateinterviewtracker .pagi-arrow', function(e) {
             e.preventDefault();
             var $btn = $(e.target).closest('[data-page]');
             if (!$btn.length) return;
@@ -7355,8 +7357,7 @@ use Carbon\Carbon;
             }
         });
 
-        $(document).off('click', '#paginationclientjobs [data-page], #paginationclientjobs .page-link, #paginationclientjobs .pagi-page, #paginationclientjobs .pagi-arrow');
-        $(document).on('click', '#paginationclientjobs [data-page], #paginationclientjobs .page-link, #paginationclientjobs .pagi-page, #paginationclientjobs .pagi-arrow', function(e) {
+        $(document).on('click.internalDrawer', '#paginationclientjobs [data-page], #paginationclientjobs .page-link, #paginationclientjobs .pagi-page, #paginationclientjobs .pagi-arrow', function(e) {
             e.preventDefault();
             var $btn = $(e.target).closest('[data-page]');
             if (!$btn.length) return;
@@ -7447,10 +7448,18 @@ use Carbon\Carbon;
                 clearTimeout(this.reconcileTimer);
                 this.reconcileTimer = null;
             }
+            if (this.inFlightXhr && this.inFlightXhr.readyState !== 4) {
+                try { this.inFlightXhr.abort(); } catch(e){}
+                this.inFlightXhr = null;
+            }
             if (window.Echo && this.companyId && this.clientId) {
                 var channel = 'private-company.' + this.companyId + '.client.' + this.clientId + '.candidates';
                 try { window.Echo.leave(channel); } catch (e) {}
             }
+            this.state = 'IDLE';
+            this.clientId = null;
+            this.data = [];
+            $(document).off('.internalDrawerCand');
         },
 
         scheduleReconcile: function(resetToPageOne) {
@@ -7483,7 +7492,11 @@ use Carbon\Carbon;
                 $('#cdCandEmptyState').hide();
             }
 
-            $.ajax({
+            if (this.inFlightXhr && this.inFlightXhr.readyState !== 4) {
+                try { this.inFlightXhr.abort(); } catch(e){}
+            }
+
+            this.inFlightXhr = $.ajax({
                 url: '{{ url("service_company/client-candidate-list") }}',
                 type: 'GET',
                 headers: { 'Accept': 'application/json' },
@@ -7497,6 +7510,12 @@ use Carbon\Carbon;
                     size: 25
                 },
                 success: function(res) {
+                    var curSelId = window.ClientStateManager && typeof window.ClientStateManager.getSelectedClientId === 'function'
+                        ? window.ClientStateManager.getSelectedClientId()
+                        : (window.activeSelectedClientId || null);
+                    if (curSelId && parseInt(curSelId, 10) !== parseInt(self.clientId, 10)) {
+                        return;
+                    }
                     if (requestId !== self.latestRequestId) return;
 
                     self.data = res.data || [];
@@ -8059,9 +8078,10 @@ use Carbon\Carbon;
         bindEvents: function() {
             var self = this;
 
+            $(document).off('.internalDrawerCand');
+
             var searchDebounceTimer = null;
-            $(document).off('input', '#cdCandSearchInput');
-            $(document).on('input', '#cdCandSearchInput', function() {
+            $(document).on('input.internalDrawerCand', '#cdCandSearchInput', function() {
                 var val = $(this).val();
                 if (val && val.length > 0) {
                     $('#cdCandSearchClear').show();
@@ -8077,8 +8097,7 @@ use Carbon\Carbon;
                 }, 300);
             });
 
-            $(document).off('click', '#cdCandSearchClear');
-            $(document).on('click', '#cdCandSearchClear', function() {
+            $(document).on('click.internalDrawerCand', '#cdCandSearchClear', function() {
                 $('#cdCandSearchInput').val('');
                 $(this).hide();
                 self.filters.search = '';
@@ -8087,8 +8106,7 @@ use Carbon\Carbon;
                 self.fetch(1);
             });
 
-            $(document).off('click.internalDrawer', '#kt_activitiesClient .cd-cand-subtab');
-            $(document).on('click.internalDrawer', '#kt_activitiesClient .cd-cand-subtab', function(e) {
+            $(document).on('click.internalDrawerCand', '#kt_activitiesClient .cd-cand-subtab', function(e) {
                 if (e && typeof e.preventDefault === 'function') e.preventDefault();
                 var status = $(this).data('status');
                 $('#kt_activitiesClient .cd-cand-subtab').removeClass('active');
@@ -8102,8 +8120,7 @@ use Carbon\Carbon;
                 self.fetch(1);
             });
 
-            $(document).off('click', '#cdCandResetBtn');
-            $(document).on('click', '#cdCandResetBtn', function() {
+            $(document).on('click.internalDrawerCand', '#cdCandResetBtn', function() {
                 $('#cdCandSearchInput').val('');
                 $('#cdCandSearchClear').hide();
                 $('.cd-cand-subtab').removeClass('active');
@@ -8116,16 +8133,14 @@ use Carbon\Carbon;
                 self.fetch(1);
             });
 
-            $(document).off('wheel', '.cd-cand-bottom-strip, .cd-bottom-skills-scroll');
-            $(document).on('wheel', '.cd-cand-bottom-strip, .cd-bottom-skills-scroll', function(e) {
+            $(document).on('wheel.internalDrawerCand', '.cd-cand-bottom-strip, .cd-bottom-skills-scroll', function(e) {
                 if (e.originalEvent && e.originalEvent.deltaY !== 0) {
                     this.scrollLeft += e.originalEvent.deltaY;
                     e.preventDefault();
                 }
             });
 
-            $(document).off('click', '#cdCandNextBtn');
-            $(document).on('click', '#cdCandNextBtn', function() {
+            $(document).on('click.internalDrawerCand', '#cdCandNextBtn', function() {
                 if ($(this).hasClass('disabled')) return;
                 var cursor = $(this).data('next-cursor');
                 if (cursor) {
@@ -8135,16 +8150,14 @@ use Carbon\Carbon;
                 }
             });
 
-            $(document).off('click', '#cdCandPrevBtn');
-            $(document).on('click', '#cdCandPrevBtn', function() {
+            $(document).on('click.internalDrawerCand', '#cdCandPrevBtn', function() {
                 if ($(this).hasClass('disabled')) return;
                 var prevPage = Math.max(self.filters.page - 1, 1);
                 self.filters.cursor = null;
                 self.fetch(prevPage);
             });
 
-            $(document).off('click', '.stage_sub_stage');
-            $(document).on('click', '.stage_sub_stage', function(e) {
+            $(document).on('click.internalDrawerCand', '.stage_sub_stage', function(e) {
                 e.preventDefault();
                 var id = $(this).data('row-id');
                 if (!id) return;
@@ -8304,7 +8317,14 @@ use Carbon\Carbon;
     window.currentOjSegmentInternal = 'all';
 
     function fetchCandidatesJoin(page = 1, search = '', segment = null) {
-        var clientid = '{{ $client->id }}';
+        var clientid = $('#kt_activitiesClient #hid_client_id').val() || '{{ $client->id }}';
+        var curSelId = window.ClientStateManager && typeof window.ClientStateManager.getSelectedClientId === 'function'
+            ? window.ClientStateManager.getSelectedClientId()
+            : (window.activeSelectedClientId || null);
+        if (curSelId && parseInt(curSelId, 10) !== parseInt(clientid, 10)) {
+            return;
+        }
+
         if (segment === null || segment === undefined) {
             segment = window.currentOjSegmentInternal || 'all';
         } else {
@@ -8315,8 +8335,12 @@ use Carbon\Carbon;
             search = $('#ojSearchInputInternal').val() || '';
         }
 
+        if (window._activeOjXhr && window._activeOjXhr.readyState !== 4) {
+            try { window._activeOjXhr.abort(); } catch(e){}
+        }
+
         $('.page-loader').css('display', 'flex');
-        return $.ajax({
+        window._activeOjXhr = $.ajax({
             url: `{{ url('service_company/client-candidate-join-list') }}?page=${page}`,
             type: 'GET',
             data: {
@@ -8325,6 +8349,12 @@ use Carbon\Carbon;
                 clientid: clientid
             },
             success: function(response) {
+                var verifySelId = window.ClientStateManager && typeof window.ClientStateManager.getSelectedClientId === 'function'
+                    ? window.ClientStateManager.getSelectedClientId()
+                    : (window.activeSelectedClientId || null);
+                if (verifySelId && parseInt(verifySelId, 10) !== parseInt(clientid, 10)) {
+                    return;
+                }
                 $('.page-loader').css('display', 'none');
                 $('#candidatetListJoin').html(response.html);
                 $('#paginationcandidatejoin').html(response.pagination);
@@ -8361,6 +8391,7 @@ use Carbon\Carbon;
                 $('.page-loader').css('display', 'none');
             }
         });
+        return window._activeOjXhr;
     }
     window.fetchCandidatesJoin = fetchCandidatesJoin;
 
@@ -8381,7 +8412,7 @@ use Carbon\Carbon;
     });
 
     var ojSearchTimerInternal = null;
-    $(document).on('keyup', '#ojSearchInputInternal', function() {
+    $(document).on('keyup.internalDrawer', '#ojSearchInputInternal', function() {
         clearTimeout(ojSearchTimerInternal);
         var search = $(this).val();
         if (search && search.length > 0) {
@@ -8394,13 +8425,13 @@ use Carbon\Carbon;
         }, 300);
     });
 
-    $(document).on('click', '#ojSearchClearInternal', function() {
+    $(document).on('click.internalDrawer', '#ojSearchClearInternal', function() {
         $('#ojSearchInputInternal').val('');
         $(this).hide();
         fetchCandidatesJoin(1, '', window.currentOjSegmentInternal || 'all');
     });
 
-    $(document).on('click', '#ojResetBtnInternal', function() {
+    $(document).on('click.internalDrawer', '#ojResetBtnInternal', function() {
         $('#ojSearchInputInternal').val('');
         $('#ojSearchClearInternal').hide();
         window.currentOjSegmentInternal = 'all';
@@ -8413,7 +8444,7 @@ use Carbon\Carbon;
     // GOD-LEVEL CLIENT-FIRST INTERVIEW STORE (INTERNAL CLIENT DRAWER)
     // 0% Server Strain | Multi-Tenant Isolated | Bidirectional Cursor Navigation
     // ══════════════════════════════════════════════════════════════════════════
-    const ClientInterviewStoreInternal = (function() {
+    window.ClientInterviewStoreInternal = (function() {
         'use strict';
 
         const store = new Map();
@@ -8909,22 +8940,50 @@ use Carbon\Carbon;
             }
         }
 
+        function destroy() {
+            activeRequests.forEach(function(req) {
+                try {
+                    if (req.controller && typeof req.controller.abort === 'function') {
+                        req.controller.abort();
+                    }
+                } catch(e) {}
+            });
+            activeRequests.clear();
+            store.clear();
+            if (window.Echo) {
+                subscriptions.forEach(function(channelName) {
+                    try { window.Echo.leave(channelName); } catch(e) {}
+                });
+            }
+            subscriptions.clear();
+            $(document).off('.internalInterviewPagination .internalInterviewPageSize');
+        }
+
         return {
             init: init,
-            fetch: fetchInterviews
+            fetch: fetchInterviews,
+            destroy: destroy
         };
     })();
 
     function fetchCandidatesInverViewTracker(page = 1, search = '') {
-        const clientid = parseInt('{{ $client->id ?? 0 }}', 10);
-        if (clientid) {
-            ClientInterviewStoreInternal.fetch(clientid, null, false, search);
+        const clientid = parseInt($('#kt_activitiesClient #hid_client_id').val() || '{{ $client->id ?? 0 }}', 10);
+        var curSelId = window.ClientStateManager && typeof window.ClientStateManager.getSelectedClientId === 'function'
+            ? window.ClientStateManager.getSelectedClientId()
+            : (window.activeSelectedClientId || null);
+        if (curSelId && parseInt(curSelId, 10) !== clientid) {
+            return;
+        }
+        if (clientid && window.ClientInterviewStoreInternal) {
+            window.ClientInterviewStoreInternal.fetch(clientid, null, false, search);
         }
     }
     window.fetchCandidatesInverViewTracker = fetchCandidatesInverViewTracker;
 
     $(document).ready(function() {
-        ClientInterviewStoreInternal.init();
+        if (window.ClientInterviewStoreInternal) {
+            window.ClientInterviewStoreInternal.init();
+        }
     });
 
     function renderInternalClientDashboardCharts(d, clientId) {
@@ -9002,14 +9061,15 @@ use Carbon\Carbon;
     }
 
     // Close any open cit follow-up menu on outside click
-    $(document).on('click', function (e) {
+    $(document).off('click.internalDrawerUI');
+    $(document).on('click.internalDrawerUI', function (e) {
         if (!$(e.target).closest('.cit-followup-dropdown').length) {
             document.querySelectorAll('.cit-followup-menu.open').forEach(function (m) { m.classList.remove('open'); });
         }
     });
 
     window.fetchJobsClient = function(page = 1, search = '', status = 'all') {
-        var activeClientId = parseInt($('#hid_client_id').val() || '{{ $client->id }}', 10);
+        var activeClientId = parseInt($('#kt_activitiesClient #hid_client_id').val() || '{{ $client->id }}', 10);
         var curSelId = window.ClientStateManager && typeof window.ClientStateManager.getSelectedClientId === 'function'
             ? window.ClientStateManager.getSelectedClientId()
             : (window.activeSelectedClientId || null);
@@ -9017,10 +9077,15 @@ use Carbon\Carbon;
             console.log('[Jobs Tab Shield] Discarded fetch for inactive client', activeClientId);
             return;
         }
+
+        if (window._activeJobsXhr && window._activeJobsXhr.readyState !== 4) {
+            try { window._activeJobsXhr.abort(); } catch(e){}
+        }
+
         $('.page-loader').css('display', 'flex');
         var activeStatus = status || window.currentJobStatusInternal || 'all';
         var clientName = $('.cd-client-name').first().text().trim() || '{{ addslashes($detailName ?? "") }}';
-        return $.ajax({
+        window._activeJobsXhr = $.ajax({
             url: `{{ url('service_company/jobs_side_bar_job_ajax/data') }}?page=${page}`,
             type: 'GET',
             data: {
@@ -9055,11 +9120,12 @@ use Carbon\Carbon;
                 $('.page-loader').css('display', 'none');
             }
         });
+        return window._activeJobsXhr;
     };
 
     // Internal Client Jobs Tab: Filter Button Interaction
-    $(document).off('click.internalDrawer', '#kt_activitiesClient .js-job-filter-btn');
-    $(document).on('click.internalDrawer', '#kt_activitiesClient .js-job-filter-btn', function(e) {
+    $(document).off('click.internalDrawerJobs', '#kt_activitiesClient .js-job-filter-btn');
+    $(document).on('click.internalDrawerJobs', '#kt_activitiesClient .js-job-filter-btn', function(e) {
         if (e && typeof e.preventDefault === 'function') e.preventDefault();
         var status = $(this).data('status') || 'all';
         window.currentJobStatusInternal = status;
@@ -9074,7 +9140,8 @@ use Carbon\Carbon;
     });
 
     // Internal Client Jobs Tab: Click Routing (Fixing Drawer Click Collision Bug)
-    $(document).on('click', '#clientJobsListajax .js-job-drawer-trigger', function(e) {
+    $(document).off('click.internalDrawerJobs', '#clientJobsListajax .js-job-drawer-trigger');
+    $(document).on('click.internalDrawerJobs', '#clientJobsListajax .js-job-drawer-trigger', function(e) {
         e.preventDefault();
         e.stopPropagation();
         var jobId = $(this).data('job-id');
