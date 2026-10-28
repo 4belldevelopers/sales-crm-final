@@ -50,20 +50,28 @@
     {{-- TIER 2: FILTER SUB-TABS CARD --}}
     <div class="cd-activity-tabs-card" id="cdActivityFilterTabs">
         <button type="button" class="cd-activity-tab-btn active" data-category="all">
-            <span>All</span>
+            <span>All Events</span>
             <span class="cd-activity-tab-badge" id="cdActivityCountAll">0</span>
+        </button>
+        <button type="button" class="cd-activity-tab-btn" data-category="pipeline">
+            <span>Pipeline</span>
+            <span class="cd-activity-tab-badge" id="cdActivityCountPipeline">0</span>
+        </button>
+        <button type="button" class="cd-activity-tab-btn" data-category="interviews">
+            <span>Interviews</span>
+            <span class="cd-activity-tab-badge" id="cdActivityCountInterviews">0</span>
+        </button>
+        <button type="button" class="cd-activity-tab-btn" data-category="offers">
+            <span>Offers &amp; Joining</span>
+            <span class="cd-activity-tab-badge" id="cdActivityCountOffers">0</span>
         </button>
         <button type="button" class="cd-activity-tab-btn" data-category="jobs">
             <span>Jobs</span>
             <span class="cd-activity-tab-badge" id="cdActivityCountJobs">0</span>
         </button>
-        <button type="button" class="cd-activity-tab-btn" data-category="candidates">
-            <span>Candidates</span>
-            <span class="cd-activity-tab-badge" id="cdActivityCountCandidates">0</span>
-        </button>
-        <button type="button" class="cd-activity-tab-btn" data-category="interviews">
-            <span>Interviews</span>
-            <span class="cd-activity-tab-badge" id="cdActivityCountInterviews">0</span>
+        <button type="button" class="cd-activity-tab-btn" data-category="crm">
+            <span>CRM &amp; Notes</span>
+            <span class="cd-activity-tab-badge" id="cdActivityCountCrm">0</span>
         </button>
     </div>
 
@@ -190,7 +198,7 @@
                 $('#cdActivityFilterTabs .cd-activity-tab-btn[data-category="all"]').addClass('active');
                 $('#cdActivityCardsStream').empty();
                 $('#cdActivityPaginationContainer').hide();
-                this.updateKpiCounters({ all: 0, jobs: 0, candidates: 0, interviews: 0 });
+                this.updateKpiCounters({ all: 0, pipeline: 0, interviews: 0, offers: 0, jobs: 0, crm: 0 });
                 this.renderOverviewRecentActivity([]);
             }
         },
@@ -363,7 +371,7 @@
          * Filters the hydrated stream instantaneously based on Category, Timeframe, and Search query.
          */
         applyFiltersAndRender: function() {
-            var cat = this.activeCategory || 'all'; // 'all' | 'jobs' | 'candidates' | 'interviews'
+            var cat = this.activeCategory || 'all'; // 'all' | 'pipeline' | 'interviews' | 'offers' | 'jobs' | 'crm'
             var tf = this.activeTimeframe || 'all';   // 'all' | 'today' | '7d' | '30d'
             var q = (this.searchQuery || '').toLowerCase().trim();
             var now = new Date();
@@ -386,15 +394,18 @@
                 var matchQ = true;
 
                 // 1. Category Matching:
-                // Jobs -> jobs
-                // Candidates -> pipeline, offers, candidates
-                // Interviews -> interviews
-                if (cat === 'jobs') {
-                    matchCat = (itemCat === 'jobs');
-                } else if (cat === 'candidates') {
-                    matchCat = (itemCat === 'pipeline' || itemCat === 'offers' || itemCat === 'candidates');
+                if (cat === 'pipeline') {
+                    matchCat = (itemCat === 'pipeline');
                 } else if (cat === 'interviews') {
                     matchCat = (itemCat === 'interviews');
+                } else if (cat === 'offers') {
+                    matchCat = (itemCat === 'offers');
+                } else if (cat === 'jobs') {
+                    matchCat = (itemCat === 'jobs');
+                } else if (cat === 'crm') {
+                    matchCat = (itemCat === 'crm');
+                } else if (cat === 'candidates') {
+                    matchCat = (itemCat === 'pipeline' || itemCat === 'offers' || itemCat === 'candidates');
                 }
 
                 // 2. Timeframe Matching (Date):
@@ -462,10 +473,13 @@
         },
 
         updateKpiCounters: function(kpi) {
-            $('#cdActivityCountAll').text(kpi.all || 0);
-            $('#cdActivityCountJobs').text(kpi.jobs || 0);
-            $('#cdActivityCountCandidates').text(kpi.candidates !== undefined ? kpi.candidates : ((kpi.pipeline || 0) + (kpi.offers || 0)));
-            $('#cdActivityCountInterviews').text(kpi.interviews || 0);
+            if (!kpi) return;
+            $('#cdActivityCountAll').text(kpi.all !== undefined ? kpi.all : (kpi.total_activities || 0));
+            $('#cdActivityCountPipeline').text(kpi.pipeline !== undefined ? kpi.pipeline : (kpi.pipeline_events || 0));
+            $('#cdActivityCountInterviews').text(kpi.interviews !== undefined ? kpi.interviews : (kpi.interview_events || 0));
+            $('#cdActivityCountOffers').text(kpi.offers !== undefined ? kpi.offers : (kpi.offer_events || 0));
+            $('#cdActivityCountJobs').text(kpi.jobs !== undefined ? kpi.jobs : (kpi.job_events || 0));
+            $('#cdActivityCountCrm').text(kpi.crm !== undefined ? kpi.crm : (kpi.note_events || 0));
         },
 
         updateHealthStatus: function(health) {
