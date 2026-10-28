@@ -406,6 +406,8 @@ Route::group(['middleware' => 'auth'], function () {
         Route::put('rm-note/{id}', [BenchRmNoteTemplateController::class, 'update'])->name('rm-note.update');
         Route::delete('rm-note/{id}', [BenchRmNoteTemplateController::class, 'destroy'])->name('rm-note.destroy');
         Route::get('rm-note/{id}/data', [BenchRmNoteTemplateController::class, 'getData'])->name('rm-note.getData');
+        Route::post('rm-note/{id}/toggle-status', [BenchRmNoteTemplateController::class, 'toggleStatus'])->name('rm-note.toggleStatus');
+        Route::post('rm-note/{id}/duplicate', [BenchRmNoteTemplateController::class, 'duplicate'])->name('rm-note.duplicate');
     });
 
 });
