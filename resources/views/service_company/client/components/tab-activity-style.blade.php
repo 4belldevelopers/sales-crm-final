@@ -1076,7 +1076,19 @@
 #kt_activitiesJob_show.drawer-readonly-view a[href*="jobs/edit"],
 #kt_activitiesJob_show.drawer-readonly-view a[href*="/edit"],
 #kt_activitiesJob_show.drawer-readonly-view .info-card-edit,
-#kt_activitiesJob_show.drawer-readonly-view .btn-edit {
+#kt_activitiesJob_show.drawer-readonly-view .btn-edit,
+#kt_activitiesJob_show.drawer-readonly-view .spartner-listing,
+#kt_activitiesJob_show.drawer-readonly-view .hm-listing,
+#kt_activitiesJob_show.drawer-readonly-view .status_stage,
+#kt_activitiesJob_show.drawer-readonly-view .job-drawer-add-candidate,
+#kt_activitiesJob_show.drawer-readonly-view #editPopup,
+#kt_activitiesJob_show.drawer-readonly-view #candidatePopup,
+#kt_activitiesJob_show.drawer-readonly-view .delete-question,
+#kt_activitiesJob_show.drawer-readonly-view .remove-question,
+#kt_activitiesJob_show.drawer-readonly-view .toggle-question,
+#kt_activitiesJob_show.drawer-readonly-view [id^="addQuestionBtn_"],
+#kt_activitiesJob_show.drawer-readonly-view .jd-empty-state-action,
+#kt_activitiesJob_show.drawer-readonly-view a[href*="settings#terms"] {
     display: none !important;
     pointer-events: none !important;
 }
