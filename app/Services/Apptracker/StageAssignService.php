@@ -53,14 +53,18 @@ class StageAssignService
         }
 
         // Tenant ownership check before any mutation
-        $appExists = DB::table('job_applications')
+        $appRow = DB::table('job_applications')
+            ->select('id', 'candidate_id', 'master_status_id', 'child_status_id')
             ->where('id', $applicationId)
             ->where('company_id', $companyId)
-            ->exists();
+            ->first();
 
-        if (! $appExists) {
+        if (! $appRow) {
             return null;
         }
+
+        $fromStatus = (int) ($appRow->master_status_id ?? 0);
+        $candidateId = (int) ($appRow->candidate_id ?? 0);
 
         DB::table('job_applications')
             ->where('id', $applicationId)
@@ -77,6 +81,31 @@ class StageAssignService
 
         $this->syncElasticStage($applicationId, $jobId, $companyId, $parentStatusId, $childStatusId);
         $this->counterService->onStageMoved($jobId, $applicationId, $parentStatusId, $companyId);
+
+        // Atomic Client Counter Invalidation & WebSocket Broadcast with Revision
+        try {
+            $jobRow = DB::table('jobs')->select('client_id')->where('id', $jobId)->first();
+            $clientId = (int) ($jobRow->client_id ?? 0);
+            if ($clientId > 0) {
+                \App\Helper\GeneralMethod::invalidateClientCandidateCounters($companyId, $clientId);
+                $revision = (int) cache()->get("tenant_{$companyId}_pipeline_rev", 1);
+                broadcast(new \App\Events\PipelineUpdated(
+                    $companyId,
+                    $clientId,
+                    $revision,
+                    [
+                        'job_id' => $jobId,
+                        'application_id' => $applicationId,
+                        'candidate_id' => $candidateId,
+                        'from_status' => $fromStatus,
+                        'to_status' => $parentStatusId,
+                        'child_status_id' => $childStatusId,
+                    ]
+                ));
+            }
+        } catch (\Throwable $bcEx) {
+            \Illuminate\Support\Facades\Log::warning('StageAssignService PipelineUpdated broadcast skipped: '.$bcEx->getMessage());
+        }
 
         // Insert timeline entry for audit trail
         $application = JobApplication::withoutGlobalScopes()->find($applicationId);

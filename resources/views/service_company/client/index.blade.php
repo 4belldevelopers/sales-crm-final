@@ -77,6 +77,10 @@
   gap: 10px !important;
   flex-shrink: 0 !important;
 }
+.cl-export-wrapper {
+  position: relative !important;
+  display: inline-block !important;
+}
 .cl-export-btn {
   display: inline-flex !important;
   align-items: center !important;
@@ -84,7 +88,7 @@
   background: #ffffff !important;
   border: 1px solid #e2e8f0 !important;
   border-radius: 8px !important;
-  padding: 8px 18px !important;
+  padding: 8px 16px !important;
   font-size: 13px !important;
   font-weight: 700 !important;
   color: #0f172a !important;
@@ -94,14 +98,189 @@
   transition: all 0.15s ease !important;
   white-space: nowrap !important;
 }
-.cl-export-btn:hover {
+.cl-export-btn:hover, .cl-export-btn:focus, .cl-export-btn.show {
   background: #f8fafc !important;
   border-color: #cbd5e1 !important;
   color: #0f172a !important;
 }
+.cl-export-btn:disabled {
+  opacity: 0.65 !important;
+  cursor: not-allowed !important;
+}
 .cl-export-btn svg {
   color: #0f172a !important;
   stroke: #0f172a !important;
+}
+.cl-export-chevron {
+  transition: transform 0.15s ease !important;
+  margin-left: 2px !important;
+}
+.cl-export-btn.show .cl-export-chevron {
+  transform: rotate(180deg) !important;
+}
+.cl-export-dropdown-menu {
+  min-width: 270px !important;
+  padding: 6px !important;
+  border-radius: 10px !important;
+  border: 1px solid #e2e8f0 !important;
+  box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.12), 0 8px 10px -6px rgba(15, 23, 42, 0.06) !important;
+  background: #ffffff !important;
+  margin-top: 6px !important;
+  z-index: 1050 !important;
+}
+.cl-export-option {
+  display: flex !important;
+  align-items: center !important;
+  gap: 12px !important;
+  padding: 8px 12px !important;
+  border-radius: 8px !important;
+  transition: all 0.12s ease !important;
+  text-decoration: none !important;
+  cursor: pointer !important;
+}
+.cl-export-option:hover {
+  background: #f1f5f9 !important;
+}
+.cl-export-opt-icon {
+  width: 32px !important;
+  height: 32px !important;
+  border-radius: 6px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  flex-shrink: 0 !important;
+}
+.cl-export-opt-icon.csv {
+  background: #eff6ff !important;
+  color: #2563eb !important;
+}
+.cl-export-opt-icon.all {
+  background: #f0fdf4 !important;
+  color: #16a34a !important;
+}
+.cl-export-opt-icon.pdf {
+  background: #fef2f2 !important;
+  color: #dc2626 !important;
+}
+.cl-export-opt-text {
+  display: flex !important;
+  flex-direction: column !important;
+  line-height: 1.25 !important;
+}
+.cl-export-opt-title {
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  color: #1e293b !important;
+}
+.cl-export-opt-sub {
+  font-size: 11px !important;
+  font-weight: 400 !important;
+  color: #64748b !important;
+  margin-top: 2px !important;
+}
+
+/* ── 100% Client-Side Dedicated Executive Print-to-PDF Engine ── */
+@media print {
+  body * {
+    visibility: hidden !important;
+  }
+  #cl-print-report-canvas, #cl-print-report-canvas * {
+    visibility: visible !important;
+  }
+  #cl-print-report-canvas {
+    position: absolute !important;
+    left: 0 !important;
+    top: 0 !important;
+    width: 100% !important;
+    display: block !important;
+    background: #ffffff !important;
+    color: #0f172a !important;
+    font-family: 'Poppins', sans-serif !important;
+    padding: 10px 15px !important;
+  }
+  @page {
+    size: A4 landscape;
+    margin: 8mm 10mm 8mm 10mm;
+  }
+  .print-report-header {
+    border-bottom: 2px solid #009ef7;
+    padding-bottom: 10px;
+    margin-bottom: 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+  }
+  .print-report-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: #0f172a;
+    margin: 0;
+  }
+  .print-report-sub {
+    font-size: 10px;
+    color: #64748b;
+    margin-top: 2px;
+  }
+  .print-report-meta {
+    text-align: right;
+    font-size: 9px;
+    color: #475569;
+    line-height: 1.4;
+  }
+  .print-kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 8px;
+    margin-bottom: 14px;
+  }
+  .print-kpi-card {
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    padding: 6px 10px;
+    background: #f8fafc;
+  }
+  .print-kpi-num {
+    font-size: 15px;
+    font-weight: 700;
+    color: #0f172a;
+  }
+  .print-kpi-lbl {
+    font-size: 8.5px;
+    font-weight: 600;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .print-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 9.5px;
+  }
+  .print-table th {
+    background-color: #f1f5f9;
+    color: #1e293b;
+    font-weight: 700;
+    padding: 5px 7px;
+    border-bottom: 2px solid #cbd5e1;
+    text-align: left;
+  }
+  .print-table td {
+    padding: 5px 7px;
+    border-bottom: 1px solid #e2e8f0;
+    color: #334155;
+  }
+  .print-table tr {
+    page-break-inside: avoid !important;
+  }
+  .print-footer {
+    margin-top: 14px;
+    padding-top: 6px;
+    border-top: 1px solid #e2e8f0;
+    display: flex;
+    justify-content: space-between;
+    font-size: 8.5px;
+    color: #94a3b8;
+  }
 }
 .cl-add-btn-primary {
   display: inline-flex !important;
@@ -358,6 +537,306 @@
   color: #94a3b8;
 }
 
+/* ── Guaranteed Enterprise Industry Combobox Filter ── */
+.cl-ind-dropdown-wrapper {
+  position: relative;
+  display: inline-block;
+}
+.cl-ind-combobox-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 42px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 0 12px;
+  min-width: 155px;
+  max-width: 220px;
+  cursor: pointer;
+  user-select: none;
+  transition: all 0.15s ease;
+  position: relative;
+}
+.cl-ind-combobox-btn:hover, .cl-ind-combobox-btn.active {
+  border-color: #cbd5e1;
+  background: #f8fafc;
+}
+.cl-ind-combobox-btn.has-filter {
+  border-color: #009ef7;
+  background: #f1faff;
+}
+.cl-ind-combobox-btn.has-filter .cl-pill-val {
+  color: #009ef7;
+  font-weight: 600;
+}
+.cl-ind-combobox-btn.has-filter .cl-pill-icon svg {
+  color: #009ef7;
+  stroke: #009ef7;
+}
+.cl-pill-clear {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #e2e8f0;
+  color: #64748b;
+  font-size: 10px;
+  line-height: 1;
+  cursor: pointer;
+  margin-left: 2px;
+  transition: all 0.12s ease;
+}
+.cl-pill-clear:hover {
+  background: #cbd5e1;
+  color: #0f172a;
+}
+.cl-ind-combobox-btn.has-filter .cl-pill-clear {
+  background: #bae6fd;
+  color: #0284c7;
+}
+.cl-ind-combobox-btn.has-filter .cl-pill-clear:hover {
+  background: #0284c7;
+  color: #ffffff;
+}
+.cl-ind-dropdown-panel {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  width: 320px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.12), 0 8px 10px -6px rgba(15, 23, 42, 0.06);
+  z-index: 1055;
+  display: none;
+  flex-direction: column;
+  overflow: hidden;
+  animation: clIndFadeIn 0.15s ease-out;
+}
+@keyframes clIndFadeIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.cl-ind-dropdown-panel.show {
+  display: flex;
+}
+.cl-ind-search-box {
+  padding: 10px 12px;
+  border-bottom: 1px solid #f1f5f9;
+  background: #fafafa;
+  position: relative;
+}
+.cl-ind-search-inp {
+  width: 100%;
+  height: 34px;
+  border: 1px solid #e2e8f0;
+  border-radius: 7px;
+  padding: 0 28px 0 30px;
+  font-size: 12px;
+  font-family: inherit;
+  color: #0f172a;
+  background: #ffffff;
+  outline: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.cl-ind-search-inp:focus {
+  border-color: #009ef7;
+  box-shadow: 0 0 0 2px rgba(0, 158, 247, 0.15);
+}
+.cl-ind-search-icon {
+  position: absolute;
+  left: 20px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #94a3b8;
+  pointer-events: none;
+}
+.cl-ind-search-clear {
+  position: absolute;
+  right: 20px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #94a3b8;
+  font-size: 11px;
+  cursor: pointer;
+  padding: 2px 4px;
+  border-radius: 50%;
+  display: none;
+}
+.cl-ind-search-clear:hover {
+  color: #0f172a;
+  background: #e2e8f0;
+}
+.cl-ind-dropdown-body {
+  max-height: 300px;
+  overflow-y: auto;
+  padding: 6px 0;
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 transparent;
+}
+.cl-ind-dropdown-body::-webkit-scrollbar {
+  width: 5px;
+}
+.cl-ind-dropdown-body::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+.cl-ind-quick-chips {
+  padding: 6px 12px 10px 12px;
+  border-bottom: 1px solid #f1f5f9;
+  background: #f8fafc;
+}
+.cl-ind-chips-title {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #64748b;
+  margin-bottom: 6px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.cl-ind-chips-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+.cl-ind-chip {
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  padding: 3px 8px;
+  font-size: 11px;
+  font-weight: 500;
+  color: #1e293b;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  user-select: none;
+}
+.cl-ind-chip:hover {
+  border-color: #009ef7;
+  color: #009ef7;
+  background: #f1faff;
+}
+.cl-ind-section-hdr {
+  font-size: 10.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #64748b;
+  padding: 8px 14px 4px 14px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: #f8fafc;
+  border-top: 1px solid #f1f5f9;
+  border-bottom: 1px solid #f1f5f9;
+  margin-top: 4px;
+}
+.cl-ind-section-hdr:first-child {
+  margin-top: 0;
+  border-top: none;
+}
+.cl-ind-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 14px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #1e293b;
+  cursor: pointer;
+  transition: background 0.12s ease;
+  user-select: none;
+}
+.cl-ind-item:hover, .cl-ind-item.focused {
+  background: #f1f5f9;
+}
+.cl-ind-item.selected {
+  background: #f1faff;
+  color: #009ef7;
+  font-weight: 600;
+}
+.cl-ind-item-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  flex: 1;
+}
+.cl-ind-item-title {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.cl-ind-check {
+  color: #009ef7;
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+  margin-left: 8px;
+}
+.cl-ind-mark {
+  background: #fef08a;
+  color: #0f172a;
+  padding: 0 2px;
+  border-radius: 2px;
+}
+.cl-ind-empty {
+  padding: 24px 16px;
+  text-align: center;
+  color: #64748b;
+}
+.cl-ind-empty-icon {
+  margin-bottom: 6px;
+  color: #94a3b8;
+}
+.cl-ind-empty-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: #1e293b;
+  margin-bottom: 2px;
+}
+.cl-ind-empty-sub {
+  font-size: 11.5px;
+  color: #64748b;
+  margin-bottom: 8px;
+}
+.cl-ind-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #cbd5e1;
+  flex-shrink: 0;
+  transition: background 0.12s ease;
+}
+.cl-ind-item:hover .cl-ind-dot, .cl-ind-item.focused .cl-ind-dot, .cl-ind-item.selected .cl-ind-dot {
+  background: #009ef7;
+}
+.cl-ind-sec-tag {
+  font-size: 9.5px;
+  font-weight: 500;
+  padding: 1.5px 5px;
+  border-radius: 4px;
+  background: #f1f5f9;
+  color: #64748b;
+  white-space: nowrap;
+}
+.cl-ind-hdr-icon {
+  display: inline-flex;
+  align-items: center;
+  color: #009ef7;
+}
+.cl-ind-chip.active {
+  background: #009ef7 !important;
+  border-color: #009ef7 !important;
+  color: #ffffff !important;
+}
+
 /* ── Sortable Table Headers ── */
 .cl-sortable-th {
   cursor: pointer !important;
@@ -378,14 +857,331 @@
   transform: rotate(180deg);
 }
 
+/* ── Guaranteed Enterprise Metronic Sort Combobox ── */
+.cl-sort-dropdown-wrapper {
+  position: relative;
+  display: inline-block;
+}
+.cl-sort-combobox-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 42px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 0 12px;
+  min-width: 155px;
+  max-width: 220px;
+  cursor: pointer;
+  user-select: none;
+  transition: all 0.15s ease;
+  position: relative;
+  font-family: inherit;
+  font-size: inherit;
+  text-align: left;
+  outline: none;
+}
+.cl-sort-combobox-btn:focus-visible {
+  border-color: #009ef7;
+  box-shadow: 0 0 0 3px rgba(0, 158, 247, 0.15);
+}
+.cl-sort-combobox-btn:hover,
+.cl-sort-combobox-btn.active {
+  border-color: #cbd5e1;
+  background: #f8fafc;
+}
+.cl-sort-combobox-btn.is-custom-sorted {
+  border-color: #cbd5e1;
+  background: #f8fafc;
+}
+.cl-sort-combobox-btn.is-custom-sorted .cl-pill-val {
+  color: #0f172a;
+  font-weight: 600;
+}
+.cl-sort-dropdown-panel {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  width: 260px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.12), 0 8px 10px -6px rgba(15, 23, 42, 0.06);
+  z-index: 1055;
+  display: none;
+  flex-direction: column;
+  overflow: hidden;
+  padding: 6px 0;
+  animation: clSortFadeIn 0.15s ease-out;
+}
+@keyframes clSortFadeIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.cl-sort-dropdown-panel.show {
+  display: flex;
+}
+.cl-sort-section-hdr {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #94a3b8;
+  padding: 6px 14px 4px 14px;
+  user-select: none;
+}
+.cl-sort-section-hdr:not(:first-child) {
+  border-top: 1px solid #f1f5f9;
+  margin-top: 4px;
+  padding-top: 8px;
+}
+.cl-sort-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 14px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #1e293b;
+  cursor: pointer;
+  transition: all 0.12s ease;
+  user-select: none;
+  outline: none;
+}
+.cl-sort-item:hover,
+.cl-sort-item:focus {
+  background: #f1f5f9;
+  color: #0f172a;
+}
+.cl-sort-item.selected {
+  background: #eff6ff;
+  color: #009ef7;
+  font-weight: 600;
+}
+.cl-sort-item-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  flex: 1;
+}
+.cl-sort-item-icon {
+  color: #64748b;
+  flex-shrink: 0;
+  transition: color 0.12s ease;
+}
+.cl-sort-item:hover .cl-sort-item-icon,
+.cl-sort-item.selected .cl-sort-item-icon {
+  color: #009ef7;
+  stroke: #009ef7;
+}
+.cl-sort-item-title {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.cl-sort-item-right {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+.cl-sort-direction-badge {
+  font-size: 9.5px;
+  font-weight: 600;
+  padding: 1.5px 5.5px;
+  border-radius: 4px;
+  background: #f1f5f9;
+  color: #64748b;
+  letter-spacing: 0.02em;
+}
+.cl-sort-item.selected .cl-sort-direction-badge {
+  background: #dbeafe;
+  color: #0284c7;
+}
+.cl-sort-check {
+  font-size: 11px;
+  font-weight: 700;
+  color: #009ef7;
+  display: inline-flex;
+  align-items: center;
+  width: 14px;
+  justify-content: center;
+}
+
+/* ── Guaranteed Enterprise Metronic Activity & Pipeline Popovers ── */
+.cl-act-dropdown-wrapper, .cl-pipe-dropdown-wrapper {
+  position: relative;
+  display: inline-block;
+}
+.cl-act-combobox-btn, .cl-pipe-combobox-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 42px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 0 12px;
+  min-width: 145px;
+  max-width: 215px;
+  cursor: pointer;
+  user-select: none;
+  transition: all 0.15s ease;
+  position: relative;
+}
+.cl-act-combobox-btn:hover,
+.cl-act-combobox-btn.active,
+.cl-pipe-combobox-btn:hover,
+.cl-pipe-combobox-btn.active {
+  border-color: #cbd5e1;
+  background: #f8fafc;
+}
+.cl-act-combobox-btn.is-active-filter,
+.cl-pipe-combobox-btn.is-active-filter {
+  border-color: #009ef7;
+  background: #f0f9ff;
+}
+.cl-act-combobox-btn.is-active-filter .cl-pill-val,
+.cl-pipe-combobox-btn.is-active-filter .cl-pill-val {
+  color: #009ef7;
+  font-weight: 600;
+}
+.cl-act-dropdown-panel, .cl-pipe-dropdown-panel {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  width: 285px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.12), 0 8px 10px -6px rgba(15, 23, 42, 0.06);
+  z-index: 1055;
+  display: none;
+  flex-direction: column;
+  overflow: hidden;
+  padding: 6px 0;
+  animation: clPopoverFadeIn 0.15s ease-out;
+}
+@keyframes clPopoverFadeIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.cl-act-dropdown-panel.show, .cl-pipe-dropdown-panel.show {
+  display: flex;
+}
+.cl-act-section-hdr, .cl-pipe-section-hdr {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #94a3b8;
+  padding: 6px 14px 4px 14px;
+  user-select: none;
+}
+.cl-act-section-hdr:not(:first-child) {
+  border-top: 1px solid #f1f5f9;
+  margin-top: 4px;
+  padding-top: 8px;
+}
+.cl-act-item, .cl-pipe-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 14px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #1e293b;
+  cursor: pointer;
+  transition: all 0.12s ease;
+  user-select: none;
+  outline: none;
+}
+.cl-act-item:hover, .cl-act-item:focus,
+.cl-pipe-item:hover, .cl-pipe-item:focus {
+  background: #f1f5f9;
+  color: #0f172a;
+}
+.cl-act-item.selected, .cl-pipe-item.selected {
+  background: #eff6ff;
+  color: #009ef7;
+  font-weight: 600;
+}
+.cl-act-item-left, .cl-pipe-item-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  flex: 1;
+}
+.cl-act-item-title, .cl-pipe-item-title {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.cl-act-item-right, .cl-pipe-item-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+.cl-act-badge, .cl-pipe-badge {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 1.5px 6.5px;
+  border-radius: 10px;
+  background: #f1f5f9;
+  color: #64748b;
+}
+.cl-act-item.selected .cl-act-badge, .cl-pipe-item.selected .cl-pipe-badge {
+  background: #dbeafe;
+  color: #0284c7;
+}
+.cl-act-check, .cl-pipe-check {
+  font-size: 11px;
+  font-weight: 700;
+  color: #009ef7;
+  display: inline-flex;
+  align-items: center;
+  width: 14px;
+  justify-content: center;
+}
+/* Dots */
+.cl-act-dot, .cl-pipe-dot, .cl-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  display: inline-block;
+  flex-shrink: 0;
+}
+.cl-dot-green { background: #10b981; }
+.cl-dot-blue { background: #3b82f6; }
+.cl-dot-amber { background: #f59e0b; }
+.cl-dot-slate { background: #94a3b8; }
+.cl-dot-purple { background: #8b5cf6; }
+.cl-dot-violet { background: #6366f1; }
+.cl-dot-all { background: #64748b; }
+
+/* Engagement Badges */
+.cl-touch-hot strong { color: #059669 !important; }
+.cl-touch-warm strong { color: #2563eb !important; }
+.cl-touch-stale strong { color: #d97706 !important; }
+.cl-touch-dormant strong { color: #64748b !important; }
+.cl-touch-never strong { color: #7c3aed !important; }
+
 /* ── 15.6-inch Screen Optimization (1366x768 & 1920x1080) ── */
 @media (max-width: 1400px) {
   .cl-filter-bar {
-    gap: 8px !important;
+    gap: 7px !important;
   }
-  .cl-dropdown-pill, .cl-loc-combobox-btn {
-    min-width: 135px !important;
-    padding: 0 10px !important;
+  .cl-dropdown-pill, .cl-loc-combobox-btn, .cl-ind-combobox-btn, .cl-act-combobox-btn, .cl-pipe-combobox-btn, .cl-sort-combobox-btn {
+    min-width: 125px !important;
+    padding: 0 8px !important;
+    height: 40px !important;
+  }
+  .cl-search-inp {
+    height: 40px !important;
   }
 }
 .cd-activities-drawer {
@@ -459,14 +1255,70 @@
             </div>
 
             <div class="cl-header-actions">
-                <button type="button" class="cl-export-btn" onclick="exportClientsToCsv()">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0f172a" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                        <polyline points="7 10 12 15 17 10"/>
-                        <line x1="12" y1="15" x2="12" y2="3"/>
-                    </svg>
-                    <span>Export</span>
-                </button>
+                <div class="cl-export-wrapper dropdown">
+                    <button type="button" class="cl-export-btn" id="clExportDropdownBtn" data-bs-toggle="dropdown" aria-expanded="false" title="Export client portfolio">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0f172a" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                            <polyline points="7 10 12 15 17 10"/>
+                            <line x1="12" y1="15" x2="12" y2="3"/>
+                        </svg>
+                        <span id="clExportBtnLabel">Export</span>
+                        <svg class="cl-export-chevron" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="m6 9 6 6 6-6"/>
+                        </svg>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end shadow-sm cl-export-dropdown-menu" aria-labelledby="clExportDropdownBtn">
+                        <li>
+                            <a class="dropdown-item cl-export-option" href="javascript:void(0);" onclick="triggerClientExport('filtered_csv')">
+                                <div class="cl-export-opt-icon csv">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                                        <polyline points="14 2 14 8 20 8"/>
+                                        <path d="M8 13h2"/>
+                                        <path d="M8 17h8"/>
+                                        <path d="M14 13h2"/>
+                                    </svg>
+                                </div>
+                                <div class="cl-export-opt-text">
+                                    <span class="cl-export-opt-title">Export Filtered View (CSV)</span>
+                                    <span class="cl-export-opt-sub">Current filtered clients only</span>
+                                </div>
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item cl-export-option" href="javascript:void(0);" onclick="triggerClientExport('all_csv')">
+                                <div class="cl-export-opt-icon all">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16a2 2 0 0 1-2 2Zm0 0a2 2 0 0 1-2-2v-9c0-1.1.9-2 2-2h2"/>
+                                        <path d="M18 14h-8"/>
+                                        <path d="M15 18h-5"/>
+                                        <path d="M10 6h8v4h-8V6Z"/>
+                                    </svg>
+                                </div>
+                                <div class="cl-export-opt-text">
+                                    <span class="cl-export-opt-title">Export All Clients (CSV)</span>
+                                    <span class="cl-export-opt-sub">Full database snapshot</span>
+                                </div>
+                            </a>
+                        </li>
+                        <li><hr class="dropdown-divider my-1 border-gray-200"></li>
+                        <li>
+                            <a class="dropdown-item cl-export-option" href="javascript:void(0);" onclick="triggerClientExport('executive_pdf')">
+                                <div class="cl-export-opt-icon pdf">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M6 9V2h12v7"/>
+                                        <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/>
+                                        <rect x="6" y="14" width="12" height="8"/>
+                                    </svg>
+                                </div>
+                                <div class="cl-export-opt-text">
+                                    <span class="cl-export-opt-title">Save / Print Report (PDF)</span>
+                                    <span class="cl-export-opt-sub">Executive landscape summary</span>
+                                </div>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
 
                 @if(in_array("add_clients", $userPermissions))
                 <a href="{{ url('service_company/clients/create') }}" class="cl-add-btn-primary">
@@ -633,14 +1485,32 @@
 
         <!-- ── SEARCH & FILTER BAR ── -->
         <div class="cl-filter-bar">
-            {{-- Search Input --}}
-            <div class="cl-search-box">
-                <svg class="cl-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            {{-- Search Input (Enterprise Tier 1 Micro-Search Bar) --}}
+            <div class="cl-search-box" id="clSearchBoxWrapper">
+                <svg class="cl-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                     <circle cx="11" cy="11" r="8"/>
                     <line x1="21" y1="21" x2="16.65" y2="16.65"/>
                 </svg>
-                <input type="text" class="cl-search-inp" name="inputJobSearch" value="" placeholder="Search clients by name, industry, location..." id="kt_tagify_2" onchange="filtersdataget()" />
-                <div id="loader_search" class="loader_search hidden_search" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);"></div>
+                <input 
+                    type="text" 
+                    class="cl-search-inp" 
+                    name="inputJobSearch" 
+                    value="" 
+                    placeholder="Search clients by name, industry, location, contact, ID..." 
+                    id="kt_tagify_2" 
+                    autocomplete="off" 
+                    spellcheck="false" 
+                    aria-label="Search client listing" 
+                    role="searchbox"
+                />
+                <div class="cl-search-right-affix">
+                    <span class="cl-search-count-pill" id="clSearchMatchCount" style="display:none;" title="Matching clients count">0 matches</span>
+                    <button type="button" class="cl-search-clear-btn" id="clSearchClearBtn" title="Clear search (Esc)" aria-label="Clear search" style="display:none;" onclick="clearClientSearchInput(event)">
+                        ✕
+                    </button>
+                    <kbd class="cl-search-kbd-hint" id="clSearchKbdHint" title="Press Ctrl+K to search">Ctrl+K</kbd>
+                </div>
+                <div id="loader_search" class="loader_search hidden_search" style="display:none;position:absolute;right:12px;top:50%;transform:translateY(-50%);"></div>
             </div>
 
             {{-- Filter 1: Location Combobox --}}
@@ -684,77 +1554,270 @@
                 <input type="hidden" id="unspecified_location" name="unspecified_location" value="0" />
             </div>
 
-            {{-- Filter 2: Industry Filter --}}
-            <div class="cl-dropdown-pill" id="industryPill">
-                <div class="cl-pill-icon">
-                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <rect x="2" y="7" width="20" height="14" rx="2" ry="2"/>
-                        <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>
-                    </svg>
+            {{-- Filter 2: Enterprise Industry Combobox Popover --}}
+            <div class="cl-ind-dropdown-wrapper" id="clIndDropdownWrapper">
+                <div class="cl-ind-combobox-btn" id="clIndBtn" onclick="toggleIndustryDropdown(event)" role="button" tabindex="0" aria-haspopup="listbox" aria-expanded="false" title="Filter by Industry">
+                    <div class="cl-pill-icon">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="2" y="7" width="20" height="14" rx="2" ry="2"/>
+                            <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>
+                        </svg>
+                    </div>
+                    <div class="cl-pill-texts">
+                        <span class="cl-pill-lbl">Industry</span>
+                        <span class="cl-pill-val" id="industryDisplay">All Industries</span>
+                    </div>
+                    <div class="cl-pill-clear" id="industryClearBtn" onclick="clearIndustryFilterFromPill(event)" title="Reset to All Industries" style="display:none;">✕</div>
+                    <div class="cl-pill-chevron">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+                    </div>
                 </div>
-                <div class="cl-pill-texts">
-                    <span class="cl-pill-lbl">Industry</span>
-                    <span class="cl-pill-val" id="industryDisplay">All Industries</span>
+
+                {{-- Popover Dropdown Panel --}}
+                <div class="cl-ind-dropdown-panel" id="clIndDropdownPanel" role="listbox" aria-label="Industries Filter">
+                    <div class="cl-ind-search-box">
+                        <svg class="cl-ind-search-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                        <input type="text" class="cl-ind-search-inp" id="clIndSearchInp" placeholder="Search 160+ industries or sectors..." autocomplete="off" oninput="handleIndustrySearchInput(this.value)" onkeydown="handleIndustryKeydown(event)" />
+                        <span class="cl-ind-search-clear" id="clIndSearchClear" onclick="clearIndustrySearch()">✕</span>
+                    </div>
+                    <div class="cl-ind-dropdown-body" id="clIndDropdownBody">
+                        {{-- Rendered dynamically from window.initialIndustriesManifest via User RAM --}}
+                    </div>
                 </div>
-                <div class="cl-pill-chevron">
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
-                </div>
-                <select class="cl-pill-select-native" id="industryFilter" onchange="handleIndustryChange(this)">
-                    <option value="" selected>All Industries</option>
-                    @if (!empty($industries))
-                        @foreach ($industries as $ind)
-                            <option value="{{ $ind->ind_id }}">{{ $ind->ind_name }}</option>
-                        @endforeach
-                    @endif
-                </select>
+
+                {{-- Hidden input for backward compatibility --}}
+                <input type="hidden" id="industryFilter" name="industry" value="" />
+                <input type="hidden" id="industry_id" name="industry_id" value="" />
             </div>
 
-            {{-- Filter 3: Activity Filter --}}
-            <div class="cl-dropdown-pill" id="activityPill">
-                <div class="cl-pill-icon">
-                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
-                    </svg>
+            {{-- Filter 3: Enterprise Activity Recency Combobox Popover --}}
+            <div class="cl-act-dropdown-wrapper" id="clActDropdownWrapper">
+                <button type="button" class="cl-act-combobox-btn" id="clActBtn" onclick="toggleActivityDropdown(event)" aria-haspopup="listbox" aria-expanded="false" aria-controls="clActDropdownPanel" title="Filter by Client Engagement Recency">
+                    <div class="cl-pill-icon">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+                        </svg>
+                    </div>
+                    <div class="cl-pill-texts">
+                        <span class="cl-pill-lbl">Activity</span>
+                        <span class="cl-pill-val" id="activityDisplay">All Activity</span>
+                    </div>
+                    <div class="cl-pill-clear" id="activityClearBtn" onclick="clearActivityFilter(event)" title="Reset Activity" style="display:none;">✕</div>
+                    <div class="cl-pill-chevron">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+                    </div>
+                </button>
+
+                <div class="cl-act-dropdown-panel" id="clActDropdownPanel" role="listbox" aria-labelledby="clActBtn" tabindex="-1">
+                    {{-- Section 1: Overview / Reset --}}
+                    <div class="cl-act-section-hdr">Activity Overview</div>
+                    <div class="cl-act-item selected" id="act-opt-all" data-act-val="all" onclick="selectActivityOption('all', 'All Activity', event)" role="option" aria-selected="true" tabindex="0">
+                        <div class="cl-act-item-left">
+                            <span class="cl-act-dot cl-dot-all"></span>
+                            <span class="cl-act-item-title">All Activity</span>
+                        </div>
+                        <div class="cl-act-item-right">
+                            <span class="cl-act-badge" id="actCountAll">0</span>
+                            <span class="cl-act-check">✓</span>
+                        </div>
+                    </div>
+
+                    {{-- Section 2: Recency (Strictly Mutually Exclusive Buckets) --}}
+                    <div class="cl-act-section-hdr">Recency (Mutually Exclusive)</div>
+                    <div class="cl-act-item" id="act-opt-7d" data-act-val="7d" onclick="selectActivityOption('7d', 'Active This Week', event)" role="option" aria-selected="false" tabindex="0">
+                        <div class="cl-act-item-left">
+                            <span class="cl-act-dot cl-dot-green"></span>
+                            <span class="cl-act-item-title">Active This Week (0–7d)</span>
+                        </div>
+                        <div class="cl-act-item-right">
+                            <span class="cl-act-badge" id="actCount7d">0</span>
+                            <span class="cl-act-check" style="display:none;">✓</span>
+                        </div>
+                    </div>
+                    <div class="cl-act-item" id="act-opt-30d" data-act-val="30d" onclick="selectActivityOption('30d', 'Active This Month', event)" role="option" aria-selected="false" tabindex="0">
+                        <div class="cl-act-item-left">
+                            <span class="cl-act-dot cl-dot-blue"></span>
+                            <span class="cl-act-item-title">Active This Month (8–30d)</span>
+                        </div>
+                        <div class="cl-act-item-right">
+                            <span class="cl-act-badge" id="actCount30d">0</span>
+                            <span class="cl-act-check" style="display:none;">✓</span>
+                        </div>
+                    </div>
+                    <div class="cl-act-item" id="act-opt-90d" data-act-val="90d" onclick="selectActivityOption('90d', 'Needs Outreach', event)" role="option" aria-selected="false" tabindex="0">
+                        <div class="cl-act-item-left">
+                            <span class="cl-act-dot cl-dot-amber"></span>
+                            <span class="cl-act-item-title">Needs Outreach (31–90d)</span>
+                        </div>
+                        <div class="cl-act-item-right">
+                            <span class="cl-act-badge" id="actCount90d">0</span>
+                            <span class="cl-act-check" style="display:none;">✓</span>
+                        </div>
+                    </div>
+                    <div class="cl-act-item" id="act-opt-dormant" data-act-val="dormant" onclick="selectActivityOption('dormant', 'Dormant (> 90d)', event)" role="option" aria-selected="false" tabindex="0">
+                        <div class="cl-act-item-left">
+                            <span class="cl-act-dot cl-dot-slate"></span>
+                            <span class="cl-act-item-title">Dormant (> 90d Inactive)</span>
+                        </div>
+                        <div class="cl-act-item-right">
+                            <span class="cl-act-badge" id="actCountDormant">0</span>
+                            <span class="cl-act-check" style="display:none;">✓</span>
+                        </div>
+                    </div>
+                    <div class="cl-act-item" id="act-opt-never" data-act-val="never" onclick="selectActivityOption('never', 'Never Engaged', event)" role="option" aria-selected="false" tabindex="0">
+                        <div class="cl-act-item-left">
+                            <span class="cl-act-dot cl-dot-purple"></span>
+                            <span class="cl-act-item-title">Never Engaged (No Touch)</span>
+                        </div>
+                        <div class="cl-act-item-right">
+                            <span class="cl-act-badge" id="actCountNever">0</span>
+                            <span class="cl-act-check" style="display:none;">✓</span>
+                        </div>
+                    </div>
                 </div>
-                <div class="cl-pill-texts">
-                    <span class="cl-pill-lbl">Activity</span>
-                    <span class="cl-pill-val" id="activityDisplay">All Activity</span>
-                </div>
-                <div class="cl-pill-chevron">
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
-                </div>
-                <select class="cl-pill-select-native" id="activityFilter" onchange="handleActivityChange(this)">
-                    <option value="" selected>All Activity</option>
-                    <option value="hiring">Hiring Now (Active Jobs)</option>
-                    <option value="pipeline">Pipeline Active</option>
-                    <option value="dormant">Dormant / Inactive</option>
-                </select>
+
+                <input type="hidden" id="activityFilter" name="activity" value="" />
             </div>
 
-            {{-- Filter 4: Sort --}}
-            <div class="cl-dropdown-pill" id="sortPill">
-                <div class="cl-pill-icon">
-                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <line x1="7" y1="4" x2="7" y2="20"/>
-                        <polyline points="3 8 7 4 11 8"/>
-                        <line x1="17" y1="4" x2="17" y2="20"/>
-                        <polyline points="13 16 17 20 21 16"/>
-                    </svg>
+            {{-- Filter 4: Enterprise Pipeline State Combobox Popover --}}
+            <div class="cl-pipe-dropdown-wrapper" id="clPipeDropdownWrapper">
+                <button type="button" class="cl-pipe-combobox-btn" id="clPipeBtn" onclick="togglePipelineDropdown(event)" aria-haspopup="listbox" aria-expanded="false" aria-controls="clPipeDropdownPanel" title="Filter by Candidate Pipeline">
+                    <div class="cl-pill-icon">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>
+                        </svg>
+                    </div>
+                    <div class="cl-pill-texts">
+                        <span class="cl-pill-lbl">Pipeline</span>
+                        <span class="cl-pill-val" id="pipelineDisplay">All Pipeline</span>
+                    </div>
+                    <div class="cl-pill-clear" id="pipelineClearBtn" onclick="clearPipelineFilter(event)" title="Reset Pipeline" style="display:none;">✕</div>
+                    <div class="cl-pill-chevron">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+                    </div>
+                </button>
+
+                <div class="cl-pipe-dropdown-panel" id="clPipeDropdownPanel" role="listbox" aria-labelledby="clPipeBtn" tabindex="-1">
+                    <div class="cl-pipe-section-hdr">Pipeline State</div>
+                    <div class="cl-pipe-item selected" id="pipe-opt-all" data-pipe-val="all" onclick="selectPipelineOption('all', 'All Pipeline', event)" role="option" aria-selected="true" tabindex="0">
+                        <div class="cl-pipe-item-left">
+                            <span class="cl-pipe-dot cl-dot-all"></span>
+                            <span class="cl-pipe-item-title">All Pipeline</span>
+                        </div>
+                        <div class="cl-pipe-item-right">
+                            <span class="cl-pipe-badge" id="pipeCountAll">0</span>
+                            <span class="cl-pipe-check">✓</span>
+                        </div>
+                    </div>
+                    <div class="cl-pipe-item" id="pipe-opt-active" data-pipe-val="active" onclick="selectPipelineOption('active', 'Pipeline Moving', event)" role="option" aria-selected="false" tabindex="0">
+                        <div class="cl-pipe-item-left">
+                            <span class="cl-pipe-dot cl-dot-violet"></span>
+                            <span class="cl-pipe-item-title">Pipeline Moving (Active)</span>
+                        </div>
+                        <div class="cl-pipe-item-right">
+                            <span class="cl-pipe-badge" id="pipeCountActive">0</span>
+                            <span class="cl-pipe-check" style="display:none;">✓</span>
+                        </div>
+                    </div>
+                    <div class="cl-pipe-item" id="pipe-opt-none" data-pipe-val="none" onclick="selectPipelineOption('none', 'No Active Pipeline', event)" role="option" aria-selected="false" tabindex="0">
+                        <div class="cl-pipe-item-left">
+                            <span class="cl-pipe-dot cl-dot-slate"></span>
+                            <span class="cl-pipe-item-title">No Active Pipeline</span>
+                        </div>
+                        <div class="cl-pipe-item-right">
+                            <span class="cl-pipe-badge" id="pipeCountNone">0</span>
+                            <span class="cl-pipe-check" style="display:none;">✓</span>
+                        </div>
+                    </div>
                 </div>
-                <div class="cl-pill-texts">
-                    <span class="cl-pill-lbl">Sort</span>
-                    <span class="cl-pill-val" id="sortDisplay">Recently Added</span>
+
+                <input type="hidden" id="pipelineFilter" name="pipeline" value="" />
+            </div>
+
+            {{-- Filter 5: Enterprise Metronic Sort Combobox Popover --}}
+            <div class="cl-sort-dropdown-wrapper" id="clSortDropdownWrapper">
+                <button type="button" class="cl-sort-combobox-btn" id="clSortBtn" onclick="toggleSortDropdown(event)" aria-haspopup="listbox" aria-expanded="false" aria-controls="clSortDropdownPanel" title="Sort Client Listing">
+                    <div class="cl-pill-icon">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="7" y1="4" x2="7" y2="20"/>
+                            <polyline points="3 8 7 4 11 8"/>
+                            <line x1="17" y1="4" x2="17" y2="20"/>
+                            <polyline points="13 16 17 20 21 16"/>
+                        </svg>
+                    </div>
+                    <div class="cl-pill-texts">
+                        <span class="cl-pill-lbl">Sort</span>
+                        <span class="cl-pill-val" id="sortDisplay">Recently Added</span>
+                    </div>
+                    <div class="cl-pill-chevron">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+                    </div>
+                </button>
+
+                {{-- Custom Popover Panel (WAI-ARIA 1.2 Compliant) --}}
+                <div class="cl-sort-dropdown-panel" id="clSortDropdownPanel" role="listbox" aria-labelledby="clSortBtn" tabindex="-1">
+                    {{-- Section 1: Chronological --}}
+                    <div class="cl-sort-section-hdr">Chronological</div>
+                    <div class="cl-sort-item selected" id="sort-opt-recent" data-sort-val="recent" onclick="selectSortOption('recent', 'Recently Added', event)" role="option" aria-selected="true" tabindex="0">
+                        <div class="cl-sort-item-left">
+                            <svg class="cl-sort-item-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                            <span class="cl-sort-item-title">Recently Added</span>
+                        </div>
+                        <div class="cl-sort-item-right">
+                            <span class="cl-sort-direction-badge">Newest ↓</span>
+                            <span class="cl-sort-check">✓</span>
+                        </div>
+                    </div>
+                    <div class="cl-sort-item" id="sort-opt-oldest" data-sort-val="oldest" onclick="selectSortOption('oldest', 'Oldest First', event)" role="option" aria-selected="false" tabindex="0">
+                        <div class="cl-sort-item-left">
+                            <svg class="cl-sort-item-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                            <span class="cl-sort-item-title">Oldest First</span>
+                        </div>
+                        <div class="cl-sort-item-right">
+                            <span class="cl-sort-direction-badge">Oldest ↑</span>
+                            <span class="cl-sort-check" style="display:none;">✓</span>
+                        </div>
+                    </div>
+
+                    {{-- Section 2: Alphabetical --}}
+                    <div class="cl-sort-section-hdr">Alphabetical</div>
+                    <div class="cl-sort-item" id="sort-opt-name_asc" data-sort-val="name_asc" onclick="selectSortOption('name_asc', 'Client Name (A → Z)', event)" role="option" aria-selected="false" tabindex="0">
+                        <div class="cl-sort-item-left">
+                            <svg class="cl-sort-item-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+                            <span class="cl-sort-item-title">Client Name (A → Z)</span>
+                        </div>
+                        <div class="cl-sort-item-right">
+                            <span class="cl-sort-direction-badge">A → Z</span>
+                            <span class="cl-sort-check" style="display:none;">✓</span>
+                        </div>
+                    </div>
+                    <div class="cl-sort-item" id="sort-opt-name_desc" data-sort-val="name_desc" onclick="selectSortOption('name_desc', 'Client Name (Z → A)', event)" role="option" aria-selected="false" tabindex="0">
+                        <div class="cl-sort-item-left">
+                            <svg class="cl-sort-item-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+                            <span class="cl-sort-item-title">Client Name (Z → A)</span>
+                        </div>
+                        <div class="cl-sort-item-right">
+                            <span class="cl-sort-direction-badge">Z → A</span>
+                            <span class="cl-sort-check" style="display:none;">✓</span>
+                        </div>
+                    </div>
+
+                    {{-- Section 3: Activity & Jobs --}}
+                    <div class="cl-sort-section-hdr">Activity</div>
+                    <div class="cl-sort-item" id="sort-opt-jobs_desc" data-sort-val="jobs_desc" onclick="selectSortOption('jobs_desc', 'Most Active Jobs', event)" role="option" aria-selected="false" tabindex="0">
+                        <div class="cl-sort-item-left">
+                            <svg class="cl-sort-item-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+                            <span class="cl-sort-item-title">Most Active Jobs</span>
+                        </div>
+                        <div class="cl-sort-item-right">
+                            <span class="cl-sort-direction-badge">High → Low</span>
+                            <span class="cl-sort-check" style="display:none;">✓</span>
+                        </div>
+                    </div>
                 </div>
-                <div class="cl-pill-chevron">
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
-                </div>
-                <select class="cl-pill-select-native" id="sortingfilter" onchange="handleSortChange(this)">
-                    <option value="recent" selected>Recently Added</option>
-                    <option value="oldest">Oldest First</option>
-                    <option value="name_asc">Client Name (A → Z)</option>
-                    <option value="name_desc">Client Name (Z → A)</option>
-                    <option value="jobs_desc">Most Active Jobs</option>
-                </select>
+
+                {{-- Hidden input for state & form compatibility --}}
+                <input type="hidden" id="sortingfilter" name="sortingfilter" value="recent" />
             </div>
         </div>
 
@@ -848,6 +1911,65 @@
     <div class="card-body position-relative px-0 py-0" id="kt_activitiesDirectClient_body"> &nbsp; </div>
   </div>
 </div>
+
+<!-- ── DEDICATED 100% CLIENT-SIDE EXECUTIVE PRINT-TO-PDF CANVAS ── -->
+<div id="cl-print-report-canvas" class="d-none" aria-hidden="true">
+    <div class="print-report-header">
+        <div>
+            <h1 class="print-report-title">Clients Portfolio & Recruitment Pipeline Report</h1>
+            <div class="print-report-sub">{{ auth()->user()->company->company_name ?? 'JERO Enterprise ATS' }} • Confidential Account Performance Review</div>
+        </div>
+        <div class="print-report-meta">
+            <div id="printReportTimestamp">Date: </div>
+            <div id="printReportScope">Scope: Active Filtered View</div>
+            <div id="printReportManifestId">Ref: </div>
+        </div>
+    </div>
+
+    <div class="print-kpi-grid">
+        <div class="print-kpi-card">
+            <div class="print-kpi-num" id="printKpiTotal">0</div>
+            <div class="print-kpi-lbl">Total Clients</div>
+        </div>
+        <div class="print-kpi-card">
+            <div class="print-kpi-num" id="printKpiActive">0</div>
+            <div class="print-kpi-lbl">Active Companies</div>
+        </div>
+        <div class="print-kpi-card">
+            <div class="print-kpi-num" id="printKpiHiring">0</div>
+            <div class="print-kpi-lbl">Open Requisitions</div>
+        </div>
+        <div class="print-kpi-card">
+            <div class="print-kpi-num" id="printKpiPipeline">0</div>
+            <div class="print-kpi-lbl">Active Pipeline</div>
+        </div>
+        <div class="print-kpi-card">
+            <div class="print-kpi-num" id="printKpiPlacements">0</div>
+            <div class="print-kpi-lbl">Placements (Joined)</div>
+        </div>
+    </div>
+
+    <table class="print-table">
+        <thead>
+            <tr>
+                <th style="width:25%;">Client Company</th>
+                <th style="width:18%;">Location</th>
+                <th style="width:12%;">Type</th>
+                <th style="width:15%;">Jobs (H/H/C)</th>
+                <th style="width:20%;">Pipeline (Src / Eval / Int / Join)</th>
+                <th style="width:10%;">Last Activity</th>
+            </tr>
+        </thead>
+        <tbody id="printTableBody">
+            <!-- Dynamically rendered -->
+        </tbody>
+    </table>
+
+    <div class="print-footer">
+        <span>CONFIDENTIAL — Generated via JERO GOD-Level ATS Engine • 100% Client-Side Render</span>
+        <span id="printFooterNotice">Authorized Recruiter View</span>
+    </div>
+</div>
 @endsection
 
 @push('footer-script')
@@ -869,17 +1991,70 @@
 <script src="{{ asset('assets/service_company/client/drawer/tabs/performance.js') }}{{ TM_VERSION }}"></script>
 <script src="{{ asset('assets/service_company/client/drawer/drawer-instance.js') }}{{ TM_VERSION }}"></script>
 <script>
+function clearClientSearchInput(e) {
+    if (e) {
+        e.preventDefault();
+        e.stopPropagation();
+    }
+    var $inp = $('#kt_tagify_2');
+    $inp.val('');
+    $('#clSearchClearBtn').hide();
+    $('#clSearchMatchCount').hide();
+    $('#clSearchKbdHint').show();
+    page_no = 1;
+    loadClientList(1, true);
+    $inp.focus();
+}
+window.clearClientSearchInput = clearClientSearchInput;
+
 $(document).ready(function() {
     var searchTimer = null;
-    $('#kt_tagify_2').on('keyup input', function() {
+    var $searchInp = $('#kt_tagify_2');
+
+    $searchInp.on('input', function() {
+        var queryVal = ($(this).val() || '').trim();
+        if (queryVal.length > 0) {
+            $('#clSearchClearBtn').show();
+            $('#clSearchKbdHint').hide();
+        } else {
+            $('#clSearchClearBtn').hide();
+            $('#clSearchMatchCount').hide();
+            $('#clSearchKbdHint').show();
+        }
+
         clearTimeout(searchTimer);
+        // JDCR Micro-Debounce (30ms for instant in-browser RAM execution, 0% server strain)
         searchTimer = setTimeout(function() {
             if (typeof loadClientList === 'function') {
-                loadClientList(1);
+                loadClientList(1, true);
             } else if (typeof fetchCandidates === 'function') {
-                fetchCandidates(1);
+                fetchCandidates(1, true);
             }
-        }, 300);
+        }, 30);
+    });
+
+    $searchInp.on('keydown', function(e) {
+        if (e.key === 'Escape') {
+            e.preventDefault();
+            clearClientSearchInput();
+            $(this).blur();
+        } else if (e.key === 'Enter') {
+            e.preventDefault();
+            clearTimeout(searchTimer);
+            loadClientList(1, true);
+        }
+    });
+
+    // Global keyboard shortcut: Ctrl+K / Cmd+K to focus search from anywhere
+    $(document).on('keydown', function(e) {
+        if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+            var activeEl = document.activeElement;
+            var isInput = activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA' || activeEl.isContentEditable);
+            if (!isInput || activeEl.id === 'kt_tagify_2') {
+                e.preventDefault();
+                $searchInp.focus().select();
+            }
+        }
     });
 });
 
@@ -1199,50 +2374,667 @@ function selectLocationByCountryAndCity(countryVal, cityVal, triggerFetch = true
     }
 }
 
-// ── Dropdown filter sync handlers ──
-function handleIndustryChange(sel) {
-    const text = sel.options[sel.selectedIndex].text;
-    const val = sel.value;
-    $('#industryDisplay').text(text);
-    clientListState.industry_id = val;
-    filtersdataget();
+// ── God-Level Enterprise Industry Combobox (Client-First / 10K Concurrency) ──
+let activeIndSectorFilter = 'all';
+let focusedIndItemIndex = -1;
+
+const SECTOR_ICON_MAP = {
+    1: '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>',
+    2: '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>',
+    3: '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>',
+    4: '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>',
+    5: '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>',
+    6: '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>',
+    7: '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>',
+    8: '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>',
+    9: '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>',
+    10: '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>'
+};
+
+function toggleIndustryDropdown(e) {
+    if (e) {
+        e.stopPropagation();
+        e.preventDefault();
+    }
+    // Close other dropdowns
+    $('#clLocDropdownPanel').removeClass('show');
+    $('#clLocBtn').removeClass('active');
+
+    const $panel = $('#clIndDropdownPanel');
+    const isVisible = $panel.hasClass('show');
+    if (isVisible) {
+        $panel.removeClass('show');
+        $('#clIndBtn').removeClass('active').attr('aria-expanded', 'false');
+    } else {
+        $panel.addClass('show');
+        $('#clIndBtn').addClass('active').attr('aria-expanded', 'true');
+        $('#clIndSearchInp').focus();
+        renderIndustryDropdown($('#clIndSearchInp').val() || '');
+    }
 }
 
-function handleActivityChange(sel) {
-    const text = sel.options[sel.selectedIndex].text;
+function handleIndustrySearchInput(q) {
+    if (q && q.trim()) {
+        $('#clIndSearchClear').show();
+    } else {
+        $('#clIndSearchClear').hide();
+    }
+    focusedIndItemIndex = -1;
+    renderIndustryDropdown(q);
+}
+
+function clearIndustrySearch() {
+    $('#clIndSearchInp').val('');
+    $('#clIndSearchClear').hide();
+    focusedIndItemIndex = -1;
+    renderIndustryDropdown('');
+    $('#clIndSearchInp').focus();
+}
+
+function filterIndustryBySector(sectorId, e) {
+    if (e) {
+        e.stopPropagation();
+        e.preventDefault();
+    }
+    activeIndSectorFilter = sectorId;
+    renderIndustryDropdown($('#clIndSearchInp').val() || '');
+}
+
+function renderIndustryDropdown(filterQuery = '') {
+    const q = (filterQuery || '').toLowerCase().trim();
+    const $body = $('#clIndDropdownBody');
+    const manifest = window.initialIndustriesManifest || { industries: [], sectors: [] };
+    const allIndustries = manifest.industries || [];
+    const selectedId = String(clientListState.industry_id || '');
+
+    let html = '';
+
+    // Quick Chips (All, Tech & AI, FinTech, Health, Retail & D2C, Other)
+    if (!q) {
+        html += `
+            <div class="cl-ind-quick-chips">
+                <div class="cl-ind-chips-title">
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#009ef7" stroke-width="2.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                    <span>Quick Sectors</span>
+                </div>
+                <div class="cl-ind-chips-row">
+                    <button type="button" class="cl-ind-chip ${activeIndSectorFilter === 'all' ? 'active' : ''}" onclick="filterIndustryBySector('all', event)">All</button>
+                    <button type="button" class="cl-ind-chip ${activeIndSectorFilter === 1 ? 'active' : ''}" onclick="filterIndustryBySector(1, event)">Tech & AI</button>
+                    <button type="button" class="cl-ind-chip ${activeIndSectorFilter === 2 ? 'active' : ''}" onclick="filterIndustryBySector(2, event)">FinTech</button>
+                    <button type="button" class="cl-ind-chip ${activeIndSectorFilter === 3 ? 'active' : ''}" onclick="filterIndustryBySector(3, event)">Healthcare</button>
+                    <button type="button" class="cl-ind-chip ${activeIndSectorFilter === 6 ? 'active' : ''}" onclick="filterIndustryBySector(6, event)">Retail & D2C</button>
+                    <button type="button" class="cl-ind-chip ${activeIndSectorFilter === 'other' ? 'active' : ''}" onclick="filterIndustryBySector('other', event)">Other</button>
+                </div>
+            </div>
+        `;
+    }
+
+    // Option 1: All Industries (Reset option)
+    const isAllSelected = !selectedId;
+    if (!q || 'all industries'.includes(q) || 'clear'.includes(q) || 'all'.includes(q)) {
+        html += `
+            <div class="cl-ind-item ${isAllSelected ? 'selected' : ''}" data-id="" onclick="clearIndustryFilter(true)">
+                <div class="cl-ind-item-left">
+                    <span class="cl-ind-dot"></span>
+                    <span class="cl-ind-item-title">All Industries</span>
+                </div>
+                ${isAllSelected ? '<span class="cl-ind-check"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg></span>' : ''}
+            </div>
+        `;
+    }
+
+    // Filter industries
+    let matches = allIndustries.filter(function(item) {
+        if (activeIndSectorFilter !== 'all' && !q) {
+            if (activeIndSectorFilter === 'other') {
+                if (item.id !== 147 && item.sector_id !== 5 && item.sector_id !== 10) return false;
+            } else if (item.sector_id !== activeIndSectorFilter) {
+                return false;
+            }
+        }
+        if (!q) return true;
+
+        const nameMatch = (item.name || '').toLowerCase().includes(q);
+        const sectorMatch = (item.sector_name || '').toLowerCase().includes(q);
+        const kwMatch = (item.keywords || '').toLowerCase().includes(q);
+        const acronymMatch = (item.acronyms || []).some(a => a.toLowerCase().includes(q));
+        const synMatch = (item.synonyms || []).some(s => s.toLowerCase().includes(q));
+
+        return nameMatch || sectorMatch || kwMatch || acronymMatch || synMatch;
+    });
+
+    if (matches.length === 0) {
+        html += `
+            <div class="cl-ind-empty">
+                <div class="cl-ind-empty-icon">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+                </div>
+                <div class="cl-ind-empty-title">No industry matching "${escapeAttr(q)}"</div>
+                <div class="cl-ind-empty-sub">Select universal classification:</div>
+                <button type="button" class="btn btn-sm btn-light-primary" style="font-size:11.5px; font-weight:600; padding:6px 14px; border-radius:6px; display:inline-flex; align-items:center; gap:6px;" onclick="selectIndustryFilter(147, 'Other / Diversified Services', true)">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                    Select "Other / Diversified Services"
+                </button>
+            </div>
+        `;
+        $body.html(html);
+        return;
+    }
+
+    // Render matches
+    let currentSecId = null;
+    matches.forEach(function(item, idx) {
+        if (!q && item.sector_id !== currentSecId) {
+            currentSecId = item.sector_id;
+            const secIcon = SECTOR_ICON_MAP[currentSecId] || SECTOR_ICON_MAP[5];
+            html += `
+                <div class="cl-ind-section-hdr">
+                    <span class="cl-ind-hdr-icon">${secIcon}</span>
+                    <span>${escapeAttr(item.sector_name || 'General')}</span>
+                </div>
+            `;
+        }
+
+        const isSelected = String(item.id) === selectedId;
+        const displayName = q ? highlightText(item.name, q) : escapeAttr(item.name);
+        const sectorTag = q ? `<span class="cl-ind-sec-tag">${escapeAttr((item.sector_name || '').split(',')[0].split('&')[0].trim())}</span>` : '';
+
+        html += `
+            <div class="cl-ind-item ${isSelected ? 'selected' : ''}" data-idx="${idx}" data-id="${item.id}" onclick="selectIndustryFilter(${item.id}, '${escapeAttr(item.name)}', true)" role="option" aria-selected="${isSelected ? 'true' : 'false'}">
+                <div class="cl-ind-item-left">
+                    <span class="cl-ind-dot"></span>
+                    <span class="cl-ind-item-title" title="${escapeAttr(item.name)}">${displayName}</span>
+                </div>
+                <div class="d-flex align-items-center gap-1">
+                    ${sectorTag}
+                    ${isSelected ? '<span class="cl-ind-check"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg></span>' : ''}
+                </div>
+            </div>
+        `;
+    });
+
+    $body.html(html);
+}
+
+function selectIndustryFilter(id, name, triggerFetch = true) {
+    const val = id ? String(id) : '';
+    clientListState.industry_id = val;
+
+    $('#industryFilter').val(val);
+    $('#industry_id').val(val);
+
+    if (val) {
+        let displayName = name;
+        if (!displayName) {
+            const manifest = window.initialIndustriesManifest || { industries: [] };
+            const found = (manifest.industries || []).find(i => String(i.id) === val);
+            displayName = found ? found.name : `Industry #${val}`;
+        }
+        $('#industryDisplay').text(displayName).attr('title', displayName);
+        $('#clIndBtn').addClass('has-filter').removeClass('active').attr('aria-expanded', 'false');
+        $('#industryClearBtn').show();
+    } else {
+        $('#industryDisplay').text('All Industries').removeAttr('title');
+        $('#clIndBtn').removeClass('has-filter active').attr('aria-expanded', 'false');
+        $('#industryClearBtn').hide();
+    }
+
+    $('#clIndDropdownPanel').removeClass('show');
+
+    if (triggerFetch) {
+        filtersdataget();
+    }
+}
+
+function clearIndustryFilter(triggerFetch = true) {
+    selectIndustryFilter('', 'All Industries', triggerFetch);
+}
+
+function clearIndustryFilterFromPill(e) {
+    if (e) {
+        e.stopPropagation();
+        e.preventDefault();
+    }
+    clearIndustryFilter(true);
+}
+
+function handleIndustryKeydown(e) {
+    const $items = $('#clIndDropdownBody .cl-ind-item');
+    if (!$items.length) return;
+
+    if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        focusedIndItemIndex = (focusedIndItemIndex + 1) % $items.length;
+        $items.removeClass('focused');
+        const $focused = $items.eq(focusedIndItemIndex).addClass('focused');
+        if ($focused.length && $focused[0].scrollIntoView) {
+            $focused[0].scrollIntoView({ block: 'nearest' });
+        }
+    } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        focusedIndItemIndex = (focusedIndItemIndex - 1 + $items.length) % $items.length;
+        $items.removeClass('focused');
+        const $focused = $items.eq(focusedIndItemIndex).addClass('focused');
+        if ($focused.length && $focused[0].scrollIntoView) {
+            $focused[0].scrollIntoView({ block: 'nearest' });
+        }
+    } else if (e.key === 'Enter') {
+        e.preventDefault();
+        if (focusedIndItemIndex >= 0 && focusedIndItemIndex < $items.length) {
+            $items.eq(focusedIndItemIndex).trigger('click');
+        }
+    } else if (e.key === 'Escape') {
+        $('#clIndDropdownPanel').removeClass('show');
+        $('#clIndBtn').removeClass('active').attr('aria-expanded', 'false');
+    }
+}
+
+// ── Dropdown filter sync handlers ──
+function handleIndustryChange(sel) {
     const val = sel.value;
-    $('#activityDisplay').text(text);
-    clientListState.activity = val;
+    const text = sel.options && sel.selectedIndex >= 0 ? sel.options[sel.selectedIndex].text : '';
+    selectIndustryFilter(val, text, true);
+}
+
+// ── Activity Recency Popover State Machine ──
+const clActLabels = {
+    'all': 'All Activity',
+    '7d': 'Active This Week',
+    '30d': 'Active This Month',
+    '90d': 'Needs Outreach',
+    'dormant': 'Dormant (> 90d)',
+    'never': 'Never Engaged'
+};
+
+function toggleActivityDropdown(e) {
+    if (e) { e.stopPropagation(); e.preventDefault(); }
+    const $panel = $('#clActDropdownPanel');
+    const $btn = $('#clActBtn');
+    const isVisible = $panel.hasClass('show');
+
+    if (isVisible) {
+        closeActivityDropdown();
+    } else {
+        // Close peer popovers
+        closeLocationDropdown();
+        closeIndustryDropdown();
+        closePipelineDropdown();
+        closeSortDropdown();
+
+        $panel.addClass('show');
+        $btn.addClass('active').attr('aria-expanded', 'true');
+        const $selected = $panel.find('.cl-act-item.selected');
+        if ($selected.length) {
+            $selected.focus();
+        } else {
+            $panel.find('.cl-act-item').first().focus();
+        }
+    }
+}
+
+function closeActivityDropdown() {
+    $('#clActDropdownPanel').removeClass('show');
+    $('#clActBtn').removeClass('active').attr('aria-expanded', 'false');
+}
+
+function selectActivityOption(val, text, e, skipFetch = false) {
+    if (e && e.stopPropagation) { e.stopPropagation(); }
+    closeActivityDropdown();
+
+    const canonicalVal = (val === 'all' || !val) ? '' : val;
+    const displayText = clActLabels[canonicalVal || 'all'] || text || 'All Activity';
+    $('#activityDisplay').text(displayText);
+    $('#activityFilter').val(canonicalVal);
+    clientListState.activity = canonicalVal;
+
+    $('#clActDropdownPanel .cl-act-item').removeClass('selected').attr('aria-selected', 'false')
+        .find('.cl-act-check').hide();
+    const optKey = canonicalVal || 'all';
+    $(`#act-opt-${optKey}`).addClass('selected').attr('aria-selected', 'true')
+        .find('.cl-act-check').show();
+
+    if (canonicalVal) {
+        $('#clActBtn').addClass('is-active-filter');
+        $('#activityClearBtn').show();
+    } else {
+        $('#clActBtn').removeClass('is-active-filter');
+        $('#activityClearBtn').hide();
+    }
+
+    if (!skipFetch) {
+        syncUrlState();
+        filtersdataget();
+    }
+}
+
+function clearActivityFilter(e) {
+    if (e) { e.stopPropagation(); e.preventDefault(); }
+    selectActivityOption('all', 'All Activity', null, false);
+}
+
+function updateRecencyCounts(counts) {
+    if (!counts) return;
+    $('#actCountAll').text(counts.all ?? 0);
+    $('#actCount7d').text(counts['7d'] ?? 0);
+    $('#actCount30d').text(counts['30d'] ?? 0);
+    $('#actCount90d').text(counts['90d'] ?? 0);
+    $('#actCountDormant').text(counts.dormant ?? 0);
+    $('#actCountNever').text(counts.never ?? 0);
+}
+
+// ── Pipeline State Popover State Machine ──
+const clPipeLabels = {
+    'all': 'All Pipeline',
+    'active': 'Pipeline Moving',
+    'none': 'No Active Pipeline'
+};
+
+function togglePipelineDropdown(e) {
+    if (e) { e.stopPropagation(); e.preventDefault(); }
+    const $panel = $('#clPipeDropdownPanel');
+    const $btn = $('#clPipeBtn');
+    const isVisible = $panel.hasClass('show');
+
+    if (isVisible) {
+        closePipelineDropdown();
+    } else {
+        // Close peer popovers
+        closeLocationDropdown();
+        closeIndustryDropdown();
+        closeActivityDropdown();
+        closeSortDropdown();
+
+        $panel.addClass('show');
+        $btn.addClass('active').attr('aria-expanded', 'true');
+        const $selected = $panel.find('.cl-pipe-item.selected');
+        if ($selected.length) {
+            $selected.focus();
+        } else {
+            $panel.find('.cl-pipe-item').first().focus();
+        }
+    }
+}
+
+function closePipelineDropdown() {
+    $('#clPipeDropdownPanel').removeClass('show');
+    $('#clPipeBtn').removeClass('active').attr('aria-expanded', 'false');
+}
+
+function selectPipelineOption(val, text, e, skipFetch = false) {
+    if (e && e.stopPropagation) { e.stopPropagation(); }
+    closePipelineDropdown();
+
+    const canonicalVal = (val === 'all' || !val) ? '' : val;
+    const displayText = clPipeLabels[canonicalVal || 'all'] || text || 'All Pipeline';
+    $('#pipelineDisplay').text(displayText);
+    $('#pipelineFilter').val(canonicalVal);
+    clientListState.pipeline = canonicalVal;
+
+    $('#clPipeDropdownPanel .cl-pipe-item').removeClass('selected').attr('aria-selected', 'false')
+        .find('.cl-pipe-check').hide();
+    const optKey = canonicalVal || 'all';
+    $(`#pipe-opt-${optKey}`).addClass('selected').attr('aria-selected', 'true')
+        .find('.cl-pipe-check').show();
+
+    if (canonicalVal) {
+        $('#clPipeBtn').addClass('is-active-filter');
+        $('#pipelineClearBtn').show();
+    } else {
+        $('#clPipeBtn').removeClass('is-active-filter');
+        $('#pipelineClearBtn').hide();
+    }
+
+    if (!skipFetch) {
+        syncUrlState();
+        filtersdataget();
+    }
+}
+
+function clearPipelineFilter(e) {
+    if (e) { e.stopPropagation(); e.preventDefault(); }
+    selectPipelineOption('all', 'All Pipeline', null, false);
+}
+
+function updatePipelineCounts(counts) {
+    if (!counts) return;
+    $('#pipeCountAll').text(counts.all ?? 0);
+    $('#pipeCountActive').text(counts.active ?? 0);
+    $('#pipeCountNone').text(counts.none ?? 0);
+}
+
+// ── Client Engagement Recency Badge Renderer (User RAM Execution) ──
+function renderClientEngagementBadge(r, daysAgo) {
+    const rawActivity = r.last_activity_at || null;
+    const fallbackDays = daysAgo || '';
+
+    if (!rawActivity && (!fallbackDays || fallbackDays === 'No activity yet')) {
+        return `<span class="cl-meta-item cl-touch-never" title="No outreach recorded yet. Initial onboarding recommended.">
+                    <span class="cl-dot cl-dot-purple"></span>
+                    <span>Last touch: <strong class="text-purple">Never engaged</strong></span>
+                </span>`;
+    }
+
+    let diffDays = 0;
+    if (rawActivity) {
+        const actDate = new Date(rawActivity);
+        const now = new Date();
+        diffDays = Math.floor((now - actDate) / (1000 * 60 * 60 * 24));
+        if (isNaN(diffDays) || diffDays < 0) diffDays = 0;
+    } else {
+        diffDays = parseInt(String(fallbackDays).replace(/\D/g, ''), 10) || 0;
+    }
+
+    if (diffDays <= 7) {
+        const text = diffDays === 0 ? 'Today' : `${diffDays}d ago`;
+        return `<span class="cl-meta-item cl-touch-hot" title="High velocity client account (Touchpoint in last 7 days)">
+                    <span class="cl-dot cl-dot-green"></span>
+                    <span>Last touch <strong>${escapeAttr(text)}</strong></span>
+                </span>`;
+    } else if (diffDays <= 30) {
+        return `<span class="cl-meta-item cl-touch-warm" title="Active client cadence (Touchpoint in last 30 days)">
+                    <span class="cl-dot cl-dot-blue"></span>
+                    <span>Last touch <strong>${diffDays}d ago</strong></span>
+                </span>`;
+    } else if (diffDays <= 90) {
+        return `<span class="cl-meta-item cl-touch-stale" title="No outreach in over 30 days! Retention risk.">
+                    <span class="cl-dot cl-dot-amber"></span>
+                    <span>Last touch <strong class="text-amber">${diffDays}d ago</strong> <span class="badge badge-light-warning ms-1" style="font-size:9.5px; padding:1px 5px; font-weight:700;">Needs outreach</span></span>
+                </span>`;
+    } else {
+        return `<span class="cl-meta-item cl-touch-dormant" title="Dormant account. Inactive over 90 days.">
+                    <span class="cl-dot cl-dot-slate"></span>
+                    <span>Last touch <strong class="text-muted">> 90d ago</strong> <span class="badge badge-light-secondary ms-1" style="font-size:9.5px; padding:1px 5px; font-weight:700;">Dormant</span></span>
+                </span>`;
+    }
+}
+
+// Backward-compatibility shim
+function handleActivityChange(sel) {
+    const val = typeof sel === 'string' ? sel : (sel.value || '');
+    selectActivityOption(val, null, null, false);
+}
+
+function closeLocationDropdown() {
+    $('#clLocDropdownPanel').removeClass('show');
+    $('#clLocBtn').removeClass('active');
+}
+
+function closeIndustryDropdown() {
+    $('#clIndDropdownPanel').removeClass('show');
+    $('#clIndBtn').removeClass('active').attr('aria-expanded', 'false');
+}
+
+function toggleSortDropdown(e) {
+    if (e) { e.stopPropagation(); e.preventDefault(); }
+    const $panel = $('#clSortDropdownPanel');
+    const $btn = $('#clSortBtn');
+    const isVisible = $panel.hasClass('show');
+
+    if (isVisible) {
+        closeSortDropdown();
+    } else {
+        // Close peer popovers
+        closeLocationDropdown();
+        closeIndustryDropdown();
+        closeActivityDropdown();
+        closePipelineDropdown();
+
+        $panel.addClass('show');
+        $btn.addClass('active').attr('aria-expanded', 'true');
+        const $selected = $panel.find('.cl-sort-item.selected');
+        if ($selected.length) {
+            $selected.focus();
+        } else {
+            $panel.find('.cl-sort-item').first().focus();
+        }
+    }
+}
+
+function closeSortDropdown() {
+    $('#clSortDropdownPanel').removeClass('show');
+    $('#clSortBtn').removeClass('active').attr('aria-expanded', 'false');
+}
+
+const clSortLabels = {
+    'recent': 'Recently Added',
+    'oldest': 'Oldest First',
+    'name_asc': 'Client Name (A → Z)',
+    'name_desc': 'Client Name (Z → A)',
+    'jobs_desc': 'Most Active Jobs'
+};
+
+function normalizeSortValue(raw) {
+    const s = String(raw || '').toLowerCase().trim();
+    if (s === 'oldest' || s === '2') return 'oldest';
+    if (s === 'name_asc' || s === 'name-asc' || s === 'a-z') return 'name_asc';
+    if (s === 'name_desc' || s === 'name-desc' || s === 'z-a') return 'name_desc';
+    if (s === 'jobs_desc' || s === 'jobs' || s === 'active_jobs') return 'jobs_desc';
+    return 'recent';
+}
+
+function sortDomClientsLocally(sortVal) {
+    const $container = $('#allClients');
+    const $rows = $container.children('.tbl-r').get();
+    if (!$rows || $rows.length <= 1) return false;
+
+    // Check total count: if total > perPage or > rows.length, server pagination is required
+    const totalCount = parseInt($('#span_clientAll').text() || '0', 10);
+    const perPage = parseInt($('#pagination .pagi-perpage').val() || '10', 10);
+    if (totalCount > perPage && totalCount > $rows.length) {
+        return false; // Multi-page dataset: defer to authoritative Elasticsearch query
+    }
+
+    $rows.sort(function(a, b) {
+        if (sortVal === 'name_asc' || sortVal === 'name_desc') {
+            const nameA = ($(a).attr('data-client-name') || $(a).find('.cl-name, .cl-details-title').first().text() || '').trim().toLowerCase();
+            const nameB = ($(b).attr('data-client-name') || $(b).find('.cl-name, .cl-details-title').first().text() || '').trim().toLowerCase();
+            return sortVal === 'name_asc' ? nameA.localeCompare(nameB) : nameB.localeCompare(nameA);
+        } else if (sortVal === 'jobs_desc') {
+            const rawJobsA = $(a).attr('data-active-jobs') ?? $(a).find('.tbl-cell-jobs .cl-job-num, .cl-job-line .cl-job-num').first().text() ?? '0';
+            const rawJobsB = $(b).attr('data-active-jobs') ?? $(b).find('.tbl-cell-jobs .cl-job-num, .cl-job-line .cl-job-num').first().text() ?? '0';
+            const jobsA = parseInt(rawJobsA, 10) || 0;
+            const jobsB = parseInt(rawJobsB, 10) || 0;
+            if (jobsB !== jobsA) return jobsB - jobsA;
+            const idA = parseInt($(a).data('row-id') || '0', 10);
+            const idB = parseInt($(b).data('row-id') || '0', 10);
+            return idB - idA;
+        } else if (sortVal === 'oldest') {
+            const idA = parseInt($(a).data('row-id') || '0', 10);
+            const idB = parseInt($(b).data('row-id') || '0', 10);
+            return idA - idB;
+        } else { // 'recent'
+            const idA = parseInt($(a).data('row-id') || '0', 10);
+            const idB = parseInt($(b).data('row-id') || '0', 10);
+            return idB - idA;
+        }
+    });
+
+    requestAnimationFrame(function() {
+        $.each($rows, function(idx, el) {
+            $container.append(el);
+        });
+    });
+
+    return true;
+}
+
+function selectSortOption(val, text, e, skipFetch = false) {
+    if (e && e.stopPropagation) { e.stopPropagation(); }
+    closeSortDropdown();
+
+    const canonicalVal = normalizeSortValue(val);
+    const displayText = text || clSortLabels[canonicalVal] || 'Recently Added';
+    $('#sortDisplay').text(displayText);
+    $('#sortingfilter').val(canonicalVal);
+
+    $('#clSortDropdownPanel .cl-sort-item').removeClass('selected').attr('aria-selected', 'false')
+        .find('.cl-sort-check').hide();
+    const $opt = $(`#clSortDropdownPanel .cl-sort-item[data-sort-val="${canonicalVal}"]`);
+    $opt.addClass('selected').attr('aria-selected', 'true').find('.cl-sort-check').show();
+
+    if (canonicalVal !== 'recent') {
+        $('#clSortBtn').addClass('is-custom-sorted');
+    } else {
+        $('#clSortBtn').removeClass('is-custom-sorted');
+    }
+
+    clientListState.sort = canonicalVal;
+    updateHeaderSortIndicators(canonicalVal);
+
+    if (skipFetch) {
+        return;
+    }
+
+    syncUrlState();
+
+    // Option A Performance Optimization: If current working set is hydrated in RAM, sort locally with 0 HTTP calls
+    const locallySorted = sortDomClientsLocally(canonicalVal);
+    if (locallySorted) {
+        return; // Near-instantaneous client-side sort executed in User RAM (0 HTTP requests)
+    }
+
+    // Option B Canonical Fallback: Authoritative Elasticsearch query
     filtersdataget();
 }
 
 function handleSortChange(sel) {
-    const text = sel.options[sel.selectedIndex].text;
+    const text = sel.options && sel.selectedIndex >= 0 ? sel.options[sel.selectedIndex].text : 'Recently Added';
     const val = sel.value;
-    $('#sortDisplay').text(text);
-    clientListState.sort = val;
-    updateHeaderSortIndicators(val);
-    filtersdataget();
+    selectSortOption(val, text);
 }
 
 function handleHeaderSort(field) {
-    let currentSort = $('#sortingfilter').val() || 'recent';
+    let currentSort = normalizeSortValue($('#sortingfilter').val() || clientListState.sort || 'recent');
     let nextSort = 'recent';
+    let nextText = 'Recently Added';
 
     if (field === 'name') {
-        nextSort = (currentSort === 'name_asc') ? 'name_desc' : 'name_asc';
+        if (currentSort === 'name_asc') {
+            nextSort = 'name_desc';
+            nextText = 'Client Name (Z → A)';
+        } else {
+            nextSort = 'name_asc';
+            nextText = 'Client Name (A → Z)';
+        }
     } else if (field === 'date') {
-        nextSort = (currentSort === 'recent') ? 'oldest' : 'recent';
+        if (currentSort === 'recent') {
+            nextSort = 'oldest';
+            nextText = 'Oldest First';
+        } else {
+            nextSort = 'recent';
+            nextText = 'Recently Added';
+        }
     } else if (field === 'jobs') {
-        nextSort = (currentSort === 'jobs_desc') ? 'recent' : 'jobs_desc';
+        if (currentSort === 'jobs_desc') {
+            nextSort = 'recent';
+            nextText = 'Recently Added';
+        } else {
+            nextSort = 'jobs_desc';
+            nextText = 'Most Active Jobs';
+        }
     }
 
-    $('#sortingfilter').val(nextSort);
-    const sortText = $(`#sortingfilter option[value="${nextSort}"]`).text() || nextSort;
-    $('#sortDisplay').text(sortText);
-    clientListState.sort = nextSort;
-    updateHeaderSortIndicators(nextSort);
-    filtersdataget();
+    selectSortOption(nextSort, nextText);
 }
 
 function updateHeaderSortIndicators(activeSort) {
@@ -1260,25 +3052,102 @@ function updateHeaderSortIndicators(activeSort) {
     }
 }
 
-// Close location dropdown on outside click or escape
+// Close location, industry, activity, pipeline & sort dropdowns on outside click or escape
 $(document).on('click', function(e) {
     if (!$(e.target).closest('#clLocDropdownWrapper').length) {
-        $('#clLocDropdownPanel').removeClass('show');
-        $('#clLocBtn').removeClass('active');
+        closeLocationDropdown();
+    }
+    if (!$(e.target).closest('#clIndDropdownWrapper').length) {
+        closeIndustryDropdown();
+    }
+    if (!$(e.target).closest('#clActDropdownWrapper').length) {
+        closeActivityDropdown();
+    }
+    if (!$(e.target).closest('#clPipeDropdownWrapper').length) {
+        closePipelineDropdown();
+    }
+    if (!$(e.target).closest('#clSortDropdownWrapper').length) {
+        if ($('#clSortDropdownPanel').hasClass('show')) {
+            closeSortDropdown();
+        }
     }
 });
 
 $(document).on('keydown', function(e) {
     if (e.key === 'Escape') {
-        if ($('#clLocDropdownPanel').hasClass('show')) {
-            $('#clLocDropdownPanel').removeClass('show');
-            $('#clLocBtn').removeClass('active');
+        closeLocationDropdown();
+        closeIndustryDropdown();
+        if ($('#clActDropdownPanel').hasClass('show')) {
+            closeActivityDropdown();
+            $('#clActBtn').focus();
+        }
+        if ($('#clPipeDropdownPanel').hasClass('show')) {
+            closePipelineDropdown();
+            $('#clPipeBtn').focus();
+        }
+        if ($('#clSortDropdownPanel').hasClass('show')) {
+            closeSortDropdown();
+            $('#clSortBtn').focus();
         }
         if ($('#kt_activitiesClient').hasClass('drawer-on') || $('#kt_activitiesDirectClient').hasClass('drawer-on') || document.querySelector('.drawer-overlay')) {
             if (typeof ClientStateManager !== 'undefined' && typeof ClientStateManager.clearDrawerState === 'function') {
                 ClientStateManager.clearDrawerState();
             }
         }
+    }
+});
+
+// Arrow key navigation inside activity popover
+$(document).on('keydown', '#clActDropdownPanel .cl-act-item', function(e) {
+    const $items = $('#clActDropdownPanel .cl-act-item');
+    const index = $items.index(this);
+    if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        const next = (index + 1) % $items.length;
+        $items.eq(next).focus();
+    } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        const prev = (index - 1 + $items.length) % $items.length;
+        $items.eq(prev).focus();
+    } else if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        $(this).trigger('click');
+    }
+});
+
+// Arrow key navigation inside pipeline popover
+$(document).on('keydown', '#clPipeDropdownPanel .cl-pipe-item', function(e) {
+    const $items = $('#clPipeDropdownPanel .cl-pipe-item');
+    const index = $items.index(this);
+    if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        const next = (index + 1) % $items.length;
+        $items.eq(next).focus();
+    } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        const prev = (index - 1 + $items.length) % $items.length;
+        $items.eq(prev).focus();
+    } else if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        $(this).trigger('click');
+    }
+});
+
+// Arrow key navigation inside sort popover
+$(document).on('keydown', '#clSortDropdownPanel .cl-sort-item', function(e) {
+    const $items = $('#clSortDropdownPanel .cl-sort-item');
+    const index = $items.index(this);
+    if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        const next = (index + 1) % $items.length;
+        $items.eq(next).focus();
+    } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        const prev = (index - 1 + $items.length) % $items.length;
+        $items.eq(prev).focus();
+    } else if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        $(this).trigger('click');
     }
 });
 
@@ -1289,59 +3158,285 @@ function toggleSelectAllClients(master) {
 }
 
 // ── Client-side CSV Exporter ──
-function exportClientsToCsv() {
-    if (clWorker && clWorkerReady) {
-        clWorker.postMessage({
-            type: 'EXPORT_CSV'
-        });
-        return;
-    }
+// ── Enterprise 100% Client-Side Export Engine (CSV with CWE-1236 Defense & Dedicated Print-to-PDF) ──
+window.ClientExportManager = {
+    state: 'IDLE', // IDLE, PREPARING, FILTERING, SERIALIZING, DOWNLOADING, COMPLETE
 
-    var rows = [];
-    rows.push(['Company Name', 'Industry', 'Location', 'Jobs Hiring', 'Jobs Hold', 'Jobs Closed', 'Sourced', 'Evaluated', 'Interviews', 'Offers', 'Joined', 'Client Type', 'Date', 'Last Activity']);
-
-    $('#allClients .tbl-r').each(function() {
-        var $r = $(this);
-        var name = $r.find('.cl-name').text().trim();
-        var ind = $r.find('.cl-ind').text().trim();
-        var locCity = $r.find('.cl-loc-city').text().trim();
-        var locState = $r.find('.cl-loc-state').text().trim();
-        var locCountry = $r.find('.cl-loc-country').text().trim();
-        var loc = [locCity, locState, locCountry].filter(Boolean).join(', ');
-        var hiringJobs = $r.find('.tbl-cell-jobs .cl-job-line:eq(0) .cl-job-num').text().trim();
-        var holdJobs = $r.find('.tbl-cell-jobs .cl-job-line:eq(1) .cl-job-num').text().trim();
-        var closedJobs = $r.find('.tbl-cell-jobs .cl-job-line:eq(2) .cl-job-num').text().trim();
-        var sourced = $r.find('.pill-sourced').text().trim();
-        var evaluated = $r.find('.pill-evaluated').text().trim();
-        var interviews = $r.find('.pill-interviews').text().trim();
-        var offers = $r.find('.pill-offers').text().trim();
-        var joined = $r.find('.pill-joined').text().trim();
-        var type = $r.find('.cl-type-name').text().trim();
-        var conn = $r.find('.cl-date-box span').text().trim();
-        var act = $r.find('.cl-act-main').text().trim();
-
-        if (name) {
-            rows.push([name, ind, loc, hiringJobs, holdJobs, closedJobs, sourced, evaluated, interviews, offers, joined, type, conn, act]);
+    setButtonState: function(state, text) {
+        this.state = state;
+        const $btn = $('#clExportDropdownBtn');
+        const $lbl = $('#clExportBtnLabel');
+        if (state === 'IDLE' || state === 'COMPLETE') {
+            $btn.prop('disabled', false).removeClass('opacity-75');
+            $lbl.text('Export');
+        } else {
+            $btn.prop('disabled', true).addClass('opacity-75');
+            $lbl.text(text || 'Exporting...');
         }
-    });
+    },
 
-    if (rows.length <= 1) {
-        Swal.fire({
-            icon: 'info',
-            title: 'No Data',
-            text: 'There are no clients visible on the current page to export.'
+    getActiveFilters: function() {
+        return {
+            tab: (typeof activeClientTab !== 'undefined' ? activeClientTab : 'all'),
+            search: ($('#kt_tagify_2').val() || '').trim(),
+            sort: ($('#sortingfilter').val() || 'recent'),
+            country_id: (typeof clientListState !== 'undefined' && clientListState.country_id) ? clientListState.country_id : ($('#country').val() || ''),
+            country_name: (typeof clientListState !== 'undefined' && clientListState.country_name) ? clientListState.country_name : '',
+            city_id: (typeof clientListState !== 'undefined' && clientListState.city_id) ? clientListState.city_id : ($('#city_id').val() || ''),
+            city_name: (typeof clientListState !== 'undefined' && clientListState.city_name) ? clientListState.city_name : '',
+            unspecified_location: (typeof clientListState !== 'undefined' && clientListState.unspecified_location) ? 1 : 0,
+            industry_id: (typeof clientListState !== 'undefined' && clientListState.industry_id) ? clientListState.industry_id : ($('#industryFilter').val() || ''),
+            industry: (typeof clientListState !== 'undefined' && clientListState.industry_id) ? clientListState.industry_id : ($('#industryFilter').val() || ''),
+            activity: (typeof clientListState !== 'undefined' && clientListState.activity) ? clientListState.activity : ($('#activityFilter').val() || '')
+        };
+    },
+
+    ensureHydration: async function() {
+        if (window.clWorker && window.clWorkerReady) {
+            return true;
+        }
+        const companyId = {{ (int)auth()->user()->company_id }};
+        const userId = {{ (int)auth()->id() }};
+        const idbStoreKey = 'jero_client_projection:tenant=' + companyId + ':user=' + userId + ':projection=clients:schema=2';
+        try {
+            if (typeof ClientLocationDB !== 'undefined') {
+                const stored = await ClientLocationDB.get(idbStoreKey);
+                if (stored && stored.rows && stored.rows.length > 0) {
+                    if (!window.clWorker && typeof initClientWorker === 'function') {
+                        initClientWorker();
+                    }
+                    if (window.clWorker) {
+                        window.clWorker.postMessage({
+                            type: 'INIT_DATASET',
+                            rows: stored.rows,
+                            version: stored.data_version || 1
+                        });
+                        window.clWorkerReady = true;
+                        return true;
+                    }
+                }
+            }
+        } catch (e) {
+            console.warn('[Export Engine] IndexedDB hydration check skipped:', e);
+        }
+        return false;
+    },
+
+    exportCsv: async function(scope) {
+        this.setButtonState('PREPARING', 'Preparing...');
+        const isHydrated = await this.ensureHydration();
+
+        const filters = this.getActiveFilters();
+        const exportId = 'EXP-' + new Date().toISOString().slice(0, 10).replace(/-/g, '') + '-' + Math.floor(1000 + Math.random() * 9000);
+        const manifest = {
+            exportId: exportId,
+            userName: '{{ addslashes(auth()->user()->name ?? "Recruiter") }}',
+            userId: {{ (int)auth()->id() }},
+            tenantId: {{ (int)auth()->user()->company_id }}
+        };
+
+        if (isHydrated && window.clWorker && window.clWorkerReady) {
+            this.setButtonState('SERIALIZING', 'Building CSV...');
+            window.clWorker.postMessage({
+                type: 'EXPORT_CSV',
+                scope: scope,
+                filters: filters,
+                manifest: manifest
+            });
+            return;
+        }
+
+        // High-performance DOM Scraper fallback with CWE-1236 defense
+        this.fallbackDomExport(scope, manifest);
+    },
+
+    fallbackDomExport: function(scope, manifest) {
+        var rows = [];
+        var sanitize = function(val) {
+            if (val === null || val === undefined) return '""';
+            var s = String(val).trim();
+            if (/^[=+\-@\t\r]/.test(s)) s = "'" + s;
+            return '"' + s.replace(/"/g, '""') + '"';
+        };
+
+        var manifestLines = [
+            '# ==============================================================================',
+            '# JERO ENTERPRISE ATS CLIENTS EXPORT MANIFEST (DOM FALLBACK)',
+            '# Export ID: ' + manifest.exportId,
+            '# Exported At: ' + new Date().toISOString(),
+            '# Scope: ' + (scope === 'all' ? 'All Visible Clients' : 'Filtered Visible View'),
+            '# Tenant ID: ' + manifest.tenantId,
+            '# Generated By: ' + manifest.userName + ' (ID #' + manifest.userId + ')',
+            '# =============================================================================='
+        ];
+
+        var headers = ['Company Name', 'Industry', 'Location', 'City', 'State', 'Country', 'Jobs Hiring', 'Jobs Hold', 'Jobs Closed', 'Sourced', 'Evaluated', 'Interviews', 'Offers', 'Joined', 'Client Type', 'Connected Date', 'Last Activity'];
+
+        rows.push(manifestLines.join('\r\n'));
+        rows.push(headers.map(function(h) { return '"' + h + '"'; }).join(','));
+
+        $('#allClients .tbl-r').each(function() {
+            var $r = $(this);
+            var name = $r.find('.cl-name, .cl-details-title').first().text().trim();
+            var ind = $r.find('.cl-ind, .cl-details-ind').first().text().trim();
+
+            var city = $r.find('.cl-loc-city').first().text().trim();
+            var state = $r.find('.cl-loc-state').first().text().trim();
+            var country = $r.find('.cl-loc-country').first().text().trim();
+            var locParts = [];
+            if (city) locParts.push(city);
+            if (state) locParts.push(state);
+            if (country) locParts.push(country);
+            var loc = locParts.length > 0 ? locParts.join(', ') : ($r.find('.cl-loc-lines, .cl-subcard-loc').first().text().trim().replace(/\s+/g, ' ') || '');
+            if (loc === '—' || loc === '-') loc = '';
+
+            var hiringJobs = $r.find('.tbl-cell-jobs .cl-job-line:eq(0) .cl-job-num').text().trim() || '0';
+            var holdJobs = $r.find('.tbl-cell-jobs .cl-job-line:eq(1) .cl-job-num').text().trim() || '0';
+            var closedJobs = $r.find('.tbl-cell-jobs .cl-job-line:eq(2) .cl-job-num').text().trim() || '0';
+            var sourced = $r.find('.pill-sourced').text().trim() || '0';
+            var evaluated = $r.find('.pill-evaluated').text().trim() || '0';
+            var interviews = $r.find('.pill-interviews').text().trim() || '0';
+            var offers = $r.find('.pill-offers').text().trim() || '0';
+            var joined = $r.find('.pill-joined').text().trim() || '0';
+            var type = $r.find('.cl-type-name').text().trim() || 'Internal Client';
+            var conn = $r.find('.cl-date-box span').text().trim() || '-';
+            var act = $r.find('.cl-act-main').text().trim() || '-';
+
+            if (name) {
+                rows.push([
+                    sanitize(name),
+                    sanitize(ind),
+                    sanitize(loc),
+                    sanitize(city),
+                    sanitize(state),
+                    sanitize(country),
+                    hiringJobs,
+                    holdJobs,
+                    closedJobs,
+                    sourced,
+                    evaluated,
+                    interviews,
+                    offers,
+                    joined,
+                    sanitize(type),
+                    sanitize(conn),
+                    sanitize(act)
+                ].join(','));
+            }
         });
-        return;
-    }
 
-    var csvContent = "data:text/csv;charset=utf-8," + rows.map(e => e.map(cell => '"' + ('' + cell).replace(/"/g, '""') + '"').join(",")).join("\n");
-    var encodedUri = encodeURI(csvContent);
-    var link = document.createElement("a");
-    link.setAttribute("href", encodedUri);
-    link.setAttribute("download", "clients_export_" + new Date().toISOString().slice(0, 10) + ".csv");
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+        if (rows.length <= 2) {
+            this.setButtonState('IDLE');
+            if (typeof Swal !== 'undefined') {
+                Swal.fire({
+                    icon: 'info',
+                    title: 'No Data',
+                    text: 'There are no clients visible on the current page to export.'
+                });
+            }
+            return;
+        }
+
+        var csvContent = '\uFEFF' + rows.join('\r\n');
+        var blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        var url = URL.createObjectURL(blob);
+        var link = document.createElement('a');
+        var dateStr = new Date().toISOString().slice(0, 10);
+        link.setAttribute('href', url);
+        link.setAttribute('download', 'jero_clients_export_' + scope + '_' + dateStr + '.csv');
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+
+        this.setButtonState('COMPLETE');
+        setTimeout(function() { ClientExportManager.setButtonState('IDLE'); }, 2000);
+    },
+
+    exportPdf: function() {
+        this.setButtonState('PREPARING', 'Preparing Report...');
+        this.buildPrintCanvas();
+        this.setButtonState('IDLE');
+        window.print();
+    },
+
+    buildPrintCanvas: function() {
+        const now = new Date();
+        const dateStr = now.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+        const manifestId = 'REF-' + now.toISOString().slice(0, 10).replace(/-/g, '') + '-' + Math.floor(1000 + Math.random() * 9000);
+        const curTab = (typeof activeClientTab !== 'undefined' ? activeClientTab : 'all').toUpperCase();
+
+        $('#printReportTimestamp').text('Generated: ' + dateStr);
+        $('#printReportScope').text('Scope: ' + curTab + ' CLIENTS');
+        $('#printReportManifestId').text('Ref: ' + manifestId);
+
+        // Sync KPI numbers from authoritative badges
+        $('#printKpiTotal').text($('#span_clientAll').text() || '0');
+        $('#printKpiActive').text($('#span_clientHiring').text() || '0');
+        $('#printKpiHiring').text($('#span_clientHiring').text() || '0');
+        $('#printKpiPipeline').text($('#span_clientCustom').text() || '0');
+        $('#printKpiPlacements').text($('#span_clientDirect').text() || '0');
+
+        // Populate Table rows from current DOM stream
+        const $tbody = $('#printTableBody');
+        $tbody.empty();
+
+        const $cards = $('#allClients .tbl-r');
+        if ($cards.length === 0) {
+            $tbody.append('<tr><td colspan="6" class="text-center py-4 text-muted">No client records in active view to display.</td></tr>');
+            return;
+        }
+
+        $cards.each(function() {
+            const $r = $(this);
+            const name = $r.find('.cl-name, .cl-details-title').first().text().trim() || 'Client Company';
+            const ind = $r.find('.cl-ind, .cl-details-ind').first().text().trim() || '—';
+            const city = $r.find('.cl-loc-city').first().text().trim();
+            const state = $r.find('.cl-loc-state').first().text().trim();
+            const country = $r.find('.cl-loc-country').first().text().trim();
+            const locParts = [];
+            if (city) locParts.push(city);
+            if (state) locParts.push(state);
+            if (country) locParts.push(country);
+            const loc = locParts.length > 0 ? locParts.join(', ') : ($r.find('.cl-loc-lines, .cl-subcard-loc').first().text().trim().replace(/\s+/g, ' ') || '—');
+            const type = $r.find('.cl-type-name').text().trim() || 'Internal Client';
+            const hiringJobs = $r.find('.tbl-cell-jobs .cl-job-line:eq(0) .cl-job-num').text().trim() || '0';
+            const holdJobs = $r.find('.tbl-cell-jobs .cl-job-line:eq(1) .cl-job-num').text().trim() || '0';
+            const closedJobs = $r.find('.tbl-cell-jobs .cl-job-line:eq(2) .cl-job-num').text().trim() || '0';
+            const sourced = $r.find('.pill-sourced').text().trim() || '0';
+            const evaluated = $r.find('.pill-evaluated').text().trim() || '0';
+            const interviews = $r.find('.pill-interviews').text().trim() || '0';
+            const joined = $r.find('.pill-joined').text().trim() || '0';
+            const act = $r.find('.cl-act-main').text().trim() || '—';
+
+            const rowHtml = `
+                <tr>
+                    <td><strong>${name}</strong><br><span style="font-size:8.5px;color:#64748b;">${ind}</span></td>
+                    <td>${loc}</td>
+                    <td><span style="display:inline-block;padding:2px 5px;border-radius:4px;background:#f1f5f9;font-weight:600;font-size:8.5px;">${type}</span></td>
+                    <td><strong>${hiringJobs}</strong> Hiring / ${holdJobs} Hold / ${closedJobs} Clsd</td>
+                    <td>${sourced} Sourced • ${evaluated} Eval • <strong>${interviews} Int</strong> • ${joined} Joined</td>
+                    <td>${act}</td>
+                </tr>
+            `;
+            $tbody.append(rowHtml);
+        });
+    }
+};
+
+function triggerClientExport(type) {
+    if (type === 'executive_pdf') {
+        window.ClientExportManager.exportPdf();
+    } else if (type === 'all_csv') {
+        window.ClientExportManager.exportCsv('all');
+    } else {
+        window.ClientExportManager.exportCsv('filtered');
+    }
+}
+
+// Backward-compatible alias for any legacy triggers
+function exportClientsToCsv() {
+    triggerClientExport('filtered_csv');
 }
 
 // ── Session & Inactivity Recovery Engine (10-minute Idle & Sleep Recovery) ──
@@ -1510,6 +3605,217 @@ window.ClientMemoryStore = {
     }
 };
 
+// ── Single Source of Truth: Canonical Client Pipeline Store ──
+window.ClientPipelineStore = {
+    revisions: new Map(),
+    pipelineCache: new Map(),
+    bus: (typeof BroadcastChannel !== 'undefined') ? new BroadcastChannel('jero_pipeline_bus') : null,
+
+    init: function() {
+        if (this.bus) {
+            this.bus.onmessage = (e) => {
+                if (e.data && e.data.type === 'PIPELINE_UPDATE' && e.data.payload) {
+                    this.apply(e.data.payload, false);
+                }
+            };
+        }
+    },
+
+    get: function(clientId) {
+        const cid = Number(clientId);
+        return this.pipelineCache.get(cid) || null;
+    },
+
+    apply: function(payload, broadcast = true) {
+        if (!payload || !payload.client_id) return;
+        const cid = Number(payload.client_id);
+        const rev = Number(payload.seq || payload.revision || 0);
+        const curRev = this.revisions.get(cid) || 0;
+
+        // Monotonic sequence check (Strict Idempotency): discard stale/out-of-order events
+        if (rev && rev <= curRev) {
+            return;
+        }
+        if (rev) this.revisions.set(cid, rev);
+
+        // Update in-memory cache (Upgraded Contract: [sourced, screening, eval, neg, offer, joined, rejected, in_review, interviews])
+        let pv = Array.isArray(payload.pv) && payload.pv.length >= 9 ? payload.pv : null;
+        if (!pv && payload.changed && this.pipelineCache.has(cid)) {
+            const cached = this.pipelineCache.get(cid);
+            const p = Object.assign({}, cached.pipeline);
+            const fromStatus = Number(payload.changed.from_status || 0);
+            const toStatus = Number(payload.changed.to_status || payload.changed.new_status || 0);
+            const statusKeyMap = {
+                1: 'sourced',
+                2: 'screening',
+                3: 'evaluated',
+                4: 'negotiations',
+                5: 'offers',
+                6: 'joined',
+                7: 'rejected',
+                8: 'in_review'
+            };
+            if (fromStatus && statusKeyMap[fromStatus] && p[statusKeyMap[fromStatus]] > 0) {
+                p[statusKeyMap[fromStatus]] = Math.max(0, p[statusKeyMap[fromStatus]] - 1);
+            }
+            if (toStatus && statusKeyMap[toStatus]) {
+                p[statusKeyMap[toStatus]] = (p[statusKeyMap[toStatus]] || 0) + 1;
+            }
+            const activePipeline = (p.sourced || 0) + (p.screening || 0) + (p.evaluated || 0) + (p.negotiations || 0) + (p.offers || 0) + (p.joined || 0);
+            const applications = activePipeline + (p.rejected || 0) + (p.in_review || 0);
+            p.active_pipeline = activePipeline;
+            p.applications = applications;
+
+            pv = [
+                p.sourced || 0,
+                p.screening || 0,
+                p.evaluated || 0,
+                p.negotiations || 0,
+                p.offers || 0,
+                p.joined || 0,
+                p.rejected || 0,
+                p.in_review || 0,
+                p.interviews || 0
+            ];
+            this.pipelineCache.set(cid, { revision: rev, seq: rev, pv: pv, pipeline: p });
+        } else if (pv) {
+            const sourced = Number(pv[0] || 0);
+            const screening = Number(pv[1] || 0);
+            const evaluated = Number(pv[2] || 0);
+            const negotiations = Number(pv[3] || 0);
+            const offers = Number(pv[4] || 0);
+            const joined = Number(pv[5] || 0);
+            const rejected = Number(pv[6] || 0);
+            const inReview = Number(pv[7] || 0);
+            const interviews = Number(pv[8] || 0);
+
+            const activePipeline = sourced + screening + evaluated + negotiations + offers + joined;
+            const applications = activePipeline + rejected + inReview;
+
+            this.pipelineCache.set(cid, {
+                revision: rev,
+                seq: rev,
+                pv: [sourced, screening, evaluated, negotiations, offers, joined, rejected, inReview, interviews],
+                pipeline: {
+                    active_pipeline: activePipeline,
+                    applications: applications,
+                    sourced: sourced,
+                    screening: screening,
+                    evaluated: evaluated,
+                    negotiations: negotiations,
+                    offers: offers,
+                    joined: joined,
+                    rejected: rejected,
+                    in_review: inReview,
+                    interviews: interviews
+                }
+            });
+        }
+
+        // Forward to Web Worker
+        if (window.clWorker && window.clWorkerReady) {
+            window.clWorker.postMessage({
+                type: 'PIPELINE_REVISION_UPDATE',
+                clientId: cid,
+                revision: rev,
+                seq: rev,
+                pv: pv,
+                changed: payload.changed
+            });
+        }
+
+        // In-place reactive DOM update for rendered listing row
+        this.updateDOM(cid, { pv: pv, pipeline: this.pipelineCache.get(cid) ? this.pipelineCache.get(cid).pipeline : null });
+
+        // Update Drawer if open for this client
+        this.updateDrawer(cid, { pv: pv, pipeline: this.pipelineCache.get(cid) ? this.pipelineCache.get(cid).pipeline : null });
+
+        // Broadcast across tabs in this browser via BroadcastChannel
+        if (broadcast && this.bus) {
+            this.bus.postMessage({
+                type: 'PIPELINE_UPDATE',
+                payload: {
+                    client_id: cid,
+                    seq: rev,
+                    revision: rev,
+                    pv: pv,
+                    changed: payload.changed
+                }
+            });
+        }
+    },
+
+    updateDOM: function(cid, payload) {
+        const $card = $(`.cl-primary-card[data-row-id="${cid}"]`);
+        if (!$card.length) return;
+
+        const pv = payload.pv;
+        if (!Array.isArray(pv) || pv.length < 9) return;
+
+        const [sourced, screening, evaluated, negotiations, offers, joined, rejected, inReview, interviews] = pv;
+        const activePipeline = Number(sourced) + Number(screening) + Number(evaluated) + Number(negotiations) + Number(offers) + Number(joined);
+        const applications = activePipeline + Number(rejected) + Number(inReview);
+
+        this._setPill($card.find('.step-sourcing'), sourced, 'Sourcing');
+        this._setPill($card.find('.step-screening'), screening, 'Screening');
+        this._setPill($card.find('.step-evaluation'), evaluated, 'Evaluation');
+        this._setPill($card.find('.step-negotiations'), negotiations, 'Negotiation');
+        this._setPill($card.find('.step-offer'), offers, 'Offer');
+        this._setPill($card.find('.step-joined'), joined, 'Joined');
+        this._setPill($card.find('.step-rejected'), rejected, 'Rejected');
+        this._setPill($card.find('.step-interview'), interviews, 'Interview');
+
+        const $appsBadge = $card.find('.cl-apps-badge');
+        if ($appsBadge.length) {
+            $appsBadge.text(applications);
+            if (applications > 0) {
+                $appsBadge.addClass('has-apps');
+            } else {
+                $appsBadge.removeClass('has-apps');
+            }
+        }
+
+        $card.find('.cl-pipe-body').attr('title', `Total Applications: ${applications} | Rejected: ${rejected} | Interviews: ${interviews}`);
+    },
+
+    _setPill: function($step, count, name) {
+        if (!$step.length) return;
+        const num = Number(count || 0);
+        $step.find('.cl-pipe-pill').text(num);
+        $step.attr('title', `${name}: ${num}`);
+        if (num > 0) {
+            $step.addClass('has-count');
+        } else {
+            $step.removeClass('has-count');
+        }
+    },
+
+    updateDrawer: function(cid, payload) {
+        const activeDrawer = window.__activeClientDrawer;
+        const activeCid = activeDrawer && activeDrawer.context ? Number(activeDrawer.context.canonicalClientId) : 0;
+        if (activeCid !== cid) return;
+
+        const pv = payload.pv;
+        if (!Array.isArray(pv) || pv.length < 9) return;
+
+        const [applications, sourced, screening, evaluated, negotiations, offers, joined, rejected, interviews] = pv;
+
+        $('#ojInternalTabBadge, #ojCountAllInternal').text(Number(offers) + Number(joined)).show();
+        $('#ojCountOffersInternal').text(offers);
+        $('#tabBadgeInterviewTrackerShow, #perfKpiInterviews').text(interviews).show();
+        $('#candTabCountScreening').text(screening);
+        $('#candTabCountOffer').text(offers);
+        $('#candTabCountJoined').text(joined);
+        $('#candTabCountRejected').text(rejected);
+        $('#candTabCountAll').text(applications);
+
+        if (window.ClientDrawerTabs && window.ClientDrawerTabs['candidates'] && typeof window.ClientDrawerTabs['candidates'].onPipelineUpdate === 'function') {
+            window.ClientDrawerTabs['candidates'].onPipelineUpdate(cid, payload);
+        }
+    }
+};
+window.ClientPipelineStore.init();
+
 // ─── JDCR V5.2: Single Synchronization Authority (SyncSupervisor) ───
 window.SyncSupervisor = {
     tenantId: {{ (int) (auth()->user()->company_id ?? 0) }},
@@ -1640,6 +3946,12 @@ window.ClientStateManager = {
 
     getActiveTab: function() {
         return this.state.activeTab;
+    },
+
+    setSort: function(val, text) {
+        if (typeof selectSortOption === 'function') {
+            selectSortOption(val, text);
+        }
     },
 
     getSelectedClientId: function() {
@@ -1980,6 +4292,10 @@ window.ClientStateManager = {
         $(`.cl-stat-filter[data-tab="${tabName}"]`).addClass('active');
 
         if (tabName === 'request') {
+            $('#sort-opt-jobs_desc').hide();
+            if (window.clientListState && window.clientListState.sort === 'jobs_desc') {
+                selectSortOption('recent', 'Recently Added', null, true);
+            }
             $('.tbl').addClass('tbl-req');
             $('#clientTableHead').html(`
                 <div class="tbl-th-subcard tbl-th-check">
@@ -2008,6 +4324,7 @@ window.ClientStateManager = {
                 </div>
             `);
         } else {
+            $('#sort-opt-jobs_desc').show();
             $('.tbl').removeClass('tbl-req');
             $('#clientTableHead').html(`
                 <div class="tbl-th-subcard tbl-th-check">
@@ -2210,7 +4527,7 @@ $(document).on('click', '#kt_activitiesClient_close, #kt_activitiesDirectClient_
     ClientStateManager.clearDrawerState();
 });
 
-// ── Canonical Client Listing State (Zero tenant_id, strictly session-scoped) ──
+// ── Canonical Client Listing State Machine ──
 window.clientListState = {
     tab: {!! json_encode($initialTab ?? 'all') !!},
     search: '',
@@ -2221,16 +4538,27 @@ window.clientListState = {
     unspecified_location: false,
     industry_id: '',
     activity: '',
+    pipeline: '',
     sort: 'recent',
     page: 1,
     per_page: 10,
-    cursor: null
+    cursor: null,
+
+    datasetVersion: {{ (int)($initialDataVersion ?? 1) }},
+    mode: 'ram', // 'ram' | 'server'
+    loading: false,
+    requestId: 0,
+    hasMore: false,
+    total: {{ (int)($initialTotal ?? 0) }}
 };
 if (window.clientListState.tab === 'requests') window.clientListState.tab = 'request';
 if (window.clientListState.tab === 'custom') window.clientListState.tab = 'internal';
 
 window.initialLocationFacets = {!! json_encode($locationFacets ?? ['total' => 0, 'located_count' => 0, 'unspecified_count' => 0, 'hubs' => []]) !!};
 window.allCountriesList = {!! json_encode($countries ?? []) !!};
+window.initialIndustriesManifest = {!! json_encode($industriesManifest ?? App\Services\IndustryTaxonomyService::getGlobalManifest()) !!};
+window.initialRecencyCounts = {!! json_encode($initialRecencyCounts ?? ['all' => 0, '7d' => 0, '30d' => 0, '90d' => 0, 'dormant' => 0, 'never' => 0]) !!};
+window.initialPipelineCounts = {!! json_encode($initialPipelineCounts ?? ['all' => 0, 'active' => 0, 'none' => 0]) !!};
 
 // ── Offline & Zero-Server IndexedDB Reference Cache ──
 const ClientLocationDB = {
@@ -2303,6 +4631,19 @@ function initCountryBundle() {
     });
 }
 
+function initIndustryBundle() {
+    if (window.initialIndustriesManifest && window.initialIndustriesManifest.industries && window.initialIndustriesManifest.industries.length > 0) {
+        ClientLocationDB.set('industries_manifest', window.initialIndustriesManifest);
+        return;
+    }
+    ClientLocationDB.get('industries_manifest').then(function(cached) {
+        if (cached && cached.industries && cached.industries.length > 0) {
+            window.initialIndustriesManifest = cached;
+            renderIndustryDropdown($('#clIndSearchInp').val() || '');
+        }
+    });
+}
+
 // ── Web Worker In-Browser OLAP Engine (Zero Server Read Strain) ──
 let clWorker = null;
 let clWorkerReady = false;
@@ -2332,19 +4673,45 @@ function renderClientRows(rows) {
         const indHtml = r.industry ? `<div class="cl-ind" title="${escapeAttr(r.industry)}">${escapeAttr(r.industry)}</div>` : '';
         const sizeHtml = r.company_size ? `<div class="cl-size">${escapeAttr(r.company_size)}</div>` : '';
 
+        // Intent: 3-tier discrete Location resolution (City, State, Country) with zero hardcoding and graceful fallback
+        let rCity = (r.city || r.city_name || '').trim();
+        let rState = (r.state || r.state_name || '').trim();
+        let rCountry = (r.country || r.country_name || '').trim();
+
+        if (!rCity || !rState || !rCountry) {
+            const locObj = (Array.isArray(r.locations) && r.locations.length > 0) ? r.locations[0] : (r.location || (Array.isArray(r.client_location) && r.client_location[0]) || null);
+            if (locObj) {
+                const lObj = typeof locObj === 'object' ? locObj : {};
+                if (!rCity) rCity = (lObj.city_name || lObj.city || '').trim();
+                if (!rState) rState = (lObj.state_name || (typeof lObj.state === 'string' && isNaN(lObj.state) ? lObj.state : '') || '').trim();
+                if (!rCountry) rCountry = (lObj.country_name || lObj.country || '').trim();
+            }
+        }
+
+        const formatTitle = function(str) {
+            if (!str) return '';
+            return str.replace(/\w\S*/g, function(txt) {
+                return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();
+            });
+        };
+
+        if (rCity) rCity = formatTitle(rCity);
+        if (rState) rState = formatTitle(rState);
+        if (rCountry) rCountry = formatTitle(rCountry);
+
         let locHtml = '';
-        if (r.city) {
-            locHtml += `<div class="cl-loc-city" title="${escapeAttr(r.city)}">${escapeAttr(r.city)}</div>`;
+        if (rCity) {
+            locHtml += `<div class="cl-loc-city" title="${escapeAttr(rCity)}">${escapeAttr(rCity)}</div>`;
         }
-        if (r.state) {
-            locHtml += `<div class="cl-loc-state" title="${escapeAttr(r.state)}">${escapeAttr(r.state)}</div>`;
+        if (rState) {
+            locHtml += `<div class="cl-loc-state" title="${escapeAttr(rState)}">${escapeAttr(rState)}</div>`;
         }
-        if (r.country) {
-            locHtml += `<div class="cl-loc-country" title="${escapeAttr(r.country)}">${escapeAttr(r.country)}</div>`;
+        if (rCountry) {
+            locHtml += `<div class="cl-loc-country" title="${escapeAttr(rCountry)}">${escapeAttr(rCountry)}</div>`;
         }
         if (!locHtml) {
             if (r.location_main) {
-                locHtml = `<div class="cl-loc-city" title="${escapeAttr(r.location_main)}">${escapeAttr(r.location_main)}</div>`;
+                locHtml = `<div class="cl-loc-city" title="${escapeAttr(formatTitle(r.location_main))}">${escapeAttr(formatTitle(r.location_main))}</div>`;
             } else {
                 locHtml = `<div class="cl-loc-empty">—</div>`;
             }
@@ -2366,7 +4733,7 @@ function renderClientRows(rows) {
                         <div class="cl-subcard-head">
                             <span class="cl-subcard-title">Client Identity</span>
                             <div class="cl-subcard-badges">
-                                <span class="cl-scope-pill pill-direct">Direct Client</span>
+                                <span class="cl-scope-pill pill-direct type-direct">Direct Client</span>
                                 <span class="badge" style="background:#fef3c7; color:#d97706; font-size:9px; font-weight:700; padding:1.5px 6px; border-radius:4px; border:1px solid #fde68a;">⚡ Request</span>
                             </div>
                         </div>
@@ -2470,24 +4837,28 @@ function renderClientRows(rows) {
         const jobHold = r.jobs ? (r.jobs.hold || 0) : 0;
         const jobClosed = r.jobs ? (r.jobs.closed || 0) : 0;
 
-        const applications = r.pipeline ? (r.pipeline.applications || 0) : 0;
-        const sourced = r.pipeline ? (r.pipeline.sourced || 0) : 0;
-        const screening = r.pipeline ? (r.pipeline.screening || 0) : 0;
-        const evaluated = r.pipeline ? (r.pipeline.evaluated || 0) : 0;
-        const negotiations = r.pipeline ? (r.pipeline.negotiations || 0) : 0;
-        const offers = r.pipeline ? (r.pipeline.offers || 0) : 0;
-        const joined = r.pipeline ? (r.pipeline.joined || 0) : 0;
-        const interviews = r.pipeline ? (r.pipeline.interviews || 0) : 0;
+        const sourced = r.pv ? (r.pv[0] || 0) : (r.pipeline ? (r.pipeline.sourced || 0) : 0);
+        const screening = r.pv ? (r.pv[1] || 0) : (r.pipeline ? (r.pipeline.screening || 0) : 0);
+        const evaluated = r.pv ? (r.pv[2] || 0) : (r.pipeline ? (r.pipeline.evaluated || 0) : 0);
+        const negotiations = r.pv ? (r.pv[3] || 0) : (r.pipeline ? (r.pipeline.negotiations || 0) : 0);
+        const offers = r.pv ? (r.pv[4] || 0) : (r.pipeline ? (r.pipeline.offers || 0) : 0);
+        const joined = r.pv ? (r.pv[5] || 0) : (r.pipeline ? (r.pipeline.joined || 0) : 0);
+        const rejected = r.pv ? (r.pv[6] || 0) : (r.pipeline ? (r.pipeline.rejected || 0) : 0);
+        const inReview = r.pv ? (r.pv[7] || 0) : (r.pipeline ? (r.pipeline.in_review || 0) : 0);
+        const interviews = r.pv ? (r.pv[8] || 0) : (r.pipeline ? (r.pipeline.interviews || 0) : 0);
+
+        const activePipeline = sourced + screening + evaluated + negotiations + offers + joined;
+        const applications = activePipeline + rejected + inReview;
 
         const daysAgo = r.days_ago || '';
-        const clientTypeClass = r.is_direct ? 'type-direct' : 'type-internal';
+        const clientTypeClass = r.is_direct ? 'pill-direct type-direct' : 'pill-internal type-internal';
         const clientTypeCss = r.client_type_css || (r.is_direct ? 'show-detail-direct' : 'show-detail');
         const clientTypeLabel = r.client_type || (r.is_direct ? 'Direct Client' : 'Internal Client');
         const clientTypeAttr = r.is_direct ? 'direct' : 'internal';
         const editUrl = '{{ url("service_company/client/edit") }}/' + r.id;
 
         return `
-        <div class="cl-primary-card tbl-r ${clientTypeCss} ${jobActive > 0 ? 'is-active-client' : 'is-inactive-client'}" data-row-id="${r.id}" data-client-type="${clientTypeAttr}">
+        <div class="cl-primary-card tbl-r ${clientTypeCss} ${jobActive > 0 ? 'is-active-client' : 'is-inactive-client'}" data-row-id="${r.id}" data-client-type="${clientTypeAttr}" data-active-jobs="${jobActive}" data-client-name="${escapeAttr(r.name || '')}">
             <div class="cl-subcards-grid">
                 <!-- SUB-CARD 1: Client Identity (Internal & Active at TOP) -->
                 <div class="cl-subcard cl-subcard-identity">
@@ -2563,7 +4934,7 @@ function renderClientRows(rows) {
                             <span class="cl-subcard-title">Hiring Pipeline</span>
                         </div>
                     </div>
-                    <div class="cl-pipe-body tbl-cell-pipeline" title="Total Applications: ${applications} | Interviews: ${interviews}">
+                    <div class="cl-pipe-body tbl-cell-pipeline" title="Total Applications: ${applications} | Rejected: ${rejected} | Interviews: ${interviews}">
                         <div class="cl-pipeline-flow">
                             <div class="cl-pipe-step step-sourcing ${sourced > 0 ? 'has-count' : ''}" title="Sourcing: ${sourced}">
                                 <span class="cl-pipe-pill pill-sourcing">${sourced}</span>
@@ -2589,6 +4960,10 @@ function renderClientRows(rows) {
                                 <span class="cl-pipe-pill pill-joined">${joined}</span>
                                 <span class="cl-pipe-label">Joined</span>
                             </div>
+                            <div class="cl-pipe-step step-rejected ${rejected > 0 ? 'has-count' : ''}" title="Rejected: ${rejected}">
+                                <span class="cl-pipe-pill pill-rejected">${rejected}</span>
+                                <span class="cl-pipe-label">Rejected</span>
+                            </div>
                             <div class="cl-pipe-divider" aria-hidden="true"></div>
                             <div class="cl-pipe-step step-interview ${interviews > 0 ? 'has-count' : ''}" title="Interview: ${interviews}">
                                 <span class="cl-pipe-pill pill-interview">${interviews}</span>
@@ -2612,13 +4987,7 @@ function renderClientRows(rows) {
                         <span>Connected: <strong>${escapeAttr(r.connected_on || '-')}</strong></span>
                     </span>
                     <span class="cl-meta-dot">•</span>
-                    <span class="cl-meta-item">
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <circle cx="12" cy="12" r="10"/>
-                            <polyline points="12 6 12 12 16 14"/>
-                        </svg>
-                        <span>Last Activity: <strong>${escapeAttr(daysAgo || 'No activity yet')}</strong></span>
-                    </span>
+                    ${renderClientEngagementBadge(r, daysAgo)}
                     <span class="cl-meta-dot">•</span>
                     <span class="cl-meta-item cl-meta-apps">
                         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -2763,18 +5132,542 @@ function handleWorkerMessage(data) {
         }
 
         applyClientResponse(syntheticResp, data.page);
+    } else if (data.type === 'PIPELINE_REVISION_APPLIED') {
+        if (window.ClientPipelineStore) {
+            window.ClientPipelineStore.updateDOM(data.clientId, data);
+            window.ClientPipelineStore.updateDrawer(data.clientId, data);
+        }
     } else if (data.type === 'CSV_READY') {
         const blob = new Blob([data.csvContent], { type: 'text/csv;charset=utf-8;' });
         const url = URL.createObjectURL(blob);
         const link = document.createElement("a");
+        const dateStr = new Date().toISOString().slice(0, 10);
+        const scopeStr = data.scope || 'clients';
         link.setAttribute("href", url);
-        link.setAttribute("download", "clients_export_" + new Date().toISOString().slice(0, 10) + ".csv");
+        link.setAttribute("download", "jero_clients_" + scopeStr + "_export_" + dateStr + ".csv");
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
         URL.revokeObjectURL(url);
+
+        if (window.ClientExportManager) {
+            window.ClientExportManager.setButtonState('COMPLETE');
+            setTimeout(function() { window.ClientExportManager.setButtonState('IDLE'); }, 2000);
+        }
+
+        if (typeof Swal !== 'undefined') {
+            Swal.fire({
+                toast: true,
+                position: 'top-end',
+                icon: 'success',
+                title: 'Export Complete: ' + (data.rowCount || 0) + ' clients in ' + (data.durationMs || 10) + 'ms (User RAM)',
+                showConfirmButton: false,
+                timer: 3500
+            });
+        }
+    } else if (data.type === 'EXPORT_ERROR') {
+        if (window.ClientExportManager) {
+            window.ClientExportManager.setButtonState('IDLE');
+        }
+        if (typeof Swal !== 'undefined') {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Export Notice',
+                text: data.message || 'Unable to export dataset at this time.'
+            });
+        }
     }
 }
+
+// ── JERO Distributed Client Runtime (JDCR V4.0) — High-Performance Client Search & Derived-State Engine ──
+const ClientSearchEngine = (function() {
+    'use strict';
+
+    let searchIndex = [];
+    const idSlotMap = new Map();
+    let activeBitmask = new Uint8Array(0);
+    let tombstoneCount = 0;
+    const presentationStore = new Map();
+
+    const WEIGHTS = {
+        NAME_BASE: 100,
+        ID_BASE: 90,
+        CONTACT_BASE: 50,
+        INDUSTRY_BASE: 30,
+        LOCATION_BASE: 20,
+        TYPE_BASE: 10
+    };
+
+    function tokenize(text) {
+        if (!text) return [];
+        return String(text)
+            .toLowerCase()
+            .replace(/[^\w\s-]/g, ' ')
+            .split(/\s+/)
+            .filter(t => t.length > 0);
+    }
+
+    return {
+        isReady: false,
+        lastQueryElapsedMs: 0,
+
+        size: function() {
+            return Math.max(0, searchIndex.length - tombstoneCount);
+        },
+
+        hydrate: function(rawRows, version) {
+            const t0 = performance.now();
+            searchIndex = [];
+            idSlotMap.clear();
+            presentationStore.clear();
+            tombstoneCount = 0;
+
+            if (!Array.isArray(rawRows) || rawRows.length === 0) {
+                activeBitmask = new Uint8Array(0);
+                this.isReady = false;
+                return;
+            }
+
+            const total = rawRows.length;
+            activeBitmask = new Uint8Array(Math.max(total, 64));
+
+            for (let i = 0; i < total; i++) {
+                const r = rawRows[i];
+                const id = Number(r.id || r.client_id);
+                if (!id) continue;
+
+                presentationStore.set(id, r);
+                const slot = searchIndex.length;
+                idSlotMap.set(id, slot);
+                activeBitmask[slot] = 1;
+
+                const nameLower = (r.name || '').trim().toLowerCase();
+                const nameTokens = tokenize(r.name);
+                const contactTokens = tokenize(r.contact_person_name || (r.contact && r.contact.name));
+                const industryTokens = tokenize(r.industry || r.ind_name);
+
+                const loc = (r.locations && r.locations[0]) || {};
+                const cityTokens = tokenize(r.city || r.location_main || loc.city_name || loc.city);
+                const stateTokens = tokenize(r.state || loc.state_name || loc.state);
+                const countryTokens = tokenize(r.country || loc.country_name || loc.country);
+                const typeTokens = tokenize(r.is_direct ? 'direct' : 'internal');
+
+                const countryId = (r.country_id !== undefined && r.country_id !== null) ? Number(r.country_id) : (loc.country_id ? Number(loc.country_id) : null);
+                const cityId = (r.city_id !== undefined && r.city_id !== null) ? Number(r.city_id) : (loc.city_id ? Number(loc.city_id) : null);
+                const industryId = (r.industry_id !== undefined && r.industry_id !== null) ? Number(r.industry_id) : null;
+                const hasLocation = Boolean(cityTokens.length || stateTokens.length || countryTokens.length);
+
+                const activeJobs = Number((r.jobs && (r.jobs.hiring || r.jobs.active)) || 0);
+                const pipelineActive = Number((r.pipeline && r.pipeline.active_pipeline) || 0);
+
+                searchIndex.push({
+                    id: id,
+                    name: nameLower,
+                    nameTokens: nameTokens,
+                    idStr: String(id),
+                    contactTokens: contactTokens,
+                    industryTokens: industryTokens,
+                    cityTokens: cityTokens,
+                    stateTokens: stateTokens,
+                    countryTokens: countryTokens,
+                    typeTokens: typeTokens,
+                    countryId: countryId,
+                    cityId: cityId,
+                    industryId: industryId,
+                    hasLocation: hasLocation,
+                    isDirect: Boolean(r.is_direct),
+                    isPendingRequest: Boolean(r.is_pending_request),
+                    activeJobs: activeJobs,
+                    pipelineActive: pipelineActive,
+                    createdTimestamp: r.created_at ? new Date(r.created_at).getTime() : 0,
+                    lastActivityTimestamp: r.last_activity_at ? new Date(r.last_activity_at).getTime() : (r.created_at ? new Date(r.created_at).getTime() : 0)
+                });
+            }
+
+            this.isReady = (searchIndex.length > 0);
+            this.lastQueryElapsedMs = performance.now() - t0;
+            console.log(`[JDCR SearchEngine V4.0] Hydrated ${searchIndex.length} records in ${this.lastQueryElapsedMs.toFixed(2)}ms.`);
+        },
+
+        upsertEntity: function(clientDto) {
+            const id = Number(clientDto.id || clientDto.client_id);
+            if (!id) return;
+
+            presentationStore.set(id, clientDto);
+
+            const nameLower = (clientDto.name || '').trim().toLowerCase();
+            const nameTokens = tokenize(clientDto.name);
+            const contactTokens = tokenize(clientDto.contact_person_name || (clientDto.contact && clientDto.contact.name));
+            const industryTokens = tokenize(clientDto.industry || clientDto.ind_name);
+
+            const loc = (clientDto.locations && clientDto.locations[0]) || {};
+            const cityTokens = tokenize(clientDto.city || clientDto.location_main || loc.city_name || loc.city);
+            const stateTokens = tokenize(clientDto.state || loc.state_name || loc.state);
+            const countryTokens = tokenize(clientDto.country || loc.country_name || loc.country);
+            const typeTokens = tokenize(clientDto.is_direct ? 'direct' : 'internal');
+
+            const countryId = (clientDto.country_id !== undefined && clientDto.country_id !== null) ? Number(clientDto.country_id) : (loc.country_id ? Number(loc.country_id) : null);
+            const cityId = (clientDto.city_id !== undefined && clientDto.city_id !== null) ? Number(clientDto.city_id) : (loc.city_id ? Number(loc.city_id) : null);
+            const industryId = (clientDto.industry_id !== undefined && clientDto.industry_id !== null) ? Number(clientDto.industry_id) : null;
+            const hasLocation = Boolean(cityTokens.length || stateTokens.length || countryTokens.length);
+
+            const activeJobs = Number((clientDto.jobs && (clientDto.jobs.hiring || clientDto.jobs.active)) || 0);
+            const pipelineActive = Number((clientDto.pipeline && clientDto.pipeline.active_pipeline) || 0);
+
+            const struct = {
+                id: id,
+                name: nameLower,
+                nameTokens: nameTokens,
+                idStr: String(id),
+                contactTokens: contactTokens,
+                industryTokens: industryTokens,
+                cityTokens: cityTokens,
+                stateTokens: stateTokens,
+                countryTokens: countryTokens,
+                typeTokens: typeTokens,
+                countryId: countryId,
+                cityId: cityId,
+                industryId: industryId,
+                hasLocation: hasLocation,
+                isDirect: Boolean(clientDto.is_direct),
+                isPendingRequest: Boolean(clientDto.is_pending_request),
+                activeJobs: activeJobs,
+                pipelineActive: pipelineActive,
+                createdTimestamp: clientDto.created_at ? new Date(clientDto.created_at).getTime() : 0,
+                lastActivityTimestamp: clientDto.last_activity_at ? new Date(clientDto.last_activity_at).getTime() : (clientDto.created_at ? new Date(clientDto.created_at).getTime() : 0)
+            };
+
+            if (idSlotMap.has(id)) {
+                const slot = idSlotMap.get(id);
+                searchIndex[slot] = struct;
+                activeBitmask[slot] = 1;
+            } else {
+                const slot = searchIndex.length;
+                searchIndex.push(struct);
+                idSlotMap.set(id, slot);
+
+                if (slot >= activeBitmask.length) {
+                    const expanded = new Uint8Array(Math.max(activeBitmask.length * 2, slot + 64));
+                    expanded.set(activeBitmask);
+                    activeBitmask = expanded;
+                }
+                activeBitmask[slot] = 1;
+            }
+            this.isReady = true;
+        },
+
+        deleteEntity: function(id) {
+            const numId = Number(id);
+            if (!idSlotMap.has(numId)) return;
+
+            const slot = idSlotMap.get(numId);
+            activeBitmask[slot] = 0;
+            presentationStore.delete(numId);
+            tombstoneCount++;
+
+            if (tombstoneCount > Math.max(50, 0.10 * searchIndex.length)) {
+                this.scheduleDeferredCompaction();
+            }
+        },
+
+        scheduleDeferredCompaction: function() {
+            const compact = function() {
+                const freshIndex = [];
+                idSlotMap.clear();
+                let freshSlot = 0;
+
+                for (let i = 0; i < searchIndex.length; i++) {
+                    if (activeBitmask[i]) {
+                        const item = searchIndex[i];
+                        freshIndex.push(item);
+                        idSlotMap.set(item.id, freshSlot);
+                        freshSlot++;
+                    }
+                }
+
+                searchIndex = freshIndex;
+                activeBitmask = new Uint8Array(searchIndex.length + 64);
+                activeBitmask.fill(1, 0, searchIndex.length);
+                tombstoneCount = 0;
+            };
+
+            if (typeof window.requestIdleCallback === 'function') {
+                window.requestIdleCallback(compact, { timeout: 2000 });
+            } else {
+                setTimeout(compact, 100);
+            }
+        },
+
+        query: function(params) {
+            const t0 = performance.now();
+            const q = (params.search || '').trim().toLowerCase();
+            const tokens = tokenize(q);
+            const tab = (params.tab || 'all').toLowerCase();
+            const countryId = params.country_id;
+            const cityId = params.city_id;
+            const unspecifiedLoc = Boolean(params.unspecified_location || countryId === 'unspecified');
+            const industry = (params.industry || params.industry_id || '').toString().trim().toLowerCase();
+            const activity = (params.activity || '').trim().toLowerCase();
+            const pipeline = (params.pipeline || '').trim().toLowerCase();
+            const sort = (params.sort || 'recent').toLowerCase();
+            const page = Math.max(1, parseInt(params.page, 10) || 1);
+            const perPage = Math.max(1, parseInt(params.per_page, 10) || 10);
+
+            const isSearching = tokens.length > 0;
+            const scoredCandidates = [];
+
+            let countAll = 0, countInternal = 0, countDirect = 0, countHiring = 0, countInactive = 0, countRequest = 0;
+            let count7d = 0, count30d = 0, count90d = 0, countDormant = 0, countNever = 0;
+            let pipeActiveCount = 0, pipeNoneCount = 0;
+            const nowMs = Date.now();
+
+            const len = searchIndex.length;
+            for (let i = 0; i < len; i++) {
+                if (!activeBitmask[i]) continue;
+
+                const item = searchIndex[i];
+
+                // 1. Hard Filter Pruning
+                if (unspecifiedLoc && item.hasLocation) continue;
+                if (!unspecifiedLoc && countryId && countryId !== 'all' && item.countryId !== Number(countryId)) continue;
+                if (!unspecifiedLoc && cityId && cityId !== 'all' && item.cityId !== Number(cityId)) continue;
+
+                if (industry && industry !== 'all') {
+                    const indNum = Number(industry);
+                    const matchIndId = !isNaN(indNum) && item.industryId === indNum;
+                    const matchIndName = item.industryTokens.some(t => t.includes(industry));
+                    if (!matchIndId && !matchIndName) continue;
+                }
+
+                if (pipeline === 'active' && item.pipelineActive <= 0) continue;
+                if (pipeline === 'none' && item.pipelineActive > 0) continue;
+
+                const lastActMs = item.lastActivityTimestamp || item.createdTimestamp || 0;
+                const ageDays = lastActMs > 0 ? (nowMs - lastActMs) / 86400000 : 9999;
+
+                if (activity === '7d' && ageDays > 7) continue;
+                if (activity === '30d' && (ageDays <= 7 || ageDays > 30)) continue;
+                if (activity === '90d' && (ageDays <= 30 || ageDays > 90)) continue;
+                if (activity === 'dormant' && ageDays <= 90) continue;
+
+                // 2. Scoped Universe Facet & Tab Counters
+                if (item.isPendingRequest) {
+                    countRequest++;
+                } else {
+                    countAll++;
+                    if (item.isDirect) countDirect++; else countInternal++;
+                    if (item.activeJobs > 0) countHiring++; else countInactive++;
+                }
+
+                if (lastActMs === 0) {
+                    countNever++;
+                } else if (ageDays <= 7) {
+                    count7d++;
+                } else if (ageDays <= 30) {
+                    count30d++;
+                } else if (ageDays <= 90) {
+                    count90d++;
+                } else {
+                    countDormant++;
+                }
+
+                if (item.pipelineActive > 0) {
+                    pipeActiveCount++;
+                } else {
+                    pipeNoneCount++;
+                }
+
+                // 3. Tab Boundary Predicate
+                if (tab === 'request' || tab === 'requests') {
+                    if (!item.isPendingRequest) continue;
+                } else {
+                    if (item.isPendingRequest) continue;
+                    if (tab === 'internal' && item.isDirect) continue;
+                    if (tab === 'direct' && !item.isDirect) continue;
+                    if (tab === 'hiring' && item.activeJobs <= 0) continue;
+                    if (tab === 'inactive' && item.activeJobs > 0) continue;
+                }
+
+                // 4. Deterministic Multi-Field Match & Relevance Scoring
+                let relevanceScore = 0;
+
+                if (isSearching) {
+                    let allTokensFound = true;
+                    let allMatchedInName = true;
+                    let allMatchedInContact = true;
+
+                    for (let t = 0; t < tokens.length; t++) {
+                        const token = tokens[t];
+                        let maxTokenWeight = 0;
+
+                        // Field 1: Client Name
+                        let nameMultiplier = 0;
+                        if (item.name === token) {
+                            nameMultiplier = 1.00;
+                        } else if (item.name.startsWith(token)) {
+                            nameMultiplier = 0.80;
+                        } else if (item.nameTokens.includes(token)) {
+                            nameMultiplier = 0.60;
+                        } else if (item.name.includes(token)) {
+                            nameMultiplier = 0.50;
+                        }
+                        if (nameMultiplier > 0) {
+                            maxTokenWeight = Math.max(maxTokenWeight, WEIGHTS.NAME_BASE * nameMultiplier);
+                        } else {
+                            allMatchedInName = false;
+                        }
+
+                        // Field 2: Client ID
+                        let idMultiplier = 0;
+                        if (item.idStr === token) {
+                            idMultiplier = 1.00;
+                        } else if (item.idStr.startsWith(token)) {
+                            idMultiplier = 0.80;
+                        }
+                        if (idMultiplier > 0) {
+                            maxTokenWeight = Math.max(maxTokenWeight, WEIGHTS.ID_BASE * idMultiplier);
+                        }
+
+                        // Field 3: Contact Person
+                        let contactMultiplier = 0;
+                        for (let k = 0; k < item.contactTokens.length; k++) {
+                            const cTok = item.contactTokens[k];
+                            if (cTok === token) { contactMultiplier = Math.max(contactMultiplier, 0.80); }
+                            else if (cTok.startsWith(token)) { contactMultiplier = Math.max(contactMultiplier, 0.60); }
+                            else if (cTok.includes(token)) { contactMultiplier = Math.max(contactMultiplier, 0.50); }
+                        }
+                        if (contactMultiplier > 0) {
+                            maxTokenWeight = Math.max(maxTokenWeight, WEIGHTS.CONTACT_BASE * contactMultiplier);
+                        } else {
+                            allMatchedInContact = false;
+                        }
+
+                        // Field 4: Industry
+                        let indMultiplier = 0;
+                        for (let k = 0; k < item.industryTokens.length; k++) {
+                            const iTok = item.industryTokens[k];
+                            if (iTok === token) { indMultiplier = Math.max(indMultiplier, 0.80); }
+                            else if (iTok.startsWith(token)) { indMultiplier = Math.max(indMultiplier, 0.60); }
+                            else if (iTok.includes(token)) { indMultiplier = Math.max(indMultiplier, 0.50); }
+                        }
+                        if (indMultiplier > 0) {
+                            maxTokenWeight = Math.max(maxTokenWeight, WEIGHTS.INDUSTRY_BASE * indMultiplier);
+                        }
+
+                        // Field 5: Location
+                        let locMultiplier = 0;
+                        for (let k = 0; k < item.cityTokens.length; k++) {
+                            const lTok = item.cityTokens[k];
+                            if (lTok === token) { locMultiplier = Math.max(locMultiplier, 0.80); }
+                            else if (lTok.startsWith(token)) { locMultiplier = Math.max(locMultiplier, 0.60); }
+                            else if (lTok.includes(token)) { locMultiplier = Math.max(locMultiplier, 0.50); }
+                        }
+                        for (let k = 0; k < item.countryTokens.length; k++) {
+                            const cTok = item.countryTokens[k];
+                            if (cTok === token) { locMultiplier = Math.max(locMultiplier, 0.80); }
+                            else if (cTok.startsWith(token)) { locMultiplier = Math.max(locMultiplier, 0.60); }
+                        }
+                        if (locMultiplier > 0) {
+                            maxTokenWeight = Math.max(maxTokenWeight, WEIGHTS.LOCATION_BASE * locMultiplier);
+                        }
+
+                        // Field 6: Client Type
+                        if (item.typeTokens.includes(token)) {
+                            maxTokenWeight = Math.max(maxTokenWeight, WEIGHTS.TYPE_BASE * 1.00);
+                        }
+
+                        if (maxTokenWeight === 0) {
+                            allTokensFound = false;
+                            break;
+                        }
+                        relevanceScore += maxTokenWeight;
+                    }
+
+                    if (!allTokensFound) continue;
+
+                    // Token Coherence Bonus
+                    if (tokens.length > 1 && allMatchedInName) relevanceScore += 40;
+                    else if (tokens.length > 1 && allMatchedInContact) relevanceScore += 20;
+
+                    // Normalized Linear Recency & Prior Boosts
+                    const recencyScore = Math.max(0, 1 - (ageDays / 180));
+                    const priorBoost = (item.activeJobs > 0 ? 10 : 0) + (item.pipelineActive > 0 ? 5 : 0) + (recencyScore * 0.01);
+                    relevanceScore += priorBoost;
+                }
+
+                scoredCandidates.push({ item: item, score: relevanceScore });
+            }
+
+            // 5. Deterministic Sort
+            scoredCandidates.sort(function(a, b) {
+                if (isSearching && Math.abs(b.score - a.score) > 0) {
+                    return b.score - a.score;
+                }
+
+                if (sort === 'name_asc') {
+                    return a.item.name.localeCompare(b.item.name) || (b.item.id - a.item.id);
+                } else if (sort === 'name_desc') {
+                    return b.item.name.localeCompare(a.item.name) || (b.item.id - a.item.id);
+                } else if (sort === 'jobs_desc') {
+                    return (b.item.activeJobs - a.item.activeJobs) || (b.item.id - a.item.id);
+                } else if (sort === 'oldest') {
+                    return (a.item.createdTimestamp - b.item.createdTimestamp) || (a.item.id - b.item.id);
+                } else {
+                    return (b.item.createdTimestamp - a.item.createdTimestamp) || (b.item.id - a.item.id);
+                }
+            });
+
+            // 6. Pagination Slice & Decoupled Presentation Retrieval
+            const total = scoredCandidates.length;
+            const from = (page - 1) * perPage;
+            const sliced = scoredCandidates.slice(from, from + perPage);
+
+            const rowsToRender = sliced.map(sc => presentationStore.get(sc.item.id)).filter(Boolean);
+            const elapsed = performance.now() - t0;
+            this.lastQueryElapsedMs = elapsed;
+
+            return {
+                rows: rowsToRender,
+                total: total,
+                page: page,
+                per_page: perPage,
+                last_page: Math.max(1, Math.ceil(total / perPage)),
+                elapsed_ms: elapsed.toFixed(2),
+                counts: {
+                    all: countAll,
+                    internal: countInternal,
+                    direct: countDirect,
+                    hiring: countHiring,
+                    inactive: countInactive,
+                    request: countRequest
+                },
+                recency_counts: {
+                    all: countAll,
+                    '7d': count7d,
+                    '30d': count30d,
+                    '90d': count90d,
+                    dormant: countDormant,
+                    never: countNever
+                },
+                pipeline_counts: {
+                    all: countAll,
+                    active: pipeActiveCount,
+                    none: pipeNoneCount
+                }
+            };
+        },
+
+        destroy: function() {
+            searchIndex = [];
+            idSlotMap.clear();
+            presentationStore.clear();
+            activeBitmask = new Uint8Array(0);
+            tombstoneCount = 0;
+            this.isReady = false;
+        }
+    };
+})();
+window.ClientSearchEngine = ClientSearchEngine;
 
 function initClientWorker() {
     if (!window.Worker) return;
@@ -2792,12 +5685,17 @@ function initClientWorker() {
         @if(!empty($initialRows))
         const initialRows = {!! json_encode($initialRows) !!};
         if (initialRows && initialRows.length > 0) {
-            clWorker.postMessage({
-                type: 'INIT_DATASET',
-                rows: initialRows,
-                version: {{ (int)($initialDataVersion ?? 1) }}
-            });
-            clWorkerReady = true;
+            if (typeof ClientSearchEngine !== 'undefined') {
+                ClientSearchEngine.hydrate(initialRows, {{ (int)($initialDataVersion ?? 1) }});
+            }
+            if (clWorker) {
+                clWorker.postMessage({
+                    type: 'INIT_DATASET',
+                    rows: initialRows,
+                    version: {{ (int)($initialDataVersion ?? 1) }}
+                });
+                clWorkerReady = true;
+            }
         }
         @endif
 
@@ -2826,13 +5724,18 @@ function fetchActiveProjection() {
     }).then(async function(res) {
         if (res.status === 304) {
             const stored = await ClientLocationDB.get(idbStoreKey);
-            if (stored && stored.rows && stored.rows.length > 0 && clWorker) {
-                clWorker.postMessage({
-                    type: 'INIT_DATASET',
-                    rows: stored.rows,
-                    version: stored.data_version || 1
-                });
-                clWorkerReady = true;
+            if (stored && stored.rows && stored.rows.length > 0) {
+                if (typeof ClientSearchEngine !== 'undefined') {
+                    ClientSearchEngine.hydrate(stored.rows, stored.data_version || 1);
+                }
+                if (clWorker) {
+                    clWorker.postMessage({
+                        type: 'INIT_DATASET',
+                        rows: stored.rows,
+                        version: stored.data_version || 1
+                    });
+                    clWorkerReady = true;
+                }
             }
             return;
         }
@@ -2840,17 +5743,22 @@ function fetchActiveProjection() {
             const newEtag = res.headers.get('ETag');
             if (newEtag) localStorage.setItem(etagKey, newEtag);
             const data = await res.json();
-            if (data && data.rows && clWorker) {
+            if (data && data.rows) {
                 if (ClientStore.latestMutationVersion && data.data_version && data.data_version < ClientStore.latestMutationVersion) {
                     console.warn('[Sync] Ignored stale projection version:', data.data_version, 'current mutation:', ClientStore.latestMutationVersion);
                     return;
                 }
-                clWorker.postMessage({
-                    type: 'INIT_DATASET',
-                    rows: data.rows,
-                    version: data.data_version || 1
-                });
-                clWorkerReady = true;
+                if (typeof ClientSearchEngine !== 'undefined') {
+                    ClientSearchEngine.hydrate(data.rows, data.data_version || 1);
+                }
+                if (clWorker) {
+                    clWorker.postMessage({
+                        type: 'INIT_DATASET',
+                        rows: data.rows,
+                        version: data.data_version || 1
+                    });
+                    clWorkerReady = true;
+                }
                 ClientLocationDB.set(idbStoreKey, data);
             }
         }
@@ -2868,8 +5776,8 @@ const ClientStore = {
     latestMutationVersion: 0,
     maxStaleAgeMs: 5000, // 5 seconds bounded staleness for SWR
 
-    getKey: function(tab, page, search, sort, countryId, cityId, unspecified, industryId, activity, perPage) {
-        return `${tab}:${page}:${search || ''}:${sort || 'recent'}:${countryId || ''}:${cityId || ''}:${unspecified ? 1 : 0}:${industryId || ''}:${activity || ''}:${perPage || 10}`;
+    getKey: function(tab, page, search, sort, countryId, cityId, unspecified, industryId, activity, pipeline, perPage) {
+        return `${tab}:${page}:${search || ''}:${sort || 'recent'}:${countryId || ''}:${cityId || ''}:${unspecified ? 1 : 0}:${industryId || ''}:${activity || ''}:${pipeline || ''}:${perPage || 10}`;
     },
 
     get: function(key) {
@@ -2911,16 +5819,26 @@ const ClientStore = {
     var initTab = {!! json_encode($initialTab ?? 'all') !!};
     if (initTab === 'requests') initTab = 'request';
     if (initTab === 'custom') initTab = 'internal';
-    var initKey = ClientStore.getKey(initTab, 1, '', 'recent', '', '', 0, '', '', 10);
+    var initKey = ClientStore.getKey(initTab, 1, '', 'recent', '', '', 0, '', '', '', 10);
     ClientStore.set(initKey, {
         html: {!! json_encode($initialHtml) !!},
         total: {{ (int)($initialTotal ?? 0) }},
         pagination: {!! json_encode($initialPagination ?? '') !!},
         rows: {!! json_encode($initialRows ?? []) !!},
+        recency_counts: {!! json_encode($initialRecencyCounts ?? []) !!},
+        pipeline_counts: {!! json_encode($initialPipelineCounts ?? []) !!},
         data_version: {{ (int)($initialDataVersion ?? 1) }}
     });
 })();
 @endif
+
+// Hydrate initial facet counts
+if (window.initialRecencyCounts) {
+    updateRecencyCounts(window.initialRecencyCounts);
+}
+if (window.initialPipelineCounts) {
+    updatePipelineCounts(window.initialPipelineCounts);
+}
 
 var page_no = localStorage.getItem('currentPageClients') || 1;
 var activeClientTab = {!! json_encode($initialTab ?? 'all') !!};
@@ -2972,8 +5890,14 @@ function syncUrlState(replace = false) {
             url.searchParams.delete('activity');
         }
 
-        const sortVal = $('#sortingfilter').val() || 'recent';
-        if (sortVal && sortVal !== 'recent' && sortVal !== 'Show All') {
+        if (clientListState.pipeline) {
+            url.searchParams.set('pipeline', clientListState.pipeline);
+        } else {
+            url.searchParams.delete('pipeline');
+        }
+
+        const sortVal = normalizeSortValue($('#sortingfilter').val() || clientListState.sort || 'recent');
+        if (sortVal && sortVal !== 'recent') {
             url.searchParams.set('sort', sortVal);
         } else {
             url.searchParams.delete('sort');
@@ -3010,6 +5934,7 @@ function hydrateStateFromUrl(shouldFetch = true) {
         const city = params.get('city') || '';
         const industry = params.get('industry') || '';
         const activity = params.get('activity') || '';
+        const pipeline = params.get('pipeline') || '';
         const sort = params.get('sort') || params.get('sortingfilter') || 'recent';
         const page = parseInt(params.get('page'), 10) || 1;
         const openClient = parseInt(params.get('open_client'), 10) || initialOpenClientId || 0;
@@ -3027,35 +5952,18 @@ function hydrateStateFromUrl(shouldFetch = true) {
         }
 
         // Hydrate industry
-        $('#industryFilter').val(industry);
-        clientListState.industry_id = industry;
         if (industry) {
-            const indText = $(`#industryFilter option[value="${industry}"]`).text() || $('#industryFilter option:selected').text();
-            if (indText) $('#industryDisplay').text(indText);
+            selectIndustryFilter(industry, null, false);
         } else {
-            $('#industryDisplay').text('All Industries');
+            clearIndustryFilter(false);
         }
 
-        // Hydrate activity
-        $('#activityFilter').val(activity);
-        clientListState.activity = activity;
-        if (activity) {
-            const actText = $(`#activityFilter option[value="${activity}"]`).text() || $('#activityFilter option:selected').text();
-            if (actText) $('#activityDisplay').text(actText);
-        } else {
-            $('#activityDisplay').text('All Activity');
-        }
+        // Hydrate activity & pipeline
+        selectActivityOption(activity, null, null, true);
+        selectPipelineOption(pipeline, null, null, true);
 
         // Hydrate sort
-        $('#sortingfilter').val(sort);
-        clientListState.sort = sort;
-        if (sort && sort !== 'recent' && sort !== 'Show All') {
-            const sortText = $(`#sortingfilter option[value="${sort}"]`).text() || $('#sortingfilter option:selected').text();
-            if (sortText) $('#sortDisplay').text(sortText);
-        } else {
-            $('#sortDisplay').text('Recently Added');
-        }
-        updateHeaderSortIndicators(sort);
+        selectSortOption(sort, null, null, true);
 
         setClientTab(tab, null, false);
         if (shouldFetch) {
@@ -3142,6 +6050,20 @@ function applyClientResponse(response, targetPage) {
             }
         }
         $('#pagination').html(response.pagination);
+        clientListState.loading = false;
+        if (response.total !== undefined) {
+            clientListState.total = response.total;
+            clientListState.hasMore = (targetPage * (clientListState.per_page || 10)) < response.total;
+        }
+        if (response.data_version) {
+            clientListState.datasetVersion = response.data_version;
+        }
+        if (response.recency_counts) {
+            updateRecencyCounts(response.recency_counts);
+        }
+        if (response.pipeline_counts) {
+            updatePipelineCounts(response.pipeline_counts);
+        }
     });
 }
 
@@ -3168,8 +6090,85 @@ function loadClientList(page, updateUrl = true, cursor = null) {
     var unspecifiedVal = clientListState.unspecified_location ? 1 : 0;
     var industryVal = clientListState.industry_id || $('#industryFilter').val() || '';
     var activityVal = clientListState.activity || $('#activityFilter').val() || '';
+    var pipelineVal = clientListState.pipeline || $('#pipelineFilter').val() || '';
 
-    var cacheKey = ClientStore.getKey(activeClientTab, targetPage, searchVal, sortVal, countryVal, cityVal, unspecifiedVal, industryVal, activityVal, perPage);
+    // ── Zero-Network Execution Guard (JDCR In-Memory Search & Query Engine) ──
+    // Strictly enforces 0% Server / MySQL / Elasticsearch reads for all search, filter,
+    // sort, and pagination interactions over the hydrated active working set.
+    if (typeof ClientSearchEngine !== 'undefined' && ClientSearchEngine.isReady && ClientSearchEngine.size() > 0) {
+        if (ClientStore.currentXhr && ClientStore.currentXhr.readyState !== 4) {
+            ClientStore.currentXhr.abort();
+            ClientStore.currentXhr = null;
+        }
+
+        var localResult = ClientSearchEngine.query({
+            search: searchVal,
+            tab: activeClientTab,
+            page: targetPage,
+            per_page: perPage,
+            sort: sortVal,
+            country_id: countryVal,
+            city_id: cityVal,
+            unspecified_location: unspecifiedVal,
+            industry_id: industryVal,
+            activity: activityVal,
+            pipeline: pipelineVal
+        });
+
+        // Toggle UI match badges and clear buttons
+        var trimmedSearch = (searchVal || '').trim();
+        if (trimmedSearch.length > 0) {
+            var matchText = localResult.total + (localResult.total === 1 ? ' match' : ' matches');
+            $('#clSearchMatchCount').text(matchText).show();
+            $('#clSearchClearBtn').show();
+            $('#clSearchKbdHint').hide();
+        } else {
+            $('#clSearchMatchCount').hide();
+            $('#clSearchClearBtn').hide();
+            $('#clSearchKbdHint').show();
+        }
+
+        var renderedHtml = renderClientRows(localResult.rows);
+        var renderedPagi = renderClientPagination(localResult);
+
+        var syntheticResponse = {
+            html: renderedHtml,
+            total: localResult.total,
+            pagination: renderedPagi,
+            rows: localResult.rows,
+            projection_status: 'synced',
+            recency_counts: localResult.recency_counts,
+            pipeline_counts: localResult.pipeline_counts
+        };
+
+        if (localResult.counts) {
+            $('#span_clientAll, #tabBadgeAll').text(localResult.counts.all);
+            $('#span_clientCustom, #tabBadgeInternal').text(localResult.counts.internal);
+            $('#span_clientDirect, #tabBadgeDirect').text(localResult.counts.direct);
+            $('#span_clientHiring, #tabBadgeHiring').text(localResult.counts.hiring);
+            if (localResult.counts.inactive !== undefined) {
+                $('#span_clientInactive, #tabBadgeInactive').text(localResult.counts.inactive);
+            }
+            if (localResult.counts.request !== undefined) {
+                $('#span_clientRequest, #tabBadgeRequest').text(localResult.counts.request);
+            }
+        }
+
+        if (localResult.recency_counts) {
+            updateRecencyCounts(localResult.recency_counts);
+        }
+        if (localResult.pipeline_counts) {
+            updatePipelineCounts(localResult.pipeline_counts);
+        }
+
+        var inMemCacheKey = ClientStore.getKey(activeClientTab, targetPage, searchVal, sortVal, countryVal, cityVal, unspecifiedVal, industryVal, activityVal, pipelineVal, perPage);
+        ClientStore.set(inMemCacheKey, syntheticResponse);
+
+        applyClientResponse(syntheticResponse, targetPage);
+        return; // Zero network requests!
+    }
+
+    var cacheKey = ClientStore.getKey(activeClientTab, targetPage, searchVal, sortVal, countryVal, cityVal, unspecifiedVal, industryVal, activityVal, pipelineVal, perPage);
     var cachedEntry = ClientStore.get(cacheKey);
 
     // Stale-While-Revalidate (SWR): Immediate perceived instant render if cache entry exists
@@ -3194,8 +6193,10 @@ function loadClientList(page, updateUrl = true, cursor = null) {
         ClientStore.currentXhr.abort();
     }
 
-    // Request Generation Token Guard
+    // Request Generation Token Guard & Monotonic Concurrency Invariant
     var requestId = ++ClientStore.latestRequestId;
+    clientListState.requestId = requestId;
+    clientListState.loading = true;
 
     var reqHeaders = {};
     if (cachedEntry && cachedEntry.data && cachedEntry.data.etag) {
@@ -3221,6 +6222,7 @@ function loadClientList(page, updateUrl = true, cursor = null) {
             industry_id: industryVal,
             industry: industryVal,
             activity: activityVal,
+            pipeline: pipelineVal,
             cursor: clientListState.cursor,
             hiring: hiringFilter,
             tab: activeClientTab,
@@ -3253,6 +6255,7 @@ function loadClientList(page, updateUrl = true, cursor = null) {
             applyClientResponse(response, targetPage);
         },
         error: function(xhr, status, error) {
+            clientListState.loading = false;
             if (status !== 'abort' && requestId === ClientStore.latestRequestId) {
                 $('.loadingMessage').css({ display: 'none' });
                 $('.loader_search').css({ display: 'none' });
@@ -3296,8 +6299,9 @@ $(document).ready(function() {
         ClientSessionRecoveryManager.init();
     }
 
-    // Phase 1: Hydrate static country bundle from IndexedDB / JSON
+    // Phase 1: Hydrate static country & industry bundles from IndexedDB / JSON
     initCountryBundle();
+    initIndustryBundle();
 
     // Phase 2: Start background Web Worker OLAP engine
     initClientWorker();
@@ -3509,6 +6513,16 @@ function handleClientMutationEvent(data) {
         window.SyncSupervisor.notifyHint(targetCid);
     }
 
+    // Delta mutation in ClientSearchEngine (Phase 3)
+    if (typeof ClientSearchEngine !== 'undefined') {
+        if (data.op === 'DELETE' || data.type === 'CLIENT_DELETED') {
+            const delId = (data.client && data.client.id) ? data.client.id : (data.client_id || data.id);
+            if (delId) ClientSearchEngine.deleteEntity(delId);
+        } else if (data.client) {
+            ClientSearchEngine.upsertEntity(data.client);
+        }
+    }
+
     // If a specific client record is attached, delta-upsert directly in Worker
     if (data.client && clWorker && clWorkerReady) {
         clWorker.postMessage({
@@ -3516,6 +6530,15 @@ function handleClientMutationEvent(data) {
             client: data.client,
             version: data.version || null
         });
+    } else if ((data.op === 'DELETE' || data.type === 'CLIENT_DELETED') && clWorker && clWorkerReady) {
+        const delId = (data.client && data.client.id) ? data.client.id : (data.client_id || data.id);
+        if (delId) {
+            clWorker.postMessage({
+                type: 'DELTA_DELETE',
+                id: delId,
+                version: data.version || null
+            });
+        }
     } else {
         // Re-hydrate active projection in background
         fetchActiveProjection();
@@ -3546,6 +6569,10 @@ function handleClientMutationEvent(data) {
 
             if (data.type === 'CLIENT_REQUEST_MUTATED' || data.type === 'CLIENT_MUTATED' || data.type === 'JOB_MUTATED' || data.type === 'JOB_STATUS_CHANGED') {
                 handleClientMutationEvent(data);
+            } else if (data.type === 'PIPELINE_UPDATED' && data.payload) {
+                if (window.ClientPipelineStore) {
+                    window.ClientPipelineStore.apply(data.payload, false);
+                }
             }
         };
     }
@@ -3571,6 +6598,23 @@ function handleClientMutationEvent(data) {
                 })
                 .listen('.JobMutated', function(e) {
                     handleClientMutationEvent(e);
+                })
+                .listen('.pipeline.updated', function(e) {
+                    if (window.ClientPipelineStore) {
+                        window.ClientPipelineStore.apply(e, true);
+                    }
+                })
+                .listen('PipelineUpdated', function(e) {
+                    if (window.ClientPipelineStore) {
+                        window.ClientPipelineStore.apply(e, true);
+                    }
+                })
+                .listen('.client.activity.updated', function(e) {
+                    if (e && e.tenant_version && e.tenant_version > ClientStore.latestMutationVersion) {
+                        ClientStore.latestMutationVersion = e.tenant_version;
+                        ClientStore.clear();
+                        loadClientList(page_no, false);
+                    }
                 });
         } catch(echoErr) {
             console.warn('[Echo] Reverb listener registration skipped:', echoErr);

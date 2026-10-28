@@ -242,6 +242,7 @@ class IndustryTaxonomyService
         144 => ['sector' => 6, 'keywords' => 'wine and spirits, alcohol, brewery, distillery, winery, liquor'],
         145 => ['sector' => 1, 'keywords' => 'wireless, radio communication, mobile communications, wi-fi, cellular'],
         146 => ['sector' => 10, 'keywords' => 'writing, editing, copywriting, technical writing, author, content creation'],
+        147 => ['sector' => 5, 'keywords' => 'other, miscellaneous, diversified, unlisted, general, multi-industry, cross-sector, conglomerate'],
     ];
 
     /**

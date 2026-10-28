@@ -56,6 +56,58 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
         $this->elasticService = $elasticService;
     }
 
+    /**
+     * Canonical directory sort normalizer (ClientDirectorySort domain).
+     * Normalizes legacy values ('1', '2', 'newest', etc.) to canonical keys.
+     * Logs invalid inputs to avoid silent contract drift.
+     */
+    public static function normalizeSort(?string $rawSort, bool $strict = false): string
+    {
+        $val = strtolower(trim((string) $rawSort));
+        if ($val === '' || $val === 'null' || $val === 'recent' || $val === '1' || $val === 'newest') {
+            return 'recent';
+        }
+
+        return match ($val) {
+            'oldest', '2' => 'oldest',
+            'name_asc', 'name-asc', 'a-z' => 'name_asc',
+            'name_desc', 'name-desc', 'z-a' => 'name_desc',
+            'jobs_desc', 'jobs', 'active_jobs' => 'jobs_desc',
+            default => (function () use ($rawSort, $strict) {
+                if ($strict) {
+                    abort(422, "Invalid sort parameter '{$rawSort}'. Expected: recent, oldest, name_asc, name_desc, jobs_desc.");
+                }
+                \Illuminate\Support\Facades\Log::warning("[ClientDirectorySort] Invalid sort parameter received: '{$rawSort}'. Falling back to 'recent'.");
+
+                return 'recent';
+            })(),
+        };
+    }
+
+    /**
+     * Canonical workflow queue sort normalizer (ClientRequestSort domain).
+     * Strict domain separation: prevents ClientDirectorySort (e.g. jobs_desc) from bleeding into Requests.
+     */
+    public static function normalizeRequestSort(?string $rawSort): string
+    {
+        $val = strtolower(trim((string) $rawSort));
+        if ($val === '' || $val === 'null' || $val === 'status_sla' || $val === 'sla' || $val === 'priority') {
+            return 'status_sla';
+        }
+
+        return match ($val) {
+            'recent', 'newest_req', '1', 'newest' => 'newest_req',
+            'oldest', 'oldest_req', '2' => 'oldest_req',
+            'name_asc', 'name-asc', 'a-z' => 'name_asc',
+            'name_desc', 'name-desc', 'z-a' => 'name_desc',
+            default => (function () use ($rawSort) {
+                \Illuminate\Support\Facades\Log::warning("[ClientRequestSort] Invalid request sort parameter: '{$rawSort}'. Falling back to 'status_sla'.");
+
+                return 'status_sla';
+            })(),
+        };
+    }
+
     public function index()
     {
 
@@ -75,6 +127,7 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
         $this->industries = cache()->remember('global_td_industries_master', 86400, function () {
             return DB::table('td_industries')->select('ind_id', 'ind_name')->orderBy('ind_name')->get();
         });
+        $this->industriesManifest = IndustryTaxonomyService::getGlobalManifest();
 
         $requestedTab = request('tab', 'all');
         if ($requestedTab === 'requests') {
@@ -91,7 +144,7 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
                 'page' => 1,
                 'per_page' => 10,
                 'size' => 10,
-            ], request()->only(['country', 'country_id', 'city', 'city_id', 'industry', 'industry_id', 'activity', 'q', 'search', 'sort', 'sortingfilter'])));
+            ], request()->only(['country', 'country_id', 'city', 'city_id', 'industry', 'industry_id', 'activity', 'pipeline', 'q', 'search', 'sort', 'sortingfilter'])));
             $initialResponse = $this->all_clients_data_ajax($initialRequest);
             $initialData = $initialResponse->getData(true);
             $this->initialHtml = $initialData['html'] ?? '';
@@ -99,12 +152,16 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
             $this->initialPagination = $initialData['pagination_html'] ?? ($initialData['pagination'] ?? '');
             $this->initialRows = $initialData['rows'] ?? [];
             $this->initialDataVersion = $initialData['data_version'] ?? 1;
+            $this->initialRecencyCounts = $initialData['recency_counts'] ?? ['all' => 0, '7d' => 0, '30d' => 0, '90d' => 0, 'dormant' => 0, 'never' => 0];
+            $this->initialPipelineCounts = $initialData['pipeline_counts'] ?? ['all' => 0, 'active' => 0, 'none' => 0];
         } catch (\Throwable $e) {
             $this->initialHtml = '';
             $this->initialTotal = 0;
             $this->initialPagination = '';
             $this->initialRows = [];
             $this->initialDataVersion = 1;
+            $this->initialRecencyCounts = ['all' => 0, '7d' => 0, '30d' => 0, '90d' => 0, 'dormant' => 0, 'never' => 0];
+            $this->initialPipelineCounts = ['all' => 0, 'active' => 0, 'none' => 0];
         }
 
         return view('service_company.client.index', $this->data);
@@ -397,7 +454,7 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
         $customSearch = trim($custom_search);
         $shouldSearch = [];
         $sort = [];
-        $valCheck = $request->input('sort', $request->input('sortingfilter', 'recent'));
+        $valCheck = self::normalizeSort($request->input('sort', $request->input('sortingfilter', 'recent')));
 
         // ── Canonical Filter Parameters ──
         $countryParam = $request->input('country_id', $request->input('country'));
@@ -405,6 +462,12 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
         $unspecifiedLoc = $request->boolean('unspecified_location') || $countryParam === 'unspecified';
         $industryParam = $request->input('industry_id', $request->input('industry'));
         $activityParam = $request->input('activity');
+        $pipelineParam = $request->input('pipeline');
+        // Backward-compatible fallback: legacy activity='pipeline' routes to pipeline=active
+        if ($activityParam === 'pipeline') {
+            $pipelineParam = 'active';
+            $activityParam = '';
+        }
         $cursorParam = $request->input('cursor');
 
         $tabFilter = $request->input('tab', $request->input('type', 'all'));
@@ -432,6 +495,7 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
             'unspecified_loc' => $unspecifiedLoc ? 1 : 0,
             'industry' => $industryParam,
             'activity' => $activityParam,
+            'pipeline' => $pipelineParam,
             'company' => $company_id,
             'cus_search' => $custom_search,
             'user_id' => auth()->id() ?? ($this->user->id ?? 0),
@@ -456,10 +520,10 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
             }
         }
 
-        $schemaVersion = '2.1';
+        $schemaVersion = '3.0';
         $cachePayload['version'] = $tenantVersion;
         $hash = md5(json_encode($cachePayload));
-        $cacheKeySet = 'ats:v2:clients:'.$company_id.':'.$tenantVersion.':'.$hash;
+        $cacheKeySet = 'ats:v3:clients:tenant='.$company_id.':version='.$tenantVersion.':tab='.$tabFilter.':activity='.($activityParam ?: 'all').':pipeline='.($pipelineParam ?: 'all').':location='.($countryParam ?: '0').'_'.($cityParam ?: '0').':industry='.($industryParam ?: '0').':sort='.$valCheck.':search='.$hash.':page='.$page.':size='.$size;
         $etag = '"clients-'.$company_id.'-'.$tenantVersion.'-'.$hash.'-'.$schemaVersion.'"';
 
         /* ----------------------------------------------------
@@ -528,42 +592,28 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
                 ->values()
                 ->toArray();
 
-            if (! empty($valCheck)) {
-                if ($valCheck === 'name_asc') {
-                    $sort = [
-                        ['company_name.keyword' => ['order' => 'asc', 'unmapped_type' => 'keyword']],
-                        ['id' => ['order' => 'desc']],
-                    ];
-                } elseif ($valCheck === 'name_desc') {
-                    $sort = [
-                        ['company_name.keyword' => ['order' => 'desc', 'unmapped_type' => 'keyword']],
-                        ['id' => ['order' => 'desc']],
-                    ];
-                } elseif ($valCheck === 'jobs_desc') {
-                    $sort = [
-                        ['job_metrics.active_jobs_count' => ['order' => 'desc', 'unmapped_type' => 'long']],
-                        ['id' => ['order' => 'desc']],
-                    ];
-                } elseif ($valCheck == 2 || $valCheck === 'oldest') {
-                    $sort = [
-                        ['created_at' => ['order' => 'asc', 'unmapped_type' => 'date']],
-                        ['id' => ['order' => 'asc']],
-                    ];
-                } elseif ($valCheck == 1 || $valCheck === 'newest') {
-                    $sort = [
-                        ['created_at' => ['order' => 'desc', 'unmapped_type' => 'date']],
-                        ['id' => ['order' => 'desc']],
-                    ];
-                } else {
-                    $sort = [
-                        ['id' => ['order' => 'desc']],
-                    ];
-                }
-            } else {
-                $sort = [
+            $sort = match ($valCheck) {
+                'name_asc' => [
+                    ['company_name.keyword' => ['order' => 'asc']],
                     ['id' => ['order' => 'desc']],
-                ];
-            }
+                ],
+                'name_desc' => [
+                    ['company_name.keyword' => ['order' => 'desc']],
+                    ['id' => ['order' => 'desc']],
+                ],
+                'jobs_desc' => [
+                    ['active_jobs_count' => ['order' => 'desc']],
+                    ['id' => ['order' => 'desc']],
+                ],
+                'oldest' => [
+                    ['created_at' => ['order' => 'asc']],
+                    ['id' => ['order' => 'asc']],
+                ],
+                default => [
+                    ['created_at' => ['order' => 'desc']],
+                    ['id' => ['order' => 'desc']],
+                ],
+            };
 
             if ($tabFilter === 'internal' || $tabFilter === 'custom') {
                 $must[] = [
@@ -784,19 +834,16 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
                 }
             }
 
-            // ── Activity Filter ──
-            if ($activityParam === 'pipeline') {
+            // ── Pipeline Filter (Orthogonal Dimension) ──
+            if ($pipelineParam === 'active') {
                 $must[] = [
                     'range' => [
                         'job_metrics.pipeline_candidates_count' => ['gt' => 0],
                     ],
                 ];
-            } elseif ($activityParam === 'dormant') {
+            } elseif ($pipelineParam === 'none') {
                 $must[] = [
                     'bool' => [
-                        'must' => [
-                            ['term' => ['job_metrics.active_jobs_count' => 0]],
-                        ],
                         'should' => [
                             ['term' => ['job_metrics.pipeline_candidates_count' => 0]],
                             ['bool' => ['must_not' => [['exists' => ['field' => 'job_metrics.pipeline_candidates_count']]]]],
@@ -804,6 +851,112 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
                         'minimum_should_match' => 1,
                     ],
                 ];
+            }
+
+            // ── Activity Recency Filter (Mutually Exclusive Buckets) ──
+            if (! empty($activityParam) && $activityParam !== 'all') {
+                if ($activityParam === '7d') {
+                    $must[] = [
+                        'bool' => [
+                            'should' => [
+                                ['range' => ['last_activity_at' => ['gte' => now()->subDays(7)->startOfDay()->toIso8601String()]]],
+                                [
+                                    'bool' => [
+                                        'must_not' => [['exists' => ['field' => 'last_activity_at']]],
+                                        'must' => [['range' => ['created_at' => ['gte' => now()->subDays(7)->startOfDay()->toIso8601String()]]]],
+                                    ],
+                                ],
+                            ],
+                            'minimum_should_match' => 1,
+                        ],
+                    ];
+                } elseif ($activityParam === '30d') {
+                    $must[] = [
+                        'bool' => [
+                            'should' => [
+                                [
+                                    'range' => [
+                                        'last_activity_at' => [
+                                            'gte' => now()->subDays(30)->startOfDay()->toIso8601String(),
+                                            'lt' => now()->subDays(7)->startOfDay()->toIso8601String(),
+                                        ],
+                                    ],
+                                ],
+                                [
+                                    'bool' => [
+                                        'must_not' => [['exists' => ['field' => 'last_activity_at']]],
+                                        'must' => [
+                                            [
+                                                'range' => [
+                                                    'created_at' => [
+                                                        'gte' => now()->subDays(30)->startOfDay()->toIso8601String(),
+                                                        'lt' => now()->subDays(7)->startOfDay()->toIso8601String(),
+                                                    ],
+                                                ],
+                                            ],
+                                        ],
+                                    ],
+                                ],
+                            ],
+                            'minimum_should_match' => 1,
+                        ],
+                    ];
+                } elseif ($activityParam === '90d') {
+                    $must[] = [
+                        'bool' => [
+                            'should' => [
+                                [
+                                    'range' => [
+                                        'last_activity_at' => [
+                                            'gte' => now()->subDays(90)->startOfDay()->toIso8601String(),
+                                            'lt' => now()->subDays(30)->startOfDay()->toIso8601String(),
+                                        ],
+                                    ],
+                                ],
+                                [
+                                    'bool' => [
+                                        'must_not' => [['exists' => ['field' => 'last_activity_at']]],
+                                        'must' => [
+                                            [
+                                                'range' => [
+                                                    'created_at' => [
+                                                        'gte' => now()->subDays(90)->startOfDay()->toIso8601String(),
+                                                        'lt' => now()->subDays(30)->startOfDay()->toIso8601String(),
+                                                    ],
+                                                ],
+                                            ],
+                                        ],
+                                    ],
+                                ],
+                            ],
+                            'minimum_should_match' => 1,
+                        ],
+                    ];
+                } elseif ($activityParam === 'dormant') {
+                    $must[] = [
+                        'bool' => [
+                            'should' => [
+                                ['range' => ['last_activity_at' => ['lt' => now()->subDays(90)->startOfDay()->toIso8601String()]]],
+                                [
+                                    'bool' => [
+                                        'must_not' => [['exists' => ['field' => 'last_activity_at']]],
+                                        'must' => [['range' => ['created_at' => ['lt' => now()->subDays(90)->startOfDay()->toIso8601String()]]]],
+                                    ],
+                                ],
+                            ],
+                            'minimum_should_match' => 1,
+                        ],
+                    ];
+                } elseif ($activityParam === 'never') {
+                    $must[] = [
+                        'bool' => [
+                            'must_not' => [
+                                ['exists' => ['field' => 'last_activity_at']],
+                                ['exists' => ['field' => 'created_at']],
+                            ],
+                        ],
+                    ];
+                }
             }
 
             // ── Hiring filter: sort internal & direct clients by active job count DESC (excluding main company) ──
@@ -1012,6 +1165,131 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
                         ];
                     }
 
+                    $facetAggs = [
+                        'recency_buckets' => [
+                            'filters' => [
+                                'filters' => [
+                                    '7d' => [
+                                        'bool' => [
+                                            'should' => [
+                                                ['range' => ['last_activity_at' => ['gte' => now()->subDays(7)->startOfDay()->toIso8601String()]]],
+                                                [
+                                                    'bool' => [
+                                                        'must_not' => [['exists' => ['field' => 'last_activity_at']]],
+                                                        'must' => [['range' => ['created_at' => ['gte' => now()->subDays(7)->startOfDay()->toIso8601String()]]]],
+                                                    ],
+                                                ],
+                                            ],
+                                            'minimum_should_match' => 1,
+                                        ],
+                                    ],
+                                    '30d' => [
+                                        'bool' => [
+                                            'should' => [
+                                                [
+                                                    'range' => [
+                                                        'last_activity_at' => [
+                                                            'gte' => now()->subDays(30)->startOfDay()->toIso8601String(),
+                                                            'lt' => now()->subDays(7)->startOfDay()->toIso8601String(),
+                                                        ],
+                                                    ],
+                                                ],
+                                                [
+                                                    'bool' => [
+                                                        'must_not' => [['exists' => ['field' => 'last_activity_at']]],
+                                                        'must' => [
+                                                            [
+                                                                'range' => [
+                                                                    'created_at' => [
+                                                                        'gte' => now()->subDays(30)->startOfDay()->toIso8601String(),
+                                                                        'lt' => now()->subDays(7)->startOfDay()->toIso8601String(),
+                                                                    ],
+                                                                ],
+                                                            ],
+                                                        ],
+                                                    ],
+                                                ],
+                                            ],
+                                            'minimum_should_match' => 1,
+                                        ],
+                                    ],
+                                    '90d' => [
+                                        'bool' => [
+                                            'should' => [
+                                                [
+                                                    'range' => [
+                                                        'last_activity_at' => [
+                                                            'gte' => now()->subDays(90)->startOfDay()->toIso8601String(),
+                                                            'lt' => now()->subDays(30)->startOfDay()->toIso8601String(),
+                                                        ],
+                                                    ],
+                                                ],
+                                                [
+                                                    'bool' => [
+                                                        'must_not' => [['exists' => ['field' => 'last_activity_at']]],
+                                                        'must' => [
+                                                            [
+                                                                'range' => [
+                                                                    'created_at' => [
+                                                                        'gte' => now()->subDays(90)->startOfDay()->toIso8601String(),
+                                                                        'lt' => now()->subDays(30)->startOfDay()->toIso8601String(),
+                                                                    ],
+                                                                ],
+                                                            ],
+                                                        ],
+                                                    ],
+                                                ],
+                                            ],
+                                            'minimum_should_match' => 1,
+                                        ],
+                                    ],
+                                    'dormant' => [
+                                        'bool' => [
+                                            'should' => [
+                                                ['range' => ['last_activity_at' => ['lt' => now()->subDays(90)->startOfDay()->toIso8601String()]]],
+                                                [
+                                                    'bool' => [
+                                                        'must_not' => [['exists' => ['field' => 'last_activity_at']]],
+                                                        'must' => [['range' => ['created_at' => ['lt' => now()->subDays(90)->startOfDay()->toIso8601String()]]]],
+                                                    ],
+                                                ],
+                                            ],
+                                            'minimum_should_match' => 1,
+                                        ],
+                                    ],
+                                    'never' => [
+                                        'bool' => [
+                                            'must_not' => [
+                                                ['exists' => ['field' => 'last_activity_at']],
+                                                ['exists' => ['field' => 'created_at']],
+                                            ],
+                                        ],
+                                    ],
+                                ],
+                            ],
+                        ],
+                        'pipeline_buckets' => [
+                            'filters' => [
+                                'filters' => [
+                                    'active' => [
+                                        'range' => [
+                                            'job_metrics.pipeline_candidates_count' => ['gt' => 0],
+                                        ],
+                                    ],
+                                    'none' => [
+                                        'bool' => [
+                                            'should' => [
+                                                ['term' => ['job_metrics.pipeline_candidates_count' => 0]],
+                                                ['bool' => ['must_not' => [['exists' => ['field' => 'job_metrics.pipeline_candidates_count']]]]],
+                                            ],
+                                            'minimum_should_match' => 1,
+                                        ],
+                                    ],
+                                ],
+                            ],
+                        ],
+                    ];
+
                     $hiringParams = [
                         'index' => ELASTIC_CLIENT_LIST,
                         'body' => [
@@ -1019,6 +1297,7 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
                             'size' => $size,
                             'sort' => $sort,
                             'query' => ['bool' => ['must' => $hiringMust]],
+                            'aggs' => $facetAggs,
                         ],
                     ];
 
@@ -1030,8 +1309,136 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
                     $data = array_map(function ($hit) {
                         return $hit['_source'];
                     }, $hiringResp['hits']['hits']);
+
+                    $recencyBuckets = $hiringResp['aggregations']['recency_buckets']['buckets'] ?? [];
+                    $pipelineBuckets = $hiringResp['aggregations']['pipeline_buckets']['buckets'] ?? [];
                 }
             } else {
+                $facetAggs = [
+                    'recency_buckets' => [
+                        'filters' => [
+                            'filters' => [
+                                '7d' => [
+                                    'bool' => [
+                                        'should' => [
+                                            ['range' => ['last_activity_at' => ['gte' => now()->subDays(7)->startOfDay()->toIso8601String()]]],
+                                            [
+                                                'bool' => [
+                                                    'must_not' => [['exists' => ['field' => 'last_activity_at']]],
+                                                    'must' => [['range' => ['created_at' => ['gte' => now()->subDays(7)->startOfDay()->toIso8601String()]]]],
+                                                ],
+                                            ],
+                                        ],
+                                        'minimum_should_match' => 1,
+                                    ],
+                                ],
+                                '30d' => [
+                                    'bool' => [
+                                        'should' => [
+                                            [
+                                                'range' => [
+                                                    'last_activity_at' => [
+                                                        'gte' => now()->subDays(30)->startOfDay()->toIso8601String(),
+                                                        'lt' => now()->subDays(7)->startOfDay()->toIso8601String(),
+                                                    ],
+                                                ],
+                                            ],
+                                            [
+                                                'bool' => [
+                                                    'must_not' => [['exists' => ['field' => 'last_activity_at']]],
+                                                    'must' => [
+                                                        [
+                                                            'range' => [
+                                                                'created_at' => [
+                                                                    'gte' => now()->subDays(30)->startOfDay()->toIso8601String(),
+                                                                    'lt' => now()->subDays(7)->startOfDay()->toIso8601String(),
+                                                                ],
+                                                            ],
+                                                        ],
+                                                    ],
+                                                ],
+                                            ],
+                                        ],
+                                        'minimum_should_match' => 1,
+                                    ],
+                                ],
+                                '90d' => [
+                                    'bool' => [
+                                        'should' => [
+                                            [
+                                                'range' => [
+                                                    'last_activity_at' => [
+                                                        'gte' => now()->subDays(90)->startOfDay()->toIso8601String(),
+                                                        'lt' => now()->subDays(30)->startOfDay()->toIso8601String(),
+                                                    ],
+                                                ],
+                                            ],
+                                            [
+                                                'bool' => [
+                                                    'must_not' => [['exists' => ['field' => 'last_activity_at']]],
+                                                    'must' => [
+                                                        [
+                                                            'range' => [
+                                                                'created_at' => [
+                                                                    'gte' => now()->subDays(90)->startOfDay()->toIso8601String(),
+                                                                    'lt' => now()->subDays(30)->startOfDay()->toIso8601String(),
+                                                                ],
+                                                            ],
+                                                        ],
+                                                    ],
+                                                ],
+                                            ],
+                                        ],
+                                        'minimum_should_match' => 1,
+                                    ],
+                                ],
+                                'dormant' => [
+                                    'bool' => [
+                                        'should' => [
+                                            ['range' => ['last_activity_at' => ['lt' => now()->subDays(90)->startOfDay()->toIso8601String()]]],
+                                            [
+                                                'bool' => [
+                                                    'must_not' => [['exists' => ['field' => 'last_activity_at']]],
+                                                    'must' => [['range' => ['created_at' => ['lt' => now()->subDays(90)->startOfDay()->toIso8601String()]]]],
+                                                ],
+                                            ],
+                                        ],
+                                        'minimum_should_match' => 1,
+                                    ],
+                                ],
+                                'never' => [
+                                    'bool' => [
+                                        'must_not' => [
+                                            ['exists' => ['field' => 'last_activity_at']],
+                                            ['exists' => ['field' => 'created_at']],
+                                        ],
+                                    ],
+                                ],
+                            ],
+                        ],
+                    ],
+                    'pipeline_buckets' => [
+                        'filters' => [
+                            'filters' => [
+                                'active' => [
+                                    'range' => [
+                                        'job_metrics.pipeline_candidates_count' => ['gt' => 0],
+                                    ],
+                                ],
+                                'none' => [
+                                    'bool' => [
+                                        'should' => [
+                                            ['term' => ['job_metrics.pipeline_candidates_count' => 0]],
+                                            ['bool' => ['must_not' => [['exists' => ['field' => 'job_metrics.pipeline_candidates_count']]]]],
+                                        ],
+                                        'minimum_should_match' => 1,
+                                    ],
+                                ],
+                            ],
+                        ],
+                    ],
+                ];
+
                 $params = [
                     'index' => ELASTIC_CLIENT_LIST,
                     'request_cache' => true,
@@ -1040,6 +1447,7 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
                         'size' => $size,
                         'sort' => $sort,
                         'query' => ['bool' => ['must' => $must]],
+                        'aggs' => $facetAggs,
                     ],
                 ];
                 $decodedCursor = $this->decodeOpaqueCursor($cursorParam);
@@ -1050,10 +1458,14 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
                 if (! $this->elasticService->indexExists(ELASTIC_CLIENT_LIST)) {
                     $total = 0;
                     $data = [];
+                    $recencyBuckets = [];
+                    $pipelineBuckets = [];
                 } else {
                     $response = $this->elasticService->getClient()->search($params);
                     $total = $response['hits']['total']['value'] ?? 0;
                     $data = array_map(fn ($hit) => $hit['_source'], $response['hits']['hits']);
+                    $recencyBuckets = $response['aggregations']['recency_buckets']['buckets'] ?? [];
+                    $pipelineBuckets = $response['aggregations']['pipeline_buckets']['buckets'] ?? [];
                 }
 
                 $nextCursor = null;
@@ -1065,99 +1477,20 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
                 }
             }
 
-            // ── Phase 3 God-Level Standard: Prepend Pending Direct Client Requests on All Clients Tab (Page 1) ──
-            $pendingRequests = [];
-            $pendingJobsCountMap = [];
+            $recencyCounts = [
+                'all' => $total,
+                '7d' => (int) ($recencyBuckets['7d']['doc_count'] ?? 0),
+                '30d' => (int) ($recencyBuckets['30d']['doc_count'] ?? 0),
+                '90d' => (int) ($recencyBuckets['90d']['doc_count'] ?? 0),
+                'dormant' => (int) ($recencyBuckets['dormant']['doc_count'] ?? 0),
+                'never' => (int) ($recencyBuckets['never']['doc_count'] ?? 0),
+            ];
 
-            if ($tabFilter === 'all' && (int) $page === 1 && ! $hiringFilter && ! $inactiveFilter && $this->elasticService->indexExists(ELASTIC_CLIENT_REQUEST)) {
-                try {
-                    $reqBool = [
-                        'must' => [
-                            ['term' => ['to_company_id' => (int) $company_id]],
-                            ['term' => ['to_invitation_status' => 0]],
-                        ],
-                    ];
-
-                    if (! empty($customSearch)) {
-                        $reqBool['must'][] = [
-                            'multi_match' => [
-                                'query' => $customSearch,
-                                'fields' => ['company_name^3', 'ind_name^2', 'city_name', 'country_name'],
-                                'type' => 'phrase_prefix',
-                            ],
-                        ];
-                    }
-
-                    $pendingEsResp = $this->elasticService->getClient()->search([
-                        'index' => ELASTIC_CLIENT_REQUEST,
-                        'size' => 20,
-                        'body' => [
-                            'query' => ['bool' => $reqBool],
-                            'sort' => [
-                                ['created_at' => ['order' => 'desc', 'unmapped_type' => 'date']],
-                                ['id' => ['order' => 'desc', 'unmapped_type' => 'long']],
-                            ],
-                        ],
-                    ]);
-
-                    if (! empty($pendingEsResp['hits']['hits'])) {
-                        $pendingFromCompanyIds = [];
-                        foreach ($pendingEsResp['hits']['hits'] as $pHit) {
-                            $pSrc = $pHit['_source'];
-                            $pSrc['is_pending_request'] = true;
-                            $pSrc['_es_id'] = $pHit['_id'] ?? null;
-                            $fromComp = (int) ($pSrc['from_company_id'] ?? 0);
-                            if ($fromComp > 0) {
-                                $pendingFromCompanyIds[] = $fromComp;
-                            }
-                            $pendingRequests[] = $pSrc;
-                        }
-
-                        // Batch count shared requisitions from ELASTIC_JOB_REQUEST for pending direct clients
-                        if (! empty($pendingFromCompanyIds) && $this->elasticService->indexExists(ELASTIC_JOB_REQUEST)) {
-                            try {
-                                $jobReqResp = $this->elasticService->getClient()->search([
-                                    'index' => ELASTIC_JOB_REQUEST,
-                                    'size' => 0,
-                                    'body' => [
-                                        'query' => [
-                                            'bool' => [
-                                                'must' => [
-                                                    ['term' => ['to_company_id' => (int) $company_id]],
-                                                    ['terms' => ['from_company_id' => array_values(array_unique($pendingFromCompanyIds))]],
-                                                ],
-                                            ],
-                                        ],
-                                        'aggs' => [
-                                            'by_from_company' => [
-                                                'terms' => [
-                                                    'field' => 'from_company_id',
-                                                    'size' => 50,
-                                                ],
-                                            ],
-                                        ],
-                                    ],
-                                ]);
-                                foreach ($jobReqResp['aggregations']['by_from_company']['buckets'] ?? [] as $b) {
-                                    $pendingJobsCountMap[(int) $b['key']] = (int) $b['doc_count'];
-                                }
-                            } catch (\Throwable $e) {
-                            }
-                        }
-
-                        foreach ($pendingRequests as &$pItem) {
-                            $fId = (int) ($pItem['from_company_id'] ?? 0);
-                            $pItem['requisition_count'] = $pendingJobsCountMap[$fId] ?? ($pItem['requisition_count'] ?? 0);
-                        }
-                        unset($pItem);
-
-                        $data = array_merge($pendingRequests, $data);
-                        $total += count($pendingRequests);
-                    }
-                } catch (\Throwable $esReqEx) {
-                    \Log::warning('Error querying ELASTIC_CLIENT_REQUEST for All Clients pinned tab: '.$esReqEx->getMessage());
-                }
-            }
+            $pipelineCounts = [
+                'all' => $total,
+                'active' => (int) ($pipelineBuckets['active']['doc_count'] ?? 0),
+                'none' => (int) ($pipelineBuckets['none']['doc_count'] ?? 0),
+            ];
 
             $pagination = [
                 'total' => $total,
@@ -1291,6 +1624,10 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
                     $reqCount = (int) ($rowObj->requisition_count ?? 0);
                     $rowTargetId = $rowObj->client_id ?: ($rowObj->from_company_id ?: ($rowObj->id ?? 0));
 
+                    $reqCity = $rowObj->city_name ?? ($rowObj->city ?? '');
+                    $reqState = $rowObj->state_name ?? (! is_numeric($rowObj->state ?? '') ? ($rowObj->state ?? '') : '');
+                    $reqCountry = $rowObj->country_name ?? ($rowObj->country ?? '');
+
                     $rowsDto[] = [
                         'id' => (int) ($rowObj->staffing_company_invitation_id ?? ($rowObj->id ?? 0)),
                         'client_id' => (int) ($rowObj->client_id ?? 0),
@@ -1302,8 +1639,10 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
                         'industry' => (string) ($rowObj->ind_name ?? ''),
                         'industry_id' => null,
                         'company_size' => (string) ($rowObj->company_size ?? ''),
-                        'location_main' => (string) ($rowObj->city_name ?? ''),
-                        'country' => ucwords((string) ($rowObj->country_name ?? '')),
+                        'location_main' => (string) $reqCity,
+                        'city' => ! empty($reqCity) ? ucwords(strtolower((string) $reqCity)) : '',
+                        'state' => ! empty($reqState) ? ucwords(strtolower((string) $reqState)) : '',
+                        'country' => ! empty($reqCountry) ? ucwords(strtolower((string) $reqCountry)) : '',
                         'country_id' => null,
                         'country_ids' => [],
                         'locations' => [],
@@ -1323,6 +1662,7 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
                             'closed' => 0,
                             'active' => $reqCount,
                         ],
+                        'pv' => [0, 0, 0, 0, 0, 0, 0, 0, 0],
                         'pipeline' => [
                             'applications' => 0,
                             'sourced' => 0,
@@ -1332,6 +1672,7 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
                             'interviews' => 0,
                             'offers' => 0,
                             'joined' => 0,
+                            'rejected' => 0,
                         ],
                         'connected_on' => (string) $newDate,
                         'expires_on' => (string) $expiresFormatted,
@@ -1364,11 +1705,48 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
                 $departmentArr = ($rowObj->ind_name ?? null) ?: ($rowObj->main_ind_name ?? '');
                 $rowTargetId = $isDirect ? ($rowObj->client_id ?: ($rowObj->from_company_id ?: ($rowObj->company_id ?: ($rowObj->id ?? 0)))) : ($rowObj->client_id ?: ($rowObj->id ?? 0));
 
+                // Intent: Robust multi-tier location resolution (City, State, Country) across nested ES structures with fallbacks
                 $country_name = $stateName = $city = '';
-                if (! empty($rowObj->client_location) && is_array($rowObj->client_location) && count($rowObj->client_location) > 0) {
-                    $country_name = $rowObj->client_location[0]['country_name'] ?? '';
-                    $stateName = $rowObj->client_location[0]['state_name'] ?? '';
-                    $city = $rowObj->client_location[0]['city_name'] ?? '';
+                if (! empty($rowObj->client_location) && (is_array($rowObj->client_location) || is_iterable($rowObj->client_location))) {
+                    foreach ($rowObj->client_location as $loc) {
+                        $locArr = (array) $loc;
+                        if (! empty($locArr['city_name'])) {
+                            $city = $locArr['city_name'];
+                        } elseif (! empty($locArr['city'])) {
+                            $city = $locArr['city'];
+                        }
+                        if (! empty($locArr['state_name'])) {
+                            $stateName = $locArr['state_name'];
+                        } elseif (! empty($locArr['state']) && ! is_numeric($locArr['state'])) {
+                            $stateName = $locArr['state'];
+                        }
+                        if (! empty($locArr['country_name'])) {
+                            $country_name = $locArr['country_name'];
+                        } elseif (! empty($locArr['country'])) {
+                            $country_name = $locArr['country'];
+                        }
+                        if (! empty($city) || ! empty($stateName) || ! empty($country_name)) {
+                            break;
+                        }
+                    }
+                }
+                if (empty($city) && ! empty($rowObj->city_name)) {
+                    $city = $rowObj->city_name;
+                }
+                if (empty($city) && ! empty($rowObj->city)) {
+                    $city = $rowObj->city;
+                }
+                if (empty($stateName) && ! empty($rowObj->state_name)) {
+                    $stateName = $rowObj->state_name;
+                }
+                if (empty($stateName) && ! empty($rowObj->state) && ! is_numeric($rowObj->state)) {
+                    $stateName = $rowObj->state;
+                }
+                if (empty($country_name) && ! empty($rowObj->country_name)) {
+                    $country_name = $rowObj->country_name;
+                }
+                if (empty($country_name) && ! empty($rowObj->country)) {
+                    $country_name = $rowObj->country;
                 }
 
                 $companySizeText = '';
@@ -1396,22 +1774,28 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
                 $job_closed = (int) ($jobsCount->job_inactive ?? 0);
                 $job_hold = (int) ($jobsCount->job_hold ?? 0);
 
-                $applications = (int) ($perf->all_candidates ?? 0);
                 $sourced = (int) ($perf->sourced ?? 0);
                 $screening = (int) ($perf->screening ?? 0);
                 $evaluated = (int) ($perf->evaluated ?? 0);
                 $negotiations = (int) ($perf->negotiations ?? ($perf->negotiation ?? 0));
                 $offers = (int) ($perf->offers ?? 0);
                 $joined = (int) ($perf->Joined ?? ($perf->joined ?? 0));
+                $rejected = (int) ($perf->rejected ?? 0);
+                $inReview = (int) ($perf->in_review ?? 0);
                 $interviews = (int) ($perf->all_interview ?? 0);
+
+                // Derived quantities (Invariant 3): Total Applications mathematically derived
+                $activePipeline = ($sourced + $screening + $evaluated + $negotiations + $offers + $joined);
+                $applications = ($activePipeline + $rejected + $inReview);
 
                 if (($recommendation_id ?? 0) > 0 && ($to_company_id ?? 0) == auth()->user()->company_id) {
                     $createdTimestamp = $from_created_at ?: ($rowObj->created_at ?? null);
                 } else {
                     $createdTimestamp = $rowObj->created_at ?? null;
                 }
+                $lastActivityTimestamp = $rowObj->last_activity_at ?? $rowObj->updated_at ?? $createdTimestamp;
                 $newDate = $createdTimestamp ? date('d M, Y', strtotime($createdTimestamp)) : '-';
-                $daysAgo = $createdTimestamp ? GeneralMethod::timeAgo($createdTimestamp) : '';
+                $daysAgo = $lastActivityTimestamp ? GeneralMethod::timeAgo($lastActivityTimestamp) : '';
 
                 $client_type = ($company_id != $cId) ? __('messages.direct_clinet_tag') : __('messages.internal_client_tag');
 
@@ -1496,6 +1880,14 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
                     $countryId = isset($chosenLoc['country_id']) ? (int) $chosenLoc['country_id'] : null;
                     $cityId = isset($chosenLoc['city_id']) ? (int) $chosenLoc['city_id'] : null;
                     $stateId = isset($chosenLoc['state']) ? (int) $chosenLoc['state'] : (isset($chosenLoc['state_id']) ? (int) $chosenLoc['state_id'] : null);
+                    if ($matchedLoc !== null) {
+                        if (! empty($matchedLoc['city_name'])) $city = $matchedLoc['city_name'];
+                        elseif (! empty($matchedLoc['city'])) $city = $matchedLoc['city'];
+                        if (! empty($matchedLoc['state_name'])) $stateName = $matchedLoc['state_name'];
+                        elseif (! empty($matchedLoc['state']) && ! is_numeric($matchedLoc['state'])) $stateName = $matchedLoc['state'];
+                        if (! empty($matchedLoc['country_name'])) $country_name = $matchedLoc['country_name'];
+                        elseif (! empty($matchedLoc['country'])) $country_name = $matchedLoc['country'];
+                    }
                 }
 
                 $rowsDto[] = [
@@ -1509,7 +1901,9 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
                     'industry_id' => isset($rowObj->industry) ? (int) $rowObj->industry : null,
                     'company_size' => (string) $companySizeText,
                     'location_main' => (string) $locMain,
-                    'country' => ucwords((string) $country_name),
+                    'city' => ! empty($city) ? ucwords(strtolower((string) $city)) : '',
+                    'state' => ! empty($stateName) ? ucwords(strtolower((string) $stateName)) : '',
+                    'country' => ! empty($country_name) ? ucwords(strtolower((string) $country_name)) : '',
                     'country_id' => $countryId,
                     'country_ids' => array_values(array_unique($countryIds)),
                     'locations' => $rowObj->client_location ?? [],
@@ -1518,6 +1912,7 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
                     'is_direct' => $isDirect,
                     'client_type_css' => $client_type_css,
                     'client_type' => (string) $client_type,
+                    'active_jobs_count' => (int) $job_active,
                     'is_active_hiring' => ($job_active > 0),
                     'is_inactive' => ($job_active === 0),
                     'jobs' => [
@@ -1526,7 +1921,19 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
                         'closed' => $job_closed,
                         'active' => $job_active,
                     ],
+                    'pv' => [
+                        $sourced,
+                        $screening,
+                        $evaluated,
+                        $negotiations,
+                        $offers,
+                        $joined,
+                        $rejected,
+                        $inReview,
+                        $interviews,
+                    ],
                     'pipeline' => [
+                        'active_pipeline' => $activePipeline,
                         'applications' => $applications,
                         'sourced' => $sourced,
                         'screening' => $screening,
@@ -1534,10 +1941,14 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
                         'negotiations' => $negotiations,
                         'offers' => $offers,
                         'joined' => $joined,
+                        'rejected' => $rejected,
+                        'in_review' => $inReview,
                         'interviews' => $interviews,
                     ],
                     'connected_on' => (string) $newDate,
                     'days_ago' => (string) $daysAgo,
+                    'last_activity_at' => $lastActivityTimestamp ? Carbon::parse($lastActivityTimestamp)->toIso8601String() : null,
+                    'last_activity_formatted' => $lastActivityTimestamp ? date('d M, Y', strtotime($lastActivityTimestamp)) : null,
                     'projection_version' => (int) $tenantVersion,
                 ];
             }
@@ -1553,7 +1964,10 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
                 'total' => $total,
                 'pagination' => view('service_company.ajax_pages.client-pagination', compact('pagination'))->render(),
                 'rows' => $rowsDto,
+                'recency_counts' => $recencyCounts ?? ['all' => $total, '7d' => 0, '30d' => 0, '90d' => 0, 'dormant' => 0, 'never' => 0],
+                'pipeline_counts' => $pipelineCounts ?? ['all' => $total, 'active' => 0, 'none' => 0],
                 'data_version' => $tenantVersion,
+                'pipeline_revision' => (int) cache()->get('tenant_'.$company_id.'_pipeline_rev', 1),
                 'authoritative_version' => $authoritativeVersion,
                 'projection_version' => $projectionVersion,
                 'projection_lag' => $projectionLag,
@@ -1654,6 +2068,7 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
         $page = max((int) $request->input('page', 1), 1);
         $size = (int) $request->input('size', 10);
         $from = ($page - 1) * $size;
+        $valCheck = self::normalizeRequestSort($request->input('sort', $request->input('sortingfilter', 'status_sla')));
 
         $cachePayload = [
             'page' => $page,
@@ -1661,6 +2076,7 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
             'q' => $searchQuery,
             'user_id' => auth()->id() ?? ($this->user->id ?? 0),
             'company' => $company_id,
+            'valCheck' => $valCheck,
         ];
 
         $tenantVersion = (int) cache()->get('tenant_'.$company_id.'_client_version', 1);
@@ -1746,12 +2162,24 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
                 ];
             }
 
-            // Multi-level deterministic sorting
+            // Multi-level deterministic sorting for Workflow Queue (ClientRequestSort domain)
             $sort = [
-                ['to_invitation_status' => ['order' => 'asc', 'unmapped_type' => 'long']],
-                ['created_at' => ['order' => 'desc', 'unmapped_type' => 'date']],
-                ['id' => ['order' => 'desc', 'unmapped_type' => 'long']],
+                ['to_invitation_status' => ['order' => 'asc']],
             ];
+            if ($valCheck === 'name_asc') {
+                $sort[] = ['company_name.keyword' => ['order' => 'asc']];
+            } elseif ($valCheck === 'name_desc') {
+                $sort[] = ['company_name.keyword' => ['order' => 'desc']];
+            } elseif ($valCheck === 'oldest_req' || $valCheck === 'oldest') {
+                $sort[] = ['created_at' => ['order' => 'asc']];
+            } elseif ($valCheck === 'newest_req') {
+                $sort[] = ['created_at' => ['order' => 'desc']];
+            } else {
+                // status_sla: deterministic SLA ordering (Overdue -> Due soon -> Normal -> No SLA)
+                $sort[] = ['expires_at' => ['order' => 'asc', 'missing' => '_last']];
+                $sort[] = ['created_at' => ['order' => 'asc']];
+            }
+            $sort[] = ['id' => ['order' => 'desc']];
 
             $params = [
                 'index' => ELASTIC_CLIENT_REQUEST,
@@ -1835,6 +2263,10 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
                     $initials = 'CL';
                 }
 
+                $reqCity = $rowObj->city_name ?? ($rowObj->city ?? '');
+                $reqState = $rowObj->state_name ?? (! is_numeric($rowObj->state ?? '') ? ($rowObj->state ?? '') : '');
+                $reqCountry = $rowObj->country_name ?? ($rowObj->country ?? '');
+
                 $rowsDto[] = [
                     'id' => (int) ($rowObj->id ?? 0),
                     'client_id' => (int) ($rowObj->client_id ?? 0),
@@ -1843,8 +2275,11 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
                     'initials' => (string) $initials,
                     'bg_color' => (string) $bgTextDecore,
                     'ind_name' => (string) ($rowObj->ind_name ?? ''),
-                    'city_name' => (string) ($rowObj->city_name ?? ''),
-                    'country_name' => (string) ($rowObj->country_name ?? ''),
+                    'city' => ! empty($reqCity) ? ucwords(strtolower((string) $reqCity)) : '',
+                    'state' => ! empty($reqState) ? ucwords(strtolower((string) $reqState)) : '',
+                    'country' => ! empty($reqCountry) ? ucwords(strtolower((string) $reqCountry)) : '',
+                    'city_name' => (string) $reqCity,
+                    'country_name' => (string) $reqCountry,
                     'staffing_company_invitation_id' => (int) ($rowObj->staffing_company_invitation_id ?? 0),
                     'from_company_id' => (int) ($rowObj->from_company_id ?? 0),
                     'to_invitation_status' => (int) ($rowObj->to_invitation_status ?? 0),
@@ -1866,6 +2301,7 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
                 'pagination' => view('service_company.ajax_pages.client-pagination', compact('pagination'))->render(),
                 'rows' => $rowsDto,
                 'data_version' => $tenantVersion,
+                'pipeline_revision' => (int) cache()->get('tenant_'.$company_id.'_pipeline_rev', 1),
                 'authoritative_version' => $authoritativeVersion,
                 'projection_version' => $projectionVersion,
                 'projection_lag' => $projectionLag,
@@ -2258,7 +2694,7 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
 
         $versionKey = 'clientsviewmore_version_user_'.$userId;
         $version = cache()->get($versionKey, 1);
-        $cacheKeySet = 'ats:clientsviewmore_v11:'.$userId.':'.$version.':'.md5(json_encode($cachePayload));
+        $cacheKeySet = 'ats:clientsviewmore_v14:'.$userId.':'.$version.':'.md5(json_encode($cachePayload));
         /* ----------------------------
         ⚡ Check DragonflyDB first
         ----------------------------- */
@@ -3887,7 +4323,18 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
     {
         abort_if(Gate::denies('edit_clients'), 403);
 
-        if ($validationError = $this->validateClientSubmission($request)) {
+        $clientId = (int) (GeneralMethod::value_decrypt($id) ?: $id);
+
+        if ($validationError = $this->validateClientSubmission($request, $clientId)) {
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => $validationError['message'] ?? 'Validation failed',
+                    'error_name' => $validationError['error_name'] ?? 'validation',
+                    'data' => $validationError['data'] ?? [],
+                ], 422);
+            }
+
             return $validationError;
         }
 
@@ -3899,8 +4346,7 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
             'company_id' => $company_id,
             'name' => trim($request->name ?? ''),
             'website' => trim($request->website ?? ''),
-            'industry' => $request->industry,
-            'custom_industry' => trim($request->custom_industry ?? ''),
+            'industry' => (! empty($request->industry) && (int) $request->industry > 0) ? (int) $request->industry : 147,
             'company_sizes' => $request->company_sizes,
             'company_type' => $request->company_type,
             'founded' => $request->founded,
@@ -3975,18 +4421,10 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
         if (! empty($request->website)) {
             $client->website = $request->website;
         }
-        $customIndustry = null;
-        if (! empty($request->industry)) {
-            if (is_numeric($request->industry)) {
-                $client->industry = (int) $request->industry;
-            } else {
-                $client->industry = 0;
-                $customIndustry = trim($request->industry);
-            }
-        }
-        if (! empty($request->custom_industry)) {
-            $customIndustry = trim($request->custom_industry);
-            $client->industry = 0;
+        if (! empty($request->industry) && (int) $request->industry > 0) {
+            $client->industry = (int) $request->industry;
+        } else {
+            $client->industry = 147; // Default to canonical 'Other / Diversified Services'
         }
         if (! empty($request->company_sizes)) {
             [$from_size, $to_size] = explode('-', $request->company_sizes);
@@ -4019,9 +4457,9 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
                 $existingDetail = $decodedExisting;
             }
         }
+        unset($existingDetail['custom_industry']);
 
         $detailData = array_merge($existingDetail, [
-            'custom_industry' => $customIndustry ?? ($existingDetail['custom_industry'] ?? null),
             'career_page_url' => $request->career_page_url ?? null,
             'linkedin_url' => $request->linkedin_url ?? null,
             'twitter_url' => $request->twitter_url ?? null,
@@ -4772,18 +5210,24 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
     }
 
     /**
-     * Validate Client Add/Edit Submission parameters across 4 wizard sections.
+     * Validate Client Add/Edit Submission parameters across wizard sections.
      *
      * Intent: Enforce strict validation rules for Client Information, Client Description,
      * Address Details, and minimum 1 Contact Person added.
+     * Edit Client Isolation: When $clientId is provided (Edit mode), unchanged name and website
+     * are excluded from duplicate checking; unique changes are validated against other clients.
+     *
+     * @param  Request  $request
+     * @param  int|null  $clientId  Client ID if performing an update
+     * @return array|null
      */
-    private function validateClientSubmission(Request $request)
+    private function validateClientSubmission(Request $request, ?int $clientId = null)
     {
         // 1. Client Information
         if (empty(trim($request->name ?? ''))) {
             return Reply::error('Client Name is required.');
         }
-        $hasIndustry = (! empty($request->industry) && (string) $request->industry !== '0') || ! empty(trim($request->custom_industry ?? ''));
+        $hasIndustry = (! empty($request->industry) && (int) $request->industry > 0);
         if (! $hasIndustry) {
             return Reply::error('Industry is required.');
         }
@@ -4853,8 +5297,9 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
         // 5. Authoritative Internal Client Duplicate Validation (Absolute Domain Isolation)
         // Direct Client records (self_company = 1) must NEVER block an Internal Client.
         $companyId = (int) ($request->user()?->company_id ?? auth()->user()->company_id);
+        $targetClientId = $clientId ?: (! empty($request->id) ? (int) $request->id : (! empty($request->client_id) ? (int) $request->client_id : null));
         $duplicateService = app(InternalClientDuplicateService::class);
-        $dup = $duplicateService->validateSubmissionDuplicates($companyId, $request->all(), ! empty($request->id) ? (int) $request->id : null);
+        $dup = $duplicateService->validateSubmissionDuplicates($companyId, $request->all(), $targetClientId);
         if ($dup !== null) {
             return Reply::error($dup['message'], $dup['field'] ?? 'duplicate', $dup);
         }
@@ -4886,8 +5331,7 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
             'company_id' => $company_id,
             'name' => trim($request->name ?? ''),
             'website' => trim($request->website ?? ''),
-            'industry' => $request->industry,
-            'custom_industry' => trim($request->custom_industry ?? ''),
+            'industry' => (! empty($request->industry) && (int) $request->industry > 0) ? (int) $request->industry : 147,
             'company_sizes' => $request->company_sizes,
             'company_type' => $request->company_type,
             'founded' => $request->founded,
@@ -4959,18 +5403,10 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
             $canonicalWebsite = InternalClientDuplicateService::canonicalizeDomain($request->website);
             $client->website = $canonicalWebsite ?: trim($request->website);
         }
-        $customIndustry = null;
-        if (! empty($request->industry)) {
-            if (is_numeric($request->industry)) {
-                $client->industry = (int) $request->industry;
-            } else {
-                $client->industry = 0;
-                $customIndustry = trim($request->industry);
-            }
-        }
-        if (! empty($request->custom_industry)) {
-            $customIndustry = trim($request->custom_industry);
-            $client->industry = 0;
+        if (! empty($request->industry) && (int) $request->industry > 0) {
+            $client->industry = (int) $request->industry;
+        } else {
+            $client->industry = 147; // Default to canonical 'Other / Diversified Services'
         }
         if (! empty($request->company_sizes)) {
             [$from_size, $to_size] = explode('-', $request->company_sizes);
@@ -4997,7 +5433,6 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
         }
 
         $detailData = [
-            'custom_industry' => $customIndustry ?? null,
             'career_page_url' => $request->career_page_url ?? null,
             'linkedin_url' => $request->linkedin_url ?? null,
             'twitter_url' => $request->twitter_url ?? null,
@@ -5398,7 +5833,14 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
 
         $tenantId = (int) auth()->user()->company_id;
         $field = $request->input('field');
-        $clientId = $request->filled('client_id') ? (int) $request->input('client_id') : null;
+
+        $rawClientId = $request->input('client_id');
+        $clientId = null;
+        if (! empty($rawClientId) && $rawClientId !== 'null' && $rawClientId !== 'undefined') {
+            $decrypted = GeneralMethod::value_decrypt($rawClientId);
+            $clientId = is_numeric($decrypted) ? (int) $decrypted : (is_numeric($rawClientId) ? (int) $rawClientId : null);
+        }
+
         $duplicateService = app(InternalClientDuplicateService::class);
 
         if ($field === 'name') {

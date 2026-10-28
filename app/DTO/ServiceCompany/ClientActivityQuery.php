@@ -34,7 +34,8 @@ class ClientActivityQuery
         public readonly int $limit = self::DEFAULT_LIMIT,
         public readonly ?int $fromSequence = null,
         public readonly ?int $toSequence = null,
-        public readonly array $eventIds = []
+        public readonly array $eventIds = [],
+        public readonly bool $forceRefresh = false
     ) {}
 
     /**
@@ -64,6 +65,7 @@ class ClientActivityQuery
         $fromSequence = $request->filled('from_sequence') ? (int) $request->input('from_sequence') : null;
         $toSequence = $request->filled('to_sequence') ? (int) $request->input('to_sequence') : null;
         $eventIds = (array) $request->input('event_ids', []);
+        $forceRefresh = $request->boolean('refresh') || $request->input('force') == '1';
 
         // Decrypt cursor if provided
         $cursorSequence = null;
@@ -92,7 +94,8 @@ class ClientActivityQuery
             limit: $limit,
             fromSequence: $fromSequence,
             toSequence: $toSequence,
-            eventIds: array_filter(array_map('trim', $eventIds))
+            eventIds: array_filter(array_map('trim', $eventIds)),
+            forceRefresh: $forceRefresh
         );
     }
 

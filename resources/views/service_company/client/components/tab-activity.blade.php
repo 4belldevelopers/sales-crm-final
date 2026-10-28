@@ -148,25 +148,27 @@
         /**
          * Initializes or switches the active client context.
          */
-        initClient: function(clientId, isCustom, partnerCompanyId) {
+        initClient: function(clientId, isCustom, partnerCompanyId, forceRefresh) {
             var cId = parseInt(clientId, 10);
             if (!cId || isNaN(cId)) return;
 
-            // Check if switching to new client
+            // Check if switching to new client or forced refresh
             var isNewClient = (this.activeClientId !== cId);
             this.activeClientId = cId;
             this.isCustom = !!isCustom;
             this.partnerCompanyId = partnerCompanyId || null;
 
-            if (isNewClient) {
-                this.resetState();
-                this.setupReverbChannel();
+            if (isNewClient || forceRefresh) {
+                this.resetState(isNewClient);
+                if (isNewClient) {
+                    this.setupReverbChannel();
+                }
             }
 
-            this.loadActivity(false);
+            this.loadActivity(false, !!forceRefresh);
         },
 
-        resetState: function() {
+        resetState: function(fullReset) {
             if (this.inFlightXhr) {
                 try { this.inFlightXhr.abort(); } catch(e) {}
                 this.inFlightXhr = null;
@@ -179,6 +181,20 @@
             this.currentGeneration++;
             this.syncGeneration++;
             this.setSyncState('SYNCING');
+
+            if (fullReset) {
+                this.activeCategory = 'all';
+                this.activeTimeframe = 'all';
+                this.searchQuery = '';
+                $('#cdActivitySearchInput').val('');
+                $('#cdActivitySearchClear').removeClass('visible');
+                $('#cdActivityTimeframeSelect').val('all');
+                $('#cdActivityFilterTabs .cd-activity-tab-btn').removeClass('active');
+                $('#cdActivityFilterTabs .cd-activity-tab-btn[data-category="all"]').addClass('active');
+                $('#cdActivityCardsStream').empty();
+                $('#cdActivityPaginationContainer').hide();
+                this.updateKpiCounters({ all: 0, pipeline: 0, interviews: 0, offers: 0, jobs: 0, crm: 0 });
+            }
         },
 
         setSyncState: function(state) {
@@ -213,7 +229,7 @@
         /**
          * Loads activity data from authoritative CQRS endpoint.
          */
-        loadActivity: function(append) {
+        loadActivity: function(append, forceRefresh) {
             if (!this.activeClientId || this.isLoading) return;
 
             var self = this;
@@ -237,6 +253,10 @@
                 timeframe: this.activeTimeframe,
                 q: this.searchQuery || ''
             };
+
+            if (forceRefresh) {
+                params.refresh = 1;
+            }
 
             if (append && this.nextCursor) {
                 params.cursor = this.nextCursor;
@@ -493,9 +513,43 @@
 
         toggleKebabMenu: function(e, btn) {
             e.stopPropagation();
-            var $menu = $(btn).siblings('.cd-activity-kebab-menu');
-            $('.cd-activity-kebab-menu').not($menu).removeClass('show');
-            $menu.toggleClass('show');
+            var $btn = $(btn);
+            var $card = $btn.closest('.cd-activity-card');
+            var $menu = $btn.siblings('.cd-activity-kebab-menu');
+            var wasOpen = $menu.hasClass('show');
+
+            // Close all open menus and remove elevation from cards
+            $('.cd-activity-kebab-menu').removeClass('show dropup');
+            $('.cd-activity-card').removeClass('cd-menu-open');
+
+            if (!wasOpen) {
+                // Elevate this card's stacking context
+                $card.addClass('cd-menu-open');
+
+                // Viewport-aware vertical placement
+                var btnOffset = $btn.offset();
+                var btnHeight = $btn.outerHeight();
+                var menuHeight = 160;
+                var windowBottom = $(window).scrollTop() + $(window).height();
+
+                var $scrollContainer = $btn.closest('.scroll-y, [data-kt-scroll="true"], #kt_activities_scroll');
+                var containerBottom = $scrollContainer.length ? ($scrollContainer.offset().top + $scrollContainer.innerHeight()) : windowBottom;
+                var effectiveBottom = Math.min(windowBottom, containerBottom);
+
+                var spaceBelow = effectiveBottom - (btnOffset.top + btnHeight);
+                if (spaceBelow < menuHeight + 15 && (btnOffset.top - $(window).scrollTop()) > menuHeight) {
+                    $menu.addClass('dropup');
+                } else {
+                    $menu.removeClass('dropup');
+                }
+
+                $menu.addClass('show');
+            }
+        },
+
+        refreshFeed: function() {
+            this.nextCursor = null;
+            this.loadActivity(false, true);
         },
 
         openNoteModal: function() {
@@ -508,6 +562,182 @@
     };
 
     window.ClientActivityManager = ClientActivityManager;
+
+    /**
+     * Dedicated View Profile opener for Candidates (strictly Read-Only).
+     * Prevents stale data and strips/suppresses all Edit functionality.
+     */
+    window.openCandidateDrawer = function(candidateId, options) {
+        if (!candidateId) return;
+        var isReadOnly = true;
+        if (typeof options === 'object' && options !== null && options.readOnly !== undefined) {
+            isReadOnly = !!options.readOnly;
+        } else if (typeof options === 'boolean') {
+            isReadOnly = options;
+        }
+
+        var $drawer = $('#kt_activitiesApplication');
+        if (!$drawer.length) {
+            console.warn('Candidate Drawer #kt_activitiesApplication not found in DOM.');
+            return;
+        }
+
+        var sid = String(candidateId);
+        // Anti-stale DOM reset: immediately display fresh skeleton loader
+        if (window.__activeCandidateDrawerId !== sid) {
+            window.__activeCandidateDrawerId = null;
+            $('#application_show_right_bar').html(
+                '<div class="d-flex flex-column align-items-center justify-content-center p-10" style="min-height: 380px;">' +
+                '  <div class="spinner-border text-primary mb-4" role="status" style="width: 2.8rem; height: 2.8rem;"></div>' +
+                '  <div class="text-gray-800 fw-bold fs-5 mb-1">Loading Candidate Profile…</div>' +
+                '  <div class="text-muted fs-7">Retrieving verified application details</div>' +
+                '</div>'
+            );
+        }
+
+        if (isReadOnly) {
+            $drawer.addClass('drawer-readonly-view');
+        } else {
+            $drawer.removeClass('drawer-readonly-view');
+        }
+
+        // Metronic drawer activation
+        if (typeof KTDrawer !== 'undefined') {
+            var drawerInst = KTDrawer.getInstance(document.getElementById('kt_activitiesApplication'));
+            if (drawerInst) {
+                drawerInst.show();
+            } else {
+                $('#kt_activitiesApplication_toggle').trigger('click');
+            }
+        } else {
+            $('#kt_activitiesApplication_toggle').trigger('click');
+        }
+
+        $drawer.css('z-index', '999999');
+
+        var currentPage = $('.custom-pagination .page-link.active').data('page') || 1;
+        var url = "{{ route('service_company.job-applications.show', ':id') }}";
+        url = url.replace(':id', sid) + "?read_only=" + (isReadOnly ? 1 : 0) + "&currentPage=" + currentPage;
+
+        $.ajax({
+            type: 'GET',
+            url: url,
+            success: function(response) {
+                if (response && response.view) {
+                    $('#application_show_right_bar').html(response.view);
+                    window.__activeCandidateDrawerId = sid;
+                    if (isReadOnly) {
+                        $drawer.addClass('drawer-readonly-view');
+                        $drawer.find('.cdr-btn-primary, a[href*="job-applications/edit"], a[href*="/edit"], .jw-card-edit-btn, .edit-note, .delete-note, #hdr_move_stage_btn, .btn-edit, [data-action="edit"]').hide();
+                    }
+                    if (typeof KTMenu !== 'undefined') KTMenu.createInstances();
+                } else if (response && response.status === 'error') {
+                    $('#application_show_right_bar').html(
+                        '<div class="card card-flush m-6 p-8 text-center border border-dashed border-danger">' +
+                        '  <div class="text-danger fw-bold fs-4 mb-2">Notice</div>' +
+                        '  <div class="text-gray-700 fs-6">' + (response.message || 'Candidate details could not be loaded.') + '</div>' +
+                        '</div>'
+                    );
+                }
+            },
+            error: function(xhr) {
+                var msg = (xhr && xhr.responseJSON && xhr.responseJSON.message) ? xhr.responseJSON.message : 'Unable to connect to server. Please refresh and try again.';
+                $('#application_show_right_bar').html(
+                    '<div class="card card-flush m-6 p-8 text-center border border-dashed border-danger">' +
+                    '  <div class="text-danger fw-bold fs-4 mb-2">Error Loading Profile</div>' +
+                    '  <div class="text-gray-700 fs-6">' + msg + '</div>' +
+                    '</div>'
+                );
+            }
+        });
+    };
+
+    /**
+     * Dedicated View Profile opener for Jobs (strictly Read-Only).
+     * Prevents stale data and strips/suppresses all Edit functionality.
+     */
+    window.openJobDrawer = function(jobId, options) {
+        if (!jobId) return;
+        var isReadOnly = true;
+        if (typeof options === 'object' && options !== null && options.readOnly !== undefined) {
+            isReadOnly = !!options.readOnly;
+        } else if (typeof options === 'boolean') {
+            isReadOnly = options;
+        }
+
+        var $drawer = $('#kt_activitiesJob_show');
+        if (!$drawer.length) {
+            window.open(`{{ url('service_company/jobs/viewmore') }}/${jobId}`, '_blank');
+            return;
+        }
+
+        if (isReadOnly) {
+            $drawer.addClass('drawer-readonly-view');
+        } else {
+            $drawer.removeClass('drawer-readonly-view');
+        }
+
+        // Anti-stale DOM reset: immediately show loader
+        $('#kt_activitiesJob_show_body').html(
+            '<div class="d-flex flex-column align-items-center justify-content-center p-10" style="min-height: 380px;">' +
+            '  <div class="spinner-border text-primary mb-4" role="status" style="width: 2.8rem; height: 2.8rem;"></div>' +
+            '  <div class="text-gray-800 fw-bold fs-5 mb-1">Loading Requisition Details…</div>' +
+            '  <div class="text-muted fs-7">Retrieving verified requisition details</div>' +
+            '</div>'
+        );
+
+        if (typeof KTDrawer !== 'undefined') {
+            var drawerInst = KTDrawer.getInstance(document.getElementById('kt_activitiesJob_show'));
+            if (drawerInst) {
+                drawerInst.show();
+            } else {
+                $('#kt_activitiesJob_show_toggle').trigger('click');
+            }
+        } else {
+            $('#kt_activitiesJob_show_toggle').trigger('click');
+        }
+
+        $drawer.css('z-index', '999999');
+
+        var url = "{{ route('service_company.jobs.viewmore', ':id') }}?viewmore=viewmore" + (isReadOnly ? '&readonly=1' : '');
+        url = url.replace(':id', jobId);
+
+        $.ajax({
+            type: 'GET',
+            url: url,
+            success: function(response) {
+                if (response && response.view) {
+                    $('#kt_activitiesJob_show_body').html(response.view);
+                } else if (typeof response === 'string') {
+                    $('#kt_activitiesJob_show_body').html(response);
+                }
+                if (isReadOnly) {
+                    $drawer.addClass('drawer-readonly-view');
+                    $drawer.find('.job-action-btn.edit, a[href*="jobs/edit"], a[href*="/edit"], .info-card-edit, .btn-edit').hide();
+                }
+            },
+            error: function() {
+                $('#kt_activitiesJob_show_body').html(
+                    '<div class="card card-flush m-6 p-8 text-center border border-dashed border-danger">' +
+                    '  <div class="text-danger fw-bold fs-4 mb-2">Error</div>' +
+                    '  <div class="text-gray-700 fs-6">Unable to load requisition details. Please try again.</div>' +
+                    '</div>'
+                );
+            }
+        });
+    };
+
+    window.openCandidateReadOnlyDrawer = function(candidateId) {
+        window.openCandidateDrawer(candidateId, { readOnly: true });
+    };
+
+    // Clean up read-only state when drawers are closed
+    $(document).on('click', '#kt_activitiesApplication_close, #kt_client_activitiesApplication_close', function() {
+        $('#kt_activitiesApplication').removeClass('drawer-readonly-view');
+    });
+    $(document).on('click', '#kt_activitiesJob_close', function() {
+        $('#kt_activitiesJob_show').removeClass('drawer-readonly-view');
+    });
 
     // Bind DOM events
     $(document).ready(function() {
@@ -531,8 +761,7 @@
 
         // Refresh button click
         $(document).on('click', '#cdActivityRefreshBtn', function() {
-            ClientActivityManager.nextCursor = null;
-            ClientActivityManager.loadActivity(false);
+            ClientActivityManager.refreshFeed();
         });
 
         // Load More button click
@@ -570,7 +799,29 @@
         // Close kebab dropdown on click outside
         $(document).on('click', function(e) {
             if (!$(e.target).closest('.cd-activity-kebab-wrapper').length) {
-                $('.cd-activity-kebab-menu').removeClass('show');
+                $('.cd-activity-kebab-menu').removeClass('show dropup');
+                $('.cd-activity-card').removeClass('cd-menu-open');
+            }
+        });
+
+        // Close kebab dropdown on ESC key
+        $(document).on('keydown', function(e) {
+            if (e.key === 'Escape' || e.keyCode === 27) {
+                $('.cd-activity-kebab-menu').removeClass('show dropup');
+                $('.cd-activity-card').removeClass('cd-menu-open');
+            }
+        });
+
+        // Close kebab dropdown on scroll
+        $(document).on('scroll.cdActivityKebab', '.scroll-y, [data-kt-scroll="true"], #kt_activities_scroll', function() {
+            $('.cd-activity-kebab-menu').removeClass('show dropup');
+            $('.cd-activity-card').removeClass('cd-menu-open');
+        });
+
+        // Listen for external ATS stage/status changes to dynamically refresh feed
+        $(document).on('ats:activity:refresh ats:stage:updated CandidateStatusChanged', function() {
+            if ($('#recent_activity').is(':visible') && window.ClientActivityManager) {
+                window.ClientActivityManager.refreshFeed();
             }
         });
     });
