@@ -189,33 +189,47 @@ use Carbon\Carbon;
           }
           .cd-hdr-btn-outline-green {
             background: #ffffff !important;
-            border-color: #a7f3d0 !important;
-            color: #059669 !important;
+            border-color: #e2e8f0 !important;
+            color: #334155 !important;
+            box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03) !important;
           }
           .cd-hdr-btn-outline-green:hover {
             background: #ecfdf5 !important;
             border-color: #059669 !important;
+            color: #059669 !important;
           }
           .cd-hdr-btn-white-edit {
             background: #ffffff !important;
-            border-color: #bfdbfe !important;
-            color: #2563eb !important;
-            box-shadow: 0 1px 2px rgba(37, 99, 235, 0.05) !important;
+            border-color: #e2e8f0 !important;
+            color: #334155 !important;
+            box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03) !important;
           }
           .cd-hdr-btn-white-edit:hover {
             background: #eff6ff !important;
-            border-color: #2563eb !important;
+            border-color: #bfdbfe !important;
+            color: #009ef7 !important;
+          }
+          .cd-hdr-btn-white-job {
+            background: #ffffff !important;
+            border-color: #e2e8f0 !important;
+            color: #334155 !important;
+            box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03) !important;
+          }
+          .cd-hdr-btn-white-job:hover {
+            background: #eff6ff !important;
+            border-color: #bfdbfe !important;
+            color: #009ef7 !important;
           }
           .cd-hdr-btn-primary {
-            background: #009ef7 !important;
-            border-color: #009ef7 !important;
-            color: #ffffff !important;
-            box-shadow: 0 2px 4px rgba(0, 158, 247, 0.2) !important;
+            background: #ffffff !important;
+            border-color: #e2e8f0 !important;
+            color: #334155 !important;
+            box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03) !important;
           }
           .cd-hdr-btn-primary:hover {
-            background: #0086d1 !important;
-            border-color: #0086d1 !important;
-            color: #ffffff !important;
+            background: #eff6ff !important;
+            border-color: #bfdbfe !important;
+            color: #009ef7 !important;
           }
           .cd-hdr-btn-close {
             width: 32px !important;
@@ -278,24 +292,34 @@ use Carbon\Carbon;
             flex-shrink: 0 !important;
           }
           .cd-hero-avatar {
-            width: 44px !important;
-            height: 44px !important;
-            border-radius: 9px !important;
-            background: linear-gradient(135deg, #4f46e5, #3b82f6) !important;
-            color: #ffffff !important;
-            border: 2px solid #ffffff !important;
-            box-shadow: 0 2px 5px rgba(15, 23, 42, 0.08) !important;
+            width: 48px !important;
+            height: 48px !important;
+            border-radius: 10px !important;
+            background: #ffffff !important;
+            color: #0f172a !important;
+            border: 1px solid #e2e8f0 !important;
+            box-shadow: 0 1px 3px rgba(15, 23, 42, 0.05) !important;
             display: flex !important;
             align-items: center !important;
             justify-content: center !important;
             font-size: 15px !important;
             font-weight: 700 !important;
             overflow: hidden !important;
+            padding: 6px !important;
+            box-sizing: border-box !important;
           }
           .cd-hero-avatar img {
-            width: 100% !important;
-            height: 100% !important;
-            object-fit: cover !important;
+            max-width: 100% !important;
+            max-height: 100% !important;
+            width: auto !important;
+            height: auto !important;
+            object-fit: contain !important;
+            display: block !important;
+          }
+          .cd-hero-avatar.is-initials {
+            background: #f8fafc !important;
+            color: #2563eb !important;
+            padding: 0 !important;
           }
           .cd-hero-verified-check {
             position: absolute !important;
@@ -477,21 +501,40 @@ use Carbon\Carbon;
           .cd-hero-positions-link {
             display: inline-flex !important;
             align-items: center !important;
+            gap: 6px !important;
             font-size: 11.5px !important;
-            font-weight: 600 !important;
-            color: #0f172a !important;
+            font-weight: 500 !important;
+            color: #334155 !important;
             text-decoration: none !important;
             cursor: pointer !important;
-            padding: 2px 8px !important;
-            border-radius: 5px !important;
-            background: #f8fafc !important;
+            padding: 3px 10px !important;
+            border-radius: 6px !important;
+            background: #ffffff !important;
             border: 1px solid #e2e8f0 !important;
+            box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03) !important;
             transition: all 0.15s ease !important;
+            line-height: 1.2 !important;
           }
           .cd-hero-positions-link:hover {
-            background: #eff6ff !important;
-            border-color: #bfdbfe !important;
-            color: #2563eb !important;
+            background: #fffbeb !important;
+            border-color: #fde68a !important;
+            color: #92400e !important;
+          }
+          .cd-hero-positions-link .cd-hero-pos-icon {
+            display: inline-flex !important;
+            align-items: center !important;
+            font-size: 11px !important;
+            color: #f59e0b !important;
+          }
+          .cd-hero-positions-link .cd-hero-pos-num {
+            font-weight: 700 !important;
+            font-size: 12px !important;
+            color: #0f172a !important;
+            margin-right: 2px !important;
+          }
+          .cd-hero-positions-link .cd-hero-pos-label {
+            font-weight: 500 !important;
+            color: #475569 !important;
           }
           .cd-hero-bottom-tags-row {
             background: #f8fafc !important;
@@ -1120,19 +1163,20 @@ use Carbon\Carbon;
           .cd-loc-group {
             display: flex !important;
             flex-direction: column !important;
-            gap: 8px !important;
+            gap: 10px !important;
             width: 100% !important;
           }
           .cd-loc-card {
             background: #ffffff !important;
             border: 1px solid #e2e8f0 !important;
             border-left: 3.5px solid #94a3b8 !important;
-            border-radius: 7px !important;
-            padding: 8px 11px !important;
+            border-radius: 8px !important;
+            padding: 10px 14px !important;
             text-align: left !important;
             width: 100% !important;
             box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03) !important;
             transition: all 0.2s ease !important;
+            box-sizing: border-box !important;
           }
           .cd-loc-card:hover {
             border-color: #cbd5e1 !important;
@@ -1140,7 +1184,7 @@ use Carbon\Carbon;
           }
           .cd-loc-card.is-primary,
           .cd-loc-card.hq {
-            background: #f8fbff !important;
+            background: #ffffff !important;
             border-color: #dbeafe !important;
             border-left: 3.5px solid #2563eb !important;
           }
@@ -1155,12 +1199,12 @@ use Carbon\Carbon;
             align-items: center !important;
             justify-content: space-between !important;
             gap: 8px !important;
-            margin-bottom: 5px !important;
+            margin-bottom: 6px !important;
           }
           .cd-loc-header-left {
             display: inline-flex !important;
             align-items: center !important;
-            gap: 5px !important;
+            gap: 6px !important;
             flex-shrink: 0 !important;
           }
           .cd-loc-badge,
@@ -1192,37 +1236,39 @@ use Carbon\Carbon;
           .cd-loc-hq-tag {
             display: inline-flex !important;
             align-items: center !important;
-            font-size: 8.5px !important;
+            font-size: 9px !important;
             font-weight: 800 !important;
             line-height: 1 !important;
             text-transform: uppercase !important;
             letter-spacing: 0.4px !important;
             background: #2563eb !important;
             color: #ffffff !important;
-            padding: 2.5px 5px !important;
-            border-radius: 3px !important;
+            padding: 2.5px 6px !important;
+            border-radius: 4px !important;
             white-space: nowrap !important;
             flex-shrink: 0 !important;
           }
           .cd-loc-country-pill {
             display: inline-flex !important;
             align-items: center !important;
-            font-size: 10px !important;
+            font-size: 10.5px !important;
             font-weight: 600 !important;
             line-height: 1 !important;
             color: #475569 !important;
-            background: #ffffff !important;
+            background: #f8fafc !important;
             border: 1px solid #e2e8f0 !important;
-            padding: 2.5px 8px !important;
+            padding: 3px 9px !important;
             border-radius: 12px !important;
             white-space: nowrap !important;
             flex-shrink: 0 !important;
-            box-shadow: 0 1px 2px rgba(15, 23, 42, 0.02) !important;
           }
           .cd-loc-city-line {
-            font-size: 12px !important;
+            display: flex !important;
+            align-items: center !important;
+            gap: 6px !important;
+            font-size: 12.5px !important;
             line-height: 1.35 !important;
-            margin-bottom: 3px !important;
+            margin-bottom: 4px !important;
             word-break: break-word !important;
           }
           .cd-loc-city-name,
@@ -1239,17 +1285,19 @@ use Carbon\Carbon;
             display: flex !important;
             align-items: flex-start !important;
             gap: 5px !important;
-            font-size: 11px !important;
-            color: #475569 !important;
-            line-height: 1.35 !important;
+            font-size: 11.5px !important;
+            color: #64748b !important;
+            line-height: 1.4 !important;
             word-break: break-word !important;
-            margin-bottom: 2px !important;
+            margin-bottom: 3px !important;
+            padding-left: 17px !important;
           }
           .cd-loc-meta-line {
             display: flex !important;
             align-items: center !important;
             gap: 6px !important;
             margin-top: 4px !important;
+            padding-left: 17px !important;
           }
           .cd-loc-meta-chip,
           .cd-loc-postcode {
@@ -1258,7 +1306,7 @@ use Carbon\Carbon;
             background: #f8fafc !important;
             border: 1px solid #e2e8f0 !important;
             border-radius: 4px !important;
-            padding: 1.5px 6px !important;
+            padding: 2px 7px !important;
             font-size: 10px !important;
             font-weight: 500 !important;
             color: #64748b !important;
@@ -4030,9 +4078,6 @@ use Carbon\Carbon;
           <!-- ── TIER 1: TOP ACTION HEADER TOOLBAR CARD ── -->
           <div class="cd-top-bar">
             <div class="cd-top-actions">
-              <button type="button" class="cd-hdr-btn cd-hdr-btn-outline cd-btn-followup" data-client-id="{{ $client->id }}" title="Schedule Follow Up">
-                <i class="fas fa-calendar-check fa-solid text-primary"></i> Follow Up
-              </button>
               @if(in_array('edit_clients', $userPermissions))
               <a href="{{ route('service_company.clients.edit', GeneralMethod::value_encrypt($client->id)) }}" class="cd-hdr-btn cd-hdr-btn-white-edit" title="Edit Client Information">
                 <i class="fas fa-pen-to-square fa-solid text-primary"></i> Edit Client
@@ -4042,8 +4087,8 @@ use Carbon\Carbon;
                 <i class="fas fa-user-plus fa-solid text-success"></i> Add Contact
               </button>
               @if(in_array('add_jobs', $userPermissions))
-              <a href="{{ url('service_company/jobs/curstomcreate/' . $client->id) }}" class="cd-hdr-btn cd-hdr-btn-primary" title="Post New Job Opening">
-                <i class="fas fa-plus me-1"></i> Add Job
+              <a href="{{ url('service_company/jobs/curstomcreate/' . $client->id) }}" class="cd-hdr-btn cd-hdr-btn-white-job" title="Post New Job Opening">
+                <i class="fas fa-plus fa-solid text-primary me-1"></i> Add Job
               </a>
               @endif
             </div>
@@ -4060,7 +4105,7 @@ use Carbon\Carbon;
               <!-- Left Flank: Company Identity & Website -->
               <div class="cd-hero-left-flank">
                 <div class="cd-hero-avatar-wrap">
-                  <div class="cd-hero-avatar">
+                  <div class="cd-hero-avatar {{ empty($detailLogo) ? 'is-initials' : '' }}">
                     @if (!empty($detailLogo))
                       <img src="{{ $detailLogo }}" alt="{{ $detailName }}">
                     @else
@@ -4112,8 +4157,9 @@ use Carbon\Carbon;
                   @endif
                   <span class="cd-status-sep">|</span>
                   <a href="#requisitions" class="cd-hero-positions-link" data-bs-toggle="tab" data-toggle="tab" title="View Active Job Positions">
-                    <i class="fas fa-bolt text-warning me-1"></i>
-                    <strong>{{ $kpiActive }}</strong> Active {{ $kpiActive == 1 ? 'Position' : 'Positions' }}
+                    <span class="cd-hero-pos-icon"><i class="fas fa-bolt text-warning"></i></span>
+                    <span class="cd-hero-pos-num">{{ $kpiActive }}</span>
+                    <span class="cd-hero-pos-label">Active {{ $kpiActive == 1 ? 'Position' : 'Positions' }}</span>
                   </a>
                 </div>
               </div>
@@ -4242,75 +4288,9 @@ use Carbon\Carbon;
                         View all activity <i class="fas fa-arrow-right fa-solid ms-1" style="font-size:9px;"></i>
                       </a>
                     </div>
-                    <div class="cd-timeline-list">
-                      <!-- Node 1: Candidates Submitted -->
-                      <div class="cd-tl-item">
-                        <div class="cd-tl-dot cd-tl-dot-green"><i class="fas fa-users fa-solid"></i></div>
-                        <div class="cd-tl-info">
-                          <div class="cd-tl-heading">2 candidates submitted</div>
-                          <div class="cd-tl-sub">{{ auth()->user()->name ?? 'Recruiter' }} submitted profiles to client review</div>
-                        </div>
-                        <div class="cd-tl-role">Senior Java Developer</div>
-                        <div class="cd-tl-meta-right">
-                          <span class="cd-tl-time">2 hours ago</span>
-                          <span class="cd-tl-badge cd-tl-badge-blue">Submitted</span>
-                        </div>
-                      </div>
-
-                      <!-- Node 2: Interview Scheduled -->
-                      <div class="cd-tl-item">
-                        <div class="cd-tl-dot cd-tl-dot-purple"><i class="fas fa-calendar-days fa-solid"></i></div>
-                        <div class="cd-tl-info">
-                          <div class="cd-tl-heading">Interview scheduled</div>
-                          <div class="cd-tl-sub">Technical Round 1 scheduled with client panel</div>
-                        </div>
-                        <div class="cd-tl-role">Chief Java Architect</div>
-                        <div class="cd-tl-meta-right">
-                          <span class="cd-tl-time">1 day ago</span>
-                          <span class="cd-tl-badge cd-tl-badge-amber">Interview</span>
-                        </div>
-                      </div>
-
-                      <!-- Node 3: Offer Generated -->
-                      <div class="cd-tl-item">
-                        <div class="cd-tl-dot cd-tl-dot-orange"><i class="fas fa-file-lines fa-solid"></i></div>
-                        <div class="cd-tl-info">
-                          <div class="cd-tl-heading">Offer letter released</div>
-                          <div class="cd-tl-sub">Formal offer extended to candidate</div>
-                        </div>
-                        <div class="cd-tl-role">Software Engineer</div>
-                        <div class="cd-tl-meta-right">
-                          <span class="cd-tl-time">2 days ago</span>
-                          <span class="cd-tl-badge cd-tl-badge-orange">Offer Sent</span>
-                        </div>
-                      </div>
-
-                      <!-- Node 4: New Job Requirement -->
-                      <div class="cd-tl-item">
-                        <div class="cd-tl-dot cd-tl-dot-blue"><i class="fas fa-briefcase fa-solid"></i></div>
-                        <div class="cd-tl-info">
-                          <div class="cd-tl-heading">New job requirement posted</div>
-                          <div class="cd-tl-sub">New hiring opening assigned to recruitment team</div>
-                        </div>
-                        <div class="cd-tl-role">DevOps Engineer</div>
-                        <div class="cd-tl-meta-right">
-                          <span class="cd-tl-time">3 days ago</span>
-                          <span class="cd-tl-badge cd-tl-badge-blue">New Opening</span>
-                        </div>
-                      </div>
-
-                      <!-- Node 5: Candidate Joined -->
-                      <div class="cd-tl-item">
-                        <div class="cd-tl-dot cd-tl-dot-green"><i class="fas fa-user-check fa-solid"></i></div>
-                        <div class="cd-tl-info">
-                          <div class="cd-tl-heading">1 candidate joined</div>
-                          <div class="cd-tl-sub">Candidate successfully joined client organization</div>
-                        </div>
-                        <div class="cd-tl-role">Full Stack Developer</div>
-                        <div class="cd-tl-meta-right">
-                          <span class="cd-tl-time">5 days ago</span>
-                          <span class="cd-tl-badge cd-tl-badge-green">Joined</span>
-                        </div>
+                    <div class="cd-timeline-list" id="cdOverviewRecentActivityList">
+                      <div class="p-4 text-center text-muted" style="font-size: 11.5px;">
+                        <i class="fas fa-spinner fa-spin me-1 text-primary"></i> Loading recent activity…
                       </div>
                     </div>
                   </div>
@@ -6917,6 +6897,9 @@ use Carbon\Carbon;
             }
 
             if (normTab === 'overview') {
+                if (window.ClientActivityManager && typeof window.ClientActivityManager.initClient === 'function') {
+                    window.ClientActivityManager.initClient(currentClientId, true, null, !!force);
+                }
                 if (coord) coord.transition(normTab, 'READY');
                 if (window.ClientStateManager) window.ClientStateManager.markTabLoaded(currentClientId, target);
                 return;
@@ -6927,6 +6910,11 @@ use Carbon\Carbon;
         // Pre-warm in-memory contacts manager immediately upon drawer mount
         if (window.InternalClientContactsManager) {
             try { window.InternalClientContactsManager.init(currentClientId); } catch(e){}
+        }
+
+        // Pre-warm client activity manager for instant Overview Recent Activity
+        if (window.ClientActivityManager && typeof window.ClientActivityManager.initClient === 'function') {
+            try { window.ClientActivityManager.initClient(currentClientId, true, null, false); } catch(e){}
         }
 
         // Initialize active tab immediately on drawer mount

@@ -26,13 +26,13 @@
             {{-- Dynamic 300ms Debounced Search Sub-Card --}}
             <div class="cd-activity-search-subcard">
                 <i class="fas fa-search"></i>
-                <input type="text" id="cdActivitySearchInput" placeholder="Filter by candidate, role, actor..." autocomplete="off">
+                <input type="text" id="cdActivitySearchInput" placeholder="Search Activity..." autocomplete="off">
                 <button type="button" class="cd-activity-search-clear" id="cdActivitySearchClear" title="Clear search">
                     <i class="fas fa-times"></i>
                 </button>
             </div>
 
-            {{-- Timeframe Filter Dropdown --}}
+            {{-- Timeframe Filter Dropdown (Date) --}}
             <select id="cdActivityTimeframeSelect" class="form-select form-select-sm" style="width: 120px; height: 34px; font-size: 11.5px; border-radius: 8px; border: 1px solid #e2e8f0; font-weight: 500;">
                 <option value="all">All Time</option>
                 <option value="today">Today</option>
@@ -50,28 +50,20 @@
     {{-- TIER 2: FILTER SUB-TABS CARD --}}
     <div class="cd-activity-tabs-card" id="cdActivityFilterTabs">
         <button type="button" class="cd-activity-tab-btn active" data-category="all">
-            <span>All Events</span>
+            <span>All</span>
             <span class="cd-activity-tab-badge" id="cdActivityCountAll">0</span>
-        </button>
-        <button type="button" class="cd-activity-tab-btn" data-category="pipeline">
-            <span>Pipeline</span>
-            <span class="cd-activity-tab-badge" id="cdActivityCountPipeline">0</span>
-        </button>
-        <button type="button" class="cd-activity-tab-btn" data-category="interviews">
-            <span>Interviews</span>
-            <span class="cd-activity-tab-badge" id="cdActivityCountInterviews">0</span>
-        </button>
-        <button type="button" class="cd-activity-tab-btn" data-category="offers">
-            <span>Offers &amp; Joining</span>
-            <span class="cd-activity-tab-badge" id="cdActivityCountOffers">0</span>
         </button>
         <button type="button" class="cd-activity-tab-btn" data-category="jobs">
             <span>Jobs</span>
             <span class="cd-activity-tab-badge" id="cdActivityCountJobs">0</span>
         </button>
-        <button type="button" class="cd-activity-tab-btn" data-category="crm">
-            <span>CRM &amp; Notes</span>
-            <span class="cd-activity-tab-badge" id="cdActivityCountCrm">0</span>
+        <button type="button" class="cd-activity-tab-btn" data-category="candidates">
+            <span>Candidates</span>
+            <span class="cd-activity-tab-badge" id="cdActivityCountCandidates">0</span>
+        </button>
+        <button type="button" class="cd-activity-tab-btn" data-category="interviews">
+            <span>Interviews</span>
+            <span class="cd-activity-tab-badge" id="cdActivityCountInterviews">0</span>
         </button>
     </div>
 
@@ -111,8 +103,9 @@
 
 <script>
 /**
- * Master Client Activity Feed Manager
+ * Master Client Activity Feed & Audit Timeline Manager
  * Strict CQRS Client-Side State Machine & Reverb Acceleration Engine
+ * 100% In-Memory RAM Filtering (0 HTTP requests on search, subtabs, timeframe)
  */
 (function() {
     if (window.ClientActivityManager) {
@@ -133,6 +126,9 @@
         inFlightXhr: null,
         searchTimer: null,
         currentGeneration: 0,
+
+        // Single Source of Truth: In-Memory Hydrated Activity Dataset
+        allActivities: [],
 
         // Distributed State Machine
         syncState: 'OFFLINE', // 'LIVE' | 'SYNCING' | 'RECONNECTING' | 'OFFLINE'
@@ -176,6 +172,7 @@
             this.nextCursor = null;
             this.hasMore = false;
             this.lruCache.clear();
+            this.allActivities = [];
             this.incomingSyncBuffer = [];
             this.lastContiguousReconciledSequence = 0;
             this.currentGeneration++;
@@ -193,7 +190,8 @@
                 $('#cdActivityFilterTabs .cd-activity-tab-btn[data-category="all"]').addClass('active');
                 $('#cdActivityCardsStream').empty();
                 $('#cdActivityPaginationContainer').hide();
-                this.updateKpiCounters({ all: 0, pipeline: 0, interviews: 0, offers: 0, jobs: 0, crm: 0 });
+                this.updateKpiCounters({ all: 0, jobs: 0, candidates: 0, interviews: 0 });
+                this.renderOverviewRecentActivity([]);
             }
         },
 
@@ -227,7 +225,8 @@
         },
 
         /**
-         * Loads activity data from authoritative CQRS endpoint.
+         * Loads authoritative activity dataset once from CQRS endpoint.
+         * Hydrates this.allActivities in RAM for 0-HTTP-request filtering.
          */
         loadActivity: function(append, forceRefresh) {
             if (!this.activeClientId || this.isLoading) return;
@@ -249,9 +248,8 @@
                 client_id: this.activeClientId,
                 custom: this.isCustom ? 1 : 0,
                 partner_company_id: this.partnerCompanyId || '',
-                category: this.activeCategory,
-                timeframe: this.activeTimeframe,
-                q: this.searchQuery || ''
+                category: 'all', // Always hydrate full dataset for client-side filtering
+                timeframe: 'all'
             };
 
             if (forceRefresh) {
@@ -277,6 +275,15 @@
                         self.nextCursor = res.pagination ? res.pagination.next_cursor : null;
                         self.hasMore = res.pagination ? !!res.pagination.has_more : false;
 
+                        // Store Authoritative Dataset in RAM
+                        if (append) {
+                            if (res.data && Array.isArray(res.data)) {
+                                self.allActivities = self.allActivities.concat(res.data);
+                            }
+                        } else {
+                            self.allActivities = (res.data && Array.isArray(res.data)) ? res.data : [];
+                        }
+
                         // Update KPIs
                         if (res.kpi) {
                             self.updateKpiCounters(res.kpi);
@@ -298,7 +305,7 @@
                             });
                         }
 
-                        // Render Cards
+                        // Render Cards Stream
                         if (append) {
                             if (res.html) {
                                 $('#cdActivityCardsStream').append(res.html);
@@ -306,6 +313,12 @@
                         } else {
                             $('#cdActivityCardsStream').html(res.html || '').show();
                         }
+
+                        // Dynamic Overview Tab Sync: Render latest 5 activities using the exact same SSOT
+                        self.renderOverviewRecentActivity(self.allActivities);
+
+                        // Apply current active category / search filters in memory
+                        self.applyFiltersAndRender();
 
                         // Update pagination button
                         if (self.hasMore && self.nextCursor) {
@@ -339,18 +352,120 @@
                     self.isLoading = false;
                     self.inFlightXhr = null;
                     $('#cdActivitySkeletonLoader').hide();
+                    $('#cdActivityCardsStream').show();
                     $('#cdActivityRefreshBtn').removeClass('spinning');
                 }
             });
         },
 
+        /**
+         * 100% In-Browser RAM Filter Engine (0 HTTP Requests)
+         * Filters the hydrated stream instantaneously based on Category, Timeframe, and Search query.
+         */
+        applyFiltersAndRender: function() {
+            var cat = this.activeCategory || 'all'; // 'all' | 'jobs' | 'candidates' | 'interviews'
+            var tf = this.activeTimeframe || 'all';   // 'all' | 'today' | '7d' | '30d'
+            var q = (this.searchQuery || '').toLowerCase().trim();
+            var now = new Date();
+
+            var $cards = $('#cdActivityCardsStream .cd-activity-card');
+            var $dayGroups = $('#cdActivityCardsStream .cd-activity-day-group');
+
+            if (!$cards.length) {
+                return;
+            }
+
+            var visibleCount = 0;
+            $cards.each(function() {
+                var $c = $(this);
+                var itemCat = $c.data('category'); // 'pipeline' | 'offers' | 'jobs' | 'interviews' | 'crm'
+                var itemSearch = ($c.data('search-terms') || '').toLowerCase();
+                var itemSeq = parseInt($c.data('sequence'), 10);
+                var matchCat = true;
+                var matchTf = true;
+                var matchQ = true;
+
+                // 1. Category Matching:
+                // Jobs -> jobs
+                // Candidates -> pipeline, offers, candidates
+                // Interviews -> interviews
+                if (cat === 'jobs') {
+                    matchCat = (itemCat === 'jobs');
+                } else if (cat === 'candidates') {
+                    matchCat = (itemCat === 'pipeline' || itemCat === 'offers' || itemCat === 'candidates');
+                } else if (cat === 'interviews') {
+                    matchCat = (itemCat === 'interviews');
+                }
+
+                // 2. Timeframe Matching (Date):
+                if (tf !== 'all' && !isNaN(itemSeq) && itemSeq > 0) {
+                    var itemDate = new Date(itemSeq * 1000);
+                    var diffDays = (now.getTime() - itemDate.getTime()) / (1000 * 60 * 60 * 24);
+                    if (tf === 'today') {
+                        matchTf = (itemDate.toDateString() === now.toDateString());
+                    } else if (tf === '7d') {
+                        matchTf = (diffDays <= 7);
+                    } else if (tf === '30d') {
+                        matchTf = (diffDays <= 30);
+                    }
+                }
+
+                // 3. Search Query Matching:
+                if (q) {
+                    matchQ = itemSearch.indexOf(q) !== -1;
+                }
+
+                if (matchCat && matchTf && matchQ) {
+                    $c.show();
+                    visibleCount++;
+                } else {
+                    $c.hide();
+                }
+            });
+
+            // Adjust day group headers visibility
+            $dayGroups.each(function() {
+                var $grp = $(this);
+                var hasVisible = false;
+                var $curr = $grp.next();
+                while ($curr.length && !$curr.hasClass('cd-activity-day-group')) {
+                    if ($curr.hasClass('cd-activity-card') && $curr.is(':visible')) {
+                        hasVisible = true;
+                        break;
+                    }
+                    $curr = $curr.next();
+                }
+                if (hasVisible) {
+                    $grp.show();
+                } else {
+                    $grp.hide();
+                }
+            });
+
+            // Handle empty state during filter
+            var $emptyFilter = $('#cdActivityFilterEmptyState');
+            if (visibleCount === 0) {
+                if (!$emptyFilter.length) {
+                    $('#cdActivityCardsStream').append(`
+                        <div id="cdActivityFilterEmptyState" class="cd-activity-empty-state">
+                            <div class="cd-activity-empty-icon"><i class="fas fa-search"></i></div>
+                            <div class="cd-activity-empty-title">No Matching Activity</div>
+                            <div class="cd-activity-empty-text">No recruitment events match the selected filters.</div>
+                        </div>
+                    `);
+                } else {
+                    $emptyFilter.show();
+                }
+            } else {
+                if ($emptyFilter.length) $emptyFilter.hide();
+            }
+        },
+
         updateKpiCounters: function(kpi) {
             $('#cdActivityCountAll').text(kpi.all || 0);
-            $('#cdActivityCountPipeline').text(kpi.pipeline || 0);
-            $('#cdActivityCountInterviews').text(kpi.interviews || 0);
-            $('#cdActivityCountOffers').text(kpi.offers || 0);
             $('#cdActivityCountJobs').text(kpi.jobs || 0);
-            $('#cdActivityCountCrm').text(kpi.crm || 0);
+            $('#cdActivityCountCandidates').text(kpi.candidates !== undefined ? kpi.candidates : ((kpi.pipeline || 0) + (kpi.offers || 0)));
+            $('#cdActivityCountInterviews').text(kpi.interviews || 0);
         },
 
         updateHealthStatus: function(health) {
@@ -370,6 +485,139 @@
             } else {
                 $pill.addClass('health-stale');
                 $text.text('Stale');
+            }
+        },
+
+        /**
+         * Dynamic Recent Activity on Overview Tab:
+         * Uses the exact same authoritative activity dataset.
+         */
+        renderOverviewRecentActivity: function(items) {
+            var $intTarget = $('#cdOverviewRecentActivityList');
+            var $dirTarget = $('#cdDirectOverviewRecentActivityList');
+            var $targets = $intTarget.add($dirTarget);
+
+            if (!$targets.length) return;
+
+            if (!items || !items.length) {
+                $targets.html(`
+                    <div class="p-6 text-center text-muted" style="font-size: 12px;">
+                        <i class="far fa-clock mb-2" style="font-size: 20px; color: #cbd5e1; display: block;"></i>
+                        No recent activity recorded for this client.
+                    </div>
+                `);
+                return;
+            }
+
+            var html = '';
+            var sliceItems = items.slice(0, 5);
+
+            sliceItems.forEach(function(item) {
+                var cat = item.category || 'pipeline';
+                var cand = item.candidate || {};
+                var job = item.job || {};
+                var actor = item.actor || {};
+                var trans = item.transition || {};
+                var attr = item.attribution || {};
+                var comp = attr.company_name || actor.company_name || '4Bell Technology';
+                var occurred = new Date(item.occurred_at || (item.client_activity_sequence ? item.client_activity_sequence * 1000 : Date.now()));
+
+                // Calculate time ago
+                var seconds = Math.floor((Date.now() - occurred.getTime()) / 1000);
+                var timeAgo = 'Just now';
+                if (seconds >= 86400) {
+                    var d = Math.floor(seconds / 86400);
+                    timeAgo = d + (d === 1 ? ' day ago' : ' days ago');
+                } else if (seconds >= 3600) {
+                    var h = Math.floor(seconds / 3600);
+                    timeAgo = h + (h === 1 ? ' hr ago' : ' hrs ago');
+                } else if (seconds >= 60) {
+                    var m = Math.floor(seconds / 60);
+                    timeAgo = m + (m === 1 ? ' min ago' : ' mins ago');
+                }
+
+                var dotColor = '#009ef7';
+                var dotBg = '#eff6ff';
+                var badgeClass = 'cd-tl-badge-blue';
+                var badgeText = 'Activity';
+                var heading = '';
+                var subtext = '';
+                var role = '';
+                var iconClass = 'fa-user';
+
+                if (cat === 'jobs') {
+                    var jStatus = job.status || 'active';
+                    iconClass = 'fa-briefcase';
+                    if (jStatus === 'active') {
+                        dotColor = '#10b981'; dotBg = '#ecfdf5'; badgeClass = 'cd-tl-badge-green'; badgeText = 'Active Requisition';
+                    } else if (jStatus === 'hold') {
+                        dotColor = '#f59e0b'; dotBg = '#fffbeb'; badgeClass = 'cd-tl-badge-orange'; badgeText = 'On Hold';
+                    } else {
+                        dotColor = '#ef4444'; dotBg = '#fef2f2'; badgeClass = 'cd-tl-badge-red'; badgeText = 'Closed';
+                    }
+                    heading = (job.title || 'Requisition') + ' (' + (job.code || 'JOB') + ')';
+                    subtext = 'Created by ' + (job.creator_name || 'Account Manager') + ' • ' + comp;
+                    role = (job.total_positions || 1) + ' ' + ((job.total_positions || 1) === 1 ? 'Opening' : 'Openings');
+                } else if (cat === 'interviews') {
+                    iconClass = 'fa-video';
+                    dotColor = '#7c3aed'; dotBg = '#f5f3ff'; badgeClass = 'cd-tl-badge-purple'; badgeText = 'Interview';
+                    heading = 'Interview: ' + (cand.name || 'Candidate');
+                    subtext = 'Scheduled by ' + (attr.name || actor.name || 'Coordinator') + ' • ' + comp;
+                    role = cand.designation || job.title || 'Candidate';
+                } else {
+                    iconClass = 'fa-user';
+                    var tStatus = trans.status || 'pipeline';
+                    if (tStatus === 'active') {
+                        dotColor = '#10b981'; dotBg = '#ecfdf5'; badgeClass = 'cd-tl-badge-green'; badgeText = trans.to_stage_name || 'Offer/Joined';
+                    } else if (tStatus === 'hold') {
+                        dotColor = '#f59e0b'; dotBg = '#fffbeb'; badgeClass = 'cd-tl-badge-orange'; badgeText = 'On Hold';
+                    } else if (tStatus === 'removed') {
+                        dotColor = '#ef4444'; dotBg = '#fef2f2'; badgeClass = 'cd-tl-badge-red'; badgeText = trans.to_stage_name || 'Rejected';
+                    } else {
+                        dotColor = '#009ef7'; dotBg = '#eff6ff'; badgeClass = 'cd-tl-badge-blue'; badgeText = trans.to_stage_name || 'Screening';
+                    }
+                    heading = (cand.name || 'Candidate') + (trans.from_stage_name ? ' (' + trans.from_stage_name + ' → ' + (trans.to_stage_name || 'Screening') + ')' : '');
+                    subtext = 'Uploaded by ' + (attr.name || actor.name || 'Recruiter') + ' • ' + comp;
+                    role = cand.designation || 'Candidate';
+                }
+
+                html += `
+                    <div class="cd-tl-item" style="display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; border-bottom: 1px solid #f1f5f9; gap: 12px;">
+                        <div style="display: flex; align-items: center; gap: 10px; min-width: 0; flex: 1;">
+                            <div style="width: 28px; height: 28px; border-radius: 50%; background: ${dotBg}; color: ${dotColor}; display: flex; align-items: center; justify-content: center; font-size: 11px; flex-shrink: 0; border: 1px solid ${dotColor}33;">
+                                <i class="fas ${iconClass}"></i>
+                            </div>
+                            <div style="min-width: 0;">
+                                <div style="font-size: 12.5px; font-weight: 600; color: #1e293b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${heading}</div>
+                                <div style="font-size: 11px; color: #64748b; margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${subtext}</div>
+                            </div>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 10px; flex-shrink: 0;">
+                            <span style="font-size: 11px; color: #475569; font-weight: 500;">${role}</span>
+                            <span class="badge ${badgeClass}" style="font-size: 10px; font-weight: 600; padding: 3px 8px; border-radius: 6px;">${badgeText}</span>
+                            <span style="font-size: 10.5px; color: #94a3b8; min-width: 60px; text-align: right;">${timeAgo}</span>
+                        </div>
+                    </div>
+                `;
+            });
+
+            $targets.html(html);
+        },
+
+        /**
+         * Switches seamlessly from Overview to Activity tab without page reload.
+         */
+        switchToActivityTab: function() {
+            var $intTab = $('.cd-tab-pill-btn[href="#recent_activity"], #kt_activitiesClient .cd-tab-pill-btn[href="#recent_activity"]');
+            var $dirTab = $('#kt_activitiesDirectClient .cd-tab-pill-btn[href="#recent_activity"]');
+            var $active = $intTab.length ? $intTab : $dirTab;
+
+            if ($active.length) {
+                if (typeof $active.tab === 'function') {
+                    $active.tab('show');
+                } else {
+                    $active.trigger('click');
+                }
             }
         },
 
@@ -394,10 +642,9 @@
                         self.handleIncomingEnvelope(envelope);
                     });
 
-                // Listen to connection state changes
                 if (window.Echo.connector && window.Echo.connector.pusher && window.Echo.connector.pusher.connection) {
                     window.Echo.connector.pusher.connection.bind('connected', function() {
-                        self.onReverbReconnect();
+                        self.refreshFeed();
                     });
                     window.Echo.connector.pusher.connection.bind('disconnected', function() {
                         self.setSyncState('RECONNECTING');
@@ -408,156 +655,15 @@
             }
         },
 
-        onReverbReconnect: function() {
-            var self = this;
-            this.setSyncState('SYNCING');
-            this.syncGeneration++;
-            var curSyncGen = this.syncGeneration;
-
-            // Execute catch-up reconciliation
-            $.ajax({
-                url: self.endpoint,
-                type: 'GET',
-                data: {
-                    client_id: self.activeClientId,
-                    custom: self.isCustom ? 1 : 0,
-                    partner_company_id: self.partnerCompanyId || '',
-                    category: self.activeCategory,
-                    timeframe: self.activeTimeframe
-                },
-                dataType: 'json',
-                success: function(res) {
-                    if (curSyncGen !== self.syncGeneration) return;
-                    if (res && res.success && res.html) {
-                        $('#cdActivityCardsStream').html(res.html);
-                        if (res.kpi) self.updateKpiCounters(res.kpi);
-                        if (res.health) self.updateHealthStatus(res.health);
-
-                        // Drain buffer
-                        self.drainSyncBuffer();
-                    }
-                    self.setSyncState('LIVE');
-                },
-                error: function() {
-                    self.setSyncState('LIVE');
-                }
-            });
-        },
-
         handleIncomingEnvelope: function(thinEvent) {
             if (!thinEvent || !thinEvent.event_id) return;
-
-            // LRU Check
             if (this.lruCache.has(thinEvent.event_id)) return;
-
-            var seq = parseInt(thinEvent.client_activity_sequence, 10);
-
-            // Buffer during SYNCING state
-            if (this.syncState === 'SYNCING') {
-                this.incomingSyncBuffer.push(thinEvent);
-                return;
-            }
-
-            // Gap check: if sequence gap detected, trigger sync
-            if (seq > this.lastContiguousReconciledSequence + 1) {
-                this.onReverbReconnect();
-                return;
-            }
-
-            // Contiguous or immediate event: fetch full card before advancing sequence
-            var self = this;
-            this.fetchAndPrependEvent(thinEvent.event_id, seq);
-        },
-
-        fetchAndPrependEvent: function(eventId, seq) {
-            var self = this;
-            $.ajax({
-                url: self.endpoint,
-                type: 'GET',
-                data: {
-                    client_id: self.activeClientId,
-                    custom: self.isCustom ? 1 : 0,
-                    category: self.activeCategory,
-                    timeframe: self.activeTimeframe
-                },
-                dataType: 'json',
-                success: function(res) {
-                    if (res && res.success && res.html) {
-                        $('#cdActivityCardsStream').html(res.html);
-                        if (res.kpi) self.updateKpiCounters(res.kpi);
-                        if (res.health) self.updateHealthStatus(res.health);
-                        self.lruCache.add(eventId);
-                        if (seq && seq > self.lastContiguousReconciledSequence) {
-                            self.lastContiguousReconciledSequence = seq;
-                        }
-                    }
-                }
-            });
-        },
-
-        drainSyncBuffer: function() {
-            var self = this;
-            var buffer = this.incomingSyncBuffer.slice();
-            this.incomingSyncBuffer = [];
-
-            buffer.sort(function(a, b) {
-                return (a.client_activity_sequence || 0) - (b.client_activity_sequence || 0);
-            });
-
-            buffer.forEach(function(envelope) {
-                if (!self.lruCache.has(envelope.event_id)) {
-                    self.lruCache.add(envelope.event_id);
-                }
-            });
-        },
-
-        toggleKebabMenu: function(e, btn) {
-            e.stopPropagation();
-            var $btn = $(btn);
-            var $card = $btn.closest('.cd-activity-card');
-            var $menu = $btn.siblings('.cd-activity-kebab-menu');
-            var wasOpen = $menu.hasClass('show');
-
-            // Close all open menus and remove elevation from cards
-            $('.cd-activity-kebab-menu').removeClass('show dropup');
-            $('.cd-activity-card').removeClass('cd-menu-open');
-
-            if (!wasOpen) {
-                // Elevate this card's stacking context
-                $card.addClass('cd-menu-open');
-
-                // Viewport-aware vertical placement
-                var btnOffset = $btn.offset();
-                var btnHeight = $btn.outerHeight();
-                var menuHeight = 160;
-                var windowBottom = $(window).scrollTop() + $(window).height();
-
-                var $scrollContainer = $btn.closest('.scroll-y, [data-kt-scroll="true"], #kt_activities_scroll');
-                var containerBottom = $scrollContainer.length ? ($scrollContainer.offset().top + $scrollContainer.innerHeight()) : windowBottom;
-                var effectiveBottom = Math.min(windowBottom, containerBottom);
-
-                var spaceBelow = effectiveBottom - (btnOffset.top + btnHeight);
-                if (spaceBelow < menuHeight + 15 && (btnOffset.top - $(window).scrollTop()) > menuHeight) {
-                    $menu.addClass('dropup');
-                } else {
-                    $menu.removeClass('dropup');
-                }
-
-                $menu.addClass('show');
-            }
+            this.refreshFeed();
         },
 
         refreshFeed: function() {
             this.nextCursor = null;
             this.loadActivity(false, true);
-        },
-
-        openNoteModal: function() {
-            if (typeof window.openClientNotesModal === 'function') {
-                window.openClientNotesModal();
-            } else {
-                alert('Add Note modal feature is active.');
-            }
         }
     };
 
@@ -652,122 +758,30 @@
         });
     };
 
-    /**
-     * Dedicated View Profile opener for Jobs (strictly Read-Only).
-     * Prevents stale data and strips/suppresses all Edit functionality.
-     */
-    window.openJobDrawer = function(jobId, options) {
-        if (!jobId) return;
-        var isReadOnly = true;
-        if (typeof options === 'object' && options !== null && options.readOnly !== undefined) {
-            isReadOnly = !!options.readOnly;
-        } else if (typeof options === 'boolean') {
-            isReadOnly = options;
-        }
-
-        var $drawer = $('#kt_activitiesJob_show');
-        if (!$drawer.length) {
-            $('body').append(`
-                <div id="kt_activitiesJob_show_toggle" style="display:none;"></div>
-                <div id="kt_activitiesJob_show" class="bg-body" data-kt-drawer="true" data-kt-drawer-name="activities" data-kt-drawer-activate="true" data-kt-drawer-overlay="true" data-kt-drawer-direction="end"
-                    data-kt-drawer-toggle="#kt_activitiesJob_show_toggle" data-kt-drawer-close="#kt_activitiesJob_close">
-                    <div class="card shadow-none rounded-0 w-100">
-                        <div class="card-body position-relative px-0 py-0" id="kt_activitiesJob_show_body"></div>
-                    </div>
-                </div>
-            `);
-            $drawer = $('#kt_activitiesJob_show');
-        }
-
-        if (isReadOnly) {
-            $drawer.addClass('drawer-readonly-view');
-        } else {
-            $drawer.removeClass('drawer-readonly-view');
-        }
-
-        // Anti-stale DOM reset: immediately show loader
-        $('#kt_activitiesJob_show_body').html(
-            '<div class="d-flex flex-column align-items-center justify-content-center p-10" style="min-height: 380px;">' +
-            '  <div class="spinner-border text-primary mb-4" role="status" style="width: 2.8rem; height: 2.8rem;"></div>' +
-            '  <div class="text-gray-800 fw-bold fs-5 mb-1">Loading Requisition Details…</div>' +
-            '  <div class="text-muted fs-7">Retrieving verified requisition details</div>' +
-            '</div>'
-        );
-
-        if (typeof KTDrawer !== 'undefined') {
-            var drawerInst = KTDrawer.getInstance(document.getElementById('kt_activitiesJob_show'));
-            if (drawerInst) {
-                drawerInst.show();
-            } else {
-                $('#kt_activitiesJob_show_toggle').trigger('click');
-            }
-        } else {
-            $('#kt_activitiesJob_show_toggle').trigger('click');
-        }
-
-        $drawer.css('z-index', '999999');
-
-        var url = "{{ route('service_company.jobs.viewmore', ':id') }}?viewmore=viewmore" + (isReadOnly ? '&readonly=1&read_only=1' : '');
-        url = url.replace(':id', jobId);
-
-        $.ajax({
-            type: 'GET',
-            url: url,
-            success: function(response) {
-                if (response && response.view) {
-                    $('#kt_activitiesJob_show_body').html(response.view);
-                } else if (typeof response === 'string') {
-                    $('#kt_activitiesJob_show_body').html(response);
-                }
-                if (isReadOnly) {
-                    $drawer.addClass('drawer-readonly-view');
-                    $drawer.find('.job-action-btn.edit, a[href*="jobs/edit"], a[href*="/edit"], .info-card-edit, .btn-edit, .spartner-listing, .hm-listing, .status_stage, .job-drawer-add-candidate').remove();
-                }
-            },
-            error: function() {
-                $('#kt_activitiesJob_show_body').html(
-                    '<div class="card card-flush m-6 p-8 text-center border border-dashed border-danger">' +
-                    '  <div class="text-danger fw-bold fs-4 mb-2">Error</div>' +
-                    '  <div class="text-gray-700 fs-6">Unable to load requisition details. Please try again.</div>' +
-                    '</div>'
-                );
-            }
-        });
-    };
-
-    window.openCandidateReadOnlyDrawer = function(candidateId) {
-        window.openCandidateDrawer(candidateId, { readOnly: true });
-    };
-
     // Clean up read-only state when drawers are closed
     $(document).on('click', '#kt_activitiesApplication_close, #kt_client_activitiesApplication_close', function() {
         $('#kt_activitiesApplication').removeClass('drawer-readonly-view');
     });
-    $(document).on('click', '#kt_activitiesJob_close', function() {
-        $('#kt_activitiesJob_show').removeClass('drawer-readonly-view');
-    });
 
     // Bind DOM events
     $(document).ready(function() {
-        // Category Sub-tabs Click
+        // Category Sub-tabs Click: 100% In-Memory RAM Filter (0 HTTP Requests)
         $(document).on('click', '#cdActivityFilterTabs .cd-activity-tab-btn', function() {
             var $btn = $(this);
             $('#cdActivityFilterTabs .cd-activity-tab-btn').removeClass('active');
             $btn.addClass('active');
 
             ClientActivityManager.activeCategory = $btn.data('category') || 'all';
-            ClientActivityManager.nextCursor = null;
-            ClientActivityManager.loadActivity(false);
+            ClientActivityManager.applyFiltersAndRender();
         });
 
-        // Timeframe select change
+        // Timeframe select change: 100% In-Memory RAM Filter (0 HTTP Requests)
         $(document).on('change', '#cdActivityTimeframeSelect', function() {
             ClientActivityManager.activeTimeframe = $(this).val() || 'all';
-            ClientActivityManager.nextCursor = null;
-            ClientActivityManager.loadActivity(false);
+            ClientActivityManager.applyFiltersAndRender();
         });
 
-        // Refresh button click
+        // Refresh button click: Fetches fresh authoritative data
         $(document).on('click', '#cdActivityRefreshBtn', function() {
             ClientActivityManager.refreshFeed();
         });
@@ -777,7 +791,7 @@
             ClientActivityManager.loadActivity(true);
         });
 
-        // 300ms Debounced Search
+        // 300ms Debounced Search: 100% In-Memory RAM Filter (0 HTTP Requests)
         $(document).on('input', '#cdActivitySearchInput', function() {
             var val = $(this).val();
             var $clearBtn = $('#cdActivitySearchClear');
@@ -790,45 +804,27 @@
             clearTimeout(ClientActivityManager.searchTimer);
             ClientActivityManager.searchTimer = setTimeout(function() {
                 ClientActivityManager.searchQuery = val;
-                ClientActivityManager.nextCursor = null;
-                ClientActivityManager.loadActivity(false);
+                ClientActivityManager.applyFiltersAndRender();
             }, 300);
         });
 
-        // Clear Search Click
+        // Clear Search Click: 100% In-Memory RAM Filter (0 HTTP Requests)
         $(document).on('click', '#cdActivitySearchClear', function() {
             $('#cdActivitySearchInput').val('');
             $(this).removeClass('visible');
             ClientActivityManager.searchQuery = '';
-            ClientActivityManager.nextCursor = null;
-            ClientActivityManager.loadActivity(false);
+            ClientActivityManager.applyFiltersAndRender();
         });
 
-        // Close kebab dropdown on click outside
-        $(document).on('click', function(e) {
-            if (!$(e.target).closest('.cd-activity-kebab-wrapper').length) {
-                $('.cd-activity-kebab-menu').removeClass('show dropup');
-                $('.cd-activity-card').removeClass('cd-menu-open');
-            }
-        });
-
-        // Close kebab dropdown on ESC key
-        $(document).on('keydown', function(e) {
-            if (e.key === 'Escape' || e.keyCode === 27) {
-                $('.cd-activity-kebab-menu').removeClass('show dropup');
-                $('.cd-activity-card').removeClass('cd-menu-open');
-            }
-        });
-
-        // Close kebab dropdown on scroll
-        $(document).on('scroll.cdActivityKebab', '.scroll-y, [data-kt-scroll="true"], #kt_activities_scroll', function() {
-            $('.cd-activity-kebab-menu').removeClass('show dropup');
-            $('.cd-activity-card').removeClass('cd-menu-open');
+        // Switch to Activity Tab from Overview
+        $(document).on('click', '.cd-view-all-activity', function(e) {
+            e.preventDefault();
+            ClientActivityManager.switchToActivityTab();
         });
 
         // Listen for external ATS stage/status changes to dynamically refresh feed
         $(document).on('ats:activity:refresh ats:stage:updated CandidateStatusChanged', function() {
-            if ($('#recent_activity').is(':visible') && window.ClientActivityManager) {
+            if (($('#recent_activity').is(':visible') || $('#overview').is(':visible')) && window.ClientActivityManager) {
                 window.ClientActivityManager.refreshFeed();
             }
         });
