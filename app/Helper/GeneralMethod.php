@@ -10191,17 +10191,22 @@ END:VCALENDAR";
                 $clientLogo = $row->logo;
             }
 
-            $activeJobsCount = 0;
-            try {
-                if ((int) ($row->self_company ?? 0) === 0) {
-                    $jobStats = self::InternalClientJobsCountAllStatus($row->id, $row->client_id);
-                    $activeJobsCount = (int) ($jobStats->job_active ?? 0);
-                } elseif (! empty($row->from_company_id) && ! empty($row->to_company_id)) {
-                    $jobStats = self::DirectClientJobsCountAllStatus($row->from_company_id, $row->to_company_id);
-                    $activeJobsCount = (int) ($jobStats->job_active ?? 0);
-                }
-            } catch (\Throwable $e) {
+            // Canonical read-side projection: prefer already projected active_jobs_count to prevent synchronous MySQL queries
+            if (isset($row->active_jobs_count)) {
+                $activeJobsCount = (int) $row->active_jobs_count;
+            } else {
                 $activeJobsCount = 0;
+                try {
+                    if ((int) ($row->self_company ?? 0) === 0) {
+                        $jobStats = self::InternalClientJobsCountAllStatus($row->id, $row->client_id);
+                        $activeJobsCount = (int) ($jobStats->job_active ?? 0);
+                    } elseif (! empty($row->from_company_id) && ! empty($row->to_company_id)) {
+                        $jobStats = self::DirectClientJobsCountAllStatus($row->from_company_id, $row->to_company_id);
+                        $activeJobsCount = (int) ($jobStats->job_active ?? 0);
+                    }
+                } catch (\Throwable $e) {
+                    $activeJobsCount = 0;
+                }
             }
 
             $response = $elasticService->getClient()->update([
