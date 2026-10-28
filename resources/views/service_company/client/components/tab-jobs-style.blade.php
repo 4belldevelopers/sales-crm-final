@@ -780,4 +780,129 @@
         gap: 4px !important;
     }
 }
+
+/* ==========================================================================
+   Master Job Drawer Read-Only View Rules
+   Suppresses all Edit/Update/Delete/Status controls defensively
+   ========================================================================== */
+#kt_activitiesJob_show.drawer-readonly-view .job-action-btn.edit,
+#kt_activitiesJob_show.drawer-readonly-view a[href*="jobs/edit"],
+#kt_activitiesJob_show.drawer-readonly-view a[href*="/edit"],
+#kt_activitiesJob_show.drawer-readonly-view .info-card-edit,
+#kt_activitiesJob_show.drawer-readonly-view .btn-edit,
+#kt_activitiesJob_show.drawer-readonly-view .spartner-listing,
+#kt_activitiesJob_show.drawer-readonly-view .hm-listing,
+#kt_activitiesJob_show.drawer-readonly-view .status_stage,
+#kt_activitiesJob_show.drawer-readonly-view .job-drawer-add-candidate,
+#kt_activitiesJob_show.drawer-readonly-view #editPopup,
+#kt_activitiesJob_show.drawer-readonly-view #candidatePopup,
+#kt_activitiesJob_show.drawer-readonly-view .delete-question,
+#kt_activitiesJob_show.drawer-readonly-view .remove-question,
+#kt_activitiesJob_show.drawer-readonly-view .toggle-question,
+#kt_activitiesJob_show.drawer-readonly-view [id^="addQuestionBtn_"],
+#kt_activitiesJob_show.drawer-readonly-view .jd-empty-state-action[onclick*="addQuestionBtn"],
+#kt_activitiesJob_show.drawer-readonly-view a[href*="settings#terms"] {
+    display: none !important;
+    pointer-events: none !important;
+}
+
+#kt_activitiesJob_show {
+    z-index: 999999 !important;
+}
+
+.cd-job-card {
+    cursor: pointer !important;
+}
+.cd-job-card:hover {
+    border-color: #009ef7 !important;
+    box-shadow: 0 4px 14px rgba(0, 158, 247, 0.12) !important;
+}
+.cd-job-card:hover .cd-job-title {
+    color: #009ef7 !important;
+}
 </style>
+
+<script>
+window.openJobDrawer = window.openJobDrawer || function(jobId, options) {
+    if (!jobId) return;
+    var isReadOnly = true;
+    if (typeof options === 'object' && options !== null && options.readOnly !== undefined) {
+        isReadOnly = !!options.readOnly;
+    } else if (typeof options === 'boolean') {
+        isReadOnly = options;
+    }
+
+    var $drawer = $('#kt_activitiesJob_show');
+    if (!$drawer.length) {
+        $('body').append(`
+            <div id="kt_activitiesJob_show_toggle" style="display:none;"></div>
+            <div id="kt_activitiesJob_show" class="bg-body" data-kt-drawer="true" data-kt-drawer-name="activities" data-kt-drawer-activate="true" data-kt-drawer-overlay="true" data-kt-drawer-direction="end"
+                data-kt-drawer-toggle="#kt_activitiesJob_show_toggle" data-kt-drawer-close="#kt_activitiesJob_close">
+                <div class="card shadow-none rounded-0 w-100">
+                    <div class="card-body position-relative px-0 py-0" id="kt_activitiesJob_show_body"></div>
+                </div>
+            </div>
+        `);
+        $drawer = $('#kt_activitiesJob_show');
+    }
+
+    if (isReadOnly) {
+        $drawer.addClass('drawer-readonly-view');
+    } else {
+        $drawer.removeClass('drawer-readonly-view');
+    }
+
+    // Anti-stale DOM reset: immediately show loader
+    $('#kt_activitiesJob_show_body').html(
+        '<div class="d-flex flex-column align-items-center justify-content-center p-10" style="min-height: 380px;">' +
+        '  <div class="spinner-border text-primary mb-4" role="status" style="width: 2.8rem; height: 2.8rem;"></div>' +
+        '  <div class="text-gray-800 fw-bold fs-5 mb-1">Loading Requisition Details…</div>' +
+        '  <div class="text-muted fs-7">Retrieving verified requisition details</div>' +
+        '</div>'
+    );
+
+    if (typeof KTDrawer !== 'undefined') {
+        var drawerInst = KTDrawer.getInstance(document.getElementById('kt_activitiesJob_show'));
+        if (drawerInst) {
+            drawerInst.show();
+        } else {
+            $('#kt_activitiesJob_show_toggle').trigger('click');
+        }
+    } else {
+        $('#kt_activitiesJob_show_toggle').trigger('click');
+    }
+
+    $drawer.css('z-index', '999999');
+
+    var url = "{{ route('service_company.jobs.viewmore', ':id') }}?viewmore=viewmore" + (isReadOnly ? '&readonly=1&read_only=1' : '');
+    url = url.replace(':id', jobId);
+
+    $.ajax({
+        type: 'GET',
+        url: url,
+        success: function(response) {
+            if (response && response.view) {
+                $('#kt_activitiesJob_show_body').html(response.view);
+            } else if (typeof response === 'string') {
+                $('#kt_activitiesJob_show_body').html(response);
+            }
+            if (isReadOnly) {
+                $drawer.addClass('drawer-readonly-view');
+                $drawer.find('.job-action-btn.edit, a[href*="jobs/edit"], a[href*="/edit"], .info-card-edit, .btn-edit, .spartner-listing, .hm-listing, .status_stage, .job-drawer-add-candidate').remove();
+            }
+        },
+        error: function() {
+            $('#kt_activitiesJob_show_body').html(
+                '<div class="card card-flush m-6 p-8 text-center border border-dashed border-danger">' +
+                '  <div class="text-danger fw-bold fs-4 mb-2">Error</div>' +
+                '  <div class="text-gray-700 fs-6">Unable to load requisition details. Please try again.</div>' +
+                '</div>'
+            );
+        }
+    });
+};
+
+window.openJobDetailsDrawer = window.openJobDrawer;
+if (typeof JobStateManager === 'undefined') window.JobStateManager = {};
+window.JobStateManager.openJobDrawer = window.openJobDrawer;
+</script>

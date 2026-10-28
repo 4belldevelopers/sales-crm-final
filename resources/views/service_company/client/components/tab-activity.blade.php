@@ -667,8 +667,16 @@
 
         var $drawer = $('#kt_activitiesJob_show');
         if (!$drawer.length) {
-            window.open(`{{ url('service_company/jobs/viewmore') }}/${jobId}`, '_blank');
-            return;
+            $('body').append(`
+                <div id="kt_activitiesJob_show_toggle" style="display:none;"></div>
+                <div id="kt_activitiesJob_show" class="bg-body" data-kt-drawer="true" data-kt-drawer-name="activities" data-kt-drawer-activate="true" data-kt-drawer-overlay="true" data-kt-drawer-direction="end"
+                    data-kt-drawer-toggle="#kt_activitiesJob_show_toggle" data-kt-drawer-close="#kt_activitiesJob_close">
+                    <div class="card shadow-none rounded-0 w-100">
+                        <div class="card-body position-relative px-0 py-0" id="kt_activitiesJob_show_body"></div>
+                    </div>
+                </div>
+            `);
+            $drawer = $('#kt_activitiesJob_show');
         }
 
         if (isReadOnly) {
@@ -699,7 +707,7 @@
 
         $drawer.css('z-index', '999999');
 
-        var url = "{{ route('service_company.jobs.viewmore', ':id') }}?viewmore=viewmore" + (isReadOnly ? '&readonly=1' : '');
+        var url = "{{ route('service_company.jobs.viewmore', ':id') }}?viewmore=viewmore" + (isReadOnly ? '&readonly=1&read_only=1' : '');
         url = url.replace(':id', jobId);
 
         $.ajax({
@@ -713,7 +721,7 @@
                 }
                 if (isReadOnly) {
                     $drawer.addClass('drawer-readonly-view');
-                    $drawer.find('.job-action-btn.edit, a[href*="jobs/edit"], a[href*="/edit"], .info-card-edit, .btn-edit').hide();
+                    $drawer.find('.job-action-btn.edit, a[href*="jobs/edit"], a[href*="/edit"], .info-card-edit, .btn-edit, .spartner-listing, .hm-listing, .status_stage, .job-drawer-add-candidate').remove();
                 }
             },
             error: function() {

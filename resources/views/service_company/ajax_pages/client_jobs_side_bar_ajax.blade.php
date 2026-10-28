@@ -205,10 +205,29 @@
                         }
                     }
                 }
+                $normalizedStatus = ($rawStatus === 'active' || $rawStatus === 'hiring') ? 'hiring' : $rawStatus;
+                $searchHaystack = strtolower(implode(' ', array_filter([
+                    $jobTitle,
+                    '#' . $jobId,
+                    (string) $jobId,
+                    $deptName,
+                    $cityName,
+                    $workMode,
+                    $hmName,
+                    $teamName,
+                    implode(' ', $skills),
+                    $empType,
+                    $clientDisplayName
+                ])));
             @endphp
 
             <!-- Master Primary Job Card -->
-            <div class="cd-job-card" data-entity="job" data-job-id="{{ $jobId }}">
+            <div class="cd-job-card js-job-card-clickable" 
+                 data-entity="job" 
+                 data-job-id="{{ $jobId }}"
+                 data-status="{{ $normalizedStatus }}"
+                 data-search="{{ $searchHaystack }}"
+                 style="cursor: pointer;">
                 <!-- Upper Sub-Cards Grid (5 Sections) -->
                 <div class="cd-job-card-grid">
                     <!-- Sub-Card 1: Job Details (Logo, Title, ID, Department, Client) -->

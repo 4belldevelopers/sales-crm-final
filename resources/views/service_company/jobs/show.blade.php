@@ -2,6 +2,8 @@
 use App\Helper\GeneralMethod;
 use Carbon\Carbon;
 
+$isReadOnly = !empty($isReadOnly) || !empty($is_readonly) || (request()->has('read_only') && request('read_only') == '1') || (request()->has('readonly') && request('readonly') == '1');
+
  $currencyArr 				=	GeneralMethod::currency();
  $salaryMode 			=	GeneralMethod::salaryMode();
  $qualification  = GeneralMethod::qualification(@$job->qualification);
@@ -1379,7 +1381,7 @@ $end_date   =	date('d-M-Y', $date);
                     @if(empty($hideMarketSections))
                     <div class="top-actions" style="position: relative; padding-right: 70px;">
                         <!-- Close button positioned at top-right of drawer for /service_company/jobs -->
-                        <button type="button" class="btn btn-sm btn-icon btn-active-light-danger jd-drawer-close-btn" onclick="(function(btn){var d=btn.closest('[data-kt-drawer=\&quot;true\&quot;]')||document.getElementById('kt_activitiesJob');if(d){if(typeof KTDrawer!=='undefined'){var inst=KTDrawer.getInstance(d);if(!inst&&typeof KTDrawer==='function')inst=new KTDrawer(d);if(inst&&typeof inst.hide==='function'){inst.hide();return;}}d.classList.remove('drawer-on');document.querySelectorAll('.drawer-overlay').forEach(function(e){e.remove();});document.body.removeAttribute('data-kt-drawer-activities');document.body.style.overflow='';}})(this);" style="cursor: pointer; position: absolute; top: 10px; right: 10px; z-index: 20; width: 36px; height: 36px; border-radius: 8px; border: 1px solid #E2E8F0; background: #FFFFFF; display: flex; align-items: center; justify-content: center; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04); transition: all 0.15s ease;" title="Close">
+                        <button type="button" class="btn btn-sm btn-icon btn-active-light-danger jd-drawer-close-btn" onclick="(function(btn){var d=btn.closest('[data-kt-drawer=\&quot;true\&quot;]')||document.getElementById('kt_activitiesJob_show')||document.getElementById('kt_activitiesJob');if(d){if(typeof KTDrawer!=='undefined'){var inst=KTDrawer.getInstance(d);if(!inst&&typeof KTDrawer==='function')inst=new KTDrawer(d);if(inst&&typeof inst.hide==='function'){inst.hide();return;}}d.classList.remove('drawer-on');var ovs=document.querySelectorAll('.drawer-overlay');if(ovs.length>1){ovs[ovs.length-1].remove();}else if(ovs.length===1 && !document.querySelector('#kt_activitiesClient.drawer-on, #kt_activitiesDirectClient.drawer-on')){ovs[0].remove();}document.body.removeAttribute('data-kt-drawer-activities');document.body.style.overflow='';}})(this);" style="cursor: pointer; position: absolute; top: 10px; right: 10px; z-index: 20; width: 36px; height: 36px; border-radius: 8px; border: 1px solid #E2E8F0; background: #FFFFFF; display: flex; align-items: center; justify-content: center; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04); transition: all 0.15s ease;" title="Close">
                             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#64748B" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
                                 <line x1="18" y1="6" x2="6" y2="18"></line>
                                 <line x1="6" y1="6" x2="18" y2="18"></line>
@@ -1392,6 +1394,7 @@ $end_date   =	date('d-M-Y', $date);
                                         <i class="fas fa-eye"></i>View Candidates
                                     </button>
                                 </a>
+                                @if(empty($isReadOnly))
                                 <a href="{{ $urladd }}" class="job-drawer-add-candidate" data-job-status="{{ @$job->status }}">
                                     <button class="action-btn">
                                         <i class="fas fa-user-plus"></i>Add Candidate
@@ -1411,6 +1414,7 @@ $end_date   =	date('d-M-Y', $date);
                                         }
                                     });
                                 </script>
+                                @endif
                             @endif
                             @if(@$tabshow)
                                 @if($viewmore)
@@ -1422,20 +1426,22 @@ $end_date   =	date('d-M-Y', $date);
                                             </button>
                                         </a>
 
+                                        @if(empty($isReadOnly))
                                         <button class="action-btn spartner-listing" data-row-id="{{ @$job->id }}">
                                             <i class="fas fa-building"></i>Add Agency
                                         </button>
+                                        @endif
                                     @endif
                                  @endif
                             @endif
-                            @if(empty($hideMarketSections))
+                            @if(empty($hideMarketSections) && empty($isReadOnly))
                             <button class="action-btn hm-listing" data-row-id="{{ @$job->id }}">
                                 <i class="fas fa-users"></i>Add Team
                             </button>
                             @endif
                             @if(@$tabshow)
                                 @if($viewmore)
-                                    @if($agencyView)
+                                    @if($agencyView && empty($isReadOnly))
                                     @php
                                         $isDirectClientJob = $recommendation_id > 0 && @$to_company_id == auth()->user()->company_id;
                                     @endphp
@@ -1556,7 +1562,7 @@ $end_date   =	date('d-M-Y', $date);
                             </div>
                         </div>
                         <div class="job-actions">
-                             @if (in_array('edit_jobs', $userPermissions))
+                             @if (in_array('edit_jobs', $userPermissions) && empty($isReadOnly))
                                 @if($benchshowtab)
                                     @if ($viewmore && ($job->comId ?? $job->company_id ?? null)==auth()->user()->company_id)
                                     <a href="<?php echo route('service_company.jobs.edit', GeneralMethod::value_encrypt($job->id)); ?>" class="">
@@ -2606,14 +2612,16 @@ $end_date   =	date('d-M-Y', $date);
                                 <div class="questions-card-header">
                                     <h3>All Interview Questions</h3>
                                     <div class="info-card-actions">
-                                        @if(@$captainAccessCheck)
-                                            <button class="btn btn-primary align-self-center" id="addQuestionBtn_{{ $job->id }}"> 
-                                            <i class="far fa-copy"></i>+ Add Question
-                                            </button>
-                                        @else
-                                            <button class="btn btn-primary align-self-center" id="addQuestionBtn_{{ $job->id }}"> 
-                                            <i class="far fa-copy"></i>+ Add Question
-                                            </button>
+                                        @if(empty($isReadOnly))
+                                            @if(@$captainAccessCheck)
+                                                <button class="btn btn-primary align-self-center" id="addQuestionBtn_{{ $job->id }}"> 
+                                                <i class="far fa-copy"></i>+ Add Question
+                                                </button>
+                                            @else
+                                                <button class="btn btn-primary align-self-center" id="addQuestionBtn_{{ $job->id }}"> 
+                                                <i class="far fa-copy"></i>+ Add Question
+                                                </button>
+                                            @endif
                                         @endif
                                     </div>
                                 </div>
@@ -2626,9 +2634,11 @@ $end_date   =	date('d-M-Y', $date);
                                             <span class="jd-empty-state-icon"><i class="far fa-comments"></i></span>
                                             <p class="jd-empty-state-title">No interview questions added</p>
                                             <p class="jd-empty-state-text">No interview questions have been added for this job yet.</p>
+                                            @if(empty($isReadOnly))
                                             <button type="button" class="jd-empty-state-action" onclick="var addQuestionBtn=document.getElementById('addQuestionBtn_{{ $job->id }}'); if(addQuestionBtn){addQuestionBtn.click();}">
                                                 <i class="fa-solid fa-plus"></i> Add Question
                                             </button>
+                                            @endif
                                         </div>
                                     @endif
                                 </div>
@@ -2639,9 +2649,11 @@ $end_date   =	date('d-M-Y', $date);
                                 <div class="info-card-header">
                                     <span class="info-card-title">Agency Terms & Condition</span>
                                     <div class="info-card-actions">
+                                        @if(empty($isReadOnly))
                                         <a href="{{ url('service_company/settings/settings#terms') }}" class="jd-empty-state-action" style="padding:5px 10px;margin-top:0;font-size:11px;" target="_blank">
                                             <i class="far fa-edit"></i> Edit
                                         </a>
+                                        @endif
                                         <button type="button" class="copy-btn tooltip" data-tooltip="Copy all" onclick="copyCardText('card-activity')"><i class="far fa-copy"></i></button>
                                     </div>
                                 </div>
@@ -2655,9 +2667,11 @@ $end_date   =	date('d-M-Y', $date);
                                         <span class="jd-empty-state-icon"><i class="far fa-file-alt"></i></span>
                                         <p class="jd-empty-state-title">No agency terms configured</p>
                                         <p class="jd-empty-state-text">Agency agreement terms are not available for this job yet. Edit the agency agreement settings to keep agency sharing clear.</p>
+                                        @if(empty($isReadOnly))
                                         <a href="{{ url('service_company/settings/settings#terms') }}" class="jd-empty-state-action" target="_blank">
                                             <i class="far fa-edit"></i> Edit Agency T&C
                                         </a>
+                                        @endif
                                     </div>
                                 @endif
                             </div>
@@ -2907,6 +2921,7 @@ $end_date   =	date('d-M-Y', $date);
 
 
      <!--begin::Add Interview Question Modal-->
+    @if(empty($isReadOnly))
     <div class="modal modal fade" tabindex="-1" aria-hidden="true" id="add_interview_question_modal_{{@$job->id}}">
         <div class="modal-dialog modal-dialog-centered modal-xl">
             <div class="modal-content">
@@ -2960,6 +2975,7 @@ $end_date   =	date('d-M-Y', $date);
             </div>
         </div>
     </div>
+    @endif
     <!--end::Add Interview Question popup-->
 
 
@@ -3014,6 +3030,7 @@ $end_date   =	date('d-M-Y', $date);
         </div>
     </div>
 
+    @if(empty($isReadOnly))
     <div class="popup-overlay" id="editPopup">
         <div class="popup-modal">
             <div class="popup-header">
@@ -3062,6 +3079,7 @@ $end_date   =	date('d-M-Y', $date);
             </div>
         </div>
     </div>
+    @endif
 
     <div class="popup-overlay" id="sharePopup">
         <div class="popup-modal">
@@ -3197,20 +3215,36 @@ $end_date   =	date('d-M-Y', $date);
         }
 
         function showEditPopup(section) {
+            @if(!empty($isReadOnly))
+            return;
+            @else
             document.getElementById('editTitle').textContent = section;
             showPopup('editPopup');
+            @endif
         }
         function saveEdit() {
+            @if(!empty($isReadOnly))
+            return;
+            @else
             showToast('Changes saved successfully!', 'success');
             closePopup('editPopup');
+            @endif
         }
 
         function showAddCandidatePopup() {
+            @if(!empty($isReadOnly))
+            return;
+            @else
             showPopup('candidatePopup');
+            @endif
         }
         function addCandidate() {
+            @if(!empty($isReadOnly))
+            return;
+            @else
             showToast('Candidate added successfully!', 'success');
             closePopup('candidatePopup');
+            @endif
         }
 
         function showSharePopup() {
@@ -3677,6 +3711,7 @@ var addBtn = document.getElementById(`addQuestionBtn_${jobIdQuestion}`);
 var saveBtn = document.getElementById(`saveQuestions_${jobIdQuestion}`);
 
 
+@if(empty($isReadOnly))
 if (CKEDITOR.env.ie && CKEDITOR.env.version < 9) {
     CKEDITOR.tools.enableHtml5Elements(document);
 }
@@ -3935,6 +3970,7 @@ function renumberQuestions(questionList) {
 setTimeout(() => {
     renumberQuestions(questionList);
 }, 500);
+@endif
 
 </script>
 

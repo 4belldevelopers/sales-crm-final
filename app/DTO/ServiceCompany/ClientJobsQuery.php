@@ -51,7 +51,7 @@ class ClientJobsQuery
             search: ! empty($rawSearch) ? trim((string) $rawSearch) : null,
             status: strtolower((string) $rawStatus),
             page: max(1, (int) $request->input('page', 1)),
-            perPage: min(50, max(1, (int) $request->input('per_page', $request->input('size', 10)))),
+            perPage: min(500, max(1, (int) $request->input('per_page', $request->input('size', 100)))),
             sort: $request->input('sort', 'created_at'),
             direction: strtolower($request->input('direction', 'desc')) === 'asc' ? 'asc' : 'desc',
             clientName: ! empty($rawClientName) ? trim((string) $rawClientName) : null
