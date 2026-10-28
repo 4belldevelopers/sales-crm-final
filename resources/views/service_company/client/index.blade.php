@@ -358,6 +358,306 @@
   color: #94a3b8;
 }
 
+/* ── Guaranteed Enterprise Industry Combobox Filter ── */
+.cl-ind-dropdown-wrapper {
+  position: relative;
+  display: inline-block;
+}
+.cl-ind-combobox-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 42px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 0 12px;
+  min-width: 155px;
+  max-width: 220px;
+  cursor: pointer;
+  user-select: none;
+  transition: all 0.15s ease;
+  position: relative;
+}
+.cl-ind-combobox-btn:hover, .cl-ind-combobox-btn.active {
+  border-color: #cbd5e1;
+  background: #f8fafc;
+}
+.cl-ind-combobox-btn.has-filter {
+  border-color: #009ef7;
+  background: #f1faff;
+}
+.cl-ind-combobox-btn.has-filter .cl-pill-val {
+  color: #009ef7;
+  font-weight: 600;
+}
+.cl-ind-combobox-btn.has-filter .cl-pill-icon svg {
+  color: #009ef7;
+  stroke: #009ef7;
+}
+.cl-pill-clear {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #e2e8f0;
+  color: #64748b;
+  font-size: 10px;
+  line-height: 1;
+  cursor: pointer;
+  margin-left: 2px;
+  transition: all 0.12s ease;
+}
+.cl-pill-clear:hover {
+  background: #cbd5e1;
+  color: #0f172a;
+}
+.cl-ind-combobox-btn.has-filter .cl-pill-clear {
+  background: #bae6fd;
+  color: #0284c7;
+}
+.cl-ind-combobox-btn.has-filter .cl-pill-clear:hover {
+  background: #0284c7;
+  color: #ffffff;
+}
+.cl-ind-dropdown-panel {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  width: 320px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.12), 0 8px 10px -6px rgba(15, 23, 42, 0.06);
+  z-index: 1055;
+  display: none;
+  flex-direction: column;
+  overflow: hidden;
+  animation: clIndFadeIn 0.15s ease-out;
+}
+@keyframes clIndFadeIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.cl-ind-dropdown-panel.show {
+  display: flex;
+}
+.cl-ind-search-box {
+  padding: 10px 12px;
+  border-bottom: 1px solid #f1f5f9;
+  background: #fafafa;
+  position: relative;
+}
+.cl-ind-search-inp {
+  width: 100%;
+  height: 34px;
+  border: 1px solid #e2e8f0;
+  border-radius: 7px;
+  padding: 0 28px 0 30px;
+  font-size: 12px;
+  font-family: inherit;
+  color: #0f172a;
+  background: #ffffff;
+  outline: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.cl-ind-search-inp:focus {
+  border-color: #009ef7;
+  box-shadow: 0 0 0 2px rgba(0, 158, 247, 0.15);
+}
+.cl-ind-search-icon {
+  position: absolute;
+  left: 20px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #94a3b8;
+  pointer-events: none;
+}
+.cl-ind-search-clear {
+  position: absolute;
+  right: 20px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #94a3b8;
+  font-size: 11px;
+  cursor: pointer;
+  padding: 2px 4px;
+  border-radius: 50%;
+  display: none;
+}
+.cl-ind-search-clear:hover {
+  color: #0f172a;
+  background: #e2e8f0;
+}
+.cl-ind-dropdown-body {
+  max-height: 300px;
+  overflow-y: auto;
+  padding: 6px 0;
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 transparent;
+}
+.cl-ind-dropdown-body::-webkit-scrollbar {
+  width: 5px;
+}
+.cl-ind-dropdown-body::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+.cl-ind-quick-chips {
+  padding: 6px 12px 10px 12px;
+  border-bottom: 1px solid #f1f5f9;
+  background: #f8fafc;
+}
+.cl-ind-chips-title {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #64748b;
+  margin-bottom: 6px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.cl-ind-chips-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+.cl-ind-chip {
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  padding: 3px 8px;
+  font-size: 11px;
+  font-weight: 500;
+  color: #1e293b;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  user-select: none;
+}
+.cl-ind-chip:hover {
+  border-color: #009ef7;
+  color: #009ef7;
+  background: #f1faff;
+}
+.cl-ind-section-hdr {
+  font-size: 10.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #64748b;
+  padding: 8px 14px 4px 14px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: #f8fafc;
+  border-top: 1px solid #f1f5f9;
+  border-bottom: 1px solid #f1f5f9;
+  margin-top: 4px;
+}
+.cl-ind-section-hdr:first-child {
+  margin-top: 0;
+  border-top: none;
+}
+.cl-ind-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 14px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #1e293b;
+  cursor: pointer;
+  transition: background 0.12s ease;
+  user-select: none;
+}
+.cl-ind-item:hover, .cl-ind-item.focused {
+  background: #f1f5f9;
+}
+.cl-ind-item.selected {
+  background: #f1faff;
+  color: #009ef7;
+  font-weight: 600;
+}
+.cl-ind-item-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  flex: 1;
+}
+.cl-ind-item-title {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.cl-ind-check {
+  color: #009ef7;
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+  margin-left: 8px;
+}
+.cl-ind-mark {
+  background: #fef08a;
+  color: #0f172a;
+  padding: 0 2px;
+  border-radius: 2px;
+}
+.cl-ind-empty {
+  padding: 24px 16px;
+  text-align: center;
+  color: #64748b;
+}
+.cl-ind-empty-icon {
+  margin-bottom: 6px;
+  color: #94a3b8;
+}
+.cl-ind-empty-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: #1e293b;
+  margin-bottom: 2px;
+}
+.cl-ind-empty-sub {
+  font-size: 11.5px;
+  color: #64748b;
+  margin-bottom: 8px;
+}
+.cl-ind-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #cbd5e1;
+  flex-shrink: 0;
+  transition: background 0.12s ease;
+}
+.cl-ind-item:hover .cl-ind-dot, .cl-ind-item.focused .cl-ind-dot, .cl-ind-item.selected .cl-ind-dot {
+  background: #009ef7;
+}
+.cl-ind-sec-tag {
+  font-size: 9.5px;
+  font-weight: 500;
+  padding: 1.5px 5px;
+  border-radius: 4px;
+  background: #f1f5f9;
+  color: #64748b;
+  white-space: nowrap;
+}
+.cl-ind-hdr-icon {
+  display: inline-flex;
+  align-items: center;
+  color: #009ef7;
+}
+.cl-ind-chip.active {
+  background: #009ef7 !important;
+  border-color: #009ef7 !important;
+  color: #ffffff !important;
+}
+
 /* ── Sortable Table Headers ── */
 .cl-sortable-th {
   cursor: pointer !important;
@@ -684,29 +984,40 @@
                 <input type="hidden" id="unspecified_location" name="unspecified_location" value="0" />
             </div>
 
-            {{-- Filter 2: Industry Filter --}}
-            <div class="cl-dropdown-pill" id="industryPill">
-                <div class="cl-pill-icon">
-                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <rect x="2" y="7" width="20" height="14" rx="2" ry="2"/>
-                        <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>
-                    </svg>
+            {{-- Filter 2: Enterprise Industry Combobox Popover --}}
+            <div class="cl-ind-dropdown-wrapper" id="clIndDropdownWrapper">
+                <div class="cl-ind-combobox-btn" id="clIndBtn" onclick="toggleIndustryDropdown(event)" role="button" tabindex="0" aria-haspopup="listbox" aria-expanded="false" title="Filter by Industry">
+                    <div class="cl-pill-icon">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="2" y="7" width="20" height="14" rx="2" ry="2"/>
+                            <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>
+                        </svg>
+                    </div>
+                    <div class="cl-pill-texts">
+                        <span class="cl-pill-lbl">Industry</span>
+                        <span class="cl-pill-val" id="industryDisplay">All Industries</span>
+                    </div>
+                    <div class="cl-pill-clear" id="industryClearBtn" onclick="clearIndustryFilterFromPill(event)" title="Reset to All Industries" style="display:none;">✕</div>
+                    <div class="cl-pill-chevron">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+                    </div>
                 </div>
-                <div class="cl-pill-texts">
-                    <span class="cl-pill-lbl">Industry</span>
-                    <span class="cl-pill-val" id="industryDisplay">All Industries</span>
+
+                {{-- Popover Dropdown Panel --}}
+                <div class="cl-ind-dropdown-panel" id="clIndDropdownPanel" role="listbox" aria-label="Industries Filter">
+                    <div class="cl-ind-search-box">
+                        <svg class="cl-ind-search-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                        <input type="text" class="cl-ind-search-inp" id="clIndSearchInp" placeholder="Search 160+ industries or sectors..." autocomplete="off" oninput="handleIndustrySearchInput(this.value)" onkeydown="handleIndustryKeydown(event)" />
+                        <span class="cl-ind-search-clear" id="clIndSearchClear" onclick="clearIndustrySearch()">✕</span>
+                    </div>
+                    <div class="cl-ind-dropdown-body" id="clIndDropdownBody">
+                        {{-- Rendered dynamically from window.initialIndustriesManifest via User RAM --}}
+                    </div>
                 </div>
-                <div class="cl-pill-chevron">
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
-                </div>
-                <select class="cl-pill-select-native" id="industryFilter" onchange="handleIndustryChange(this)">
-                    <option value="" selected>All Industries</option>
-                    @if (!empty($industries))
-                        @foreach ($industries as $ind)
-                            <option value="{{ $ind->ind_id }}">{{ $ind->ind_name }}</option>
-                        @endforeach
-                    @endif
-                </select>
+
+                {{-- Hidden input for backward compatibility --}}
+                <input type="hidden" id="industryFilter" name="industry" value="" />
+                <input type="hidden" id="industry_id" name="industry_id" value="" />
             </div>
 
             {{-- Filter 3: Activity Filter --}}
@@ -1199,13 +1510,266 @@ function selectLocationByCountryAndCity(countryVal, cityVal, triggerFetch = true
     }
 }
 
+// ── God-Level Enterprise Industry Combobox (Client-First / 10K Concurrency) ──
+let activeIndSectorFilter = 'all';
+let focusedIndItemIndex = -1;
+
+const SECTOR_ICON_MAP = {
+    1: '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>',
+    2: '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>',
+    3: '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>',
+    4: '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>',
+    5: '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>',
+    6: '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>',
+    7: '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>',
+    8: '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>',
+    9: '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>',
+    10: '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>'
+};
+
+function toggleIndustryDropdown(e) {
+    if (e) {
+        e.stopPropagation();
+        e.preventDefault();
+    }
+    // Close other dropdowns
+    $('#clLocDropdownPanel').removeClass('show');
+    $('#clLocBtn').removeClass('active');
+
+    const $panel = $('#clIndDropdownPanel');
+    const isVisible = $panel.hasClass('show');
+    if (isVisible) {
+        $panel.removeClass('show');
+        $('#clIndBtn').removeClass('active').attr('aria-expanded', 'false');
+    } else {
+        $panel.addClass('show');
+        $('#clIndBtn').addClass('active').attr('aria-expanded', 'true');
+        $('#clIndSearchInp').focus();
+        renderIndustryDropdown($('#clIndSearchInp').val() || '');
+    }
+}
+
+function handleIndustrySearchInput(q) {
+    if (q && q.trim()) {
+        $('#clIndSearchClear').show();
+    } else {
+        $('#clIndSearchClear').hide();
+    }
+    focusedIndItemIndex = -1;
+    renderIndustryDropdown(q);
+}
+
+function clearIndustrySearch() {
+    $('#clIndSearchInp').val('');
+    $('#clIndSearchClear').hide();
+    focusedIndItemIndex = -1;
+    renderIndustryDropdown('');
+    $('#clIndSearchInp').focus();
+}
+
+function filterIndustryBySector(sectorId, e) {
+    if (e) {
+        e.stopPropagation();
+        e.preventDefault();
+    }
+    activeIndSectorFilter = sectorId;
+    renderIndustryDropdown($('#clIndSearchInp').val() || '');
+}
+
+function renderIndustryDropdown(filterQuery = '') {
+    const q = (filterQuery || '').toLowerCase().trim();
+    const $body = $('#clIndDropdownBody');
+    const manifest = window.initialIndustriesManifest || { industries: [], sectors: [] };
+    const allIndustries = manifest.industries || [];
+    const selectedId = String(clientListState.industry_id || '');
+
+    let html = '';
+
+    // Quick Chips (All, Tech & AI, FinTech, Health, Retail & D2C, Other)
+    if (!q) {
+        html += `
+            <div class="cl-ind-quick-chips">
+                <div class="cl-ind-chips-title">
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#009ef7" stroke-width="2.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                    <span>Quick Sectors</span>
+                </div>
+                <div class="cl-ind-chips-row">
+                    <button type="button" class="cl-ind-chip ${activeIndSectorFilter === 'all' ? 'active' : ''}" onclick="filterIndustryBySector('all', event)">All</button>
+                    <button type="button" class="cl-ind-chip ${activeIndSectorFilter === 1 ? 'active' : ''}" onclick="filterIndustryBySector(1, event)">Tech & AI</button>
+                    <button type="button" class="cl-ind-chip ${activeIndSectorFilter === 2 ? 'active' : ''}" onclick="filterIndustryBySector(2, event)">FinTech</button>
+                    <button type="button" class="cl-ind-chip ${activeIndSectorFilter === 3 ? 'active' : ''}" onclick="filterIndustryBySector(3, event)">Healthcare</button>
+                    <button type="button" class="cl-ind-chip ${activeIndSectorFilter === 6 ? 'active' : ''}" onclick="filterIndustryBySector(6, event)">Retail & D2C</button>
+                    <button type="button" class="cl-ind-chip ${activeIndSectorFilter === 'other' ? 'active' : ''}" onclick="filterIndustryBySector('other', event)">Other</button>
+                </div>
+            </div>
+        `;
+    }
+
+    // Option 1: All Industries (Reset option)
+    const isAllSelected = !selectedId;
+    if (!q || 'all industries'.includes(q) || 'clear'.includes(q) || 'all'.includes(q)) {
+        html += `
+            <div class="cl-ind-item ${isAllSelected ? 'selected' : ''}" data-id="" onclick="clearIndustryFilter(true)">
+                <div class="cl-ind-item-left">
+                    <span class="cl-ind-dot"></span>
+                    <span class="cl-ind-item-title">All Industries</span>
+                </div>
+                ${isAllSelected ? '<span class="cl-ind-check"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg></span>' : ''}
+            </div>
+        `;
+    }
+
+    // Filter industries
+    let matches = allIndustries.filter(function(item) {
+        if (activeIndSectorFilter !== 'all' && !q) {
+            if (activeIndSectorFilter === 'other') {
+                if (item.id !== 147 && item.sector_id !== 5 && item.sector_id !== 10) return false;
+            } else if (item.sector_id !== activeIndSectorFilter) {
+                return false;
+            }
+        }
+        if (!q) return true;
+
+        const nameMatch = (item.name || '').toLowerCase().includes(q);
+        const sectorMatch = (item.sector_name || '').toLowerCase().includes(q);
+        const kwMatch = (item.keywords || '').toLowerCase().includes(q);
+        const acronymMatch = (item.acronyms || []).some(a => a.toLowerCase().includes(q));
+        const synMatch = (item.synonyms || []).some(s => s.toLowerCase().includes(q));
+
+        return nameMatch || sectorMatch || kwMatch || acronymMatch || synMatch;
+    });
+
+    if (matches.length === 0) {
+        html += `
+            <div class="cl-ind-empty">
+                <div class="cl-ind-empty-icon">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+                </div>
+                <div class="cl-ind-empty-title">No industry matching "${escapeAttr(q)}"</div>
+                <div class="cl-ind-empty-sub">Select universal classification:</div>
+                <button type="button" class="btn btn-sm btn-light-primary" style="font-size:11.5px; font-weight:600; padding:6px 14px; border-radius:6px; display:inline-flex; align-items:center; gap:6px;" onclick="selectIndustryFilter(147, 'Other / Diversified Services', true)">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                    Select "Other / Diversified Services"
+                </button>
+            </div>
+        `;
+        $body.html(html);
+        return;
+    }
+
+    // Render matches
+    let currentSecId = null;
+    matches.forEach(function(item, idx) {
+        if (!q && item.sector_id !== currentSecId) {
+            currentSecId = item.sector_id;
+            const secIcon = SECTOR_ICON_MAP[currentSecId] || SECTOR_ICON_MAP[5];
+            html += `
+                <div class="cl-ind-section-hdr">
+                    <span class="cl-ind-hdr-icon">${secIcon}</span>
+                    <span>${escapeAttr(item.sector_name || 'General')}</span>
+                </div>
+            `;
+        }
+
+        const isSelected = String(item.id) === selectedId;
+        const displayName = q ? highlightText(item.name, q) : escapeAttr(item.name);
+        const sectorTag = q ? `<span class="cl-ind-sec-tag">${escapeAttr((item.sector_name || '').split(',')[0].split('&')[0].trim())}</span>` : '';
+
+        html += `
+            <div class="cl-ind-item ${isSelected ? 'selected' : ''}" data-idx="${idx}" data-id="${item.id}" onclick="selectIndustryFilter(${item.id}, '${escapeAttr(item.name)}', true)" role="option" aria-selected="${isSelected ? 'true' : 'false'}">
+                <div class="cl-ind-item-left">
+                    <span class="cl-ind-dot"></span>
+                    <span class="cl-ind-item-title" title="${escapeAttr(item.name)}">${displayName}</span>
+                </div>
+                <div class="d-flex align-items-center gap-1">
+                    ${sectorTag}
+                    ${isSelected ? '<span class="cl-ind-check"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg></span>' : ''}
+                </div>
+            </div>
+        `;
+    });
+
+    $body.html(html);
+}
+
+function selectIndustryFilter(id, name, triggerFetch = true) {
+    const val = id ? String(id) : '';
+    clientListState.industry_id = val;
+
+    $('#industryFilter').val(val);
+    $('#industry_id').val(val);
+
+    if (val) {
+        let displayName = name;
+        if (!displayName) {
+            const manifest = window.initialIndustriesManifest || { industries: [] };
+            const found = (manifest.industries || []).find(i => String(i.id) === val);
+            displayName = found ? found.name : `Industry #${val}`;
+        }
+        $('#industryDisplay').text(displayName).attr('title', displayName);
+        $('#clIndBtn').addClass('has-filter').removeClass('active').attr('aria-expanded', 'false');
+        $('#industryClearBtn').show();
+    } else {
+        $('#industryDisplay').text('All Industries').removeAttr('title');
+        $('#clIndBtn').removeClass('has-filter active').attr('aria-expanded', 'false');
+        $('#industryClearBtn').hide();
+    }
+
+    $('#clIndDropdownPanel').removeClass('show');
+
+    if (triggerFetch) {
+        filtersdataget();
+    }
+}
+
+function clearIndustryFilter(triggerFetch = true) {
+    selectIndustryFilter('', 'All Industries', triggerFetch);
+}
+
+function clearIndustryFilterFromPill(e) {
+    if (e) {
+        e.stopPropagation();
+        e.preventDefault();
+    }
+    clearIndustryFilter(true);
+}
+
+function handleIndustryKeydown(e) {
+    const $items = $('#clIndDropdownBody .cl-ind-item');
+    if (!$items.length) return;
+
+    if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        focusedIndItemIndex = (focusedIndItemIndex + 1) % $items.length;
+        $items.removeClass('focused');
+        const $focused = $items.eq(focusedIndItemIndex).addClass('focused');
+        if ($focused.length && $focused[0].scrollIntoView) {
+            $focused[0].scrollIntoView({ block: 'nearest' });
+        }
+    } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        focusedIndItemIndex = (focusedIndItemIndex - 1 + $items.length) % $items.length;
+        $items.removeClass('focused');
+        const $focused = $items.eq(focusedIndItemIndex).addClass('focused');
+        if ($focused.length && $focused[0].scrollIntoView) {
+            $focused[0].scrollIntoView({ block: 'nearest' });
+        }
+    } else if (e.key === 'Enter') {
+        e.preventDefault();
+        if (focusedIndItemIndex >= 0 && focusedIndItemIndex < $items.length) {
+            $items.eq(focusedIndItemIndex).trigger('click');
+        }
+    } else if (e.key === 'Escape') {
+        $('#clIndDropdownPanel').removeClass('show');
+        $('#clIndBtn').removeClass('active').attr('aria-expanded', 'false');
+    }
+}
+
 // ── Dropdown filter sync handlers ──
 function handleIndustryChange(sel) {
-    const text = sel.options[sel.selectedIndex].text;
     const val = sel.value;
-    $('#industryDisplay').text(text);
-    clientListState.industry_id = val;
-    filtersdataget();
+    const text = sel.options && sel.selectedIndex >= 0 ? sel.options[sel.selectedIndex].text : '';
+    selectIndustryFilter(val, text, true);
 }
 
 function handleActivityChange(sel) {
@@ -1260,11 +1824,15 @@ function updateHeaderSortIndicators(activeSort) {
     }
 }
 
-// Close location dropdown on outside click or escape
+// Close location & industry dropdowns on outside click or escape
 $(document).on('click', function(e) {
     if (!$(e.target).closest('#clLocDropdownWrapper').length) {
         $('#clLocDropdownPanel').removeClass('show');
         $('#clLocBtn').removeClass('active');
+    }
+    if (!$(e.target).closest('#clIndDropdownWrapper').length) {
+        $('#clIndDropdownPanel').removeClass('show');
+        $('#clIndBtn').removeClass('active').attr('aria-expanded', 'false');
     }
 });
 
@@ -1273,6 +1841,10 @@ $(document).on('keydown', function(e) {
         if ($('#clLocDropdownPanel').hasClass('show')) {
             $('#clLocDropdownPanel').removeClass('show');
             $('#clLocBtn').removeClass('active');
+        }
+        if ($('#clIndDropdownPanel').hasClass('show')) {
+            $('#clIndDropdownPanel').removeClass('show');
+            $('#clIndBtn').removeClass('active').attr('aria-expanded', 'false');
         }
         if ($('#kt_activitiesClient').hasClass('drawer-on') || $('#kt_activitiesDirectClient').hasClass('drawer-on') || document.querySelector('.drawer-overlay')) {
             if (typeof ClientStateManager !== 'undefined' && typeof ClientStateManager.clearDrawerState === 'function') {
@@ -1509,6 +2081,191 @@ window.ClientMemoryStore = {
         this.cache.clear();
     }
 };
+
+// ── Single Source of Truth: Canonical Client Pipeline Store ──
+window.ClientPipelineStore = {
+    revisions: new Map(),
+    pipelineCache: new Map(),
+    bus: (typeof BroadcastChannel !== 'undefined') ? new BroadcastChannel('jero_pipeline_bus') : null,
+
+    init: function() {
+        if (this.bus) {
+            this.bus.onmessage = (e) => {
+                if (e.data && e.data.type === 'PIPELINE_UPDATE' && e.data.payload) {
+                    this.apply(e.data.payload, false);
+                }
+            };
+        }
+    },
+
+    get: function(clientId) {
+        const cid = Number(clientId);
+        return this.pipelineCache.get(cid) || null;
+    },
+
+    apply: function(payload, broadcast = true) {
+        if (!payload || !payload.client_id) return;
+        const cid = Number(payload.client_id);
+        const rev = Number(payload.revision || 0);
+        const curRev = this.revisions.get(cid) || 0;
+
+        // Monotonic revision check: discard stale/out-of-order events
+        if (rev && rev <= curRev) {
+            return;
+        }
+        if (rev) this.revisions.set(cid, rev);
+
+        // Update in-memory cache
+        let pv = Array.isArray(payload.pv) && payload.pv.length >= 9 ? payload.pv : null;
+        if (!pv && payload.changed && this.pipelineCache.has(cid)) {
+            const cached = this.pipelineCache.get(cid);
+            const p = Object.assign({}, cached.pipeline);
+            const fromStatus = Number(payload.changed.from_status || 0);
+            const toStatus = Number(payload.changed.to_status || payload.changed.new_status || 0);
+            const statusKeyMap = {
+                1: 'sourced',
+                2: 'screening',
+                3: 'evaluated',
+                4: 'negotiations',
+                5: 'offers',
+                6: 'joined',
+                7: 'rejected'
+            };
+            if (fromStatus && statusKeyMap[fromStatus] && p[statusKeyMap[fromStatus]] > 0) {
+                p[statusKeyMap[fromStatus]] = Math.max(0, p[statusKeyMap[fromStatus]] - 1);
+            }
+            if (toStatus && statusKeyMap[toStatus]) {
+                p[statusKeyMap[toStatus]] = (p[statusKeyMap[toStatus]] || 0) + 1;
+            }
+            pv = [
+                p.applications || 0,
+                p.sourced || 0,
+                p.screening || 0,
+                p.evaluated || 0,
+                p.negotiations || 0,
+                p.offers || 0,
+                p.joined || 0,
+                p.rejected || 0,
+                p.interviews || 0
+            ];
+            this.pipelineCache.set(cid, { revision: rev, pv: pv, pipeline: p });
+        } else if (pv) {
+            this.pipelineCache.set(cid, {
+                revision: rev,
+                pv: pv,
+                pipeline: {
+                    applications: Number(pv[0] || 0),
+                    sourced: Number(pv[1] || 0),
+                    screening: Number(pv[2] || 0),
+                    evaluated: Number(pv[3] || 0),
+                    negotiations: Number(pv[4] || 0),
+                    offers: Number(pv[5] || 0),
+                    joined: Number(pv[6] || 0),
+                    rejected: Number(pv[7] || 0),
+                    interviews: Number(pv[8] || 0)
+                }
+            });
+        }
+
+        // Forward to Web Worker
+        if (window.clWorker && window.clWorkerReady) {
+            window.clWorker.postMessage({
+                type: 'PIPELINE_REVISION_UPDATE',
+                clientId: cid,
+                revision: rev,
+                pv: pv,
+                changed: payload.changed
+            });
+        }
+
+        // In-place reactive DOM update for rendered listing row
+        this.updateDOM(cid, { pv: pv, pipeline: this.pipelineCache.get(cid) ? this.pipelineCache.get(cid).pipeline : null });
+
+        // Update Drawer if open for this client
+        this.updateDrawer(cid, { pv: pv, pipeline: this.pipelineCache.get(cid) ? this.pipelineCache.get(cid).pipeline : null });
+
+        // Broadcast across tabs in this browser via BroadcastChannel
+        if (broadcast && this.bus) {
+            this.bus.postMessage({
+                type: 'PIPELINE_UPDATE',
+                payload: {
+                    client_id: cid,
+                    revision: rev,
+                    pv: pv,
+                    changed: payload.changed
+                }
+            });
+        }
+    },
+
+    updateDOM: function(cid, payload) {
+        const $card = $(`.cl-primary-card[data-row-id="${cid}"]`);
+        if (!$card.length) return;
+
+        const pv = payload.pv;
+        if (!Array.isArray(pv) || pv.length < 9) return;
+
+        const [applications, sourced, screening, evaluated, negotiations, offers, joined, rejected, interviews] = pv;
+
+        this._setPill($card.find('.step-sourcing'), sourced, 'Sourcing');
+        this._setPill($card.find('.step-screening'), screening, 'Screening');
+        this._setPill($card.find('.step-evaluation'), evaluated, 'Evaluation');
+        this._setPill($card.find('.step-negotiations'), negotiations, 'Negotiation');
+        this._setPill($card.find('.step-offer'), offers, 'Offer');
+        this._setPill($card.find('.step-joined'), joined, 'Joined');
+        this._setPill($card.find('.step-rejected'), rejected, 'Rejected');
+        this._setPill($card.find('.step-interview'), interviews, 'Interview');
+
+        const $appsBadge = $card.find('.cl-apps-badge');
+        if ($appsBadge.length) {
+            $appsBadge.text(applications);
+            if (applications > 0) {
+                $appsBadge.addClass('has-apps');
+            } else {
+                $appsBadge.removeClass('has-apps');
+            }
+        }
+
+        $card.find('.cl-pipe-body').attr('title', `Total Applications: ${applications} | Rejected: ${rejected} | Interviews: ${interviews}`);
+    },
+
+    _setPill: function($step, count, name) {
+        if (!$step.length) return;
+        const num = Number(count || 0);
+        $step.find('.cl-pipe-pill').text(num);
+        $step.attr('title', `${name}: ${num}`);
+        if (num > 0) {
+            $step.addClass('has-count');
+        } else {
+            $step.removeClass('has-count');
+        }
+    },
+
+    updateDrawer: function(cid, payload) {
+        const activeDrawer = window.__activeClientDrawer;
+        const activeCid = activeDrawer && activeDrawer.context ? Number(activeDrawer.context.canonicalClientId) : 0;
+        if (activeCid !== cid) return;
+
+        const pv = payload.pv;
+        if (!Array.isArray(pv) || pv.length < 9) return;
+
+        const [applications, sourced, screening, evaluated, negotiations, offers, joined, rejected, interviews] = pv;
+
+        $('#ojInternalTabBadge, #ojCountAllInternal').text(Number(offers) + Number(joined)).show();
+        $('#ojCountOffersInternal').text(offers);
+        $('#tabBadgeInterviewTrackerShow, #perfKpiInterviews').text(interviews).show();
+        $('#candTabCountScreening').text(screening);
+        $('#candTabCountOffer').text(offers);
+        $('#candTabCountJoined').text(joined);
+        $('#candTabCountRejected').text(rejected);
+        $('#candTabCountAll').text(applications);
+
+        if (window.ClientDrawerTabs && window.ClientDrawerTabs['candidates'] && typeof window.ClientDrawerTabs['candidates'].onPipelineUpdate === 'function') {
+            window.ClientDrawerTabs['candidates'].onPipelineUpdate(cid, payload);
+        }
+    }
+};
+window.ClientPipelineStore.init();
 
 // ─── JDCR V5.2: Single Synchronization Authority (SyncSupervisor) ───
 window.SyncSupervisor = {
@@ -2231,6 +2988,7 @@ if (window.clientListState.tab === 'custom') window.clientListState.tab = 'inter
 
 window.initialLocationFacets = {!! json_encode($locationFacets ?? ['total' => 0, 'located_count' => 0, 'unspecified_count' => 0, 'hubs' => []]) !!};
 window.allCountriesList = {!! json_encode($countries ?? []) !!};
+window.initialIndustriesManifest = {!! json_encode($industriesManifest ?? App\Services\IndustryTaxonomyService::getGlobalManifest()) !!};
 
 // ── Offline & Zero-Server IndexedDB Reference Cache ──
 const ClientLocationDB = {
@@ -2300,6 +3058,19 @@ function initCountryBundle() {
             }).catch(function(err) {
                 console.warn('[Countries Bundle] Offline fetch fallback:', err);
             });
+    });
+}
+
+function initIndustryBundle() {
+    if (window.initialIndustriesManifest && window.initialIndustriesManifest.industries && window.initialIndustriesManifest.industries.length > 0) {
+        ClientLocationDB.set('industries_manifest', window.initialIndustriesManifest);
+        return;
+    }
+    ClientLocationDB.get('industries_manifest').then(function(cached) {
+        if (cached && cached.industries && cached.industries.length > 0) {
+            window.initialIndustriesManifest = cached;
+            renderIndustryDropdown($('#clIndSearchInp').val() || '');
+        }
     });
 }
 
@@ -2470,14 +3241,15 @@ function renderClientRows(rows) {
         const jobHold = r.jobs ? (r.jobs.hold || 0) : 0;
         const jobClosed = r.jobs ? (r.jobs.closed || 0) : 0;
 
-        const applications = r.pipeline ? (r.pipeline.applications || 0) : 0;
-        const sourced = r.pipeline ? (r.pipeline.sourced || 0) : 0;
-        const screening = r.pipeline ? (r.pipeline.screening || 0) : 0;
-        const evaluated = r.pipeline ? (r.pipeline.evaluated || 0) : 0;
-        const negotiations = r.pipeline ? (r.pipeline.negotiations || 0) : 0;
-        const offers = r.pipeline ? (r.pipeline.offers || 0) : 0;
-        const joined = r.pipeline ? (r.pipeline.joined || 0) : 0;
-        const interviews = r.pipeline ? (r.pipeline.interviews || 0) : 0;
+        const applications = r.pv ? (r.pv[0] || 0) : (r.pipeline ? (r.pipeline.applications || 0) : 0);
+        const sourced = r.pv ? (r.pv[1] || 0) : (r.pipeline ? (r.pipeline.sourced || 0) : 0);
+        const screening = r.pv ? (r.pv[2] || 0) : (r.pipeline ? (r.pipeline.screening || 0) : 0);
+        const evaluated = r.pv ? (r.pv[3] || 0) : (r.pipeline ? (r.pipeline.evaluated || 0) : 0);
+        const negotiations = r.pv ? (r.pv[4] || 0) : (r.pipeline ? (r.pipeline.negotiations || 0) : 0);
+        const offers = r.pv ? (r.pv[5] || 0) : (r.pipeline ? (r.pipeline.offers || 0) : 0);
+        const joined = r.pv ? (r.pv[6] || 0) : (r.pipeline ? (r.pipeline.joined || 0) : 0);
+        const rejected = r.pv ? (r.pv[7] || 0) : (r.pipeline ? (r.pipeline.rejected || 0) : 0);
+        const interviews = r.pv ? (r.pv[8] || 0) : (r.pipeline ? (r.pipeline.interviews || 0) : 0);
 
         const daysAgo = r.days_ago || '';
         const clientTypeClass = r.is_direct ? 'type-direct' : 'type-internal';
@@ -2563,7 +3335,7 @@ function renderClientRows(rows) {
                             <span class="cl-subcard-title">Hiring Pipeline</span>
                         </div>
                     </div>
-                    <div class="cl-pipe-body tbl-cell-pipeline" title="Total Applications: ${applications} | Interviews: ${interviews}">
+                    <div class="cl-pipe-body tbl-cell-pipeline" title="Total Applications: ${applications} | Rejected: ${rejected} | Interviews: ${interviews}">
                         <div class="cl-pipeline-flow">
                             <div class="cl-pipe-step step-sourcing ${sourced > 0 ? 'has-count' : ''}" title="Sourcing: ${sourced}">
                                 <span class="cl-pipe-pill pill-sourcing">${sourced}</span>
@@ -2588,6 +3360,10 @@ function renderClientRows(rows) {
                             <div class="cl-pipe-step step-joined ${joined > 0 ? 'has-count' : ''}" title="Joined: ${joined}">
                                 <span class="cl-pipe-pill pill-joined">${joined}</span>
                                 <span class="cl-pipe-label">Joined</span>
+                            </div>
+                            <div class="cl-pipe-step step-rejected ${rejected > 0 ? 'has-count' : ''}" title="Rejected: ${rejected}">
+                                <span class="cl-pipe-pill pill-rejected">${rejected}</span>
+                                <span class="cl-pipe-label">Rejected</span>
                             </div>
                             <div class="cl-pipe-divider" aria-hidden="true"></div>
                             <div class="cl-pipe-step step-interview ${interviews > 0 ? 'has-count' : ''}" title="Interview: ${interviews}">
@@ -2763,6 +3539,11 @@ function handleWorkerMessage(data) {
         }
 
         applyClientResponse(syntheticResp, data.page);
+    } else if (data.type === 'PIPELINE_REVISION_APPLIED') {
+        if (window.ClientPipelineStore) {
+            window.ClientPipelineStore.updateDOM(data.clientId, data);
+            window.ClientPipelineStore.updateDrawer(data.clientId, data);
+        }
     } else if (data.type === 'CSV_READY') {
         const blob = new Blob([data.csvContent], { type: 'text/csv;charset=utf-8;' });
         const url = URL.createObjectURL(blob);
@@ -3027,13 +3808,10 @@ function hydrateStateFromUrl(shouldFetch = true) {
         }
 
         // Hydrate industry
-        $('#industryFilter').val(industry);
-        clientListState.industry_id = industry;
         if (industry) {
-            const indText = $(`#industryFilter option[value="${industry}"]`).text() || $('#industryFilter option:selected').text();
-            if (indText) $('#industryDisplay').text(indText);
+            selectIndustryFilter(industry, null, false);
         } else {
-            $('#industryDisplay').text('All Industries');
+            clearIndustryFilter(false);
         }
 
         // Hydrate activity
@@ -3296,8 +4074,9 @@ $(document).ready(function() {
         ClientSessionRecoveryManager.init();
     }
 
-    // Phase 1: Hydrate static country bundle from IndexedDB / JSON
+    // Phase 1: Hydrate static country & industry bundles from IndexedDB / JSON
     initCountryBundle();
+    initIndustryBundle();
 
     // Phase 2: Start background Web Worker OLAP engine
     initClientWorker();
@@ -3546,6 +4325,10 @@ function handleClientMutationEvent(data) {
 
             if (data.type === 'CLIENT_REQUEST_MUTATED' || data.type === 'CLIENT_MUTATED' || data.type === 'JOB_MUTATED' || data.type === 'JOB_STATUS_CHANGED') {
                 handleClientMutationEvent(data);
+            } else if (data.type === 'PIPELINE_UPDATED' && data.payload) {
+                if (window.ClientPipelineStore) {
+                    window.ClientPipelineStore.apply(data.payload, false);
+                }
             }
         };
     }
@@ -3571,6 +4354,16 @@ function handleClientMutationEvent(data) {
                 })
                 .listen('.JobMutated', function(e) {
                     handleClientMutationEvent(e);
+                })
+                .listen('.pipeline.updated', function(e) {
+                    if (window.ClientPipelineStore) {
+                        window.ClientPipelineStore.apply(e, true);
+                    }
+                })
+                .listen('PipelineUpdated', function(e) {
+                    if (window.ClientPipelineStore) {
+                        window.ClientPipelineStore.apply(e, true);
+                    }
                 });
         } catch(echoErr) {
             console.warn('[Echo] Reverb listener registration skipped:', echoErr);

@@ -18,16 +18,16 @@ class InterviewReadModel
     /**
      * Transform a single Elasticsearch _source document into the canonical Read Projection array.
      *
-     * @param array $source Raw Elasticsearch _source document
-     * @param int|null $authCompanyId Authenticated tenant company ID
+     * @param  array  $source  Raw Elasticsearch _source document
+     * @param  int|null  $authCompanyId  Authenticated tenant company ID
      * @return array Transformed UI projection array
      */
     public static function fromElasticSource(array $source, ?int $authCompanyId = null): array
     {
         $id = (int) ($source['id'] ?? 0);
-        $fullName = trim((string) ($source['full_name'] ?? 'Candidate'));
+        $fullName = trim((string) ($source['full_name'] ?? ($source['candidate_name'] ?? ($source['name'] ?? trim((@$source['first_name'] ?? '').' '.(@$source['last_name'] ?? '')) ?: 'Candidate'))));
         $initial = strtoupper(mb_substr($fullName, 0, 1) ?: 'C');
-        $designation = trim((string) ($source['current_designation'] ?? '—'));
+        $designation = trim((string) ($source['current_designation'] ?? ($source['designation_name'] ?? ($source['designation'] ?? '—'))));
 
         // Candidate Avatar Color
         $firstChar = strtolower(mb_substr($fullName, 0, 1) ?: 'a');
@@ -96,9 +96,9 @@ class InterviewReadModel
         $tz = trim((string) ($source['timezone_abbreviation'] ?? ''));
 
         if ($timeTo) {
-            $timeFormatted = $timeTo . ($tz ? " ({$tz})" : '');
+            $timeFormatted = $timeTo.($tz ? " ({$tz})" : '');
         } elseif ($timeFrom) {
-            $timeFormatted = $timeFrom . ($tz ? " ({$tz})" : '');
+            $timeFormatted = $timeFrom.($tz ? " ({$tz})" : '');
         }
 
         // Mode and Link/Address
@@ -220,7 +220,7 @@ class InterviewReadModel
         $joinWindowState = 'JOIN_WINDOW_CLOSED';
         $joinWindow = null;
 
-        if ($scheduleCarbon && !empty($meetingLink) && in_array($availableStatus, [0, 3], true)) {
+        if ($scheduleCarbon && ! empty($meetingLink) && in_array($availableStatus, [0, 3], true)) {
             $windowStart = $scheduleCarbon->copy()->subMinutes(15);
             $windowEnd = $scheduleCarbon->copy()->addMinutes(60);
 
@@ -252,13 +252,15 @@ class InterviewReadModel
         $leadCompany = trim((string) ($source['uc_company_name'] ?? ($source['company_name'] ?? 'Panel')));
         $extraCount = 0;
 
-        if (!empty($rawInterviewers)) {
+        if (! empty($rawInterviewers)) {
             $names = is_array($rawInterviewers)
                 ? $rawInterviewers
                 : array_filter(array_map('trim', explode(',', (string) $rawInterviewers)));
 
             foreach ($names as $idx => $intvName) {
-                if (empty($intvName)) continue;
+                if (empty($intvName)) {
+                    continue;
+                }
                 $interviewers[] = [
                     'id' => $idx + 1,
                     'name' => ucwords($intvName),
@@ -266,7 +268,7 @@ class InterviewReadModel
                 ];
             }
 
-            if (!empty($names)) {
+            if (! empty($names)) {
                 $leadName = ucwords($names[0]);
                 $extraCount = max(0, count($names) - 1);
             }
@@ -275,6 +277,15 @@ class InterviewReadModel
         // Source (Recruiter / Spokperson)
         $sourceName = trim((string) ($source['submitted_by_name'] ?? ($source['posted_by'] ?? ($source['spokperson_name'] ?? ($source['source'] ?? '—')))));
         $sourceCompany = trim((string) ($source['submitted_by_company_name'] ?? ($source['post_company_name'] ?? ($source['from_company_name'] ?? ($source['uc_company_name'] ?? ($source['company_name'] ?? ''))))));
+        $createdAtRaw = $source['created_at'] ?? null;
+        $submittedAt = 'Recently';
+        if ($createdAtRaw) {
+            try {
+                $submittedAt = Carbon::parse($createdAtRaw)->diffForHumans();
+            } catch (Throwable $e) {
+                $submittedAt = (string) $createdAtRaw;
+            }
+        }
 
         // Master & Child Status / Stage
         $masterStatusName = trim((string) ($source['master_status_name'] ?? 'In Review'));
@@ -286,33 +297,37 @@ class InterviewReadModel
         $cssStyle = trim((string) ($source['css_style'] ?? 'badge-light-primary'));
 
         $stageLower = strtolower($masterStatusName);
-        $stageBadgeClass = 'it-badge-blue';
+        $stageBadgeClass = 'cd-stage-interview it-badge-blue';
         if (str_contains($stageLower, 'review') || str_contains($stageLower, 'inw')) {
-            $stageBadgeClass = 'it-badge-yellow';
+            $stageBadgeClass = 'cd-stage-in-review it-badge-yellow';
         } elseif (str_contains($stageLower, 'sourc') || str_contains($stageLower, 'sou')) {
-            $stageBadgeClass = 'it-badge-gray';
+            $stageBadgeClass = 'cd-stage-sourcing it-badge-gray';
         } elseif (str_contains($stageLower, 'screen') || str_contains($stageLower, 'scr')) {
-            $stageBadgeClass = 'it-badge-purple';
+            $stageBadgeClass = 'cd-stage-screening it-badge-purple';
         } elseif (str_contains($stageLower, 'evaluat') || str_contains($stageLower, 'eva')) {
-            $stageBadgeClass = 'it-badge-blue';
+            $stageBadgeClass = 'cd-stage-interview it-badge-blue';
         } elseif (str_contains($stageLower, 'negot') || str_contains($stageLower, 'neg')) {
-            $stageBadgeClass = 'it-badge-pink';
+            $stageBadgeClass = 'cd-stage-screening it-badge-pink';
         } elseif (str_contains($stageLower, 'offer') || str_contains($stageLower, 'off')) {
-            $stageBadgeClass = 'it-badge-orange';
+            $stageBadgeClass = 'cd-stage-offer it-badge-orange';
         } elseif (str_contains($stageLower, 'join') || str_contains($stageLower, 'joi')) {
-            $stageBadgeClass = 'it-badge-green';
+            $stageBadgeClass = 'cd-stage-joined it-badge-green';
         } elseif (str_contains($stageLower, 'reject') || str_contains($stageLower, 'rej')) {
-            $stageBadgeClass = 'it-badge-red';
+            $stageBadgeClass = 'cd-stage-rejected it-badge-red';
         }
+
+        $candidateCurrentCompany = trim((string) ($source['current_company'] ?? ($source['candidate_company'] ?? ($source['candidate_current_company'] ?? ''))));
 
         return [
             'id' => $id,
             'candidate' => [
                 'id' => (int) ($source['candidate_id'] ?? ($source['condidate_id'] ?? 0)),
+                'application_id' => (int) ($source['job_application_id'] ?? ($source['application_id'] ?? ($source['wiseId'] ?? 0))),
                 'name' => $fullName,
                 'initial' => $initial,
                 'designation' => $designation,
                 'avatar_color_class' => $avatarColorClass,
+                'current_company' => $candidateCurrentCompany ?: null,
                 'email' => trim((string) ($source['email'] ?? '')),
                 'phone' => trim((string) ($source['phone'] ?? '')),
             ],
@@ -353,6 +368,7 @@ class InterviewReadModel
             'source_info' => [
                 'name' => $sourceName,
                 'company_name' => $sourceCompany,
+                'submitted_at' => $submittedAt,
             ],
             'attendance' => $attendance,
             'evaluation' => $evaluation,
@@ -382,8 +398,8 @@ class InterviewReadModel
     /**
      * Batch transform an array of Elasticsearch hits into a collection of Read Models.
      *
-     * @param array $hits Elasticsearch hits array
-     * @param int|null $authCompanyId Authenticated tenant company ID
+     * @param  array  $hits  Elasticsearch hits array
+     * @param  int|null  $authCompanyId  Authenticated tenant company ID
      * @return array Transformed array of UI projection read models
      */
     public static function collection(array $hits, ?int $authCompanyId = null): array
@@ -395,6 +411,7 @@ class InterviewReadModel
                 $models[] = self::fromElasticSource($source, $authCompanyId);
             }
         }
+
         return $models;
     }
 }

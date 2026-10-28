@@ -1001,7 +1001,21 @@
   color: #15803d !important;
 }
 
-/* 7. Interview (Cross-Stage Metric: Royal Blue) */
+/* 7. Rejected (Crimson / Rose Red) */
+.step-rejected .cl-pipe-pill,
+.pill-rejected {
+  color: #ef4444 !important;
+}
+.step-rejected .cl-pipe-label {
+  color: #ef4444 !important;
+}
+.step-rejected.has-count .cl-pipe-pill {
+  background: #fef2f2 !important;
+  border-color: #fecaca !important;
+  color: #b91c1c !important;
+}
+
+/* 8. Interview (Cross-Stage Metric: Royal Blue) */
 .step-interview {
   background: #f8fafc !important;
   border: 1px dashed #e2e8f0 !important;
@@ -1414,6 +1428,7 @@
 .pill-negotiations, .pill-negotiation { background: transparent; color: #db2777; }
 .pill-offer, .pill-offers             { background: transparent; color: #d97706; }
 .pill-joined                          { background: transparent; color: #16a34a; }
+.pill-rejected                        { background: transparent; color: #ef4444; }
 .pill-interview, .pill-interviews     { background: transparent; color: #2563eb; }
 
 .cl-pipe-arrow {

@@ -4191,13 +4191,14 @@ use Carbon\Carbon;
             $kpiCacheKey = "ats:client_kpi_v9:{$cur_company_id}:{$client->id}";
             $kpiData = cache()->remember($kpiCacheKey, 900, function() use ($cur_company_id, $client) {
                 $kpiJobs = GeneralMethod::InternalClientJobsCountAllStatus($cur_company_id, $client->id);
-                $kpiPerf = GeneralMethod::InternalClientCandidatesCountList($client->id);
+                $kpiPerf = GeneralMethod::InternalClientCandidatesCountList($client->id, $cur_company_id);
                 return [
                     'kpiActive' => $kpiJobs->job_active ?? 0,
                     'kpiSubmitted' => $kpiPerf->all_candidates ?? 0,
                     'kpiInterviews' => $kpiPerf->all_interview ?? 0,
                     'kpiOffers' => $kpiPerf->offers ?? 0,
                     'kpiJoins' => $kpiPerf->Joined ?? 0,
+                    'kpiRejected' => $kpiPerf->rejected ?? 0,
                 ];
             });
             $kpiActive     = $kpiData['kpiActive'];
@@ -4235,6 +4236,9 @@ use Carbon\Carbon;
                         $industries_name = (string) $rawInd;
                     }
                 }
+            }
+            if (empty($industries_name)) {
+                $industries_name = 'Other / Diversified Services';
             }
 
             $tagsArr = array_filter(array_map('trim', explode(',', (string) @$client->tags)));

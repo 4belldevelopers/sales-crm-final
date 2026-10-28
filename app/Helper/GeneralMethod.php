@@ -10218,10 +10218,10 @@ END:VCALENDAR";
                         'companies_description' => $row->companies_description,
                         'description' => $row->description,
                         'logo_logical_path' => $row->logo_logical_path,
-                        'industry' => $row->industry,
+                        'industry' => (! empty($row->industry) && (int) $row->industry > 0) ? (int) $row->industry : 147,
                         'detail' => $row->detail ?? null,
                         'clients_company_id' => $row->clients_company_id,
-                        'ind_name' => $row->ind_name,
+                        'ind_name' => (! empty($row->ind_name)) ? $row->ind_name : 'Other / Diversified Services',
                         'main_ind_name' => $row->main_ind_name,
                         'staffing_company_relation_id' => $row->staffing_company_relation_id,
                         'from_company_id' => $row->from_company_id,
@@ -15761,7 +15761,8 @@ END:VCALENDAR";
                             'screening' => ['filter' => ['term' => ['job_master_status_id' => 2]]],
                             'evaluated' => ['filter' => ['term' => ['job_master_status_id' => 3]]],
                             'negotiations' => ['filter' => ['term' => ['job_master_status_id' => 4]]],
-                            'offers' => ['filter' => ['exists' => ['field' => 'of_created_date']]],
+                            'offers' => ['filter' => ['term' => ['job_master_status_id' => 5]]],
+                            'rejected' => ['filter' => ['term' => ['job_master_status_id' => 7]]],
                         ],
                     ],
                 ];
@@ -15773,6 +15774,7 @@ END:VCALENDAR";
                 $evaluated = $response['aggregations']['evaluated']['doc_count'] ?? 0;
                 $negotiations = $response['aggregations']['negotiations']['doc_count'] ?? 0;
                 $offers = $response['aggregations']['offers']['doc_count'] ?? 0;
+                $rejected = $response['aggregations']['rejected']['doc_count'] ?? 0;
             }
 
             if ($elasticService->indexExists(ELASTIC_INERTVIEW_TRACKER)) {
@@ -15793,12 +15795,14 @@ END:VCALENDAR";
                         'size' => 0,
                         'query' => $interviewQuery,
                         'aggs' => [
+                            'interviewees' => ['cardinality' => ['field' => 'candidate_id']],
                             'all_interview' => ['value_count' => ['field' => 'id']],
                         ],
                     ],
                 ];
                 $responseInterview = $elasticService->getClient()->search($paramsInterview);
-                $allInterview = $responseInterview['hits']['total']['value'] ?? ($responseInterview['aggregations']['all_interview']['value'] ?? 0);
+                $allInterview = $responseInterview['aggregations']['interviewees']['value']
+                    ?? ($responseInterview['aggregations']['all_interview']['value'] ?? ($responseInterview['hits']['total']['value'] ?? 0));
             }
 
             return (object) [
@@ -15810,6 +15814,7 @@ END:VCALENDAR";
                 'evaluated' => $evaluated,
                 'negotiations' => $negotiations,
                 'offers' => $offers,
+                'rejected' => $rejected ?? 0,
                 'all_interview' => $allInterview,
             ];
         });
@@ -15920,7 +15925,8 @@ END:VCALENDAR";
                             'screening' => ['filter' => ['term' => ['job_master_status_id' => 2]]],
                             'evaluated' => ['filter' => ['term' => ['job_master_status_id' => 3]]],
                             'negotiations' => ['filter' => ['term' => ['job_master_status_id' => 4]]],
-                            'offers' => ['filter' => ['exists' => ['field' => 'of_created_date']]],
+                            'offers' => ['filter' => ['term' => ['job_master_status_id' => 5]]],
+                            'rejected' => ['filter' => ['term' => ['job_master_status_id' => 7]]],
                         ],
                     ],
                 ];
@@ -15933,6 +15939,7 @@ END:VCALENDAR";
                 $evaluated = $response['aggregations']['evaluated']['doc_count'] ?? 0;
                 $negotiations = $response['aggregations']['negotiations']['doc_count'] ?? 0;
                 $offers = $response['aggregations']['offers']['doc_count'] ?? 0;
+                $rejected = $response['aggregations']['rejected']['doc_count'] ?? 0;
             }
 
             if ($elasticService->indexExists(ELASTIC_INERTVIEW_TRACKER)) {
@@ -15943,13 +15950,15 @@ END:VCALENDAR";
                         'size' => 0,
                         'query' => \App\Services\Interview\InterviewTenantScope::forClient((int) $to_company_id, (int) $from_company_id, 'direct'),
                         'aggs' => [
+                            'interviewees' => ['cardinality' => ['field' => 'candidate_id']],
                             'all_interview' => ['value_count' => ['field' => 'id']],
                         ],
                     ],
                 ];
 
                 $responseInterview = $elasticService->getClient()->search($paramsInterview);
-                $allInterview = $responseInterview['hits']['total']['value'] ?? ($responseInterview['aggregations']['all_interview']['value'] ?? 0);
+                $allInterview = $responseInterview['aggregations']['interviewees']['value']
+                    ?? ($responseInterview['aggregations']['all_interview']['value'] ?? ($responseInterview['hits']['total']['value'] ?? 0));
             }
 
             return (object) [
@@ -15961,9 +15970,34 @@ END:VCALENDAR";
                 'evaluated' => $evaluated,
                 'negotiations' => $negotiations,
                 'offers' => $offers,
+                'rejected' => $rejected ?? 0,
                 'all_interview' => $allInterview,
             ];
         });
+    }
+
+    /**
+     * Atomically invalidate client candidate counters and bump tenant pipeline revision.
+     */
+    public static function invalidateClientCandidateCounters($company_id, $client_id = null, $directCompanyId = null)
+    {
+        $comp = (int) $company_id;
+        if ($comp > 0) {
+            $cl = (int) $client_id;
+            if ($cl > 0) {
+                cache()->forget("ats:kpi:internal_client_cand:{$comp}:{$cl}");
+                cache()->forget("ats:kpi:internal_client_cand:{$cl}");
+                cache()->forget("ats:client_kpi_v9:{$comp}:{$cl}");
+            }
+            $dComp = (int) $directCompanyId;
+            if ($dComp > 0) {
+                cache()->forget("ats:kpi:direct_client_cand:{$dComp}:{$comp}");
+                cache()->forget("ats:kpi:direct_client_cand:{$comp}:{$dComp}");
+                cache()->forget("ats:direct_client_kpi_v9:{$comp}:{$dComp}");
+            }
+            // Bump monotonic tenant pipeline revision token
+            cache()->increment("tenant_{$comp}_pipeline_rev");
+        }
     }
 
     public static function agencyJobsCount($company_id)
