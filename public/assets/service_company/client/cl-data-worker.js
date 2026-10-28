@@ -29,6 +29,10 @@ self.onmessage = function(e) {
             exportCsv(msg.filters);
             break;
 
+        case 'PIPELINE_REVISION_UPDATE':
+            pipelineRevisionUpdate(msg.clientId, msg.revision, msg.pv, msg.changed);
+            break;
+
         default:
             break;
     }
@@ -65,7 +69,10 @@ function normalizeRow(r) {
     const countryId = (r.country_id !== undefined && r.country_id !== null) ? Number(r.country_id) : (loc.country_id ? Number(loc.country_id) : null);
     const cityId = (r.city_id !== undefined && r.city_id !== null) ? Number(r.city_id) : (loc.city_id ? Number(loc.city_id) : null);
     const stateId = (r.state_id !== undefined && r.state_id !== null) ? Number(r.state_id) : (loc.state_id || loc.state ? Number(loc.state_id || loc.state) : null);
-    const industryId = (r.industry_id !== undefined && r.industry_id !== null) ? Number(r.industry_id) : null;
+    const industryId = (r.industry_id !== undefined && r.industry_id !== null)
+        ? Number(r.industry_id)
+        : ((r.industry && !isNaN(Number(r.industry))) ? Number(r.industry) : null);
+    const indName = (r.ind_name || (isNaN(Number(r.industry)) ? r.industry : '') || '').trim();
 
     const rawCountryIds = Array.isArray(r.country_ids) ? r.country_ids : [];
     const locations = Array.isArray(r.locations) ? r.locations : (Array.isArray(r.client_location) ? r.client_location : []);
@@ -88,6 +95,18 @@ function normalizeRow(r) {
 
     const activeJobs = Number(jobs.active || jobs.hiring || 0);
 
+    // Canonical Status Vector (Option A): [total, sourcing, screening, evaluation, negotiation, offer, joined, rejected, interviewees]
+    const pv = Array.isArray(r.pv) && r.pv.length >= 9 ? r.pv : null;
+    const applications = pv ? Number(pv[0] || 0) : Number(pipeline.applications || pipeline.total || 0);
+    const sourced = pv ? Number(pv[1] || 0) : Number(pipeline.sourced || 0);
+    const screening = pv ? Number(pv[2] || 0) : Number(pipeline.screening || 0);
+    const evaluated = pv ? Number(pv[3] || 0) : Number(pipeline.evaluated || 0);
+    const negotiations = pv ? Number(pv[4] || 0) : Number(pipeline.negotiations || pipeline.negotiation || 0);
+    const offers = pv ? Number(pv[5] || 0) : Number(pipeline.offers || 0);
+    const joined = pv ? Number(pv[6] || 0) : Number(pipeline.joined || 0);
+    const rejected = pv ? Number(pv[7] || 0) : Number(pipeline.rejected || 0);
+    const interviews = pv ? Number(pv[8] || 0) : Number(pipeline.interviews || pipeline.all_interview || 0);
+
     return {
         id: r.id,
         client_id: r.client_id || r.id,
@@ -95,8 +114,8 @@ function normalizeRow(r) {
         name_lower: (r.name || '').toLowerCase(),
         is_direct: Boolean(r.is_direct),
         client_type: r.client_type || (r.is_direct ? 'Direct Client' : 'Internal Client'),
-        industry: r.industry || '',
-        industry_lower: (r.industry || '').toLowerCase(),
+        industry: indName || r.industry || '',
+        industry_lower: (indName || r.industry || '').toLowerCase(),
         industry_id: industryId,
         has_location: hasLocation,
         country_name: country,
@@ -110,18 +129,24 @@ function normalizeRow(r) {
         company_size: r.company_size || '',
         is_active_hiring: activeJobs > 0,
         is_inactive: activeJobs === 0,
+        revision: r.revision || 1,
         jobs: {
             active: activeJobs,
             hold: Number(jobs.hold || 0),
             closed: Number(jobs.closed || 0),
             total: Number(jobs.total || (activeJobs + Number(jobs.hold || 0) + Number(jobs.closed || 0)))
         },
+        pv: [applications, sourced, screening, evaluated, negotiations, offers, joined, rejected, interviews],
         pipeline: {
-            sourced: Number(pipeline.sourced || 0),
-            evaluated: Number(pipeline.evaluated || 0),
-            interviews: Number(pipeline.interviews || 0),
-            offers: Number(pipeline.offers || 0),
-            joined: Number(pipeline.joined || 0)
+            applications: applications,
+            sourced: sourced,
+            screening: screening,
+            evaluated: evaluated,
+            negotiations: negotiations,
+            offers: offers,
+            joined: joined,
+            rejected: rejected,
+            interviews: interviews
         },
         date: r.connected_on || r.date || '-',
         date_ago: r.days_ago || r.date_ago || '',
@@ -200,9 +225,12 @@ function queryDataset(msg) {
             }
         }
 
-        // Industry filter
+        // Industry filter (supports ID or substring name)
         if (industry) {
-            if (!item.industry_lower.includes(industry)) continue;
+            const industryNum = Number(industry);
+            const matchesId = !isNaN(industryNum) && industryNum > 0 && item.industry_id === industryNum;
+            const matchesName = item.industry_lower && item.industry_lower.includes(industry);
+            if (!matchesId && !matchesName) continue;
         }
 
         // Activity filter
@@ -299,10 +327,76 @@ function deltaUpsert(clientData, version) {
     });
 }
 
+function pipelineRevisionUpdate(clientId, revision, newPv, changed) {
+    if (!clientId) return;
+    const cid = Number(clientId);
+    const item = self.datasetMap.get(cid);
+    if (!item) return;
+
+    if (revision && item.revision && Number(revision) <= Number(item.revision)) {
+        // Discard stale or duplicate revision
+        return;
+    }
+    if (revision) item.revision = Number(revision);
+
+    if (Array.isArray(newPv) && newPv.length >= 9) {
+        item.pv = newPv;
+        item.pipeline = {
+            applications: Number(newPv[0] || 0),
+            sourced: Number(newPv[1] || 0),
+            screening: Number(newPv[2] || 0),
+            evaluated: Number(newPv[3] || 0),
+            negotiations: Number(newPv[4] || 0),
+            offers: Number(newPv[5] || 0),
+            joined: Number(newPv[6] || 0),
+            rejected: Number(newPv[7] || 0),
+            interviews: Number(newPv[8] || 0)
+        };
+    } else if (changed && typeof changed === 'object') {
+        const p = item.pipeline;
+        const fromStatus = Number(changed.from_status || 0);
+        const toStatus = Number(changed.new_status || changed.to_status || 0);
+        const statusKeyMap = {
+            1: 'sourced',
+            2: 'screening',
+            3: 'evaluated',
+            4: 'negotiations',
+            5: 'offers',
+            6: 'joined',
+            7: 'rejected'
+        };
+        if (fromStatus && statusKeyMap[fromStatus] && p[statusKeyMap[fromStatus]] > 0) {
+            p[statusKeyMap[fromStatus]] = Math.max(0, p[statusKeyMap[fromStatus]] - 1);
+        }
+        if (toStatus && statusKeyMap[toStatus]) {
+            p[statusKeyMap[toStatus]] = (p[statusKeyMap[toStatus]] || 0) + 1;
+        }
+        item.pv = [
+            p.applications,
+            p.sourced,
+            p.screening,
+            p.evaluated,
+            p.negotiations,
+            p.offers,
+            p.joined,
+            p.rejected,
+            p.interviews
+        ];
+    }
+
+    self.postMessage({
+        type: 'PIPELINE_REVISION_APPLIED',
+        clientId: cid,
+        revision: item.revision,
+        pv: item.pv,
+        pipeline: item.pipeline
+    });
+}
+
 function exportCsv(filters) {
     // Generate CSV on worker thread without main-thread blocking
     const rows = [];
-    rows.push(['Company Name', 'Industry', 'Location', 'Jobs Hiring', 'Jobs Hold', 'Jobs Closed', 'Sourced', 'Evaluated', 'Interviews', 'Offers', 'Joined', 'Client Type', 'Date', 'Last Activity']);
+    rows.push(['Company Name', 'Industry', 'Location', 'Jobs Hiring', 'Jobs Hold', 'Jobs Closed', 'Sourced', 'Screening', 'Evaluated', 'Negotiation', 'Offers', 'Joined', 'Rejected', 'Interviewees', 'Client Type', 'Date', 'Last Activity']);
 
     for (let i = 0; i < self.dataset.length; i++) {
         const item = self.dataset[i];
@@ -314,10 +408,13 @@ function exportCsv(filters) {
             item.jobs.hold,
             item.jobs.closed,
             item.pipeline.sourced,
+            item.pipeline.screening,
             item.pipeline.evaluated,
-            item.pipeline.interviews,
+            item.pipeline.negotiations,
             item.pipeline.offers,
             item.pipeline.joined,
+            item.pipeline.rejected,
+            item.pipeline.interviews,
             item.client_type,
             item.date,
             item.last_activity

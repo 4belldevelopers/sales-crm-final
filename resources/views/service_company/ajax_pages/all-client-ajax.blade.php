@@ -24,7 +24,7 @@
             $city = $rowObj->city_name ?? ($rowObj->city ?? '');
             $stateName = $rowObj->state_name ?? ($rowObj->state ?? '');
             $country_name = $rowObj->country_name ?? ($rowObj->country ?? '');
-            $departmentArr = $rowObj->ind_name ?? '';
+            $departmentArr = !empty($rowObj->ind_name) ? $rowObj->ind_name : 'Other / Diversified Services';
             $created_at = !empty($rowObj->from_created_at) ? $rowObj->from_created_at : ($rowObj->created_at ?? '');
             $newDate = !empty($created_at) ? date('d M, Y', strtotime($created_at)) : '-';
             $daysAgo = !empty($created_at) ? GeneralMethod::timeAgo($created_at) : 'Just now';
@@ -243,7 +243,7 @@
             $client_Or_CompanyName = $row->company_name ?? $row->name ?? '';
         }
 
-        $departmentArr = (@$row->ind_name) ? @$row->ind_name : @$row->main_ind_name;
+        $departmentArr = (!empty($row->ind_name)) ? $row->ind_name : ((!empty($row->main_ind_name)) ? $row->main_ind_name : 'Other / Diversified Services');
         $client_id = $row->client_id ?? ($row->id ?? 0);
         $rowTargetId = $isDirect ? ($row->client_id ?: ($row->from_company_id ?: ($row->company_id ?: ($row->id ?? 0)))) : ($row->client_id ?: ($row->id ?? 0));
 
@@ -298,6 +298,7 @@
         $negotiations  = (int)($perf->negotiations ?? ($perf->negotiation ?? 0));
         $offers        = (int)($perf->offers ?? 0);
         $joined        = (int)($perf->Joined ?? ($perf->joined ?? 0));
+        $rejected      = (int)($perf->rejected ?? 0);
         $interviews    = (int)($perf->all_interview ?? 0);
 
         /* ── connected on ── */
@@ -490,7 +491,7 @@
                         <span class="cl-subcard-title">Hiring Pipeline</span>
                     </div>
                 </div>
-                <div class="cl-pipe-body tbl-cell-pipeline" title="Total Applications: {{ $allCandidates }} | Interviews: {{ $interviews }}">
+                <div class="cl-pipe-body tbl-cell-pipeline" title="Total Applications: {{ $allCandidates }} | Rejected: {{ $rejected }} | Interviews: {{ $interviews }}">
                     <div class="cl-pipeline-flow">
                         <div class="cl-pipe-step step-sourcing {{ $sourced > 0 ? 'has-count' : '' }}" title="Sourcing: {{ $sourced }}">
                             <span class="cl-pipe-pill pill-sourcing">{{ $sourced }}</span>
@@ -515,6 +516,10 @@
                         <div class="cl-pipe-step step-joined {{ $joined > 0 ? 'has-count' : '' }}" title="Joined: {{ $joined }}">
                             <span class="cl-pipe-pill pill-joined">{{ $joined }}</span>
                             <span class="cl-pipe-label">Joined</span>
+                        </div>
+                        <div class="cl-pipe-step step-rejected {{ $rejected > 0 ? 'has-count' : '' }}" title="Rejected: {{ $rejected }}">
+                            <span class="cl-pipe-pill pill-rejected">{{ $rejected }}</span>
+                            <span class="cl-pipe-label">Rejected</span>
                         </div>
                         <div class="cl-pipe-divider" aria-hidden="true"></div>
                         <div class="cl-pipe-step step-interview {{ $interviews > 0 ? 'has-count' : '' }}" title="Interview: {{ $interviews }}">

@@ -20,6 +20,7 @@
     $kpiInterviews = 0;
     $kpiOffers = 0;
     $kpiJoins = 0;
+    $kpiRejected = 0;
 
     if ($detail_from) {
         try {
@@ -30,6 +31,7 @@
             if (isset($kpiPerf->all_interview)) $kpiInterviews = $kpiPerf->all_interview;
             if (isset($kpiPerf->offers)) $kpiOffers = $kpiPerf->offers;
             if (isset($kpiPerf->Joined)) $kpiJoins = $kpiPerf->Joined;
+            if (isset($kpiPerf->rejected)) $kpiRejected = $kpiPerf->rejected;
         } catch (\Throwable $e) {
             // Keep default KPI active count fallback
         }

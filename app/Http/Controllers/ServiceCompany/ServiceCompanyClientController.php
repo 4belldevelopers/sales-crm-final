@@ -75,6 +75,7 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
         $this->industries = cache()->remember('global_td_industries_master', 86400, function () {
             return DB::table('td_industries')->select('ind_id', 'ind_name')->orderBy('ind_name')->get();
         });
+        $this->industriesManifest = IndustryTaxonomyService::getGlobalManifest();
 
         $requestedTab = request('tab', 'all');
         if ($requestedTab === 'requests') {
@@ -1323,6 +1324,7 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
                             'closed' => 0,
                             'active' => $reqCount,
                         ],
+                        'pv' => [0, 0, 0, 0, 0, 0, 0, 0, 0],
                         'pipeline' => [
                             'applications' => 0,
                             'sourced' => 0,
@@ -1332,6 +1334,7 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
                             'interviews' => 0,
                             'offers' => 0,
                             'joined' => 0,
+                            'rejected' => 0,
                         ],
                         'connected_on' => (string) $newDate,
                         'expires_on' => (string) $expiresFormatted,
@@ -1403,6 +1406,7 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
                 $negotiations = (int) ($perf->negotiations ?? ($perf->negotiation ?? 0));
                 $offers = (int) ($perf->offers ?? 0);
                 $joined = (int) ($perf->Joined ?? ($perf->joined ?? 0));
+                $rejected = (int) ($perf->rejected ?? 0);
                 $interviews = (int) ($perf->all_interview ?? 0);
 
                 if (($recommendation_id ?? 0) > 0 && ($to_company_id ?? 0) == auth()->user()->company_id) {
@@ -1526,6 +1530,17 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
                         'closed' => $job_closed,
                         'active' => $job_active,
                     ],
+                    'pv' => [
+                        $applications,
+                        $sourced,
+                        $screening,
+                        $evaluated,
+                        $negotiations,
+                        $offers,
+                        $joined,
+                        $rejected,
+                        $interviews,
+                    ],
                     'pipeline' => [
                         'applications' => $applications,
                         'sourced' => $sourced,
@@ -1534,6 +1549,7 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
                         'negotiations' => $negotiations,
                         'offers' => $offers,
                         'joined' => $joined,
+                        'rejected' => $rejected,
                         'interviews' => $interviews,
                     ],
                     'connected_on' => (string) $newDate,
@@ -1554,6 +1570,7 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
                 'pagination' => view('service_company.ajax_pages.client-pagination', compact('pagination'))->render(),
                 'rows' => $rowsDto,
                 'data_version' => $tenantVersion,
+                'pipeline_revision' => (int) cache()->get('tenant_'.$company_id.'_pipeline_rev', 1),
                 'authoritative_version' => $authoritativeVersion,
                 'projection_version' => $projectionVersion,
                 'projection_lag' => $projectionLag,
@@ -1866,6 +1883,7 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
                 'pagination' => view('service_company.ajax_pages.client-pagination', compact('pagination'))->render(),
                 'rows' => $rowsDto,
                 'data_version' => $tenantVersion,
+                'pipeline_revision' => (int) cache()->get('tenant_'.$company_id.'_pipeline_rev', 1),
                 'authoritative_version' => $authoritativeVersion,
                 'projection_version' => $projectionVersion,
                 'projection_lag' => $projectionLag,
@@ -3899,8 +3917,7 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
             'company_id' => $company_id,
             'name' => trim($request->name ?? ''),
             'website' => trim($request->website ?? ''),
-            'industry' => $request->industry,
-            'custom_industry' => trim($request->custom_industry ?? ''),
+            'industry' => (! empty($request->industry) && (int) $request->industry > 0) ? (int) $request->industry : 147,
             'company_sizes' => $request->company_sizes,
             'company_type' => $request->company_type,
             'founded' => $request->founded,
@@ -3975,18 +3992,10 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
         if (! empty($request->website)) {
             $client->website = $request->website;
         }
-        $customIndustry = null;
-        if (! empty($request->industry)) {
-            if (is_numeric($request->industry)) {
-                $client->industry = (int) $request->industry;
-            } else {
-                $client->industry = 0;
-                $customIndustry = trim($request->industry);
-            }
-        }
-        if (! empty($request->custom_industry)) {
-            $customIndustry = trim($request->custom_industry);
-            $client->industry = 0;
+        if (! empty($request->industry) && (int) $request->industry > 0) {
+            $client->industry = (int) $request->industry;
+        } else {
+            $client->industry = 147; // Default to canonical 'Other / Diversified Services'
         }
         if (! empty($request->company_sizes)) {
             [$from_size, $to_size] = explode('-', $request->company_sizes);
@@ -4019,9 +4028,9 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
                 $existingDetail = $decodedExisting;
             }
         }
+        unset($existingDetail['custom_industry']);
 
         $detailData = array_merge($existingDetail, [
-            'custom_industry' => $customIndustry ?? ($existingDetail['custom_industry'] ?? null),
             'career_page_url' => $request->career_page_url ?? null,
             'linkedin_url' => $request->linkedin_url ?? null,
             'twitter_url' => $request->twitter_url ?? null,
@@ -4783,7 +4792,7 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
         if (empty(trim($request->name ?? ''))) {
             return Reply::error('Client Name is required.');
         }
-        $hasIndustry = (! empty($request->industry) && (string) $request->industry !== '0') || ! empty(trim($request->custom_industry ?? ''));
+        $hasIndustry = (! empty($request->industry) && (int) $request->industry > 0);
         if (! $hasIndustry) {
             return Reply::error('Industry is required.');
         }
@@ -4886,8 +4895,7 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
             'company_id' => $company_id,
             'name' => trim($request->name ?? ''),
             'website' => trim($request->website ?? ''),
-            'industry' => $request->industry,
-            'custom_industry' => trim($request->custom_industry ?? ''),
+            'industry' => (! empty($request->industry) && (int) $request->industry > 0) ? (int) $request->industry : 147,
             'company_sizes' => $request->company_sizes,
             'company_type' => $request->company_type,
             'founded' => $request->founded,
@@ -4959,18 +4967,10 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
             $canonicalWebsite = InternalClientDuplicateService::canonicalizeDomain($request->website);
             $client->website = $canonicalWebsite ?: trim($request->website);
         }
-        $customIndustry = null;
-        if (! empty($request->industry)) {
-            if (is_numeric($request->industry)) {
-                $client->industry = (int) $request->industry;
-            } else {
-                $client->industry = 0;
-                $customIndustry = trim($request->industry);
-            }
-        }
-        if (! empty($request->custom_industry)) {
-            $customIndustry = trim($request->custom_industry);
-            $client->industry = 0;
+        if (! empty($request->industry) && (int) $request->industry > 0) {
+            $client->industry = (int) $request->industry;
+        } else {
+            $client->industry = 147; // Default to canonical 'Other / Diversified Services'
         }
         if (! empty($request->company_sizes)) {
             [$from_size, $to_size] = explode('-', $request->company_sizes);
@@ -4997,7 +4997,6 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
         }
 
         $detailData = [
-            'custom_industry' => $customIndustry ?? null,
             'career_page_url' => $request->career_page_url ?? null,
             'linkedin_url' => $request->linkedin_url ?? null,
             'twitter_url' => $request->twitter_url ?? null,

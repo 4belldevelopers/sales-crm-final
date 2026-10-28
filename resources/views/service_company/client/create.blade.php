@@ -10037,9 +10037,7 @@ $('.remove_address').click(function(){
             }
           });
           if (!optFound) {
-            $sel.append(new Option(indDispVal, 0, true, true));
-            $sel.val(0);
-            $('#custom_industry').val(indDispVal);
+            $sel.val(147);
           }
         }
       }
@@ -10083,8 +10081,7 @@ $('.remove_address').click(function(){
       }
 
       var industryVal = ($('#industry').val() || '').trim();
-      var customIndVal = ($('#custom_industry').val() || '').trim();
-      var hasValidIndustry = (industryVal && industryVal !== '0') || Boolean(customIndVal) || Boolean(indDispVal);
+      var hasValidIndustry = Boolean(industryVal && industryVal !== '0');
       if (!hasValidIndustry) {
         showInlineError($('#industry_display'), 'Please select an Industry.');
         $firstInvalid = $firstInvalid || $('#industry_display');
@@ -10935,9 +10932,7 @@ $('.remove_address').click(function(){
             }
           });
           if (!optFound) {
-            $sel.append(new Option(indDisp, 0, true, true));
-            $sel.val(0);
-            $('#custom_industry').val(indDisp);
+            $sel.val(147);
           }
         }
       }
@@ -11992,13 +11987,13 @@ $('.remove_address').click(function(){
         var html = '';
 
         if (currentMatches.length === 0) {
-            container.innerHTML = '<div class="jero-ind-empty-state">' +
-                '<div class="jero-ind-empty-icon">' +
-                    '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>' +
+            container.innerHTML = '<div class="jero-ind-empty-state" style="padding:16px 12px;text-align:center;">' +
+                '<div class="jero-ind-empty-icon" style="margin-bottom:8px;color:#94a3b8;">' +
+                    '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>' +
                 '</div>' +
-                '<div class="jero-ind-empty-title">' + (q ? 'No industry matches "' + escapeHtml(q) + '"' : 'No industries available') + '</div>' +
-                (q ? '<div class="jero-ind-empty-sub">Add this as a custom industry:</div>' +
-                     '<button type="button" class="jero-ind-add-custom-btn" onclick="if(window.JeroIndustryIntelligenceEngine) window.JeroIndustryIntelligenceEngine.commitCustomIndustry(\'' + escapeHtml(q).replace(/'/g, "\\'") + '\');">+ Use "' + escapeHtml(q) + '"</button>' : '') +
+                '<div class="jero-ind-empty-title" style="font-size:13px;font-weight:600;color:#1e293b;margin-bottom:4px;">' + (q ? 'No direct match for "' + escapeHtml(q) + '"' : 'No industries available') + '</div>' +
+                (q ? '<div class="jero-ind-empty-sub" style="font-size:11.5px;color:#64748b;margin-bottom:10px;">Select general classification:</div>' +
+                     '<button type="button" class="btn btn-sm btn-light-primary jero-ind-select-other-btn" style="font-size:11.5px;font-weight:600;padding:6px 14px;border-radius:6px;display:inline-flex;align-items:center;gap:6px;" onclick="if(window.JeroIndustryIntelligenceEngine) window.JeroIndustryIntelligenceEngine.selectById(147);"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Select &quot;Other / Diversified Services&quot;</button>' : '') +
             '</div>';
             adjustDropdownPosition();
             return;
@@ -12376,40 +12371,12 @@ $('.remove_address').click(function(){
             return;
         }
 
-        // 4. Safe Custom Industry Handling (Database Integrity clients.industry = int(11))
-        // Set hidden input #custom_industry to clean string, set #industry to 0
-        if (customInput) customInput.value = clean;
-
-        if (select) {
-            var customZeroExists = false;
-            for (var c = 0; c < select.options.length; c++) {
-                if (select.options[c].value == 0 && select.options[c].text === clean) {
-                    select.selectedIndex = c;
-                    customZeroExists = true;
-                    break;
-                }
-            }
-            if (!customZeroExists) {
-                var customOpt = document.createElement('option');
-                customOpt.value = 0;
-                customOpt.text = clean;
-                customOpt.selected = true;
-                select.appendChild(customOpt);
-            }
-            $(select).val(0).trigger('change');
-        }
-
-        selectedIndustry = { id: 0, name: clean, is_custom: true };
-        $('.span_industry').text(clean);
-        $('#jero_ind_select_wrap').removeClass('has-validation-error');
-        $('.jero-ind-input-box').removeClass('has-validation-error');
-        if (typeof window.clearFieldError === 'function') {
-            window.clearFieldError($('#industry'));
-        }
-
-        // Dynamic linkage to Step 2 Services
-        if (typeof window.updateSuggestedServicesForIndustry === 'function') {
-            window.updateSuggestedServicesForIndustry(selectedIndustry);
+        // 4. Universal Fallback: If no match exists, select canonical ID 147 ('Other / Diversified Services')
+        var otherItem = indMap.get(147);
+        if (otherItem) {
+            selectItem(otherItem);
+        } else {
+            selectItem({ id: 147, name: 'Other / Diversified Services', sector_id: 5, sector_name: 'Professional Services, Consulting & Legal' });
         }
 
         closeDropdown();

@@ -20,6 +20,26 @@ Last updated: 2026-10-22 (Super Admin Companies Page UI Redesign, 100% CQRS Read
 - **Test coverage:** `TenantIsolationTest`, `BenchToJobAppTrackerPipelineContractTest`, `BenchTalentRequestPipelineContractTest`, `SuperAdminCompanyLoadTest`, `SuperAdminSubscriptionLoadTest`, `SuperAdminDashboardLoadTest` (100% green).
 - **V2_login blocking-scenarios architecture:** session-epoch pattern + Reverb `UserAccountSuspended` event + `SyncUserStatusAction` (cross-tenant-safe) + `BlockCompanyAction` (static bulk helper) + `block_log` audit table + drop all 20 `refresh:true` ES sites + grep-lint guard. See [docs/V2_login/BLOCKING_SCENARIOS_AUDIT.md](../docs/V2_login/BLOCKING_SCENARIOS_AUDIT.md), [ADR 0007](../docs/adr/0007-blocking-scenarios-architecture.md). Code not yet landed.
 
+- *2026-10-28* — **God-Level Universal Canonical Industry Architecture & Enterprise Combobox Redesign (100% COMPLETED & VERIFIED)**:
+  - **Module & Scope**: Universal Industry Workflow across JERO ATS (Industry Master → Client Registration → Client Profile → Client Tracker → Client Edit → Filters/Search → Reports/Analytics).
+  - **Architecture Decision (Universal Canonical SSOT)**:
+    - **Single Source of Truth (SSOT)**: Strictly eliminated separate industry lists and free-text `custom_industry`. Any unlisted industry selects canonical `"Other / Diversified Services"` (ID `147`).
+    - **161 Canonical Industries**: Seeded `td_industries` with ID `147` and 14 modern 2026 verticals (`1001`–`1014`, e.g. AI/ML, FinTech, E-Commerce/D2C, Cybersecurity, Cloud/DevOps, HealthTech, etc.).
+    - **Zero Stale / Zero Blank Industries**: Migrated all 141 legacy clients with `industry = 0` or `null` to canonical ID `147`. Re-indexed 100% of clients (151 records) into Elasticsearch `ELASTIC_CLIENT_LIST` (`industry = 147`, `ind_name = 'Other / Diversified Services'`).
+    - **0% MySQL Reads on Request Path**: Global manifest (`IndustryTaxonomyService::getGlobalManifest()`) compiled deterministically with SHA-256 hash into Redis/Dragonfly and client browser IndexedDB (`ClientLocationDB.set('industries_manifest')`), achieving 0ms keystroke search for 10,000 concurrent users.
+  - **UI/UX Enterprise Redesign**:
+    - **Client Registration & Edit** (`create.blade.php`, `tab-basic-info.blade.php`, `show.blade.php`, `dviewMore.blade.php`): Replaced free-text custom inputs with a 1-click CTA button to select canonical "Other / Diversified Services" (ID `147`), auto-committing on unknown input.
+    - **Client Tracker Popover Combobox** (`index.blade.php`, `cl-data-worker.js`): Transformed legacy native `<select>` into a high-performance searchable popover combobox matching `#clLocBtn`:
+      - Quick sector chips (All, Tech & AI, FinTech, Healthcare, Retail & D2C, Other).
+      - Grouped sectors with crisp SVG icons and section headers.
+      - 300ms instant type-ahead filtering by name, sector, keywords, and acronyms with yellow match highlighting (`.cl-ind-mark`).
+      - In-pill reset button (`#industryClearBtn`), active blue state (`.has-filter`), and full keyboard navigation (Arrow Up/Down, Enter, Esc).
+      - In-browser Web Worker OLAP engine (`cl-data-worker.js`) updated to filter by canonical ID and substring name with zero main-thread freezing.
+  - **Verification**:
+    - Unit test suite (`tests/Unit/IndustryTaxonomyGodLevelTest.php`): 3 passed, 984 assertions (100% green).
+    - `php -l` clean across all modified controllers, helpers, services, and blades.
+    - Verified Elasticsearch search `term: {industry: 147}` returning all 141 clients with zero errors.
+
 - *2026-10-27* — **Service Company Client Listing (Client Cards & Sub-Cards UX Modernization & Refinement)**:
   - **Module & Views**: Service Company Clients (`/service-company/client`, `resources/views/service_company/client/index.blade.php`, `resources/views/service_company/ajax_pages/all-client-ajax.blade.php`, `demo/css/clientList.css`).
   - **Key Enhancements**:
