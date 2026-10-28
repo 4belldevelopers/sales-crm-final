@@ -9976,10 +9976,10 @@
     window.applyClientJobFilterDirect = applyClientJobFilterDirect;
 
     function fetchJobsClientdirect(page = 1, search = '', status = 'all', force = false) {
-        var directCurrentId = parseInt('{{ $directClientDetail->client_id ?: ($directClientDetail->from_company_id ?: $directClientDetail->company_id) }}', 10);
+        var directCurrentId = directDcClientId;
         
         // If already hydrated for this client and not forced, execute 100% in browser RAM
-        if (!force && window.ClientJobsDirectState && window.ClientJobsDirectState.hydrated && window.ClientJobsDirectState.clientId === directCurrentId) {
+        if (!force && window.ClientJobsDirectState && window.ClientJobsDirectState.hydrated && isMatchingDirectClient(window.ClientJobsDirectState.clientId)) {
             applyClientJobFilterDirect(status);
             return;
         }
@@ -10068,7 +10068,7 @@
         $('#kt_activitiesDirectClient #requisitions .js-job-filter-btn').removeClass('active');
         $(this).addClass('active');
         if (window.__activeClientDrawer && window.__activeClientDrawer.coordinator) {
-            window.__activeClientDrawer.coordinator.setFilter('jobs', status);
+            window.__activeClientDrawer.coordinator.getState('jobs').filter = status;
         }
         applyClientJobFilterDirect(status);
     });
@@ -10095,17 +10095,15 @@
 
     $(document).on('click.directDrawer', '#kt_activitiesDirectClient .cd-view-all-activity', function(e) {
         e.preventDefault();
-        var $tabBtn = $('#kt_activitiesDirectClient .cd-tab-pill-btn[href="#recent_activity"]');
-        if ($tabBtn.length) {
-            $tabBtn.trigger('click');
+        if (typeof window.loadDirectTabContent === 'function') {
+            window.loadDirectTabContent('recent_activity', false);
         }
     });
 
     $(document).on('click.directDrawer', '#kt_activitiesDirectClient .cd-view-all-contacts', function(e) {
         e.preventDefault();
-        var $tabBtn = $('#kt_activitiesDirectClient .cd-tab-pill-btn[href="#contacts"]');
-        if ($tabBtn.length) {
-            $tabBtn.trigger('click');
+        if (typeof window.loadDirectTabContent === 'function') {
+            window.loadDirectTabContent('contacts', false);
         }
     });
 
