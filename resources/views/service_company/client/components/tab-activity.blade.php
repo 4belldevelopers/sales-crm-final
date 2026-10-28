@@ -762,6 +762,92 @@
     $(document).on('click', '#kt_activitiesApplication_close, #kt_client_activitiesApplication_close', function() {
         $('#kt_activitiesApplication').removeClass('drawer-readonly-view');
     });
+    $(document).on('click', '#kt_activitiesJob_close', function() {
+        $('#kt_activitiesJob_show').removeClass('drawer-readonly-view');
+    });
+
+    /**
+     * Dedicated View Profile opener for Jobs (strictly Read-Only).
+     * Prevents stale data and strips/suppresses all Edit functionality, Add Team, and Add Agency.
+     */
+    window.openJobDrawer = function(jobId, options) {
+        if (!jobId) return;
+        var isReadOnly = true;
+        if (typeof options === 'object' && options !== null && options.readOnly !== undefined) {
+            isReadOnly = !!options.readOnly;
+        } else if (typeof options === 'boolean') {
+            isReadOnly = options;
+        }
+
+        var $drawer = $('#kt_activitiesJob_show');
+        if (!$drawer.length) {
+            $('body').append(`
+                <div id="kt_activitiesJob_show_toggle" style="display:none;"></div>
+                <div id="kt_activitiesJob_show" class="bg-body" data-kt-drawer="true" data-kt-drawer-name="activities" data-kt-drawer-activate="true" data-kt-drawer-overlay="true" data-kt-drawer-direction="end"
+                    data-kt-drawer-toggle="#kt_activitiesJob_show_toggle" data-kt-drawer-close="#kt_activitiesJob_close">
+                    <div class="card shadow-none rounded-0 w-100">
+                        <div class="card-body position-relative px-0 py-0" id="kt_activitiesJob_show_body"></div>
+                    </div>
+                </div>
+            `);
+            $drawer = $('#kt_activitiesJob_show');
+        }
+
+        if (isReadOnly) {
+            $drawer.addClass('drawer-readonly-view');
+        } else {
+            $drawer.removeClass('drawer-readonly-view');
+        }
+
+        // Anti-stale DOM reset: immediately show fresh skeleton loader
+        $('#kt_activitiesJob_show_body').html(
+            '<div class="d-flex flex-column align-items-center justify-content-center p-10" style="min-height: 380px;">' +
+            '  <div class="spinner-border text-primary mb-4" role="status" style="width: 2.8rem; height: 2.8rem;"></div>' +
+            '  <div class="text-gray-800 fw-bold fs-5 mb-1">Loading Requisition Details…</div>' +
+            '  <div class="text-muted fs-7">Retrieving verified requisition details</div>' +
+            '</div>'
+        );
+
+        if (typeof KTDrawer !== 'undefined') {
+            var drawerInst = KTDrawer.getInstance(document.getElementById('kt_activitiesJob_show'));
+            if (drawerInst) {
+                drawerInst.show();
+            } else {
+                $('#kt_activitiesJob_show_toggle').trigger('click');
+            }
+        } else {
+            $('#kt_activitiesJob_show_toggle').trigger('click');
+        }
+
+        $drawer.css('z-index', '999999');
+
+        var url = "{{ route('service_company.jobs.viewmore', ':id') }}?viewmore=viewmore" + (isReadOnly ? '&readonly=1&read_only=1' : '');
+        url = url.replace(':id', jobId);
+
+        $.ajax({
+            type: 'GET',
+            url: url,
+            success: function(response) {
+                if (response && response.view) {
+                    $('#kt_activitiesJob_show_body').html(response.view);
+                } else if (typeof response === 'string') {
+                    $('#kt_activitiesJob_show_body').html(response);
+                }
+                if (isReadOnly) {
+                    $drawer.addClass('drawer-readonly-view');
+                    $drawer.find('.job-action-btn.edit, a[href*="jobs/edit"], a[href*="/edit"], .info-card-edit, .btn-edit, .spartner-listing, .hm-listing, .status_stage, .job-drawer-add-candidate, .btn-primary:contains("Add Team"), .btn-primary:contains("Add Agency")').remove();
+                }
+            },
+            error: function() {
+                $('#kt_activitiesJob_show_body').html(
+                    '<div class="card card-flush m-6 p-8 text-center border border-dashed border-danger">' +
+                    '  <div class="text-danger fw-bold fs-4 mb-2">Error</div>' +
+                    '  <div class="text-gray-700 fs-6">Unable to load requisition details. Please try again.</div>' +
+                    '</div>'
+                );
+            }
+        });
+    };
 
     // Bind DOM events
     $(document).ready(function() {

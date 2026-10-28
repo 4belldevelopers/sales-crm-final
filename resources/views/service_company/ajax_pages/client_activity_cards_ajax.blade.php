@@ -288,8 +288,14 @@
                             </div>
                         </div>
 
-                        {{-- Action Button: Strictly Candidate Read-Only View, NO JOB DRAWER BUTTON --}}
-                        @if(!empty($candidate['id']) || !empty($candidate['wise_id']))
+                        {{-- Action Button: Strictly Read-Only View Profile for Candidate and Job --}}
+                        @if($category === 'jobs' && !empty($job['id']))
+                            <button type="button" 
+                                    class="cd-activity-btn-action" 
+                                    onclick="if(window.openJobDrawer) { window.openJobDrawer('{{ $job['id'] }}', { readOnly: true }); }">
+                                <i class="far fa-eye me-1"></i> View Profile
+                            </button>
+                        @elseif(!empty($candidate['id']) || !empty($candidate['wise_id']))
                             @php
                                 $targetCandDrawerId = $candidate['wise_id'] ?? $candidate['id'];
                             @endphp
