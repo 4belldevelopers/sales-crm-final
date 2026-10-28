@@ -698,6 +698,14 @@
   user-select: none;
   transition: all 0.15s ease;
   position: relative;
+  font-family: inherit;
+  font-size: inherit;
+  text-align: left;
+  outline: none;
+}
+.cl-sort-combobox-btn:focus-visible {
+  border-color: #009ef7;
+  box-shadow: 0 0 0 3px rgba(0, 158, 247, 0.15);
 }
 .cl-sort-combobox-btn:hover,
 .cl-sort-combobox-btn.active {
@@ -1189,7 +1197,7 @@
 
             {{-- Filter 4: Enterprise Metronic Sort Combobox Popover --}}
             <div class="cl-sort-dropdown-wrapper" id="clSortDropdownWrapper">
-                <div class="cl-sort-combobox-btn" id="clSortBtn" onclick="toggleSortDropdown(event)" role="button" tabindex="0" aria-haspopup="listbox" aria-expanded="false" aria-controls="clSortDropdownPanel" title="Sort Client Listing">
+                <button type="button" class="cl-sort-combobox-btn" id="clSortBtn" onclick="toggleSortDropdown(event)" aria-haspopup="listbox" aria-expanded="false" aria-controls="clSortDropdownPanel" title="Sort Client Listing">
                     <div class="cl-pill-icon">
                         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <line x1="7" y1="4" x2="7" y2="20"/>
@@ -1205,7 +1213,7 @@
                     <div class="cl-pill-chevron">
                         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
                     </div>
-                </div>
+                </button>
 
                 {{-- Custom Popover Panel (WAI-ARIA 1.2 Compliant) --}}
                 <div class="cl-sort-dropdown-panel" id="clSortDropdownPanel" role="listbox" aria-labelledby="clSortBtn" tabindex="-1">
@@ -3379,7 +3387,7 @@ $(document).on('click', '#kt_activitiesClient_close, #kt_activitiesDirectClient_
     ClientStateManager.clearDrawerState();
 });
 
-// ── Canonical Client Listing State (Zero tenant_id, strictly session-scoped) ──
+// ── Canonical Client Listing State Machine ──
 window.clientListState = {
     tab: {!! json_encode($initialTab ?? 'all') !!},
     search: '',
@@ -3393,7 +3401,14 @@ window.clientListState = {
     sort: 'recent',
     page: 1,
     per_page: 10,
-    cursor: null
+    cursor: null,
+
+    datasetVersion: {{ (int)($initialDataVersion ?? 1) }},
+    mode: 'ram', // 'ram' | 'server'
+    loading: false,
+    requestId: 0,
+    hasMore: false,
+    total: {{ (int)($initialTotal ?? 0) }}
 };
 if (window.clientListState.tab === 'requests') window.clientListState.tab = 'request';
 if (window.clientListState.tab === 'custom') window.clientListState.tab = 'internal';
@@ -4327,6 +4342,14 @@ function applyClientResponse(response, targetPage) {
             }
         }
         $('#pagination').html(response.pagination);
+        clientListState.loading = false;
+        if (response.total !== undefined) {
+            clientListState.total = response.total;
+            clientListState.hasMore = (targetPage * (clientListState.per_page || 10)) < response.total;
+        }
+        if (response.data_version) {
+            clientListState.datasetVersion = response.data_version;
+        }
     });
 }
 
@@ -4379,8 +4402,10 @@ function loadClientList(page, updateUrl = true, cursor = null) {
         ClientStore.currentXhr.abort();
     }
 
-    // Request Generation Token Guard
+    // Request Generation Token Guard & Monotonic Concurrency Invariant
     var requestId = ++ClientStore.latestRequestId;
+    clientListState.requestId = requestId;
+    clientListState.loading = true;
 
     var reqHeaders = {};
     if (cachedEntry && cachedEntry.data && cachedEntry.data.etag) {
@@ -4438,6 +4463,7 @@ function loadClientList(page, updateUrl = true, cursor = null) {
             applyClientResponse(response, targetPage);
         },
         error: function(xhr, status, error) {
+            clientListState.loading = false;
             if (status !== 'abort' && requestId === ClientStore.latestRequestId) {
                 $('.loadingMessage').css({ display: 'none' });
                 $('.loader_search').css({ display: 'none' });
