@@ -10191,6 +10191,19 @@ END:VCALENDAR";
                 $clientLogo = $row->logo;
             }
 
+            $activeJobsCount = 0;
+            try {
+                if ((int) ($row->self_company ?? 0) === 0) {
+                    $jobStats = self::InternalClientJobsCountAllStatus($row->id, $row->client_id);
+                    $activeJobsCount = (int) ($jobStats->job_active ?? 0);
+                } elseif (! empty($row->from_company_id) && ! empty($row->to_company_id)) {
+                    $jobStats = self::DirectClientJobsCountAllStatus($row->from_company_id, $row->to_company_id);
+                    $activeJobsCount = (int) ($jobStats->job_active ?? 0);
+                }
+            } catch (\Throwable $e) {
+                $activeJobsCount = 0;
+            }
+
             $response = $elasticService->getClient()->update([
                 'index' => ELASTIC_CLIENT_LIST,
                 'id' => $row->client_id,
@@ -10200,6 +10213,7 @@ END:VCALENDAR";
                         'id' => $row->client_id,
                         'company_id' => $row->id,
                         'company_name' => $clientCompanyName,
+                        'active_jobs_count' => (int) $activeJobsCount,
                         'industries' => $row->industries,
                         'website' => $row->website,
                         'logo' => $clientLogo,

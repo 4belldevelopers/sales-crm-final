@@ -4018,14 +4018,31 @@ class HomeController extends Controller
                     'mappings' => [
                         'properties' => [
                             'company_id' => ['type' => 'long'],
-                            'company_name' => ['type' => 'text'],
+                            'company_name' => [
+                                'type' => 'text',
+                                'fields' => [
+                                    'keyword' => [
+                                        'type' => 'keyword',
+                                        'ignore_above' => 256,
+                                    ],
+                                ],
+                            ],
+                            'active_jobs_count' => ['type' => 'integer'],
                             'industries' => ['type' => 'text'],
                             'logo' => ['type' => 'text'],
                             'company_type' => ['type' => 'integer'],
                             'client_id' => ['type' => 'long'],
                             'tags' => ['type' => 'text'],
                             'created_at' => ['type' => 'date'],
-                            'name' => ['type' => 'text'],
+                            'name' => [
+                                'type' => 'text',
+                                'fields' => [
+                                    'keyword' => [
+                                        'type' => 'keyword',
+                                        'ignore_above' => 256,
+                                    ],
+                                ],
+                            ],
                             'email' => ['type' => 'keyword'],
                             'contact_number' => ['type' => 'keyword'],
                             'logo_logical_path' => ['type' => 'text'],
