@@ -8746,6 +8746,81 @@
         }
     };
 
+    if (typeof window.openCandidateReadOnlyDrawer !== 'function') {
+        window.openCandidateReadOnlyDrawer = function(id) {
+            id = String(id);
+            if (typeof openMetronicDrawer === 'function') {
+                openMetronicDrawer('kt_activitiesApplication');
+            } else if (typeof KTDrawer !== 'undefined') {
+                var d = KTDrawer.getInstance(document.querySelector('#kt_activitiesApplication'));
+                if (d) d.show();
+            } else {
+                $('#kt_activitiesApplication').addClass('drawer-on');
+            }
+
+            $('#kt_activitiesApplication').addClass('jw-drawer-readonly-mode');
+
+            if (typeof getCandidateDrawerLoader === 'function') {
+                $('#application_show_right_bar').html(getCandidateDrawerLoader());
+            } else {
+                $('#application_show_right_bar').html('<div class="text-center py-20 text-muted"><i class="fas fa-spinner fa-spin fa-2x text-primary me-2"></i><div class="mt-3 fs-6">Loading candidate profile...</div></div>');
+            }
+
+            var currentPage = $('.custom-pagination .page-link.active').data('page') || 1;
+            var url = '{{ route("service_company.job-applications.show", ":id") }}'.replace(':id', id)
+                    + '?slug={{ $currentSlug ?? "" }}&read_only=1&mode=readonly&source=client_candidate&currentPage=' + currentPage;
+
+            $.ajax({
+                type: 'GET',
+                url: url,
+                success: function(response) {
+                    if (response && response.view) {
+                        $('#application_show_right_bar').html(response.view);
+                        $('#kt_activitiesApplication').addClass('jw-drawer-readonly-mode');
+                        if (typeof KTMenu !== 'undefined') KTMenu.createInstances();
+                    } else if (response && response.status === 'error') {
+                        $('#application_show_right_bar').html(
+                            '<div class="card card-flush m-6 p-8 text-center border border-dashed border-danger">' +
+                            '  <div class="text-danger fw-bold fs-4 mb-2">Notice</div>' +
+                            '  <div class="text-gray-700 fs-6">' + (response.message || 'Unable to load candidate profile.') + '</div>' +
+                            '</div>'
+                        );
+                    }
+                },
+                error: function(xhr) {
+                    var msg = (xhr && xhr.responseJSON && xhr.responseJSON.message)
+                        ? xhr.responseJSON.message
+                        : 'Unable to connect to server. Please refresh and try again.';
+                    $('#application_show_right_bar').html(
+                        '<div class="card card-flush m-6 p-8 text-center border border-dashed border-danger">' +
+                        '  <div class="text-danger fw-bold fs-4 mb-2">Error Loading Profile</div>' +
+                        '  <div class="text-gray-700 fs-6">' + msg + '</div>' +
+                        '</div>'
+                    );
+                }
+            });
+        };
+
+        $(document).on('click', '#kt_activitiesApplication_close', function() {
+            $('#kt_activitiesApplication').removeClass('jw-drawer-readonly-mode');
+        });
+
+        $(document).on('click', '.jw-drawer-readonly-mode .editRecruiterNote, .jw-drawer-readonly-mode .cdr-btn-primary, .jw-drawer-readonly-mode .cdr-btn-interview, .jw-drawer-readonly-mode .cdr-btn-email, .jw-drawer-readonly-mode .cdr-btn-wa, .jw-drawer-readonly-mode .cdr-btn-stage, .jw-drawer-readonly-mode #hdr_move_stage_btn, .jw-drawer-readonly-mode #hdr_fwd_resume_btn, .jw-drawer-readonly-mode .edit-note, .jw-drawer-readonly-mode .delete-note', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            if (typeof Swal !== 'undefined') {
+                Swal.fire({
+                    icon: 'info',
+                    title: 'Read-Only Mode',
+                    text: 'Any activity is not allowed from here except download resume.',
+                    timer: 2500,
+                    showConfirmButton: false
+                });
+            }
+            return false;
+        });
+    }
+
     function directfetchCandidates(page = 1, search = '') {
         if (search) {
             window.ClientCandidateStoreDirect.filters.search = search;

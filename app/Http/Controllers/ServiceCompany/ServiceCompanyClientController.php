@@ -4323,7 +4323,18 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
     {
         abort_if(Gate::denies('edit_clients'), 403);
 
-        if ($validationError = $this->validateClientSubmission($request)) {
+        $clientId = (int) (GeneralMethod::value_decrypt($id) ?: $id);
+
+        if ($validationError = $this->validateClientSubmission($request, $clientId)) {
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => $validationError['message'] ?? 'Validation failed',
+                    'error_name' => $validationError['error_name'] ?? 'validation',
+                    'data' => $validationError['data'] ?? [],
+                ], 422);
+            }
+
             return $validationError;
         }
 
@@ -5199,12 +5210,18 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
     }
 
     /**
-     * Validate Client Add/Edit Submission parameters across 4 wizard sections.
+     * Validate Client Add/Edit Submission parameters across wizard sections.
      *
      * Intent: Enforce strict validation rules for Client Information, Client Description,
      * Address Details, and minimum 1 Contact Person added.
+     * Edit Client Isolation: When $clientId is provided (Edit mode), unchanged name and website
+     * are excluded from duplicate checking; unique changes are validated against other clients.
+     *
+     * @param  Request  $request
+     * @param  int|null  $clientId  Client ID if performing an update
+     * @return array|null
      */
-    private function validateClientSubmission(Request $request)
+    private function validateClientSubmission(Request $request, ?int $clientId = null)
     {
         // 1. Client Information
         if (empty(trim($request->name ?? ''))) {
@@ -5280,8 +5297,9 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
         // 5. Authoritative Internal Client Duplicate Validation (Absolute Domain Isolation)
         // Direct Client records (self_company = 1) must NEVER block an Internal Client.
         $companyId = (int) ($request->user()?->company_id ?? auth()->user()->company_id);
+        $targetClientId = $clientId ?: (! empty($request->id) ? (int) $request->id : (! empty($request->client_id) ? (int) $request->client_id : null));
         $duplicateService = app(InternalClientDuplicateService::class);
-        $dup = $duplicateService->validateSubmissionDuplicates($companyId, $request->all(), ! empty($request->id) ? (int) $request->id : null);
+        $dup = $duplicateService->validateSubmissionDuplicates($companyId, $request->all(), $targetClientId);
         if ($dup !== null) {
             return Reply::error($dup['message'], $dup['field'] ?? 'duplicate', $dup);
         }
@@ -5815,7 +5833,14 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
 
         $tenantId = (int) auth()->user()->company_id;
         $field = $request->input('field');
-        $clientId = $request->filled('client_id') ? (int) $request->input('client_id') : null;
+
+        $rawClientId = $request->input('client_id');
+        $clientId = null;
+        if (! empty($rawClientId) && $rawClientId !== 'null' && $rawClientId !== 'undefined') {
+            $decrypted = GeneralMethod::value_decrypt($rawClientId);
+            $clientId = is_numeric($decrypted) ? (int) $decrypted : (is_numeric($rawClientId) ? (int) $rawClientId : null);
+        }
+
         $duplicateService = app(InternalClientDuplicateService::class);
 
         if ($field === 'name') {
