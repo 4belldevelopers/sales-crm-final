@@ -148,25 +148,27 @@
         /**
          * Initializes or switches the active client context.
          */
-        initClient: function(clientId, isCustom, partnerCompanyId) {
+        initClient: function(clientId, isCustom, partnerCompanyId, forceRefresh) {
             var cId = parseInt(clientId, 10);
             if (!cId || isNaN(cId)) return;
 
-            // Check if switching to new client
+            // Check if switching to new client or forced refresh
             var isNewClient = (this.activeClientId !== cId);
             this.activeClientId = cId;
             this.isCustom = !!isCustom;
             this.partnerCompanyId = partnerCompanyId || null;
 
-            if (isNewClient) {
-                this.resetState();
-                this.setupReverbChannel();
+            if (isNewClient || forceRefresh) {
+                this.resetState(isNewClient);
+                if (isNewClient) {
+                    this.setupReverbChannel();
+                }
             }
 
-            this.loadActivity(false);
+            this.loadActivity(false, !!forceRefresh);
         },
 
-        resetState: function() {
+        resetState: function(fullReset) {
             if (this.inFlightXhr) {
                 try { this.inFlightXhr.abort(); } catch(e) {}
                 this.inFlightXhr = null;
@@ -179,6 +181,20 @@
             this.currentGeneration++;
             this.syncGeneration++;
             this.setSyncState('SYNCING');
+
+            if (fullReset) {
+                this.activeCategory = 'all';
+                this.activeTimeframe = 'all';
+                this.searchQuery = '';
+                $('#cdActivitySearchInput').val('');
+                $('#cdActivitySearchClear').removeClass('visible');
+                $('#cdActivityTimeframeSelect').val('all');
+                $('#cdActivityFilterTabs .cd-activity-tab-btn').removeClass('active');
+                $('#cdActivityFilterTabs .cd-activity-tab-btn[data-category="all"]').addClass('active');
+                $('#cdActivityCardsStream').empty();
+                $('#cdActivityPaginationContainer').hide();
+                this.updateKpiCounters({ all: 0, pipeline: 0, interviews: 0, offers: 0, jobs: 0, crm: 0 });
+            }
         },
 
         setSyncState: function(state) {
@@ -213,7 +229,7 @@
         /**
          * Loads activity data from authoritative CQRS endpoint.
          */
-        loadActivity: function(append) {
+        loadActivity: function(append, forceRefresh) {
             if (!this.activeClientId || this.isLoading) return;
 
             var self = this;
@@ -237,6 +253,10 @@
                 timeframe: this.activeTimeframe,
                 q: this.searchQuery || ''
             };
+
+            if (forceRefresh) {
+                params.refresh = 1;
+            }
 
             if (append && this.nextCursor) {
                 params.cursor = this.nextCursor;
@@ -493,9 +513,43 @@
 
         toggleKebabMenu: function(e, btn) {
             e.stopPropagation();
-            var $menu = $(btn).siblings('.cd-activity-kebab-menu');
-            $('.cd-activity-kebab-menu').not($menu).removeClass('show');
-            $menu.toggleClass('show');
+            var $btn = $(btn);
+            var $card = $btn.closest('.cd-activity-card');
+            var $menu = $btn.siblings('.cd-activity-kebab-menu');
+            var wasOpen = $menu.hasClass('show');
+
+            // Close all open menus and remove elevation from cards
+            $('.cd-activity-kebab-menu').removeClass('show dropup');
+            $('.cd-activity-card').removeClass('cd-menu-open');
+
+            if (!wasOpen) {
+                // Elevate this card's stacking context
+                $card.addClass('cd-menu-open');
+
+                // Viewport-aware vertical placement
+                var btnOffset = $btn.offset();
+                var btnHeight = $btn.outerHeight();
+                var menuHeight = 160;
+                var windowBottom = $(window).scrollTop() + $(window).height();
+
+                var $scrollContainer = $btn.closest('.scroll-y, [data-kt-scroll="true"], #kt_activities_scroll');
+                var containerBottom = $scrollContainer.length ? ($scrollContainer.offset().top + $scrollContainer.innerHeight()) : windowBottom;
+                var effectiveBottom = Math.min(windowBottom, containerBottom);
+
+                var spaceBelow = effectiveBottom - (btnOffset.top + btnHeight);
+                if (spaceBelow < menuHeight + 15 && (btnOffset.top - $(window).scrollTop()) > menuHeight) {
+                    $menu.addClass('dropup');
+                } else {
+                    $menu.removeClass('dropup');
+                }
+
+                $menu.addClass('show');
+            }
+        },
+
+        refreshFeed: function() {
+            this.nextCursor = null;
+            this.loadActivity(false, true);
         },
 
         openNoteModal: function() {
@@ -531,8 +585,7 @@
 
         // Refresh button click
         $(document).on('click', '#cdActivityRefreshBtn', function() {
-            ClientActivityManager.nextCursor = null;
-            ClientActivityManager.loadActivity(false);
+            ClientActivityManager.refreshFeed();
         });
 
         // Load More button click
@@ -570,7 +623,29 @@
         // Close kebab dropdown on click outside
         $(document).on('click', function(e) {
             if (!$(e.target).closest('.cd-activity-kebab-wrapper').length) {
-                $('.cd-activity-kebab-menu').removeClass('show');
+                $('.cd-activity-kebab-menu').removeClass('show dropup');
+                $('.cd-activity-card').removeClass('cd-menu-open');
+            }
+        });
+
+        // Close kebab dropdown on ESC key
+        $(document).on('keydown', function(e) {
+            if (e.key === 'Escape' || e.keyCode === 27) {
+                $('.cd-activity-kebab-menu').removeClass('show dropup');
+                $('.cd-activity-card').removeClass('cd-menu-open');
+            }
+        });
+
+        // Close kebab dropdown on scroll
+        $(document).on('scroll.cdActivityKebab', '.scroll-y, [data-kt-scroll="true"], #kt_activities_scroll', function() {
+            $('.cd-activity-kebab-menu').removeClass('show dropup');
+            $('.cd-activity-card').removeClass('cd-menu-open');
+        });
+
+        // Listen for external ATS stage/status changes to dynamically refresh feed
+        $(document).on('ats:activity:refresh ats:stage:updated CandidateStatusChanged', function() {
+            if ($('#recent_activity').is(':visible') && window.ClientActivityManager) {
+                window.ClientActivityManager.refreshFeed();
             }
         });
     });

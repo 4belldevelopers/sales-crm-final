@@ -15,11 +15,16 @@
     box-sizing: border-box !important;
 }
 
-.cd-activity-wrapper,
-.cd-activity-stream {
+.cd-activity-wrapper {
     width: 100% !important;
     max-width: 100% !important;
     overflow-x: hidden !important;
+}
+
+.cd-activity-stream {
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow: visible !important;
 }
 
 /* ==========================================================================
@@ -393,6 +398,10 @@
     overflow: visible !important;
 }
 
+.cd-activity-card.cd-menu-open {
+    z-index: 1050 !important;
+}
+
 .cd-activity-card:hover {
     border-color: #cbd5e1 !important;
     box-shadow: 0 3px 8px rgba(15, 23, 42, 0.07) !important;
@@ -423,20 +432,67 @@
     background: #009ef7 !important;
 }
 
-.cd-activity-node-dot.stream-pipeline { border-color: #009ef7 !important; }
-.cd-activity-node-dot.stream-pipeline::after { background: #009ef7 !important; }
+.cd-activity-node-dot.stream-pipeline,
+.cd-activity-node-dot.dot-status-pipeline {
+    border-color: #009ef7 !important;
+}
+.cd-activity-node-dot.stream-pipeline::after,
+.cd-activity-node-dot.dot-status-pipeline::after {
+    background: #009ef7 !important;
+}
 
-.cd-activity-node-dot.stream-interviews { border-color: #7239ea !important; }
-.cd-activity-node-dot.stream-interviews::after { background: #7239ea !important; }
+.cd-activity-node-dot.stream-interviews,
+.cd-activity-node-dot.dot-status-interview {
+    border-color: #7239ea !important;
+}
+.cd-activity-node-dot.stream-interviews::after,
+.cd-activity-node-dot.dot-status-interview::after {
+    background: #7239ea !important;
+}
 
-.cd-activity-node-dot.stream-offers { border-color: #10b981 !important; }
-.cd-activity-node-dot.stream-offers::after { background: #10b981 !important; }
+/* 🟢 Active Requisition / Offered / Joined → Green */
+.cd-activity-node-dot.stream-offers,
+.cd-activity-node-dot.dot-status-active {
+    border-color: #10b981 !important;
+}
+.cd-activity-node-dot.stream-offers::after,
+.cd-activity-node-dot.dot-status-active::after {
+    background: #10b981 !important;
+}
 
-.cd-activity-node-dot.stream-jobs { border-color: #f59e0b !important; }
-.cd-activity-node-dot.stream-jobs::after { background: #f59e0b !important; }
+.cd-activity-node-dot.stream-jobs {
+    border-color: #10b981 !important;
+}
+.cd-activity-node-dot.stream-jobs::after {
+    background: #10b981 !important;
+}
 
-.cd-activity-node-dot.stream-crm { border-color: #0ea5e9 !important; }
-.cd-activity-node-dot.stream-crm::after { background: #0ea5e9 !important; }
+/* 🟠 Hold → Orange */
+.cd-activity-node-dot.dot-status-hold {
+    border-color: #f97316 !important;
+}
+.cd-activity-node-dot.dot-status-hold::after {
+    background: #f97316 !important;
+}
+
+/* 🔴 Closed / Removed → Red */
+.cd-activity-node-dot.dot-status-closed,
+.cd-activity-node-dot.dot-status-removed {
+    border-color: #ef4444 !important;
+}
+.cd-activity-node-dot.dot-status-closed::after,
+.cd-activity-node-dot.dot-status-removed::after {
+    background: #ef4444 !important;
+}
+
+.cd-activity-node-dot.stream-crm,
+.cd-activity-node-dot.dot-status-crm {
+    border-color: #0ea5e9 !important;
+}
+.cd-activity-node-dot.stream-crm::after,
+.cd-activity-node-dot.dot-status-crm::after {
+    background: #0ea5e9 !important;
+}
 
 .cd-activity-card-body {
     padding: 12px 16px !important;
@@ -522,6 +578,97 @@
     display: inline-flex !important;
     align-items: center !important;
     gap: 5px !important;
+    white-space: nowrap !important;
+}
+
+/* ==========================================================================
+   Standardized Stage & Status Badges
+   🟢 Active Requisition / Active / Offered / Joined → Green
+   🟠 Hold → Orange
+   🔴 Closed → Red
+   🔴 Removed → Red
+   ========================================================================== */
+.cd-status-badge {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 5px !important;
+    padding: 3px 8px !important;
+    border-radius: 6px !important;
+    font-size: 11px !important;
+    font-weight: 600 !important;
+    line-height: 1.3 !important;
+    white-space: nowrap !important;
+    transition: all 0.15s ease-in-out !important;
+}
+
+/* 🟢 Active Requisition / Active / Offered / Joined → Green */
+.cd-status-badge.status-active,
+.cd-status-badge.status-hiring,
+.cd-status-badge.status-open {
+    background: #ecfdf5 !important;
+    color: #15803d !important;
+    border: 1px solid #a7f3d0 !important;
+}
+.cd-status-badge.status-active i,
+.cd-status-badge.status-hiring i,
+.cd-status-badge.status-open i {
+    color: #10b981 !important;
+}
+
+/* 🟠 Hold → Orange */
+.cd-status-badge.status-hold,
+.cd-status-badge.status-paused {
+    background: #fff7ed !important;
+    color: #c2410c !important;
+    border: 1px solid #fed7aa !important;
+}
+.cd-status-badge.status-hold i,
+.cd-status-badge.status-paused i {
+    color: #f97316 !important;
+}
+
+/* 🔴 Closed → Red */
+.cd-status-badge.status-closed {
+    background: #fef2f2 !important;
+    color: #b91c1c !important;
+    border: 1px solid #fecaca !important;
+}
+.cd-status-badge.status-closed i {
+    color: #ef4444 !important;
+}
+
+/* 🔴 Removed → Red */
+.cd-status-badge.status-removed,
+.cd-status-badge.status-rejected,
+.cd-status-badge.status-cancelled {
+    background: #fef2f2 !important;
+    color: #b91c1c !important;
+    border: 1px solid #fecaca !important;
+}
+.cd-status-badge.status-removed i,
+.cd-status-badge.status-rejected i,
+.cd-status-badge.status-cancelled i {
+    color: #ef4444 !important;
+}
+
+/* Pipeline standard badges (Screening, Sourcing, InReview, etc.) */
+.cd-status-badge.status-pipeline {
+    background: #eff6ff !important;
+    color: #009ef7 !important;
+    border: 1px solid #bfdbfe !important;
+}
+.cd-status-badge.status-pipeline i {
+    color: #009ef7 !important;
+}
+
+/* Interview standard badges */
+.cd-status-badge.status-interview {
+    background: #f5f3ff !important;
+    color: #7c3aed !important;
+    border: 1px solid #ddd6fe !important;
+}
+.cd-status-badge.status-interview i {
+    color: #7c3aed !important;
 }
 
 .cd-activity-stage-from {
@@ -663,15 +810,22 @@
     display: none;
     position: absolute !important;
     right: 0 !important;
-    top: 100% !important;
-    margin-top: 4px !important;
+    top: calc(100% + 4px) !important;
+    margin-top: 0 !important;
     background: #ffffff !important;
     border: 1px solid #e2e8f0 !important;
     border-radius: 8px !important;
-    box-shadow: 0 4px 14px rgba(15, 23, 42, 0.1) !important;
-    min-width: 160px !important;
-    z-index: 100 !important;
-    padding: 4px 0 !important;
+    box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.15), 0 8px 10px -6px rgba(15, 23, 42, 0.1) !important;
+    min-width: 175px !important;
+    z-index: 1060 !important;
+    padding: 5px 0 !important;
+}
+
+.cd-activity-kebab-menu.dropup {
+    top: auto !important;
+    bottom: calc(100% + 4px) !important;
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
 }
 
 .cd-activity-kebab-menu.show {

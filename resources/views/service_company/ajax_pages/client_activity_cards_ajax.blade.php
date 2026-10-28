@@ -29,12 +29,28 @@
 
             // Initials helper
             $candidateName = $candidate['name'] ?? 'Candidate';
-            $words = explode(' ', trim($candidateName));
-            $cInitials = strtoupper(substr($words[0] ?? 'C', 0, 1) . substr($words[1] ?? '', 0, 1));
+            $words = preg_split('/\s+/', trim($candidateName));
+            $cInitials = strtoupper(substr($words[0] ?? 'C', 0, 1) . (isset($words[1]) ? substr($words[1], 0, 1) : ''));
             
-            $actorName = $actor['name'] ?? 'Recruiter';
-            $aWords = explode(' ', trim($actorName));
-            $aInitials = strtoupper(substr($aWords[0] ?? 'R', 0, 1) . substr($aWords[1] ?? '', 0, 1));
+            $actorName = $actor['name'] ?? 'Technical Recruiter';
+            $aWords = preg_split('/\s+/', trim($actorName));
+            $aInitials = strtoupper(substr($aWords[0] ?? 'R', 0, 1) . (isset($aWords[1]) ? substr($aWords[1], 0, 1) : ''));
+
+            // Status tokens calculation for standardized badges and markers
+            $jobStatus = $job['status'] ?? 'active';
+            $dotStatusClass = 'dot-status-pipeline';
+            if ($category === 'jobs') {
+                $dotStatusClass = 'dot-status-' . $jobStatus;
+            } elseif ($category === 'interviews') {
+                $dotStatusClass = 'dot-status-interview';
+            } elseif ($category === 'offers') {
+                $dotStatusClass = 'dot-status-active';
+            } elseif ($category === 'crm') {
+                $dotStatusClass = 'dot-status-crm';
+            } else {
+                $transStatus = $transition['status'] ?? 'pipeline';
+                $dotStatusClass = 'dot-status-' . $transStatus;
+            }
         @endphp
 
         @if($currentGroupDate !== $itemDateStr)
@@ -55,7 +71,7 @@
              data-event-type="{{ $eventType }}">
             
             {{-- Connecting Node Dot --}}
-            <div class="cd-activity-node-dot stream-{{ $category }}"></div>
+            <div class="cd-activity-node-dot {{ $dotStatusClass }} stream-{{ $category }}"></div>
 
             {{-- Card Body: 4 Discrete Sub-Cards --}}
             <div class="cd-activity-card-body">
@@ -64,7 +80,15 @@
                     {{-- Sub-Card 1: Entity & Subject --}}
                     <div class="cd-activity-subcard-entity">
                         @if($category === 'jobs')
-                            <div class="cd-activity-entity-avatar" style="background: #fffbeb; color: #d97706;">
+                            @php
+                                $jAvatarStyle = match($jobStatus) {
+                                    'active' => 'background: #ecfdf5; color: #15803d; border-color: #a7f3d0;',
+                                    'hold' => 'background: #fff7ed; color: #c2410c; border-color: #fed7aa;',
+                                    'closed', 'removed' => 'background: #fef2f2; color: #b91c1c; border-color: #fecaca;',
+                                    default => 'background: #ecfdf5; color: #15803d; border-color: #a7f3d0;'
+                                };
+                            @endphp
+                            <div class="cd-activity-entity-avatar" style="{{ $jAvatarStyle }}">
                                 <i class="fa fa-briefcase"></i>
                             </div>
                             <div class="cd-activity-entity-meta">
@@ -76,7 +100,7 @@
                                 </div>
                             </div>
                         @elseif($category === 'crm')
-                            <div class="cd-activity-entity-avatar" style="background: #f0fdf4; color: #15803d;">
+                            <div class="cd-activity-entity-avatar" style="background: #f0fdf4; color: #15803d; border-color: #bbf7d0;">
                                 <i class="fa fa-sticky-note"></i>
                             </div>
                             <div class="cd-activity-entity-meta">
@@ -88,7 +112,7 @@
                                 </div>
                             </div>
                         @else
-                            <div class="cd-activity-entity-avatar" style="background: #eff6ff; color: #009ef7;">
+                            <div class="cd-activity-entity-avatar" style="background: #eff6ff; color: #009ef7; border-color: #bfdbfe;">
                                 {{ $cInitials }}
                             </div>
                             <div class="cd-activity-entity-meta">
@@ -108,6 +132,22 @@
                     {{-- Sub-Card 2: Context / Transition / Details --}}
                     <div class="cd-activity-subcard-detail">
                         @if($category === 'pipeline' || $category === 'offers')
+                            @php
+                                $transStatus = $transition['status'] ?? ($category === 'offers' ? 'active' : 'pipeline');
+                                $transBadgeClass = match($transStatus) {
+                                    'active' => 'status-active',
+                                    'hold' => 'status-hold',
+                                    'removed' => 'status-removed',
+                                    'closed' => 'status-closed',
+                                    default => 'status-pipeline'
+                                };
+                                $transIcon = match($transStatus) {
+                                    'active' => 'fa-check-double',
+                                    'hold' => 'fa-pause-circle',
+                                    'removed', 'closed' => 'fa-times-circle',
+                                    default => 'fa-check-circle'
+                                };
+                            @endphp
                             <div class="cd-activity-stage-transition">
                                 @if(!empty($transition['from_stage_name']))
                                     <span class="cd-activity-stage-badge cd-activity-stage-from">
@@ -115,20 +155,20 @@
                                     </span>
                                     <i class="fa fa-arrow-right cd-activity-stage-arrow"></i>
                                 @endif
-                                <span class="cd-activity-stage-badge cd-activity-stage-to">
-                                    <i class="fa fa-check-circle" style="font-size: 10px;"></i>
+                                <span class="cd-status-badge {{ $transBadgeClass }}">
+                                    <i class="fa {{ $transIcon }}" style="font-size: 10px;"></i>
                                     {{ $transition['to_stage_name'] ?? 'Updated' }}
                                 </span>
 
                                 @if(!empty($details['compensation']['amount']) && empty($details['compensation']['is_confidential']))
-                                    <span class="cd-activity-stage-badge" style="background: #ecfdf5; color: #059669; border: 1px solid #a7f3d0;">
+                                    <span class="cd-status-badge status-active">
                                         {{ $details['compensation']['currency'] ?? 'INR' }} {{ number_format($details['compensation']['amount']) }}
                                     </span>
                                 @endif
                             </div>
                         @elseif($category === 'interviews')
                             <div class="cd-activity-stage-transition">
-                                <span class="cd-activity-stage-badge" style="background: #f5f3ff; color: #7c3aed; border: 1px solid #ddd6fe;">
+                                <span class="cd-status-badge status-interview">
                                     <i class="fa fa-video" style="font-size: 10px;"></i>
                                     {{ $details['interview_mode'] ?? 'Video Call' }}
                                 </span>
@@ -140,10 +180,27 @@
                                 @endif
                             </div>
                         @elseif($category === 'jobs')
+                            @php
+                                $statusBadgeClass = match($jobStatus) {
+                                    'active' => 'status-active',
+                                    'hold' => 'status-hold',
+                                    'closed' => 'status-closed',
+                                    'removed' => 'status-removed',
+                                    default => 'status-active'
+                                };
+                                $statusIcon = match($jobStatus) {
+                                    'active' => 'fa-circle-check',
+                                    'hold' => 'fa-pause-circle',
+                                    'closed' => 'fa-lock',
+                                    'removed' => 'fa-trash-alt',
+                                    default => 'fa-circle-check'
+                                };
+                                $statusLabel = $job['status_label'] ?? ucfirst($jobStatus);
+                            @endphp
                             <div class="cd-activity-stage-transition">
-                                <span class="cd-activity-stage-badge" style="background: #fffbeb; color: #d97706; border: 1px solid #fde68a;">
-                                    <i class="fa fa-bolt" style="font-size: 10px;"></i>
-                                    {{ $transition['to_stage_name'] ?? 'Active' }} Requisition
+                                <span class="cd-status-badge {{ $statusBadgeClass }}">
+                                    <i class="fa {{ $statusIcon }}" style="font-size: 10px;"></i>
+                                    {{ $statusLabel }} Requisition
                                 </span>
                             </div>
                         @elseif($category === 'crm')
