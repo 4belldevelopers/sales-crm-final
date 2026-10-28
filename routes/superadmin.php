@@ -242,6 +242,7 @@ Route::group(['middleware' => 'auth'], function () {
         Route::any('skill/update/{id}/{name}', [SuperAdminCompanyController::class, 'skillUpdate'])->name('company.skillUpdate');
         Route::post('skill/add-edit', [SuperAdminCompanyController::class, 'addEditSkillUpdate'])->name('company.addEditSkillUpdate');
         Route::post('skillDelete', [SuperAdminCompanyController::class, 'skillDelete'])->name('company.skillDelete');
+        Route::post('skills/bulk-delete', [SuperAdminCompanyController::class, 'skillDelete'])->name('company.skillsBulkDelete');
 
         Route::get('jobs/hmlisting/{id?}', [SuperAdminCompanyController::class, 'hmlisting'])->name('company.hmlisting');
 

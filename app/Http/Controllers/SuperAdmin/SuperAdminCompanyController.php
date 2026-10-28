@@ -37,6 +37,8 @@ use App\Services\GoogleSheetServiceCandidate;
 use App\Services\GoogleSheetsServiceGet;
 use App\Services\MailService;
 use App\Services\MarketplaceModerationService;
+use App\Http\Requests\SuperAdmin\DeleteSkillRequest;
+use App\Http\Requests\SuperAdmin\StoreOrUpdateSkillRequest;
 use App\Http\Requests\SuperAdmin\ToggleNotificationStatusRequest;
 use App\Http\Requests\SuperAdmin\UpdateEmailNotificationRequest;
 use App\Services\Notification\NotificationHtmlSanitizer;
@@ -9314,165 +9316,346 @@ class SuperAdminCompanyController extends SuperAdminBaseController
 
     }
 
+    /**
+     * Display the Master Skills directory using Elasticsearch reads.
+     * Strict CQRS: 100% Elasticsearch reads, 0% MySQL reads.
+     */
     public function skillskElastic(Request $request)
     {
+        $this->ensureSkillsIndexExists();
 
-        $searchQuery = $request->input('q');
+        $searchQuery = trim((string) $request->input('q', ''));
+        $letterFilter = strtolower(trim((string) $request->input('letter', '')));
+        $rangeFilter = strtolower(trim((string) $request->input('range', '')));
         $page = max((int) $request->input('page', 1), 1);
-        $size = (int) $request->input('size', 20); // Default 20 results per page
+        $size = min(max((int) $request->input('size', 20), 10), 250);
         $from = ($page - 1) * $size;
-        $sort = [
-            ['created_at' => ['order' => 'desc']],
+
+        $sortParam = $request->input('sort', 'newest');
+        $sort = match ($sortParam) {
+            'oldest' => [['created_at' => ['order' => 'asc', 'unmapped_type' => 'date']]],
+            'alpha_asc' => [['skill_name' => ['order' => 'asc']]],
+            'alpha_desc' => [['skill_name' => ['order' => 'desc']]],
+            default => [['created_at' => ['order' => 'desc', 'unmapped_type' => 'date']]],
+        };
+
+        // Construct Elasticsearch Bool Query
+        $mustClauses = [];
+
+        if ($searchQuery !== '') {
+            $mustClauses[] = [
+                'wildcard' => [
+                    'skill_name' => '*' . strtolower($searchQuery) . '*',
+                ],
+            ];
+        } elseif ($letterFilter !== '') {
+            $mustClauses[] = [
+                'prefix' => [
+                    'skill_name' => $letterFilter,
+                ],
+            ];
+        } elseif ($rangeFilter !== '') {
+            if ($rangeFilter === 'other') {
+                $mustClauses[] = [
+                    'regexp' => [
+                        'skill_name' => '[0-9#+/. -].*',
+                    ],
+                ];
+            } else {
+                $ranges = [
+                    'a-d' => ['a', 'b', 'c', 'd'],
+                    'e-h' => ['e', 'f', 'g', 'h'],
+                    'i-l' => ['i', 'j', 'k', 'l'],
+                    'm-p' => ['m', 'n', 'o', 'p'],
+                    'q-t' => ['q', 'r', 's', 't'],
+                    'u-z' => ['u', 'v', 'w', 'x', 'y', 'z'],
+                ];
+                if (isset($ranges[$rangeFilter])) {
+                    $shouldLetters = [];
+                    foreach ($ranges[$rangeFilter] as $ltr) {
+                        $shouldLetters[] = ['prefix' => ['skill_name' => $ltr]];
+                    }
+                    $mustClauses[] = [
+                        'bool' => [
+                            'should' => $shouldLetters,
+                            'minimum_should_match' => 1,
+                        ],
+                    ];
+                }
+            }
+        }
+
+        $body = [
+            'from' => $from,
+            'size' => $size,
+            'track_total_hits' => true,
+            'sort' => $sort,
         ];
+
+        if (! empty($mustClauses)) {
+            $body['query'] = [
+                'bool' => [
+                    'must' => $mustClauses,
+                ],
+            ];
+        }
+
         $params = [
             'index' => ELASTIC_SKILLS,
             'request_cache' => true,
-            'body' => [
-                'from' => $from,
-                'size' => $size,
-                'track_total_hits' => true,
-                'sort' => $sort,
-            ],
+            'body' => $body,
         ];
-        $response = $this->elasticService->getClient()->search($params);
 
-        $dataskill = collect($response['hits']['hits'])->map(function ($hit) {
+        $totalAll = 0;
+        try {
+            $countRes = $this->elasticService->getClient()->count(['index' => ELASTIC_SKILLS]);
+            $totalAll = $countRes['count'] ?? 0;
+            $response = $this->elasticService->getClient()->search($params);
+        } catch (\Exception $e) {
+            Log::error('SuperAdmin skillskElastic ES Search Failed: ' . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
+            $response = ['hits' => ['hits' => [], 'total' => ['value' => 0]]];
+        }
+
+        $dataskill = collect($response['hits']['hits'] ?? [])->map(function ($hit) {
             return (object) array_merge(
-                ['id' => $hit['_id']],   // include the ES document ID
-                $hit['_source']          // merge with your fields
+                ['id' => $hit['_id']],
+                $hit['_source'] ?? []
             );
         });
 
-        //  $total_cus = (int) $dataskill->count();
-        // dd($dataskill);
-
         $total = $response['hits']['total']['value'] ?? 0;
 
-        //    dd($total_cus,$total);
-
         $paginatedSkills = new LengthAwarePaginator(
-            $dataskill,         // items for this page
-            $total,             // total items (from Elasticsearch)
-            $size,              // per page
-            $page,              // current page
-            ['path' => request()->url(), 'query' => request()->query()] // keep query params
+            $dataskill,
+            $total,
+            $size,
+            $page,
+            ['path' => request()->url(), 'query' => request()->query()]
         );
-        // dd($paginatedSkills);
+
+        if ($request->ajax()) {
+            $html = view('super-admin.comman.skill-cards-stream', [
+                'dataskill' => $paginatedSkills,
+                'total' => $total,
+                'totalAll' => $totalAll,
+                'q' => $searchQuery,
+            ])->render();
+
+            return response()->json([
+                'status' => 'success',
+                'html' => $html,
+                'total' => $total,
+                'totalAll' => $totalAll,
+                'count' => count($dataskill),
+            ]);
+        }
 
         return view('super-admin.comman.skill-list', $this->data, [
             'dataskill' => $paginatedSkills,
             'total' => $total,
+            'totalAll' => $totalAll,
+            'q' => $searchQuery,
+            'letter' => $letterFilter,
+            'range' => $rangeFilter,
+            'size' => $size,
+            'sort' => $sortParam,
         ]);
-
     }
 
-    public function skillDelete(Request $request)
+    /**
+     * Delete one or multiple master skills from Elasticsearch.
+     * Tenancy: Global Super Admin scope. Synchronous refresh for zero stale reads.
+     */
+    public function skillDelete(DeleteSkillRequest $request)
     {
+        $docIds = $request->getTargetDocIds();
 
-        // all($request->all());
-
-        $docId = $this->getElasticDocId($request->id);
-        if (! $docId) {
-            return $this->error('❌ Not found in ES');
+        if (empty($docIds)) {
+            return Reply::error('No valid skill identifiers provided.');
         }
 
-        // dd($docId);
+        $deletedCount = 0;
+        foreach ($docIds as $docId) {
+            try {
+                if ($this->elasticService->getClient()->exists(['index' => ELASTIC_SKILLS, 'id' => $docId])) {
+                    $this->elasticService->getClient()->delete([
+                        'index' => ELASTIC_SKILLS,
+                        'id' => $docId,
+                    ]);
+                    $deletedCount++;
+                }
+            } catch (\Exception $e) {
+                Log::warning("Failed to delete ES skill {$docId}: " . $e->getMessage());
+            }
+        }
 
-        $this->elasticService->getClient()->delete([
-            'index' => ELASTIC_SKILLS,
-            'id' => $docId,
-        ]);
+        // Force synchronous index refresh
+        try {
+            $this->elasticService->getClient()->indices()->refresh(['index' => ELASTIC_SKILLS]);
+        } catch (\Exception $e) {
+            Log::warning('Failed to refresh ELASTIC_SKILLS index: ' . $e->getMessage());
+        }
 
         return response()->json([
-            'message' => '',
             'status' => 'success',
+            'message' => $deletedCount > 1
+                ? "{$deletedCount} skills deleted successfully."
+                : 'Skill deleted successfully.',
+            'deleted_count' => $deletedCount,
         ]);
-
     }
 
+    /**
+     * Render the standalone view for updating an existing skill or creating a new skill.
+     * 0% MySQL reads: removed dead queries for clients, mail_permissions, and roles.
+     */
     public function skillUpdate(Request $request, $Id, $name)
     {
-
         $this->skill_name = $name;
         $this->skill_id = $Id;
-
-        $this->clients = DB::table('clients')->select('clients.*')->orderBy('clients.id', 'ASC')->get();
-
-        $this->mail_permissions = DB::table('mail_permissions')->where('notification_id', '=', $Id)->pluck('role_name')->toArray();
-
-        $this->roles = DB::table('roles')->select('roles.*')->groupBy('display_name')->get();
-
-        // dd($this->th_email_template);	 display_name
 
         return view('super-admin.comman.add-edit-skill', $this->data);
     }
 
-    public function addEditSkillUpdate(Request $request)
+    /**
+     * Add or update master skills in Elasticsearch.
+     * Supports single-skill renaming and multi-skill bulk indexing with deduplication.
+     */
+    public function addEditSkillUpdate(StoreOrUpdateSkillRequest $request)
     {
+        $this->ensureSkillsIndexExists();
+        $skills = $request->getSanitizedSkills();
 
-        if ($request->tokenId === '0') {
-            //   dd($request->all());
-            if (! empty(@$request->skill_name)) {
-                $tags = @$request->skill_name;
-                $tags = json_decode($tags, true);
-                $skillsAddElastic = array_column($tags, 'value');
-                if (count($skillsAddElastic) > 0) {
-                    GeneralMethod::skillsAddElastic($skillsAddElastic);
-                }
-            }
-
-        } else {
-
-            $docId = $this->getElasticDocId($request->tokenId);
-            if (! $docId) {
-                return Reply::dataOnly(['status' => 'error']);
-            }
-
-            if (! empty(@$request->skill_name)) {
-                $tags = @$request->skill_name;
-                // dd($tags); now()->toIso8601String()
-                $tags = json_decode($tags, true);
-                $skillsAddElastic = array_column($tags, 'value');
-                if (count($skillsAddElastic) > 0) {
-                    foreach ($skillsAddElastic as $row) {
-                        $skill_name = strtolower(trim($row));
-
-                        $this->elasticService->getClient()->update([
-                            'index' => ELASTIC_SKILLS,
-                            'id' => $docId,
-                            'body' => [
-                                'doc' => [
-                                    'skill_name' => $skill_name,
-                                    'updated_at' => now()->toIso8601String(),
-                                ],
-                            ],
-                        ]);
-
-                    }
-                }
-            }
-
+        if (empty($skills)) {
+            return Reply::error('Please provide at least one valid skill name (letters, numbers, +, #, /, ., -).');
         }
 
-        return Reply::dataOnly(['status' => 'success']);
+        if ($request->tokenId === '0') {
+            // Bulk Add Mode
+            $addedCount = 0;
+            $skippedCount = 0;
 
+            foreach ($skills as $skillName) {
+                try {
+                    $search = $this->elasticService->getClient()->search([
+                        'index' => ELASTIC_SKILLS,
+                        'body' => [
+                            'query' => [
+                                'term' => ['skill_name' => $skillName],
+                            ],
+                        ],
+                    ]);
+
+                    if (($search['hits']['total']['value'] ?? 0) > 0) {
+                        $skippedCount++;
+                        continue;
+                    }
+
+                    $customId = uniqid('skill_', true);
+                    $this->elasticService->getClient()->index([
+                        'index' => ELASTIC_SKILLS,
+                        'id' => $customId,
+                        'body' => [
+                            'skill_name' => $skillName,
+                            'created_at' => now()->toIso8601String(),
+                            'updated_at' => now()->toIso8601String(),
+                        ],
+                    ]);
+                    $addedCount++;
+                } catch (\Exception $e) {
+                    Log::error("Failed to index skill '{$skillName}': " . $e->getMessage());
+                }
+            }
+
+            try {
+                $this->elasticService->getClient()->indices()->refresh(['index' => ELASTIC_SKILLS]);
+            } catch (\Exception $e) {
+                Log::warning('Failed to refresh ELASTIC_SKILLS index: ' . $e->getMessage());
+            }
+
+            $message = "{$addedCount} skill(s) added successfully.";
+            if ($skippedCount > 0) {
+                $message .= " ({$skippedCount} duplicate(s) skipped).";
+            }
+
+            return Reply::success($message);
+        }
+
+        // Edit / Rename Single Skill Mode
+        $docId = trim((string) $request->tokenId);
+        try {
+            if (! $this->elasticService->getClient()->exists(['index' => ELASTIC_SKILLS, 'id' => $docId])) {
+                return Reply::error('Skill document not found in Elasticsearch.');
+            }
+
+            $cleanSkillName = $skills[0];
+
+            $this->elasticService->getClient()->update([
+                'index' => ELASTIC_SKILLS,
+                'id' => $docId,
+                'body' => [
+                    'doc' => [
+                        'skill_name' => $cleanSkillName,
+                        'updated_at' => now()->toIso8601String(),
+                    ],
+                ],
+            ]);
+
+            $this->elasticService->getClient()->indices()->refresh(['index' => ELASTIC_SKILLS]);
+
+            return Reply::success("Skill updated to '{$cleanSkillName}'.");
+        } catch (\Exception $e) {
+            Log::error("Failed to update skill {$docId}: " . $e->getMessage());
+            return Reply::error('Failed to update skill in Elasticsearch.');
+        }
     }
 
+    /**
+     * Helper to verify or retrieve an existing Elasticsearch document ID.
+     */
     private function getElasticDocId($id)
     {
-        //   dd($id);
-        $result = $this->elasticService->getClient()->search([
-            'index' => ELASTIC_SKILLS,
-            'body' => [
-                'query' => [
-                    'term' => ['_id' => $id], // exact match
-                ],
-            ],
-        ]);
+        try {
+            if ($this->elasticService->getClient()->exists(['index' => ELASTIC_SKILLS, 'id' => $id])) {
+                return $id;
+            }
+        } catch (\Exception $e) {
+            Log::warning("getElasticDocId check failed for id {$id}: " . $e->getMessage());
+        }
 
-        return $result['hits']['total']['value'] > 0
-            ? $result['hits']['hits'][0]['_id']
-            : null;
+        return null;
+    }
+
+    /**
+     * Ensure the ELASTIC_SKILLS index exists with standard mappings.
+     */
+    private function ensureSkillsIndexExists(): void
+    {
+        try {
+            if (! $this->elasticService->indexExists(ELASTIC_SKILLS)) {
+                $params = [
+                    'index' => ELASTIC_SKILLS,
+                    'body' => [
+                        'settings' => [
+                            'number_of_shards' => 1,
+                            'number_of_replicas' => 0,
+                            'index.requests.cache.enable' => true,
+                        ],
+                        'mappings' => [
+                            'properties' => [
+                                'id' => ['type' => 'keyword'],
+                                'skill_name' => ['type' => 'keyword'],
+                                'created_at' => ['type' => 'date'],
+                                'updated_at' => ['type' => 'date'],
+                            ],
+                        ],
+                    ],
+                ];
+                $this->elasticService->getClient()->indices()->create($params);
+            }
+        } catch (\Exception $e) {
+            Log::warning('ensureSkillsIndexExists encountered exception: ' . $e->getMessage());
+        }
     }
 
     public function job_request($id)
