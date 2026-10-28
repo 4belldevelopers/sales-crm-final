@@ -1187,30 +1187,90 @@
                 </select>
             </div>
 
-            {{-- Filter 4: Sort --}}
-            <div class="cl-dropdown-pill" id="sortPill">
-                <div class="cl-pill-icon">
-                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <line x1="7" y1="4" x2="7" y2="20"/>
-                        <polyline points="3 8 7 4 11 8"/>
-                        <line x1="17" y1="4" x2="17" y2="20"/>
-                        <polyline points="13 16 17 20 21 16"/>
-                    </svg>
+            {{-- Filter 4: Enterprise Metronic Sort Combobox Popover --}}
+            <div class="cl-sort-dropdown-wrapper" id="clSortDropdownWrapper">
+                <div class="cl-sort-combobox-btn" id="clSortBtn" onclick="toggleSortDropdown(event)" role="button" tabindex="0" aria-haspopup="listbox" aria-expanded="false" aria-controls="clSortDropdownPanel" title="Sort Client Listing">
+                    <div class="cl-pill-icon">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="7" y1="4" x2="7" y2="20"/>
+                            <polyline points="3 8 7 4 11 8"/>
+                            <line x1="17" y1="4" x2="17" y2="20"/>
+                            <polyline points="13 16 17 20 21 16"/>
+                        </svg>
+                    </div>
+                    <div class="cl-pill-texts">
+                        <span class="cl-pill-lbl">Sort</span>
+                        <span class="cl-pill-val" id="sortDisplay">Recently Added</span>
+                    </div>
+                    <div class="cl-pill-chevron">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+                    </div>
                 </div>
-                <div class="cl-pill-texts">
-                    <span class="cl-pill-lbl">Sort</span>
-                    <span class="cl-pill-val" id="sortDisplay">Recently Added</span>
+
+                {{-- Custom Popover Panel (WAI-ARIA 1.2 Compliant) --}}
+                <div class="cl-sort-dropdown-panel" id="clSortDropdownPanel" role="listbox" aria-labelledby="clSortBtn" tabindex="-1">
+                    {{-- Section 1: Chronological --}}
+                    <div class="cl-sort-section-hdr">Chronological</div>
+                    <div class="cl-sort-item selected" id="sort-opt-recent" data-sort-val="recent" onclick="selectSortOption('recent', 'Recently Added', event)" role="option" aria-selected="true" tabindex="0">
+                        <div class="cl-sort-item-left">
+                            <svg class="cl-sort-item-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                            <span class="cl-sort-item-title">Recently Added</span>
+                        </div>
+                        <div class="cl-sort-item-right">
+                            <span class="cl-sort-direction-badge">Newest ↓</span>
+                            <span class="cl-sort-check">✓</span>
+                        </div>
+                    </div>
+                    <div class="cl-sort-item" id="sort-opt-oldest" data-sort-val="oldest" onclick="selectSortOption('oldest', 'Oldest First', event)" role="option" aria-selected="false" tabindex="0">
+                        <div class="cl-sort-item-left">
+                            <svg class="cl-sort-item-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                            <span class="cl-sort-item-title">Oldest First</span>
+                        </div>
+                        <div class="cl-sort-item-right">
+                            <span class="cl-sort-direction-badge">Oldest ↑</span>
+                            <span class="cl-sort-check" style="display:none;">✓</span>
+                        </div>
+                    </div>
+
+                    {{-- Section 2: Alphabetical --}}
+                    <div class="cl-sort-section-hdr">Alphabetical</div>
+                    <div class="cl-sort-item" id="sort-opt-name_asc" data-sort-val="name_asc" onclick="selectSortOption('name_asc', 'Client Name (A → Z)', event)" role="option" aria-selected="false" tabindex="0">
+                        <div class="cl-sort-item-left">
+                            <svg class="cl-sort-item-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+                            <span class="cl-sort-item-title">Client Name (A → Z)</span>
+                        </div>
+                        <div class="cl-sort-item-right">
+                            <span class="cl-sort-direction-badge">A → Z</span>
+                            <span class="cl-sort-check" style="display:none;">✓</span>
+                        </div>
+                    </div>
+                    <div class="cl-sort-item" id="sort-opt-name_desc" data-sort-val="name_desc" onclick="selectSortOption('name_desc', 'Client Name (Z → A)', event)" role="option" aria-selected="false" tabindex="0">
+                        <div class="cl-sort-item-left">
+                            <svg class="cl-sort-item-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+                            <span class="cl-sort-item-title">Client Name (Z → A)</span>
+                        </div>
+                        <div class="cl-sort-item-right">
+                            <span class="cl-sort-direction-badge">Z → A</span>
+                            <span class="cl-sort-check" style="display:none;">✓</span>
+                        </div>
+                    </div>
+
+                    {{-- Section 3: Activity & Jobs --}}
+                    <div class="cl-sort-section-hdr">Activity</div>
+                    <div class="cl-sort-item" id="sort-opt-jobs_desc" data-sort-val="jobs_desc" onclick="selectSortOption('jobs_desc', 'Most Active Jobs', event)" role="option" aria-selected="false" tabindex="0">
+                        <div class="cl-sort-item-left">
+                            <svg class="cl-sort-item-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+                            <span class="cl-sort-item-title">Most Active Jobs</span>
+                        </div>
+                        <div class="cl-sort-item-right">
+                            <span class="cl-sort-direction-badge">High → Low</span>
+                            <span class="cl-sort-check" style="display:none;">✓</span>
+                        </div>
+                    </div>
                 </div>
-                <div class="cl-pill-chevron">
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
-                </div>
-                <select class="cl-pill-select-native" id="sortingfilter" onchange="handleSortChange(this)">
-                    <option value="recent" selected>Recently Added</option>
-                    <option value="oldest">Oldest First</option>
-                    <option value="name_asc">Client Name (A → Z)</option>
-                    <option value="name_desc">Client Name (Z → A)</option>
-                    <option value="jobs_desc">Most Active Jobs</option>
-                </select>
+
+                {{-- Hidden input for state & form compatibility --}}
+                <input type="hidden" id="sortingfilter" name="sortingfilter" value="recent" />
             </div>
         </div>
 
@@ -1925,33 +1985,161 @@ function handleActivityChange(sel) {
     filtersdataget();
 }
 
-function handleSortChange(sel) {
-    const text = sel.options[sel.selectedIndex].text;
-    const val = sel.value;
+function toggleSortDropdown(e) {
+    if (e) { e.stopPropagation(); e.preventDefault(); }
+    const $panel = $('#clSortDropdownPanel');
+    const $btn = $('#clSortBtn');
+    const isVisible = $panel.hasClass('show');
+
+    if (isVisible) {
+        closeSortDropdown();
+    } else {
+        // Close peer popovers
+        $('#clLocDropdownPanel').removeClass('show');
+        $('#clLocBtn').removeClass('active');
+        $('#clIndDropdownPanel').removeClass('show');
+        $('#clIndBtn').removeClass('active').attr('aria-expanded', 'false');
+
+        $panel.addClass('show');
+        $btn.addClass('active').attr('aria-expanded', 'true');
+        const $selected = $panel.find('.cl-sort-item.selected');
+        if ($selected.length) {
+            $selected.focus();
+        } else {
+            $panel.find('.cl-sort-item').first().focus();
+        }
+    }
+}
+
+function closeSortDropdown() {
+    $('#clSortDropdownPanel').removeClass('show');
+    $('#clSortBtn').removeClass('active').attr('aria-expanded', 'false');
+}
+
+function normalizeSortValue(raw) {
+    const s = String(raw || '').toLowerCase().trim();
+    if (s === 'oldest' || s === '2') return 'oldest';
+    if (s === 'name_asc' || s === 'name-asc' || s === 'a-z') return 'name_asc';
+    if (s === 'name_desc' || s === 'name-desc' || s === 'z-a') return 'name_desc';
+    if (s === 'jobs_desc' || s === 'jobs' || s === 'active_jobs') return 'jobs_desc';
+    return 'recent';
+}
+
+function sortDomClientsLocally(sortVal) {
+    const $container = $('#allClients');
+    const $rows = $container.children('.tbl-r').get();
+    if (!$rows || $rows.length <= 1) return false;
+
+    // Check total count: if total > perPage or > rows.length, server pagination is required
+    const totalCount = parseInt($('#span_clientAll').text() || '0', 10);
+    const perPage = parseInt($('#pagination .pagi-perpage').val() || '10', 10);
+    if (totalCount > perPage && totalCount > $rows.length) {
+        return false; // Multi-page dataset: defer to authoritative Elasticsearch query
+    }
+
+    $rows.sort(function(a, b) {
+        if (sortVal === 'name_asc' || sortVal === 'name_desc') {
+            const nameA = ($(a).find('.cl-details-title, .cl-name').first().text() || '').trim().toLowerCase();
+            const nameB = ($(b).find('.cl-details-title, .cl-name').first().text() || '').trim().toLowerCase();
+            return sortVal === 'name_asc' ? nameA.localeCompare(nameB) : nameB.localeCompare(nameA);
+        } else if (sortVal === 'jobs_desc') {
+            const jobsA = parseInt($(a).find('.cl-job-hiring .cl-job-num').first().text() || '0', 10);
+            const jobsB = parseInt($(b).find('.cl-job-hiring .cl-job-num').first().text() || '0', 10);
+            if (jobsB !== jobsA) return jobsB - jobsA;
+            const idA = parseInt($(a).data('row-id') || '0', 10);
+            const idB = parseInt($(b).data('row-id') || '0', 10);
+            return idB - idA;
+        } else if (sortVal === 'oldest') {
+            const idA = parseInt($(a).data('row-id') || '0', 10);
+            const idB = parseInt($(b).data('row-id') || '0', 10);
+            return idA - idB;
+        } else { // 'recent'
+            const idA = parseInt($(a).data('row-id') || '0', 10);
+            const idB = parseInt($(b).data('row-id') || '0', 10);
+            return idB - idA;
+        }
+    });
+
+    requestAnimationFrame(function() {
+        $.each($rows, function(idx, el) {
+            $container.append(el);
+        });
+    });
+
+    return true;
+}
+
+function selectSortOption(val, text, e) {
+    if (e) { e.stopPropagation(); }
+    closeSortDropdown();
+
+    const canonicalVal = normalizeSortValue(val);
     $('#sortDisplay').text(text);
-    clientListState.sort = val;
-    updateHeaderSortIndicators(val);
+    $('#sortingfilter').val(canonicalVal);
+
+    $('#clSortDropdownPanel .cl-sort-item').removeClass('selected').attr('aria-selected', 'false')
+        .find('.cl-sort-check').hide();
+    const $opt = $(`#clSortDropdownPanel .cl-sort-item[data-sort-val="${canonicalVal}"]`);
+    $opt.addClass('selected').attr('aria-selected', 'true').find('.cl-sort-check').show();
+
+    if (canonicalVal !== 'recent') {
+        $('#clSortBtn').addClass('is-custom-sorted');
+    } else {
+        $('#clSortBtn').removeClass('is-custom-sorted');
+    }
+
+    clientListState.sort = canonicalVal;
+    updateHeaderSortIndicators(canonicalVal);
+    syncUrlState();
+
+    // Option A Performance Optimization: If current working set is hydrated in RAM, sort locally with 0 HTTP calls
+    const locallySorted = sortDomClientsLocally(canonicalVal);
+    if (locallySorted) {
+        return; // Near-instantaneous client-side sort executed in User RAM (0 HTTP requests)
+    }
+
+    // Option B Canonical Fallback: Authoritative Elasticsearch query
     filtersdataget();
 }
 
+function handleSortChange(sel) {
+    const text = sel.options && sel.selectedIndex >= 0 ? sel.options[sel.selectedIndex].text : 'Recently Added';
+    const val = sel.value;
+    selectSortOption(val, text);
+}
+
 function handleHeaderSort(field) {
-    let currentSort = $('#sortingfilter').val() || 'recent';
+    let currentSort = normalizeSortValue($('#sortingfilter').val() || clientListState.sort || 'recent');
     let nextSort = 'recent';
+    let nextText = 'Recently Added';
 
     if (field === 'name') {
-        nextSort = (currentSort === 'name_asc') ? 'name_desc' : 'name_asc';
+        if (currentSort === 'name_asc') {
+            nextSort = 'name_desc';
+            nextText = 'Client Name (Z → A)';
+        } else {
+            nextSort = 'name_asc';
+            nextText = 'Client Name (A → Z)';
+        }
     } else if (field === 'date') {
-        nextSort = (currentSort === 'recent') ? 'oldest' : 'recent';
+        if (currentSort === 'recent') {
+            nextSort = 'oldest';
+            nextText = 'Oldest First';
+        } else {
+            nextSort = 'recent';
+            nextText = 'Recently Added';
+        }
     } else if (field === 'jobs') {
-        nextSort = (currentSort === 'jobs_desc') ? 'recent' : 'jobs_desc';
+        if (currentSort === 'jobs_desc') {
+            nextSort = 'recent';
+            nextText = 'Recently Added';
+        } else {
+            nextSort = 'jobs_desc';
+            nextText = 'Most Active Jobs';
+        }
     }
 
-    $('#sortingfilter').val(nextSort);
-    const sortText = $(`#sortingfilter option[value="${nextSort}"]`).text() || nextSort;
-    $('#sortDisplay').text(sortText);
-    clientListState.sort = nextSort;
-    updateHeaderSortIndicators(nextSort);
-    filtersdataget();
+    selectSortOption(nextSort, nextText);
 }
 
 function updateHeaderSortIndicators(activeSort) {
@@ -1969,7 +2157,7 @@ function updateHeaderSortIndicators(activeSort) {
     }
 }
 
-// Close location & industry dropdowns on outside click or escape
+// Close location, industry & sort dropdowns on outside click or escape
 $(document).on('click', function(e) {
     if (!$(e.target).closest('#clLocDropdownWrapper').length) {
         $('#clLocDropdownPanel').removeClass('show');
@@ -1978,6 +2166,11 @@ $(document).on('click', function(e) {
     if (!$(e.target).closest('#clIndDropdownWrapper').length) {
         $('#clIndDropdownPanel').removeClass('show');
         $('#clIndBtn').removeClass('active').attr('aria-expanded', 'false');
+    }
+    if (!$(e.target).closest('#clSortDropdownWrapper').length) {
+        if ($('#clSortDropdownPanel').hasClass('show')) {
+            closeSortDropdown();
+        }
     }
 });
 
@@ -1988,6 +2181,33 @@ $(document).on('keydown', function(e) {
             $('#clLocBtn').removeClass('active');
         }
         if ($('#clIndDropdownPanel').hasClass('show')) {
+            $('#clIndDropdownPanel').removeClass('show');
+            $('#clIndBtn').removeClass('active').attr('aria-expanded', 'false');
+        }
+        if ($('#clSortDropdownPanel').hasClass('show')) {
+            closeSortDropdown();
+            $('#clSortBtn').focus();
+        }
+    }
+});
+
+// Arrow key navigation inside sort popover
+$(document).on('keydown', '#clSortDropdownPanel .cl-sort-item', function(e) {
+    const $items = $('#clSortDropdownPanel .cl-sort-item');
+    const index = $items.index(this);
+    if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        const next = (index + 1) % $items.length;
+        $items.eq(next).focus();
+    } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        const prev = (index - 1 + $items.length) % $items.length;
+        $items.eq(prev).focus();
+    } else if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        $(this).trigger('click');
+    }
+});
             $('#clIndDropdownPanel').removeClass('show');
             $('#clIndBtn').removeClass('active').attr('aria-expanded', 'false');
         }
