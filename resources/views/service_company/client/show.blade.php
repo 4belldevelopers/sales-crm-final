@@ -7172,6 +7172,27 @@ use Carbon\Carbon;
             this.clientId = null;
             this.allCandidates = [];
             this.data = [];
+            this.activeStage = 'sourcing';
+            this.searchTerm = '';
+            this.stageCounts = {
+                sourcing: 0,
+                screening: 0,
+                evaluation: 0,
+                negotiations: 0,
+                offer: 0,
+                joined: 0,
+                rejected: 0,
+                interviews: 0,
+                in_review: 0
+            };
+            this.updateAllStageBadges();
+            $('#cdCandidateCountText').text('0');
+            $('#cdInReviewCountBadge').hide();
+            $('#cdCandSearchInput').val('');
+            $('#cdCandSearchClear').hide();
+            $('#candidatetList').empty();
+            $('#cdCandEmptyState').hide();
+            $('#cdCandidateTableWrap').hide();
             $(document).off('.internalDrawerCand');
         },
 
@@ -7291,55 +7312,68 @@ use Carbon\Carbon;
             if (!cand) return false;
             var jSid = parseInt(cand.job_master_status_id, 10);
             var mSid = parseInt(cand.master_status_id, 10);
+            var sid = (!isNaN(jSid) && jSid > 0) ? jSid : ((!isNaN(mSid) && mSid > 0) ? mSid : 0);
+            if (sid === 8) return true;
             var sName = String(cand.child_status_name || cand.master_status_name || cand.name || '').toLowerCase().trim();
-            if (jSid === 8 || mSid === 8) return true;
-            if (jSid <= 0 && (sName === 'inreview' || sName === 'in review' || sName.indexOf('inreview') !== -1 || sName.indexOf('in review') !== -1)) return true;
+            if (sid <= 0 && (sName === 'inreview' || sName === 'in review' || sName.indexOf('inreview') !== -1 || sName.indexOf('in review') !== -1)) return true;
             return false;
         },
 
         getCandidateStage: function(cand) {
             if (!cand) return 'unknown';
 
-            // 1. Strict InReview boundary: Never included in any of the 8 pipeline stages
+            // 1. Authoritative status ID:
+            // job_master_status_id (from add_job_wise_condidates) is the definitive, authoritative
+            // pipeline stage for this job/client. master_status_id is ONLY a fallback if job_master_status_id is missing/0.
+            var jSid = parseInt(cand.job_master_status_id, 10);
+            var mSid = parseInt(cand.master_status_id, 10);
+            var sid = (!isNaN(jSid) && jSid > 0) ? jSid : ((!isNaN(mSid) && mSid > 0) ? mSid : 0);
+
+            // InReview boundary (Status 8)
             if (this.isInReview(cand)) {
                 return 'inreview';
             }
 
-            var jSid = parseInt(cand.job_master_status_id, 10);
-            var mSid = parseInt(cand.master_status_id, 10);
-            var sid = (jSid > 0) ? jSid : ((mSid > 0) ? mSid : 0);
-            var sName = String(cand.child_status_name || cand.master_status_name || cand.name || '').toLowerCase().trim();
-
-            // 2. Active Scheduled Interviews (strictly isolated from Evaluation)
-            var hasScheduleDate = cand.schedule_date && String(cand.schedule_date).trim() !== '' && String(cand.schedule_date) !== 'null';
-            var hasInterviewCount = cand.interview_count && parseInt(cand.interview_count, 10) > 0;
-            var hasInterviewName = sName.indexOf('interview') !== -1;
-            if (hasScheduleDate || hasInterviewCount || (hasInterviewName && sid === 3)) {
-                return 'interviews';
-            }
-
-            // 3. Exact 1:1 Stage Boundaries (Mutual Exclusion)
-            if (sid === 1 || sName === 'sourcing' || sName.indexOf('sourc') !== -1) {
+            // 2. Strict 1:1 Stage Boundaries (Mutual Exclusion)
+            if (sid === 1) {
                 return 'sourcing';
             }
-            if (sid === 2 || sName === 'screening' || sName.indexOf('screen') !== -1) {
+            if (sid === 2) {
                 return 'screening';
             }
-            if (sid === 3 || sName === 'evaluation' || sName.indexOf('eval') !== -1) {
+            if (sid === 3) {
+                var hasScheduleDate = cand.schedule_date && String(cand.schedule_date).trim() !== '' && String(cand.schedule_date) !== 'null';
+                var hasInterviewCount = cand.interview_count && parseInt(cand.interview_count, 10) > 0;
+                var sName = String(cand.child_status_name || cand.master_status_name || cand.name || '').toLowerCase().trim();
+                var hasInterviewName = sName.indexOf('interview') !== -1;
+                if (hasScheduleDate || hasInterviewCount || hasInterviewName) {
+                    return 'interviews';
+                }
                 return 'evaluation';
             }
-            if (sid === 4 || sName.indexOf('negot') !== -1) {
+            if (sid === 4) {
                 return 'negotiations';
             }
-            if (sid === 5 || sName.indexOf('offer') !== -1) {
+            if (sid === 5) {
                 return 'offer';
             }
-            if (sid === 6 || sName.indexOf('join') !== -1 || sName.indexOf('onboard') !== -1) {
+            if (sid === 6) {
                 return 'joined';
             }
-            if (sid === 7 || sid === 9 || sName.indexOf('reject') !== -1) {
+            if (sid === 7 || sid === 9) {
                 return 'rejected';
             }
+
+            // 3. Fallback: Check status strings ONLY if sid is unmapped or 0
+            var sName = String(cand.child_status_name || cand.master_status_name || cand.name || '').toLowerCase().trim();
+            if (sName.indexOf('sourc') !== -1) return 'sourcing';
+            if (sName.indexOf('screen') !== -1) return 'screening';
+            if (sName.indexOf('interview') !== -1) return 'interviews';
+            if (sName.indexOf('eval') !== -1) return 'evaluation';
+            if (sName.indexOf('negot') !== -1) return 'negotiations';
+            if (sName.indexOf('offer') !== -1) return 'offer';
+            if (sName.indexOf('join') !== -1 || sName.indexOf('onboard') !== -1) return 'joined';
+            if (sName.indexOf('reject') !== -1) return 'rejected';
 
             return 'unknown';
         },
@@ -7364,9 +7398,7 @@ use Carbon\Carbon;
             var self = this;
             (list || []).forEach(function(cand) {
                 var stage = self.getCandidateStage(cand);
-                if (stage === 'inreview') {
-                    counts.in_review++;
-                } else if (counts.hasOwnProperty(stage)) {
+                if (counts.hasOwnProperty(stage)) {
                     counts[stage]++;
                 }
             });
@@ -7391,26 +7423,56 @@ use Carbon\Carbon;
             var stage = this.activeStage || 'sourcing';
             var term = (this.searchTerm || '').toLowerCase().trim();
 
-            var filtered = (this.allCandidates || []).filter(function(cand) {
-                // 1. Stage filter (Strict Stage Boundary)
-                if (!self.matchesStage(cand, stage)) return false;
-
-                // 2. Search query filter within selected tab
-                if (term) {
-                    var corpus = [
-                        cand.full_name, cand.first_name, cand.last_name,
-                        cand.current_designation, cand.skills,
-                        cand.city_name, cand.country_name,
-                        cand.current_company, cand.title, cand.job_title,
-                        String(cand.id || cand.wiseId || '')
-                    ].filter(Boolean).join(' ').toLowerCase();
-                    if (!corpus.includes(term)) return false;
-                }
-                return true;
+            // 1. Single Source of Truth: Filter active stage from hydrated candidate dataset
+            var stageCandidates = (this.allCandidates || []).filter(function(cand) {
+                return self.matchesStage(cand, stage);
             });
 
+            // 2. Client-Side-Only Search within active stage (0 HTTP Requests)
+            var filtered = stageCandidates;
+            if (term) {
+                filtered = stageCandidates.filter(function(cand) {
+                    var skillsStr = '';
+                    if (Array.isArray(cand.skills)) {
+                        skillsStr = cand.skills.join(' ');
+                    } else if (typeof cand.skills === 'string') {
+                        skillsStr = cand.skills;
+                    }
+                    var corpus = [
+                        cand.full_name,
+                        cand.first_name,
+                        cand.last_name,
+                        cand.email,
+                        cand.phone,
+                        cand.secondary_mobile,
+                        cand.current_designation,
+                        cand.current_company,
+                        cand.cur_company_name,
+                        cand.company_name,
+                        cand.client_name,
+                        cand.title,
+                        cand.job_title,
+                        cand.city_name,
+                        cand.state_name,
+                        cand.country_name,
+                        cand.location,
+                        cand.posted_by,
+                        cand.posted_by_name,
+                        cand.submitted_by_name,
+                        cand.spokperson_name,
+                        skillsStr,
+                        String(cand.id || ''),
+                        String(cand.wiseId || ''),
+                        String(cand.candidate_id || ''),
+                        String(cand.jobId || cand.job_id || '')
+                    ].filter(Boolean).join(' ').toLowerCase();
+
+                    return corpus.indexOf(term) !== -1;
+                });
+            }
+
             this.data = filtered;
-            this.renderRows();
+            this.renderRows(stageCandidates.length);
         },
 
         updateCounts: function(total, relation) {
@@ -7431,7 +7493,29 @@ use Carbon\Carbon;
             }
         },
 
-        renderRows: function() {
+        updateCandidateStageLocal: function(candidateId, newStageId, newStageName) {
+            var found = false;
+            var numStageId = parseInt(newStageId, 10);
+            (this.allCandidates || []).forEach(function(cand) {
+                var cid = cand.id || cand.wiseId || cand.candidate_id;
+                if (String(cid) === String(candidateId)) {
+                    cand.job_master_status_id = numStageId;
+                    if (newStageName) {
+                        cand.child_status_name = newStageName;
+                        cand.master_status_name = newStageName;
+                        cand.name = newStageName;
+                    }
+                    found = true;
+                }
+            });
+            if (found) {
+                this.calculateStageCounts(this.allCandidates);
+                this.updateAllStageBadges();
+                this.filterAndRender();
+            }
+        },
+
+        renderRows: function(stageTotal) {
             if (!this.data || this.data.length === 0) {
                 $('#candidatetList').empty();
                 var stageLabel = (this.activeStage && this.activeStage !== 'all')
@@ -7670,23 +7754,37 @@ use Carbon\Carbon;
             var submittedAgo = formatTimeAgo(row.created_at);
 
             // 6. Sub-Card 6: Pipeline & Stage (Matched with Client Tracker Colors)
-            var stageName = row.child_status_name || row.master_status_name || row.name || 'InReview';
-            var sLower = stageName.toLowerCase();
-            var stageChipStyle = 'background:#ecfeff;color:#0891b2;border:1px solid #a5f3fc;'; // Sourcing / InReview default
-            if (sLower.includes('screen')) {
+            var canonicalStage = this.getCandidateStage(row);
+            var stageLabels = {
+                sourcing: 'Sourcing',
+                screening: 'Screening',
+                evaluation: 'Evaluation',
+                negotiations: 'Negotiations',
+                offer: 'Offered',
+                joined: 'Joined',
+                rejected: 'Rejected',
+                interviews: 'Interviews',
+                inreview: 'InReview'
+            };
+            var stageName = row.master_status_name || stageLabels[canonicalStage] || row.name || 'Sourcing';
+            var sLower = canonicalStage.toLowerCase();
+            var stageChipStyle = 'background:#ecfeff;color:#0891b2;border:1px solid #a5f3fc;'; // Sourcing default
+            if (sLower === 'screening') {
                 stageChipStyle = 'background:#faf5ff;color:#9333ea;border:1px solid #e9d5ff;';
-            } else if (sLower.includes('eval') || sLower.includes('interview')) {
+            } else if (sLower === 'evaluation' || sLower === 'interviews') {
                 stageChipStyle = 'background:#eef2ff;color:#4f46e5;border:1px solid #c7d2fe;';
-            } else if (sLower.includes('negot')) {
+            } else if (sLower === 'negotiations') {
                 stageChipStyle = 'background:#fdf2f8;color:#db2777;border:1px solid #fbcfe8;';
-            } else if (sLower.includes('offer')) {
+            } else if (sLower === 'offer') {
                 stageChipStyle = 'background:#fffbeb;color:#d97706;border:1px solid #fde68a;';
-            } else if (sLower.includes('join') || sLower.includes('onboard')) {
+            } else if (sLower === 'joined') {
                 stageChipStyle = 'background:#f0fdf4;color:#16a34a;border:1px solid #bbf7d0;';
-            } else if (sLower.includes('reject')) {
+            } else if (sLower === 'rejected') {
                 stageChipStyle = 'background:#fef2f2;color:#ef4444;border:1px solid #fecaca;';
+            } else if (sLower === 'inreview') {
+                stageChipStyle = 'background:#fffbeb;color:#b45309;border:1px solid #fde047;';
             }
-            var subStageText = row.childStatus ? (row.child_status_name || 'Private') : 'Private';
+            var subStageText = row.childStatus ? (row.child_status_name || 'Private') : (row.child_status_name || 'Private');
 
             // 7. Sub-Card 7 (Bottom Strip): Skills, CV Match, LinkedIn Verified, Visa Status
             var matchPct = (row.skill_match !== undefined && row.skill_match !== null) ? Math.round(row.skill_match) : 0;
