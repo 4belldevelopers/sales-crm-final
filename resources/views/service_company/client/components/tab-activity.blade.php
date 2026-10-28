@@ -569,7 +569,7 @@
                     } else {
                         dotColor = '#ef4444'; dotBg = '#fef2f2'; badgeClass = 'cd-tl-badge-red'; badgeText = 'Closed';
                     }
-                    heading = (job.title || 'Requisition') + ' (' + (job.code || 'JOB') + ')';
+                    heading = (job.title || 'Requisition') + (job.id ? ' (#' + job.id + ')' : (job.code ? ' (' + job.code + ')' : ''));
                     subtext = 'Created by ' + (job.creator_name || 'Account Manager') + ' • ' + comp;
                     role = (job.total_positions || 1) + ' ' + ((job.total_positions || 1) === 1 ? 'Opening' : 'Openings');
                 } else if (cat === 'interviews') {
