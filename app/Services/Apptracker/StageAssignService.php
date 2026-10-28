@@ -53,14 +53,18 @@ class StageAssignService
         }
 
         // Tenant ownership check before any mutation
-        $appExists = DB::table('job_applications')
+        $appRow = DB::table('job_applications')
+            ->select('id', 'candidate_id', 'master_status_id', 'child_status_id')
             ->where('id', $applicationId)
             ->where('company_id', $companyId)
-            ->exists();
+            ->first();
 
-        if (! $appExists) {
+        if (! $appRow) {
             return null;
         }
+
+        $fromStatus = (int) ($appRow->master_status_id ?? 0);
+        $candidateId = (int) ($appRow->candidate_id ?? 0);
 
         DB::table('job_applications')
             ->where('id', $applicationId)
@@ -92,7 +96,9 @@ class StageAssignService
                     [
                         'job_id' => $jobId,
                         'application_id' => $applicationId,
-                        'new_status' => $parentStatusId,
+                        'candidate_id' => $candidateId,
+                        'from_status' => $fromStatus,
+                        'to_status' => $parentStatusId,
                         'child_status_id' => $childStatusId,
                     ]
                 ));

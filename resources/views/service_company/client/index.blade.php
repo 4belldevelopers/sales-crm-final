@@ -2106,16 +2106,16 @@ window.ClientPipelineStore = {
     apply: function(payload, broadcast = true) {
         if (!payload || !payload.client_id) return;
         const cid = Number(payload.client_id);
-        const rev = Number(payload.revision || 0);
+        const rev = Number(payload.seq || payload.revision || 0);
         const curRev = this.revisions.get(cid) || 0;
 
-        // Monotonic revision check: discard stale/out-of-order events
+        // Monotonic sequence check (Strict Idempotency): discard stale/out-of-order events
         if (rev && rev <= curRev) {
             return;
         }
         if (rev) this.revisions.set(cid, rev);
 
-        // Update in-memory cache
+        // Update in-memory cache (Upgraded Contract: [sourced, screening, eval, neg, offer, joined, rejected, in_review, interviews])
         let pv = Array.isArray(payload.pv) && payload.pv.length >= 9 ? payload.pv : null;
         if (!pv && payload.changed && this.pipelineCache.has(cid)) {
             const cached = this.pipelineCache.get(cid);
@@ -2129,7 +2129,8 @@ window.ClientPipelineStore = {
                 4: 'negotiations',
                 5: 'offers',
                 6: 'joined',
-                7: 'rejected'
+                7: 'rejected',
+                8: 'in_review'
             };
             if (fromStatus && statusKeyMap[fromStatus] && p[statusKeyMap[fromStatus]] > 0) {
                 p[statusKeyMap[fromStatus]] = Math.max(0, p[statusKeyMap[fromStatus]] - 1);
@@ -2137,8 +2138,12 @@ window.ClientPipelineStore = {
             if (toStatus && statusKeyMap[toStatus]) {
                 p[statusKeyMap[toStatus]] = (p[statusKeyMap[toStatus]] || 0) + 1;
             }
+            const activePipeline = (p.sourced || 0) + (p.screening || 0) + (p.evaluated || 0) + (p.negotiations || 0) + (p.offers || 0) + (p.joined || 0);
+            const applications = activePipeline + (p.rejected || 0) + (p.in_review || 0);
+            p.active_pipeline = activePipeline;
+            p.applications = applications;
+
             pv = [
-                p.applications || 0,
                 p.sourced || 0,
                 p.screening || 0,
                 p.evaluated || 0,
@@ -2146,23 +2151,40 @@ window.ClientPipelineStore = {
                 p.offers || 0,
                 p.joined || 0,
                 p.rejected || 0,
+                p.in_review || 0,
                 p.interviews || 0
             ];
-            this.pipelineCache.set(cid, { revision: rev, pv: pv, pipeline: p });
+            this.pipelineCache.set(cid, { revision: rev, seq: rev, pv: pv, pipeline: p });
         } else if (pv) {
+            const sourced = Number(pv[0] || 0);
+            const screening = Number(pv[1] || 0);
+            const evaluated = Number(pv[2] || 0);
+            const negotiations = Number(pv[3] || 0);
+            const offers = Number(pv[4] || 0);
+            const joined = Number(pv[5] || 0);
+            const rejected = Number(pv[6] || 0);
+            const inReview = Number(pv[7] || 0);
+            const interviews = Number(pv[8] || 0);
+
+            const activePipeline = sourced + screening + evaluated + negotiations + offers + joined;
+            const applications = activePipeline + rejected + inReview;
+
             this.pipelineCache.set(cid, {
                 revision: rev,
-                pv: pv,
+                seq: rev,
+                pv: [sourced, screening, evaluated, negotiations, offers, joined, rejected, inReview, interviews],
                 pipeline: {
-                    applications: Number(pv[0] || 0),
-                    sourced: Number(pv[1] || 0),
-                    screening: Number(pv[2] || 0),
-                    evaluated: Number(pv[3] || 0),
-                    negotiations: Number(pv[4] || 0),
-                    offers: Number(pv[5] || 0),
-                    joined: Number(pv[6] || 0),
-                    rejected: Number(pv[7] || 0),
-                    interviews: Number(pv[8] || 0)
+                    active_pipeline: activePipeline,
+                    applications: applications,
+                    sourced: sourced,
+                    screening: screening,
+                    evaluated: evaluated,
+                    negotiations: negotiations,
+                    offers: offers,
+                    joined: joined,
+                    rejected: rejected,
+                    in_review: inReview,
+                    interviews: interviews
                 }
             });
         }
@@ -2173,6 +2195,7 @@ window.ClientPipelineStore = {
                 type: 'PIPELINE_REVISION_UPDATE',
                 clientId: cid,
                 revision: rev,
+                seq: rev,
                 pv: pv,
                 changed: payload.changed
             });
@@ -2190,6 +2213,7 @@ window.ClientPipelineStore = {
                 type: 'PIPELINE_UPDATE',
                 payload: {
                     client_id: cid,
+                    seq: rev,
                     revision: rev,
                     pv: pv,
                     changed: payload.changed
@@ -2205,7 +2229,9 @@ window.ClientPipelineStore = {
         const pv = payload.pv;
         if (!Array.isArray(pv) || pv.length < 9) return;
 
-        const [applications, sourced, screening, evaluated, negotiations, offers, joined, rejected, interviews] = pv;
+        const [sourced, screening, evaluated, negotiations, offers, joined, rejected, inReview, interviews] = pv;
+        const activePipeline = Number(sourced) + Number(screening) + Number(evaluated) + Number(negotiations) + Number(offers) + Number(joined);
+        const applications = activePipeline + Number(rejected) + Number(inReview);
 
         this._setPill($card.find('.step-sourcing'), sourced, 'Sourcing');
         this._setPill($card.find('.step-screening'), screening, 'Screening');
@@ -3241,15 +3267,18 @@ function renderClientRows(rows) {
         const jobHold = r.jobs ? (r.jobs.hold || 0) : 0;
         const jobClosed = r.jobs ? (r.jobs.closed || 0) : 0;
 
-        const applications = r.pv ? (r.pv[0] || 0) : (r.pipeline ? (r.pipeline.applications || 0) : 0);
-        const sourced = r.pv ? (r.pv[1] || 0) : (r.pipeline ? (r.pipeline.sourced || 0) : 0);
-        const screening = r.pv ? (r.pv[2] || 0) : (r.pipeline ? (r.pipeline.screening || 0) : 0);
-        const evaluated = r.pv ? (r.pv[3] || 0) : (r.pipeline ? (r.pipeline.evaluated || 0) : 0);
-        const negotiations = r.pv ? (r.pv[4] || 0) : (r.pipeline ? (r.pipeline.negotiations || 0) : 0);
-        const offers = r.pv ? (r.pv[5] || 0) : (r.pipeline ? (r.pipeline.offers || 0) : 0);
-        const joined = r.pv ? (r.pv[6] || 0) : (r.pipeline ? (r.pipeline.joined || 0) : 0);
-        const rejected = r.pv ? (r.pv[7] || 0) : (r.pipeline ? (r.pipeline.rejected || 0) : 0);
+        const sourced = r.pv ? (r.pv[0] || 0) : (r.pipeline ? (r.pipeline.sourced || 0) : 0);
+        const screening = r.pv ? (r.pv[1] || 0) : (r.pipeline ? (r.pipeline.screening || 0) : 0);
+        const evaluated = r.pv ? (r.pv[2] || 0) : (r.pipeline ? (r.pipeline.evaluated || 0) : 0);
+        const negotiations = r.pv ? (r.pv[3] || 0) : (r.pipeline ? (r.pipeline.negotiations || 0) : 0);
+        const offers = r.pv ? (r.pv[4] || 0) : (r.pipeline ? (r.pipeline.offers || 0) : 0);
+        const joined = r.pv ? (r.pv[5] || 0) : (r.pipeline ? (r.pipeline.joined || 0) : 0);
+        const rejected = r.pv ? (r.pv[6] || 0) : (r.pipeline ? (r.pipeline.rejected || 0) : 0);
+        const inReview = r.pv ? (r.pv[7] || 0) : (r.pipeline ? (r.pipeline.in_review || 0) : 0);
         const interviews = r.pv ? (r.pv[8] || 0) : (r.pipeline ? (r.pipeline.interviews || 0) : 0);
+
+        const activePipeline = sourced + screening + evaluated + negotiations + offers + joined;
+        const applications = activePipeline + rejected + inReview;
 
         const daysAgo = r.days_ago || '';
         const clientTypeClass = r.is_direct ? 'type-direct' : 'type-internal';

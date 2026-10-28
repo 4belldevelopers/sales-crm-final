@@ -1399,7 +1399,6 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
                 $job_closed = (int) ($jobsCount->job_inactive ?? 0);
                 $job_hold = (int) ($jobsCount->job_hold ?? 0);
 
-                $applications = (int) ($perf->all_candidates ?? 0);
                 $sourced = (int) ($perf->sourced ?? 0);
                 $screening = (int) ($perf->screening ?? 0);
                 $evaluated = (int) ($perf->evaluated ?? 0);
@@ -1407,7 +1406,12 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
                 $offers = (int) ($perf->offers ?? 0);
                 $joined = (int) ($perf->Joined ?? ($perf->joined ?? 0));
                 $rejected = (int) ($perf->rejected ?? 0);
+                $inReview = (int) ($perf->in_review ?? 0);
                 $interviews = (int) ($perf->all_interview ?? 0);
+
+                // Derived quantities (Invariant 3): Total Applications mathematically derived
+                $activePipeline = ($sourced + $screening + $evaluated + $negotiations + $offers + $joined);
+                $applications = ($activePipeline + $rejected + $inReview);
 
                 if (($recommendation_id ?? 0) > 0 && ($to_company_id ?? 0) == auth()->user()->company_id) {
                     $createdTimestamp = $from_created_at ?: ($rowObj->created_at ?? null);
@@ -1531,7 +1535,6 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
                         'active' => $job_active,
                     ],
                     'pv' => [
-                        $applications,
                         $sourced,
                         $screening,
                         $evaluated,
@@ -1539,9 +1542,11 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
                         $offers,
                         $joined,
                         $rejected,
+                        $inReview,
                         $interviews,
                     ],
                     'pipeline' => [
+                        'active_pipeline' => $activePipeline,
                         'applications' => $applications,
                         'sourced' => $sourced,
                         'screening' => $screening,
@@ -1550,6 +1555,7 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
                         'offers' => $offers,
                         'joined' => $joined,
                         'rejected' => $rejected,
+                        'in_review' => $inReview,
                         'interviews' => $interviews,
                     ],
                     'connected_on' => (string) $newDate,

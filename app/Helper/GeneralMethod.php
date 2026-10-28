@@ -15763,6 +15763,7 @@ END:VCALENDAR";
                             'negotiations' => ['filter' => ['term' => ['job_master_status_id' => 4]]],
                             'offers' => ['filter' => ['term' => ['job_master_status_id' => 5]]],
                             'rejected' => ['filter' => ['term' => ['job_master_status_id' => 7]]],
+                            'in_review' => ['filter' => ['term' => ['job_master_status_id' => 8]]],
                         ],
                     ],
                 ];
@@ -15775,6 +15776,7 @@ END:VCALENDAR";
                 $negotiations = $response['aggregations']['negotiations']['doc_count'] ?? 0;
                 $offers = $response['aggregations']['offers']['doc_count'] ?? 0;
                 $rejected = $response['aggregations']['rejected']['doc_count'] ?? 0;
+                $inReview = $response['aggregations']['in_review']['doc_count'] ?? 0;
             }
 
             if ($elasticService->indexExists(ELASTIC_INERTVIEW_TRACKER)) {
@@ -15815,6 +15817,7 @@ END:VCALENDAR";
                 'negotiations' => $negotiations,
                 'offers' => $offers,
                 'rejected' => $rejected ?? 0,
+                'in_review' => $inReview ?? 0,
                 'all_interview' => $allInterview,
             ];
         });
@@ -15927,6 +15930,7 @@ END:VCALENDAR";
                             'negotiations' => ['filter' => ['term' => ['job_master_status_id' => 4]]],
                             'offers' => ['filter' => ['term' => ['job_master_status_id' => 5]]],
                             'rejected' => ['filter' => ['term' => ['job_master_status_id' => 7]]],
+                            'in_review' => ['filter' => ['term' => ['job_master_status_id' => 8]]],
                         ],
                     ],
                 ];
@@ -15940,6 +15944,7 @@ END:VCALENDAR";
                 $negotiations = $response['aggregations']['negotiations']['doc_count'] ?? 0;
                 $offers = $response['aggregations']['offers']['doc_count'] ?? 0;
                 $rejected = $response['aggregations']['rejected']['doc_count'] ?? 0;
+                $inReview = $response['aggregations']['in_review']['doc_count'] ?? 0;
             }
 
             if ($elasticService->indexExists(ELASTIC_INERTVIEW_TRACKER)) {
@@ -15971,6 +15976,7 @@ END:VCALENDAR";
                 'negotiations' => $negotiations,
                 'offers' => $offers,
                 'rejected' => $rejected ?? 0,
+                'in_review' => $inReview ?? 0,
                 'all_interview' => $allInterview,
             ];
         });
