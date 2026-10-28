@@ -7261,8 +7261,12 @@ use Carbon\Carbon;
                         }
                     });
 
-                    // Compute stage counts strictly from hydrated candidates (Guarantees 100% list-badge parity)
-                    self.calculateStageCounts(self.allCandidates);
+                    // Compute stage counts (from ES meta if multi-page, or strictly from hydrated list)
+                    if (res.meta && res.meta.stage_counts && self.pagination && self.pagination.has_more) {
+                        self.stageCounts = Object.assign({}, res.meta.stage_counts);
+                    } else {
+                        self.calculateStageCounts(self.allCandidates);
+                    }
 
                     self.state = 'READY';
                     $('#cdCandSkeletonLoader').hide();
@@ -7377,7 +7381,9 @@ use Carbon\Carbon;
             var self = this;
             (list || []).forEach(function(cand) {
                 var stage = self.getCandidateStage(cand);
-                if (counts.hasOwnProperty(stage)) {
+                if (stage === 'inreview') {
+                    counts.in_review++;
+                } else if (counts.hasOwnProperty(stage)) {
                     counts[stage]++;
                 }
             });
