@@ -2080,9 +2080,11 @@ $end_date   =	date('d-M-Y', $date);
                                     <p class="fs-5" style="color:#64748b;margin-top:0.125rem;">Manage and track team working on this job</p>
                                 </div>
                                 <div style="display:flex;align-items:center;gap:0.5rem;flex-shrink:0;">
+                                    @if(empty($isReadOnly))
                                         <button data-row-id="{{ @$job->id }}" class="btn-primary hm-listing fs-5" style="padding:0.3rem 0.625rem;">
                                             <i class="fa-solid fa-plus fs-5" style=""></i> Add Team
                                         </button>
+                                    @endif
                                 </div>
                             </div>
 
@@ -2200,7 +2202,7 @@ $end_date   =	date('d-M-Y', $date);
                                     <p class="fs-5" style="color:#64748b;margin-top:0.125rem;">Manage and track agencies working on this job</p>
                                 </div>
                                 <div style="display:flex;align-items:center;gap:0.5rem;flex-shrink:0;">
-                                    @if(@$tabshow)
+                                    @if(@$tabshow && empty($isReadOnly))
                                         @if ($viewmore)
                                         <button data-row-id="{{ @$job->id }}" class="btn-primary spartner-listing fs-5" style="padding:0.3rem 0.625rem;">
                                             <i class="fa-solid fa-plus fs-5" style=""></i> Add Agency
@@ -2332,7 +2334,7 @@ $end_date   =	date('d-M-Y', $date);
                                                             <span class="jd-empty-state-icon"><i class="fas fa-building"></i></span>
                                                             <p class="jd-empty-state-title">No agencies assigned</p>
                                                             <p class="jd-empty-state-text">No agencies are currently working on this job. Add an agency to start receiving profiles.</p>
-                                                            @if(@$tabshow && $viewmore)
+                                                            @if(@$tabshow && $viewmore && empty($isReadOnly))
                                                                 <button type="button" data-row-id="{{ @$job->id }}" class="jd-empty-state-action spartner-listing">
                                                                     <i class="fa-solid fa-plus"></i> Add Agency
                                                                 </button>

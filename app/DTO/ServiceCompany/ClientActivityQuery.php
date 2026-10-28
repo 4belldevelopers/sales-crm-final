@@ -49,7 +49,7 @@ class ClientActivityQuery
         }
 
         $rawCategory = strtolower(trim((string) $request->input('category', 'all')));
-        $allowedCategories = ['all', 'pipeline', 'interviews', 'offers', 'jobs', 'crm'];
+        $allowedCategories = ['all', 'jobs', 'candidates', 'pipeline', 'interviews', 'offers', 'crm'];
         $category = in_array($rawCategory, $allowedCategories, true) ? $rawCategory : 'all';
 
         $rawTimeframe = strtolower(trim((string) $request->input('timeframe', 'all')));

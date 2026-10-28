@@ -1,10 +1,10 @@
 @if(empty($items))
     <div class="cd-activity-empty-state">
         <div class="cd-activity-empty-icon">
-            <i class="fa fa-history"></i>
+            <i class="fas fa-clock-rotate-left"></i>
         </div>
         <div class="cd-activity-empty-title">No Activity Found</div>
-        <div class="cd-activity-empty-text">There are no recorded pipeline events, interviews, or updates for this client under the selected filter criteria.</div>
+        <div class="cd-activity-empty-text">There are no recorded audit events matching the selected filter criteria.</div>
     </div>
 @else
     @php
@@ -27,19 +27,32 @@
             $seq = $item['client_activity_sequence'] ?? 0;
             $eventId = $item['event_id'] ?? '';
 
-            // Initials helper
+            // Candidate Name & Initials
             $candidateName = $candidate['name'] ?? 'Candidate';
             $words = preg_split('/\s+/', trim($candidateName));
             $cInitials = strtoupper(substr($words[0] ?? 'C', 0, 1) . (isset($words[1]) ? substr($words[1], 0, 1) : ''));
+            $candidateId = $candidate['wise_id'] ?? ($candidate['id'] ?? ($candidate['application_id'] ?? ''));
 
+            // Job Details
+            $jobStatus = $job['status'] ?? 'active';
+            $jobTitle = $job['title'] ?? 'Requisition';
+            $jobCode = $job['code'] ?? ('JERO-' . ($job['id'] ?? ''));
+            $jobOpenings = (int) ($job['total_positions'] ?? 1);
+
+            // Attribution & Actor Company Resolution (NEVER recruiter role)
             $attribution = $item['attribution'] ?? [];
             $attributionLabel = $attribution['label'] ?? ($category === 'jobs' ? 'Created by' : ($category === 'crm' ? 'Logged by' : 'Uploaded by'));
             $attributionName = $attribution['name'] ?? ($actor['name'] ?? ($category === 'jobs' ? 'Account Manager' : 'Technical Recruiter'));
-            $aWords = preg_split('/\s+/', trim($attributionName));
-            $aInitials = strtoupper(substr($aWords[0] ?? 'R', 0, 1) . (isset($aWords[1]) ? substr($aWords[1], 0, 1) : ''));
+            $companyName = $attribution['company_name'] ?? ($actor['company_name'] ?? ($category === 'jobs' ? ($job['creator_company'] ?? '4Bell Technology') : ($candidate['uploader_company'] ?? '4Bell Technology')));
+            if (empty($companyName) || strtolower($companyName) === 'account lead' || strtolower($companyName) === 'technical recruiter') {
+                $companyName = '4Bell Technology';
+            }
 
-            // Status tokens calculation for standardized badges and markers
-            $jobStatus = $job['status'] ?? 'active';
+            // Standardize Stage & Status Colors:
+            // 🟢 Active Requisition / Active / Offer / Joined -> Green
+            // 🟠 Hold -> Orange
+            // 🔴 Closed / Removed / Rejected -> Red
+            // 🔵 Pipeline / Interview -> Blue / Violet
             $dotStatusClass = 'dot-status-pipeline';
             if ($category === 'jobs') {
                 $dotStatusClass = 'dot-status-' . $jobStatus;
@@ -53,6 +66,17 @@
                 $transStatus = $transition['status'] ?? 'pipeline';
                 $dotStatusClass = 'dot-status-' . $transStatus;
             }
+
+            // Activity Type Label
+            $activityLabel = match($eventType) {
+                'job.created' => 'Job Requisition Created',
+                'job.updated' => 'Job Requisition Updated',
+                'candidate.joined' => 'Candidate Joined',
+                'offer.sent' => 'Offer Extended',
+                'interview.scheduled' => 'Interview Scheduled',
+                'client.note_added' => 'Client Note Logged',
+                default => ($category === 'jobs' ? 'Job Requisition Created' : ($category === 'interviews' ? 'Interview Scheduled' : 'Candidate Stage Changed'))
+            };
         @endphp
 
         @if($currentGroupDate !== $itemDateStr)
@@ -60,26 +84,27 @@
             <div class="cd-activity-day-group">
                 <div class="cd-activity-day-header">
                     <span class="cd-activity-date-badge">
-                        <i class="far fa-calendar-alt"></i> {{ $itemDateStr }}
+                        <i class="far fa-calendar-alt me-1"></i> {{ $itemDateStr }}
                     </span>
                 </div>
             </div>
         @endif
 
-        <div class="cd-activity-card" 
+        <div class="cd-activity-card cd-activity-audit-card" 
              data-event-id="{{ $eventId }}" 
              data-sequence="{{ $seq }}" 
              data-category="{{ $category }}"
-             data-event-type="{{ $eventType }}">
+             data-event-type="{{ $eventType }}"
+             data-search-terms="{{ strtolower($candidateName . ' ' . ($candidate['designation'] ?? '') . ' ' . $jobTitle . ' ' . $jobCode . ' ' . $attributionName . ' ' . $companyName . ' ' . ($transition['to_stage_name'] ?? '')) }}">
             
             {{-- Connecting Node Dot --}}
             <div class="cd-activity-node-dot {{ $dotStatusClass }} stream-{{ $category }}"></div>
 
-            {{-- Card Body: 4 Discrete Sub-Cards --}}
+            {{-- Audit Timeline Row: Activity -> Entity -> What Changed -> Who -> Company -> Time --}}
             <div class="cd-activity-card-body">
                 <div class="cd-activity-subcard-grid">
 
-                    {{-- Sub-Card 1: Entity & Subject --}}
+                    {{-- 1. Activity & Entity Sub-Card --}}
                     <div class="cd-activity-subcard-entity">
                         @if($category === 'jobs')
                             @php
@@ -91,26 +116,46 @@
                                 };
                             @endphp
                             <div class="cd-activity-entity-avatar" style="{{ $jAvatarStyle }}">
-                                <i class="fa fa-briefcase"></i>
+                                <i class="fas fa-briefcase"></i>
                             </div>
                             <div class="cd-activity-entity-meta">
-                                <div class="cd-activity-entity-name" title="{{ $job['title'] ?? 'Requisition' }}">
-                                    {{ $job['title'] ?? 'Requisition' }}
+                                <div class="cd-activity-pill-label">
+                                    <span class="cd-activity-stream-pill stream-jobs-pill">JOB REQUISITION</span>
+                                </div>
+                                <div class="cd-activity-entity-name" title="{{ $jobTitle }}">
+                                    {{ $jobTitle }}
                                 </div>
                                 <div class="cd-activity-entity-sub">
-                                    {{ $job['code'] ?? 'JOB-REQ' }} &bull; {{ $job['total_positions'] ?? 1 }} {{ \Illuminate\Support\Str::plural('Opening', $job['total_positions'] ?? 1) }}
+                                    <span class="fw-semibold text-gray-800">{{ $jobCode }}</span> &bull; {{ $jobOpenings }} {{ \Illuminate\Support\Str::plural('Opening', $jobOpenings) }}
                                 </div>
                             </div>
                         @elseif($category === 'crm')
                             <div class="cd-activity-entity-avatar" style="background: #f0fdf4; color: #15803d; border-color: #bbf7d0;">
-                                <i class="fa fa-sticky-note"></i>
+                                <i class="fas fa-sticky-note"></i>
                             </div>
                             <div class="cd-activity-entity-meta">
-                                <div class="cd-activity-entity-name">
-                                    Client Interaction Note
+                                <div class="cd-activity-pill-label">
+                                    <span class="cd-activity-stream-pill stream-crm-pill">CRM NOTE</span>
                                 </div>
-                                <div class="cd-activity-entity-sub">
-                                    Logged by {{ $actorName }}
+                                <div class="cd-activity-entity-name">Client Interaction</div>
+                                <div class="cd-activity-entity-sub">Logged Note</div>
+                            </div>
+                        @elseif($category === 'interviews')
+                            <div class="cd-activity-entity-avatar" style="background: #f5f3ff; color: #7c3aed; border-color: #ddd6fe;">
+                                <i class="fas fa-video"></i>
+                            </div>
+                            <div class="cd-activity-entity-meta">
+                                <div class="cd-activity-pill-label">
+                                    <span class="cd-activity-stream-pill stream-interviews-pill">INTERVIEW</span>
+                                </div>
+                                <div class="cd-activity-entity-name" title="{{ $candidateName }}">
+                                    {{ $candidateName }}
+                                </div>
+                                <div class="cd-activity-entity-sub" title="{{ $candidate['designation'] ?? $jobTitle }}">
+                                    {{ $candidate['designation'] ?? $jobTitle }}
+                                    @if(!empty($jobCode))
+                                        &bull; {{ $jobCode }}
+                                    @endif
                                 </div>
                             </div>
                         @else
@@ -118,20 +163,23 @@
                                 {{ $cInitials }}
                             </div>
                             <div class="cd-activity-entity-meta">
+                                <div class="cd-activity-pill-label">
+                                    <span class="cd-activity-stream-pill stream-pipeline-pill">CANDIDATE</span>
+                                </div>
                                 <div class="cd-activity-entity-name" title="{{ $candidateName }}">
                                     {{ $candidateName }}
                                 </div>
-                                <div class="cd-activity-entity-sub" title="{{ $candidate['designation'] ?? ($job['title'] ?? '') }}">
-                                    {{ $candidate['designation'] ?? ($job['title'] ?? 'Candidate') }}
-                                    @if(!empty($job['code']))
-                                        &bull; {{ $job['code'] }}
+                                <div class="cd-activity-entity-sub" title="{{ $candidate['designation'] ?? $jobTitle }}">
+                                    <span class="fw-semibold text-gray-800">{{ $candidate['designation'] ?? $jobTitle }}</span>
+                                    @if(!empty($candidateId))
+                                        &bull; #{{ $candidateId }}
                                     @endif
                                 </div>
                             </div>
                         @endif
                     </div>
 
-                    {{-- Sub-Card 2: Context / Transition / Details --}}
+                    {{-- 2. What Changed Sub-Card (Transition & Standard Status Badges) --}}
                     <div class="cd-activity-subcard-detail">
                         @if($category === 'pipeline' || $category === 'offers')
                             @php
@@ -149,17 +197,19 @@
                                     'removed', 'closed' => 'fa-times-circle',
                                     default => 'fa-check-circle'
                                 };
+                                $fromStage = $transition['from_stage_name'] ?? '';
+                                $toStage = $transition['to_stage_name'] ?? 'Screening';
                             @endphp
                             <div class="cd-activity-stage-transition">
-                                @if(!empty($transition['from_stage_name']))
+                                @if(!empty($fromStage) && strtolower($fromStage) !== strtolower($toStage))
                                     <span class="cd-activity-stage-badge cd-activity-stage-from">
-                                        {{ $transition['from_stage_name'] }}
+                                        {{ $fromStage }}
                                     </span>
-                                    <i class="fa fa-arrow-right cd-activity-stage-arrow"></i>
+                                    <i class="fas fa-arrow-right cd-activity-stage-arrow"></i>
                                 @endif
                                 <span class="cd-status-badge {{ $transBadgeClass }}">
-                                    <i class="fa {{ $transIcon }}" style="font-size: 10px;"></i>
-                                    {{ $transition['to_stage_name'] ?? 'Updated' }}
+                                    <i class="fas {{ $transIcon }}" style="font-size: 10px;"></i>
+                                    {{ $toStage }}
                                 </span>
 
                                 @if(!empty($details['compensation']['amount']) && empty($details['compensation']['is_confidential']))
@@ -171,12 +221,12 @@
                         @elseif($category === 'interviews')
                             <div class="cd-activity-stage-transition">
                                 <span class="cd-status-badge status-interview">
-                                    <i class="fa fa-video" style="font-size: 10px;"></i>
+                                    <i class="fas fa-video" style="font-size: 10px;"></i>
                                     {{ $details['interview_mode'] ?? 'Video Call' }}
                                 </span>
                                 @if(!empty($details['scheduled_time']))
                                     <span class="cd-activity-stage-badge cd-activity-stage-from" style="font-size: 10.5px;">
-                                        <i class="far fa-clock" style="font-size: 10px;"></i>
+                                        <i class="far fa-clock me-1" style="font-size: 10px;"></i>
                                         {{ \Carbon\Carbon::parse($details['scheduled_time'])->format('M d, h:i A') }}
                                     </span>
                                 @endif
@@ -201,7 +251,7 @@
                             @endphp
                             <div class="cd-activity-stage-transition">
                                 <span class="cd-status-badge {{ $statusBadgeClass }}">
-                                    <i class="fa {{ $statusIcon }}" style="font-size: 10px;"></i>
+                                    <i class="fas {{ $statusIcon }}" style="font-size: 10px;"></i>
                                     {{ $statusLabel }} Requisition
                                 </span>
                             </div>
@@ -212,11 +262,8 @@
                         @endif
                     </div>
 
-                    {{-- Sub-Card 3: Ownership / Attribution & Authority --}}
+                    {{-- 3. Who & Company Sub-Card (Actual Owner & Company - NEVER Recruiter Role) --}}
                     <div class="cd-activity-subcard-actor">
-                        <div class="cd-activity-actor-avatar" title="{{ $attributionName }}">
-                            {{ $aInitials }}
-                        </div>
                         <div class="cd-activity-actor-meta">
                             <div class="cd-activity-actor-attribution">
                                 {{ $attributionLabel }}:
@@ -224,55 +271,34 @@
                             <div class="cd-activity-actor-name" title="{{ $attributionName }}">
                                 {{ $attributionName }}
                             </div>
-                            <div class="cd-activity-actor-role">
-                                {{ $actor['role'] ?? ($category === 'jobs' ? 'Account Lead' : 'Technical Recruiter') }}
+                            <div class="cd-activity-actor-company" title="{{ $companyName }}">
+                                <i class="far fa-building me-1" style="font-size: 10px; color: #64748b;"></i>{{ $companyName }}
                             </div>
                         </div>
                     </div>
 
-                    {{-- Sub-Card 4: Actions & Kebab Menu --}}
+                    {{-- 4. Time & Action Sub-Card (Strictly Read-Only, ZERO Job Drawer Trigger) --}}
                     <div class="cd-activity-subcard-actions">
+                        <div class="cd-activity-time-wrap">
+                            <div class="cd-activity-time-ago" title="{{ $occurred->toIso8601String() }}">
+                                {{ $timeAgo }}
+                            </div>
+                            <div class="cd-activity-time-clock">
+                                {{ $timeFormatted }}
+                            </div>
+                        </div>
+
+                        {{-- Action Button: Strictly Candidate Read-Only View, NO JOB DRAWER BUTTON --}}
                         @if(!empty($candidate['id']) || !empty($candidate['wise_id']))
                             @php
                                 $targetCandDrawerId = $candidate['wise_id'] ?? $candidate['id'];
                             @endphp
-                            <button type="button" class="cd-activity-btn-action" onclick="if(window.openCandidateDrawer) { window.openCandidateDrawer('{{ $targetCandDrawerId }}', { readOnly: true }); } else { console.log('Candidate', '{{ $targetCandDrawerId }}'); }">
-                                <i class="far fa-user"></i> View Profile
-                            </button>
-                        @elseif(!empty($job['id']))
-                            <button type="button" class="cd-activity-btn-action" onclick="if(window.openJobDrawer) { window.openJobDrawer('{{ $job['id'] }}', { readOnly: true }); } else { console.log('Job', '{{ $job['id'] }}'); }">
-                                <i class="far fa-eye"></i> View Profile
-                            </button>
-                        @else
-                            <button type="button" class="cd-activity-btn-action" onclick="if(window.openClientNotesModal) { window.openClientNotesModal(); }">
-                                <i class="far fa-file-alt"></i> Details
+                            <button type="button" 
+                                    class="cd-activity-btn-action" 
+                                    onclick="if(window.openCandidateDrawer) { window.openCandidateDrawer('{{ $targetCandDrawerId }}', { readOnly: true }); }">
+                                <i class="far fa-user me-1"></i> View Profile
                             </button>
                         @endif
-
-                        {{-- Kebab Menu Wrapper --}}
-                        <div class="cd-activity-kebab-wrapper">
-                            <button type="button" class="cd-activity-btn-kebab" onclick="window.ClientActivityManager && window.ClientActivityManager.toggleKebabMenu(event, this)">
-                                <i class="fa fa-ellipsis-v"></i>
-                            </button>
-                            <div class="cd-activity-kebab-menu">
-                                <a href="javascript:void(0)" class="cd-activity-menu-item" onclick="navigator.clipboard.writeText('{{ $eventId }}'); toastr && toastr.success('Event ID copied');">
-                                    <i class="far fa-copy"></i> Copy Event ID
-                                </a>
-                                @if(!empty($job['id']))
-                                    <a href="javascript:void(0)" class="cd-activity-menu-item" onclick="if(window.openJobDrawer) window.openJobDrawer('{{ $job['id'] }}', { readOnly: true });">
-                                        <i class="fa fa-briefcase"></i> View Requisition
-                                    </a>
-                                @endif
-                                @if(!empty($candidate['id']) || !empty($candidate['wise_id']))
-                                    <a href="javascript:void(0)" class="cd-activity-menu-item" onclick="if(window.openCandidateDrawer) window.openCandidateDrawer('{{ $targetCandDrawerId }}', { readOnly: true });">
-                                        <i class="fa fa-user-circle"></i> Candidate Profile
-                                    </a>
-                                @endif
-                                <a href="javascript:void(0)" class="cd-activity-menu-item" onclick="if(window.ClientActivityManager) window.ClientActivityManager.openNoteModal();">
-                                    <i class="fa fa-edit"></i> Add Interaction Note
-                                </a>
-                            </div>
-                        </div>
                     </div>
 
                 </div>
@@ -284,12 +310,12 @@
                     <span class="cd-activity-stream-pill stream-{{ $category }}-pill">
                         {{ strtoupper($category) }}
                     </span>
-                    <span title="{{ $occurred->toIso8601String() }}">
-                        <i class="far fa-clock"></i> {{ $timeAgo }} &bull; {{ $timeFormatted }}
+                    <span>
+                        <i class="far fa-clock me-1"></i> {{ $activityLabel }} &bull; {{ $timeFormatted }}
                     </span>
                 </div>
                 <div class="cd-activity-footer-right">
-                    <span class="cd-activity-seq-tag" title="Monotonic Sequence Pointer">
+                    <span class="cd-activity-seq-tag" title="Monotonic Audit Sequence">
                         #seq-{{ $seq }}
                     </span>
                 </div>

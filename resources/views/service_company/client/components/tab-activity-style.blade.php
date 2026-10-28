@@ -755,6 +755,19 @@
     line-height: 1.25 !important;
 }
 
+.cd-activity-actor-company {
+    font-size: 11px !important;
+    font-weight: 600 !important;
+    color: #475569 !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 4px !important;
+    margin-top: 1px !important;
+}
+
 .cd-activity-actor-role {
     font-size: 10.5px !important;
     color: #94a3b8 !important;
@@ -763,12 +776,36 @@
     text-overflow: ellipsis !important;
 }
 
+.cd-activity-pill-label {
+    margin-bottom: 2px !important;
+}
+
+.cd-activity-time-wrap {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: flex-end !important;
+    margin-right: 6px !important;
+}
+
+.cd-activity-time-ago {
+    font-size: 11.5px !important;
+    font-weight: 600 !important;
+    color: #334155 !important;
+    white-space: nowrap !important;
+}
+
+.cd-activity-time-clock {
+    font-size: 10.5px !important;
+    color: #94a3b8 !important;
+    white-space: nowrap !important;
+}
+
 /* Discrete Sub-Card 4: Actions & Overflow Kebab Menu */
 .cd-activity-subcard-actions {
     display: flex !important;
     align-items: center !important;
     justify-content: flex-end !important;
-    gap: 6px !important;
+    gap: 8px !important;
     margin-left: auto !important;
 }
 

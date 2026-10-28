@@ -4547,70 +4547,9 @@
                         View Audit Log <i class="fas fa-arrow-right ms-1"></i>
                       </a>
                     </div>
-                    <div class="cd-timeline-subcards-stream">
-                      <!-- Activity 1 -->
-                      <div class="cd-timeline-item-subcard">
-                        <div class="cd-timeline-dot green"><i class="fas fa-users"></i></div>
-                        <div class="cd-timeline-body">
-                          <div class="cd-timeline-title">Candidates submitted to client</div>
-                          <div class="cd-timeline-subtext">{{ auth()->user()->name ?? 'Recruiter' }} forwarded active candidate profiles</div>
-                        </div>
-                        <div class="cd-timeline-meta-wrap">
-                          <span class="cd-timeline-badge green">Submitted</span>
-                          <span class="cd-timeline-timestamp">2 hours ago</span>
-                        </div>
-                      </div>
-
-                      <!-- Activity 2 -->
-                      <div class="cd-timeline-item-subcard">
-                        <div class="cd-timeline-dot purple"><i class="fas fa-calendar-check"></i></div>
-                        <div class="cd-timeline-body">
-                          <div class="cd-timeline-title">Client interview scheduled</div>
-                          <div class="cd-timeline-subtext">Interview confirmed with hiring team</div>
-                        </div>
-                        <div class="cd-timeline-meta-wrap">
-                          <span class="cd-timeline-badge amber">Scheduled</span>
-                          <span class="cd-timeline-timestamp">1 day ago</span>
-                        </div>
-                      </div>
-
-                      <!-- Activity 3 -->
-                      <div class="cd-timeline-item-subcard">
-                        <div class="cd-timeline-dot orange"><i class="fas fa-file-lines"></i></div>
-                        <div class="cd-timeline-body">
-                          <div class="cd-timeline-title">Offer proposal extended</div>
-                          <div class="cd-timeline-subtext">Compensation terms approved</div>
-                        </div>
-                        <div class="cd-timeline-meta-wrap">
-                          <span class="cd-timeline-badge orange">Offer Sent</span>
-                          <span class="cd-timeline-timestamp">2 days ago</span>
-                        </div>
-                      </div>
-
-                      <!-- Activity 4 -->
-                      <div class="cd-timeline-item-subcard">
-                        <div class="cd-timeline-dot blue"><i class="fas fa-briefcase"></i></div>
-                        <div class="cd-timeline-body">
-                          <div class="cd-timeline-title">Direct mandate received</div>
-                          <div class="cd-timeline-subtext">Hiring requisition added to board</div>
-                        </div>
-                        <div class="cd-timeline-meta-wrap">
-                          <span class="cd-timeline-badge blue">Mandate</span>
-                          <span class="cd-timeline-timestamp">3 days ago</span>
-                        </div>
-                      </div>
-
-                      <!-- Activity 5 -->
-                      <div class="cd-timeline-item-subcard">
-                        <div class="cd-timeline-dot green"><i class="fas fa-user-check"></i></div>
-                        <div class="cd-timeline-body">
-                          <div class="cd-timeline-title">Candidate onboarding complete</div>
-                          <div class="cd-timeline-subtext">Placement milestone reached</div>
-                        </div>
-                        <div class="cd-timeline-meta-wrap">
-                          <span class="cd-timeline-badge green">Joined</span>
-                          <span class="cd-timeline-timestamp">5 days ago</span>
-                        </div>
+                    <div class="cd-timeline-subcards-stream" id="cdDirectOverviewRecentActivityList">
+                      <div class="p-4 text-center text-muted" style="font-size: 11.5px;">
+                        <i class="fas fa-spinner fa-spin me-1 text-primary"></i> Loading recent activity…
                       </div>
                     </div>
                   </div>
@@ -7464,6 +7403,9 @@
             }
 
             if (normTab === 'overview') {
+                if (window.ClientActivityManager && typeof window.ClientActivityManager.initClient === 'function') {
+                    window.ClientActivityManager.initClient(dcClientId, false, dcClientId, !!force);
+                }
                 if (coord) coord.transition(normTab, 'READY');
                 if (window.ClientStateManager) window.ClientStateManager.markTabLoaded(dcClientId, target);
                 return;
@@ -7474,6 +7416,11 @@
         // Pre-warm in-memory direct contacts manager immediately upon drawer mount
         if (window.DirectClientContactsManager) {
             try { window.DirectClientContactsManager.init(dcClientId); } catch(e){}
+        }
+
+        // Pre-warm client activity manager for instant Overview Recent Activity
+        if (window.ClientActivityManager && typeof window.ClientActivityManager.initClient === 'function') {
+            try { window.ClientActivityManager.initClient(dcClientId, false, dcClientId, false); } catch(e){}
         }
 
         // Initialize active tab immediately on drawer mount

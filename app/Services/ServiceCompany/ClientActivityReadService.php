@@ -350,10 +350,11 @@ class ClientActivityReadService
 
         // Convenient aliases for UI sub-tabs
         $kpis['all'] = $kpis['total_activities'];
-        $kpis['pipeline'] = $kpis['pipeline_events'];
-        $kpis['interviews'] = $kpis['interview_events'];
-        $kpis['offers'] = $kpis['offer_events'];
         $kpis['jobs'] = $kpis['job_events'];
+        $kpis['candidates'] = $kpis['pipeline_events'] + $kpis['offer_events'];
+        $kpis['interviews'] = $kpis['interview_events'];
+        $kpis['pipeline'] = $kpis['pipeline_events'];
+        $kpis['offers'] = $kpis['offer_events'];
         $kpis['crm'] = $kpis['note_events'];
 
         try {
@@ -381,7 +382,7 @@ class ClientActivityReadService
         $indexKeys = [];
 
         // 1. Timeline Search Query
-        if (! empty($clientJobIds) && in_array($query->category, ['all', 'pipeline', 'offers'], true) && $this->elasticService->indexExists($indexTimeline)) {
+        if (! empty($clientJobIds) && in_array($query->category, ['all', 'pipeline', 'offers', 'candidates'], true) && $this->elasticService->indexExists($indexTimeline)) {
             $must = [['terms' => ['job_id' => $clientJobIds]]];
             if ($timeRange) {
                 $must[] = ['range' => ['created_at' => $timeRange]];
@@ -513,10 +514,82 @@ class ClientActivityReadService
     }
 
     /**
-     * Batch resolves candidate details (full_name, designation, uploader) from Elasticsearch
+     * Formats company name cleanly with proper casing (e.g. 4Bell Technology).
+     */
+    protected function formatCompanyName(string $name): string
+    {
+        $trimmed = trim($name);
+        if (empty($trimmed)) {
+            return '4Bell Technology';
+        }
+        $formatted = ucwords($trimmed);
+        if (stripos($formatted, '4bell') !== false) {
+            $formatted = str_ireplace('4bell', '4Bell', $formatted);
+        }
+
+        return $formatted;
+    }
+
+    /**
+     * Resolves tenant company name via Elasticsearch or Redis cache with 0% MySQL reads.
+     */
+    protected function resolveTenantCompanyName(int $companyId): string
+    {
+        if ($companyId <= 0) {
+            return '4Bell Technology';
+        }
+
+        $cacheKey = "ats:tenant_comp_name:{$companyId}";
+        try {
+            $cached = Redis::get($cacheKey);
+            if ($cached) {
+                return $this->formatCompanyName((string) $cached);
+            }
+        } catch (\Throwable) {
+        }
+
+        $indexCompanies = defined('ELASTIC_COMPANIES_INDEX') ? ELASTIC_COMPANIES_INDEX : config('constants.ELASTIC_COMPANIES_INDEX', 'local_companies_elastic');
+        try {
+            if ($this->elasticService->indexExists($indexCompanies)) {
+                $res = $this->elasticService->getClient()->search([
+                    'index' => $indexCompanies,
+                    'size' => 1,
+                    '_source' => ['company_name', 'name'],
+                    'body' => [
+                        'query' => [
+                            'bool' => [
+                                'should' => [
+                                    ['term' => ['id' => $companyId]],
+                                    ['term' => ['_id' => $companyId]],
+                                ],
+                                'minimum_should_match' => 1,
+                            ],
+                        ],
+                    ],
+                ]);
+                $hit = $res['hits']['hits'][0]['_source'] ?? [];
+                $name = trim((string) ($hit['company_name'] ?? $hit['name'] ?? ''));
+                if (! empty($name)) {
+                    $compName = $this->formatCompanyName($name);
+                    try {
+                        Redis::setex($cacheKey, 86400, $compName);
+                    } catch (\Throwable) {
+                    }
+
+                    return $compName;
+                }
+            }
+        } catch (\Throwable) {
+        }
+
+        return '4Bell Technology';
+    }
+
+    /**
+     * Batch resolves candidate details (full_name, designation, uploader, company) from Elasticsearch
      * across ats_candidates_elastic and local_candidates_elastic with Redis caching and 0% MySQL reads.
      */
-    protected function resolveCandidateProfiles(array $appIds, array $emails = []): array
+    protected function resolveCandidateProfiles(array $appIds, array $emails = [], int $tenantId = 0): array
     {
         if (empty($appIds) && empty($emails)) {
             return [];
@@ -585,7 +658,7 @@ class ClientActivityReadService
                 $params = [
                     'index' => $indices,
                     'size' => max((count($unresolvedIds) + count($unresolvedEmails)) * 2, 20),
-                    '_source' => ['id', 'wiseId', 'candidate_id', 'full_name', 'current_designation', 'email', 'posted_by', 'submitted_by'],
+                    '_source' => ['id', 'wiseId', 'candidate_id', 'full_name', 'current_designation', 'email', 'posted_by', 'submitted_by', 'company_name', 'apl_company_name', 'submitted_by_company_name', 'cur_company_name'],
                     'body' => [
                         'query' => [
                             'bool' => [
@@ -606,10 +679,19 @@ class ClientActivityReadService
                     $cEmail = strtolower(trim((string) ($s['email'] ?? '')));
                     $uName = trim((string) ($s['posted_by'] ?? ''));
 
+                    $cComp = trim((string) ($s['cur_company_name'] ?? $s['company_name'] ?? $s['apl_company_name'] ?? $s['submitted_by_company_name'] ?? ''));
+                    if (empty($cComp) && $tenantId > 0) {
+                        $cComp = $this->resolveTenantCompanyName($tenantId);
+                    }
+                    if (empty($cComp)) {
+                        $cComp = '4Bell Technology';
+                    }
+
                     $data = [
                         'name' => ! empty($cName) ? ucwords($cName) : null,
                         'designation' => ! empty($cDesig) ? ucwords($cDesig) : null,
                         'uploader_name' => ! empty($uName) ? ucwords($uName) : null,
+                        'company_name' => $this->formatCompanyName($cComp),
                         'wise_id' => $cid > 0 ? $cid : null,
                         'candidate_id' => $candAppId > 0 ? $candAppId : null,
                     ];
@@ -645,10 +727,10 @@ class ClientActivityReadService
     }
 
     /**
-     * Batch resolves job requisition details (designation, creator/owner) from Elasticsearch
+     * Batch resolves job requisition details (designation, creator/owner, creator company) from Elasticsearch
      * across ats_jobs_elastic and local_jobs_elastic with Redis caching and 0% MySQL reads.
      */
-    protected function resolveJobProfiles(array $jobIds): array
+    protected function resolveJobProfiles(array $jobIds, int $tenantId = 0): array
     {
         if (empty($jobIds)) {
             return [];
@@ -684,7 +766,7 @@ class ClientActivityReadService
                 $params = [
                     'index' => $indices,
                     'size' => max(count($cleanJids), 10),
-                    '_source' => ['id', 'title', 'raw_designation', 'status', 'total_positions', 'job_assign', 'user_name', 'created_by_name', 'posted_by'],
+                    '_source' => ['id', 'title', 'raw_designation', 'status', 'total_positions', 'job_assign', 'user_name', 'created_by_name', 'posted_by', 'company_name'],
                     'body' => [
                         'query' => [
                             'bool' => [
@@ -713,6 +795,14 @@ class ClientActivityReadService
                         $creatorName = $s['user_name'] ?? $s['created_by_name'] ?? $s['posted_by'] ?? null;
                     }
 
+                    $jComp = trim((string) ($s['company_name'] ?? ''));
+                    if (empty($jComp) && $tenantId > 0) {
+                        $jComp = $this->resolveTenantCompanyName($tenantId);
+                    }
+                    if (empty($jComp)) {
+                        $jComp = '4Bell Technology';
+                    }
+
                     $rawStatus = strtolower(trim((string) ($s['status'] ?? 'active')));
                     $canonicalStatus = match ($rawStatus) {
                         'active', 'hiring', 'open' => 'active',
@@ -732,6 +822,7 @@ class ClientActivityReadService
                         'id' => $jid,
                         'title' => ! empty($title) ? ucwords($title) : 'Requisition',
                         'creator_name' => ! empty($creatorName) ? ucwords(trim($creatorName)) : 'Account Manager',
+                        'creator_company' => $this->formatCompanyName($jComp),
                         'status' => $canonicalStatus,
                         'status_label' => $statusLabel,
                         'total_positions' => (int) ($s['total_positions'] ?? 1),
@@ -797,8 +888,8 @@ class ClientActivityReadService
             }
         }
 
-        $candProfiles = $this->resolveCandidateProfiles($appIds, $appEmails);
-        $jobProfiles = $this->resolveJobProfiles($jobIds);
+        $candProfiles = $this->resolveCandidateProfiles($appIds, $appEmails, $query->tenantId);
+        $jobProfiles = $this->resolveJobProfiles($jobIds, $query->tenantId);
 
         foreach ($rawEvents as $entry) {
             $type = $entry['source_type'];
@@ -814,7 +905,7 @@ class ClientActivityReadService
                 $category = $isOffer ? 'offers' : 'pipeline';
 
                 // Check category filter
-                if ($query->category !== 'all' && $query->category !== $category) {
+                if ($query->category !== 'all' && $query->category !== 'candidates' && $query->category !== $category) {
                     continue;
                 }
 
@@ -845,15 +936,16 @@ class ClientActivityReadService
                 $resolvedJobTitle = $jobProfile['title'] ?? (! empty($src['title']) ? ucwords(trim($src['title'])) : 'Open Requisition');
                 $resolvedDesignation = $profile['designation'] ?? $src['designation_offer'] ?? $resolvedJobTitle;
 
-                // Ownership / Attribution: Candidate uploader name
+                // Ownership / Attribution: Candidate uploader name & company
                 $uploaderName = $profile['uploader_name'] ?? (! empty($src['name']) ? ucwords(trim($src['name'])) : 'Technical Recruiter');
+                $uploaderCompany = $profile['company_name'] ?? (! empty($src['cur_companyname']) ? $this->formatCompanyName((string) $src['cur_companyname']) : $this->resolveTenantCompanyName($query->tenantId));
                 $targetWiseId = $profile['wise_id'] ?? $appId;
 
                 // Standardize Stage Status
                 $toStage = $src['master_process_name'] ?? 'Screening';
                 $toStageLower = strtolower(trim((string) $toStage));
                 $stageStatus = 'pipeline';
-                if (in_array($toStageLower, ['offer', 'offered', 'offer released', 'offer accepted', 'joined', 'hired'], true)) {
+                if (in_array($toStageLower, ['offer', 'offered', 'offer released', 'offer accepted', 'joined', 'hired', 'selected'], true)) {
                     $stageStatus = 'active'; // 🟢 Green
                 } elseif (in_array($toStageLower, ['hold', 'on hold', 'on-hold', 'paused'], true)) {
                     $stageStatus = 'hold'; // 🟠 Orange
@@ -870,12 +962,14 @@ class ClientActivityReadService
                     'actor' => [
                         'id' => (int) ($src['event_by_user_id'] ?? 0),
                         'name' => $uploaderName,
-                        'role' => 'Technical Recruiter',
+                        'company_name' => $uploaderCompany,
+                        'role' => $uploaderCompany,
                         'avatar_version' => 1,
                     ],
                     'attribution' => [
                         'label' => 'Uploaded by',
                         'name' => $uploaderName,
+                        'company_name' => $uploaderCompany,
                     ],
                     'candidate' => [
                         'id' => $targetWiseId,
@@ -883,6 +977,8 @@ class ClientActivityReadService
                         'application_id' => $appId,
                         'name' => $resolvedCandidateName,
                         'designation' => $resolvedDesignation,
+                        'uploader_name' => $uploaderName,
+                        'uploader_company' => $uploaderCompany,
                         'experience_years' => (float) ($src['min_exp'] ?? 0),
                     ],
                     'job' => [
@@ -890,6 +986,7 @@ class ClientActivityReadService
                         'code' => 'JERO-'.$jobId,
                         'title' => $resolvedJobTitle,
                         'creator_name' => $jobProfile['creator_name'] ?? 'Account Manager',
+                        'creator_company' => $jobProfile['creator_company'] ?? $uploaderCompany,
                     ],
                     'transition' => [
                         'from_stage_name' => $src['prev_process_name'] ?? 'Sourcing',
@@ -929,6 +1026,7 @@ class ClientActivityReadService
 
                 $targetWiseId = $intWiseId ?: ($intProfile['wise_id'] ?? $intAppId);
                 $uploaderName = $intProfile['uploader_name'] ?? (! empty($src['posted_by']) ? ucwords(trim($src['posted_by'])) : (! empty($src['source']) ? ucwords(trim($src['source'])) : 'Technical Recruiter'));
+                $intCompany = $intProfile['company_name'] ?? (! empty($src['company_name']) ? $this->formatCompanyName((string) $src['company_name']) : (! empty($src['uc_company_name']) ? $this->formatCompanyName((string) $src['uc_company_name']) : $this->resolveTenantCompanyName($query->tenantId)));
 
                 $stage = $src['stage'] ?? $src['master_status_name'] ?? 'Interview';
                 $interviewMode = ! empty($src['mode_name']) ? $src['mode_name'] : (! empty($src['interview_type']) ? $src['interview_type'] : 'Video Call');
@@ -942,12 +1040,14 @@ class ClientActivityReadService
                     'actor' => [
                         'id' => (int) ($src['user_id'] ?? 0),
                         'name' => $uploaderName,
-                        'role' => 'Coordinator',
+                        'company_name' => $intCompany,
+                        'role' => $intCompany,
                         'avatar_version' => 1,
                     ],
                     'attribution' => [
-                        'label' => 'Uploaded by',
+                        'label' => 'Scheduled by',
                         'name' => $uploaderName,
+                        'company_name' => $intCompany,
                     ],
                     'candidate' => [
                         'id' => $targetWiseId,
@@ -955,12 +1055,15 @@ class ClientActivityReadService
                         'application_id' => $intAppId,
                         'name' => $resolvedCandidateName,
                         'designation' => $resolvedDesignation,
+                        'uploader_name' => $uploaderName,
+                        'uploader_company' => $intCompany,
                     ],
                     'job' => [
                         'id' => $jobId,
                         'code' => 'JERO-'.$jobId,
                         'title' => $resolvedJobTitle,
                         'creator_name' => $jobProfile['creator_name'] ?? 'Account Manager',
+                        'creator_company' => $jobProfile['creator_company'] ?? $intCompany,
                     ],
                     'transition' => [
                         'from_stage_name' => 'Evaluation',
@@ -986,6 +1089,7 @@ class ClientActivityReadService
 
                 $resolvedJobTitle = $jobProfile['title'] ?? (! empty($src['raw_designation']) ? ucwords(trim($src['raw_designation'])) : (! empty($src['title']) ? ucwords(trim($src['title'])) : 'New Requisition'));
                 $creatorName = $jobProfile['creator_name'] ?? (! empty($src['user_name']) ? ucwords(trim($src['user_name'])) : 'Account Manager');
+                $jobCompany = $jobProfile['creator_company'] ?? (! empty($src['company_name']) ? $this->formatCompanyName((string) $src['company_name']) : $this->resolveTenantCompanyName($query->tenantId));
                 $jobStatus = $jobProfile['status'] ?? 'active';
                 $statusLabel = $jobProfile['status_label'] ?? 'Active';
 
@@ -998,18 +1102,21 @@ class ClientActivityReadService
                     'actor' => [
                         'id' => (int) ($src['user_id'] ?? 0),
                         'name' => $creatorName,
-                        'role' => 'Account Lead',
+                        'company_name' => $jobCompany,
+                        'role' => $jobCompany,
                         'avatar_version' => 1,
                     ],
                     'attribution' => [
                         'label' => 'Created by',
                         'name' => $creatorName,
+                        'company_name' => $jobCompany,
                     ],
                     'job' => [
                         'id' => $jobId,
                         'code' => 'JERO-'.$jobId,
                         'title' => $resolvedJobTitle,
                         'creator_name' => $creatorName,
+                        'creator_company' => $jobCompany,
                         'status' => $jobStatus,
                         'status_label' => $statusLabel,
                         'total_positions' => (int) ($src['total_positions'] ?? ($jobProfile['total_positions'] ?? 1)),
