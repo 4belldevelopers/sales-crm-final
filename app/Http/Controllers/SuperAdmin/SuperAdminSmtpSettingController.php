@@ -14,6 +14,8 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Notification;
+use Illuminate\Support\Facades\RateLimiter;
+use InvalidArgumentException;
 use Throwable;
 
 /**
@@ -26,17 +28,17 @@ use Throwable;
  * - Gateway 11: System Notifications & Tenant Alerts
  * - Gateway 12: Accounts, Offers & Billing Desk
  *
- * Implements atomic transactional updating, multi-tenant cache invalidation,
- * and live socket handshake testing.
+ * Implements atomic transactional updating, post-commit cache invalidation,
+ * password preservation, counter protection, and multi-stage socket diagnostics.
  */
 class SuperAdminSmtpSettingController extends SuperAdminBaseController
 {
     /**
-     * Target primary gateway IDs managed by Super Admin.
+     * Target primary gateway IDs strictly permitted in Super Admin.
      *
      * @var array<int>
      */
-    protected const GATEWAY_IDS = [8, 9, 10, 11, 12];
+    public const GATEWAY_IDS = [8, 9, 10, 11, 12];
 
     public function __construct()
     {
@@ -75,6 +77,7 @@ class SuperAdminSmtpSettingController extends SuperAdminBaseController
 
     /**
      * Persist updated configurations across all 5 gateways atomically.
+     * Preserves existing passwords when omitted and protects live operational counters.
      *
      * @param  mixed  $id
      * @return array
@@ -86,12 +89,23 @@ class SuperAdminSmtpSettingController extends SuperAdminBaseController
 
         try {
             DB::transaction(function () use ($validated, $hostInput, $id) {
-                // Multi-gateway array batch update
+                // Multi-gateway batch updating
                 if (is_array($hostInput)) {
+                    // Pre-verify that all requested gateways exist in database
+                    $existingGateways = EmailSetting::whereIn('id', array_keys($hostInput))
+                        ->get()
+                        ->keyBy('id');
+
                     foreach ($hostInput as $gatewayId => $host) {
                         $gatewayId = (int) $gatewayId;
+
                         if (! in_array($gatewayId, self::GATEWAY_IDS, true)) {
-                            continue;
+                            throw new InvalidArgumentException("Unauthorized gateway ID ({$gatewayId}) submitted.");
+                        }
+
+                        $existing = $existingGateways->get($gatewayId);
+                        if (! $existing) {
+                            throw new InvalidArgumentException("Gateway record #{$gatewayId} does not exist in smtp_settings.");
                         }
 
                         $encryption = $validated['mail_encryption'][$gatewayId] ?? null;
@@ -103,50 +117,69 @@ class SuperAdminSmtpSettingController extends SuperAdminBaseController
                         $fromName = trim((string) ($validated['mail_from_name'][$gatewayId] ?? 'JERO.WORKS'));
                         $port = (int) ($validated['mail_port'][$gatewayId] ?? 465);
                         $username = trim((string) ($validated['mail_username'][$gatewayId] ?? ''));
-                        $password = (string) ($validated['mail_password'][$gatewayId] ?? '');
-                        $status = (int) ($validated['status'][$gatewayId] ?? 0);
-                        $dailyCount = (int) ($validated['daily_used'][$gatewayId] ?? 0);
 
+                        // Password preservation: retain existing password if omitted or blank
+                        $submittedPassword = $validated['mail_password'][$gatewayId] ?? null;
+                        $finalPassword = (! is_null($submittedPassword) && trim((string) $submittedPassword) !== '')
+                            ? (string) $submittedPassword
+                            : (string) $existing->mail_password;
+
+                        $status = (int) ($validated['status'][$gatewayId] ?? 0);
+
+                        // Note: dailyCount is explicitly NOT updated to prevent overwriting live counters
                         $updateData = [
                             'mail_host' => trim((string) $host),
                             'mail_port' => $port,
                             'mail_username' => $username,
-                            'mail_password' => $password,
+                            'mail_password' => $finalPassword,
                             'mail_encryption' => $encryption,
                             'notification_mail_host' => trim((string) $host),
                             'notification_mail_port' => $port,
                             'notification_mail_username' => $username,
-                            'notification_mail_password' => $password,
+                            'notification_mail_password' => $finalPassword,
                             'notification_mail_encryption' => $encryption,
                             'email_id' => $fromEmail,
                             'mail_from_email' => $fromEmail,
                             'mail_from_name' => $fromName,
                             'status' => $status,
-                            'dailyCount' => $dailyCount,
                             'updated_at' => now(),
                         ];
 
                         DB::table('smtp_settings')->where('id', $gatewayId)->update($updateData);
                     }
                 } else {
-                    // Single gateway update fallback
+                    // Single gateway fallback
                     $targetId = (int) ($id ?: 8);
+                    if (! in_array($targetId, self::GATEWAY_IDS, true)) {
+                        throw new InvalidArgumentException("Unauthorized gateway ID ({$targetId}).");
+                    }
+
+                    $existing = EmailSetting::find($targetId);
+                    if (! $existing) {
+                        throw new InvalidArgumentException("Gateway record #{$targetId} does not exist.");
+                    }
+
                     $encryption = $validated['mail_encryption'] ?? null;
                     if ($encryption === 'none' || empty($encryption)) {
                         $encryption = null;
                     }
                     $fromEmail = trim((string) ($validated['from_mail'] ?? $validated['mail_from_email'] ?? ''));
 
+                    $submittedPassword = $validated['mail_password'] ?? null;
+                    $finalPassword = (! is_null($submittedPassword) && trim((string) $submittedPassword) !== '')
+                        ? (string) $submittedPassword
+                        : (string) $existing->mail_password;
+
                     $updateData = [
                         'mail_host' => trim((string) $hostInput),
                         'mail_port' => (int) ($validated['mail_port'] ?? 465),
                         'mail_username' => trim((string) ($validated['mail_username'] ?? '')),
-                        'mail_password' => (string) ($validated['mail_password'] ?? ''),
+                        'mail_password' => $finalPassword,
                         'mail_encryption' => $encryption,
                         'notification_mail_host' => trim((string) $hostInput),
                         'notification_mail_port' => (int) ($validated['mail_port'] ?? 465),
                         'notification_mail_username' => trim((string) ($validated['mail_username'] ?? '')),
-                        'notification_mail_password' => (string) ($validated['mail_password'] ?? ''),
+                        'notification_mail_password' => $finalPassword,
                         'notification_mail_encryption' => $encryption,
                         'email_id' => $fromEmail,
                         'mail_from_email' => $fromEmail,
@@ -158,8 +191,14 @@ class SuperAdminSmtpSettingController extends SuperAdminBaseController
                     DB::table('smtp_settings')->where('id', $targetId)->update($updateData);
                 }
 
-                // Invalidate multi-tenant cache keys
-                Cache::forget('smtp_settings:default');
+                // Reliable post-commit cache invalidation
+                DB::afterCommit(function () {
+                    try {
+                        Cache::forget('smtp_settings:default');
+                    } catch (Throwable $e) {
+                        Log::warning('SMTP settings cache eviction warning: '.$e->getMessage());
+                    }
+                });
             });
 
             return Reply::success(__('messages.updatedSuccessfully'));
@@ -173,31 +212,61 @@ class SuperAdminSmtpSettingController extends SuperAdminBaseController
     }
 
     /**
-     * Dispatch live diagnostic verification email across a specified gateway.
+     * Dispatch live diagnostic verification email with multi-stage reporting and rate limiting.
      *
      * @return array
      */
     public function sendTestEmail(Request $request)
     {
+        // Rate limiting: maximum 5 test requests per minute per administrator
+        $rateLimitKey = 'smtp_test_admin_'.(auth()->id() ?: $request->ip());
+        if (RateLimiter::tooManyAttempts($rateLimitKey, 5)) {
+            $seconds = RateLimiter::availableIn($rateLimitKey);
+
+            return response()->json(
+                Reply::error("Rate limit exceeded. Please wait {$seconds} seconds before dispatching another diagnostic test."),
+                429
+            );
+        }
+        RateLimiter::hit($rateLimitKey, 60);
+
         $request->validate([
             'test_email' => 'required|email|max:191',
             'gateway_id' => 'nullable|integer|in:8,9,10,11,12',
         ]);
 
         $gatewayId = (int) ($request->gateway_id ?: 8);
-        $gateway = EmailSetting::where('id', $gatewayId)->first() ?: EmailSetting::first();
+        $gateway = EmailSetting::where('id', $gatewayId)->first();
 
         if (! $gateway) {
             return Reply::error('Target SMTP Gateway record not found.');
         }
 
+        $stages = [
+            'config_validation' => 'PASSED',
+            'network_connect' => 'PENDING',
+            'tls_handshake' => 'PENDING',
+            'smtp_auth' => 'PENDING',
+            'submission' => 'PENDING',
+            'server_acceptance' => 'PENDING',
+        ];
+
         // Step 1: Perform live socket handshake and timing diagnostics
         $handshake = $gateway->verifySmtp();
         if (! $handshake['success']) {
-            return Reply::error('SMTP Handshake Failed: '.$handshake['message']);
+            $stages['network_connect'] = 'FAILED';
+
+            return Reply::error('SMTP Handshake Failed: '.$handshake['message'], null, [
+                'stages' => $stages,
+                'latency_ms' => $handshake['latency_ms'] ?? 0,
+            ]);
         }
 
-        // Step 2: Dynamically reconfigure mailer and dispatch verification email
+        $stages['network_connect'] = 'PASSED';
+        $stages['tls_handshake'] = 'PASSED';
+        $stages['smtp_auth'] = 'PASSED';
+
+        // Step 2: Dynamically configure mailer and dispatch verification email
         try {
             Mail::purge();
 
@@ -235,24 +304,41 @@ class SuperAdminSmtpSettingController extends SuperAdminBaseController
                 'from_name' => $fromName,
             ];
 
+            $stages['submission'] = 'PASSED';
+
             Notification::route('mail', $request->test_email)
                 ->notify(new SuperAdminTestEmailNotification($notificationData));
 
-            return Reply::successWithData('Live test email dispatched successfully to '.$request->test_email, [
+            $stages['server_acceptance'] = 'ACCEPTED_BY_SMTP_SERVER';
+
+            return Reply::successWithData('Diagnostic email accepted by SMTP server for delivery to '.$request->test_email, [
                 'gateway_id' => $gateway->id,
                 'gateway_title' => $gateway->gateway_title,
                 'latency_ms' => $handshake['latency_ms'] ?? 0,
                 'host' => $host,
                 'port' => $port,
                 'from_email' => $fromEmail,
+                'stages' => $stages,
+                'status_note' => 'Accepted by upstream SMTP relay for delivery (downstream inbox placement subject to recipient MX routing).',
             ]);
         } catch (Throwable $e) {
-            Log::error('SuperAdmin SMTP live test dispatch failed: '.$e->getMessage(), [
+            $stages['submission'] = 'FAILED';
+            $stages['server_acceptance'] = 'FAILED';
+
+            // Redact credentials from error logs and response
+            $sanitizedMessage = str_replace(
+                [$password, $username],
+                ['[REDACTED]', '[REDACTED]'],
+                $e->getMessage()
+            );
+
+            Log::error('SuperAdmin SMTP test dispatch failed: '.$sanitizedMessage, [
                 'gateway_id' => $gatewayId,
-                'trace' => $e->getTraceAsString(),
             ]);
 
-            return Reply::error('Failed to dispatch test email: '.$e->getMessage());
+            return Reply::error('Failed to submit test email to SMTP server: '.$sanitizedMessage, null, [
+                'stages' => $stages,
+            ]);
         }
     }
 }

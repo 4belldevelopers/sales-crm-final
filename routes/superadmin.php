@@ -263,6 +263,8 @@ Route::group(['middleware' => 'auth'], function () {
 
         Route::post('notification/add-edit', [SuperAdminCompanyController::class, 'addEditnotificationupdate'])->name('company.addEditnotificationupdate');
 
+        Route::get('notification/preview/{id}', [SuperAdminCompanyController::class, 'previewNotification'])->name('company.notificationpreview');
+
         Route::get('default-terms/{id?}', [SuperAdminCompanyController::class, 'defaultTerms'])->name('company.defaultTerms');
         Route::get('list-default-terms', [SuperAdminCompanyController::class, 'defaultTermsList'])->name('company.defaultTermsList');
 
