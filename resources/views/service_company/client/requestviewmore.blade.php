@@ -532,24 +532,34 @@
             flex-shrink: 0 !important;
           }
           .cd-hero-avatar {
-            width: 44px !important;
-            height: 44px !important;
-            border-radius: 9px !important;
-            background: linear-gradient(135deg, #064e3b, #059669) !important;
-            color: #ffffff !important;
-            border: 2px solid #ffffff !important;
-            box-shadow: 0 2px 5px rgba(15, 23, 42, 0.08) !important;
+            width: 48px !important;
+            height: 48px !important;
+            border-radius: 10px !important;
+            background: #ffffff !important;
+            color: #0f172a !important;
+            border: 1px solid #e2e8f0 !important;
+            box-shadow: 0 1px 3px rgba(15, 23, 42, 0.05) !important;
             display: flex !important;
             align-items: center !important;
             justify-content: center !important;
             font-size: 15px !important;
             font-weight: 700 !important;
             overflow: hidden !important;
+            padding: 6px !important;
+            box-sizing: border-box !important;
           }
           .cd-hero-avatar img {
-            width: 100% !important;
-            height: 100% !important;
-            object-fit: cover !important;
+            max-width: 100% !important;
+            max-height: 100% !important;
+            width: auto !important;
+            height: auto !important;
+            object-fit: contain !important;
+            display: block !important;
+          }
+          .cd-hero-avatar.is-initials {
+            background: #f8fafc !important;
+            color: #059669 !important;
+            padding: 0 !important;
           }
           .cd-hero-verified-check {
             position: absolute !important;
@@ -731,21 +741,40 @@
           .cd-hero-positions-link {
             display: inline-flex !important;
             align-items: center !important;
+            gap: 6px !important;
             font-size: 11.5px !important;
-            font-weight: 600 !important;
-            color: #0f172a !important;
+            font-weight: 500 !important;
+            color: #334155 !important;
             text-decoration: none !important;
             cursor: pointer !important;
-            padding: 2px 8px !important;
-            border-radius: 5px !important;
-            background: #f8fafc !important;
+            padding: 3px 10px !important;
+            border-radius: 6px !important;
+            background: #ffffff !important;
             border: 1px solid #e2e8f0 !important;
+            box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03) !important;
             transition: all 0.15s ease !important;
+            line-height: 1.2 !important;
           }
           .cd-hero-positions-link:hover {
-            background: #ecfdf5 !important;
-            border-color: #a7f3d0 !important;
-            color: #059669 !important;
+            background: #fffbeb !important;
+            border-color: #fde68a !important;
+            color: #92400e !important;
+          }
+          .cd-hero-positions-link .cd-hero-pos-icon {
+            display: inline-flex !important;
+            align-items: center !important;
+            font-size: 11px !important;
+            color: #f59e0b !important;
+          }
+          .cd-hero-positions-link .cd-hero-pos-num {
+            font-weight: 700 !important;
+            font-size: 12px !important;
+            color: #0f172a !important;
+            margin-right: 2px !important;
+          }
+          .cd-hero-positions-link .cd-hero-pos-label {
+            font-weight: 500 !important;
+            color: #475569 !important;
           }
           .cd-hero-bottom-tags-row {
             background: #f8fafc !important;
@@ -1541,7 +1570,7 @@
                     <!-- Left Flank: Company Identity & Website -->
                     <div class="cd-hero-left-flank">
                         <div class="cd-hero-avatar-wrap">
-                            <div class="cd-hero-avatar" style="background: linear-gradient(135deg, #064e3b, #059669) !important;">
+                            <div class="cd-hero-avatar {{ empty($detailLogo) ? 'is-initials' : '' }}">
                                 @if (!empty($detailLogo))
                                     <img src="{{ $detailLogo }}" alt="{{ $detailName }}">
                                 @else
@@ -1593,8 +1622,9 @@
                             @endif
                             <span class="cd-status-sep">|</span>
                             <a href="#requisitions_req" class="cd-hero-positions-link" data-bs-toggle="tab" data-toggle="tab" title="View Active Job Positions">
-                                <i class="fas fa-bolt text-warning me-1"></i>
-                                <strong>{{ $kpiActive }}</strong> Active {{ $kpiActive == 1 ? 'Position' : 'Positions' }}
+                                <span class="cd-hero-pos-icon"><i class="fas fa-bolt text-warning"></i></span>
+                                <span class="cd-hero-pos-num">{{ $kpiActive }}</span>
+                                <span class="cd-hero-pos-label">Active {{ $kpiActive == 1 ? 'Position' : 'Positions' }}</span>
                             </a>
                         </div>
                     </div>

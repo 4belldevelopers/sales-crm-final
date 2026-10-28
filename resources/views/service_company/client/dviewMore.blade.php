@@ -821,24 +821,34 @@
             flex-shrink: 0 !important;
           }
           .cd-hero-avatar {
-            width: 52px !important;
-            height: 52px !important;
+            width: 48px !important;
+            height: 48px !important;
             border-radius: 10px !important;
-            background: linear-gradient(135deg, #4f46e5, #3b82f6) !important;
-            color: #ffffff !important;
-            border: 2px solid #ffffff !important;
-            box-shadow: 0 2px 6px rgba(15, 23, 42, 0.08) !important;
+            background: #ffffff !important;
+            color: #0f172a !important;
+            border: 1px solid #e2e8f0 !important;
+            box-shadow: 0 1px 3px rgba(15, 23, 42, 0.05) !important;
             display: flex !important;
             align-items: center !important;
             justify-content: center !important;
-            font-size: 16px !important;
+            font-size: 15px !important;
             font-weight: 700 !important;
             overflow: hidden !important;
+            padding: 6px !important;
+            box-sizing: border-box !important;
           }
           .cd-hero-avatar img {
-            width: 100% !important;
-            height: 100% !important;
-            object-fit: cover !important;
+            max-width: 100% !important;
+            max-height: 100% !important;
+            width: auto !important;
+            height: auto !important;
+            object-fit: contain !important;
+            display: block !important;
+          }
+          .cd-hero-avatar.is-initials {
+            background: #f8fafc !important;
+            color: #059669 !important;
+            padding: 0 !important;
           }
           .cd-hero-verified-check {
             position: absolute !important;
@@ -1142,21 +1152,40 @@
           .cd-hero-positions-link {
             display: inline-flex !important;
             align-items: center !important;
+            gap: 6px !important;
             font-size: 11.5px !important;
-            font-weight: 600 !important;
-            color: #0f172a !important;
+            font-weight: 500 !important;
+            color: #334155 !important;
             text-decoration: none !important;
             cursor: pointer !important;
-            padding: 2px 8px !important;
-            border-radius: 5px !important;
-            background: #f8fafc !important;
+            padding: 3px 10px !important;
+            border-radius: 6px !important;
+            background: #ffffff !important;
             border: 1px solid #e2e8f0 !important;
+            box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03) !important;
             transition: all 0.15s ease !important;
+            line-height: 1.2 !important;
           }
           .cd-hero-positions-link:hover {
-            background: #ecfdf5 !important;
-            border-color: #a7f3d0 !important;
-            color: #059669 !important;
+            background: #fffbeb !important;
+            border-color: #fde68a !important;
+            color: #92400e !important;
+          }
+          .cd-hero-positions-link .cd-hero-pos-icon {
+            display: inline-flex !important;
+            align-items: center !important;
+            font-size: 11px !important;
+            color: #f59e0b !important;
+          }
+          .cd-hero-positions-link .cd-hero-pos-num {
+            font-weight: 700 !important;
+            font-size: 12px !important;
+            color: #0f172a !important;
+            margin-right: 2px !important;
+          }
+          .cd-hero-positions-link .cd-hero-pos-label {
+            font-weight: 500 !important;
+            color: #475569 !important;
           }
           .cd-hero-bottom-tags-row {
             background: #f8fafc !important;
@@ -1794,19 +1823,20 @@
           .cd-loc-group {
             display: flex !important;
             flex-direction: column !important;
-            gap: 8px !important;
+            gap: 10px !important;
             width: 100% !important;
           }
           .cd-loc-card {
             background: #ffffff !important;
             border: 1px solid #e2e8f0 !important;
             border-left: 3.5px solid #94a3b8 !important;
-            border-radius: 7px !important;
-            padding: 8px 11px !important;
+            border-radius: 8px !important;
+            padding: 10px 14px !important;
             text-align: left !important;
             width: 100% !important;
             box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03) !important;
             transition: all 0.2s ease !important;
+            box-sizing: border-box !important;
           }
           .cd-loc-card:hover {
             border-color: #cbd5e1 !important;
@@ -1814,7 +1844,7 @@
           }
           .cd-loc-card.is-primary,
           .cd-loc-card.hq {
-            background: #f8fbff !important;
+            background: #ffffff !important;
             border-color: #dbeafe !important;
             border-left: 3.5px solid #2563eb !important;
           }
@@ -1829,12 +1859,12 @@
             align-items: center !important;
             justify-content: space-between !important;
             gap: 8px !important;
-            margin-bottom: 5px !important;
+            margin-bottom: 6px !important;
           }
           .cd-loc-header-left {
             display: inline-flex !important;
             align-items: center !important;
-            gap: 5px !important;
+            gap: 6px !important;
             flex-shrink: 0 !important;
           }
           .cd-loc-badge,
@@ -1866,37 +1896,39 @@
           .cd-loc-hq-tag {
             display: inline-flex !important;
             align-items: center !important;
-            font-size: 8.5px !important;
+            font-size: 9px !important;
             font-weight: 800 !important;
             line-height: 1 !important;
             text-transform: uppercase !important;
             letter-spacing: 0.4px !important;
             background: #2563eb !important;
             color: #ffffff !important;
-            padding: 2.5px 5px !important;
-            border-radius: 3px !important;
+            padding: 2.5px 6px !important;
+            border-radius: 4px !important;
             white-space: nowrap !important;
             flex-shrink: 0 !important;
           }
           .cd-loc-country-pill {
             display: inline-flex !important;
             align-items: center !important;
-            font-size: 10px !important;
+            font-size: 10.5px !important;
             font-weight: 600 !important;
             line-height: 1 !important;
             color: #475569 !important;
-            background: #ffffff !important;
+            background: #f8fafc !important;
             border: 1px solid #e2e8f0 !important;
-            padding: 2.5px 8px !important;
+            padding: 3px 9px !important;
             border-radius: 12px !important;
             white-space: nowrap !important;
             flex-shrink: 0 !important;
-            box-shadow: 0 1px 2px rgba(15, 23, 42, 0.02) !important;
           }
           .cd-loc-city-line {
-            font-size: 12px !important;
+            display: flex !important;
+            align-items: center !important;
+            gap: 6px !important;
+            font-size: 12.5px !important;
             line-height: 1.35 !important;
-            margin-bottom: 3px !important;
+            margin-bottom: 4px !important;
             word-break: break-word !important;
           }
           .cd-loc-city-name,
@@ -1913,17 +1945,19 @@
             display: flex !important;
             align-items: flex-start !important;
             gap: 5px !important;
-            font-size: 11px !important;
-            color: #475569 !important;
-            line-height: 1.35 !important;
+            font-size: 11.5px !important;
+            color: #64748b !important;
+            line-height: 1.4 !important;
             word-break: break-word !important;
-            margin-bottom: 2px !important;
+            margin-bottom: 3px !important;
+            padding-left: 17px !important;
           }
           .cd-loc-meta-line {
             display: flex !important;
             align-items: center !important;
             gap: 6px !important;
             margin-top: 4px !important;
+            padding-left: 17px !important;
           }
           .cd-loc-meta-chip,
           .cd-loc-postcode {
@@ -1932,7 +1966,7 @@
             background: #f8fafc !important;
             border: 1px solid #e2e8f0 !important;
             border-radius: 4px !important;
-            padding: 1.5px 6px !important;
+            padding: 2px 7px !important;
             font-size: 10px !important;
             font-weight: 500 !important;
             color: #64748b !important;
@@ -4355,9 +4389,6 @@
           <!-- ── Tier 1: Action Header Toolbar Card ── -->
           <div class="cd-top-bar">
             <div class="cd-top-actions">
-              <button type="button" class="cd-hdr-action-btn followup cd-btn-followup" data-client-id="{{ $directClientDetail->client_id ?? $directClientDetail->id }}">
-                <i class="fas fa-calendar-check" style="color:#0284c7;"></i> Follow Up
-              </button>
             </div>
             <div class="cd-top-close-wrap">
               <button type="button" class="cd-hdr-btn-close cd-close-drawer" id="kt_activitiesDirectClient_close_btn" title="Close Drawer">
@@ -4372,7 +4403,7 @@
               <!-- Left Flank: Company Identity & Website -->
               <div class="cd-hero-left-flank">
                 <div class="cd-hero-avatar-wrap">
-                  <div class="cd-hero-avatar" style="background: linear-gradient(135deg, #064e3b, #059669) !important;">
+                  <div class="cd-hero-avatar {{ empty($detailLogo) ? 'is-initials' : '' }}">
                     @if (!empty($detailLogo))
                       <img src="{{ $detailLogo }}" alt="{{ $detailName }}">
                     @else
@@ -4424,8 +4455,9 @@
                   @endif
                   <span class="cd-status-sep">|</span>
                   <a href="#requisitions" class="cd-hero-positions-link" data-bs-toggle="tab" data-toggle="tab" title="View Active Job Positions">
-                    <i class="fas fa-bolt text-success me-1"></i>
-                    <strong>{{ $kpiActive }}</strong> Active {{ $kpiActive == 1 ? 'Position' : 'Positions' }}
+                    <span class="cd-hero-pos-icon"><i class="fas fa-bolt text-warning"></i></span>
+                    <span class="cd-hero-pos-num">{{ $kpiActive }}</span>
+                    <span class="cd-hero-pos-label">Active {{ $kpiActive == 1 ? 'Position' : 'Positions' }}</span>
                   </a>
                 </div>
               </div>
@@ -4673,104 +4705,7 @@
                     @endphp
 
                     <div class="cd-vertical-info-list">
-                      <!-- 1. Locations & Addresses -->
-                      <div class="cd-vinfo-row">
-                        <div class="cd-vinfo-key">
-                          <div class="cd-vinfo-icon red"><i class="fas fa-location-dot"></i></div>
-                          <span class="cd-vinfo-label">{{ $locCount > 1 ? 'Locations ('.$locCount.')' : 'Headquarters' }}</span>
-                        </div>
-                        <div class="cd-vinfo-val" style="align-items: stretch;">
-                          @if ($locCount > 0)
-                            <div class="cd-loc-group">
-                              @foreach ($allLocations as $idx => $loc)
-                                @php
-                                  $lCity = !empty($loc->city_name_resolved) ? $loc->city_name_resolved : (!empty($loc->city_name) ? $loc->city_name : ($loc->city ?? ''));
-                                  $lState = !empty($loc->state_name) ? $loc->state_name : (!empty($loc->state) ? $loc->state : '');
-                                  $lCountry = !empty($loc->country_name) ? $loc->country_name : (!empty($loc->country) ? $loc->country : '');
-                                  $lAddr = trim(!empty($loc->address) ? $loc->address : '');
-                                  $lPostcode = !empty($loc->postcode) && $loc->postcode !== '0' && $loc->postcode !== 0 ? trim((string)$loc->postcode) : '';
-                                  $isHq = ($idx === 0);
-                                  $cityStateParts = array_filter([$lCity ? ucwords(trim($lCity)) : '', $lState ? ucwords(trim($lState)) : '']);
-                                  $cityStateText = implode(', ', $cityStateParts);
-                                @endphp
-                                <div class="cd-loc-card {{ $isHq ? 'is-primary hq' : '' }}">
-                                  <div class="cd-loc-header">
-                                    <div class="cd-loc-header-left">
-                                      <span class="cd-loc-badge {{ $isHq ? 'loc-primary' : 'loc-secondary' }}">
-                                        <i class="fas fa-map-marker-alt me-1"></i>Location {{ $idx + 1 }}
-                                      </span>
-                                      @if($isHq)
-                                        <span class="cd-loc-hq-tag">HQ</span>
-                                      @endif
-                                    </div>
-                                    @if($lCountry)
-                                      <span class="cd-loc-country-pill">
-                                        <i class="fas fa-globe-americas me-1 text-primary" style="font-size:9.5px;"></i>{{ ucwords(trim($lCountry)) }}
-                                      </span>
-                                    @endif
-                                  </div>
-                                  @if($cityStateText)
-                                    <div class="cd-loc-city-line">
-                                      <span class="cd-loc-city-name">{{ $cityStateText }}</span>
-                                    </div>
-                                  @endif
-                                  @if($lAddr)
-                                    <div class="cd-loc-street-line">
-                                      <i class="fas fa-map-pin text-danger me-1.5" style="font-size: 10.5px; margin-top: 2px; flex-shrink: 0;"></i>
-                                      <span>{{ $lAddr }}</span>
-                                    </div>
-                                  @endif
-                                  @if($lPostcode)
-                                    <div class="cd-loc-meta-line">
-                                      <span class="cd-loc-meta-chip">
-                                        <i class="fas fa-hashtag text-muted me-1" style="font-size: 9.5px;"></i>Postal Code: <strong>{{ $lPostcode }}</strong>
-                                      </span>
-                                    </div>
-                                  @endif
-                                </div>
-                              @endforeach
-                            </div>
-                          @else
-                            @php
-                              $fallbackCity = $city_name ?: (@$dClient->city_name ?: (@$dClient->city ?: ''));
-                              $fallbackState = !empty(@$dClient->state_name) ? @$dClient->state_name : (!empty(@$dClient->state) ? @$dClient->state : '');
-                              $fallbackCountry = $country_name ?: (@$dClient->country_name ?: (@$dClient->country ?: ''));
-                              $fallbackAddr = trim(!empty(@$client_location->address) ? @$client_location->address : (!empty(@$dClient->address) ? @$dClient->address : ''));
-                              $fallbackPostcode = !empty(@$client_location->postcode) && @$client_location->postcode !== '0' ? trim((string)@$client_location->postcode) : '';
-                              $fallbackCityState = implode(', ', array_filter([$fallbackCity ? ucwords(trim($fallbackCity)) : '', $fallbackState ? ucwords(trim($fallbackState)) : '']));
-                            @endphp
-                            <div class="cd-loc-card is-primary hq">
-                              <div class="cd-loc-header">
-                                <div class="cd-loc-header-left">
-                                  <span class="cd-loc-badge loc-primary"><i class="fas fa-map-marker-alt me-1"></i>Location 1</span>
-                                  <span class="cd-loc-hq-tag">HQ</span>
-                                </div>
-                                @if($fallbackCountry)
-                                  <span class="cd-loc-country-pill"><i class="fas fa-globe-americas me-1 text-primary" style="font-size:9.5px;"></i>{{ ucwords(trim($fallbackCountry)) }}</span>
-                                @endif
-                              </div>
-                              @if($fallbackCityState)
-                                <div class="cd-loc-city-line">
-                                  <span class="cd-loc-city-name">{{ $fallbackCityState }}</span>
-                                </div>
-                              @endif
-                              @if($fallbackAddr)
-                                <div class="cd-loc-street-line">
-                                  <i class="fas fa-map-pin text-danger me-1.5" style="font-size: 10.5px; margin-top: 2px; flex-shrink: 0;"></i>
-                                  <span>{{ $fallbackAddr }}</span>
-                                </div>
-                              @endif
-                              @if($fallbackPostcode)
-                                <div class="cd-loc-meta-line">
-                                  <span class="cd-loc-meta-chip"><i class="fas fa-hashtag text-muted me-1" style="font-size: 9.5px;"></i>Postal Code: <strong>{{ $fallbackPostcode }}</strong></span>
-                                </div>
-                              @endif
-                            </div>
-                          @endif
-                        </div>
-                      </div>
-
-                      <!-- 2. Official Website -->
+                      <!-- 1. Official Website -->
                       <div class="cd-vinfo-row">
                         <div class="cd-vinfo-key">
                           <div class="cd-vinfo-icon blue"><i class="fas fa-globe"></i></div>
@@ -4952,6 +4887,109 @@
                           </div>
                         </div>
                       </div>
+                      @endif
+                    </div>
+                  </div>
+
+                  <!-- Card: Office Locations (Dedicated Enterprise Section) -->
+                  <div class="cd-card-panel">
+                    <div class="cd-card-hdr">
+                      <div class="cd-card-hdr-left">
+                        <div class="cd-top-bar-icon" style="width:28px; height:28px; font-size:12px; background:#fef2f2; color:#ef4444;">
+                          <i class="fas fa-location-dot fa-solid"></i>
+                        </div>
+                        <span class="cd-card-hdr-title">Locations</span>
+                      </div>
+                      <span class="badge bg-light-primary text-primary fw-semibold" style="font-size:10px; padding:3px 7px;">
+                        <i class="fas fa-building me-1"></i>{{ $locCount > 1 ? $locCount . ' Locations' : ($locCount === 1 ? '1 Location' : 'Headquarters') }}
+                      </span>
+                    </div>
+
+                    <div class="cd-loc-group">
+                      @if ($locCount > 0)
+                        @foreach ($allLocations as $idx => $loc)
+                          @php
+                            $lCity = !empty($loc->city_name_resolved) ? $loc->city_name_resolved : (!empty($loc->city_name) ? $loc->city_name : ($loc->city ?? ''));
+                            $lState = !empty($loc->state_name) ? $loc->state_name : (!empty($loc->state) ? $loc->state : '');
+                            $lCountry = !empty($loc->country_name) ? $loc->country_name : (!empty($loc->country) ? $loc->country : '');
+                            $lAddr = trim(!empty($loc->address) ? $loc->address : '');
+                            $lPostcode = !empty($loc->postcode) && $loc->postcode !== '0' && $loc->postcode !== 0 ? trim((string)$loc->postcode) : '';
+                            $isHq = ($idx === 0);
+                            $cityStateParts = array_filter([$lCity ? ucwords(trim($lCity)) : '', $lState ? ucwords(trim($lState)) : '']);
+                            $cityStateText = implode(', ', $cityStateParts);
+                          @endphp
+                          <div class="cd-loc-card {{ $isHq ? 'is-primary hq' : '' }}">
+                            <div class="cd-loc-header">
+                              <div class="cd-loc-header-left">
+                                <span class="cd-loc-badge {{ $isHq ? 'loc-primary' : 'loc-secondary' }}">
+                                  <i class="fas fa-map-marker-alt me-1"></i>Location {{ $idx + 1 }}
+                                </span>
+                                @if($isHq)
+                                  <span class="cd-loc-hq-tag">HQ</span>
+                                @endif
+                              </div>
+                              @if($lCountry)
+                                <span class="cd-loc-country-pill">
+                                  <i class="fas fa-globe-americas me-1 text-primary" style="font-size:9.5px;"></i>{{ ucwords(trim($lCountry)) }}
+                                </span>
+                              @endif
+                            </div>
+                            @if($cityStateText)
+                              <div class="cd-loc-city-line">
+                                <i class="fas fa-location-dot text-danger" style="font-size:11px; flex-shrink:0;"></i>
+                                <span class="cd-loc-city-name">{{ $cityStateText }}</span>
+                              </div>
+                            @endif
+                            @if($lAddr)
+                              <div class="cd-loc-street-line">
+                                <span>{{ $lAddr }}</span>
+                              </div>
+                            @endif
+                            @if($lPostcode)
+                              <div class="cd-loc-meta-line">
+                                <span class="cd-loc-meta-chip">
+                                  <i class="fas fa-hashtag text-muted me-1" style="font-size: 9.5px;"></i>Postal Code: <strong>{{ $lPostcode }}</strong>
+                                </span>
+                              </div>
+                            @endif
+                          </div>
+                        @endforeach
+                      @else
+                        @php
+                          $fallbackCity = $city_name ?: (@$dClient->city_name ?: (@$dClient->city ?: ''));
+                          $fallbackState = !empty(@$dClient->state_name) ? @$dClient->state_name : (!empty(@$dClient->state) ? @$dClient->state : '');
+                          $fallbackCountry = $country_name ?: (@$dClient->country_name ?: (@$dClient->country ?: ''));
+                          $fallbackAddr = trim(!empty(@$client_location->address) ? @$client_location->address : (!empty(@$dClient->address) ? @$dClient->address : ''));
+                          $fallbackPostcode = !empty(@$client_location->postcode) && @$client_location->postcode !== '0' ? trim((string)@$client_location->postcode) : '';
+                          $fallbackCityState = implode(', ', array_filter([$fallbackCity ? ucwords(trim($fallbackCity)) : '', $fallbackState ? ucwords(trim($fallbackState)) : '']));
+                        @endphp
+                        <div class="cd-loc-card is-primary hq">
+                          <div class="cd-loc-header">
+                            <div class="cd-loc-header-left">
+                              <span class="cd-loc-badge loc-primary"><i class="fas fa-map-marker-alt me-1"></i>Location 1</span>
+                              <span class="cd-loc-hq-tag">HQ</span>
+                            </div>
+                            @if($fallbackCountry)
+                              <span class="cd-loc-country-pill"><i class="fas fa-globe-americas me-1 text-primary" style="font-size:9.5px;"></i>{{ ucwords(trim($fallbackCountry)) }}</span>
+                            @endif
+                          </div>
+                          @if($fallbackCityState)
+                            <div class="cd-loc-city-line">
+                              <i class="fas fa-location-dot text-danger" style="font-size:11px; flex-shrink:0;"></i>
+                              <span class="cd-loc-city-name">{{ $fallbackCityState }}</span>
+                            </div>
+                          @endif
+                          @if($fallbackAddr)
+                            <div class="cd-loc-street-line">
+                              <span>{{ $fallbackAddr }}</span>
+                            </div>
+                          @endif
+                          @if($fallbackPostcode)
+                            <div class="cd-loc-meta-line">
+                              <span class="cd-loc-meta-chip"><i class="fas fa-hashtag text-muted me-1" style="font-size: 9.5px;"></i>Postal Code: <strong>{{ $fallbackPostcode }}</strong></span>
+                            </div>
+                          @endif
+                        </div>
                       @endif
                     </div>
                   </div>
@@ -9938,36 +9976,6 @@
         var $tabBtn = $('#kt_activitiesDirectClient .cd-tab-pill-btn[href="#contacts"]');
         if ($tabBtn.length) {
             $tabBtn.trigger('click');
-        }
-    });
-
-    $(document).on('click.directDrawer', '#kt_activitiesDirectClient .cd-btn-followup', function(e) {
-        e.preventDefault();
-        if (typeof Swal !== 'undefined') {
-            Swal.fire({
-                title: '<span style="font-size:14px;font-weight:600;">Client Follow Up</span>',
-                input: 'textarea',
-                inputLabel: 'Record follow-up notes, agenda or meeting minutes',
-                inputPlaceholder: 'Enter follow-up details...',
-                showCancelButton: true,
-                confirmButtonText: 'Save Follow Up',
-                confirmButtonColor: '#10b981',
-                customClass: {
-                    input: 'form-control form-control-sm',
-                    confirmButton: 'btn btn-sm btn-success',
-                    cancelButton: 'btn btn-sm btn-light'
-                }
-            }).then(function(res) {
-                if (res.isConfirmed && res.value) {
-                    Swal.fire({
-                        icon: 'success',
-                        title: '<span style="font-size:13.5px;font-weight:600;">Follow Up Recorded</span>',
-                        text: 'Follow-up agenda has been saved.',
-                        timer: 1800,
-                        showConfirmButton: false
-                    });
-                }
-            });
         }
     });
 
