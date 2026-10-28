@@ -1219,8 +1219,65 @@
     $activeJobsCount = (int)($clientDataCnt['activeJobs'] ?? 0);
     $pendingRequestsCount = (int)($clientDataCnt['clientRequest'] ?? 0);
 
-    $directPercent = ($totalClientsCount > 0) ? round(($directClientsCount / $totalClientsCount) * 100) : 100;
+    $directPercent = ($totalClientsCount > 0) ? round(($directClientsCount / $totalClientsCount) * 100) : 0;
 @endphp
+
+<script>
+    // ── Authoritative Single Source of Truth for Tab Counters ──
+    window.CLIENT_DATA_COUNTERS = {
+        clientAll: {{ (int)($totalClientsCount ?? 0) }},
+        clientCustom: {{ (int)($internalClientsCount ?? 0) }},
+        clientDirect: {{ (int)($directClientsCount ?? 0) }},
+        clientHiring: {{ (int)($hiringClientsCount ?? 0) }},
+        clientInactive: {{ (int)($inactiveClientsCount ?? 0) }},
+        clientRequest: {{ (int)($pendingRequestsCount ?? 0) }},
+        activeJobs: {{ (int)($activeJobsCount ?? 0) }}
+    };
+
+    function updateClientTabCounters(counts) {
+        if (!counts || typeof counts !== 'object') return;
+
+        var all = counts.clientAll !== undefined ? Number(counts.clientAll) : (counts.all !== undefined ? Number(counts.all) : null);
+        var internal = counts.clientCustom !== undefined ? Number(counts.clientCustom) : (counts.internal !== undefined ? Number(counts.internal) : null);
+        var direct = counts.clientDirect !== undefined ? Number(counts.clientDirect) : (counts.direct !== undefined ? Number(counts.direct) : null);
+        var hiring = counts.clientHiring !== undefined ? Number(counts.clientHiring) : (counts.hiring !== undefined ? Number(counts.hiring) : null);
+        var inactive = counts.clientInactive !== undefined ? Number(counts.clientInactive) : (counts.inactive !== undefined ? Number(counts.inactive) : null);
+        var request = counts.clientRequest !== undefined ? Number(counts.clientRequest) : (counts.request !== undefined ? Number(counts.request) : null);
+
+        if (all !== null && !isNaN(all)) {
+            $('#span_clientAll, #tabBadgeAll').text(all);
+            window.CLIENT_DATA_COUNTERS.clientAll = all;
+        }
+        if (internal !== null && !isNaN(internal)) {
+            $('#span_clientCustom, #tabBadgeInternal').text(internal);
+            window.CLIENT_DATA_COUNTERS.clientCustom = internal;
+        }
+        if (direct !== null && !isNaN(direct)) {
+            $('#span_clientDirect, #tabBadgeDirect').text(direct);
+            window.CLIENT_DATA_COUNTERS.clientDirect = direct;
+        }
+        if (hiring !== null && !isNaN(hiring)) {
+            $('#span_clientHiring, #tabBadgeHiring').text(hiring);
+            window.CLIENT_DATA_COUNTERS.clientHiring = hiring;
+        }
+        if (inactive !== null && !isNaN(inactive)) {
+            $('#span_clientInactive, #tabBadgeInactive').text(inactive);
+            window.CLIENT_DATA_COUNTERS.clientInactive = inactive;
+        }
+        if (request !== null && !isNaN(request)) {
+            $('#span_clientRequest, #tabBadgeRequest').text(request);
+            window.CLIENT_DATA_COUNTERS.clientRequest = request;
+        }
+
+        var curAll = (all !== null && !isNaN(all)) ? all : (window.CLIENT_DATA_COUNTERS.clientAll || 0);
+        var curDirect = (direct !== null && !isNaN(direct)) ? direct : (window.CLIENT_DATA_COUNTERS.clientDirect || 0);
+        if ($('#span_clientDirectPercent').length) {
+            var pct = (curAll > 0) ? Math.round((curDirect / curAll) * 100) : 0;
+            $('#span_clientDirectPercent').text(pct + '% of total clients');
+        }
+    }
+    window.updateClientTabCounters = updateClientTabCounters;
+</script>
 
 <!--begin::Content-->
 <div class="content d-flex flex-column flex-column-fluid pt-4 kt_content_client" id="kt_content">
@@ -1402,7 +1459,7 @@
                         <circle cx="8.5" cy="7" r="4"/>
                         <polyline points="17 11 19 13 23 9"/>
                     </svg>
-                    <span>{{ $directPercent }}% of total clients</span>
+                    <span id="span_clientDirectPercent">{{ $directPercent }}% of total clients</span>
                 </div>
             </a>
 
@@ -4280,7 +4337,10 @@ window.ClientStateManager = {
             window.__activeClientDrawer.coordinator.activateTab(tabName);
             return;
         }
-        if (typeof window.loadInternalTabContent === 'function') {
+        var isDirect = (this.state.selectedClientType === 'direct');
+        if (isDirect && typeof window.loadDirectTabContent === 'function') {
+            window.loadDirectTabContent(tabName, false);
+        } else if (typeof window.loadInternalTabContent === 'function') {
             window.loadInternalTabContent(tabName, false);
         } else if (typeof window.loadDirectTabContent === 'function') {
             window.loadDirectTabContent(tabName, false);
@@ -5109,14 +5169,10 @@ function handleWorkerMessage(data) {
             last_page: Math.ceil(data.total / data.per_page)
         });
 
-        if (data.counts) {
-            $('#span_clientAll, #tabBadgeAll').text(data.counts.all);
-            $('#span_clientCustom, #tabBadgeInternal').text(data.counts.internal);
-            $('#span_clientDirect, #tabBadgeDirect').text(data.counts.direct);
-            $('#span_clientHiring, #tabBadgeHiring').text(data.counts.hiring);
-            if (data.counts.inactive !== undefined) {
-                $('#span_clientInactive, #tabBadgeInactive').text(data.counts.inactive);
-            }
+        if (window.CLIENT_DATA_COUNTERS) {
+            updateClientTabCounters(window.CLIENT_DATA_COUNTERS);
+        } else if (data.counts && clWorkerReady) {
+            updateClientTabCounters(data.counts);
         }
 
         const syntheticResp = {
@@ -5209,13 +5265,14 @@ const ClientSearchEngine = (function() {
 
     return {
         isReady: false,
+        isFull: false,
         lastQueryElapsedMs: 0,
 
         size: function() {
             return Math.max(0, searchIndex.length - tombstoneCount);
         },
 
-        hydrate: function(rawRows, version) {
+        hydrate: function(rawRows, version, isFull = false) {
             const t0 = performance.now();
             searchIndex = [];
             idSlotMap.clear();
@@ -5225,6 +5282,7 @@ const ClientSearchEngine = (function() {
             if (!Array.isArray(rawRows) || rawRows.length === 0) {
                 activeBitmask = new Uint8Array(0);
                 this.isReady = false;
+                this.isFull = false;
                 return;
             }
 
@@ -5284,9 +5342,11 @@ const ClientSearchEngine = (function() {
                 });
             }
 
-            this.isReady = (searchIndex.length > 0);
+            this.isFull = Boolean(isFull);
+            const expectedTotal = (window.CLIENT_DATA_COUNTERS && window.CLIENT_DATA_COUNTERS.clientAll) ? window.CLIENT_DATA_COUNTERS.clientAll : 0;
+            this.isReady = (searchIndex.length > 0 && (this.isFull || (expectedTotal > 0 && searchIndex.length >= expectedTotal)));
             this.lastQueryElapsedMs = performance.now() - t0;
-            console.log(`[JDCR SearchEngine V4.0] Hydrated ${searchIndex.length} records in ${this.lastQueryElapsedMs.toFixed(2)}ms.`);
+            console.log(`[JDCR SearchEngine V4.0] Hydrated ${searchIndex.length} records in ${this.lastQueryElapsedMs.toFixed(2)}ms. (isReady: ${this.isReady}, isFull: ${this.isFull})`);
         },
 
         upsertEntity: function(clientDto) {
@@ -5664,6 +5724,7 @@ const ClientSearchEngine = (function() {
             activeBitmask = new Uint8Array(0);
             tombstoneCount = 0;
             this.isReady = false;
+            this.isFull = false;
         }
     };
 })();
@@ -5681,14 +5742,15 @@ function initClientWorker() {
             clWorkerReady = false;
         };
 
-        // Seed with initial rows if present
+        // Seed with initial rows if present (partial page 1 does NOT mark engine as full)
         @if(!empty($initialRows))
         const initialRows = {!! json_encode($initialRows) !!};
         if (initialRows && initialRows.length > 0) {
+            const isFullSeed = (initialRows.length >= {{ (int)$totalClientsCount }});
             if (typeof ClientSearchEngine !== 'undefined') {
-                ClientSearchEngine.hydrate(initialRows, {{ (int)($initialDataVersion ?? 1) }});
+                ClientSearchEngine.hydrate(initialRows, {{ (int)($initialDataVersion ?? 1) }}, isFullSeed);
             }
-            if (clWorker) {
+            if (clWorker && isFullSeed) {
                 clWorker.postMessage({
                     type: 'INIT_DATASET',
                     rows: initialRows,
@@ -5726,7 +5788,7 @@ function fetchActiveProjection() {
             const stored = await ClientLocationDB.get(idbStoreKey);
             if (stored && stored.rows && stored.rows.length > 0) {
                 if (typeof ClientSearchEngine !== 'undefined') {
-                    ClientSearchEngine.hydrate(stored.rows, stored.data_version || 1);
+                    ClientSearchEngine.hydrate(stored.rows, stored.data_version || 1, true);
                 }
                 if (clWorker) {
                     clWorker.postMessage({
@@ -5735,6 +5797,9 @@ function fetchActiveProjection() {
                         version: stored.data_version || 1
                     });
                     clWorkerReady = true;
+                }
+                if (stored.clientDataCnt) {
+                    updateClientTabCounters(stored.clientDataCnt);
                 }
             }
             return;
@@ -5749,7 +5814,7 @@ function fetchActiveProjection() {
                     return;
                 }
                 if (typeof ClientSearchEngine !== 'undefined') {
-                    ClientSearchEngine.hydrate(data.rows, data.data_version || 1);
+                    ClientSearchEngine.hydrate(data.rows, data.data_version || 1, true);
                 }
                 if (clWorker) {
                     clWorker.postMessage({
@@ -5758,6 +5823,9 @@ function fetchActiveProjection() {
                         version: data.data_version || 1
                     });
                     clWorkerReady = true;
+                }
+                if (data.clientDataCnt) {
+                    updateClientTabCounters(data.clientDataCnt);
                 }
                 ClientLocationDB.set(idbStoreKey, data);
             }
@@ -6028,26 +6096,11 @@ function applyClientResponse(response, targetPage) {
             }
         }
 
-        if (response.total !== undefined) {
-            if (activeClientTab === 'all') {
-                $('#span_clientAll').html(response.total);
-                $('#tabBadgeAll').html(response.total);
-            } else if (activeClientTab === 'internal' || activeClientTab === 'custom') {
-                $('#span_clientCustom').html(response.total);
-                $('#tabBadgeInternal').html(response.total);
-            } else if (activeClientTab === 'direct') {
-                $('#span_clientDirect').html(response.total);
-                $('#tabBadgeDirect').html(response.total);
-            } else if (activeClientTab === 'hiring') {
-                $('#span_clientHiring').html(response.total);
-                $('#tabBadgeHiring').html(response.total);
-            } else if (activeClientTab === 'inactive') {
-                $('#span_clientInactive').html(response.total);
-                $('#tabBadgeInactive').html(response.total);
-            } else if (activeClientTab === 'request') {
-                $('#span_clientRequest').html(response.total);
-                $('#tabBadgeRequest').html(response.total);
-            }
+        // Authoritative Tab Counters Update from clientDataCnt (Single Source of Truth)
+        if (response.clientDataCnt) {
+            updateClientTabCounters(response.clientDataCnt);
+        } else if (window.CLIENT_DATA_COUNTERS) {
+            updateClientTabCounters(window.CLIENT_DATA_COUNTERS);
         }
         $('#pagination').html(response.pagination);
         clientListState.loading = false;
@@ -6138,20 +6191,14 @@ function loadClientList(page, updateUrl = true, cursor = null) {
             rows: localResult.rows,
             projection_status: 'synced',
             recency_counts: localResult.recency_counts,
-            pipeline_counts: localResult.pipeline_counts
+            pipeline_counts: localResult.pipeline_counts,
+            clientDataCnt: window.CLIENT_DATA_COUNTERS
         };
 
-        if (localResult.counts) {
-            $('#span_clientAll, #tabBadgeAll').text(localResult.counts.all);
-            $('#span_clientCustom, #tabBadgeInternal').text(localResult.counts.internal);
-            $('#span_clientDirect, #tabBadgeDirect').text(localResult.counts.direct);
-            $('#span_clientHiring, #tabBadgeHiring').text(localResult.counts.hiring);
-            if (localResult.counts.inactive !== undefined) {
-                $('#span_clientInactive, #tabBadgeInactive').text(localResult.counts.inactive);
-            }
-            if (localResult.counts.request !== undefined) {
-                $('#span_clientRequest, #tabBadgeRequest').text(localResult.counts.request);
-            }
+        if (localResult.counts && ClientSearchEngine.isFull && !trimmedSearch && (!countryVal || countryVal === 'all') && (!cityVal || cityVal === 'all') && !unspecifiedVal && (!industryVal || industryVal === 'all') && (!activityVal || activityVal === 'all') && (!pipelineVal || pipelineVal === 'all')) {
+            updateClientTabCounters(localResult.counts);
+        } else if (window.CLIENT_DATA_COUNTERS) {
+            updateClientTabCounters(window.CLIENT_DATA_COUNTERS);
         }
 
         if (localResult.recency_counts) {
@@ -6410,12 +6457,7 @@ $(document).on('click', '.request_event', function () {
                     }
 
                     if (response.clientDataCnt) {
-                        if ($('#span_clientAll').length) $('#span_clientAll').html(response.clientDataCnt.clientAll);
-                        if ($('#span_clientDirect').length) $('#span_clientDirect').html(response.clientDataCnt.clientDirect);
-                        if ($('#span_clientCustom').length) $('#span_clientCustom').html(response.clientDataCnt.clientCustom);
-                        if ($('#span_clientHiring').length) $('#span_clientHiring').html(response.clientDataCnt.clientHiring);
-                        if ($('#span_clientInactive').length && response.clientDataCnt.clientInactive !== undefined) $('#span_clientInactive').html(response.clientDataCnt.clientInactive);
-                        if ($('#span_clientRequest').length) $('#span_clientRequest').html(response.clientDataCnt.clientRequest);
+                        updateClientTabCounters(response.clientDataCnt);
                     }
 
                     if (window.clientSyncChannel) {
@@ -6545,13 +6587,7 @@ function handleClientMutationEvent(data) {
     }
 
     if (data.clientDataCnt) {
-        if ($('#span_clientAll').length && data.clientDataCnt.clientAll !== undefined) $('#span_clientAll').html(data.clientDataCnt.clientAll);
-        if ($('#span_clientDirect').length && data.clientDataCnt.clientDirect !== undefined) $('#span_clientDirect').html(data.clientDataCnt.clientDirect);
-        if ($('#span_clientCustom').length && data.clientDataCnt.clientCustom !== undefined) $('#span_clientCustom').html(data.clientDataCnt.clientCustom);
-        if ($('#span_clientHiring').length && data.clientDataCnt.clientHiring !== undefined) $('#span_clientHiring').html(data.clientDataCnt.clientHiring);
-        if ($('#span_clientInactive').length && data.clientDataCnt.clientInactive !== undefined) $('#span_clientInactive').html(data.clientDataCnt.clientInactive);
-        if ($('#span_clientRequest').length && data.clientDataCnt.clientRequest !== undefined) $('#span_clientRequest').html(data.clientDataCnt.clientRequest);
-        if ($('#tabBadgeInactive').length && data.clientDataCnt.clientInactive !== undefined) $('#tabBadgeInactive').html(data.clientDataCnt.clientInactive);
+        updateClientTabCounters(data.clientDataCnt);
     }
 
     // Refresh current view with zero page reload
