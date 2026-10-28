@@ -1163,6 +1163,131 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
                         ];
                     }
 
+                    $facetAggs = [
+                        'recency_buckets' => [
+                            'filters' => [
+                                'filters' => [
+                                    '7d' => [
+                                        'bool' => [
+                                            'should' => [
+                                                ['range' => ['last_activity_at' => ['gte' => now()->subDays(7)->startOfDay()->toIso8601String()]]],
+                                                [
+                                                    'bool' => [
+                                                        'must_not' => [['exists' => ['field' => 'last_activity_at']]],
+                                                        'must' => [['range' => ['created_at' => ['gte' => now()->subDays(7)->startOfDay()->toIso8601String()]]]],
+                                                    ],
+                                                ],
+                                            ],
+                                            'minimum_should_match' => 1,
+                                        ],
+                                    ],
+                                    '30d' => [
+                                        'bool' => [
+                                            'should' => [
+                                                [
+                                                    'range' => [
+                                                        'last_activity_at' => [
+                                                            'gte' => now()->subDays(30)->startOfDay()->toIso8601String(),
+                                                            'lt' => now()->subDays(7)->startOfDay()->toIso8601String(),
+                                                        ],
+                                                    ],
+                                                ],
+                                                [
+                                                    'bool' => [
+                                                        'must_not' => [['exists' => ['field' => 'last_activity_at']]],
+                                                        'must' => [
+                                                            [
+                                                                'range' => [
+                                                                    'created_at' => [
+                                                                        'gte' => now()->subDays(30)->startOfDay()->toIso8601String(),
+                                                                        'lt' => now()->subDays(7)->startOfDay()->toIso8601String(),
+                                                                    ],
+                                                                ],
+                                                            ],
+                                                        ],
+                                                    ],
+                                                ],
+                                            ],
+                                            'minimum_should_match' => 1,
+                                        ],
+                                    ],
+                                    '90d' => [
+                                        'bool' => [
+                                            'should' => [
+                                                [
+                                                    'range' => [
+                                                        'last_activity_at' => [
+                                                            'gte' => now()->subDays(90)->startOfDay()->toIso8601String(),
+                                                            'lt' => now()->subDays(30)->startOfDay()->toIso8601String(),
+                                                        ],
+                                                    ],
+                                                ],
+                                                [
+                                                    'bool' => [
+                                                        'must_not' => [['exists' => ['field' => 'last_activity_at']]],
+                                                        'must' => [
+                                                            [
+                                                                'range' => [
+                                                                    'created_at' => [
+                                                                        'gte' => now()->subDays(90)->startOfDay()->toIso8601String(),
+                                                                        'lt' => now()->subDays(30)->startOfDay()->toIso8601String(),
+                                                                    ],
+                                                                ],
+                                                            ],
+                                                        ],
+                                                    ],
+                                                ],
+                                            ],
+                                            'minimum_should_match' => 1,
+                                        ],
+                                    ],
+                                    'dormant' => [
+                                        'bool' => [
+                                            'should' => [
+                                                ['range' => ['last_activity_at' => ['lt' => now()->subDays(90)->startOfDay()->toIso8601String()]]],
+                                                [
+                                                    'bool' => [
+                                                        'must_not' => [['exists' => ['field' => 'last_activity_at']]],
+                                                        'must' => [['range' => ['created_at' => ['lt' => now()->subDays(90)->startOfDay()->toIso8601String()]]]],
+                                                    ],
+                                                ],
+                                            ],
+                                            'minimum_should_match' => 1,
+                                        ],
+                                    ],
+                                    'never' => [
+                                        'bool' => [
+                                            'must_not' => [
+                                                ['exists' => ['field' => 'last_activity_at']],
+                                                ['exists' => ['field' => 'created_at']],
+                                            ],
+                                        ],
+                                    ],
+                                ],
+                            ],
+                        ],
+                        'pipeline_buckets' => [
+                            'filters' => [
+                                'filters' => [
+                                    'active' => [
+                                        'range' => [
+                                            'job_metrics.pipeline_candidates_count' => ['gt' => 0],
+                                        ],
+                                    ],
+                                    'none' => [
+                                        'bool' => [
+                                            'should' => [
+                                                ['term' => ['job_metrics.pipeline_candidates_count' => 0]],
+                                                ['bool' => ['must_not' => [['exists' => ['field' => 'job_metrics.pipeline_candidates_count']]]]],
+                                            ],
+                                            'minimum_should_match' => 1,
+                                        ],
+                                    ],
+                                ],
+                            ],
+                        ],
+                    ];
+
                     $hiringParams = [
                         'index' => ELASTIC_CLIENT_LIST,
                         'body' => [
@@ -1170,6 +1295,7 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
                             'size' => $size,
                             'sort' => $sort,
                             'query' => ['bool' => ['must' => $hiringMust]],
+                            'aggs' => $facetAggs,
                         ],
                     ];
 
@@ -1181,8 +1307,136 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
                     $data = array_map(function ($hit) {
                         return $hit['_source'];
                     }, $hiringResp['hits']['hits']);
+
+                    $recencyBuckets = $hiringResp['aggregations']['recency_buckets']['buckets'] ?? [];
+                    $pipelineBuckets = $hiringResp['aggregations']['pipeline_buckets']['buckets'] ?? [];
                 }
             } else {
+                $facetAggs = [
+                    'recency_buckets' => [
+                        'filters' => [
+                            'filters' => [
+                                '7d' => [
+                                    'bool' => [
+                                        'should' => [
+                                            ['range' => ['last_activity_at' => ['gte' => now()->subDays(7)->startOfDay()->toIso8601String()]]],
+                                            [
+                                                'bool' => [
+                                                    'must_not' => [['exists' => ['field' => 'last_activity_at']]],
+                                                    'must' => [['range' => ['created_at' => ['gte' => now()->subDays(7)->startOfDay()->toIso8601String()]]]],
+                                                ],
+                                            ],
+                                        ],
+                                        'minimum_should_match' => 1,
+                                    ],
+                                ],
+                                '30d' => [
+                                    'bool' => [
+                                        'should' => [
+                                            [
+                                                'range' => [
+                                                    'last_activity_at' => [
+                                                        'gte' => now()->subDays(30)->startOfDay()->toIso8601String(),
+                                                        'lt' => now()->subDays(7)->startOfDay()->toIso8601String(),
+                                                    ],
+                                                ],
+                                            ],
+                                            [
+                                                'bool' => [
+                                                    'must_not' => [['exists' => ['field' => 'last_activity_at']]],
+                                                    'must' => [
+                                                        [
+                                                            'range' => [
+                                                                'created_at' => [
+                                                                    'gte' => now()->subDays(30)->startOfDay()->toIso8601String(),
+                                                                    'lt' => now()->subDays(7)->startOfDay()->toIso8601String(),
+                                                                ],
+                                                            ],
+                                                        ],
+                                                    ],
+                                                ],
+                                            ],
+                                        ],
+                                        'minimum_should_match' => 1,
+                                    ],
+                                ],
+                                '90d' => [
+                                    'bool' => [
+                                        'should' => [
+                                            [
+                                                'range' => [
+                                                    'last_activity_at' => [
+                                                        'gte' => now()->subDays(90)->startOfDay()->toIso8601String(),
+                                                        'lt' => now()->subDays(30)->startOfDay()->toIso8601String(),
+                                                    ],
+                                                ],
+                                            ],
+                                            [
+                                                'bool' => [
+                                                    'must_not' => [['exists' => ['field' => 'last_activity_at']]],
+                                                    'must' => [
+                                                        [
+                                                            'range' => [
+                                                                'created_at' => [
+                                                                    'gte' => now()->subDays(90)->startOfDay()->toIso8601String(),
+                                                                    'lt' => now()->subDays(30)->startOfDay()->toIso8601String(),
+                                                                ],
+                                                            ],
+                                                        ],
+                                                    ],
+                                                ],
+                                            ],
+                                        ],
+                                        'minimum_should_match' => 1,
+                                    ],
+                                ],
+                                'dormant' => [
+                                    'bool' => [
+                                        'should' => [
+                                            ['range' => ['last_activity_at' => ['lt' => now()->subDays(90)->startOfDay()->toIso8601String()]]],
+                                            [
+                                                'bool' => [
+                                                    'must_not' => [['exists' => ['field' => 'last_activity_at']]],
+                                                    'must' => [['range' => ['created_at' => ['lt' => now()->subDays(90)->startOfDay()->toIso8601String()]]]],
+                                                ],
+                                            ],
+                                        ],
+                                        'minimum_should_match' => 1,
+                                    ],
+                                ],
+                                'never' => [
+                                    'bool' => [
+                                        'must_not' => [
+                                            ['exists' => ['field' => 'last_activity_at']],
+                                            ['exists' => ['field' => 'created_at']],
+                                        ],
+                                    ],
+                                ],
+                            ],
+                        ],
+                    ],
+                    'pipeline_buckets' => [
+                        'filters' => [
+                            'filters' => [
+                                'active' => [
+                                    'range' => [
+                                        'job_metrics.pipeline_candidates_count' => ['gt' => 0],
+                                    ],
+                                ],
+                                'none' => [
+                                    'bool' => [
+                                        'should' => [
+                                            ['term' => ['job_metrics.pipeline_candidates_count' => 0]],
+                                            ['bool' => ['must_not' => [['exists' => ['field' => 'job_metrics.pipeline_candidates_count']]]]],
+                                        ],
+                                        'minimum_should_match' => 1,
+                                    ],
+                                ],
+                            ],
+                        ],
+                    ],
+                ];
+
                 $params = [
                     'index' => ELASTIC_CLIENT_LIST,
                     'request_cache' => true,
@@ -1191,6 +1445,7 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
                         'size' => $size,
                         'sort' => $sort,
                         'query' => ['bool' => ['must' => $must]],
+                        'aggs' => $facetAggs,
                     ],
                 ];
                 $decodedCursor = $this->decodeOpaqueCursor($cursorParam);
@@ -1201,10 +1456,14 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
                 if (! $this->elasticService->indexExists(ELASTIC_CLIENT_LIST)) {
                     $total = 0;
                     $data = [];
+                    $recencyBuckets = [];
+                    $pipelineBuckets = [];
                 } else {
                     $response = $this->elasticService->getClient()->search($params);
                     $total = $response['hits']['total']['value'] ?? 0;
                     $data = array_map(fn ($hit) => $hit['_source'], $response['hits']['hits']);
+                    $recencyBuckets = $response['aggregations']['recency_buckets']['buckets'] ?? [];
+                    $pipelineBuckets = $response['aggregations']['pipeline_buckets']['buckets'] ?? [];
                 }
 
                 $nextCursor = null;
@@ -1215,6 +1474,21 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
                     }
                 }
             }
+
+            $recencyCounts = [
+                'all' => $total,
+                '7d' => (int) ($recencyBuckets['7d']['doc_count'] ?? 0),
+                '30d' => (int) ($recencyBuckets['30d']['doc_count'] ?? 0),
+                '90d' => (int) ($recencyBuckets['90d']['doc_count'] ?? 0),
+                'dormant' => (int) ($recencyBuckets['dormant']['doc_count'] ?? 0),
+                'never' => (int) ($recencyBuckets['never']['doc_count'] ?? 0),
+            ];
+
+            $pipelineCounts = [
+                'all' => $total,
+                'active' => (int) ($pipelineBuckets['active']['doc_count'] ?? 0),
+                'none' => (int) ($pipelineBuckets['none']['doc_count'] ?? 0),
+            ];
 
             $pagination = [
                 'total' => $total,
@@ -1474,8 +1748,9 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
                 } else {
                     $createdTimestamp = $rowObj->created_at ?? null;
                 }
+                $lastActivityTimestamp = $rowObj->last_activity_at ?? $rowObj->updated_at ?? $createdTimestamp;
                 $newDate = $createdTimestamp ? date('d M, Y', strtotime($createdTimestamp)) : '-';
-                $daysAgo = $createdTimestamp ? GeneralMethod::timeAgo($createdTimestamp) : '';
+                $daysAgo = $lastActivityTimestamp ? GeneralMethod::timeAgo($lastActivityTimestamp) : '';
 
                 $client_type = ($company_id != $cId) ? __('messages.direct_clinet_tag') : __('messages.internal_client_tag');
 
@@ -1617,6 +1892,8 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
                     ],
                     'connected_on' => (string) $newDate,
                     'days_ago' => (string) $daysAgo,
+                    'last_activity_at' => $lastActivityTimestamp ? Carbon::parse($lastActivityTimestamp)->toIso8601String() : null,
+                    'last_activity_formatted' => $lastActivityTimestamp ? date('d M, Y', strtotime($lastActivityTimestamp)) : null,
                     'projection_version' => (int) $tenantVersion,
                 ];
             }
@@ -1632,6 +1909,8 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
                 'total' => $total,
                 'pagination' => view('service_company.ajax_pages.client-pagination', compact('pagination'))->render(),
                 'rows' => $rowsDto,
+                'recency_counts' => $recencyCounts ?? ['all' => $total, '7d' => 0, '30d' => 0, '90d' => 0, 'dormant' => 0, 'never' => 0],
+                'pipeline_counts' => $pipelineCounts ?? ['all' => $total, 'active' => 0, 'none' => 0],
                 'data_version' => $tenantVersion,
                 'pipeline_revision' => (int) cache()->get('tenant_'.$company_id.'_pipeline_rev', 1),
                 'authoritative_version' => $authoritativeVersion,
