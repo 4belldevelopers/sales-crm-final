@@ -8,6 +8,43 @@
             background-color: #F8FAFC;
         }
 
+        /* =========================================================================
+           TOP GAP COLLAPSE & VIEWPORT SPACING MANAGEMENT (Eliminate Metronic 55px whitespace)
+           ========================================================================= */
+        #kt_body {
+            --kt-toolbar-height: 0px !important;
+            --kt-toolbar-height-tablet-and-mobile: 0px !important;
+        }
+
+        .header-fixed.toolbar-fixed #kt_wrapper,
+        .header-fixed #kt_wrapper,
+        .toolbar-fixed #kt_wrapper,
+        #kt_wrapper {
+            padding-top: calc(65px + 10px) !important;
+        }
+
+        @media (max-width: 991.98px) {
+            .header-tablet-and-mobile-fixed.toolbar-tablet-and-mobile-fixed #kt_wrapper,
+            .header-tablet-and-mobile-fixed #kt_wrapper,
+            #kt_wrapper {
+                padding-top: calc(55px + 10px) !important;
+            }
+        }
+
+        #kt_toolbar {
+            display: none !important;
+            height: 0 !important;
+            min-height: 0 !important;
+            padding: 0 !important;
+            margin: 0 !important;
+        }
+
+        #kt_content,
+        .content {
+            padding-top: 0 !important;
+            margin-top: 0 !important;
+        }
+
         /* Top Action Bar - Compact 15.6" Header */
         .template-header-bar {
             background: #FFFFFF;
