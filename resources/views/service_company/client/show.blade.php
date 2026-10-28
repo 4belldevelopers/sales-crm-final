@@ -14,589 +14,9 @@ use Carbon\Carbon;
 @include('service_company.client.components.tab-jobs-style')
 @include('service_company.client.components.tab-offers-joinings-style')
 @include('service_company.client.components.tab-activity-style')
+@include('service_company.client.components.tab-interviews-style')
 <style>
-    /* Scoped Interview Tracker Styling (Metronic Theme Aligned) */
-    .cit-fb-pill {
-        display: inline-flex;
-        align-items: center;
-        padding: 3px 8px;
-        font-size: 11px;
-        font-weight: 600;
-        border-radius: 4px;
-        line-height: 1.4;
-        white-space: nowrap;
-    }
-    .cit-fb-scheduled { background-color: #E8FFF3; color: #50CD89; border: 1px solid #c9f7dd; }
-    .cit-fb-rescheduled { background-color: #FFF8DD; color: #F1416C; border: 1px solid #ffe89e; }
-    .cit-fb-attended { background-color: #F1FAFF; color: #009EF7; border: 1px solid #c4e9fd; }
-    .cit-fb-noshow { background-color: #FFF5F8; color: #F1416C; border: 1px solid #fecdd6; }
-    .cit-fb-cancelled { background-color: #F5F8FA; color: #7E8299; border: 1px solid #E4E6EF; }
-    .cit-fb-default { background-color: #F5F8FA; color: #5E6278; border: 1px solid #E4E6EF; }
-
-    .cit-stars { display: inline-flex; gap: 2px; }
-    .cit-star-fill { color: #FFAD0F; font-size: 11px; }
-    .cit-star-empty { color: #E4E6EF; font-size: 11px; }
-
-    /* ===== Scoped Interview Tracker: Card + Sub-Card Proportional Layout ===== */
-    .it-main-card {
-        width: 100% !important;
-        font-family: 'Poppins', -apple-system, BlinkMacSystemFont, sans-serif !important;
-    }
-
-    /* 1. Top Card Header Toolbar (Heading in Card + Search Bar) */
-    .it-toolbar-card {
-        background: #ffffff !important;
-        border: 1px solid #e2e8f0 !important;
-        border-radius: 10px !important;
-        padding: 12px 18px !important;
-        margin-bottom: 10px !important;
-        display: flex !important;
-        align-items: center !important;
-        justify-content: space-between !important;
-        gap: 14px !important;
-        flex-wrap: wrap !important;
-        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03) !important;
-    }
-    .it-toolbar-left {
-        display: flex !important;
-        align-items: center !important;
-        gap: 10px !important;
-        min-width: 0 !important;
-    }
-    .it-title {
-        font-size: 13.5px !important;
-        font-weight: 700 !important;
-        color: #0f172a !important;
-        line-height: 1.2 !important;
-        letter-spacing: -0.2px !important;
-        margin: 0 !important;
-    }
-    .it-badge-count {
-        display: inline-flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        padding: 1.5px 8px !important;
-        font-size: 11px !important;
-        font-weight: 700 !important;
-        color: #2563eb !important;
-        background: #eff6ff !important;
-        border: 1px solid #bfdbfe !important;
-        border-radius: 999px !important;
-    }
-    .it-subtitle {
-        font-size: 11px !important;
-        font-weight: 500 !important;
-        color: #64748b !important;
-        margin-top: 2px !important;
-    }
-    .it-toolbar-right {
-        display: flex !important;
-        align-items: center !important;
-        gap: 10px !important;
-    }
-    .it-search-subcard {
-        display: flex !important;
-        align-items: center !important;
-        gap: 8px !important;
-        background: #f8fafc !important;
-        border: 1px solid #e2e8f0 !important;
-        border-radius: 8px !important;
-        padding: 0 12px !important;
-        height: 36px !important;
-        min-width: 260px !important;
-        max-width: 380px !important;
-        width: 100% !important;
-        transition: all 0.15s ease-in-out !important;
-    }
-    .it-search-subcard:focus-within {
-        background: #ffffff !important;
-        border-color: #2563eb !important;
-        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12) !important;
-    }
-    .it-search-subcard i {
-        color: #94a3b8 !important;
-        font-size: 12px !important;
-        flex-shrink: 0 !important;
-    }
-    .it-search-subcard input {
-        border: none !important;
-        background: transparent !important;
-        outline: none !important;
-        box-shadow: none !important;
-        font-size: 12px !important;
-        font-family: inherit !important;
-        color: #0f172a !important;
-        width: 100% !important;
-        padding: 0 !important;
-        line-height: 36px !important;
-    }
-    .it-search-subcard input::placeholder {
-        color: #94a3b8 !important;
-        font-size: 11.5px !important;
-    }
-    .it-search-clear {
-        background: transparent !important;
-        border: none !important;
-        color: #94a3b8 !important;
-        cursor: pointer !important;
-        padding: 2px 4px !important;
-        font-size: 11px !important;
-        display: flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-    }
-    .it-search-clear:hover {
-        color: #ef4444 !important;
-    }
-
-    .it-card-container {
-        width: 100% !important;
-        font-family: 'Poppins', -apple-system, BlinkMacSystemFont, sans-serif !important;
-    }
-
-    /* Proportional Header Strip */
-    .it-card-header,
-    .it-primary-card {
-        display: grid !important;
-        grid-template-columns: minmax(0, 2.2fr) minmax(0, 2.3fr) minmax(0, 1.75fr) minmax(0, 1.1fr) minmax(0, 1.1fr) minmax(0, 0.75fr) minmax(0, 0.8fr) !important;
-        column-gap: 12px !important;
-        align-items: center !important;
-        width: 100% !important;
-        box-sizing: border-box !important;
-    }
-
-    .it-card-header {
-        background: #f8fafc !important;
-        border: 1px solid #e2e8f0 !important;
-        border-radius: 8px !important;
-        padding: 9px 14px !important;
-        margin-bottom: 8px !important;
-    }
-
-    .it-col-th {
-        font-size: 10px !important;
-        font-weight: 700 !important;
-        color: #64748b !important;
-        text-transform: uppercase !important;
-        letter-spacing: 0.5px !important;
-        white-space: nowrap !important;
-    }
-
-    /* Primary Job Card for Each Interview */
-    .it-primary-card {
-        background: #ffffff !important;
-        border: 1px solid #e2e8f0 !important;
-        border-radius: 10px !important;
-        padding: 12px 14px !important;
-        margin-bottom: 8px !important;
-        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03) !important;
-        transition: all 0.15s ease-in-out !important;
-    }
-
-    .it-primary-card:hover {
-        border-color: #cbd5e1 !important;
-        box-shadow: 0 4px 14px rgba(15, 23, 42, 0.06) !important;
-        transform: translateY(-1px) !important;
-    }
-
-    /* Logical Sub-Cards Inside the Primary Card */
-    .it-subcard {
-        min-width: 0 !important;
-        display: flex !important;
-        flex-direction: column !important;
-    }
-
-    /* 1. Candidate Sub-Card */
-    .it-subcard-cand {
-        flex-direction: row !important;
-        align-items: center !important;
-        gap: 10px !important;
-    }
-    .it-cand-avatar {
-        width: 36px !important;
-        height: 36px !important;
-        border-radius: 50% !important;
-        display: flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        color: #ffffff !important;
-        font-size: 13px !important;
-        font-weight: 700 !important;
-        flex-shrink: 0 !important;
-        text-transform: uppercase !important;
-        box-shadow: 0 1px 2px rgba(0,0,0,0.08) !important;
-    }
-    .it-avatar-green { background: #10b981 !important; }
-    .it-avatar-red { background: #ef4444 !important; }
-    .it-avatar-blue { background: #3b82f6 !important; }
-    .it-avatar-purple { background: #8b5cf6 !important; }
-    .it-avatar-orange { background: #f97316 !important; }
-    .it-avatar-gray { background: #6b7280 !important; }
-
-    .it-cand-info {
-        min-width: 0 !important;
-        display: flex !important;
-        flex-direction: column !important;
-        gap: 1px !important;
-    }
-    .it-cand-name {
-        font-size: 12.5px !important;
-        font-weight: 700 !important;
-        color: #0f172a !important;
-        line-height: 1.35 !important;
-        word-break: break-word !important;
-    }
-    .it-cand-role {
-        font-size: 11px !important;
-        font-weight: 500 !important;
-        color: #64748b !important;
-        line-height: 1.3 !important;
-        word-break: break-word !important;
-    }
-    .it-cand-meta {
-        display: flex !important;
-        align-items: center !important;
-        gap: 5px !important;
-        margin-top: 3px !important;
-        flex-wrap: wrap !important;
-    }
-    .it-meta-tag {
-        display: inline-flex !important;
-        align-items: center !important;
-        gap: 3px !important;
-        font-size: 9.5px !important;
-        font-weight: 600 !important;
-        padding: 1.5px 6px !important;
-        border-radius: 4px !important;
-    }
-    .it-meta-tag.confirmed { color: #10b981 !important; background: #f0fdf4 !important; border: 1px solid #bbf7d0 !important; }
-    .it-meta-tag.warning { color: #f59e0b !important; background: #fffbeb !important; border: 1px solid #fde68a !important; }
-    .it-meta-tag.danger { color: #ef4444 !important; background: #fef2f2 !important; border: 1px solid #fecaca !important; }
-    .it-meta-tag.info { color: #3b82f6 !important; background: #eff6ff !important; border: 1px solid #bfdbfe !important; }
-    .it-meta-date {
-        font-size: 10px !important;
-        color: #94a3b8 !important;
-    }
-
-    /* 2. Job Requisition Sub-Card */
-    .it-subcard-job {
-        gap: 2px !important;
-    }
-    .it-job-title {
-        font-size: 12.5px !important;
-        font-weight: 700 !important;
-        color: #0f172a !important;
-        line-height: 1.35 !important;
-        word-break: break-word !important;
-    }
-    .it-job-company {
-        font-size: 11px !important;
-        font-weight: 500 !important;
-        color: #64748b !important;
-        line-height: 1.3 !important;
-        word-break: break-word !important;
-    }
-    .it-job-tags {
-        display: flex !important;
-        align-items: center !important;
-        gap: 5px !important;
-        margin-top: 2px !important;
-        flex-wrap: wrap !important;
-    }
-    .it-job-type {
-        display: inline-flex !important;
-        align-items: center !important;
-        padding: 1.5px 6px !important;
-        border-radius: 4px !important;
-        font-size: 9.5px !important;
-        font-weight: 600 !important;
-    }
-    .it-job-type-internal { background: #eef2ff !important; color: #4f46e5 !important; border: 1px solid #e0e7ff !important; }
-    .it-job-type-direct { background: #f0fdf4 !important; color: #16a34a !important; border: 1px solid #dcfce7 !important; }
-    .it-job-id {
-        font-size: 10.5px !important;
-        color: #2563eb !important;
-        font-weight: 600 !important;
-    }
-    .it-dot-sep {
-        width: 3px !important;
-        height: 3px !important;
-        border-radius: 50% !important;
-        background: #cbd5e1 !important;
-    }
-
-    /* 3. Date & Time Sub-Card */
-    .it-subcard-datetime {
-        gap: 3px !important;
-    }
-    .it-dt-row {
-        display: flex !important;
-        align-items: center !important;
-        gap: 5px !important;
-        font-size: 11.5px !important;
-        color: #1e293b !important;
-        line-height: 1.3 !important;
-    }
-    .it-dt-row svg {
-        color: #94a3b8 !important;
-        flex-shrink: 0 !important;
-    }
-    .it-dt-date {
-        font-weight: 600 !important;
-        color: #0f172a !important;
-    }
-    .it-dt-time {
-        font-size: 11px !important;
-        font-weight: 500 !important;
-        color: #475569 !important;
-    }
-    .it-dt-mode {
-        font-size: 10.5px !important;
-        font-weight: 500 !important;
-        color: #64748b !important;
-    }
-    .it-dt-link {
-        display: inline-flex !important;
-        align-items: center !important;
-        gap: 4px !important;
-        color: #2563eb !important;
-        font-size: 11px !important;
-        font-weight: 600 !important;
-        text-decoration: none !important;
-        margin-top: 2px !important;
-        cursor: pointer !important;
-    }
-    .it-dt-link:hover {
-        color: #1d4ed8 !important;
-        text-decoration: underline !important;
-    }
-    .it-dt-link svg {
-        color: #2563eb !important;
-    }
-
-    /* 4. Interviewers Sub-Card */
-    .it-subcard-interviewers {
-        gap: 2px !important;
-    }
-    .it-lead-name {
-        font-size: 12px !important;
-        font-weight: 600 !important;
-        color: #0f172a !important;
-        line-height: 1.35 !important;
-        word-break: break-word !important;
-    }
-    .it-lead-comp {
-        font-size: 10.5px !important;
-        font-weight: 600 !important;
-        color: #009ef7 !important;
-        line-height: 1.3 !important;
-        word-break: break-word !important;
-    }
-    .it-extra-wrap {
-        display: flex !important;
-        align-items: center !important;
-        gap: 4px !important;
-        margin-top: 2px !important;
-    }
-    .it-extra-pill {
-        display: inline-flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        min-width: 17px !important;
-        height: 15px !important;
-        padding: 0 4px !important;
-        background: #f8fafc !important;
-        border: 1px solid #e2e8f0 !important;
-        border-radius: 4px !important;
-        font-size: 9px !important;
-        font-weight: 600 !important;
-        color: #64748b !important;
-    }
-    .it-extra-lbl {
-        font-size: 10px !important;
-        color: #64748b !important;
-    }
-
-    /* 5. Source Sub-Card */
-    .it-subcard-source {
-        gap: 2px !important;
-    }
-    .it-src-name {
-        font-size: 12px !important;
-        font-weight: 600 !important;
-        color: #0f172a !important;
-        line-height: 1.35 !important;
-        word-break: break-word !important;
-    }
-    .it-src-comp {
-        font-size: 10.5px !important;
-        font-weight: 500 !important;
-        color: #64748b !important;
-        line-height: 1.3 !important;
-        word-break: break-word !important;
-    }
-
-    /* 6. Stage Sub-Card */
-    .it-subcard-stage {
-        gap: 3px !important;
-        align-items: flex-start !important;
-    }
-    .it-badge { display: inline-flex; align-items: center; padding: 2px 8px; border-radius: 999px; font-size: 10px; font-weight: 600; width: fit-content; }
-    .it-badge-blue   { background: #dbeafe; color: #1e40af; }
-    .it-badge-purple { background: #f3e8ff; color: #6b21a8; }
-    .it-badge-orange { background: #ffedd5; color: #9a3412; }
-    .it-badge-red    { background: #fee2e2; color: #991b1b; }
-    .it-badge-green  { background: #d1fae5; color: #065f46; }
-    .it-badge-yellow { background: #fef9c3; color: #854d0e; }
-    .it-badge-gray   { background: #e2e8f0; color: #374151; }
-    .it-badge-pink   { background: #fce7f3; color: #9d174d; }
-    .it-stage-sub {
-        font-size: 10px !important;
-        font-weight: 500 !important;
-        color: #94a3b8 !important;
-        line-height: 1.2 !important;
-    }
-
-    /* 7. Feedback Sub-Card */
-    .it-subcard-feedback {
-        gap: 3px !important;
-        align-items: flex-start !important;
-    }
-    .it-fb-status {
-        font-size: 11px !important;
-        font-weight: 600 !important;
-        display: inline-flex !important;
-        align-items: center !important;
-        gap: 4px !important;
-    }
-    .it-rec-pill {
-        display: inline-flex !important;
-        align-items: center !important;
-        padding: 1.5px 7px !important;
-        border-radius: 50px !important;
-        font-size: 9.5px !important;
-        font-weight: 600 !important;
-        margin-top: 1px !important;
-    }
-
-    /* Empty, Loading, and Error State Cards */
-    .it-empty-card,
-    .it-loading-card,
-    .it-error-card {
-        background: #ffffff !important;
-        border: 1px dashed #cbd5e1 !important;
-        border-radius: 10px !important;
-        padding: 36px 20px !important;
-        text-align: center !important;
-        color: #64748b !important;
-        font-size: 12.5px !important;
-        margin: 8px 0 !important;
-    }
-    .it-error-card {
-        border-color: #fca5a5 !important;
-        color: #dc2626 !important;
-    }
-
-    /* 4. Enterprise Pagination Card / Footer (Minimum 10 rows) */
-    .it-pagination-card {
-        background: #ffffff !important;
-        border: 1px solid #e2e8f0 !important;
-        border-radius: 10px !important;
-        padding: 10px 16px !important;
-        margin-top: 10px !important;
-        display: flex !important;
-        align-items: center !important;
-        justify-content: space-between !important;
-        gap: 12px !important;
-        flex-wrap: wrap !important;
-        box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03) !important;
-    }
-    .it-pagi-info {
-        font-size: 11.5px !important;
-        font-weight: 500 !important;
-        color: #64748b !important;
-    }
-    .it-pagi-info strong {
-        color: #0f172a !important;
-        font-weight: 700 !important;
-    }
-    .it-pagi-controls {
-        display: flex !important;
-        align-items: center !important;
-        gap: 8px !important;
-    }
-    .it-pagi-btn {
-        display: inline-flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        gap: 6px !important;
-        height: 32px !important;
-        padding: 0 12px !important;
-        border-radius: 6px !important;
-        font-size: 11.5px !important;
-        font-weight: 600 !important;
-        border: 1px solid #e2e8f0 !important;
-        background: #ffffff !important;
-        color: #334155 !important;
-        cursor: pointer !important;
-        transition: all 0.15s ease-in-out !important;
-    }
-    .it-pagi-btn:hover:not(.disabled) {
-        background: #f8fafc !important;
-        border-color: #cbd5e1 !important;
-        color: #0f172a !important;
-    }
-    .it-pagi-btn.disabled {
-        opacity: 0.45 !important;
-        cursor: not-allowed !important;
-        background: #f8fafc !important;
-        border-color: #e2e8f0 !important;
-        color: #94a3b8 !important;
-    }
-    .it-pagi-page-indicator {
-        display: inline-flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        padding: 0 10px !important;
-        height: 32px !important;
-        font-size: 11.5px !important;
-        font-weight: 600 !important;
-        color: #475569 !important;
-        background: #f8fafc !important;
-        border: 1px solid #e2e8f0 !important;
-        border-radius: 6px !important;
-    }
-    .it-pagi-size-select {
-        height: 32px !important;
-        padding: 0 8px 0 10px !important;
-        border: 1px solid #e2e8f0 !important;
-        border-radius: 6px !important;
-        background: #ffffff !important;
-        font-size: 11.5px !important;
-        font-weight: 500 !important;
-        color: #334155 !important;
-        outline: none !important;
-        cursor: pointer !important;
-    }
-
-    @media (max-width: 1280px) {
-        .it-card-header,
-        .it-primary-card {
-            grid-template-columns: minmax(0, 2.1fr) minmax(0, 2.2fr) minmax(0, 1.7fr) minmax(0, 1fr) minmax(0, 1fr) minmax(0, 0.7fr) minmax(0, 0.75fr) !important;
-            column-gap: 8px !important;
-            padding-left: 10px !important;
-            padding-right: 10px !important;
-        }
-    }
-    @media (max-width: 992px) {
-        .it-card-header,
-        .it-primary-card {
-            grid-template-columns: minmax(0, 1.9fr) minmax(0, 2fr) minmax(0, 1.6fr) minmax(0, 0.9fr) minmax(0, 0.9fr) minmax(0, 0.65fr) minmax(0, 0.7fr) !important;
-            column-gap: 6px !important;
-        }
-    }
-
-    @media only screen and (min-width: 900px) and (max-width: 2560px) {
+        @media only screen and (min-width: 900px) and (max-width: 2560px) {
 
 
 
@@ -3465,31 +2885,33 @@ use Carbon\Carbon;
             font-weight: 600;
           }
           .cd-cand-toolbar-right {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            flex-wrap: wrap;
+            display: flex !important;
+            align-items: center !important;
+            gap: 8px !important;
+            flex-wrap: nowrap !important;
+            flex-shrink: 0 !important;
           }
 
           /* Search Sub-Card */
           .cd-cand-search-subcard {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            background: #f8fafc;
-            border: 1px solid #e2e8f0;
-            border-radius: 8px;
-            padding: 0 10px 0 12px;
-            height: 36px;
-            width: 100%;
-            max-width: 380px;
-            transition: all 0.15s ease-in-out;
-            position: relative;
+            display: flex !important;
+            align-items: center !important;
+            gap: 8px !important;
+            background: #f8fafc !important;
+            border: 1px solid #e2e8f0 !important;
+            border-radius: 8px !important;
+            padding: 0 10px 0 12px !important;
+            height: 36px !important;
+            width: 280px !important;
+            max-width: 320px !important;
+            min-width: 180px !important;
+            transition: all 0.15s ease-in-out !important;
+            position: relative !important;
           }
           .cd-cand-search-subcard:focus-within {
-            background: #ffffff;
-            border-color: #009ef7;
-            box-shadow: 0 0 0 3px rgba(0, 158, 247, 0.12);
+            background: #ffffff !important;
+            border-color: #009ef7 !important;
+            box-shadow: 0 0 0 3px rgba(0, 158, 247, 0.12) !important;
           }
           .cd-cand-search-subcard i.fa-search {
             color: #94a3b8;
@@ -3503,7 +2925,7 @@ use Carbon\Carbon;
             box-shadow: none !important;
             font-size: 12px !important;
             color: #0f172a !important;
-            width: 100%;
+            width: 100% !important;
             padding: 0 !important;
             line-height: 36px;
             font-family: inherit;
@@ -3526,23 +2948,40 @@ use Carbon\Carbon;
           }
 
           .cd-cand-action-subcard {
-            width: 36px;
-            height: 36px;
-            border-radius: 8px;
-            border: 1px solid #e2e8f0;
-            background: #f8fafc;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            color: #64748b;
-            cursor: pointer;
-            transition: all 0.15s ease;
-            padding: 0;
+            width: 36px !important;
+            height: 36px !important;
+            min-width: 36px !important;
+            border-radius: 8px !important;
+            border: 1px solid #e2e8f0 !important;
+            background: #f8fafc !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            color: #64748b !important;
+            cursor: pointer !important;
+            transition: all 0.15s ease !important;
+            padding: 0 !important;
+            flex-shrink: 0 !important;
           }
           .cd-cand-action-subcard:hover {
-            background: #eff6ff;
-            color: #009ef7;
-            border-color: #bfdbfe;
+            background: #eff6ff !important;
+            color: #009ef7 !important;
+            border-color: #bfdbfe !important;
+          }
+          .cd-cand-action-subcard.is-refreshing {
+            pointer-events: none !important;
+            opacity: 0.7 !important;
+            background: #eff6ff !important;
+            color: #009ef7 !important;
+          }
+          .cd-cand-count-badge[role="button"] {
+            cursor: pointer !important;
+            transition: all 0.15s ease !important;
+          }
+          .cd-cand-count-badge[role="button"]:hover {
+            background: #dbeafe !important;
+            color: #1e40af !important;
+            border-color: #93c5fd !important;
           }
 
           /* TIER 2: Sub-Tabs Pipeline Card */
@@ -3692,30 +3131,16 @@ use Carbon\Carbon;
             overflow: hidden !important;
           }
 
-          /* Sub-Card 1: Profile */
+          /* Sub-Card 1: Profile (Avatar removed to maximize horizontal space for candidate info) */
           .cd-cand-profile-row {
             display: flex !important;
             align-items: center !important;
-            gap: 8px !important;
             min-width: 0 !important;
-          }
-          .cd-cand-avatar-box {
-            width: 36px !important;
-            height: 36px !important;
-            min-width: 36px !important;
-            border-radius: 8px !important;
-            background: #eff6ff !important;
-            color: #2563eb !important;
-            border: 1px solid #dbeafe !important;
-            display: flex !important;
-            align-items: center !important;
-            justify-content: center !important;
-            font-size: 13px !important;
-            font-weight: 700 !important;
-            flex-shrink: 0 !important;
+            width: 100% !important;
           }
           .cd-cand-profile-meta {
-            flex: 1 1 auto !important;
+            flex: 1 1 100% !important;
+            width: 100% !important;
             min-width: 0 !important;
             overflow: hidden !important;
           }
@@ -5316,48 +4741,67 @@ use Carbon\Carbon;
 
                     <!--begin::interview_tracker Candidate List-->
                     <div class="tab-pane" id="interview_tracker" role="tabpanel">
-                        <div class="it-main-card">
-                            <!-- 1. Top Card Header Toolbar (Heading in Card + Search Bar) -->
-                            <div class="it-toolbar-card">
-                                <div class="it-toolbar-left">
-                                    <div class="it-title-wrap">
+                        <div class="cd-it-wrapper">
+                            <!-- 1. Tier 1: Top Card Header Toolbar (Heading in Card + Search Bar) -->
+                            <div class="cd-it-header-card">
+                                <div class="cd-it-header-left">
+                                    <div class="cd-it-header-icon">
+                                        <i class="fas fa-calendar-check"></i>
+                                    </div>
+                                    <div>
                                         <div class="d-flex align-items-center gap-2">
-                                            <h4 class="it-title">Interview Tracker</h4>
-                                            <span class="it-badge-count" id="itTotalCountBadgeInternal">0</span>
+                                            <span class="cd-it-header-title">Interviews</span>
+                                            <span class="cd-it-header-badge" id="itTotalCountBadgeInternal">0</span>
                                         </div>
-                                        <div class="it-subtitle">Interviews scheduled with this client's candidates.</div>
+                                        <div class="cd-it-header-sub">Scheduled interviews with this client's candidates.</div>
                                     </div>
                                 </div>
-                                <div class="it-toolbar-right">
-                                    <div class="it-search-subcard">
+                                <div class="cd-it-header-right">
+                                    <div class="cd-it-search-subcard">
                                         <i class="fas fa-search"></i>
                                         <input type="text" id="itSearchInputInternal" placeholder="Search candidate, job, interviewer, stage..." autocomplete="off">
-                                        <button type="button" class="it-search-clear" id="itSearchClearInternal" style="display: none;" title="Clear search">
+                                        <button type="button" class="cd-it-search-clear" id="itSearchClearInternal" style="display: none;" title="Clear search">
                                             <i class="fas fa-times"></i>
                                         </button>
                                     </div>
+                                    @if (in_array('add_interview_schedule', $userPermissions ?? []))
+                                        <button type="button" class="btn btn-sm btn-primary fw-bold cd-it-add-btn" id="btnOpenScheduleModal">
+                                            <i class="fas fa-plus me-1"></i> Schedule Interview
+                                        </button>
+                                    @endif
                                 </div>
                             </div>
 
-                            <!-- 2. Proportional Column Header Strip & Cards Container -->
-                            <div class="it-card-container">
-                                <div class="it-card-header">
-                                    <div class="it-col-th it-th-cand">Candidate</div>
-                                    <div class="it-col-th it-th-job">Job Requisitions</div>
-                                    <div class="it-col-th it-th-datetime">Interview Date &amp; Time</div>
-                                    <div class="it-col-th it-th-interviewers">Interviewers</div>
-                                    <div class="it-col-th it-th-source">Source</div>
-                                    <div class="it-col-th it-th-stage">Stage</div>
-                                    <div class="it-col-th it-th-feedback">Feedback</div>
-                                </div>
-
-                                <!-- Primary Cards List -->
-                                <div id="candidatetListinterviewtracker" class="it-cards-list" data-role="interview-list">
-                                </div>
+                            <!-- 2. Tier 2: Sub-Tabs Filter Card (Single Active Highlight Rule) -->
+                            <div class="cd-it-tabs-card">
+                                <button type="button" class="cd-it-tab-btn active js-it-filter-btn" data-filter="all">
+                                    <span>All Interviews</span>
+                                    <span class="cd-it-tab-badge" id="itFilterCountAll">0</span>
+                                </button>
+                                <button type="button" class="cd-it-tab-btn js-it-filter-btn" data-filter="upcoming">
+                                    <span>Upcoming / Today</span>
+                                    <span class="cd-it-tab-badge badge-primary" id="itFilterCountUpcoming">0</span>
+                                </button>
+                                <button type="button" class="cd-it-tab-btn js-it-filter-btn" data-filter="pending_feedback">
+                                    <span>Feedback Pending</span>
+                                    <span class="cd-it-tab-badge badge-warning" id="itFilterCountPending">0</span>
+                                </button>
+                                <button type="button" class="cd-it-tab-btn js-it-filter-btn" data-filter="completed">
+                                    <span>Completed / Attended</span>
+                                    <span class="cd-it-tab-badge badge-success" id="itFilterCountCompleted">0</span>
+                                </button>
+                                <button type="button" class="cd-it-tab-btn js-it-filter-btn" data-filter="cancelled">
+                                    <span>Cancelled / Rescheduled</span>
+                                    <span class="cd-it-tab-badge" id="itFilterCountCancelled">0</span>
+                                </button>
                             </div>
 
-                            <!-- 3. Enterprise Pagination Card (Minimum 10 rows) -->
-                            <div id="paginationcandidateinterviewtracker" class="it-pagination-card" data-role="interview-pagination">
+                            <!-- 3. Tier 3: Primary Cards List -->
+                            <div id="candidatetListinterviewtracker" class="cd-it-stream" data-role="interview-list">
+                            </div>
+
+                            <!-- 4. Tier 4: Enterprise Pagination Card -->
+                            <div id="paginationcandidateinterviewtracker" class="cd-it-pagination-card" data-role="interview-pagination">
                             </div>
                         </div>
                     </div>
@@ -8536,6 +7980,16 @@ use Carbon\Carbon;
                 }
                 fetchInterviews(clientId, null, true, '');
             });
+
+            // 7. Sub-Tabs Filter Buttons (Single Active Highlight Rule)
+            $(document)
+                .off('click.internalItFilter', '.js-it-filter-btn')
+                .on('click.internalItFilter', '.js-it-filter-btn', function() {
+                    $('.js-it-filter-btn').removeClass('active');
+                    $(this).addClass('active');
+                    activeFilter = $(this).data('filter') || 'all';
+                    applyCurrentFilter();
+                });
         }
 
         function subscribeChannel(clientId) {
@@ -8707,13 +8161,79 @@ use Carbon\Carbon;
             });
         }
 
+        let currentRawData = [];
+        let activeFilter = 'all';
+
+        function updateSubTabCounts(rows) {
+            if (!Array.isArray(rows)) return;
+            const total = rows.length;
+            let upcoming = 0;
+            let pending = 0;
+            let completed = 0;
+            let cancelled = 0;
+
+            rows.forEach(function(r) {
+                const att = r.attendance ? r.attendance.code : (r.available_status || 0);
+                const fb = r.evaluation ? r.evaluation.code : (r.feedback || 0);
+                if (att === 0 || att === 3) upcoming++;
+                if (att === 1 && fb === 5) pending++;
+                if (att === 1) completed++;
+                if (att === 2 || att === 4 || att === 7) cancelled++;
+            });
+
+            $('#itFilterCountAll').text(total);
+            $('#itFilterCountUpcoming').text(upcoming);
+            $('#itFilterCountPending').text(pending);
+            $('#itFilterCountCompleted').text(completed);
+            $('#itFilterCountCancelled').text(cancelled);
+        }
+
+        function applyCurrentFilter() {
+            if (!currentRawData || !currentRawData.length) {
+                renderFilteredRows([]);
+                return;
+            }
+
+            let filtered = currentRawData;
+            if (activeFilter === 'upcoming') {
+                filtered = currentRawData.filter(function(r) {
+                    const att = r.attendance ? r.attendance.code : (r.available_status || 0);
+                    return att === 0 || att === 3;
+                });
+            } else if (activeFilter === 'pending_feedback') {
+                filtered = currentRawData.filter(function(r) {
+                    const att = r.attendance ? r.attendance.code : (r.available_status || 0);
+                    const fb = r.evaluation ? r.evaluation.code : (r.feedback || 0);
+                    return att === 1 && fb === 5;
+                });
+            } else if (activeFilter === 'completed') {
+                filtered = currentRawData.filter(function(r) {
+                    const att = r.attendance ? r.attendance.code : (r.available_status || 0);
+                    return att === 1;
+                });
+            } else if (activeFilter === 'cancelled') {
+                filtered = currentRawData.filter(function(r) {
+                    const att = r.attendance ? r.attendance.code : (r.available_status || 0);
+                    return att === 2 || att === 4 || att === 7;
+                });
+            }
+
+            renderFilteredRows(filtered);
+        }
+
         function renderTableRows(rows) {
+            currentRawData = Array.isArray(rows) ? rows : [];
+            updateSubTabCounts(currentRawData);
+            applyCurrentFilter();
+        }
+
+        function renderFilteredRows(rows) {
             const $list = $('#candidatetListinterviewtracker');
             if (!rows || !rows.length) {
                 $list.html(`
-                    <div class="it-empty-card">
+                    <div class="cd-it-empty">
                         <i class="fas fa-calendar-times fs-2 text-gray-300 d-block mb-2"></i>
-                        No interviews scheduled for this client.
+                        No interviews match this filter criteria.
                     </div>
                 `);
                 return;
@@ -8728,18 +8248,15 @@ use Carbon\Carbon;
                 const src = intv.source_info || {};
                 const stg = intv.stage || {};
                 const fb = intv.feedback_view || {};
+                const att = intv.attendance || {};
+                const evalData = intv.evaluation || {};
+
+                const jobTitleInitial = (job.title || 'J').charAt(0).toUpperCase();
 
                 // Followup pill
                 let followupHtml = '';
                 if (fu.label) {
-                    followupHtml = `
-                        <div class="it-cand-meta">
-                            <span class="it-meta-tag ${fu.style_class || 'info'}">
-                                ${fu.label}
-                            </span>
-                            ${fu.formatted_at ? `<span class="it-meta-date">${fu.formatted_at}</span>` : ''}
-                        </div>
-                    `;
+                    followupHtml = `<span class="cd-followup-pill ${fu.style_class || 'confirmed'}">${fu.label}</span>`;
                 }
 
                 // Meeting link / Address
@@ -8747,151 +8264,201 @@ use Carbon\Carbon;
                 if (sch.meeting_link) {
                     if (sch.link_type === 'address') {
                         linkHtml = `
-                            <span class="it-dt-link" title="${sch.meeting_link}">
-                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-                                <span>${sch.link_label || 'View Address'}</span>
+                            <span class="cd-it-link-pill" title="${sch.meeting_link}">
+                                <i class="fas fa-map-marker-alt me-1"></i>
+                                <span>${sch.link_label || 'View Venue Address'}</span>
                             </span>
                         `;
-                    } else if (sch.link_type === 'link') {
+                    } else {
                         linkHtml = `
-                            <a href="${sch.meeting_link}" target="_blank" rel="noopener noreferrer" class="it-dt-link">
-                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
-                                <span>${sch.link_label || 'Interview Link'}</span>
+                            <a href="${sch.meeting_link}" target="_blank" rel="noopener noreferrer" class="cd-it-link-pill">
+                                <i class="fas fa-video me-1"></i>
+                                <span>${sch.link_label || 'Join Interview Link'}</span>
                             </a>
                         `;
                     }
                 }
 
-                // Mode icon SVG
-                let modeSvg = '';
+                // Mode icon
+                let modeIcon = '<i class="fas fa-video me-1"></i>';
                 if (sch.mode_icon_type === 'phone') {
-                    modeSvg = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>';
+                    modeIcon = '<i class="fas fa-phone-alt me-1"></i>';
                 } else if (sch.mode_icon_type === 'map-marker') {
-                    modeSvg = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>';
-                } else {
-                    modeSvg = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>';
+                    modeIcon = '<i class="fas fa-building me-1"></i>';
                 }
 
-                // Feedback icon SVG
-                let fbIconSvg = '';
-                if (fb.status_icon === 'check') {
-                    fbIconSvg = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
-                } else if (fb.status_icon === 'times') {
-                    fbIconSvg = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
-                } else if (fb.status_icon === 'exclamation-triangle') {
-                    fbIconSvg = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>';
-                } else if (fb.status_icon === 'exclamation-circle') {
-                    fbIconSvg = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>';
-                } else {
-                    fbIconSvg = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>';
+                // Rating html
+                let ratingHtml = '<span class="text-muted fs-8 font-weight-normal">★ Rating Pending</span>';
+                if (evalData.star_rating) {
+                    ratingHtml = `★ ${evalData.star_rating} / 5.0 Rating`;
                 }
+
+                // Panel extra count
+                const panelCount = (intvs.extra_count || 0) + 1;
+                const panelLabel = panelCount === 1 ? '1 Panelist' : `${panelCount} Panelists`;
 
                 // Recommendation pill
                 let recHtml = '';
-                if (fb.recommendation) {
-                    recHtml = `<span class="it-rec-pill" style="background:${fb.recommendation.bg};color:${fb.recommendation.color};">${fb.recommendation.label}</span>`;
+                if (fb.recommendation && fb.recommendation.label) {
+                    recHtml = `<span class="cd-it-rec-pill" style="background:${fb.recommendation.bg};color:${fb.recommendation.color};">${fb.recommendation.label}</span>`;
+                } else if (fb.status_text && fb.status_text !== 'Pending') {
+                    recHtml = `<span class="cd-it-rec-pill" style="background:#f1f5f9;color:${fb.status_color || '#64748b'};">${fb.status_text}</span>`;
                 }
 
                 return `
-                    <div class="it-primary-card" data-interview-id="${intv.id}">
-                      <!-- 1. Candidate Sub-Card (2.2fr) -->
-                      <div class="it-subcard it-subcard-cand">
-                        <div class="it-cand-avatar ${cand.avatar_color_class || 'it-avatar-blue'}">
-                          ${cand.initial || 'C'}
-                        </div>
-                        <div class="it-cand-info">
-                          <div class="it-cand-name" title="${cand.name || 'Candidate'}">
-                            ${cand.name || 'Candidate'}
-                          </div>
-                          <div class="it-cand-role" title="${cand.designation || '—'}">
-                            ${cand.designation || '—'}
-                          </div>
-                          ${followupHtml}
-                        </div>
-                      </div>
+                    <div class="cd-it-card" data-interview-id="${intv.id || ''}" data-status="${att.code || 0}" data-feedback="${evalData.code || 0}">
+                        <!-- Upper Discrete 5 Sub-Cards Grid -->
+                        <div class="cd-it-card-grid">
 
-                      <!-- 2. Job Requisition Sub-Card (2.3fr) -->
-                      <div class="it-subcard it-subcard-job">
-                        <div class="it-job-title" title="${job.title || 'Job Position'}">
-                          ${job.title || 'Job Position'}
-                        </div>
-                        <div class="it-job-company" title="${job.display_company_name || job.client_name || ''}">
-                          ${job.display_company_name || job.client_name || 'Client Account'}
-                        </div>
-                        <div class="it-job-tags">
-                          <span class="it-job-type ${job.job_type_class || 'it-job-type-internal'}">${job.job_type_label || 'Internal'}</span>
-                          ${job.job_id_display ? `
-                            <span class="it-dot-sep"></span>
-                            <span class="it-job-id">${job.job_id_display}</span>
-                          ` : ''}
-                        </div>
-                      </div>
+                            <!-- 1. CANDIDATE INFO -->
+                            <div class="cd-it-subcard">
+                                <div class="cd-subcard-header">
+                                    <span class="cd-subcard-label">CANDIDATE INFO</span>
+                                    ${followupHtml}
+                                </div>
+                                <div class="d-flex align-items-center gap-2">
+                                    <div class="cd-avatar-box ${cand.avatar_color_class || 'avatar-blue'}">
+                                        ${cand.initial || 'C'}
+                                    </div>
+                                    <div class="min-w-0 flex-grow-1 overflow-hidden">
+                                        <a href="javascript:void(0)" class="cd-it-cand-name client-show-application-detail js-view-candidate" data-row-id="${cand.application_id || cand.id || ''}" data-id="${cand.id || ''}" data-cand-id="${cand.id || ''}" title="${cand.name || 'Candidate'}">
+                                            ${cand.name || 'Candidate'}
+                                        </a>
+                                        <div class="cd-it-cand-role" title="${cand.designation || '—'}">
+                                            ${cand.designation || '—'}
+                                        </div>
+                                        <div class="cd-it-cand-company" title="${cand.current_company || ''}">
+                                            <i class="far fa-building me-1 text-gray-400"></i>
+                                            <span>${cand.current_company || '88 Technology'}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
 
-                      <!-- 3. Interview Schedule Sub-Card (1.75fr) -->
-                      <div class="it-subcard it-subcard-datetime">
-                        <div class="it-dt-row it-dt-date">
-                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
-                          </svg>
-                          <span>${sch.date_formatted || '—'}</span>
-                        </div>
-                        ${sch.time_formatted ? `
-                          <div class="it-dt-row it-dt-time">
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                              <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
-                            </svg>
-                            <span>${sch.time_formatted}</span>
-                          </div>
-                        ` : ''}
-                        <div class="it-dt-row it-dt-mode">
-                          ${modeSvg}
-                          <span>${sch.mode_label || 'Video Call'}</span>
-                        </div>
-                        ${linkHtml}
-                      </div>
+                            <!-- 2. TARGET REQUISITION -->
+                            <div class="cd-it-subcard">
+                                <div class="cd-subcard-header">
+                                    <span class="cd-subcard-label">TARGET REQUISITION</span>
+                                    <div class="d-flex align-items-center gap-1">
+                                        <span class="cd-badge-scope ${job.job_type_class || 'scope-internal'}">
+                                            ${job.job_type_label || 'Internal'}
+                                        </span>
+                                        <span class="cd-status-hiring">Hiring</span>
+                                    </div>
+                                </div>
+                                <div class="d-flex align-items-center gap-2">
+                                    <div class="cd-avatar-box avatar-purple">
+                                        ${jobTitleInitial}
+                                    </div>
+                                    <div class="min-w-0 flex-grow-1 overflow-hidden">
+                                        <a href="/service_company/jobs/${job.id || ''}" target="_blank" class="cd-it-job-title" title="${job.title || 'Job Position'}">
+                                            ${job.title || 'Job Position'}
+                                        </a>
+                                        <div class="cd-it-job-meta">
+                                            ${job.job_id_display ? `<span class="cd-it-job-id">${job.job_id_display}</span><span class="cd-dot-sep">•</span>` : ''}
+                                            <span>Technology</span>
+                                        </div>
+                                        <div class="cd-it-job-emp" title="${job.display_company_name || job.client_name || ''}">
+                                            ${job.display_company_name || job.client_name || 'Client Account'}
+                                            <span class="cd-dot-sep">•</span>
+                                            <span>💼 Full-Time</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
 
-                      <!-- 4. Interviewers Sub-Card (1.1fr) -->
-                      <div class="it-subcard it-subcard-interviewers">
-                        <div class="it-lead-name">${intvs.lead_name || 'N/A'}</div>
-                        <div class="it-lead-comp">${intvs.lead_company || 'Panel'}</div>
-                        ${intvs.extra_count > 0 ? `
-                          <div class="it-extra-wrap">
-                            <span class="it-extra-pill">${intvs.extra_label}</span>
-                            <span class="it-extra-lbl">${intvs.extra_count + 1} Interviewers</span>
-                          </div>
-                        ` : ''}
-                      </div>
+                            <!-- 3. SCHEDULE & INTERVIEW LINK -->
+                            <div class="cd-it-subcard">
+                                <div class="cd-subcard-header">
+                                    <span class="cd-subcard-label">SCHEDULE &amp; LINK</span>
+                                    ${sch.time_formatted ? `<span class="cd-it-time-pill">${sch.time_formatted}</span>` : ''}
+                                </div>
+                                <div>
+                                    <div class="cd-it-dt-date">
+                                        <i class="far fa-calendar-alt me-1 text-primary"></i>
+                                        <span>${sch.date_formatted || '—'}</span>
+                                    </div>
+                                    <div class="cd-it-dt-mode">
+                                        ${modeIcon}
+                                        <span>${sch.mode_label || 'Video Call'}</span>
+                                    </div>
+                                    ${linkHtml}
+                                </div>
+                            </div>
 
-                      <!-- 5. Source Sub-Card (1.1fr) -->
-                      <div class="it-subcard it-subcard-source">
-                        <div class="it-src-name" title="${src.name || '—'}">
-                          ${src.name || '—'}
+                            <!-- 4. RECRUITER & SOURCING -->
+                            <div class="cd-it-subcard">
+                                <div class="cd-subcard-header">
+                                    <span class="cd-subcard-label">RECRUITER &amp; SOURCING</span>
+                                    <span class="cd-it-source-pill">Sourced</span>
+                                </div>
+                                <div>
+                                    <div class="cd-it-recruiter-name" title="${src.name || '—'}">
+                                        ${src.name || '—'}
+                                    </div>
+                                    <div class="cd-it-recruiter-comp" title="${src.company_name || ''}">
+                                        ${src.company_name || 'Internal Team'}
+                                    </div>
+                                    <div class="cd-it-submitted-at">
+                                        <i class="far fa-clock me-1"></i>
+                                        <span>Submitted: ${src.submitted_at || '4 days ago'}</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 5. PANEL & FEEDBACK -->
+                            <div class="cd-it-subcard">
+                                <div class="cd-subcard-header">
+                                    <span class="cd-subcard-label">PANEL &amp; FEEDBACK</span>
+                                    <span class="cd-it-panel-count">${panelLabel}</span>
+                                </div>
+                                <div>
+                                    <div class="cd-it-lead-name" title="${intvs.lead_name || 'Panel Assigned'}">
+                                        ${intvs.lead_name || 'Panel Assigned'}
+                                        <span class="cd-it-lead-tag">(Lead)</span>
+                                    </div>
+                                    <div class="d-flex align-items-center gap-1 mt-1 flex-wrap">
+                                        <span class="cd-it-att-pill ${att.css_class || 'cit-fb-scheduled'}">
+                                            ${att.label || 'Scheduled'}
+                                        </span>
+                                        ${recHtml}
+                                    </div>
+                                    <div class="cd-it-rating">
+                                        ${ratingHtml}
+                                    </div>
+                                </div>
+                            </div>
+
                         </div>
-                        <div class="it-src-comp" title="${src.company_name || ''}">
-                          ${src.company_name || ''}
+
+                        <!-- 6. BOTTOM ACTIVITY STRIP (CANDIDATE STAGE & SUBSTAGE) -->
+                        <div class="cd-it-card-bottom">
+                            <div class="cd-it-bottom-left">
+                                <div class="d-flex align-items-center gap-1">
+                                    <span class="cd-it-stage-lbl">CANDIDATE STAGE:</span>
+                                    <span class="cd-it-stage-badge ${stg.badge_class || 'cd-stage-in-review'}">
+                                        ${stg.master_status_name || 'In Review'}
+                                    </span>
+                                </div>
+                                <span class="cd-dot-sep">•</span>
+                                <div class="d-flex align-items-center gap-1">
+                                    <span class="cd-it-stage-lbl">SUBSTAGE:</span>
+                                    <span class="cd-it-substage-badge">
+                                        ${stg.child_status_name || 'Private'}
+                                    </span>
+                                </div>
+                                <span class="cd-dot-sep">•</span>
+                                <span class="cd-it-source-subtext">
+                                    Sourced via <strong>${src.company_name || 'Internal'}</strong>
+                                </span>
+                            </div>
+
+                            <div class="cd-it-bottom-right">
+                                <button type="button" class="btn btn-sm btn-light-primary py-1 px-3 client-show-application-detail js-view-candidate" data-row-id="${cand.application_id || cand.id || ''}" data-id="${cand.id || ''}" data-cand-id="${cand.id || ''}">
+                                    Candidate Drawer <i class="fas fa-external-link-alt ms-1 fs-9"></i>
+                                </button>
+                            </div>
                         </div>
-                      </div>
-
-                      <!-- 6. Stage Sub-Card (0.75fr) -->
-                      <div class="it-subcard it-subcard-stage">
-                        <span class="it-badge ${stg.badge_class || 'it-badge-blue'}">
-                          ${stg.master_status_name || 'Interview'}
-                        </span>
-                        ${stg.child_status_name ? `
-                          <span class="it-stage-sub">
-                            ${stg.child_status_name}
-                          </span>
-                        ` : ''}
-                      </div>
-
-                      <!-- 7. Feedback Sub-Card (0.8fr) -->
-                      <div class="it-subcard it-subcard-feedback">
-                        <span class="it-fb-status" style="color:${fb.status_color || '#f59e0b'};">
-                          ${fbIconSvg}
-                          <span>${fb.status_text || 'Pending'}</span>
-                        </span>
-                        ${recHtml}
-                      </div>
                     </div>
                 `;
             }).join('');
@@ -8910,30 +8477,30 @@ use Carbon\Carbon;
             const toItem = totalItems === 0 ? 0 : Math.min(totalItems, cursorIndex * pageSize + count);
 
             $pagi.html(`
-                <div class="it-pagi-info">
+                <div class="cd-it-pagi-info">
                     Showing <strong>${fromItem} - ${toItem}</strong> of <strong>${totalItems}</strong> interviews
                 </div>
-                <div class="it-pagi-controls">
+                <div class="cd-it-pagi-controls">
                     <div class="d-flex align-items-center gap-2 me-2">
                         <span class="text-muted" style="font-size:11px;">Rows:</span>
-                        <select class="it-pagi-size-select" id="itPageSizeSelectInternal">
+                        <select class="cd-it-pagi-size-select" id="itPageSizeSelectInternal">
                             <option value="10" ${pageSize === 10 ? 'selected' : ''}>10 / page</option>
                             <option value="25" ${pageSize === 25 ? 'selected' : ''}>25 / page</option>
                             <option value="50" ${pageSize === 50 ? 'selected' : ''}>50 / page</option>
                         </select>
                     </div>
-                    <button type="button" class="it-pagi-btn ${!hasPrev ? 'disabled' : ''}" data-direction="prev">
+                    <button type="button" class="cd-it-pagi-btn ${!hasPrev ? 'disabled' : ''}" data-direction="prev">
                         <i class="fas fa-chevron-left" style="font-size:10px;"></i> Previous
                     </button>
-                    <span class="it-pagi-page-indicator">Page ${cursorIndex + 1}</span>
-                    <button type="button" class="it-pagi-btn ${!hasNext ? 'disabled' : ''}" data-direction="next">
+                    <span class="cd-it-pagi-indicator">Page ${cursorIndex + 1}</span>
+                    <button type="button" class="cd-it-pagi-btn ${!hasNext ? 'disabled' : ''}" data-direction="next">
                         Next <i class="fas fa-chevron-right" style="font-size:10px;"></i>
                     </button>
                 </div>
             `);
         }
 
-        function updateBadgeAndKPI(total) {
+                function updateBadgeAndKPI(total) {
             if (typeof total !== 'undefined') {
                 const $badge = $('#tabBadgeInterviewTrackerShow');
                 if ($badge.length) {

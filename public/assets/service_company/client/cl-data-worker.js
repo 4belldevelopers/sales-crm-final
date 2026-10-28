@@ -25,6 +25,10 @@ self.onmessage = function(e) {
             deltaUpsert(msg.client, msg.version);
             break;
 
+        case 'DELTA_DELETE':
+            deltaDelete(msg.id, msg.version);
+            break;
+
         case 'EXPORT_CSV':
             exportCsv(msg);
             break;
@@ -119,13 +123,18 @@ function normalizeRow(r) {
 
     const activePipeline = sourced + screening + evaluated + negotiations + offers + joined;
     const applications = activePipeline + rejected + inReview;
+    const contactName = (r.contact_person_name || (r.contact && r.contact.name) || '').trim();
 
     return {
         id: r.id,
+        id_str: String(r.id),
         client_id: r.client_id || r.id,
         name: r.name || '',
         name_lower: (r.name || '').toLowerCase(),
+        contact_name: contactName,
+        contact_name_lower: contactName.toLowerCase(),
         is_direct: Boolean(r.is_direct),
+        is_pending_request: Boolean(r.is_pending_request),
         client_type: r.client_type || (r.is_direct ? 'Direct Client' : 'Internal Client'),
         industry: indName || r.industry || '',
         industry_lower: (indName || r.industry || '').toLowerCase(),
@@ -177,6 +186,15 @@ function normalizeRow(r) {
     };
 }
 
+function tokenize(text) {
+    if (!text) return [];
+    return String(text)
+        .toLowerCase()
+        .replace(/[^\w\s-]/g, ' ')
+        .split(/\s+/)
+        .filter(t => t.length > 0);
+}
+
 function queryDataset(msg) {
     const t0 = performance.now();
     const qId = msg.queryId || 0;
@@ -184,6 +202,8 @@ function queryDataset(msg) {
 
     const tab = (f.tab || 'all').toLowerCase();
     const search = (f.search || '').trim().toLowerCase();
+    const tokens = tokenize(search);
+    const isSearching = tokens.length > 0;
     const countryId = f.country_id;
     const countryName = (f.country_name || '').trim().toLowerCase();
     const cityId = f.city_id;
@@ -194,6 +214,7 @@ function queryDataset(msg) {
     const sort = (f.sort || 'recent').toLowerCase();
     const page = Math.max(1, parseInt(f.page, 10) || 1);
     const perPage = Math.max(1, parseInt(f.per_page, 10) || 10);
+    const nowMs = Date.now();
 
     let filtered = [];
     let allCount = 0;
@@ -201,18 +222,110 @@ function queryDataset(msg) {
     let directCount = 0;
     let hiringCount = 0;
     let inactiveCount = 0;
+    let requestCount = 0;
 
     for (let i = 0; i < self.dataset.length; i++) {
         const item = self.dataset[i];
 
         // 1. Non-tab filters define the scoped client universe
-        // Search filter (multi-field substring)
-        if (search) {
-            const matchesSearch = item.name_lower.includes(search) ||
-                                  item.industry_lower.includes(search) ||
-                                  item.country_name_lower.includes(search) ||
-                                  item.city_name_lower.includes(search);
-            if (!matchesSearch) continue;
+        // Deterministic Multi-Field Search Matching & Relevance Scoring
+        let relevanceScore = 0;
+        if (isSearching) {
+            let allTokensFound = true;
+            let allMatchedInName = true;
+            let allMatchedInContact = true;
+
+            for (let t = 0; t < tokens.length; t++) {
+                const token = tokens[t];
+                let maxTokenWeight = 0;
+
+                // Field 1: Client Name
+                let nameMultiplier = 0;
+                if (item.name_lower === token) {
+                    nameMultiplier = 1.00;
+                } else if (item.name_lower.startsWith(token)) {
+                    nameMultiplier = 0.80;
+                } else if (item.name_lower.includes(token)) {
+                    nameMultiplier = 0.50;
+                }
+                if (nameMultiplier > 0) {
+                    maxTokenWeight = Math.max(maxTokenWeight, 100 * nameMultiplier);
+                } else {
+                    allMatchedInName = false;
+                }
+
+                // Field 2: Client ID
+                if (item.id_str === token) {
+                    maxTokenWeight = Math.max(maxTokenWeight, 90 * 1.00);
+                } else if (item.id_str && item.id_str.startsWith(token)) {
+                    maxTokenWeight = Math.max(maxTokenWeight, 90 * 0.80);
+                }
+
+                // Field 3: Contact Person
+                if (item.contact_name_lower) {
+                    if (item.contact_name_lower === token) {
+                        maxTokenWeight = Math.max(maxTokenWeight, 50 * 0.80);
+                    } else if (item.contact_name_lower.startsWith(token)) {
+                        maxTokenWeight = Math.max(maxTokenWeight, 50 * 0.60);
+                    } else if (item.contact_name_lower.includes(token)) {
+                        maxTokenWeight = Math.max(maxTokenWeight, 50 * 0.50);
+                    } else {
+                        allMatchedInContact = false;
+                    }
+                } else {
+                    allMatchedInContact = false;
+                }
+
+                // Field 4: Industry
+                if (item.industry_lower) {
+                    if (item.industry_lower === token) {
+                        maxTokenWeight = Math.max(maxTokenWeight, 30 * 0.80);
+                    } else if (item.industry_lower.startsWith(token)) {
+                        maxTokenWeight = Math.max(maxTokenWeight, 30 * 0.60);
+                    } else if (item.industry_lower.includes(token)) {
+                        maxTokenWeight = Math.max(maxTokenWeight, 30 * 0.50);
+                    }
+                }
+
+                // Field 5: Location
+                if (item.city_name_lower) {
+                    if (item.city_name_lower === token) {
+                        maxTokenWeight = Math.max(maxTokenWeight, 20 * 0.80);
+                    } else if (item.city_name_lower.startsWith(token)) {
+                        maxTokenWeight = Math.max(maxTokenWeight, 20 * 0.60);
+                    } else if (item.city_name_lower.includes(token)) {
+                        maxTokenWeight = Math.max(maxTokenWeight, 20 * 0.50);
+                    }
+                }
+                if (item.country_name_lower) {
+                    if (item.country_name_lower === token) {
+                        maxTokenWeight = Math.max(maxTokenWeight, 20 * 0.80);
+                    } else if (item.country_name_lower.startsWith(token)) {
+                        maxTokenWeight = Math.max(maxTokenWeight, 20 * 0.60);
+                    }
+                }
+
+                // Field 6: Client Type
+                const typeLower = item.is_direct ? 'direct' : 'internal';
+                if (typeLower.includes(token)) {
+                    maxTokenWeight = Math.max(maxTokenWeight, 10 * 1.00);
+                }
+
+                if (maxTokenWeight === 0) {
+                    allTokensFound = false;
+                    break;
+                }
+                relevanceScore += maxTokenWeight;
+            }
+
+            if (!allTokensFound) continue;
+
+            if (tokens.length > 1 && allMatchedInName) relevanceScore += 40;
+            else if (tokens.length > 1 && allMatchedInContact) relevanceScore += 20;
+
+            const ageDays = (nowMs - (item.created_timestamp || 0)) / 86400000;
+            const recencyScore = Math.max(0, 1 - (ageDays / 180));
+            relevanceScore += (item.jobs.active > 0 ? 10 : 0) + (item.pipeline.active_pipeline > 0 ? 5 : 0) + (recencyScore * 0.01);
         }
 
         // Location filter
@@ -265,43 +378,55 @@ function queryDataset(msg) {
         }
 
         // Item belongs to the scoped client universe: evaluate universal tab counters
-        allCount++;
-        if (item.is_direct) {
-            directCount++;
+        if (item.is_pending_request) {
+            requestCount++;
         } else {
-            internalCount++;
-        }
+            allCount++;
+            if (item.is_direct) {
+                directCount++;
+            } else {
+                internalCount++;
+            }
 
-        if (item.jobs.active > 0) {
-            hiringCount++;
-        } else {
-            inactiveCount++;
+            if (item.jobs.active > 0) {
+                hiringCount++;
+            } else {
+                inactiveCount++;
+            }
         }
 
         // 2. Tab filter determines which rows are rendered in the current tab view
-        if (tab === 'internal' && item.is_direct) continue;
-        if (tab === 'direct' && !item.is_direct) continue;
-        if (tab === 'hiring' && item.jobs.active <= 0) continue;
-        if (tab === 'inactive' && item.jobs.active > 0) continue;
+        if (tab === 'request' || tab === 'requests') {
+            if (!item.is_pending_request) continue;
+        } else {
+            if (item.is_pending_request) continue;
+            if (tab === 'internal' && item.is_direct) continue;
+            if (tab === 'direct' && !item.is_direct) continue;
+            if (tab === 'hiring' && item.jobs.active <= 0) continue;
+            if (tab === 'inactive' && item.jobs.active > 0) continue;
+        }
 
-        filtered.push(item);
+        filtered.push({ item: item, score: relevanceScore });
     }
 
     const totalCount = filtered.length;
 
     // Sort
     filtered.sort(function(a, b) {
+        if (isSearching && Math.abs(b.score - a.score) > 0) {
+            return b.score - a.score;
+        }
         if (sort === 'name_asc') {
-            return a.name.localeCompare(b.name) || (b.id - a.id);
+            return a.item.name.localeCompare(b.item.name) || (b.item.id - a.item.id);
         } else if (sort === 'name_desc') {
-            return b.name.localeCompare(a.name) || (b.id - a.id);
+            return b.item.name.localeCompare(a.item.name) || (b.item.id - a.item.id);
         } else if (sort === 'jobs_desc') {
-            return (b.jobs.active - a.jobs.active) || (b.id - a.id);
+            return (b.item.jobs.active - a.item.jobs.active) || (b.item.id - a.item.id);
         } else if (sort === 'oldest' || sort === '2') {
-            return (a.created_timestamp - b.created_timestamp) || (a.id - b.id);
+            return (a.item.created_timestamp - b.item.created_timestamp) || (a.item.id - b.item.id);
         } else {
             // recent / newest
-            return (b.created_timestamp - a.created_timestamp) || (b.id - a.id);
+            return (b.item.created_timestamp - a.item.created_timestamp) || (b.item.id - a.item.id);
         }
     });
 
@@ -317,13 +442,14 @@ function queryDataset(msg) {
         total: totalCount,
         page: page,
         per_page: perPage,
-        rows: pageRows.map(r => r.raw),
+        rows: pageRows.map(r => r.item.raw),
         counts: {
             all: allCount,
             internal: internalCount,
             direct: directCount,
             hiring: hiringCount,
-            inactive: inactiveCount
+            inactive: inactiveCount,
+            request: requestCount
         },
         elapsed_ms: elapsed.toFixed(2)
     });
@@ -345,6 +471,22 @@ function deltaUpsert(clientData, version) {
         total: self.dataset.length,
         version: self.dataVersion
     });
+}
+
+function deltaDelete(id, version) {
+    if (!id) return;
+    const cid = Number(id);
+    if (version) self.dataVersion = version;
+    if (self.datasetMap.has(cid)) {
+        self.datasetMap.delete(cid);
+        self.dataset = Array.from(self.datasetMap.values());
+        self.postMessage({
+            type: 'DELTA_DELETED',
+            id: cid,
+            total: self.dataset.length,
+            version: self.dataVersion
+        });
+    }
 }
 
 function pipelineRevisionUpdate(clientId, revision, newPv, changed) {

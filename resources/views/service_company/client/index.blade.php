@@ -1485,14 +1485,32 @@
 
         <!-- ── SEARCH & FILTER BAR ── -->
         <div class="cl-filter-bar">
-            {{-- Search Input --}}
-            <div class="cl-search-box">
-                <svg class="cl-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            {{-- Search Input (Enterprise Tier 1 Micro-Search Bar) --}}
+            <div class="cl-search-box" id="clSearchBoxWrapper">
+                <svg class="cl-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                     <circle cx="11" cy="11" r="8"/>
                     <line x1="21" y1="21" x2="16.65" y2="16.65"/>
                 </svg>
-                <input type="text" class="cl-search-inp" name="inputJobSearch" value="" placeholder="Search clients by name, industry, location..." id="kt_tagify_2" onchange="filtersdataget()" />
-                <div id="loader_search" class="loader_search hidden_search" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);"></div>
+                <input 
+                    type="text" 
+                    class="cl-search-inp" 
+                    name="inputJobSearch" 
+                    value="" 
+                    placeholder="Search clients by name, industry, location, contact, ID..." 
+                    id="kt_tagify_2" 
+                    autocomplete="off" 
+                    spellcheck="false" 
+                    aria-label="Search client listing" 
+                    role="searchbox"
+                />
+                <div class="cl-search-right-affix">
+                    <span class="cl-search-count-pill" id="clSearchMatchCount" style="display:none;" title="Matching clients count">0 matches</span>
+                    <button type="button" class="cl-search-clear-btn" id="clSearchClearBtn" title="Clear search (Esc)" aria-label="Clear search" style="display:none;" onclick="clearClientSearchInput(event)">
+                        ✕
+                    </button>
+                    <kbd class="cl-search-kbd-hint" id="clSearchKbdHint" title="Press Ctrl+K to search">Ctrl+K</kbd>
+                </div>
+                <div id="loader_search" class="loader_search hidden_search" style="display:none;position:absolute;right:12px;top:50%;transform:translateY(-50%);"></div>
             </div>
 
             {{-- Filter 1: Location Combobox --}}
@@ -1973,17 +1991,70 @@
 <script src="{{ asset('assets/service_company/client/drawer/tabs/performance.js') }}{{ TM_VERSION }}"></script>
 <script src="{{ asset('assets/service_company/client/drawer/drawer-instance.js') }}{{ TM_VERSION }}"></script>
 <script>
+function clearClientSearchInput(e) {
+    if (e) {
+        e.preventDefault();
+        e.stopPropagation();
+    }
+    var $inp = $('#kt_tagify_2');
+    $inp.val('');
+    $('#clSearchClearBtn').hide();
+    $('#clSearchMatchCount').hide();
+    $('#clSearchKbdHint').show();
+    page_no = 1;
+    loadClientList(1, true);
+    $inp.focus();
+}
+window.clearClientSearchInput = clearClientSearchInput;
+
 $(document).ready(function() {
     var searchTimer = null;
-    $('#kt_tagify_2').on('keyup input', function() {
+    var $searchInp = $('#kt_tagify_2');
+
+    $searchInp.on('input', function() {
+        var queryVal = ($(this).val() || '').trim();
+        if (queryVal.length > 0) {
+            $('#clSearchClearBtn').show();
+            $('#clSearchKbdHint').hide();
+        } else {
+            $('#clSearchClearBtn').hide();
+            $('#clSearchMatchCount').hide();
+            $('#clSearchKbdHint').show();
+        }
+
         clearTimeout(searchTimer);
+        // JDCR Micro-Debounce (30ms for instant in-browser RAM execution, 0% server strain)
         searchTimer = setTimeout(function() {
             if (typeof loadClientList === 'function') {
-                loadClientList(1);
+                loadClientList(1, true);
             } else if (typeof fetchCandidates === 'function') {
-                fetchCandidates(1);
+                fetchCandidates(1, true);
             }
-        }, 300);
+        }, 30);
+    });
+
+    $searchInp.on('keydown', function(e) {
+        if (e.key === 'Escape') {
+            e.preventDefault();
+            clearClientSearchInput();
+            $(this).blur();
+        } else if (e.key === 'Enter') {
+            e.preventDefault();
+            clearTimeout(searchTimer);
+            loadClientList(1, true);
+        }
+    });
+
+    // Global keyboard shortcut: Ctrl+K / Cmd+K to focus search from anywhere
+    $(document).on('keydown', function(e) {
+        if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+            var activeEl = document.activeElement;
+            var isInput = activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA' || activeEl.isContentEditable);
+            if (!isInput || activeEl.id === 'kt_tagify_2') {
+                e.preventDefault();
+                $searchInp.focus().select();
+            }
+        }
     });
 });
 
@@ -5062,6 +5133,496 @@ function handleWorkerMessage(data) {
     }
 }
 
+// ── JERO Distributed Client Runtime (JDCR V4.0) — High-Performance Client Search & Derived-State Engine ──
+const ClientSearchEngine = (function() {
+    'use strict';
+
+    let searchIndex = [];
+    const idSlotMap = new Map();
+    let activeBitmask = new Uint8Array(0);
+    let tombstoneCount = 0;
+    const presentationStore = new Map();
+
+    const WEIGHTS = {
+        NAME_BASE: 100,
+        ID_BASE: 90,
+        CONTACT_BASE: 50,
+        INDUSTRY_BASE: 30,
+        LOCATION_BASE: 20,
+        TYPE_BASE: 10
+    };
+
+    function tokenize(text) {
+        if (!text) return [];
+        return String(text)
+            .toLowerCase()
+            .replace(/[^\w\s-]/g, ' ')
+            .split(/\s+/)
+            .filter(t => t.length > 0);
+    }
+
+    return {
+        isReady: false,
+        lastQueryElapsedMs: 0,
+
+        size: function() {
+            return Math.max(0, searchIndex.length - tombstoneCount);
+        },
+
+        hydrate: function(rawRows, version) {
+            const t0 = performance.now();
+            searchIndex = [];
+            idSlotMap.clear();
+            presentationStore.clear();
+            tombstoneCount = 0;
+
+            if (!Array.isArray(rawRows) || rawRows.length === 0) {
+                activeBitmask = new Uint8Array(0);
+                this.isReady = false;
+                return;
+            }
+
+            const total = rawRows.length;
+            activeBitmask = new Uint8Array(Math.max(total, 64));
+
+            for (let i = 0; i < total; i++) {
+                const r = rawRows[i];
+                const id = Number(r.id || r.client_id);
+                if (!id) continue;
+
+                presentationStore.set(id, r);
+                const slot = searchIndex.length;
+                idSlotMap.set(id, slot);
+                activeBitmask[slot] = 1;
+
+                const nameLower = (r.name || '').trim().toLowerCase();
+                const nameTokens = tokenize(r.name);
+                const contactTokens = tokenize(r.contact_person_name || (r.contact && r.contact.name));
+                const industryTokens = tokenize(r.industry || r.ind_name);
+
+                const loc = (r.locations && r.locations[0]) || {};
+                const cityTokens = tokenize(r.city || r.location_main || loc.city_name || loc.city);
+                const stateTokens = tokenize(r.state || loc.state_name || loc.state);
+                const countryTokens = tokenize(r.country || loc.country_name || loc.country);
+                const typeTokens = tokenize(r.is_direct ? 'direct' : 'internal');
+
+                const countryId = (r.country_id !== undefined && r.country_id !== null) ? Number(r.country_id) : (loc.country_id ? Number(loc.country_id) : null);
+                const cityId = (r.city_id !== undefined && r.city_id !== null) ? Number(r.city_id) : (loc.city_id ? Number(loc.city_id) : null);
+                const industryId = (r.industry_id !== undefined && r.industry_id !== null) ? Number(r.industry_id) : null;
+                const hasLocation = Boolean(cityTokens.length || stateTokens.length || countryTokens.length);
+
+                const activeJobs = Number((r.jobs && (r.jobs.hiring || r.jobs.active)) || 0);
+                const pipelineActive = Number((r.pipeline && r.pipeline.active_pipeline) || 0);
+
+                searchIndex.push({
+                    id: id,
+                    name: nameLower,
+                    nameTokens: nameTokens,
+                    idStr: String(id),
+                    contactTokens: contactTokens,
+                    industryTokens: industryTokens,
+                    cityTokens: cityTokens,
+                    stateTokens: stateTokens,
+                    countryTokens: countryTokens,
+                    typeTokens: typeTokens,
+                    countryId: countryId,
+                    cityId: cityId,
+                    industryId: industryId,
+                    hasLocation: hasLocation,
+                    isDirect: Boolean(r.is_direct),
+                    isPendingRequest: Boolean(r.is_pending_request),
+                    activeJobs: activeJobs,
+                    pipelineActive: pipelineActive,
+                    createdTimestamp: r.created_at ? new Date(r.created_at).getTime() : 0,
+                    lastActivityTimestamp: r.last_activity_at ? new Date(r.last_activity_at).getTime() : (r.created_at ? new Date(r.created_at).getTime() : 0)
+                });
+            }
+
+            this.isReady = (searchIndex.length > 0);
+            this.lastQueryElapsedMs = performance.now() - t0;
+            console.log(`[JDCR SearchEngine V4.0] Hydrated ${searchIndex.length} records in ${this.lastQueryElapsedMs.toFixed(2)}ms.`);
+        },
+
+        upsertEntity: function(clientDto) {
+            const id = Number(clientDto.id || clientDto.client_id);
+            if (!id) return;
+
+            presentationStore.set(id, clientDto);
+
+            const nameLower = (clientDto.name || '').trim().toLowerCase();
+            const nameTokens = tokenize(clientDto.name);
+            const contactTokens = tokenize(clientDto.contact_person_name || (clientDto.contact && clientDto.contact.name));
+            const industryTokens = tokenize(clientDto.industry || clientDto.ind_name);
+
+            const loc = (clientDto.locations && clientDto.locations[0]) || {};
+            const cityTokens = tokenize(clientDto.city || clientDto.location_main || loc.city_name || loc.city);
+            const stateTokens = tokenize(clientDto.state || loc.state_name || loc.state);
+            const countryTokens = tokenize(clientDto.country || loc.country_name || loc.country);
+            const typeTokens = tokenize(clientDto.is_direct ? 'direct' : 'internal');
+
+            const countryId = (clientDto.country_id !== undefined && clientDto.country_id !== null) ? Number(clientDto.country_id) : (loc.country_id ? Number(loc.country_id) : null);
+            const cityId = (clientDto.city_id !== undefined && clientDto.city_id !== null) ? Number(clientDto.city_id) : (loc.city_id ? Number(loc.city_id) : null);
+            const industryId = (clientDto.industry_id !== undefined && clientDto.industry_id !== null) ? Number(clientDto.industry_id) : null;
+            const hasLocation = Boolean(cityTokens.length || stateTokens.length || countryTokens.length);
+
+            const activeJobs = Number((clientDto.jobs && (clientDto.jobs.hiring || clientDto.jobs.active)) || 0);
+            const pipelineActive = Number((clientDto.pipeline && clientDto.pipeline.active_pipeline) || 0);
+
+            const struct = {
+                id: id,
+                name: nameLower,
+                nameTokens: nameTokens,
+                idStr: String(id),
+                contactTokens: contactTokens,
+                industryTokens: industryTokens,
+                cityTokens: cityTokens,
+                stateTokens: stateTokens,
+                countryTokens: countryTokens,
+                typeTokens: typeTokens,
+                countryId: countryId,
+                cityId: cityId,
+                industryId: industryId,
+                hasLocation: hasLocation,
+                isDirect: Boolean(clientDto.is_direct),
+                isPendingRequest: Boolean(clientDto.is_pending_request),
+                activeJobs: activeJobs,
+                pipelineActive: pipelineActive,
+                createdTimestamp: clientDto.created_at ? new Date(clientDto.created_at).getTime() : 0,
+                lastActivityTimestamp: clientDto.last_activity_at ? new Date(clientDto.last_activity_at).getTime() : (clientDto.created_at ? new Date(clientDto.created_at).getTime() : 0)
+            };
+
+            if (idSlotMap.has(id)) {
+                const slot = idSlotMap.get(id);
+                searchIndex[slot] = struct;
+                activeBitmask[slot] = 1;
+            } else {
+                const slot = searchIndex.length;
+                searchIndex.push(struct);
+                idSlotMap.set(id, slot);
+
+                if (slot >= activeBitmask.length) {
+                    const expanded = new Uint8Array(Math.max(activeBitmask.length * 2, slot + 64));
+                    expanded.set(activeBitmask);
+                    activeBitmask = expanded;
+                }
+                activeBitmask[slot] = 1;
+            }
+            this.isReady = true;
+        },
+
+        deleteEntity: function(id) {
+            const numId = Number(id);
+            if (!idSlotMap.has(numId)) return;
+
+            const slot = idSlotMap.get(numId);
+            activeBitmask[slot] = 0;
+            presentationStore.delete(numId);
+            tombstoneCount++;
+
+            if (tombstoneCount > Math.max(50, 0.10 * searchIndex.length)) {
+                this.scheduleDeferredCompaction();
+            }
+        },
+
+        scheduleDeferredCompaction: function() {
+            const compact = function() {
+                const freshIndex = [];
+                idSlotMap.clear();
+                let freshSlot = 0;
+
+                for (let i = 0; i < searchIndex.length; i++) {
+                    if (activeBitmask[i]) {
+                        const item = searchIndex[i];
+                        freshIndex.push(item);
+                        idSlotMap.set(item.id, freshSlot);
+                        freshSlot++;
+                    }
+                }
+
+                searchIndex = freshIndex;
+                activeBitmask = new Uint8Array(searchIndex.length + 64);
+                activeBitmask.fill(1, 0, searchIndex.length);
+                tombstoneCount = 0;
+            };
+
+            if (typeof window.requestIdleCallback === 'function') {
+                window.requestIdleCallback(compact, { timeout: 2000 });
+            } else {
+                setTimeout(compact, 100);
+            }
+        },
+
+        query: function(params) {
+            const t0 = performance.now();
+            const q = (params.search || '').trim().toLowerCase();
+            const tokens = tokenize(q);
+            const tab = (params.tab || 'all').toLowerCase();
+            const countryId = params.country_id;
+            const cityId = params.city_id;
+            const unspecifiedLoc = Boolean(params.unspecified_location || countryId === 'unspecified');
+            const industry = (params.industry || params.industry_id || '').toString().trim().toLowerCase();
+            const activity = (params.activity || '').trim().toLowerCase();
+            const pipeline = (params.pipeline || '').trim().toLowerCase();
+            const sort = (params.sort || 'recent').toLowerCase();
+            const page = Math.max(1, parseInt(params.page, 10) || 1);
+            const perPage = Math.max(1, parseInt(params.per_page, 10) || 10);
+
+            const isSearching = tokens.length > 0;
+            const scoredCandidates = [];
+
+            let countAll = 0, countInternal = 0, countDirect = 0, countHiring = 0, countInactive = 0, countRequest = 0;
+            let count7d = 0, count30d = 0, count90d = 0, countDormant = 0, countNever = 0;
+            let pipeActiveCount = 0, pipeNoneCount = 0;
+            const nowMs = Date.now();
+
+            const len = searchIndex.length;
+            for (let i = 0; i < len; i++) {
+                if (!activeBitmask[i]) continue;
+
+                const item = searchIndex[i];
+
+                // 1. Hard Filter Pruning
+                if (unspecifiedLoc && item.hasLocation) continue;
+                if (!unspecifiedLoc && countryId && countryId !== 'all' && item.countryId !== Number(countryId)) continue;
+                if (!unspecifiedLoc && cityId && cityId !== 'all' && item.cityId !== Number(cityId)) continue;
+
+                if (industry && industry !== 'all') {
+                    const indNum = Number(industry);
+                    const matchIndId = !isNaN(indNum) && item.industryId === indNum;
+                    const matchIndName = item.industryTokens.some(t => t.includes(industry));
+                    if (!matchIndId && !matchIndName) continue;
+                }
+
+                if (pipeline === 'active' && item.pipelineActive <= 0) continue;
+                if (pipeline === 'none' && item.pipelineActive > 0) continue;
+
+                const lastActMs = item.lastActivityTimestamp || item.createdTimestamp || 0;
+                const ageDays = lastActMs > 0 ? (nowMs - lastActMs) / 86400000 : 9999;
+
+                if (activity === '7d' && ageDays > 7) continue;
+                if (activity === '30d' && (ageDays <= 7 || ageDays > 30)) continue;
+                if (activity === '90d' && (ageDays <= 30 || ageDays > 90)) continue;
+                if (activity === 'dormant' && ageDays <= 90) continue;
+
+                // 2. Scoped Universe Facet & Tab Counters
+                if (item.isPendingRequest) {
+                    countRequest++;
+                } else {
+                    countAll++;
+                    if (item.isDirect) countDirect++; else countInternal++;
+                    if (item.activeJobs > 0) countHiring++; else countInactive++;
+                }
+
+                if (lastActMs === 0) {
+                    countNever++;
+                } else if (ageDays <= 7) {
+                    count7d++;
+                } else if (ageDays <= 30) {
+                    count30d++;
+                } else if (ageDays <= 90) {
+                    count90d++;
+                } else {
+                    countDormant++;
+                }
+
+                if (item.pipelineActive > 0) {
+                    pipeActiveCount++;
+                } else {
+                    pipeNoneCount++;
+                }
+
+                // 3. Tab Boundary Predicate
+                if (tab === 'request' || tab === 'requests') {
+                    if (!item.isPendingRequest) continue;
+                } else {
+                    if (item.isPendingRequest) continue;
+                    if (tab === 'internal' && item.isDirect) continue;
+                    if (tab === 'direct' && !item.isDirect) continue;
+                    if (tab === 'hiring' && item.activeJobs <= 0) continue;
+                    if (tab === 'inactive' && item.activeJobs > 0) continue;
+                }
+
+                // 4. Deterministic Multi-Field Match & Relevance Scoring
+                let relevanceScore = 0;
+
+                if (isSearching) {
+                    let allTokensFound = true;
+                    let allMatchedInName = true;
+                    let allMatchedInContact = true;
+
+                    for (let t = 0; t < tokens.length; t++) {
+                        const token = tokens[t];
+                        let maxTokenWeight = 0;
+
+                        // Field 1: Client Name
+                        let nameMultiplier = 0;
+                        if (item.name === token) {
+                            nameMultiplier = 1.00;
+                        } else if (item.name.startsWith(token)) {
+                            nameMultiplier = 0.80;
+                        } else if (item.nameTokens.includes(token)) {
+                            nameMultiplier = 0.60;
+                        } else if (item.name.includes(token)) {
+                            nameMultiplier = 0.50;
+                        }
+                        if (nameMultiplier > 0) {
+                            maxTokenWeight = Math.max(maxTokenWeight, WEIGHTS.NAME_BASE * nameMultiplier);
+                        } else {
+                            allMatchedInName = false;
+                        }
+
+                        // Field 2: Client ID
+                        let idMultiplier = 0;
+                        if (item.idStr === token) {
+                            idMultiplier = 1.00;
+                        } else if (item.idStr.startsWith(token)) {
+                            idMultiplier = 0.80;
+                        }
+                        if (idMultiplier > 0) {
+                            maxTokenWeight = Math.max(maxTokenWeight, WEIGHTS.ID_BASE * idMultiplier);
+                        }
+
+                        // Field 3: Contact Person
+                        let contactMultiplier = 0;
+                        for (let k = 0; k < item.contactTokens.length; k++) {
+                            const cTok = item.contactTokens[k];
+                            if (cTok === token) { contactMultiplier = Math.max(contactMultiplier, 0.80); }
+                            else if (cTok.startsWith(token)) { contactMultiplier = Math.max(contactMultiplier, 0.60); }
+                            else if (cTok.includes(token)) { contactMultiplier = Math.max(contactMultiplier, 0.50); }
+                        }
+                        if (contactMultiplier > 0) {
+                            maxTokenWeight = Math.max(maxTokenWeight, WEIGHTS.CONTACT_BASE * contactMultiplier);
+                        } else {
+                            allMatchedInContact = false;
+                        }
+
+                        // Field 4: Industry
+                        let indMultiplier = 0;
+                        for (let k = 0; k < item.industryTokens.length; k++) {
+                            const iTok = item.industryTokens[k];
+                            if (iTok === token) { indMultiplier = Math.max(indMultiplier, 0.80); }
+                            else if (iTok.startsWith(token)) { indMultiplier = Math.max(indMultiplier, 0.60); }
+                            else if (iTok.includes(token)) { indMultiplier = Math.max(indMultiplier, 0.50); }
+                        }
+                        if (indMultiplier > 0) {
+                            maxTokenWeight = Math.max(maxTokenWeight, WEIGHTS.INDUSTRY_BASE * indMultiplier);
+                        }
+
+                        // Field 5: Location
+                        let locMultiplier = 0;
+                        for (let k = 0; k < item.cityTokens.length; k++) {
+                            const lTok = item.cityTokens[k];
+                            if (lTok === token) { locMultiplier = Math.max(locMultiplier, 0.80); }
+                            else if (lTok.startsWith(token)) { locMultiplier = Math.max(locMultiplier, 0.60); }
+                            else if (lTok.includes(token)) { locMultiplier = Math.max(locMultiplier, 0.50); }
+                        }
+                        for (let k = 0; k < item.countryTokens.length; k++) {
+                            const cTok = item.countryTokens[k];
+                            if (cTok === token) { locMultiplier = Math.max(locMultiplier, 0.80); }
+                            else if (cTok.startsWith(token)) { locMultiplier = Math.max(locMultiplier, 0.60); }
+                        }
+                        if (locMultiplier > 0) {
+                            maxTokenWeight = Math.max(maxTokenWeight, WEIGHTS.LOCATION_BASE * locMultiplier);
+                        }
+
+                        // Field 6: Client Type
+                        if (item.typeTokens.includes(token)) {
+                            maxTokenWeight = Math.max(maxTokenWeight, WEIGHTS.TYPE_BASE * 1.00);
+                        }
+
+                        if (maxTokenWeight === 0) {
+                            allTokensFound = false;
+                            break;
+                        }
+                        relevanceScore += maxTokenWeight;
+                    }
+
+                    if (!allTokensFound) continue;
+
+                    // Token Coherence Bonus
+                    if (tokens.length > 1 && allMatchedInName) relevanceScore += 40;
+                    else if (tokens.length > 1 && allMatchedInContact) relevanceScore += 20;
+
+                    // Normalized Linear Recency & Prior Boosts
+                    const recencyScore = Math.max(0, 1 - (ageDays / 180));
+                    const priorBoost = (item.activeJobs > 0 ? 10 : 0) + (item.pipelineActive > 0 ? 5 : 0) + (recencyScore * 0.01);
+                    relevanceScore += priorBoost;
+                }
+
+                scoredCandidates.push({ item: item, score: relevanceScore });
+            }
+
+            // 5. Deterministic Sort
+            scoredCandidates.sort(function(a, b) {
+                if (isSearching && Math.abs(b.score - a.score) > 0) {
+                    return b.score - a.score;
+                }
+
+                if (sort === 'name_asc') {
+                    return a.item.name.localeCompare(b.item.name) || (b.item.id - a.item.id);
+                } else if (sort === 'name_desc') {
+                    return b.item.name.localeCompare(a.item.name) || (b.item.id - a.item.id);
+                } else if (sort === 'jobs_desc') {
+                    return (b.item.activeJobs - a.item.activeJobs) || (b.item.id - a.item.id);
+                } else if (sort === 'oldest') {
+                    return (a.item.createdTimestamp - b.item.createdTimestamp) || (a.item.id - b.item.id);
+                } else {
+                    return (b.item.createdTimestamp - a.item.createdTimestamp) || (b.item.id - a.item.id);
+                }
+            });
+
+            // 6. Pagination Slice & Decoupled Presentation Retrieval
+            const total = scoredCandidates.length;
+            const from = (page - 1) * perPage;
+            const sliced = scoredCandidates.slice(from, from + perPage);
+
+            const rowsToRender = sliced.map(sc => presentationStore.get(sc.item.id)).filter(Boolean);
+            const elapsed = performance.now() - t0;
+            this.lastQueryElapsedMs = elapsed;
+
+            return {
+                rows: rowsToRender,
+                total: total,
+                page: page,
+                per_page: perPage,
+                last_page: Math.max(1, Math.ceil(total / perPage)),
+                elapsed_ms: elapsed.toFixed(2),
+                counts: {
+                    all: countAll,
+                    internal: countInternal,
+                    direct: countDirect,
+                    hiring: countHiring,
+                    inactive: countInactive,
+                    request: countRequest
+                },
+                recency_counts: {
+                    all: countAll,
+                    '7d': count7d,
+                    '30d': count30d,
+                    '90d': count90d,
+                    dormant: countDormant,
+                    never: countNever
+                },
+                pipeline_counts: {
+                    all: countAll,
+                    active: pipeActiveCount,
+                    none: pipeNoneCount
+                }
+            };
+        },
+
+        destroy: function() {
+            searchIndex = [];
+            idSlotMap.clear();
+            presentationStore.clear();
+            activeBitmask = new Uint8Array(0);
+            tombstoneCount = 0;
+            this.isReady = false;
+        }
+    };
+})();
+window.ClientSearchEngine = ClientSearchEngine;
+
 function initClientWorker() {
     if (!window.Worker) return;
     try {
@@ -5078,12 +5639,17 @@ function initClientWorker() {
         @if(!empty($initialRows))
         const initialRows = {!! json_encode($initialRows) !!};
         if (initialRows && initialRows.length > 0) {
-            clWorker.postMessage({
-                type: 'INIT_DATASET',
-                rows: initialRows,
-                version: {{ (int)($initialDataVersion ?? 1) }}
-            });
-            clWorkerReady = true;
+            if (typeof ClientSearchEngine !== 'undefined') {
+                ClientSearchEngine.hydrate(initialRows, {{ (int)($initialDataVersion ?? 1) }});
+            }
+            if (clWorker) {
+                clWorker.postMessage({
+                    type: 'INIT_DATASET',
+                    rows: initialRows,
+                    version: {{ (int)($initialDataVersion ?? 1) }}
+                });
+                clWorkerReady = true;
+            }
         }
         @endif
 
@@ -5112,13 +5678,18 @@ function fetchActiveProjection() {
     }).then(async function(res) {
         if (res.status === 304) {
             const stored = await ClientLocationDB.get(idbStoreKey);
-            if (stored && stored.rows && stored.rows.length > 0 && clWorker) {
-                clWorker.postMessage({
-                    type: 'INIT_DATASET',
-                    rows: stored.rows,
-                    version: stored.data_version || 1
-                });
-                clWorkerReady = true;
+            if (stored && stored.rows && stored.rows.length > 0) {
+                if (typeof ClientSearchEngine !== 'undefined') {
+                    ClientSearchEngine.hydrate(stored.rows, stored.data_version || 1);
+                }
+                if (clWorker) {
+                    clWorker.postMessage({
+                        type: 'INIT_DATASET',
+                        rows: stored.rows,
+                        version: stored.data_version || 1
+                    });
+                    clWorkerReady = true;
+                }
             }
             return;
         }
@@ -5126,17 +5697,22 @@ function fetchActiveProjection() {
             const newEtag = res.headers.get('ETag');
             if (newEtag) localStorage.setItem(etagKey, newEtag);
             const data = await res.json();
-            if (data && data.rows && clWorker) {
+            if (data && data.rows) {
                 if (ClientStore.latestMutationVersion && data.data_version && data.data_version < ClientStore.latestMutationVersion) {
                     console.warn('[Sync] Ignored stale projection version:', data.data_version, 'current mutation:', ClientStore.latestMutationVersion);
                     return;
                 }
-                clWorker.postMessage({
-                    type: 'INIT_DATASET',
-                    rows: data.rows,
-                    version: data.data_version || 1
-                });
-                clWorkerReady = true;
+                if (typeof ClientSearchEngine !== 'undefined') {
+                    ClientSearchEngine.hydrate(data.rows, data.data_version || 1);
+                }
+                if (clWorker) {
+                    clWorker.postMessage({
+                        type: 'INIT_DATASET',
+                        rows: data.rows,
+                        version: data.data_version || 1
+                    });
+                    clWorkerReady = true;
+                }
                 ClientLocationDB.set(idbStoreKey, data);
             }
         }
@@ -5469,6 +6045,82 @@ function loadClientList(page, updateUrl = true, cursor = null) {
     var industryVal = clientListState.industry_id || $('#industryFilter').val() || '';
     var activityVal = clientListState.activity || $('#activityFilter').val() || '';
     var pipelineVal = clientListState.pipeline || $('#pipelineFilter').val() || '';
+
+    // ── Zero-Network Execution Guard (JDCR In-Memory Search & Query Engine) ──
+    // Strictly enforces 0% Server / MySQL / Elasticsearch reads for all search, filter,
+    // sort, and pagination interactions over the hydrated active working set.
+    if (typeof ClientSearchEngine !== 'undefined' && ClientSearchEngine.isReady && ClientSearchEngine.size() > 0) {
+        if (ClientStore.currentXhr && ClientStore.currentXhr.readyState !== 4) {
+            ClientStore.currentXhr.abort();
+            ClientStore.currentXhr = null;
+        }
+
+        var localResult = ClientSearchEngine.query({
+            search: searchVal,
+            tab: activeClientTab,
+            page: targetPage,
+            per_page: perPage,
+            sort: sortVal,
+            country_id: countryVal,
+            city_id: cityVal,
+            unspecified_location: unspecifiedVal,
+            industry_id: industryVal,
+            activity: activityVal,
+            pipeline: pipelineVal
+        });
+
+        // Toggle UI match badges and clear buttons
+        var trimmedSearch = (searchVal || '').trim();
+        if (trimmedSearch.length > 0) {
+            var matchText = localResult.total + (localResult.total === 1 ? ' match' : ' matches');
+            $('#clSearchMatchCount').text(matchText).show();
+            $('#clSearchClearBtn').show();
+            $('#clSearchKbdHint').hide();
+        } else {
+            $('#clSearchMatchCount').hide();
+            $('#clSearchClearBtn').hide();
+            $('#clSearchKbdHint').show();
+        }
+
+        var renderedHtml = renderClientRows(localResult.rows);
+        var renderedPagi = renderClientPagination(localResult);
+
+        var syntheticResponse = {
+            html: renderedHtml,
+            total: localResult.total,
+            pagination: renderedPagi,
+            rows: localResult.rows,
+            projection_status: 'synced',
+            recency_counts: localResult.recency_counts,
+            pipeline_counts: localResult.pipeline_counts
+        };
+
+        if (localResult.counts) {
+            $('#span_clientAll, #tabBadgeAll').text(localResult.counts.all);
+            $('#span_clientCustom, #tabBadgeInternal').text(localResult.counts.internal);
+            $('#span_clientDirect, #tabBadgeDirect').text(localResult.counts.direct);
+            $('#span_clientHiring, #tabBadgeHiring').text(localResult.counts.hiring);
+            if (localResult.counts.inactive !== undefined) {
+                $('#span_clientInactive, #tabBadgeInactive').text(localResult.counts.inactive);
+            }
+            if (localResult.counts.request !== undefined) {
+                $('#span_clientRequest, #tabBadgeRequest').text(localResult.counts.request);
+            }
+        }
+
+        if (localResult.recency_counts) {
+            updateRecencyCounts(localResult.recency_counts);
+        }
+        if (localResult.pipeline_counts) {
+            updatePipelineCounts(localResult.pipeline_counts);
+        }
+
+        var inMemCacheKey = ClientStore.getKey(activeClientTab, targetPage, searchVal, sortVal, countryVal, cityVal, unspecifiedVal, industryVal, activityVal, pipelineVal, perPage);
+        ClientStore.set(inMemCacheKey, syntheticResponse);
+
+        applyClientResponse(syntheticResponse, targetPage);
+        return; // Zero network requests!
+    }
 
     var cacheKey = ClientStore.getKey(activeClientTab, targetPage, searchVal, sortVal, countryVal, cityVal, unspecifiedVal, industryVal, activityVal, pipelineVal, perPage);
     var cachedEntry = ClientStore.get(cacheKey);
@@ -5815,6 +6467,16 @@ function handleClientMutationEvent(data) {
         window.SyncSupervisor.notifyHint(targetCid);
     }
 
+    // Delta mutation in ClientSearchEngine (Phase 3)
+    if (typeof ClientSearchEngine !== 'undefined') {
+        if (data.op === 'DELETE' || data.type === 'CLIENT_DELETED') {
+            const delId = (data.client && data.client.id) ? data.client.id : (data.client_id || data.id);
+            if (delId) ClientSearchEngine.deleteEntity(delId);
+        } else if (data.client) {
+            ClientSearchEngine.upsertEntity(data.client);
+        }
+    }
+
     // If a specific client record is attached, delta-upsert directly in Worker
     if (data.client && clWorker && clWorkerReady) {
         clWorker.postMessage({
@@ -5822,6 +6484,15 @@ function handleClientMutationEvent(data) {
             client: data.client,
             version: data.version || null
         });
+    } else if ((data.op === 'DELETE' || data.type === 'CLIENT_DELETED') && clWorker && clWorkerReady) {
+        const delId = (data.client && data.client.id) ? data.client.id : (data.client_id || data.id);
+        if (delId) {
+            clWorker.postMessage({
+                type: 'DELTA_DELETE',
+                id: delId,
+                version: data.version || null
+            });
+        }
     } else {
         // Re-hydrate active projection in background
         fetchActiveProjection();
