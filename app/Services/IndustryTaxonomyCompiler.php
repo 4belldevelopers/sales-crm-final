@@ -262,7 +262,7 @@ class IndustryTaxonomyCompiler
             $dbRows = self::getBaseIndustryCatalog();
         }
 
-        $industries = [];
+        $industriesById = [];
         $seenSlugs = [];
 
         // 2. Ingest DB industries with metadata
@@ -277,6 +277,25 @@ class IndustryTaxonomyCompiler
             }
             $seenSlugs[$slug] = true;
 
+            if (isset(self::MODERN_2026_VERTICALS[$id])) {
+                $mv = self::MODERN_2026_VERTICALS[$id];
+                $sector = self::SECTORS[$mv['sector']] ?? self::SECTORS[1];
+                $industriesById[$id] = [
+                    'id' => $id,
+                    'name' => $name ?: $mv['name'],
+                    'slug' => $mv['slug'],
+                    'sector_id' => $sector['id'],
+                    'sector_name' => $sector['name'],
+                    'keywords' => $mv['keywords'],
+                    'acronyms' => $mv['acronyms'] ?? [],
+                    'synonyms' => $mv['synonyms'] ?? [],
+                    'is_standard' => true,
+                    'is_system' => true,
+                    'is_custom' => false,
+                ];
+                continue;
+            }
+
             $meta = IndustryTaxonomyService::INDUSTRY_METADATA[$id] ?? null;
 
             if ($meta) {
@@ -290,7 +309,7 @@ class IndustryTaxonomyCompiler
 
             $sector = self::SECTORS[$sectorId] ?? self::SECTORS[5];
 
-            $industries[] = [
+            $industriesById[$id] = [
                 'id' => $id,
                 'name' => $name,
                 'slug' => $slug,
@@ -303,11 +322,15 @@ class IndustryTaxonomyCompiler
             ];
         }
 
-        // 3. Ingest Modern 2026 Verticals
+        // 3. Ingest any missing Modern 2026 Verticals
         foreach (self::MODERN_2026_VERTICALS as $mv) {
+            $id = $mv['id'];
+            if (isset($industriesById[$id])) {
+                continue;
+            }
             $sector = self::SECTORS[$mv['sector']] ?? self::SECTORS[1];
-            $industries[] = [
-                'id' => $mv['id'],
+            $industriesById[$id] = [
+                'id' => $id,
                 'name' => $mv['name'],
                 'slug' => $mv['slug'],
                 'sector_id' => $sector['id'],
@@ -320,6 +343,8 @@ class IndustryTaxonomyCompiler
                 'is_custom' => false,
             ];
         }
+
+        $industries = array_values($industriesById);
 
         // 4. Deterministic Sort: sector_id ASC, then name ASC
         usort($industries, function ($a, $b) {
@@ -501,7 +526,7 @@ class IndustryTaxonomyCompiler
             133 => 'Telecommunications', 134 => 'Textiles', 135 => 'Think Tanks', 136 => 'Tobacco',
             137 => 'Translation and Localization', 138 => 'Transportation/Trucking/Railroad', 139 => 'Utilities', 140 => 'Venture Capital & Private Equity',
             141 => 'Veterinary', 142 => 'Warehousing', 143 => 'Wholesale', 144 => 'Wine and Spirits',
-            145 => 'Wireless', 146 => 'Writing and Editing',
+            145 => 'Wireless', 146 => 'Writing and Editing', 147 => 'Other / Diversified Services',
         ];
 
         foreach ($names as $id => $name) {

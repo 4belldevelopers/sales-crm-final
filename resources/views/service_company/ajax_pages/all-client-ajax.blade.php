@@ -24,7 +24,7 @@
             $city = $rowObj->city_name ?? ($rowObj->city ?? '');
             $stateName = $rowObj->state_name ?? ($rowObj->state ?? '');
             $country_name = $rowObj->country_name ?? ($rowObj->country ?? '');
-            $departmentArr = $rowObj->ind_name ?? '';
+            $departmentArr = !empty($rowObj->ind_name) ? $rowObj->ind_name : 'Other / Diversified Services';
             $created_at = !empty($rowObj->from_created_at) ? $rowObj->from_created_at : ($rowObj->created_at ?? '');
             $newDate = !empty($created_at) ? date('d M, Y', strtotime($created_at)) : '-';
             $daysAgo = !empty($created_at) ? GeneralMethod::timeAgo($created_at) : 'Just now';
@@ -84,7 +84,7 @@
                     <div class="cl-subcard-head">
                         <span class="cl-subcard-title">Client Identity</span>
                         <div class="cl-subcard-badges">
-                            <span class="cl-scope-pill pill-direct">Direct Client</span>
+                            <span class="cl-scope-pill pill-direct type-direct">Direct Client</span>
                             <span class="badge" style="background:#fef3c7; color:#d97706; font-size:9px; font-weight:700; padding:1.5px 6px; border-radius:4px; border:1px solid #fde68a;">⚡ Request</span>
                         </div>
                     </div>
@@ -120,9 +120,9 @@
                             <circle cx="12" cy="10" r="3"/>
                         </svg>
                         @php
-                            $reqCity = !empty($city) ? ucwords($city) : '';
-                            $reqState = !empty($stateName) ? ucwords($stateName) : '';
-                            $reqCountry = !empty($country_name) ? ucwords($country_name) : '';
+                            $reqCity = !empty($city) ? ucwords(strtolower((string) $city)) : '';
+                            $reqState = !empty($stateName) ? ucwords(strtolower((string) $stateName)) : '';
+                            $reqCountry = !empty($country_name) ? ucwords(strtolower((string) $country_name)) : '';
                         @endphp
                         <div class="cl-loc-lines">
                             @if(!empty($reqCity))
@@ -243,21 +243,28 @@
             $client_Or_CompanyName = $row->company_name ?? $row->name ?? '';
         }
 
-        $departmentArr = (@$row->ind_name) ? @$row->ind_name : @$row->main_ind_name;
+        $departmentArr = (!empty($row->ind_name)) ? $row->ind_name : ((!empty($row->main_ind_name)) ? $row->main_ind_name : 'Other / Diversified Services');
         $client_id = $row->client_id ?? ($row->id ?? 0);
         $rowTargetId = $isDirect ? ($row->client_id ?: ($row->from_company_id ?: ($row->company_id ?: ($row->id ?? 0)))) : ($row->client_id ?: ($row->id ?? 0));
 
         /* ── location ── */
         $country_name = $stateName = $city = '';
-        if (!empty($row->client_location) && count($row->client_location) > 0) {
-            $country_name = $row->client_location[0]['country_name'] ?? '';
-            $stateName = $row->client_location[0]['state_name'] ?? '';
-            $city = $row->client_location[0]['city_name'] ?? '';
+        if (!empty($row->client_location) && (is_array($row->client_location) || is_iterable($row->client_location))) {
+            foreach ($row->client_location as $locItem) {
+                $locArr = (array) $locItem;
+                if (!empty($locArr['city_name'])) $city = $locArr['city_name'];
+                elseif (!empty($locArr['city'])) $city = $locArr['city'];
+                if (!empty($locArr['state_name'])) $stateName = $locArr['state_name'];
+                elseif (!empty($locArr['state']) && !is_numeric($locArr['state'])) $stateName = $locArr['state'];
+                if (!empty($locArr['country_name'])) $country_name = $locArr['country_name'];
+                elseif (!empty($locArr['country'])) $country_name = $locArr['country'];
+                if (!empty($city) || !empty($stateName) || !empty($country_name)) break;
+            }
         }
         if (empty($city) && !empty($row->city_name)) $city = $row->city_name;
         if (empty($city) && !empty($row->city)) $city = $row->city;
         if (empty($stateName) && !empty($row->state_name)) $stateName = $row->state_name;
-        if (empty($stateName) && !empty($row->state)) $stateName = $row->state;
+        if (empty($stateName) && !empty($row->state) && !is_numeric($row->state)) $stateName = $row->state;
         if (empty($country_name) && !empty($row->country_name)) $country_name = $row->country_name;
         if (empty($country_name) && !empty($row->country)) $country_name = $row->country;
 
@@ -291,14 +298,19 @@
             $pKey = 'internal_' . $client_id;
             $perf = $candidateCountsMap[$pKey] ?? GeneralMethod::InternalClientCandidatesCountList($client_id);
         }
-        $allCandidates = (int)($perf->all_candidates ?? 0);
         $sourced       = (int)($perf->sourced ?? 0);
         $screening     = (int)($perf->screening ?? 0);
         $evaluated     = (int)($perf->evaluated ?? 0);
         $negotiations  = (int)($perf->negotiations ?? ($perf->negotiation ?? 0));
         $offers        = (int)($perf->offers ?? 0);
         $joined        = (int)($perf->Joined ?? ($perf->joined ?? 0));
+        $rejected      = (int)($perf->rejected ?? 0);
+        $inReview      = (int)($perf->in_review ?? 0);
         $interviews    = (int)($perf->all_interview ?? 0);
+
+        // Invariant 3: Total Applications derived from mutually exclusive states
+        $activePipeline = ($sourced + $screening + $evaluated + $negotiations + $offers + $joined);
+        $allCandidates  = ($activePipeline + $rejected + $inReview);
 
         /* ── connected on ── */
         if ($row->staffing_company_relation_id > 0 && ($row->to_company_id ?? 0) == auth()->user()->company_id) {
@@ -380,7 +392,7 @@
         }
     @endphp
 
-    <div class="cl-primary-card tbl-r {{ $client_type_css }} {{ $job_active > 0 ? 'is-active-client' : 'is-inactive-client' }}" data-row-id="{{ $rowTargetId }}" data-client-type="{{ $isDirect ? 'direct' : 'internal' }}">
+    <div class="cl-primary-card tbl-r {{ $client_type_css }} {{ $job_active > 0 ? 'is-active-client' : 'is-inactive-client' }}" data-row-id="{{ $rowTargetId }}" data-client-type="{{ $isDirect ? 'direct' : 'internal' }}" data-active-jobs="{{ (int)$job_active }}" data-client-name="{{ e($client_Or_CompanyName) }}">
         {{-- Upper 4 Discrete Sub-Cards Grid --}}
         <div class="cl-subcards-grid">
             {{-- SUB-CARD 1: Client Identity (Internal & Active at TOP) --}}
@@ -388,7 +400,7 @@
                 <div class="cl-subcard-head">
                     <span class="cl-subcard-title">Client Identity</span>
                     <div class="cl-subcard-badges">
-                        <span class="cl-scope-pill {{ $isDirect ? 'pill-direct' : 'pill-internal' }} {{ $client_type_css }}" data-row-id="{{ $rowTargetId }}" data-client-type="{{ $isDirect ? 'direct' : 'internal' }}">
+                        <span class="cl-scope-pill {{ $isDirect ? 'pill-direct type-direct' : 'pill-internal type-internal' }} {{ $client_type_css }}" data-row-id="{{ $rowTargetId }}" data-client-type="{{ $isDirect ? 'direct' : 'internal' }}">
                             {{ $client_type }}
                         </span>
                         <span class="cl-status-pill {{ $job_active > 0 ? 'pill-active' : 'pill-inactive' }}">
@@ -435,9 +447,9 @@
                         <circle cx="12" cy="10" r="3"/>
                     </svg>
                     @php
-                        $locCity = !empty($city) ? ucwords($city) : '';
-                        $locState = !empty($stateName) ? ucwords($stateName) : '';
-                        $locCountry = !empty($country_name) ? ucwords($country_name) : '';
+                        $locCity = !empty($city) ? ucwords(strtolower((string) $city)) : '';
+                        $locState = !empty($stateName) ? ucwords(strtolower((string) $stateName)) : '';
+                        $locCountry = !empty($country_name) ? ucwords(strtolower((string) $country_name)) : '';
                     @endphp
                     <div class="cl-loc-lines">
                         @if(!empty($locCity))
@@ -490,7 +502,7 @@
                         <span class="cl-subcard-title">Hiring Pipeline</span>
                     </div>
                 </div>
-                <div class="cl-pipe-body tbl-cell-pipeline" title="Total Applications: {{ $allCandidates }} | Interviews: {{ $interviews }}">
+                <div class="cl-pipe-body tbl-cell-pipeline" title="Total Applications: {{ $allCandidates }} | Rejected: {{ $rejected }} | Interviews: {{ $interviews }}">
                     <div class="cl-pipeline-flow">
                         <div class="cl-pipe-step step-sourcing {{ $sourced > 0 ? 'has-count' : '' }}" title="Sourcing: {{ $sourced }}">
                             <span class="cl-pipe-pill pill-sourcing">{{ $sourced }}</span>
@@ -515,6 +527,10 @@
                         <div class="cl-pipe-step step-joined {{ $joined > 0 ? 'has-count' : '' }}" title="Joined: {{ $joined }}">
                             <span class="cl-pipe-pill pill-joined">{{ $joined }}</span>
                             <span class="cl-pipe-label">Joined</span>
+                        </div>
+                        <div class="cl-pipe-step step-rejected {{ $rejected > 0 ? 'has-count' : '' }}" title="Rejected: {{ $rejected }}">
+                            <span class="cl-pipe-pill pill-rejected">{{ $rejected }}</span>
+                            <span class="cl-pipe-label">Rejected</span>
                         </div>
                         <div class="cl-pipe-divider" aria-hidden="true"></div>
                         <div class="cl-pipe-step step-interview {{ $interviews > 0 ? 'has-count' : '' }}" title="Interview: {{ $interviews }}">

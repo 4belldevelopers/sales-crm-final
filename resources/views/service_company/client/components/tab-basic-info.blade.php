@@ -16,9 +16,6 @@
           }
       }
   }
-  if (empty($selectedIndName) && !empty($custom_industry)) {
-      $selectedIndName = $custom_industry;
-  }
 ?>
 
 <div class="pb-5 client-info-step" data-wizard-type="step-content" data-wizard-state="current">
@@ -168,11 +165,7 @@
                   @endif
                 @endforeach
               @endif
-              @if(!empty($custom_industry) && $industry == 0)
-                <option value="0" selected="selected">{{ $custom_industry }}</option>
-              @endif
             </select>
-            <input type="hidden" name="custom_industry" id="custom_industry" value="{{ htmlspecialchars($custom_industry ?? '') }}">
 
             <!-- God-Level Enterprise Industry Combobox Component -->
             <div class="jero-ind-select-wrap god-ind-wrap" id="jero_ind_select_wrap">

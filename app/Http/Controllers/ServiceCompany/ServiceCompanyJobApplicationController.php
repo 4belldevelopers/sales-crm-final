@@ -4960,7 +4960,14 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
         $company_id = '';
         $company_id = auth()->user()->company_id;
         $userId = $this->user->id;
-        $this->editComman = true;
+
+        $isReadOnly = (request()->has('read_only') && request('read_only') == '1')
+            || (request()->has('readonly') && request('readonly') == '1')
+            || request()->get('mode') === 'readonly'
+            || request()->get('source') === 'client_candidate';
+        $this->isReadOnly = $isReadOnly;
+        $this->editComman = ! $isReadOnly;
+        $this->editprofile = ! $isReadOnly;
 
         $currentSlug = '';
         if (isset($_GET['slug'])) {
@@ -4971,7 +4978,8 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
         $tenantId = (int) ($company_id ?: 0);
         // Intent: Auto-bust cached drawer HTML when showdetail Blade changes, so UI fixes reflect without flushing all app cache.
         $drawerViewVersion = @filemtime(resource_path('views/service_company/job-applications/showdetail.blade.php')) ?: 0;
-        $cacheKeySet = 'tenant:'.$tenantId.':candidate_details:'.$id.':'.md5($currentSlug).':view:'.$drawerViewVersion;
+        $roSuffix = $isReadOnly ? ':ro' : '';
+        $cacheKeySet = 'tenant:'.$tenantId.':candidate_details:'.$id.':'.md5($currentSlug).':view:'.$drawerViewVersion.$roSuffix;
 
         $cachedResponse = cache()->get($cacheKeySet);
         if ($cachedResponse !== null) {
@@ -4985,6 +4993,12 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
         $this->currency = GeneralMethod::currency();
         $this->salaryMode = GeneralMethod::salaryMode();
         $AddJobWiseCondidate = AddJobWiseCondidate::withoutGlobalScopes()->find($id);
+        if (! $AddJobWiseCondidate) {
+            $AddJobWiseCondidate = AddJobWiseCondidate::withoutGlobalScopes()->where('job_application_id', $id)->first();
+            if ($AddJobWiseCondidate) {
+                $id = $AddJobWiseCondidate->id;
+            }
+        }
 
         // Intent: Verify candidate record belongs to the user's company or authorized thirdparty company (FINDING-SEC-02 - P0).
         if ($AddJobWiseCondidate) {
