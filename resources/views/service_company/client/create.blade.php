@@ -4414,6 +4414,10 @@ if ($page_event == 'ADD') {
                 <form class="form mx-auto" novalidate="novalidate" autocomplete="off" action="javascript:void(0);" method="post" id="kt_form" name="kt_form" style="margin:0 !important; padding:0 !important;">
                   <meta name="csrf-token" content="{{ csrf_token() }}" />
                   <input type="hidden" name="idempotency_key" id="kt_form_idempotency_key" value="{{ (string) \Illuminate\Support\Str::uuid() }}" />
+                  @if($page_event == 'EDIT' && !empty($client->id))
+                  <input type="hidden" name="client_id" id="edit_client_id" value="{{ $client->id }}" />
+                  <input type="hidden" name="id" value="{{ $client->id }}" />
+                  @endif
                   <!--begin::Client Information (Page 1)-->
                   @include('service_company.client.components.tab-basic-info', ['page_event' => $page_event])
 
@@ -4471,6 +4475,33 @@ if ($page_event == 'ADD') {
 <link href="https://unpkg.com/@yaireo/tagify/dist/tagify.css" rel="stylesheet" type="text/css" />
 
 <script>
+  /**
+   * JERO Client Configuration & Isolation Engine
+   * Tenancy Note: Tenant-isolated client profile context.
+   * Edit Mode Isolation: Keeps original stored Name and Website so duplicate validation
+   * is only performed if unique fields actually change. Excludes client's own record.
+   */
+  window.JERO_CLIENT_CONFIG = {
+    isEdit: {{ $page_event === 'EDIT' ? 'true' : 'false' }},
+    clientId: {{ ($page_event === 'EDIT' && !empty($client->id)) ? (int)$client->id : 'null' }},
+    originalName: {!! json_encode((string) ($name ?? '')) !!},
+    originalWebsite: {!! json_encode((string) ($website ?? '')) !!}
+  };
+
+  function normalizeClientName(str) {
+    return (str || '').toString().trim().replace(/\s+/g, ' ').toLowerCase();
+  }
+
+  function canonicalizeClientWebsite(url) {
+    if (!url) return '';
+    var str = url.toString().trim().toLowerCase();
+    str = str.replace(/^https?:\/\//i, '').replace(/^\/\//, '');
+    str = str.replace(/^www\./i, '');
+    str = str.replace(/:\d+$/, '');
+    str = str.split('/')[0].split('?')[0].split('#')[0];
+    return str.trim();
+  }
+
   // =========================================================================
   // JeroEmailBoxEngine: 100% Client-First (Zero Server Strain) Email Engine
   // RFC 5321 (254 char), Deterministic Sanitizer, 3-State Typo Detection
