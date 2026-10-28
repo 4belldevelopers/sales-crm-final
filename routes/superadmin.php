@@ -397,6 +397,8 @@ Route::group(['middleware' => 'auth'], function () {
         Route::put('recruiter-note/{id}', [RecruiterNoteTemplateController::class, 'update'])->name('recruiter-note.update');
         Route::delete('recruiter-note/{id}', [RecruiterNoteTemplateController::class, 'destroy'])->name('recruiter-note.destroy');
         Route::get('recruiter-note/{id}/data', [RecruiterNoteTemplateController::class, 'getData'])->name('recruiter-note.getData');
+        Route::post('recruiter-note/{id}/toggle-status', [RecruiterNoteTemplateController::class, 'toggleStatus'])->name('recruiter-note.toggleStatus');
+        Route::post('recruiter-note/{id}/duplicate', [RecruiterNoteTemplateController::class, 'duplicate'])->name('recruiter-note.duplicate');
 
         // Relationship Manager Note Templates (global defaults, company_id = NULL)
         Route::get('rm-note', [BenchRmNoteTemplateController::class, 'index'])->name('rm-note.index');
