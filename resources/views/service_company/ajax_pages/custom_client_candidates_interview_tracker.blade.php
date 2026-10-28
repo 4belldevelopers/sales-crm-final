@@ -22,10 +22,38 @@
         $eval   = $readModel['evaluation'] ?? [];
 
         $jobTitleInitial = strtoupper(mb_substr($job['title'] ?? 'J', 0, 1) ?: 'J');
+
+        // Panelists list processing
+        $panelList = $readModel['interviewers'] ?? [];
+        if (empty($panelList)) {
+            $leadFallback = !empty($intvs['lead_name']) && $intvs['lead_name'] !== 'N/A' ? $intvs['lead_name'] : 'Panel Assigned';
+            $panelList[] = [
+                'name' => $leadFallback,
+                'company_name' => $intvs['lead_company'] ?? '',
+                'is_lead' => true,
+            ];
+            $extraCount = (int) ($intvs['extra_count'] ?? 0);
+            for ($i = 1; $i <= $extraCount; $i++) {
+                $panelList[] = [
+                    'name' => 'Panelist #' . ($i + 1),
+                    'company_name' => $intvs['lead_company'] ?? '',
+                    'is_lead' => false,
+                ];
+            }
+        }
+        $totalPanelists = count($panelList);
+        $leadName = $panelList[0]['name'] ?? 'Panel Assigned';
+        $leadInitial = ($leadName && $leadName !== 'Panel Assigned') ? strtoupper(mb_substr($leadName, 0, 1)) : 'P';
+        $leadCompany = $panelList[0]['company_name'] ?? ($intvs['lead_company'] ?? '');
+        $extraPanelistsCount = max(0, $totalPanelists - 1);
+        $panelBadgeText = $totalPanelists === 1 ? '1 Panelist' : "{$totalPanelists} Panelists";
+        $panelistTooltipText = implode(', ', array_map(function($p, $idx) {
+            return ($idx === 0) ? ($p['name'] . ' (Lead)') : $p['name'];
+        }, $panelList, array_keys($panelList)));
     @endphp
         <!-- Master Primary Card for Interview Record -->
         <div class="cd-it-card" data-interview-id="{{ $readModel['id'] }}" data-status="{{ $att['code'] ?? 0 }}" data-feedback="{{ $eval['code'] ?? 0 }}">
-            <!-- Upper Discrete 5 Sub-Cards Grid -->
+            <!-- Upper Discrete 6 Sub-Cards Grid -->
             <div class="cd-it-card-grid">
 
                 <!-- 1. CANDIDATE INFO -->
@@ -92,20 +120,22 @@
                     </div>
                 </div>
 
-                <!-- 3. SCHEDULE & INTERVIEW LINK (Round 1 removed, direct link added) -->
+                <!-- 3. SCHEDULE & INTERVIEW LINK -->
                 <div class="cd-it-subcard">
                     <div class="cd-subcard-header">
                         <span class="cd-subcard-label">SCHEDULE &amp; LINK</span>
-                        @if(!empty($sch['time_formatted']))
-                            <span class="cd-it-time-pill">{{ $sch['time_formatted'] }}</span>
-                        @endif
                     </div>
                     <div>
                         <div class="cd-it-dt-date">
                             <i class="far fa-calendar-alt me-1 text-primary"></i>
                             <span>{{ $sch['date_formatted'] }}</span>
                         </div>
-                        <div class="cd-it-dt-mode">
+                        <div class="cd-it-dt-time-mode">
+                            @if(!empty($sch['time_formatted']))
+                                <i class="far fa-clock me-1 text-primary"></i>
+                                <span class="cd-it-dt-time-val">{{ $sch['time_formatted'] }}</span>
+                                <span class="cd-dot-sep">|</span>
+                            @endif
                             @if (($sch['mode_icon_type'] ?? '') === 'phone')
                                 <i class="fas fa-phone-alt me-1"></i>
                             @elseif (($sch['mode_icon_type'] ?? '') === 'map-marker')
@@ -113,7 +143,7 @@
                             @else
                                 <i class="fas fa-video me-1"></i>
                             @endif
-                            <span>{{ $sch['mode_label'] ?? 'Video Call' }}</span>
+                            <span class="cd-it-dt-mode-val">{{ $sch['mode_label'] ?? 'Video Call' }}</span>
                         </div>
                         @if (!empty($sch['meeting_link']))
                             @if (($sch['link_type'] ?? '') === 'address')
@@ -131,11 +161,10 @@
                     </div>
                 </div>
 
-                <!-- 4. RECRUITER & SOURCING -->
+                <!-- 4. RECRUITER INFO -->
                 <div class="cd-it-subcard">
                     <div class="cd-subcard-header">
-                        <span class="cd-subcard-label">RECRUITER &amp; SOURCING</span>
-                        <span class="cd-it-source-pill">Sourced</span>
+                        <span class="cd-subcard-label">RECRUITER INFO</span>
                     </div>
                     <div>
                         <div class="cd-it-recruiter-name" title="{{ $src['name'] }}">
@@ -146,25 +175,69 @@
                         </div>
                         <div class="cd-it-submitted-at">
                             <i class="far fa-clock me-1"></i>
-                            <span>Submitted: {{ $src['submitted_at'] ?? '4 days ago' }}</span>
+                            <span>Submitted: {{ $src['submitted_at'] ?? 'Recently' }}</span>
                         </div>
                     </div>
                 </div>
 
-                <!-- 5. PANEL & FEEDBACK -->
+                <!-- 5. DEDICATED PANELISTS CARD -->
+                <div class="cd-it-subcard cd-it-panelist-card">
+                    <div class="cd-subcard-header">
+                        <span class="cd-subcard-label">PANELISTS</span>
+                        <span class="cd-it-panel-count-pill">{{ $panelBadgeText }}</span>
+                    </div>
+                    <div class="cd-it-panel-body" title="{{ $panelistTooltipText }}">
+                        <div class="cd-panel-avatar-stack">
+                            <div class="cd-panel-avatar" title="{{ $leadName }}">
+                                {{ $leadInitial }}
+                            </div>
+                            @if($extraPanelistsCount > 0)
+                                <div class="cd-panel-avatar cd-panel-avatar-extra" title="+{{ $extraPanelistsCount }} more panelists">
+                                    +{{ $extraPanelistsCount }}
+                                </div>
+                            @endif
+                        </div>
+                        <div class="min-w-0 flex-grow-1 overflow-hidden">
+                            <div class="cd-it-lead-name" title="{{ $leadName }}">
+                                {{ $leadName }}
+                            </div>
+                            <div class="cd-it-lead-sub" title="{{ $leadCompany ?: 'Interview Panel' }}">
+                                {{ $extraPanelistsCount > 0 ? "+{$extraPanelistsCount} more panelists" : ($leadCompany ?: 'Interview Panel') }}
+                            </div>
+                        </div>
+
+                        <!-- Hover Popover -->
+                        <div class="cd-it-popover-card">
+                            <div class="cd-it-popover-header">
+                                <span><i class="fas fa-users text-primary me-1"></i> Interview Panel</span>
+                                <span class="badge badge-sm badge-light-primary text-primary">{{ $totalPanelists }}</span>
+                            </div>
+                            <div class="cd-it-popover-body">
+                                @foreach($panelList as $pIdx => $p)
+                                    <div class="cd-it-popover-item">
+                                        <span class="text-truncate" style="max-width: 150px;" title="{{ $p['name'] }}">
+                                            <i class="fas {{ $pIdx === 0 ? 'fa-user-check text-info' : 'fa-user text-muted' }} me-1"></i>
+                                            {{ $p['name'] }}
+                                        </span>
+                                        @if($pIdx === 0)
+                                            <span class="item-lead-badge">Lead</span>
+                                        @elseif(!empty($p['company_name']))
+                                            <span class="text-muted fs-9">{{ $p['company_name'] }}</span>
+                                        @endif
+                                    </div>
+                                @endforeach
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 6. STATUS & FEEDBACK -->
                 <div class="cd-it-subcard">
                     <div class="cd-subcard-header">
-                        <span class="cd-subcard-label">PANEL &amp; FEEDBACK</span>
-                        <span class="cd-it-panel-count">
-                            {{ ($intvs['extra_count'] ?? 0) + 1 }} {{ (($intvs['extra_count'] ?? 0) + 1) === 1 ? 'Panelist' : 'Panelists' }}
-                        </span>
+                        <span class="cd-subcard-label">STATUS &amp; FEEDBACK</span>
                     </div>
                     <div>
-                        <div class="cd-it-lead-name" title="{{ $intvs['lead_name'] }}">
-                            {{ $intvs['lead_name'] ?: 'Panel Assigned' }}
-                            <span class="cd-it-lead-tag">(Lead)</span>
-                        </div>
-                        <div class="d-flex align-items-center gap-1 mt-1 flex-wrap">
+                        <div class="d-flex align-items-center gap-1 flex-wrap">
                             <span class="cd-it-att-pill {{ $att['css_class'] ?? 'cit-fb-scheduled' }}">
                                 {{ $att['label'] ?? 'Scheduled' }}
                             </span>
@@ -190,7 +263,7 @@
 
             </div>
 
-            <!-- 6. BOTTOM ACTIVITY STRIP (CANDIDATE STAGE & SUBSTAGE) -->
+            <!-- Bottom Activity Strip (Candidate Stage & Substage) -->
             <div class="cd-it-card-bottom">
                 <div class="cd-it-bottom-left">
                     <div class="d-flex align-items-center gap-1">

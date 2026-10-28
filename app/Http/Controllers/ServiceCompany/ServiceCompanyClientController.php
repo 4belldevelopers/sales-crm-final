@@ -78,6 +78,7 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
                     abort(422, "Invalid sort parameter '{$rawSort}'. Expected: recent, oldest, name_asc, name_desc, jobs_desc.");
                 }
                 \Illuminate\Support\Facades\Log::warning("[ClientDirectorySort] Invalid sort parameter received: '{$rawSort}'. Falling back to 'recent'.");
+
                 return 'recent';
             })(),
         };
@@ -101,6 +102,7 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
             'name_desc', 'name-desc', 'z-a' => 'name_desc',
             default => (function () use ($rawSort) {
                 \Illuminate\Support\Facades\Log::warning("[ClientRequestSort] Invalid request sort parameter: '{$rawSort}'. Falling back to 'status_sla'.");
+
                 return 'status_sla';
             })(),
         };
@@ -2632,7 +2634,7 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
 
         $versionKey = 'clientsviewmore_version_user_'.$userId;
         $version = cache()->get($versionKey, 1);
-        $cacheKeySet = 'ats:clientsviewmore_v12:'.$userId.':'.$version.':'.md5(json_encode($cachePayload));
+        $cacheKeySet = 'ats:clientsviewmore_v13:'.$userId.':'.$version.':'.md5(json_encode($cachePayload));
         /* ----------------------------
         ⚡ Check DragonflyDB first
         ----------------------------- */
