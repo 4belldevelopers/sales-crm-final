@@ -222,14 +222,20 @@ class CandidateDrawerQueryService
             ];
         }
 
-        // Active Status Filter
+        // Active Status Filter (Strict Canonical Status Resolution)
         if (! empty($params['status_id'])) {
             $statusId = (int) $params['status_id'];
+            $statusTerms = ($statusId === 7 || $statusId === 9) ? [7, 9] : [$statusId];
             $filter[] = [
                 'bool' => [
                     'should' => [
-                        ['term' => ['master_status_id' => $statusId]],
-                        ['term' => ['job_master_status_id' => $statusId]],
+                        ['terms' => ['job_master_status_id' => $statusTerms]],
+                        [
+                            'bool' => [
+                                'must' => [['terms' => ['master_status_id' => $statusTerms]]],
+                                'must_not' => [['range' => ['job_master_status_id' => ['gt' => 0]]]],
+                            ],
+                        ],
                     ],
                     'minimum_should_match' => 1,
                 ],
@@ -284,12 +290,14 @@ class CandidateDrawerQueryService
                         'bool' => [
                             'should' => [
                                 ['term' => ['job_master_status_id' => 1]],
-                                ['term' => ['master_status_id' => 1]],
+                                [
+                                    'bool' => [
+                                        'must' => [['term' => ['master_status_id' => 1]]],
+                                        'must_not' => [['range' => ['job_master_status_id' => ['gt' => 0]]]],
+                                    ],
+                                ],
                             ],
-                            'must_not' => [
-                                ['term' => ['job_master_status_id' => 8]],
-                                ['term' => ['master_status_id' => 8]],
-                            ],
+                            'minimum_should_match' => 1,
                         ],
                     ],
                 ],
@@ -298,26 +306,38 @@ class CandidateDrawerQueryService
                         'bool' => [
                             'should' => [
                                 ['term' => ['job_master_status_id' => 2]],
-                                ['term' => ['master_status_id' => 2]],
+                                [
+                                    'bool' => [
+                                        'must' => [['term' => ['master_status_id' => 2]]],
+                                        'must_not' => [['range' => ['job_master_status_id' => ['gt' => 0]]]],
+                                    ],
+                                ],
                             ],
-                            'must_not' => [
-                                ['term' => ['job_master_status_id' => 8]],
-                                ['term' => ['master_status_id' => 8]],
-                            ],
+                            'minimum_should_match' => 1,
                         ],
                     ],
                 ],
                 'evaluation' => [
                     'filter' => [
                         'bool' => [
-                            'should' => [
-                                ['term' => ['job_master_status_id' => 3]],
-                                ['term' => ['master_status_id' => 3]],
+                            'must' => [
+                                [
+                                    'bool' => [
+                                        'should' => [
+                                            ['term' => ['job_master_status_id' => 3]],
+                                            [
+                                                'bool' => [
+                                                    'must' => [['term' => ['master_status_id' => 3]]],
+                                                    'must_not' => [['range' => ['job_master_status_id' => ['gt' => 0]]]],
+                                                ],
+                                            ],
+                                        ],
+                                        'minimum_should_match' => 1,
+                                    ],
+                                ],
                             ],
                             'must_not' => [
                                 ['exists' => ['field' => 'schedule_date']],
-                                ['term' => ['job_master_status_id' => 8]],
-                                ['term' => ['master_status_id' => 8]],
                             ],
                         ],
                     ],
@@ -327,12 +347,14 @@ class CandidateDrawerQueryService
                         'bool' => [
                             'should' => [
                                 ['term' => ['job_master_status_id' => 4]],
-                                ['term' => ['master_status_id' => 4]],
+                                [
+                                    'bool' => [
+                                        'must' => [['term' => ['master_status_id' => 4]]],
+                                        'must_not' => [['range' => ['job_master_status_id' => ['gt' => 0]]]],
+                                    ],
+                                ],
                             ],
-                            'must_not' => [
-                                ['term' => ['job_master_status_id' => 8]],
-                                ['term' => ['master_status_id' => 8]],
-                            ],
+                            'minimum_should_match' => 1,
                         ],
                     ],
                 ],
@@ -341,12 +363,14 @@ class CandidateDrawerQueryService
                         'bool' => [
                             'should' => [
                                 ['term' => ['job_master_status_id' => 5]],
-                                ['term' => ['master_status_id' => 5]],
+                                [
+                                    'bool' => [
+                                        'must' => [['term' => ['master_status_id' => 5]]],
+                                        'must_not' => [['range' => ['job_master_status_id' => ['gt' => 0]]]],
+                                    ],
+                                ],
                             ],
-                            'must_not' => [
-                                ['term' => ['job_master_status_id' => 8]],
-                                ['term' => ['master_status_id' => 8]],
-                            ],
+                            'minimum_should_match' => 1,
                         ],
                     ],
                 ],
@@ -355,12 +379,14 @@ class CandidateDrawerQueryService
                         'bool' => [
                             'should' => [
                                 ['term' => ['job_master_status_id' => 6]],
-                                ['term' => ['master_status_id' => 6]],
+                                [
+                                    'bool' => [
+                                        'must' => [['term' => ['master_status_id' => 6]]],
+                                        'must_not' => [['range' => ['job_master_status_id' => ['gt' => 0]]]],
+                                    ],
+                                ],
                             ],
-                            'must_not' => [
-                                ['term' => ['job_master_status_id' => 8]],
-                                ['term' => ['master_status_id' => 8]],
-                            ],
+                            'minimum_should_match' => 1,
                         ],
                     ],
                 ],
@@ -368,27 +394,37 @@ class CandidateDrawerQueryService
                     'filter' => [
                         'bool' => [
                             'should' => [
-                                ['term' => ['job_master_status_id' => 7]],
-                                ['term' => ['master_status_id' => 7]],
-                                ['term' => ['job_master_status_id' => 9]],
-                                ['term' => ['master_status_id' => 9]],
+                                ['terms' => ['job_master_status_id' => [7, 9]]],
+                                [
+                                    'bool' => [
+                                        'must' => [['terms' => ['master_status_id' => [7, 9]]]],
+                                        'must_not' => [['range' => ['job_master_status_id' => ['gt' => 0]]]],
+                                    ],
+                                ],
                             ],
-                            'must_not' => [
-                                ['term' => ['job_master_status_id' => 8]],
-                                ['term' => ['master_status_id' => 8]],
-                            ],
+                            'minimum_should_match' => 1,
                         ],
                     ],
                 ],
                 'interviews' => [
                     'filter' => [
                         'bool' => [
-                            'should' => [
+                            'must' => [
+                                [
+                                    'bool' => [
+                                        'should' => [
+                                            ['term' => ['job_master_status_id' => 3]],
+                                            [
+                                                'bool' => [
+                                                    'must' => [['term' => ['master_status_id' => 3]]],
+                                                    'must_not' => [['range' => ['job_master_status_id' => ['gt' => 0]]]],
+                                                ],
+                                            ],
+                                        ],
+                                        'minimum_should_match' => 1,
+                                    ],
+                                ],
                                 ['exists' => ['field' => 'schedule_date']],
-                            ],
-                            'must_not' => [
-                                ['term' => ['job_master_status_id' => 8]],
-                                ['term' => ['master_status_id' => 8]],
                             ],
                         ],
                     ],
@@ -398,8 +434,14 @@ class CandidateDrawerQueryService
                         'bool' => [
                             'should' => [
                                 ['term' => ['job_master_status_id' => 8]],
-                                ['term' => ['master_status_id' => 8]],
+                                [
+                                    'bool' => [
+                                        'must' => [['term' => ['master_status_id' => 8]]],
+                                        'must_not' => [['range' => ['job_master_status_id' => ['gt' => 0]]]],
+                                    ],
+                                ],
                             ],
+                            'minimum_should_match' => 1,
                         ],
                     ],
                 ],
