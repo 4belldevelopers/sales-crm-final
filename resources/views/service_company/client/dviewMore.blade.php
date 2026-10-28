@@ -9126,7 +9126,7 @@
         window.currentOjSegmentDirect = segment;
         var search = $('#kt_activitiesDirectClient #ojSearchInputDirect').val() || '';
         if (window.__activeClientDrawer && window.__activeClientDrawer.coordinator) {
-            window.__activeClientDrawer.coordinator.setFilter('offers', segment);
+            window.__activeClientDrawer.coordinator.getState('offers').filter = segment;
         }
         if (typeof directfetchCandidatesJoin === 'function') {
             directfetchCandidatesJoin(1, search, segment);
@@ -9848,21 +9848,19 @@
         var activeSelectedId = window.ClientStateManager && typeof window.ClientStateManager.getSelectedClientId === 'function'
             ? window.ClientStateManager.getSelectedClientId()
             : (window.activeSelectedClientId || null);
-        var directCurrentId = parseInt('{{ $directClientDetail->client_id ?: ($directClientDetail->from_company_id ?: $directClientDetail->company_id) }}', 10);
-        if (activeSelectedId && directCurrentId && parseInt(activeSelectedId, 10) !== directCurrentId) {
+        if (activeSelectedId && !isMatchingDirectClient(activeSelectedId)) {
             return;
         }
-        if (directCurrentId && window.ClientInterviewStoreDirect) {
-            window.ClientInterviewStoreDirect.fetch(directCurrentId, null, false, search);
+        var targetId = directTargetClientId || directDcClientId;
+        if (targetId && window.ClientInterviewStoreDirect) {
+            window.ClientInterviewStoreDirect.fetch(targetId, null, false, search);
         }
     }
     window.directfetchCandidatesInverViewTracker = directfetchCandidatesInverViewTracker;
 
-    $(document).ready(function() {
-        if (window.ClientInterviewStoreDirect) {
-            window.ClientInterviewStoreDirect.init();
-        }
-    });
+    if (window.ClientInterviewStoreDirect && typeof window.ClientInterviewStoreDirect.init === 'function') {
+        window.ClientInterviewStoreDirect.init();
+    }
 
     // ══════════════════════════════════════════════════════════════════════════
     // Client-Side First Jobs Engine (Direct Client Scope)
