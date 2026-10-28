@@ -73,7 +73,6 @@ class CandidateDrawerStageSegregationTest extends TestCase
                 $this->assertArrayHasKey('rejected', $aggs);
                 $this->assertArrayHasKey('sourcing', $aggs);
                 $this->assertArrayHasKey('evaluation', $aggs);
-                $this->assertArrayHasKey('interviews', $aggs);
 
                 return true;
             })
@@ -90,7 +89,6 @@ class CandidateDrawerStageSegregationTest extends TestCase
                     'offer' => ['doc_count' => 0],
                     'joined' => ['doc_count' => 0],
                     'rejected' => ['doc_count' => 0],
-                    'interviews' => ['doc_count' => 0],
                     'in_review' => ['doc_count' => 0],
                 ],
             ]);

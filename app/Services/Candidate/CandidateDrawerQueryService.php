@@ -320,25 +320,16 @@ class CandidateDrawerQueryService
                 'evaluation' => [
                     'filter' => [
                         'bool' => [
-                            'must' => [
+                            'should' => [
+                                ['term' => ['job_master_status_id' => 3]],
                                 [
                                     'bool' => [
-                                        'should' => [
-                                            ['term' => ['job_master_status_id' => 3]],
-                                            [
-                                                'bool' => [
-                                                    'must' => [['term' => ['master_status_id' => 3]]],
-                                                    'must_not' => [['range' => ['job_master_status_id' => ['gt' => 0]]]],
-                                                ],
-                                            ],
-                                        ],
-                                        'minimum_should_match' => 1,
+                                        'must' => [['term' => ['master_status_id' => 3]]],
+                                        'must_not' => [['range' => ['job_master_status_id' => ['gt' => 0]]]],
                                     ],
                                 ],
                             ],
-                            'must_not' => [
-                                ['exists' => ['field' => 'schedule_date']],
-                            ],
+                            'minimum_should_match' => 1,
                         ],
                     ],
                 ],
@@ -403,29 +394,6 @@ class CandidateDrawerQueryService
                                 ],
                             ],
                             'minimum_should_match' => 1,
-                        ],
-                    ],
-                ],
-                'interviews' => [
-                    'filter' => [
-                        'bool' => [
-                            'must' => [
-                                [
-                                    'bool' => [
-                                        'should' => [
-                                            ['term' => ['job_master_status_id' => 3]],
-                                            [
-                                                'bool' => [
-                                                    'must' => [['term' => ['master_status_id' => 3]]],
-                                                    'must_not' => [['range' => ['job_master_status_id' => ['gt' => 0]]]],
-                                                ],
-                                            ],
-                                        ],
-                                        'minimum_should_match' => 1,
-                                    ],
-                                ],
-                                ['exists' => ['field' => 'schedule_date']],
-                            ],
                         ],
                     ],
                 ],
@@ -547,7 +515,6 @@ class CandidateDrawerQueryService
             'offer' => (int) ($aggs['offer']['doc_count'] ?? 0),
             'joined' => (int) ($aggs['joined']['doc_count'] ?? 0),
             'rejected' => (int) ($aggs['rejected']['doc_count'] ?? 0),
-            'interviews' => (int) ($aggs['interviews']['doc_count'] ?? 0),
             'in_review' => (int) ($aggs['in_review']['doc_count'] ?? 0),
         ];
 

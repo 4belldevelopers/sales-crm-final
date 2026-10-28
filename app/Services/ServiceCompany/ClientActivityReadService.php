@@ -230,11 +230,18 @@ class ClientActivityReadService
     protected function resolveKpiTotals(ClientActivityQuery $query, array $clientJobIds, int $version): array
     {
         $kpiCacheKey = $query->toKpiCacheKey($version);
-        $cachedKpi = Redis::get($kpiCacheKey);
-        if ($cachedKpi) {
-            $decoded = json_decode($cachedKpi, true);
-            if (is_array($decoded)) {
-                return $decoded;
+        if ($query->forceRefresh) {
+            try {
+                Redis::del($kpiCacheKey);
+            } catch (\Throwable) {
+            }
+        } else {
+            $cachedKpi = Redis::get($kpiCacheKey);
+            if ($cachedKpi) {
+                $decoded = json_decode($cachedKpi, true);
+                if (is_array($decoded)) {
+                    return $decoded;
+                }
             }
         }
 
@@ -258,35 +265,41 @@ class ClientActivityReadService
         // 1. Timeline Counts (Pipeline & Offers)
         if (! empty($clientJobIds) && $this->elasticService->indexExists($indexTimeline)) {
             try {
-                $must = [['terms' => ['job_id' => $clientJobIds]]];
+                $baseMust = [['terms' => ['job_id' => $clientJobIds]]];
                 if ($timeRange) {
-                    $must[] = ['range' => ['created_at' => $timeRange]];
+                    $baseMust[] = ['range' => ['created_at' => $timeRange]];
                 }
 
-                $res = $this->elasticService->getClient()->search([
+                // Total timeline events
+                $totalRes = $this->elasticService->getClient()->count([
                     'index' => $indexTimeline,
-                    'size' => 0,
-                    'body' => [
-                        'query' => ['bool' => ['must' => $must]],
-                        'aggs' => [
-                            'by_process' => [
-                                'terms' => ['field' => 'master_process_name.keyword', 'size' => 10],
-                            ],
-                        ],
-                    ],
+                    'body' => ['query' => ['bool' => ['must' => $baseMust]]],
                 ]);
+                $totalTimeline = (int) ($totalRes['count'] ?? 0);
 
-                $buckets = $res['aggregations']['by_process']['buckets'] ?? [];
-                foreach ($buckets as $b) {
-                    $name = strtolower($b['key'] ?? '');
-                    $count = (int) ($b['doc_count'] ?? 0);
-                    if (in_array($name, ['offer', 'joined'], true)) {
-                        $kpis['offer_events'] += $count;
-                    } else {
-                        $kpis['pipeline_events'] += $count;
-                    }
-                }
-            } catch (\Throwable) {
+                // Offers & Joining events
+                $offerMust = $baseMust;
+                $offerMust[] = [
+                    'bool' => [
+                        'should' => [
+                            ['match' => ['master_process_name' => 'Offer']],
+                            ['match' => ['master_process_name' => 'Joined']],
+                            ['match' => ['master_process_name' => 'Hired']],
+                            ['match' => ['master_process_name' => 'Offered']],
+                        ],
+                        'minimum_should_match' => 1,
+                    ],
+                ];
+                $offerRes = $this->elasticService->getClient()->count([
+                    'index' => $indexTimeline,
+                    'body' => ['query' => ['bool' => ['must' => $offerMust]]],
+                ]);
+                $offerCount = (int) ($offerRes['count'] ?? 0);
+
+                $kpis['offer_events'] = $offerCount;
+                $kpis['pipeline_events'] = max(0, $totalTimeline - $offerCount);
+            } catch (\Throwable $e) {
+                Log::warning('ClientActivityReadService: Timeline count error', ['error' => $e->getMessage()]);
             }
         }
 
