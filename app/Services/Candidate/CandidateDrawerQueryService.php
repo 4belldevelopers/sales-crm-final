@@ -103,6 +103,9 @@ class CandidateDrawerQueryService
         'company_logo',
         'logo_logical_path',
         'logo',
+        'schedule_date',
+        'timezone_abbreviation',
+        'schedule_to_time',
     ];
 
     public function __construct(ElasticService $elasticService, ClientCandidateVersionStore $versionStore)
@@ -283,6 +286,10 @@ class CandidateDrawerQueryService
                                 ['term' => ['job_master_status_id' => 1]],
                                 ['term' => ['master_status_id' => 1]],
                             ],
+                            'must_not' => [
+                                ['term' => ['job_master_status_id' => 8]],
+                                ['term' => ['master_status_id' => 8]],
+                            ],
                         ],
                     ],
                 ],
@@ -292,6 +299,10 @@ class CandidateDrawerQueryService
                             'should' => [
                                 ['term' => ['job_master_status_id' => 2]],
                                 ['term' => ['master_status_id' => 2]],
+                            ],
+                            'must_not' => [
+                                ['term' => ['job_master_status_id' => 8]],
+                                ['term' => ['master_status_id' => 8]],
                             ],
                         ],
                     ],
@@ -303,6 +314,11 @@ class CandidateDrawerQueryService
                                 ['term' => ['job_master_status_id' => 3]],
                                 ['term' => ['master_status_id' => 3]],
                             ],
+                            'must_not' => [
+                                ['exists' => ['field' => 'schedule_date']],
+                                ['term' => ['job_master_status_id' => 8]],
+                                ['term' => ['master_status_id' => 8]],
+                            ],
                         ],
                     ],
                 ],
@@ -312,6 +328,10 @@ class CandidateDrawerQueryService
                             'should' => [
                                 ['term' => ['job_master_status_id' => 4]],
                                 ['term' => ['master_status_id' => 4]],
+                            ],
+                            'must_not' => [
+                                ['term' => ['job_master_status_id' => 8]],
+                                ['term' => ['master_status_id' => 8]],
                             ],
                         ],
                     ],
@@ -323,6 +343,10 @@ class CandidateDrawerQueryService
                                 ['term' => ['job_master_status_id' => 5]],
                                 ['term' => ['master_status_id' => 5]],
                             ],
+                            'must_not' => [
+                                ['term' => ['job_master_status_id' => 8]],
+                                ['term' => ['master_status_id' => 8]],
+                            ],
                         ],
                     ],
                 ],
@@ -333,6 +357,10 @@ class CandidateDrawerQueryService
                                 ['term' => ['job_master_status_id' => 6]],
                                 ['term' => ['master_status_id' => 6]],
                             ],
+                            'must_not' => [
+                                ['term' => ['job_master_status_id' => 8]],
+                                ['term' => ['master_status_id' => 8]],
+                            ],
                         ],
                     ],
                 ],
@@ -342,6 +370,10 @@ class CandidateDrawerQueryService
                             'should' => [
                                 ['term' => ['job_master_status_id' => 7]],
                                 ['term' => ['master_status_id' => 7]],
+                                ['term' => ['job_master_status_id' => 9]],
+                                ['term' => ['master_status_id' => 9]],
+                            ],
+                            'must_not' => [
                                 ['term' => ['job_master_status_id' => 8]],
                                 ['term' => ['master_status_id' => 8]],
                             ],
@@ -352,8 +384,21 @@ class CandidateDrawerQueryService
                     'filter' => [
                         'bool' => [
                             'should' => [
-                                ['term' => ['job_master_status_id' => 3]],
-                                ['term' => ['master_status_id' => 3]],
+                                ['exists' => ['field' => 'schedule_date']],
+                            ],
+                            'must_not' => [
+                                ['term' => ['job_master_status_id' => 8]],
+                                ['term' => ['master_status_id' => 8]],
+                            ],
+                        ],
+                    ],
+                ],
+                'in_review' => [
+                    'filter' => [
+                        'bool' => [
+                            'should' => [
+                                ['term' => ['job_master_status_id' => 8]],
+                                ['term' => ['master_status_id' => 8]],
                             ],
                         ],
                     ],
@@ -461,6 +506,7 @@ class CandidateDrawerQueryService
             'joined' => (int) ($aggs['joined']['doc_count'] ?? 0),
             'rejected' => (int) ($aggs['rejected']['doc_count'] ?? 0),
             'interviews' => (int) ($aggs['interviews']['doc_count'] ?? 0),
+            'in_review' => (int) ($aggs['in_review']['doc_count'] ?? 0),
         ];
 
         return [

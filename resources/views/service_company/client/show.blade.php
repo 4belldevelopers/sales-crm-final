@@ -4894,6 +4894,9 @@ use Carbon\Carbon;
                                             <span class="cd-cand-count-badge" id="cdCandidateCountBadge" role="button" title="View All Pipeline Candidates" aria-label="View all candidates">
                                                 <span id="cdCandidateCountText">0</span> Candidates
                                             </span>
+                                            <span class="badge badge-light-warning text-warning fw-bold fs-8 cursor-pointer" id="cdInReviewCountBadge" style="display:none; padding:4px 8px; border-radius:6px; border:1px solid #fde047;" role="button" title="View In Review candidates" aria-label="View In Review candidates">
+                                                <span id="cdInReviewCountText">0</span> In Review
+                                            </span>
                                         </div>
                                         <div class="cd-cand-subtitle">Pipeline and submitted talent for this client</div>
                                     </div>
@@ -6661,6 +6664,12 @@ use Carbon\Carbon;
       <div class="modal-body p-6">
         <div class="stage_body_content" id="stage_body_content"></div>
       </div>
+      <div class="modal-footer flex-stack py-3 px-6">
+        <button type="button" class="btn btn-sm btn-light" data-bs-dismiss="modal" data-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-sm btn-primary" id="custom_stage_submit">
+          <span class="indicator-label"><span class="csdChangeLabel">Submit</span> <i class="fa fa-arrow-right ms-1"></i></span>
+        </button>
+      </div>
     </div>
   </div>
 </div>
@@ -7252,12 +7261,8 @@ use Carbon\Carbon;
                         }
                     });
 
-                    // Stage counts computation
-                    if (res.meta && res.meta.stage_counts) {
-                        self.stageCounts = res.meta.stage_counts;
-                    } else {
-                        self.calculateStageCounts(self.allCandidates);
-                    }
+                    // Compute stage counts strictly from hydrated candidates (Guarantees 100% list-badge parity)
+                    self.calculateStageCounts(self.allCandidates);
 
                     self.state = 'READY';
                     $('#cdCandSkeletonLoader').hide();
@@ -7295,30 +7300,66 @@ use Carbon\Carbon;
             return xhr;
         },
 
+        isInReview: function(cand) {
+            if (!cand) return false;
+            var jSid = parseInt(cand.job_master_status_id, 10);
+            var mSid = parseInt(cand.master_status_id, 10);
+            var sName = String(cand.child_status_name || cand.master_status_name || cand.name || '').toLowerCase().trim();
+            if (jSid === 8 || mSid === 8) return true;
+            if (jSid <= 0 && (sName === 'inreview' || sName === 'in review' || sName.indexOf('inreview') !== -1 || sName.indexOf('in review') !== -1)) return true;
+            return false;
+        },
+
+        getCandidateStage: function(cand) {
+            if (!cand) return 'unknown';
+
+            // 1. Strict InReview boundary: Never included in any of the 8 pipeline stages
+            if (this.isInReview(cand)) {
+                return 'inreview';
+            }
+
+            var jSid = parseInt(cand.job_master_status_id, 10);
+            var mSid = parseInt(cand.master_status_id, 10);
+            var sid = (jSid > 0) ? jSid : ((mSid > 0) ? mSid : 0);
+            var sName = String(cand.child_status_name || cand.master_status_name || cand.name || '').toLowerCase().trim();
+
+            // 2. Active Scheduled Interviews (strictly isolated from Evaluation)
+            var hasScheduleDate = cand.schedule_date && String(cand.schedule_date).trim() !== '' && String(cand.schedule_date) !== 'null';
+            var hasInterviewCount = cand.interview_count && parseInt(cand.interview_count, 10) > 0;
+            var hasInterviewName = sName.indexOf('interview') !== -1;
+            if (hasScheduleDate || hasInterviewCount || (hasInterviewName && sid === 3)) {
+                return 'interviews';
+            }
+
+            // 3. Exact 1:1 Stage Boundaries (Mutual Exclusion)
+            if (sid === 1 || sName === 'sourcing' || sName.indexOf('sourc') !== -1) {
+                return 'sourcing';
+            }
+            if (sid === 2 || sName === 'screening' || sName.indexOf('screen') !== -1) {
+                return 'screening';
+            }
+            if (sid === 3 || sName === 'evaluation' || sName.indexOf('eval') !== -1) {
+                return 'evaluation';
+            }
+            if (sid === 4 || sName.indexOf('negot') !== -1) {
+                return 'negotiations';
+            }
+            if (sid === 5 || sName.indexOf('offer') !== -1) {
+                return 'offer';
+            }
+            if (sid === 6 || sName.indexOf('join') !== -1 || sName.indexOf('onboard') !== -1) {
+                return 'joined';
+            }
+            if (sid === 7 || sid === 9 || sName.indexOf('reject') !== -1) {
+                return 'rejected';
+            }
+
+            return 'unknown';
+        },
+
         matchesStage: function(cand, stage) {
             if (!stage || stage === 'all') return true;
-            var sid = parseInt(cand.master_status_id || cand.job_master_status_id || 0, 10);
-            var sName = String(cand.child_status_name || cand.master_status_name || cand.name || '').toLowerCase();
-            switch (stage) {
-                case 'sourcing':
-                    return sid === 1 || sName.includes('sourc') || sName.includes('inreview') || sName.includes('review') || sName.includes('sendmail');
-                case 'screening':
-                    return sid === 2 || sName.includes('screen');
-                case 'evaluation':
-                    return sid === 3 || sName.includes('eval') || sName.includes('interview');
-                case 'negotiations':
-                    return sid === 4 || sName.includes('negot');
-                case 'offer':
-                    return sid === 5 || sName.includes('offer');
-                case 'joined':
-                    return sid === 6 || sName.includes('join') || sName.includes('onboard');
-                case 'rejected':
-                    return sid === 7 || sid === 8 || sName.includes('reject');
-                case 'interviews':
-                    return sid === 3 || sName.includes('interview') || (cand.interview_count && cand.interview_count > 0);
-                default:
-                    return true;
-            }
+            return this.getCandidateStage(cand) === stage;
         },
 
         calculateStageCounts: function(list) {
@@ -7330,18 +7371,15 @@ use Carbon\Carbon;
                 offer: 0,
                 joined: 0,
                 rejected: 0,
-                interviews: 0
+                interviews: 0,
+                in_review: 0
             };
             var self = this;
             (list || []).forEach(function(cand) {
-                if (self.matchesStage(cand, 'sourcing')) counts.sourcing++;
-                if (self.matchesStage(cand, 'screening')) counts.screening++;
-                if (self.matchesStage(cand, 'evaluation')) counts.evaluation++;
-                if (self.matchesStage(cand, 'negotiations')) counts.negotiations++;
-                if (self.matchesStage(cand, 'offer')) counts.offer++;
-                if (self.matchesStage(cand, 'joined')) counts.joined++;
-                if (self.matchesStage(cand, 'rejected')) counts.rejected++;
-                if (self.matchesStage(cand, 'interviews')) counts.interviews++;
+                var stage = self.getCandidateStage(cand);
+                if (counts.hasOwnProperty(stage)) {
+                    counts[stage]++;
+                }
             });
             this.stageCounts = counts;
             return counts;
@@ -7365,10 +7403,10 @@ use Carbon\Carbon;
             var term = (this.searchTerm || '').toLowerCase().trim();
 
             var filtered = (this.allCandidates || []).filter(function(cand) {
-                // 1. Stage filter
+                // 1. Stage filter (Strict Stage Boundary)
                 if (!self.matchesStage(cand, stage)) return false;
 
-                // 2. Search query filter
+                // 2. Search query filter within selected tab
                 if (term) {
                     var corpus = [
                         cand.full_name, cand.first_name, cand.last_name,
@@ -7391,11 +7429,29 @@ use Carbon\Carbon;
             var formatted = (relation === 'gte') ? (num.toLocaleString() + '+') : num.toLocaleString();
             $('#cdCandidateCountText').text(formatted);
             $('#tabBadgeCandidates, #cdCandidatesNavBadgeInternal').text(formatted).show();
+
+            // InReview count & badge indicator
+            var inReviewCount = (this.stageCounts && this.stageCounts.in_review !== undefined)
+                ? this.stageCounts.in_review
+                : (this.allCandidates || []).filter(cand => this.isInReview(cand)).length;
+            if (inReviewCount > 0) {
+                $('#cdInReviewCountText').text(inReviewCount);
+                $('#cdInReviewCountBadge').show();
+            } else {
+                $('#cdInReviewCountBadge').hide();
+            }
         },
 
         renderRows: function() {
             if (!this.data || this.data.length === 0) {
                 $('#candidatetList').empty();
+                var stageLabel = (this.activeStage && this.activeStage !== 'all')
+                    ? (this.activeStage.charAt(0).toUpperCase() + this.activeStage.slice(1)) + ' stage'
+                    : 'this client';
+                var emptyMsg = this.searchTerm
+                    ? 'No candidates match "' + $('<div>').text(this.searchTerm).html() + '" in ' + stageLabel + '.'
+                    : 'No candidates currently in ' + stageLabel + '.';
+                $('#cdCandEmptyState .text-dark').text(emptyMsg);
                 $('#cdCandEmptyState').show();
                 $('#cdCandidateTableWrap').hide();
                 $('#paginationcandidate').empty();
@@ -7916,6 +7972,8 @@ use Carbon\Carbon;
                 $('#kt_activitiesClient .cd-cand-subtab').removeClass('active').attr('aria-selected', 'false');
                 $(this).addClass('active').attr('aria-selected', 'true');
                 self.activeStage = stage;
+                self.calculateStageCounts(self.allCandidates);
+                self.updateAllStageBadges();
                 self.filterAndRender();
             });
 
@@ -7924,6 +7982,14 @@ use Carbon\Carbon;
                 if (e && typeof e.preventDefault === 'function') e.preventDefault();
                 $('#kt_activitiesClient .cd-cand-subtab').removeClass('active').attr('aria-selected', 'false');
                 self.activeStage = 'all';
+                self.filterAndRender();
+            });
+
+            // 2b. Click on In Review count badge -> Show In Review candidates
+            $(document).on('click.internalDrawerCand', '#cdInReviewCountBadge', function(e) {
+                if (e && typeof e.preventDefault === 'function') e.preventDefault();
+                $('#kt_activitiesClient .cd-cand-subtab').removeClass('active').attr('aria-selected', 'false');
+                self.activeStage = 'inreview';
                 self.filterAndRender();
             });
 
@@ -8002,6 +8068,7 @@ use Carbon\Carbon;
                 var id = $(this).data('row-id');
                 if (!id) return;
                 $('#stage_body_content').html('<div class="text-center py-10 text-muted"><i class="fas fa-spinner fa-spin me-2"></i>Loading stage details...</div>');
+                $('#stage_sub_stage').modal('show');
                 var url = '{{ route("service_company.job-applications.stage_body_content", ":id") }}'.replace(':id', id);
                 $.ajax({
                     type: 'GET',
@@ -8015,6 +8082,56 @@ use Carbon\Carbon;
                     },
                     error: function() {
                         $('#stage_body_content').html('<div class="text-center py-10 text-danger">Failed to load stage configuration.</div>');
+                    }
+                });
+            });
+
+            // 6. Stage Change Submit inside modal shell
+            $(document).on('click.internalDrawerCand', '#custom_stage_submit', function(e) {
+                e.preventDefault();
+                var $btn = $(this);
+                if ($btn.prop('disabled')) return;
+
+                var $form = $('#status_frm');
+                if (!$form.length) return;
+
+                var chosenStatusId = $form.find('input[name="master_status"]:checked').val() || $form.find('input.master_status:checked').val();
+                if (!chosenStatusId) {
+                    if (typeof Swal !== 'undefined') {
+                        Swal.fire('Warning', 'Please select a stage to continue.', 'warning');
+                    }
+                    return;
+                }
+
+                $btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-2"></span> Updating...');
+
+                $.ajax({
+                    url: '{{ route("service_company.job-applications.stage_submit") }}',
+                    type: 'POST',
+                    data: $form.serialize(),
+                    success: function(res) {
+                        $btn.prop('disabled', false).html('<span class="indicator-label"><span class="csdChangeLabel">Submit</span> <i class="fa fa-arrow-right ms-1"></i></span>');
+                        $('#stage_sub_stage_close').click();
+
+                        if (typeof Swal !== 'undefined') {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Stage Updated',
+                                text: 'Candidate stage has been successfully updated.',
+                                timer: 1500,
+                                showConfirmButton: false
+                            });
+                        }
+
+                        // Immediately fetch fresh dataset & update all badges and lists
+                        self.fetch(1, null, true);
+                    },
+                    error: function(xhr) {
+                        $btn.prop('disabled', false).html('<span class="indicator-label"><span class="csdChangeLabel">Submit</span> <i class="fa fa-arrow-right ms-1"></i></span>');
+                        var errMsg = xhr.responseJSON?.message || 'Failed to update candidate stage. Please try again.';
+                        if (typeof Swal !== 'undefined') {
+                            Swal.fire('Error', errMsg, 'error');
+                        }
                     }
                 });
             });

@@ -3270,7 +3270,7 @@ window.ClientExportManager = {
             '# =============================================================================='
         ];
 
-        var headers = ['Company Name', 'Industry', 'Location', 'Jobs Hiring', 'Jobs Hold', 'Jobs Closed', 'Sourced', 'Evaluated', 'Interviews', 'Offers', 'Joined', 'Client Type', 'Connected Date', 'Last Activity'];
+        var headers = ['Company Name', 'Industry', 'Location', 'City', 'State', 'Country', 'Jobs Hiring', 'Jobs Hold', 'Jobs Closed', 'Sourced', 'Evaluated', 'Interviews', 'Offers', 'Joined', 'Client Type', 'Connected Date', 'Last Activity'];
 
         rows.push(manifestLines.join('\r\n'));
         rows.push(headers.map(function(h) { return '"' + h + '"'; }).join(','));
@@ -3279,7 +3279,17 @@ window.ClientExportManager = {
             var $r = $(this);
             var name = $r.find('.cl-name, .cl-details-title').first().text().trim();
             var ind = $r.find('.cl-ind, .cl-details-ind').first().text().trim();
-            var loc = $r.find('.tbl-cell-location, .cl-card-loc-text').first().text().trim().replace(/\s+/g, ' ');
+
+            var city = $r.find('.cl-loc-city').first().text().trim();
+            var state = $r.find('.cl-loc-state').first().text().trim();
+            var country = $r.find('.cl-loc-country').first().text().trim();
+            var locParts = [];
+            if (city) locParts.push(city);
+            if (state) locParts.push(state);
+            if (country) locParts.push(country);
+            var loc = locParts.length > 0 ? locParts.join(', ') : ($r.find('.cl-loc-lines, .cl-subcard-loc').first().text().trim().replace(/\s+/g, ' ') || '');
+            if (loc === '—' || loc === '-') loc = '';
+
             var hiringJobs = $r.find('.tbl-cell-jobs .cl-job-line:eq(0) .cl-job-num').text().trim() || '0';
             var holdJobs = $r.find('.tbl-cell-jobs .cl-job-line:eq(1) .cl-job-num').text().trim() || '0';
             var closedJobs = $r.find('.tbl-cell-jobs .cl-job-line:eq(2) .cl-job-num').text().trim() || '0';
@@ -3297,6 +3307,9 @@ window.ClientExportManager = {
                     sanitize(name),
                     sanitize(ind),
                     sanitize(loc),
+                    sanitize(city),
+                    sanitize(state),
+                    sanitize(country),
                     hiringJobs,
                     holdJobs,
                     closedJobs,
@@ -3378,7 +3391,14 @@ window.ClientExportManager = {
             const $r = $(this);
             const name = $r.find('.cl-name, .cl-details-title').first().text().trim() || 'Client Company';
             const ind = $r.find('.cl-ind, .cl-details-ind').first().text().trim() || '—';
-            const loc = $r.find('.tbl-cell-location, .cl-card-loc-text').first().text().trim().replace(/\s+/g, ' ') || '—';
+            const city = $r.find('.cl-loc-city').first().text().trim();
+            const state = $r.find('.cl-loc-state').first().text().trim();
+            const country = $r.find('.cl-loc-country').first().text().trim();
+            const locParts = [];
+            if (city) locParts.push(city);
+            if (state) locParts.push(state);
+            if (country) locParts.push(country);
+            const loc = locParts.length > 0 ? locParts.join(', ') : ($r.find('.cl-loc-lines, .cl-subcard-loc').first().text().trim().replace(/\s+/g, ' ') || '—');
             const type = $r.find('.cl-type-name').text().trim() || 'Internal Client';
             const hiringJobs = $r.find('.tbl-cell-jobs .cl-job-line:eq(0) .cl-job-num').text().trim() || '0';
             const holdJobs = $r.find('.tbl-cell-jobs .cl-job-line:eq(1) .cl-job-num').text().trim() || '0';
