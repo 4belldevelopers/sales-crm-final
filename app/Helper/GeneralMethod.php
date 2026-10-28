@@ -10015,6 +10015,10 @@ END:VCALENDAR";
                 ],
             ]);
 
+            // Atomically invalidate candidate & interview counters for this client
+            if (!empty($row->company_id)) {
+                self::invalidateClientCandidateCounters($row->company_id, $row->client_id ?? null, $row->from_company_id ?? null);
+            }
         }
 
         return $response;
@@ -10258,7 +10262,6 @@ END:VCALENDAR";
                     'detect_noop' => false,
                 ],
             ]);
-
         }
 
         return $response;
@@ -10636,7 +10639,6 @@ END:VCALENDAR";
                     'detect_noop' => false,
                 ],
             ]);
-
         }
 
         return $response;
@@ -10747,7 +10749,6 @@ END:VCALENDAR";
                     'detect_noop' => false,
                 ],
             ]);
-
         }
 
         return $response;
@@ -12925,7 +12926,6 @@ END:VCALENDAR";
                     'detect_noop' => false,
                 ],
             ]);
-
         }
 
         return $response;
@@ -15731,8 +15731,8 @@ END:VCALENDAR";
     {
         $company_id = (int) ($company_id ?: (auth()->user()?->company_id ?? 0));
         $cacheKey = $company_id > 0
-            ? "ats:kpi:internal_client_cand:{$company_id}:{$client_id}"
-            : "ats:kpi:internal_client_cand:{$client_id}";
+            ? "ats:kpi:internal_client_cand_v2:{$company_id}:{$client_id}"
+            : "ats:kpi:internal_client_cand_v2:{$client_id}";
 
         return cache()->remember($cacheKey, 180, function () use ($client_id, $company_id) {
             $elasticService = app(ElasticService::class);
@@ -15804,7 +15804,7 @@ END:VCALENDAR";
                     : [
                         'bool' => [
                             'must' => [
-                                ['term' => ['client_id' => $client_id]],
+                                ['term' => ['client_id' => (int) $client_id]],
                             ],
                         ],
                     ];
@@ -15815,15 +15815,12 @@ END:VCALENDAR";
                     'body' => [
                         'size' => 0,
                         'query' => $interviewQuery,
-                        'aggs' => [
-                            'interviewees' => ['cardinality' => ['field' => 'candidate_id']],
-                            'all_interview' => ['value_count' => ['field' => 'id']],
-                        ],
+                        'track_total_hits' => true,
                     ],
                 ];
                 $responseInterview = $elasticService->getClient()->search($paramsInterview);
-                $allInterview = $responseInterview['aggregations']['interviewees']['value']
-                    ?? ($responseInterview['aggregations']['all_interview']['value'] ?? ($responseInterview['hits']['total']['value'] ?? 0));
+                $totalHitData = $responseInterview['hits']['total'] ?? 0;
+                $allInterview = is_array($totalHitData) ? ($totalHitData['value'] ?? 0) : (int) $totalHitData;
             }
 
             return (object) [
@@ -15910,7 +15907,7 @@ END:VCALENDAR";
      */
     public static function DirectClientCandidatesCountList($from_company_id, $to_company_id)
     {
-        $cacheKey = "ats:kpi:direct_client_cand:{$from_company_id}:{$to_company_id}";
+        $cacheKey = "ats:kpi:direct_client_cand_v2:{$from_company_id}:{$to_company_id}";
 
         return cache()->remember($cacheKey, 900, function () use ($from_company_id, $to_company_id) {
             $elasticService = app(ElasticService::class);
@@ -15973,16 +15970,13 @@ END:VCALENDAR";
                     'body' => [
                         'size' => 0,
                         'query' => \App\Services\Interview\InterviewTenantScope::forClient((int) $to_company_id, (int) $from_company_id, 'direct'),
-                        'aggs' => [
-                            'interviewees' => ['cardinality' => ['field' => 'candidate_id']],
-                            'all_interview' => ['value_count' => ['field' => 'id']],
-                        ],
+                        'track_total_hits' => true,
                     ],
                 ];
 
                 $responseInterview = $elasticService->getClient()->search($paramsInterview);
-                $allInterview = $responseInterview['aggregations']['interviewees']['value']
-                    ?? ($responseInterview['aggregations']['all_interview']['value'] ?? ($responseInterview['hits']['total']['value'] ?? 0));
+                $totalHitData = $responseInterview['hits']['total'] ?? 0;
+                $allInterview = is_array($totalHitData) ? ($totalHitData['value'] ?? 0) : (int) $totalHitData;
             }
 
             return (object) [
@@ -16012,13 +16006,19 @@ END:VCALENDAR";
             if ($cl > 0) {
                 cache()->forget("ats:kpi:internal_client_cand:{$comp}:{$cl}");
                 cache()->forget("ats:kpi:internal_client_cand:{$cl}");
+                cache()->forget("ats:kpi:internal_client_cand_v2:{$comp}:{$cl}");
+                cache()->forget("ats:kpi:internal_client_cand_v2:{$cl}");
                 cache()->forget("ats:client_kpi_v9:{$comp}:{$cl}");
+                cache()->forget("ats:client_kpi_v10:{$comp}:{$cl}");
             }
             $dComp = (int) $directCompanyId;
             if ($dComp > 0) {
                 cache()->forget("ats:kpi:direct_client_cand:{$dComp}:{$comp}");
                 cache()->forget("ats:kpi:direct_client_cand:{$comp}:{$dComp}");
+                cache()->forget("ats:kpi:direct_client_cand_v2:{$dComp}:{$comp}");
+                cache()->forget("ats:kpi:direct_client_cand_v2:{$comp}:{$dComp}");
                 cache()->forget("ats:direct_client_kpi_v9:{$comp}:{$dComp}");
+                cache()->forget("ats:direct_client_kpi_v10:{$comp}:{$dComp}");
             }
             // Bump monotonic tenant pipeline revision token
             cache()->increment("tenant_{$comp}_pipeline_rev");
