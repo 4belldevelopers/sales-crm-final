@@ -1566,6 +1566,7 @@
           .cd-subcard-header-icon.indigo { background: #eef2ff !important; color: #4f46e5 !important; }
           .cd-subcard-header-icon.teal   { background: #f0fdf4 !important; color: #059669 !important; }
           .cd-subcard-header-icon.pink   { background: #fdf2f8 !important; color: #db2777 !important; }
+          .cd-subcard-header-icon.red    { background: #fef2f2 !important; color: #ef4444 !important; }
 
           .cd-subcard-title {
             font-size: 13px !important;
@@ -1925,16 +1926,28 @@
           .cd-loc-city-line {
             display: flex !important;
             align-items: center !important;
-            gap: 6px !important;
+            gap: 7px !important;
             font-size: 12.5px !important;
             line-height: 1.35 !important;
             margin-bottom: 4px !important;
             word-break: break-word !important;
           }
+          .cd-loc-city-icon {
+            width: 14px !important;
+            height: 14px !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            font-size: 11.5px !important;
+            line-height: 1 !important;
+            flex-shrink: 0 !important;
+          }
           .cd-loc-city-name,
           .cd-loc-title {
             font-weight: 700 !important;
             color: #0f172a !important;
+            font-size: 12.5px !important;
+            line-height: 1.35 !important;
           }
           .cd-loc-state-name {
             font-weight: 500 !important;
@@ -1950,14 +1963,14 @@
             line-height: 1.4 !important;
             word-break: break-word !important;
             margin-bottom: 3px !important;
-            padding-left: 17px !important;
+            padding-left: 21px !important;
           }
           .cd-loc-meta-line {
             display: flex !important;
             align-items: center !important;
             gap: 6px !important;
             margin-top: 4px !important;
-            padding-left: 17px !important;
+            padding-left: 21px !important;
           }
           .cd-loc-meta-chip,
           .cd-loc-postcode {
@@ -2075,18 +2088,41 @@
             margin-bottom: 8px !important;
           }
           .cd-contact-avatar-box {
-            width: 38px !important;
-            height: 38px !important;
+            width: 40px !important;
+            height: 40px !important;
+            min-width: 40px !important;
             border-radius: 8px !important;
-            background: #dcfce7 !important;
-            border: 1px solid #bbf7d0 !important;
-            color: #15803d !important;
-            display: flex !important;
+            background: #047857 !important;
+            border: 1px solid #065f46 !important;
+            color: #ffffff !important;
+            display: inline-flex !important;
             align-items: center !important;
             justify-content: center !important;
-            font-size: 13px !important;
+            font-size: 13.5px !important;
             font-weight: 700 !important;
             flex-shrink: 0 !important;
+            position: relative !important;
+            overflow: hidden !important;
+            box-shadow: 0 1px 3px rgba(4, 120, 87, 0.2) !important;
+            text-transform: uppercase !important;
+            letter-spacing: 0.3px !important;
+          }
+          .cd-contact-avatar-box img,
+          .cd-contact-avatar-img {
+            width: 100% !important;
+            height: 100% !important;
+            object-fit: cover !important;
+            display: block !important;
+          }
+          .cd-contact-avatar-initials {
+            color: #ffffff !important;
+            font-size: 13.5px !important;
+            font-weight: 700 !important;
+            line-height: 1 !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            text-transform: uppercase !important;
           }
           .cd-contact-master-info {
             flex: 1 !important;
@@ -2730,15 +2766,18 @@
             height: 40px !important;
             min-width: 40px !important;
             border-radius: 9px !important;
-            display: flex !important;
+            display: inline-flex !important;
             align-items: center !important;
             justify-content: center !important;
             font-size: 14px !important;
             font-weight: 700 !important;
             color: #ffffff !important;
+            background: #047857 !important;
+            border: 1px solid #065f46 !important;
             flex-shrink: 0 !important;
             text-transform: uppercase !important;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08) !important;
+            overflow: hidden !important;
           }
           .cd-contact-profile-meta {
             flex: 1 1 auto !important;
@@ -4262,13 +4301,45 @@
                 $tagsArr = ['Enterprise Staffing', 'Talent Marketplace', 'Direct Placement'];
             }
 
+            $companyTypeMap = GeneralMethod::industries_type_arr();
             $d_company_type_val = '';
-            if (@$directClientDetail->industries_type > 0 && isset($companyType[@$directClientDetail->industries_type])) {
-                $rawDComp = $companyType[@$directClientDetail->industries_type];
-                $d_company_type_val = is_string($rawDComp) ? $rawDComp : (is_object($rawDComp) ? (string)($rawDComp->name ?? '') : '');
+
+            // Authoritative Company Type resolution:
+            // 1. Direct from directClientDetail properties (industries_type / client_company_type / company_type)
+            $rawCompType = null;
+            if (isset($directClientDetail->industries_type) && $directClientDetail->industries_type !== '' && $directClientDetail->industries_type !== null) {
+                $rawCompType = $directClientDetail->industries_type;
+            } elseif (isset($directClientDetail->client_company_type) && $directClientDetail->client_company_type !== '' && $directClientDetail->client_company_type !== null) {
+                $rawCompType = $directClientDetail->client_company_type;
+            } elseif (isset($directClientDetail->company_type) && $directClientDetail->company_type !== '' && $directClientDetail->company_type !== null) {
+                $rawCompType = $directClientDetail->company_type;
             }
+
+            // 2. Fallback to authoritative tenant company settings in companies table (cached in Redis)
+            if ($rawCompType === null || $rawCompType === '') {
+                $targetCompId = $directClientDetail->company_id ?? ($directClientDetail->from_company_id ?? ($directClientDetail->companies_id ?? null));
+                if (!empty($targetCompId)) {
+                    $rawCompType = cache()->remember('auth_comp_ind_type_' . $targetCompId, 86400, function() use ($targetCompId) {
+                        return \Illuminate\Support\Facades\DB::table('companies')->where('id', $targetCompId)->value('industries_type');
+                    });
+                }
+            }
+
+            // Map integer/string to authoritative label (e.g., 0 => 'Public', 1 => 'Private')
+            if ($rawCompType !== null && $rawCompType !== '') {
+                if (is_numeric($rawCompType)) {
+                    $typeInt = (int)$rawCompType;
+                    if (isset($companyTypeMap[$typeInt])) {
+                        $d_company_type_val = $companyTypeMap[$typeInt];
+                    }
+                } elseif (is_string($rawCompType)) {
+                    $d_company_type_val = trim($rawCompType);
+                }
+            }
+
+            // Fallback: Default to 'Private' if not configured
             if (empty($d_company_type_val)) {
-                $d_company_type_val = 'Direct Corporate Client';
+                $d_company_type_val = 'Private';
             }
 
             // Workforce Scale Range calculation
@@ -4331,14 +4402,50 @@
             $emailClean = @$directClientDetail->email ?: @$directClientDetail->companies_email;
             $phoneClean = @$directClientDetail->phone ?: @$directClientDetail->companies_phone;
 
-            $primaryName = @$directClientDetail->contact_person ?? (@$directClientDetail->name ?? 'Primary Contact');
+            // Primary SPOC resolution:
+            // Prefer designated contact from client_contact_arr (first contact where is_primary == 1 or first contact)
+            $primaryContact = collect($client_contact_arr ?? [])->firstWhere('is_primary', 1)
+                ?? (is_iterable($client_contact_arr ?? null) && count($client_contact_arr) > 0 ? collect($client_contact_arr)->first() : null);
+
+            if ($primaryContact) {
+                $primaryName = trim((string)($primaryContact->contact_person_name ?? ($primaryContact->name ?? '')));
+                if (empty($primaryName)) {
+                    $primaryName = @$directClientDetail->contact_person ?? (@$directClientDetail->name ?? 'Primary Contact');
+                }
+                $primaryDesignation = trim((string)($primaryContact->contact_person_designation ?? ($primaryContact->Designation ?? ($primaryContact->display_name ?? ''))));
+                if (empty($primaryDesignation)) {
+                    $primaryDesignation = @$directClientDetail->designation ?? 'Hiring Lead';
+                }
+                $primaryEmail = trim((string)($primaryContact->contact_person_email ?? ($primaryContact->email ?? '')));
+                if (empty($primaryEmail)) {
+                    $primaryEmail = $emailClean ?: 'contact@client.com';
+                }
+                $primaryPhone = trim((string)($primaryContact->clean_phone ?? ''));
+                if (empty($primaryPhone)) {
+                    $rawPhone = (string)($phoneClean ?: '+91 98765 43210');
+                    $primaryPhone = preg_replace('/^\++/', '+', trim($rawPhone));
+                }
+                $primaryRawImg = $primaryContact->image ?? null;
+            } else {
+                $primaryName = @$directClientDetail->contact_person ?? (@$directClientDetail->name ?? 'Primary Contact');
+                $primaryDesignation = @$directClientDetail->designation ?? 'Hiring Lead';
+                $primaryEmail = $emailClean ?: 'contact@client.com';
+                $rawPhone = (string)($phoneClean ?: '+91 98765 43210');
+                $primaryPhone = preg_replace('/^\++/', '+', trim($rawPhone));
+                $primaryRawImg = @$directClientDetail->image ?? @$directClientDetail->contact_image ?? null;
+            }
+
             $primaryInitials = strtoupper(implode('', array_map(fn($w) => mb_substr($w, 0, 1), array_slice(explode(' ', trim($primaryName)), 0, 2)))) ?: 'PC';
-            $primaryDesignation = @$directClientDetail->designation ?? 'Hiring Lead';
-            $primaryEmail = $emailClean ?: 'contact@client.com';
-            
-            // Fix double plus: ensure strictly single '+' before country code and number
-            $rawPhone = (string)($phoneClean ?: '+91 98765 43210');
-            $primaryPhone = preg_replace('/^\++/', '+', trim($rawPhone));
+
+            $primaryAvatarUrl = '';
+            if (!empty($primaryRawImg) && strlen(trim((string)$primaryRawImg)) > 3) {
+                $trimImg = trim((string)$primaryRawImg);
+                if (str_starts_with($trimImg, 'http://') || str_starts_with($trimImg, 'https://')) {
+                    $primaryAvatarUrl = $trimImg;
+                } else {
+                    $primaryAvatarUrl = asset('user-uploads/team_profile_img/' . $trimImg);
+                }
+            }
 
             // Dynamic Client Since from actual onboarding date
             $clientSinceYear = (!empty(@$directClientDetail->created_at)) ? \Carbon\Carbon::parse(@$directClientDetail->created_at)->format('Y') : ((!empty(@$directClientDetail->to_created_at)) ? \Carbon\Carbon::parse(@$directClientDetail->to_created_at)->format('Y') : date('Y'));
@@ -4350,7 +4457,9 @@
             $userPermissions = (isset($userPermissions) && is_array($userPermissions)) ? $userPermissions : [];
         @endphp
 
-        <input type="hidden" name="direct_client_id" id="direct_client_id" value="{{ $directClientDetail->client_id ?? $directClientDetail->id }}" />
+        <input type="hidden" name="direct_client_id" id="direct_client_id" value="{{ $requested_client_id ?? ($directClientDetail->client_id ?? $directClientDetail->id) }}" />
+        <input type="hidden" id="direct_client_actual_id" value="{{ $directClientDetail->client_id ?? '' }}" />
+        <input type="hidden" id="direct_company_id" value="{{ $directClientDetail->company_id ?? ($directClientDetail->from_company_id ?? '') }}" />
 
         <div class="cd-scope">
           <!-- ── Tier 1: Action Header Toolbar Card ── -->
@@ -4450,53 +4559,69 @@
 
           <!-- ── Tier 2: Dedicated Pure White Sub-Tabs Card ── -->
           <div class="cd-drawer-tabs-card">
-            <div class="cd-drawer-tabs-list" role="tablist">
-              <a class="cd-tab-pill-btn active" data-bs-toggle="tab" data-toggle="tab" href="#overview" role="tab" title="Overview">
-                <i class="fas fa-house"></i>
-                <span>Overview</span>
-              </a>
+            <ul class="cd-drawer-tabs-list nav nav-tabs border-0 flex-nowrap" role="tablist">
+              <li class="nav-item" role="presentation">
+                <a class="cd-tab-pill-btn nav-link active" data-bs-toggle="tab" data-toggle="tab" href="#overview" role="tab" aria-selected="true" title="Overview">
+                  <i class="fas fa-house"></i>
+                  <span>Overview</span>
+                </a>
+              </li>
 
-              <a class="cd-tab-pill-btn" data-bs-toggle="tab" data-toggle="tab" href="#recent_activity" role="tab" title="Recent Activity">
-                <i class="fas fa-clock"></i>
-                <span>Activity</span>
-              </a>
+              <li class="nav-item" role="presentation">
+                <a class="cd-tab-pill-btn nav-link" data-bs-toggle="tab" data-toggle="tab" href="#recent_activity" role="tab" aria-selected="false" title="Recent Activity">
+                  <i class="fas fa-clock"></i>
+                  <span>Activity</span>
+                </a>
+              </li>
 
-              <a class="cd-tab-pill-btn" data-bs-toggle="tab" data-toggle="tab" href="#contacts" role="tab" title="Client Contacts">
-                <i class="fas fa-address-book"></i>
-                <span>Contacts</span>
-                <span class="cd-tab-badge-pill" id="cdContactNavBadgeDirect" style="{{ (!empty($client_contact_count) && $client_contact_count > 0) ? '' : 'display:none;' }}">{{ $client_contact_count ?? 0 }}</span>
-              </a>
+              <li class="nav-item" role="presentation">
+                <a class="cd-tab-pill-btn nav-link" data-bs-toggle="tab" data-toggle="tab" href="#contacts" role="tab" aria-selected="false" title="Client Contacts">
+                  <i class="fas fa-address-book"></i>
+                  <span>Contacts</span>
+                  <span class="cd-tab-badge-pill" id="cdContactNavBadgeDirect" style="{{ (!empty($client_contact_count) && $client_contact_count > 0) ? '' : 'display:none;' }}">{{ $client_contact_count ?? 0 }}</span>
+                </a>
+              </li>
 
-              <a class="cd-tab-pill-btn" data-bs-toggle="tab" data-toggle="tab" href="#requisitions" role="tab" title="Active Jobs">
-                <i class="fas fa-briefcase"></i>
-                <span>Jobs</span>
-                @if($kpiActive > 0)<span class="cd-tab-badge-pill">{{ $kpiActive }}</span>@endif
-              </a>
+              <li class="nav-item" role="presentation">
+                <a class="cd-tab-pill-btn nav-link" data-bs-toggle="tab" data-toggle="tab" href="#requisitions" role="tab" aria-selected="false" title="Active Jobs">
+                  <i class="fas fa-briefcase"></i>
+                  <span>Jobs</span>
+                  @if($kpiActive > 0)<span class="cd-tab-badge-pill">{{ $kpiActive }}</span>@endif
+                </a>
+              </li>
 
-              <a class="cd-tab-pill-btn" data-bs-toggle="tab" data-toggle="tab" href="#candidate_list" role="tab" title="Candidates Pipeline">
-                <i class="fas fa-users"></i>
-                <span>Candidates</span>
-                @if($kpiSubmitted > 0)<span class="cd-tab-badge-pill">{{ $kpiSubmitted }}</span>@endif
-              </a>
+              <li class="nav-item" role="presentation">
+                <a class="cd-tab-pill-btn nav-link" data-bs-toggle="tab" data-toggle="tab" href="#candidate_list" role="tab" aria-selected="false" title="Candidates Pipeline">
+                  <i class="fas fa-users"></i>
+                  <span>Candidates</span>
+                  @if($kpiSubmitted > 0)<span class="cd-tab-badge-pill">{{ $kpiSubmitted }}</span>@endif
+                </a>
+              </li>
 
-              <a class="cd-tab-pill-btn" data-bs-toggle="tab" data-toggle="tab" href="#interview_tracker" role="tab" title="Interview Schedule">
-                <i class="fas fa-calendar-days"></i>
-                <span>Interviews</span>
-                <span class="cd-tab-badge-pill" id="tabBadgeInterviewTracker" @if($kpiInterviews <= 0) style="display:none;" @endif>{{ $kpiInterviews }}</span>
-              </a>
+              <li class="nav-item" role="presentation">
+                <a class="cd-tab-pill-btn nav-link" data-bs-toggle="tab" data-toggle="tab" href="#interview_tracker" role="tab" aria-selected="false" title="Interview Schedule">
+                  <i class="fas fa-calendar-days"></i>
+                  <span>Interviews</span>
+                  <span class="cd-tab-badge-pill" id="tabBadgeInterviewTracker" @if($kpiInterviews <= 0) style="display:none;" @endif>{{ $kpiInterviews }}</span>
+                </a>
+              </li>
 
-              <a class="cd-tab-pill-btn" data-bs-toggle="tab" data-toggle="tab" href="#candidate_joining" role="tab" title="Offers & Joinings">
-                <i class="fas fa-file-signature"></i>
-                <span>Offers &amp; Joins</span>
-                @php $totalOffersJoinsDirect = ($kpiOffers ?? 0) + ($kpiJoins ?? 0); @endphp
-                <span class="cd-tab-badge-pill" id="ojDirectTabBadge" @if($totalOffersJoinsDirect <= 0) style="display:none;" @endif>{{ $totalOffersJoinsDirect }}</span>
-              </a>
+              <li class="nav-item" role="presentation">
+                <a class="cd-tab-pill-btn nav-link" data-bs-toggle="tab" data-toggle="tab" href="#candidate_joining" role="tab" aria-selected="false" title="Offers & Joinings">
+                  <i class="fas fa-file-signature"></i>
+                  <span>Offers &amp; Joins</span>
+                  @php $totalOffersJoinsDirect = ($kpiOffers ?? 0) + ($kpiJoins ?? 0); @endphp
+                  <span class="cd-tab-badge-pill" id="ojDirectTabBadge" @if($totalOffersJoinsDirect <= 0) style="display:none;" @endif>{{ $totalOffersJoinsDirect }}</span>
+                </a>
+              </li>
 
-              <a class="cd-tab-pill-btn" data-bs-toggle="tab" data-toggle="tab" href="#candidateDashboard" role="tab" title="Performance Analytics">
-                <i class="fas fa-chart-column"></i>
-                <span>Performance</span>
-              </a>
-            </div>
+              <li class="nav-item" role="presentation">
+                <a class="cd-tab-pill-btn nav-link" data-bs-toggle="tab" data-toggle="tab" href="#candidateDashboard" role="tab" aria-selected="false" title="Performance Analytics">
+                  <i class="fas fa-chart-column"></i>
+                  <span>Performance</span>
+                </a>
+              </li>
+            </ul>
           </div>
 
           <!-- ── Tab Contents Container ── -->
@@ -4744,7 +4869,7 @@
                           <span class="cd-vinfo-label">Company Type</span>
                         </div>
                         <div class="cd-vinfo-val">
-                          <span class="cd-type-badge-pill">{{ $d_company_type_val ?: 'Direct Corporate Client' }}</span>
+                          <span class="cd-type-badge-pill">{{ $d_company_type_val }}</span>
                         </div>
                       </div>
 
@@ -4858,16 +4983,16 @@
                     </div>
                   </div>
 
-                  <!-- Card: Office Locations (Dedicated Enterprise Section) -->
-                  <div class="cd-card-panel">
-                    <div class="cd-card-hdr">
-                      <div class="cd-card-hdr-left">
-                        <div class="cd-top-bar-icon" style="width:28px; height:28px; font-size:12px; background:#fef2f2; color:#ef4444;">
-                          <i class="fas fa-location-dot fa-solid"></i>
+                  <!-- Sub-Card: Office Locations (Dedicated Enterprise Section) -->
+                  <div class="cd-master-subcard">
+                    <div class="cd-subcard-header">
+                      <div class="cd-subcard-header-left">
+                        <div class="cd-subcard-header-icon red">
+                          <i class="fas fa-location-dot"></i>
                         </div>
-                        <span class="cd-card-hdr-title">Locations</span>
+                        <h4 class="cd-subcard-title">Locations</h4>
                       </div>
-                      <span class="badge bg-light-primary text-primary fw-semibold" style="font-size:10px; padding:3px 7px;">
+                      <span class="badge bg-light-primary text-primary fw-semibold" style="font-size:10.5px; padding:3px 8px; border-radius:12px;">
                         <i class="fas fa-building me-1"></i>{{ $locCount > 1 ? $locCount . ' Locations' : ($locCount === 1 ? '1 Location' : 'Headquarters') }}
                       </span>
                     </div>
@@ -4903,7 +5028,7 @@
                             </div>
                             @if($cityStateText)
                               <div class="cd-loc-city-line">
-                                <i class="fas fa-location-dot text-danger" style="font-size:11px; flex-shrink:0;"></i>
+                                <span class="cd-loc-city-icon"><i class="fas fa-location-dot text-danger"></i></span>
                                 <span class="cd-loc-city-name">{{ $cityStateText }}</span>
                               </div>
                             @endif
@@ -4942,7 +5067,7 @@
                           </div>
                           @if($fallbackCityState)
                             <div class="cd-loc-city-line">
-                              <i class="fas fa-location-dot text-danger" style="font-size:11px; flex-shrink:0;"></i>
+                              <span class="cd-loc-city-icon"><i class="fas fa-location-dot text-danger"></i></span>
                               <span class="cd-loc-city-name">{{ $fallbackCityState }}</span>
                             </div>
                           @endif
@@ -4977,22 +5102,27 @@
                     <div class="cd-contact-master-subcard">
                       <div class="cd-contact-master-top">
                         <div class="cd-contact-avatar-box">
-                          {{ $primaryInitials }}
+                          @if (!empty($primaryAvatarUrl))
+                            <img src="{{ $primaryAvatarUrl }}" alt="{{ $primaryName }}" class="cd-contact-avatar-img" onerror="this.style.display='none'; this.parentElement.querySelector('.cd-contact-avatar-initials').style.display='inline-flex';" />
+                            <span class="cd-contact-avatar-initials" style="display:none;">{{ $primaryInitials }}</span>
+                          @else
+                            <span class="cd-contact-avatar-initials">{{ $primaryInitials }}</span>
+                          @endif
                         </div>
                         <div class="cd-contact-master-info">
                           <div class="cd-contact-master-name-row">
-                            <span class="cd-contact-master-name">{{ $primaryName }}</span>
+                            <span class="cd-contact-master-name" title="{{ $primaryName }}">{{ $primaryName }}</span>
                             <span class="cd-contact-primary-tag">Primary</span>
                           </div>
-                          <div class="cd-contact-master-role">{{ $primaryDesignation }}</div>
+                          <div class="cd-contact-master-role" title="{{ $primaryDesignation }}">{{ $primaryDesignation }}</div>
                         </div>
                       </div>
                       <div class="cd-contact-channels-grid">
-                        <a href="mailto:{{ $primaryEmail }}" class="cd-contact-channel-item" title="Send Email">
+                        <a href="mailto:{{ $primaryEmail }}" class="cd-contact-channel-item" title="Send Email ({{ $primaryEmail }})">
                           <div class="cd-contact-channel-icon email"><i class="fas fa-envelope"></i></div>
                           <span class="cd-contact-channel-text">{{ $primaryEmail }}</span>
                         </a>
-                        <a href="tel:{{ $primaryPhone }}" class="cd-contact-channel-item" title="Call Phone">
+                        <a href="tel:{{ $primaryPhone }}" class="cd-contact-channel-item" title="Call Phone ({{ $primaryPhone }})">
                           <div class="cd-contact-channel-icon phone"><i class="fas fa-phone"></i></div>
                           <span class="cd-contact-channel-text">{{ $primaryPhone }}</span>
                         </a>

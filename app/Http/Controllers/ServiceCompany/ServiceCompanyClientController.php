@@ -538,7 +538,12 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
         ⚡ Check DragonflyDB first
         ----------------------------- */
         if (cache()->has($cacheKeySet)) {
-            return response()->json(cache()->get($cacheKeySet))->header('ETag', $etag);
+            $cached = cache()->get($cacheKeySet);
+            if (! isset($cached['clientDataCnt'])) {
+                $cached['clientDataCnt'] = $this->commonclient();
+            }
+
+            return response()->json($cached)->header('ETag', $etag);
         }
 
         /* ----------------------------------------------------
@@ -551,14 +556,24 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
             if (! $singleFlightLock->block(2)) {
                 $singleFlightLock = null;
                 if (cache()->has($cacheKeySet)) {
-                    return response()->json(cache()->get($cacheKeySet))->header('ETag', $etag);
+                    $cached = cache()->get($cacheKeySet);
+                    if (! isset($cached['clientDataCnt'])) {
+                        $cached['clientDataCnt'] = $this->commonclient();
+                    }
+
+                    return response()->json($cached)->header('ETag', $etag);
                 }
             } else {
                 if (cache()->has($cacheKeySet)) {
                     $singleFlightLock->release();
                     $singleFlightLock = null;
 
-                    return response()->json(cache()->get($cacheKeySet))->header('ETag', $etag);
+                    $cached = cache()->get($cacheKeySet);
+                    if (! isset($cached['clientDataCnt'])) {
+                        $cached['clientDataCnt'] = $this->commonclient();
+                    }
+
+                    return response()->json($cached)->header('ETag', $etag);
                 }
             }
         } catch (\Throwable $e) {
@@ -1881,12 +1896,21 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
                     $cityId = isset($chosenLoc['city_id']) ? (int) $chosenLoc['city_id'] : null;
                     $stateId = isset($chosenLoc['state']) ? (int) $chosenLoc['state'] : (isset($chosenLoc['state_id']) ? (int) $chosenLoc['state_id'] : null);
                     if ($matchedLoc !== null) {
-                        if (! empty($matchedLoc['city_name'])) $city = $matchedLoc['city_name'];
-                        elseif (! empty($matchedLoc['city'])) $city = $matchedLoc['city'];
-                        if (! empty($matchedLoc['state_name'])) $stateName = $matchedLoc['state_name'];
-                        elseif (! empty($matchedLoc['state']) && ! is_numeric($matchedLoc['state'])) $stateName = $matchedLoc['state'];
-                        if (! empty($matchedLoc['country_name'])) $country_name = $matchedLoc['country_name'];
-                        elseif (! empty($matchedLoc['country'])) $country_name = $matchedLoc['country'];
+                        if (! empty($matchedLoc['city_name'])) {
+                            $city = $matchedLoc['city_name'];
+                        } elseif (! empty($matchedLoc['city'])) {
+                            $city = $matchedLoc['city'];
+                        }
+                        if (! empty($matchedLoc['state_name'])) {
+                            $stateName = $matchedLoc['state_name'];
+                        } elseif (! empty($matchedLoc['state']) && ! is_numeric($matchedLoc['state'])) {
+                            $stateName = $matchedLoc['state'];
+                        }
+                        if (! empty($matchedLoc['country_name'])) {
+                            $country_name = $matchedLoc['country_name'];
+                        } elseif (! empty($matchedLoc['country'])) {
+                            $country_name = $matchedLoc['country'];
+                        }
                     }
                 }
 
@@ -1977,6 +2001,7 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
                 'page' => $page,
                 'per_page' => $size,
                 'next_cursor' => $nextCursor ?? null,
+                'clientDataCnt' => $this->commonclient(),
             ];
 
             cache()->put($cacheKeySet, $responseData, now()->addMinutes(5));
@@ -1995,6 +2020,7 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
                 'pagination' => '',
                 'rows' => [],
                 'data_version' => $tenantVersion,
+                'clientDataCnt' => $this->commonclient(),
             ], 503)->header('Retry-After', '3');
         } finally {
             if ($singleFlightLock) {
@@ -2111,7 +2137,12 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
         ⚡ DragonflyDB / Redis Cache Hit
         ----------------------------- */
         if (cache()->has($cacheKeySet)) {
-            return response()->json(cache()->get($cacheKeySet))->header('ETag', $etag);
+            $cached = cache()->get($cacheKeySet);
+            if (! isset($cached['clientDataCnt'])) {
+                $cached['clientDataCnt'] = $this->commonclient();
+            }
+
+            return response()->json($cached)->header('ETag', $etag);
         }
 
         /* ----------------------------------------------------
@@ -2124,14 +2155,24 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
             if (! $singleFlightLock->block(2)) {
                 $singleFlightLock = null;
                 if (cache()->has($cacheKeySet)) {
-                    return response()->json(cache()->get($cacheKeySet))->header('ETag', $etag);
+                    $cached = cache()->get($cacheKeySet);
+                    if (! isset($cached['clientDataCnt'])) {
+                        $cached['clientDataCnt'] = $this->commonclient();
+                    }
+
+                    return response()->json($cached)->header('ETag', $etag);
                 }
             } else {
                 if (cache()->has($cacheKeySet)) {
                     $singleFlightLock->release();
                     $singleFlightLock = null;
 
-                    return response()->json(cache()->get($cacheKeySet))->header('ETag', $etag);
+                    $cached = cache()->get($cacheKeySet);
+                    if (! isset($cached['clientDataCnt'])) {
+                        $cached['clientDataCnt'] = $this->commonclient();
+                    }
+
+                    return response()->json($cached)->header('ETag', $etag);
                 }
             }
         } catch (\Throwable $e) {
@@ -2176,7 +2217,7 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
                 $sort[] = ['created_at' => ['order' => 'desc']];
             } else {
                 // status_sla: deterministic SLA ordering (Overdue -> Due soon -> Normal -> No SLA)
-                $sort[] = ['expires_at' => ['order' => 'asc', 'missing' => '_last']];
+                $sort[] = ['expires_at' => ['order' => 'asc', 'missing' => '_last', 'unmapped_type' => 'date']];
                 $sort[] = ['created_at' => ['order' => 'asc']];
             }
             $sort[] = ['id' => ['order' => 'desc']];
@@ -2311,6 +2352,7 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
                 'page' => $page,
                 'per_page' => $size,
                 'next_cursor' => $nextCursor ?? null,
+                'clientDataCnt' => $this->commonclient(),
             ];
 
             cache()->put($cacheKeySet, $responseData, now()->addMinutes(5));
@@ -2329,6 +2371,7 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
                 'pagination' => '',
                 'rows' => [],
                 'data_version' => $tenantVersion,
+                'clientDataCnt' => $this->commonclient(),
             ], 503)->header('Retry-After', '3');
         } finally {
             if ($singleFlightLock) {
@@ -3697,6 +3740,8 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
     {
         abort_if(Gate::denies('view_clients'), 403);
         $company_id = auth()->user()->company_id;
+        $this->requested_client_id = (int) $id;
+        $this->id = (int) $id;
 
         $userId = auth()->id() ?? ($this->user->id ?? 0);
         $cachePayload = [
@@ -3706,7 +3751,7 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
 
         $versionKey = 'clientsdviewmore_version_user_'.$userId;
         $version = cache()->get($versionKey, 1);
-        $cacheKeySet = 'ats:clientsdviewmore_v12:'.$userId.':'.$version.':'.md5(json_encode($cachePayload));
+        $cacheKeySet = 'ats:clientsdviewmore_v13:'.$userId.':'.$version.':'.md5(json_encode($cachePayload));
         /* ----------------------------
         ⚡ Check DragonflyDB first
         ----------------------------- */
@@ -4030,6 +4075,7 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
                 'clean_phone' => $cleanPhone,
                 'created_formatted' => $createdFormatted,
                 'status' => $row->status ?? 'active',
+                'image' => $row->image,
             ];
         });
         $this->client_contact_count = count($this->client_contact_arr);
@@ -4083,6 +4129,8 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
 
         $this->startOfMonth = $startOfMonth;
         $this->endOfMonth = $endOfMonth;
+        $this->requested_client_id = (int) $id;
+        $this->id = (int) $id;
 
         /** Render instant lightweight Direct Client Details shell view (< 60ms) */
         $view = view('service_company.client.dviewMore', $this->data)->render();
@@ -4132,6 +4180,15 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
         });
 
         $direct_company = (int) request('company_id');
+        if ($direct_company > 0) {
+            $companyExists = DB::table('companies')->where('id', $direct_company)->exists();
+            if (! $companyExists) {
+                $clientCompany = DB::table('clients')->where('id', $direct_company)->value('company_id');
+                if ($clientCompany) {
+                    $direct_company = (int) $clientCompany;
+                }
+            }
+        }
         $directContactList = $directContactList->where('companies.id', '=', $direct_company);
         $directContactList = $directContactList->groupBy('users.id');
         // $directContactList = $directContactList->where('roles.display_name', '=', 'Administrator');
@@ -5088,6 +5145,7 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
                 'rows' => $payload['rows'] ?? [],
                 'html' => $payload['html'] ?? '',
                 'data_version' => $payload['data_version'] ?? 1,
+                'clientDataCnt' => $this->commonclient(),
             ];
         });
 
@@ -5217,7 +5275,6 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
      * Edit Client Isolation: When $clientId is provided (Edit mode), unchanged name and website
      * are excluded from duplicate checking; unique changes are validated against other clients.
      *
-     * @param  Request  $request
      * @param  int|null  $clientId  Client ID if performing an update
      * @return array|null
      */
