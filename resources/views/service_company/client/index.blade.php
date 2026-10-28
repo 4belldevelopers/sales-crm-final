@@ -2814,6 +2814,12 @@ window.ClientStateManager = {
         return this.state.activeTab;
     },
 
+    setSort: function(val, text) {
+        if (typeof selectSortOption === 'function') {
+            selectSortOption(val, text);
+        }
+    },
+
     getSelectedClientId: function() {
         return this.state.selectedClientId ? parseInt(this.state.selectedClientId, 10) : null;
     },
