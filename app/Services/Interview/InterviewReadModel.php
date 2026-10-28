@@ -253,24 +253,38 @@ class InterviewReadModel
         $extraCount = 0;
 
         if (! empty($rawInterviewers)) {
-            $names = is_array($rawInterviewers)
+            $rawList = is_array($rawInterviewers)
                 ? $rawInterviewers
                 : array_filter(array_map('trim', explode(',', (string) $rawInterviewers)));
 
-            foreach ($names as $idx => $intvName) {
-                if (empty($intvName)) {
+            foreach ($rawList as $idx => $intvItem) {
+                if (empty($intvItem)) {
                     continue;
                 }
+                $nameStr = '';
+                $itemComp = $companyNameDefault;
+                if (is_array($intvItem)) {
+                    $nameStr = trim((string) ($intvItem['name'] ?? ($intvItem['interviewer_name'] ?? '')));
+                    $itemComp = trim((string) ($intvItem['company_name'] ?? ($intvItem['company'] ?? $companyNameDefault)));
+                } else {
+                    $nameStr = trim((string) $intvItem);
+                }
+
+                if (empty($nameStr)) {
+                    continue;
+                }
+
                 $interviewers[] = [
                     'id' => $idx + 1,
-                    'name' => ucwords($intvName),
-                    'company_name' => $companyNameDefault,
+                    'name' => ucwords($nameStr),
+                    'company_name' => $itemComp ?: $companyNameDefault,
                 ];
             }
 
-            if (! empty($names)) {
-                $leadName = ucwords($names[0]);
-                $extraCount = max(0, count($names) - 1);
+            if (! empty($interviewers)) {
+                $leadName = $interviewers[0]['name'];
+                $leadCompany = $interviewers[0]['company_name'] ?: $leadCompany;
+                $extraCount = max(0, count($interviewers) - 1);
             }
         }
 

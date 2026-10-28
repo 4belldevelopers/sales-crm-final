@@ -8469,9 +8469,84 @@ use Carbon\Carbon;
                     ratingHtml = `★ ${evalData.star_rating} / 5.0 Rating`;
                 }
 
-                // Panel extra count
-                const panelCount = (intvs.extra_count || 0) + 1;
-                const panelLabel = panelCount === 1 ? '1 Panelist' : `${panelCount} Panelists`;
+                                // Panelist processing: Support multiple panelists & avatars elegantly
+                let panelList = [];
+                if (Array.isArray(intv.interviewers) && intv.interviewers.length > 0) {
+                    panelList = intv.interviewers.map(function(p, idx) {
+                        let pName = typeof p === 'object' && p !== null ? (p.name || p.interviewer_name || '') : String(p);
+                        let pComp = typeof p === 'object' && p !== null ? (p.company_name || '') : '';
+                        return {
+                            name: pName.trim() || 'Interviewer',
+                            company: pComp.trim(),
+                            is_lead: idx === 0
+                        };
+                    }).filter(p => !!p.name);
+                }
+
+                if (!panelList.length) {
+                    const leadFallback = (intvs.lead_name && intvs.lead_name !== 'N/A') ? intvs.lead_name : 'Panel Assigned';
+                    panelList.push({
+                        name: leadFallback,
+                        company: intvs.lead_company || '',
+                        is_lead: true
+                    });
+                    if (intvs.extra_count && intvs.extra_count > 0) {
+                        for (let i = 1; i <= intvs.extra_count; i++) {
+                            panelList.push({
+                                name: `Panelist #${i + 1}`,
+                                company: intvs.lead_company || '',
+                                is_lead: false
+                            });
+                        }
+                    }
+                }
+
+                const totalPanelists = panelList.length;
+                const leadPanelist = panelList[0] || { name: 'Panel Assigned', company: '' };
+                const leadName = leadPanelist.name || 'Panel Assigned';
+                const leadInitial = (leadName && leadName !== 'Panel Assigned') ? leadName.charAt(0).toUpperCase() : '<i class="fas fa-user-tie fs-9"></i>';
+                const leadCompany = leadPanelist.company || '';
+                const extraPanelistsCount = Math.max(0, totalPanelists - 1);
+                const panelBadgeText = totalPanelists === 1 ? '1 Panelist' : `${totalPanelists} Panelists`;
+
+                // Build popover items HTML
+                const popoverItemsHtml = panelList.map(function(p) {
+                    return `
+                        <div class="cd-it-popover-item">
+                            <span class="text-truncate" style="max-width: 150px;" title="${p.name}">
+                                <i class="fas ${p.is_lead ? 'fa-user-check text-info' : 'fa-user text-muted'} me-1"></i>
+                                ${p.name}
+                            </span>
+                            ${p.is_lead ? '<span class="item-lead-badge">Lead</span>' : (p.company ? `<span class="text-muted fs-9">${p.company}</span>` : '')}
+                        </div>
+                    `;
+                }).join('');
+
+                const panelistTooltipText = panelList.map(p => p.is_lead ? `${p.name} (Lead)` : p.name).join(', ');
+
+                // Schedule Time & Mode formatting (Time directly below Date: Time | Mode)
+                const dateText = sch.date_formatted || '—';
+                const timeText = sch.time_formatted || '';
+                const modeText = sch.mode_label || 'Video Call';
+                let timeModeHtml = '';
+                if (timeText) {
+                    timeModeHtml = `
+                        <div class="cd-it-dt-time-mode">
+                            <i class="far fa-clock me-1 text-primary"></i>
+                            <span class="cd-it-dt-time-val">${timeText}</span>
+                            <span class="cd-dot-sep">|</span>
+                            ${modeIcon}
+                            <span class="cd-it-dt-mode-val">${modeText}</span>
+                        </div>
+                    `;
+                } else {
+                    timeModeHtml = `
+                        <div class="cd-it-dt-time-mode">
+                            ${modeIcon}
+                            <span class="cd-it-dt-mode-val">${modeText}</span>
+                        </div>
+                    `;
+                }
 
                 // Recommendation pill
                 let recHtml = '';
@@ -8483,7 +8558,7 @@ use Carbon\Carbon;
 
                 return `
                     <div class="cd-it-card" data-interview-id="${intv.id || ''}" data-status="${att.code || 0}" data-feedback="${evalData.code || 0}">
-                        <!-- Upper Discrete 5 Sub-Cards Grid -->
+                        <!-- Upper Discrete 6 Sub-Cards Grid -->
                         <div class="cd-it-card-grid">
 
                             <!-- 1. CANDIDATE INFO -->
@@ -8516,9 +8591,7 @@ use Carbon\Carbon;
                                 <div class="cd-subcard-header">
                                     <span class="cd-subcard-label">TARGET REQUISITION</span>
                                     <div class="d-flex align-items-center gap-1">
-                                        <span class="cd-badge-scope ${job.job_type_class || 'scope-internal'}">
-                                            ${job.job_type_label || 'Internal'}
-                                        </span>
+                                        <span class="cd-badge-scope ${job.job_type_class || 'scope-internal'}">${job.job_type_label || 'Internal'}</span>
                                         <span class="cd-status-hiring">Hiring</span>
                                     </div>
                                 </div>
@@ -8547,26 +8620,21 @@ use Carbon\Carbon;
                             <div class="cd-it-subcard">
                                 <div class="cd-subcard-header">
                                     <span class="cd-subcard-label">SCHEDULE &amp; LINK</span>
-                                    ${sch.time_formatted ? `<span class="cd-it-time-pill">${sch.time_formatted}</span>` : ''}
                                 </div>
                                 <div>
                                     <div class="cd-it-dt-date">
                                         <i class="far fa-calendar-alt me-1 text-primary"></i>
-                                        <span>${sch.date_formatted || '—'}</span>
+                                        <span>${dateText}</span>
                                     </div>
-                                    <div class="cd-it-dt-mode">
-                                        ${modeIcon}
-                                        <span>${sch.mode_label || 'Video Call'}</span>
-                                    </div>
+                                    ${timeModeHtml}
                                     ${linkHtml}
                                 </div>
                             </div>
 
-                            <!-- 4. RECRUITER & SOURCING -->
+                            <!-- 4. RECRUITER INFO -->
                             <div class="cd-it-subcard">
                                 <div class="cd-subcard-header">
-                                    <span class="cd-subcard-label">RECRUITER &amp; SOURCING</span>
-                                    <span class="cd-it-source-pill">Sourced</span>
+                                    <span class="cd-subcard-label">RECRUITER INFO</span>
                                 </div>
                                 <div>
                                     <div class="cd-it-recruiter-name" title="${src.name || '—'}">
@@ -8577,23 +8645,57 @@ use Carbon\Carbon;
                                     </div>
                                     <div class="cd-it-submitted-at">
                                         <i class="far fa-clock me-1"></i>
-                                        <span>Submitted: ${src.submitted_at || '4 days ago'}</span>
+                                        <span>Submitted: ${src.submitted_at || 'Recently'}</span>
                                     </div>
                                 </div>
                             </div>
 
-                            <!-- 5. PANEL & FEEDBACK -->
+                            <!-- 5. DEDICATED PANELISTS CARD -->
+                            <div class="cd-it-subcard cd-it-panelist-card">
+                                <div class="cd-subcard-header">
+                                    <span class="cd-subcard-label">PANELISTS</span>
+                                    <span class="cd-it-panel-count-pill">${panelBadgeText}</span>
+                                </div>
+                                <div class="cd-it-panel-body" title="${panelistTooltipText}">
+                                    <div class="cd-panel-avatar-stack">
+                                        <div class="cd-panel-avatar" title="${leadName}">
+                                            ${leadInitial}
+                                        </div>
+                                        ${extraPanelistsCount > 0 ? `
+                                            <div class="cd-panel-avatar cd-panel-avatar-extra" title="+${extraPanelistsCount} more panelists">
+                                                +${extraPanelistsCount}
+                                            </div>
+                                        ` : ''}
+                                    </div>
+                                    <div class="min-w-0 flex-grow-1 overflow-hidden">
+                                        <div class="cd-it-lead-name" title="${leadName}">
+                                            ${leadName}
+                                        </div>
+                                        <div class="cd-it-lead-sub" title="${leadCompany || 'Interview Panel'}">
+                                            ${extraPanelistsCount > 0 ? `+${extraPanelistsCount} more panelist${extraPanelistsCount > 1 ? 's' : ''}` : (leadCompany || 'Interview Panel')}
+                                        </div>
+                                    </div>
+
+                                    <!-- Clean Hover Popover -->
+                                    <div class="cd-it-popover-card">
+                                        <div class="cd-it-popover-header">
+                                            <span><i class="fas fa-users text-primary me-1"></i> Interview Panel</span>
+                                            <span class="badge badge-sm badge-light-primary text-primary">${totalPanelists}</span>
+                                        </div>
+                                        <div class="cd-it-popover-body">
+                                            ${popoverItemsHtml}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 6. STATUS & FEEDBACK -->
                             <div class="cd-it-subcard">
                                 <div class="cd-subcard-header">
-                                    <span class="cd-subcard-label">PANEL &amp; FEEDBACK</span>
-                                    <span class="cd-it-panel-count">${panelLabel}</span>
+                                    <span class="cd-subcard-label">STATUS &amp; FEEDBACK</span>
                                 </div>
                                 <div>
-                                    <div class="cd-it-lead-name" title="${intvs.lead_name || 'Panel Assigned'}">
-                                        ${intvs.lead_name || 'Panel Assigned'}
-                                        <span class="cd-it-lead-tag">(Lead)</span>
-                                    </div>
-                                    <div class="d-flex align-items-center gap-1 mt-1 flex-wrap">
+                                    <div class="d-flex align-items-center gap-1 flex-wrap">
                                         <span class="cd-it-att-pill ${att.css_class || 'cit-fb-scheduled'}">
                                             ${att.label || 'Scheduled'}
                                         </span>

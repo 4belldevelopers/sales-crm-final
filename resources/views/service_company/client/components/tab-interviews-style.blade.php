@@ -281,12 +281,12 @@
 }
 
 /* ==========================================================================
-   4. Upper Sub-Cards Grid (5 Discrete Enterprise Sub-Cards)
+   4. Upper Sub-Cards Grid (6 Discrete Enterprise Sub-Cards)
    Strictly Zero Horizontal Scrollbar via fractional units & minmax(0, ...)
    ========================================================================== */
 .cd-it-card-grid {
     display: grid !important;
-    grid-template-columns: minmax(0, 2.2fr) minmax(0, 2.3fr) minmax(0, 1.9fr) minmax(0, 1.8fr) minmax(0, 1.8fr) !important;
+    grid-template-columns: minmax(0, 2fr) minmax(0, 2.1fr) minmax(0, 1.8fr) minmax(0, 1.7fr) minmax(0, 1.5fr) minmax(0, 1.5fr) !important;
     gap: 8px !important;
     padding: 10px 12px !important;
     width: 100% !important;
@@ -488,16 +488,6 @@
 }
 
 /* Sub-Card 3: Schedule & Interview Link */
-.cd-it-time-pill {
-    font-size: 8.5px !important;
-    font-weight: 700 !important;
-    color: #2563eb !important;
-    background: #eff6ff !important;
-    padding: 1px 5px !important;
-    border-radius: 4px !important;
-    white-space: nowrap !important;
-}
-
 .cd-it-dt-date {
     font-size: 11.5px !important;
     font-weight: 700 !important;
@@ -508,19 +498,30 @@
     white-space: nowrap !important;
     overflow: hidden !important;
     text-overflow: ellipsis !important;
+    line-height: 1.25 !important;
 }
 
-.cd-it-dt-mode {
+.cd-it-dt-time-mode {
     font-size: 10.5px !important;
     font-weight: 500 !important;
-    color: #64748b !important;
+    color: #475569 !important;
     margin-top: 2px !important;
     display: flex !important;
     align-items: center !important;
-    gap: 4px !important;
+    gap: 3px !important;
     white-space: nowrap !important;
     overflow: hidden !important;
     text-overflow: ellipsis !important;
+    line-height: 1.25 !important;
+}
+
+.cd-it-dt-time-val {
+    font-weight: 600 !important;
+    color: #0f172a !important;
+}
+
+.cd-it-dt-mode-val {
+    color: #64748b !important;
 }
 
 .cd-it-link-pill {
@@ -546,16 +547,7 @@
     border-color: #009ef7 !important;
 }
 
-/* Sub-Card 4: Recruiter & Sourcing */
-.cd-it-source-pill {
-    font-size: 8.5px !important;
-    font-weight: 600 !important;
-    color: #64748b !important;
-    background: #f1f5f9 !important;
-    padding: 1px 5px !important;
-    border-radius: 4px !important;
-}
-
+/* Sub-Card 4: Recruiter Info */
 .cd-it-recruiter-name {
     font-size: 12px !important;
     font-weight: 700 !important;
@@ -587,32 +579,157 @@
     white-space: nowrap !important;
 }
 
-/* Sub-Card 5: Panel & Feedback */
-.cd-it-panel-count {
-    font-size: 8.5px !important;
-    font-weight: 600 !important;
-    color: #2563eb !important;
+/* Sub-Card 5: Dedicated Panelists Card */
+.cd-it-panelist-card {
+    position: relative !important;
+    overflow: visible !important;
+}
+
+.cd-it-panel-body {
+    position: relative !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    cursor: pointer !important;
+    width: 100% !important;
+}
+
+.cd-panel-avatar-stack {
+    display: flex !important;
+    align-items: center !important;
+    flex-shrink: 0 !important;
+}
+
+.cd-panel-avatar {
+    width: 28px !important;
+    height: 28px !important;
+    min-width: 28px !important;
+    border-radius: 50% !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-weight: 700 !important;
+    font-size: 11px !important;
     background: #eff6ff !important;
-    padding: 1px 5px !important;
-    border-radius: 4px !important;
+    color: #2563eb !important;
+    border: 1.5px solid #ffffff !important;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.08) !important;
+    text-transform: uppercase !important;
+}
+
+.cd-panel-avatar-extra {
+    background: #f1f5f9 !important;
+    color: #475569 !important;
+    font-size: 9.5px !important;
+    margin-left: -8px !important;
+    z-index: 2 !important;
+    border-color: #ffffff !important;
 }
 
 .cd-it-lead-name {
-    font-size: 12px !important;
+    font-size: 11.5px !important;
     font-weight: 700 !important;
     color: #0f172a !important;
     white-space: nowrap !important;
     overflow: hidden !important;
     text-overflow: ellipsis !important;
-    line-height: 1.3 !important;
+    line-height: 1.25 !important;
 }
 
-.cd-it-lead-tag {
-    font-size: 10px !important;
+.cd-it-lead-sub {
+    font-size: 9.5px !important;
     color: #64748b !important;
     font-weight: 500 !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    margin-top: 1px !important;
 }
 
+.cd-it-panel-count-pill {
+    font-size: 8.5px !important;
+    font-weight: 600 !important;
+    color: #2563eb !important;
+    background: #eff6ff !important;
+    border: 1px solid #bfdbfe !important;
+    padding: 1px 5px !important;
+    border-radius: 4px !important;
+    white-space: nowrap !important;
+}
+
+/* Tooltip / Popover for Panelists on Mouse Hover */
+.cd-it-popover-card {
+    display: none !important;
+    position: absolute !important;
+    bottom: calc(100% + 8px) !important;
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+    background: #0f172a !important;
+    color: #ffffff !important;
+    border-radius: 8px !important;
+    padding: 8px 12px !important;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.4), 0 8px 10px -6px rgba(0, 0, 0, 0.3) !important;
+    z-index: 99999 !important;
+    min-width: 190px !important;
+    max-width: 260px !important;
+    pointer-events: none !important;
+}
+
+.cd-it-popover-card::after {
+    content: '' !important;
+    position: absolute !important;
+    top: 100% !important;
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+    border-width: 6px !important;
+    border-style: solid !important;
+    border-color: #0f172a transparent transparent transparent !important;
+}
+
+.cd-it-panel-body:hover .cd-it-popover-card,
+.cd-it-panelist-card:hover .cd-it-popover-card {
+    display: block !important;
+    animation: cdPopoverFadeIn 0.15s ease-out forwards !important;
+}
+
+@keyframes cdPopoverFadeIn {
+    from { opacity: 0; transform: translate(-50%, 4px); }
+    to { opacity: 1; transform: translate(-50%, 0); }
+}
+
+.cd-it-popover-header {
+    font-size: 11px !important;
+    font-weight: 700 !important;
+    color: #ffffff !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.15) !important;
+    padding-bottom: 4px !important;
+    margin-bottom: 5px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+}
+
+.cd-it-popover-item {
+    font-size: 10px !important;
+    color: #e2e8f0 !important;
+    padding: 2px 0 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 8px !important;
+    white-space: nowrap !important;
+}
+
+.cd-it-popover-item .item-lead-badge {
+    font-size: 8.5px !important;
+    font-weight: 700 !important;
+    color: #38bdf8 !important;
+    background: rgba(56, 189, 248, 0.15) !important;
+    padding: 1px 4px !important;
+    border-radius: 3px !important;
+}
+
+/* Sub-Card 6: Status & Feedback */
 .cd-it-att-pill {
     font-size: 9.5px !important;
     font-weight: 700 !important;
@@ -841,7 +958,7 @@
    ========================================================================== */
 @media (max-width: 1440px) {
     .cd-it-card-grid {
-        grid-template-columns: minmax(0, 2.2fr) minmax(0, 2.2fr) minmax(0, 1.8fr) minmax(0, 1.7fr) minmax(0, 1.7fr) !important;
+        grid-template-columns: minmax(0, 1.9fr) minmax(0, 2fr) minmax(0, 1.7fr) minmax(0, 1.6fr) minmax(0, 1.45fr) minmax(0, 1.45fr) !important;
         gap: 6px !important;
         padding: 8px 10px !important;
     }
@@ -849,7 +966,21 @@
 
 @media (max-width: 1200px) {
     .cd-it-card-grid {
-        grid-template-columns: minmax(0, 1.5fr) minmax(0, 1.5fr) minmax(0, 1.2fr) !important;
+        grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+        gap: 8px !important;
+    }
+}
+
+@media (max-width: 768px) {
+    .cd-it-card-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+        gap: 8px !important;
+    }
+}
+
+@media (max-width: 480px) {
+    .cd-it-card-grid {
+        grid-template-columns: minmax(0, 1fr) !important;
     }
 }
 </style>

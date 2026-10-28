@@ -3192,26 +3192,29 @@
             font-weight: 600;
           }
           .cd-cand-toolbar-right {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            flex-wrap: wrap;
+            display: flex !important;
+            align-items: center !important;
+            gap: 8px !important;
+            flex-wrap: nowrap !important;
+            flex-shrink: 0 !important;
           }
 
           /* Search Sub-Card */
           .cd-cand-search-subcard {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            background: #f8fafc;
-            border: 1px solid #e2e8f0;
-            border-radius: 8px;
-            padding: 0 10px 0 12px;
-            height: 36px;
-            width: 100%;
-            max-width: 380px;
-            transition: all 0.15s ease-in-out;
-            position: relative;
+            display: flex !important;
+            align-items: center !important;
+            gap: 8px !important;
+            background: #f8fafc !important;
+            border: 1px solid #e2e8f0 !important;
+            border-radius: 8px !important;
+            padding: 0 10px 0 12px !important;
+            height: 36px !important;
+            width: 280px !important;
+            max-width: 320px !important;
+            min-width: 180px !important;
+            flex-shrink: 1 !important;
+            transition: all 0.15s ease-in-out !important;
+            position: relative !important;
           }
           .cd-cand-search-subcard:focus-within {
             background: #ffffff;
@@ -3293,7 +3296,8 @@
           .cd-cand-tabs-list::-webkit-scrollbar {
             display: none;
           }
-          .cd-cand-subtab {
+          .cd-cand-subtab,
+          .cd-cand-subtab-direct {
             display: inline-flex;
             align-items: center;
             gap: 6px;
@@ -3309,12 +3313,14 @@
             transition: all 0.15s ease;
             user-select: none;
           }
-          .cd-cand-subtab:hover {
+          .cd-cand-subtab:hover,
+          .cd-cand-subtab-direct:hover {
             background: #f1f5f9;
             color: #0f172a;
             border-color: #cbd5e1;
           }
-          .cd-cand-subtab.active {
+          .cd-cand-subtab.active,
+          .cd-cand-subtab-direct.active {
             background: #009ef7 !important;
             color: #ffffff !important;
             border-color: #009ef7 !important;
@@ -3334,7 +3340,8 @@
             background: #e2e8f0;
             color: #475569;
           }
-          .cd-cand-subtab.active .cd-cand-subtab-badge {
+          .cd-cand-subtab.active .cd-cand-subtab-badge,
+          .cd-cand-subtab-direct.active .cd-cand-subtab-badge {
             background: rgba(255, 255, 255, 0.28) !important;
             color: #ffffff !important;
           }
@@ -3419,30 +3426,15 @@
             overflow: hidden !important;
           }
 
-          /* Sub-Card 1: Profile */
+          /* Sub-Card 1: Profile - Space Reclaimed (No Avatar Icon) */
           .cd-cand-profile-row {
-            display: flex !important;
-            align-items: center !important;
-            gap: 8px !important;
+            display: block !important;
+            width: 100% !important;
             min-width: 0 !important;
           }
-          .cd-cand-avatar-box {
-            width: 36px !important;
-            height: 36px !important;
-            min-width: 36px !important;
-            border-radius: 8px !important;
-            background: #eff6ff !important;
-            color: #2563eb !important;
-            border: 1px solid #dbeafe !important;
-            display: flex !important;
-            align-items: center !important;
-            justify-content: center !important;
-            font-size: 13px !important;
-            font-weight: 700 !important;
-            flex-shrink: 0 !important;
-          }
           .cd-cand-profile-meta {
-            flex: 1 1 auto !important;
+            display: block !important;
+            width: 100% !important;
             min-width: 0 !important;
             overflow: hidden !important;
           }
@@ -3613,20 +3605,35 @@
             gap: 7px !important;
             min-width: 0 !important;
           }
-          .cd-job-logo-box {
-            width: 26px !important;
-            height: 26px !important;
-            min-width: 26px !important;
+          .cd-job-logo-wrap {
+            width: 28px !important;
+            height: 28px !important;
+            min-width: 28px !important;
             border-radius: 6px !important;
-            background: #eff6ff !important;
-            color: #2563eb !important;
-            font-size: 11px !important;
-            font-weight: 700 !important;
+            background: #ffffff !important;
+            border: 1px solid #e2e8f0 !important;
             display: flex !important;
             align-items: center !important;
             justify-content: center !important;
-            border: 1px solid #dbeafe !important;
+            overflow: hidden !important;
             flex-shrink: 0 !important;
+          }
+          .cd-job-logo-img {
+            width: 100% !important;
+            height: 100% !important;
+            object-fit: contain !important;
+            display: block !important;
+          }
+          .cd-job-logo-fallback {
+            width: 100% !important;
+            height: 100% !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            background: #eff6ff !important;
+            color: #009ef7 !important;
+            font-size: 11px !important;
+            font-weight: 700 !important;
           }
           .cd-job-meta-wrap {
             flex: 1 1 auto !important;
@@ -3872,24 +3879,59 @@
           /* Responsive Scaling for 15.6" Laptops (1366x768 & 1920x1080) and Smaller */
           @media (max-width: 1440px) {
             .cd-cand-card-grid {
-              grid-template-columns: minmax(0, 1.8fr) minmax(0, 1.3fr) minmax(0, 1.2fr) minmax(0, 2.2fr) minmax(0, 1.45fr) minmax(0, 1.2fr) !important;
+              grid-template-columns: minmax(0, 1.9fr) minmax(0, 1.3fr) minmax(0, 1.2fr) minmax(0, 2.2fr) minmax(0, 1.45fr) minmax(0, 1.2fr) !important;
               gap: 6px !important;
               padding: 8px 10px !important;
             }
             .cd-cand-subcard {
               padding: 6px 8px !important;
             }
+            .cd-cand-search-subcard {
+              width: 240px !important;
+            }
           }
-          @media (max-width: 1100px) {
+          @media (max-width: 1200px) {
             .cd-cand-card-grid {
-              grid-template-columns: minmax(0, 1.7fr) minmax(0, 1.2fr) minmax(0, 1.1fr) minmax(0, 2fr) minmax(0, 1.4fr) minmax(0, 1.1fr) !important;
-              gap: 5px !important;
-              padding: 6px 8px !important;
+              grid-template-columns: minmax(0, 1.8fr) minmax(0, 1.25fr) minmax(0, 1.15fr) minmax(0, 2fr) minmax(0, 1.4fr) minmax(0, 1.15fr) !important;
+              gap: 6px !important;
+              padding: 8px 10px !important;
+            }
+            .cd-cand-search-subcard {
+              width: 200px !important;
+            }
+            .cd-cand-subtab,
+            .cd-cand-subtab-direct {
+              padding: 5px 8px !important;
+              font-size: 11px !important;
+            }
+          }
+          @media (max-width: 992px) {
+            .cd-cand-card-grid {
+              grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+              gap: 8px !important;
             }
             .cd-cand-bottom-strip {
               flex-direction: column !important;
               align-items: flex-start !important;
               gap: 6px !important;
+            }
+          }
+          @media (max-width: 640px) {
+            .cd-cand-card-grid {
+              grid-template-columns: 1fr !important;
+              gap: 8px !important;
+            }
+            .cd-cand-toolbar-card {
+              flex-direction: column !important;
+              align-items: stretch !important;
+            }
+            .cd-cand-toolbar-right {
+              width: 100% !important;
+              justify-content: space-between !important;
+            }
+            .cd-cand-search-subcard {
+              width: 100% !important;
+              max-width: 100% !important;
             }
           }
 
@@ -4933,40 +4975,40 @@
                                 </div>
                             </div>
 
-                            <!-- TIER 2: SUB-TABS PIPELINE CARD -->
+                            <!-- TIER 2: SUB-TABS PIPELINE CARD (Strict 8 Pipeline Stages) -->
                             <div class="cd-cand-tabs-card">
-                                <div class="cd-cand-tabs-list">
-                                    <button type="button" class="cd-cand-subtab-direct active" data-status="">
-                                        <span>All Candidates</span>
-                                        <span class="cd-cand-subtab-badge" id="candTabCountAllDirect">0</span>
+                                <div class="cd-cand-tabs-list" role="tablist">
+                                    <button type="button" class="cd-cand-subtab cd-cand-subtab-direct active" data-stage="sourcing" data-status="1" role="tab" aria-selected="true" title="Sourcing Stage">
+                                        <span>Sourcing</span>
+                                        <span class="cd-cand-subtab-badge" id="candTabCountSourcingDirect">0</span>
                                     </button>
-                                    <button type="button" class="cd-cand-subtab-direct" data-status="2">
+                                    <button type="button" class="cd-cand-subtab cd-cand-subtab-direct" data-stage="screening" data-status="2" role="tab" aria-selected="false" title="Screening Stage">
                                         <span>Screening</span>
-                                        <span class="cd-cand-subtab-badge" id="candTabCountScreeningDirect"></span>
+                                        <span class="cd-cand-subtab-badge" id="candTabCountScreeningDirect">0</span>
                                     </button>
-                                    <button type="button" class="cd-cand-subtab-direct" data-status="3">
-                                        <span>Interview</span>
-                                        <span class="cd-cand-subtab-badge" id="candTabCountInterviewDirect"></span>
+                                    <button type="button" class="cd-cand-subtab cd-cand-subtab-direct" data-stage="evaluation" data-status="3" role="tab" aria-selected="false" title="Evaluation Stage">
+                                        <span>Evaluation</span>
+                                        <span class="cd-cand-subtab-badge" id="candTabCountEvaluationDirect">0</span>
                                     </button>
-                                    <button type="button" class="cd-cand-subtab-direct" data-status="4">
-                                        <span>Shortlisted</span>
-                                        <span class="cd-cand-subtab-badge" id="candTabCountShortlistedDirect"></span>
+                                    <button type="button" class="cd-cand-subtab cd-cand-subtab-direct" data-stage="negotiations" data-status="4" role="tab" aria-selected="false" title="Negotiations Stage">
+                                        <span>Negotiations</span>
+                                        <span class="cd-cand-subtab-badge" id="candTabCountNegotiationsDirect">0</span>
                                     </button>
-                                    <button type="button" class="cd-cand-subtab-direct" data-status="5">
+                                    <button type="button" class="cd-cand-subtab cd-cand-subtab-direct" data-stage="offer" data-status="5" role="tab" aria-selected="false" title="Offer Stage">
                                         <span>Offer</span>
-                                        <span class="cd-cand-subtab-badge" id="candTabCountOfferDirect"></span>
+                                        <span class="cd-cand-subtab-badge" id="candTabCountOfferDirect">0</span>
                                     </button>
-                                    <button type="button" class="cd-cand-subtab-direct" data-status="6">
+                                    <button type="button" class="cd-cand-subtab cd-cand-subtab-direct" data-stage="joined" data-status="6" role="tab" aria-selected="false" title="Joined Stage">
                                         <span>Joined</span>
-                                        <span class="cd-cand-subtab-badge" id="candTabCountJoinedDirect"></span>
+                                        <span class="cd-cand-subtab-badge" id="candTabCountJoinedDirect">0</span>
                                     </button>
-                                    <button type="button" class="cd-cand-subtab-direct" data-status="7">
-                                        <span>On Hold</span>
-                                        <span class="cd-cand-subtab-badge" id="candTabCountOnHoldDirect"></span>
-                                    </button>
-                                    <button type="button" class="cd-cand-subtab-direct" data-status="8">
+                                    <button type="button" class="cd-cand-subtab cd-cand-subtab-direct" data-stage="rejected" data-status="7" role="tab" aria-selected="false" title="Rejected Stage">
                                         <span>Rejected</span>
-                                        <span class="cd-cand-subtab-badge" id="candTabCountRejectedDirect"></span>
+                                        <span class="cd-cand-subtab-badge" id="candTabCountRejectedDirect">0</span>
+                                    </button>
+                                    <button type="button" class="cd-cand-subtab cd-cand-subtab-direct" data-stage="interviews" data-status="interview" role="tab" aria-selected="false" title="Interview Activity">
+                                        <span>Interviews</span>
+                                        <span class="cd-cand-subtab-badge" id="candTabCountInterviewsDirect">0</span>
                                     </button>
                                 </div>
                             </div>
@@ -7033,20 +7075,18 @@
             }
 
             if (normTab === 'candidates') {
-                var activeCandBtn = $('#kt_activitiesDirectClient #candidate_list .cd-cand-subtab-direct.active');
-                var activeCandStatus = activeCandBtn.length ? activeCandBtn.data('status') : '';
-                var candStatus = (filter !== undefined && filter !== null) ? filter : activeCandStatus;
+                var activeCandBtn = $('#kt_activitiesDirectClient #candidate_list .cd-cand-subtab-direct.active, #kt_activitiesDirectClient #candidate_list .cd-cand-subtab.active');
+                var activeCandStage = activeCandBtn.length ? (activeCandBtn.data('stage') || 'sourcing') : 'sourcing';
+                var targetStage = filter ? filter : activeCandStage;
 
-                if (filter !== undefined && filter !== null) {
-                    $('#kt_activitiesDirectClient #candidate_list .cd-cand-subtab-direct').removeClass('active');
-                    var $matchBtn = $('#kt_activitiesDirectClient #candidate_list .cd-cand-subtab-direct[data-status="' + candStatus + '"]');
+                if (filter) {
+                    $('#kt_activitiesDirectClient #candidate_list .cd-cand-subtab, #kt_activitiesDirectClient #candidate_list .cd-cand-subtab-direct').removeClass('active').attr('aria-selected', 'false');
+                    var $matchBtn = $('#kt_activitiesDirectClient #candidate_list .cd-cand-subtab[data-stage="' + targetStage + '"], #kt_activitiesDirectClient #candidate_list .cd-cand-subtab-direct[data-stage="' + targetStage + '"]');
                     if ($matchBtn.length) {
-                        $matchBtn.addClass('active');
-                    } else if (candStatus === '' || candStatus === 'all') {
-                        $('#kt_activitiesDirectClient #candidate_list .cd-cand-subtab-direct[data-status=""]').addClass('active');
+                        $matchBtn.addClass('active').attr('aria-selected', 'true');
+                    } else {
+                        $('#kt_activitiesDirectClient #candidate_list .cd-cand-subtab[data-stage="sourcing"], #kt_activitiesDirectClient #candidate_list .cd-cand-subtab-direct[data-stage="sourcing"]').addClass('active').attr('aria-selected', 'true');
                     }
-                } else if (!activeCandBtn.length) {
-                    $('#kt_activitiesDirectClient #candidate_list .cd-cand-subtab-direct[data-status=""]').addClass('active');
                 }
 
                 if (window.ClientCandidateStoreDirect) {
@@ -7055,9 +7095,8 @@
                             window.ClientCandidateStoreDirect.init(currentCompanyId, dcClientId, 'direct');
                         }
                     } else {
-                        window.ClientCandidateStoreDirect.filters.status_id = (candStatus !== '' && candStatus !== 'all') ? String(candStatus) : '';
-                        window.ClientCandidateStoreDirect.filters.page = 1;
-                        window.ClientCandidateStoreDirect.fetch(1);
+                        window.ClientCandidateStoreDirect.activeStage = targetStage;
+                        window.ClientCandidateStoreDirect.filterAndRender();
                     }
                 }
                 if (coord) coord.transition(normTab, 'READY');
@@ -7324,6 +7363,20 @@
         maxProcessedEventIds: 500,
         latestRequestId: 0,
 
+        allCandidates: [],
+        stageCounts: {
+            sourcing: 0,
+            screening: 0,
+            evaluation: 0,
+            negotiations: 0,
+            offer: 0,
+            joined: 0,
+            rejected: 0,
+            interviews: 0
+        },
+        activeStage: 'sourcing',
+        searchTerm: '',
+
         filters: {
             search: '',
             status_id: '',
@@ -7373,6 +7426,9 @@
             this.queryFingerprint = null;
             this.candidateVersions = {};
             this.processedEventIds.clear();
+            this.allCandidates = [];
+            this.activeStage = 'sourcing';
+            this.searchTerm = '';
             this.bindEvents();
             this.subscribeReverb();
             this.fetch(1);
@@ -7393,6 +7449,7 @@
             }
             this.state = 'IDLE';
             this.clientId = null;
+            this.allCandidates = [];
             this.data = [];
             $(document).off('.directDrawerCand');
         },
@@ -7412,7 +7469,7 @@
             }, this.coalesceDelayMs);
         },
 
-        fetch: function(page, cursor) {
+        fetch: function(page, cursor, isManualRefresh) {
             var self = this;
             this.latestRequestId++;
             var requestId = this.latestRequestId;
@@ -7421,7 +7478,7 @@
             this.filters.page = page || 1;
             this.filters.cursor = cursor || null;
 
-            if (this.state === 'LOADING') {
+            if (this.state === 'LOADING' && (!this.allCandidates || this.allCandidates.length === 0)) {
                 $('#cdCandSkeletonLoaderDirect').show();
                 $('#cdCandidateTableWrapDirect').hide();
                 $('#cdCandEmptyStateDirect').hide();
@@ -7431,18 +7488,18 @@
                 try { this.inFlightXhr.abort(); } catch(e){}
             }
 
-            this.inFlightXhr = $.ajax({
+            var xhr = $.ajax({
                 url: '{{ url("service_company/direct-client-candidate-list") }}',
                 type: 'GET',
                 headers: { 'Accept': 'application/json' },
                 data: {
                     clientid: this.clientId,
-                    search: this.filters.search,
-                    status_id: this.filters.status_id,
+                    search: '',
+                    status_id: '',
                     job_id: this.filters.job_id,
                     page: this.filters.page,
                     cursor: this.filters.cursor,
-                    size: 25
+                    size: 100
                 },
                 success: function(res) {
                     var curSelId = window.ClientStateManager && typeof window.ClientStateManager.getSelectedClientId === 'function'
@@ -7453,24 +7510,33 @@
                     }
                     if (requestId !== self.latestRequestId) return;
 
-                    self.data = res.data || [];
+                    self.allCandidates = res.data || [];
                     self.pagination = res.pagination || {};
                     self.clientCandidateVersion = res.meta?.client_candidate_version || self.clientCandidateVersion;
                     self.queryFingerprint = res.meta?.query_fingerprint || null;
 
                     self.candidateVersions = {};
-                    self.data.forEach(function(cand) {
+                    self.allCandidates.forEach(function(cand) {
                         var cid = cand.id || cand.wiseId;
                         if (cid && cand.aggregate_version !== undefined) {
                             self.candidateVersions[cid] = cand.aggregate_version;
                         }
                     });
 
+                    // Stage counts computation from aggregations or fallback
+                    if (res.meta && res.meta.stage_counts) {
+                        self.stageCounts = res.meta.stage_counts;
+                    } else {
+                        self.calculateStageCounts(self.allCandidates);
+                    }
+
                     self.state = 'READY';
                     $('#cdCandSkeletonLoaderDirect').hide();
                     $('#cdCandidateTableWrapDirect').show();
-                    self.renderRows();
+
                     self.updateCounts(self.pagination.total, self.pagination.total_relation);
+                    self.updateAllStageBadgesDirect();
+                    self.filterAndRender();
                 },
                 error: function(xhr, status) {
                     if (status === 'abort') return;
@@ -7491,23 +7557,111 @@
                             ? 'Candidate search service temporarily unavailable. Please retry.'
                             : (xhr.responseJSON?.message || 'Failed to load candidates.');
 
-                    $('#candidatetList').html(`<tr><td colspan="9" class="text-center py-6 text-danger fw-bold">${msg}</td></tr>`);
+                    $('#candidatetList').html(`<div class="text-center py-6 text-danger fw-bold">${msg}</div>`);
                     $('#paginationcandidate').empty();
                 }
             });
+
+            this.inFlightXhr = xhr;
+            return xhr;
+        },
+
+        matchesStage: function(cand, stage) {
+            if (!stage || stage === 'all') return true;
+            var sid = parseInt(cand.master_status_id || cand.job_master_status_id || 0, 10);
+            var sName = String(cand.child_status_name || cand.master_status_name || cand.name || '').toLowerCase();
+            switch (stage) {
+                case 'sourcing':
+                    return sid === 1 || sName.includes('sourc') || sName.includes('inreview') || sName.includes('review') || sName.includes('sendmail');
+                case 'screening':
+                    return sid === 2 || sName.includes('screen');
+                case 'evaluation':
+                    return sid === 3 || sName.includes('eval') || sName.includes('interview');
+                case 'negotiations':
+                    return sid === 4 || sName.includes('negot');
+                case 'offer':
+                    return sid === 5 || sName.includes('offer');
+                case 'joined':
+                    return sid === 6 || sName.includes('join') || sName.includes('onboard');
+                case 'rejected':
+                    return sid === 7 || sid === 8 || sName.includes('reject');
+                case 'interviews':
+                    return sid === 3 || sName.includes('interview') || (cand.interview_count && cand.interview_count > 0);
+                default:
+                    return true;
+            }
+        },
+
+        calculateStageCounts: function(list) {
+            var counts = {
+                sourcing: 0,
+                screening: 0,
+                evaluation: 0,
+                negotiations: 0,
+                offer: 0,
+                joined: 0,
+                rejected: 0,
+                interviews: 0
+            };
+            var self = this;
+            (list || []).forEach(function(cand) {
+                if (self.matchesStage(cand, 'sourcing')) counts.sourcing++;
+                if (self.matchesStage(cand, 'screening')) counts.screening++;
+                if (self.matchesStage(cand, 'evaluation')) counts.evaluation++;
+                if (self.matchesStage(cand, 'negotiations')) counts.negotiations++;
+                if (self.matchesStage(cand, 'offer')) counts.offer++;
+                if (self.matchesStage(cand, 'joined')) counts.joined++;
+                if (self.matchesStage(cand, 'rejected')) counts.rejected++;
+                if (self.matchesStage(cand, 'interviews')) counts.interviews++;
+            });
+            this.stageCounts = counts;
+            return counts;
+        },
+
+        updateAllStageBadgesDirect: function() {
+            var c = this.stageCounts || {};
+            $('#candTabCountSourcingDirect').text(c.sourcing || 0);
+            $('#candTabCountScreeningDirect').text(c.screening || 0);
+            $('#candTabCountEvaluationDirect').text(c.evaluation || 0);
+            $('#candTabCountNegotiationsDirect').text(c.negotiations || 0);
+            $('#candTabCountOfferDirect').text(c.offer || 0);
+            $('#candTabCountJoinedDirect').text(c.joined || 0);
+            $('#candTabCountRejectedDirect').text(c.rejected || 0);
+            $('#candTabCountInterviewsDirect').text(c.interviews || 0);
+        },
+
+        filterAndRender: function() {
+            var self = this;
+            var stage = this.activeStage || 'sourcing';
+            var term = (this.searchTerm || '').toLowerCase().trim();
+
+            var filtered = (this.allCandidates || []).filter(function(cand) {
+                // 1. Stage filter
+                if (!self.matchesStage(cand, stage)) return false;
+
+                // 2. Search query filter
+                if (term) {
+                    var corpus = [
+                        cand.full_name, cand.first_name, cand.last_name,
+                        cand.current_designation, cand.skills,
+                        cand.city_name, cand.country_name,
+                        cand.current_company, cand.title, cand.job_title,
+                        String(cand.id || cand.wiseId || '')
+                    ].filter(Boolean).join(' ').toLowerCase();
+                    if (!corpus.includes(term)) return false;
+                }
+                return true;
+            });
+
+            this.data = filtered;
+            this.renderRows();
         },
 
         updateCounts: function(total, relation) {
-            var num = Number(total || 0);
+            var num = Number(total || (this.allCandidates ? this.allCandidates.length : 0));
             var formatted = (relation === 'gte') ? (num.toLocaleString() + '+') : num.toLocaleString();
             $('#cdCandidateCountTextDirect').text(formatted);
             $('#tabBadgeCandidates').text(formatted).show();
-
-            var activeTab = $('.cd-cand-subtab-direct.active');
-            activeTab.find('.cd-cand-subtab-badge').text(formatted).show();
-            if (!this.filters.status_id) {
-                $('#candTabCountAllDirect').text(formatted).show();
-            }
         },
 
         renderRows: function() {
@@ -7727,6 +7881,25 @@
                 statusChipClass = 'status-closed';
             }
 
+            // Target Requirement Company Branding Logo
+            var companyLogo = row.client_logo || row.company_logo || row.logo_logical_path || row.logo || '{{ $detailLogo ?? "" }}';
+            var companyInitial = (companyName && companyName.length > 0) ? companyName.charAt(0).toUpperCase() : 'C';
+            var logoHtml = '';
+            if (companyLogo && companyLogo.length > 5) {
+                logoHtml = `
+                    <div class="cd-job-logo-wrap" title="${$('<div>').text(companyNameFormatted).html()}">
+                        <img src="${companyLogo}" alt="${$('<div>').text(companyNameFormatted).html()}" class="cd-job-logo-img" onerror="this.style.display='none'; if(this.nextElementSibling) this.nextElementSibling.style.display='flex';">
+                        <div class="cd-job-logo-fallback" style="display:none;">${companyInitial}</div>
+                    </div>
+                `;
+            } else {
+                logoHtml = `
+                    <div class="cd-job-logo-wrap" title="${$('<div>').text(companyNameFormatted).html()}">
+                        <div class="cd-job-logo-fallback"><i class="fas fa-building text-primary"></i></div>
+                    </div>
+                `;
+            }
+
             // 5. Sub-Card 5: Recruiter & Sourcing
             var recruiter = row.posted_by_name || row.posted_by || row.submitted_by_name || row.agency_root_name || 'Recruiter';
             var submitterCompany = row.submitted_by_company_name || row.post_company_name || row.apl_company_name || row.company_name || 'Agency';
@@ -7845,7 +8018,6 @@
                             </div>
                             <div class="cd-cand-subcard-body">
                                 <div class="cd-cand-profile-row">
-                                    <div class="cd-cand-avatar-box">${candInitials}</div>
                                     <div class="cd-cand-profile-meta">
                                         <a href="javascript:void(0);" class="cd-cand-name show-application-detail" data-row-id="${cid}" title="${$('<div>').text(rawFullName).html()}">
                                             ${displayName}
@@ -7906,7 +8078,7 @@
                             </div>
                             <div class="cd-cand-subcard-body">
                                 <div class="cd-job-row">
-                                    <div class="cd-job-logo-box">${jobInitial}</div>
+                                    ${logoHtml}
                                     <div class="cd-job-meta-wrap">
                                         <a href="${jobUrl}" target="_blank" class="cd-job-title-link" title="${$('<div>').text(jobTitle).html()}">
                                             ${jobTitleFormatted}
@@ -8015,6 +8187,25 @@
 
             $(document).off('.directDrawerCand');
 
+            // 1. Sub-tab clicks (0 HTTP requests!)
+            $(document).on('click.directDrawerCand', '#kt_activitiesDirectClient .cd-cand-subtab, #kt_activitiesDirectClient .cd-cand-subtab-direct', function(e) {
+                if (e && typeof e.preventDefault === 'function') e.preventDefault();
+                var stage = $(this).data('stage') || 'sourcing';
+                $('#kt_activitiesDirectClient .cd-cand-subtab, #kt_activitiesDirectClient .cd-cand-subtab-direct').removeClass('active').attr('aria-selected', 'false');
+                $(this).addClass('active').attr('aria-selected', 'true');
+                self.activeStage = stage;
+                self.filterAndRender();
+            });
+
+            // 2. Click on Candidates total count badge -> Show All candidates
+            $(document).on('click.directDrawerCand', '#cdCandidateCountBadgeDirect', function(e) {
+                if (e && typeof e.preventDefault === 'function') e.preventDefault();
+                $('#kt_activitiesDirectClient .cd-cand-subtab, #kt_activitiesDirectClient .cd-cand-subtab-direct').removeClass('active').attr('aria-selected', 'false');
+                self.activeStage = 'all';
+                self.filterAndRender();
+            });
+
+            // 3. Search input with 300ms debounce (0 HTTP requests!)
             var searchDebounceTimer = null;
             $(document).on('input.directDrawerCand', '#cdCandSearchInputDirect', function() {
                 var val = $(this).val();
@@ -8025,47 +8216,39 @@
                 }
                 clearTimeout(searchDebounceTimer);
                 searchDebounceTimer = setTimeout(function() {
-                    self.filters.search = val;
-                    self.filters.page = 1;
-                    self.filters.cursor = null;
-                    self.fetch(1);
+                    self.searchTerm = val;
+                    self.filterAndRender();
                 }, 300);
             });
 
+            // 4. Clear search button (0 HTTP requests!)
             $(document).on('click.directDrawerCand', '#cdCandSearchClearDirect', function() {
                 $('#cdCandSearchInputDirect').val('');
                 $(this).hide();
-                self.filters.search = '';
-                self.filters.page = 1;
-                self.filters.cursor = null;
-                self.fetch(1);
+                self.searchTerm = '';
+                self.filterAndRender();
             });
 
-            $(document).on('click.directDrawerCand', '#kt_activitiesDirectClient .cd-cand-subtab-direct', function(e) {
+            // 5. Reset / Refresh button (deduplicated with loading spin)
+            $(document).on('click.directDrawerCand', '#cdCandResetBtnDirect', function(e) {
                 if (e && typeof e.preventDefault === 'function') e.preventDefault();
-                var status = $(this).data('status');
-                $('#kt_activitiesDirectClient .cd-cand-subtab-direct').removeClass('active');
-                $(this).addClass('active');
-                if (window.__activeClientDrawer && window.__activeClientDrawer.coordinator) {
-                    window.__activeClientDrawer.coordinator.transition('candidates', 'LOADING', { filter: String(status || '') });
+                var $btn = $(this);
+                if ($btn.hasClass('is-refreshing') || self.state === 'LOADING' || self.state === 'REFRESHING') {
+                    return;
                 }
-                self.filters.status_id = (status !== undefined && status !== null && status !== '' && status !== 'all') ? String(status) : '';
-                self.filters.page = 1;
-                self.filters.cursor = null;
-                self.fetch(1);
-            });
-
-            $(document).on('click.directDrawerCand', '#cdCandResetBtnDirect', function() {
+                $btn.addClass('is-refreshing');
+                $btn.find('i').addClass('fa-spin');
                 $('#cdCandSearchInputDirect').val('');
                 $('#cdCandSearchClearDirect').hide();
-                $('.cd-cand-subtab-direct').removeClass('active');
-                $('.cd-cand-subtab-direct[data-status=""]').addClass('active');
-                self.filters.search = '';
-                self.filters.status_id = '';
-                self.filters.job_id = '';
-                self.filters.page = 1;
-                self.filters.cursor = null;
-                self.fetch(1);
+                self.searchTerm = '';
+                self.activeStage = 'sourcing';
+                $('#kt_activitiesDirectClient .cd-cand-subtab, #kt_activitiesDirectClient .cd-cand-subtab-direct').removeClass('active').attr('aria-selected', 'false');
+                $('#kt_activitiesDirectClient .cd-cand-subtab[data-stage="sourcing"], #kt_activitiesDirectClient .cd-cand-subtab-direct[data-stage="sourcing"]').addClass('active').attr('aria-selected', 'true');
+
+                self.fetch(1, null, true).always(function() {
+                    $btn.removeClass('is-refreshing');
+                    $btn.find('i').removeClass('fa-spin');
+                });
             });
 
             $(document).on('wheel.directDrawerCand', '.cd-cand-bottom-strip, .cd-bottom-skills-scroll', function(e) {
@@ -8781,9 +8964,84 @@
                     ratingHtml = `★ ${evalData.star_rating} / 5.0 Rating`;
                 }
 
-                // Panel extra count
-                const panelCount = (intvs.extra_count || 0) + 1;
-                const panelLabel = panelCount === 1 ? '1 Panelist' : `${panelCount} Panelists`;
+                                // Panelist processing: Support multiple panelists & avatars elegantly
+                let panelList = [];
+                if (Array.isArray(intv.interviewers) && intv.interviewers.length > 0) {
+                    panelList = intv.interviewers.map(function(p, idx) {
+                        let pName = typeof p === 'object' && p !== null ? (p.name || p.interviewer_name || '') : String(p);
+                        let pComp = typeof p === 'object' && p !== null ? (p.company_name || '') : '';
+                        return {
+                            name: pName.trim() || 'Interviewer',
+                            company: pComp.trim(),
+                            is_lead: idx === 0
+                        };
+                    }).filter(p => !!p.name);
+                }
+
+                if (!panelList.length) {
+                    const leadFallback = (intvs.lead_name && intvs.lead_name !== 'N/A') ? intvs.lead_name : 'Panel Assigned';
+                    panelList.push({
+                        name: leadFallback,
+                        company: intvs.lead_company || '',
+                        is_lead: true
+                    });
+                    if (intvs.extra_count && intvs.extra_count > 0) {
+                        for (let i = 1; i <= intvs.extra_count; i++) {
+                            panelList.push({
+                                name: `Panelist #${i + 1}`,
+                                company: intvs.lead_company || '',
+                                is_lead: false
+                            });
+                        }
+                    }
+                }
+
+                const totalPanelists = panelList.length;
+                const leadPanelist = panelList[0] || { name: 'Panel Assigned', company: '' };
+                const leadName = leadPanelist.name || 'Panel Assigned';
+                const leadInitial = (leadName && leadName !== 'Panel Assigned') ? leadName.charAt(0).toUpperCase() : '<i class="fas fa-user-tie fs-9"></i>';
+                const leadCompany = leadPanelist.company || '';
+                const extraPanelistsCount = Math.max(0, totalPanelists - 1);
+                const panelBadgeText = totalPanelists === 1 ? '1 Panelist' : `${totalPanelists} Panelists`;
+
+                // Build popover items HTML
+                const popoverItemsHtml = panelList.map(function(p) {
+                    return `
+                        <div class="cd-it-popover-item">
+                            <span class="text-truncate" style="max-width: 150px;" title="${p.name}">
+                                <i class="fas ${p.is_lead ? 'fa-user-check text-info' : 'fa-user text-muted'} me-1"></i>
+                                ${p.name}
+                            </span>
+                            ${p.is_lead ? '<span class="item-lead-badge">Lead</span>' : (p.company ? `<span class="text-muted fs-9">${p.company}</span>` : '')}
+                        </div>
+                    `;
+                }).join('');
+
+                const panelistTooltipText = panelList.map(p => p.is_lead ? `${p.name} (Lead)` : p.name).join(', ');
+
+                // Schedule Time & Mode formatting (Time directly below Date: Time | Mode)
+                const dateText = sch.date_formatted || '—';
+                const timeText = sch.time_formatted || '';
+                const modeText = sch.mode_label || 'Video Call';
+                let timeModeHtml = '';
+                if (timeText) {
+                    timeModeHtml = `
+                        <div class="cd-it-dt-time-mode">
+                            <i class="far fa-clock me-1 text-primary"></i>
+                            <span class="cd-it-dt-time-val">${timeText}</span>
+                            <span class="cd-dot-sep">|</span>
+                            ${modeIcon}
+                            <span class="cd-it-dt-mode-val">${modeText}</span>
+                        </div>
+                    `;
+                } else {
+                    timeModeHtml = `
+                        <div class="cd-it-dt-time-mode">
+                            ${modeIcon}
+                            <span class="cd-it-dt-mode-val">${modeText}</span>
+                        </div>
+                    `;
+                }
 
                 // Recommendation pill
                 let recHtml = '';
@@ -8795,7 +9053,7 @@
 
                 return `
                     <div class="cd-it-card" data-interview-id="${intv.id || ''}" data-status="${att.code || 0}" data-feedback="${evalData.code || 0}">
-                        <!-- Upper Discrete 5 Sub-Cards Grid -->
+                        <!-- Upper Discrete 6 Sub-Cards Grid -->
                         <div class="cd-it-card-grid">
 
                             <!-- 1. CANDIDATE INFO -->
@@ -8828,9 +9086,7 @@
                                 <div class="cd-subcard-header">
                                     <span class="cd-subcard-label">TARGET REQUISITION</span>
                                     <div class="d-flex align-items-center gap-1">
-                                        <span class="cd-badge-scope ${job.job_type_class || 'scope-direct'}">
-                                            ${job.job_type_label || 'Direct Client'}
-                                        </span>
+                                        <span class="cd-badge-scope ${job.job_type_class || 'scope-direct'}">${job.job_type_label || 'Direct Client'}</span>
                                         <span class="cd-status-hiring">Hiring</span>
                                     </div>
                                 </div>
@@ -8859,26 +9115,21 @@
                             <div class="cd-it-subcard">
                                 <div class="cd-subcard-header">
                                     <span class="cd-subcard-label">SCHEDULE &amp; LINK</span>
-                                    ${sch.time_formatted ? `<span class="cd-it-time-pill">${sch.time_formatted}</span>` : ''}
                                 </div>
                                 <div>
                                     <div class="cd-it-dt-date">
                                         <i class="far fa-calendar-alt me-1 text-primary"></i>
-                                        <span>${sch.date_formatted || '—'}</span>
+                                        <span>${dateText}</span>
                                     </div>
-                                    <div class="cd-it-dt-mode">
-                                        ${modeIcon}
-                                        <span>${sch.mode_label || 'Video Call'}</span>
-                                    </div>
+                                    ${timeModeHtml}
                                     ${linkHtml}
                                 </div>
                             </div>
 
-                            <!-- 4. RECRUITER & SOURCING -->
+                            <!-- 4. RECRUITER INFO -->
                             <div class="cd-it-subcard">
                                 <div class="cd-subcard-header">
-                                    <span class="cd-subcard-label">RECRUITER &amp; SOURCING</span>
-                                    <span class="cd-it-source-pill">Sourced</span>
+                                    <span class="cd-subcard-label">RECRUITER INFO</span>
                                 </div>
                                 <div>
                                     <div class="cd-it-recruiter-name" title="${src.name || '—'}">
@@ -8889,23 +9140,57 @@
                                     </div>
                                     <div class="cd-it-submitted-at">
                                         <i class="far fa-clock me-1"></i>
-                                        <span>Submitted: ${src.submitted_at || '4 days ago'}</span>
+                                        <span>Submitted: ${src.submitted_at || 'Recently'}</span>
                                     </div>
                                 </div>
                             </div>
 
-                            <!-- 5. PANEL & FEEDBACK -->
+                            <!-- 5. DEDICATED PANELISTS CARD -->
+                            <div class="cd-it-subcard cd-it-panelist-card">
+                                <div class="cd-subcard-header">
+                                    <span class="cd-subcard-label">PANELISTS</span>
+                                    <span class="cd-it-panel-count-pill">${panelBadgeText}</span>
+                                </div>
+                                <div class="cd-it-panel-body" title="${panelistTooltipText}">
+                                    <div class="cd-panel-avatar-stack">
+                                        <div class="cd-panel-avatar" title="${leadName}">
+                                            ${leadInitial}
+                                        </div>
+                                        ${extraPanelistsCount > 0 ? `
+                                            <div class="cd-panel-avatar cd-panel-avatar-extra" title="+${extraPanelistsCount} more panelists">
+                                                +${extraPanelistsCount}
+                                            </div>
+                                        ` : ''}
+                                    </div>
+                                    <div class="min-w-0 flex-grow-1 overflow-hidden">
+                                        <div class="cd-it-lead-name" title="${leadName}">
+                                            ${leadName}
+                                        </div>
+                                        <div class="cd-it-lead-sub" title="${leadCompany || 'Interview Panel'}">
+                                            ${extraPanelistsCount > 0 ? `+${extraPanelistsCount} more panelist${extraPanelistsCount > 1 ? 's' : ''}` : (leadCompany || 'Interview Panel')}
+                                        </div>
+                                    </div>
+
+                                    <!-- Clean Hover Popover -->
+                                    <div class="cd-it-popover-card">
+                                        <div class="cd-it-popover-header">
+                                            <span><i class="fas fa-users text-primary me-1"></i> Interview Panel</span>
+                                            <span class="badge badge-sm badge-light-primary text-primary">${totalPanelists}</span>
+                                        </div>
+                                        <div class="cd-it-popover-body">
+                                            ${popoverItemsHtml}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 6. STATUS & FEEDBACK -->
                             <div class="cd-it-subcard">
                                 <div class="cd-subcard-header">
-                                    <span class="cd-subcard-label">PANEL &amp; FEEDBACK</span>
-                                    <span class="cd-it-panel-count">${panelLabel}</span>
+                                    <span class="cd-subcard-label">STATUS &amp; FEEDBACK</span>
                                 </div>
                                 <div>
-                                    <div class="cd-it-lead-name" title="${intvs.lead_name || 'Panel Assigned'}">
-                                        ${intvs.lead_name || 'Panel Assigned'}
-                                        <span class="cd-it-lead-tag">(Lead)</span>
-                                    </div>
-                                    <div class="d-flex align-items-center gap-1 mt-1 flex-wrap">
+                                    <div class="d-flex align-items-center gap-1 flex-wrap">
                                         <span class="cd-it-att-pill ${att.css_class || 'cit-fb-scheduled'}">
                                             ${att.label || 'Scheduled'}
                                         </span>
