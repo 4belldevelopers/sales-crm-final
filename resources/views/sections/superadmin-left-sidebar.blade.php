@@ -897,7 +897,7 @@
                          <!--begin::smtpSetting-->
                          <div class="menu-item">
                             <a href="{{ route('superadmin.smtp-settings.index') }}"
-                                class="menu-link {{ request()->is('super-admin/smtp-settings') ? 'active' : '' }}"">
+                                class="menu-link {{ request()->is('super-admin/smtp-settings*') ? 'active' : '' }}">
                                 <span class="menu-bullet">
                                     <span class="bullet bullet-dot"></span>
                                 </span>
@@ -1051,7 +1051,27 @@
                 <!--end::CMS Pages-->
 
                 <!--begin::settings-->
-                <div data-kt-menu-trigger="click" class="menu-item menu-accordion {{ request()->is('super-admin/global-settings') ||  request()->is('super-admin/super-admin-access') || request()->is('super-admin/zoom-setting') || request()->is('super-admin/team-meeting-setting') || request()->is('super-admin/google-meeting-setting') || request()->is('super-admin/profile') || request()->is('super-admin/currency-settings') || request()->is('super-admin/language-settings') || request()->is('super-admin/theme-settings') || request()->is('super-admin/payment-settings') || request()->is('super-admin/skills') || request()->is('super-admin/sms-settings') || request()->is('super-admin/custom-modules') || request()->is('super-admin/features-list') || request()->is('super-admin/linkedin-settings') ? 'show' : '' }} ">
+                <div data-kt-menu-trigger="click" class="menu-item menu-accordion {{ request()->is(
+                    'super-admin/global-settings*',
+                    'super-admin/skills*',
+                    'super-admin/recruiter-note*',
+                    'super-admin/rm-note*',
+                    'super-admin/zoom-setting*',
+                    'super-admin/google-meeting-setting*',
+                    'super-admin/team-meeting-setting*',
+                    'super-admin/super-admin-access*',
+                    'super-admin/profile*',
+                    'super-admin/currency-settings*',
+                    'super-admin/language-settings*',
+                    'super-admin/theme-settings*',
+                    'super-admin/footer-settings*',
+                    'super-admin/payment-settings*',
+                    'super-admin/sms-settings*',
+                    'super-admin/custom-modules*',
+                    'super-admin/update-application*',
+                    'super-admin/features-list*',
+                    'super-admin/linkedin-settings*'
+                ) ? 'here show' : '' }} ">
                     <span class="menu-link">
                         <span class="menu-icon">
                             <!--begin::Svg Icon-->
@@ -1075,7 +1095,7 @@
                         <!--begin::settings-->
                         <div class="menu-item">
                             <a href="{{ route('superadmin.global-settings.index') }}"
-                                class="menu-link {{ request()->is('super-admin/global-settings') ? 'active' : '' }}"">
+                                class="menu-link {{ request()->is('super-admin/global-settings*') ? 'active' : '' }}">
                                 <span class="menu-bullet">
                                     <span class="bullet bullet-dot"></span>
                                 </span>
@@ -1086,7 +1106,7 @@
                          <!--begin::settings-->
                         <div class="menu-item">
                             <a href="{{ route('superadmin.company.skillskElastic') }}"
-                                class="menu-link {{ request()->is('super-admin/skills') ? 'active' : '' }}"">
+                                class="menu-link {{ request()->is('super-admin/skills*') ? 'active' : '' }}">
                                 <span class="menu-bullet">
                                     <span class="bullet bullet-dot"></span>
                                 </span>
@@ -1122,7 +1142,7 @@
                         <!--begin::settings-->
                         <div class="menu-item">
                             <a href="{{ route('superadmin.company.zoom_setting') }}"
-                                class="menu-link {{ request()->is('super-admin/zoom-setting') ? 'active' : '' }}"">
+                                class="menu-link {{ request()->is('super-admin/zoom-setting*') ? 'active' : '' }}">
                                 <span class="menu-bullet">
                                     <span class="bullet bullet-dot"></span>
                                 </span>
@@ -1134,7 +1154,7 @@
                         <!--begin::google meeting link-->
                         <div class="menu-item">
                             <a href="{{ route('superadmin.company.google_meeting_setting') }}"
-                                class="menu-link {{ request()->is('super-admin/google-meeting-setting') ? 'active' : '' }}"">
+                                class="menu-link {{ request()->is('super-admin/google-meeting-setting*') ? 'active' : '' }}">
                                 <span class="menu-bullet">
                                     <span class="bullet bullet-dot"></span>
                                 </span>
@@ -1146,7 +1166,7 @@
                         <!--begin::team meeting link-->
                         <div class="menu-item">
                             <a href="{{ route('superadmin.company.team_meeting_setting') }}"
-                                class="menu-link {{ request()->is('super-admin/team-meeting-setting') ? 'active' : '' }}"">
+                                class="menu-link {{ request()->is('super-admin/team-meeting-setting*') ? 'active' : '' }}">
                                 <span class="menu-bullet">
                                     <span class="bullet bullet-dot"></span>
                                 </span>
@@ -1159,7 +1179,7 @@
                          <!--begin::settings-->
                          <div class="menu-item d-none">
                             <a href="{{ route('superadmin.company.superAdminAccess') }}"
-                                class="menu-link {{ request()->is('super-admin/super-admin-access') ? 'active' : '' }}"">
+                                class="menu-link {{ request()->is('super-admin/super-admin-access*') ? 'active' : '' }}">
                                 <span class="menu-bullet">
                                     <span class="bullet bullet-dot"></span>
                                 </span>
@@ -1173,7 +1193,7 @@
                         <!--begin::myProfile-->
                         <div class="menu-item">
                             <a href="{{ route('superadmin.profile.index') }}"
-                                class="menu-link {{ request()->is('super-admin/profile') ? 'active' : '' }}"">
+                                class="menu-link {{ request()->is('super-admin/profile*') ? 'active' : '' }}">
                                 <span class="menu-bullet">
                                     <span class="bullet bullet-dot"></span>
                                 </span>
@@ -1185,7 +1205,7 @@
                         <!--begin::settings-->
                         <div class="menu-item">
                             <a href="{{ route('superadmin.currency-settings.index') }}"
-                                class="menu-link {{ request()->is('super-admin/currency-settings') ? 'active' : '' }}">
+                                class="menu-link {{ request()->is('super-admin/currency-settings*') ? 'active' : '' }}">
                                 <span class="menu-bullet">
                                     <span class="bullet bullet-dot"></span>
                                 </span>
@@ -1197,7 +1217,7 @@
                         <!--begin::Icon Features-->
                         <div class="menu-item">
                             <a href="{{ route('superadmin.language-settings.index') }}"
-                                class="menu-link {{ request()->is('super-admin/language-settings') ? 'active' : '' }}">
+                                class="menu-link {{ request()->is('super-admin/language-settings*') ? 'active' : '' }}">
                                 <span class="menu-bullet">
                                     <span class="bullet bullet-dot"></span>
                                 </span>
@@ -1209,7 +1229,7 @@
                         <!--begin::ThemeSettings-->
                         <div class="menu-item">
                             <a href="{{ route('superadmin.theme-settings.index') }}"
-                                class="menu-link {{ request()->is('super-admin/theme-settings') ? 'active' : '' }}">
+                                class="menu-link {{ request()->is('super-admin/theme-settings*') ? 'active' : '' }}">
                                 <span class="menu-bullet">
                                     <span class="bullet bullet-dot"></span>
                                 </span>
@@ -1221,7 +1241,7 @@
                         <!--begin::footerSettings-->
                         <div class="menu-item d-none">
                             <a href="{{ route('superadmin.footer-settings.index') }}"
-                                class="menu-link {{ request()->is('super-admin/footer-settings') ? 'active' : '' }}">
+                                class="menu-link {{ request()->is('super-admin/footer-settings*') ? 'active' : '' }}">
                                 <span class="menu-bullet">
                                     <span class="bullet bullet-dot"></span>
                                 </span>
@@ -1233,7 +1253,7 @@
                         <!--begin::paymentSettings-->
                         <div class="menu-item">
                             <a href="{{ route('superadmin.payment-settings.index') }}"
-                                class="menu-link {{ request()->is('super-admin/payment-settings') ? 'active' : '' }}">
+                                class="menu-link {{ request()->is('super-admin/payment-settings*') ? 'active' : '' }}">
                                 <span class="menu-bullet">
                                     <span class="bullet bullet-dot"></span>
                                 </span>
@@ -1245,7 +1265,7 @@
                         <!--begin::smsSettings-->
                         {{-- <div class="menu-item">
                             <a href="{{ route('superadmin.sms-settings.index') }}"
-                                class="menu-link {{ request()->is('super-admin/sms-settings') ? 'active' : '' }}">
+                                class="menu-link {{ request()->is('super-admin/sms-settings*') ? 'active' : '' }}">
                                 <span class="menu-bullet">
                                     <span class="bullet bullet-dot"></span>
                                 </span>
@@ -1257,7 +1277,7 @@
                         <!--begin::customModules-->
                         {{-- <div class="menu-item">
                             <a href="{{ route('superadmin.custom-modules.index') }}"
-                                class="menu-link {{ request()->is('super-admin/custom-modules') ? 'active' : '' }}">
+                                class="menu-link {{ request()->is('super-admin/custom-modules*') ? 'active' : '' }}">
                                 <span class="menu-bullet">
                                     <span class="bullet bullet-dot"></span>
                                 </span>
@@ -1269,7 +1289,7 @@
                         <!--begin::updateApplication-->
                         <div class="menu-item d-none hide_unsue_menu">
                             <a href="{{ route('superadmin.update-application.index') }}"
-                                class="menu-link {{ request()->is('super-admin/update-application') ? 'active' : '' }}">
+                                class="menu-link {{ request()->is('super-admin/update-application*') ? 'active' : '' }}">
                                 <span class="menu-bullet">
                                     <span class="bullet bullet-dot"></span>
                                 </span>
@@ -1281,7 +1301,7 @@
                         <!--begin::Features-->
                         <div class="menu-item">
                             <a href="{{ route('superadmin.company.featuresList') }}"
-                                class="menu-link {{ request()->is('super-admin/features-list') ? 'active' : '' }}">
+                                class="menu-link {{ request()->is('super-admin/features-list*') ? 'active' : '' }}">
                                 <span class="menu-bullet">
                                     <span class="bullet bullet-dot"></span>
                                 </span>
@@ -1295,7 +1315,7 @@
                         <!--begin::linkedInSettings-->
                         <div class="menu-item">
                             <a href="{{ route('superadmin.linkedin-settings.index') }}"
-                                class="menu-link {{ request()->is('super-admin/linkedin-settings') ? 'active' : '' }}">
+                                class="menu-link {{ request()->is('super-admin/linkedin-settings*') ? 'active' : '' }}">
                                 <span class="menu-bullet">
                                     <span class="bullet bullet-dot"></span>
                                 </span>
@@ -1310,7 +1330,7 @@
                 <!--begin::frontWebsite-->
                 <div class="menu-item">
                     <a href="{{ url('/') }}" target="_blank"
-                        class="menu-link {{ request()->is('super-admin/global-settings') ? 'active' : '' }}">
+                        class="menu-link">
                         <span class="menu-icon">
                             <!--begin::Svg Icon-->
                             <span class="svg-icon svg-icon-2">
