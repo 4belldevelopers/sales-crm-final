@@ -6783,13 +6783,37 @@
     // new $.fn.dataTable.FixedHeader(table);
 </script>
 <script>
+    var directRequestedClientId = parseInt('{{ $requested_client_id ?? ($id ?? 0) }}', 10);
+    var directDcClientId = parseInt('{{ $requested_client_id ?? ($directClientDetail->client_id ?: ($directClientDetail->from_company_id ?: $directClientDetail->company_id)) }}', 10);
+    var directTargetCompanyId = parseInt('{{ $directClientDetail->company_id ?: ($directClientDetail->from_company_id ?: ($directClientDetail->companies_id ?: $directClientDetail->client_id)) }}', 10);
+    var directTargetClientId = parseInt('{{ $directClientDetail->client_id ?: ($requested_client_id ?? ($id ?? 0)) }}', 10);
+    var directCurrentCompanyId = parseInt('{{ auth()->user()->company_id }}', 10);
+
+    var directValidClientIds = [
+        {{ (int) ($requested_client_id ?? ($id ?? 0)) }},
+        {{ (int) ($directClientDetail->client_id ?? 0) }},
+        {{ (int) ($directClientDetail->from_company_id ?? 0) }},
+        {{ (int) ($directClientDetail->company_id ?? 0) }},
+        {{ (int) ($directClientDetail->companies_id ?? 0) }},
+        {{ (int) ($directClientDetail->id ?? 0) }}
+    ].filter(function(v) { return v && v > 0; });
+
+    function isMatchingDirectClient(activeId) {
+        if (!activeId) return true;
+        var num = parseInt(activeId, 10);
+        if (!num || isNaN(num)) return true;
+        return directValidClientIds.indexOf(num) !== -1;
+    }
+    window.isMatchingDirectClient = isMatchingDirectClient;
+    window.directValidClientIds = directValidClientIds;
+
     /**
      * ── DirectClientContactsManager (Client-First RAM & Card Stream Engine) ──
      * God-Level Modern Card + Sub-Card Enterprise Implementation.
      * 100% Client-First Local Filtering, 300ms Debounce, Copy Actions, Zero Horizontal Overflow.
      */
     window.DirectClientContactsManager = {
-        companyId: {{ $directClientDetail->company_id ?? $directClientDetail->from_company_id ?? $directClientDetail->companies_id ?? $directClientDetail->client_id ?? 0 }},
+        companyId: directTargetCompanyId || {{ $directClientDetail->company_id ?? $directClientDetail->from_company_id ?? $directClientDetail->companies_id ?? $directClientDetail->client_id ?? 0 }},
         clientName: '{{ addslashes($clientTitle ?? @$directClientDetail->name ?? "Direct Client") }}',
         allContacts: @json($client_contact_arr ?? []),
         filteredContacts: [],
@@ -6804,10 +6828,10 @@
         init: function(companyId) {
             if (companyId) {
                 var cid = parseInt(companyId, 10);
-                if (this.companyId && parseInt(this.companyId, 10) !== cid) {
+                if (this.companyId && !isMatchingDirectClient(this.companyId) && !isMatchingDirectClient(cid)) {
                     this.companyId = cid;
                     this.allContacts = [];
-                } else {
+                } else if (cid && (!this.companyId || !isMatchingDirectClient(this.companyId))) {
                     this.companyId = cid;
                 }
             }
@@ -6869,7 +6893,7 @@
                 $(this).addClass('active');
                 self.activeFilter = filter;
                 if (window.__activeClientDrawer && window.__activeClientDrawer.coordinator) {
-                    window.__activeClientDrawer.coordinator.setFilter('contacts', filter);
+                    window.__activeClientDrawer.coordinator.getState('contacts').filter = filter;
                 }
                 if (Array.isArray(self.allContacts) && self.allContacts.length > 0) {
                     self.filterAndRender();
@@ -6936,7 +6960,7 @@
                 $('#cdContactEmptyStateDirect').hide();
             }
 
-            var companyId = this.companyId;
+            var companyId = this.companyId || directTargetCompanyId || directTargetClientId || directDcClientId;
             $.ajax({
                 url: '{!! route('service_company.clients.dcontactList') !!}?company_id=' + companyId,
                 type: 'GET',
@@ -7265,11 +7289,11 @@
     };
 
     function initDContactsDataTable() {
-        var cid = (typeof dcClientId !== 'undefined') ? dcClientId : (window.ClientStateManager && typeof window.ClientStateManager.getSelectedClientId === 'function' ? window.ClientStateManager.getSelectedClientId() : null);
+        var cid = directTargetCompanyId || directTargetClientId || directDcClientId;
         window.DirectClientContactsManager.init(cid);
     }
     function initDContactsManager() {
-        var cid = (typeof dcClientId !== 'undefined') ? dcClientId : (window.ClientStateManager && typeof window.ClientStateManager.getSelectedClientId === 'function' ? window.ClientStateManager.getSelectedClientId() : null);
+        var cid = directTargetCompanyId || directTargetClientId || directDcClientId;
         window.DirectClientContactsManager.init(cid);
     }
 </script>
