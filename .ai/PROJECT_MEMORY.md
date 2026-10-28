@@ -2106,6 +2106,16 @@ Last updated: 2026-10-22 (Super Admin Companies Page UI Redesign, 100% CQRS Read
   - Multi-tab cross-synchronization via `BroadcastChannel('jero_superadmin_job_requests')`.
   - Fixed PHP falsy `"0"` status string bug in `SuperAdminCompanyController@formatJobRequestDoc` so status 0 ("Conversation 1") is accurately retained from Elasticsearch.
 
+- **Service Company Client Listing: Location Card Data & Scope Pill Styling Restoration:** (October 28, 2026)
+  - **Root Cause Analysis**:
+    1. **Location Card Missing City & State**: In `ServiceCompanyClientController::all_clients_data_ajax` and `client_request_data`, `$rowsDto[]` previously omitted `city` and `state` attributes, only emitting `country`. In addition, `renderClientRows` and `cl-data-worker.js` strictly checked `r.city` and `r.state` before checking `r.country`. When only `r.country` was present, `locHtml` was truthy, short-circuiting `r.location_main` and rendering only the country line ("@ Ireland").
+    2. **Internal Client / Direct Client Scope Badge Styling**: `renderClientRows` and `all-client-ajax.blade.php` applied CSS classes `type-internal` / `type-direct` on `.cl-scope-pill`, while `demo/css/clientList.css` defined rules for `.cl-scope-pill.pill-internal` and `.cl-scope-pill.pill-direct`. The class mismatch resulted in scope pills rendering without backgrounds, borders, or text colors.
+  - **Restoration**:
+    1. **Location Card**: Multi-tier location extraction (`city`, `state`, `country`) added to `$rowsDto[]` in `ServiceCompanyClientController.php` with robust fallbacks across nested `client_location` (arrays and objects), `city_name`, and `state_name`. Updated `renderClientRows()` in `index.blade.php` to dynamically resolve `rCity`, `rState`, and `rCountry` with proper title-casing and fallback to `r.locations` / `location_main` / dash placeholder.
+    2. **Scope Pill Styling**: Updated `demo/css/clientList.css` to support both `.cl-scope-pill.pill-internal, .cl-scope-pill.type-internal` (`#eff6ff` bg, `#2563eb` text, `#bfdbfe` border) and `.cl-scope-pill.pill-direct, .cl-scope-pill.type-direct` (`#ecfdf5` bg, `#059669` text, `#a7f3d0` border). Updated `renderClientRows()` and `all-client-ajax.blade.php` to apply both classes simultaneously.
+    3. **Web Worker & CSV Export**: Updated `normalizeRow()` in `cl-data-worker.js` to preserve `city`, `state`, `country` on the raw row payload and included `State` in CSV export headers and cells.
+  - **Verification**: `php -l` passed 100% on all controllers and views; direct tests confirmed STRIPE 128 (Internal) and Technova Solutions (Direct) render complete City, State, Country rows and vibrant scope pill badges; view compilation cache cleared.
+
 ---
 ### How to maintain this file
 Append, don't rewrite history. When you complete a roadmap phase, note it in §1 and §2.

@@ -4653,19 +4653,45 @@ function renderClientRows(rows) {
         const indHtml = r.industry ? `<div class="cl-ind" title="${escapeAttr(r.industry)}">${escapeAttr(r.industry)}</div>` : '';
         const sizeHtml = r.company_size ? `<div class="cl-size">${escapeAttr(r.company_size)}</div>` : '';
 
+        // Intent: 3-tier discrete Location resolution (City, State, Country) with zero hardcoding and graceful fallback
+        let rCity = (r.city || r.city_name || '').trim();
+        let rState = (r.state || r.state_name || '').trim();
+        let rCountry = (r.country || r.country_name || '').trim();
+
+        if (!rCity || !rState || !rCountry) {
+            const locObj = (Array.isArray(r.locations) && r.locations.length > 0) ? r.locations[0] : (r.location || (Array.isArray(r.client_location) && r.client_location[0]) || null);
+            if (locObj) {
+                const lObj = typeof locObj === 'object' ? locObj : {};
+                if (!rCity) rCity = (lObj.city_name || lObj.city || '').trim();
+                if (!rState) rState = (lObj.state_name || (typeof lObj.state === 'string' && isNaN(lObj.state) ? lObj.state : '') || '').trim();
+                if (!rCountry) rCountry = (lObj.country_name || lObj.country || '').trim();
+            }
+        }
+
+        const formatTitle = function(str) {
+            if (!str) return '';
+            return str.replace(/\w\S*/g, function(txt) {
+                return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();
+            });
+        };
+
+        if (rCity) rCity = formatTitle(rCity);
+        if (rState) rState = formatTitle(rState);
+        if (rCountry) rCountry = formatTitle(rCountry);
+
         let locHtml = '';
-        if (r.city) {
-            locHtml += `<div class="cl-loc-city" title="${escapeAttr(r.city)}">${escapeAttr(r.city)}</div>`;
+        if (rCity) {
+            locHtml += `<div class="cl-loc-city" title="${escapeAttr(rCity)}">${escapeAttr(rCity)}</div>`;
         }
-        if (r.state) {
-            locHtml += `<div class="cl-loc-state" title="${escapeAttr(r.state)}">${escapeAttr(r.state)}</div>`;
+        if (rState) {
+            locHtml += `<div class="cl-loc-state" title="${escapeAttr(rState)}">${escapeAttr(rState)}</div>`;
         }
-        if (r.country) {
-            locHtml += `<div class="cl-loc-country" title="${escapeAttr(r.country)}">${escapeAttr(r.country)}</div>`;
+        if (rCountry) {
+            locHtml += `<div class="cl-loc-country" title="${escapeAttr(rCountry)}">${escapeAttr(rCountry)}</div>`;
         }
         if (!locHtml) {
             if (r.location_main) {
-                locHtml = `<div class="cl-loc-city" title="${escapeAttr(r.location_main)}">${escapeAttr(r.location_main)}</div>`;
+                locHtml = `<div class="cl-loc-city" title="${escapeAttr(formatTitle(r.location_main))}">${escapeAttr(formatTitle(r.location_main))}</div>`;
             } else {
                 locHtml = `<div class="cl-loc-empty">—</div>`;
             }
@@ -4687,7 +4713,7 @@ function renderClientRows(rows) {
                         <div class="cl-subcard-head">
                             <span class="cl-subcard-title">Client Identity</span>
                             <div class="cl-subcard-badges">
-                                <span class="cl-scope-pill pill-direct">Direct Client</span>
+                                <span class="cl-scope-pill pill-direct type-direct">Direct Client</span>
                                 <span class="badge" style="background:#fef3c7; color:#d97706; font-size:9px; font-weight:700; padding:1.5px 6px; border-radius:4px; border:1px solid #fde68a;">⚡ Request</span>
                             </div>
                         </div>
@@ -4805,7 +4831,7 @@ function renderClientRows(rows) {
         const applications = activePipeline + rejected + inReview;
 
         const daysAgo = r.days_ago || '';
-        const clientTypeClass = r.is_direct ? 'type-direct' : 'type-internal';
+        const clientTypeClass = r.is_direct ? 'pill-direct type-direct' : 'pill-internal type-internal';
         const clientTypeCss = r.client_type_css || (r.is_direct ? 'show-detail-direct' : 'show-detail');
         const clientTypeLabel = r.client_type || (r.is_direct ? 'Direct Client' : 'Internal Client');
         const clientTypeAttr = r.is_direct ? 'direct' : 'internal';

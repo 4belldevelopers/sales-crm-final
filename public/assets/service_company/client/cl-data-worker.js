@@ -72,11 +72,18 @@ function initDataset(rawRows, version) {
     });
 }
 
+function titleCase(str) {
+    if (!str) return '';
+    return String(str).replace(/\w\S*/g, function(txt) {
+        return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();
+    });
+}
+
 function normalizeRow(r) {
-    const loc = r.location || {};
-    const city = (r.location_main || loc.city || '').trim();
-    const state = (loc.state || '').trim();
-    const country = (r.country || loc.country || '').trim();
+    const loc = r.location || (Array.isArray(r.locations) && r.locations[0]) || (Array.isArray(r.client_location) && r.client_location[0]) || {};
+    const city = (r.city || r.city_name || loc.city_name || loc.city || r.location_main || '').trim();
+    const state = (r.state || r.state_name || loc.state_name || (typeof loc.state === 'string' && isNaN(loc.state) ? loc.state : '') || '').trim();
+    const country = (r.country || r.country_name || loc.country_name || loc.country || '').trim();
     const hasLocation = Boolean(city || state || country);
 
     const countryId = (r.country_id !== undefined && r.country_id !== null) ? Number(r.country_id) : (loc.country_id ? Number(loc.country_id) : null);
@@ -182,7 +189,12 @@ function normalizeRow(r) {
         last_activity_utc: r.last_activity_at || null,
         last_activity_formatted: r.last_activity_formatted || null,
         last_activity_display: r.days_ago || r.last_activity_ago || r.last_activity || 'No Activity',
-        raw: r
+        state_name: state,
+        raw: Object.assign({}, r, {
+            city: r.city || (city ? titleCase(city) : ''),
+            state: r.state || (state ? titleCase(state) : ''),
+            country: r.country || (country ? titleCase(country) : '')
+        })
     };
 }
 
@@ -719,7 +731,7 @@ function exportCsv(msg) {
     ];
 
     const headers = [
-        'Client ID', 'Company Name', 'Industry', 'Company Size', 'City', 'Country',
+        'Client ID', 'Company Name', 'Industry', 'Company Size', 'City', 'State', 'Country',
         'Client Type', 'Status', 'Jobs Hiring', 'Jobs Hold', 'Jobs Closed',
         'Sourced', 'Screening', 'Evaluated', 'Negotiation', 'Offers',
         'Joined', 'Rejected', 'In Review', 'Interviewees', 'Total Applications',
@@ -739,6 +751,7 @@ function exportCsv(msg) {
             sanitizeCsvCell(item.industry),
             sanitizeCsvCell(item.company_size),
             sanitizeCsvCell(item.city_name),
+            sanitizeCsvCell(item.state_name || item.state),
             sanitizeCsvCell(item.country_name),
             sanitizeCsvCell(item.client_type || (item.is_direct ? 'Direct Client' : 'Internal Client')),
             sanitizeCsvCell(item.status),
