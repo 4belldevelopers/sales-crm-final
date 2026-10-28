@@ -34,6 +34,13 @@ class ClientActivityReadService
     {
         $versionKey = "ats:client_act_ver:{$query->tenantId}:{$query->clientId}";
 
+        if ($query->forceRefresh) {
+            try {
+                Redis::incr($versionKey);
+            } catch (\Throwable) {
+            }
+        }
+
         for ($attempt = 1; $attempt <= 2; $attempt++) {
             $rawVersion = Redis::get($versionKey);
             $startVersion = $rawVersion !== null ? (int) $rawVersion : 1;
@@ -506,13 +513,146 @@ class ClientActivityReadService
     }
 
     /**
+     * Batch resolves candidate details (full_name, designation) from ELASTIC_CANDIDATES
+     * with Redis caching and 0% MySQL reads.
+     */
+    protected function resolveCandidateProfiles(array $appIds, array $emails = []): array
+    {
+        if (empty($appIds) && empty($emails)) {
+            return [];
+        }
+
+        $indexCandidates = defined('ELASTIC_CANDIDATES') ? ELASTIC_CANDIDATES : config('constants.ELASTIC_CANDIDATES', 'local_candidates_elastic');
+        $profiles = [];
+        $unresolvedIds = [];
+        $unresolvedEmails = [];
+
+        // 1. Check Redis cache
+        foreach ($appIds as $appId) {
+            if ($appId <= 0) {
+                continue;
+            }
+            try {
+                $cached = Redis::get("ats:cand_brief:id:{$appId}");
+                if ($cached) {
+                    $decoded = json_decode($cached, true);
+                    if (is_array($decoded)) {
+                        $profiles["id:{$appId}"] = $decoded;
+
+                        continue;
+                    }
+                }
+            } catch (\Throwable) {
+            }
+            $unresolvedIds[] = $appId;
+        }
+
+        foreach ($emails as $email) {
+            $emailKey = strtolower(trim($email));
+            if (empty($emailKey)) {
+                continue;
+            }
+            try {
+                $cached = Redis::get("ats:cand_brief:em:{$emailKey}");
+                if ($cached) {
+                    $decoded = json_decode($cached, true);
+                    if (is_array($decoded)) {
+                        $profiles["em:{$emailKey}"] = $decoded;
+
+                        continue;
+                    }
+                }
+            } catch (\Throwable) {
+            }
+            $unresolvedEmails[] = $emailKey;
+        }
+
+        // 2. Query Elasticsearch for unresolved candidates
+        if ((! empty($unresolvedIds) || ! empty($unresolvedEmails)) && $this->elasticService->indexExists($indexCandidates)) {
+            try {
+                $should = [];
+                if (! empty($unresolvedIds)) {
+                    $should[] = ['terms' => ['id' => array_values(array_unique($unresolvedIds))]];
+                }
+                if (! empty($unresolvedEmails)) {
+                    $should[] = ['terms' => ['email.keyword' => array_values(array_unique($unresolvedEmails))]];
+                }
+
+                $params = [
+                    'index' => $indexCandidates,
+                    'size' => max(count($unresolvedIds) + count($unresolvedEmails), 10),
+                    '_source' => ['id', 'full_name', 'current_designation', 'email'],
+                    'body' => [
+                        'query' => [
+                            'bool' => [
+                                'should' => $should,
+                                'minimum_should_match' => 1,
+                            ],
+                        ],
+                    ],
+                ];
+
+                $res = $this->elasticService->getClient()->search($params);
+                foreach ($res['hits']['hits'] ?? [] as $hit) {
+                    $s = $hit['_source'] ?? [];
+                    $cid = (int) ($s['id'] ?? 0);
+                    $cName = trim((string) ($s['full_name'] ?? ''));
+                    $cDesig = trim((string) ($s['current_designation'] ?? ''));
+                    $cEmail = strtolower(trim((string) ($s['email'] ?? '')));
+
+                    $data = [
+                        'name' => ! empty($cName) ? $cName : null,
+                        'designation' => ! empty($cDesig) ? $cDesig : null,
+                    ];
+
+                    if ($cid > 0) {
+                        $profiles["id:{$cid}"] = $data;
+                        try {
+                            Redis::setex("ats:cand_brief:id:{$cid}", 600, json_encode($data));
+                        } catch (\Throwable) {
+                        }
+                    }
+                    if (! empty($cEmail)) {
+                        $profiles["em:{$cEmail}"] = $data;
+                        try {
+                            Redis::setex("ats:cand_brief:em:{$cEmail}", 600, json_encode($data));
+                        } catch (\Throwable) {
+                        }
+                    }
+                }
+            } catch (\Throwable $e) {
+                Log::warning('ClientActivityReadService: resolveCandidateProfiles ES query error', ['error' => $e->getMessage()]);
+            }
+        }
+
+        return $profiles;
+    }
+
+    /**
      * Normalizes heterogeneous Elasticsearch hits into the canonical event schema,
-     * applying permission-aware compensation masking and deterministic sorting.
+     * applying permission-aware compensation masking, standard status tokens, and deterministic sorting.
      */
     protected function normalizeAndSortEvents(array $rawEvents, ClientActivityQuery $query): array
     {
         $normalized = [];
         $canViewCompensation = auth()->check() && (auth()->user()->can('view_compensation') || auth()->user()->hasRole('admin'));
+
+        // Collect all application IDs and emails to batch resolve candidate identity
+        $appIds = [];
+        $appEmails = [];
+        foreach ($rawEvents as $entry) {
+            $src = $entry['hit']['_source'] ?? [];
+            if (! empty($src['application_id'])) {
+                $appIds[] = (int) $src['application_id'];
+            }
+            if (! empty($src['candidate_id'])) {
+                $appIds[] = (int) $src['candidate_id'];
+            }
+            if (! empty($src['application_email'])) {
+                $appEmails[] = strtolower(trim((string) $src['application_email']));
+            }
+        }
+        $candProfiles = $this->resolveCandidateProfiles($appIds, $appEmails);
 
         foreach ($rawEvents as $entry) {
             $type = $entry['source_type'];
@@ -524,7 +664,7 @@ class ClientActivityReadService
 
             if ($type === 'timeline') {
                 $processName = $src['master_process_name'] ?? 'Pipeline';
-                $isOffer = in_array(strtolower($processName), ['offer', 'joined'], true);
+                $isOffer = in_array(strtolower($processName), ['offer', 'offered', 'offer released', 'offer accepted', 'joined', 'hired'], true);
                 $category = $isOffer ? 'offers' : 'pipeline';
 
                 // Check category filter
@@ -533,7 +673,7 @@ class ClientActivityReadService
                 }
 
                 $eventType = $isOffer
-                    ? (strtolower($processName) === 'joined' ? 'candidate.joined' : 'offer.sent')
+                    ? (in_array(strtolower($processName), ['joined', 'hired'], true) ? 'candidate.joined' : 'offer.sent')
                     : 'candidate.stage_changed';
 
                 $offerAmount = null;
@@ -541,6 +681,27 @@ class ClientActivityReadService
                 if ($canViewCompensation && ! empty($src['offer_amount'])) {
                     $offerAmount = (float) $src['offer_amount'];
                     $isConfidential = false;
+                }
+
+                $appId = (int) ($src['application_id'] ?? 0);
+                $appEmail = strtolower(trim((string) ($src['application_email'] ?? '')));
+                $profile = $candProfiles["id:{$appId}"] ?? $candProfiles["em:{$appEmail}"] ?? null;
+                $resolvedCandidateName = $profile['name'] ?? (! empty($src['candidate_name']) ? $src['candidate_name'] : null);
+                if (empty($resolvedCandidateName) || strtolower($resolvedCandidateName) === 'candidate') {
+                    $resolvedCandidateName = 'Candidate';
+                }
+                $resolvedDesignation = $profile['designation'] ?? $src['designation_offer'] ?? $src['title'] ?? 'Candidate';
+
+                // Standardize Stage Status
+                $toStage = $src['master_process_name'] ?? 'Screening';
+                $toStageLower = strtolower(trim((string) $toStage));
+                $stageStatus = 'pipeline';
+                if (in_array($toStageLower, ['offer', 'offered', 'offer released', 'offer accepted', 'joined', 'hired'], true)) {
+                    $stageStatus = 'active'; // 🟢 Green
+                } elseif (in_array($toStageLower, ['hold', 'on hold', 'on-hold', 'paused'], true)) {
+                    $stageStatus = 'hold'; // 🟠 Orange
+                } elseif (in_array($toStageLower, ['rejected', 'dropped', 'removed', 'not suitable', 'cancelled'], true)) {
+                    $stageStatus = 'removed'; // 🔴 Red
                 }
 
                 $normalized[] = [
@@ -551,14 +712,14 @@ class ClientActivityReadService
                     'occurred_at' => Carbon::parse($createdAt)->toIso8601String(),
                     'actor' => [
                         'id' => (int) ($src['event_by_user_id'] ?? 0),
-                        'name' => $src['name'] ?? 'Recruiter',
+                        'name' => $src['name'] ?? 'Technical Recruiter',
                         'role' => 'Technical Recruiter',
                         'avatar_version' => 1,
                     ],
                     'candidate' => [
-                        'id' => (int) ($src['application_id'] ?? 0),
-                        'name' => $src['candidate_name'] ?? $src['name'] ?? 'Candidate',
-                        'designation' => $src['designation_offer'] ?? $src['title'] ?? 'Candidate',
+                        'id' => $appId,
+                        'name' => $resolvedCandidateName,
+                        'designation' => $resolvedDesignation,
                         'experience_years' => (float) ($src['min_exp'] ?? 0),
                     ],
                     'job' => [
@@ -568,7 +729,8 @@ class ClientActivityReadService
                     ],
                     'transition' => [
                         'from_stage_name' => $src['prev_process_name'] ?? 'Sourcing',
-                        'to_stage_name' => $src['master_process_name'] ?? 'Screening',
+                        'to_stage_name' => $toStage,
+                        'status' => $stageStatus,
                         'client_spoc_name' => $src['name_hr'] ?? null,
                     ],
                     'details' => [
@@ -589,6 +751,11 @@ class ClientActivityReadService
                     continue;
                 }
 
+                $intAppId = (int) ($src['candidate_id'] ?? 0);
+                $intProfile = $candProfiles["id:{$intAppId}"] ?? null;
+                $intCandidateName = ! empty($src['candidate_name']) ? $src['candidate_name'] : ($intProfile['name'] ?? 'Candidate');
+                $intDesignation = $intProfile['designation'] ?? $src['job_title'] ?? 'Candidate';
+
                 $stage = $src['stage'] ?? 'Interview';
                 $normalized[] = [
                     'event_id' => 'evt_int_'.$id,
@@ -603,9 +770,9 @@ class ClientActivityReadService
                         'avatar_version' => 1,
                     ],
                     'candidate' => [
-                        'id' => (int) ($src['candidate_id'] ?? 0),
-                        'name' => $src['candidate_name'] ?? 'Candidate',
-                        'designation' => $src['job_title'] ?? 'Candidate',
+                        'id' => $intAppId,
+                        'name' => $intCandidateName,
+                        'designation' => $intDesignation,
                     ],
                     'job' => [
                         'id' => (int) ($src['job_id'] ?? 0),
@@ -615,6 +782,7 @@ class ClientActivityReadService
                     'transition' => [
                         'from_stage_name' => 'Evaluation',
                         'to_stage_name' => $stage,
+                        'status' => 'interview',
                     ],
                     'details' => [
                         'interview_mode' => $src['interview_type'] ?? 'Video Call',
@@ -630,7 +798,21 @@ class ClientActivityReadService
                     continue;
                 }
 
-                $status = $src['status'] ?? 'active';
+                $rawStatus = strtolower(trim((string) ($src['status'] ?? 'active')));
+                $canonicalStatus = match ($rawStatus) {
+                    'active', 'hiring', 'open' => 'active',
+                    'hold', 'on_hold', 'paused', 'on-hold' => 'hold',
+                    'closed', 'filled' => 'closed',
+                    'removed', 'cancelled' => 'removed',
+                    default => 'active'
+                };
+                $statusLabel = match ($canonicalStatus) {
+                    'active' => 'Active',
+                    'hold' => 'Hold',
+                    'closed' => 'Closed',
+                    'removed' => 'Removed',
+                };
+
                 $normalized[] = [
                     'event_id' => 'evt_job_'.$id,
                     'client_activity_sequence' => $timestamp,
@@ -647,11 +829,13 @@ class ClientActivityReadService
                         'id' => (int) ($src['id'] ?? $id),
                         'code' => 'JERO-'.($src['id'] ?? $id),
                         'title' => $src['title'] ?? 'New Requisition',
-                        'status' => $status,
+                        'status' => $canonicalStatus,
+                        'status_label' => $statusLabel,
                         'total_positions' => (int) ($src['total_positions'] ?? 1),
                     ],
                     'transition' => [
-                        'to_stage_name' => ucfirst($status),
+                        'to_stage_name' => $statusLabel,
+                        'status' => $canonicalStatus,
                     ],
                     'details' => [],
                     'visibility' => [
@@ -674,6 +858,10 @@ class ClientActivityReadService
                         'name' => $src['author_name'] ?? 'Client Partner',
                         'role' => 'Account Lead',
                         'avatar_version' => 1,
+                    ],
+                    'transition' => [
+                        'to_stage_name' => 'Note Logged',
+                        'status' => 'crm',
                     ],
                     'details' => [
                         'note_excerpt' => $src['note'] ?? 'Client interaction logged.',

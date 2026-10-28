@@ -247,9 +247,9 @@ class InterviewReadModel
         // Interviewers List (Extracted from ES source, 0 MySQL queries)
         $interviewers = [];
         $rawInterviewers = $source['interviewers'] ?? ($source['interviewer_name'] ?? '');
-        $companyNameDefault = trim((string) ($source['company_name'] ?? 'Panel'));
-        $leadName = 'N/A';
-        $leadCompany = trim((string) ($source['uc_company_name'] ?? ($source['company_name'] ?? 'Panel')));
+        $companyNameDefault = trim((string) ($source['company_name'] ?? ''));
+        $leadName = null;
+        $leadCompany = trim((string) ($source['uc_company_name'] ?? ($source['company_name'] ?? '')));
         $extraCount = 0;
 
         if (! empty($rawInterviewers)) {
@@ -263,9 +263,11 @@ class InterviewReadModel
                 }
                 $nameStr = '';
                 $itemComp = $companyNameDefault;
+                $itemImage = '';
                 if (is_array($intvItem)) {
                     $nameStr = trim((string) ($intvItem['name'] ?? ($intvItem['interviewer_name'] ?? '')));
                     $itemComp = trim((string) ($intvItem['company_name'] ?? ($intvItem['company'] ?? $companyNameDefault)));
+                    $itemImage = trim((string) ($intvItem['image'] ?? ($intvItem['avatar'] ?? '')));
                 } else {
                     $nameStr = trim((string) $intvItem);
                 }
@@ -278,6 +280,8 @@ class InterviewReadModel
                     'id' => $idx + 1,
                     'name' => ucwords($nameStr),
                     'company_name' => $itemComp ?: $companyNameDefault,
+                    'image' => $itemImage ?: null,
+                    'initial' => strtoupper(mb_substr($nameStr, 0, 1)),
                 ];
             }
 
@@ -378,6 +382,7 @@ class InterviewReadModel
                 'lead_company' => $leadCompany,
                 'extra_count' => $extraCount,
                 'extra_label' => $extraCount > 0 ? "+{$extraCount}" : '',
+                'total_count' => count($interviewers),
             ],
             'source_info' => [
                 'name' => $sourceName,

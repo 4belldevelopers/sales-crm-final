@@ -579,19 +579,87 @@
     white-space: nowrap !important;
 }
 
-/* Sub-Card 5: Dedicated Panelists Card */
+/* Sub-Card 5: Reusable Dynamic Panelists Card */
 .cd-it-panelist-card {
     position: relative !important;
     overflow: visible !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: space-between !important;
 }
 
-.cd-it-panel-body {
-    position: relative !important;
+/* Single Panelist (Rule 1: Avatar on top, Name below, Company below) */
+.cd-it-panelist-single {
     display: flex !important;
-    align-items: center !important;
-    gap: 8px !important;
-    cursor: pointer !important;
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 3px !important;
     width: 100% !important;
+    min-width: 0 !important;
+}
+
+.cd-panel-avatar-single {
+    width: 28px !important;
+    height: 28px !important;
+    min-width: 28px !important;
+    border-radius: 50% !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: 11px !important;
+    font-weight: 700 !important;
+    color: #2563eb !important;
+    background: #eff6ff !important;
+    border: 1.5px solid #ffffff !important;
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.08) !important;
+    flex-shrink: 0 !important;
+    overflow: hidden !important;
+    text-transform: uppercase !important;
+}
+
+.cd-panel-avatar-img {
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover !important;
+    border-radius: 50% !important;
+}
+
+.cd-it-panelist-meta {
+    width: 100% !important;
+    min-width: 0 !important;
+    overflow: hidden !important;
+}
+
+.cd-it-panelist-name {
+    font-size: 11.5px !important;
+    font-weight: 700 !important;
+    color: #0f172a !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    line-height: 1.25 !important;
+}
+
+.cd-it-panelist-company {
+    font-size: 10px !important;
+    font-weight: 500 !important;
+    color: #64748b !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    line-height: 1.2 !important;
+    margin-top: 1px !important;
+}
+
+/* Multiple Panelists Overlapping Avatars (Rule 2: Reference Design) */
+.cd-it-panelist-multiple {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 4px !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    cursor: pointer !important;
+    position: relative !important;
 }
 
 .cd-panel-avatar-stack {
@@ -605,45 +673,81 @@
     height: 28px !important;
     min-width: 28px !important;
     border-radius: 50% !important;
-    display: flex !important;
+    display: inline-flex !important;
     align-items: center !important;
     justify-content: center !important;
+    font-size: 10.5px !important;
     font-weight: 700 !important;
-    font-size: 11px !important;
-    background: #eff6ff !important;
     color: #2563eb !important;
-    border: 1.5px solid #ffffff !important;
-    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.08) !important;
-    text-transform: uppercase !important;
-}
-
-.cd-panel-avatar-extra {
-    background: #f1f5f9 !important;
-    color: #475569 !important;
-    font-size: 9.5px !important;
-    margin-left: -8px !important;
-    z-index: 2 !important;
-    border-color: #ffffff !important;
-}
-
-.cd-it-lead-name {
-    font-size: 11.5px !important;
-    font-weight: 700 !important;
-    color: #0f172a !important;
-    white-space: nowrap !important;
+    background: #eff6ff !important;
+    border: 2px solid #ffffff !important;
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.1) !important;
+    position: relative !important;
     overflow: hidden !important;
-    text-overflow: ellipsis !important;
-    line-height: 1.25 !important;
+    text-transform: uppercase !important;
+    margin-left: -8px !important;
+    transition: transform 0.12s ease !important;
 }
 
-.cd-it-lead-sub {
-    font-size: 9.5px !important;
-    color: #64748b !important;
+.cd-panel-avatar:first-child {
+    margin-left: 0 !important;
+    z-index: 1 !important;
+}
+.cd-panel-avatar:nth-child(2) { z-index: 2 !important; }
+.cd-panel-avatar:nth-child(3) { z-index: 3 !important; }
+.cd-panel-avatar:nth-child(4) { z-index: 4 !important; }
+
+.cd-panel-avatar:hover {
+    transform: translateY(-2px) scale(1.08) !important;
+    z-index: 10 !important;
+}
+
+/* Red Circular +N Indicator matching user reference image */
+.cd-panel-avatar-extra {
+    background: #dc2626 !important;
+    color: #ffffff !important;
+    font-size: 10px !important;
+    font-weight: 700 !important;
+    border: 2px solid #ffffff !important;
+    box-shadow: 0 1px 3px rgba(220, 38, 38, 0.3) !important;
+    z-index: 5 !important;
+}
+
+.cd-it-panelist-more-text {
+    color: #0284c7 !important;
+    font-size: 10.5px !important;
+    font-weight: 600 !important;
+}
+
+/* Empty / No Panelist State (Rule 4) */
+.cd-it-panelist-empty {
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: center !important;
+    align-items: flex-start !important;
+    gap: 2px !important;
+    min-height: 48px !important;
+    color: #94a3b8 !important;
+}
+
+.cd-it-empty-dash {
+    font-size: 16px !important;
+    font-weight: 700 !important;
+    color: #94a3b8 !important;
+    line-height: 1 !important;
+}
+
+.cd-it-empty-sub {
+    font-size: 10.5px !important;
+    color: #94a3b8 !important;
     font-weight: 500 !important;
     white-space: nowrap !important;
-    overflow: hidden !important;
-    text-overflow: ellipsis !important;
-    margin-top: 1px !important;
+}
+
+.cd-it-empty-pill {
+    background: #f1f5f9 !important;
+    color: #94a3b8 !important;
+    border-color: #e2e8f0 !important;
 }
 
 .cd-it-panel-count-pill {
@@ -657,7 +761,7 @@
     white-space: nowrap !important;
 }
 
-/* Tooltip / Popover for Panelists on Mouse Hover */
+/* Complete Popover on Hover / Click (Rule 2) */
 .cd-it-popover-card {
     display: none !important;
     position: absolute !important;
@@ -667,11 +771,11 @@
     background: #0f172a !important;
     color: #ffffff !important;
     border-radius: 8px !important;
-    padding: 8px 12px !important;
-    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.4), 0 8px 10px -6px rgba(0, 0, 0, 0.3) !important;
+    padding: 10px 12px !important;
+    box-shadow: 0 12px 28px -4px rgba(0, 0, 0, 0.45), 0 8px 10px -6px rgba(0, 0, 0, 0.3) !important;
     z-index: 99999 !important;
-    min-width: 190px !important;
-    max-width: 260px !important;
+    min-width: 210px !important;
+    max-width: 280px !important;
     pointer-events: none !important;
 }
 
@@ -686,8 +790,9 @@
     border-color: #0f172a transparent transparent transparent !important;
 }
 
-.cd-it-panel-body:hover .cd-it-popover-card,
-.cd-it-panelist-card:hover .cd-it-popover-card {
+.cd-it-panelist-card:hover .cd-it-popover-card,
+.cd-it-panelist-multiple:hover .cd-it-popover-card,
+.cd-it-panelist-single:hover .cd-it-popover-card {
     display: block !important;
     animation: cdPopoverFadeIn 0.15s ease-out forwards !important;
 }
@@ -702,31 +807,72 @@
     font-weight: 700 !important;
     color: #ffffff !important;
     border-bottom: 1px solid rgba(255, 255, 255, 0.15) !important;
-    padding-bottom: 4px !important;
-    margin-bottom: 5px !important;
+    padding-bottom: 5px !important;
+    margin-bottom: 6px !important;
     display: flex !important;
     align-items: center !important;
     justify-content: space-between !important;
 }
 
-.cd-it-popover-item {
-    font-size: 10px !important;
-    color: #e2e8f0 !important;
-    padding: 2px 0 !important;
+.cd-it-popover-row {
     display: flex !important;
     align-items: center !important;
-    justify-content: space-between !important;
     gap: 8px !important;
-    white-space: nowrap !important;
+    padding: 4px 0 !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06) !important;
+}
+.cd-it-popover-row:last-child {
+    border-bottom: none !important;
 }
 
-.cd-it-popover-item .item-lead-badge {
-    font-size: 8.5px !important;
+.cd-popover-avatar {
+    width: 22px !important;
+    height: 22px !important;
+    min-width: 22px !important;
+    border-radius: 50% !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: 9px !important;
     font-weight: 700 !important;
+    background: #1e293b !important;
     color: #38bdf8 !important;
-    background: rgba(56, 189, 248, 0.15) !important;
-    padding: 1px 4px !important;
-    border-radius: 3px !important;
+    border: 1px solid rgba(255, 255, 255, 0.15) !important;
+    overflow: hidden !important;
+    text-transform: uppercase !important;
+}
+
+.cd-popover-avatar img {
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover !important;
+}
+
+.cd-popover-info {
+    min-width: 0 !important;
+    flex-grow: 1 !important;
+}
+
+.cd-popover-name {
+    font-size: 10.5px !important;
+    font-weight: 600 !important;
+    color: #f8fafc !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    line-height: 1.25 !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 4px !important;
+}
+
+.cd-popover-company {
+    font-size: 9.5px !important;
+    color: #94a3b8 !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    line-height: 1.2 !important;
 }
 
 /* Sub-Card 6: Status & Feedback */
@@ -984,3 +1130,4 @@
     }
 }
 </style>
+<script src="{{ asset('assets/js/components/jero-panelist-component.js') }}"></script>
