@@ -56,6 +56,21 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
         $this->elasticService = $elasticService;
     }
 
+    /**
+     * Canonical sort normalizer (single contract across UI, Cache, ES).
+     * Normalizes legacy values ('1', '2', 'newest', etc.) to canonical keys.
+     */
+    public static function normalizeSort(?string $rawSort): string
+    {
+        return match (strtolower(trim((string) $rawSort))) {
+            'oldest', '2' => 'oldest',
+            'name_asc', 'name-asc', 'a-z' => 'name_asc',
+            'name_desc', 'name-desc', 'z-a' => 'name_desc',
+            'jobs_desc', 'jobs', 'active_jobs' => 'jobs_desc',
+            default => 'recent',
+        };
+    }
+
     public function index()
     {
 
@@ -398,7 +413,7 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
         $customSearch = trim($custom_search);
         $shouldSearch = [];
         $sort = [];
-        $valCheck = $request->input('sort', $request->input('sortingfilter', 'recent'));
+        $valCheck = self::normalizeSort($request->input('sort', $request->input('sortingfilter', 'recent')));
 
         // ── Canonical Filter Parameters ──
         $countryParam = $request->input('country_id', $request->input('country'));
@@ -529,42 +544,28 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
                 ->values()
                 ->toArray();
 
-            if (! empty($valCheck)) {
-                if ($valCheck === 'name_asc') {
-                    $sort = [
-                        ['company_name.keyword' => ['order' => 'asc', 'unmapped_type' => 'keyword']],
-                        ['id' => ['order' => 'desc']],
-                    ];
-                } elseif ($valCheck === 'name_desc') {
-                    $sort = [
-                        ['company_name.keyword' => ['order' => 'desc', 'unmapped_type' => 'keyword']],
-                        ['id' => ['order' => 'desc']],
-                    ];
-                } elseif ($valCheck === 'jobs_desc') {
-                    $sort = [
-                        ['job_metrics.active_jobs_count' => ['order' => 'desc', 'unmapped_type' => 'long']],
-                        ['id' => ['order' => 'desc']],
-                    ];
-                } elseif ($valCheck == 2 || $valCheck === 'oldest') {
-                    $sort = [
-                        ['created_at' => ['order' => 'asc', 'unmapped_type' => 'date']],
-                        ['id' => ['order' => 'asc']],
-                    ];
-                } elseif ($valCheck == 1 || $valCheck === 'newest') {
-                    $sort = [
-                        ['created_at' => ['order' => 'desc', 'unmapped_type' => 'date']],
-                        ['id' => ['order' => 'desc']],
-                    ];
-                } else {
-                    $sort = [
-                        ['id' => ['order' => 'desc']],
-                    ];
-                }
-            } else {
-                $sort = [
+            $sort = match ($valCheck) {
+                'name_asc' => [
+                    ['company_name.keyword' => ['order' => 'asc']],
                     ['id' => ['order' => 'desc']],
-                ];
-            }
+                ],
+                'name_desc' => [
+                    ['company_name.keyword' => ['order' => 'desc']],
+                    ['id' => ['order' => 'desc']],
+                ],
+                'jobs_desc' => [
+                    ['active_jobs_count' => ['order' => 'desc']],
+                    ['id' => ['order' => 'desc']],
+                ],
+                'oldest' => [
+                    ['created_at' => ['order' => 'asc']],
+                    ['id' => ['order' => 'asc']],
+                ],
+                default => [
+                    ['created_at' => ['order' => 'desc']],
+                    ['id' => ['order' => 'desc']],
+                ],
+            };
 
             if ($tabFilter === 'internal' || $tabFilter === 'custom') {
                 $must[] = [
@@ -1066,100 +1067,6 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
                 }
             }
 
-            // ── Phase 3 God-Level Standard: Prepend Pending Direct Client Requests on All Clients Tab (Page 1) ──
-            $pendingRequests = [];
-            $pendingJobsCountMap = [];
-
-            if ($tabFilter === 'all' && (int) $page === 1 && ! $hiringFilter && ! $inactiveFilter && $this->elasticService->indexExists(ELASTIC_CLIENT_REQUEST)) {
-                try {
-                    $reqBool = [
-                        'must' => [
-                            ['term' => ['to_company_id' => (int) $company_id]],
-                            ['term' => ['to_invitation_status' => 0]],
-                        ],
-                    ];
-
-                    if (! empty($customSearch)) {
-                        $reqBool['must'][] = [
-                            'multi_match' => [
-                                'query' => $customSearch,
-                                'fields' => ['company_name^3', 'ind_name^2', 'city_name', 'country_name'],
-                                'type' => 'phrase_prefix',
-                            ],
-                        ];
-                    }
-
-                    $pendingEsResp = $this->elasticService->getClient()->search([
-                        'index' => ELASTIC_CLIENT_REQUEST,
-                        'size' => 20,
-                        'body' => [
-                            'query' => ['bool' => $reqBool],
-                            'sort' => [
-                                ['created_at' => ['order' => 'desc', 'unmapped_type' => 'date']],
-                                ['id' => ['order' => 'desc', 'unmapped_type' => 'long']],
-                            ],
-                        ],
-                    ]);
-
-                    if (! empty($pendingEsResp['hits']['hits'])) {
-                        $pendingFromCompanyIds = [];
-                        foreach ($pendingEsResp['hits']['hits'] as $pHit) {
-                            $pSrc = $pHit['_source'];
-                            $pSrc['is_pending_request'] = true;
-                            $pSrc['_es_id'] = $pHit['_id'] ?? null;
-                            $fromComp = (int) ($pSrc['from_company_id'] ?? 0);
-                            if ($fromComp > 0) {
-                                $pendingFromCompanyIds[] = $fromComp;
-                            }
-                            $pendingRequests[] = $pSrc;
-                        }
-
-                        // Batch count shared requisitions from ELASTIC_JOB_REQUEST for pending direct clients
-                        if (! empty($pendingFromCompanyIds) && $this->elasticService->indexExists(ELASTIC_JOB_REQUEST)) {
-                            try {
-                                $jobReqResp = $this->elasticService->getClient()->search([
-                                    'index' => ELASTIC_JOB_REQUEST,
-                                    'size' => 0,
-                                    'body' => [
-                                        'query' => [
-                                            'bool' => [
-                                                'must' => [
-                                                    ['term' => ['to_company_id' => (int) $company_id]],
-                                                    ['terms' => ['from_company_id' => array_values(array_unique($pendingFromCompanyIds))]],
-                                                ],
-                                            ],
-                                        ],
-                                        'aggs' => [
-                                            'by_from_company' => [
-                                                'terms' => [
-                                                    'field' => 'from_company_id',
-                                                    'size' => 50,
-                                                ],
-                                            ],
-                                        ],
-                                    ],
-                                ]);
-                                foreach ($jobReqResp['aggregations']['by_from_company']['buckets'] ?? [] as $b) {
-                                    $pendingJobsCountMap[(int) $b['key']] = (int) $b['doc_count'];
-                                }
-                            } catch (\Throwable $e) {
-                            }
-                        }
-
-                        foreach ($pendingRequests as &$pItem) {
-                            $fId = (int) ($pItem['from_company_id'] ?? 0);
-                            $pItem['requisition_count'] = $pendingJobsCountMap[$fId] ?? ($pItem['requisition_count'] ?? 0);
-                        }
-                        unset($pItem);
-
-                        $data = array_merge($pendingRequests, $data);
-                        $total += count($pendingRequests);
-                    }
-                } catch (\Throwable $esReqEx) {
-                    \Log::warning('Error querying ELASTIC_CLIENT_REQUEST for All Clients pinned tab: '.$esReqEx->getMessage());
-                }
-            }
-
             $pagination = [
                 'total' => $total,
                 'current_page' => $page,
@@ -1526,6 +1433,7 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
                     'is_direct' => $isDirect,
                     'client_type_css' => $client_type_css,
                     'client_type' => (string) $client_type,
+                    'active_jobs_count' => (int) $job_active,
                     'is_active_hiring' => ($job_active > 0),
                     'is_inactive' => ($job_active === 0),
                     'jobs' => [
@@ -1677,6 +1585,7 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
         $page = max((int) $request->input('page', 1), 1);
         $size = (int) $request->input('size', 10);
         $from = ($page - 1) * $size;
+        $valCheck = self::normalizeSort($request->input('sort', $request->input('sortingfilter', 'recent')));
 
         $cachePayload = [
             'page' => $page,
@@ -1684,6 +1593,7 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
             'q' => $searchQuery,
             'user_id' => auth()->id() ?? ($this->user->id ?? 0),
             'company' => $company_id,
+            'valCheck' => $valCheck,
         ];
 
         $tenantVersion = (int) cache()->get('tenant_'.$company_id.'_client_version', 1);
@@ -1769,12 +1679,20 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
                 ];
             }
 
-            // Multi-level deterministic sorting
+            // Multi-level deterministic sorting for Workflow Queue
             $sort = [
-                ['to_invitation_status' => ['order' => 'asc', 'unmapped_type' => 'long']],
-                ['created_at' => ['order' => 'desc', 'unmapped_type' => 'date']],
-                ['id' => ['order' => 'desc', 'unmapped_type' => 'long']],
+                ['to_invitation_status' => ['order' => 'asc']],
             ];
+            if ($valCheck === 'name_asc') {
+                $sort[] = ['company_name.keyword' => ['order' => 'asc']];
+            } elseif ($valCheck === 'name_desc') {
+                $sort[] = ['company_name.keyword' => ['order' => 'desc']];
+            } elseif ($valCheck === 'oldest') {
+                $sort[] = ['created_at' => ['order' => 'asc']];
+            } else {
+                $sort[] = ['created_at' => ['order' => 'desc']];
+            }
+            $sort[] = ['id' => ['order' => 'desc']];
 
             $params = [
                 'index' => ELASTIC_CLIENT_REQUEST,
