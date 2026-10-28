@@ -43,7 +43,7 @@ Route::group(['middleware' => 'auth'], function () {
         Route::get('custom-plan-requests/sync', [SuperAdminCustomPlanRequestController::class, 'sync'])->name('custom-plan-requests.sync');
         Route::get('custom-plan-requests/{id}', [SuperAdminCustomPlanRequestController::class, 'show'])->name('custom-plan-requests.show');
         Route::match(['post', 'put'], 'custom-plan-requests/{id}/status', [SuperAdminCustomPlanRequestController::class, 'updateStatus'])->name('custom-plan-requests.updateStatus');
-        Route::get('smtp-settings/sent-test-email', [SuperAdminSmtpSettingController::class, 'sendTestEmail'])
+        Route::match(['get', 'post'], 'smtp-settings/sent-test-email', [SuperAdminSmtpSettingController::class, 'sendTestEmail'])
             ->name('smtp-settings.sendTestEmail');
         Route::resource('smtp-settings', SuperAdminSmtpSettingController::class);
         // language settings
