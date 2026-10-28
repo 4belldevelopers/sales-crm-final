@@ -392,10 +392,15 @@
     padding: 14px 16px !important;
     box-shadow: 0 1px 3px rgba(15, 23, 42, 0.02) !important;
     transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease !important;
-    display: flex !important;
+    display: flex;
     flex-direction: column !important;
     gap: 12px !important;
     width: 100% !important;
+}
+
+.cd-tx-card.cd-d-none,
+.cd-tx-tablerow.cd-d-none {
+    display: none !important;
 }
 
 .cd-tx-card:hover {
@@ -1017,31 +1022,36 @@
     <!-- ======================================================================
          TIER 2: SUB-TABS FILTER CARD
          ====================================================================== -->
+    @php
+        $currTab = $activeTab ?? (request('tab') ?: (request('status') ?: 'all'));
+    @endphp
     <div class="cd-tx-tabs-card">
         <ul class="cd-tabs-list" id="cd_tx_subtabs">
-            <li class="cd-tab-item active" data-tab="all">
+            <li class="cd-tab-item {{ $currTab === 'all' ? 'active' : '' }}" data-tab="all">
                 <span>All Transactions</span>
                 <span class="cd-tab-badge" id="tab_badge_all">{{ $cart_transaction_history->total() }}</span>
             </li>
-            <li class="cd-tab-item" data-tab="captured">
+            <li class="cd-tab-item {{ $currTab === 'captured' ? 'active' : '' }}" data-tab="captured">
                 <span>Paid / Captured</span>
                 <span class="cd-tab-badge" id="tab_badge_captured" style="color: #059669;">{{ $kpi['capturedCount'] }}</span>
             </li>
-            <li class="cd-tab-item" data-tab="pending">
+            <li class="cd-tab-item {{ $currTab === 'pending' ? 'active' : '' }}" data-tab="pending">
                 <span>Pending / Initiated</span>
                 <span class="cd-tab-badge" id="tab_badge_pending" style="color: #d97706;">{{ $kpi['pendingCount'] }}</span>
             </li>
-            <li class="cd-tab-item" data-tab="failed">
+            <li class="cd-tab-item {{ $currTab === 'failed' ? 'active' : '' }}" data-tab="failed">
                 <span>Failed</span>
                 <span class="cd-tab-badge" id="tab_badge_failed" style="color: #dc2626;">{{ $kpi['failedCount'] }}</span>
             </li>
-            <li class="cd-tab-item" data-tab="online">
+            <li class="cd-tab-item {{ $currTab === 'online' ? 'active' : '' }}" data-tab="online">
                 <span>Online Gateway</span>
+                <span class="cd-tab-badge" id="tab_badge_online" style="color: #2563eb;">{{ $kpi['onlineCount'] ?? 0 }}</span>
             </li>
-            <li class="cd-tab-item" data-tab="offline">
+            <li class="cd-tab-item {{ $currTab === 'offline' ? 'active' : '' }}" data-tab="offline">
                 <span>Bank / Cheque</span>
+                <span class="cd-tab-badge" id="tab_badge_offline" style="color: #64748b;">{{ $kpi['offlineCount'] ?? 0 }}</span>
             </li>
-            <li class="cd-tab-item" data-tab="invoiced">
+            <li class="cd-tab-item {{ $currTab === 'invoiced' ? 'active' : '' }}" data-tab="invoiced">
                 <span>Tax Approved</span>
                 <span class="cd-tab-badge" id="tab_badge_invoiced" style="color: #2563eb;">{{ $kpi['approvedInvoiceCount'] }}</span>
             </li>
@@ -1092,8 +1102,8 @@
                         $filterCat = 'pending';
                     }
 
-                    $modeCategory = ($payMode === 'Online' || $payMode === 'Payment Link') ? 'online' : 'offline';
-                    $invoiceApproved = ($val->invoice_approval === 'Yes') ? 'invoiced' : 'pending_invoice';
+                    $modeCategory = in_array(strtolower((string)$payMode), ['online', 'payment link', 'gateway', 'razorpay']) ? 'online' : 'offline';
+                    $invoiceApproved = (strtolower((string)$val->invoice_approval) === 'yes') ? 'invoiced' : 'pending_invoice';
                     $receiptUrl = route('superadmin.company.receiptdownload', [encrypt($val->cart_id)]);
 
                     // Payload for drawer
@@ -1346,6 +1356,7 @@
                             $orderDate = $val->created_at ? Carbon::parse($val->created_at)->format('d M Y, h:i A') : 'N/A';
                             $companyName = $val->company_name ?: ($val->organization ?: 'Unassigned Company');
                             $currencySymbol = ($val->currency === 'INR') ? '₹' : '$';
+                            $payMode = $val->payment_mode ?: 'Online';
                             $statusRaw = strtolower((string)$val->status);
                             if ($val->payment_mode != 'Payment Link' && $statusRaw == 'created') {
                                 $statusText = 'Failed';
@@ -1355,17 +1366,29 @@
                                 $statusText = 'Paid';
                                 $statusClass = 'cd-status-success';
                                 $filterCat = 'captured';
+                            } elseif ($statusRaw === 'authorized') {
+                                $statusText = 'Authorized';
+                                $statusClass = 'cd-status-info';
+                                $filterCat = 'captured';
+                            } elseif ($statusRaw === 'refunded' || $statusRaw === 'partially_refunded') {
+                                $statusText = ucfirst(str_replace('_', ' ', $statusRaw));
+                                $statusClass = 'cd-status-warning';
+                                $filterCat = 'failed';
                             } else {
                                 $statusText = ucfirst($statusRaw ?: 'Initiated');
                                 $statusClass = 'cd-status-warning';
                                 $filterCat = 'pending';
                             }
+                            $modeCategory = in_array(strtolower((string)$payMode), ['online', 'payment link', 'gateway', 'razorpay']) ? 'online' : 'offline';
+                            $invoiceApproved = (strtolower((string)$val->invoice_approval) === 'yes') ? 'invoiced' : 'pending_invoice';
                             $receiptUrl = route('superadmin.company.receiptdownload', [encrypt($val->cart_id)]);
                         @endphp
                         <tr class="cd-tx-tablerow"
                             data-id="{{ $val->id }}"
                             data-category="{{ $filterCat }}"
-                            data-search="{{ strtolower($orderNum . ' ' . $companyName . ' ' . $val->payment_Id . ' ' . $val->payment_orderId . ' ' . $val->transactionid . ' ' . $val->invoiceId . ' ' . $val->approval_invoice_no) }}">
+                            data-mode="{{ $modeCategory }}"
+                            data-invoiced="{{ $invoiceApproved }}"
+                            data-search="{{ strtolower($orderNum . ' ' . $companyName . ' ' . $val->payment_Id . ' ' . $val->payment_orderId . ' ' . $val->transactionid . ' ' . $val->invoiceId . ' ' . $val->approval_invoice_no . ' ' . $val->product_name . ' ' . ($val->gstin ?? '')) }}">
                             <td>
                                 <a href="javascript:void(0);" class="cd-order-num btn-view-drawer">#{{ $orderNum }}</a>
                             </td>
@@ -1667,18 +1690,25 @@ class JeroTransactionHistoryDB {
                         db.createObjectStore('meta', { keyPath: 'id' });
                     }
                 };
+                req.onblocked = function() {
+                    resolve(null);
+                };
                 req.onsuccess = async function(e) {
-                    JeroTransactionHistoryDB.db = e.target.result;
-                    // Enforce tenant/session isolation guard
-                    var meta = await JeroTransactionHistoryDB.getMeta('auth_context');
-                    if (meta && meta.user_id !== userId) {
-                        await JeroTransactionHistoryDB.clearAll();
+                    try {
+                        JeroTransactionHistoryDB.db = e.target.result;
+                        // Enforce tenant/session isolation guard
+                        var meta = await JeroTransactionHistoryDB.getMeta('auth_context');
+                        if (meta && meta.user_id !== userId) {
+                            await JeroTransactionHistoryDB.clearAll();
+                        }
+                        await JeroTransactionHistoryDB.setMeta('auth_context', {
+                            id: 'auth_context',
+                            user_id: userId,
+                            cached_at: Date.now()
+                        });
+                    } catch (mErr) {
+                        console.warn('IDB meta non-fatal warning:', mErr);
                     }
-                    await JeroTransactionHistoryDB.setMeta('auth_context', {
-                        id: 'auth_context',
-                        user_id: userId,
-                        cached_at: Date.now()
-                    });
                     resolve(JeroTransactionHistoryDB.db);
                 };
                 req.onerror = function() {
@@ -1818,7 +1848,7 @@ class JeroTransactionHistoryDB {
 // =============================================================================
 // 2. Client Memory State & Main Logic Execution
 // =============================================================================
-$(document).ready(async function() {
+$(document).ready(function() {
     "use strict";
 
     var currentUserId = {{ (int) (auth()->id() ?? 0) }};
@@ -1831,17 +1861,24 @@ $(document).ready(async function() {
         }
     });
 
-    // Initialize IndexedDB
-    await JeroTransactionHistoryDB.init(currentUserId);
-
     // In-memory RAM state (Zero server strain for search/filter/details)
+    var urlParams = new URLSearchParams(window.location.search);
+    var initialTab = urlParams.get('tab') || urlParams.get('status') || '{{ $currTab ?? "all" }}';
+
     window.txState = {
         all: [],
-        activeTab: 'all',
+        activeTab: initialTab || 'all',
         searchQuery: '',
         detailsCache: new Map(),
         viewMode: localStorage.getItem('jero_sa_tx_view_mode') || 'stream'
     };
+
+    // Initialize IndexedDB in the background safely without blocking UI
+    if (typeof JeroTransactionHistoryDB !== 'undefined' && JeroTransactionHistoryDB.init) {
+        JeroTransactionHistoryDB.init(currentUserId).catch(function(err) {
+            console.warn('JeroTransactionHistoryDB init non-fatal warning:', err);
+        });
+    }
 
     // LRU Cache Eviction Helper (Strict ceiling of 100 entries to prevent memory leaks)
     function setDetailsCache(key, val) {
@@ -1864,8 +1901,10 @@ $(document).ready(async function() {
                 var d = JSON.parse(dataStr);
                 window.txState.all.push(d);
                 setDetailsCache(id, d);
-                JeroTransactionHistoryDB.putDossier(id, d);
-                JeroTransactionHistoryDB.putTransaction(id, d);
+                if (typeof JeroTransactionHistoryDB !== 'undefined') {
+                    JeroTransactionHistoryDB.putDossier(id, d);
+                    JeroTransactionHistoryDB.putTransaction(id, d);
+                }
             } catch (e) {
                 console.warn('Failed parsing card data for RAM cache', e);
             }
@@ -1936,10 +1975,26 @@ $(document).ready(async function() {
     // -------------------------------------------------------------------------
     // 5. Tier 2 Sub-Tabs Category Filtering
     // -------------------------------------------------------------------------
-    $('#cd_tx_subtabs .cd-tab-item').off('.superAdminTx').on('click.superAdminTx', function() {
+    $('#cd_tx_subtabs .cd-tab-item').off('.superAdminTx').on('click.superAdminTx', function(e) {
+        if (e && typeof e.preventDefault === 'function') e.preventDefault();
         $('#cd_tx_subtabs .cd-tab-item').removeClass('active');
         $(this).addClass('active');
-        window.txState.activeTab = $(this).attr('data-tab') || 'all';
+        var tab = $(this).attr('data-tab') || 'all';
+        window.txState.activeTab = tab;
+
+        // Update URL query string without reloading page
+        try {
+            var url = new URL(window.location.href);
+            if (tab === 'all') {
+                url.searchParams.delete('tab');
+                url.searchParams.delete('status');
+            } else {
+                url.searchParams.set('tab', tab);
+                url.searchParams.delete('status');
+            }
+            window.history.replaceState({ tab: tab }, '', url.toString());
+        } catch (err) {}
+
         applyFilters();
     });
 
@@ -1952,47 +2007,51 @@ $(document).ready(async function() {
         window.txState.activeTab = 'all';
         $('#cd_tx_subtabs .cd-tab-item').removeClass('active');
         $('#cd_tx_subtabs .cd-tab-item[data-tab="all"]').addClass('active');
+        try {
+            var url = new URL(window.location.href);
+            url.searchParams.delete('tab');
+            url.searchParams.delete('status');
+            url.searchParams.delete('search');
+            window.history.replaceState({}, '', url.toString());
+        } catch (err) {}
         applyFilters();
     });
 
+    function checkItemMatches(cat, mode, invoiced, search) {
+        var query = window.txState.searchQuery || '';
+        var activeTab = window.txState.activeTab || 'all';
+
+        var matchesSearch = (query === '' || search.indexOf(query) !== -1);
+        if (!matchesSearch) return false;
+
+        if (activeTab === 'all') return true;
+        if (activeTab === 'captured') return cat === 'captured';
+        if (activeTab === 'pending') return cat === 'pending';
+        if (activeTab === 'failed') return cat === 'failed';
+        if (activeTab === 'online') return mode === 'online';
+        if (activeTab === 'offline') return mode === 'offline';
+        if (activeTab === 'invoiced') return invoiced === 'invoiced';
+
+        return false;
+    }
+
     function applyFilters() {
-        var query = window.txState.searchQuery;
-        var activeTab = window.txState.activeTab;
         var streamVisibleCount = 0;
         var tableVisibleCount = 0;
 
         // Filter Stream Cards in RAM
         $('.cd-tx-card').each(function() {
             var $card = $(this);
-            var searchData = $card.attr('data-search') || '';
+            var searchData = ($card.attr('data-search') || '').toLowerCase();
             var category = $card.attr('data-category') || '';
             var mode = $card.attr('data-mode') || '';
             var invoiced = $card.attr('data-invoiced') || '';
 
-            var matchesSearch = (query === '' || searchData.indexOf(query) !== -1);
-            var matchesTab = false;
-
-            if (activeTab === 'all') {
-                matchesTab = true;
-            } else if (activeTab === 'captured' && category === 'captured') {
-                matchesTab = true;
-            } else if (activeTab === 'pending' && category === 'pending') {
-                matchesTab = true;
-            } else if (activeTab === 'failed' && category === 'failed') {
-                matchesTab = true;
-            } else if (activeTab === 'online' && mode === 'online') {
-                matchesTab = true;
-            } else if (activeTab === 'offline' && mode === 'offline') {
-                matchesTab = true;
-            } else if (activeTab === 'invoiced' && invoiced === 'invoiced') {
-                matchesTab = true;
-            }
-
-            if (matchesSearch && matchesTab) {
-                $card.fadeIn(120);
+            if (checkItemMatches(category, mode, invoiced, searchData)) {
+                $card.removeClass('cd-d-none').show();
                 streamVisibleCount++;
             } else {
-                $card.hide();
+                $card.addClass('cd-d-none').hide();
             }
         });
 
@@ -2005,17 +2064,16 @@ $(document).ready(async function() {
         // Filter Table Rows in RAM
         $('.cd-tx-tablerow').each(function() {
             var $row = $(this);
-            var searchData = $row.attr('data-search') || '';
+            var searchData = ($row.attr('data-search') || '').toLowerCase();
             var category = $row.attr('data-category') || '';
+            var mode = $row.attr('data-mode') || '';
+            var invoiced = $row.attr('data-invoiced') || '';
 
-            var matchesSearch = (query === '' || searchData.indexOf(query) !== -1);
-            var matchesTab = (activeTab === 'all' || activeTab === category);
-
-            if (matchesSearch && matchesTab) {
-                $row.fadeIn(120);
+            if (checkItemMatches(category, mode, invoiced, searchData)) {
+                $row.removeClass('cd-d-none').show();
                 tableVisibleCount++;
             } else {
-                $row.hide();
+                $row.addClass('cd-d-none').hide();
             }
         });
 
@@ -2025,6 +2083,16 @@ $(document).ready(async function() {
             $('#cd_tx_table_no_results').hide();
         }
     }
+
+    // Initialize initial filtering state
+    if (window.txState.activeTab && window.txState.activeTab !== 'all') {
+        var $targetTab = $('#cd_tx_subtabs .cd-tab-item[data-tab="' + window.txState.activeTab + '"]');
+        if ($targetTab.length) {
+            $('#cd_tx_subtabs .cd-tab-item').removeClass('active');
+            $targetTab.addClass('active');
+        }
+    }
+    applyFilters();
 
     // -------------------------------------------------------------------------
     // 6. Slide-Over Transaction Drawer (IndexedDB L2 Cache First — < 5ms)
@@ -2611,7 +2679,7 @@ $(document).ready(async function() {
             'GSTIN'
         ]);
 
-        var $visibleCards = $('.cd-tx-card:visible');
+        var $visibleCards = $('.cd-tx-card:not(.cd-d-none)');
 
         if ($visibleCards.length === 0) {
             Swal.fire('Notice', 'No transactions currently match your filter criteria to export.', 'info');

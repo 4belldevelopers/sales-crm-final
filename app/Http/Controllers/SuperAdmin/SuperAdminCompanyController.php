@@ -8601,6 +8601,8 @@ class SuperAdminCompanyController extends SuperAdminBaseController
                     COUNT(CASE WHEN status = 'captured' THEN 1 END) as capturedCount,
                     COUNT(CASE WHEN status = 'failed' THEN 1 END) as failedCount,
                     COUNT(CASE WHEN status IN ('created', 'authorized') THEN 1 END) as pendingCount,
+                    COUNT(CASE WHEN LOWER(COALESCE(payment_mode, 'Online')) IN ('online', 'payment link', 'gateway') THEN 1 END) as onlineCount,
+                    COUNT(CASE WHEN LOWER(COALESCE(payment_mode, 'Online')) NOT IN ('online', 'payment link', 'gateway') THEN 1 END) as offlineCount,
                     COALESCE(SUM(CASE WHEN status = 'captured' THEN credit ELSE 0 END), 0) as totalCoinsIssued,
                     COUNT(CASE WHEN invoice_approval = 'Yes' THEN 1 END) as approvedInvoiceCount
                 ")
@@ -8613,6 +8615,8 @@ class SuperAdminCompanyController extends SuperAdminBaseController
                 'capturedCount' => (int) ($row->capturedCount ?? 0),
                 'failedCount' => (int) ($row->failedCount ?? 0),
                 'pendingCount' => (int) ($row->pendingCount ?? 0),
+                'onlineCount' => (int) ($row->onlineCount ?? 0),
+                'offlineCount' => (int) ($row->offlineCount ?? 0),
                 'totalCoinsIssued' => (float) ($row->totalCoinsIssued ?? 0),
                 'approvedInvoiceCount' => (int) ($row->approvedInvoiceCount ?? 0),
             ];
@@ -8677,20 +8681,47 @@ class SuperAdminCompanyController extends SuperAdminBaseController
             });
         }
 
-        // Filter: Payment Status
+        // Filter: Tier 2 Sub-Tabs Selection (Syncs seamlessly with UI)
+        if ($request->filled('tab') && $request->tab !== 'all') {
+            $tab = strtolower(trim($request->tab));
+            if ($tab === 'captured') {
+                $query->where('cart_transaction_history.status', '=', 'captured');
+            } elseif ($tab === 'pending') {
+                $query->where(function ($q) {
+                    $q->whereIn('cart_transaction_history.status', ['created', 'authorized', 'pending'])
+                        ->orWhereNull('cart_transaction_history.status');
+                });
+            } elseif ($tab === 'failed') {
+                $query->where('cart_transaction_history.status', '=', 'failed');
+            } elseif ($tab === 'online') {
+                $query->where(function ($q) {
+                    $q->whereNull('cart_transaction_history.payment_mode')
+                        ->orWhereIn(DB::raw('LOWER(cart_transaction_history.payment_mode)'), ['online', 'payment link', 'gateway', 'razorpay']);
+                });
+            } elseif ($tab === 'offline') {
+                $query->whereNotNull('cart_transaction_history.payment_mode')
+                    ->whereNotIn(DB::raw('LOWER(cart_transaction_history.payment_mode)'), ['online', 'payment link', 'gateway', 'razorpay']);
+            } elseif ($tab === 'invoiced') {
+                $query->where('cart_transaction_history.invoice_approval', '=', 'Yes');
+            }
+        }
+
+        // Filter: Payment Status (fallback)
         if ($request->filled('status') && $request->status !== 'all') {
             $query->where('cart_transaction_history.status', '=', $request->status);
         }
 
-        // Filter: Payment Mode
+        // Filter: Payment Mode (fallback)
         if ($request->filled('payment_mode') && $request->payment_mode !== 'all') {
             $query->where('cart_transaction_history.payment_mode', '=', $request->payment_mode);
         }
 
-        // Filter: Invoice Approval
+        // Filter: Invoice Approval (fallback)
         if ($request->filled('invoice_approval') && $request->invoice_approval !== 'all') {
             $query->where('cart_transaction_history.invoice_approval', '=', $request->invoice_approval);
         }
+
+        $this->activeTab = $request->get('tab', $request->get('status', 'all'));
 
         $this->cart_transaction_history = $query->orderByDesc('cart_transaction_history.id')
             ->paginate(25)
