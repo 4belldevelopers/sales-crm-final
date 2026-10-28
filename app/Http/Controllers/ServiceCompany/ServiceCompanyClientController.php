@@ -2737,7 +2737,7 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
 
         $versionKey = 'clientsviewmore_version_user_'.$userId;
         $version = cache()->get($versionKey, 1);
-        $cacheKeySet = 'ats:clientsviewmore_v14:'.$userId.':'.$version.':'.md5(json_encode($cachePayload));
+        $cacheKeySet = 'ats:clientsviewmore_v15:'.$userId.':'.$version.':'.md5(json_encode($cachePayload));
         /* ----------------------------
         ⚡ Check DragonflyDB first
         ----------------------------- */
@@ -2971,6 +2971,18 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
 
         $this->startOfMonth = $startOfMonth;
         $this->endOfMonth = $endOfMonth;
+
+        // Authoritative initial drawer candidate & interview KPI metrics
+        $company_id = (int) (auth()->user()->company_id ?? 0);
+        $kpiJobs = GeneralMethod::InternalClientJobsCountAllStatus($company_id, $id);
+        $kpiPerf = GeneralMethod::InternalClientCandidatesCountList($id, $company_id);
+        $this->kpiTotalJobs = (int) ($kpiJobs->all_jobs ?? 0);
+        $this->kpiActive = (int) ($kpiJobs->job_active ?? 0);
+        $this->kpiInterviews = (int) ($kpiPerf->all_interview ?? 0);
+        $this->kpiSubmitted = (int) ($kpiPerf->all_candidates ?? 0);
+        $this->kpiOffers = (int) ($kpiPerf->offers ?? 0);
+        $this->kpiJoins = (int) ($kpiPerf->Joined ?? 0);
+        $this->kpiRejected = (int) ($kpiPerf->rejected ?? 0);
 
         /** Render instant lightweight Client Details shell view (< 60ms) */
         $view = view('service_company.client.show', $this->data)->render();
@@ -3751,7 +3763,7 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
 
         $versionKey = 'clientsdviewmore_version_user_'.$userId;
         $version = cache()->get($versionKey, 1);
-        $cacheKeySet = 'ats:clientsdviewmore_v13:'.$userId.':'.$version.':'.md5(json_encode($cachePayload));
+        $cacheKeySet = 'ats:clientsdviewmore_v14:'.$userId.':'.$version.':'.md5(json_encode($cachePayload));
         /* ----------------------------
         ⚡ Check DragonflyDB first
         ----------------------------- */
@@ -4131,6 +4143,19 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
         $this->endOfMonth = $endOfMonth;
         $this->requested_client_id = (int) $id;
         $this->id = (int) $id;
+
+        // Authoritative initial drawer candidate & interview KPI metrics
+        $company_id = (int) (auth()->user()->company_id ?? 0);
+        $detail_from = @$this->directClientDetail->from_company_id ?: (@$this->directClientDetail->companies_id ?: (@$this->directClientDetail->company_id ?: $id));
+        $kpiJobs = GeneralMethod::DirectClientJobsCountAllStatus($detail_from, $company_id);
+        $kpiPerf = GeneralMethod::DirectClientCandidatesCountList($detail_from, $company_id);
+        $this->kpiTotalJobs = (int) ($kpiJobs->all_jobs ?? 0);
+        $this->kpiActive = (int) ($kpiJobs->job_active ?? 0);
+        $this->kpiInterviews = (int) ($kpiPerf->all_interview ?? 0);
+        $this->kpiSubmitted = (int) ($kpiPerf->all_candidates ?? 0);
+        $this->kpiOffers = (int) ($kpiPerf->offers ?? 0);
+        $this->kpiJoins = (int) ($kpiPerf->Joined ?? 0);
+        $this->kpiRejected = (int) ($kpiPerf->rejected ?? 0);
 
         /** Render instant lightweight Direct Client Details shell view (< 60ms) */
         $view = view('service_company.client.dviewMore', $this->data)->render();

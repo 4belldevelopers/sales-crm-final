@@ -15,6 +15,7 @@
     $cur_company_id = auth()->user()->company_id ?? 0;
     $detail_from = @$directClientDetail->from_company_id ?: @$directClientDetail->company_id;
 
+    $kpiTotalJobs = 0;
     $kpiActive = $active_requisition ?? 0;
     $kpiSubmitted = 0;
     $kpiInterviews = 0;
@@ -26,6 +27,7 @@
         try {
             $kpiJobs = GeneralMethod::DirectClientJobsCountAllStatus($detail_from, $cur_company_id);
             $kpiPerf = GeneralMethod::DirectClientCandidatesCountList($detail_from, $cur_company_id);
+            if (isset($kpiJobs->all_jobs)) $kpiTotalJobs = $kpiJobs->all_jobs;
             if (isset($kpiJobs->job_active)) $kpiActive = $kpiJobs->job_active;
             if (isset($kpiPerf->all_candidates)) $kpiSubmitted = $kpiPerf->all_candidates;
             if (isset($kpiPerf->all_interview)) $kpiInterviews = $kpiPerf->all_interview;
@@ -916,34 +918,47 @@
             padding: 1px 4px !important;
           }
 
-    /* 5 METRIC KPI SUB-CARDS GRID */
+    /* ── 6 Metric KPI Summary Row (Modern Card + Sub-Card Standard) ── */
     .cd-kpi-grid {
         display: grid !important;
-        grid-template-columns: repeat(5, 1fr) !important;
+        grid-template-columns: repeat(6, minmax(0, 1fr)) !important;
         gap: 10px !important;
-        margin-bottom: 12px !important;
+        margin: 0 14px 12px 14px !important;
+        width: calc(100% - 28px) !important;
+        box-sizing: border-box !important;
     }
-    @media (max-width: 992px) { .cd-kpi-grid { grid-template-columns: repeat(3, 1fr) !important; } }
-    @media (max-width: 576px) { .cd-kpi-grid { grid-template-columns: repeat(2, 1fr) !important; } }
+    @media (max-width: 1280px) {
+        .cd-kpi-grid {
+            grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+        }
+    }
+    @media (max-width: 640px) {
+        .cd-kpi-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+        }
+    }
     .cd-kpi-card {
         background: #ffffff !important;
         border: 1px solid #e2e8f0 !important;
         border-radius: 10px !important;
-        padding: 11px 13px !important;
+        padding: 9px 11px !important;
         display: flex !important;
         align-items: center !important;
-        justify-content: space-between !important;
-        gap: 8px !important;
+        gap: 10px !important;
         box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03) !important;
         transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+        cursor: pointer !important;
+        text-decoration: none !important;
+        min-width: 0 !important;
+        box-sizing: border-box !important;
+        position: relative !important;
     }
     .cd-kpi-card:hover {
         transform: translateY(-2px) !important;
         box-shadow: 0 4px 12px rgba(15, 23, 42, 0.06) !important;
-        border-color: #009ef7 !important;
+        border-color: #cbd5e1 !important;
     }
-    .cd-kpi-card-left { display: flex !important; align-items: center !important; gap: 10px !important; min-width: 0 !important; }
-    .cd-kpi-icon-square {
+    .cd-kpi-icon {
         width: 36px !important;
         height: 36px !important;
         border-radius: 8px !important;
@@ -952,14 +967,45 @@
         justify-content: center !important;
         font-size: 13.5px !important;
         flex-shrink: 0 !important;
+        transition: transform 0.2s ease !important;
     }
-    .cd-kpi-icon-square.blue   { background: #eff6ff !important; color: #2563eb !important; border: 1px solid #dbeafe !important; }
-    .cd-kpi-icon-square.green  { background: #f0fdf4 !important; color: #16a34a !important; border: 1px solid #dcfce7 !important; }
-    .cd-kpi-icon-square.purple { background: #f5f3ff !important; color: #7c3aed !important; border: 1px solid #ede9fe !important; }
-    .cd-kpi-icon-square.orange { background: #fff7ed !important; color: #ea580c !important; border: 1px solid #ffedd5 !important; }
-    .cd-kpi-icon-square.teal   { background: #f0fdfa !important; color: #0d9488 !important; border: 1px solid #ccfbf1 !important; }
-    .cd-kpi-val { font-size: 14.5px !important; font-weight: 700 !important; color: #0f172a !important; line-height: 1.1 !important; }
-    .cd-kpi-label { font-size: 11px !important; font-weight: 500 !important; color: #64748b !important; line-height: 1.2 !important; margin-top: 2px !important; }
+    .cd-kpi-card:hover .cd-kpi-icon {
+        transform: scale(1.08) !important;
+    }
+    .cd-kpi-icon-blue    { background: #eff6ff !important; color: #2563eb !important; }
+    .cd-kpi-icon-emerald { background: #ecfdf5 !important; color: #059669 !important; }
+    .cd-kpi-icon-purple  { background: #f5f3ff !important; color: #7c3aed !important; }
+    .cd-kpi-icon-amber   { background: #fffbeb !important; color: #d97706 !important; }
+    .cd-kpi-icon-rose    { background: #fdf2f8 !important; color: #db2777 !important; }
+    .cd-kpi-icon-teal    { background: #f0fdfa !important; color: #0d9488 !important; }
+    .cd-kpi-body {
+        display: flex !important;
+        flex-direction: column !important;
+        min-width: 0 !important;
+        flex: 1 !important;
+    }
+    .cd-kpi-num {
+        font-size: 17px !important;
+        font-weight: 700 !important;
+        color: #0f172a !important;
+        line-height: 1.15 !important;
+        letter-spacing: -0.02em !important;
+        font-family: 'Poppins', -apple-system, BlinkMacSystemFont, sans-serif !important;
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+    }
+    .cd-kpi-lbl {
+        font-size: 11px !important;
+        font-weight: 500 !important;
+        color: #64748b !important;
+        line-height: 1.25 !important;
+        margin-top: 2px !important;
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        letter-spacing: -0.01em !important;
+    }
 
     /* TIER 2: Dedicated Pure White Sub-Tabs Card */
     .cd-drawer-tabs-card {
@@ -1672,6 +1718,75 @@
                         @else
                             <span class="cd-hero-tag-pill" style="background:#ffffff; color:#64748b; border:1px solid #e2e8f0;">Software Development</span>
                         @endif
+                    </div>
+                </div>
+            </div>
+
+            <!-- ── KPI SUMMARY ROW: AUTHORITATIVE CLIENT-LEVEL BUSINESS TOTALS (Rule 20 Compliant) ── -->
+            <div class="cd-kpi-grid">
+                <!-- KPI 1: Total Jobs Created -->
+                <div class="cd-kpi-card" title="Total jobs created for this client till date">
+                    <div class="cd-kpi-icon cd-kpi-icon-blue">
+                        <i class="fas fa-layer-group fa-solid"></i>
+                    </div>
+                    <div class="cd-kpi-body">
+                        <div class="cd-kpi-num">{{ number_format($kpiTotalJobs ?? 0) }}</div>
+                        <div class="cd-kpi-lbl">Total Jobs Created</div>
+                    </div>
+                </div>
+
+                <!-- KPI 2: Active Jobs -->
+                <div class="cd-kpi-card" title="Total jobs currently active">
+                    <div class="cd-kpi-icon cd-kpi-icon-emerald">
+                        <i class="fas fa-bolt fa-solid"></i>
+                    </div>
+                    <div class="cd-kpi-body">
+                        <div class="cd-kpi-num">{{ number_format($kpiActive ?? 0) }}</div>
+                        <div class="cd-kpi-lbl">Active Jobs</div>
+                    </div>
+                </div>
+
+                <!-- KPI 3: Candidates Submitted -->
+                <div class="cd-kpi-card" title="Total candidates submitted to this client till date">
+                    <div class="cd-kpi-icon cd-kpi-icon-purple">
+                        <i class="fas fa-user-check fa-solid"></i>
+                    </div>
+                    <div class="cd-kpi-body">
+                        <div class="cd-kpi-num">{{ number_format($kpiSubmitted ?? 0) }}</div>
+                        <div class="cd-kpi-lbl">Candidates Submitted</div>
+                    </div>
+                </div>
+
+                <!-- KPI 4: Interviews Scheduled -->
+                <div class="cd-kpi-card" title="Total interviews scheduled for this client till date">
+                    <div class="cd-kpi-icon cd-kpi-icon-amber">
+                        <i class="fas fa-calendar-check fa-solid"></i>
+                    </div>
+                    <div class="cd-kpi-body">
+                        <div class="cd-kpi-num">{{ number_format($kpiInterviews ?? 0) }}</div>
+                        <div class="cd-kpi-lbl">Interviews Scheduled</div>
+                    </div>
+                </div>
+
+                <!-- KPI 5: Offers Generated -->
+                <div class="cd-kpi-card" title="Total offers generated for this client till date">
+                    <div class="cd-kpi-icon cd-kpi-icon-rose">
+                        <i class="fas fa-file-signature fa-solid"></i>
+                    </div>
+                    <div class="cd-kpi-body">
+                        <div class="cd-kpi-num">{{ number_format($kpiOffers ?? 0) }}</div>
+                        <div class="cd-kpi-lbl">Offers Generated</div>
+                    </div>
+                </div>
+
+                <!-- KPI 6: Joined -->
+                <div class="cd-kpi-card" title="Total candidates who have joined for this client till date">
+                    <div class="cd-kpi-icon cd-kpi-icon-teal">
+                        <i class="fas fa-handshake fa-solid"></i>
+                    </div>
+                    <div class="cd-kpi-body">
+                        <div class="cd-kpi-num">{{ number_format($kpiJoins ?? 0) }}</div>
+                        <div class="cd-kpi-lbl">Joined</div>
                     </div>
                 </div>
             </div>

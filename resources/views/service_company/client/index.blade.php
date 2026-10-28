@@ -3855,11 +3855,16 @@ window.ClientPipelineStore = {
         const pv = payload.pv;
         if (!Array.isArray(pv) || pv.length < 9) return;
 
-        const [applications, sourced, screening, evaluated, negotiations, offers, joined, rejected, interviews] = pv;
+        const [sourced, screening, evaluated, negotiations, offers, joined, rejected, inReview, interviews] = pv;
+        const activePipeline = Number(sourced) + Number(screening) + Number(evaluated) + Number(negotiations) + Number(offers) + Number(joined);
+        const applications = activePipeline + Number(rejected) + Number(inReview);
+        const numInterviews = Number(interviews || 0);
+        const totalOffersJoined = Number(offers) + Number(joined);
 
-        $('#ojInternalTabBadge, #ojCountAllInternal').text(Number(offers) + Number(joined)).show();
-        $('#ojCountOffersInternal').text(offers);
-        $('#tabBadgeInterviewTrackerShow, #perfKpiInterviews').text(interviews).show();
+        $('#ojInternalTabBadge, #ojCountAllInternal, #ojDirectTabBadge, #ojCountAllDirect').text(totalOffersJoined).toggle(totalOffersJoined > 0);
+        $('#ojCountOffersInternal, #ojCountOffersDirect').text(offers);
+        $('#tabBadgeInterviewTrackerShow, #tabBadgeInterviewTracker').text(numInterviews).toggle(numInterviews > 0);
+        $('#perfKpiInterviews').text(numInterviews.toLocaleString());
         $('#candTabCountScreening').text(screening);
         $('#candTabCountOffer').text(offers);
         $('#candTabCountJoined').text(joined);

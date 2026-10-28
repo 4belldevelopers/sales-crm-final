@@ -648,15 +648,16 @@ use Carbon\Carbon;
             padding: 1px 4px !important;
           }
 
-          /* ── 5 Metric KPI Sub-Cards Row ── */
+          /* ── 6 Metric KPI Summary Row (Modern Card + Sub-Card Standard) ── */
           .cd-kpi-grid {
             display: grid !important;
-            grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+            grid-template-columns: repeat(6, minmax(0, 1fr)) !important;
             gap: 10px !important;
             margin: 0 14px 12px 14px !important;
             width: calc(100% - 28px) !important;
+            box-sizing: border-box !important;
           }
-          @media (max-width: 1024px) {
+          @media (max-width: 1280px) {
             .cd-kpi-grid {
               grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
             }
@@ -670,15 +671,17 @@ use Carbon\Carbon;
             background: #ffffff !important;
             border: 1px solid #e2e8f0 !important;
             border-radius: 10px !important;
-            padding: 10px 12px !important;
+            padding: 9px 11px !important;
             display: flex !important;
             align-items: center !important;
-            justify-content: space-between !important;
+            gap: 10px !important;
             box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03) !important;
-            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
             cursor: pointer !important;
             text-decoration: none !important;
             min-width: 0 !important;
+            box-sizing: border-box !important;
+            position: relative !important;
           }
           .cd-kpi-card:hover {
             transform: translateY(-2px) !important;
@@ -692,37 +695,46 @@ use Carbon\Carbon;
             display: flex !important;
             align-items: center !important;
             justify-content: center !important;
-            font-size: 14px !important;
+            font-size: 13.5px !important;
             flex-shrink: 0 !important;
+            transition: transform 0.2s ease !important;
           }
-          .cd-kpi-icon-blue   { background: #eff6ff !important; color: #2563eb !important; }
-          .cd-kpi-icon-purple { background: #f5f3ff !important; color: #7c3aed !important; }
-          .cd-kpi-icon-amber  { background: #fffbeb !important; color: #d97706 !important; }
-          .cd-kpi-icon-orange { background: #fff7ed !important; color: #ea580c !important; }
-          .cd-kpi-icon-green  { background: #ecfdf5 !important; color: #059669 !important; }
+          .cd-kpi-card:hover .cd-kpi-icon {
+            transform: scale(1.08) !important;
+          }
+          .cd-kpi-icon-blue    { background: #eff6ff !important; color: #2563eb !important; }
+          .cd-kpi-icon-emerald { background: #ecfdf5 !important; color: #059669 !important; }
+          .cd-kpi-icon-purple  { background: #f5f3ff !important; color: #7c3aed !important; }
+          .cd-kpi-icon-amber   { background: #fffbeb !important; color: #d97706 !important; }
+          .cd-kpi-icon-rose    { background: #fdf2f8 !important; color: #db2777 !important; }
+          .cd-kpi-icon-teal    { background: #f0fdfa !important; color: #0d9488 !important; }
+          .cd-kpi-body {
+            display: flex !important;
+            flex-direction: column !important;
+            min-width: 0 !important;
+            flex: 1 !important;
+          }
           .cd-kpi-num {
-            font-size: 16px !important;
+            font-size: 17px !important;
             font-weight: 700 !important;
             color: #0f172a !important;
             line-height: 1.15 !important;
+            letter-spacing: -0.02em !important;
+            font-family: 'Poppins', -apple-system, BlinkMacSystemFont, sans-serif !important;
+            white-space: nowrap !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
           }
           .cd-kpi-lbl {
             font-size: 11px !important;
-            font-weight: 600 !important;
+            font-weight: 500 !important;
             color: #64748b !important;
-            text-transform: uppercase !important;
-            letter-spacing: 0.3px !important;
-            line-height: 1.2 !important;
-            margin-top: 1px !important;
-          }
-          .cd-kpi-arrow {
-            font-size: 11px !important;
-            color: #cbd5e1 !important;
-            transition: transform 0.15s !important;
-          }
-          .cd-kpi-card:hover .cd-kpi-arrow {
-            color: #2563eb !important;
-            transform: translateX(3px) !important;
+            line-height: 1.25 !important;
+            margin-top: 2px !important;
+            white-space: nowrap !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+            letter-spacing: -0.01em !important;
           }
 
           /* ── Tier 2 Drawer Navigation Tabs Card ── */
@@ -3885,11 +3897,12 @@ use Carbon\Carbon;
         @php
             // KPI counts for Internal Client cached in Redis / Dragonfly
             $cur_company_id = auth()->user()->company_id;
-            $kpiCacheKey = "ats:client_kpi_v9:{$cur_company_id}:{$client->id}";
+            $kpiCacheKey = "ats:client_kpi_v11:{$cur_company_id}:{$client->id}";
             $kpiData = cache()->remember($kpiCacheKey, 900, function() use ($cur_company_id, $client) {
                 $kpiJobs = GeneralMethod::InternalClientJobsCountAllStatus($cur_company_id, $client->id);
                 $kpiPerf = GeneralMethod::InternalClientCandidatesCountList($client->id, $cur_company_id);
                 return [
+                    'kpiTotalJobs' => $kpiJobs->all_jobs ?? 0,
                     'kpiActive' => $kpiJobs->job_active ?? 0,
                     'kpiSubmitted' => $kpiPerf->all_candidates ?? 0,
                     'kpiInterviews' => $kpiPerf->all_interview ?? 0,
@@ -3898,11 +3911,12 @@ use Carbon\Carbon;
                     'kpiRejected' => $kpiPerf->rejected ?? 0,
                 ];
             });
-            $kpiActive     = $kpiData['kpiActive'];
-            $kpiSubmitted  = $kpiData['kpiSubmitted'];
-            $kpiInterviews = $kpiData['kpiInterviews'];
-            $kpiOffers     = $kpiData['kpiOffers'];
-            $kpiJoins      = $kpiData['kpiJoins'];
+            $kpiTotalJobs  = $kpiTotalJobs ?? ($kpiData['kpiTotalJobs'] ?? 0);
+            $kpiActive     = $kpiActive ?? ($kpiData['kpiActive'] ?? 0);
+            $kpiSubmitted  = $kpiSubmitted ?? ($kpiData['kpiSubmitted'] ?? 0);
+            $kpiInterviews = $kpiInterviews ?? ($kpiData['kpiInterviews'] ?? 0);
+            $kpiOffers     = $kpiOffers ?? ($kpiData['kpiOffers'] ?? 0);
+            $kpiJoins      = $kpiJoins ?? ($kpiData['kpiJoins'] ?? 0);
 
             $detailLogo = '';
             if (!empty(@$client->logo_logical_path) && strlen(@$client->logo_logical_path) > 10) $detailLogo = @$client->logo_logical_path;
@@ -4153,6 +4167,75 @@ use Carbon\Carbon;
                 @endif
               </div>
             </div>
+          </div>
+
+          <!-- ── KPI SUMMARY ROW: AUTHORITATIVE CLIENT-LEVEL BUSINESS TOTALS (Rule 20 Compliant) ── -->
+          <div class="cd-kpi-grid">
+            <!-- KPI 1: Total Jobs Created -->
+            <a href="javascript:void(0);" class="cd-kpi-card cd-kpi-nav-trigger" data-tab-target="#requisitions" title="Total jobs created for this client till date">
+              <div class="cd-kpi-icon cd-kpi-icon-blue">
+                <i class="fas fa-layer-group fa-solid"></i>
+              </div>
+              <div class="cd-kpi-body">
+                <div class="cd-kpi-num" id="cdKpiTotalJobsInternal">{{ number_format($kpiTotalJobs ?? 0) }}</div>
+                <div class="cd-kpi-lbl">Total Jobs Created</div>
+              </div>
+            </a>
+
+            <!-- KPI 2: Active Jobs -->
+            <a href="javascript:void(0);" class="cd-kpi-card cd-kpi-nav-trigger" data-tab-target="#requisitions" title="Total jobs currently active">
+              <div class="cd-kpi-icon cd-kpi-icon-emerald">
+                <i class="fas fa-bolt fa-solid"></i>
+              </div>
+              <div class="cd-kpi-body">
+                <div class="cd-kpi-num" id="cdKpiActiveJobsInternal">{{ number_format($kpiActive ?? 0) }}</div>
+                <div class="cd-kpi-lbl">Active Jobs</div>
+              </div>
+            </a>
+
+            <!-- KPI 3: Candidates Submitted -->
+            <a href="javascript:void(0);" class="cd-kpi-card cd-kpi-nav-trigger" data-tab-target="#candidate_list" title="Total candidates submitted to this client till date">
+              <div class="cd-kpi-icon cd-kpi-icon-purple">
+                <i class="fas fa-user-check fa-solid"></i>
+              </div>
+              <div class="cd-kpi-body">
+                <div class="cd-kpi-num" id="cdKpiCandidatesSubmittedInternal">{{ number_format($kpiSubmitted ?? 0) }}</div>
+                <div class="cd-kpi-lbl">Candidates Submitted</div>
+              </div>
+            </a>
+
+            <!-- KPI 4: Interviews Scheduled -->
+            <a href="javascript:void(0);" class="cd-kpi-card cd-kpi-nav-trigger" data-tab-target="#interview_tracker" title="Total interviews scheduled for this client till date">
+              <div class="cd-kpi-icon cd-kpi-icon-amber">
+                <i class="fas fa-calendar-check fa-solid"></i>
+              </div>
+              <div class="cd-kpi-body">
+                <div class="cd-kpi-num" id="cdKpiInterviewsScheduledInternal">{{ number_format($kpiInterviews ?? 0) }}</div>
+                <div class="cd-kpi-lbl">Interviews Scheduled</div>
+              </div>
+            </a>
+
+            <!-- KPI 5: Offers Generated -->
+            <a href="javascript:void(0);" class="cd-kpi-card cd-kpi-nav-trigger" data-tab-target="#candidate_joining" title="Total offers generated for this client till date">
+              <div class="cd-kpi-icon cd-kpi-icon-rose">
+                <i class="fas fa-file-signature fa-solid"></i>
+              </div>
+              <div class="cd-kpi-body">
+                <div class="cd-kpi-num" id="cdKpiOffersGeneratedInternal">{{ number_format($kpiOffers ?? 0) }}</div>
+                <div class="cd-kpi-lbl">Offers Generated</div>
+              </div>
+            </a>
+
+            <!-- KPI 6: Joined -->
+            <a href="javascript:void(0);" class="cd-kpi-card cd-kpi-nav-trigger" data-tab-target="#candidate_joining" title="Total candidates who have joined for this client till date">
+              <div class="cd-kpi-icon cd-kpi-icon-teal">
+                <i class="fas fa-handshake fa-solid"></i>
+              </div>
+              <div class="cd-kpi-body">
+                <div class="cd-kpi-num" id="cdKpiJoinedInternal">{{ number_format($kpiJoins ?? 0) }}</div>
+                <div class="cd-kpi-lbl">Joined</div>
+              </div>
+            </a>
           </div>
 
           <!-- ── TIER 2: SUB-TABS CARD WITH WHITE BACKGROUND (Rule 20 Compliant) ── -->
@@ -4960,7 +5043,7 @@ use Carbon\Carbon;
                                     <div>
                                         <div class="d-flex align-items-center gap-2">
                                             <span class="cd-it-header-title">Interviews</span>
-                                            <span class="cd-it-header-badge" id="itTotalCountBadgeInternal">0</span>
+                                            <span class="cd-it-header-badge" id="itTotalCountBadgeInternal">{{ $kpiInterviews }}</span>
                                         </div>
                                         <div class="cd-it-header-sub">Scheduled interviews with this client's candidates.</div>
                                     </div>
@@ -5163,7 +5246,7 @@ use Carbon\Carbon;
                               </div>
                               <span class="cd-perf-pill cd-perf-pill-up" id="perfKpiIntPill"><i class="fas fa-arrow-up fa-solid" style="font-size:8px;"></i>0.0%</span>
                             </div>
-                            <div class="cd-perf-kpi-num" id="perfKpiInterviews">—</div>
+                            <div class="cd-perf-kpi-num" id="perfKpiInterviews">{{ $kpiInterviews }}</div>
                             <div class="cd-perf-kpi-lbl">Interviews Scheduled</div>
                             <div class="cd-perf-kpi-sub">Across all rounds</div>
                             <div class="cd-perf-kpi-comp" id="perfKpiIntComp">vs. previous period</div>
@@ -9097,11 +9180,13 @@ use Carbon\Carbon;
             `);
         }
 
-                function updateBadgeAndKPI(total) {
+        function updateBadgeAndKPI(total) {
             if (typeof total !== 'undefined') {
-                const $badge = $('#tabBadgeInterviewTrackerShow');
-                if ($badge.length) {
-                    $badge.text(total).toggle(total > 0);
+                if (!currentSearch) {
+                    const $badge = $('#tabBadgeInterviewTrackerShow');
+                    if ($badge.length) {
+                        $badge.text(total).toggle(total > 0);
+                    }
                 }
                 $('#kpiInterviewsScheduledCountShow').text(total);
                 $('#itTotalCountBadgeInternal').text(total);
@@ -9178,6 +9263,12 @@ use Carbon\Carbon;
                     $(`#icHoldJobsCount_${clientId}`).text(holdCount);
                     $(`#icClosedJobsCount_${clientId}`).text(inactiveCount);
 
+                    $(`#cdKpiTotalJobsInternal`).text(totalJobs);
+                    $(`#cdKpiActiveJobsInternal`).text(activeCount);
+                    if (d.total_candidates !== undefined) $(`#cdKpiCandidatesSubmittedInternal`).text(d.total_candidates);
+                    if (d.candidateValuesTotaloffer !== undefined) $(`#cdKpiOffersGeneratedInternal`).text(d.candidateValuesTotaloffer);
+                    if (d.candidateValuesTotaljoin !== undefined) $(`#cdKpiJoinedInternal`).text(d.candidateValuesTotaljoin);
+
                     $(`#icAdded7DaysCount_${clientId}`).text(d.candidateValuesTotal || 0);
                     $(`#icTotalCandidatesCount_${clientId}`).text(d.total_candidates || 0);
                     $(`#icTotalOffersCount_${clientId}`).text(d.candidateValuesTotaloffer || 0);
@@ -9189,6 +9280,21 @@ use Carbon\Carbon;
         });
     }
     window.fetchInternalClientDashboardAnalytics = fetchInternalClientDashboardAnalytics;
+
+    // Delegated click handler to jump to tab when clicking KPI summary card
+    $(document).off('click', '.cd-kpi-nav-trigger').on('click', '.cd-kpi-nav-trigger', function(e) {
+        e.preventDefault();
+        var target = $(this).attr('data-tab-target');
+        if (!target) return;
+        var $scope = $(this).closest('.cd-scope');
+        var $tabLink = $scope.find('.cd-drawer-tabs-list .cd-tab-pill-btn[href="' + target + '"]');
+        if ($tabLink.length) {
+            $tabLink.trigger('click');
+            if (typeof $tabLink.tab === 'function') {
+                $tabLink.tab('show');
+            }
+        }
+    });
 
     // ── Follow-Up actions for the Interview Tracker (client show page) ──
     function citToggleFollowUp(btn) {
