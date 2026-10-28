@@ -6562,16 +6562,16 @@ use Carbon\Carbon;
 
             if (normTab === 'candidates') {
                 var activeCandBtn = $('#kt_activitiesClient #candidate_list .cd-cand-subtab.active');
-                var activeCandStatus = activeCandBtn.length ? activeCandBtn.data('status') : '';
-                var candStatus = (filter !== undefined && filter !== null) ? filter : activeCandStatus;
+                var activeCandStage = activeCandBtn.length ? (activeCandBtn.data('stage') || 'sourcing') : 'sourcing';
+                var targetStage = filter ? filter : activeCandStage;
 
-                if (filter !== undefined && filter !== null) {
-                    $('#kt_activitiesClient #candidate_list .cd-cand-subtab').removeClass('active');
-                    var $matchBtn = $('#kt_activitiesClient #candidate_list .cd-cand-subtab[data-status="' + candStatus + '"]');
+                if (filter) {
+                    $('#kt_activitiesClient #candidate_list .cd-cand-subtab').removeClass('active').attr('aria-selected', 'false');
+                    var $matchBtn = $('#kt_activitiesClient #candidate_list .cd-cand-subtab[data-stage="' + targetStage + '"]');
                     if ($matchBtn.length) {
-                        $matchBtn.addClass('active');
-                    } else if (candStatus === '' || candStatus === 'all') {
-                        $('#kt_activitiesClient #candidate_list .cd-cand-subtab[data-status=""]').addClass('active');
+                        $matchBtn.addClass('active').attr('aria-selected', 'true');
+                    } else {
+                        $('#kt_activitiesClient #candidate_list .cd-cand-subtab[data-stage="sourcing"]').addClass('active').attr('aria-selected', 'true');
                     }
                 }
 
@@ -6581,9 +6581,8 @@ use Carbon\Carbon;
                             window.ClientCandidateStore.init(currentCompanyId, currentClientId, 'internal');
                         }
                     } else {
-                        window.ClientCandidateStore.filters.status_id = (candStatus !== '' && candStatus !== 'all') ? String(candStatus) : '';
-                        window.ClientCandidateStore.filters.page = 1;
-                        window.ClientCandidateStore.fetch(1);
+                        window.ClientCandidateStore.activeStage = targetStage;
+                        window.ClientCandidateStore.filterAndRender();
                     }
                 }
                 if (coord) coord.transition(normTab, 'READY');
@@ -6882,6 +6881,20 @@ use Carbon\Carbon;
         maxProcessedEventIds: 500,
         latestRequestId: 0,
 
+        allCandidates: [],
+        stageCounts: {
+            sourcing: 0,
+            screening: 0,
+            evaluation: 0,
+            negotiations: 0,
+            offer: 0,
+            joined: 0,
+            rejected: 0,
+            interviews: 0
+        },
+        activeStage: 'sourcing',
+        searchTerm: '',
+
         filters: {
             search: '',
             status_id: '',
@@ -6931,6 +6944,9 @@ use Carbon\Carbon;
             this.queryFingerprint = null;
             this.candidateVersions = {};
             this.processedEventIds.clear();
+            this.allCandidates = [];
+            this.activeStage = 'sourcing';
+            this.searchTerm = '';
             this.bindEvents();
             this.subscribeReverb();
             this.fetch(1);
@@ -6951,6 +6967,7 @@ use Carbon\Carbon;
             }
             this.state = 'IDLE';
             this.clientId = null;
+            this.allCandidates = [];
             this.data = [];
             $(document).off('.internalDrawerCand');
         },
@@ -6970,7 +6987,7 @@ use Carbon\Carbon;
             }, this.coalesceDelayMs);
         },
 
-        fetch: function(page, cursor) {
+        fetch: function(page, cursor, isManualRefresh) {
             var self = this;
             this.latestRequestId++;
             var requestId = this.latestRequestId;
@@ -6979,7 +6996,7 @@ use Carbon\Carbon;
             this.filters.page = page || 1;
             this.filters.cursor = cursor || null;
 
-            if (this.state === 'LOADING') {
+            if (this.state === 'LOADING' && (!this.allCandidates || this.allCandidates.length === 0)) {
                 $('#cdCandSkeletonLoader').show();
                 $('#cdCandidateTableWrap').hide();
                 $('#cdCandEmptyState').hide();
@@ -6989,18 +7006,18 @@ use Carbon\Carbon;
                 try { this.inFlightXhr.abort(); } catch(e){}
             }
 
-            this.inFlightXhr = $.ajax({
+            var xhr = $.ajax({
                 url: '{{ url("service_company/client-candidate-list") }}',
                 type: 'GET',
                 headers: { 'Accept': 'application/json' },
                 data: {
                     clientid: this.clientId,
-                    search: this.filters.search,
-                    status_id: this.filters.status_id,
+                    search: '',
+                    status_id: '',
                     job_id: this.filters.job_id,
                     page: this.filters.page,
                     cursor: this.filters.cursor,
-                    size: 25
+                    size: 100
                 },
                 success: function(res) {
                     var curSelId = window.ClientStateManager && typeof window.ClientStateManager.getSelectedClientId === 'function'
@@ -7011,24 +7028,33 @@ use Carbon\Carbon;
                     }
                     if (requestId !== self.latestRequestId) return;
 
-                    self.data = res.data || [];
+                    self.allCandidates = res.data || [];
                     self.pagination = res.pagination || {};
                     self.clientCandidateVersion = res.meta?.client_candidate_version || self.clientCandidateVersion;
                     self.queryFingerprint = res.meta?.query_fingerprint || null;
 
                     self.candidateVersions = {};
-                    self.data.forEach(function(cand) {
+                    self.allCandidates.forEach(function(cand) {
                         var cid = cand.id || cand.wiseId;
                         if (cid && cand.aggregate_version !== undefined) {
                             self.candidateVersions[cid] = cand.aggregate_version;
                         }
                     });
 
+                    // Stage counts computation
+                    if (res.meta && res.meta.stage_counts) {
+                        self.stageCounts = res.meta.stage_counts;
+                    } else {
+                        self.calculateStageCounts(self.allCandidates);
+                    }
+
                     self.state = 'READY';
                     $('#cdCandSkeletonLoader').hide();
                     $('#cdCandidateTableWrap').show();
-                    self.renderRows();
+                    
                     self.updateCounts(self.pagination.total, self.pagination.total_relation);
+                    self.updateAllStageBadges();
+                    self.filterAndRender();
                 },
                 error: function(xhr, status) {
                     if (status === 'abort') return;
@@ -7049,23 +7075,111 @@ use Carbon\Carbon;
                             ? 'Candidate search service temporarily unavailable. Please retry.'
                             : (xhr.responseJSON?.message || 'Failed to load candidates.');
 
-                    $('#candidatetList').html(`<tr><td colspan="9" class="text-center py-6 text-danger fw-bold">${msg}</td></tr>`);
+                    $('#candidatetList').html(`<div class="text-center py-6 text-danger fw-bold">${msg}</div>`);
                     $('#paginationcandidate').empty();
                 }
             });
+
+            this.inFlightXhr = xhr;
+            return xhr;
+        },
+
+        matchesStage: function(cand, stage) {
+            if (!stage || stage === 'all') return true;
+            var sid = parseInt(cand.master_status_id || cand.job_master_status_id || 0, 10);
+            var sName = String(cand.child_status_name || cand.master_status_name || cand.name || '').toLowerCase();
+            switch (stage) {
+                case 'sourcing':
+                    return sid === 1 || sName.includes('sourc') || sName.includes('inreview') || sName.includes('review') || sName.includes('sendmail');
+                case 'screening':
+                    return sid === 2 || sName.includes('screen');
+                case 'evaluation':
+                    return sid === 3 || sName.includes('eval') || sName.includes('interview');
+                case 'negotiations':
+                    return sid === 4 || sName.includes('negot');
+                case 'offer':
+                    return sid === 5 || sName.includes('offer');
+                case 'joined':
+                    return sid === 6 || sName.includes('join') || sName.includes('onboard');
+                case 'rejected':
+                    return sid === 7 || sid === 8 || sName.includes('reject');
+                case 'interviews':
+                    return sid === 3 || sName.includes('interview') || (cand.interview_count && cand.interview_count > 0);
+                default:
+                    return true;
+            }
+        },
+
+        calculateStageCounts: function(list) {
+            var counts = {
+                sourcing: 0,
+                screening: 0,
+                evaluation: 0,
+                negotiations: 0,
+                offer: 0,
+                joined: 0,
+                rejected: 0,
+                interviews: 0
+            };
+            var self = this;
+            (list || []).forEach(function(cand) {
+                if (self.matchesStage(cand, 'sourcing')) counts.sourcing++;
+                if (self.matchesStage(cand, 'screening')) counts.screening++;
+                if (self.matchesStage(cand, 'evaluation')) counts.evaluation++;
+                if (self.matchesStage(cand, 'negotiations')) counts.negotiations++;
+                if (self.matchesStage(cand, 'offer')) counts.offer++;
+                if (self.matchesStage(cand, 'joined')) counts.joined++;
+                if (self.matchesStage(cand, 'rejected')) counts.rejected++;
+                if (self.matchesStage(cand, 'interviews')) counts.interviews++;
+            });
+            this.stageCounts = counts;
+            return counts;
+        },
+
+        updateAllStageBadges: function() {
+            var c = this.stageCounts || {};
+            $('#candTabCountSourcing').text(c.sourcing || 0);
+            $('#candTabCountScreening').text(c.screening || 0);
+            $('#candTabCountEvaluation').text(c.evaluation || 0);
+            $('#candTabCountNegotiations').text(c.negotiations || 0);
+            $('#candTabCountOffer').text(c.offer || 0);
+            $('#candTabCountJoined').text(c.joined || 0);
+            $('#candTabCountRejected').text(c.rejected || 0);
+            $('#candTabCountInterviews').text(c.interviews || 0);
+        },
+
+        filterAndRender: function() {
+            var self = this;
+            var stage = this.activeStage || 'sourcing';
+            var term = (this.searchTerm || '').toLowerCase().trim();
+
+            var filtered = (this.allCandidates || []).filter(function(cand) {
+                // 1. Stage filter
+                if (!self.matchesStage(cand, stage)) return false;
+
+                // 2. Search query filter
+                if (term) {
+                    var corpus = [
+                        cand.full_name, cand.first_name, cand.last_name,
+                        cand.current_designation, cand.skills,
+                        cand.city_name, cand.country_name,
+                        cand.current_company, cand.title, cand.job_title,
+                        String(cand.id || cand.wiseId || '')
+                    ].filter(Boolean).join(' ').toLowerCase();
+                    if (!corpus.includes(term)) return false;
+                }
+                return true;
+            });
+
+            this.data = filtered;
+            this.renderRows();
         },
 
         updateCounts: function(total, relation) {
-            var num = Number(total || 0);
+            var num = Number(total || (this.allCandidates ? this.allCandidates.length : 0));
             var formatted = (relation === 'gte') ? (num.toLocaleString() + '+') : num.toLocaleString();
             $('#cdCandidateCountText').text(formatted);
-            $('#tabBadgeCandidates').text(formatted).show();
-
-            var activeTab = $('.cd-cand-subtab.active');
-            activeTab.find('.cd-cand-subtab-badge').text(formatted).show();
-            if (!this.filters.status_id) {
-                $('#candTabCountAll').text(formatted).show();
-            }
+            $('#tabBadgeCandidates, #cdCandidatesNavBadgeInternal').text(formatted).show();
         },
 
         renderRows: function() {
@@ -7125,15 +7239,6 @@ use Carbon\Carbon;
                 return words.slice(0, maxWords).join(' ') + '...';
             };
 
-            // Initials generator for candidate avatar monogram
-            var getInitials = function(name) {
-                if (!name || typeof name !== 'string') return 'C';
-                var parts = name.trim().split(/\s+/).filter(Boolean);
-                if (parts.length === 0) return 'C';
-                if (parts.length === 1) return parts[0].substring(0, 2).toUpperCase();
-                return (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase();
-            };
-
             // Relative time formatted helper
             var formatTimeAgo = function(createdVal) {
                 if (!createdVal) return 'Recently';
@@ -7178,15 +7283,14 @@ use Carbon\Carbon;
                 return num.toLocaleString();
             };
 
-            // 1. Sub-Card 1: Candidate Profile
+            // 1. Sub-Card 1: Candidate Profile (Reclaimed horizontal space - no avatar box)
             var rawFullName = (row.full_name || ((row.first_name || '') + ' ' + (row.last_name || ''))).trim() || 'Candidate';
             var rawDesignation = (row.current_designation || '----').trim();
             var currCompany = (row.current_company || '----').trim();
 
-            var displayName = formatWithAcronyms(limitWords(rawFullName, 15));
-            var displayDesig = formatWithAcronyms(limitWords(rawDesignation, 15));
-            var currCompanyClean = formatWithAcronyms(limitWords(currCompany, 10));
-            var candInitials = getInitials(rawFullName);
+            var displayName = formatWithAcronyms(limitWords(rawFullName, 25));
+            var displayDesig = formatWithAcronyms(limitWords(rawDesignation, 20));
+            var currCompanyClean = formatWithAcronyms(limitWords(currCompany, 15));
 
             // 2. Sub-Card 2: Compensation & Experience
             var currencySymbol = row.current_ctc_cur || row.salary_currency || row.job_currency || '₹';
@@ -7198,7 +7302,6 @@ use Carbon\Carbon;
 
             var ectcVal = formatCompactSalary(row.ectc_yearly || row.ectc || row.salary);
             var ctcVal = formatCompactSalary(row.ctc_yearly || row.ctc);
-            // Single currency symbol formatting (guaranteed no double symbols)
             var salaryPrimaryHtml = ectcVal
                 ? `<span class="fw-bold text-dark">${currencySymbol}${ectcVal}</span> <span class="text-muted fs-8">/ Yr</span>`
                 : (ctcVal ? `<span class="fw-bold text-dark">${currencySymbol}${ctcVal}</span> <span class="text-muted fs-8">/ Yr</span>` : '<span class="text-muted">----</span>');
@@ -7253,14 +7356,13 @@ use Carbon\Carbon;
             var qualification = row.qualification_name || '----';
             var qualificationClean = formatWithAcronyms(limitWords(qualification, 8));
 
-            // 4. Sub-Card 4: Target Job Requisition
+            // 4. Sub-Card 4: Target Job Requisition (With Company Branding Logo)
             var jobTitle = row.title || row.job_title || ('Job #' + jobId);
             var jobTitleFormatted = formatWithAcronyms(limitWords(jobTitle, 15));
             var companyName = row.cur_company_name || row.client_name || '{{ addslashes($detailName ?? "Client") }}';
             var companyNameFormatted = formatWithAcronyms(limitWords(companyName, 12));
             var jobUrl = jobId ? `{{ url('service_company/jobs') }}/${jobId}` : 'javascript:void(0);';
 
-            var jobInitial = (jobTitle && jobTitle.length > 0) ? jobTitle.charAt(0).toUpperCase() : 'J';
             var deptFormatted = formatWithAcronyms(row.industry_name || row.department || 'Technology');
             var jobTypeClean = (row.job_type || 'Full-Time');
 
@@ -7283,6 +7385,25 @@ use Carbon\Carbon;
             } else if (rawJobStatus === 'inactive' || rawJobStatus === 'closed') {
                 statusPillText = 'Closed';
                 statusChipClass = 'status-closed';
+            }
+
+            // Target Requirement Company Branding Logo
+            var companyLogo = row.client_logo || row.company_logo || row.logo_logical_path || row.logo || '{{ $detailLogo ?? "" }}';
+            var companyInitial = (companyName && companyName.length > 0) ? companyName.charAt(0).toUpperCase() : 'C';
+            var logoHtml = '';
+            if (companyLogo && companyLogo.length > 5) {
+                logoHtml = `
+                    <div class="cd-job-logo-wrap" title="${$('<div>').text(companyNameFormatted).html()}">
+                        <img src="${companyLogo}" alt="${$('<div>').text(companyNameFormatted).html()}" class="cd-job-logo-img" onerror="this.style.display='none'; if(this.nextElementSibling) this.nextElementSibling.style.display='flex';">
+                        <div class="cd-job-logo-fallback" style="display:none;">${companyInitial}</div>
+                    </div>
+                `;
+            } else {
+                logoHtml = `
+                    <div class="cd-job-logo-wrap" title="${$('<div>').text(companyNameFormatted).html()}">
+                        <div class="cd-job-logo-fallback"><i class="fas fa-building text-primary"></i></div>
+                    </div>
+                `;
             }
 
             // 5. Sub-Card 5: Recruiter & Sourcing
@@ -7403,7 +7524,6 @@ use Carbon\Carbon;
                             </div>
                             <div class="cd-cand-subcard-body">
                                 <div class="cd-cand-profile-row">
-                                    <div class="cd-cand-avatar-box">${candInitials}</div>
                                     <div class="cd-cand-profile-meta">
                                         <a href="javascript:void(0);" class="cd-cand-name show-application-detail" data-row-id="${cid}" title="${$('<div>').text(rawFullName).html()}">
                                             ${displayName}
@@ -7464,7 +7584,7 @@ use Carbon\Carbon;
                             </div>
                             <div class="cd-cand-subcard-body">
                                 <div class="cd-job-row">
-                                    <div class="cd-job-logo-box">${jobInitial}</div>
+                                    ${logoHtml}
                                     <div class="cd-job-meta-wrap">
                                         <a href="${jobUrl}" target="_blank" class="cd-job-title-link" title="${$('<div>').text(jobTitle).html()}">
                                             ${jobTitleFormatted}
@@ -7573,6 +7693,25 @@ use Carbon\Carbon;
 
             $(document).off('.internalDrawerCand');
 
+            // 1. Sub-tab clicks (0 HTTP requests!)
+            $(document).on('click.internalDrawerCand', '#kt_activitiesClient .cd-cand-subtab', function(e) {
+                if (e && typeof e.preventDefault === 'function') e.preventDefault();
+                var stage = $(this).data('stage') || 'sourcing';
+                $('#kt_activitiesClient .cd-cand-subtab').removeClass('active').attr('aria-selected', 'false');
+                $(this).addClass('active').attr('aria-selected', 'true');
+                self.activeStage = stage;
+                self.filterAndRender();
+            });
+
+            // 2. Click on Candidates total count badge -> Show All candidates
+            $(document).on('click.internalDrawerCand', '#cdCandidateCountBadge', function(e) {
+                if (e && typeof e.preventDefault === 'function') e.preventDefault();
+                $('#kt_activitiesClient .cd-cand-subtab').removeClass('active').attr('aria-selected', 'false');
+                self.activeStage = 'all';
+                self.filterAndRender();
+            });
+
+            // 3. Search input with 300ms debounce (0 HTTP requests!)
             var searchDebounceTimer = null;
             $(document).on('input.internalDrawerCand', '#cdCandSearchInput', function() {
                 var val = $(this).val();
@@ -7583,47 +7722,39 @@ use Carbon\Carbon;
                 }
                 clearTimeout(searchDebounceTimer);
                 searchDebounceTimer = setTimeout(function() {
-                    self.filters.search = val;
-                    self.filters.page = 1;
-                    self.filters.cursor = null;
-                    self.fetch(1);
+                    self.searchTerm = val;
+                    self.filterAndRender();
                 }, 300);
             });
 
+            // 4. Clear search button (0 HTTP requests!)
             $(document).on('click.internalDrawerCand', '#cdCandSearchClear', function() {
                 $('#cdCandSearchInput').val('');
                 $(this).hide();
-                self.filters.search = '';
-                self.filters.page = 1;
-                self.filters.cursor = null;
-                self.fetch(1);
+                self.searchTerm = '';
+                self.filterAndRender();
             });
 
-            $(document).on('click.internalDrawerCand', '#kt_activitiesClient .cd-cand-subtab', function(e) {
+            // 5. Reset / Refresh button (deduplicated with loading spin)
+            $(document).on('click.internalDrawerCand', '#cdCandResetBtn', function(e) {
                 if (e && typeof e.preventDefault === 'function') e.preventDefault();
-                var status = $(this).data('status');
-                $('#kt_activitiesClient .cd-cand-subtab').removeClass('active');
-                $(this).addClass('active');
-                if (window.__activeClientDrawer && window.__activeClientDrawer.coordinator) {
-                    window.__activeClientDrawer.coordinator.transition('candidates', 'LOADING', { filter: String(status || '') });
+                var $btn = $(this);
+                if ($btn.hasClass('is-refreshing') || self.state === 'LOADING' || self.state === 'REFRESHING') {
+                    return;
                 }
-                self.filters.status_id = (status !== undefined && status !== null && status !== '') ? String(status) : '';
-                self.filters.page = 1;
-                self.filters.cursor = null;
-                self.fetch(1);
-            });
-
-            $(document).on('click.internalDrawerCand', '#cdCandResetBtn', function() {
+                $btn.addClass('is-refreshing');
+                $btn.find('i').addClass('fa-spin');
                 $('#cdCandSearchInput').val('');
                 $('#cdCandSearchClear').hide();
-                $('.cd-cand-subtab').removeClass('active');
-                $('.cd-cand-subtab[data-status=""]').addClass('active');
-                self.filters.search = '';
-                self.filters.status_id = '';
-                self.filters.job_id = '';
-                self.filters.page = 1;
-                self.filters.cursor = null;
-                self.fetch(1);
+                self.searchTerm = '';
+                self.activeStage = 'sourcing';
+                $('#kt_activitiesClient .cd-cand-subtab').removeClass('active').attr('aria-selected', 'false');
+                $('#kt_activitiesClient .cd-cand-subtab[data-stage="sourcing"]').addClass('active').attr('aria-selected', 'true');
+
+                self.fetch(1, null, true).always(function() {
+                    $btn.removeClass('is-refreshing');
+                    $btn.find('i').removeClass('fa-spin');
+                });
             });
 
             $(document).on('wheel.internalDrawerCand', '.cd-cand-bottom-strip, .cd-bottom-skills-scroll', function(e) {
