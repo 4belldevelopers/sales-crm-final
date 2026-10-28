@@ -84,7 +84,7 @@
                     <div class="cl-subcard-head">
                         <span class="cl-subcard-title">Client Identity</span>
                         <div class="cl-subcard-badges">
-                            <span class="cl-scope-pill pill-direct">Direct Client</span>
+                            <span class="cl-scope-pill pill-direct type-direct">Direct Client</span>
                             <span class="badge" style="background:#fef3c7; color:#d97706; font-size:9px; font-weight:700; padding:1.5px 6px; border-radius:4px; border:1px solid #fde68a;">⚡ Request</span>
                         </div>
                     </div>
@@ -120,9 +120,9 @@
                             <circle cx="12" cy="10" r="3"/>
                         </svg>
                         @php
-                            $reqCity = !empty($city) ? ucwords($city) : '';
-                            $reqState = !empty($stateName) ? ucwords($stateName) : '';
-                            $reqCountry = !empty($country_name) ? ucwords($country_name) : '';
+                            $reqCity = !empty($city) ? ucwords(strtolower((string) $city)) : '';
+                            $reqState = !empty($stateName) ? ucwords(strtolower((string) $stateName)) : '';
+                            $reqCountry = !empty($country_name) ? ucwords(strtolower((string) $country_name)) : '';
                         @endphp
                         <div class="cl-loc-lines">
                             @if(!empty($reqCity))
@@ -249,15 +249,22 @@
 
         /* ── location ── */
         $country_name = $stateName = $city = '';
-        if (!empty($row->client_location) && count($row->client_location) > 0) {
-            $country_name = $row->client_location[0]['country_name'] ?? '';
-            $stateName = $row->client_location[0]['state_name'] ?? '';
-            $city = $row->client_location[0]['city_name'] ?? '';
+        if (!empty($row->client_location) && (is_array($row->client_location) || is_iterable($row->client_location))) {
+            foreach ($row->client_location as $locItem) {
+                $locArr = (array) $locItem;
+                if (!empty($locArr['city_name'])) $city = $locArr['city_name'];
+                elseif (!empty($locArr['city'])) $city = $locArr['city'];
+                if (!empty($locArr['state_name'])) $stateName = $locArr['state_name'];
+                elseif (!empty($locArr['state']) && !is_numeric($locArr['state'])) $stateName = $locArr['state'];
+                if (!empty($locArr['country_name'])) $country_name = $locArr['country_name'];
+                elseif (!empty($locArr['country'])) $country_name = $locArr['country'];
+                if (!empty($city) || !empty($stateName) || !empty($country_name)) break;
+            }
         }
         if (empty($city) && !empty($row->city_name)) $city = $row->city_name;
         if (empty($city) && !empty($row->city)) $city = $row->city;
         if (empty($stateName) && !empty($row->state_name)) $stateName = $row->state_name;
-        if (empty($stateName) && !empty($row->state)) $stateName = $row->state;
+        if (empty($stateName) && !empty($row->state) && !is_numeric($row->state)) $stateName = $row->state;
         if (empty($country_name) && !empty($row->country_name)) $country_name = $row->country_name;
         if (empty($country_name) && !empty($row->country)) $country_name = $row->country;
 
@@ -393,7 +400,7 @@
                 <div class="cl-subcard-head">
                     <span class="cl-subcard-title">Client Identity</span>
                     <div class="cl-subcard-badges">
-                        <span class="cl-scope-pill {{ $isDirect ? 'pill-direct' : 'pill-internal' }} {{ $client_type_css }}" data-row-id="{{ $rowTargetId }}" data-client-type="{{ $isDirect ? 'direct' : 'internal' }}">
+                        <span class="cl-scope-pill {{ $isDirect ? 'pill-direct type-direct' : 'pill-internal type-internal' }} {{ $client_type_css }}" data-row-id="{{ $rowTargetId }}" data-client-type="{{ $isDirect ? 'direct' : 'internal' }}">
                             {{ $client_type }}
                         </span>
                         <span class="cl-status-pill {{ $job_active > 0 ? 'pill-active' : 'pill-inactive' }}">
@@ -440,9 +447,9 @@
                         <circle cx="12" cy="10" r="3"/>
                     </svg>
                     @php
-                        $locCity = !empty($city) ? ucwords($city) : '';
-                        $locState = !empty($stateName) ? ucwords($stateName) : '';
-                        $locCountry = !empty($country_name) ? ucwords($country_name) : '';
+                        $locCity = !empty($city) ? ucwords(strtolower((string) $city)) : '';
+                        $locState = !empty($stateName) ? ucwords(strtolower((string) $stateName)) : '';
+                        $locCountry = !empty($country_name) ? ucwords(strtolower((string) $country_name)) : '';
                     @endphp
                     <div class="cl-loc-lines">
                         @if(!empty($locCity))

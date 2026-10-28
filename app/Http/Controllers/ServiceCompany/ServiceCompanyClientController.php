@@ -1624,6 +1624,10 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
                     $reqCount = (int) ($rowObj->requisition_count ?? 0);
                     $rowTargetId = $rowObj->client_id ?: ($rowObj->from_company_id ?: ($rowObj->id ?? 0));
 
+                    $reqCity = $rowObj->city_name ?? ($rowObj->city ?? '');
+                    $reqState = $rowObj->state_name ?? (! is_numeric($rowObj->state ?? '') ? ($rowObj->state ?? '') : '');
+                    $reqCountry = $rowObj->country_name ?? ($rowObj->country ?? '');
+
                     $rowsDto[] = [
                         'id' => (int) ($rowObj->staffing_company_invitation_id ?? ($rowObj->id ?? 0)),
                         'client_id' => (int) ($rowObj->client_id ?? 0),
@@ -1635,8 +1639,10 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
                         'industry' => (string) ($rowObj->ind_name ?? ''),
                         'industry_id' => null,
                         'company_size' => (string) ($rowObj->company_size ?? ''),
-                        'location_main' => (string) ($rowObj->city_name ?? ''),
-                        'country' => ucwords((string) ($rowObj->country_name ?? '')),
+                        'location_main' => (string) $reqCity,
+                        'city' => ! empty($reqCity) ? ucwords(strtolower((string) $reqCity)) : '',
+                        'state' => ! empty($reqState) ? ucwords(strtolower((string) $reqState)) : '',
+                        'country' => ! empty($reqCountry) ? ucwords(strtolower((string) $reqCountry)) : '',
                         'country_id' => null,
                         'country_ids' => [],
                         'locations' => [],
@@ -1699,11 +1705,48 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
                 $departmentArr = ($rowObj->ind_name ?? null) ?: ($rowObj->main_ind_name ?? '');
                 $rowTargetId = $isDirect ? ($rowObj->client_id ?: ($rowObj->from_company_id ?: ($rowObj->company_id ?: ($rowObj->id ?? 0)))) : ($rowObj->client_id ?: ($rowObj->id ?? 0));
 
+                // Intent: Robust multi-tier location resolution (City, State, Country) across nested ES structures with fallbacks
                 $country_name = $stateName = $city = '';
-                if (! empty($rowObj->client_location) && is_array($rowObj->client_location) && count($rowObj->client_location) > 0) {
-                    $country_name = $rowObj->client_location[0]['country_name'] ?? '';
-                    $stateName = $rowObj->client_location[0]['state_name'] ?? '';
-                    $city = $rowObj->client_location[0]['city_name'] ?? '';
+                if (! empty($rowObj->client_location) && (is_array($rowObj->client_location) || is_iterable($rowObj->client_location))) {
+                    foreach ($rowObj->client_location as $loc) {
+                        $locArr = (array) $loc;
+                        if (! empty($locArr['city_name'])) {
+                            $city = $locArr['city_name'];
+                        } elseif (! empty($locArr['city'])) {
+                            $city = $locArr['city'];
+                        }
+                        if (! empty($locArr['state_name'])) {
+                            $stateName = $locArr['state_name'];
+                        } elseif (! empty($locArr['state']) && ! is_numeric($locArr['state'])) {
+                            $stateName = $locArr['state'];
+                        }
+                        if (! empty($locArr['country_name'])) {
+                            $country_name = $locArr['country_name'];
+                        } elseif (! empty($locArr['country'])) {
+                            $country_name = $locArr['country'];
+                        }
+                        if (! empty($city) || ! empty($stateName) || ! empty($country_name)) {
+                            break;
+                        }
+                    }
+                }
+                if (empty($city) && ! empty($rowObj->city_name)) {
+                    $city = $rowObj->city_name;
+                }
+                if (empty($city) && ! empty($rowObj->city)) {
+                    $city = $rowObj->city;
+                }
+                if (empty($stateName) && ! empty($rowObj->state_name)) {
+                    $stateName = $rowObj->state_name;
+                }
+                if (empty($stateName) && ! empty($rowObj->state) && ! is_numeric($rowObj->state)) {
+                    $stateName = $rowObj->state;
+                }
+                if (empty($country_name) && ! empty($rowObj->country_name)) {
+                    $country_name = $rowObj->country_name;
+                }
+                if (empty($country_name) && ! empty($rowObj->country)) {
+                    $country_name = $rowObj->country;
                 }
 
                 $companySizeText = '';
@@ -1837,6 +1880,14 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
                     $countryId = isset($chosenLoc['country_id']) ? (int) $chosenLoc['country_id'] : null;
                     $cityId = isset($chosenLoc['city_id']) ? (int) $chosenLoc['city_id'] : null;
                     $stateId = isset($chosenLoc['state']) ? (int) $chosenLoc['state'] : (isset($chosenLoc['state_id']) ? (int) $chosenLoc['state_id'] : null);
+                    if ($matchedLoc !== null) {
+                        if (! empty($matchedLoc['city_name'])) $city = $matchedLoc['city_name'];
+                        elseif (! empty($matchedLoc['city'])) $city = $matchedLoc['city'];
+                        if (! empty($matchedLoc['state_name'])) $stateName = $matchedLoc['state_name'];
+                        elseif (! empty($matchedLoc['state']) && ! is_numeric($matchedLoc['state'])) $stateName = $matchedLoc['state'];
+                        if (! empty($matchedLoc['country_name'])) $country_name = $matchedLoc['country_name'];
+                        elseif (! empty($matchedLoc['country'])) $country_name = $matchedLoc['country'];
+                    }
                 }
 
                 $rowsDto[] = [
@@ -1850,7 +1901,9 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
                     'industry_id' => isset($rowObj->industry) ? (int) $rowObj->industry : null,
                     'company_size' => (string) $companySizeText,
                     'location_main' => (string) $locMain,
-                    'country' => ucwords((string) $country_name),
+                    'city' => ! empty($city) ? ucwords(strtolower((string) $city)) : '',
+                    'state' => ! empty($stateName) ? ucwords(strtolower((string) $stateName)) : '',
+                    'country' => ! empty($country_name) ? ucwords(strtolower((string) $country_name)) : '',
                     'country_id' => $countryId,
                     'country_ids' => array_values(array_unique($countryIds)),
                     'locations' => $rowObj->client_location ?? [],
@@ -2210,6 +2263,10 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
                     $initials = 'CL';
                 }
 
+                $reqCity = $rowObj->city_name ?? ($rowObj->city ?? '');
+                $reqState = $rowObj->state_name ?? (! is_numeric($rowObj->state ?? '') ? ($rowObj->state ?? '') : '');
+                $reqCountry = $rowObj->country_name ?? ($rowObj->country ?? '');
+
                 $rowsDto[] = [
                     'id' => (int) ($rowObj->id ?? 0),
                     'client_id' => (int) ($rowObj->client_id ?? 0),
@@ -2218,8 +2275,11 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
                     'initials' => (string) $initials,
                     'bg_color' => (string) $bgTextDecore,
                     'ind_name' => (string) ($rowObj->ind_name ?? ''),
-                    'city_name' => (string) ($rowObj->city_name ?? ''),
-                    'country_name' => (string) ($rowObj->country_name ?? ''),
+                    'city' => ! empty($reqCity) ? ucwords(strtolower((string) $reqCity)) : '',
+                    'state' => ! empty($reqState) ? ucwords(strtolower((string) $reqState)) : '',
+                    'country' => ! empty($reqCountry) ? ucwords(strtolower((string) $reqCountry)) : '',
+                    'city_name' => (string) $reqCity,
+                    'country_name' => (string) $reqCountry,
                     'staffing_company_invitation_id' => (int) ($rowObj->staffing_company_invitation_id ?? 0),
                     'from_company_id' => (int) ($rowObj->from_company_id ?? 0),
                     'to_invitation_status' => (int) ($rowObj->to_invitation_status ?? 0),
