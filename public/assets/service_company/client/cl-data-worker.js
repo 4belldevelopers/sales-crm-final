@@ -26,7 +26,16 @@ self.onmessage = function(e) {
             break;
 
         case 'EXPORT_CSV':
-            exportCsv(msg.filters);
+            exportCsv(msg);
+            break;
+
+        case 'CHECK_HYDRATION':
+            self.postMessage({
+                type: 'HYDRATION_STATUS',
+                isHydrated: Boolean(self.dataset && self.dataset.length > 0),
+                total: self.dataset ? self.dataset.length : 0,
+                version: self.dataVersion || 1
+            });
             break;
 
         case 'PIPELINE_REVISION_UPDATE':
@@ -156,9 +165,14 @@ function normalizeRow(r) {
         },
         date: r.connected_on || r.date || '-',
         date_ago: r.days_ago || r.date_ago || '',
+        connected_date: r.connected_on || r.date || '-',
         created_timestamp: createdTimestamp,
+        status: activeJobs > 0 ? 'Active' : 'Inactive',
         last_activity: r.days_ago || r.last_activity || 'No Activity',
         last_activity_ago: r.days_ago || r.last_activity_ago || '',
+        last_activity_utc: r.last_activity_at || null,
+        last_activity_formatted: r.last_activity_formatted || null,
+        last_activity_display: r.days_ago || r.last_activity_ago || r.last_activity || 'No Activity',
         raw: r
     };
 }
@@ -421,17 +435,171 @@ function pipelineRevisionUpdate(clientId, revision, newPv, changed) {
     });
 }
 
-function exportCsv(filters) {
-    // Generate CSV on worker thread without main-thread blocking
-    const rows = [];
-    rows.push(['Company Name', 'Industry', 'Location', 'Jobs Hiring', 'Jobs Hold', 'Jobs Closed', 'Sourced', 'Screening', 'Evaluated', 'Negotiation', 'Offers', 'Joined', 'Rejected', 'In Review', 'Interviewees', 'Total Applications', 'Client Type', 'Date', 'Last Activity']);
+function exportCsv(msg) {
+    const t0 = performance.now();
+    const f = (msg && msg.filters) ? msg.filters : (msg || {});
+    const scope = (msg && msg.scope) ? msg.scope : 'filtered';
+    const manifest = (msg && msg.manifest) ? msg.manifest : {};
 
-    for (let i = 0; i < self.dataset.length; i++) {
-        const item = self.dataset[i];
+    if (!self.dataset || self.dataset.length === 0) {
+        self.postMessage({
+            type: 'EXPORT_ERROR',
+            code: 'DATASET_EMPTY',
+            message: 'No client records are available in local browser memory to export.'
+        });
+        return;
+    }
+
+    let records = [];
+
+    if (scope === 'all') {
+        records = self.dataset.slice();
+    } else {
+        const tab = (f.tab || 'all').toLowerCase();
+        const search = (f.search || '').trim().toLowerCase();
+        const countryId = f.country_id;
+        const countryName = (f.country_name || '').trim().toLowerCase();
+        const cityId = f.city_id;
+        const cityName = (f.city_name || '').trim().toLowerCase();
+        const unspecifiedLoc = Boolean(f.unspecified_location || countryId === 'unspecified');
+        const industry = (f.industry || f.industry_id || '').toString().trim().toLowerCase();
+        const activity = (f.activity || '').trim().toLowerCase();
+
+        for (let i = 0; i < self.dataset.length; i++) {
+            const item = self.dataset[i];
+
+            // 1. Search filter
+            if (search) {
+                const matchesSearch = (item.name_lower && item.name_lower.includes(search)) ||
+                                      (item.industry_lower && item.industry_lower.includes(search)) ||
+                                      (item.country_name_lower && item.country_name_lower.includes(search)) ||
+                                      (item.city_name_lower && item.city_name_lower.includes(search));
+                if (!matchesSearch) continue;
+            }
+
+            // 2. Location filter
+            if (unspecifiedLoc) {
+                if (item.has_location) continue;
+            } else if (countryId || countryName) {
+                let matchCountry = false;
+                if (countryId && item.country_ids && item.country_ids.some(cid => String(cid) === String(countryId))) {
+                    matchCountry = true;
+                } else if (countryId && item.country_id && String(item.country_id) === String(countryId)) {
+                    matchCountry = true;
+                } else if (countryName && item.country_name_lower && item.country_name_lower.includes(countryName)) {
+                    matchCountry = true;
+                } else if (countryId && isNaN(countryId) && item.country_name_lower && item.country_name_lower.includes(String(countryId).toLowerCase())) {
+                    matchCountry = true;
+                }
+                if (!matchCountry) continue;
+
+                if (cityId || cityName) {
+                    let matchCity = false;
+                    if (cityId && item.city_id && String(item.city_id) === String(cityId)) {
+                        matchCity = true;
+                    } else if (cityName && item.city_name_lower && item.city_name_lower.includes(cityName)) {
+                        matchCity = true;
+                    } else if (cityId && isNaN(cityId) && item.city_name_lower && item.city_name_lower.includes(String(cityId).toLowerCase())) {
+                        matchCity = true;
+                    }
+                    if (!matchCity) continue;
+                }
+            }
+
+            // 3. Industry filter
+            if (industry) {
+                const industryNum = Number(industry);
+                const matchesId = !isNaN(industryNum) && industryNum > 0 && item.industry_id === industryNum;
+                const matchesName = item.industry_lower && item.industry_lower.includes(industry);
+                if (!matchesId && !matchesName) continue;
+            }
+
+            // 4. Activity filter
+            if (activity === 'hiring') {
+                if (item.jobs.active <= 0) continue;
+            } else if (activity === 'pipeline') {
+                const pipeSum = item.pipeline.sourced + item.pipeline.evaluated + item.pipeline.interviews;
+                if (pipeSum <= 0) continue;
+            } else if (activity === 'dormant') {
+                const actSum = item.jobs.active + item.pipeline.sourced + item.pipeline.evaluated;
+                if (actSum > 0) continue;
+            }
+
+            // 5. Tab filter
+            if (tab === 'internal' && item.is_direct) continue;
+            if (tab === 'direct' && !item.is_direct) continue;
+            if (tab === 'hiring' && item.jobs.active <= 0) continue;
+            if (tab === 'inactive' && item.jobs.active > 0) continue;
+
+            records.push(item);
+        }
+    }
+
+    // Apply Sorting (strictly preserving active UI sort)
+    const sort = (f.sort || 'recent').toLowerCase();
+    records.sort(function(a, b) {
+        if (sort === 'name_asc') {
+            return a.name.localeCompare(b.name) || (b.id - a.id);
+        } else if (sort === 'name_desc') {
+            return b.name.localeCompare(a.name) || (b.id - a.id);
+        } else if (sort === 'jobs_desc') {
+            return (b.jobs.active - a.jobs.active) || (b.id - a.id);
+        } else if (sort === 'oldest' || sort === '2') {
+            return (a.created_timestamp - b.created_timestamp) || (a.id - b.id);
+        } else {
+            return (b.created_timestamp - a.created_timestamp) || (b.id - a.id);
+        }
+    });
+
+    // CWE-1236 Defense: Neutralize formula triggers (=, +, -, @, \t, \r)
+    function sanitizeCsvCell(value) {
+        if (value === null || value === undefined) return '""';
+        let str = String(value).trim();
+        if (/^[=+\-@\t\r]/.test(str)) {
+            str = "'" + str;
+        }
+        return '"' + str.replace(/"/g, '""') + '"';
+    }
+
+    // Enterprise Audit Manifest Header
+    const manifestLines = [
+        '# ==============================================================================',
+        '# JERO ENTERPRISE ATS CLIENTS EXPORT MANIFEST',
+        `# Export ID: ${manifest.exportId || ('EXP-' + Date.now())}`,
+        `# Exported At: ${new Date().toISOString()}`,
+        `# Scope: ${scope === 'all' ? 'All Clients' : (f.tab || 'All').toUpperCase() + ' (Filtered)'}`,
+        `# Total Records: ${records.length}`,
+        `# Tenant ID: ${manifest.tenantId || ''}`,
+        `# Generated By: ${manifest.userName || 'Authorized User'} (ID #${manifest.userId || ''})`,
+        `# Dataset Version: ${self.dataVersion || '1.0'}`,
+        '# Security Classification: Internal Business Confidential',
+        '# =============================================================================='
+    ];
+
+    const headers = [
+        'Client ID', 'Company Name', 'Industry', 'Company Size', 'City', 'Country',
+        'Client Type', 'Status', 'Jobs Hiring', 'Jobs Hold', 'Jobs Closed',
+        'Sourced', 'Screening', 'Evaluated', 'Negotiation', 'Offers',
+        'Joined', 'Rejected', 'In Review', 'Interviewees', 'Total Applications',
+        'Connected Date', 'Last Activity UTC', 'Last Activity (Display)'
+    ];
+
+    const rows = [
+        manifestLines.join('\r\n'),
+        headers.map(h => `"${h}"`).join(',')
+    ];
+
+    for (let i = 0; i < records.length; i++) {
+        const item = records[i];
         rows.push([
-            item.name,
-            item.industry,
-            item.city_name ? (item.city_name + (item.country_name ? ', ' + item.country_name : '')) : item.country_name,
+            sanitizeCsvCell(item.id),
+            sanitizeCsvCell(item.name),
+            sanitizeCsvCell(item.industry),
+            sanitizeCsvCell(item.company_size),
+            sanitizeCsvCell(item.city_name),
+            sanitizeCsvCell(item.country_name),
+            sanitizeCsvCell(item.client_type || (item.is_direct ? 'Direct Client' : 'Internal Client')),
+            sanitizeCsvCell(item.status),
             item.jobs.active,
             item.jobs.hold,
             item.jobs.closed,
@@ -445,17 +613,23 @@ function exportCsv(filters) {
             item.pipeline.in_review || 0,
             item.pipeline.interviews,
             item.pipeline.applications,
-            item.client_type,
-            item.date,
-            item.last_activity
-        ]);
+            sanitizeCsvCell(item.connected_date || item.date),
+            sanitizeCsvCell(item.last_activity_utc || item.last_activity_formatted || '-'),
+            sanitizeCsvCell(item.last_activity_display || item.last_activity)
+        ].join(','));
     }
 
-    const csvContent = rows.map(e => e.map(cell => '"' + ('' + (cell || '')).replace(/"/g, '""') + '"').join(",")).join("\n");
+    // Prepend UTF-8 BOM (\uFEFF) for strict Microsoft Excel character fidelity
+    const bom = '\uFEFF';
+    const csvContent = bom + rows.join('\r\n');
+    const elapsed = Math.round(performance.now() - t0);
 
     self.postMessage({
         type: 'CSV_READY',
         csvContent: csvContent,
-        rowCount: self.dataset.length
+        rowCount: records.length,
+        scope: scope,
+        exportId: manifest.exportId || '',
+        durationMs: elapsed
     });
 }
