@@ -6508,7 +6508,20 @@ if ($page_event == 'ADD') {
 
     window.checkCompanyNameDuplicate = function(name, isSync, callback) {
         name = (typeof name === 'string' ? name : ($('#client_id').val() || '')).trim();
+        var isEdit = Boolean(window.JERO_CLIENT_CONFIG && window.JERO_CLIENT_CONFIG.isEdit);
+        var origName = (window.JERO_CLIENT_CONFIG && window.JERO_CLIENT_CONFIG.originalName) ? window.JERO_CLIENT_CONFIG.originalName : '';
+        var clientId = (window.JERO_CLIENT_CONFIG && window.JERO_CLIENT_CONFIG.clientId) ? window.JERO_CLIENT_CONFIG.clientId : {{ $client->id ?? 'null' }};
+
         if (!name || name.length < 2) {
+            window._dupCompanyNameError = null;
+            $('#company_duplicate_error').hide();
+            $('#client_id').removeClass('is-invalid');
+            if (typeof callback === 'function') callback(true, null);
+            return true;
+        }
+
+        // Scenario A: When in Edit mode and name matches existing stored name, do NOT check duplicate!
+        if (isEdit && normalizeClientName(name) === normalizeClientName(origName)) {
             window._dupCompanyNameError = null;
             $('#company_duplicate_error').hide();
             $('#client_id').removeClass('is-invalid');
@@ -6528,7 +6541,7 @@ if ($page_event == 'ADD') {
                 field: 'name',
                 name: name,
                 value: name,
-                client_id: {{ $client->id ?? 'null' }}
+                client_id: clientId
             },
             success: function(res) {
                 if (res && res.duplicate) {
@@ -6566,6 +6579,16 @@ if ($page_event == 'ADD') {
             return;
         }
 
+        // In edit mode, if name is unchanged from stored value, skip duplicate check
+        if (window.JERO_CLIENT_CONFIG && window.JERO_CLIENT_CONFIG.isEdit) {
+            if (normalizeClientName(name) === normalizeClientName(window.JERO_CLIENT_CONFIG.originalName)) {
+                window._dupCompanyNameError = null;
+                $('#company_duplicate_error').hide();
+                $('#client_id').removeClass('is-invalid');
+                return;
+            }
+        }
+
         _clientIdDupTimer = setTimeout(function() {
             window.checkCompanyNameDuplicate(name, false);
         }, 280);
@@ -6575,13 +6598,36 @@ if ($page_event == 'ADD') {
         var name = $(this).val().trim();
         clearTimeout(_clientIdDupTimer);
         if (name && name.length >= 2) {
+            if (window.JERO_CLIENT_CONFIG && window.JERO_CLIENT_CONFIG.isEdit) {
+                if (normalizeClientName(name) === normalizeClientName(window.JERO_CLIENT_CONFIG.originalName)) {
+                    window._dupCompanyNameError = null;
+                    $('#company_duplicate_error').hide();
+                    $('#client_id').removeClass('is-invalid');
+                    return;
+                }
+            }
             window.checkCompanyNameDuplicate(name, false);
         }
     });
 
     window.checkWebsiteDuplicate = function(web, isSync, callback) {
         web = (typeof web === 'string' ? web : ($('#website').val() || '')).trim();
+        var isEdit = Boolean(window.JERO_CLIENT_CONFIG && window.JERO_CLIENT_CONFIG.isEdit);
+        var origWebsite = (window.JERO_CLIENT_CONFIG && window.JERO_CLIENT_CONFIG.originalWebsite) ? window.JERO_CLIENT_CONFIG.originalWebsite : '';
+        var clientId = (window.JERO_CLIENT_CONFIG && window.JERO_CLIENT_CONFIG.clientId) ? window.JERO_CLIENT_CONFIG.clientId : {{ $client->id ?? 'null' }};
+
         if (!web) {
+            window._dupWebsiteError = null;
+            $('#website_duplicate_error').hide();
+            $('#website_checking_indicator').hide();
+            $('#website').removeClass('is-invalid');
+            $('.god-website-input-box').removeClass('has-validation-error');
+            if (typeof callback === 'function') callback(true, null);
+            return true;
+        }
+
+        // Scenario A: When in Edit mode and website matches existing stored website, do NOT check duplicate!
+        if (isEdit && canonicalizeClientWebsite(web) === canonicalizeClientWebsite(origWebsite)) {
             window._dupWebsiteError = null;
             $('#website_duplicate_error').hide();
             $('#website_checking_indicator').hide();
@@ -6606,7 +6652,7 @@ if ($page_event == 'ADD') {
                 field: 'website',
                 website: web,
                 value: web,
-                client_id: {{ $client->id ?? 'null' }}
+                client_id: clientId
             },
             success: function(res) {
                 $('#website_checking_indicator').hide();
@@ -6649,6 +6695,18 @@ if ($page_event == 'ADD') {
             return;
         }
 
+        // In edit mode, if website is unchanged from stored value, skip duplicate check
+        if (window.JERO_CLIENT_CONFIG && window.JERO_CLIENT_CONFIG.isEdit) {
+            if (canonicalizeClientWebsite(web) === canonicalizeClientWebsite(window.JERO_CLIENT_CONFIG.originalWebsite)) {
+                window._dupWebsiteError = null;
+                $('#website_duplicate_error').hide();
+                $('#website_checking_indicator').hide();
+                $('#website').removeClass('is-invalid');
+                $('.god-website-input-box').removeClass('has-validation-error');
+                return;
+            }
+        }
+
         $('#website_checking_indicator').show();
         _websiteDupTimer = setTimeout(function() {
             window.checkWebsiteDuplicate(web, false);
@@ -6659,7 +6717,32 @@ if ($page_event == 'ADD') {
         var web = $(this).val().trim();
         clearTimeout(_websiteDupTimer);
         if (web) {
+            if (window.JERO_CLIENT_CONFIG && window.JERO_CLIENT_CONFIG.isEdit) {
+                if (canonicalizeClientWebsite(web) === canonicalizeClientWebsite(window.JERO_CLIENT_CONFIG.originalWebsite)) {
+                    window._dupWebsiteError = null;
+                    $('#website_duplicate_error').hide();
+                    $('#website_checking_indicator').hide();
+                    $('#website').removeClass('is-invalid');
+                    $('.god-website-input-box').removeClass('has-validation-error');
+                    return;
+                }
+            }
             window.checkWebsiteDuplicate(web, false);
+        }
+    });
+
+    // Guard initial page load: Ensure edit mode never triggers duplicate error on initial load
+    $(document).ready(function() {
+        if (window.JERO_CLIENT_CONFIG && window.JERO_CLIENT_CONFIG.isEdit) {
+            $('#company_duplicate_error').hide();
+            $('#website_duplicate_error').hide();
+            $('#website_checking_indicator').hide();
+            window._dupCompanyNameError = null;
+            window._dupWebsiteError = null;
+            $('#client_id').removeClass('is-invalid');
+            $('#website').removeClass('is-invalid');
+            $('.god-website-input-box').removeClass('has-validation-error');
+            window._lastFetchedWebsite = ($('#website').val() || '').trim();
         }
     });
 $('.remove_address').click(function(){
@@ -7189,9 +7272,15 @@ $('.remove_address').click(function(){
               } catch (err) {}
             }
             if (typeof Swal !== 'undefined' && typeof Swal.fire === 'function') {
-              var updateErrMsg = (s === 3 && window._lastStep3Error)
-                ? window._lastStep3Error
-                : 'Please complete all required fields in Step ' + s + ' before saving.';
+              var updateErrMsg = (s === 1 && window._dupWebsiteError)
+                ? window._dupWebsiteError
+                : ((s === 1 && window._dupCompanyNameError)
+                  ? window._dupCompanyNameError
+                  : ((s === 3 && window._lastStep3Error)
+                    ? window._lastStep3Error
+                    : ((s === 4 && window._lastStep4Error)
+                      ? window._lastStep4Error
+                      : 'Please complete all required fields in Step ' + s + ' before saving.')));
               Swal.fire({
                 icon: 'warning',
                 title: 'Incomplete Details',
@@ -10079,14 +10168,26 @@ $('.remove_address').click(function(){
         $firstInvalid = $firstInvalid || $('#client_id');
         isValid = false;
       } else {
-        // Enforce immediate synchronous company duplicate check before leaving Step 1
-        var isNameAvail = window.checkCompanyNameDuplicate ? window.checkCompanyNameDuplicate($('#client_id').val(), true) : true;
-        if (!isNameAvail || window._dupCompanyNameError) {
-          $('#company_duplicate_error').show();
-          $('#company_duplicate_error_text').text(window._dupCompanyNameError || 'This client is already registered internally.');
-          $('#client_id').addClass('is-invalid');
-          $firstInvalid = $firstInvalid || $('#client_id');
-          isValid = false;
+        var curNameVal = ($('#client_id').val() || '').trim();
+        var isEdit = Boolean(window.JERO_CLIENT_CONFIG && window.JERO_CLIENT_CONFIG.isEdit);
+        var origName = (window.JERO_CLIENT_CONFIG && window.JERO_CLIENT_CONFIG.originalName) ? window.JERO_CLIENT_CONFIG.originalName : '';
+        var isNameUnchanged = isEdit && normalizeClientName(curNameVal) === normalizeClientName(origName);
+
+        if (isNameUnchanged) {
+          // Scenario A: Unchanged in Edit mode -> Exclude from duplicate validation
+          window._dupCompanyNameError = null;
+          $('#company_duplicate_error').hide();
+          $('#client_id').removeClass('is-invalid');
+        } else {
+          // Enforce immediate synchronous company duplicate check before leaving Step 1
+          var isNameAvail = window.checkCompanyNameDuplicate ? window.checkCompanyNameDuplicate(curNameVal, true) : true;
+          if (!isNameAvail || window._dupCompanyNameError) {
+            $('#company_duplicate_error').show();
+            $('#company_duplicate_error_text').text(window._dupCompanyNameError || 'This client is already registered internally.');
+            $('#client_id').addClass('is-invalid');
+            $firstInvalid = $firstInvalid || $('#client_id');
+            isValid = false;
+          }
         }
       }
 
@@ -10098,15 +10199,27 @@ $('.remove_address').click(function(){
           $firstInvalid = $firstInvalid || $('#website');
           isValid = false;
         } else {
-          // Enforce immediate synchronous website duplicate check before leaving Step 1
-          var isWebAvail = window.checkWebsiteDuplicate ? window.checkWebsiteDuplicate(webVal, true) : true;
-          if (!isWebAvail || window._dupWebsiteError) {
-            $('#website_duplicate_error').show();
-            $('#website_duplicate_error_text').text(window._dupWebsiteError || 'This website/domain is already registered internally. A client with this website already exists in your Internal Client list.');
-            $('#website').addClass('is-invalid');
-            $('.god-website-input-box').addClass('has-validation-error');
-            $firstInvalid = $firstInvalid || $('#website');
-            isValid = false;
+          var isEdit = Boolean(window.JERO_CLIENT_CONFIG && window.JERO_CLIENT_CONFIG.isEdit);
+          var origWebsite = (window.JERO_CLIENT_CONFIG && window.JERO_CLIENT_CONFIG.originalWebsite) ? window.JERO_CLIENT_CONFIG.originalWebsite : '';
+          var isWebUnchanged = isEdit && canonicalizeClientWebsite(webVal) === canonicalizeClientWebsite(origWebsite);
+
+          if (isWebUnchanged) {
+            // Scenario A: Unchanged in Edit mode -> Exclude from duplicate validation
+            window._dupWebsiteError = null;
+            $('#website_duplicate_error').hide();
+            $('#website').removeClass('is-invalid');
+            $('.god-website-input-box').removeClass('has-validation-error');
+          } else {
+            // Enforce immediate synchronous website duplicate check before leaving Step 1
+            var isWebAvail = window.checkWebsiteDuplicate ? window.checkWebsiteDuplicate(webVal, true) : true;
+            if (!isWebAvail || window._dupWebsiteError) {
+              $('#website_duplicate_error').show();
+              $('#website_duplicate_error_text').text(window._dupWebsiteError || 'This website/domain is already registered internally. A client with this website already exists in your Internal Client list.');
+              $('#website').addClass('is-invalid');
+              $('.god-website-input-box').addClass('has-validation-error');
+              $firstInvalid = $firstInvalid || $('#website');
+              isValid = false;
+            }
           }
         }
       }
@@ -10354,7 +10467,7 @@ $('.remove_address').click(function(){
         if (isValid) {
           var batchPayload = {
             field: 'all',
-            client_id: {{ $client->id ?? 'null' }},
+            client_id: (window.JERO_CLIENT_CONFIG && window.JERO_CLIENT_CONFIG.clientId) ? window.JERO_CLIENT_CONFIG.clientId : {{ $client->id ?? 'null' }},
             cp_name: [],
             cp_email: [],
             cp_number: [],
