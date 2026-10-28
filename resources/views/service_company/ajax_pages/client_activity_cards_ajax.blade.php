@@ -36,7 +36,15 @@
             // Job Details
             $jobStatus = $job['status'] ?? 'active';
             $jobTitle = $job['title'] ?? 'Requisition';
-            $jobCode = $job['code'] ?? ('JERO-' . ($job['id'] ?? ''));
+            $jobId = $job['id'] ?? '';
+            $rawJobCode = $job['code'] ?? '';
+            if (!empty($jobId)) {
+                $jobCode = '#' . $jobId;
+            } elseif (!empty($rawJobCode)) {
+                $jobCode = str_starts_with($rawJobCode, '#') ? $rawJobCode : ('#' . preg_replace('/^jero-?/i', '', $rawJobCode));
+            } else {
+                $jobCode = '';
+            }
             $jobOpenings = (int) ($job['total_positions'] ?? 1);
 
             // Attribution & Actor Company Resolution (NEVER recruiter role)

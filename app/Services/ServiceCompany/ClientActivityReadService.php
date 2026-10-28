@@ -461,12 +461,21 @@ class ClientActivityReadService
                 $must[] = ['range' => ['created_at' => $timeRange]];
             }
             if ($searchQuery) {
+                $cleanSearch = ltrim($searchQuery, '#');
+                $jobShould = [
+                    ['wildcard' => ['title' => "*{$searchQuery}*"]],
+                    ['wildcard' => ['job_code' => "*{$searchQuery}*"]],
+                ];
+                if ($cleanSearch !== $searchQuery) {
+                    $jobShould[] = ['wildcard' => ['job_code' => "*{$cleanSearch}*"]];
+                }
+                if (is_numeric($cleanSearch)) {
+                    $jobShould[] = ['term' => ['id' => (int) $cleanSearch]];
+                    $jobShould[] = ['term' => ['_id' => (int) $cleanSearch]];
+                }
                 $must[] = [
                     'bool' => [
-                        'should' => [
-                            ['wildcard' => ['title' => "*{$searchQuery}*"]],
-                            ['wildcard' => ['job_code' => "*{$searchQuery}*"]],
-                        ],
+                        'should' => $jobShould,
                         'minimum_should_match' => 1,
                     ],
                 ];
@@ -996,7 +1005,7 @@ class ClientActivityReadService
                     ],
                     'job' => [
                         'id' => $jobId,
-                        'code' => 'JERO-'.$jobId,
+                        'code' => $jobId > 0 ? '#'.$jobId : '',
                         'title' => $resolvedJobTitle,
                         'creator_name' => $jobProfile['creator_name'] ?? 'Account Manager',
                         'creator_company' => $jobProfile['creator_company'] ?? $uploaderCompany,
@@ -1073,7 +1082,7 @@ class ClientActivityReadService
                     ],
                     'job' => [
                         'id' => $jobId,
-                        'code' => 'JERO-'.$jobId,
+                        'code' => $jobId > 0 ? '#'.$jobId : '',
                         'title' => $resolvedJobTitle,
                         'creator_name' => $jobProfile['creator_name'] ?? 'Account Manager',
                         'creator_company' => $jobProfile['creator_company'] ?? $intCompany,
@@ -1126,7 +1135,7 @@ class ClientActivityReadService
                     ],
                     'job' => [
                         'id' => $jobId,
-                        'code' => 'JERO-'.$jobId,
+                        'code' => $jobId > 0 ? '#'.$jobId : '',
                         'title' => $resolvedJobTitle,
                         'creator_name' => $creatorName,
                         'creator_company' => $jobCompany,
