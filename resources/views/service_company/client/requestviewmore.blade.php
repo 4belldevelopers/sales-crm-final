@@ -83,13 +83,41 @@
 
     $tagsArr = array_filter(array_map('trim', explode(',', (string) @$directClientDetail->tags)));
 
+    $companyTypeMap = \App\Helper\GeneralMethod::industries_type_arr();
     $rc_company_type_val = '';
-    if (isset($directClientDetail->company_type) && $directClientDetail->company_type !== '' && isset($companyType[$directClientDetail->company_type])) {
-        $rawRcComp = $companyType[$directClientDetail->company_type];
-        $rc_company_type_val = is_string($rawRcComp) ? $rawRcComp : (is_object($rawRcComp) ? (string)($rawRcComp->name ?? '') : '');
+
+    // Authoritative Company Type resolution
+    $rawRcCompType = null;
+    if (isset($directClientDetail->industries_type) && $directClientDetail->industries_type !== '' && $directClientDetail->industries_type !== null) {
+        $rawRcCompType = $directClientDetail->industries_type;
+    } elseif (isset($directClientDetail->client_company_type) && $directClientDetail->client_company_type !== '' && $directClientDetail->client_company_type !== null) {
+        $rawRcCompType = $directClientDetail->client_company_type;
+    } elseif (isset($directClientDetail->company_type) && $directClientDetail->company_type !== '' && $directClientDetail->company_type !== null) {
+        $rawRcCompType = $directClientDetail->company_type;
     }
+
+    if ($rawRcCompType === null || $rawRcCompType === '') {
+        $targetCompId = $directClientDetail->company_id ?? ($directClientDetail->from_company_id ?? ($directClientDetail->companies_id ?? null));
+        if (!empty($targetCompId)) {
+            $rawRcCompType = cache()->remember('auth_comp_ind_type_' . $targetCompId, 86400, function() use ($targetCompId) {
+                return \Illuminate\Support\Facades\DB::table('companies')->where('id', $targetCompId)->value('industries_type');
+            });
+        }
+    }
+
+    if ($rawRcCompType !== null && $rawRcCompType !== '') {
+        if (is_numeric($rawRcCompType)) {
+            $typeInt = (int)$rawRcCompType;
+            if (isset($companyTypeMap[$typeInt])) {
+                $rc_company_type_val = $companyTypeMap[$typeInt];
+            }
+        } elseif (is_string($rawRcCompType)) {
+            $rc_company_type_val = trim($rawRcCompType);
+        }
+    }
+
     if (empty($rc_company_type_val)) {
-        $rc_company_type_val = 'Direct Corporate Client';
+        $rc_company_type_val = 'Private';
     }
 
     // Workforce Scale Range calculation
