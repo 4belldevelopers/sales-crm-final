@@ -3595,39 +3595,6 @@
             border-color: transparent !important;
           }
 
-          /* 8. Interviews (Royal Blue #2563eb) */
-          .cd-cand-subtab[data-stage="interviews"],
-          .cd-cand-subtab-direct[data-stage="interviews"] {
-            background: #eff6ff !important;
-            border-color: #bfdbfe !important;
-            color: #2563eb !important;
-          }
-          .cd-cand-subtab[data-stage="interviews"] .cd-cand-subtab-badge,
-          .cd-cand-subtab-direct[data-stage="interviews"] .cd-cand-subtab-badge {
-            background: #eff6ff !important;
-            color: #2563eb !important;
-            border-color: #bfdbfe !important;
-          }
-          .cd-cand-subtab[data-stage="interviews"]:hover,
-          .cd-cand-subtab-direct[data-stage="interviews"]:hover {
-            background: #dbeafe !important;
-            border-color: #2563eb !important;
-            color: #1d4ed8 !important;
-          }
-          .cd-cand-subtab[data-stage="interviews"].active,
-          .cd-cand-subtab-direct[data-stage="interviews"].active {
-            background: #2563eb !important;
-            border-color: #2563eb !important;
-            color: #ffffff !important;
-            box-shadow: 0 2px 6px rgba(37, 99, 235, 0.35) !important;
-          }
-          .cd-cand-subtab[data-stage="interviews"].active .cd-cand-subtab-badge,
-          .cd-cand-subtab-direct[data-stage="interviews"].active .cd-cand-subtab-badge {
-            background: rgba(255, 255, 255, 0.28) !important;
-            color: #ffffff !important;
-            border-color: transparent !important;
-          }
-
           /* TIER 3: Candidate Card Stream */
           .cd-cand-stream-wrap {
             width: 100%;
@@ -5229,10 +5196,6 @@
                                     <button type="button" class="cd-cand-subtab cd-cand-subtab-direct" data-stage="rejected" data-status="7" role="tab" aria-selected="false" title="Rejected Stage">
                                         <span>Rejected</span>
                                         <span class="cd-cand-subtab-badge" id="candTabCountRejectedDirect">0</span>
-                                    </button>
-                                    <button type="button" class="cd-cand-subtab cd-cand-subtab-direct" data-stage="interviews" data-status="interview" role="tab" aria-selected="false" title="Interview Activity">
-                                        <span>Interviews</span>
-                                        <span class="cd-cand-subtab-badge" id="candTabCountInterviewsDirect">0</span>
                                     </button>
                                 </div>
                             </div>
@@ -7604,8 +7567,7 @@
             negotiations: 0,
             offer: 0,
             joined: 0,
-            rejected: 0,
-            interviews: 0
+            rejected: 0
         },
         activeStage: 'sourcing',
         searchTerm: '',
@@ -7694,7 +7656,6 @@
                 offer: 0,
                 joined: 0,
                 rejected: 0,
-                interviews: 0,
                 in_review: 0
             };
             this.updateAllStageBadgesDirect();
@@ -7854,13 +7815,6 @@
                 return 'screening';
             }
             if (sid === 3) {
-                var hasScheduleDate = cand.schedule_date && String(cand.schedule_date).trim() !== '' && String(cand.schedule_date) !== 'null';
-                var hasInterviewCount = cand.interview_count && parseInt(cand.interview_count, 10) > 0;
-                var sName = String(cand.child_status_name || cand.master_status_name || cand.name || '').toLowerCase().trim();
-                var hasInterviewName = sName.indexOf('interview') !== -1;
-                if (hasScheduleDate || hasInterviewCount || hasInterviewName) {
-                    return 'interviews';
-                }
                 return 'evaluation';
             }
             if (sid === 4) {
@@ -7880,8 +7834,7 @@
             var sName = String(cand.child_status_name || cand.master_status_name || cand.name || '').toLowerCase().trim();
             if (sName.indexOf('sourc') !== -1) return 'sourcing';
             if (sName.indexOf('screen') !== -1) return 'screening';
-            if (sName.indexOf('interview') !== -1) return 'interviews';
-            if (sName.indexOf('eval') !== -1) return 'evaluation';
+            if (sName.indexOf('eval') !== -1 || sName.indexOf('interview') !== -1) return 'evaluation';
             if (sName.indexOf('negot') !== -1) return 'negotiations';
             if (sName.indexOf('offer') !== -1) return 'offer';
             if (sName.indexOf('join') !== -1 || sName.indexOf('onboard') !== -1) return 'joined';
@@ -7904,7 +7857,6 @@
                 offer: 0,
                 joined: 0,
                 rejected: 0,
-                interviews: 0,
                 in_review: 0
             };
             var self = this;
@@ -7927,7 +7879,6 @@
             $('#candTabCountOfferDirect').text(c.offer || 0);
             $('#candTabCountJoinedDirect').text(c.joined || 0);
             $('#candTabCountRejectedDirect').text(c.rejected || 0);
-            $('#candTabCountInterviewsDirect').text(c.interviews || 0);
         },
 
         filterAndRender: function() {
@@ -8287,7 +8238,6 @@
                 offer: 'Offered',
                 joined: 'Joined',
                 rejected: 'Rejected',
-                interviews: 'Interviews',
                 inreview: 'InReview'
             };
             var stageName = row.master_status_name || stageLabels[canonicalStage] || row.name || 'Sourcing';
@@ -8295,7 +8245,7 @@
             var stageChipStyle = 'background:#ecfeff;color:#0891b2;border:1px solid #a5f3fc;'; // Sourcing default
             if (sLower === 'screening') {
                 stageChipStyle = 'background:#faf5ff;color:#9333ea;border:1px solid #e9d5ff;';
-            } else if (sLower === 'evaluation' || sLower === 'interviews') {
+            } else if (sLower === 'evaluation') {
                 stageChipStyle = 'background:#eef2ff;color:#4f46e5;border:1px solid #c7d2fe;';
             } else if (sLower === 'negotiations') {
                 stageChipStyle = 'background:#fdf2f8;color:#db2777;border:1px solid #fbcfe8;';
