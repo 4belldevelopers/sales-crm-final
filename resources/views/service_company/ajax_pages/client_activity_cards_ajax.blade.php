@@ -31,9 +31,11 @@
             $candidateName = $candidate['name'] ?? 'Candidate';
             $words = preg_split('/\s+/', trim($candidateName));
             $cInitials = strtoupper(substr($words[0] ?? 'C', 0, 1) . (isset($words[1]) ? substr($words[1], 0, 1) : ''));
-            
-            $actorName = $actor['name'] ?? 'Technical Recruiter';
-            $aWords = preg_split('/\s+/', trim($actorName));
+
+            $attribution = $item['attribution'] ?? [];
+            $attributionLabel = $attribution['label'] ?? ($category === 'jobs' ? 'Created by' : ($category === 'crm' ? 'Logged by' : 'Uploaded by'));
+            $attributionName = $attribution['name'] ?? ($actor['name'] ?? ($category === 'jobs' ? 'Account Manager' : 'Technical Recruiter'));
+            $aWords = preg_split('/\s+/', trim($attributionName));
             $aInitials = strtoupper(substr($aWords[0] ?? 'R', 0, 1) . (isset($aWords[1]) ? substr($aWords[1], 0, 1) : ''));
 
             // Status tokens calculation for standardized badges and markers
@@ -210,30 +212,36 @@
                         @endif
                     </div>
 
-                    {{-- Sub-Card 3: Actor & Authority --}}
+                    {{-- Sub-Card 3: Ownership / Attribution & Authority --}}
                     <div class="cd-activity-subcard-actor">
-                        <div class="cd-activity-actor-avatar" title="{{ $actorName }}">
+                        <div class="cd-activity-actor-avatar" title="{{ $attributionName }}">
                             {{ $aInitials }}
                         </div>
                         <div class="cd-activity-actor-meta">
-                            <div class="cd-activity-actor-name" title="{{ $actorName }}">
-                                {{ $actorName }}
+                            <div class="cd-activity-actor-attribution">
+                                {{ $attributionLabel }}:
+                            </div>
+                            <div class="cd-activity-actor-name" title="{{ $attributionName }}">
+                                {{ $attributionName }}
                             </div>
                             <div class="cd-activity-actor-role">
-                                {{ $actor['role'] ?? 'Recruiter' }}
+                                {{ $actor['role'] ?? ($category === 'jobs' ? 'Account Lead' : 'Technical Recruiter') }}
                             </div>
                         </div>
                     </div>
 
                     {{-- Sub-Card 4: Actions & Kebab Menu --}}
                     <div class="cd-activity-subcard-actions">
-                        @if(!empty($candidate['id']))
-                            <button type="button" class="cd-activity-btn-action" onclick="if(window.openCandidateDrawer) { window.openCandidateDrawer('{{ $candidate['id'] }}'); } else { console.log('Candidate', '{{ $candidate['id'] }}'); }">
+                        @if(!empty($candidate['id']) || !empty($candidate['wise_id']))
+                            @php
+                                $targetCandDrawerId = $candidate['wise_id'] ?? $candidate['id'];
+                            @endphp
+                            <button type="button" class="cd-activity-btn-action" onclick="if(window.openCandidateDrawer) { window.openCandidateDrawer('{{ $targetCandDrawerId }}', { readOnly: true }); } else { console.log('Candidate', '{{ $targetCandDrawerId }}'); }">
                                 <i class="far fa-user"></i> View Profile
                             </button>
                         @elseif(!empty($job['id']))
-                            <button type="button" class="cd-activity-btn-action" onclick="if(window.openJobDrawer) { window.openJobDrawer('{{ $job['id'] }}'); } else { console.log('Job', '{{ $job['id'] }}'); }">
-                                <i class="far fa-eye"></i> View Job
+                            <button type="button" class="cd-activity-btn-action" onclick="if(window.openJobDrawer) { window.openJobDrawer('{{ $job['id'] }}', { readOnly: true }); } else { console.log('Job', '{{ $job['id'] }}'); }">
+                                <i class="far fa-eye"></i> View Profile
                             </button>
                         @else
                             <button type="button" class="cd-activity-btn-action" onclick="if(window.openClientNotesModal) { window.openClientNotesModal(); }">
@@ -251,13 +259,13 @@
                                     <i class="far fa-copy"></i> Copy Event ID
                                 </a>
                                 @if(!empty($job['id']))
-                                    <a href="javascript:void(0)" class="cd-activity-menu-item" onclick="if(window.openJobDrawer) window.openJobDrawer('{{ $job['id'] }}');">
+                                    <a href="javascript:void(0)" class="cd-activity-menu-item" onclick="if(window.openJobDrawer) window.openJobDrawer('{{ $job['id'] }}', { readOnly: true });">
                                         <i class="fa fa-briefcase"></i> View Requisition
                                     </a>
                                 @endif
-                                @if(!empty($candidate['id']))
-                                    <a href="javascript:void(0)" class="cd-activity-menu-item" onclick="if(window.openCandidateDrawer) window.openCandidateDrawer('{{ $candidate['id'] }}');">
-                                        <i class="fa fa-user-circle"></i> Candidate Details
+                                @if(!empty($candidate['id']) || !empty($candidate['wise_id']))
+                                    <a href="javascript:void(0)" class="cd-activity-menu-item" onclick="if(window.openCandidateDrawer) window.openCandidateDrawer('{{ $targetCandDrawerId }}', { readOnly: true });">
+                                        <i class="fa fa-user-circle"></i> Candidate Profile
                                     </a>
                                 @endif
                                 <a href="javascript:void(0)" class="cd-activity-menu-item" onclick="if(window.ClientActivityManager) window.ClientActivityManager.openNoteModal();">

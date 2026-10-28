@@ -732,17 +732,31 @@
     min-width: 0 !important;
 }
 
-.cd-activity-actor-name {
-    font-size: 11.5px !important;
+.cd-activity-actor-attribution {
+    font-size: 10px !important;
     font-weight: 600 !important;
+    color: #64748b !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.3px !important;
+    line-height: 1.2 !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    margin-bottom: 1px !important;
+}
+
+.cd-activity-actor-name {
+    font-size: 12px !important;
+    font-weight: 700 !important;
     color: #0f172a !important;
     white-space: nowrap !important;
     overflow: hidden !important;
     text-overflow: ellipsis !important;
+    line-height: 1.25 !important;
 }
 
 .cd-activity-actor-role {
-    font-size: 10px !important;
+    font-size: 10.5px !important;
     color: #94a3b8 !important;
     white-space: nowrap !important;
     overflow: hidden !important;
@@ -1007,5 +1021,30 @@
     .cd-activity-search-subcard {
         width: 100% !important;
     }
+}
+/* ==========================================================================
+   Read-Only Drawer Mode (Strict suppression of Edit and mutable controls)
+   ========================================================================== */
+#kt_activitiesApplication.drawer-readonly-view .cdr-btn-primary,
+#kt_activitiesApplication.drawer-readonly-view a[href*="job-applications/edit"],
+#kt_activitiesApplication.drawer-readonly-view a[href*="/edit"],
+#kt_activitiesApplication.drawer-readonly-view .jw-card-edit-btn,
+#kt_activitiesApplication.drawer-readonly-view .edit-note,
+#kt_activitiesApplication.drawer-readonly-view .delete-note,
+#kt_activitiesApplication.drawer-readonly-view .po-btn-edit-note,
+#kt_activitiesApplication.drawer-readonly-view #hdr_move_stage_btn,
+#kt_activitiesApplication.drawer-readonly-view [data-action="edit"],
+#kt_activitiesApplication.drawer-readonly-view .btn-edit,
+#kt_activitiesJob_show.drawer-readonly-view .job-action-btn.edit,
+#kt_activitiesJob_show.drawer-readonly-view a[href*="jobs/edit"],
+#kt_activitiesJob_show.drawer-readonly-view a[href*="/edit"],
+#kt_activitiesJob_show.drawer-readonly-view .info-card-edit,
+#kt_activitiesJob_show.drawer-readonly-view .btn-edit {
+    display: none !important;
+    pointer-events: none !important;
+}
+
+#kt_activitiesJob_show {
+    z-index: 999999 !important;
 }
 </style>
