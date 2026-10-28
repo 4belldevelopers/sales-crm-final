@@ -99,6 +99,10 @@ class CandidateDrawerQueryService
         'duplicate',
         'linkedin',
         'visastatu',
+        'client_logo',
+        'company_logo',
+        'logo_logical_path',
+        'logo',
     ];
 
     public function __construct(ElasticService $elasticService, ClientCandidateVersionStore $versionStore)
@@ -121,11 +125,8 @@ class CandidateDrawerQueryService
         // 1. Rule 3 & 4: Fail-Closed Tenant Authorization before any ES read
         $this->assertClientTenancy($companyId, $clientId, $clientType);
 
-        // 2. Strict Input Validation (1 <= size <= 50)
-        $size = isset($params['size']) ? (int) $params['size'] : 25;
-        if ($size < 1 || $size > 50) {
-            abort(422, 'Parameter per_page must be an integer between 1 and 50.');
-        }
+        // 2. Strict Input Validation (1 <= size <= 100 for Client-First hydration)
+        $size = isset($params['size']) ? min(max((int) $params['size'], 1), 100) : 50;
 
         $page = isset($params['page']) ? max((int) $params['page'], 1) : 1;
 
@@ -274,6 +275,90 @@ class CandidateDrawerQueryService
                     'must_not' => $mustNot,
                 ],
             ],
+            'aggs' => [
+                'sourcing' => [
+                    'filter' => [
+                        'bool' => [
+                            'should' => [
+                                ['term' => ['job_master_status_id' => 1]],
+                                ['term' => ['master_status_id' => 1]],
+                            ],
+                        ],
+                    ],
+                ],
+                'screening' => [
+                    'filter' => [
+                        'bool' => [
+                            'should' => [
+                                ['term' => ['job_master_status_id' => 2]],
+                                ['term' => ['master_status_id' => 2]],
+                            ],
+                        ],
+                    ],
+                ],
+                'evaluation' => [
+                    'filter' => [
+                        'bool' => [
+                            'should' => [
+                                ['term' => ['job_master_status_id' => 3]],
+                                ['term' => ['master_status_id' => 3]],
+                            ],
+                        ],
+                    ],
+                ],
+                'negotiations' => [
+                    'filter' => [
+                        'bool' => [
+                            'should' => [
+                                ['term' => ['job_master_status_id' => 4]],
+                                ['term' => ['master_status_id' => 4]],
+                            ],
+                        ],
+                    ],
+                ],
+                'offer' => [
+                    'filter' => [
+                        'bool' => [
+                            'should' => [
+                                ['term' => ['job_master_status_id' => 5]],
+                                ['term' => ['master_status_id' => 5]],
+                            ],
+                        ],
+                    ],
+                ],
+                'joined' => [
+                    'filter' => [
+                        'bool' => [
+                            'should' => [
+                                ['term' => ['job_master_status_id' => 6]],
+                                ['term' => ['master_status_id' => 6]],
+                            ],
+                        ],
+                    ],
+                ],
+                'rejected' => [
+                    'filter' => [
+                        'bool' => [
+                            'should' => [
+                                ['term' => ['job_master_status_id' => 7]],
+                                ['term' => ['master_status_id' => 7]],
+                                ['term' => ['job_master_status_id' => 8]],
+                                ['term' => ['master_status_id' => 8]],
+                            ],
+                        ],
+                    ],
+                ],
+                'interviews' => [
+                    'filter' => [
+                        'bool' => [
+                            'should' => [
+                                ['term' => ['job_master_status_id' => 3]],
+                                ['term' => ['master_status_id' => 3]],
+                            ],
+                        ],
+                    ],
+                ],
+            ],
         ];
 
         // 7. Pagination Guard: Cursor vs Offset
@@ -366,6 +451,18 @@ class CandidateDrawerQueryService
             $pagination['last_page'] = ($totalRelation === 'gte') ? null : (int) ceil($total / $size);
         }
 
+        $aggs = $response['aggregations'] ?? [];
+        $stageCounts = [
+            'sourcing' => (int) ($aggs['sourcing']['doc_count'] ?? 0),
+            'screening' => (int) ($aggs['screening']['doc_count'] ?? 0),
+            'evaluation' => (int) ($aggs['evaluation']['doc_count'] ?? 0),
+            'negotiations' => (int) ($aggs['negotiations']['doc_count'] ?? 0),
+            'offer' => (int) ($aggs['offer']['doc_count'] ?? 0),
+            'joined' => (int) ($aggs['joined']['doc_count'] ?? 0),
+            'rejected' => (int) ($aggs['rejected']['doc_count'] ?? 0),
+            'interviews' => (int) ($aggs['interviews']['doc_count'] ?? 0),
+        ];
+
         return [
             'data' => $items,
             'meta' => [
@@ -374,6 +471,7 @@ class CandidateDrawerQueryService
                 'query_fingerprint' => $queryFingerprint,
                 'client_candidate_version' => $currentCollectionVersion,
                 'projection_schema_version' => 2,
+                'stage_counts' => $stageCounts,
                 'server_time' => now()->toIso8601String(),
             ],
             'pagination' => $pagination,
