@@ -3696,10 +3696,8 @@
             text-overflow: ellipsis !important;
             white-space: nowrap !important;
             text-decoration: none !important;
-            transition: color 0.12s ease !important;
-          }
-          .cd-cand-name:hover {
-            color: #009ef7 !important;
+            cursor: default !important;
+            user-select: text !important;
           }
           .cd-cand-desig {
             font-size: 11px !important;
@@ -3951,11 +3949,11 @@
             text-overflow: ellipsis !important;
           }
 
-          /* Sub-Card 6: Pipeline & Stage */
+          /* Sub-Card 6: Pipeline & Stage (Strict Read-Only) */
           .cd-stage-chip {
             display: inline-flex !important;
             align-items: center !important;
-            justify-content: space-between !important;
+            justify-content: center !important;
             gap: 4px !important;
             padding: 2px 7px !important;
             border-radius: 6px !important;
@@ -3963,14 +3961,12 @@
             font-weight: 600 !important;
             line-height: 1.3 !important;
             text-decoration: none !important;
-            cursor: pointer !important;
-            transition: filter 0.15s ease !important;
+            cursor: default !important;
+            pointer-events: none !important;
+            user-select: none !important;
             max-width: 100% !important;
             overflow: hidden !important;
             white-space: nowrap !important;
-          }
-          .cd-stage-chip:hover {
-            filter: brightness(0.95) !important;
           }
           .cd-stage-sub {
             font-size: 10.5px !important;
@@ -8334,9 +8330,9 @@
                             <div class="cd-cand-subcard-body">
                                 <div class="cd-cand-profile-row">
                                     <div class="cd-cand-profile-meta">
-                                        <a href="javascript:void(0);" class="cd-cand-name show-application-detail" data-row-id="${cid}" title="${$('<div>').text(rawFullName).html()}">
+                                        <span class="cd-cand-name" title="${$('<div>').text(rawFullName).html()}">
                                             ${displayName}
-                                        </a>
+                                        </span>
                                         <div class="cd-cand-desig" title="${$('<div>').text(rawDesignation).html()}">${displayDesig}</div>
                                         <div class="cd-cand-employer" title="${$('<div>').text(currCompany).html()}">
                                             <i class="fas fa-building text-muted me-1" style="font-size:9.5px;"></i>${currCompanyClean}
@@ -8434,16 +8430,16 @@
                             </div>
                             <div class="cd-cand-subcard-body">
                                 <div>
-                                    <a href="javascript:void(0);" class="cd-stage-chip stage_sub_stage" data-row-id="${cid}" data-toggle="modal" data-target="#stage_sub_stage" style="${stageChipStyle}" title="${stageName}">
-                                        <span>${stageName}</span> <i class="fas fa-caret-down ms-1" style="font-size:9px;"></i>
-                                    </a>
+                                    <span class="cd-stage-chip cd-stage-chip-readonly" style="${stageChipStyle}; cursor: default !important; pointer-events: none !important;" title="Current Stage: ${stageName}">
+                                        <span>${stageName}</span>
+                                    </span>
                                 </div>
                                 <div class="cd-stage-sub" title="${subStageText}">
                                     <span class="text-muted">Sub-stage:</span> <span class="fw-medium text-dark">${subStageText}</span>
                                 </div>
                                 <div class="cd-stage-action">
-                                    <a href="javascript:void(0);" class="cd-action-link show-application-detail" data-row-id="${cid}" title="View details">
-                                        <i class="far fa-id-badge text-primary me-1" style="font-size:9.5px;"></i>View Details
+                                    <a href="javascript:void(0);" class="cd-action-link js-view-profile-readonly" data-row-id="${cid}" title="View Profile (Read-Only)">
+                                        <i class="far fa-user text-primary me-1" style="font-size:9.5px;"></i>View Profile
                                     </a>
                                 </div>
                             </div>
@@ -8600,82 +8596,26 @@
                 self.fetch(prevPage);
             });
 
-            $(document).on('click.directDrawerCand', '.stage_sub_stage', function(e) {
+            // 6. View Profile -> Open Read-Only Candidate Drawer (Only Allowed Way to Open Drawer)
+            $(document).on('click.directDrawerCand', '.js-view-profile-readonly', function(e) {
                 e.preventDefault();
+                e.stopPropagation();
                 var id = $(this).data('row-id');
                 if (!id) return;
-                $('#stage_body_content').html('<div class="text-center py-10 text-muted"><i class="fas fa-spinner fa-spin me-2"></i>Loading stage details...</div>');
-                $('#stage_sub_stage').modal('show');
-                var url = '{{ route("service_company.job-applications.stage_body_content", ":id") }}'.replace(':id', id);
-                $.ajax({
-                    type: 'GET',
-                    url: url,
-                    success: function(res) {
-                        if (res && res.status === 'success') {
-                            $('#stage_body_content').html(res.view);
-                        } else if (res && res.html) {
-                            $('#stage_body_content').html(res.html);
-                        }
-                    },
-                    error: function() {
-                        $('#stage_body_content').html('<div class="text-center py-10 text-danger">Failed to load stage configuration.</div>');
-                    }
-                });
+                if (typeof window.openCandidateDrawer === 'function') {
+                    window.openCandidateDrawer(id, { readOnly: true });
+                } else if (typeof window.openCandidateReadOnlyDrawer === 'function') {
+                    window.openCandidateReadOnlyDrawer(id);
+                }
             });
 
-            // Stage Change Submit inside modal shell
-            $(document).on('click.directDrawerCand', '#custom_stage_submit', function(e) {
-                e.preventDefault();
-                var $btn = $(this);
-                if ($btn.prop('disabled')) return;
-
-                var $form = $('#status_frm');
-                if (!$form.length) return;
-
-                var chosenStatusId = $form.find('input[name="master_status"]:checked').val() || $form.find('input.master_status:checked').val();
-                if (!chosenStatusId) {
-                    if (typeof Swal !== 'undefined') {
-                        Swal.fire('Warning', 'Please select a stage to continue.', 'warning');
-                    }
-                    return;
+            // 7. Strict Read-Only Guard: Prevent any clicks on candidate stage, name, card or sub-cards from triggering drawer or actions
+            $(document).on('click.directDrawerCand', '.cd-stage-chip, .cd-cand-name, .cd-cand-card, .cd-cand-subcard', function(e) {
+                if ($(e.target).closest('.js-view-profile-readonly, .cd-job-title-link, .cd-cand-linkedin-pill, #paginationcandidate button').length) {
+                    return; // Allow explicitly authorized navigation/actions
                 }
-
-                $btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-2"></span> Updating...');
-
-                $.ajax({
-                    url: '{{ route("service_company.job-applications.stage_submit") }}',
-                    type: 'POST',
-                    data: $form.serialize(),
-                    success: function(res) {
-                        $btn.prop('disabled', false).html('<span class="indicator-label"><span class="csdChangeLabel">Submit</span> <i class="fa fa-arrow-right ms-1"></i></span>');
-                        $('#stage_sub_stage_close').click();
-
-                        if (typeof Swal !== 'undefined') {
-                            Swal.fire({
-                                icon: 'success',
-                                title: 'Stage Updated',
-                                text: 'Candidate stage has been successfully updated.',
-                                timer: 1500,
-                                showConfirmButton: false
-                            });
-                        }
-
-                        // Immediately fetch fresh dataset & update all badges and lists
-                        self.fetch(1, null, true);
-                    },
-                    error: function(xhr) {
-                        $btn.prop('disabled', false).html('<span class="indicator-label"><span class="csdChangeLabel">Submit</span> <i class="fa fa-arrow-right ms-1"></i></span>');
-                        var msg = 'Failed to update candidate stage.';
-                        if (xhr.responseJSON && xhr.responseJSON.message) {
-                            msg = xhr.responseJSON.message;
-                        }
-                        if (typeof Swal !== 'undefined') {
-                            Swal.fire('Error', msg, 'error');
-                        } else {
-                            alert(msg);
-                        }
-                    }
-                });
+                e.preventDefault();
+                e.stopPropagation();
             });
         },
 
