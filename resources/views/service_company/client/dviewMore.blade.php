@@ -5931,11 +5931,6 @@
                                         <i class="fas fa-times"></i>
                                     </button>
                                 </div>
-                                @if (in_array('add_jobs', $userPermissions))
-                                    <a href="{{ url('service_company/jobs/create') }}" class="btn btn-sm btn-primary fw-bold cd-jobs-add-btn">
-                                        <i class="fas fa-plus me-1"></i> Add Jobs
-                                    </a>
-                                @endif
                             </div>
                         </div>
                         <div class="cd-tabwrap">
@@ -9654,12 +9649,125 @@
         }
     });
 
-    function fetchJobsClientdirect(page = 1, search = '', status = 'all') {
-        var activeSelectedId = window.ClientStateManager && typeof window.ClientStateManager.getSelectedClientId === 'function'
-            ? window.ClientStateManager.getSelectedClientId()
-            : (window.activeSelectedClientId || null);
+    // ══════════════════════════════════════════════════════════════════════════
+    // Client-Side First Jobs Engine (Direct Client Scope)
+    // 0 HTTP Requests for Search, Tab Switching, Filtering & Counters
+    // ══════════════════════════════════════════════════════════════════════════
+    window.ClientJobsDirectState = window.ClientJobsDirectState || {
+        hydrated: false,
+        clientId: null,
+        loading: false
+    };
+
+    function applyClientJobFilterDirect(overrideStatus) {
+        var $pane = $('#kt_activitiesDirectClient #requisitions');
+        var $container = $('#kt_activitiesDirectClient #directclientJobsListajax');
+        if (!$container.length) return;
+
+        var rawSearch = ($pane.find('#inputJobSearch').val() || '').trim().toLowerCase();
+        var searchWords = rawSearch.length > 0 ? rawSearch.split(/\s+/).filter(Boolean) : [];
+
+        var activeBtn = $pane.find('.js-job-filter-btn.active');
+        var targetStatus = (overrideStatus || (activeBtn.length ? activeBtn.data('status') : (window.currentJobStatusDirect || 'all')) || 'all').toLowerCase();
+        window.currentJobStatusDirect = targetStatus;
+
+        // Toggle clear search button
+        if (rawSearch.length > 0) {
+            $pane.find('#btnJobSearchClear').show();
+        } else {
+            $pane.find('#btnJobSearchClear').hide();
+        }
+
+        var $cards = $container.find('.cd-job-card');
+        var visibleCount = 0;
+
+        // Dynamic counter tallies derived from current search match across all statuses
+        var counts = {
+            all: 0,
+            hiring: 0,
+            hold: 0,
+            closed: 0,
+            inactive: 0
+        };
+
+        $cards.each(function() {
+            var $card = $(this);
+            var cardStatus = ($card.attr('data-status') || $card.data('status') || '').toLowerCase();
+            var cardSearch = ($card.attr('data-search') || $card.text() || '').toLowerCase();
+
+            // Multi-word token search matching (Title, ID, Dept, Loc, HM, Team, Skills, Client, EmpType)
+            var matchesSearch = true;
+            if (searchWords.length > 0) {
+                for (var i = 0; i < searchWords.length; i++) {
+                    if (cardSearch.indexOf(searchWords[i]) === -1) {
+                        matchesSearch = false;
+                        break;
+                    }
+                }
+            }
+
+            if (matchesSearch) {
+                counts.all++;
+                if (cardStatus === 'hiring' || cardStatus === 'active') {
+                    counts.hiring++;
+                } else if (cardStatus === 'hold') {
+                    counts.hold++;
+                } else if (cardStatus === 'closed') {
+                    counts.closed++;
+                } else if (cardStatus === 'inactive') {
+                    counts.inactive++;
+                }
+            }
+
+            var matchesStatus = (targetStatus === 'all') ||
+                (targetStatus === 'hiring' && (cardStatus === 'hiring' || cardStatus === 'active')) ||
+                (cardStatus === targetStatus);
+
+            if (matchesSearch && matchesStatus) {
+                $card.show();
+                visibleCount++;
+            } else {
+                $card.hide();
+            }
+        });
+
+        // 100% Derived Accurate Counters
+        $pane.find('#directFilterCountAll').text(counts.all);
+        $pane.find('#directFilterCountHiring').text(counts.hiring);
+        $pane.find('#directFilterCountHold').text(counts.hold);
+        $pane.find('#directFilterCountClosed').text(counts.closed);
+        $pane.find('#directFilterCountInactive').text(counts.inactive);
+
+        // Synchronize Drawer Hero KPI and Tab Badge
+        $('#kt_activitiesDirectClient .cd-kpi-card[data-target-tab="#requisitions"] .cd-kpi-num').text(counts.hiring);
+        $('#kt_activitiesDirectClient a[href="#requisitions"] .cd-tab-badge').text(counts.hiring);
+
+        // Dynamic Empty State Handling
+        var $empty = $container.find('.cd-jobs-empty');
+        if (visibleCount === 0) {
+            if (!$empty.length) {
+                $container.append(`
+                    <div class="cd-jobs-empty">
+                        <i class="fas fa-briefcase fa-2x mb-3 text-muted d-block"></i>
+                        <div class="fw-bold fs-6 text-gray-700 mb-1">No Job Requisitions Found</div>
+                        <div class="text-muted fs-7">No job requisitions match the current criteria for this client.</div>
+                    </div>
+                `);
+            } else {
+                $empty.show();
+            }
+        } else {
+            $empty.hide();
+        }
+    }
+    window.applyClientJobFilterDirect = applyClientJobFilterDirect;
+
+    function fetchJobsClientdirect(page = 1, search = '', status = 'all', force = false) {
         var directCurrentId = parseInt('{{ $directClientDetail->client_id ?: ($directClientDetail->from_company_id ?: $directClientDetail->company_id) }}', 10);
-        if (activeSelectedId && directCurrentId && parseInt(activeSelectedId, 10) !== directCurrentId) {
+        
+        // If already hydrated for this client and not forced, execute 100% in browser RAM
+        if (!force && window.ClientJobsDirectState && window.ClientJobsDirectState.hydrated && window.ClientJobsDirectState.clientId === directCurrentId) {
+            applyClientJobFilterDirect(status);
             return;
         }
 
@@ -9667,106 +9775,108 @@
             try { window._activeJobsDirectXhr.abort(); } catch(e){}
         }
 
-        $('.page-loader').css('display', 'flex');
-        var activeStatus = status || window.currentJobStatusDirect || 'all';
+        var $directJobsList = $('#kt_activitiesDirectClient #directclientJobsListajax');
+        $directJobsList.html(`
+            <div class="d-flex flex-column align-items-center justify-content-center py-10" style="min-height:200px;">
+                <div class="spinner-border text-primary mb-3" style="width:2rem;height:2rem;" role="status"></div>
+                <span class="text-gray-600 font-poppins fs-7 fw-semibold">Loading client job requisitions...</span>
+            </div>
+        `);
+
         var clientName = $('.cd-client-name').first().text().trim() || '{{ addslashes($detailName ?? "") }}';
         var clientId = $('#direct_client_id').val() || '{{ $directClientDetail->client_id ?? $directClientDetail->id ?? $dc_id ?? 0 }}';
         var fromCompanyId = '{{ $directClientDetail->company_id ?? $directClientDetail->from_company_id ?? $directClientDetail->client_id ?? $directClientDetail->id ?? $dc_id ?? 0 }}';
-        var searchVal = (search !== undefined && search !== null && search !== '') ? search : ($('#kt_activitiesDirectClient #requisitions #inputJobSearch').val() || '');
 
         window._activeJobsDirectXhr = $.ajax({
-            url: `{{ url('service_company/jobs_side_bar_job_ajax/data') }}?page=${page}`,
+            url: `{{ url('service_company/jobs_side_bar_job_ajax/data') }}`,
             type: 'GET',
             data: {
-                search: searchVal,
-                status: activeStatus,
+                search: '',
+                status: 'all',
+                per_page: 500,
                 client_id: clientId,
                 client_name: clientName,
                 from_company_id: fromCompanyId,
                 custom: false
             },
             success: function(response) {
-                $('.page-loader').css('display', 'none');
                 var curSelId = window.ClientStateManager && typeof window.ClientStateManager.getSelectedClientId === 'function'
                     ? window.ClientStateManager.getSelectedClientId()
                     : (window.activeSelectedClientId || null);
                 if (curSelId && parseInt(curSelId, 10) !== directCurrentId) {
                     return;
                 }
-                $('#directclientJobsListajax').html(response.html);
-                $('#directpaginationclientjobs').html(response.pagination);
 
-                if (response.kpi) {
-                    $('.cd-kpi-card[data-target-tab="#requisitions"] .cd-kpi-num').text(response.kpi.hiring);
-                    $('a[href="#requisitions"] .cd-tab-badge').text(response.kpi.hiring);
-                    $('#directFilterCountAll').text(response.kpi.total);
-                    $('#directFilterCountHiring').text(response.kpi.hiring);
-                    $('#directFilterCountHold').text(response.kpi.hold);
-                    $('#directFilterCountClosed').text(response.kpi.closed);
-                    $('#directFilterCountInactive').text(response.kpi.inactive);
-                }
+                window.ClientJobsDirectState = {
+                    hydrated: true,
+                    clientId: directCurrentId,
+                    loading: false
+                };
+
+                $('#directclientJobsListajax').html(response.html);
+                $('#directpaginationclientjobs').empty(); // 100% Client-side listing
+
+                // Apply initial client-side filter & calculate exact counters
+                applyClientJobFilterDirect(status || window.currentJobStatusDirect || 'all');
             },
             error: function() {
-                $('.page-loader').css('display', 'none');
+                $directJobsList.html(`
+                    <div class="cd-jobs-empty">
+                        <i class="fas fa-exclamation-circle fa-2x mb-3 text-danger d-block"></i>
+                        <div class="fw-bold fs-6 text-gray-700 mb-1">Failed to load jobs</div>
+                        <div class="text-muted fs-7">Please refresh or try again.</div>
+                    </div>
+                `);
             }
         });
         return window._activeJobsDirectXhr;
     }
     window.fetchJobsClientdirect = fetchJobsClientdirect;
 
-    // Direct Client Jobs Tab: Dynamic Search Bar (Keyup & Clear)
-    var directJobSearchTimer = null;
-    $(document).off('keyup.directDrawerJobs', '#kt_activitiesDirectClient #requisitions #inputJobSearch');
-    $(document).on('keyup.directDrawerJobs', '#kt_activitiesDirectClient #requisitions #inputJobSearch', function() {
-        clearTimeout(directJobSearchTimer);
-        var searchVal = $(this).val();
-        if (searchVal.length > 0) {
-            $('#kt_activitiesDirectClient #requisitions #btnJobSearchClear').show();
-        } else {
-            $('#kt_activitiesDirectClient #requisitions #btnJobSearchClear').hide();
-        }
-        directJobSearchTimer = setTimeout(function() {
-            fetchJobsClientdirect(1, searchVal, window.currentJobStatusDirect || 'all');
-        }, 300);
+    // Instant Client-Side Search (No AJAX, No Debounce Delay, Instant Execution)
+    $(document).off('input.directDrawerJobs keyup.directDrawerJobs', '#kt_activitiesDirectClient #requisitions #inputJobSearch');
+    $(document).on('input.directDrawerJobs keyup.directDrawerJobs', '#kt_activitiesDirectClient #requisitions #inputJobSearch', function() {
+        applyClientJobFilterDirect();
     });
 
+    // Clear Search (Restores dataset immediately in 0ms with 0 HTTP requests)
     $(document).off('click.directDrawerJobs', '#kt_activitiesDirectClient #requisitions #btnJobSearchClear');
     $(document).on('click.directDrawerJobs', '#kt_activitiesDirectClient #requisitions #btnJobSearchClear', function() {
         $('#kt_activitiesDirectClient #requisitions #inputJobSearch').val('');
         $(this).hide();
-        fetchJobsClientdirect(1, '', window.currentJobStatusDirect || 'all');
+        applyClientJobFilterDirect();
     });
 
-    // Direct Client Jobs Tab: Filter Button Interaction
+    // Sub-Tabs Click Interaction (0 HTTP Requests, 100% Client Memory Filter)
     $(document).off('click.directDrawerJobs', '#kt_activitiesDirectClient #requisitions .js-job-filter-btn');
     $(document).on('click.directDrawerJobs', '#kt_activitiesDirectClient #requisitions .js-job-filter-btn', function(e) {
         if (e && typeof e.preventDefault === 'function') e.preventDefault();
         var status = $(this).data('status') || 'all';
-        window.currentJobStatusDirect = status;
         $('#kt_activitiesDirectClient #requisitions .js-job-filter-btn').removeClass('active');
         $(this).addClass('active');
         if (window.__activeClientDrawer && window.__activeClientDrawer.coordinator) {
             window.__activeClientDrawer.coordinator.setFilter('jobs', status);
         }
-        if (typeof fetchJobsClientdirect === 'function') {
-            fetchJobsClientdirect(1, $('#kt_activitiesDirectClient #requisitions #inputJobSearch').val() || '', status);
-        }
+        applyClientJobFilterDirect(status);
     });
 
-    // Direct Client Jobs Tab: Click Routing (Fixing Drawer Click Collision Bug)
-    $(document).off('click.directDrawerJobs', '#kt_activitiesDirectClient #directclientJobsListajax .js-job-drawer-trigger');
-    $(document).on('click.directDrawerJobs', '#kt_activitiesDirectClient #directclientJobsListajax .js-job-drawer-trigger', function(e) {
+    // Job Click Behavior: Click Title OR Click Anywhere on Card -> Opens Strictly Read-Only Job Drawer
+    $(document).off('click.directJobClick', '#kt_activitiesDirectClient #directclientJobsListajax .cd-job-card, #kt_activitiesDirectClient #directclientJobsListajax .js-job-drawer-trigger, #kt_activitiesDirectClient #directclientJobsListajax .cd-job-title');
+    $(document).on('click.directJobClick', '#kt_activitiesDirectClient #directclientJobsListajax .cd-job-card, #kt_activitiesDirectClient #directclientJobsListajax .js-job-drawer-trigger, #kt_activitiesDirectClient #directclientJobsListajax .cd-job-title', function(e) {
+        if ($(e.target).closest('a:not(.cd-job-title):not(.js-job-drawer-trigger), button:not(.js-job-drawer-trigger)').length) {
+            return;
+        }
         e.preventDefault();
         e.stopPropagation();
-        var jobId = $(this).data('job-id');
+
+        var $card = $(this).closest('.cd-job-card');
+        var jobId = $(this).data('job-id') || $card.data('job-id');
         if (!jobId) return;
 
-        if (typeof openJobDetailsDrawer === 'function') {
+        if (typeof window.openJobDrawer === 'function') {
+            window.openJobDrawer(jobId, { readOnly: true });
+        } else if (typeof openJobDetailsDrawer === 'function') {
             openJobDetailsDrawer(jobId);
-        } else if (typeof JobStateManager !== 'undefined' && JobStateManager.openJobDrawer) {
-            JobStateManager.openJobDrawer(jobId);
-        } else {
-            window.open(`{{ url('service_company/jobs/viewmore') }}/${jobId}`, '_blank');
         }
     });
 

@@ -7320,8 +7320,18 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
 
         $isReadOnly = (request()->has('read_only') && request('read_only') == '1') || (request()->has('readonly') && request('readonly') == '1');
         if ($isReadOnly) {
-            $this->userPermissions = array_values(array_diff($this->userPermissions, ['edit_jobs']));
+            $this->userPermissions = array_values(array_diff($this->userPermissions, [
+                'edit_jobs',
+                'delete_jobs',
+                'change_job_status',
+                'add_candidate',
+                'add_jobs',
+            ]));
         }
+        $this->isReadOnly = $isReadOnly;
+        $this->is_readonly = $isReadOnly;
+        $this->data['isReadOnly'] = $isReadOnly;
+        $this->data['is_readonly'] = $isReadOnly;
 
         abort_if(Gate::denies('view_jobs'), 403);
         $company_id = auth()->user()->company_id;
