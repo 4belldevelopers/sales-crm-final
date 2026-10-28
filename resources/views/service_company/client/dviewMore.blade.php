@@ -7780,8 +7780,12 @@
                         }
                     });
 
-                    // Compute stage counts strictly from hydrated candidates (Guarantees 100% list-badge parity)
-                    self.calculateStageCounts(self.allCandidates);
+                    // Compute stage counts (from ES meta if multi-page, or strictly from hydrated list)
+                    if (res.meta && res.meta.stage_counts && self.pagination && self.pagination.has_more) {
+                        self.stageCounts = Object.assign({}, res.meta.stage_counts);
+                    } else {
+                        self.calculateStageCounts(self.allCandidates);
+                    }
 
                     self.state = 'READY';
                     $('#cdCandSkeletonLoaderDirect').hide();
@@ -7896,7 +7900,9 @@
             var self = this;
             (list || []).forEach(function(cand) {
                 var stage = self.getCandidateStage(cand);
-                if (counts.hasOwnProperty(stage)) {
+                if (stage === 'inreview') {
+                    counts.in_review++;
+                } else if (counts.hasOwnProperty(stage)) {
                     counts[stage]++;
                 }
             });
@@ -8599,6 +8605,7 @@
                 var id = $(this).data('row-id');
                 if (!id) return;
                 $('#stage_body_content').html('<div class="text-center py-10 text-muted"><i class="fas fa-spinner fa-spin me-2"></i>Loading stage details...</div>');
+                $('#stage_sub_stage').modal('show');
                 var url = '{{ route("service_company.job-applications.stage_body_content", ":id") }}'.replace(':id', id);
                 $.ajax({
                     type: 'GET',
@@ -8612,6 +8619,61 @@
                     },
                     error: function() {
                         $('#stage_body_content').html('<div class="text-center py-10 text-danger">Failed to load stage configuration.</div>');
+                    }
+                });
+            });
+
+            // Stage Change Submit inside modal shell
+            $(document).on('click.directDrawerCand', '#custom_stage_submit', function(e) {
+                e.preventDefault();
+                var $btn = $(this);
+                if ($btn.prop('disabled')) return;
+
+                var $form = $('#status_frm');
+                if (!$form.length) return;
+
+                var chosenStatusId = $form.find('input[name="master_status"]:checked').val() || $form.find('input.master_status:checked').val();
+                if (!chosenStatusId) {
+                    if (typeof Swal !== 'undefined') {
+                        Swal.fire('Warning', 'Please select a stage to continue.', 'warning');
+                    }
+                    return;
+                }
+
+                $btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-2"></span> Updating...');
+
+                $.ajax({
+                    url: '{{ route("service_company.job-applications.stage_submit") }}',
+                    type: 'POST',
+                    data: $form.serialize(),
+                    success: function(res) {
+                        $btn.prop('disabled', false).html('<span class="indicator-label"><span class="csdChangeLabel">Submit</span> <i class="fa fa-arrow-right ms-1"></i></span>');
+                        $('#stage_sub_stage_close').click();
+
+                        if (typeof Swal !== 'undefined') {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Stage Updated',
+                                text: 'Candidate stage has been successfully updated.',
+                                timer: 1500,
+                                showConfirmButton: false
+                            });
+                        }
+
+                        // Immediately fetch fresh dataset & update all badges and lists
+                        self.fetch(1, null, true);
+                    },
+                    error: function(xhr) {
+                        $btn.prop('disabled', false).html('<span class="indicator-label"><span class="csdChangeLabel">Submit</span> <i class="fa fa-arrow-right ms-1"></i></span>');
+                        var msg = 'Failed to update candidate stage.';
+                        if (xhr.responseJSON && xhr.responseJSON.message) {
+                            msg = xhr.responseJSON.message;
+                        }
+                        if (typeof Swal !== 'undefined') {
+                            Swal.fire('Error', msg, 'error');
+                        } else {
+                            alert(msg);
+                        }
                     }
                 });
             });
