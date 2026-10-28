@@ -99,6 +99,28 @@
       color: red;
     }
 
+    /* Strict Read-Only Mode constraints (Client Candidate Tab) */
+    .jw-drawer-readonly-mode .editRecruiterNote,
+    .jw-drawer-readonly-mode .cdr-btn-primary,
+    .jw-drawer-readonly-mode .cdr-btn-interview,
+    .jw-drawer-readonly-mode .cdr-btn-email,
+    .jw-drawer-readonly-mode .cdr-btn-wa,
+    .jw-drawer-readonly-mode .cdr-btn-stage,
+    .jw-drawer-readonly-mode #hdr_move_stage_btn,
+    .jw-drawer-readonly-mode #hdr_fwd_resume_btn,
+    .jw-drawer-readonly-mode .edit-note,
+    .jw-drawer-readonly-mode .delete-note,
+    .jw-drawer-readonly-mode .jw-card-edit-btn,
+    .jw-drawer-readonly-mode form button[type="submit"],
+    .jw-drawer-readonly-mode .btn-primary:not(#hdrDlToggleApp):not([href*="download"]) {
+      display: none !important;
+    }
+    .jw-drawer-readonly-mode input:not([type="hidden"]),
+    .jw-drawer-readonly-mode textarea:not([readonly]),
+    .jw-drawer-readonly-mode select:not(.cdr-dl-select) {
+      pointer-events: none !important;
+    }
+
 </style>
 
  <link href="{{ asset('demo/css/candidates-details.css') }}{{ TM_VERSION }}" rel="stylesheet" type="text/css" />
@@ -1418,9 +1440,19 @@
   <input type="hidden" id="candidate_wise_id" value="{{ @$application->wiseId ?: @$jobWiseCanId }}" />
   <input type="hidden" id="candidate_core_id" value="{{ @$application->id }}" />
 
+  @if(!empty($isReadOnly))
+    <div class="cdr-readonly-alert" style="margin: 10px 14px 14px 14px; background: #fffbeb; border: 1px dashed #f59e0b; border-radius: 8px; padding: 10px 14px; display: flex; align-items: center; gap: 10px;">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#d97706" stroke-width="2" style="width: 20px; height: 20px; flex-shrink: 0;" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+      <div style="flex: 1; font-size: 12px; color: #92400e; line-height: 1.4;">
+        <strong style="color: #b45309; font-weight: 700;">Read-Only Mode:</strong> Any activity is not allowed from here except download resume.
+      </div>
+    </div>
+  @endif
+
   {{-- TOP ACTION BAR (outside any card, spans full width — mirrors job drawer top-actions) --}}
   <div class="cdr-topbar" aria-label="Candidate actions">
     <div class="cdr-topbar-group">
+      @if(empty($isReadOnly))
       @if(in_array("edit_job_applications", $userPermissions) && $application->condidate_type=='other' && $editprofile===true)
         <a href="{{ route('service_company.job-applications.edit', [ GeneralMethod::value_encrypt($jobWiseCanId)]) }}?currentPage={{ GeneralMethod::value_encrypt($currentPage) }}&currentSlug={{ GeneralMethod::value_encrypt($currentSlug) }}" class="cdr-action-btn cdr-btn-primary {{ $dnone }}" title="Edit candidate profile">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg>
@@ -1480,6 +1512,7 @@
       </button>
 
       <div class="cdr-topbar-split" role="separator" aria-hidden="true"></div>
+      @endif
 
       @php
         $_rawResumeUrl = !empty($application->resume) ? $application->resume : (!empty($resume) ? $resume : '');
@@ -3450,7 +3483,9 @@
 
                                    </div>
                                 </div>
+                                @if($editComman && empty($isReadOnly))
                                 <div class="dropdown ml-2" data-toggle="tooltip" title="" data-placement="left" data-original-title="New Project"> <a href="javascript:void(0);" class="btn btn-hover-light-primary btn-sm btn-icon" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"> <a href="javascript:void(0);" class="edit-note" data-note-id="{{ $notes->id }}"><i class="fa fa-edit ml-2"></i></a> <a href="javascript:;" class="delete-note" data-note-id="{{ $notes->id }}"><i class="fa fa-trash ml-1 text-danger"></i></a> </div>
+                                @endif
                               </div>
                               <p class="p-0 fs-6 comment-para note-text">{{ ucfirst($notes->note_text) }}</p>
                               <div class="note-textarea"></div>

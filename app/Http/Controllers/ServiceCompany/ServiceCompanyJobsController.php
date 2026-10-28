@@ -7318,6 +7318,11 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
         $this->getUserPermissions();
         $userId = $this->user->id;
 
+        $isReadOnly = (request()->has('read_only') && request('read_only') == '1') || (request()->has('readonly') && request('readonly') == '1');
+        if ($isReadOnly) {
+            $this->userPermissions = array_values(array_diff($this->userPermissions, ['edit_jobs']));
+        }
+
         abort_if(Gate::denies('view_jobs'), 403);
         $company_id = auth()->user()->company_id;
 
@@ -7343,6 +7348,7 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
             'job_version' => $jobVersion,
             'bechshowtab' => @$request->bechshowtab,
             'user_id' => $this->user->id,
+            'is_readonly' => $isReadOnly ? 1 : 0,
             // Intent: make cached drawer HTML expire when the company Agency Agreement is edited.
             'company_terms_version' => Cache::get('jobDetails_version_company_'.$company_id, 1),
         ];

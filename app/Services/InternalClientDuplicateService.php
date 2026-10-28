@@ -156,6 +156,11 @@ class InternalClientDuplicateService
      * Check if a company name already exists within the tenant's Internal Client dataset.
      *
      * Direct Client records (self_company = 1) are strictly excluded.
+     * Edit Client Isolation:
+     * When $ignoreClientId is provided, if the target client's existing stored name matches
+     * the requested name (case-insensitively, trimmed), duplicate validation is skipped (returns null).
+     * Otherwise, $ignoreClientId is excluded from the query so the client being updated is not
+     * treated as a duplicate of itself.
      *
      * @param  int  $tenantId  The current company_id (tenant)
      * @param  int|null  $ignoreClientId  Client ID to ignore during Edit operations
@@ -166,6 +171,18 @@ class InternalClientDuplicateService
         $normalizedName = self::normalizeCompanyName($companyName);
         if ($normalizedName === '') {
             return null;
+        }
+
+        // Edit Client Exclusion: If client's own stored name is unchanged, skip duplicate check
+        if (! empty($ignoreClientId)) {
+            $targetClient = DB::table('clients')
+                ->where('id', (int) $ignoreClientId)
+                ->where('company_id', $tenantId)
+                ->first();
+
+            if ($targetClient && self::normalizeCompanyName($targetClient->name) === $normalizedName) {
+                return null;
+            }
         }
 
         // Query strictly within Internal Client domain: self_company = 0 AND company_id = tenantId
@@ -198,6 +215,11 @@ class InternalClientDuplicateService
      * Check if a website / canonical domain already exists within the tenant's Internal Client dataset.
      *
      * Direct Client records (self_company = 1) are strictly excluded.
+     * Edit Client Isolation:
+     * When $ignoreClientId is provided, if the target client's existing stored website matches
+     * the requested domain canonically, duplicate validation is skipped (returns null).
+     * Otherwise, $ignoreClientId is excluded from the candidate search query so the client being
+     * updated is not treated as a duplicate of itself.
      *
      * @return array|null Null if valid, or array with error details if duplicate
      */
@@ -206,6 +228,18 @@ class InternalClientDuplicateService
         $canonicalDomain = self::canonicalizeDomain($website);
         if ($canonicalDomain === '') {
             return null;
+        }
+
+        // Edit Client Exclusion: If client's own stored website is canonically unchanged, skip duplicate check
+        if (! empty($ignoreClientId)) {
+            $targetClient = DB::table('clients')
+                ->where('id', (int) $ignoreClientId)
+                ->where('company_id', $tenantId)
+                ->first();
+
+            if ($targetClient && self::canonicalizeDomain($targetClient->website) === $canonicalDomain) {
+                return null;
+            }
         }
 
         // 1. Check against Main Account (Tenant Company) records
@@ -465,32 +499,63 @@ class InternalClientDuplicateService
     }
 
     /**
-     * Complete authoritative pre-creation duplicate validation.
+     * Complete authoritative pre-creation and pre-update duplicate validation.
      *
      * Validates:
-     * 1. Company Name uniqueness in Internal Client domain
-     * 2. Canonical Website/Domain uniqueness in Internal Client domain
+     * 1. Company Name uniqueness in Internal Client domain (excluded if unchanged in Edit mode)
+     * 2. Canonical Website/Domain uniqueness in Internal Client domain (excluded if unchanged in Edit mode)
      * 3. Contact Emails & Phones uniqueness in Internal Client domain
      *
+     * Edit Client Isolation:
+     * When $ignoreClientId is provided:
+     * - If the client's name is unchanged from stored record, duplicate check for name is skipped.
+     * - If the client's website is unchanged canonically from stored record, duplicate check for website is skipped.
+     * - When updating with unique or unchanged values, update is allowed.
+     *
+     * @param  int  $tenantId  The current company_id (tenant)
+     * @param  array  $payload  Request payload containing name, website, and contacts
+     * @param  int|null  $ignoreClientId  Client ID being updated (null for Add Client)
      * @return array|null Null if all checks pass, or array with the first detected duplicate error
      */
     public function validateSubmissionDuplicates(int $tenantId, array $payload, ?int $ignoreClientId = null): ?array
     {
-        // 1. Company Name
+        $existingClient = null;
+        if (! empty($ignoreClientId)) {
+            $existingClient = DB::table('clients')
+                ->where('id', (int) $ignoreClientId)
+                ->where('company_id', $tenantId)
+                ->first();
+        }
+
+        // 1. Company Name (Skip duplicate check if unchanged in Edit mode)
         $companyName = $payload['name'] ?? '';
         if (! empty($companyName)) {
-            $dup = $this->checkCompanyNameDuplicate($tenantId, $companyName, $ignoreClientId);
-            if ($dup !== null) {
-                return $dup;
+            $nameChanged = true;
+            if ($existingClient && self::normalizeCompanyName($existingClient->name) === self::normalizeCompanyName($companyName)) {
+                $nameChanged = false;
+            }
+
+            if ($nameChanged) {
+                $dup = $this->checkCompanyNameDuplicate($tenantId, $companyName, $ignoreClientId);
+                if ($dup !== null) {
+                    return $dup;
+                }
             }
         }
 
-        // 2. Website / Domain
+        // 2. Website / Domain (Skip duplicate check if unchanged canonically in Edit mode)
         $website = $payload['website'] ?? '';
         if (! empty($website)) {
-            $dup = $this->checkDomainDuplicate($tenantId, $website, $ignoreClientId);
-            if ($dup !== null) {
-                return $dup;
+            $websiteChanged = true;
+            if ($existingClient && self::canonicalizeDomain($existingClient->website) === self::canonicalizeDomain($website)) {
+                $websiteChanged = false;
+            }
+
+            if ($websiteChanged) {
+                $dup = $this->checkDomainDuplicate($tenantId, $website, $ignoreClientId);
+                if ($dup !== null) {
+                    return $dup;
+                }
             }
         }
 
