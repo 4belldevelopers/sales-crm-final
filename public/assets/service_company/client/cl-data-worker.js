@@ -95,17 +95,21 @@ function normalizeRow(r) {
 
     const activeJobs = Number(jobs.active || jobs.hiring || 0);
 
-    // Canonical Status Vector (Option A): [total, sourcing, screening, evaluation, negotiation, offer, joined, rejected, interviewees]
+    // Canonical Status Vector (Upgraded Contract): [sourcing, screening, evaluation, negotiation, offer, joined, rejected, in_review, unique_interviewees]
+    // Note: 'total' is strictly excluded from vector to eliminate redundant derived data and enforce Invariant 3.
     const pv = Array.isArray(r.pv) && r.pv.length >= 9 ? r.pv : null;
-    const applications = pv ? Number(pv[0] || 0) : Number(pipeline.applications || pipeline.total || 0);
-    const sourced = pv ? Number(pv[1] || 0) : Number(pipeline.sourced || 0);
-    const screening = pv ? Number(pv[2] || 0) : Number(pipeline.screening || 0);
-    const evaluated = pv ? Number(pv[3] || 0) : Number(pipeline.evaluated || 0);
-    const negotiations = pv ? Number(pv[4] || 0) : Number(pipeline.negotiations || pipeline.negotiation || 0);
-    const offers = pv ? Number(pv[5] || 0) : Number(pipeline.offers || 0);
-    const joined = pv ? Number(pv[6] || 0) : Number(pipeline.joined || 0);
-    const rejected = pv ? Number(pv[7] || 0) : Number(pipeline.rejected || 0);
+    const sourced = pv ? Number(pv[0] || 0) : Number(pipeline.sourced || 0);
+    const screening = pv ? Number(pv[1] || 0) : Number(pipeline.screening || 0);
+    const evaluated = pv ? Number(pv[2] || 0) : Number(pipeline.evaluated || 0);
+    const negotiations = pv ? Number(pv[3] || 0) : Number(pipeline.negotiations || pipeline.negotiation || 0);
+    const offers = pv ? Number(pv[4] || 0) : Number(pipeline.offers || 0);
+    const joined = pv ? Number(pv[5] || 0) : Number(pipeline.joined || 0);
+    const rejected = pv ? Number(pv[6] || 0) : Number(pipeline.rejected || 0);
+    const inReview = pv ? Number(pv[7] || 0) : Number(pipeline.in_review || 0);
     const interviews = pv ? Number(pv[8] || 0) : Number(pipeline.interviews || pipeline.all_interview || 0);
+
+    const activePipeline = sourced + screening + evaluated + negotiations + offers + joined;
+    const applications = activePipeline + rejected + inReview;
 
     return {
         id: r.id,
@@ -136,8 +140,9 @@ function normalizeRow(r) {
             closed: Number(jobs.closed || 0),
             total: Number(jobs.total || (activeJobs + Number(jobs.hold || 0) + Number(jobs.closed || 0)))
         },
-        pv: [applications, sourced, screening, evaluated, negotiations, offers, joined, rejected, interviews],
+        pv: [sourced, screening, evaluated, negotiations, offers, joined, rejected, inReview, interviews],
         pipeline: {
+            active_pipeline: activePipeline,
             applications: applications,
             sourced: sourced,
             screening: screening,
@@ -146,6 +151,7 @@ function normalizeRow(r) {
             offers: offers,
             joined: joined,
             rejected: rejected,
+            in_review: inReview,
             interviews: interviews
         },
         date: r.connected_on || r.date || '-',
@@ -340,17 +346,32 @@ function pipelineRevisionUpdate(clientId, revision, newPv, changed) {
     if (revision) item.revision = Number(revision);
 
     if (Array.isArray(newPv) && newPv.length >= 9) {
-        item.pv = newPv;
+        const sourced = Number(newPv[0] || 0);
+        const screening = Number(newPv[1] || 0);
+        const evaluated = Number(newPv[2] || 0);
+        const negotiations = Number(newPv[3] || 0);
+        const offers = Number(newPv[4] || 0);
+        const joined = Number(newPv[5] || 0);
+        const rejected = Number(newPv[6] || 0);
+        const inReview = Number(newPv[7] || 0);
+        const interviews = Number(newPv[8] || 0);
+
+        const activePipeline = sourced + screening + evaluated + negotiations + offers + joined;
+        const applications = activePipeline + rejected + inReview;
+
+        item.pv = [sourced, screening, evaluated, negotiations, offers, joined, rejected, inReview, interviews];
         item.pipeline = {
-            applications: Number(newPv[0] || 0),
-            sourced: Number(newPv[1] || 0),
-            screening: Number(newPv[2] || 0),
-            evaluated: Number(newPv[3] || 0),
-            negotiations: Number(newPv[4] || 0),
-            offers: Number(newPv[5] || 0),
-            joined: Number(newPv[6] || 0),
-            rejected: Number(newPv[7] || 0),
-            interviews: Number(newPv[8] || 0)
+            active_pipeline: activePipeline,
+            applications: applications,
+            sourced: sourced,
+            screening: screening,
+            evaluated: evaluated,
+            negotiations: negotiations,
+            offers: offers,
+            joined: joined,
+            rejected: rejected,
+            in_review: inReview,
+            interviews: interviews
         };
     } else if (changed && typeof changed === 'object') {
         const p = item.pipeline;
@@ -363,7 +384,8 @@ function pipelineRevisionUpdate(clientId, revision, newPv, changed) {
             4: 'negotiations',
             5: 'offers',
             6: 'joined',
-            7: 'rejected'
+            7: 'rejected',
+            8: 'in_review'
         };
         if (fromStatus && statusKeyMap[fromStatus] && p[statusKeyMap[fromStatus]] > 0) {
             p[statusKeyMap[fromStatus]] = Math.max(0, p[statusKeyMap[fromStatus]] - 1);
@@ -371,8 +393,13 @@ function pipelineRevisionUpdate(clientId, revision, newPv, changed) {
         if (toStatus && statusKeyMap[toStatus]) {
             p[statusKeyMap[toStatus]] = (p[statusKeyMap[toStatus]] || 0) + 1;
         }
+
+        const activePipeline = (p.sourced || 0) + (p.screening || 0) + (p.evaluated || 0) + (p.negotiations || 0) + (p.offers || 0) + (p.joined || 0);
+        const applications = activePipeline + (p.rejected || 0) + (p.in_review || 0);
+        p.active_pipeline = activePipeline;
+        p.applications = applications;
+
         item.pv = [
-            p.applications,
             p.sourced,
             p.screening,
             p.evaluated,
@@ -380,6 +407,7 @@ function pipelineRevisionUpdate(clientId, revision, newPv, changed) {
             p.offers,
             p.joined,
             p.rejected,
+            p.in_review || 0,
             p.interviews
         ];
     }
@@ -396,7 +424,7 @@ function pipelineRevisionUpdate(clientId, revision, newPv, changed) {
 function exportCsv(filters) {
     // Generate CSV on worker thread without main-thread blocking
     const rows = [];
-    rows.push(['Company Name', 'Industry', 'Location', 'Jobs Hiring', 'Jobs Hold', 'Jobs Closed', 'Sourced', 'Screening', 'Evaluated', 'Negotiation', 'Offers', 'Joined', 'Rejected', 'Interviewees', 'Client Type', 'Date', 'Last Activity']);
+    rows.push(['Company Name', 'Industry', 'Location', 'Jobs Hiring', 'Jobs Hold', 'Jobs Closed', 'Sourced', 'Screening', 'Evaluated', 'Negotiation', 'Offers', 'Joined', 'Rejected', 'In Review', 'Interviewees', 'Total Applications', 'Client Type', 'Date', 'Last Activity']);
 
     for (let i = 0; i < self.dataset.length; i++) {
         const item = self.dataset[i];
@@ -414,7 +442,9 @@ function exportCsv(filters) {
             item.pipeline.offers,
             item.pipeline.joined,
             item.pipeline.rejected,
+            item.pipeline.in_review || 0,
             item.pipeline.interviews,
+            item.pipeline.applications,
             item.client_type,
             item.date,
             item.last_activity

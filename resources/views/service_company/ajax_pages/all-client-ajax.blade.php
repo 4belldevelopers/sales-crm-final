@@ -291,7 +291,6 @@
             $pKey = 'internal_' . $client_id;
             $perf = $candidateCountsMap[$pKey] ?? GeneralMethod::InternalClientCandidatesCountList($client_id);
         }
-        $allCandidates = (int)($perf->all_candidates ?? 0);
         $sourced       = (int)($perf->sourced ?? 0);
         $screening     = (int)($perf->screening ?? 0);
         $evaluated     = (int)($perf->evaluated ?? 0);
@@ -299,7 +298,12 @@
         $offers        = (int)($perf->offers ?? 0);
         $joined        = (int)($perf->Joined ?? ($perf->joined ?? 0));
         $rejected      = (int)($perf->rejected ?? 0);
+        $inReview      = (int)($perf->in_review ?? 0);
         $interviews    = (int)($perf->all_interview ?? 0);
+
+        // Invariant 3: Total Applications derived from mutually exclusive states
+        $activePipeline = ($sourced + $screening + $evaluated + $negotiations + $offers + $joined);
+        $allCandidates  = ($activePipeline + $rejected + $inReview);
 
         /* ── connected on ── */
         if ($row->staffing_company_relation_id > 0 && ($row->to_company_id ?? 0) == auth()->user()->company_id) {
