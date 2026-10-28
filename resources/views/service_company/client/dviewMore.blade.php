@@ -3304,28 +3304,14 @@
             padding: 6px 12px;
             border-radius: 7px;
             border: 1px solid #e2e8f0;
-            background: #f8fafc;
+            background: #ffffff;
             color: #475569;
             font-size: 11.5px;
-            font-weight: 500;
+            font-weight: 600;
             cursor: pointer;
             white-space: nowrap;
             transition: all 0.15s ease;
             user-select: none;
-          }
-          .cd-cand-subtab:hover,
-          .cd-cand-subtab-direct:hover {
-            background: #f1f5f9;
-            color: #0f172a;
-            border-color: #cbd5e1;
-          }
-          .cd-cand-subtab.active,
-          .cd-cand-subtab-direct.active {
-            background: #009ef7 !important;
-            color: #ffffff !important;
-            border-color: #009ef7 !important;
-            font-weight: 600 !important;
-            box-shadow: 0 2px 6px rgba(0, 158, 247, 0.28) !important;
           }
           .cd-cand-subtab-badge {
             display: inline-flex;
@@ -3337,13 +3323,275 @@
             border-radius: 10px;
             font-size: 10px;
             font-weight: 700;
-            background: #e2e8f0;
+            background: #f1f5f9;
             color: #475569;
+            border: 1px solid #e2e8f0;
+            transition: all 0.15s ease;
           }
-          .cd-cand-subtab.active .cd-cand-subtab-badge,
-          .cd-cand-subtab-direct.active .cd-cand-subtab-badge {
+
+          /* ── Client Tracker Hiring Pipeline Color Combinations for Sub-Tabs ── */
+          /* 1. Sourcing (Cyan / Teal #0891b2) */
+          .cd-cand-subtab[data-stage="sourcing"],
+          .cd-cand-subtab-direct[data-stage="sourcing"] {
+            background: #f0fdfa !important;
+            border-color: #a5f3fc !important;
+            color: #0891b2 !important;
+          }
+          .cd-cand-subtab[data-stage="sourcing"] .cd-cand-subtab-badge,
+          .cd-cand-subtab-direct[data-stage="sourcing"] .cd-cand-subtab-badge {
+            background: #ecfeff !important;
+            color: #0891b2 !important;
+            border-color: #a5f3fc !important;
+          }
+          .cd-cand-subtab[data-stage="sourcing"]:hover,
+          .cd-cand-subtab-direct[data-stage="sourcing"]:hover {
+            background: #ecfeff !important;
+            border-color: #0891b2 !important;
+            color: #0e7490 !important;
+          }
+          .cd-cand-subtab[data-stage="sourcing"].active,
+          .cd-cand-subtab-direct[data-stage="sourcing"].active {
+            background: #0891b2 !important;
+            border-color: #0891b2 !important;
+            color: #ffffff !important;
+            box-shadow: 0 2px 6px rgba(8, 145, 178, 0.35) !important;
+          }
+          .cd-cand-subtab[data-stage="sourcing"].active .cd-cand-subtab-badge,
+          .cd-cand-subtab-direct[data-stage="sourcing"].active .cd-cand-subtab-badge {
             background: rgba(255, 255, 255, 0.28) !important;
             color: #ffffff !important;
+            border-color: transparent !important;
+          }
+
+          /* 2. Screening (Purple / Violet #9333ea) */
+          .cd-cand-subtab[data-stage="screening"],
+          .cd-cand-subtab-direct[data-stage="screening"] {
+            background: #faf5ff !important;
+            border-color: #e9d5ff !important;
+            color: #9333ea !important;
+          }
+          .cd-cand-subtab[data-stage="screening"] .cd-cand-subtab-badge,
+          .cd-cand-subtab-direct[data-stage="screening"] .cd-cand-subtab-badge {
+            background: #faf5ff !important;
+            color: #9333ea !important;
+            border-color: #e9d5ff !important;
+          }
+          .cd-cand-subtab[data-stage="screening"]:hover,
+          .cd-cand-subtab-direct[data-stage="screening"]:hover {
+            background: #f3e8ff !important;
+            border-color: #9333ea !important;
+            color: #7e22ce !important;
+          }
+          .cd-cand-subtab[data-stage="screening"].active,
+          .cd-cand-subtab-direct[data-stage="screening"].active {
+            background: #9333ea !important;
+            border-color: #9333ea !important;
+            color: #ffffff !important;
+            box-shadow: 0 2px 6px rgba(147, 51, 234, 0.35) !important;
+          }
+          .cd-cand-subtab[data-stage="screening"].active .cd-cand-subtab-badge,
+          .cd-cand-subtab-direct[data-stage="screening"].active .cd-cand-subtab-badge {
+            background: rgba(255, 255, 255, 0.28) !important;
+            color: #ffffff !important;
+            border-color: transparent !important;
+          }
+
+          /* 3. Evaluation (Indigo #4f46e5) */
+          .cd-cand-subtab[data-stage="evaluation"],
+          .cd-cand-subtab-direct[data-stage="evaluation"] {
+            background: #eef2ff !important;
+            border-color: #c7d2fe !important;
+            color: #4f46e5 !important;
+          }
+          .cd-cand-subtab[data-stage="evaluation"] .cd-cand-subtab-badge,
+          .cd-cand-subtab-direct[data-stage="evaluation"] .cd-cand-subtab-badge {
+            background: #eef2ff !important;
+            color: #4f46e5 !important;
+            border-color: #c7d2fe !important;
+          }
+          .cd-cand-subtab[data-stage="evaluation"]:hover,
+          .cd-cand-subtab-direct[data-stage="evaluation"]:hover {
+            background: #e0e7ff !important;
+            border-color: #4f46e5 !important;
+            color: #4338ca !important;
+          }
+          .cd-cand-subtab[data-stage="evaluation"].active,
+          .cd-cand-subtab-direct[data-stage="evaluation"].active {
+            background: #4f46e5 !important;
+            border-color: #4f46e5 !important;
+            color: #ffffff !important;
+            box-shadow: 0 2px 6px rgba(79, 70, 229, 0.35) !important;
+          }
+          .cd-cand-subtab[data-stage="evaluation"].active .cd-cand-subtab-badge,
+          .cd-cand-subtab-direct[data-stage="evaluation"].active .cd-cand-subtab-badge {
+            background: rgba(255, 255, 255, 0.28) !important;
+            color: #ffffff !important;
+            border-color: transparent !important;
+          }
+
+          /* 4. Negotiations (Rose / Magenta #db2777) */
+          .cd-cand-subtab[data-stage="negotiations"],
+          .cd-cand-subtab-direct[data-stage="negotiations"] {
+            background: #fdf2f8 !important;
+            border-color: #fbcfe8 !important;
+            color: #db2777 !important;
+          }
+          .cd-cand-subtab[data-stage="negotiations"] .cd-cand-subtab-badge,
+          .cd-cand-subtab-direct[data-stage="negotiations"] .cd-cand-subtab-badge {
+            background: #fdf2f8 !important;
+            color: #db2777 !important;
+            border-color: #fbcfe8 !important;
+          }
+          .cd-cand-subtab[data-stage="negotiations"]:hover,
+          .cd-cand-subtab-direct[data-stage="negotiations"]:hover {
+            background: #fce7f3 !important;
+            border-color: #db2777 !important;
+            color: #be185d !important;
+          }
+          .cd-cand-subtab[data-stage="negotiations"].active,
+          .cd-cand-subtab-direct[data-stage="negotiations"].active {
+            background: #db2777 !important;
+            border-color: #db2777 !important;
+            color: #ffffff !important;
+            box-shadow: 0 2px 6px rgba(219, 39, 119, 0.35) !important;
+          }
+          .cd-cand-subtab[data-stage="negotiations"].active .cd-cand-subtab-badge,
+          .cd-cand-subtab-direct[data-stage="negotiations"].active .cd-cand-subtab-badge {
+            background: rgba(255, 255, 255, 0.28) !important;
+            color: #ffffff !important;
+            border-color: transparent !important;
+          }
+
+          /* 5. Offer (Warm Amber / Gold #d97706) */
+          .cd-cand-subtab[data-stage="offer"],
+          .cd-cand-subtab-direct[data-stage="offer"] {
+            background: #fffbeb !important;
+            border-color: #fde68a !important;
+            color: #d97706 !important;
+          }
+          .cd-cand-subtab[data-stage="offer"] .cd-cand-subtab-badge,
+          .cd-cand-subtab-direct[data-stage="offer"] .cd-cand-subtab-badge {
+            background: #fffbeb !important;
+            color: #d97706 !important;
+            border-color: #fde68a !important;
+          }
+          .cd-cand-subtab[data-stage="offer"]:hover,
+          .cd-cand-subtab-direct[data-stage="offer"]:hover {
+            background: #fef3c7 !important;
+            border-color: #d97706 !important;
+            color: #b45309 !important;
+          }
+          .cd-cand-subtab[data-stage="offer"].active,
+          .cd-cand-subtab-direct[data-stage="offer"].active {
+            background: #d97706 !important;
+            border-color: #d97706 !important;
+            color: #ffffff !important;
+            box-shadow: 0 2px 6px rgba(217, 119, 6, 0.35) !important;
+          }
+          .cd-cand-subtab[data-stage="offer"].active .cd-cand-subtab-badge,
+          .cd-cand-subtab-direct[data-stage="offer"].active .cd-cand-subtab-badge {
+            background: rgba(255, 255, 255, 0.28) !important;
+            color: #ffffff !important;
+            border-color: transparent !important;
+          }
+
+          /* 6. Joined (Success Emerald Green #16a34a) */
+          .cd-cand-subtab[data-stage="joined"],
+          .cd-cand-subtab-direct[data-stage="joined"] {
+            background: #f0fdf4 !important;
+            border-color: #bbf7d0 !important;
+            color: #16a34a !important;
+          }
+          .cd-cand-subtab[data-stage="joined"] .cd-cand-subtab-badge,
+          .cd-cand-subtab-direct[data-stage="joined"] .cd-cand-subtab-badge {
+            background: #f0fdf4 !important;
+            color: #16a34a !important;
+            border-color: #bbf7d0 !important;
+          }
+          .cd-cand-subtab[data-stage="joined"]:hover,
+          .cd-cand-subtab-direct[data-stage="joined"]:hover {
+            background: #dcfce7 !important;
+            border-color: #16a34a !important;
+            color: #15803d !important;
+          }
+          .cd-cand-subtab[data-stage="joined"].active,
+          .cd-cand-subtab-direct[data-stage="joined"].active {
+            background: #16a34a !important;
+            border-color: #16a34a !important;
+            color: #ffffff !important;
+            box-shadow: 0 2px 6px rgba(22, 163, 74, 0.35) !important;
+          }
+          .cd-cand-subtab[data-stage="joined"].active .cd-cand-subtab-badge,
+          .cd-cand-subtab-direct[data-stage="joined"].active .cd-cand-subtab-badge {
+            background: rgba(255, 255, 255, 0.28) !important;
+            color: #ffffff !important;
+            border-color: transparent !important;
+          }
+
+          /* 7. Rejected (Crimson / Rose Red #ef4444) */
+          .cd-cand-subtab[data-stage="rejected"],
+          .cd-cand-subtab-direct[data-stage="rejected"] {
+            background: #fef2f2 !important;
+            border-color: #fecaca !important;
+            color: #ef4444 !important;
+          }
+          .cd-cand-subtab[data-stage="rejected"] .cd-cand-subtab-badge,
+          .cd-cand-subtab-direct[data-stage="rejected"] .cd-cand-subtab-badge {
+            background: #fef2f2 !important;
+            color: #ef4444 !important;
+            border-color: #fecaca !important;
+          }
+          .cd-cand-subtab[data-stage="rejected"]:hover,
+          .cd-cand-subtab-direct[data-stage="rejected"]:hover {
+            background: #fee2e2 !important;
+            border-color: #ef4444 !important;
+            color: #b91c1c !important;
+          }
+          .cd-cand-subtab[data-stage="rejected"].active,
+          .cd-cand-subtab-direct[data-stage="rejected"].active {
+            background: #ef4444 !important;
+            border-color: #ef4444 !important;
+            color: #ffffff !important;
+            box-shadow: 0 2px 6px rgba(239, 68, 68, 0.35) !important;
+          }
+          .cd-cand-subtab[data-stage="rejected"].active .cd-cand-subtab-badge,
+          .cd-cand-subtab-direct[data-stage="rejected"].active .cd-cand-subtab-badge {
+            background: rgba(255, 255, 255, 0.28) !important;
+            color: #ffffff !important;
+            border-color: transparent !important;
+          }
+
+          /* 8. Interviews (Royal Blue #2563eb) */
+          .cd-cand-subtab[data-stage="interviews"],
+          .cd-cand-subtab-direct[data-stage="interviews"] {
+            background: #eff6ff !important;
+            border-color: #bfdbfe !important;
+            color: #2563eb !important;
+          }
+          .cd-cand-subtab[data-stage="interviews"] .cd-cand-subtab-badge,
+          .cd-cand-subtab-direct[data-stage="interviews"] .cd-cand-subtab-badge {
+            background: #eff6ff !important;
+            color: #2563eb !important;
+            border-color: #bfdbfe !important;
+          }
+          .cd-cand-subtab[data-stage="interviews"]:hover,
+          .cd-cand-subtab-direct[data-stage="interviews"]:hover {
+            background: #dbeafe !important;
+            border-color: #2563eb !important;
+            color: #1d4ed8 !important;
+          }
+          .cd-cand-subtab[data-stage="interviews"].active,
+          .cd-cand-subtab-direct[data-stage="interviews"].active {
+            background: #2563eb !important;
+            border-color: #2563eb !important;
+            color: #ffffff !important;
+            box-shadow: 0 2px 6px rgba(37, 99, 235, 0.35) !important;
+          }
+          .cd-cand-subtab[data-stage="interviews"].active .cd-cand-subtab-badge,
+          .cd-cand-subtab-direct[data-stage="interviews"].active .cd-cand-subtab-badge {
+            background: rgba(255, 255, 255, 0.28) !important;
+            color: #ffffff !important;
+            border-color: transparent !important;
           }
 
           /* TIER 3: Candidate Card Stream */
@@ -7907,17 +8155,22 @@
             var submitterFormatted = formatWithAcronyms(limitWords(submitterCompany, 12));
             var submittedAgo = formatTimeAgo(row.created_at);
 
-            // 6. Sub-Card 6: Pipeline & Stage
+            // 6. Sub-Card 6: Pipeline & Stage (Matched with Client Tracker Colors)
             var stageName = row.child_status_name || row.master_status_name || row.name || 'InReview';
-            var stageChipStyle = 'background:#fef9c3;color:#854d0e;border:1px solid #fde047;';
-            if (stageName.toLowerCase().includes('offer')) {
-                stageChipStyle = 'background:#cffafe;color:#0e7490;border:1px solid #a5f3fc;';
-            } else if (stageName.toLowerCase().includes('join')) {
-                stageChipStyle = 'background:#dcfce7;color:#16a34a;border:1px solid #bbf7d0;';
-            } else if (stageName.toLowerCase().includes('reject')) {
-                stageChipStyle = 'background:#fee2e2;color:#dc2626;border:1px solid #fecdd3;';
-            } else if (stageName.toLowerCase().includes('source') || stageName.toLowerCase().includes('screen')) {
-                stageChipStyle = 'background:#e0e7ff;color:#4338ca;border:1px solid #c7d2fe;';
+            var sLower = stageName.toLowerCase();
+            var stageChipStyle = 'background:#ecfeff;color:#0891b2;border:1px solid #a5f3fc;'; // Sourcing / InReview default
+            if (sLower.includes('screen')) {
+                stageChipStyle = 'background:#faf5ff;color:#9333ea;border:1px solid #e9d5ff;';
+            } else if (sLower.includes('eval') || sLower.includes('interview')) {
+                stageChipStyle = 'background:#eef2ff;color:#4f46e5;border:1px solid #c7d2fe;';
+            } else if (sLower.includes('negot')) {
+                stageChipStyle = 'background:#fdf2f8;color:#db2777;border:1px solid #fbcfe8;';
+            } else if (sLower.includes('offer')) {
+                stageChipStyle = 'background:#fffbeb;color:#d97706;border:1px solid #fde68a;';
+            } else if (sLower.includes('join') || sLower.includes('onboard')) {
+                stageChipStyle = 'background:#f0fdf4;color:#16a34a;border:1px solid #bbf7d0;';
+            } else if (sLower.includes('reject')) {
+                stageChipStyle = 'background:#fef2f2;color:#ef4444;border:1px solid #fecaca;';
             }
             var subStageText = row.childStatus ? (row.child_status_name || 'Private') : 'Private';
 
