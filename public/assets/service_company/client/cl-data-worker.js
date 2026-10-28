@@ -80,11 +80,26 @@ function titleCase(str) {
 }
 
 function normalizeRow(r) {
-    const loc = r.location || (Array.isArray(r.locations) && r.locations[0]) || (Array.isArray(r.client_location) && r.client_location[0]) || {};
-    const city = (r.city || r.city_name || loc.city_name || loc.city || r.location_main || '').trim();
-    const state = (r.state || r.state_name || loc.state_name || (typeof loc.state === 'string' && isNaN(loc.state) ? loc.state : '') || '').trim();
-    const country = (r.country || r.country_name || loc.country_name || loc.country || '').trim();
-    const hasLocation = Boolean(city || state || country);
+    const locArr = Array.isArray(r.locations) ? r.locations : (Array.isArray(r.client_location) ? r.client_location : []);
+    const loc = r.location || (locArr.length > 0 ? locArr[0] : {}) || {};
+    let city = (r.city || r.city_name || loc.city_name || loc.city || r.location_main || '').trim();
+    let state = (r.state || r.state_name || loc.state_name || (typeof loc.state === 'string' && isNaN(loc.state) ? loc.state : '') || '').trim();
+    let country = (r.country || r.country_name || loc.country_name || loc.country || '').trim();
+
+    if (city && city.includes(',') && !state) {
+        const parts = city.split(',').map(s => s.trim()).filter(Boolean);
+        if (parts.length >= 2) {
+            city = parts[0];
+            state = parts.slice(1).join(', ');
+        }
+    }
+
+    const locParts = [];
+    if (city) locParts.push(city);
+    if (state) locParts.push(state);
+    if (country) locParts.push(country);
+    const locationFormatted = locParts.length > 0 ? locParts.join(', ') : (r.location_main || '');
+    const hasLocation = Boolean(locationFormatted);
 
     const countryId = (r.country_id !== undefined && r.country_id !== null) ? Number(r.country_id) : (loc.country_id ? Number(loc.country_id) : null);
     const cityId = (r.city_id !== undefined && r.city_id !== null) ? Number(r.city_id) : (loc.city_id ? Number(loc.city_id) : null);
@@ -147,10 +162,13 @@ function normalizeRow(r) {
         industry_lower: (indName || r.industry || '').toLowerCase(),
         industry_id: industryId,
         has_location: hasLocation,
+        location: locationFormatted,
+        location_formatted: locationFormatted,
         country_name: country,
         country_name_lower: country.toLowerCase(),
         country_id: countryId,
         country_ids: countryIds,
+        state_name: state,
         state_id: stateId,
         city_name: city,
         city_name_lower: city.toLowerCase(),
@@ -731,7 +749,7 @@ function exportCsv(msg) {
     ];
 
     const headers = [
-        'Client ID', 'Company Name', 'Industry', 'Company Size', 'City', 'State', 'Country',
+        'Client ID', 'Company Name', 'Industry', 'Company Size', 'Location', 'City', 'State', 'Country',
         'Client Type', 'Status', 'Jobs Hiring', 'Jobs Hold', 'Jobs Closed',
         'Sourced', 'Screening', 'Evaluated', 'Negotiation', 'Offers',
         'Joined', 'Rejected', 'In Review', 'Interviewees', 'Total Applications',
@@ -745,11 +763,13 @@ function exportCsv(msg) {
 
     for (let i = 0; i < records.length; i++) {
         const item = records[i];
+        const fullLoc = item.location_formatted || item.location || [item.city_name, item.state_name, item.country_name].filter(Boolean).join(', ') || '-';
         rows.push([
             sanitizeCsvCell(item.id),
             sanitizeCsvCell(item.name),
             sanitizeCsvCell(item.industry),
             sanitizeCsvCell(item.company_size),
+            sanitizeCsvCell(fullLoc),
             sanitizeCsvCell(item.city_name),
             sanitizeCsvCell(item.state_name || item.state),
             sanitizeCsvCell(item.country_name),
