@@ -51,6 +51,7 @@ Route::group(['middleware' => 'auth'], function () {
         Route::put('language-settings/change-language-status/{id}', [LanguageSettingsController::class, 'changeStatus'])->name('language-settings.changeStatus');
         Route::put('language-settings/set-default/{id}', [LanguageSettingsController::class, 'setDefaultLanguage'])->name('language-settings.setDefault');
         Route::resource('language-settings', LanguageSettingsController::class);
+        Route::post('theme-settings/reset', [SuperAdminThemeSettingsController::class, 'reset'])->name('theme-settings.reset');
         Route::resource('theme-settings', SuperAdminThemeSettingsController::class);
         Route::put('footer-settings/update-footer-menu/{id}', [SuperAdminFooterSettingsController::class, 'updateFooterMenu'])->name('footer-settings.updateFooterMenu');
         Route::post('footer-settings/store-footer-menu', [SuperAdminFooterSettingsController::class, 'storeFooterMenu'])->name('footer-settings.storeFooterMenu');
@@ -384,6 +385,7 @@ Route::group(['middleware' => 'auth'], function () {
         Route::post('defaultpackages/update', [DefaultPackageController::class, 'update'])->name('defaultpackages.update');
 
         Route::resource('currency-settings', SuperAdminCurrencyController::class);
+        Route::post('payment-settings/verify-gateway', [SuperAdminPaymentSettingsController::class, 'verifyGateway'])->name('payment-settings.verifyGateway');
         Route::resource('/payment-settings', SuperAdminPaymentSettingsController::class)->only(['index', 'update']);
         Route::resource('/sms-settings', SuperAdminSmsSettingsController::class)->only(['index', 'update']);
         Route::get('invoices/invoice-download/{invoice}', [InvoiceController::class, 'download'])->name('invoices.invoice-download');
