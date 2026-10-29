@@ -54,6 +54,10 @@
         }
     }
 
+    body.superadmin-offline-active .superadmin-subscription-page {
+        margin-top: 0 !important;
+    }
+
     .superadmin-subscription-page #kt_content_container {
         padding-top: 0.5rem !important;
     }

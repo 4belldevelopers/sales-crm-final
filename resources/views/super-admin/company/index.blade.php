@@ -62,6 +62,10 @@
     }
 }
 
+body.superadmin-offline-active .sa-companies-page {
+    margin-top: 0 !important;
+}
+
 .sa-companies-page #kt_content_container {
     padding-top: 0.5rem !important;
 }
