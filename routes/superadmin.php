@@ -342,7 +342,8 @@ Route::group(['middleware' => 'auth'], function () {
 
         Route::resource('global-settings', GlobalSettingController::class);
         Route::post('dddcustompackages/createInvoice', [GlobalSettingController::class, 'updatePr'])->name('global-settings.updatePr');
-        Route::get('linkedin-settings/update-status/{id}', [LinkedInSettingController::class, 'updateStatus'])->name('updateStatus');
+        Route::match(['get', 'post'], 'linkedin-settings/update-status/{id}', [LinkedInSettingController::class, 'updateStatus'])->name('updateStatus');
+        Route::post('linkedin-settings/test-connection', [LinkedInSettingController::class, 'testConnection'])->name('linkedin-settings.testConnection');
         Route::resource('linkedin-settings', LinkedInSettingController::class);
         Route::get('front-cms/index', [SuperAdminFrontCmsController::class, 'index'])->name('front-cms.index');
         Route::get('front-cms/change-form', [SuperAdminFrontCmsController::class, 'changeForm'])->name('front-cms.changeForm');
