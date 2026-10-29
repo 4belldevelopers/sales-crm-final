@@ -177,6 +177,32 @@
                     ? ($hiredAgencyCount . ' ' . ($hiredAgencyCount === 1 ? 'Agency' : 'Agencies')) 
                     : '—';
 
+                // Authoritative Agency Representative: The specific user who shared this job with the agency
+                $agencyRepName = null;
+                if (!empty($agencies)) {
+                    $firstRel = is_array($agencies[0]) ? $agencies[0] : (array)$agencies[0];
+                    $sharerId = (int) ($firstRel['from_user_id'] ?? 0);
+                    if ($sharerId > 0) {
+                        $agencyRepName = $firstRel['from_user_name'] ?? $firstRel['user_name'] ?? null;
+                        if (!$agencyRepName && class_exists(\App\Services\CompanyRepresentativeService::class)) {
+                            $repSummary = app(\App\Services\CompanyRepresentativeService::class)->resolveUserSummary($sharerId, (int)($job->company_id ?? 0));
+                            if (!empty($repSummary['name'])) {
+                                $agencyRepName = $repSummary['name'];
+                            }
+                        }
+                    }
+                }
+
+                // Job Creator Name (Internal Author)
+                $jobCreatorName = null;
+                $creatorId = (int) ($job->user_id ?? $job->posted_by ?? 0);
+                if ($creatorId > 0 && class_exists(\App\Services\CompanyRepresentativeService::class)) {
+                    $creatorSummary = app(\App\Services\CompanyRepresentativeService::class)->resolveUserSummary($creatorId, (int)($job->company_id ?? 0));
+                    if (!empty($creatorSummary['name'])) {
+                        $jobCreatorName = $creatorSummary['name'];
+                    }
+                }
+
                 // 7. Sub-Card 5: Pipeline Stages (Strictly Read-Only)
                 $jobStageCounts = isset($viewModel) && isset($viewModel->pipelineStageMap[$jobId]) 
                     ? $viewModel->pipelineStageMap[$jobId] 
@@ -300,7 +326,7 @@
                         </div>
                     </div>
 
-                    <!-- Sub-Card 4: Agency (No Matching Badge, Hired Count or "—") -->
+                    <!-- Sub-Card 4: Agency (Authoritative Agency Rep & Hired Count) -->
                     <div class="cd-job-subcard cd-subcard-agency">
                         <div class="cd-subcard-header">
                             <span class="cd-subcard-label"><i class="fa fa-handshake me-1 text-muted"></i>Agency</span>
@@ -308,6 +334,11 @@
                         <div class="cd-subcard-body">
                             @if($agencyText !== '—')
                                 <div class="cd-agency-val">{{ $agencyText }}</div>
+                                @if(!empty($agencyRepName))
+                                    <div class="cd-val-sub text-success" title="Agency Representative: {{ $agencyRepName }} (User who shared this job with agency)" style="font-size: 10px; font-weight: 600;">
+                                        <i class="fa fa-user-check me-1"></i>Rep: {{ \Illuminate\Support\Str::limit($agencyRepName, 12) }}
+                                    </div>
+                                @endif
                             @else
                                 <div class="cd-agency-empty">—</div>
                             @endif
@@ -340,13 +371,21 @@
                     </div>
                 </div>
 
-                <!-- Sub-Card 6: Bottom Activity Strip (Timeline, HM & Skills) -->
+                <!-- Sub-Card 6: Bottom Activity Strip (Timeline, Author, HM, Agency Rep & Skills) -->
                 <div class="cd-job-card-bottom">
                     <div class="cd-bottom-left">
                         <span><i class="far fa-calendar-alt text-muted me-1"></i>Posted: <strong>{{ $formattedDate }}</strong></span>
+                        @if(!empty($jobCreatorName))
+                            <span class="cd-bullet">&bull;</span>
+                            <span title="Job Created By: {{ $jobCreatorName }} (Internal Author)"><i class="far fa-user text-muted me-1"></i>Created by: <strong>{{ \Illuminate\Support\Str::limit($jobCreatorName, 12) }}</strong></span>
+                        @endif
                         @if(!empty($hmName) && $hmName !== 'Hiring Manager')
                             <span class="cd-bullet">&bull;</span>
-                            <span title="{{ $hmName }} ({{ $hmTitle }})"><i class="far fa-user text-muted me-1"></i>HM: <strong>{{ $hmName }}</strong></span>
+                            <span title="Client SPOC: {{ $hmName }} ({{ $hmTitle }})"><i class="far fa-id-badge text-primary me-1"></i>Client Rep: <strong>{{ \Illuminate\Support\Str::limit($hmName, 12) }}</strong></span>
+                        @endif
+                        @if(!empty($agencyRepName))
+                            <span class="cd-bullet">&bull;</span>
+                            <span title="Agency Representative: {{ $agencyRepName }} (Shared by this user)"><i class="fa fa-handshake text-success me-1"></i>Agency Rep: <strong>{{ \Illuminate\Support\Str::limit($agencyRepName, 12) }}</strong></span>
                         @endif
                     </div>
                     <div class="cd-bottom-skills">
