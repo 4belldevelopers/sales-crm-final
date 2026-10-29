@@ -126,6 +126,17 @@
             $isDirect = ($final_status == 1);
             $scopeLabel = $isDirect ? 'Direct Agency' : 'Marketplace Partner';
             $scopeClass = $isDirect ? 'pill-direct type-direct' : 'pill-internal type-internal';
+
+            /* ── company size (Employee Strength) ── */
+            $compSizeObj = $batchCompanySizes[$row->company_id] ?? null;
+            $fromSize = $row->company_size_from ?? ($compSizeObj->company_size_from ?? null);
+            $toSize = $row->company_sizes ?? $row->company_size ?? ($compSizeObj->company_size ?? null);
+            $companySizeText = '';
+            if (!empty($fromSize) && !empty($toSize)) {
+                $companySizeText = number_format((int)$fromSize) . ' - ' . number_format((int)$toSize) . ' employees';
+            } elseif (!empty($toSize)) {
+                $companySizeText = is_numeric($toSize) ? number_format((int)$toSize) . ' employees' : $toSize . ' employees';
+            }
         @endphp
 
         <!-- ── Tier 3 Primary Card Stream (Rule 20 Enterprise Card + Sub-Card Design) ── -->
@@ -162,7 +173,11 @@
                         <div class="cl-details-box">
                             <div class="cl-name {{ $client_type_css }}" data-row-id="{{ $row->client_id }}">{{ $company_name }}</div>
                             <div class="cl-ind" title="{{ e($ind_name) }}">{{ $ind_name }}</div>
-                            <div class="cl-size">{{ $row->company_size ?? '—' }}</div>
+                            @if(!empty($companySizeText))
+                                <div class="cl-size">{{ $companySizeText }}</div>
+                            @else
+                                <div class="cl-size text-muted">—</div>
+                            @endif
                         </div>
                     </div>
                 </div>
@@ -298,9 +313,9 @@
                     </span>
                 </div>
                 <div class="cl-bottom-actions">
-                    <button type="button" class="btn btn-sm btn-light-primary fw-bold px-3 py-1.5 {{ $client_type_css }}" data-row-id="{{ $row->client_id }}" style="font-size: 11px; border-radius: 6px;">
+                    <button type="button" class="btn btn-sm btn-light-primary fw-bold px-3 py-1.5 {{ $client_type_css }}" data-row-id="{{ $row->client_id }}" style="display: inline-flex !important; align-items: center !important; justify-content: center !important; gap: 6px !important; white-space: nowrap !important; line-height: 1 !important; font-size: 11px; border-radius: 6px;">
                         <span>View Agency</span>
-                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="ms-1"><polyline points="9 18 15 12 9 6"/></svg>
+                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="display: inline-block; vertical-align: middle; flex-shrink: 0;"><polyline points="9 18 15 12 9 6"/></svg>
                     </button>
                 </div>
             </div>
