@@ -196,6 +196,7 @@ class ServiceCompanyConsultancyController extends ServiceCompanyBaseController
                     'batchLocations' => [],
                     'batchIndustries' => [],
                     'batchRelations' => [],
+                    'batchCompanySizes' => [],
                 ])->render(),
                 'total' => 0,
                 'pagination' => view('service_company.ajax_pages.pagination', [
@@ -291,6 +292,7 @@ class ServiceCompanyConsultancyController extends ServiceCompanyBaseController
                 $batchLocations = $this->agencyListingService->getBatchLocations($clientIds);
                 $batchIndustries = $this->agencyListingService->getBatchIndustries($industryIds);
                 $batchRelations = $this->agencyListingService->getBatchRelationData($agencyCompanyIds, $company_id);
+                $batchCompanySizes = $this->agencyListingService->getBatchCompanySizes($agencyCompanyIds);
 
                 // Optional: Performance filtering based on batch pipeline activity
                 if (! empty($performanceFilter)) {
@@ -317,6 +319,7 @@ class ServiceCompanyConsultancyController extends ServiceCompanyBaseController
                 $batchLocations = [];
                 $batchIndustries = [];
                 $batchRelations = [];
+                $batchCompanySizes = [];
             }
         }
 
@@ -330,7 +333,7 @@ class ServiceCompanyConsultancyController extends ServiceCompanyBaseController
 
         $userPermissions = $this->userPermissions;
         $responseData = [
-            'html' => view('service_company.ajax_pages.staffing-partner-ajax', compact('data', 'userPermissions', 'company_id', 'batchAgencyStats', 'batchLocations', 'batchIndustries', 'batchRelations'))->render(),
+            'html' => view('service_company.ajax_pages.staffing-partner-ajax', compact('data', 'userPermissions', 'company_id', 'batchAgencyStats', 'batchLocations', 'batchIndustries', 'batchRelations', 'batchCompanySizes'))->render(),
             'total' => $total,
             'pagination' => view('service_company.ajax_pages.pagination', compact('pagination'))->render(),
         ];

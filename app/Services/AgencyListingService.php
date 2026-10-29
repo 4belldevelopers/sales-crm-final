@@ -358,6 +358,26 @@ class AgencyListingService
     }
 
     /**
+     * Bulk fetch company size / employee strength for agency companies.
+     *
+     * @return array Keyed by company id
+     */
+    public function getBatchCompanySizes(array $agencyCompanyIds): array
+    {
+        $filtered = array_filter(array_unique($agencyCompanyIds));
+        if (empty($filtered)) {
+            return [];
+        }
+
+        return DB::table('companies')
+            ->whereIn('id', $filtered)
+            ->select('id', 'company_size', 'company_size_from')
+            ->get()
+            ->keyBy('id')
+            ->toArray();
+    }
+
+    /**
      * Bulk fetch industry names for a list of industry IDs.
      *
      * @param  array  $industryIds  List of industry IDs

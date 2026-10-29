@@ -7,12 +7,20 @@
 <link href="{{ asset('demo/css/clientList.css') }}?v={{ time() }}" rel="stylesheet" type="text/css" />
 <style>
 /* ── Guaranteed Card-Based Header Design (Rule 20 Enterprise Standard) ── */
+#kt_content,
+.content {
+  padding-top: 6px !important;
+}
+#kt_content_container {
+  padding-top: 0 !important;
+}
 .cl-header, .cl-header-card {
   background: #ffffff !important;
   border: 1px solid #e2e8f0 !important;
   border-radius: 12px !important;
-  padding: 14px 20px !important;
-  margin-bottom: 14px !important;
+  padding: 10px 18px !important;
+  margin-top: 0 !important;
+  margin-bottom: 12px !important;
   display: flex !important;
   align-items: center !important;
   justify-content: space-between !important;
@@ -153,9 +161,21 @@
   transition: all 0.15s ease !important;
   white-space: nowrap !important;
 }
+.cl-add-btn-primary svg {
+  stroke: #ffffff !important;
+  color: #ffffff !important;
+  fill: none !important;
+  flex-shrink: 0 !important;
+  display: inline-block !important;
+  vertical-align: middle !important;
+}
 .cl-add-btn-primary:hover {
   background: #0086d4 !important;
   border-color: #0086d4 !important;
+  color: #ffffff !important;
+}
+.cl-add-btn-primary:hover svg {
+  stroke: #ffffff !important;
   color: #ffffff !important;
 }
 
@@ -387,6 +407,30 @@
   background: #f8fafc !important;
   border-color: #cbd5e1 !important;
 }
+.cl-loc-combobox-btn.has-filter,
+.cl-pipe-combobox-btn.has-filter,
+.cl-sort-combobox-btn.has-filter {
+  border-color: #009ef7 !important;
+  background: #f0fdf4 !important;
+}
+.cl-loc-combobox-btn.has-filter .cl-pill-val,
+.cl-pipe-combobox-btn.has-filter .cl-pill-val,
+.cl-sort-combobox-btn.has-filter .cl-pill-val {
+  color: #009ef7 !important;
+}
+.cl-pill-clear {
+  color: #94a3b8 !important;
+  font-size: 11px !important;
+  cursor: pointer !important;
+  padding: 1px 4px !important;
+  border-radius: 50% !important;
+  margin-left: 2px !important;
+  display: none;
+}
+.cl-pill-clear:hover {
+  background: #e2e8f0 !important;
+  color: #0f172a !important;
+}
 .cl-pill-lbl { font-size: 10px !important; font-weight: 600 !important; color: #94a3b8 !important; text-transform: uppercase !important; }
 .cl-pill-val { font-size: 12px !important; font-weight: 600 !important; color: #0f172a !important; }
 .cl-pill-icon svg { color: #2563eb; }
@@ -488,8 +532,8 @@
 }
 .tbl-h {
   display: grid !important;
-  grid-template-columns: 2.2fr 1.3fr 1fr 2.5fr !important;
-  gap: 12px !important;
+  grid-template-columns: minmax(0, 2.1fr) minmax(0, 1.1fr) minmax(0, 0.9fr) minmax(0, 3.5fr) !important;
+  gap: 8px !important;
   padding: 8px 14px !important;
   background: #f8fafc !important;
   border: 1px solid #e2e8f0 !important;
@@ -533,8 +577,8 @@
 /* Sub-Cards Grid */
 .cl-subcards-grid {
   display: grid !important;
-  grid-template-columns: 2.2fr 1.3fr 1fr 2.5fr !important;
-  gap: 12px !important;
+  grid-template-columns: minmax(0, 2.1fr) minmax(0, 1.1fr) minmax(0, 0.9fr) minmax(0, 3.5fr) !important;
+  gap: 8px !important;
   margin-bottom: 10px !important;
 }
 .cl-subcard {
@@ -682,32 +726,42 @@
 .cl-pipe-body {
   display: flex !important;
   align-items: center !important;
+  justify-content: center !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  padding-top: 2px !important;
 }
 .cl-pipeline-flow {
   display: flex !important;
   align-items: center !important;
-  gap: 6px !important;
+  justify-content: space-between !important;
+  gap: 2px !important;
   width: 100% !important;
-  overflow-x: auto !important;
+  min-width: 0 !important;
 }
 .cl-pipeline-flow::-webkit-scrollbar { display: none; }
 .cl-pipe-step {
   display: flex !important;
   flex-direction: column !important;
   align-items: center !important;
-  gap: 2px !important;
+  justify-content: center !important;
   flex: 1 !important;
+  min-width: 0 !important;
+  padding: 2px 1px !important;
+  border-radius: 6px !important;
+  transition: all 0.15s ease !important;
 }
 .cl-pipe-pill {
-  min-width: 20px !important;
+  min-width: 18px !important;
   height: 18px !important;
-  padding: 0 5px !important;
-  border-radius: 9px !important;
+  padding: 0 3px !important;
+  border-radius: 6px !important;
   display: inline-flex !important;
   align-items: center !important;
   justify-content: center !important;
-  font-size: 10.5px !important;
+  font-size: 11px !important;
   font-weight: 700 !important;
+  line-height: 1 !important;
   background: #f1f5f9 !important;
   color: #64748b !important;
   font-variant-numeric: tabular-nums !important;
@@ -722,15 +776,22 @@
 .cl-pipe-step.has-count .pill-interview    { background: #fef3c7; color: #b45309; }
 
 .cl-pipe-label {
-  font-size: 9.5px !important;
-  color: #94a3b8 !important;
+  font-size: 8px !important;
+  font-weight: 600 !important;
+  text-transform: capitalize !important;
+  margin-top: 2.5px !important;
+  letter-spacing: -0.15px !important;
   white-space: nowrap !important;
+  line-height: 1.1 !important;
+  text-align: center !important;
+  color: #64748b !important;
 }
 .cl-pipe-divider {
-  width: 1px;
-  height: 22px;
-  background: #e2e8f0;
-  margin: 0 2px;
+  width: 1.5px !important;
+  height: 22px !important;
+  background: #cbd5e1 !important;
+  margin: 0 4px !important;
+  flex-shrink: 0 !important;
 }
 
 /* Bottom Activity Strip */
@@ -987,7 +1048,7 @@
 </script>
 
 <!--begin::Content-->
-<div class="content d-flex flex-column flex-column-fluid pt-4" id="kt_content">
+<div class="content d-flex flex-column flex-column-fluid pt-0" id="kt_content">
   <!--begin::Post-->
   <div class="post d-flex flex-column-fluid" id="kt_post">
     <!--begin::Container-->
@@ -1082,7 +1143,7 @@
 
                 @if(in_array("add_staffing_partners", $userPermissions))
                 <button type="button" class="cl-add-btn-primary" id="open_add_agency_drawer">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" style="stroke: #ffffff !important; color: #ffffff !important;">
                         <line x1="12" y1="5" x2="12" y2="19"/>
                         <line x1="5" y1="12" x2="19" y2="12"/>
                     </svg>
@@ -1257,23 +1318,27 @@
                         <span class="cl-pill-lbl">Location</span>
                         <span class="cl-pill-val" id="locationDisplay">All Locations</span>
                     </div>
+                    <div class="cl-pill-clear" id="locationClearBtn" onclick="clearLocationFilter(event)" title="Reset Location" style="display:none;">✕</div>
                     <div class="cl-pill-chevron">
                         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
                     </div>
                 </div>
 
                 <div class="cl-loc-dropdown-panel" id="clLocDropdownPanel">
-                    <div class="cl-loc-search-box">
-                        <input type="text" class="cl-search-inp" style="height:32px; padding:0 10px;" id="clLocSearchInp" placeholder="Search countries or cities..." autocomplete="off" oninput="handleLocationSearchInput(this.value)" />
+                    <div class="cl-loc-search-box" style="position: relative;">
+                        <input type="text" class="cl-search-inp" style="height:32px; padding:0 26px 0 10px;" id="clLocSearchInp" placeholder="Search countries or cities..." autocomplete="off" oninput="handleLocationSearchInput(this.value)" />
+                        <span class="cl-pill-clear" id="clLocSearchClear" onclick="$('#clLocSearchInp').val(''); handleLocationSearchInput(''); $(this).hide();" style="position: absolute; right: 14px; top: 50%; transform: translateY(-50%); display:none;">✕</span>
                     </div>
                     <div class="cl-loc-dropdown-body mt-2" id="clLocDropdownBody" style="max-height: 220px; overflow-y: auto;">
                         <div class="cl-act-item selected" onclick="selectLocationOption('', 'All Locations', event)">
                             <span>All Locations</span>
+                            <span class="cl-act-check">✓</span>
                         </div>
                         @if ($countries)
                             @foreach ($countries as $c)
                                 <div class="cl-act-item" onclick="selectLocationOption('{{ $c->id }}', '{{ $c->country_name }}', event)">
                                     <span>{{ $c->country_name }}</span>
+                                    <span class="cl-act-check" style="display:none;">✓</span>
                                 </div>
                             @endforeach
                         @endif
@@ -1294,6 +1359,7 @@
                         <span class="cl-pill-lbl">Performance</span>
                         <span class="cl-pill-val" id="perfDisplay">All Performance</span>
                     </div>
+                    <div class="cl-pill-clear" id="perfClearBtn" onclick="clearPerfFilter(event)" title="Reset Performance" style="display:none;">✕</div>
                     <div class="cl-pill-chevron">
                         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
                     </div>
@@ -1303,15 +1369,19 @@
                     <div class="cl-pipe-section-hdr">Performance Tier</div>
                     <div class="cl-pipe-item selected" onclick="selectPerfOption('', 'All Performance', event)">
                         <span>All Performance</span>
+                        <span class="cl-act-check">✓</span>
                     </div>
                     <div class="cl-pipe-item" onclick="selectPerfOption('high', 'High Performers (5+ Placements)', event)">
                         <span>High Performers</span>
+                        <span class="cl-act-check" style="display:none;">✓</span>
                     </div>
                     <div class="cl-pipe-item" onclick="selectPerfOption('medium', 'Active (1–4 Placements)', event)">
                         <span>Medium Activity</span>
+                        <span class="cl-act-check" style="display:none;">✓</span>
                     </div>
                     <div class="cl-pipe-item" onclick="selectPerfOption('low', 'Getting Started (0 Placements)', event)">
                         <span>Low / New</span>
+                        <span class="cl-act-check" style="display:none;">✓</span>
                     </div>
                 </div>
                 <input type="hidden" id="agency_performance" name="agency_performance" value="" />
@@ -1329,6 +1399,7 @@
                         <span class="cl-pill-lbl">Sort</span>
                         <span class="cl-pill-val" id="sortDisplay">Recently Added</span>
                     </div>
+                    <div class="cl-pill-clear" id="sortClearBtn" onclick="clearSortFilter(event)" title="Reset Sort" style="display:none;">✕</div>
                     <div class="cl-pill-chevron">
                         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
                     </div>
@@ -1338,20 +1409,25 @@
                     <div class="cl-sort-section-hdr">Chronological</div>
                     <div class="cl-sort-item selected" onclick="selectSortOption('recent', 'Recently Added', event)">
                         <span>Recently Added</span>
+                        <span class="cl-act-check">✓</span>
                     </div>
                     <div class="cl-sort-item" onclick="selectSortOption('oldest', 'Oldest First', event)">
                         <span>Oldest First</span>
+                        <span class="cl-act-check" style="display:none;">✓</span>
                     </div>
                     <div class="cl-sort-section-hdr">Alphabetical</div>
                     <div class="cl-sort-item" onclick="selectSortOption('name_asc', 'Agency Name (A → Z)', event)">
                         <span>Agency Name (A → Z)</span>
+                        <span class="cl-act-check" style="display:none;">✓</span>
                     </div>
                     <div class="cl-sort-item" onclick="selectSortOption('name_desc', 'Agency Name (Z → A)', event)">
                         <span>Agency Name (Z → A)</span>
+                        <span class="cl-act-check" style="display:none;">✓</span>
                     </div>
                     <div class="cl-sort-section-hdr">Activity</div>
                     <div class="cl-sort-item" onclick="selectSortOption('jobs_desc', 'Most Shared Jobs', event)">
                         <span>Most Shared Jobs</span>
+                        <span class="cl-act-check" style="display:none;">✓</span>
                     </div>
                 </div>
                 <input type="hidden" id="sortingfilter" name="sortingfilter" value="" />
@@ -1504,6 +1580,21 @@
         if (e) e.stopPropagation();
         $('#locationDisplay').text(name);
         $('#country').val(id);
+        $('#clLocDropdownBody .cl-act-item').removeClass('selected');
+        $('#clLocDropdownBody .cl-act-item .cl-act-check').hide();
+        if (e && e.currentTarget) {
+            $(e.currentTarget).addClass('selected');
+            $(e.currentTarget).find('.cl-act-check').show();
+        }
+
+        if (id) {
+            $('#clLocBtn').addClass('has-filter');
+            $('#locationClearBtn').show();
+        } else {
+            $('#clLocBtn').removeClass('has-filter');
+            $('#locationClearBtn').hide();
+        }
+
         if (window.AgencyListingManager) {
             window.AgencyListingManager.countryFilter = id;
             window.AgencyListingManager.closeAllDropdowns();
@@ -1511,10 +1602,31 @@
         }
     };
 
-    window.handleLocationSearchInput = function(e) {
-        const val = (e.target.value || '').toLowerCase();
-        $('#clLocList .cl-loc-item').each(function() {
-            const text = $(this).text().toLowerCase();
+    window.clearLocationFilter = function(e) {
+        if (e) e.stopPropagation();
+        $('#locationDisplay').text('All Locations');
+        $('#country').val('');
+        $('#clLocDropdownBody .cl-act-item').removeClass('selected');
+        $('#clLocDropdownBody .cl-act-item .cl-act-check').hide();
+        $('#clLocDropdownBody .cl-act-item').first().addClass('selected').find('.cl-act-check').show();
+        $('#clLocBtn').removeClass('has-filter');
+        $('#locationClearBtn').hide();
+        if (window.AgencyListingManager) {
+            window.AgencyListingManager.countryFilter = '';
+            window.AgencyListingManager.closeAllDropdowns();
+            window.AgencyListingManager.loadPage(1);
+        }
+    };
+
+    window.handleLocationSearchInput = function(val) {
+        val = (val || '').toLowerCase();
+        if (val.length > 0) {
+            $('#clLocSearchClear').show();
+        } else {
+            $('#clLocSearchClear').hide();
+        }
+        $('#clLocDropdownBody .cl-act-item').each(function() {
+            var text = $(this).text().toLowerCase();
             $(this).toggle(text.indexOf(val) > -1);
         });
     };
@@ -1531,8 +1643,39 @@
         if (e) e.stopPropagation();
         $('#perfDisplay').text(label);
         $('#agency_performance').val(val);
+        $('#clPerfDropdownPanel .cl-pipe-item').removeClass('selected');
+        $('#clPerfDropdownPanel .cl-pipe-item .cl-act-check').hide();
+        if (e && e.currentTarget) {
+            $(e.currentTarget).addClass('selected');
+            $(e.currentTarget).find('.cl-act-check').show();
+        }
+
+        if (val) {
+            $('#clPerfBtn').addClass('has-filter');
+            $('#perfClearBtn').show();
+        } else {
+            $('#clPerfBtn').removeClass('has-filter');
+            $('#perfClearBtn').hide();
+        }
+
         if (window.AgencyListingManager) {
             window.AgencyListingManager.perfFilter = val;
+            window.AgencyListingManager.closeAllDropdowns();
+            window.AgencyListingManager.loadPage(1);
+        }
+    };
+
+    window.clearPerfFilter = function(e) {
+        if (e) e.stopPropagation();
+        $('#perfDisplay').text('All Performance');
+        $('#agency_performance').val('');
+        $('#clPerfDropdownPanel .cl-pipe-item').removeClass('selected');
+        $('#clPerfDropdownPanel .cl-pipe-item .cl-act-check').hide();
+        $('#clPerfDropdownPanel .cl-pipe-item').first().addClass('selected').find('.cl-act-check').show();
+        $('#clPerfBtn').removeClass('has-filter');
+        $('#perfClearBtn').hide();
+        if (window.AgencyListingManager) {
+            window.AgencyListingManager.perfFilter = '';
             window.AgencyListingManager.closeAllDropdowns();
             window.AgencyListingManager.loadPage(1);
         }
@@ -1550,11 +1693,31 @@
         if (e) e.stopPropagation();
         $('#sortDisplay').text(label);
         $('#sortingfilter').val(val);
+        $('#clSortDropdownPanel .cl-sort-item').removeClass('selected');
+        $('#clSortDropdownPanel .cl-sort-item .cl-act-check').hide();
+        if (e && e.currentTarget) {
+            $(e.currentTarget).addClass('selected');
+            $(e.currentTarget).find('.cl-act-check').show();
+        }
+
+        if (val && val !== 'recent') {
+            $('#clSortBtn').addClass('has-filter');
+            $('#sortClearBtn').show();
+        } else {
+            $('#clSortBtn').removeClass('has-filter');
+            $('#sortClearBtn').hide();
+        }
+
         if (window.AgencyListingManager) {
             window.AgencyListingManager.sortFilter = val;
             window.AgencyListingManager.closeAllDropdowns();
             window.AgencyListingManager.loadPage(1);
         }
+    };
+
+    window.clearSortFilter = function(e) {
+        if (e) e.stopPropagation();
+        selectSortOption('recent', 'Recently Added', e);
     };
 
     window.triggerAgencyExport = function(type) {
@@ -1840,7 +2003,9 @@
                     $('#staffingpartnerajax').html(response.html);
                     $('#paginationstaffingpartner').html(response.pagination);
                     if (response.total !== undefined) {
-                        $('#span_spartnerAll').text(response.total);
+                        if (self.activeTab === 'all' && !self.searchQuery && !self.countryFilter && !self.perfFilter) {
+                            $('#span_spartnerAll').text(response.total);
+                        }
                         if (self.searchQuery) {
                             $('#clSearchMatchCount').text(`${response.total} matches`).show();
                         } else {
