@@ -216,222 +216,289 @@
         .team-btn-light:hover { background: #f8fafc; color: #0f172a; border-color: #cbd5e1; }
 
         /* =========================================================================
-           EXECUTIVE SPOC & REPRESENTATION HUB (Rule 20 Card + Sub-Card Standard)
+           TOP CARD: MARKETPLACE COMMUNICATION CONTACTS (Rule 20 Enterprise Card)
            ========================================================================= */
-        .team-spoc-card {
+        .team-mp-contacts-card {
             background: #ffffff !important;
             border: 1px solid #e2e8f0 !important;
-            border-radius: 10px !important;
-            padding: 10px 14px !important;
-            margin-bottom: 12px !important;
+            border-radius: 12px !important;
+            padding: 18px 20px !important;
+            margin-bottom: 16px !important;
             box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03) !important;
         }
-        .team-spoc-grid {
+        .team-mp-contacts-grid {
             display: grid !important;
-            grid-template-columns: minmax(0, 1.35fr) minmax(0, 1.35fr) minmax(0, 1.15fr) !important;
-            gap: 10px !important;
+            grid-template-columns: minmax(0, 1.15fr) minmax(0, 1.4fr) minmax(0, 1.4fr) !important;
+            gap: 16px !important;
             align-items: stretch !important;
         }
-        .tm-spoc-subcard {
-            background: #f8fafc;
-            border: 1px solid #e2e8f0;
-            border-radius: 8px;
-            padding: 8px 12px;
+        .tm-mp-col {
             display: flex;
             flex-direction: column;
             justify-content: space-between;
-            gap: 6px;
-            position: relative;
+        }
+        .tm-mp-overview-col {
+            padding-right: 6px;
+        }
+        .tm-mp-icon-wrap {
+            width: 44px;
+            height: 44px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        .bg-light-teal { background: #f0fdfa !important; }
+        .text-teal { color: #0d9488 !important; }
+        .bg-light-purple { background: #f5f3ff !important; }
+        .text-purple { color: #7c3aed !important; }
+        .badge-light-purple { background: #f3e8ff; color: #7c3aed !important; }
+        .shadow-xs { box-shadow: 0 1px 2px rgba(15, 23, 42, 0.05); }
+
+        .tm-mp-col-title {
+            font-size: 14px;
+            font-weight: 700;
+            color: #0f172a;
+            margin: 0 0 4px 0;
+            line-height: 1.3;
+        }
+        .tm-mp-col-desc {
+            font-size: 11.5px;
+            color: #64748b;
+            margin: 0;
+            line-height: 1.45;
+        }
+        .tm-mp-info-box {
+            margin-top: 14px;
+            background: #eff6ff;
+            border: 1px solid #dbeafe;
+            border-radius: 8px;
+            padding: 10px 12px;
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+            font-size: 11px;
+            color: #1e40af;
+            line-height: 1.45;
+        }
+
+        /* 2 Spotlight Communication Boxes (Client & Agency) */
+        .tm-mp-box {
+            border-radius: 10px;
+            padding: 14px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
             transition: all .2s;
         }
-        .tm-spoc-subcard:hover {
-            box-shadow: 0 2px 6px rgba(15, 23, 42, 0.04);
-            border-color: #cbd5e1;
+        .tm-mp-client-box {
+            background: #f0fdf4;
+            border: 1px solid #bbf7d0;
         }
-        .tm-spoc-client {
-            border-left: 3.5px solid #009ef7;
+        .tm-mp-agency-box {
+            background: #f5f3ff;
+            border: 1px solid #ddd6fe;
         }
-        .tm-spoc-agency {
-            border-left: 3.5px solid #10b981;
-        }
-        .tm-spoc-rules {
-            border-left: 3.5px solid #8b5cf6;
-            background: #fcfaff;
-            border-color: #ede9fe;
-        }
-        .tm-spoc-header {
+        .tm-mp-box-head {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            gap: 6px;
+            gap: 8px;
+            margin-bottom: 4px;
         }
-        .tm-spoc-badge {
-            font-size: 10px;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            padding: 2px 7px;
-            border-radius: 4px;
-            display: inline-flex;
-            align-items: center;
-        }
-        .tm-spoc-badge-client {
-            background: #eff6ff;
-            color: #009ef7;
-            border: 1px solid #dbeafe;
-        }
-        .tm-spoc-badge-agency {
-            background: #ecfdf5;
-            color: #059669;
-            border: 1px solid #a7f3d0;
-        }
-        .tm-spoc-badge-rules {
-            background: #f5f3ff;
-            color: #7c3aed;
-            border: 1px solid #ddd6fe;
-        }
-        .tm-spoc-scope-hint {
-            font-size: 10.5px;
-            color: #64748b;
-            font-weight: 500;
-        }
-        .tm-spoc-body {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            background: #ffffff;
-            border: 1px solid #eef2f6;
-            border-radius: 7px;
-            padding: 6px 10px;
-            min-height: 44px;
-        }
-        .tm-spoc-avatar {
-            width: 32px;
-            height: 32px;
+        .tm-mp-box-icon {
+            width: 28px;
+            height: 28px;
             border-radius: 7px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-weight: 700;
             font-size: 13px;
+        }
+        .tm-mp-box-title {
+            font-size: 13.5px;
+            font-weight: 700;
+            color: #0f172a;
+        }
+        .tm-mp-box-subtitle {
+            font-size: 11px;
+            color: #64748b;
+            margin-bottom: 12px;
+            line-height: 1.4;
+        }
+        .tm-mp-profile-box {
+            background: #ffffff;
+            border: 1px solid rgba(0,0,0,0.06);
+            border-radius: 8px;
+            padding: 10px 12px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .tm-mp-avatar {
+            width: 38px;
+            height: 38px;
+            border-radius: 8px;
+            background: #0f172a;
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 15px;
             flex-shrink: 0;
             overflow: hidden;
         }
-        .tm-spoc-details {
+        .tm-mp-profile-details {
+            flex-grow: 1;
+            overflow: hidden;
             display: flex;
             flex-direction: column;
-            overflow: hidden;
-            flex-grow: 1;
+            gap: 1px;
         }
-        .tm-spoc-name-row {
-            display: flex;
-            align-items: baseline;
-            gap: 5px;
-            overflow: hidden;
-            white-space: nowrap;
-        }
-        .tm-spoc-name {
-            font-size: 12px;
+        .tm-mp-profile-name {
+            font-size: 13px;
             font-weight: 700;
             color: #0f172a;
+            white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
         }
-        .tm-spoc-role {
+        .tm-mp-profile-role {
             font-size: 11px;
             color: #64748b;
-            font-weight: 500;
         }
-        .tm-spoc-contact {
+        .tm-mp-profile-contact {
             font-size: 10.5px;
             color: #475569;
             display: flex;
             align-items: center;
-            gap: 6px;
-            overflow: hidden;
+            gap: 8px;
             white-space: nowrap;
+            overflow: hidden;
             text-overflow: ellipsis;
             margin-top: 1px;
         }
-        .tm-spoc-bullet {
-            color: #cbd5e1;
-            font-size: 9px;
-        }
-        .tm-spoc-footer {
-            display: flex;
-            align-items: center;
-            justify-content: flex-end;
-        }
-        .tm-spoc-btn {
+        .btn-mp-change {
+            background: #ffffff;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            padding: 5px 11px;
             font-size: 11px;
             font-weight: 600;
-            padding: 3px 9px;
-            border-radius: 5px;
-            border: 1px solid #e2e8f0;
-            background: #ffffff;
-            color: #334155;
+            color: #0f172a;
             cursor: pointer;
+            transition: all .15s;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+        .btn-mp-change:hover {
+            background: #f8fafc;
+            border-color: #94a3b8;
+        }
+
+        /* Underlined Modern Sub-Tabs */
+        .tm-nav-tabs {
+            display: flex;
+            align-items: center;
+            gap: 18px;
+            border-bottom: 2px solid transparent;
+        }
+        .tm-nav-tab {
+            background: transparent;
+            border: none;
+            padding: 6px 4px 10px 4px;
+            font-size: 13px;
+            font-weight: 600;
+            color: #64748b;
+            cursor: pointer;
+            position: relative;
             transition: all .15s;
             display: inline-flex;
             align-items: center;
+            gap: 6px;
+            outline: none;
         }
-        .tm-spoc-btn-client:hover {
-            background: #eff6ff;
+        .tm-nav-tab:hover {
+            color: #0f172a;
+        }
+        .tm-nav-tab.active {
             color: #009ef7;
-            border-color: #bfdbfe;
         }
-        .tm-spoc-btn-agency:hover {
-            background: #ecfdf5;
-            color: #059669;
-            border-color: #a7f3d0;
+        .tm-nav-tab.active::after {
+            content: '';
+            position: absolute;
+            left: 0;
+            right: 0;
+            bottom: -2px;
+            height: 2.5px;
+            background: #009ef7;
+            border-radius: 2px;
         }
-        .tm-spoc-btn-rules:hover {
-            background: #f5f3ff;
-            color: #7c3aed;
-            border-color: #ddd6fe;
-        }
-        .tm-spoc-rules-body {
-            background: #ffffff;
-            border: 1px solid #ede9fe;
-            border-radius: 7px;
-            padding: 6px 10px;
-            min-height: 44px;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            gap: 3px;
-        }
-        .tm-spoc-rules-flow {
-            display: flex;
-            align-items: center;
-            gap: 5px;
-            font-size: 10.5px;
-        }
-        .tm-rule-step {
-            padding: 1.5px 5px;
-            border-radius: 4px;
-            background: #f1f5f9;
-            color: #475569;
-            font-weight: 600;
-        }
-        .tm-rule-step.active {
-            background: #eff6ff;
-            color: #009ef7;
-            border: 1px solid #bfdbfe;
-        }
-        .tm-spoc-rules-caption {
-            font-size: 10px;
-            color: #64748b;
-            line-height: 1.25;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
+        .tm-nav-count {
+            font-size: 11.5px;
+            color: inherit;
+            font-weight: 700;
         }
 
-        /* =========================================================================
-           Tier 2: Dedicated Sub-Tabs Card
-           ========================================================================= */
-        .team-tabs-card {
+        /* Filter & Search Bar */
+        .team-filter-bar {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 8px 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 14px;
+            box-shadow: 0 1px 3px rgba(15, 23, 42, 0.02);
+            flex-wrap: wrap;
+        }
+        .team-filter-search {
+            position: relative;
+            flex-grow: 1;
+            max-width: 380px;
+            display: flex;
+            align-items: center;
+        }
+        .team-filter-search i {
+            position: absolute;
+            left: 10px;
+            font-size: 12px;
+            color: #94a3b8;
+        }
+        .team-filter-search .team-search-input {
+            width: 100%;
+            height: 32px;
+            padding: 0 30px 0 30px;
+            border: 1px solid transparent;
+            border-radius: 6px;
+            font-size: 12px;
+            font-family: 'Poppins', sans-serif;
+            color: #0f172a;
+            outline: none;
+            transition: all .15s;
+            background: transparent;
+        }
+        .team-filter-search .team-search-input:focus {
+            background: #ffffff;
+            border-color: #009ef7;
+            box-shadow: 0 0 0 2px rgba(0, 158, 247, 0.1);
+        }
+
+        /* Roster Header Legend */
+        .team-roster-legend {
+            display: grid;
+            grid-template-columns: minmax(0, 2.2fr) minmax(0, 1fr) minmax(0, 1.8fr) minmax(0, 1.2fr) minmax(0, 2.4fr) minmax(0, 1.1fr) minmax(0, 1fr) 36px;
+            gap: 12px;
+            padding: 6px 18px;
+            font-size: 11px;
+            font-weight: 700;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
             background: #ffffff !important;
             border: 1px solid #e2e8f0 !important;
             border-radius: 10px !important;
@@ -918,8 +985,9 @@
 
         /* Responsive */
         @media (max-width: 1200px) {
-            .team-spoc-grid { grid-template-columns: 1fr !important; }
+            .team-mp-contacts-grid { grid-template-columns: 1fr !important; }
             .team-card-grid { grid-template-columns: 1fr 1fr !important; }
+            .team-roster-legend { display: none !important; }
         }
         @media (max-width: 768px) {
             .team-card-grid { grid-template-columns: 1fr !important; }
@@ -1130,174 +1198,150 @@
             <div id="kt_content_container" class="container-fluid px-3">
 
                 <!-- ============================================================== -->
-                <!-- TIER 1: TOP HEADER TOOLBAR CARD (Pure White, Border #e2e8f0)   -->
+                <!-- TIER 1: TOP HEADER TOOLBAR (Matching Reference Standard)        -->
                 <!-- ============================================================== -->
-                <div class="team-toolbar-card">
+                <div class="team-toolbar-card mb-4">
                     <div class="team-toolbar-left">
-                        <div class="team-toolbar-icon">
-                            <i class="fa-solid fa-users-gear"></i>
+                        <div class="team-toolbar-icon" style="background:#eff6ff; color:#009ef7;">
+                            <i class="fa-solid fa-users"></i>
                         </div>
                         <div>
                             <div class="d-flex align-items-center">
-                                <h1 class="team-toolbar-title">Team Management</h1>
-                                <span class="team-badge-pill" id="tab-count-all-badge">{{ $teamCounts['total'] ?? 0 }} Members</span>
-                                <button type="button" class="team-refresh-btn" onclick="fetchTeams(1)" title="Refresh Team Roster">
-                                    <i class="fa-solid fa-arrows-rotate"></i>
-                                </button>
+                                <h1 class="team-toolbar-title">Team Members</h1>
                             </div>
-                            <div class="team-toolbar-subtitle">Manage organization team members, workloads, roles and company communication representatives.</div>
+                            <div class="team-toolbar-subtitle">Manage your team and configure who represents your company for external communication through Jero Marketplace.</div>
                         </div>
                     </div>
 
                     <div class="team-toolbar-right">
-                        <!-- Dynamic Right Search Sub-Card (300ms Debounce + Clear 'X') -->
-                        <div class="team-search-subcard">
-                            <i class="fa-solid fa-magnifying-glass team-search-icon"></i>
-                            <input type="text" id="kt_tagify_2" class="team-search-input" placeholder="Search by name, email or designation..." autocomplete="off" />
-                            <button type="button" class="team-search-clear" onclick="clearTeamFilters()" title="Clear Search">✕</button>
-                        </div>
-
-                        <!-- Action Button: Invite Team Member -->
+                        <!-- Action Button: Invite Member -->
                         <button type="button" class="team-btn-primary" id="openInviteDrawer">
-                            <i class="fa-solid fa-user-plus"></i>
-                            <span>Invite Team Member</span>
-                        </button>
-
-                        <!-- Secondary Action: Export -->
-                        <button type="button" class="team-btn-light" onclick="exportTeam()" title="Export or print team roster">
-                            <i class="fa-solid fa-arrow-up-from-bracket"></i>
-                            <span>Export</span>
+                            <i class="fa-solid fa-plus me-1"></i>
+                            <span>Invite Member</span>
                         </button>
                     </div>
                 </div>
 
                 <!-- ============================================================== -->
-                <!-- DEDICATED “COMPANY COMMUNICATION REPRESENTATIVES” SECTION       -->
+                <!-- MARKETPLACE COMMUNICATION CONTACTS (3-Column Executive Card)    -->
                 <!-- ============================================================== -->
-                <!-- ============================================================== -->
-                <!-- EXECUTIVE SPOC & REPRESENTATION HUB (Rule 20 Card + Sub-Card Standard) -->
-                <!-- ============================================================== -->
-                <div class="team-spoc-card">
-                    <div class="team-spoc-grid">
+                <div class="team-mp-contacts-card mb-4">
+                    <div class="team-mp-contacts-grid">
                         
-                        <!-- SPOC Sub-Card 1: Client Communication Representative -->
-                        <div class="tm-spoc-subcard tm-spoc-client">
-                            <div class="tm-spoc-header">
-                                <span class="tm-spoc-badge tm-spoc-badge-client">
-                                    <i class="fa-solid fa-user-tie me-1"></i>Client SPOC
-                                </span>
-                                <span class="tm-spoc-scope-hint">Visible to Direct Clients</span>
+                        <!-- Column 1: Marketplace Communication Contacts Overview -->
+                        <div class="tm-mp-col tm-mp-overview-col">
+                            <div class="d-flex align-items-start gap-3">
+                                <div class="tm-mp-icon-wrap bg-light-teal text-teal">
+                                    <i class="fa-solid fa-bullhorn fs-4"></i>
+                                </div>
+                                <div>
+                                    <h3 class="tm-mp-col-title">Marketplace Communication Contacts</h3>
+                                    <p class="tm-mp-col-desc">Select team members who will be the default contact for client and agency communication through Jero Marketplace.</p>
+                                </div>
                             </div>
-                            <div class="tm-spoc-body" id="spotlightClientRepBox">
+                            <div class="tm-mp-info-box">
+                                <i class="fa-solid fa-circle-info text-primary mt-1"></i>
+                                <span>When your company is discovered through Jero Marketplace Search or a relevant Job Request is initiated, the selected contact person's business contact details will be shared with the client or agency for communication.</span>
+                            </div>
+                        </div>
+
+                        <!-- Column 2: Client & Sales Communication -->
+                        <div class="tm-mp-col tm-mp-box tm-mp-client-box">
+                            <div class="tm-mp-box-head">
+                                <div class="d-flex align-items-center gap-2">
+                                    <div class="tm-mp-box-icon text-success bg-white shadow-xs">
+                                        <i class="fa-solid fa-building"></i>
+                                    </div>
+                                    <div class="tm-mp-box-title">Client &amp; Sales Communication</div>
+                                </div>
+                                <span class="badge badge-light-success text-success fw-bold fs-9">
+                                    <i class="fa-solid fa-crown me-1"></i>Default Contact
+                                </span>
+                            </div>
+                            <div class="tm-mp-box-subtitle">
+                                Used for client enquiries, sales communication, profile discovery and client job requests.
+                            </div>
+                            <div class="tm-mp-profile-box" id="spotlightClientRepBox">
                                 @if(!empty($clientRep))
                                     @php
                                         $crInit = strtoupper(substr($clientRep['name'] ?? 'C', 0, 1));
                                     @endphp
-                                    <div class="tm-spoc-avatar bg-light-primary text-primary">
+                                    <div class="tm-mp-avatar">
                                         @if(!empty($clientRep['image']))
                                             <img src="{{ $clientRep['image'] }}" alt="{{ $clientRep['name'] }}" style="width:100%; height:100%; border-radius:6px; object-fit:cover;">
                                         @else
                                             {{ $crInit }}
                                         @endif
                                     </div>
-                                    <div class="tm-spoc-details">
-                                        <div class="tm-spoc-name-row">
-                                            <span class="tm-spoc-name" id="spotlightClientRepName">{{ $clientRep['name'] }}</span>
-                                            <span class="tm-spoc-role" id="spotlightClientRepDesig">({{ $clientRep['designation'] ?? 'Representative' }})</span>
-                                        </div>
-                                        <div class="tm-spoc-contact">
+                                    <div class="tm-mp-profile-details">
+                                        <div class="tm-mp-profile-name" id="spotlightClientRepName">{{ $clientRep['name'] }}</div>
+                                        <div class="tm-mp-profile-role" id="spotlightClientRepDesig">{{ $clientRep['designation'] ?? 'Administrator' }}</div>
+                                        <div class="tm-mp-profile-contact">
                                             <span id="spotlightClientRepEmail"><i class="fa-regular fa-envelope me-1"></i>{{ $clientRep['email'] }}</span>
                                             @if(!empty($clientRep['mobile']))
-                                                <span class="tm-spoc-bullet">•</span>
                                                 <span id="spotlightClientRepMobile"><i class="fa-solid fa-phone me-1"></i>{{ $clientRep['mobile'] }}</span>
                                             @endif
                                         </div>
                                     </div>
+                                    <button type="button" class="btn-mp-change" onclick="openRepModal('client')" title="Change Client &amp; Sales Contact">
+                                        Change Contact
+                                    </button>
                                 @else
-                                    <div class="d-flex align-items-center gap-2 text-muted py-1">
-                                        <i class="fa-solid fa-user-slash text-muted fs-6"></i>
-                                        <span class="fs-8 fw-semibold">No Client Representative Assigned</span>
+                                    <div class="d-flex align-items-center justify-content-between w-100 py-1">
+                                        <span class="fs-8 text-muted">No Contact Assigned</span>
+                                        <button type="button" class="btn-mp-change" onclick="openRepModal('client')">Assign Contact</button>
                                     </div>
                                 @endif
                             </div>
-                            <div class="tm-spoc-footer">
-                                <button type="button" class="tm-spoc-btn tm-spoc-btn-client" onclick="openRepModal('client')" title="Change Client Representative">
-                                    <i class="fa-solid fa-user-pen me-1"></i>Change Client Rep
-                                </button>
-                            </div>
                         </div>
 
-                        <!-- SPOC Sub-Card 2: Agency Communication Representative -->
-                        <div class="tm-spoc-subcard tm-spoc-agency">
-                            <div class="tm-spoc-header">
-                                <span class="tm-spoc-badge tm-spoc-badge-agency">
-                                    <i class="fa-solid fa-building-user me-1"></i>Agency SPOC
+                        <!-- Column 3: Agency Communication -->
+                        <div class="tm-mp-col tm-mp-box tm-mp-agency-box">
+                            <div class="tm-mp-box-head">
+                                <div class="d-flex align-items-center gap-2">
+                                    <div class="tm-mp-box-icon text-purple bg-white shadow-xs">
+                                        <i class="fa-solid fa-users"></i>
+                                    </div>
+                                    <div class="tm-mp-box-title">Agency Communication</div>
+                                </div>
+                                <span class="badge badge-light-purple text-purple fw-bold fs-9">
+                                    <i class="fa-solid fa-crown me-1"></i>Default Contact
                                 </span>
-                                <span class="tm-spoc-scope-hint">Visible to Partner Agencies</span>
                             </div>
-                            <div class="tm-spoc-body" id="spotlightAgencyRepBox">
+                            <div class="tm-mp-box-subtitle">
+                                Used for agency enquiries, job requests, candidate submissions and other marketplace communication.
+                            </div>
+                            <div class="tm-mp-profile-box" id="spotlightAgencyRepBox">
                                 @if(!empty($agencyRep))
                                     @php
                                         $arInit = strtoupper(substr($agencyRep['name'] ?? 'A', 0, 1));
                                     @endphp
-                                    <div class="tm-spoc-avatar bg-light-success text-success">
+                                    <div class="tm-mp-avatar">
                                         @if(!empty($agencyRep['image']))
                                             <img src="{{ $agencyRep['image'] }}" alt="{{ $agencyRep['name'] }}" style="width:100%; height:100%; border-radius:6px; object-fit:cover;">
                                         @else
                                             {{ $arInit }}
                                         @endif
                                     </div>
-                                    <div class="tm-spoc-details">
-                                        <div class="tm-spoc-name-row">
-                                            <span class="tm-spoc-name" id="spotlightAgencyRepName">{{ $agencyRep['name'] }}</span>
-                                            <span class="tm-spoc-role" id="spotlightAgencyRepDesig">({{ $agencyRep['designation'] ?? 'Representative' }})</span>
-                                        </div>
-                                        <div class="tm-spoc-contact">
+                                    <div class="tm-mp-profile-details">
+                                        <div class="tm-mp-profile-name" id="spotlightAgencyRepName">{{ $agencyRep['name'] }}</div>
+                                        <div class="tm-mp-profile-role" id="spotlightAgencyRepDesig">{{ $agencyRep['designation'] ?? 'Administrator' }}</div>
+                                        <div class="tm-mp-profile-contact">
                                             <span id="spotlightAgencyRepEmail"><i class="fa-regular fa-envelope me-1"></i>{{ $agencyRep['email'] }}</span>
                                             @if(!empty($agencyRep['mobile']))
-                                                <span class="tm-spoc-bullet">•</span>
                                                 <span id="spotlightAgencyRepMobile"><i class="fa-solid fa-phone me-1"></i>{{ $agencyRep['mobile'] }}</span>
                                             @endif
                                         </div>
                                     </div>
+                                    <button type="button" class="btn-mp-change" onclick="openRepModal('agency')" title="Change Agency Contact">
+                                        Change Contact
+                                    </button>
                                 @else
-                                    <div class="d-flex align-items-center gap-2 text-muted py-1">
-                                        <i class="fa-solid fa-building-circle-xmark text-muted fs-6"></i>
-                                        <span class="fs-8 fw-semibold">No Agency Representative Assigned</span>
+                                    <div class="d-flex align-items-center justify-content-between w-100 py-1">
+                                        <span class="fs-8 text-muted">No Contact Assigned</span>
+                                        <button type="button" class="btn-mp-change" onclick="openRepModal('agency')">Assign Contact</button>
                                     </div>
                                 @endif
-                            </div>
-                            <div class="tm-spoc-footer">
-                                <button type="button" class="tm-spoc-btn tm-spoc-btn-agency" onclick="openRepModal('agency')" title="Change Agency Representative">
-                                    <i class="fa-solid fa-user-pen me-1"></i>Change Agency Rep
-                                </button>
-                            </div>
-                        </div>
-
-                        <!-- SPOC Sub-Card 3: Authoritative Hierarchy & Rules Trigger -->
-                        <div class="tm-spoc-subcard tm-spoc-rules">
-                            <div class="tm-spoc-header">
-                                <span class="tm-spoc-badge tm-spoc-badge-rules">
-                                    <i class="fa-solid fa-shield-halved me-1"></i>Representation Model
-                                </span>
-                                <span class="tm-spoc-scope-hint">Resolution Hierarchy</span>
-                            </div>
-                            <div class="tm-spoc-rules-body">
-                                <div class="tm-spoc-rules-flow">
-                                    <span class="tm-rule-step" title="1st Priority: Specific job and agency relationship">Job Sharer</span>
-                                    <i class="fa-solid fa-arrow-right fs-9 text-muted"></i>
-                                    <span class="tm-rule-step" title="2nd Priority: Partner addition attribution">Agency Adder</span>
-                                    <i class="fa-solid fa-arrow-right fs-9 text-muted"></i>
-                                    <span class="tm-rule-step active" title="3rd Priority: Default Company Representative">Default SPOC</span>
-                                </div>
-                                <div class="tm-spoc-rules-caption">
-                                    Authoritative identity shown on invitations and direct client pipelines.
-                                </div>
-                            </div>
-                            <div class="tm-spoc-footer">
-                                <button type="button" class="tm-spoc-btn tm-spoc-btn-rules" data-bs-toggle="modal" data-bs-target="#repRulesModal" title="View Full Representation Rules & Architecture">
-                                    <i class="fa-solid fa-circle-info me-1"></i>View Architecture
-                                </button>
                             </div>
                         </div>
 
@@ -1305,37 +1349,49 @@
                 </div>
 
                 <!-- ============================================================== -->
-                <!-- TIER 2: DEDICATED SUB-TABS CARD (Pure White, Border #e2e8f0)    -->
+                <!-- TIER 2: SUB-TABS & COMMUNICATION HISTORY ROW                    -->
                 <!-- ============================================================== -->
-                <div class="team-tabs-card">
-                    <div class="team-tabs-group">
-                        <button type="button" class="team-tab-btn active" data-status="all">
+                <div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
+                    <div class="tm-nav-tabs">
+                        <button type="button" class="tm-nav-tab active" data-status="all">
                             <span>All Members</span>
-                            <span class="team-tab-badge" id="tab-count-all">{{ $teamCounts['total'] ?? 0 }}</span>
+                            <span class="tm-nav-count" id="tab-count-all">({{ $teamCounts['total'] ?? 0 }})</span>
                         </button>
-                        <button type="button" class="team-tab-btn" data-status="active">
+                        <button type="button" class="tm-nav-tab" data-status="active">
                             <span>Active</span>
-                            <span class="team-tab-badge" id="tab-count-active">{{ $teamCounts['active'] ?? 0 }}</span>
+                            <span class="tm-nav-count" id="tab-count-active">({{ $teamCounts['active'] ?? 0 }})</span>
                         </button>
-                        <button type="button" class="team-tab-btn" data-status="representatives" title="Filter team members who act as company communication representatives">
-                            <i class="fa-solid fa-bullhorn text-primary me-1"></i>
-                            <span>Representatives</span>
-                            <span class="team-tab-badge" id="tab-count-reps">{{ $teamCounts['representatives'] ?? 0 }}</span>
-                        </button>
-                        <button type="button" class="team-tab-btn" data-status="inactive">
+                        <button type="button" class="tm-nav-tab" data-status="inactive">
                             <span>Inactive</span>
-                            <span class="team-tab-badge" id="tab-count-inactive">{{ $teamCounts['inactive'] ?? 0 }}</span>
+                            <span class="tm-nav-count" id="tab-count-inactive">({{ $teamCounts['inactive'] ?? 0 }})</span>
                         </button>
-                        <button type="button" class="team-tab-btn" data-status="invited">
+                        <button type="button" class="tm-nav-tab" data-status="invited">
                             <span>Invited</span>
-                            <span class="team-tab-badge" id="tab-count-invited">{{ $teamCounts['invited'] ?? 0 }}</span>
+                            <span class="tm-nav-count" id="tab-count-invited">({{ $teamCounts['invited'] ?? 0 }})</span>
                         </button>
                     </div>
 
-                    <div class="team-tabs-right">
-                        <!-- Sort Filter -->
+                    <div>
+                        <button type="button" class="btn btn-sm btn-white border border-gray-300 text-gray-800 fw-semibold shadow-xs" onclick="openAgencySharesModal()" title="View job-level communication mapping and history">
+                            <i class="fa-solid fa-clock-rotate-left me-1 text-muted"></i>
+                            <span>Communication History</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- ============================================================== -->
+                <!-- TIER 2.5: SEARCH & FILTER BAR                                  -->
+                <!-- ============================================================== -->
+                <div class="team-filter-bar mb-3">
+                    <div class="team-filter-search">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                        <input type="text" id="kt_tagify_2" class="team-search-input" placeholder="Search by name, email or phone..." autocomplete="off" />
+                        <button type="button" class="team-search-clear" onclick="clearTeamFilters()" title="Clear Search">✕</button>
+                    </div>
+
+                    <div class="d-flex align-items-center gap-3">
                         <div class="d-flex align-items-center gap-2">
-                            <span class="text-muted fs-8 fw-semibold"><i class="fa-solid fa-arrow-down-short-wide me-1"></i>Sort:</span>
+                            <span class="text-muted fs-8 fw-semibold"><i class="fa-solid fa-arrow-down-short-wide me-1"></i>Sort by:</span>
                             <select class="team-select-control" id="sortingfilter" onchange="fetchTeams(1)">
                                 <option value="">Last Active</option>
                                 <option value="1">Newest to Oldest</option>
@@ -1343,20 +1399,32 @@
                             </select>
                         </div>
 
-                        <!-- Rows Per Page -->
                         <div class="d-flex align-items-center gap-2">
-                            <select class="team-select-control" id="teamPageSizeSelect" onchange="changeTeamPageSize(this.value)">
-                                <option value="10">10 per page</option>
-                                <option value="25">25 per page</option>
-                                <option value="50">50 per page</option>
+                            <span class="text-muted fs-8 fw-semibold">Status:</span>
+                            <select class="team-select-control" id="teamStatusFilterDropdown" onchange="changeStatusDropdown(this.value)">
+                                <option value="all">All</option>
+                                <option value="active">Active</option>
+                                <option value="inactive">Inactive</option>
+                                <option value="invited">Invited</option>
                             </select>
                         </div>
                     </div>
                 </div>
 
                 <!-- ============================================================== -->
-                <!-- TIER 3: PRIMARY CARD STREAM & DISCRETE SUB-CARDS STREAM        -->
+                <!-- TIER 3: ROSTER COLUMN LEGEND & CARD STREAM                     -->
                 <!-- ============================================================== -->
+                <div class="team-roster-legend mb-2">
+                    <div>Member</div>
+                    <div>Rank</div>
+                    <div>Workload</div>
+                    <div>Role</div>
+                    <div>Communication</div>
+                    <div>Status</div>
+                    <div>Last Active</div>
+                    <div style="text-align: center;">Actions</div>
+                </div>
+
                 <div class="position-relative">
                     <div class="loadingMessage loadingMessageteamsListajax" style="display: none; position: absolute; z-index: 20; background: rgba(255,255,255,0.85); inset: 0; padding: 40px; text-align: center; font-weight: 600; color: #009ef7; border-radius: 10px;">
                         <span class="spinner-border spinner-border-sm me-2"></span> Loading team members...
@@ -3468,11 +3536,11 @@
 							if ($('#stat-trm-sub').length) {
 								$('#stat-trm-sub').text(response.counts.trm || 0);
 							}
-							$('#tab-count-all').text(response.counts.total);
+							$('#tab-count-all').text('(' + (response.counts.total || 0) + ')');
 							$('#tab-count-all-badge').text((response.counts.total || 0) + ' Members');
-							$('#tab-count-active').text(response.counts.active);
-							$('#tab-count-inactive').text(response.counts.inactive);
-							$('#tab-count-invited').text(response.counts.invited);
+							$('#tab-count-active').text('(' + (response.counts.active || 0) + ')');
+							$('#tab-count-inactive').text('(' + (response.counts.inactive || 0) + ')');
+							$('#tab-count-invited').text('(' + (response.counts.invited || 0) + ')');
 							if (response.counts.representatives !== undefined) {
 								$('#tab-count-reps').text(response.counts.representatives);
 							}
@@ -3487,13 +3555,21 @@
 				return currentTeamFetchXhr;
 			}
 
-			// Switch status tabs (All / Active / Representatives / Inactive / Invited)
-			$(document).on('click', '.team-tab-btn, .team-tab', function() {
-				$('.team-tab-btn, .team-tab').removeClass('active');
+			// Switch status tabs (All / Active / Inactive / Invited / Representatives)
+			$(document).on('click', '.team-tab-btn, .team-tab, .tm-nav-tab', function() {
+				$('.team-tab-btn, .team-tab, .tm-nav-tab').removeClass('active');
 				$(this).addClass('active');
 				teamStatusTab = $(this).data('status');
+				$('#teamStatusFilterDropdown').val(teamStatusTab);
 				fetchTeams(1);
 			});
+
+			function changeStatusDropdown(val) {
+				teamStatusTab = val;
+				$('.tm-nav-tab, .team-tab-btn, .team-tab').removeClass('active');
+				$('.tm-nav-tab[data-status="' + val + '"]').addClass('active');
+				fetchTeams(1);
+			}
 
 			// Dynamic Search with 300ms debounce
 			var teamSearchTimeout = null;
@@ -3629,29 +3705,29 @@
 			function updateSpotlightUI(type, user) {
 				if (!user) return;
 				var prefix = type === 'client' ? 'Client' : 'Agency';
-				var themeBg = type === 'client' ? 'bg-light-primary text-primary' : 'bg-light-success text-success';
 				var init = (user.name || 'U').charAt(0).toUpperCase();
 
 				var avatarHtml = user.image 
 					? '<img src="' + user.image + '" alt="' + user.name + '" style="width:100%; height:100%; border-radius:6px; object-fit:cover;">' 
 					: init;
 
-				var phoneHtml = user.mobile ? '<span class="tm-spoc-bullet">•</span><span id="spotlight' + prefix + 'RepMobile"><i class="fa-solid fa-phone me-1"></i>' + user.mobile + '</span>' : '';
+				var phoneHtml = user.mobile ? '<span id="spotlight' + prefix + 'RepMobile"><i class="fa-solid fa-phone me-1"></i>' + user.mobile + '</span>' : '';
 
 				var boxHtml = `
-					<div class="tm-spoc-avatar ${themeBg}">
+					<div class="tm-mp-avatar">
 						${avatarHtml}
 					</div>
-					<div class="tm-spoc-details">
-						<div class="tm-spoc-name-row">
-							<span class="tm-spoc-name" id="spotlight${prefix}RepName">${user.name}</span>
-							<span class="tm-spoc-role" id="spotlight${prefix}RepDesig">(${user.designation || 'Representative'})</span>
-						</div>
-						<div class="tm-spoc-contact">
+					<div class="tm-mp-profile-details">
+						<div class="tm-mp-profile-name" id="spotlight${prefix}RepName">${user.name}</div>
+						<div class="tm-mp-profile-role" id="spotlight${prefix}RepDesig">${user.designation || 'Administrator'}</div>
+						<div class="tm-mp-profile-contact">
 							<span id="spotlight${prefix}RepEmail"><i class="fa-regular fa-envelope me-1"></i>${user.email}</span>
 							${phoneHtml}
 						</div>
 					</div>
+					<button type="button" class="btn-mp-change" onclick="openRepModal('${type}')" title="Change Contact">
+						Change Contact
+					</button>
 				`;
 				$('#spotlight' + prefix + 'RepBox').html(boxHtml);
 			}

@@ -930,21 +930,19 @@
 @section('content')
 @php
     $totalAgenciesCount = (int)($spartnerDataCnt['spartnerAll'] ?? 0);
-    $directAgenciesCount = (int)($spartnerDataCnt['clientDirect'] ?? 0);
-    $marketplaceAgenciesCount = (int)($spartnerDataCnt['clientCustom'] ?? max(0, $totalAgenciesCount - $directAgenciesCount));
+    $newlyAddedCount = (int)($spartnerDataCnt['newlyAdded'] ?? 0);
+    $topPerformingCount = (int)($spartnerDataCnt['topPerforming'] ?? 0);
     $activeAgenciesCount = (int)($spartnerDataCnt['workingOnJobs'] ?? 0);
     $inactiveAgenciesCount = (int)max(0, $totalAgenciesCount - $activeAgenciesCount);
     $pendingRequestsCount = (int)($spartnerDataCnt['sentRequest'] ?? 0);
-
-    $directPercent = ($totalAgenciesCount > 0) ? round(($directAgenciesCount / $totalAgenciesCount) * 100) : 0;
 @endphp
 
 <script>
     // ── Authoritative Single Source of Truth for Agency Tab Counters ──
     window.AGENCY_DATA_COUNTERS = {
         spartnerAll: {{ (int)($totalAgenciesCount ?? 0) }},
-        spartnerCustom: {{ (int)($marketplaceAgenciesCount ?? 0) }},
-        spartnerDirect: {{ (int)($directAgenciesCount ?? 0) }},
+        spartnerNewlyAdded: {{ (int)($newlyAddedCount ?? 0) }},
+        spartnerTopPerforming: {{ (int)($topPerformingCount ?? 0) }},
         spartnerHiring: {{ (int)($activeAgenciesCount ?? 0) }},
         spartnerInactive: {{ (int)($inactiveAgenciesCount ?? 0) }},
         spartnerRequest: {{ (int)($pendingRequestsCount ?? 0) }}
@@ -954,8 +952,8 @@
         if (!counts || typeof counts !== 'object') return;
 
         var all = counts.spartnerAll !== undefined ? Number(counts.spartnerAll) : null;
-        var direct = counts.spartnerDirect !== undefined ? Number(counts.spartnerDirect) : null;
-        var custom = counts.spartnerCustom !== undefined ? Number(counts.spartnerCustom) : null;
+        var newlyAdded = counts.spartnerNewlyAdded !== undefined ? Number(counts.spartnerNewlyAdded) : null;
+        var topPerforming = counts.spartnerTopPerforming !== undefined ? Number(counts.spartnerTopPerforming) : null;
         var hiring = counts.spartnerHiring !== undefined ? Number(counts.spartnerHiring) : null;
         var inactive = counts.spartnerInactive !== undefined ? Number(counts.spartnerInactive) : null;
         var request = counts.spartnerRequest !== undefined ? Number(counts.spartnerRequest) : null;
@@ -964,13 +962,13 @@
             $('#span_spartnerAll').text(all);
             window.AGENCY_DATA_COUNTERS.spartnerAll = all;
         }
-        if (custom !== null && !isNaN(custom)) {
-            $('#span_spartnerCustom').text(custom);
-            window.AGENCY_DATA_COUNTERS.spartnerCustom = custom;
+        if (newlyAdded !== null && !isNaN(newlyAdded)) {
+            $('#span_spartnerNewlyAdded').text(newlyAdded);
+            window.AGENCY_DATA_COUNTERS.spartnerNewlyAdded = newlyAdded;
         }
-        if (direct !== null && !isNaN(direct)) {
-            $('#span_spartnerDirect').text(direct);
-            window.AGENCY_DATA_COUNTERS.spartnerDirect = direct;
+        if (topPerforming !== null && !isNaN(topPerforming)) {
+            $('#span_spartnerTopPerforming').text(topPerforming);
+            window.AGENCY_DATA_COUNTERS.spartnerTopPerforming = topPerforming;
         }
         if (hiring !== null && !isNaN(hiring)) {
             $('#span_spartnerHiring').text(hiring);
@@ -1118,45 +1116,46 @@
                 </div>
             </a>
 
-            {{-- Card 2: Marketplace Partners --}}
-            <a href="#" onclick="setAgencyTab('internal', this); return false;" class="cl-card" data-tab="internal">
+            {{-- Card 2: Newly Added Agencies --}}
+            <a href="#" onclick="setAgencyTab('newly_added', this); return false;" class="cl-card" data-tab="newly_added">
                 <div class="cl-card-top">
                     <div class="cl-card-icon indigo">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
-                            <polyline points="9 22 9 12 15 12 15 22"/>
+                            <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+                            <circle cx="9" cy="7" r="4"/>
+                            <line x1="19" y1="8" x2="19" y2="14"/>
+                            <line x1="22" y1="11" x2="16" y2="11"/>
                         </svg>
                     </div>
                     <div class="cl-card-meta">
-                        <div class="cl-card-num" id="span_spartnerCustom">{{ $marketplaceAgenciesCount }}</div>
-                        <div class="cl-card-lbl">Marketplace Partners</div>
+                        <div class="cl-card-num" id="span_spartnerNewlyAdded">{{ $newlyAddedCount }}</div>
+                        <div class="cl-card-lbl">Newly Added</div>
                     </div>
                 </div>
                 <div class="cl-card-sub blue">
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><path d="m18 15-6-6-6 6"/></svg>
-                    <span>{{ $marketplaceAgenciesCount }} active partners</span>
+                    <span>Upto 180 days (max 10)</span>
                 </div>
             </a>
 
-            {{-- Card 3: Direct Agencies --}}
-            <a href="#" onclick="setAgencyTab('direct', this); return false;" class="cl-card" data-tab="direct">
+            {{-- Card 3: Top Performing Agencies --}}
+            <a href="#" onclick="setAgencyTab('top_performing', this); return false;" class="cl-card" data-tab="top_performing">
                 <div class="cl-card-top">
                     <div class="cl-card-icon green">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <rect x="4" y="2" width="16" height="20" rx="2" ry="2"/>
-                            <path d="M9 22v-4h6v4"/><path d="M8 6h.01"/><path d="M16 6h.01"/><path d="M8 10h.01"/><path d="M16 10h.01"/>
+                            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
                         </svg>
                     </div>
                     <div class="cl-card-meta">
-                        <div class="cl-card-num" id="span_spartnerDirect">{{ $directAgenciesCount }}</div>
-                        <div class="cl-card-lbl">Direct Agencies</div>
+                        <div class="cl-card-num" id="span_spartnerTopPerforming">{{ $topPerformingCount }}</div>
+                        <div class="cl-card-lbl">Top Performing</div>
                     </div>
                 </div>
                 <div class="cl-card-sub green">
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><polyline points="17 11 19 13 23 9"/>
+                        <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/>
                     </svg>
-                    <span>{{ $directPercent }}% of total</span>
+                    <span>High placement score</span>
                 </div>
             </a>
 
@@ -1468,7 +1467,11 @@
         $(el).addClass('active');
         if (window.AgencyListingManager) {
             window.AgencyListingManager.activeTab = tabKey;
-            if (tabKey === 'hiring') {
+            if (tabKey === 'newly_added') {
+                window.AgencyListingManager.perfFilter = '';
+            } else if (tabKey === 'top_performing') {
+                window.AgencyListingManager.perfFilter = 'high';
+            } else if (tabKey === 'hiring') {
                 window.AgencyListingManager.perfFilter = 'high';
             } else if (tabKey === 'inactive') {
                 window.AgencyListingManager.perfFilter = 'low';
@@ -1824,6 +1827,7 @@
                 url: `{{ route('service_company.consultancy.data_ajax') }}?page=${this.currentPage}`,
                 type: 'GET',
                 data: {
+                    tab: self.activeTab,
                     search: self.searchQuery,
                     cus_search: self.searchQuery,
                     country: self.countryFilter,

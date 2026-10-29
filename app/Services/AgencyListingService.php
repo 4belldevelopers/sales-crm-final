@@ -297,6 +297,35 @@ class AgencyListingService
                 ->distinct('job_applications.thirdparty_company_id')
                 ->count('job_applications.thirdparty_company_id');
 
+            // 9. Newly Added Agencies: joined within last 180 days (capped at 10)
+            $recent180Ids = DB::table('staffing_company_relation')
+                ->where('from_company_id', $companyId)
+                ->where('final_status', 1)
+                ->where('created_at', '>=', now()->subDays(180))
+                ->pluck('to_company_id')
+                ->unique()
+                ->values()
+                ->toArray();
+            $counters['newlyAdded'] = min(10, count($recent180Ids));
+            $counters['newlyAddedTotal'] = count($recent180Ids);
+
+            // 10. Top Performing Agencies: agencies with verified pipeline activity / placements
+            $topAgencyCount = 0;
+            if (! empty($connectedAgencyIds)) {
+                $topAgencyCount = DB::table('add_job_wise_condidates')
+                    ->join('recommendation_relation', function ($join) use ($companyId) {
+                        $join->on('recommendation_relation.job_id', '=', 'add_job_wise_condidates.job_id')
+                            ->on('recommendation_relation.to_company_id', '=', 'add_job_wise_condidates.thirdparty_company_id')
+                            ->where('recommendation_relation.from_company_id', '=', $companyId)
+                            ->where('recommendation_relation.final_status', '=', 1);
+                    })
+                    ->whereIn('add_job_wise_condidates.thirdparty_company_id', $connectedAgencyIds)
+                    ->whereIn('add_job_wise_condidates.master_status_id', [3, 6, 7, 10])
+                    ->distinct()
+                    ->count('add_job_wise_condidates.thirdparty_company_id');
+            }
+            $counters['topPerforming'] = $topAgencyCount;
+
             return $counters;
         });
     }

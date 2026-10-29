@@ -74,269 +74,202 @@
                 }
             @endphp
 
-            <!-- Primary Team Member Card -->
+            <!-- Primary Team Member Card (Rule 20 Enterprise Card + Sub-Card System) -->
             <div class="team-card js-team-card" 
                  data-user-id="{{ $row->id }}" 
                  data-is-client-rep="{{ $isClientRep ? '1' : '0' }}" 
                  data-is-agency-rep="{{ $isAgencyRep ? '1' : '0' }}"
                  style="border-left: 3.5px solid {{ $cardAccent }};">
                 
-                <!-- Upper Discrete Sub-Cards Grid (5 Sections) -->
+                <!-- Discrete Sub-Cards Grid (Aligned with Modern 8-Column Roster Standard) -->
                 <div class="team-card-grid">
                     
-                    <!-- Sub-Card 1: Member Identity & Contact -->
-                    <div class="tm-subcard tm-subcard-profile">
-                        <div class="tm-subcard-header">
-                            <span class="tm-subcard-label"><i class="fa-regular fa-user me-1 text-muted"></i>Member</span>
-                            @if(!$isInvited)
-                                <span class="tm-badge-status {{ strtolower($row->status ?? '') === 'active' ? 'status-active' : 'status-inactive' }}">
-                                    {{ strtolower($row->status ?? '') === 'active' ? 'Active' : 'Inactive' }}
-                                </span>
-                            @else
-                                <span class="tm-badge-status status-invited">Invited</span>
-                            @endif
-                        </div>
-                        <div class="tm-subcard-body">
-                            <div class="d-flex align-items-center">
-                                <div class="team-avatar {{ $avatarClass }} show-detail-team me-3" data-row-id="{{ $row->id }}" style="cursor:pointer;" title="View Profile">
-                                    @if (!empty($row->image))
-                                        <img src="{{ $row->image }}" alt="{{ $rawName }}">
-                                    @else
-                                        {{ strtoupper($strVal) }}
-                                    @endif
-                                </div>
-                                <div class="d-flex flex-column overflow-hidden">
-                                    <a href="javascript:void(0);" class="team-member-name show-detail-team" data-row-id="{{ $row->id }}" title="{{ ucwords(strtolower($rawName)) }}">
-                                        {{ ucwords(strtolower(mb_substr($rawName, 0, 24))) }}
-                                    </a>
-                                    @if (!empty($row->designation))
-                                        <span class="team-member-role" title="{{ $row->designation }}">{{ ucwords(strtolower($row->designation)) }}</span>
-                                    @else
-                                        <span class="team-member-role text-muted">Team Member</span>
-                                    @endif
-                                    <span class="team-member-mail" title="{{ $row->email }}">
-                                        <i class="fa-regular fa-envelope me-1"></i>{{ $row->email }}
-                                    </span>
-                                    @if(!empty($phone))
-                                        <span class="team-member-phone" title="{{ $phone }}">
-                                            <i class="fa-solid fa-phone me-1"></i>{{ $phone }}
-                                        </span>
-                                    @endif
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Sub-Card 2: Communication Representation Role & One-Click Actions -->
-                    <div class="tm-subcard tm-subcard-rep">
-                        <div class="tm-subcard-header">
-                            <span class="tm-subcard-label"><i class="fa-solid fa-bullhorn me-1 text-primary"></i>Representation</span>
-                            @if($isClientRep && $isAgencyRep)
-                                <span class="badge-rep-pill badge-rep-dual" title="Default representative for both Clients & Agencies"><i class="fa-solid fa-star me-1"></i>Dual Rep</span>
-                            @elseif($isClientRep)
-                                <span class="badge-rep-pill badge-rep-client" title="Default representative for Client communication"><i class="fa-solid fa-user-tie me-1"></i>Client Rep</span>
-                            @elseif($isAgencyRep)
-                                <span class="badge-rep-pill badge-rep-agency" title="Default representative for Agency communication"><i class="fa-solid fa-building-user me-1"></i>Agency Rep</span>
-                            @else
-                                <span class="badge-rep-pill badge-rep-standard">Standard</span>
-                            @endif
-                        </div>
-                        <div class="tm-subcard-body">
-                            <!-- Scope explanation in clean executive format -->
-                            <div class="team-rep-scope-box">
-                                @if($isClientRep && $isAgencyRep)
-                                    <div class="rep-scope-desc text-primary fw-semibold fs-8">
-                                        <i class="fa-solid fa-star text-warning me-1"></i>Primary SPOC for Clients &amp; Agencies
-                                    </div>
-                                    <div class="rep-scope-hint fs-9 text-muted">Direct client views &amp; shared partner jobs</div>
-                                @elseif($isClientRep)
-                                    <div class="rep-scope-desc text-primary fw-semibold fs-8">
-                                        <i class="fa-solid fa-user-tie text-primary me-1"></i>Client Communication SPOC
-                                    </div>
-                                    <div class="rep-scope-hint fs-9 text-muted">Shown on client requisitions &amp; pipelines</div>
-                                @elseif($isAgencyRep)
-                                    <div class="rep-scope-desc text-success fw-semibold fs-8">
-                                        <i class="fa-solid fa-building-user text-success me-1"></i>Agency Partner SPOC
-                                    </div>
-                                    <div class="rep-scope-hint fs-9 text-muted">Default contact on agency job invitations</div>
+                    <!-- Sub-Card 1: Member Identity -->
+                    <div class="tm-subcard-cell tm-cell-member">
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="team-avatar {{ $avatarClass }} show-detail-team" data-row-id="{{ $row->id }}" style="cursor:pointer;" title="View Profile">
+                                @if (!empty($row->image))
+                                    <img src="{{ $row->image }}" alt="{{ $rawName }}">
                                 @else
-                                    <div class="rep-scope-desc text-muted fs-8">
-                                        @if($agencyShares > 0)
-                                            <span class="text-dark fw-semibold"><i class="fa-solid fa-diagram-project text-primary me-1"></i>Represents <strong>{{ $agencyShares }}</strong> shared {{ $agencyShares === 1 ? 'job' : 'jobs' }}</span>
-                                        @else
-                                            <i class="fa-regular fa-circle-dot me-1 text-muted"></i>Internal Contributor
-                                        @endif
-                                    </div>
-                                    <div class="rep-scope-hint fs-9 text-muted">
-                                        @if($agencyShares > 0)
-                                            Job-level authoritative attribution
-                                        @else
-                                            Standard organization permissions
-                                        @endif
-                                    </div>
+                                    {{ strtoupper($strVal) }}
                                 @endif
                             </div>
-
-                            <!-- Layman Action Buttons -->
-                            <div class="team-rep-btn-row">
-                                @if(!$isClientRep)
-                                    <button type="button" class="btn-rep-toggle btn-rep-client" onclick="setRepresentative({{ $row->id }}, 'client', '{{ addslashes($rawName) }}')" title="Make this user the company face shown to Clients">
-                                        <i class="fa-solid fa-user-check me-1 text-primary"></i>Set Client Rep
-                                    </button>
-                                @endif
-                                @if(!$isAgencyRep)
-                                    <button type="button" class="btn-rep-toggle btn-rep-agency" onclick="setRepresentative({{ $row->id }}, 'agency', '{{ addslashes($rawName) }}')" title="Make this user the company face shown to Agencies">
-                                        <i class="fa-solid fa-building-circle-check me-1 text-success"></i>Set Agency Rep
-                                    </button>
-                                @endif
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Sub-Card 3: Workload & Requisition Scope -->
-                    <div class="tm-subcard tm-subcard-workload">
-                        <div class="tm-subcard-header">
-                            <span class="tm-subcard-label"><i class="fa-solid fa-briefcase me-1 text-muted"></i>Workload &amp; Reach</span>
-                        </div>
-                        <div class="tm-subcard-body">
-                            <div class="tm-workload-grid">
-                                <div class="tm-wl-cell" title="Active Jobs Assigned">
-                                    <span class="tm-wl-val"><i class="fa-solid fa-briefcase text-primary me-1"></i>{{ $activeJobs }}</span>
-                                    <span class="tm-wl-lbl">Active Jobs</span>
-                                </div>
-                                <div class="tm-wl-cell" title="SPOC / Captain on Jobs">
-                                    <span class="tm-wl-val text-purple"><i class="fa-solid fa-crown text-purple me-1"></i>{{ $captainJobs }}</span>
-                                    <span class="tm-wl-lbl">Captain SPOC</span>
-                                </div>
-                                <div class="tm-wl-cell" title="Bench Talents Managed">
-                                    <span class="tm-wl-val text-success"><i class="fa-solid fa-users text-success me-1"></i>{{ $trmTalents }}</span>
-                                    <span class="tm-wl-lbl">TRM Talents</span>
-                                </div>
-                                <div class="tm-wl-cell" title="Jobs Shared with Partner Agencies">
-                                    <span class="tm-wl-val text-indigo"><i class="fa-solid fa-share-nodes text-indigo me-1"></i>{{ $agencyShares }}</span>
-                                    <span class="tm-wl-lbl">Agency Shares</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Sub-Card 4: Performance & Rank -->
-                    <div class="tm-subcard tm-subcard-rank">
-                        <div class="tm-subcard-header">
-                            <span class="tm-subcard-label"><i class="fa-solid fa-chart-line me-1 text-muted"></i>Performance</span>
-                        </div>
-                        <div class="tm-subcard-body">
-                            <div class="d-flex flex-column align-items-start">
-                                <div class="tm-rank-val">
-                                    {!! $medal !!} <strong>{{ $teamRanks->rank }}</strong>
-                                    @if (!empty($teamRanks->rankMonth))
-                                        <span class="tm-rank-month">{{ $teamRanks->rankMonth }}</span>
-                                    @endif
-                                </div>
-                                <span class="team-score-link teamViewScore mt-2" data-user-id="{{ $row->id }}" title="Click to view detailed performance scoreboard">
-                                    <i class="fa-solid fa-trophy me-1 text-warning"></i>Score: <strong>{{ $scoreVal }}</strong>
-                                </span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Sub-Card 5: Role & Status Controls -->
-                    <div class="tm-subcard tm-subcard-controls">
-                        <div class="tm-subcard-header">
-                            <span class="tm-subcard-label"><i class="fa-solid fa-shield-halved me-1 text-muted"></i>Access &amp; Role</span>
-                        </div>
-                        <div class="tm-subcard-body">
-                            <div class="d-flex align-items-center justify-content-between mb-2">
-                                <span class="team-role-pill {{ $rolePill }}" title="Assigned system role">
-                                    {{ $roleName }}
-                                </span>
-                                @if ($row->root_user != 1)
-                                    <button type="button" class="team-role-edit-btn update-user-role" data-row-id="{{ $row->id }}" title="Edit Role">
-                                        <i class="fa-solid fa-pen-to-square"></i>
-                                    </button>
-                                @endif
-                            </div>
-
-                            <div class="d-flex align-items-center justify-content-between pt-1">
-                                @if (!empty($row->password))
-                                    <div class="team-status-cell">
-                                        <label class="team-switch">
-                                            <input type="checkbox" class="chkStatus" value="active"
-                                                {{ $row->status == 'active' ? 'checked' : '' }}
-                                                onclick="handleClick(this, {{ $row->id }});"
-                                                {{ $row->root_user == 1 ? 'disabled' : '' }}>
-                                            <span class="slider"></span>
-                                        </label>
-                                        <span class="team-status-text status_text {{ $row->status == 'active' ? 'text-success' : 'text-danger' }} fw-bold ms-2">
-                                            {{ $row->status == 'active' ? 'Active' : 'Inactive' }}
-                                        </span>
-                                    </div>
-                                @else
-                                    <a href="javascript:;" class="text-primary fw-semibold fs-8" onclick="reSendhandleClick(this, {{ $row->id }});">
-                                        <i class="fa-solid fa-arrows-rotate me-1"></i>Resend Invite
-                                    </a>
-                                @endif
-
-                                <div class="team-action-wrap">
-                                    <button class="team-action-btn" onclick="toggleTeamMenu(this)" title="More Actions">
-                                        <i class="fa-solid fa-ellipsis-vertical"></i>
-                                    </button>
-                                    <div class="team-action-menu">
-                                        <a class="team-action-item show-detail-team" data-row-id="{{ $row->id }}">
-                                            <i class="fa-regular fa-id-card me-2"></i>View Profile
-                                        </a>
-                                        @if ($row->root_user != 1)
-                                            <a class="team-action-item update-user-role" data-row-id="{{ $row->id }}">
-                                                <i class="fa-solid fa-user-shield me-2"></i>Edit Role
-                                            </a>
-                                            @if (empty($row->password))
-                                                <a class="team-action-item" onclick="reSendhandleClick(this, {{ $row->id }});">
-                                                    <i class="fa-solid fa-paper-plane me-2"></i>Resend Invitation
-                                                </a>
-                                            @endif
-                                        @endif
-                                        <a class="team-action-item" onclick="setRepresentative({{ $row->id }}, 'client', '{{ addslashes($rawName) }}')">
-                                            <i class="fa-solid fa-user-tie me-2 text-primary"></i>Set as Client Representative
-                                        </a>
-                                        <a class="team-action-item" onclick="setRepresentative({{ $row->id }}, 'agency', '{{ addslashes($rawName) }}')">
-                                            <i class="fa-solid fa-building-user me-2 text-success"></i>Set as Agency Representative
-                                        </a>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                </div>
-
-                <!-- Bottom Activity & Attributions Strip -->
-                <div class="team-card-bottom">
-                    <div class="tm-bottom-left">
-                        <span class="tm-lastactive">
-                            <span class="team-dot {{ $dotClass }}"></span>
-                            Last Active: <strong>{{ $lastActive }}</strong>
-                        </span>
-                        @if ($row->root_user == 1)
-                            <span class="tm-bullet">&bull;</span>
-                            <span class="tm-root-badge"><i class="fa-solid fa-crown me-1 text-warning"></i>Organization Owner</span>
-                        @endif
-                    </div>
-                    <div class="tm-bottom-right">
-                        @if($agencyShares > 0)
-                            <span class="tm-agency-share-pill">
-                                <i class="fa-solid fa-diagram-project me-1 text-primary"></i>
-                                <span>Authoritative Representative on <strong>{{ $agencyShares }}</strong> shared agency {{ $agencyShares === 1 ? 'job' : 'jobs' }}</span>
-                                <span class="tm-bullet">&bull;</span>
-                                <a href="javascript:void(0);" onclick="openAgencySharesModal({{ $row->id }}, '{{ addslashes($rawName) }}')" class="tm-inspect-link">
-                                    Inspect Mapping
+                            <div class="d-flex flex-column overflow-hidden">
+                                <a href="javascript:void(0);" class="team-member-name show-detail-team" data-row-id="{{ $row->id }}" title="{{ ucwords(strtolower($rawName)) }}">
+                                    {{ ucwords(strtolower(mb_substr($rawName, 0, 24))) }}
                                 </a>
+                                <span class="team-member-mail" title="{{ $row->email }}">
+                                    {{ $row->email }}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Sub-Card 2: Rank & Score -->
+                    <div class="tm-subcard-cell tm-cell-rank">
+                        <div class="d-flex flex-column align-items-start">
+                            <div class="tm-rank-val">
+                                {!! $medal !!} <strong>{{ $teamRanks->rank }}</strong>
+                                @if (!empty($teamRanks->rankMonth))
+                                    <span class="tm-rank-month">{{ $teamRanks->rankMonth }}</span>
+                                @endif
+                            </div>
+                            <span class="badge-score-pill teamViewScore mt-1" data-user-id="{{ $row->id }}" title="Click to view detailed performance scoreboard">
+                                View Score
                             </span>
+                        </div>
+                    </div>
+
+                    <!-- Sub-Card 3: Workload -->
+                    <div class="tm-subcard-cell tm-cell-workload">
+                        <div class="d-flex flex-column gap-1">
+                            <span class="tm-wl-pill" title="Active Jobs Assigned">
+                                <i class="fa-solid fa-briefcase text-primary me-1"></i><strong>{{ $activeJobs }}</strong> Active Jobs
+                            </span>
+                            <span class="tm-wl-pill" title="SPOC / Captain on Jobs">
+                                <i class="fa-solid fa-crown text-purple me-1"></i><strong>{{ $captainJobs }}</strong> Captain Jobs
+                            </span>
+                            <span class="tm-wl-pill" title="Bench Talents Managed">
+                                <i class="fa-solid fa-users text-success me-1"></i><strong>{{ $trmTalents }}</strong> TRM Talents
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Sub-Card 4: Role & Permissions -->
+                    <div class="tm-subcard-cell tm-cell-role">
+                        <div class="d-flex align-items-center gap-1">
+                            <span class="team-role-pill {{ $rolePill }}" title="Assigned system role">
+                                {{ $roleName }}
+                            </span>
+                            @if ($row->root_user != 1)
+                                <button type="button" class="team-role-edit-btn update-user-role" data-row-id="{{ $row->id }}" title="Edit Role">
+                                    <i class="fa-solid fa-pen-to-square"></i>
+                                </button>
+                            @endif
+                        </div>
+                    </div>
+
+                    <!-- Sub-Card 5: Marketplace Communication SPOC -->
+                    <div class="tm-subcard-cell tm-cell-communication">
+                        <div class="d-flex flex-column gap-1">
+                            @if($isClientRep)
+                                <div class="tm-comm-badge client" title="Designated contact for Client & Sales Communication">
+                                    <i class="fa-solid fa-crown me-1 text-success"></i>Client &amp; Sales Contact
+                                </div>
+                            @else
+                                <button type="button" class="btn-comm-action client" onclick="setRepresentative({{ $row->id }}, 'client', '{{ addslashes($rawName) }}')" title="Assign as default Client &amp; Sales Contact">
+                                    <i class="fa-solid fa-building me-1 text-primary"></i>Set as Client &amp; Sales Contact
+                                </button>
+                            @endif
+
+                            @if($isAgencyRep)
+                                <div class="tm-comm-badge agency" title="Designated contact for Partner Agency Communication">
+                                    <i class="fa-solid fa-crown me-1 text-purple"></i>Agency Contact
+                                </div>
+                            @else
+                                <button type="button" class="btn-comm-action agency" onclick="setRepresentative({{ $row->id }}, 'agency', '{{ addslashes($rawName) }}')" title="Assign as default Agency Contact">
+                                    <i class="fa-solid fa-users me-1 text-purple"></i>Set as Agency Contact
+                                </button>
+                            @endif
+                        </div>
+                    </div>
+
+                    <!-- Sub-Card 6: Status Toggle -->
+                    <div class="tm-subcard-cell tm-cell-status">
+                        @if (!empty($row->password))
+                            <div class="team-status-cell">
+                                <label class="team-switch">
+                                    <input type="checkbox" class="chkStatus" value="active"
+                                        {{ $row->status == 'active' ? 'checked' : '' }}
+                                        onclick="handleClick(this, {{ $row->id }});"
+                                        {{ $row->root_user == 1 ? 'disabled' : '' }}>
+                                    <span class="slider"></span>
+                                </label>
+                                <span class="team-status-text status_text {{ $row->status == 'active' ? 'text-success' : 'text-muted' }} fw-bold ms-2">
+                                    {{ ucfirst($row->status) }}
+                                </span>
+                            </div>
+                        @else
+                            <a href="javascript:;" class="text-primary fw-semibold fs-8" onclick="reSendhandleClick(this, {{ $row->id }});">
+                                <i class="fa-solid fa-arrows-rotate me-1"></i>Resend Invite
+                            </a>
                         @endif
                     </div>
+
+                    <!-- Sub-Card 7: Last Active -->
+                    <div class="tm-subcard-cell tm-cell-lastactive">
+                        <div class="d-flex align-items-center gap-1 fs-8 text-muted">
+                            <span class="team-dot {{ $dotClass }}"></span>
+                            <span>{{ $lastActive }}</span>
+                        </div>
+                    </div>
+
+                    <!-- Sub-Card 8: Actions -->
+                    <div class="tm-subcard-cell tm-cell-actions text-center">
+                        <div class="team-action-wrap">
+                            <button class="team-action-btn" onclick="toggleTeamMenu(this)" title="More Actions">
+                                <i class="fa-solid fa-ellipsis-vertical"></i>
+                            </button>
+                            <div class="team-action-menu">
+                                <a class="team-action-item show-detail-team" data-row-id="{{ $row->id }}">
+                                    <i class="fa-regular fa-id-card me-2"></i>View Profile
+                                </a>
+                                @if ($row->root_user != 1)
+                                    <a class="team-action-item update-user-role" data-row-id="{{ $row->id }}">
+                                        <i class="fa-solid fa-user-shield me-2"></i>Edit Role
+                                    </a>
+                                    @if (empty($row->password))
+                                        <a class="team-action-item" onclick="reSendhandleClick(this, {{ $row->id }});">
+                                            <i class="fa-solid fa-paper-plane me-2"></i>Resend Invitation
+                                        </a>
+                                    @endif
+                                @endif
+                                <a class="team-action-item" onclick="setRepresentative({{ $row->id }}, 'client', '{{ addslashes($rawName) }}')">
+                                    <i class="fa-solid fa-building me-2 text-primary"></i>Set as Client Contact
+                                </a>
+                                <a class="team-action-item" onclick="setRepresentative({{ $row->id }}, 'agency', '{{ addslashes($rawName) }}')">
+                                    <i class="fa-solid fa-users me-2 text-purple"></i>Set as Agency Contact
+                                </a>
+                                @if($agencyShares > 0)
+                                    <a class="team-action-item" onclick="openAgencySharesModal({{ $row->id }}, '{{ addslashes($rawName) }}')">
+                                        <i class="fa-solid fa-diagram-project me-2 text-indigo"></i>Inspect Shared Jobs
+                                    </a>
+                                @endif
+                            </div>
+                        </div>
+                    </div>
+
                 </div>
+
+                <!-- Bottom Activity & Ownership Strip (if owner or shares) -->
+                @if ($row->root_user == 1 || $agencyShares > 0)
+                    <div class="team-card-bottom">
+                        <div class="tm-bottom-left">
+                            @if ($row->root_user == 1)
+                                <span class="tm-root-badge"><i class="fa-solid fa-crown me-1 text-warning"></i>Organization Owner</span>
+                            @endif
+                        </div>
+                        <div class="tm-bottom-right">
+                            @if($agencyShares > 0)
+                                <span class="tm-agency-share-pill">
+                                    <i class="fa-solid fa-diagram-project me-1 text-primary"></i>
+                                    <span>Authoritative Representative on <strong>{{ $agencyShares }}</strong> shared agency {{ $agencyShares === 1 ? 'job' : 'jobs' }}</span>
+                                    <span class="tm-bullet">&bull;</span>
+                                    <a href="javascript:void(0);" onclick="openAgencySharesModal({{ $row->id }}, '{{ addslashes($rawName) }}')" class="tm-inspect-link">
+                                        Inspect Mapping
+                                    </a>
+                                </span>
+                            @endif
+                        </div>
+                    </div>
+                @endif
 
             </div>
         @endforeach
+
+        <div class="d-flex align-items-center justify-content-between pt-2 pb-1 px-1 text-muted fs-8">
+            <div>Showing 1 to {{ count($data) }} of {{ $total ?? count($data) }} members</div>
+        </div>
     </div>
 @else
     <div class="team-empty-card">

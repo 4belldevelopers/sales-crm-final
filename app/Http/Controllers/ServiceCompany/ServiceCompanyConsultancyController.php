@@ -87,6 +87,7 @@ class ServiceCompanyConsultancyController extends ServiceCompanyBaseController
         $performanceFilter = request('agency_performance');
         $slaFilter = request('response_sla');
         $valCheck = request('sortingfilter');
+        $tab = request('tab') ?: request('active_tab', '');
         $page = max((int) $request->input('page', 1), 1);
         $size = (int) ($request->input('per_page') ?? $request->input('size') ?? $request->input('limit') ?? 10);
         $from = ($page - 1) * $size;
@@ -108,6 +109,7 @@ class ServiceCompanyConsultancyController extends ServiceCompanyBaseController
             'custom_search' => $custom_search,
             'user_id' => $userId,
             'valCheck' => $valCheck,
+            'tab' => $tab,
         ];
 
         $versionKey = 'allconsultancy_version_user_'.$userId;
@@ -162,6 +164,23 @@ class ServiceCompanyConsultancyController extends ServiceCompanyBaseController
                 ->unique()
                 ->values()
                 ->toArray();
+
+            // Newly added agencies: joined within last 180 days (capped at 10)
+            if ($tab === 'newly_added') {
+                $recentCompanyIds = DB::table('staffing_company_relation')
+                    ->where('from_company_id', $company_id)
+                    ->where('final_status', 1)
+                    ->where('created_at', '>=', now()->subDays(180))
+                    ->orderBy('created_at', 'desc')
+                    ->pluck('to_company_id')
+                    ->unique()
+                    ->take(10)
+                    ->toArray();
+                $companyIds = array_values(array_intersect($recentCompanyIds, $companyIds));
+                $size = min($size, 10);
+            } elseif ($tab === 'top_performing') {
+                $performanceFilter = 'high';
+            }
         } catch (\Exception $e) {
             $companyIds = [];
         }
@@ -280,7 +299,7 @@ class ServiceCompanyConsultancyController extends ServiceCompanyBaseController
                         $stats = $batchAgencyStats[$cId] ?? null;
                         $score = $stats ? ($stats->all_candidates + $stats->all_interview + $stats->offers + $stats->Joined) : 0;
                         if ($performanceFilter === 'high') {
-                            return $score >= 5;
+                            return $score >= 3 || ($stats && ($stats->all_interview > 0 || $stats->offers > 0 || $stats->Joined > 0));
                         } elseif ($performanceFilter === 'medium') {
                             return $score >= 1 && $score < 5;
                         } elseif ($performanceFilter === 'low') {
