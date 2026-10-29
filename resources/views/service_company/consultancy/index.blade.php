@@ -505,6 +505,7 @@
   display: flex !important;
   flex-direction: column !important;
   position: relative !important;
+  cursor: pointer !important;
 }
 .cl-primary-card:hover {
   border-color: #cbd5e1 !important;
@@ -1284,11 +1285,11 @@
                     </div>
 
                     <div class="loadingMessage loadingMessagestaffingpartnerajax" style="display:none; position:absolute; left:50%; top:50%; transform:translate(-50%, -50%); z-index:10; background:rgba(255,255,255,0.9); padding:10px 20px; border-radius:8px; box-shadow:0 2px 10px rgba(0,0,0,0.1);">Processing...</div>
-                    <div id="staffingpartnerajax"></div>
+                    <div id="staffingpartnerajax">{!! $initialHtml ?? '' !!}</div>
                 </div>
 
                 <!-- ── PAGINATION BAR ── -->
-                <div id="paginationstaffingpartner" class="mt-3"></div>
+                <div id="paginationstaffingpartner" class="mt-3">{!! $initialPagination ?? '' !!}</div>
             </div>
         </div>
         @endif
@@ -1352,9 +1353,209 @@
     </div>
 </div>
 
-@push('scripts')
+@push('footer-script')
 <script>
-    // ── Agency Listing Manager (Strict Rule 17 Isolation) ──
+    // ── Global Filter & Action Callbacks (Strict Rule 17 Isolation) ──
+    window.setAgencyTab = function(tabKey, el) {
+        $('.cl-stat-grid .cl-card').removeClass('active');
+        $(el).addClass('active');
+        if (window.AgencyListingManager) {
+            window.AgencyListingManager.activeTab = tabKey;
+            if (tabKey === 'hiring') {
+                window.AgencyListingManager.perfFilter = 'high';
+            } else if (tabKey === 'inactive') {
+                window.AgencyListingManager.perfFilter = 'low';
+            } else {
+                window.AgencyListingManager.perfFilter = '';
+            }
+            window.AgencyListingManager.loadPage(1);
+        }
+    };
+
+    window.clearAgencySearchInput = function(e) {
+        if (e) e.stopPropagation();
+        $('#kt_tagify_2').val('');
+        $('#clSearchClearBtn, #clSearchMatchCount').hide();
+        if (window.AgencyListingManager) {
+            window.AgencyListingManager.searchQuery = '';
+            window.AgencyListingManager.loadPage(1);
+        }
+    };
+
+    window.toggleLocationDropdown = function(e) {
+        if (e) e.stopPropagation();
+        const $panel = $('#clLocDropdownPanel');
+        const isShown = $panel.hasClass('show');
+        if (window.AgencyListingManager) window.AgencyListingManager.closeAllDropdowns();
+        if (!isShown) $panel.addClass('show');
+    };
+
+    window.selectLocationOption = function(id, name, e) {
+        if (e) e.stopPropagation();
+        $('#locationDisplay').text(name);
+        $('#country').val(id);
+        if (window.AgencyListingManager) {
+            window.AgencyListingManager.countryFilter = id;
+            window.AgencyListingManager.closeAllDropdowns();
+            window.AgencyListingManager.loadPage(1);
+        }
+    };
+
+    window.handleLocationSearchInput = function(e) {
+        const val = (e.target.value || '').toLowerCase();
+        $('#clLocList .cl-loc-item').each(function() {
+            const text = $(this).text().toLowerCase();
+            $(this).toggle(text.indexOf(val) > -1);
+        });
+    };
+
+    window.togglePerfDropdown = function(e) {
+        if (e) e.stopPropagation();
+        const $panel = $('#clPerfDropdownPanel');
+        const isShown = $panel.hasClass('show');
+        if (window.AgencyListingManager) window.AgencyListingManager.closeAllDropdowns();
+        if (!isShown) $panel.addClass('show');
+    };
+
+    window.selectPerfOption = function(val, label, e) {
+        if (e) e.stopPropagation();
+        $('#perfDisplay').text(label);
+        $('#agency_performance').val(val);
+        if (window.AgencyListingManager) {
+            window.AgencyListingManager.perfFilter = val;
+            window.AgencyListingManager.closeAllDropdowns();
+            window.AgencyListingManager.loadPage(1);
+        }
+    };
+
+    window.toggleSortDropdown = function(e) {
+        if (e) e.stopPropagation();
+        const $panel = $('#clSortDropdownPanel');
+        const isShown = $panel.hasClass('show');
+        if (window.AgencyListingManager) window.AgencyListingManager.closeAllDropdowns();
+        if (!isShown) $panel.addClass('show');
+    };
+
+    window.selectSortOption = function(val, label, e) {
+        if (e) e.stopPropagation();
+        $('#sortDisplay').text(label);
+        $('#sortingfilter').val(val);
+        if (window.AgencyListingManager) {
+            window.AgencyListingManager.sortFilter = val;
+            window.AgencyListingManager.closeAllDropdowns();
+            window.AgencyListingManager.loadPage(1);
+        }
+    };
+
+    window.triggerAgencyExport = function(type) {
+        if (type === 'filtered_csv') {
+            const q = (window.AgencyListingManager && window.AgencyListingManager.searchQuery) ? window.AgencyListingManager.searchQuery : '';
+            window.location.href = `{{ url('service_company/consultancy/export/0/1000') }}?search=${encodeURIComponent(q)}`;
+        } else if (type === 'all_csv') {
+            window.location.href = `{{ url('service_company/consultancy/export/0/10000') }}`;
+        } else if (type === 'executive_pdf') {
+            window.print();
+        }
+    };
+
+    window.openAgencyDrawer = function(id) {
+        if (!id) return;
+        $('[data-row-id]').closest('.tbl-r').removeClass('client-selected');
+        $(`[data-row-id="${id}"]`).closest('.tbl-r').addClass('client-selected');
+
+        var drawerEl = document.getElementById('kt_activitiesDirectClient');
+        if (drawerEl) {
+            var opened = false;
+            if (typeof KTDrawer !== 'undefined') {
+                var drawer = (typeof KTDrawer.getInstance === 'function') ? KTDrawer.getInstance(drawerEl) : null;
+                if (!drawer && typeof KTDrawer === 'function') {
+                    try { drawer = new KTDrawer(drawerEl); } catch (e) {}
+                }
+                if (!drawer && typeof KTDrawer.createInstances === 'function') {
+                    try {
+                        KTDrawer.createInstances();
+                        drawer = KTDrawer.getInstance(drawerEl);
+                    } catch (e) {}
+                }
+                if (drawer && typeof drawer.show === 'function') {
+                    drawer.show();
+                    opened = true;
+                }
+            }
+            if (!opened) {
+                var toggleEl = document.getElementById('kt_activitiesDirectClient_toggle');
+                if (toggleEl) {
+                    if (typeof toggleEl.click === 'function') {
+                        toggleEl.click();
+                    } else {
+                        $(toggleEl).trigger('click');
+                    }
+                }
+            }
+            if (!drawerEl.classList.contains('drawer')) {
+                drawerEl.classList.add('drawer', 'drawer-end');
+            }
+            drawerEl.classList.add('drawer-on');
+            drawerEl.style.transform = 'none';
+            drawerEl.style.zIndex = '999999';
+
+            var existingOverlay = document.querySelector('.drawer-overlay');
+            if (!existingOverlay) {
+                var overlay = document.createElement('div');
+                overlay.className = 'drawer-overlay agency-drawer-overlay';
+                overlay.style.zIndex = '999998';
+                overlay.onclick = function() {
+                    window.closeAgencyDrawer();
+                };
+                document.body.appendChild(overlay);
+            }
+        }
+
+        $('#kt_activitiesDirectClient_body').html('<div class="d-flex align-items-center justify-content-center p-10" style="min-height:300px;"><div class="spinner-border text-primary" role="status" style="width:3rem; height:3rem;"></div></div>');
+
+        let url = "{{ route('service_company.consultancy.dviewmore', ':id') }}";
+        url = url.replace(':id', id);
+
+        $.ajax({
+            url: url,
+            type: 'GET',
+            success: function(response) {
+                if (response.status === 'success' && response.view) {
+                    $('#kt_activitiesDirectClient_body').html(response.view);
+                } else if (response.view) {
+                    $('#kt_activitiesDirectClient_body').html(response.view);
+                } else if (typeof response === 'string') {
+                    $('#kt_activitiesDirectClient_body').html(response);
+                }
+            },
+            error: function(xhr) {
+                $('#kt_activitiesDirectClient_body').html('<div class="alert alert-danger m-5">Failed to load agency details. Please try again.</div>');
+            }
+        });
+    };
+
+    window.closeAgencyDrawer = function() {
+        var drawerEl = document.getElementById('kt_activitiesDirectClient');
+        if (drawerEl) {
+            if (typeof KTDrawer !== 'undefined' && typeof KTDrawer.getInstance === 'function') {
+                var inst = KTDrawer.getInstance(drawerEl);
+                if (inst && typeof inst.hide === 'function') {
+                    inst.hide();
+                }
+            }
+            drawerEl.classList.remove('drawer-on');
+            drawerEl.style.removeProperty('transform');
+            drawerEl.style.removeProperty('z-index');
+        }
+        document.querySelectorAll('.drawer-overlay.agency-drawer-overlay, .drawer-overlay').forEach(function(ov) {
+            ov.remove();
+        });
+        document.body.removeAttribute('data-kt-drawer-activities');
+        document.body.removeAttribute('data-kt-drawer');
+        document.body.style.overflow = '';
+    };
+
+    // ── Agency Listing Manager Object ──
     const AgencyListingManager = {
         currentPage: 1,
         activeTab: 'all',
@@ -1366,7 +1567,10 @@
 
         init: function() {
             this.bindEvents();
-            this.loadPage(1);
+            // If initialHtml is empty, fetch page 1
+            if (!$('#staffingpartnerajax').children().length) {
+                this.loadPage(1);
+            }
         },
 
         bindEvents: function() {
@@ -1395,34 +1599,100 @@
                 }
                 if (e.key === 'Escape') {
                     self.closeAllDropdowns();
+                    window.closeAgencyDrawer();
                 }
             });
 
-            // Drawer Toggle for Agency Details
-            $(document).on('click', '.show-detail-direct', function(e) {
-                e.stopPropagation();
-                const id = $(this).data('row-id');
-                if (!id) return;
-                self.openAgencyDrawer(id);
+            // Row-Level and Button Delegation to Open Drawer
+            $(document).on('click', '.tbl-r, .show-detail-direct', function(e) {
+                if ($(e.target).closest('input, button, a, .tbl-cb, .tbl-cell-check, .dropdown-menu').length > 0) {
+                    return;
+                }
+                const id = $(this).data('row-id') || $(this).closest('[data-row-id]').data('row-id') || $(this).find('[data-row-id]').first().data('row-id');
+                if (id) {
+                    window.openAgencyDrawer(id);
+                }
+            });
+
+            // Drawer Close Handlers
+            $(document).on('click', '#kt_activitiesDirectClient_close, #kt_activitiesDirectClient_close_btn, .cd-close-drawer', function(e) {
+                if (e) e.preventDefault();
+                window.closeAgencyDrawer();
             });
 
             // Add Agency Drawer Open/Close
-            $('#open_add_agency_drawer').on('click', function() {
+            $('#open_add_agency_drawer').on('click', function(e) {
+                if (e) e.preventDefault();
                 $('#add_agency_drawer_overlay, #add_agency_drawer').fadeIn(150);
             });
-            $('.add_staffing_close, #add_agency_drawer_overlay').on('click', function() {
+            $(document).on('click', '.add_staffing_close, #add_agency_drawer_overlay, #add_agency_drawer_close_btn', function(e) {
+                if (e) e.preventDefault();
                 $('#add_agency_drawer_overlay, #add_agency_drawer').fadeOut(150);
+            });
+
+            // Submit Agency Invitation via Email
+            $(document).on('click', '#submit_staffing_partners', function(e) {
+                if (e) e.preventDefault();
+                const email = $('#staffing_partners_email').val().trim();
+                if (!email) {
+                    if (typeof Swal !== 'undefined') {
+                        Swal.fire({ icon: 'warning', title: 'Email required', text: 'Please enter an agency email address.' });
+                    } else if (typeof swal !== 'undefined') {
+                        swal({ title: 'Warning!', text: 'Please enter an agency email address.', type: 'warning' });
+                    } else {
+                        alert('Please enter an agency email address.');
+                    }
+                    return;
+                }
+                const url = "{{ route('service_company.consultancy.staffing_invitation', 0) }}";
+                $.ajax({
+                    type: 'GET',
+                    url: url,
+                    data: { staffing_partners_email: email },
+                    success: function(response) {
+                        $('#staffing_partners_email').val('');
+                        if (response.status === 'warning') {
+                            if (typeof Swal !== 'undefined') {
+                                Swal.fire({ icon: 'warning', title: 'Warning', text: response.message });
+                            } else if (typeof swal !== 'undefined') {
+                                swal({ title: 'Warning!', text: response.message, type: 'warning' });
+                            } else {
+                                alert(response.message);
+                            }
+                        } else if (response.status === 'success') {
+                            $('#add_agency_drawer_overlay, #add_agency_drawer').fadeOut(150);
+                            if (typeof Swal !== 'undefined') {
+                                Swal.fire({ icon: 'success', title: 'Invited!', text: response.message || 'Invitation sent successfully.' });
+                            } else if (typeof swal !== 'undefined') {
+                                swal({ title: 'Success!', text: response.message || 'Invitation sent successfully.', type: 'success' });
+                            } else {
+                                alert('Invitation sent successfully.');
+                            }
+                            self.loadPage(1);
+                        }
+                    },
+                    error: function(xhr) {
+                        const msg = (xhr.responseJSON && xhr.responseJSON.message) ? xhr.responseJSON.message : 'Failed to send invitation.';
+                        if (typeof Swal !== 'undefined') {
+                            Swal.fire({ icon: 'error', title: 'Error', text: msg });
+                        } else {
+                            alert(msg);
+                        }
+                    }
+                });
             });
 
             // Copy Link
             $('#kt_share_earn_link_copy_button').on('click', function() {
                 const copyText = document.getElementById("kt_share_earn_link_input");
-                copyText.select();
-                copyText.setSelectionRange(0, 99999);
-                navigator.clipboard.writeText(copyText.value);
-                $(this).text('Copied!');
-                const btn = $(this);
-                setTimeout(function() { btn.text('Copy'); }, 2000);
+                if (copyText) {
+                    copyText.select();
+                    copyText.setSelectionRange(0, 99999);
+                    navigator.clipboard.writeText(copyText.value);
+                    $(this).text('Copied!');
+                    const btn = $(this);
+                    setTimeout(function() { btn.text('Copy'); }, 2000);
+                }
             });
 
             // Outside click closes popovers
@@ -1471,116 +1741,10 @@
                     $('.loadingMessagestaffingpartnerajax').css({ display: 'none' });
                 }
             });
-        },
-
-        openAgencyDrawer: function(id) {
-            $('#kt_activitiesDirectClient_toggle').trigger('click');
-            const baseurl = "{{ asset('assets/images/Loading2.gif') }}";
-            $('#kt_activitiesDirectClient_body').html('<div class="d-flex align-items-center justify-content-center p-10"><div class="spinner-border text-primary" role="status"></div></div>');
-
-            let url = "{{ route('service_company.consultancy.dviewmore', ':id') }}";
-            url = url.replace(':id', id);
-
-            $.ajax({
-                url: url,
-                type: 'GET',
-                success: function(response) {
-                    if (response.status === 'success') {
-                        $('#kt_activitiesDirectClient_body').html(response.view);
-                    } else if (response.view) {
-                        $('#kt_activitiesDirectClient_body').html(response.view);
-                    }
-                },
-                error: function() {
-                    $('#kt_activitiesDirectClient_body').html('<div class="alert alert-danger m-5">Failed to load agency details. Please try again.</div>');
-                }
-            });
         }
     };
 
-    // ── Global Filter & Action Callbacks ──
-    function setAgencyTab(tabKey, el) {
-        $('.cl-stat-grid .cl-card').removeClass('active');
-        $(el).addClass('active');
-        AgencyListingManager.activeTab = tabKey;
-        if (tabKey === 'hiring') {
-            AgencyListingManager.perfFilter = 'high';
-        } else if (tabKey === 'inactive') {
-            AgencyListingManager.perfFilter = 'low';
-        } else {
-            AgencyListingManager.perfFilter = '';
-        }
-        AgencyListingManager.loadPage(1);
-    }
-
-    function clearAgencySearchInput(e) {
-        e.stopPropagation();
-        $('#kt_tagify_2').val('');
-        $('#clSearchClearBtn, #clSearchMatchCount').hide();
-        AgencyListingManager.searchQuery = '';
-        AgencyListingManager.loadPage(1);
-    }
-
-    function toggleLocationDropdown(e) {
-        e.stopPropagation();
-        const $panel = $('#clLocDropdownPanel');
-        const isShown = $panel.hasClass('show');
-        AgencyListingManager.closeAllDropdowns();
-        if (!isShown) $panel.addClass('show');
-    }
-
-    function selectLocationOption(id, name, e) {
-        e.stopPropagation();
-        $('#locationDisplay').text(name);
-        $('#country').val(id);
-        AgencyListingManager.countryFilter = id;
-        AgencyListingManager.closeAllDropdowns();
-        AgencyListingManager.loadPage(1);
-    }
-
-    function togglePerfDropdown(e) {
-        e.stopPropagation();
-        const $panel = $('#clPerfDropdownPanel');
-        const isShown = $panel.hasClass('show');
-        AgencyListingManager.closeAllDropdowns();
-        if (!isShown) $panel.addClass('show');
-    }
-
-    function selectPerfOption(val, label, e) {
-        e.stopPropagation();
-        $('#perfDisplay').text(label);
-        $('#agency_performance').val(val);
-        AgencyListingManager.perfFilter = val;
-        AgencyListingManager.closeAllDropdowns();
-        AgencyListingManager.loadPage(1);
-    }
-
-    function toggleSortDropdown(e) {
-        e.stopPropagation();
-        const $panel = $('#clSortDropdownPanel');
-        const isShown = $panel.hasClass('show');
-        AgencyListingManager.closeAllDropdowns();
-        if (!isShown) $panel.addClass('show');
-    }
-
-    function selectSortOption(val, label, e) {
-        e.stopPropagation();
-        $('#sortDisplay').text(label);
-        $('#sortingfilter').val(val);
-        AgencyListingManager.sortFilter = val;
-        AgencyListingManager.closeAllDropdowns();
-        AgencyListingManager.loadPage(1);
-    }
-
-    function triggerAgencyExport(type) {
-        if (type === 'filtered_csv') {
-            window.location.href = `{{ url('service_company/consultancy/export/0/1000') }}?search=${encodeURIComponent(AgencyListingManager.searchQuery || '')}`;
-        } else if (type === 'all_csv') {
-            window.location.href = `{{ url('service_company/consultancy/export/0/10000') }}`;
-        } else if (type === 'executive_pdf') {
-            window.print();
-        }
-    }
+    window.AgencyListingManager = AgencyListingManager;
 
     // Pagination Click Handler
     $(document).on('click', '#paginationstaffingpartner a', function(e) {
