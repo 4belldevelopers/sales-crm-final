@@ -618,7 +618,14 @@
 }
 </style>
 
-<div class="cd-drawer-root">
+<div class="cd-drawer-root" style="position: relative;">
+
+    <!-- ── Top Close Button (Consistent with Client Drawer) ── -->
+    <div class="cd-top-close-wrap" style="position: absolute; top: 12px; right: 16px; z-index: 100;">
+        <button type="button" class="cd-hdr-btn-close cd-close-drawer" id="kt_activitiesDirectClient_close_btn" onclick="if(window.closeAgencyDrawer){window.closeAgencyDrawer();}else{$('#kt_activitiesDirectClient_close').trigger('click');}" title="Close Drawer" style="width: 32px; height: 32px; border-radius: 8px; background: #f1f5f9; border: 1px solid #e2e8f0; color: #64748b; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.15s ease;">
+            <i class="fas fa-times"></i>
+        </button>
+    </div>
 
     <!-- ── 1. Top Header & Hero Card (Rule 20 Continuous Streamlined Design) ── -->
     <div class="cd-hero-card cd-hero-streamlined">
@@ -1292,19 +1299,19 @@
 
 <script>
     // ── Agency Drawer Tab Switcher (Rule 17 Isolated Execution) ──
-    function switchDrawerTab(btn, tabId) {
+    window.switchDrawerTab = function(btn, tabId) {
         $('.cd-drawer-tabs-list .cd-tab-pill-btn').removeClass('active');
         $(btn).addClass('active');
 
         $('.cd-tab-content-wrapper .tab-pane').removeClass('active');
         $('#pane_' + tabId).addClass('active');
-    }
+    };
 
-    function triggerDrawerTab(tabId, e) {
+    window.triggerDrawerTab = function(tabId, e) {
         if (e) e.preventDefault();
         const $targetBtn = $(`.cd-drawer-tabs-list .cd-tab-pill-btn[data-target="${tabId}"]`);
         if ($targetBtn.length) {
             $targetBtn.trigger('click');
         }
-    }
+    };
 </script>

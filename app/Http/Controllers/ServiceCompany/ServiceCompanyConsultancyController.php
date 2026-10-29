@@ -60,6 +60,19 @@ class ServiceCompanyConsultancyController extends ServiceCompanyBaseController
             return DB::table('countries')->get();
         });
 
+        // ── Phase 1 God-Level Optimization: Bootstrap Page 1 data directly into view ──
+        try {
+            $initialResponse = $this->data_ajax($request);
+            $initialData = $initialResponse->getData(true);
+            $this->initialHtml = $initialData['html'] ?? '';
+            $this->initialTotal = $initialData['total'] ?? 0;
+            $this->initialPagination = $initialData['pagination'] ?? '';
+        } catch (\Throwable $e) {
+            $this->initialHtml = '';
+            $this->initialTotal = 0;
+            $this->initialPagination = '';
+        }
+
         return view('service_company.consultancy.index', $this->data);
     }
 
