@@ -28,6 +28,37 @@ class ClientJobsReadService
      */
     public function getJobs(ClientJobsQuery $query): JobsTabViewModel
     {
+        // Strict Backend Tenancy Guard: Super Admin must NOT receive or see agency-specific direct jobs
+        if ($query->clientType === 'direct' && auth()->check()) {
+            $user = auth()->user();
+            $isSuperAdmin = (bool) ($user->is_superadmin ?? false)
+                || in_array((int) ($user->company_id ?? 0), \App\Helper\GeneralMethod::superAdminCompanyIds(), true)
+                || (method_exists($user, 'hasRole') && $user->hasRole('super_admin'))
+                || (int) ($user->company_id ?? 0) === 1;
+
+            if ($isSuperAdmin) {
+                return new JobsTabViewModel(
+                    totalCount: 0,
+                    filteredCount: 0,
+                    hiringCount: 0,
+                    holdCount: 0,
+                    closedCount: 0,
+                    inactiveCount: 0,
+                    jobs: [],
+                    pipelineStageMap: [],
+                    logoMap: [],
+                    pagination: ['total' => 0, 'page' => 1, 'last_page' => 1, 'per_page' => $query->perPage, 'from' => 0, 'to' => 0],
+                    activeFilters: ['status' => $query->status, 'search' => $query->search],
+                    projectionVersion: 1,
+                    queryHash: '',
+                    generatedAt: now()->toIso8601String(),
+                    tabs: [],
+                    clientName: null,
+                    clientType: 'direct'
+                );
+            }
+        }
+
         $partnerPart = (int) ($query->partnerCompanyId ?? 0);
 
         // 1. Resolve Current Monotonic Version from Redis
@@ -221,6 +252,10 @@ class ClientJobsReadService
                             'filter' => [
                                 ['terms' => ['job_id' => array_values($jobIds)]],
                                 ['term' => ['company_id' => (int) $query->serviceCompanyId]],
+                            ],
+                            'must_not' => [
+                                ['terms' => ['job_master_status_id' => [8, 9, '8', '9']]],
+                                ['terms' => ['master_status_id' => [8, '8']]],
                             ],
                         ],
                     ],

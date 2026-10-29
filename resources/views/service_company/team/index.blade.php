@@ -43,377 +43,954 @@
             box-shadow: none !important;
         }
 
-        /* Toolbar appearance — positioning is handled by the fixed-toolbar CSS block below */
-        .team-page-title {
-            font-size: 22px;
-            font-weight: 700;
-            color: #1e2129;
-            margin: 0;
-            line-height: 1.2;
-        }
-        .team-page-subtitle {
-            font-size: 13px;
-            color: #7c8398;
-            margin-top: 2px;
-        }
-        .team-header-actions { gap: 10px; }
-        .team-btn {
-            display: inline-flex;
-            align-items: center;
-            gap: 7px;
-            font-size: 13px;
-            font-weight: 600;
-            padding: 9px 18px;
-            border-radius: 9px;
-            border: 1px solid #eef0f4;
-            background: #fff;
-            color: #1e2129;
-            transition: all .15s ease;
-            white-space: nowrap;
-        }
-        .team-btn i { font-size: 14px; }
-        .team-btn-light:hover { background: #f1f3f7; color: #1e2129; }
-        .team-btn-primary {
-            background: #6366f1;
-            border-color: #6366f1;
-            color: #fff;
-        }
-        .team-btn-primary:hover { background: #4f46e5; color: #fff; }
+        /* =========================================================================
+           Modern Card + Sub-Card Enterprise Design System (Rule 20 / Team Redesign)
+           ========================================================================= */
 
-        /* ---------- Stat cards ---------- */
-        .team-stats-row {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 16px;
-            margin-bottom: 18px;
-        }
-        .team-stat-card {
-            background: #fff;
-            border: 1px solid #eef0f4;
-            border-radius: 14px;
-            padding: 18px 20px;
+        /* Tier 1: Toolbar Header Card */
+        .team-toolbar-card {
+            background: #ffffff !important;
+            border: 1px solid #e2e8f0 !important;
+            border-radius: 10px !important;
+            padding: 12px 18px !important;
+            margin-bottom: 12px !important;
+            box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04) !important;
             display: flex;
             align-items: center;
-            gap: 16px;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 14px;
         }
-        .team-stat-ico {
-            width: 60px;
-            height: 60px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 24px;
-            flex-shrink: 0;
-        }
-        .ico-blue   { background: #e8eeff; color: #4f80f0; }
-        .ico-green  { background: #e6f9f0; color: #2ebd85; }
-        .ico-amber  { background: #fff3e0; color: #f79009; }
-        .ico-purple { background: #f0ebff; color: #7c5cfc; }
-        .team-stat-label { font-size: 12px; color: #7c8398; margin-bottom: 2px; }
-        .team-stat-value { font-size: 24px; font-weight: 700; color: #1e2129; line-height: 1; }
-        .team-stat-sub { font-size: 11px; color: #7c8398; margin-top: 5px; }
-
-        /* ---------- Main card ---------- */
-        .team-main-card {
-            background: #fff;
-            border: 1px solid #eef0f4;
-            border-radius: 14px;
-            overflow: hidden;
-        }
-
-        /* ---------- Tabs ---------- */
-        .team-tabs {
-            display: flex;
-            gap: 26px;
-            padding: 0 22px;
-            border-bottom: 1px solid #eef0f4;
-        }
-        .team-tab {
-            font-size: 14px;
-            font-weight: 600;
-            color: #7c8398;
-            padding: 16px 2px;
-            border-bottom: 2px solid transparent;
-            cursor: pointer;
-            white-space: nowrap;
-        }
-        .team-tab:hover { color: #1e2129; }
-        .team-tab.active { color: #6366f1; border-bottom-color: #6366f1; }
-
-        /* ---------- Filter bar ---------- */
-        .team-filter-bar {
+        .team-toolbar-left {
             display: flex;
             align-items: center;
             gap: 12px;
-            padding: 16px 0 12px;
+        }
+        .team-toolbar-icon {
+            width: 38px;
+            height: 38px;
+            border-radius: 8px;
+            background: #eff6ff;
+            color: #009ef7;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        .team-toolbar-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: #0f172a;
+            line-height: 1.25;
+            margin: 0;
+        }
+        .team-toolbar-subtitle {
+            font-size: 11.5px;
+            color: #64748b;
+            margin-top: 2px;
+        }
+        .team-badge-pill {
+            background: #f1f5f9;
+            color: #334155;
+            font-size: 11px;
+            font-weight: 600;
+            padding: 3px 8px;
+            border-radius: 6px;
+            margin-left: 8px;
+        }
+        .team-refresh-btn {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+            background: #fff;
+            color: #64748b;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all .15s;
+            margin-left: 4px;
+        }
+        .team-refresh-btn:hover {
+            background: #f8fafc;
+            color: #009ef7;
+            border-color: #009ef7;
+        }
+
+        /* Tier 1 Right Action Area */
+        .team-toolbar-right {
+            display: flex;
+            align-items: center;
+            gap: 10px;
             flex-wrap: wrap;
         }
-        /* Search with icon using input-group so FA CSS icon is inside naturally */
-        .team-search-wrap {
-            flex: 1;
-            min-width: 240px;
+        .team-search-subcard {
             position: relative;
             display: flex;
             align-items: center;
+            width: 280px;
+            max-width: 100%;
+            height: 36px;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            transition: all .2s;
         }
-        .team-search-wrap .team-search-icon {
+        .team-search-subcard:focus-within {
+            background: #fff;
+            border-color: #009ef7;
+            box-shadow: 0 0 0 3px rgba(0, 158, 247, 0.12);
+        }
+        .team-search-icon {
             position: absolute;
-            left: 13px;
-            top: 50%;
-            transform: translateY(-50%);
-            color: #a3aabf;
+            left: 12px;
+            color: #94a3b8;
             font-size: 13px;
             pointer-events: none;
-            line-height: 1;
         }
-        .team-search-wrap input {
+        .team-search-input {
             width: 100%;
-            height: 40px;
-            border: 1.5px solid #e4e7f0;
-            border-radius: 10px;
-            padding: 0 14px 0 38px;
-            font-size: 13px;
+            height: 100%;
+            border: none;
+            background: transparent;
+            padding: 0 32px 0 34px;
+            font-size: 12px;
             font-family: 'Poppins', sans-serif;
-            background: #fff;
-            color: #1e2129;
+            color: #0f172a;
             outline: none;
-            transition: border-color .15s;
         }
-        .team-search-wrap input:focus { border-color: #6366f1; box-shadow: 0 0 0 3px rgba(99,102,241,.1); }
-        .team-search-wrap input::placeholder { color: #b0b7c9; }
+        .team-search-input::placeholder { color: #94a3b8; }
+        .team-search-clear {
+            position: absolute;
+            right: 8px;
+            width: 20px;
+            height: 20px;
+            border: none;
+            background: transparent;
+            color: #94a3b8;
+            font-size: 14px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+        }
+        .team-search-clear:hover { background: #e2e8f0; color: #0f172a; }
 
-        /* ---------- Sort By card ---------- */
-        .team-sort-card {
+        .team-btn-primary {
+            height: 36px;
+            padding: 0 16px;
+            background: #009ef7;
+            border: 1px solid #009ef7;
+            border-radius: 8px;
+            color: #fff;
+            font-size: 12px;
+            font-weight: 600;
             display: inline-flex;
             align-items: center;
-            gap: 0;
-            background: #fff;
-            border: 1.5px solid #e4e7f0;
-            border-radius: 10px;
-            padding: 0 14px;
-            height: 40px;
-            box-shadow: 0 1px 4px rgba(0,0,0,.04);
+            gap: 7px;
+            cursor: pointer;
+            transition: all .15s;
             white-space: nowrap;
         }
-        .team-sort-label {
+        .team-btn-primary:hover { background: #0086d1; border-color: #0086d1; color: #fff; }
+
+        .team-btn-light {
+            height: 36px;
+            padding: 0 14px;
+            background: #fff;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            color: #475569;
+            font-size: 12px;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            cursor: pointer;
+            transition: all .15s;
+            white-space: nowrap;
+        }
+        .team-btn-light:hover { background: #f8fafc; color: #0f172a; border-color: #cbd5e1; }
+
+        /* =========================================================================
+           TOP CARD: MARKETPLACE COMMUNICATION CONTACTS (Rule 20 Enterprise Card)
+           ========================================================================= */
+        .team-mp-contacts-card {
+            background: #ffffff !important;
+            border: 1px solid #e2e8f0 !important;
+            border-radius: 12px !important;
+            padding: 18px 20px !important;
+            margin-bottom: 16px !important;
+            box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03) !important;
+        }
+        .team-mp-contacts-grid {
+            display: grid !important;
+            grid-template-columns: minmax(0, 1.15fr) minmax(0, 1.4fr) minmax(0, 1.4fr) !important;
+            gap: 16px !important;
+            align-items: stretch !important;
+        }
+        .tm-mp-col {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+        .tm-mp-overview-col {
+            padding-right: 6px;
+        }
+        .tm-mp-icon-wrap {
+            width: 44px;
+            height: 44px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        .bg-light-teal { background: #f0fdfa !important; }
+        .text-teal { color: #0d9488 !important; }
+        .bg-light-purple { background: #f5f3ff !important; }
+        .text-purple { color: #7c3aed !important; }
+        .badge-light-purple { background: #f3e8ff; color: #7c3aed !important; }
+        .shadow-xs { box-shadow: 0 1px 2px rgba(15, 23, 42, 0.05); }
+
+        .tm-mp-col-title {
+            font-size: 14px;
+            font-weight: 700;
+            color: #0f172a;
+            margin: 0 0 4px 0;
+            line-height: 1.3;
+        }
+        .tm-mp-col-desc {
+            font-size: 11.5px;
+            color: #64748b;
+            margin: 0;
+            line-height: 1.45;
+        }
+        .tm-mp-info-box {
+            margin-top: 14px;
+            background: #eff6ff;
+            border: 1px solid #dbeafe;
+            border-radius: 8px;
+            padding: 10px 12px;
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+            font-size: 11px;
+            color: #1e40af;
+            line-height: 1.45;
+        }
+
+        /* 2 Spotlight Communication Boxes (Client & Agency) */
+        .tm-mp-box {
+            border-radius: 10px;
+            padding: 14px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            transition: all .2s;
+        }
+        .tm-mp-client-box {
+            background: #f0fdf4;
+            border: 1px solid #bbf7d0;
+        }
+        .tm-mp-agency-box {
+            background: #f5f3ff;
+            border: 1px solid #ddd6fe;
+        }
+        .tm-mp-box-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            margin-bottom: 4px;
+        }
+        .tm-mp-box-icon {
+            width: 28px;
+            height: 28px;
+            border-radius: 7px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 13px;
+        }
+        .tm-mp-box-title {
+            font-size: 13.5px;
+            font-weight: 700;
+            color: #0f172a;
+        }
+        .tm-mp-box-subtitle {
+            font-size: 11px;
+            color: #64748b;
+            margin-bottom: 12px;
+            line-height: 1.4;
+        }
+        .tm-mp-profile-box {
+            background: #ffffff;
+            border: 1px solid rgba(0,0,0,0.06);
+            border-radius: 8px;
+            padding: 10px 12px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .tm-mp-avatar {
+            width: 38px;
+            height: 38px;
+            border-radius: 8px;
+            background: #0f172a;
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 15px;
+            flex-shrink: 0;
+            overflow: hidden;
+        }
+        .tm-mp-profile-details {
+            flex-grow: 1;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            gap: 1px;
+        }
+        .tm-mp-profile-name {
+            font-size: 13px;
+            font-weight: 700;
+            color: #0f172a;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .tm-mp-profile-role {
+            font-size: 11px;
+            color: #64748b;
+        }
+        .tm-mp-profile-contact {
+            font-size: 10.5px;
+            color: #475569;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            margin-top: 1px;
+        }
+        .btn-mp-change {
+            background: #ffffff;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            padding: 5px 11px;
+            font-size: 11px;
+            font-weight: 600;
+            color: #0f172a;
+            cursor: pointer;
+            transition: all .15s;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+        .btn-mp-change:hover {
+            background: #f8fafc;
+            border-color: #94a3b8;
+        }
+
+        /* Underlined Modern Sub-Tabs */
+        .tm-nav-tabs {
+            display: flex;
+            align-items: center;
+            gap: 18px;
+            border-bottom: 2px solid transparent;
+        }
+        .tm-nav-tab {
+            background: transparent;
+            border: none;
+            padding: 6px 4px 10px 4px;
+            font-size: 13px;
+            font-weight: 600;
+            color: #64748b;
+            cursor: pointer;
+            position: relative;
+            transition: all .15s;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            outline: none;
+        }
+        .tm-nav-tab:hover {
+            color: #0f172a;
+        }
+        .tm-nav-tab.active {
+            color: #009ef7;
+        }
+        .tm-nav-tab.active::after {
+            content: '';
+            position: absolute;
+            left: 0;
+            right: 0;
+            bottom: -2px;
+            height: 2.5px;
+            background: #009ef7;
+            border-radius: 2px;
+        }
+        .tm-nav-count {
+            font-size: 11.5px;
+            color: inherit;
+            font-weight: 700;
+        }
+
+        /* Filter & Search Bar */
+        .team-filter-bar {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 8px 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 14px;
+            box-shadow: 0 1px 3px rgba(15, 23, 42, 0.02);
+            flex-wrap: wrap;
+        }
+        .team-filter-search {
+            position: relative;
+            flex-grow: 1;
+            max-width: 380px;
+            display: flex;
+            align-items: center;
+        }
+        .team-filter-search i {
+            position: absolute;
+            left: 10px;
+            font-size: 12px;
+            color: #94a3b8;
+        }
+        .team-filter-search .team-search-input {
+            width: 100%;
+            height: 32px;
+            padding: 0 30px 0 30px;
+            border: 1px solid transparent;
+            border-radius: 6px;
+            font-size: 12px;
+            font-family: 'Poppins', sans-serif;
+            color: #0f172a;
+            outline: none;
+            transition: all .15s;
+            background: transparent;
+        }
+        .team-filter-search .team-search-input:focus {
+            background: #ffffff;
+            border-color: #009ef7;
+            box-shadow: 0 0 0 2px rgba(0, 158, 247, 0.1);
+        }
+
+        /* Roster Header Legend */
+        .team-roster-legend {
+            display: grid;
+            grid-template-columns: minmax(0, 2.2fr) minmax(0, 1fr) minmax(0, 1.8fr) minmax(0, 1.2fr) minmax(0, 2.4fr) minmax(0, 1.1fr) minmax(0, 1fr) 36px;
+            gap: 12px;
+            padding: 6px 18px;
+            font-size: 11px;
+            font-weight: 700;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+            background: #ffffff !important;
+            border: 1px solid #e2e8f0 !important;
+            border-radius: 10px !important;
+            padding: 8px 12px !important;
+            margin-bottom: 12px !important;
+            box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03) !important;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+        .team-tabs-group {
             display: flex;
             align-items: center;
             gap: 6px;
-            font-size: 12px;
-            font-weight: 600;
-            color: #7c8398;
-            letter-spacing: .2px;
-            padding-right: 10px;
-            border-right: 1.5px solid #e4e7f0;
-            height: 22px;
+            flex-wrap: wrap;
         }
-        .team-sort-label i { font-size: 12px; color: #6366f1; }
-        .team-select {
-            border: none;
-            background: transparent;
-            font-size: 13px;
-            font-weight: 600;
-            font-family: 'Poppins', sans-serif;
-            color: #1e2129;
-            padding: 0 28px 0 10px;
-            height: 100%;
-            -webkit-appearance: none;
-            appearance: none;
-            cursor: pointer;
-            background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='11' height='11' viewBox='0 0 24 24' fill='none' stroke='%236366f1' stroke-width='2.5'><path d='M6 9l6 6 6-6'/></svg>");
-            background-repeat: no-repeat;
-            background-position: right 0 center;
-            outline: none;
-        }
-
-        /* ---------- Table ---------- */
-        .team-table { width: 100%; margin: 0; }
-        .team-table thead th {
-            font-size: 12px;
-            font-weight: 600;
-            text-transform: none;
-            color: #7c8398;
-            border-bottom: 1px solid #eef0f4;
-            padding: 12px 10px;
-            background: #fbfbfd;
-            position: sticky;
-            top: 0;
-            /* z-index: 10; */
-        }
-        .team-table tbody td {
-            padding: 14px 10px;
-            border-bottom: 1px solid #eef0f4;
-            vertical-align: middle;
-            font-size: 13px;
-        }
-        .team-table tbody tr:hover { background: #fafbff; }
-        .team-avatar {
-            width: 40px; height: 40px;
-            border-radius: 10px;
-            display: flex; align-items: center; justify-content: center;
-            font-weight: 600; font-size: 14px;
-            overflow: hidden; flex-shrink: 0;
-        }
-        .team-avatar img { width: 100%; height: 100%; object-fit: cover; }
-        .team-member-name { font-size: 13px; font-weight: 600; color: #1e2129; }
-        .team-member-role { font-size: 12px; color: #7c8398; }
-        .team-member-mail { font-size: 12px; color: #7c8398; }
-
-        .team-rank-badge { font-size: 14px; font-weight: 700; color: #1e2129; }
-        .team-rank-month { font-size: 11px; color: #7c8398; }
-        .team-score-link {
-            display: inline-block;
-            margin-top: 4px;
-            font-size: 11px;
-            font-weight: 600;
-            color: #12b76a;
-            background: #e7f8f0;
-            border-radius: 6px;
-            padding: 2px 8px;
-            cursor: pointer;
-        }
-
-        .team-workload { display: flex; gap: 22px; }
-        .team-wl-item { display: flex; flex-direction: column; gap: 2px; }
-        .team-wl-num { font-size: 13px; font-weight: 700; color: #1e2129; display: flex; align-items: center; gap: 5px; }
-        .team-wl-num i { font-size: 12px; }
-        .team-wl-label { font-size: 11px; color: #7c8398; }
-        .wl-blue i { color: #3b82f6; }
-        .wl-purple i { color: #7c5cfc; }
-        .wl-green i { color: #12b76a; }
-
-        .team-role-pill {
-            display: inline-block;
-            font-size: 11px;
-            font-weight: 600;
-            border-radius: 7px;
-            padding: 4px 11px;
-        }
-        .role-admin { background: #f1ecff; color: #7c5cfc; }
-        .role-lead  { background: #eaf1ff; color: #3b82f6; }
-        .role-default { background: #f1f3f7; color: #7c8398; }
-        .team-role-edit-btn {
-            width: 26px; height: 26px;
-            border-radius: 6px;
-            border: 1px solid #eef0f4;
-            background: #fff;
-            color: #7c8398;
-            display: inline-flex; align-items: center; justify-content: center;
+        .team-tab-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: #ffffff !important;
+            border: 1px solid #e2e8f0 !important;
+            border-radius: 8px !important;
+            padding: 6px 14px !important;
+            font-size: 11.5px !important;
+            font-weight: 600 !important;
+            color: #475569 !important;
             cursor: pointer;
             transition: all .15s ease;
         }
-        .team-role-edit-btn i { font-size: 11px; }
-        .team-role-edit-btn:hover { background: #eef2ff; color: #6366f1; border-color: #6366f1; }
+        .team-tab-btn:hover {
+            background: #f8fafc !important;
+            border-color: #cbd5e1 !important;
+            color: #0f172a !important;
+        }
+        .team-tab-btn.active {
+            background: #009ef7 !important;
+            border-color: #009ef7 !important;
+            color: #ffffff !important;
+            box-shadow: 0 2px 4px rgba(0, 158, 247, 0.2) !important;
+        }
+        .team-tab-badge {
+            min-width: 18px;
+            height: 18px;
+            padding: 0 5px;
+            border-radius: 10px;
+            font-size: 10.5px;
+            font-weight: 700;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: #f1f5f9;
+            color: #334155;
+            font-variant-numeric: tabular-nums;
+        }
+        .team-tab-btn.active .team-tab-badge {
+            background: rgba(255, 255, 255, 0.28) !important;
+            color: #ffffff !important;
+        }
+        .team-tabs-right {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .team-select-control {
+            height: 32px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            background: #fff;
+            font-size: 11.5px;
+            font-weight: 600;
+            font-family: 'Poppins', sans-serif;
+            color: #334155;
+            padding: 0 10px;
+            outline: none;
+            cursor: pointer;
+        }
+        .team-select-control:focus {
+            border-color: #009ef7;
+        }
 
-        .team-status-cell { display: flex; align-items: center; gap: 9px; }
-        .team-switch { position: relative; display: inline-block; width: 36px; height: 20px; }
+        /* =========================================================================
+           Tier 3: Primary Card Stream & Discrete Sub-Cards
+           ========================================================================= */
+        .team-cards-container {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .team-card {
+            background: #ffffff !important;
+            border: 1px solid #e2e8f0 !important;
+            border-radius: 10px !important;
+            box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03) !important;
+            transition: all .2s cubic-bezier(.4, 0, .2, 1);
+            overflow: hidden;
+        }
+        .team-card:hover {
+            border-color: #cbd5e1 !important;
+            box-shadow: 0 4px 14px rgba(15, 23, 42, 0.06) !important;
+        }
+        .team-card-grid {
+            display: grid !important;
+            grid-template-columns: minmax(0, 2.3fr) minmax(0, 2.1fr) minmax(0, 1.8fr) minmax(0, 1.1fr) minmax(0, 1.4fr) !important;
+            gap: 10px !important;
+            padding: 12px 16px !important;
+        }
+        .tm-subcard {
+            background: #f8fafc;
+            border: 1px solid #eef2f6;
+            border-radius: 8px;
+            padding: 10px 12px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+        .tm-subcard-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 6px;
+            margin-bottom: 8px;
+        }
+        .tm-subcard-label {
+            font-size: 10.5px;
+            font-weight: 700;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .tm-subcard-body {
+            flex: 1;
+        }
+
+        /* Sub-Card 1: Profile */
+        .team-avatar {
+            width: 42px;
+            height: 42px;
+            border-radius: 9px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 15px;
+            overflow: hidden;
+            flex-shrink: 0;
+        }
+        .team-avatar img { width: 100%; height: 100%; object-fit: cover; }
+        .team-member-name {
+            font-size: 13.5px;
+            font-weight: 700;
+            color: #0f172a;
+            line-height: 1.25;
+            text-decoration: none;
+        }
+        .team-member-name:hover { color: #009ef7; }
+        .team-member-role {
+            font-size: 11.5px;
+            font-weight: 500;
+            color: #64748b;
+            margin-top: 1px;
+        }
+        .team-member-mail, .team-member-phone {
+            font-size: 11px;
+            color: #475569;
+            margin-top: 2px;
+            display: inline-flex;
+            align-items: center;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .tm-badge-status {
+            font-size: 10.5px;
+            font-weight: 700;
+            padding: 2px 7px;
+            border-radius: 4px;
+        }
+        .status-active   { background: #dcfce7; color: #15803d; }
+        .status-inactive { background: #fee2e2; color: #b91c1c; }
+        .status-invited  { background: #fef3c7; color: #b45309; }
+
+        /* Sub-Card 2: Representation Role */
+        .badge-rep-pill {
+            font-size: 10.5px;
+            font-weight: 700;
+            padding: 2.5px 8px;
+            border-radius: 5px;
+            display: inline-flex;
+            align-items: center;
+        }
+        .badge-rep-client   { background: #eff6ff; color: #009ef7; border: 1px solid #bfdbfe; }
+        .badge-rep-agency   { background: #ecfdf5; color: #059669; border: 1px solid #a7f3d0; }
+        .badge-rep-dual     { background: #faf5ff; color: #7c3aed; border: 1px solid #e9d5ff; }
+        .badge-rep-standard { background: #f1f5f9; color: #64748b; border: 1px solid #e2e8f0; }
+
+        .team-rep-scope-box {
+            margin-bottom: 8px;
+        }
+        .rep-scope-desc {
+            font-size: 11.5px;
+            line-height: 1.35;
+        }
+        .rep-scope-hint {
+            font-size: 10.5px;
+            color: #64748b;
+            margin-top: 2px;
+        }
+        .team-rep-btn-row {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+            margin-top: 4px;
+        }
+        .btn-rep-toggle {
+            font-size: 11px;
+            font-weight: 600;
+            padding: 4px 8px;
+            border-radius: 5px;
+            border: 1px solid #e2e8f0;
+            background: #ffffff;
+            cursor: pointer;
+            transition: all .15s;
+            display: inline-flex;
+            align-items: center;
+            color: #334155;
+            white-space: nowrap;
+        }
+        .btn-rep-client:hover { background: #eff6ff; color: #009ef7; border-color: #009ef7; }
+        .btn-rep-agency:hover { background: #ecfdf5; color: #059669; border-color: #059669; }
+
+        /* Sub-Card 3: Workload Grid */
+        .tm-workload-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 6px;
+        }
+        .tm-wl-cell {
+            background: #ffffff;
+            border: 1px solid #eef2f6;
+            border-radius: 6px;
+            padding: 5px 8px;
+            display: flex;
+            flex-direction: column;
+        }
+        .tm-wl-val {
+            font-size: 13px;
+            font-weight: 700;
+            color: #0f172a;
+            font-variant-numeric: tabular-nums;
+        }
+        .tm-wl-lbl {
+            font-size: 10px;
+            font-weight: 500;
+            color: #64748b;
+            margin-top: 1px;
+        }
+        .text-purple { color: #7c3aed !important; }
+        .text-indigo { color: #4f46e5 !important; }
+
+        /* Sub-Card 4: Rank & Score */
+        .tm-rank-val {
+            font-size: 14px;
+            font-weight: 700;
+            color: #0f172a;
+        }
+        .tm-rank-month {
+            font-size: 10.5px;
+            color: #64748b;
+            font-weight: 500;
+            margin-left: 4px;
+        }
+        .team-score-link {
+            display: inline-flex;
+            align-items: center;
+            font-size: 11px;
+            font-weight: 600;
+            color: #059669;
+            background: #ecfdf5;
+            border: 1px solid #d1fae5;
+            border-radius: 5px;
+            padding: 3px 8px;
+            cursor: pointer;
+            transition: all .15s;
+        }
+        .team-score-link:hover { background: #d1fae5; }
+
+        /* Sub-Card 5: Controls & Role */
+        .team-role-pill {
+            font-size: 11px;
+            font-weight: 600;
+            padding: 3px 9px;
+            border-radius: 6px;
+            display: inline-block;
+        }
+        .role-admin   { background: #f3e8ff; color: #7e22ce; }
+        .role-lead    { background: #eff6ff; color: #1d4ed8; }
+        .role-default { background: #f1f5f9; color: #475569; }
+
+        .team-role-edit-btn {
+            width: 24px;
+            height: 24px;
+            border-radius: 6px;
+            border: 1px solid #e2e8f0;
+            background: #fff;
+            color: #64748b;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all .15s;
+        }
+        .team-role-edit-btn:hover { background: #eff6ff; color: #009ef7; border-color: #009ef7; }
+
+        .team-status-cell { display: flex; align-items: center; gap: 8px; }
+        .team-switch { position: relative; display: inline-block; width: 34px; height: 18px; }
         .team-switch input { opacity: 0; width: 0; height: 0; }
         .team-switch .slider {
             position: absolute; cursor: pointer; inset: 0;
-            background: #d5d8e0; border-radius: 20px; transition: .2s;
+            background: #cbd5e1; border-radius: 20px; transition: .2s;
         }
         .team-switch .slider:before {
-            content: ""; position: absolute; height: 14px; width: 14px;
+            content: ""; position: absolute; height: 12px; width: 12px;
             left: 3px; bottom: 3px; background: #fff; border-radius: 50%; transition: .2s;
         }
-        .team-switch input:checked + .slider { background: #6366f1; }
+        .team-switch input:checked + .slider { background: #10b981; }
         .team-switch input:checked + .slider:before { transform: translateX(16px); }
         .team-switch input:disabled + .slider { opacity: .6; cursor: not-allowed; }
-        .team-status-text { font-size: 12px; font-weight: 600; }
-        .team-status-text.is-active { color: #12b76a; }
-        .team-status-text.is-inactive { color: #f04438; }
+        .team-status-text { font-size: 11.5px; font-weight: 600; }
 
-        .team-lastactive { display: flex; align-items: center; gap: 7px; font-size: 12px; color: #7c8398; }
         .team-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
-        .dot-green { background: #12b76a; }
-        .dot-amber { background: #f79009; }
-        .dot-gray  { background: #c2c7d2; }
+        .dot-green { background: #10b981; }
+        .dot-amber { background: #f59e0b; }
+        .dot-gray  { background: #94a3b8; }
 
         .team-action-btn {
-            width: 30px; height: 30px;
-            border-radius: 8px;
-            border: none; background: transparent;
-            color: #7c8398;
+            width: 28px; height: 28px;
+            border-radius: 6px;
+            border: 1px solid #e2e8f0; background: #fff;
+            color: #64748b;
             display: inline-flex; align-items: center; justify-content: center;
+            cursor: pointer;
+            transition: all .15s;
         }
-        .team-action-btn:hover { background: #f1f3f7; color: #1e2129; }
+        .team-action-btn:hover { background: #f8fafc; color: #0f172a; }
         .team-action-wrap { position: relative; display: inline-block; }
         .team-action-menu {
             position: absolute;
             right: 0;
-            top: 34px;
-            min-width: 160px;
+            top: 32px;
+            min-width: 200px;
             background: #fff;
-            border: 1px solid #eef0f4;
-            border-radius: 10px;
-            box-shadow: 0 8px 24px rgba(20, 25, 40, .12);
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            box-shadow: 0 8px 24px rgba(15, 23, 42, .08);
             padding: 6px;
             z-index: 50;
             display: none;
         }
         .team-action-menu.show { display: block; }
         .team-action-item {
-            display: block;
-            font-size: 12px;
-            color: #1e2129;
-            padding: 8px 12px;
-            border-radius: 7px;
+            display: flex;
+            align-items: center;
+            font-size: 11.5px;
+            font-weight: 500;
+            color: #334155;
+            padding: 7px 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all .15s;
+        }
+        .team-action-item:hover { background: #f1f5f9; color: #0f172a; }
+
+        /* Bottom Activity Strip */
+        .team-card-bottom {
+            background: #fcfdfd;
+            border-top: 1px solid #f1f5f9;
+            padding: 8px 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            flex-wrap: wrap;
+            font-size: 11.5px;
+        }
+        .tm-bottom-left {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #64748b;
+        }
+        .tm-lastactive {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .tm-bullet { color: #cbd5e1; }
+        .tm-root-badge {
+            font-size: 11px;
+            font-weight: 600;
+            color: #b45309;
+        }
+        .tm-bottom-right {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .tm-agency-share-pill {
+            font-size: 11px;
+            color: #334155;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .tm-inspect-link {
+            color: #009ef7;
+            font-weight: 600;
+            text-decoration: underline;
             cursor: pointer;
         }
-        .team-action-item:hover { background: #eef2ff; color: #6366f1; }
+        .tm-inspect-link:hover { color: #0077b6; }
 
-        /* ---------- Footer / pagination ---------- */
-        .team-pagination-bar {
+        /* Empty state */
+        .team-empty-card {
+            background: #fff;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 40px 20px;
+            text-align: center;
+        }
+
+        /* Rep Selection Modal Items */
+        .rep-picker-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            max-height: 380px;
+            overflow-y: auto;
+            padding: 4px;
+        }
+        .rep-picker-item {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 16px 4px 4px;
-            border-top: 1px solid #eef0f4;
-            margin-top: 4px;
-            gap: 14px;
-            flex-wrap: wrap;
-        }
-        .team-pagination-info { font-size: 12px; color: #7c8398; }
-        .team-pagination-pages { display: flex; align-items: center; gap: 6px; }
-        .team-page-link {
-            min-width: 32px; height: 32px;
-            border: 1px solid #eef0f4;
+            padding: 10px 14px;
             background: #fff;
+            border: 1.5px solid #e2e8f0;
             border-radius: 8px;
-            font-size: 12px; font-weight: 600;
-            color: #1e2129;
-            display: inline-flex; align-items: center; justify-content: center;
-            cursor: pointer; padding: 0 8px;
+            cursor: pointer;
+            transition: all .15s;
         }
-        .team-page-link.is-active { background: #6366f1; border-color: #6366f1; color: #fff; }
-        .team-page-link.is-disabled { opacity: .45; pointer-events: none; }
-        .team-page-dots { color: #7c8398; padding: 0 2px; }
-        .team-pagination-rows { display: flex; align-items: center; gap: 8px; font-size: 12px; color: #7c8398; }
-        .team-pagination-rows select {
-            height: 32px; border: 1px solid #eef0f4;
-            border-radius: 8px; font-size: 12px; padding: 0 8px; background: #fff;
+        .rep-picker-item:hover {
+            border-color: #009ef7;
+            background: #f8fafc;
         }
-
-        #team_rank_user .modal-dialog { max-width: 1180px; }
-
-        /* ========== Team Toolbar (in-flow, not fixed) ========== */
-        /* Custom ID (#team-toolbar) to avoid Metronic .toolbar class conflicts. */
-        #team-toolbar {
-            position: static;
-            background: #fff;
-            border-bottom: 1px solid #eef0f4;
-            box-shadow: none;
-            padding: 16px 20px;
+        .rep-picker-item.selected {
+            border-color: #009ef7;
+            background: #eff6ff;
+        }
+        .rep-picker-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
             display: flex;
             align-items: center;
-            margin-bottom: 8px;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 14px;
+            margin-right: 12px;
+            flex-shrink: 0;
         }
-        #team-toolbar .team-toolbar-inner {
-            width: 100%;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
+        .rep-picker-name {
+            font-size: 13px;
+            font-weight: 700;
+            color: #0f172a;
+        }
+        .rep-picker-meta {
+            font-size: 11.5px;
+            color: #64748b;
+        }
+
+        /* Responsive */
+        @media (max-width: 1200px) {
+            .team-mp-contacts-grid { grid-template-columns: 1fr !important; }
+            .team-card-grid { grid-template-columns: 1fr 1fr !important; }
+            .team-roster-legend { display: none !important; }
+        }
+        @media (max-width: 768px) {
+            .team-card-grid { grid-template-columns: 1fr !important; }
         }
 
         /* ========== Invite Drawer ========== */
@@ -606,148 +1183,264 @@
 @endpush 
  
 @section('content')
-    <!--begin::Team Toolbar (in-flow, not fixed) -->
-    <div id="team-toolbar">
-        <div class="team-toolbar-inner">
-            <div class="page-title d-flex flex-column">
-                <h1 class="team-page-title">Team</h1>
-                <span class="team-page-subtitle">Manage your team members, workloads and performance.</span>
-            </div>
-            <div class="d-flex align-items-center team-header-actions">
-                <input type="hidden" id="inputSearch" data-kt-user-table-filter="search" placeholder="Search..." />
-                <a href="javascript:void(0);" class="team-btn team-btn-light" id="openInviteDrawer">
-                    <i class="fa-regular fa-envelope"></i> <span>Invite Member</span>
-                </a>
-                <a href="javascript:void(0);" class="team-btn team-btn-light" onclick="exportTeam()">
-                    <i class="fa-solid fa-arrow-up-from-bracket"></i> <span>Export</span>
-                </a>
-            </div>
-        </div>
-    </div>
-    <!--end::Team Toolbar-->
-    <!--begin::Content-->
-    <div class="content d-flex flex-column flex-column-fluid pt-4" id="kt_content">
+    @php
+        $teamCid = (int) (auth()->user()->company_id ?? 0);
+        if (!isset($teamCounts)) {
+            $teamCounts = app(\App\Http\Controllers\ServiceCompany\ServiceCompanyTeamController::class)->getTeamCounts($teamCid);
+        }
+        $defaultReps = $defaultRepresentatives ?? app(\App\Services\CompanyRepresentativeService::class)->getDefaultRepresentatives($teamCid);
+        $clientRep = $defaultReps['client_rep'] ?? null;
+        $agencyRep = $defaultReps['agency_rep'] ?? null;
+    @endphp
+
+    <div class="content d-flex flex-column flex-column-fluid pt-2" id="kt_content">
         <div class="post d-flex flex-column-fluid" id="kt_post">
             <div id="kt_content_container" class="container-fluid px-3">
 
-                @php
-                    // Fallback: derive the stat-card / tab counts here if the controller did not
-                    // supply them (e.g. while a long-running worker still holds an older index()).
-                    // Same logic as ServiceCompanyTeamController@index. Tenancy: User::company()
-                    // is company-scoped; raw DB queries are filtered by company_id explicitly.
-                    if (!isset($teamCounts)) {
-                        $teamCid = auth()->user()->company_id;
-                        $teamStatus = \App\Models\User::query()->company()
-                            ->selectRaw('COUNT(*) as total')
-                            ->selectRaw("SUM(status = 'active') as active")
-                            ->selectRaw("SUM(status = 'inactive') as inactive")
-                            ->selectRaw("SUM(password = '') as invited")
-                            ->first();
-                        $teamCaptain = \Illuminate\Support\Facades\DB::table('job_assign')
-                            ->where('company_id', $teamCid)->where('spok_user_id', '>', 0)
-                            ->distinct()->count('spok_user_id');
-                        $teamTrm = \Illuminate\Support\Facades\DB::table('job_applications')
-                            ->where('company_id', $teamCid)->where('submitted_by', '>', 0)
-                            ->distinct()->count('submitted_by');
-                        $teamCounts = [
-                            'total'     => (int) ($teamStatus->total ?? 0),
-                            'active'    => (int) ($teamStatus->active ?? 0),
-                            'inactive'  => (int) ($teamStatus->inactive ?? 0),
-                            'invited'   => (int) ($teamStatus->invited ?? 0),
-                            'suspended' => 0,
-                            'captain'   => (int) $teamCaptain,
-                            'trm'       => (int) $teamTrm,
-                        ];
-                    }
-                @endphp
+                <!-- ============================================================== -->
+                <!-- TIER 1: TOP HEADER TOOLBAR (Matching Reference Standard)        -->
+                <!-- ============================================================== -->
+                <div class="team-toolbar-card mb-4">
+                    <div class="team-toolbar-left">
+                        <div class="team-toolbar-icon" style="background:#eff6ff; color:#009ef7;">
+                            <i class="fa-solid fa-users"></i>
+                        </div>
+                        <div>
+                            <div class="d-flex align-items-center">
+                                <h1 class="team-toolbar-title">Team Members</h1>
+                            </div>
+                            <div class="team-toolbar-subtitle">Manage your team and configure who represents your company for external communication through Jero Marketplace.</div>
+                        </div>
+                    </div>
 
-                {{-- Stat cards --}}
-                <div class="team-stats-row">
-                    <div class="team-stat-card">
-                        <div class="team-stat-ico ico-blue"><i class="fa-solid fa-user-group"></i></div>
-                        <div>
-                            <div class="team-stat-label">Total Members</div>
-                            <div class="team-stat-value" id="stat-total-members">{{ $teamCounts['total'] }}</div>
-                        </div>
-                    </div>
-                    <div class="team-stat-card">
-                        <div class="team-stat-ico ico-green"><i class="fa-solid fa-user-check"></i></div>
-                        <div>
-                            <div class="team-stat-label">Active Members</div>
-                            <div class="team-stat-value" id="stat-active-members">{{ $teamCounts['active'] }}</div>
-                        </div>
-                    </div>
-                    <div class="team-stat-card">
-                        <div class="team-stat-ico ico-amber"><i class="fa-solid fa-user-xmark"></i></div>
-                        <div>
-                            <div class="team-stat-label">Inactive Members</div>
-                            <div class="team-stat-value" id="stat-inactive-members">{{ $teamCounts['inactive'] }}</div>
-                        </div>
-                    </div>
-                    <div class="team-stat-card">
-                        <div class="team-stat-ico ico-purple"><i class="fa-solid fa-crown"></i></div>
-                        <div>
-                            <div class="team-stat-label">Captain / TRM</div>
-                            <div class="team-stat-value" id="stat-captain-trm">{{ $teamCounts['captain'] + $teamCounts['trm'] }}</div>
-                            <div class="team-stat-sub">Captain <span id="stat-captain-sub">{{ $teamCounts['captain'] }}</span> &nbsp;•&nbsp; TRM
-                                <span id="stat-trm-sub">{{ $teamCounts['trm'] }}</span></div>
-                        </div>
+                    <div class="team-toolbar-right">
+                        <!-- Action Button: Invite Member -->
+                        <button type="button" class="team-btn-primary" id="openInviteDrawer">
+                            <i class="fa-solid fa-plus me-1"></i>
+                            <span>Invite Member</span>
+                        </button>
                     </div>
                 </div>
 
-                <div class="card team-main-card">
-                    {{-- Status tabs --}}
-                    <div class="team-tabs">
-                        <a class="team-tab active" data-status="all">All Members (<span id="tab-count-all">{{ $teamCounts['total'] }}</span>)</a>
-                        <a class="team-tab" data-status="active">Active (<span id="tab-count-active">{{ $teamCounts['active'] }}</span>)</a>
-                        <a class="team-tab" data-status="inactive">Inactive (<span id="tab-count-inactive">{{ $teamCounts['inactive'] }}</span>)</a>
-                        <a class="team-tab" data-status="invited">Invited (<span id="tab-count-invited">{{ $teamCounts['invited'] }}</span>)</a>
-                    </div>
-
-                    <div class="card-body pt-3 px-5">
-                        {{-- Filter bar --}}
-                        <div class="team-filter-bar">
-                            <div class="team-search-wrap">
-                                <span class="team-search-icon"><i class="fa-solid fa-magnifying-glass"></i></span>
-                                <input type="text" id="kt_tagify_2" placeholder="Search by name, email or phone..." autocomplete="off" />
+                <!-- ============================================================== -->
+                <!-- MARKETPLACE COMMUNICATION CONTACTS (3-Column Executive Card)    -->
+                <!-- ============================================================== -->
+                <div class="team-mp-contacts-card mb-4">
+                    <div class="team-mp-contacts-grid">
+                        
+                        <!-- Column 1: Marketplace Communication Contacts Overview -->
+                        <div class="tm-mp-col tm-mp-overview-col">
+                            <div class="d-flex align-items-start gap-3">
+                                <div class="tm-mp-icon-wrap bg-light-teal text-teal">
+                                    <i class="fa-solid fa-bullhorn fs-4"></i>
+                                </div>
+                                <div>
+                                    <h3 class="tm-mp-col-title">Marketplace Communication Contacts</h3>
+                                    <p class="tm-mp-col-desc">Select team members who will be the default contact for client and agency communication through Jero Marketplace.</p>
+                                </div>
                             </div>
-                            <div class="team-sort-card">
-                                <span class="team-sort-label">
-                                    <i class="fa-solid fa-arrow-up-wide-short"></i> Sort by
+                            <div class="tm-mp-info-box">
+                                <i class="fa-solid fa-circle-info text-primary mt-1"></i>
+                                <span>When your company is discovered through Jero Marketplace Search or a relevant Job Request is initiated, the selected contact person's business contact details will be shared with the client or agency for communication.</span>
+                            </div>
+                        </div>
+
+                        <!-- Column 2: Client & Sales Communication -->
+                        <div class="tm-mp-col tm-mp-box tm-mp-client-box">
+                            <div class="tm-mp-box-head">
+                                <div class="d-flex align-items-center gap-2">
+                                    <div class="tm-mp-box-icon text-success bg-white shadow-xs">
+                                        <i class="fa-solid fa-building"></i>
+                                    </div>
+                                    <div class="tm-mp-box-title">Client &amp; Sales Communication</div>
+                                </div>
+                                <span class="badge badge-light-success text-success fw-bold fs-9">
+                                    <i class="fa-solid fa-crown me-1"></i>Default Contact
                                 </span>
-                                <select class="team-select" id="sortingfilter" onchange="filtersdataget()">
-                                    <option value="">Last Active</option>
-                                    <option value="1">Newest to Oldest</option>
-                                    <option value="2">Oldest to Newest</option>
-                                </select>
+                            </div>
+                            <div class="tm-mp-box-subtitle">
+                                Used for client enquiries, sales communication, profile discovery and client job requests.
+                            </div>
+                            <div class="tm-mp-profile-box" id="spotlightClientRepBox">
+                                @if(!empty($clientRep))
+                                    @php
+                                        $crInit = strtoupper(substr($clientRep['name'] ?? 'C', 0, 1));
+                                    @endphp
+                                    <div class="tm-mp-avatar">
+                                        @if(!empty($clientRep['image']))
+                                            <img src="{{ $clientRep['image'] }}" alt="{{ $clientRep['name'] }}" style="width:100%; height:100%; border-radius:6px; object-fit:cover;">
+                                        @else
+                                            {{ $crInit }}
+                                        @endif
+                                    </div>
+                                    <div class="tm-mp-profile-details">
+                                        <div class="tm-mp-profile-name" id="spotlightClientRepName">{{ $clientRep['name'] }}</div>
+                                        <div class="tm-mp-profile-role" id="spotlightClientRepDesig">{{ $clientRep['designation'] ?? 'Administrator' }}</div>
+                                        <div class="tm-mp-profile-contact">
+                                            <span id="spotlightClientRepEmail"><i class="fa-regular fa-envelope me-1"></i>{{ $clientRep['email'] }}</span>
+                                            @if(!empty($clientRep['mobile']))
+                                                <span id="spotlightClientRepMobile"><i class="fa-solid fa-phone me-1"></i>{{ $clientRep['mobile'] }}</span>
+                                            @endif
+                                        </div>
+                                    </div>
+                                    <button type="button" class="btn-mp-change" onclick="openRepModal('client')" title="Change Client &amp; Sales Contact">
+                                        Change Contact
+                                    </button>
+                                @else
+                                    <div class="d-flex align-items-center justify-content-between w-100 py-1">
+                                        <span class="fs-8 text-muted">No Contact Assigned</span>
+                                        <button type="button" class="btn-mp-change" onclick="openRepModal('client')">Assign Contact</button>
+                                    </div>
+                                @endif
                             </div>
                         </div>
 
-                        @if (in_array('view_team', $userPermissions))
-                            <div class="loadingMessage loadingMessageteamsListajax"
-                                style="display: none; position: absolute;">Processing...</div>
-                            <div class="table-responsive">
-                                <table class="team-table" id="myTable">
-                                    <thead>
-                                        <tr>
-                                            <th>Member</th>
-                                            <th>Rank</th>
-                                            <th>Workload</th>
-                                            <th>Role</th>
-                                            <th>Status</th>
-                                            <th>Last Active</th>
-                                            <th style="text-align:right;">Actions</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="teamsListajax"> </tbody>
-                                </table>
+                        <!-- Column 3: Agency Communication -->
+                        <div class="tm-mp-col tm-mp-box tm-mp-agency-box">
+                            <div class="tm-mp-box-head">
+                                <div class="d-flex align-items-center gap-2">
+                                    <div class="tm-mp-box-icon text-purple bg-white shadow-xs">
+                                        <i class="fa-solid fa-users"></i>
+                                    </div>
+                                    <div class="tm-mp-box-title">Agency Communication</div>
+                                </div>
+                                <span class="badge badge-light-purple text-purple fw-bold fs-9">
+                                    <i class="fa-solid fa-crown me-1"></i>Default Contact
+                                </span>
                             </div>
-                            <div id="paginationTeams"></div>
-                        @endif
+                            <div class="tm-mp-box-subtitle">
+                                Used for agency enquiries, job requests, candidate submissions and other marketplace communication.
+                            </div>
+                            <div class="tm-mp-profile-box" id="spotlightAgencyRepBox">
+                                @if(!empty($agencyRep))
+                                    @php
+                                        $arInit = strtoupper(substr($agencyRep['name'] ?? 'A', 0, 1));
+                                    @endphp
+                                    <div class="tm-mp-avatar">
+                                        @if(!empty($agencyRep['image']))
+                                            <img src="{{ $agencyRep['image'] }}" alt="{{ $agencyRep['name'] }}" style="width:100%; height:100%; border-radius:6px; object-fit:cover;">
+                                        @else
+                                            {{ $arInit }}
+                                        @endif
+                                    </div>
+                                    <div class="tm-mp-profile-details">
+                                        <div class="tm-mp-profile-name" id="spotlightAgencyRepName">{{ $agencyRep['name'] }}</div>
+                                        <div class="tm-mp-profile-role" id="spotlightAgencyRepDesig">{{ $agencyRep['designation'] ?? 'Administrator' }}</div>
+                                        <div class="tm-mp-profile-contact">
+                                            <span id="spotlightAgencyRepEmail"><i class="fa-regular fa-envelope me-1"></i>{{ $agencyRep['email'] }}</span>
+                                            @if(!empty($agencyRep['mobile']))
+                                                <span id="spotlightAgencyRepMobile"><i class="fa-solid fa-phone me-1"></i>{{ $agencyRep['mobile'] }}</span>
+                                            @endif
+                                        </div>
+                                    </div>
+                                    <button type="button" class="btn-mp-change" onclick="openRepModal('agency')" title="Change Agency Contact">
+                                        Change Contact
+                                    </button>
+                                @else
+                                    <div class="d-flex align-items-center justify-content-between w-100 py-1">
+                                        <span class="fs-8 text-muted">No Contact Assigned</span>
+                                        <button type="button" class="btn-mp-change" onclick="openRepModal('agency')">Assign Contact</button>
+                                    </div>
+                                @endif
+                            </div>
+                        </div>
+
                     </div>
                 </div>
+
+                <!-- ============================================================== -->
+                <!-- TIER 2: SUB-TABS & COMMUNICATION HISTORY ROW                    -->
+                <!-- ============================================================== -->
+                <div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
+                    <div class="tm-nav-tabs">
+                        <button type="button" class="tm-nav-tab active" data-status="all">
+                            <span>All Members</span>
+                            <span class="tm-nav-count" id="tab-count-all">({{ $teamCounts['total'] ?? 0 }})</span>
+                        </button>
+                        <button type="button" class="tm-nav-tab" data-status="active">
+                            <span>Active</span>
+                            <span class="tm-nav-count" id="tab-count-active">({{ $teamCounts['active'] ?? 0 }})</span>
+                        </button>
+                        <button type="button" class="tm-nav-tab" data-status="inactive">
+                            <span>Inactive</span>
+                            <span class="tm-nav-count" id="tab-count-inactive">({{ $teamCounts['inactive'] ?? 0 }})</span>
+                        </button>
+                        <button type="button" class="tm-nav-tab" data-status="invited">
+                            <span>Invited</span>
+                            <span class="tm-nav-count" id="tab-count-invited">({{ $teamCounts['invited'] ?? 0 }})</span>
+                        </button>
+                    </div>
+
+                    <div>
+                        <button type="button" class="btn btn-sm btn-white border border-gray-300 text-gray-800 fw-semibold shadow-xs" onclick="openAgencySharesModal()" title="View job-level communication mapping and history">
+                            <i class="fa-solid fa-clock-rotate-left me-1 text-muted"></i>
+                            <span>Communication History</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- ============================================================== -->
+                <!-- TIER 2.5: SEARCH & FILTER BAR                                  -->
+                <!-- ============================================================== -->
+                <div class="team-filter-bar mb-3">
+                    <div class="team-filter-search">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                        <input type="text" id="kt_tagify_2" class="team-search-input" placeholder="Search by name, email or phone..." autocomplete="off" />
+                        <button type="button" class="team-search-clear" onclick="clearTeamFilters()" title="Clear Search">✕</button>
+                    </div>
+
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="text-muted fs-8 fw-semibold"><i class="fa-solid fa-arrow-down-short-wide me-1"></i>Sort by:</span>
+                            <select class="team-select-control" id="sortingfilter" onchange="fetchTeams(1)">
+                                <option value="">Last Active</option>
+                                <option value="1">Newest to Oldest</option>
+                                <option value="2">Oldest to Newest</option>
+                            </select>
+                        </div>
+
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="text-muted fs-8 fw-semibold">Status:</span>
+                            <select class="team-select-control" id="teamStatusFilterDropdown" onchange="changeStatusDropdown(this.value)">
+                                <option value="all">All</option>
+                                <option value="active">Active</option>
+                                <option value="inactive">Inactive</option>
+                                <option value="invited">Invited</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ============================================================== -->
+                <!-- TIER 3: ROSTER COLUMN LEGEND & CARD STREAM                     -->
+                <!-- ============================================================== -->
+                <div class="team-roster-legend mb-2">
+                    <div>Member</div>
+                    <div>Rank</div>
+                    <div>Workload</div>
+                    <div>Role</div>
+                    <div>Communication</div>
+                    <div>Status</div>
+                    <div>Last Active</div>
+                    <div style="text-align: center;">Actions</div>
+                </div>
+
+                <div class="position-relative">
+                    <div class="loadingMessage loadingMessageteamsListajax" style="display: none; position: absolute; z-index: 20; background: rgba(255,255,255,0.85); inset: 0; padding: 40px; text-align: center; font-weight: 600; color: #009ef7; border-radius: 10px;">
+                        <span class="spinner-border spinner-border-sm me-2"></span> Loading team members...
+                    </div>
+                    
+                    <!-- Dynamic Stream Container Populated via AJAX -->
+                    <div id="teamsListajax"></div>
+                    
+                    <!-- Pagination Bar -->
+                    <div id="paginationTeams" class="mt-3"></div>
+                </div>
+
             </div>
         </div>
+    </div>
+    <!--end::Content-->
         <!--end::Content-->
 
         {{-- Invite Member Drawer --}}
@@ -887,6 +1580,196 @@
             </div>
         </div>
 
+        <!-- ============================================================== -->
+        <!-- REPRESENTATIVE SELECTION MODAL                                 -->
+        <!-- ============================================================== -->
+        <div class="modal fade" id="repSelectModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered modal-md">
+                <div class="modal-content" style="border-radius: 12px; border: 1px solid #e2e8f0; box-shadow: 0 10px 25px rgba(15,23,42,0.12);">
+                    <div class="modal-header py-3 px-4" style="border-bottom: 1px solid #e2e8f0;">
+                        <div>
+                            <h3 class="modal-title fs-6 fw-bold text-gray-900 mb-0">Select Company Representative</h3>
+                            <div class="text-muted fs-8 mt-1">
+                                Choose who will represent your company to <span id="repModalTypeLabel" class="text-primary fw-bold">Clients</span>.
+                            </div>
+                        </div>
+                        <button type="button" class="btn btn-sm btn-icon btn-active-light-primary" data-bs-dismiss="modal" data-dismiss="modal" aria-label="Close">
+                            <i class="fa-solid fa-xmark"></i>
+                        </button>
+                    </div>
+                    <div class="modal-body py-3 px-4">
+                        <input type="hidden" id="repModalTargetType" value="client">
+                        
+                        <!-- Search Box -->
+                        <div class="position-relative mb-3">
+                            <i class="fa-solid fa-magnifying-glass position-absolute text-muted" style="left: 12px; top: 11px; font-size: 12px;"></i>
+                            <input type="text" id="repPickerSearch" class="form-control form-control-sm ps-5" placeholder="Search team members by name or email..." autocomplete="off" oninput="filterRepPicker(this.value)">
+                        </div>
+
+                        <!-- Info Pill -->
+                        <div class="p-2 mb-3 rounded" style="background: #f8fafc; border: 1px solid #e2e8f0; font-size: 11.5px; color: #475569;">
+                            <i class="fa-solid fa-circle-info text-primary me-1"></i>
+                            <span id="repModalScopeExplain">The selected user will be shown as the primary contact on all Direct Client interfaces.</span>
+                        </div>
+
+                        <!-- Eligible Team Members Radio List -->
+                        <div class="rep-picker-list" id="repPickerList">
+                            @php
+                                $eligibleList = $eligibleRepresentatives ?? app(\App\Services\CompanyRepresentativeService::class)->getEligibleRepresentatives($teamCid);
+                            @endphp
+                            @foreach($eligibleList as $elUser)
+                                @php
+                                    $uInit = strtoupper(substr($elUser['name'] ?? 'U', 0, 1));
+                                @endphp
+                                <label class="rep-picker-item js-rep-picker-item" data-search="{{ strtolower($elUser['name'] . ' ' . $elUser['email'] . ' ' . $elUser['designation']) }}">
+                                    <div class="d-flex align-items-center">
+                                        <div class="rep-picker-avatar bg-light-primary text-primary">
+                                            @if(!empty($elUser['image']))
+                                                <img src="{{ $elUser['image'] }}" alt="{{ $elUser['name'] }}" style="width:100%; height:100%; border-radius:8px; object-fit:cover;">
+                                            @else
+                                                {{ $uInit }}
+                                            @endif
+                                        </div>
+                                        <div>
+                                            <div class="rep-picker-name">{{ $elUser['name'] }}</div>
+                                            <div class="rep-picker-meta">
+                                                <span>{{ $elUser['designation'] }}</span>
+                                                <span class="mx-1">&bull;</span>
+                                                <span>{{ $elUser['email'] }}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="d-flex align-items-center gap-2">
+                                        @if(!empty($elUser['is_client_rep']))
+                                            <span class="badge-rep-pill badge-rep-client fs-8">Current Client Rep</span>
+                                        @endif
+                                        @if(!empty($elUser['is_agency_rep']))
+                                            <span class="badge-rep-pill badge-rep-agency fs-8">Current Agency Rep</span>
+                                        @endif
+                                        <input type="radio" name="selected_rep_user_id" value="{{ $elUser['id'] }}" class="form-check-input ms-2" style="cursor: pointer;">
+                                    </div>
+                                </label>
+                            @endforeach
+                        </div>
+                    </div>
+                    <div class="modal-footer py-2 px-4" style="border-top: 1px solid #e2e8f0;">
+                        <button type="button" class="btn btn-sm btn-light" data-bs-dismiss="modal" data-dismiss="modal">Cancel</button>
+                        <button type="button" class="btn btn-sm btn-primary" id="btnConfirmRep" onclick="submitRepSelection()">
+                            <i class="fa-solid fa-check me-1"></i> Confirm Representative
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================================== -->
+        <!-- JOB-LEVEL AGENCY SHARES MAPPING INSPECTOR MODAL               -->
+        <!-- ============================================================== -->
+        <div class="modal fade" id="agencySharesModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered modal-lg">
+                <div class="modal-content" style="border-radius: 12px; border: 1px solid #e2e8f0; box-shadow: 0 10px 25px rgba(15,23,42,0.12);">
+                    <div class="modal-header py-3 px-4" style="border-bottom: 1px solid #e2e8f0;">
+                        <div>
+                            <h3 class="modal-title fs-6 fw-bold text-gray-900 mb-0">
+                                <i class="fa-solid fa-diagram-project text-primary me-2"></i>Job-Level Agency Representation Mapping
+                            </h3>
+                            <div class="text-muted fs-8 mt-1">
+                                Authoritative representation priority: <strong>Job + Agency Relationship → User Who Shared/Added Agency → Representative</strong>
+                            </div>
+                        </div>
+                        <button type="button" class="btn btn-sm btn-icon btn-active-light-primary" data-bs-dismiss="modal" data-dismiss="modal" aria-label="Close">
+                            <i class="fa-solid fa-xmark"></i>
+                        </button>
+                    </div>
+                    <div class="modal-body py-3 px-4">
+                        <!-- Rule Reminder Alert -->
+                        <div class="p-3 mb-3 rounded" style="background: #eff6ff; border: 1px solid #bfdbfe; font-size: 11.5px; color: #1e40af;">
+                            <div class="fw-bold mb-1"><i class="fa-solid fa-shield-halved me-1"></i>Direct Client &amp; Agency Representation Law:</div>
+                            When a job is shared with an agency, the team member who actually shared/invited that agency becomes the representative for that agency relationship. The job creator is <strong>NOT</strong> automatically the representative unless they shared the job themselves. Both the Partner Agency and Direct Client see this exact representative.
+                        </div>
+
+                        <!-- Content Loaded via AJAX -->
+                        <div id="agencySharesModalBody">
+                            <div class="text-center py-5 text-muted">
+                                <span class="spinner-border spinner-border-sm me-2"></span> Loading agency relationship mapping...
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer py-2 px-4" style="border-top: 1px solid #e2e8f0;">
+                        <button type="button" class="btn btn-sm btn-light" data-bs-dismiss="modal" data-dismiss="modal">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {{-- Authoritative Representation Rules Modal --}}
+        <div class="modal fade" id="repRulesModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered modal-lg">
+                <div class="modal-content" style="border-radius: 12px; border: 1px solid #e2e8f0; box-shadow: 0 10px 25px rgba(15,23,42,0.12);">
+                    <div class="modal-header py-3 px-4" style="border-bottom: 1px solid #e2e8f0;">
+                        <div class="d-flex align-items-center gap-2">
+                            <div style="width:34px; height:34px; border-radius:8px; background:#eff6ff; color:#009ef7; display:flex; align-items:center; justify-content:center; font-size:16px;">
+                                <i class="fa-solid fa-shield-halved"></i>
+                            </div>
+                            <div>
+                                <h3 class="modal-title fs-6 fw-bold text-gray-900 mb-0">Company Representation Architecture &amp; Hierarchy</h3>
+                                <div class="text-muted fs-8 mt-1">Authoritative identity resolution across Direct Clients and Partner Agencies</div>
+                            </div>
+                        </div>
+                        <button type="button" class="btn btn-sm btn-icon btn-active-light-primary" data-bs-dismiss="modal" data-dismiss="modal" aria-label="Close">
+                            <i class="fa-solid fa-xmark"></i>
+                        </button>
+                    </div>
+                    <div class="modal-body p-4">
+                        <!-- 4 Pillars Grid -->
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-6">
+                                <div class="p-3 rounded-2" style="background:#f8fafc; border:1px solid #e2e8f0; border-left:3.5px solid #009ef7;">
+                                    <div class="fw-bold fs-7 text-dark mb-1"><i class="fa-solid fa-user-tie text-primary me-2"></i>Client SPOC</div>
+                                    <div class="fs-8 text-muted">The authoritative company representative shown to <strong>Direct Clients</strong> across job requisitions, candidate review pipelines, and organization profiles.</div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="p-3 rounded-2" style="background:#f8fafc; border:1px solid #e2e8f0; border-left:3.5px solid #10b981;">
+                                    <div class="fw-bold fs-7 text-dark mb-1"><i class="fa-solid fa-building-user text-success me-2"></i>Agency SPOC</div>
+                                    <div class="fs-8 text-muted">The default contact presented to <strong>Partner Agencies</strong> on job invitations, talent sharing feeds, and placement discussions.</div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="p-3 rounded-2" style="background:#f8fafc; border:1px solid #e2e8f0; border-left:3.5px solid #f59e0b;">
+                                    <div class="fw-bold fs-7 text-dark mb-1"><i class="fa-solid fa-pen-nib text-warning me-2"></i>Job Internal Author</div>
+                                    <div class="fs-8 text-muted">The team member who originally authored or opened the job requisition internally. Retained for internal audit trails.</div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="p-3 rounded-2" style="background:#f8fafc; border:1px solid #e2e8f0; border-left:3.5px solid #8b5cf6;">
+                                    <div class="fw-bold fs-7 text-dark mb-1"><i class="fa-solid fa-share-nodes text-purple me-2"></i>Job-Agency Sharer</div>
+                                    <div class="fs-8 text-muted">The specific team member who actively shared a requisition with an agency. Always takes top precedence on shared views.</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Priority Cascade Banner -->
+                        <div class="p-3 rounded-2" style="background:#eff6ff; border:1px solid #bfdbfe;">
+                            <div class="fw-bold fs-7 text-primary mb-2"><i class="fa-solid fa-arrow-trend-up me-2"></i>Authoritative Identity Priority Cascade</div>
+                            <div class="d-flex align-items-center gap-2 flex-wrap fs-8 text-dark">
+                                <span class="badge bg-white text-primary border border-primary px-2 py-1">1. Job + Agency Specific Sharer</span>
+                                <i class="fa-solid fa-arrow-right text-muted fs-9"></i>
+                                <span class="badge bg-white text-dark border px-2 py-1">2. User Who Added Partner Agency</span>
+                                <i class="fa-solid fa-arrow-right text-muted fs-9"></i>
+                                <span class="badge bg-primary text-white px-2 py-1">3. Default Company Representative</span>
+                            </div>
+                            <div class="fs-8 text-muted mt-2">
+                                This guarantees that partner agencies and clients always see the authoritative person they are actively working with, never a generic placeholder.
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer py-2 px-4" style="border-top: 1px solid #e2e8f0;">
+                        <button type="button" class="btn btn-sm btn-primary" data-bs-dismiss="modal" data-dismiss="modal">Got it</button>
+                    </div>
+                </div>
+            </div>
+        </div>
 
     @endsection
 
@@ -2653,10 +3536,14 @@
 							if ($('#stat-trm-sub').length) {
 								$('#stat-trm-sub').text(response.counts.trm || 0);
 							}
-							$('#tab-count-all').text(response.counts.total);
-							$('#tab-count-active').text(response.counts.active);
-							$('#tab-count-inactive').text(response.counts.inactive);
-							$('#tab-count-invited').text(response.counts.invited);
+							$('#tab-count-all').text('(' + (response.counts.total || 0) + ')');
+							$('#tab-count-all-badge').text((response.counts.total || 0) + ' Members');
+							$('#tab-count-active').text('(' + (response.counts.active || 0) + ')');
+							$('#tab-count-inactive').text('(' + (response.counts.inactive || 0) + ')');
+							$('#tab-count-invited').text('(' + (response.counts.invited || 0) + ')');
+							if (response.counts.representatives !== undefined) {
+								$('#tab-count-reps').text(response.counts.representatives);
+							}
 						}
 					},
 					error: function(xhr, status) {
@@ -2668,12 +3555,35 @@
 				return currentTeamFetchXhr;
 			}
 
-			// Switch status tabs (All / Active / Inactive / Invited / Suspended)
-			$(document).on('click', '.team-tab', function() {
-				$('.team-tab').removeClass('active');
+			// Switch status tabs (All / Active / Inactive / Invited / Representatives)
+			$(document).on('click', '.team-tab-btn, .team-tab, .tm-nav-tab', function() {
+				$('.team-tab-btn, .team-tab, .tm-nav-tab').removeClass('active');
 				$(this).addClass('active');
 				teamStatusTab = $(this).data('status');
+				$('#teamStatusFilterDropdown').val(teamStatusTab);
 				fetchTeams(1);
+			});
+
+			function changeStatusDropdown(val) {
+				teamStatusTab = val;
+				$('.tm-nav-tab, .team-tab-btn, .team-tab').removeClass('active');
+				$('.tm-nav-tab[data-status="' + val + '"]').addClass('active');
+				fetchTeams(1);
+			}
+
+			// Dynamic Search with 300ms debounce
+			var teamSearchTimeout = null;
+			$('#kt_tagify_2').on('input', function() {
+				var val = $(this).val();
+				if (val && val.trim().length > 0) {
+					$('.team-search-clear').show();
+				} else {
+					$('.team-search-clear').hide();
+				}
+				clearTimeout(teamSearchTimeout);
+				teamSearchTimeout = setTimeout(function() {
+					fetchTeams(1);
+				}, 300);
 			});
 
 			// Rows-per-page selector in the footer
@@ -2685,6 +3595,7 @@
 
 			function clearTeamFilters() {
 				$('#kt_tagify_2').val('');
+				$('.team-search-clear').hide();
 				$('#sortingfilter').val('');
 				fetchTeams(1);
 			}
@@ -2712,6 +3623,334 @@
 					$('.team-action-menu.show').removeClass('show');
 				}
 			});
+
+			/* =========================================================================
+			   Company Communication Representatives System
+			   ========================================================================= */
+
+			// Set default representative (Client or Agency)
+			function setRepresentative(userId, type, userName) {
+				if (!userId || !type) return;
+
+				var typeLabel = type === 'client' ? 'Client' : 'Agency';
+				var token = "{{ csrf_token() }}";
+				var url = "{{ route('service_company.team.set_default_representative') }}";
+
+				Swal.fire({
+					title: 'Set ' + typeLabel + ' Representative?',
+					text: 'Designate ' + (userName || 'this user') + ' as the default ' + typeLabel + ' Representative for your organization?',
+					icon: 'question',
+					showCancelButton: true,
+					confirmButtonColor: '#009ef7',
+					cancelButtonColor: '#e2e8f0',
+					confirmButtonText: 'Yes, Designate',
+					cancelButtonText: 'Cancel',
+					customClass: {
+						cancelButton: 'btn btn-light text-dark'
+					}
+				}).then((result) => {
+					if (result.isConfirmed) {
+						$.ajax({
+							type: 'POST',
+							url: url,
+							headers: {
+								'X-Idempotency-Key': generateIdempotencyKey('rep_def_' + type + '_' + userId)
+							},
+							data: {
+								_token: token,
+								user_id: userId,
+								type: type
+							},
+							success: function(response) {
+								if (response.status === 'success') {
+									if (window.JeroTeamLocalStore) {
+										window.JeroTeamLocalStore.purge();
+									}
+									// Update the Spotlight Sub-Card dynamically
+									updateSpotlightUI(type, response.representative);
+
+									// Re-fetch current page to update badges and action buttons
+									fetchTeams(window.teamState ? window.teamState.currentPage : 1);
+
+									Swal.fire({
+										icon: 'success',
+										title: typeLabel + ' Representative Updated',
+										text: response.message || (userName + ' has been designated as the ' + typeLabel + ' Representative.'),
+										timer: 2500,
+										showConfirmButton: false
+									});
+								} else {
+									Swal.fire({
+										icon: 'error',
+										title: 'Action Failed',
+										text: response.message || 'Could not update representative.',
+										confirmButtonColor: '#009ef7'
+									});
+								}
+							},
+							error: function(xhr) {
+								Swal.fire({
+									icon: 'error',
+									title: 'Server Error',
+									text: 'An error occurred while updating the representative.',
+									confirmButtonColor: '#009ef7'
+								});
+							}
+						});
+					}
+				});
+			}
+
+			// Dynamically updates the Spotlight Sub-Card without full page reload
+			function updateSpotlightUI(type, user) {
+				if (!user) return;
+				var prefix = type === 'client' ? 'Client' : 'Agency';
+				var init = (user.name || 'U').charAt(0).toUpperCase();
+
+				var avatarHtml = user.image 
+					? '<img src="' + user.image + '" alt="' + user.name + '" style="width:100%; height:100%; border-radius:6px; object-fit:cover;">' 
+					: init;
+
+				var phoneHtml = user.mobile ? '<span id="spotlight' + prefix + 'RepMobile"><i class="fa-solid fa-phone me-1"></i>' + user.mobile + '</span>' : '';
+
+				var boxHtml = `
+					<div class="tm-mp-avatar">
+						${avatarHtml}
+					</div>
+					<div class="tm-mp-profile-details">
+						<div class="tm-mp-profile-name" id="spotlight${prefix}RepName">${user.name}</div>
+						<div class="tm-mp-profile-role" id="spotlight${prefix}RepDesig">${user.designation || 'Administrator'}</div>
+						<div class="tm-mp-profile-contact">
+							<span id="spotlight${prefix}RepEmail"><i class="fa-regular fa-envelope me-1"></i>${user.email}</span>
+							${phoneHtml}
+						</div>
+					</div>
+					<button type="button" class="btn-mp-change" onclick="openRepModal('${type}')" title="Change Contact">
+						Change Contact
+					</button>
+				`;
+				$('#spotlight' + prefix + 'RepBox').html(boxHtml);
+			}
+
+			// Open modal to select default representative
+			function openRepModal(type) {
+				type = type || 'client';
+				$('#repModalTargetType').val(type);
+				var typeLabel = type === 'client' ? 'Clients' : 'Partner Agencies';
+				$('#repModalTypeLabel').text(typeLabel);
+
+				if (type === 'client') {
+					$('#repModalScopeExplain').html('The selected team member will be presented to <strong>Direct Clients</strong> on all job requisitions, candidate review workflows, and organizational profile summaries.');
+				} else {
+					$('#repModalScopeExplain').html('The selected team member will be presented as the default contact to <strong>Partner Agencies</strong> on shared requisitions (unless individually overridden at the job level).');
+				}
+
+				$('#repPickerSearch').val('');
+				$('.js-rep-picker-item').show();
+				$('#repSelectModal').modal('show');
+			}
+
+			// Filter team members inside the selection modal
+			function filterRepPicker(query) {
+				var q = (query || '').toLowerCase().trim();
+				$('.js-rep-picker-item').each(function() {
+					var searchData = ($(this).data('search') || '').toLowerCase();
+					if (!q || searchData.indexOf(q) !== -1) {
+						$(this).show();
+					} else {
+						$(this).hide();
+					}
+				});
+			}
+
+			// Confirm selection in the modal
+			function submitRepSelection() {
+				var $selected = $('input[name="selected_rep_user_id"]:checked');
+				if (!$selected.length) {
+					Swal.fire({
+						icon: 'warning',
+						title: 'Select a Team Member',
+						text: 'Please select a team member from the list to assign as representative.',
+						confirmButtonColor: '#009ef7'
+					});
+					return;
+				}
+				var userId = $selected.val();
+				var userName = $selected.closest('.js-rep-picker-item').find('.rep-picker-name').text().trim();
+				var type = $('#repModalTargetType').val() || 'client';
+
+				$('#repSelectModal').modal('hide');
+				setRepresentative(userId, type, userName);
+			}
+
+			// Open Job-Level Agency Representation Mapping Modal
+			function openAgencySharesModal(userId, userName) {
+				$('#agencySharesModal').modal('show');
+				var url = "{{ route('service_company.team.job_agency_representatives') }}";
+				if (userId) {
+					url += '?userId=' + userId;
+				}
+
+				$('#agencySharesModalBody').html(`
+					<div class="text-center py-5 text-muted">
+						<span class="spinner-border spinner-border-sm me-2"></span> Loading agency relationship mapping for ${userName || 'team member'}...
+					</div>
+				`);
+
+				$.ajax({
+					type: 'GET',
+					url: url,
+					success: function(response) {
+						if (response.status === 'success' && response.shares && response.shares.length > 0) {
+							var html = `
+								<div class="table-responsive">
+									<table class="table table-row-dashed table-row-gray-200 align-middle gs-2 gy-3 fs-8">
+										<thead>
+											<tr class="fw-bold text-muted text-uppercase fs-9 border-bottom border-gray-200">
+												<th style="min-width: 140px;">Job Requisition</th>
+												<th style="min-width: 130px;">Job Created By</th>
+												<th style="min-width: 130px;">Partner Agency</th>
+												<th style="min-width: 150px;">Authoritative Representative</th>
+												<th style="min-width: 100px;">Shared Date</th>
+												<th class="text-end" style="min-width: 90px;">Action</th>
+											</tr>
+										</thead>
+										<tbody>
+							`;
+
+							response.shares.forEach(function(share) {
+								var creatorName = share.job_creator ? share.job_creator.name : 'Author';
+								var creatorEmail = share.job_creator ? share.job_creator.email : '';
+								var repName = share.representative ? share.representative.name : 'Default Contact';
+								var repEmail = share.representative ? share.representative.email : '';
+								var isCreatorRep = share.is_creator_the_rep;
+
+								html += `
+									<tr>
+										<td>
+											<div class="fw-bold text-dark fs-7">${share.job_title}</div>
+											<div class="text-muted fs-9">Job #${share.job_id}</div>
+										</td>
+										<td>
+											<div class="fw-semibold text-gray-800">${creatorName}</div>
+											<div class="text-muted fs-9">${creatorEmail}</div>
+										</td>
+										<td>
+											<div class="fw-semibold text-gray-800"><i class="fa-solid fa-handshake text-muted me-1"></i>${share.agency_name}</div>
+										</td>
+										<td>
+											<div class="d-flex align-items-center gap-1">
+												<span class="badge-rep-pill badge-rep-agency fs-9">Agency Rep</span>
+												<span class="fw-bold text-gray-900">${repName}</span>
+											</div>
+											<div class="text-muted fs-9">${repEmail}</div>
+											${isCreatorRep ? '<div class="text-success fs-9 mt-1"><i class="fa-solid fa-check me-1"></i>Also created the job</div>' : '<div class="text-primary fs-9 mt-1"><i class="fa-solid fa-share me-1"></i>Shared by this user</div>'}
+										</td>
+										<td>
+											<div class="text-muted">${share.shared_at}</div>
+										</td>
+										<td class="text-end">
+											<button type="button" class="btn btn-xs btn-light-primary fw-bold fs-9 py-1 px-2" onclick="reassignJobAgencyRep(${share.job_id}, ${share.agency_id}, ${share.representative_user_id}, '${escapeQuote(share.agency_name)}', '${escapeQuote(share.job_title)}')">
+												<i class="fa-solid fa-user-pen fs-9 me-1"></i>Reassign
+											</button>
+										</td>
+									</tr>
+								`;
+							});
+
+							html += `
+										</tbody>
+									</table>
+								</div>
+							`;
+							$('#agencySharesModalBody').html(html);
+						} else {
+							$('#agencySharesModalBody').html(`
+								<div class="text-center py-5 text-muted">
+									<i class="fa-solid fa-diagram-project fa-2x mb-2 text-muted"></i>
+									<div class="fw-bold fs-7 text-dark">No Agency Job Shares Found</div>
+									<div class="fs-8 mt-1">${userName || 'This user'} has not shared any job requisitions with partner agencies yet.</div>
+								</div>
+							`);
+						}
+					},
+					error: function() {
+						$('#agencySharesModalBody').html(`
+							<div class="text-center py-4 text-danger fs-8">
+								<i class="fa-solid fa-circle-exclamation me-1"></i> Failed to load agency relationships. Please try again.
+							</div>
+						`);
+					}
+				});
+			}
+
+			// Reassign Job Agency Representative
+			function reassignJobAgencyRep(jobId, agencyCompanyId, currentUserId, agencyName, jobTitle) {
+				var url = "{{ route('service_company.team.representatives_data') }}";
+				$.get(url, function(res) {
+					if (res.status === 'success' && res.eligible_users && res.eligible_users.length > 0) {
+						var options = {};
+						res.eligible_users.forEach(function(u) {
+							options[u.id] = u.name + ' (' + (u.designation || u.role_name) + ')';
+						});
+
+						Swal.fire({
+							title: 'Reassign Agency Representative',
+							html: `
+								<div class="text-start fs-8 mb-3">
+									<div><strong>Requisition:</strong> ${jobTitle}</div>
+									<div><strong>Partner Agency:</strong> ${agencyName}</div>
+									<div class="text-muted mt-1">Select the team member who will act as the authoritative representative for this agency on this job:</div>
+								</div>
+							`,
+							input: 'select',
+							inputOptions: options,
+							inputValue: currentUserId,
+							showCancelButton: true,
+							confirmButtonText: 'Reassign Representative',
+							confirmButtonColor: '#009ef7',
+							cancelButtonColor: '#e2e8f0',
+							customClass: { cancelButton: 'btn btn-light text-dark' }
+						}).then((sel) => {
+							if (sel.isConfirmed && sel.value) {
+								var newUserId = sel.value;
+								$.ajax({
+									type: 'POST',
+									url: "{{ route('service_company.team.change_job_representative') }}",
+									headers: {
+										'X-Idempotency-Key': generateIdempotencyKey('reassign_' + jobId + '_' + agencyCompanyId + '_' + newUserId)
+									},
+									data: {
+										_token: "{{ csrf_token() }}",
+										job_id: jobId,
+										agency_company_id: agencyCompanyId,
+										new_user_id: newUserId
+									},
+									success: function(resp) {
+										if (resp.status === 'success') {
+											if (window.JeroTeamLocalStore) {
+												window.JeroTeamLocalStore.purge();
+											}
+											Swal.fire({ icon: 'success', title: 'Reassigned', text: resp.message, timer: 2000, showConfirmButton: false });
+											openAgencySharesModal(null, '');
+											fetchTeams();
+										} else {
+											Swal.fire({ icon: 'error', title: 'Failed', text: resp.message });
+										}
+									},
+									error: function() {
+										Swal.fire({ icon: 'error', title: 'Error', text: 'Server error while reassigning.' });
+									}
+								});
+							}
+						});
+					}
+				});
+			}
+
+			function escapeQuote(str) {
+				return (str || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+			}
 
 
 

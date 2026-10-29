@@ -15769,12 +15769,14 @@ END:VCALENDAR";
                             'bool' => [
                                 'must' => $candidateMust,
                                 'must_not' => [
-                                    ['terms' => ['job_master_status_id' => [9]]],
+                                    ['terms' => ['job_master_status_id' => [8, 9, '8', '9']]],
+                                    ['terms' => ['master_status_id' => [8, '8']]],
                                 ],
                             ],
                         ],
                         'aggs' => [
-                            'all_candidates' => ['value_count' => ['field' => 'id']],
+                            // Authoritative Positive Allow-List: Sourcing through Joined [1..6] (Excludes In Review 8 and Archived 9)
+                            'all_candidates' => ['filter' => ['terms' => ['job_master_status_id' => [1, 2, 3, 4, 5, 6]]]],
                             'joined' => ['filter' => ['term' => ['job_master_status_id' => 6]]],
                             'sourced' => ['filter' => ['term' => ['job_master_status_id' => 1]]],
                             'screening' => ['filter' => ['term' => ['job_master_status_id' => 2]]],
@@ -15787,7 +15789,7 @@ END:VCALENDAR";
                     ],
                 ];
                 $response = $elasticService->getClient()->search($params);
-                $allCandidates = $response['hits']['total']['value'] ?? ($response['aggregations']['all_candidates']['value'] ?? 0);
+                $allCandidates = $response['aggregations']['all_candidates']['doc_count'] ?? 0;
                 $joined = $response['aggregations']['joined']['doc_count'] ?? 0;
                 $sourced = $response['aggregations']['sourced']['doc_count'] ?? 0;
                 $screening = $response['aggregations']['screening']['doc_count'] ?? 0;
@@ -15795,11 +15797,11 @@ END:VCALENDAR";
                 $negotiations = $response['aggregations']['negotiations']['doc_count'] ?? 0;
                 $offers = $response['aggregations']['offers']['doc_count'] ?? 0;
                 $rejected = $response['aggregations']['rejected']['doc_count'] ?? 0;
-                $inReview = $response['aggregations']['in_review']['doc_count'] ?? 0;
+                $inReview = 0; // In Review candidates are strictly excluded from client-facing counters
             }
 
             if ($elasticService->indexExists(ELASTIC_INERTVIEW_TRACKER)) {
-                $interviewQuery = ($company_id > 0)
+                $tenantInterviewQuery = ($company_id > 0)
                     ? \App\Services\Interview\InterviewTenantScope::forClient($company_id, (int) $client_id, 'internal')
                     : [
                         'bool' => [
@@ -15814,7 +15816,15 @@ END:VCALENDAR";
                     'request_cache' => true,
                     'body' => [
                         'size' => 0,
-                        'query' => $interviewQuery,
+                        'query' => [
+                            'bool' => [
+                                'must' => [$tenantInterviewQuery],
+                                'must_not' => [
+                                    ['terms' => ['master_status_id' => [8, '8']]],
+                                    ['terms' => ['job_master_status_id' => [8, '8']]],
+                                ],
+                            ],
+                        ],
                         'track_total_hits' => true,
                     ],
                 ];
@@ -15933,12 +15943,14 @@ END:VCALENDAR";
                                     ['term' => ['final_status' => 1]],
                                 ],
                                 'must_not' => [
-                                    ['terms' => ['job_master_status_id' => [9]]],
+                                    ['terms' => ['job_master_status_id' => [8, 9, '8', '9']]],
+                                    ['terms' => ['master_status_id' => [8, '8']]],
                                 ],
                             ],
                         ],
                         'aggs' => [
-                            'all_candidates' => ['value_count' => ['field' => 'id']],
+                            // Authoritative Positive Allow-List: Sourcing through Joined [1..6] (Excludes In Review 8 and Archived 9)
+                            'all_candidates' => ['filter' => ['terms' => ['job_master_status_id' => [1, 2, 3, 4, 5, 6]]]],
                             'joined' => ['filter' => ['term' => ['job_master_status_id' => 6]]],
                             'sourced' => ['filter' => ['term' => ['job_master_status_id' => 1]]],
                             'screening' => ['filter' => ['term' => ['job_master_status_id' => 2]]],
@@ -15952,7 +15964,7 @@ END:VCALENDAR";
                 ];
 
                 $response = $elasticService->getClient()->search($params);
-                $allCandidates = $response['hits']['total']['value'] ?? ($response['aggregations']['all_candidates']['value'] ?? 0);
+                $allCandidates = $response['aggregations']['all_candidates']['doc_count'] ?? 0;
                 $joined = $response['aggregations']['joined']['doc_count'] ?? 0;
                 $sourced = $response['aggregations']['sourced']['doc_count'] ?? 0;
                 $screening = $response['aggregations']['screening']['doc_count'] ?? 0;
@@ -15960,16 +15972,25 @@ END:VCALENDAR";
                 $negotiations = $response['aggregations']['negotiations']['doc_count'] ?? 0;
                 $offers = $response['aggregations']['offers']['doc_count'] ?? 0;
                 $rejected = $response['aggregations']['rejected']['doc_count'] ?? 0;
-                $inReview = $response['aggregations']['in_review']['doc_count'] ?? 0;
+                $inReview = 0; // In Review candidates are strictly excluded from client-facing counters
             }
 
             if ($elasticService->indexExists(ELASTIC_INERTVIEW_TRACKER)) {
+                $tenantInterviewQuery = \App\Services\Interview\InterviewTenantScope::forClient((int) $to_company_id, (int) $from_company_id, 'direct');
                 $paramsInterview = [
                     'index' => ELASTIC_INERTVIEW_TRACKER,
                     'request_cache' => true,
                     'body' => [
                         'size' => 0,
-                        'query' => \App\Services\Interview\InterviewTenantScope::forClient((int) $to_company_id, (int) $from_company_id, 'direct'),
+                        'query' => [
+                            'bool' => [
+                                'must' => [$tenantInterviewQuery],
+                                'must_not' => [
+                                    ['terms' => ['master_status_id' => [8, '8']]],
+                                    ['terms' => ['job_master_status_id' => [8, '8']]],
+                                ],
+                            ],
+                        ],
                         'track_total_hits' => true,
                     ],
                 ];

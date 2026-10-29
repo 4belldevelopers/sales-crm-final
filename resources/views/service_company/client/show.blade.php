@@ -653,7 +653,7 @@ use Carbon\Carbon;
             display: grid !important;
             grid-template-columns: repeat(6, minmax(0, 1fr)) !important;
             gap: 10px !important;
-            margin: 0 14px 12px 14px !important;
+            margin: 0 14px 10px 14px !important;
             width: calc(100% - 28px) !important;
             box-sizing: border-box !important;
           }
@@ -741,32 +741,34 @@ use Carbon\Carbon;
           .cd-drawer-tabs-card {
             background: #ffffff !important;
             border: 1px solid #e2e8f0 !important;
-            border-radius: 10px !important;
-            padding: 8px 10px !important;
-            margin: 0 14px 12px 14px !important;
+            border-radius: 8px !important;
+            padding: 5px 8px !important;
+            margin: 0 14px 10px 14px !important;
             box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04) !important;
             width: auto !important;
             box-sizing: border-box !important;
-            overflow: hidden !important;
+            overflow: visible !important;
             display: flex !important;
             align-items: center !important;
             min-height: 48px !important;
+            height: auto !important;
           }
           .cd-drawer-tabs-list {
             display: flex !important;
             align-items: center !important;
-            gap: 5px !important;
+            gap: 6px !important;
             overflow-x: auto !important;
-            overflow-y: hidden !important;
+            overflow-y: visible !important;
             -webkit-overflow-scrolling: touch !important;
             scrollbar-width: thin !important;
             scrollbar-color: #cbd5e1 transparent !important;
             list-style: none !important;
-            padding: 0 !important;
+            padding: 2px 0 !important;
             margin: 0 !important;
             flex-wrap: nowrap !important;
             width: 100% !important;
-            height: 32px !important;
+            min-height: 38px !important;
+            height: auto !important;
           }
           .cd-drawer-tabs-list::-webkit-scrollbar {
             height: 3px !important;
@@ -784,13 +786,13 @@ use Carbon\Carbon;
             flex-shrink: 0 !important;
             display: flex !important;
             align-items: center !important;
-            height: 32px !important;
+            height: 34px !important;
           }
           .cd-tab-pill-btn {
             background: #f8fafc !important;
             border: 1px solid #e2e8f0 !important;
-            border-radius: 7px !important;
-            padding: 0 9.5px !important;
+            border-radius: 6px !important;
+            padding: 0 10.5px !important;
             font-size: 11px !important;
             font-weight: 600 !important;
             color: #475569 !important;
@@ -798,7 +800,7 @@ use Carbon\Carbon;
             align-items: center !important;
             justify-content: center !important;
             gap: 5px !important;
-            height: 32px !important;
+            height: 34px !important;
             text-decoration: none !important;
             box-shadow: 0 1px 2px rgba(15, 23, 42, 0.02) !important;
             transition: all 0.15s ease-in-out !important;
@@ -4171,14 +4173,14 @@ use Carbon\Carbon;
 
           <!-- ── KPI SUMMARY ROW: AUTHORITATIVE CLIENT-LEVEL BUSINESS TOTALS (Rule 20 Compliant) ── -->
           <div class="cd-kpi-grid">
-            <!-- KPI 1: Total Jobs Created -->
+            <!-- KPI 1: All Jobs -->
             <a href="javascript:void(0);" class="cd-kpi-card cd-kpi-nav-trigger" data-tab-target="#requisitions" title="Total jobs created for this client till date">
               <div class="cd-kpi-icon cd-kpi-icon-blue">
                 <i class="fas fa-layer-group fa-solid"></i>
               </div>
               <div class="cd-kpi-body">
                 <div class="cd-kpi-num" id="cdKpiTotalJobsInternal">{{ number_format($kpiTotalJobs ?? 0) }}</div>
-                <div class="cd-kpi-lbl">Total Jobs Created</div>
+                <div class="cd-kpi-lbl">All Jobs</div>
               </div>
             </a>
 
@@ -4193,47 +4195,47 @@ use Carbon\Carbon;
               </div>
             </a>
 
-            <!-- KPI 3: Candidates Submitted -->
+            <!-- KPI 3: All Candidates -->
             <a href="javascript:void(0);" class="cd-kpi-card cd-kpi-nav-trigger" data-tab-target="#candidate_list" title="Total candidates submitted to this client till date">
               <div class="cd-kpi-icon cd-kpi-icon-purple">
                 <i class="fas fa-user-check fa-solid"></i>
               </div>
               <div class="cd-kpi-body">
                 <div class="cd-kpi-num" id="cdKpiCandidatesSubmittedInternal">{{ number_format($kpiSubmitted ?? 0) }}</div>
-                <div class="cd-kpi-lbl">Candidates Submitted</div>
+                <div class="cd-kpi-lbl">All Candidates</div>
               </div>
             </a>
 
-            <!-- KPI 4: Interviews Scheduled -->
+            <!-- KPI 4: All Interviews -->
             <a href="javascript:void(0);" class="cd-kpi-card cd-kpi-nav-trigger" data-tab-target="#interview_tracker" title="Total interviews scheduled for this client till date">
               <div class="cd-kpi-icon cd-kpi-icon-amber">
                 <i class="fas fa-calendar-check fa-solid"></i>
               </div>
               <div class="cd-kpi-body">
                 <div class="cd-kpi-num" id="cdKpiInterviewsScheduledInternal">{{ number_format($kpiInterviews ?? 0) }}</div>
-                <div class="cd-kpi-lbl">Interviews Scheduled</div>
+                <div class="cd-kpi-lbl">All Interviews</div>
               </div>
             </a>
 
-            <!-- KPI 5: Offers Generated -->
+            <!-- KPI 5: All Offers -->
             <a href="javascript:void(0);" class="cd-kpi-card cd-kpi-nav-trigger" data-tab-target="#candidate_joining" title="Total offers generated for this client till date">
               <div class="cd-kpi-icon cd-kpi-icon-rose">
                 <i class="fas fa-file-signature fa-solid"></i>
               </div>
               <div class="cd-kpi-body">
                 <div class="cd-kpi-num" id="cdKpiOffersGeneratedInternal">{{ number_format($kpiOffers ?? 0) }}</div>
-                <div class="cd-kpi-lbl">Offers Generated</div>
+                <div class="cd-kpi-lbl">All Offers</div>
               </div>
             </a>
 
-            <!-- KPI 6: Joined -->
-            <a href="javascript:void(0);" class="cd-kpi-card cd-kpi-nav-trigger" data-tab-target="#candidate_joining" title="Total candidates who have joined for this client till date">
+            <!-- KPI 6: All Joinings -->
+            <a href="javascript:void(0);" class="cd-kpi-card cd-kpi-nav-trigger" data-tab-target="#candidate_joining" title="Total candidates joined for this client till date">
               <div class="cd-kpi-icon cd-kpi-icon-teal">
                 <i class="fas fa-handshake fa-solid"></i>
               </div>
               <div class="cd-kpi-body">
                 <div class="cd-kpi-num" id="cdKpiJoinedInternal">{{ number_format($kpiJoins ?? 0) }}</div>
-                <div class="cd-kpi-lbl">Joined</div>
+                <div class="cd-kpi-lbl">All Joinings</div>
               </div>
             </a>
           </div>
@@ -4931,7 +4933,7 @@ use Carbon\Carbon;
                                             <span class="cd-cand-count-badge" id="cdCandidateCountBadge" role="button" title="View All Pipeline Candidates" aria-label="View all candidates">
                                                 <span id="cdCandidateCountText">0</span> Candidates
                                             </span>
-                                            <span class="badge badge-light-warning text-warning fw-bold fs-8 cursor-pointer" id="cdInReviewCountBadge" style="display:none; padding:4px 8px; border-radius:6px; border:1px solid #fde047;" role="button" title="View In Review candidates" aria-label="View In Review candidates">
+                                            <span class="badge badge-light-warning text-warning fw-bold fs-8 cursor-pointer" id="cdInReviewCountBadge" style="display:none !important; padding:4px 8px; border-radius:6px; border:1px solid #fde047;" role="button" title="View In Review candidates" aria-label="View In Review candidates">
                                                 <span id="cdInReviewCountText">0</span> In Review
                                             </span>
                                         </div>
@@ -5232,7 +5234,7 @@ use Carbon\Carbon;
                               </div>
                               <span class="cd-perf-pill cd-perf-pill-up" id="perfKpiCandPill"><i class="fas fa-arrow-up fa-solid" style="font-size:8px;"></i>0.0%</span>
                             </div>
-                            <div class="cd-perf-kpi-num" id="perfKpiCandidates">—</div>
+                            <div class="cd-perf-kpi-num" id="perfKpiCandidates">{{ number_format($kpiSubmitted ?? 0) }}</div>
                             <div class="cd-perf-kpi-lbl">Total Candidates</div>
                             <div class="cd-perf-kpi-sub">Submitted to this client</div>
                             <div class="cd-perf-kpi-comp" id="perfKpiCandComp">vs. previous period</div>
@@ -5246,7 +5248,7 @@ use Carbon\Carbon;
                               </div>
                               <span class="cd-perf-pill cd-perf-pill-up" id="perfKpiIntPill"><i class="fas fa-arrow-up fa-solid" style="font-size:8px;"></i>0.0%</span>
                             </div>
-                            <div class="cd-perf-kpi-num" id="perfKpiInterviews">{{ $kpiInterviews }}</div>
+                            <div class="cd-perf-kpi-num" id="perfKpiInterviews">{{ number_format($kpiInterviews ?? 0) }}</div>
                             <div class="cd-perf-kpi-lbl">Interviews Scheduled</div>
                             <div class="cd-perf-kpi-sub">Across all rounds</div>
                             <div class="cd-perf-kpi-comp" id="perfKpiIntComp">vs. previous period</div>
@@ -5260,7 +5262,7 @@ use Carbon\Carbon;
                               </div>
                               <span class="cd-perf-pill cd-perf-pill-up" id="perfKpiOfferPill"><i class="fas fa-arrow-up fa-solid" style="font-size:8px;"></i>0.0%</span>
                             </div>
-                            <div class="cd-perf-kpi-num" id="perfKpiOffers">—</div>
+                            <div class="cd-perf-kpi-num" id="perfKpiOffers">{{ number_format($kpiOffers ?? 0) }}</div>
                             <div class="cd-perf-kpi-lbl">Offers Generated</div>
                             <div class="cd-perf-kpi-sub">Offer letters sent</div>
                             <div class="cd-perf-kpi-comp" id="perfKpiOfferComp">vs. previous period</div>
@@ -5274,7 +5276,7 @@ use Carbon\Carbon;
                               </div>
                               <span class="cd-perf-pill cd-perf-pill-up" id="perfKpiJoinPill"><i class="fas fa-arrow-up fa-solid" style="font-size:8px;"></i>0.0%</span>
                             </div>
-                            <div class="cd-perf-kpi-num" id="perfKpiJoins">—</div>
+                            <div class="cd-perf-kpi-num" id="perfKpiJoins">{{ number_format($kpiJoins ?? 0) }}</div>
                             <div class="cd-perf-kpi-lbl">Successful Joins</div>
                             <div class="cd-perf-kpi-sub">Candidates placed</div>
                             <div class="cd-perf-kpi-comp" id="perfKpiJoinComp">vs. previous period</div>
@@ -5846,7 +5848,8 @@ use Carbon\Carbon;
         var s = data.summary;
 
         // 1. Update 5 Hero KPI Cards
-        $('#perfKpiCandidates').text(s.candidates.value.toLocaleString());
+        var candLabel = (s.candidates && s.candidates.display_label) ? s.candidates.display_label : (s.candidates ? s.candidates.value.toLocaleString() : '0');
+        $('#perfKpiCandidates').text(candLabel);
         cdPerfUpdatePill($('#perfKpiCandPill'), s.candidates.delta_label, s.candidates.delta_value, false);
         $('#perfKpiCandComp').text('vs. ' + (data.meta.compare === 'none' ? 'none' : 'prior period'));
 
@@ -5877,7 +5880,7 @@ use Carbon\Carbon;
             $banner.slideUp(150);
         }
 
-        // 3. Funnel Stages
+        // 3. Funnel Stages (In Review strictly excluded from Performance funnel)
         if (data.funnel && data.funnel.stages) {
             var st = data.funnel.stages;
             if (st[0]) { $('#funnelCountCand').text(st[0].count); $('#funnelPctCand').text(st[0].conversion_pct); }
@@ -6145,26 +6148,42 @@ use Carbon\Carbon;
         if (jt.counts && jt.counts[3] !== undefined) $('#donutCountPartTime').text(jt.counts[3]);
         if (jt.percentages && jt.percentages[3]) $('#donutPctPartTime').text(jt.percentages[3]);
 
-        // 5. Line: Time to Hire Trend
+        // 5. Line: Time to Hire Trend (Zero-Data Rule: null for months with 0 joins, spanGaps: true)
+        var tthData = (data.tth_trend && data.tth_trend.length)
+            ? data.tth_trend
+            : (v.time_to_hire && v.time_to_hire.length)
+                ? v.time_to_hire
+                : v.labels.map(function() { return null; });
+
         getOrCreateChart('chartTimeToHire', {
             type: 'line',
             data: {
                 labels: v.labels,
                 datasets: [{
                     label: 'Days to Hire',
-                    data: v.labels.map(function() { return data.summary.avg_time_to_hire_days.value || 30; }),
+                    data: tthData,
                     borderColor: '#0284c7',
                     backgroundColor: 'rgba(2, 132, 199, 0.08)',
                     borderWidth: 2,
                     fill: true,
                     pointRadius: 2.5,
-                    tension: 0.35
+                    tension: 0.35,
+                    spanGaps: true
                 }]
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
-                plugins: { legend: { display: false } },
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return context.raw !== null ? context.raw + ' days' : 'No joins';
+                            }
+                        }
+                    }
+                },
                 scales: {
                     x: { grid: { display: false }, ticks: { font: { size: 9.5 } } },
                     y: { beginAtZero: true, grid: { color: '#f1f5f9' }, ticks: { font: { size: 9.5 } } }
@@ -7514,16 +7533,8 @@ use Carbon\Carbon;
             $('#cdCandidateCountText').text(formatted);
             $('#tabBadgeCandidates, #cdCandidatesNavBadgeInternal').text(formatted).show();
 
-            // InReview count & badge indicator
-            var inReviewCount = (this.stageCounts && this.stageCounts.in_review !== undefined)
-                ? this.stageCounts.in_review
-                : (this.allCandidates || []).filter(cand => this.isInReview(cand)).length;
-            if (inReviewCount > 0) {
-                $('#cdInReviewCountText').text(inReviewCount);
-                $('#cdInReviewCountBadge').show();
-            } else {
-                $('#cdInReviewCountBadge').hide();
-            }
+            // InReview count & badge indicator: In Review candidates must NOT appear or be counted in Candidate Tab
+            $('#cdInReviewCountBadge').hide();
         },
 
         updateCandidateStageLocal: function(candidateId, newStageId, newStageName) {
