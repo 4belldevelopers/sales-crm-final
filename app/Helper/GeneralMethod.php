@@ -15938,7 +15938,8 @@ END:VCALENDAR";
                             ],
                         ],
                         'aggs' => [
-                            'all_candidates' => ['value_count' => ['field' => 'id']],
+                            // Authoritative Positive Allow-List: Sourcing through Joined [1..6] (Excludes In Review 8 and Archived 9)
+                            'all_candidates' => ['filter' => ['terms' => ['job_master_status_id' => [1, 2, 3, 4, 5, 6]]]],
                             'joined' => ['filter' => ['term' => ['job_master_status_id' => 6]]],
                             'sourced' => ['filter' => ['term' => ['job_master_status_id' => 1]]],
                             'screening' => ['filter' => ['term' => ['job_master_status_id' => 2]]],
@@ -15952,7 +15953,7 @@ END:VCALENDAR";
                 ];
 
                 $response = $elasticService->getClient()->search($params);
-                $allCandidates = $response['hits']['total']['value'] ?? ($response['aggregations']['all_candidates']['value'] ?? 0);
+                $allCandidates = $response['aggregations']['all_candidates']['doc_count'] ?? 0;
                 $joined = $response['aggregations']['joined']['doc_count'] ?? 0;
                 $sourced = $response['aggregations']['sourced']['doc_count'] ?? 0;
                 $screening = $response['aggregations']['screening']['doc_count'] ?? 0;

@@ -367,15 +367,16 @@
             </td>
             <td>
                 @php
-                if($company_id != $row->ClientComID && $row->ClientComID != 0 && $row->ClientComID > 0){
-                        $spokperson = DB::table('job_assign')->select('users.name')->join('users', 'users.id', 'job_assign.spok_user_id')->where('job_assign.job_id', $row->jobId)->where('job_assign.company_id', $row->ClientComID)->first();
-                        $rowpostedby = (@$spokperson) ? @$spokperson->name : $row->posted_by;
-                    }else{
-                        $rowpostedby = $row->posted_by;
-                    }
-                    if (empty($rowpostedby) && !empty($row->spokperson_name)) {
-                        $rowpostedby = $row->spokperson_name;
-                    }
+                // 100% CQRS Precomputed Captain Attribution (Master Standard §10, §16 - Zero MySQL Reads)
+                $rowpostedby = !empty($row->captain_name)
+                    ? $row->captain_name
+                    : (!empty($row->spokperson_name)
+                        ? $row->spokperson_name
+                        : (!empty($row->agency_root_name)
+                            ? $row->agency_root_name
+                            : (!empty($row->submitted_by_display)
+                                ? explode(' — ', (string)$row->submitted_by_display)[0]
+                                : (($company_id == ($row->ClientComID ?? 0)) ? (@$row->posted_by_name ?: @$row->posted_by) : 'Agency Lead'))));
 
                     $post_company_name = @$row->submitted_by_company_name ?: (@$row->post_company_name ?: (@$row->uc_company_name ?: (@$row->from_company_name ?: (@$row->company_name ?: ''))));
 

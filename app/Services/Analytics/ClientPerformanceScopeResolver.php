@@ -2,9 +2,12 @@
 
 namespace App\Services\Analytics;
 
+use App\Services\Analytics\Contracts\PerformanceStatusMap;
+use App\Services\Analytics\DTO\PerformanceScopeContract;
 use App\Services\ElasticService;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 /**
  * ClientPerformanceScopeResolver
@@ -16,6 +19,9 @@ use Illuminate\Support\Facades\DB;
  * - Internal Client: Strictly verifies that client belongs to auth_company_id.
  * - Direct Client: Strictly verifies that an approved relationship (final_status=1)
  *   exists between the authenticated company and the direct client organization.
+ * - Canonical Shared Jobs Invariant: Resolves canonical shared_job_ids first.
+ *   If a job is not in shared_job_ids, it is completely absent from all analytics.
+ * - Sourcing Gating Invariant: Uses positive allow-list SHARED_PIPELINE_STATUSES [1..6].
  */
 class ClientPerformanceScopeResolver
 {
@@ -55,11 +61,44 @@ class ClientPerformanceScopeResolver
         if ($clientTypeHint === 'internal' || $clientTypeHint === 'auto') {
             $isInternal = $this->verifyInternalClient($authCompanyId, $clientId, $clientsIndex);
             if ($isInternal) {
+                $sharedJobData = $this->resolveSharedJobIds($authCompanyId, $clientId, 'internal', $jobsIndex);
+                $sharedJobIds = $sharedJobData['shared_job_ids'];
+                $activeSharedJobIds = $sharedJobData['active_job_ids'];
+
+                $contract = new PerformanceScopeContract(
+                    clientId: $clientId,
+                    agencyCompanyId: $authCompanyId,
+                    clientType: 'internal',
+                    clientName: $isInternal['name'] ?? 'Client #'.$clientId,
+                    relationshipType: 'TENANT_OWNED',
+                    sharedJobIds: $sharedJobIds,
+                    activeSharedJobIds: $activeSharedJobIds,
+                    activeRelationshipOnly: true,
+                    range: '12M',
+                    compareWith: 'previous_period',
+                    timezone: 'Asia/Kolkata',
+                    dateBoundaries: [],
+                    theme: 'blue',
+                    themeColor: '#009ef7',
+                    indices: [
+                        'candidates' => $candidatesIndex,
+                        'jobs' => $jobsIndex,
+                        'interviews' => $interviewsIndex,
+                        'timeline' => $timelineIndex,
+                        'clients' => $clientsIndex,
+                    ],
+                    correlationId: 'cor_'.Str::random(12),
+                    scopeVersion: 1
+                );
+
                 $scope = [
+                    'contract' => $contract,
                     'client_type' => 'internal',
                     'client_id' => $clientId,
                     'client_name' => $isInternal['name'] ?? 'Client #'.$clientId,
                     'auth_company_id' => $authCompanyId,
+                    'shared_job_ids' => $sharedJobIds,
+                    'active_shared_job_ids' => $activeSharedJobIds,
                     'theme' => 'blue',
                     'theme_color' => '#009ef7',
                     'indices' => [
@@ -69,7 +108,7 @@ class ClientPerformanceScopeResolver
                         'timeline' => $timelineIndex,
                         'clients' => $clientsIndex,
                     ],
-                    // Candidate query must strictly match auth company and client_id
+                    // Candidate query: internal company + client + positive allow-list [1..6]
                     'candidate_filter' => [
                         'bool' => [
                             'must' => [
@@ -84,9 +123,10 @@ class ClientPerformanceScopeResolver
                                         'minimum_should_match' => 1,
                                     ],
                                 ],
+                                ['terms' => ['job_master_status_id' => PerformanceStatusMap::SHARED_PIPELINE_STATUSES]],
                             ],
                             'must_not' => [
-                                ['terms' => ['job_master_status_id' => [ClientPerformanceConstants::STATUS_ARCHIVED, (string) ClientPerformanceConstants::STATUS_ARCHIVED]]],
+                                ['terms' => ['job_master_status_id' => [PerformanceStatusMap::STAGE_IN_REVIEW, PerformanceStatusMap::STAGE_ARCHIVED]]],
                             ],
                         ],
                     ],
@@ -110,11 +150,44 @@ class ClientPerformanceScopeResolver
         if ($clientTypeHint === 'direct' || $clientTypeHint === 'auto') {
             $isDirect = $this->verifyDirectClient($authCompanyId, $clientId);
             if ($isDirect) {
-                return [
+                $sharedJobData = $this->resolveSharedJobIds($authCompanyId, $clientId, 'direct', $jobsIndex);
+                $sharedJobIds = $sharedJobData['shared_job_ids'];
+                $activeSharedJobIds = $sharedJobData['active_job_ids'];
+
+                $contract = new PerformanceScopeContract(
+                    clientId: $clientId,
+                    agencyCompanyId: $authCompanyId,
+                    clientType: 'direct',
+                    clientName: $isDirect['name'] ?? 'Direct Client #'.$clientId,
+                    relationshipType: 'MARKETPLACE_SHARED',
+                    sharedJobIds: $sharedJobIds,
+                    activeSharedJobIds: $activeSharedJobIds,
+                    activeRelationshipOnly: true,
+                    range: '12M',
+                    compareWith: 'previous_period',
+                    timezone: 'Asia/Kolkata',
+                    dateBoundaries: [],
+                    theme: 'emerald',
+                    themeColor: '#10b981',
+                    indices: [
+                        'candidates' => $candidatesIndex,
+                        'jobs' => $jobsIndex,
+                        'interviews' => $interviewsIndex,
+                        'timeline' => $timelineIndex,
+                        'clients' => $clientsIndex,
+                    ],
+                    correlationId: 'cor_'.Str::random(12),
+                    scopeVersion: 1
+                );
+
+                $scope = [
+                    'contract' => $contract,
                     'client_type' => 'direct',
                     'client_id' => $clientId,
                     'client_name' => $isDirect['name'] ?? 'Direct Client #'.$clientId,
                     'auth_company_id' => $authCompanyId,
+                    'shared_job_ids' => $sharedJobIds,
+                    'active_shared_job_ids' => $activeSharedJobIds,
                     'theme' => 'emerald',
                     'theme_color' => '#10b981',
                     'indices' => [
@@ -124,10 +197,15 @@ class ClientPerformanceScopeResolver
                         'timeline' => $timelineIndex,
                         'clients' => $clientsIndex,
                     ],
-                    // Candidate filter for direct client
+                    // Candidate filter for direct client:
+                    // 1. Strictly bounded by canonical shared_job_ids (if none, [-1] guarantees 0 leakage)
+                    // 2. Both client and agency matching
+                    // 3. Active shared relationship final_status = 1
+                    // 4. Positive allow-list: SHARED_PIPELINE_STATUSES [1, 2, 3, 4, 5, 6] (Sourcing onward)
                     'candidate_filter' => [
                         'bool' => [
                             'must' => [
+                                ['terms' => ['jobId' => !empty($sharedJobIds) ? $sharedJobIds : [-1]]],
                                 [
                                     'bool' => [
                                         'should' => [
@@ -147,17 +225,32 @@ class ClientPerformanceScopeResolver
                                         'minimum_should_match' => 1,
                                     ],
                                 ],
+                                ['term' => ['final_status' => 1]],
+                                ['terms' => ['job_master_status_id' => PerformanceStatusMap::SHARED_PIPELINE_STATUSES]],
                             ],
                             'must_not' => [
-                                ['terms' => ['job_master_status_id' => [ClientPerformanceConstants::STATUS_ARCHIVED, (string) ClientPerformanceConstants::STATUS_ARCHIVED]]],
+                                ['terms' => ['job_master_status_id' => [PerformanceStatusMap::STAGE_IN_REVIEW, PerformanceStatusMap::STAGE_ARCHIVED]]],
                             ],
                         ],
                     ],
-                    // Job filter for direct client (shared requisitions)
+                    // Job filter for direct client: Strictly matches nested recommendation_relation (final_status = 1)
                     'job_filter' => [
                         'bool' => [
                             'must' => [
-                                ['term' => ['company_id' => $clientId]],
+                                [
+                                    'nested' => [
+                                        'path' => 'recommendation_relation',
+                                        'query' => [
+                                            'bool' => [
+                                                'must' => [
+                                                    ['term' => ['recommendation_relation.to_company_id' => (int) $authCompanyId]],
+                                                    ['term' => ['recommendation_relation.from_company_id' => (int) $clientId]],
+                                                    ['term' => ['recommendation_relation.final_status' => 1]],
+                                                ],
+                                            ],
+                                        ],
+                                    ],
+                                ],
                             ],
                         ],
                     ],
@@ -170,6 +263,77 @@ class ClientPerformanceScopeResolver
 
         // Unauthorized access: Neither an internal client of this company nor an authorized direct client
         throw new AuthorizationException('Unauthorized access to client performance analytics.');
+    }
+
+    /**
+     * Resolve canonical shared job IDs directly from ELASTIC_JOBS.
+     */
+    public function resolveSharedJobIds(int $authCompanyId, int $clientId, string $clientType, string $jobsIndex): array
+    {
+        $sharedJobIds = [];
+        $activeJobIds = [];
+
+        try {
+            if (!$this->elasticService->indexExists($jobsIndex)) {
+                return ['shared_job_ids' => [], 'active_job_ids' => []];
+            }
+
+            if ($clientType === 'direct') {
+                $query = [
+                    'nested' => [
+                        'path' => 'recommendation_relation',
+                        'query' => [
+                            'bool' => [
+                                'must' => [
+                                    ['term' => ['recommendation_relation.to_company_id' => (int) $authCompanyId]],
+                                    ['term' => ['recommendation_relation.from_company_id' => (int) $clientId]],
+                                    ['term' => ['recommendation_relation.final_status' => 1]],
+                                ],
+                            ],
+                        ],
+                    ],
+                ];
+            } else {
+                $query = [
+                    'bool' => [
+                        'must' => [
+                            ['term' => ['company_id' => (int) $authCompanyId]],
+                            ['term' => ['client_id' => (int) $clientId]],
+                        ],
+                    ],
+                ];
+            }
+
+            $searchRes = $this->elasticService->getClient()->search([
+                'index'   => $jobsIndex,
+                'size'    => 1000,
+                '_source' => ['id', 'status'],
+                'body'    => [
+                    'query' => $query,
+                ],
+            ]);
+
+            if (!empty($searchRes['hits']['hits'])) {
+                foreach ($searchRes['hits']['hits'] as $hit) {
+                    $src = $hit['_source'] ?? [];
+                    if (!empty($src['id'])) {
+                        $jobId = (int) $src['id'];
+                        $sharedJobIds[] = $jobId;
+                        $status = strtolower(trim((string) ($src['status'] ?? '')));
+                        if (in_array($status, ['active', 'hiring'], true)) {
+                            $activeJobIds[] = $jobId;
+                        }
+                    }
+                }
+            }
+        } catch (\Throwable $e) {
+            \Log::warning("resolveSharedJobIds failed for client {$clientId}: ".$e->getMessage());
+        }
+
+        return [
+            'shared_job_ids' => array_values(array_unique($sharedJobIds)),
+            'active_job_ids' => array_values(array_unique($activeJobIds)),
+        ];
     }
 
     /**
@@ -249,13 +413,6 @@ class ClientPerformanceScopeResolver
                 $r = DB::table('staffing_company_relation')
                     ->where('from_company_id', $clientId)
                     ->where('to_company_id', $authCompanyId)
-                    ->first();
-            }
-
-            if (! $r) {
-                $r = DB::table('client_user_assign')
-                    ->where('company_id', $authCompanyId)
-                    ->where('client_id', $clientId)
                     ->first();
             }
 

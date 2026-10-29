@@ -5652,7 +5652,7 @@
                               </div>
                               <span class="cd-perf-pill cd-perf-pill-up" id="perfKpiCandPill"><i class="fas fa-arrow-up fa-solid" style="font-size:8px;"></i>0.0%</span>
                             </div>
-                            <div class="cd-perf-kpi-num" id="perfKpiCandidates">—</div>
+                            <div class="cd-perf-kpi-num" id="perfKpiCandidates">{{ number_format($kpiSubmitted ?? 0) }}</div>
                             <div class="cd-perf-kpi-lbl">Total Candidates</div>
                             <div class="cd-perf-kpi-sub">Submitted to this client</div>
                             <div class="cd-perf-kpi-comp" id="perfKpiCandComp">vs. previous period</div>
@@ -5666,7 +5666,7 @@
                               </div>
                               <span class="cd-perf-pill cd-perf-pill-up" id="perfKpiIntPill"><i class="fas fa-arrow-up fa-solid" style="font-size:8px;"></i>0.0%</span>
                             </div>
-                            <div class="cd-perf-kpi-num" id="perfKpiInterviews">{{ $kpiInterviews }}</div>
+                            <div class="cd-perf-kpi-num" id="perfKpiInterviews">{{ number_format($kpiInterviews ?? 0) }}</div>
                             <div class="cd-perf-kpi-lbl">Interviews Scheduled</div>
                             <div class="cd-perf-kpi-sub">Across all rounds</div>
                             <div class="cd-perf-kpi-comp" id="perfKpiIntComp">vs. previous period</div>
@@ -5680,7 +5680,7 @@
                               </div>
                               <span class="cd-perf-pill cd-perf-pill-up" id="perfKpiOfferPill"><i class="fas fa-arrow-up fa-solid" style="font-size:8px;"></i>0.0%</span>
                             </div>
-                            <div class="cd-perf-kpi-num" id="perfKpiOffers">—</div>
+                            <div class="cd-perf-kpi-num" id="perfKpiOffers">{{ number_format($kpiOffers ?? 0) }}</div>
                             <div class="cd-perf-kpi-lbl">Offers Generated</div>
                             <div class="cd-perf-kpi-sub">Offer letters sent</div>
                             <div class="cd-perf-kpi-comp" id="perfKpiOfferComp">vs. previous period</div>
@@ -5694,7 +5694,7 @@
                               </div>
                               <span class="cd-perf-pill cd-perf-pill-up" id="perfKpiJoinPill"><i class="fas fa-arrow-up fa-solid" style="font-size:8px;"></i>0.0%</span>
                             </div>
-                            <div class="cd-perf-kpi-num" id="perfKpiJoins">—</div>
+                            <div class="cd-perf-kpi-num" id="perfKpiJoins">{{ number_format($kpiJoins ?? 0) }}</div>
                             <div class="cd-perf-kpi-lbl">Successful Joins</div>
                             <div class="cd-perf-kpi-sub">Candidates placed</div>
                             <div class="cd-perf-kpi-comp" id="perfKpiJoinComp">vs. previous period</div>
@@ -6275,7 +6275,8 @@
         var s = data.summary;
 
         // 1. Update 5 Hero KPI Cards
-        $('#perfKpiCandidates').text(s.candidates.value.toLocaleString());
+        var candLabel = (s.candidates && s.candidates.display_label) ? s.candidates.display_label : (s.candidates ? s.candidates.value.toLocaleString() : '0');
+        $('#perfKpiCandidates').text(candLabel);
         cdPerfUpdatePill($('#perfKpiCandPill'), s.candidates.delta_label, s.candidates.delta_value, false);
         $('#perfKpiCandComp').text('vs. ' + (data.meta.compare === 'none' ? 'none' : 'prior period'));
 
@@ -6574,26 +6575,42 @@
         if (jt.counts && jt.counts[3] !== undefined) $('#donutCountPartTime').text(jt.counts[3]);
         if (jt.percentages && jt.percentages[3]) $('#donutPctPartTime').text(jt.percentages[3]);
 
-        // 5. Line: Time to Hire Trend
+        // 5. Line: Time to Hire Trend (Zero-Data Rule: null for months with 0 joins, spanGaps: true)
+        var tthData = (data.tth_trend && data.tth_trend.length)
+            ? data.tth_trend
+            : (v.time_to_hire && v.time_to_hire.length)
+                ? v.time_to_hire
+                : v.labels.map(function() { return null; });
+
         getOrCreateChart('chartTimeToHire', {
             type: 'line',
             data: {
                 labels: v.labels,
                 datasets: [{
                     label: 'Days to Hire',
-                    data: v.labels.map(function() { return data.summary.avg_time_to_hire_days.value || 30; }),
+                    data: tthData,
                     borderColor: '#10b981',
                     backgroundColor: 'rgba(16, 185, 129, 0.08)',
                     borderWidth: 2,
                     fill: true,
                     pointRadius: 2.5,
-                    tension: 0.35
+                    tension: 0.35,
+                    spanGaps: true
                 }]
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
-                plugins: { legend: { display: false } },
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return context.raw !== null ? context.raw + ' days' : 'No joins';
+                            }
+                        }
+                    }
+                },
                 scales: {
                     x: { grid: { display: false }, ticks: { font: { size: 9.5 } } },
                     y: { beginAtZero: true, grid: { color: '#f1f5f9' }, ticks: { font: { size: 9.5 } } }
@@ -8183,10 +8200,14 @@
                         cand.state_name,
                         cand.country_name,
                         cand.location,
+                        cand.captain_name,
+                        cand.agency_name,
+                        cand.submitted_by_display,
+                        cand.spokperson_name,
+                        cand.agency_root_name,
                         cand.posted_by,
                         cand.posted_by_name,
                         cand.submitted_by_name,
-                        cand.spokperson_name,
                         skillsStr,
                         String(cand.id || ''),
                         String(cand.wiseId || ''),
@@ -8485,10 +8506,10 @@
                 `;
             }
 
-            // 5. Sub-Card 5: Recruiter & Sourcing
-            var recruiter = row.posted_by_name || row.posted_by || row.submitted_by_name || row.agency_root_name || 'Recruiter';
-            var submitterCompany = row.submitted_by_company_name || row.post_company_name || row.apl_company_name || row.company_name || 'Agency';
-            var recruiterFormatted = formatWithAcronyms(limitWords(recruiter, 12));
+            // 5. Sub-Card 5: Sourcing & Agency Attribution (Master Standard §22.1)
+            var captain = row.captain_name || (row.submitted_by_display ? row.submitted_by_display.split(' — ')[0] : (row.spokperson_name || row.agency_root_name || row.posted_by_name || row.posted_by || 'Agency Lead'));
+            var submitterCompany = row.agency_name || row.submitted_by_company_name || row.post_company_name || row.apl_company_name || row.company_name || 'Agency Partner';
+            var captainFormatted = formatWithAcronyms(limitWords(captain, 12));
             var submitterFormatted = formatWithAcronyms(limitWords(submitterCompany, 12));
             var submittedAgo = formatTimeAgo(row.created_at);
 
@@ -8697,14 +8718,14 @@
                             </div>
                         </div>
 
-                        <!-- Sub-Card 5: RECRUITER & SOURCING -->
+                        <!-- Sub-Card 5: SOURCING & AGENCY ATTRIBUTION (Master Standard §22.1) -->
                         <div class="cd-cand-subcard cd-cand-subcard-recruiter">
                             <div class="cd-cand-subcard-hdr">
-                                <span class="cd-cand-subcard-label"><i class="fa fa-user-tie me-1 text-muted"></i>RECRUITER &amp; SOURCING</span>
+                                <span class="cd-cand-subcard-label"><i class="fa fa-user-tie me-1 text-muted"></i>SUBMITTED BY</span>
                             </div>
                             <div class="cd-cand-subcard-body">
-                                <div class="cd-recruiter-name" title="${$('<div>').text(recruiter).html()}">
-                                    <i class="fas fa-user-circle text-primary me-1" style="font-size:10.5px;"></i>${recruiterFormatted}
+                                <div class="cd-recruiter-name" title="${$('<div>').text(captain).html()}">
+                                    <i class="fas fa-user-circle text-primary me-1" style="font-size:10.5px;"></i>${captainFormatted}
                                 </div>
                                 <div class="cd-recruiter-company" title="${$('<div>').text(submitterCompany).html()}">
                                     <i class="fas fa-building text-muted me-1" style="font-size:9.5px;"></i>${submitterFormatted}

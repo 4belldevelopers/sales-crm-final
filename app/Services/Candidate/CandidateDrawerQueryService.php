@@ -78,6 +78,12 @@ class CandidateDrawerQueryService
         'submitted_by_name',
         'agency_root_name',
         'spokperson_name',
+        'captain_name',
+        'captain_user_id',
+        'agency_name',
+        'agency_company_id',
+        'submitted_by_display',
+        'job_application_id',
         'company_name',
         'post_company_name',
         'submitted_by_company_name',
@@ -517,6 +523,12 @@ class CandidateDrawerQueryService
             'rejected' => (int) ($aggs['rejected']['doc_count'] ?? 0),
             'in_review' => (int) ($aggs['in_review']['doc_count'] ?? 0),
         ];
+
+        if ($clientType === 'direct') {
+            $items = array_map(function ($doc) {
+                return \App\DTO\ServiceCompany\DirectClientCandidateDTO::fromElasticDoc($doc)->toArray();
+            }, $items);
+        }
 
         return [
             'data' => $items,

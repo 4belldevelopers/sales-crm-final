@@ -5233,7 +5233,7 @@ use Carbon\Carbon;
                               </div>
                               <span class="cd-perf-pill cd-perf-pill-up" id="perfKpiCandPill"><i class="fas fa-arrow-up fa-solid" style="font-size:8px;"></i>0.0%</span>
                             </div>
-                            <div class="cd-perf-kpi-num" id="perfKpiCandidates">—</div>
+                            <div class="cd-perf-kpi-num" id="perfKpiCandidates">{{ number_format($kpiSubmitted ?? 0) }}</div>
                             <div class="cd-perf-kpi-lbl">Total Candidates</div>
                             <div class="cd-perf-kpi-sub">Submitted to this client</div>
                             <div class="cd-perf-kpi-comp" id="perfKpiCandComp">vs. previous period</div>
@@ -5247,7 +5247,7 @@ use Carbon\Carbon;
                               </div>
                               <span class="cd-perf-pill cd-perf-pill-up" id="perfKpiIntPill"><i class="fas fa-arrow-up fa-solid" style="font-size:8px;"></i>0.0%</span>
                             </div>
-                            <div class="cd-perf-kpi-num" id="perfKpiInterviews">{{ $kpiInterviews }}</div>
+                            <div class="cd-perf-kpi-num" id="perfKpiInterviews">{{ number_format($kpiInterviews ?? 0) }}</div>
                             <div class="cd-perf-kpi-lbl">Interviews Scheduled</div>
                             <div class="cd-perf-kpi-sub">Across all rounds</div>
                             <div class="cd-perf-kpi-comp" id="perfKpiIntComp">vs. previous period</div>
@@ -5261,7 +5261,7 @@ use Carbon\Carbon;
                               </div>
                               <span class="cd-perf-pill cd-perf-pill-up" id="perfKpiOfferPill"><i class="fas fa-arrow-up fa-solid" style="font-size:8px;"></i>0.0%</span>
                             </div>
-                            <div class="cd-perf-kpi-num" id="perfKpiOffers">—</div>
+                            <div class="cd-perf-kpi-num" id="perfKpiOffers">{{ number_format($kpiOffers ?? 0) }}</div>
                             <div class="cd-perf-kpi-lbl">Offers Generated</div>
                             <div class="cd-perf-kpi-sub">Offer letters sent</div>
                             <div class="cd-perf-kpi-comp" id="perfKpiOfferComp">vs. previous period</div>
@@ -5275,7 +5275,7 @@ use Carbon\Carbon;
                               </div>
                               <span class="cd-perf-pill cd-perf-pill-up" id="perfKpiJoinPill"><i class="fas fa-arrow-up fa-solid" style="font-size:8px;"></i>0.0%</span>
                             </div>
-                            <div class="cd-perf-kpi-num" id="perfKpiJoins">—</div>
+                            <div class="cd-perf-kpi-num" id="perfKpiJoins">{{ number_format($kpiJoins ?? 0) }}</div>
                             <div class="cd-perf-kpi-lbl">Successful Joins</div>
                             <div class="cd-perf-kpi-sub">Candidates placed</div>
                             <div class="cd-perf-kpi-comp" id="perfKpiJoinComp">vs. previous period</div>
@@ -5847,7 +5847,8 @@ use Carbon\Carbon;
         var s = data.summary;
 
         // 1. Update 5 Hero KPI Cards
-        $('#perfKpiCandidates').text(s.candidates.value.toLocaleString());
+        var candLabel = (s.candidates && s.candidates.display_label) ? s.candidates.display_label : (s.candidates ? s.candidates.value.toLocaleString() : '0');
+        $('#perfKpiCandidates').text(candLabel);
         cdPerfUpdatePill($('#perfKpiCandPill'), s.candidates.delta_label, s.candidates.delta_value, false);
         $('#perfKpiCandComp').text('vs. ' + (data.meta.compare === 'none' ? 'none' : 'prior period'));
 
@@ -6146,26 +6147,42 @@ use Carbon\Carbon;
         if (jt.counts && jt.counts[3] !== undefined) $('#donutCountPartTime').text(jt.counts[3]);
         if (jt.percentages && jt.percentages[3]) $('#donutPctPartTime').text(jt.percentages[3]);
 
-        // 5. Line: Time to Hire Trend
+        // 5. Line: Time to Hire Trend (Zero-Data Rule: null for months with 0 joins, spanGaps: true)
+        var tthData = (data.tth_trend && data.tth_trend.length)
+            ? data.tth_trend
+            : (v.time_to_hire && v.time_to_hire.length)
+                ? v.time_to_hire
+                : v.labels.map(function() { return null; });
+
         getOrCreateChart('chartTimeToHire', {
             type: 'line',
             data: {
                 labels: v.labels,
                 datasets: [{
                     label: 'Days to Hire',
-                    data: v.labels.map(function() { return data.summary.avg_time_to_hire_days.value || 30; }),
+                    data: tthData,
                     borderColor: '#0284c7',
                     backgroundColor: 'rgba(2, 132, 199, 0.08)',
                     borderWidth: 2,
                     fill: true,
                     pointRadius: 2.5,
-                    tension: 0.35
+                    tension: 0.35,
+                    spanGaps: true
                 }]
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
-                plugins: { legend: { display: false } },
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return context.raw !== null ? context.raw + ' days' : 'No joins';
+                            }
+                        }
+                    }
+                },
                 scales: {
                     x: { grid: { display: false }, ticks: { font: { size: 9.5 } } },
                     y: { beginAtZero: true, grid: { color: '#f1f5f9' }, ticks: { font: { size: 9.5 } } }
