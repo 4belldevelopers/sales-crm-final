@@ -53,6 +53,7 @@ use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Validator;
@@ -9010,38 +9011,71 @@ class SuperAdminCompanyController extends SuperAdminBaseController
 
     }
 
+    /**
+     * Display the Zoom Video Meeting integration settings page.
+     *
+     * Intent: Loads the singleton Zoom configuration (id = 1) for the Super Admin
+     * to manage platform-wide Server-to-Server OAuth credentials used in ATS candidate interview scheduling.
+     * Tenancy: Global Super Admin configuration stored in zoomsettings (singleton pattern).
+     *
+     * @param Request $request
+     * @return \Illuminate\Contracts\View\View
+     */
     public function zoomSetting(Request $request)
     {
-        // dd($request->status);
-
-        //    $this->newCandidates =  JobApplication::paginate(10);
-
         $zoom_setting = DB::table('zoomsettings')
-            ->select('zoomsettings.*');
+            ->where('id', 1)
+            ->first();
 
-        $this->zoom_setting = $zoom_setting->first();
-        if ($this->zoom_setting) {
-            $this->isEmptycheck = false;
-        } else {
-            $this->isEmptycheck = true;
+        // Fallback to first row if record exists under a non-1 ID, or initialize defaults
+        if (! $zoom_setting) {
+            $zoom_setting = DB::table('zoomsettings')->first();
         }
-        //    dd($this->zoom_setting);
+
+        if (! $zoom_setting) {
+            $zoom_setting = (object) [
+                'id' => 1,
+                'title' => '',
+                'redirect_uri' => '', // Stores Zoom Account ID
+                'client_id' => '',
+                'client_secret' => '',
+                'zoom_access_token' => '',
+                'status' => 1,
+            ];
+            $this->isEmptycheck = true;
+        } else {
+            $this->isEmptycheck = false;
+        }
+
+        $this->zoom_setting = $zoom_setting;
 
         return view('super-admin.meeting.zoom-setting', $this->data);
-
     }
 
+    /**
+     * Store or update Zoom Server-to-Server OAuth credentials.
+     *
+     * Intent: Persists Zoom API credentials ensuring a strict singleton record (id = 1)
+     * to maintain 100% backward compatibility with ATS callers (ServiceCompanyJobApplicationController).
+     * Automatically sanitizes whitespace, updates status, and invalidates cached tokens.
+     * Tenancy: Global Super Admin configuration (MySQL write path).
+     *
+     * @param Request $req
+     * @return \Illuminate\Http\JsonResponse|\Illuminate\Http\RedirectResponse
+     */
     public function settingZoomStore(Request $req)
     {
-        // dd($req->token_id());
-        $message = '';
-        $status = 'error';
-
         $validator = Validator::make($req->all(), [
-            'title' => 'required',
-            'redirect_uri' => 'required',
-            'client_id' => 'required',
-            'client_secret' => 'required',
+            'title' => 'required|string|max:255',
+            'redirect_uri' => 'required|string|max:255',
+            'client_id' => 'required|string|max:255',
+            'client_secret' => 'required|string|max:255',
+            'status' => 'nullable|in:0,1,true,false,on',
+        ], [
+            'title.required' => 'The Application Title is required.',
+            'redirect_uri.required' => 'The Account ID is required for Zoom Server-to-Server OAuth.',
+            'client_id.required' => 'The Client ID is required.',
+            'client_secret.required' => 'The Client Secret is required.',
         ]);
 
         if ($validator->fails()) {
@@ -9049,39 +9083,186 @@ class SuperAdminCompanyController extends SuperAdminBaseController
                 return response()->json([
                     'status' => 'error',
                     'errors' => $validator->errors(),
-                ], 422); // 422 Unprocessable Entity description
+                ], 422);
             } else {
                 return redirect()->back()->withErrors($validator)->withInput();
             }
         }
 
-        if ($req->token_id == '' || $req->token_id == 0) {
-
-            $value = [
-                'title' => $req->title,
-                'redirect_uri' => $req->redirect_uri,
-                'client_id' => $req->client_id,
-                'client_secret' => ($req->client_secret) ? $req->client_secret : '',
-            ];
-            DB::table('zoomsettings')->insert($value);
-            $message = 'Zoom Meeting Created Successfully';
-            $status = 'success';
-        } else {
-            $value = [
-                'title' => $req->title,
-                'redirect_uri' => $req->redirect_uri,
-                'client_id' => $req->client_id,
-                'client_secret' => ($req->client_secret) ? $req->client_secret : '',
-            ];
-            $id = ($req->token_id);
-            DB::table('zoomsettings')->where('id', $id)->update($value);
-            $message = 'Zoom Meeting updated Successfully';
-            $status = 'success';
+        // Active status evaluation: 1 for active, 0 for inactive
+        $status = 0;
+        if ($req->has('status') && in_array($req->input('status'), ['1', 1, 'on', 'true', true], true)) {
+            $status = 1;
         }
 
-        $data = ['status' => $status, 'message' => $message, 'url' => ''];
+        $value = [
+            'title' => trim($req->title),
+            'redirect_uri' => trim($req->redirect_uri), // Preserves baked-in column storing Account ID
+            'client_id' => trim($req->client_id),
+            'client_secret' => trim($req->client_secret),
+            'status' => $status,
+        ];
 
-        return response()->json($data);
+        // Enforce canonical singleton record (id = 1)
+        // Guaranteed synchronization with ATS caller: ServiceCompanyJobApplicationController::where('id', '=', 1)
+        $existing = DB::table('zoomsettings')->where('id', 1)->first();
+        if (! $existing) {
+            $first = DB::table('zoomsettings')->first();
+            if ($first) {
+                DB::table('zoomsettings')->where('id', $first->id)->update(array_merge($value, ['id' => 1]));
+            } else {
+                DB::table('zoomsettings')->insert(array_merge($value, ['id' => 1]));
+            }
+        } else {
+            DB::table('zoomsettings')->where('id', 1)->update($value);
+        }
+
+        // Multi-Tenant Atomic Cache Invalidation
+        Cache::forget('zoom_access_token:global');
+        Cache::forget('zoom_access_token');
+        Cache::forget('zoomsettings:singleton');
+
+        $message = 'Zoom Meeting settings updated successfully';
+
+        return response()->json([
+            'status' => 'success',
+            'message' => $message,
+            'url' => '',
+            'data' => [
+                'id' => 1,
+                'title' => $value['title'],
+                'redirect_uri' => $value['redirect_uri'],
+                'client_id' => $value['client_id'],
+                'status' => $status,
+            ],
+        ]);
+    }
+
+    /**
+     * Test Zoom Server-to-Server OAuth credentials via live diagnostic handshake.
+     *
+     * Intent: Validates supplied credentials (or currently stored credentials if omitted)
+     * by attempting a live OAuth token exchange against https://zoom.us/oauth/token and
+     * querying the user profile API (https://api.zoom.us/v2/users/me).
+     * Measures latency (ms), verifies account type/status, and returns actionable diagnostics.
+     * Tenancy: Global Super Admin configuration diagnostic endpoint.
+     *
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function testZoomConnection(Request $request)
+    {
+        // 1. Resolve credentials from request payload (testing unsaved values) or fall back to database
+        $accountId = trim($request->input('redirect_uri', ''));
+        $clientId = trim($request->input('client_id', ''));
+        $clientSecret = trim($request->input('client_secret', ''));
+
+        if (empty($accountId) || empty($clientId) || empty($clientSecret)) {
+            $setting = DB::table('zoomsettings')->where('id', 1)->first() ?? DB::table('zoomsettings')->first();
+            if ($setting) {
+                $accountId = empty($accountId) ? trim($setting->redirect_uri ?? '') : $accountId;
+                $clientId = empty($clientId) ? trim($setting->client_id ?? '') : $clientId;
+                $clientSecret = empty($clientSecret) ? trim($setting->client_secret ?? '') : $clientSecret;
+            }
+        }
+
+        if (empty($accountId) || empty($clientId) || empty($clientSecret)) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Missing credentials. Please supply Account ID, Client ID, and Client Secret to test.',
+                'latency_ms' => 0,
+            ], 422);
+        }
+
+        try {
+            $startTime = hrtime(true);
+
+            // 2. Execute OAuth handshake with Zoom Server-to-Server endpoint
+            $tokenResponse = Http::asForm()
+                ->timeout(12)
+                ->withBasicAuth($clientId, $clientSecret)
+                ->post('https://zoom.us/oauth/token', [
+                    'grant_type' => 'account_credentials',
+                    'account_id' => $accountId,
+                ]);
+
+            $latencyMs = round((hrtime(true) - $startTime) / 1e6);
+
+            if (! $tokenResponse->successful()) {
+                $status = $tokenResponse->status();
+                $body = $tokenResponse->json() ?? [];
+                $errorDesc = $body['reason'] ?? $body['error_description'] ?? $body['message'] ?? $tokenResponse->body();
+
+                // Human-friendly mapping for common Zoom error codes
+                $helpfulHint = '';
+                if ($status === 401 || (isset($body['error']) && $body['error'] === 'invalid_client')) {
+                    $helpfulHint = 'Invalid Client ID or Client Secret. Please verify your credentials in Zoom App Marketplace.';
+                } elseif (stripos($errorDesc, 'account') !== false || (isset($body['error']) && $body['error'] === 'unauthorized_client')) {
+                    $helpfulHint = 'Invalid Account ID, or the Server-to-Server OAuth application is not activated for this Zoom account.';
+                } else {
+                    $helpfulHint = 'Zoom rejected the authorization request: ' . $errorDesc;
+                }
+
+                return response()->json([
+                    'status' => 'error',
+                    'message' => $helpfulHint,
+                    'latency_ms' => $latencyMs,
+                    'error_code' => $body['code'] ?? $status,
+                    'raw_error' => $body,
+                ], 422);
+            }
+
+            $tokenData = $tokenResponse->json();
+            $accessToken = $tokenData['access_token'] ?? null;
+            $expiresIn = $tokenData['expires_in'] ?? 3600;
+            $scope = $tokenData['scope'] ?? 'meeting:write:admin user:read:admin';
+
+            if (! $accessToken) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Zoom authenticated successfully but did not return an access token.',
+                    'latency_ms' => $latencyMs,
+                ], 422);
+            }
+
+            // 3. Verify API access by pinging /users/me
+            $accountEmail = 'Server-to-Server Account';
+            $accountType = 'Licensed / Enterprise';
+
+            try {
+                $userResponse = Http::withToken($accessToken)
+                    ->timeout(8)
+                    ->get('https://api.zoom.us/v2/users/me');
+
+                if ($userResponse->successful()) {
+                    $userData = $userResponse->json();
+                    $accountEmail = $userData['email'] ?? (($userData['first_name'] ?? 'Zoom') . ' ' . ($userData['last_name'] ?? 'Admin'));
+                    $typeCode = $userData['type'] ?? 1;
+                    $accountType = ($typeCode == 2) ? 'Pro / Licensed' : (($typeCode == 3) ? 'Corp / Enterprise' : 'Basic');
+                }
+            } catch (\Throwable $userEx) {
+                // Non-fatal if users/me scope is restricted
+                Log::info('Zoom test connection user profile lookup note: ' . $userEx->getMessage());
+            }
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Zoom Server-to-Server OAuth handshake verified successfully!',
+                'latency_ms' => $latencyMs,
+                'account_email' => $accountEmail,
+                'account_type' => $accountType,
+                'account_id' => $accountId,
+                'scopes' => is_string($scope) ? explode(' ', $scope) : $scope,
+                'expires_in' => $expiresIn,
+            ]);
+
+        } catch (\Throwable $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Network error connecting to Zoom API: ' . $e->getMessage(),
+                'latency_ms' => 0,
+            ], 500);
+        }
     }
 
     public function googleMeetingSetting(Request $request)

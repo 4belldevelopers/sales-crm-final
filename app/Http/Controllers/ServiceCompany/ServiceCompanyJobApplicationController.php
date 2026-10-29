@@ -9363,24 +9363,35 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
 
     private function getZoomAccessToken()
     {
-        $refreshToken = DB::table('zoomsettings')->where('id', '=', 1)->first();
+        return Cache::remember('zoom_access_token:global', 3300, function () {
+            $refreshToken = DB::table('zoomsettings')->where('id', '=', 1)->first() ?? DB::table('zoomsettings')->first();
 
-        $clientId = $refreshToken->client_id;
-        $clientSecret = $refreshToken->client_secret;
-        $accountId = $refreshToken->redirect_uri;
+            if (! $refreshToken || (isset($refreshToken->status) && (int) $refreshToken->status === 0)) {
+                throw new \Exception('Zoom Video Meeting integration is not configured or is currently paused by Super Admin.');
+            }
 
-        $response = Http::asForm()
-            ->withBasicAuth($clientId, $clientSecret)
-            ->post('https://zoom.us/oauth/token', [
-                'grant_type' => 'account_credentials',
-                'account_id' => $accountId,
-            ]);
+            $clientId = trim($refreshToken->client_id ?? '');
+            $clientSecret = trim($refreshToken->client_secret ?? '');
+            $accountId = trim($refreshToken->redirect_uri ?? '');
 
-        if ($response->successful()) {
-            return $response->json()['access_token'];
-        }
+            if (empty($clientId) || empty($clientSecret) || empty($accountId)) {
+                throw new \Exception('Zoom Video Meeting credentials are incomplete in Super Admin settings.');
+            }
 
-        throw new \Exception('Could not retrieve Zoom access token: '.$response->body());
+            $response = Http::asForm()
+                ->timeout(12)
+                ->withBasicAuth($clientId, $clientSecret)
+                ->post('https://zoom.us/oauth/token', [
+                    'grant_type' => 'account_credentials',
+                    'account_id' => $accountId,
+                ]);
+
+            if ($response->successful()) {
+                return $response->json()['access_token'];
+            }
+
+            throw new \Exception('Could not retrieve Zoom access token: '.$response->body());
+        });
     }
 
     public function getGoogleVideoUrl(Request $request)

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Helper\Reply;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Cookie;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
@@ -14,22 +15,35 @@ class ZoomController extends Controller
 
     private function getZoomAccessToken()
     {
-        $clientId = 'ma_AqFVMQLyelwJ2hhaKlg';
-        $clientSecret = 'FBrziLAFmSk9AFqx7Rdsg5nDsmVBnihT';
-        $accountId = '5PdHLPvqR0SY77pwiruTnA';
+        return Cache::remember('zoom_access_token:global', 3300, function () {
+            $setting = DB::table('zoomsettings')->where('id', 1)->first() ?? DB::table('zoomsettings')->first();
 
-        $response = Http::asForm()
-            ->withBasicAuth($clientId, $clientSecret)
-            ->post('https://zoom.us/oauth/token', [
-                'grant_type' => 'account_credentials',
-                'account_id' => $accountId,
-            ]);
+            if (! $setting || (isset($setting->status) && (int) $setting->status === 0)) {
+                throw new \Exception('Zoom Video Meeting integration is not configured or is currently paused by Super Admin.');
+            }
 
-        if ($response->successful()) {
-            return $response->json()['access_token'];
-        }
+            $clientId = trim($setting->client_id ?? '');
+            $clientSecret = trim($setting->client_secret ?? '');
+            $accountId = trim($setting->redirect_uri ?? '');
 
-        throw new \Exception('Could not retrieve Zoom access token: '.$response->body());
+            if (empty($clientId) || empty($clientSecret) || empty($accountId)) {
+                throw new \Exception('Zoom Video Meeting credentials are incomplete in Super Admin settings.');
+            }
+
+            $response = Http::asForm()
+                ->timeout(12)
+                ->withBasicAuth($clientId, $clientSecret)
+                ->post('https://zoom.us/oauth/token', [
+                    'grant_type' => 'account_credentials',
+                    'account_id' => $accountId,
+                ]);
+
+            if ($response->successful()) {
+                return $response->json()['access_token'];
+            }
+
+            throw new \Exception('Could not retrieve Zoom access token: '.$response->body());
+        });
     }
 
     public function createZoomMeeting()
