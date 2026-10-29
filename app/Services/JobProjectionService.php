@@ -76,9 +76,9 @@ class JobProjectionService
         $client = $job->client_id ? DB::table('clients')->where('id', $job->client_id)->first() : null;
         $category = $job->job_category_id ? DB::table('job_categories')->where('id', $job->job_category_id)->first() : null;
 
-        // Fetch recommendations
+        // Fetch recommendations (including from_user_id for correct agency activity attribution)
         $recommendations = DB::table('recommendation_relation')
-            ->select('id', 'from_company_id', 'to_company_id', 'final_status', 'created_at')
+            ->select('id', 'from_company_id', 'from_user_id', 'to_company_id', 'final_status', 'created_at')
             ->where('job_id', $jobId)
             ->get()
             ->map(fn ($r) => (array) $r)

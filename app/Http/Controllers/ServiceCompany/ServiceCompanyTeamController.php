@@ -21,6 +21,7 @@ use App\Models\JobApplication;
 use App\Models\JobCategory;
 use App\Models\Role;
 use App\Models\User;
+use App\Services\CompanyRepresentativeService;
 use App\Services\ElasticService;
 use App\Services\MailService;
 use App\Services\TeamMutationService;
@@ -77,6 +78,23 @@ class ServiceCompanyTeamController extends ServiceCompanyBaseController
                     ->distinct()
                     ->count('submitted_by');
 
+                // Communication Representatives Count:
+                // Includes default client rep, default agency rep, and any team member who actively shared a job with an agency.
+                $repService = app(CompanyRepresentativeService::class);
+                $defaults = $repService->getDefaultRepresentatives($companyId);
+                $repUserIds = array_filter([(int) ($defaults['client_rep_id'] ?? 0), (int) ($defaults['agency_rep_id'] ?? 0)]);
+
+                $agencySharerIds = DB::table('recommendation_relation')
+                    ->where('from_company_id', $companyId)
+                    ->where('from_user_id', '>', 0)
+                    ->distinct()
+                    ->pluck('from_user_id')
+                    ->map(fn($id) => (int) $id)
+                    ->toArray();
+
+                $allRepIds = array_unique(array_merge($repUserIds, $agencySharerIds));
+                $representativesCount = count($allRepIds);
+
                 return [
                     'total' => (int) ($status->total ?? 0),
                     'active' => (int) ($status->active ?? 0),
@@ -85,6 +103,7 @@ class ServiceCompanyTeamController extends ServiceCompanyBaseController
                     'suspended' => 0, // users.status enum has no "suspended" state yet
                     'captain' => (int) $captain,
                     'trm' => (int) $trm,
+                    'representatives' => (int) $representativesCount,
                 ];
             }
         );
@@ -101,9 +120,10 @@ class ServiceCompanyTeamController extends ServiceCompanyBaseController
         $this->teamCounts = $this->getTeamCounts($companyId);
         $this->usersCount = $this->teamCounts['total'];
 
-        //  GeneralMethod::userIndexingupload((int) 6);
-        // V2 Phase 1: Removed dead query `$this->users = User::with('company')->company()->get();`
-        // because row data is fetched asynchronously via data_ajax().
+        $repService = app(CompanyRepresentativeService::class);
+        $this->defaultRepresentatives = $repService->getDefaultRepresentatives($companyId);
+        $this->eligibleRepresentatives = $repService->getEligibleRepresentatives($companyId);
+
         return view('service_company.team.index', $this->data);
     }
 
@@ -163,6 +183,7 @@ class ServiceCompanyTeamController extends ServiceCompanyBaseController
 
         try {
             Cache::forget('ats:teamcounts:'.$companyId);
+            Cache::forget('ats:company_rep:defaults:'.$companyId);
             $versionKey = 'ats:teamversion:company_'.$companyId;
             if (Cache::has($versionKey)) {
                 Cache::increment($versionKey);
@@ -278,6 +299,9 @@ class ServiceCompanyTeamController extends ServiceCompanyBaseController
                 $must[] = ['bool' => ['must_not' => [['wildcard' => ['email_verification_code' => '?*']]]]];
             } elseif ($statusTab === 'suspended') {
                 $must[] = ['term' => ['status' => 'suspended']];
+            } elseif ($statusTab === 'representatives') {
+                // Representatives tab: Active constraint applied, detailed filter applied in ranked collection
+                $must[] = ['term' => ['status' => 'active']];
             } else {
                 $must[] = ['term' => ['status' => $statusTab]];
             }
@@ -506,6 +530,29 @@ class ServiceCompanyTeamController extends ServiceCompanyBaseController
             return $user;
         });
 
+        // Resolve company communication representative IDs & agency sharers
+        $repService = app(CompanyRepresentativeService::class);
+        $defaults = $repService->getDefaultRepresentatives($company_id);
+        $defaultClientRepId = (int) ($defaults['client_rep_id'] ?? 0);
+        $defaultAgencyRepId = (int) ($defaults['agency_rep_id'] ?? 0);
+
+        $allAgencySharerIds = DB::table('recommendation_relation')
+            ->where('from_company_id', $company_id)
+            ->where('from_user_id', '>', 0)
+            ->distinct()
+            ->pluck('from_user_id')
+            ->map(fn($id) => (int) $id)
+            ->toArray();
+
+        $allRepUserIds = array_unique(array_filter(array_merge([$defaultClientRepId, $defaultAgencyRepId], $allAgencySharerIds)));
+
+        if ($statusTab === 'representatives') {
+            $allRankedUsers = $allRankedUsers->filter(function ($u) use ($allRepUserIds) {
+                return in_array((int) ($u['id'] ?? 0), $allRepUserIds, true);
+            })->values();
+            $total = $allRankedUsers->count();
+        }
+
         // -------------------------
         // 5. Paginate
         // -------------------------
@@ -539,14 +586,24 @@ class ServiceCompanyTeamController extends ServiceCompanyBaseController
             ->groupBy('user_id')
             ->pluck('total', 'user_id') : collect();
 
-        $data = $data->map(function ($item) use ($activeJobsMap, $captainJobsMap, $trmTalentsMap, $rankMonth) {
-            $uid = $item['id'];
+        $agencySharesMap = ! empty($userIds) ? DB::table('recommendation_relation')
+            ->where('from_company_id', $company_id)
+            ->whereIn('from_user_id', $userIds)
+            ->select('from_user_id', DB::raw('COUNT(*) as total'))
+            ->groupBy('from_user_id')
+            ->pluck('total', 'from_user_id') : collect();
+
+        $data = $data->map(function ($item) use ($activeJobsMap, $captainJobsMap, $trmTalentsMap, $rankMonth, $defaultClientRepId, $defaultAgencyRepId, $agencySharesMap) {
+            $uid = (int) $item['id'];
             $item['pre_active_jobs'] = (int) ($activeJobsMap[$uid] ?? 0);
             $item['pre_captain_jobs'] = (int) ($captainJobsMap[$uid] ?? 0);
             $item['pre_trm_talents'] = (int) ($trmTalentsMap[$uid] ?? 0);
             $item['pre_rank'] = is_numeric($item['rank'] ?? null) ? (int) $item['rank'] : 'N/A';
             $item['pre_score'] = (int) ($item['score'] ?? 0);
             $item['pre_rank_month'] = is_numeric($item['rank'] ?? null) ? $rankMonth : '';
+            $item['is_client_rep'] = ($uid === $defaultClientRepId);
+            $item['is_agency_rep'] = ($uid === $defaultAgencyRepId);
+            $item['pre_agency_shares'] = (int) ($agencySharesMap[$uid] ?? 0);
 
             return $item;
         });
@@ -573,6 +630,133 @@ class ServiceCompanyTeamController extends ServiceCompanyBaseController
 
         return response()->json($responseData);
 
+    }
+
+    /**
+     * AJAX endpoint returning communication representative data and eligible users.
+     */
+    public function representativesData(Request $request)
+    {
+        abort_if(Gate::denies('view_team'), 403);
+        $companyId = (int) $this->user->company_id;
+        $repService = app(CompanyRepresentativeService::class);
+
+        return response()->json([
+            'defaults' => $repService->getDefaultRepresentatives($companyId),
+            'eligible' => $repService->getEligibleRepresentatives($companyId),
+            'counts' => $this->getTeamCounts($companyId),
+        ]);
+    }
+
+    /**
+     * Set a team member as Default Client or Agency Representative.
+     */
+    public function setDefaultRepresentative(Request $request)
+    {
+        abort_if(Gate::denies('edit_team'), 403);
+        $companyId = (int) $this->user->company_id;
+        $userId = (int) $request->input('user_id');
+        $type = (string) $request->input('type');
+
+        $repService = app(CompanyRepresentativeService::class);
+        $result = $repService->setDefaultRepresentative($companyId, $userId, $type);
+
+        if (($result['status'] ?? '') === 'success') {
+            $this->clearTeamCache($companyId);
+        }
+
+        return response()->json($result);
+    }
+
+    /**
+     * Change / Reassign the representative for a specific Job + Agency relationship.
+     */
+    public function changeJobRepresentative(Request $request)
+    {
+        abort_if(Gate::denies('edit_team'), 403);
+        $companyId = (int) $this->user->company_id;
+        $jobId = (int) $request->input('job_id');
+        $agencyCompanyId = (int) $request->input('agency_company_id');
+        $newUserId = (int) $request->input('new_user_id');
+
+        $repService = app(CompanyRepresentativeService::class);
+        $result = $repService->changeJobAgencyRepresentative($companyId, $jobId, $agencyCompanyId, $newUserId);
+
+        return response()->json($result);
+    }
+
+    /**
+     * Fetch all agencies associated with a job/user and their authoritative representative.
+     * Supports filtering by job_id or user_id (sharer/representative).
+     */
+    public function jobAgencyRepresentatives(Request $request, $jobId = null)
+    {
+        abort_if(Gate::denies('view_team'), 403);
+        $companyId = (int) $this->user->company_id;
+        $jobId = (int) ($jobId ?: $request->input('job_id'));
+        $userId = (int) ($request->input('userId') ?: $request->input('user_id'));
+
+        $query = DB::table('recommendation_relation')
+            ->join('companies', 'companies.id', '=', 'recommendation_relation.to_company_id')
+            ->leftJoin('jobs', 'jobs.id', '=', 'recommendation_relation.job_id')
+            ->where('recommendation_relation.from_company_id', $companyId);
+
+        if ($jobId > 0) {
+            $query->where('recommendation_relation.job_id', $jobId);
+        }
+        if ($userId > 0) {
+            $query->where('recommendation_relation.from_user_id', $userId);
+        }
+
+        $records = $query->select([
+            'recommendation_relation.id as relation_id',
+            'recommendation_relation.job_id',
+            'recommendation_relation.to_company_id as agency_id',
+            'recommendation_relation.from_user_id',
+            'recommendation_relation.final_status',
+            'recommendation_relation.created_at as shared_at',
+            'companies.company_name as agency_name',
+            'companies.logo as agency_logo',
+            'jobs.title as job_title',
+            'jobs.user_id as job_creator_id',
+        ])
+        ->orderByDesc('recommendation_relation.created_at')
+        ->limit(50)
+        ->get();
+
+        $repService = app(CompanyRepresentativeService::class);
+        $mapped = $records->map(function ($rel) use ($repService, $companyId) {
+            $sharerId = (int) $rel->from_user_id;
+            $repUser = $sharerId > 0 ? $repService->resolveUserSummary($sharerId, $companyId) : null;
+            $creatorId = (int) $rel->job_creator_id;
+            $creatorUser = $creatorId > 0 ? $repService->resolveUserSummary($creatorId, $companyId) : null;
+
+            return [
+                'relation_id' => $rel->relation_id,
+                'job_id' => $rel->job_id,
+                'job_title' => $rel->job_title ?: ('Job #' . $rel->job_id),
+                'job_creator' => $creatorUser,
+                'agency_id' => $rel->agency_id,
+                'agency_name' => $rel->agency_name,
+                'agency_logo' => $rel->agency_logo,
+                'final_status' => $rel->final_status,
+                'shared_at' => $rel->shared_at ? Carbon::parse($rel->shared_at)->format('d M Y') : '—',
+                'representative' => $repUser,
+                'representative_user_id' => $sharerId,
+                'is_creator_the_rep' => ($sharerId > 0 && $sharerId === $creatorId),
+            ];
+        });
+
+        $eligibleUsers = $repService->getEligibleRepresentatives($companyId);
+
+        return response()->json([
+            'status' => 'success',
+            'job_id' => $jobId,
+            'user_id' => $userId,
+            'shares' => $mapped,
+            'agencies' => $mapped,
+            'eligible_users' => $eligibleUsers,
+        ]);
     }
 
     public function viewMore($id)

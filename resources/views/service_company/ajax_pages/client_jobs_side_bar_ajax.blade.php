@@ -154,28 +154,87 @@
                 }
                 $teamMeta = $teamCount > 0 ? ($teamCount . ' ' . ($teamCount === 1 ? 'Member' : 'Members')) : '—';
 
-                // 6. Sub-Card 4: Agency (Strictly Read-Only — Based on actual hired relationships, No matching badges)
+                // 6. Sub-Card 4: Agency Name Resolution (Strictly displays actual Agency Name, NEVER a count like "3 Agencies")
+                $agencyName = null;
                 $agencies = is_array($job->recommendation_relation ?? null) ? $job->recommendation_relation : [];
-                $hiredAgencies = collect($agencies)->filter(function($rel) {
-                    if (is_array($rel)) {
-                        return (isset($rel['final_status']) && (int)$rel['final_status'] === 1)
-                            || (isset($rel['from_status']) && (int)$rel['from_status'] === 1)
-                            || (!isset($rel['final_status']) && !isset($rel['from_status']));
-                    } elseif (is_object($rel)) {
-                        return (isset($rel->final_status) && (int)$rel->final_status === 1)
-                            || (isset($rel->from_status) && (int)$rel->from_status === 1)
-                            || (!isset($rel->final_status) && !isset($rel->from_status));
+                if (!empty($agencies)) {
+                    $selectedRel = null;
+                    foreach ($agencies as $rel) {
+                        $relArr = (array) $rel;
+                        $toCompId = (int) ($relArr['to_company_id'] ?? 0);
+                        if ($company_id > 0 && $toCompId === (int) $company_id) {
+                            $selectedRel = $relArr;
+                            break;
+                        }
                     }
-                    return false;
-                });
-                $hiredAgencyCount = $hiredAgencies->pluck('to_company_id')->filter()->unique()->count();
-                if ($hiredAgencyCount === 0 && count($agencies) > 0) {
-                    $hiredAgencyCount = count($agencies);
+                    if (!$selectedRel && isset($agencies[0])) {
+                        $selectedRel = (array) $agencies[0];
+                    }
+
+                    if ($selectedRel) {
+                        $targetAgencyId = (int) ($selectedRel['to_company_id'] ?? 0);
+                        if ($targetAgencyId > 0) {
+                            $cacheCompKey = "ats:tenant_comp_name:{$targetAgencyId}";
+                            $cachedCompName = \Illuminate\Support\Facades\Redis::get($cacheCompKey);
+                            if (!empty($cachedCompName)) {
+                                $agencyName = (string) $cachedCompName;
+                            } else {
+                                $cRow = \Illuminate\Support\Facades\DB::table('companies')->where('id', $targetAgencyId)->first(['company_name', 'name']);
+                                if ($cRow) {
+                                    $agencyName = $cRow->company_name ?? ($cRow->name ?? null);
+                                    if ($agencyName) {
+                                        \Illuminate\Support\Facades\Redis::setex($cacheCompKey, 86400, $agencyName);
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
 
-                $agencyText = $hiredAgencyCount > 0 
-                    ? ($hiredAgencyCount . ' ' . ($hiredAgencyCount === 1 ? 'Agency' : 'Agencies')) 
-                    : '—';
+                if (empty($agencyName)) {
+                    if (!empty($job->agency_name)) {
+                        $agencyName = $job->agency_name;
+                    } elseif (!empty($company_id)) {
+                        $cacheCompKey = "ats:tenant_comp_name:{$company_id}";
+                        $cachedCompName = \Illuminate\Support\Facades\Redis::get($cacheCompKey);
+                        if (!empty($cachedCompName)) {
+                            $agencyName = (string) $cachedCompName;
+                        } else {
+                            $cRow = \Illuminate\Support\Facades\DB::table('companies')->where('id', $company_id)->first(['company_name']);
+                            $agencyName = $cRow->company_name ?? '4Bell Technology';
+                            \Illuminate\Support\Facades\Redis::setex($cacheCompKey, 86400, $agencyName);
+                        }
+                    } else {
+                        $agencyName = '—';
+                    }
+                }
+                $agencyText = $agencyName;
+
+                // Authoritative Agency Representative: The specific user who shared this job with the agency
+                $agencyRepName = null;
+                if (!empty($agencies)) {
+                    $firstRel = is_array($agencies[0]) ? $agencies[0] : (array)$agencies[0];
+                    $sharerId = (int) ($firstRel['from_user_id'] ?? 0);
+                    if ($sharerId > 0) {
+                        $agencyRepName = $firstRel['from_user_name'] ?? $firstRel['user_name'] ?? null;
+                        if (!$agencyRepName && class_exists(\App\Services\CompanyRepresentativeService::class)) {
+                            $repSummary = app(\App\Services\CompanyRepresentativeService::class)->resolveUserSummary($sharerId, (int)($job->company_id ?? 0));
+                            if (!empty($repSummary['name'])) {
+                                $agencyRepName = $repSummary['name'];
+                            }
+                        }
+                    }
+                }
+
+                // Job Creator Name (Internal Author)
+                $jobCreatorName = null;
+                $creatorId = (int) ($job->user_id ?? $job->posted_by ?? 0);
+                if ($creatorId > 0 && class_exists(\App\Services\CompanyRepresentativeService::class)) {
+                    $creatorSummary = app(\App\Services\CompanyRepresentativeService::class)->resolveUserSummary($creatorId, (int)($job->company_id ?? 0));
+                    if (!empty($creatorSummary['name'])) {
+                        $jobCreatorName = $creatorSummary['name'];
+                    }
+                }
 
                 // 7. Sub-Card 5: Pipeline Stages (Strictly Read-Only)
                 $jobStageCounts = isset($viewModel) && isset($viewModel->pipelineStageMap[$jobId]) 
@@ -300,14 +359,19 @@
                         </div>
                     </div>
 
-                    <!-- Sub-Card 4: Agency (No Matching Badge, Hired Count or "—") -->
+                    <!-- Sub-Card 4: Agency (Display Actual Agency Name) -->
                     <div class="cd-job-subcard cd-subcard-agency">
                         <div class="cd-subcard-header">
                             <span class="cd-subcard-label"><i class="fa fa-handshake me-1 text-muted"></i>Agency</span>
                         </div>
                         <div class="cd-subcard-body">
                             @if($agencyText !== '—')
-                                <div class="cd-agency-val">{{ $agencyText }}</div>
+                                <div class="cd-agency-val" title="{{ $agencyText }}">{{ $agencyText }}</div>
+                                @if(!empty($agencyRepName))
+                                    <div class="cd-val-sub text-success" title="Agency Representative: {{ $agencyRepName }} (User who shared this job with agency)" style="font-size: 10px; font-weight: 600;">
+                                        <i class="fa fa-user-check me-1"></i>Rep: {{ \Illuminate\Support\Str::limit($agencyRepName, 12) }}
+                                    </div>
+                                @endif
                             @else
                                 <div class="cd-agency-empty">—</div>
                             @endif
@@ -340,13 +404,21 @@
                     </div>
                 </div>
 
-                <!-- Sub-Card 6: Bottom Activity Strip (Timeline, HM & Skills) -->
+                <!-- Sub-Card 6: Bottom Activity Strip (Timeline, Author, HM, Agency Rep & Skills) -->
                 <div class="cd-job-card-bottom">
                     <div class="cd-bottom-left">
                         <span><i class="far fa-calendar-alt text-muted me-1"></i>Posted: <strong>{{ $formattedDate }}</strong></span>
+                        @if(!empty($jobCreatorName))
+                            <span class="cd-bullet">&bull;</span>
+                            <span title="Job Created By: {{ $jobCreatorName }} (Internal Author)"><i class="far fa-user text-muted me-1"></i>Created by: <strong>{{ \Illuminate\Support\Str::limit($jobCreatorName, 12) }}</strong></span>
+                        @endif
                         @if(!empty($hmName) && $hmName !== 'Hiring Manager')
                             <span class="cd-bullet">&bull;</span>
-                            <span title="{{ $hmName }} ({{ $hmTitle }})"><i class="far fa-user text-muted me-1"></i>HM: <strong>{{ $hmName }}</strong></span>
+                            <span title="Client SPOC: {{ $hmName }} ({{ $hmTitle }})"><i class="far fa-id-badge text-primary me-1"></i>Client Rep: <strong>{{ \Illuminate\Support\Str::limit($hmName, 12) }}</strong></span>
+                        @endif
+                        @if(!empty($agencyRepName))
+                            <span class="cd-bullet">&bull;</span>
+                            <span title="Agency Representative: {{ $agencyRepName }} (Shared by this user)"><i class="fa fa-handshake text-success me-1"></i>Agency Rep: <strong>{{ \Illuminate\Support\Str::limit($agencyRepName, 12) }}</strong></span>
                         @endif
                     </div>
                     <div class="cd-bottom-skills">

@@ -78,6 +78,12 @@ class CandidateDrawerQueryService
         'submitted_by_name',
         'agency_root_name',
         'spokperson_name',
+        'captain_name',
+        'captain_user_id',
+        'agency_name',
+        'agency_company_id',
+        'submitted_by_display',
+        'job_application_id',
         'company_name',
         'post_company_name',
         'submitted_by_company_name',
@@ -154,9 +160,54 @@ class CandidateDrawerQueryService
         $filter = [];
         $must = [];
         $mustNot = [
-            // Visibility: status 9 (archived) is excluded from active drawer scope
-            ['terms' => ['job_master_status_id' => [9, '9']]],
+            // Visibility Guard: In Review (status 8) and Archived (status 9) are strictly excluded from client-facing drawer views
+            ['terms' => ['job_master_status_id' => [8, 9, '8', '9']]],
+            [
+                'bool' => [
+                    'must' => [['terms' => ['master_status_id' => [8, 9, '8', '9']]]],
+                    'must_not' => [['range' => ['job_master_status_id' => ['gt' => 0]]]],
+                ],
+            ],
         ];
+
+        // Status 8 (In Review) Client Guard: In Review candidates must NEVER appear in client drawer
+        if (! empty($params['status_id']) && (int) $params['status_id'] === 8) {
+            return [
+                'data' => [],
+                'meta' => [
+                    'client_id' => $clientId,
+                    'client_type' => $clientType,
+                    'query_fingerprint' => $queryFingerprint,
+                    'client_candidate_version' => $currentCollectionVersion,
+                    'projection_schema_version' => 2,
+                    'stage_counts' => [
+                        'sourcing' => 0,
+                        'screening' => 0,
+                        'evaluation' => 0,
+                        'negotiations' => 0,
+                        'offer' => 0,
+                        'joined' => 0,
+                        'rejected' => 0,
+                        'in_review' => 0,
+                    ],
+                    'server_time' => now()->toIso8601String(),
+                ],
+                'pagination' => [
+                    'mode' => 'page',
+                    'total' => 0,
+                    'total_relation' => 'eq',
+                    'per_page' => $size,
+                    'has_more' => false,
+                    'current_page' => $page,
+                    'last_page' => 1,
+                ],
+                'filters' => [
+                    'search' => $params['search'] ?? '',
+                    'status_id' => 8,
+                    'job_id' => ! empty($params['job_id']) ? (int) $params['job_id'] : null,
+                ],
+            ];
+        }
 
         // 5.1 Resolve client's jobs from ELASTIC_JOBS (cached in Dragonfly/Redis)
         $clientJobIds = $this->resolveClientJobIds($companyId, $clientId, $clientType);
@@ -184,12 +235,22 @@ class CandidateDrawerQueryService
                         ['term' => ['ClientComID' => $companyId]],
                         ['term' => ['company_id' => $companyId]],
                         ['term' => ['client_comapny_id' => $companyId]],
+                        ['term' => ['thirdparty_company_id' => $companyId]],
                     ],
                     'minimum_should_match' => 1,
                 ],
             ];
-            // Align with Direct Client badge count in GeneralMethod
-            $filter[] = ['term' => ['final_status' => 1]];
+            // Align with Direct Client relationship: final_status 1 or 2 (Active/Approved share)
+            $filter[] = [
+                'bool' => [
+                    'should' => [
+                        ['terms' => ['final_status' => [1, 2]]],
+                        ['terms' => ['job_id' => ! empty($clientJobIds) ? $clientJobIds : [-1]]],
+                        ['terms' => ['jobId' => ! empty($clientJobIds) ? $clientJobIds : [-1]]],
+                    ],
+                    'minimum_should_match' => 1,
+                ],
+            ];
         } else {
             // Internal client scope:
             // Match candidates where client_id = clientId, OR where jobId belongs to any job of this client
@@ -515,8 +576,14 @@ class CandidateDrawerQueryService
             'offer' => (int) ($aggs['offer']['doc_count'] ?? 0),
             'joined' => (int) ($aggs['joined']['doc_count'] ?? 0),
             'rejected' => (int) ($aggs['rejected']['doc_count'] ?? 0),
-            'in_review' => (int) ($aggs['in_review']['doc_count'] ?? 0),
+            'in_review' => 0, // Strict In Review Exclusion: Candidate tab never shows or counts In Review candidates
         ];
+
+        if ($clientType === 'direct') {
+            $items = array_map(function ($doc) {
+                return \App\DTO\ServiceCompany\DirectClientCandidateDTO::fromElasticDoc($doc)->toArray();
+            }, $items);
+        }
 
         return [
             'data' => $items,

@@ -923,7 +923,7 @@
         display: grid !important;
         grid-template-columns: repeat(6, minmax(0, 1fr)) !important;
         gap: 10px !important;
-        margin: 0 14px 12px 14px !important;
+        margin: 0 14px 10px 14px !important;
         width: calc(100% - 28px) !important;
         box-sizing: border-box !important;
     }
@@ -1011,16 +1011,17 @@
     .cd-drawer-tabs-card {
         background: #ffffff !important;
         border: 1px solid #e2e8f0 !important;
-        border-radius: 10px !important;
-        padding: 8px 10px !important;
-        margin: 0 14px 12px 14px !important;
+        border-radius: 8px !important;
+        padding: 3px 6px !important;
+        margin: 0 14px 10px 14px !important;
         box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04) !important;
         width: auto !important;
         box-sizing: border-box !important;
         overflow: hidden !important;
         display: flex !important;
         align-items: center !important;
-        min-height: 48px !important;
+        height: 40px !important;
+        min-height: 40px !important;
     }
     .cd-drawer-tabs-list {
         display: flex !important;
@@ -1036,7 +1037,7 @@
         margin: 0 !important;
         flex-wrap: nowrap !important;
         width: 100% !important;
-        height: 32px !important;
+        height: 34px !important;
     }
     .cd-drawer-tabs-list::-webkit-scrollbar {
         height: 3px !important;
@@ -1054,13 +1055,13 @@
         flex-shrink: 0 !important;
         display: flex !important;
         align-items: center !important;
-        height: 32px !important;
+        height: 34px !important;
     }
     .cd-tab-pill-btn {
         background: #f8fafc !important;
         border: 1px solid #e2e8f0 !important;
-        border-radius: 7px !important;
-        padding: 0 9.5px !important;
+        border-radius: 6px !important;
+        padding: 0 10.5px !important;
         font-size: 11px !important;
         font-weight: 600 !important;
         color: #475569 !important;
@@ -1068,7 +1069,7 @@
         align-items: center !important;
         justify-content: center !important;
         gap: 5px !important;
-        height: 32px !important;
+        height: 34px !important;
         text-decoration: none !important;
         box-shadow: 0 1px 2px rgba(15, 23, 42, 0.02) !important;
         transition: all 0.15s ease-in-out !important;
@@ -1724,14 +1725,14 @@
 
             <!-- ── KPI SUMMARY ROW: AUTHORITATIVE CLIENT-LEVEL BUSINESS TOTALS (Rule 20 Compliant) ── -->
             <div class="cd-kpi-grid">
-                <!-- KPI 1: Total Jobs Created -->
+                <!-- KPI 1: All Jobs -->
                 <div class="cd-kpi-card" title="Total jobs created for this client till date">
                     <div class="cd-kpi-icon cd-kpi-icon-blue">
                         <i class="fas fa-layer-group fa-solid"></i>
                     </div>
                     <div class="cd-kpi-body">
                         <div class="cd-kpi-num">{{ number_format($kpiTotalJobs ?? 0) }}</div>
-                        <div class="cd-kpi-lbl">Total Jobs Created</div>
+                        <div class="cd-kpi-lbl">All Jobs</div>
                     </div>
                 </div>
 
@@ -1746,47 +1747,47 @@
                     </div>
                 </div>
 
-                <!-- KPI 3: Candidates Submitted -->
+                <!-- KPI 3: All Candidates -->
                 <div class="cd-kpi-card" title="Total candidates submitted to this client till date">
                     <div class="cd-kpi-icon cd-kpi-icon-purple">
                         <i class="fas fa-user-check fa-solid"></i>
                     </div>
                     <div class="cd-kpi-body">
                         <div class="cd-kpi-num">{{ number_format($kpiSubmitted ?? 0) }}</div>
-                        <div class="cd-kpi-lbl">Candidates Submitted</div>
+                        <div class="cd-kpi-lbl">All Candidates</div>
                     </div>
                 </div>
 
-                <!-- KPI 4: Interviews Scheduled -->
+                <!-- KPI 4: All Interviews -->
                 <div class="cd-kpi-card" title="Total interviews scheduled for this client till date">
                     <div class="cd-kpi-icon cd-kpi-icon-amber">
                         <i class="fas fa-calendar-check fa-solid"></i>
                     </div>
                     <div class="cd-kpi-body">
                         <div class="cd-kpi-num">{{ number_format($kpiInterviews ?? 0) }}</div>
-                        <div class="cd-kpi-lbl">Interviews Scheduled</div>
+                        <div class="cd-kpi-lbl">All Interviews</div>
                     </div>
                 </div>
 
-                <!-- KPI 5: Offers Generated -->
+                <!-- KPI 5: All Offers -->
                 <div class="cd-kpi-card" title="Total offers generated for this client till date">
                     <div class="cd-kpi-icon cd-kpi-icon-rose">
                         <i class="fas fa-file-signature fa-solid"></i>
                     </div>
                     <div class="cd-kpi-body">
                         <div class="cd-kpi-num">{{ number_format($kpiOffers ?? 0) }}</div>
-                        <div class="cd-kpi-lbl">Offers Generated</div>
+                        <div class="cd-kpi-lbl">All Offers</div>
                     </div>
                 </div>
 
-                <!-- KPI 6: Joined -->
-                <div class="cd-kpi-card" title="Total candidates who have joined for this client till date">
+                <!-- KPI 6: All Joinings -->
+                <div class="cd-kpi-card" title="Total candidates joined for this client till date">
                     <div class="cd-kpi-icon cd-kpi-icon-teal">
                         <i class="fas fa-handshake fa-solid"></i>
                     </div>
                     <div class="cd-kpi-body">
                         <div class="cd-kpi-num">{{ number_format($kpiJoins ?? 0) }}</div>
-                        <div class="cd-kpi-lbl">Joined</div>
+                        <div class="cd-kpi-lbl">All Joinings</div>
                     </div>
                 </div>
             </div>

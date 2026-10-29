@@ -49,9 +49,10 @@
 
             // Attribution & Actor Company Resolution (NEVER recruiter role)
             $attribution = $item['attribution'] ?? [];
-            $attributionLabel = $attribution['label'] ?? ($category === 'jobs' ? 'Created by' : ($category === 'crm' ? 'Logged by' : 'Uploaded by'));
-            $attributionName = $attribution['name'] ?? ($actor['name'] ?? ($category === 'jobs' ? 'Account Manager' : 'Technical Recruiter'));
-            $companyName = $attribution['company_name'] ?? ($actor['company_name'] ?? ($category === 'jobs' ? ($job['creator_company'] ?? '4Bell Technology') : ($candidate['uploader_company'] ?? '4Bell Technology')));
+            $isSharedJob = ($eventType === 'job.shared') || !empty($job['shared_by_name']);
+            $attributionLabel = $attribution['label'] ?? ($isSharedJob ? 'Shared by' : ($category === 'jobs' ? 'Created by' : ($category === 'crm' ? 'Logged by' : 'Uploaded by')));
+            $attributionName = $attribution['name'] ?? ($actor['name'] ?? ($isSharedJob ? ($job['shared_by_name'] ?? 'Account Lead') : ($category === 'jobs' ? 'Account Manager' : 'Technical Recruiter')));
+            $companyName = $attribution['company_name'] ?? ($actor['company_name'] ?? ($isSharedJob ? ($job['shared_by_company'] ?? '4Bell Technology') : ($category === 'jobs' ? ($job['creator_company'] ?? '4Bell Technology') : ($candidate['uploader_company'] ?? '4Bell Technology'))));
             if (empty($companyName) || strtolower($companyName) === 'account lead' || strtolower($companyName) === 'technical recruiter') {
                 $companyName = '4Bell Technology';
             }
@@ -77,13 +78,14 @@
 
             // Activity Type Label
             $activityLabel = match($eventType) {
+                'job.shared' => 'Job Shared',
                 'job.created' => 'Job Requisition Created',
                 'job.updated' => 'Job Requisition Updated',
                 'candidate.joined' => 'Candidate Joined',
                 'offer.sent' => 'Offer Extended',
                 'interview.scheduled' => 'Interview Scheduled',
                 'client.note_added' => 'Client Note Logged',
-                default => ($category === 'jobs' ? 'Job Requisition Created' : ($category === 'interviews' ? 'Interview Scheduled' : 'Candidate Stage Changed'))
+                default => ($category === 'jobs' ? ($isSharedJob ? 'Job Shared' : 'Job Requisition Created') : ($category === 'interviews' ? 'Interview Scheduled' : 'Candidate Stage Changed'))
             };
         @endphp
 
@@ -103,7 +105,7 @@
              data-sequence="{{ $seq }}" 
              data-category="{{ $category }}"
              data-event-type="{{ $eventType }}"
-             data-search-terms="{{ strtolower($candidateName . ' ' . ($candidate['designation'] ?? '') . ' ' . $jobTitle . ' ' . $jobCode . ' ' . $attributionName . ' ' . $companyName . ' ' . ($transition['to_stage_name'] ?? '')) }}">
+             data-search-terms="{{ strtolower($candidateName . ' ' . ($candidate['designation'] ?? '') . ' ' . $jobTitle . ' ' . $jobCode . ' ' . $attributionName . ' ' . $companyName . ' ' . ($transition['to_stage_name'] ?? '') . ' ' . ($job['shared_with_agency'] ?? '') . ' ' . ($job['shared_by_name'] ?? '')) }}">
             
             {{-- Connecting Node Dot --}}
             <div class="cd-activity-node-dot {{ $dotStatusClass }} stream-{{ $category }}"></div>
@@ -116,22 +118,29 @@
                     <div class="cd-activity-subcard-entity">
                         @if($category === 'jobs')
                             @php
-                                $jAvatarStyle = match($jobStatus) {
-                                    'active' => 'background: #ecfdf5; color: #15803d; border-color: #a7f3d0;',
-                                    'hold' => 'background: #fff7ed; color: #c2410c; border-color: #fed7aa;',
-                                    'closed', 'removed' => 'background: #fef2f2; color: #b91c1c; border-color: #fecaca;',
-                                    default => 'background: #ecfdf5; color: #15803d; border-color: #a7f3d0;'
-                                };
+                                $jAvatarStyle = $isSharedJob
+                                    ? 'background: #eff6ff; color: #009ef7; border-color: #bfdbfe;'
+                                    : match($jobStatus) {
+                                        'active' => 'background: #ecfdf5; color: #15803d; border-color: #a7f3d0;',
+                                        'hold' => 'background: #fff7ed; color: #c2410c; border-color: #fed7aa;',
+                                        'closed', 'removed' => 'background: #fef2f2; color: #b91c1c; border-color: #fecaca;',
+                                        default => 'background: #ecfdf5; color: #15803d; border-color: #a7f3d0;'
+                                    };
+                                $sharedWithText = $job['shared_with_agency'] ?? ($job['agency_name'] ?? '');
                             @endphp
                             <div class="cd-activity-entity-avatar" style="{{ $jAvatarStyle }}">
-                                <i class="fas fa-briefcase"></i>
+                                <i class="fas {{ $isSharedJob ? 'fa-share-nodes' : 'fa-briefcase' }}"></i>
                             </div>
                             <div class="cd-activity-entity-meta">
                                 <div class="cd-activity-pill-label">
-                                    <span class="cd-activity-stream-pill stream-jobs-pill">JOB REQUISITION</span>
+                                    <span class="cd-activity-stream-pill stream-jobs-pill">{{ $isSharedJob ? 'JOB SHARED' : 'JOB REQUISITION' }}</span>
                                 </div>
                                 <div class="cd-activity-entity-name" title="{{ $jobTitle }}">
-                                    {{ $jobTitle }}
+                                    @if($isSharedJob && !empty($sharedWithText))
+                                        {{ $jobTitle }} &rarr; Shared with {{ $sharedWithText }}
+                                    @else
+                                        {{ $jobTitle }}
+                                    @endif
                                 </div>
                                 <div class="cd-activity-entity-sub">
                                     <span class="fw-semibold text-gray-800">{{ $jobCode }}</span> &bull; {{ $jobOpenings }} {{ \Illuminate\Support\Str::plural('Opening', $jobOpenings) }}
@@ -241,26 +250,32 @@
                             </div>
                         @elseif($category === 'jobs')
                             @php
-                                $statusBadgeClass = match($jobStatus) {
-                                    'active' => 'status-active',
-                                    'hold' => 'status-hold',
-                                    'closed' => 'status-closed',
-                                    'removed' => 'status-removed',
-                                    default => 'status-active'
-                                };
-                                $statusIcon = match($jobStatus) {
-                                    'active' => 'fa-circle-check',
-                                    'hold' => 'fa-pause-circle',
-                                    'closed' => 'fa-lock',
-                                    'removed' => 'fa-trash-alt',
-                                    default => 'fa-circle-check'
-                                };
-                                $statusLabel = $job['status_label'] ?? ucfirst($jobStatus);
+                                $statusBadgeClass = $isSharedJob
+                                    ? 'status-active'
+                                    : match($jobStatus) {
+                                        'active' => 'status-active',
+                                        'hold' => 'status-hold',
+                                        'closed' => 'status-closed',
+                                        'removed' => 'status-removed',
+                                        default => 'status-active'
+                                    };
+                                $statusIcon = $isSharedJob
+                                    ? 'fa-share-nodes'
+                                    : match($jobStatus) {
+                                        'active' => 'fa-circle-check',
+                                        'hold' => 'fa-pause-circle',
+                                        'closed' => 'fa-lock',
+                                        'removed' => 'fa-trash-alt',
+                                        default => 'fa-circle-check'
+                                    };
+                                $statusLabel = $isSharedJob
+                                    ? ($transition['to_stage_name'] ?? ('Shared with ' . ($job['shared_with_agency'] ?? 'Agency')))
+                                    : (($job['status_label'] ?? ucfirst($jobStatus)) . ' Requisition');
                             @endphp
                             <div class="cd-activity-stage-transition">
                                 <span class="cd-status-badge {{ $statusBadgeClass }}">
                                     <i class="fas {{ $statusIcon }}" style="font-size: 10px;"></i>
-                                    {{ $statusLabel }} Requisition
+                                    {{ $statusLabel }}
                                 </span>
                             </div>
                         @elseif($category === 'crm')
@@ -276,12 +291,18 @@
                             <div class="cd-activity-actor-attribution">
                                 {{ $attributionLabel }}:
                             </div>
-                            <div class="cd-activity-actor-name" title="{{ $attributionName }}">
-                                {{ $attributionName }}
-                            </div>
-                            <div class="cd-activity-actor-company" title="{{ $companyName }}">
-                                <i class="far fa-building me-1" style="font-size: 10px; color: #64748b;"></i>{{ $companyName }}
-                            </div>
+                            @if(($isSharedJob || str_contains(strtolower($attributionLabel), 'shared')) && !empty($companyName) && !empty($attributionName) && strtolower($attributionName) !== 'account lead')
+                                <div class="cd-activity-actor-name fw-bold text-dark" title="{{ $companyName }} — {{ $attributionName }}">
+                                    {{ $companyName }} — {{ $attributionName }}
+                                </div>
+                            @else
+                                <div class="cd-activity-actor-name" title="{{ $attributionName }}">
+                                    {{ $attributionName }}
+                                </div>
+                                <div class="cd-activity-actor-company" title="{{ $companyName }}">
+                                    <i class="far fa-building me-1" style="font-size: 10px; color: #64748b;"></i>{{ $companyName }}
+                                </div>
+                            @endif
                         </div>
                     </div>
 
@@ -322,7 +343,7 @@
             <div class="cd-activity-footer-strip">
                 <div class="cd-activity-footer-left">
                     <span class="cd-activity-stream-pill stream-{{ $category }}-pill">
-                        {{ strtoupper($category) }}
+                        {{ ($category === 'jobs' && $isSharedJob) ? 'JOB SHARED' : strtoupper($category) }}
                     </span>
                     <span>
                         <i class="far fa-clock me-1"></i> {{ $activityLabel }} &bull; {{ $timeFormatted }}

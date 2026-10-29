@@ -228,33 +228,132 @@ class ElasticCandidatesIndex
                         })
                         ->toArray();
 
-                    // Denormalized lookups for Phase 1 V2 Zero-N+1 rendering: Captain / Spokesperson / Agency Root
-                    $spokperson_name = null;
-                    if (! empty($application->jobId)) {
-                        $captain = DB::table('job_assign')
-                            ->select('users.name')
-                            ->join('users', 'users.id', '=', 'job_assign.spok_user_id')
-                            ->where('job_assign.job_id', $application->jobId)
-                            ->where('job_assign.spok_user_id', '>', 0)
-                            ->first();
-                        if ($captain && ! empty($captain->name)) {
-                            $spokperson_name = $captain->name;
+                    // -------------------------------------------------------------------------
+                    // Scoped Captain Resolution Hierarchy (Phase 1 V2 Master Standard §10.1)
+                    // Tier 1: job_assign (job_id, company_id = agencyCompId, spok_user_id > 0)
+                    // Tier 2: Agency Root User (users.company_id = agencyCompId ORDER BY root_user DESC, id ASC)
+                    // Tier 3: Agency Corporate Name (post_company_name / submitted_by_company_name)
+                    // INVARIANT: NEVER fall back to posted_by (internal recruiter)
+                    // -------------------------------------------------------------------------
+                    $agencyCompId = ! empty($application->thirdparty_company_id)
+                        ? (int) $application->thirdparty_company_id
+                        : (! empty($application->other_company) ? (int) $application->other_company : 0);
+
+                    // Resolve Agency Corporate Name safely
+                    $agencyName = ! empty($application->post_company_name)
+                        ? (string) $application->post_company_name
+                        : (! empty($application->submitted_by_company_name) ? (string) $application->submitted_by_company_name : null);
+
+                    if (empty($agencyName) && $agencyCompId > 0) {
+                        $resolvedCompName = DB::table('companies')->where('id', $agencyCompId)->value('company_name');
+                        if (! empty($resolvedCompName)) {
+                            $agencyName = (string) $resolvedCompName;
                         }
                     }
-                    if (empty($spokperson_name)) {
-                        $spokperson_name = $application->posted_by;
+
+                    if (empty($agencyName)) {
+                        $agencyName = ! empty($application->company_name) ? (string) $application->company_name : 'Agency Partner';
                     }
 
-                    // Agency Root / Parent User lookup for third-party shared candidates (e.g. Varsha Sharma)
+                    $captain_name = null;
+                    $captain_user_id = null;
+
+                    // Tier 1: Check Dragonfly cache and job_assign strictly scoped by (job_id, company_id = agencyCompId)
+                    if (! empty($application->jobId) && $agencyCompId > 0) {
+                        $captainCacheKey = "ats:captain:{$application->jobId}:{$agencyCompId}";
+                        $cachedCaptain = null;
+                        try {
+                            $store = config('cache.stores.dragonfly') ? 'dragonfly' : config('cache.default');
+                            $cachedCaptain = cache()->store($store)->get($captainCacheKey);
+                        } catch (\Throwable $e) {
+                            try {
+                                $cachedCaptain = cache()->get($captainCacheKey);
+                            } catch (\Throwable $fallbackEx) {
+                                $cachedCaptain = null;
+                            }
+                        }
+
+                        if (is_string($cachedCaptain)) {
+                            $cachedCaptain = json_decode($cachedCaptain, true);
+                        }
+
+                        if (is_array($cachedCaptain) && ! empty($cachedCaptain['captain_name'])) {
+                            $captain_name = (string) $cachedCaptain['captain_name'];
+                            $captain_user_id = ! empty($cachedCaptain['captain_user_id']) ? (int) $cachedCaptain['captain_user_id'] : null;
+                        } else {
+                            $captainRow = DB::table('job_assign')
+                                ->select('users.name', 'job_assign.spok_user_id')
+                                ->join('users', 'users.id', '=', 'job_assign.spok_user_id')
+                                ->where('job_assign.job_id', $application->jobId)
+                                ->where('job_assign.company_id', $agencyCompId) // STRICTLY SCOPED BY AGENCY
+                                ->where('job_assign.spok_user_id', '>', 0)
+                                ->first();
+
+                            if ($captainRow && ! empty($captainRow->name)) {
+                                $captain_name = (string) $captainRow->name;
+                                $captain_user_id = (int) $captainRow->spok_user_id;
+
+                                try {
+                                    $store = config('cache.stores.dragonfly') ? 'dragonfly' : config('cache.default');
+                                    cache()->store($store)->put($captainCacheKey, [
+                                        'captain_user_id' => $captain_user_id,
+                                        'captain_name' => $captain_name,
+                                        'agency_id' => $agencyCompId,
+                                        'agency_name' => $agencyName,
+                                        'is_fallback' => false,
+                                        'resolved_at' => now()->timestamp,
+                                    ], 3600);
+                                } catch (\Throwable $e) {
+                                    try {
+                                        cache()->put($captainCacheKey, [
+                                            'captain_user_id' => $captain_user_id,
+                                            'captain_name' => $captain_name,
+                                            'agency_id' => $agencyCompId,
+                                            'agency_name' => $agencyName,
+                                            'is_fallback' => false,
+                                            'resolved_at' => now()->timestamp,
+                                        ], 3600);
+                                    } catch (\Throwable $fallbackEx) {
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    // Tier 2: If Tier 1 not found, query users where company_id = agencyCompId ordered by root_user DESC, id ASC
                     $agency_root_name = null;
-                    $agencyCompId = ! empty($application->thirdparty_company_id) ? $application->thirdparty_company_id : (! empty($application->other_company) ? $application->other_company : 0);
-                    if ($agencyCompId > 0 && $agencyCompId != $application->company_id) {
-                        $agency_root_name = DB::table('users')
+                    if ($agencyCompId > 0) {
+                        $rootUser = DB::table('users')
                             ->where('company_id', $agencyCompId)
                             ->orderByDesc('root_user')
                             ->orderBy('id', 'asc')
-                            ->value('name');
+                            ->first(['id', 'name']);
+
+                        if ($rootUser && ! empty($rootUser->name)) {
+                            if ($agencyCompId != (int) ($application->company_id ?? 0)) {
+                                $agency_root_name = (string) $rootUser->name;
+                            }
+                            if (empty($captain_name)) {
+                                $captain_name = (string) $rootUser->name;
+                                $captain_user_id = (int) $rootUser->id;
+                            }
+                        }
                     }
+
+                    // Tier 3: If Tier 2 not found, fall back to $agencyName with captain_user_id = null
+                    if (empty($captain_name)) {
+                        $captain_name = $agencyName;
+                        $captain_user_id = null;
+                    }
+                    // STRICT INVARIANT: $captain_name NEVER falls back to $application->posted_by!
+
+                    // Compute Institutional Submitted By Display
+                    $submittedByDisplay = ($captain_name !== $agencyName)
+                        ? "{$captain_name} — {$agencyName}"
+                        : $agencyName;
+
+                    // Backward compatibility: set $spokperson_name = $captain_name so all legacy views get clean attribution
+                    $spokperson_name = $captain_name;
 
                     $submitted_by_name = null;
                     if (! empty($agency_root_name)) {
@@ -423,6 +522,15 @@ class ElasticCandidatesIndex
                         'submitted_by_name' => $submitted_by_name,
                         'agency_root_name' => $agency_root_name,
                         'spokperson_name' => $spokperson_name,
+                        // Canonical Dual-Audience Attribution Fields (Master Standard §11.1)
+                        'captain_name' => $captain_name,
+                        'captain_user_id' => $captain_user_id,
+                        'agency_name' => $agencyName,
+                        'agency_company_id' => (int) $agencyCompId,
+                        'submitted_by_display' => $submittedByDisplay,
+                        'job_application_id' => (int) $application->id,
+                        'recruiter_name' => $submitted_by_name,
+                        'recruiter_id' => (int) ($application->submitted_by ?? 0),
                         'offer_released_at' => $offer_released_at,
                         'sourcing_date' => $sourcing_date,
                         'evaluation_date' => $evaluation_date,
