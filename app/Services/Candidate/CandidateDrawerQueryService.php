@@ -160,9 +160,49 @@ class CandidateDrawerQueryService
         $filter = [];
         $must = [];
         $mustNot = [
-            // Visibility: status 9 (archived) is excluded from active drawer scope
-            ['terms' => ['job_master_status_id' => [9, '9']]],
+            // Visibility Guard: In Review (status 8) and Archived (status 9) are strictly excluded from client-facing drawer views
+            ['terms' => ['job_master_status_id' => [8, 9, '8', '9']]],
+            ['terms' => ['master_status_id' => [8, '8']]],
         ];
+
+        // Status 8 (In Review) Client Guard: In Review candidates must NEVER appear in client drawer
+        if (! empty($params['status_id']) && (int) $params['status_id'] === 8) {
+            return [
+                'data' => [],
+                'meta' => [
+                    'client_id' => $clientId,
+                    'client_type' => $clientType,
+                    'query_fingerprint' => $queryFingerprint,
+                    'client_candidate_version' => $currentCollectionVersion,
+                    'projection_schema_version' => 2,
+                    'stage_counts' => [
+                        'sourcing' => 0,
+                        'screening' => 0,
+                        'evaluation' => 0,
+                        'negotiations' => 0,
+                        'offer' => 0,
+                        'joined' => 0,
+                        'rejected' => 0,
+                        'in_review' => 0,
+                    ],
+                    'server_time' => now()->toIso8601String(),
+                ],
+                'pagination' => [
+                    'mode' => 'page',
+                    'total' => 0,
+                    'total_relation' => 'eq',
+                    'per_page' => $size,
+                    'has_more' => false,
+                    'current_page' => $page,
+                    'last_page' => 1,
+                ],
+                'filters' => [
+                    'search' => $params['search'] ?? '',
+                    'status_id' => 8,
+                    'job_id' => ! empty($params['job_id']) ? (int) $params['job_id'] : null,
+                ],
+            ];
+        }
 
         // 5.1 Resolve client's jobs from ELASTIC_JOBS (cached in Dragonfly/Redis)
         $clientJobIds = $this->resolveClientJobIds($companyId, $clientId, $clientType);
@@ -521,7 +561,7 @@ class CandidateDrawerQueryService
             'offer' => (int) ($aggs['offer']['doc_count'] ?? 0),
             'joined' => (int) ($aggs['joined']['doc_count'] ?? 0),
             'rejected' => (int) ($aggs['rejected']['doc_count'] ?? 0),
-            'in_review' => (int) ($aggs['in_review']['doc_count'] ?? 0),
+            'in_review' => 0, // Strict In Review Exclusion: Candidate tab never shows or counts In Review candidates
         ];
 
         if ($clientType === 'direct') {

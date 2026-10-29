@@ -21,27 +21,40 @@ namespace App\Services\Analytics\Contracts;
 class PerformanceStatusMap
 {
     // Canonical Domain Stages
-    public const STAGE_IN_REVIEW   = 'IN_REVIEW';   // ID = 8 (Agency Internal Only)
-    public const STAGE_SOURCING    = 'SOURCING';    // ID = 1 (Official Submission Trigger)
-    public const STAGE_SCREENING   = 'SCREENING';   // ID = 2
-    public const STAGE_INTERVIEW   = 'INTERVIEW';   // ID = 3
+    public const STAGE_IN_REVIEW = 'IN_REVIEW';   // ID = 8 (Agency Internal Only)
+
+    public const STAGE_SOURCING = 'SOURCING';    // ID = 1 (Official Submission Trigger)
+
+    public const STAGE_SCREENING = 'SCREENING';   // ID = 2
+
+    public const STAGE_INTERVIEW = 'INTERVIEW';   // ID = 3
+
     public const STAGE_NEGOTIATION = 'NEGOTIATION'; // ID = 4
-    public const STAGE_OFFER       = 'OFFER';       // ID = 5
-    public const STAGE_JOINED      = 'JOINED';      // ID = 6
-    public const STAGE_REJECTED    = 'REJECTED';    // ID = 7
-    public const STAGE_ARCHIVED    = 'ARCHIVED';    // ID = 9
+
+    public const STAGE_OFFER = 'OFFER';       // ID = 5
+
+    public const STAGE_JOINED = 'JOINED';      // ID = 6
+
+    public const STAGE_REJECTED = 'REJECTED';    // ID = 7
+
+    public const STAGE_ARCHIVED = 'ARCHIVED';    // ID = 9
+
+    // Integer Status Identifiers
+    public const STATUS_IN_REVIEW_INT = 8;
+
+    public const STATUS_ARCHIVED_INT = 9;
 
     // Concrete Database / Elasticsearch Status ID Bindings
     public const STATUS_ID_MAP = [
-        self::STAGE_IN_REVIEW   => [8],
-        self::STAGE_SOURCING    => [1],
-        self::STAGE_SCREENING   => [2],
-        self::STAGE_INTERVIEW   => [3],
+        self::STAGE_IN_REVIEW => [8],
+        self::STAGE_SOURCING => [1],
+        self::STAGE_SCREENING => [2],
+        self::STAGE_INTERVIEW => [3],
         self::STAGE_NEGOTIATION => [4],
-        self::STAGE_OFFER       => [5],
-        self::STAGE_JOINED      => [6],
-        self::STAGE_REJECTED    => [7],
-        self::STAGE_ARCHIVED    => [9],
+        self::STAGE_OFFER => [5],
+        self::STAGE_JOINED => [6],
+        self::STAGE_REJECTED => [7],
+        self::STAGE_ARCHIVED => [9],
     ];
 
     /**
@@ -51,12 +64,21 @@ class PerformanceStatusMap
      */
     public const SHARED_PIPELINE_STATUSES = [1, 2, 3, 4, 5, 6];
 
+    /**
+     * Pipeline statuses including In Review (status 8) strictly for the Performance Tab's Hiring Pipeline funnel/column exception.
+     */
+    public const PIPELINE_WITH_IN_REVIEW_STATUSES = [1, 2, 3, 4, 5, 6, 8];
+
     // Pipeline Milestone Sets (Cumulative Funnel Reach from Sourcing onward)
-    public const MILESTONE_SOURCING_STATUSES  = [1, 2, 3, 4, 5, 6];
-    public const MILESTONE_SCREENED_STATUSES  = [2, 3, 4, 5, 6];
+    public const MILESTONE_SOURCING_STATUSES = [1, 2, 3, 4, 5, 6];
+
+    public const MILESTONE_SCREENED_STATUSES = [2, 3, 4, 5, 6];
+
     public const MILESTONE_INTERVIEW_STATUSES = [3, 4, 5, 6];
-    public const MILESTONE_OFFER_STATUSES     = [5, 6];
-    public const MILESTONE_JOINED_STATUSES    = [6];
+
+    public const MILESTONE_OFFER_STATUSES = [5, 6];
+
+    public const MILESTONE_JOINED_STATUSES = [6];
 
     /**
      * Determine if a status ID belongs to the client-visible shared pipeline.

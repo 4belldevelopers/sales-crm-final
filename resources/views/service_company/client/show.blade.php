@@ -4932,7 +4932,7 @@ use Carbon\Carbon;
                                             <span class="cd-cand-count-badge" id="cdCandidateCountBadge" role="button" title="View All Pipeline Candidates" aria-label="View all candidates">
                                                 <span id="cdCandidateCountText">0</span> Candidates
                                             </span>
-                                            <span class="badge badge-light-warning text-warning fw-bold fs-8 cursor-pointer" id="cdInReviewCountBadge" style="display:none; padding:4px 8px; border-radius:6px; border:1px solid #fde047;" role="button" title="View In Review candidates" aria-label="View In Review candidates">
+                                            <span class="badge badge-light-warning text-warning fw-bold fs-8 cursor-pointer" id="cdInReviewCountBadge" style="display:none !important; padding:4px 8px; border-radius:6px; border:1px solid #fde047;" role="button" title="View In Review candidates" aria-label="View In Review candidates">
                                                 <span id="cdInReviewCountText">0</span> In Review
                                             </span>
                                         </div>
@@ -5326,6 +5326,14 @@ use Carbon\Carbon;
                                 <path d="M 45,118 L 55,118 L 52,128 L 48,128 Z" fill="#10b981" />
                               </svg>
                               <div class="cd-funnel-list">
+                                <div class="cd-funnel-item" id="funnelItemInReview" style="display:none;">
+                                  <div class="cd-funnel-stage">
+                                    <span class="cd-funnel-dot" style="background:#64748b;"></span>
+                                    <span class="cd-funnel-val" id="funnelCountInReview">0</span>
+                                    <span>In Review</span>
+                                  </div>
+                                  <span class="cd-funnel-pct" id="funnelPctInReview">Pipeline</span>
+                                </div>
                                 <div class="cd-funnel-item">
                                   <div class="cd-funnel-stage">
                                     <span class="cd-funnel-dot" style="background:#3b82f6;"></span>
@@ -5882,6 +5890,12 @@ use Carbon\Carbon;
         // 3. Funnel Stages
         if (data.funnel && data.funnel.stages) {
             var st = data.funnel.stages;
+            if (data.funnel.in_review_count && data.funnel.in_review_count > 0) {
+                $('#funnelCountInReview').text(data.funnel.in_review_count);
+                $('#funnelItemInReview').show();
+            } else {
+                $('#funnelItemInReview').hide();
+            }
             if (st[0]) { $('#funnelCountCand').text(st[0].count); $('#funnelPctCand').text(st[0].conversion_pct); }
             if (st[1]) { $('#funnelCountScreened').text(st[1].count); $('#funnelPctScreened').text(st[1].conversion_pct); }
             if (st[2]) { $('#funnelCountInt').text(st[2].count); $('#funnelPctInt').text(st[2].conversion_pct); }
@@ -7532,16 +7546,8 @@ use Carbon\Carbon;
             $('#cdCandidateCountText').text(formatted);
             $('#tabBadgeCandidates, #cdCandidatesNavBadgeInternal').text(formatted).show();
 
-            // InReview count & badge indicator
-            var inReviewCount = (this.stageCounts && this.stageCounts.in_review !== undefined)
-                ? this.stageCounts.in_review
-                : (this.allCandidates || []).filter(cand => this.isInReview(cand)).length;
-            if (inReviewCount > 0) {
-                $('#cdInReviewCountText').text(inReviewCount);
-                $('#cdInReviewCountBadge').show();
-            } else {
-                $('#cdInReviewCountBadge').hide();
-            }
+            // InReview count & badge indicator: In Review candidates must NOT appear or be counted in Candidate Tab
+            $('#cdInReviewCountBadge').hide();
         },
 
         updateCandidateStageLocal: function(candidateId, newStageId, newStageName) {
