@@ -172,6 +172,7 @@ Route::group(['middleware' => 'auth'], function () {
         Route::any('features-list/update/{id}', [SuperAdminCompanyController::class, 'featuresListupdate'])->name('company.featuresListupdate');
 
         Route::post('features-list/add-edit', [SuperAdminCompanyController::class, 'addEditfeaturesListupdate'])->name('company.addEditfeaturesListupdate');
+        Route::post('features-list/toggle-status', [SuperAdminCompanyController::class, 'toggleFeatureStatus'])->name('company.featuresToggleStatus');
 
         Route::get('bench-candidates/{status?}', [SuperAdminCompanyController::class, 'bernchNewCandidates'])->name('company.new-bench-candidates');
         Route::get('showdetails-bench-candidates/{id?}', [SuperAdminCompanyController::class, 'bernchDetailsCandidates'])->name('company.showdetails-bench-candidates');
