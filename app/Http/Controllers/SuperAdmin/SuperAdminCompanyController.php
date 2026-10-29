@@ -12,6 +12,10 @@ use App\Helper\Reply;
 use App\Http\Requests\Company\StoreCompany;
 use App\Http\Requests\Company\UpdateCompany;
 use App\Http\Requests\Company\UpdatePakage;
+use App\Http\Requests\SuperAdmin\DeleteSkillRequest;
+use App\Http\Requests\SuperAdmin\StoreOrUpdateSkillRequest;
+use App\Http\Requests\SuperAdmin\ToggleNotificationStatusRequest;
+use App\Http\Requests\SuperAdmin\UpdateEmailNotificationRequest;
 use App\MeetingComment;
 use App\Models\AddJobWiseCondidate;
 use App\Models\ApplicationStatus;
@@ -37,10 +41,6 @@ use App\Services\GoogleSheetServiceCandidate;
 use App\Services\GoogleSheetsServiceGet;
 use App\Services\MailService;
 use App\Services\MarketplaceModerationService;
-use App\Http\Requests\SuperAdmin\DeleteSkillRequest;
-use App\Http\Requests\SuperAdmin\StoreOrUpdateSkillRequest;
-use App\Http\Requests\SuperAdmin\ToggleNotificationStatusRequest;
-use App\Http\Requests\SuperAdmin\UpdateEmailNotificationRequest;
 use App\Services\Notification\NotificationHtmlSanitizer;
 use App\Services\Notification\NotificationTokenRegistry;
 use App\Services\SuperAdmin\SuperAdminBenchMutationService;
@@ -5558,8 +5558,7 @@ class SuperAdminCompanyController extends SuperAdminBaseController
      * Intent: Load template and role permissions for editing or provision blank template for creation.
      * Fixes SQL ONLY_FULL_GROUP_BY error on roles query.
      *
-     * @param Request $request
-     * @param int|string $Id
+     * @param  int|string  $Id
      * @return \Illuminate\View\View
      */
     public function notificationupdate(Request $request, $Id, NotificationTokenRegistry $tokenRegistry)
@@ -9018,7 +9017,6 @@ class SuperAdminCompanyController extends SuperAdminBaseController
      * to manage platform-wide Server-to-Server OAuth credentials used in ATS candidate interview scheduling.
      * Tenancy: Global Super Admin configuration stored in zoomsettings (singleton pattern).
      *
-     * @param Request $request
      * @return \Illuminate\Contracts\View\View
      */
     public function zoomSetting(Request $request)
@@ -9060,7 +9058,6 @@ class SuperAdminCompanyController extends SuperAdminBaseController
      * Automatically sanitizes whitespace, updates status, and invalidates cached tokens.
      * Tenancy: Global Super Admin configuration (MySQL write path).
      *
-     * @param Request $req
      * @return \Illuminate\Http\JsonResponse|\Illuminate\Http\RedirectResponse
      */
     public function settingZoomStore(Request $req)
@@ -9147,7 +9144,6 @@ class SuperAdminCompanyController extends SuperAdminBaseController
      * Measures latency (ms), verifies account type/status, and returns actionable diagnostics.
      * Tenancy: Global Super Admin configuration diagnostic endpoint.
      *
-     * @param Request $request
      * @return \Illuminate\Http\JsonResponse
      */
     public function testZoomConnection(Request $request)
@@ -9200,7 +9196,7 @@ class SuperAdminCompanyController extends SuperAdminBaseController
                 } elseif (stripos($errorDesc, 'account') !== false || (isset($body['error']) && $body['error'] === 'unauthorized_client')) {
                     $helpfulHint = 'Invalid Account ID, or the Server-to-Server OAuth application is not activated for this Zoom account.';
                 } else {
-                    $helpfulHint = 'Zoom rejected the authorization request: ' . $errorDesc;
+                    $helpfulHint = 'Zoom rejected the authorization request: '.$errorDesc;
                 }
 
                 return response()->json([
@@ -9236,13 +9232,13 @@ class SuperAdminCompanyController extends SuperAdminBaseController
 
                 if ($userResponse->successful()) {
                     $userData = $userResponse->json();
-                    $accountEmail = $userData['email'] ?? (($userData['first_name'] ?? 'Zoom') . ' ' . ($userData['last_name'] ?? 'Admin'));
+                    $accountEmail = $userData['email'] ?? (($userData['first_name'] ?? 'Zoom').' '.($userData['last_name'] ?? 'Admin'));
                     $typeCode = $userData['type'] ?? 1;
                     $accountType = ($typeCode == 2) ? 'Pro / Licensed' : (($typeCode == 3) ? 'Corp / Enterprise' : 'Basic');
                 }
             } catch (\Throwable $userEx) {
                 // Non-fatal if users/me scope is restricted
-                Log::info('Zoom test connection user profile lookup note: ' . $userEx->getMessage());
+                Log::info('Zoom test connection user profile lookup note: '.$userEx->getMessage());
             }
 
             return response()->json([
@@ -9259,97 +9255,558 @@ class SuperAdminCompanyController extends SuperAdminBaseController
         } catch (\Throwable $e) {
             return response()->json([
                 'status' => 'error',
-                'message' => 'Network error connecting to Zoom API: ' . $e->getMessage(),
+                'message' => 'Network error connecting to Zoom API: '.$e->getMessage(),
                 'latency_ms' => 0,
             ], 500);
         }
     }
 
+    /**
+     * Display the Google Meeting Link Pool Management Hub.
+     * Supports multi-field search (account email + meeting link), status filtering, and real-time pool metrics.
+     */
     public function googleMeetingSetting(Request $request)
     {
+        $searchTerm = trim((string) $request->input('meeting_link', $request->input('q', '')));
+        $statusFilter = $request->input('status', null);
 
-        $meeting_link = ($request->meeting_link);
-        //    $this->newCandidates =  JobApplication::paginate(10); lisisd
-        $google_meeting_setting = DB::table('google_meeting_lists')
+        $query = DB::table('google_meeting_lists')
             ->select('google_meeting_lists.*')
-            ->when($meeting_link !== '', function ($query) use ($meeting_link) {
-                $query->where('meeting_link', 'LIKE', '%'.$meeting_link.'%');
+            ->when($searchTerm !== '', function ($query) use ($searchTerm) {
+                $query->where(function ($sub) use ($searchTerm) {
+                    $sub->where('meeting_link', 'LIKE', '%'.$searchTerm.'%')
+                        ->orWhere('account_name', 'LIKE', '%'.$searchTerm.'%');
+                });
+            })
+            ->when($statusFilter !== null && $statusFilter !== '' && $statusFilter !== 'all', function ($query) use ($statusFilter) {
+                $query->where('status', (int) $statusFilter);
             })
             ->orderByDesc('id');
 
-        $this->google_meeting_setting = $google_meeting_setting->paginate(10);
+        $this->google_meeting_setting = $query->paginate(15)->withQueryString();
+        $this->isEmptycheck = ($this->google_meeting_setting->total() === 0);
+        $this->meeting_link = $searchTerm;
+        $this->statusFilter = $statusFilter;
 
-        if ($this->google_meeting_setting) {
-            $this->isEmptycheck = false;
-        } else {
-            $this->isEmptycheck = true;
-        }
-        //    dd($this->zoom_setting);
-
-        $this->meeting_link = $meeting_link;
+        // High-level pool metrics for Tier 1 Toolbar
+        $this->totalLinksCount = DB::table('google_meeting_lists')->count();
+        $this->activeLinksCount = DB::table('google_meeting_lists')->where('status', 1)->count();
+        $this->inactiveLinksCount = DB::table('google_meeting_lists')->where('status', 0)->count();
+        $this->scheduledMeetingsCount = DB::table('google_meeting_schedule')->count();
 
         return view('super-admin.meeting.google-meeting-setting', $this->data);
-
     }
 
+    /**
+     * Store Google Meeting links into the pool (resolves phantom route company.settingGoogleMeetingStore).
+     * Supports both multi-row batch insert and single link creation.
+     */
+    public function settingGoogleMeetingStore(Request $request)
+    {
+        try {
+            // Case 1: Multi-row dynamic manual entry
+            if ($request->has('holder_email') && is_array($request->holder_email)) {
+                $emails = $request->input('holder_email', []);
+                $links = $request->input('meeting_link', []);
+
+                $insertData = [];
+                foreach ($emails as $key => $email) {
+                    $emailTrim = trim((string) $email);
+                    $linkTrim = trim((string) ($links[$key] ?? ''));
+
+                    if ($emailTrim === '' || $linkTrim === '') {
+                        continue;
+                    }
+
+                    if (! preg_match('/^https?:\/\//i', $linkTrim)) {
+                        $linkTrim = 'https://'.$linkTrim;
+                    }
+
+                    $insertData[] = [
+                        'account_name' => $emailTrim,
+                        'meeting_link' => $linkTrim,
+                        'status' => 1,
+                    ];
+                }
+
+                if (empty($insertData)) {
+                    return response()->json([
+                        'status' => false,
+                        'type' => 'warning',
+                        'message' => 'Please provide at least one valid account email and meeting link.',
+                    ], 422);
+                }
+
+                DB::table('google_meeting_lists')->insertOrIgnore($insertData);
+                Cache::forget('jero:google_meeting_links:active_pool');
+
+                return response()->json([
+                    'status' => true,
+                    'type' => 'success',
+                    'message' => count($insertData).' meeting link(s) added successfully to the pool.',
+                    'url' => route('superadmin.company.google_meeting_setting'),
+                ]);
+            }
+
+            // Case 2: Single item creation
+            $validated = $request->validate([
+                'account_name' => 'required|string|max:255',
+                'meeting_link' => 'required|string|max:500',
+                'status' => 'nullable|in:0,1',
+            ]);
+
+            $accountName = trim($validated['account_name']);
+            $meetingLink = trim($validated['meeting_link']);
+            if (! preg_match('/^https?:\/\//i', $meetingLink)) {
+                $meetingLink = 'https://'.$meetingLink;
+            }
+            $status = isset($validated['status']) ? (int) $validated['status'] : 1;
+
+            $exists = DB::table('google_meeting_lists')->where('meeting_link', $meetingLink)->exists();
+            if ($exists) {
+                return response()->json([
+                    'status' => false,
+                    'type' => 'warning',
+                    'message' => 'This Google Meeting link already exists in the pool.',
+                ], 422);
+            }
+
+            $id = DB::table('google_meeting_lists')->insertGetId([
+                'account_name' => $accountName,
+                'meeting_link' => $meetingLink,
+                'status' => $status,
+            ]);
+
+            Cache::forget('jero:google_meeting_links:active_pool');
+
+            return response()->json([
+                'status' => true,
+                'type' => 'success',
+                'message' => 'Meeting link created successfully.',
+                'id' => $id,
+                'url' => route('superadmin.company.google_meeting_setting'),
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => false,
+                'type' => 'error',
+                'message' => 'Failed to save meeting link: '.$e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Atomically toggle or update status of a Google Meeting pool link.
+     */
     public function googleMeetStatusUpdate(Request $request)
     {
-
-        $values = [
-            'status' => $request->chkStatus,
-        ];
-        // dd($values);
-        DB::table('google_meeting_lists')->where('id', '=', $request->id)->update($values);
-
-        return response()->json([
-            'message' => '',
-            'status' => 'success',
+        $validator = Validator::make($request->all(), [
+            'id' => 'required|integer|exists:google_meeting_lists,id',
+            'chkStatus' => 'required|in:0,1',
         ]);
 
+        if ($validator->fails()) {
+            return response()->json([
+                'status' => 'error',
+                'message' => $validator->errors()->first(),
+            ], 422);
+        }
+
+        $newStatus = (int) $request->chkStatus;
+        DB::table('google_meeting_lists')
+            ->where('id', $request->id)
+            ->update(['status' => $newStatus]);
+
+        Cache::forget('jero:google_meeting_links:active_pool');
+
+        return response()->json([
+            'status' => 'success',
+            'message' => $newStatus === 1 ? 'Meeting link activated successfully.' : 'Meeting link paused successfully.',
+            'new_status' => $newStatus,
+            'id' => (int) $request->id,
+        ]);
     }
 
+    /**
+     * Update an individual Google Meeting link record (account_name and meeting_link).
+     */
+    public function updateGoogleMeetingLink(Request $request, $id)
+    {
+        try {
+            $validator = Validator::make($request->all(), [
+                'account_name' => 'required|string|max:255',
+                'meeting_link' => 'required|string|max:500',
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    'status' => false,
+                    'type' => 'error',
+                    'message' => $validator->errors()->first(),
+                ], 422);
+            }
+
+            $record = DB::table('google_meeting_lists')->where('id', $id)->first();
+            if (! $record) {
+                return response()->json([
+                    'status' => false,
+                    'type' => 'error',
+                    'message' => 'Meeting link record not found.',
+                ], 404);
+            }
+
+            $accountName = trim($request->account_name);
+            $meetingLink = trim($request->meeting_link);
+            if (! preg_match('/^https?:\/\//i', $meetingLink)) {
+                $meetingLink = 'https://'.$meetingLink;
+            }
+
+            // Check if meeting_link conflicts with another record
+            $conflict = DB::table('google_meeting_lists')
+                ->where('meeting_link', $meetingLink)
+                ->where('id', '!=', $id)
+                ->exists();
+
+            if ($conflict) {
+                return response()->json([
+                    'status' => false,
+                    'type' => 'warning',
+                    'message' => 'Another record with this meeting link already exists.',
+                ], 422);
+            }
+
+            DB::table('google_meeting_lists')->where('id', $id)->update([
+                'account_name' => $accountName,
+                'meeting_link' => $meetingLink,
+            ]);
+
+            Cache::forget('jero:google_meeting_links:active_pool');
+
+            return response()->json([
+                'status' => true,
+                'type' => 'success',
+                'message' => 'Meeting link updated successfully.',
+                'data' => [
+                    'id' => (int) $id,
+                    'account_name' => $accountName,
+                    'meeting_link' => $meetingLink,
+                ],
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => false,
+                'type' => 'error',
+                'message' => 'Error updating meeting link: '.$e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Fetch recent schedule allocations for Google Meet links from google_meeting_schedule.
+     */
+    public function getGoogleMeetingScheduleHistory(Request $request)
+    {
+        try {
+            $schedules = DB::table('google_meeting_schedule')
+                ->leftJoin('companies', 'companies.id', '=', 'google_meeting_schedule.company_id')
+                ->leftJoin('users', 'users.id', '=', 'google_meeting_schedule.user_id')
+                ->select(
+                    'google_meeting_schedule.id',
+                    'google_meeting_schedule.meeting_link',
+                    'google_meeting_schedule.interview_date',
+                    'google_meeting_schedule.interview_job_wise_con_id',
+                    'companies.company_name',
+                    'users.name as recruiter_name',
+                    'users.email as recruiter_email'
+                )
+                ->orderByDesc('google_meeting_schedule.id')
+                ->limit(50)
+                ->get();
+
+            return response()->json([
+                'status' => true,
+                'data' => $schedules,
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Unable to fetch schedule allocations: '.$e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Display the Microsoft Teams Meeting Link Pool Management Hub.
+     * Supports multi-field search (account email + meeting link), status filtering, and real-time pool metrics.
+     */
     public function teamMeetingSetting(Request $request)
     {
-        // dd($request->status);
+        $searchTerm = trim((string) $request->input('meeting_link', $request->input('q', '')));
+        $statusFilter = $request->input('status', null);
 
-        $meeting_link = ($request->meeting_link);
-        //    $this->newCandidates =  JobApplication::paginate(10);
-
-        $team_meeting_setting = DB::table('team_meeting_lists')
+        $query = DB::table('team_meeting_lists')
             ->select('team_meeting_lists.*')
-            ->when($meeting_link !== '', function ($query) use ($meeting_link) {
-                $query->where('meeting_link', 'LIKE', '%'.$meeting_link.'%');
+            ->when($searchTerm !== '', function ($query) use ($searchTerm) {
+                $query->where(function ($sub) use ($searchTerm) {
+                    $sub->where('meeting_link', 'LIKE', '%'.$searchTerm.'%')
+                        ->orWhere('account_name', 'LIKE', '%'.$searchTerm.'%');
+                });
+            })
+            ->when($statusFilter !== null && $statusFilter !== '' && $statusFilter !== 'all', function ($query) use ($statusFilter) {
+                $query->where('status', (int) $statusFilter);
             })
             ->orderByDesc('id');
 
-        $this->team_meeting_setting = $team_meeting_setting->paginate(10);
+        $this->team_meeting_setting = $query->paginate(15)->withQueryString();
+        $this->isEmptycheck = ($this->team_meeting_setting->total() === 0);
+        $this->meeting_link = $searchTerm;
+        $this->statusFilter = $statusFilter;
 
-        if ($this->team_meeting_setting) {
-            $this->isEmptycheck = false;
-        } else {
-            $this->isEmptycheck = true;
-        }
-        //    dd($this->zoom_setting);
-        $this->meeting_link = $meeting_link;
+        // High-level pool metrics for Tier 1 Toolbar
+        $this->totalLinksCount = DB::table('team_meeting_lists')->count();
+        $this->activeLinksCount = DB::table('team_meeting_lists')->where('status', 1)->count();
+        $this->inactiveLinksCount = DB::table('team_meeting_lists')->where('status', 0)->count();
+        $this->scheduledMeetingsCount = DB::table('team_meeting_schedule')->count();
 
         return view('super-admin.meeting.team-meeting-setting', $this->data);
-
     }
 
+    /**
+     * Store Microsoft Teams Meeting links into the pool (resolves phantom route company.settingteamMeetingStore).
+     * Supports both multi-row batch insert and single link creation.
+     */
+    public function settingteamMeetingStore(Request $request)
+    {
+        try {
+            // Case 1: Multi-row dynamic manual entry
+            if ($request->has('holder_email') && is_array($request->holder_email)) {
+                $emails = $request->input('holder_email', []);
+                $links = $request->input('meeting_link', []);
+
+                $insertData = [];
+                foreach ($emails as $key => $email) {
+                    $emailTrim = trim((string) $email);
+                    $linkTrim = trim((string) ($links[$key] ?? ''));
+
+                    if ($emailTrim === '' || $linkTrim === '') {
+                        continue;
+                    }
+
+                    if (! preg_match('/^https?:\/\//i', $linkTrim)) {
+                        $linkTrim = 'https://'.$linkTrim;
+                    }
+
+                    $insertData[] = [
+                        'account_name' => $emailTrim,
+                        'meeting_link' => $linkTrim,
+                        'status' => 1,
+                    ];
+                }
+
+                if (empty($insertData)) {
+                    return response()->json([
+                        'status' => false,
+                        'type' => 'warning',
+                        'message' => 'Please provide at least one valid account email and meeting link.',
+                    ], 422);
+                }
+
+                DB::table('team_meeting_lists')->insertOrIgnore($insertData);
+                Cache::forget('jero:team_meeting_links:active_pool');
+
+                return response()->json([
+                    'status' => true,
+                    'type' => 'success',
+                    'message' => count($insertData).' Teams meeting link(s) added successfully to the pool.',
+                    'url' => route('superadmin.company.team_meeting_setting'),
+                ]);
+            }
+
+            // Case 2: Single item creation
+            $validated = $request->validate([
+                'account_name' => 'required|string|max:255',
+                'meeting_link' => 'required|string|max:500',
+                'status' => 'nullable|in:0,1',
+            ]);
+
+            $accountName = trim($validated['account_name']);
+            $meetingLink = trim($validated['meeting_link']);
+            if (! preg_match('/^https?:\/\//i', $meetingLink)) {
+                $meetingLink = 'https://'.$meetingLink;
+            }
+            $status = isset($validated['status']) ? (int) $validated['status'] : 1;
+
+            $exists = DB::table('team_meeting_lists')->where('meeting_link', $meetingLink)->exists();
+            if ($exists) {
+                return response()->json([
+                    'status' => false,
+                    'type' => 'warning',
+                    'message' => 'This Teams meeting link already exists in the pool.',
+                ], 422);
+            }
+
+            $id = DB::table('team_meeting_lists')->insertGetId([
+                'account_name' => $accountName,
+                'meeting_link' => $meetingLink,
+                'status' => $status,
+            ]);
+
+            Cache::forget('jero:team_meeting_links:active_pool');
+
+            return response()->json([
+                'status' => true,
+                'type' => 'success',
+                'message' => 'Teams meeting link created successfully.',
+                'id' => $id,
+                'url' => route('superadmin.company.team_meeting_setting'),
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => false,
+                'type' => 'error',
+                'message' => 'Failed to save Teams meeting link: '.$e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Atomically toggle or update status of a Teams Meeting pool link.
+     */
     public function teamMeetStatusUpdate(Request $request)
     {
-
-        $values = [
-            'status' => $request->chkStatus,
-        ];
-        // dd($values);
-        DB::table('team_meeting_lists')->where('id', '=', $request->id)->update($values);
-
-        return response()->json([
-            'message' => '',
-            'status' => 'success',
+        $validator = Validator::make($request->all(), [
+            'id' => 'required|integer|exists:team_meeting_lists,id',
+            'chkStatus' => 'required|in:0,1',
         ]);
 
+        if ($validator->fails()) {
+            return response()->json([
+                'status' => 'error',
+                'message' => $validator->errors()->first(),
+            ], 422);
+        }
+
+        $newStatus = (int) $request->chkStatus;
+        DB::table('team_meeting_lists')
+            ->where('id', $request->id)
+            ->update(['status' => $newStatus]);
+
+        Cache::forget('jero:team_meeting_links:active_pool');
+
+        return response()->json([
+            'status' => 'success',
+            'message' => $newStatus === 1 ? 'Teams meeting link activated successfully.' : 'Teams meeting link paused successfully.',
+            'new_status' => $newStatus,
+            'id' => (int) $request->id,
+        ]);
+    }
+
+    /**
+     * Update an individual Teams Meeting link record (account_name and meeting_link).
+     */
+    public function updateTeamMeetingLink(Request $request, $id)
+    {
+        try {
+            $validator = Validator::make($request->all(), [
+                'account_name' => 'required|string|max:255',
+                'meeting_link' => 'required|string|max:500',
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    'status' => false,
+                    'type' => 'error',
+                    'message' => $validator->errors()->first(),
+                ], 422);
+            }
+
+            $record = DB::table('team_meeting_lists')->where('id', $id)->first();
+            if (! $record) {
+                return response()->json([
+                    'status' => false,
+                    'type' => 'error',
+                    'message' => 'Meeting link record not found.',
+                ], 404);
+            }
+
+            $accountName = trim($request->account_name);
+            $meetingLink = trim($request->meeting_link);
+            if (! preg_match('/^https?:\/\//i', $meetingLink)) {
+                $meetingLink = 'https://'.$meetingLink;
+            }
+
+            // Check if meeting_link conflicts with another record
+            $conflict = DB::table('team_meeting_lists')
+                ->where('meeting_link', $meetingLink)
+                ->where('id', '!=', $id)
+                ->exists();
+
+            if ($conflict) {
+                return response()->json([
+                    'status' => false,
+                    'type' => 'warning',
+                    'message' => 'Another record with this Teams meeting link already exists.',
+                ], 422);
+            }
+
+            DB::table('team_meeting_lists')->where('id', $id)->update([
+                'account_name' => $accountName,
+                'meeting_link' => $meetingLink,
+            ]);
+
+            Cache::forget('jero:team_meeting_links:active_pool');
+
+            return response()->json([
+                'status' => true,
+                'type' => 'success',
+                'message' => 'Teams meeting link updated successfully.',
+                'data' => [
+                    'id' => (int) $id,
+                    'account_name' => $accountName,
+                    'meeting_link' => $meetingLink,
+                ],
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => false,
+                'type' => 'error',
+                'message' => 'Error updating Teams meeting link: '.$e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Fetch recent schedule allocations for Teams Meeting links from team_meeting_schedule.
+     */
+    public function getTeamMeetingScheduleHistory(Request $request)
+    {
+        try {
+            $schedules = DB::table('team_meeting_schedule')
+                ->leftJoin('companies', 'companies.id', '=', 'team_meeting_schedule.company_id')
+                ->leftJoin('users', 'users.id', '=', 'team_meeting_schedule.user_id')
+                ->select(
+                    'team_meeting_schedule.id',
+                    'team_meeting_schedule.meeting_link',
+                    'team_meeting_schedule.interview_date',
+                    'team_meeting_schedule.interview_job_wise_con_id',
+                    'companies.company_name',
+                    'users.name as recruiter_name',
+                    'users.email as recruiter_email'
+                )
+                ->orderByDesc('team_meeting_schedule.id')
+                ->limit(50)
+                ->get();
+
+            return response()->json([
+                'status' => true,
+                'data' => $schedules,
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Unable to fetch Teams schedule allocations: '.$e->getMessage(),
+            ], 500);
+        }
     }
 
     public function meetingListDelete(Request $request)
@@ -9382,6 +9839,12 @@ class SuperAdminCompanyController extends SuperAdminBaseController
             $deleted = DB::table($table)
                 ->whereIn('id', $ids)
                 ->delete();
+
+            if ($table === 'google_meeting_lists') {
+                Cache::forget('jero:google_meeting_links:active_pool');
+            } elseif ($table === 'team_meeting_lists') {
+                Cache::forget('jero:team_meeting_links:active_pool');
+            }
 
             return response()->json([
                 'status' => true,
@@ -9444,15 +9907,21 @@ class SuperAdminCompanyController extends SuperAdminBaseController
             }
 
             foreach ($emails as $key => $email) {
+                $emailTrim = trim((string) $email);
+                $linkTrim = trim((string) ($links[$key] ?? ''));
 
                 // Skip empty rows
-                if (empty($email) || empty($links[$key])) {
+                if ($emailTrim === '' || $linkTrim === '') {
                     continue;
                 }
 
+                if (! preg_match('/^https?:\/\//i', $linkTrim)) {
+                    $linkTrim = 'https://'.$linkTrim;
+                }
+
                 $insertData[] = [
-                    'account_name' => $email,
-                    'meeting_link' => $links[$key],
+                    'account_name' => $emailTrim,
+                    'meeting_link' => $linkTrim,
                     'status' => 1,
                 ];
             }
@@ -9465,6 +9934,11 @@ class SuperAdminCompanyController extends SuperAdminBaseController
             }
             // ✅ Bulk Insert (FAST)
             DB::table($table)->insertOrIgnore($insertData);
+            if ($table === 'google_meeting_lists') {
+                Cache::forget('jero:google_meeting_links:active_pool');
+            } elseif ($table === 'team_meeting_lists') {
+                Cache::forget('jero:team_meeting_links:active_pool');
+            }
 
             return response()->json([
                 'status' => true,
@@ -9526,7 +10000,7 @@ class SuperAdminCompanyController extends SuperAdminBaseController
         if ($searchQuery !== '') {
             $mustClauses[] = [
                 'wildcard' => [
-                    'skill_name' => '*' . strtolower($searchQuery) . '*',
+                    'skill_name' => '*'.strtolower($searchQuery).'*',
                 ],
             ];
         } elseif ($letterFilter !== '') {
@@ -9593,7 +10067,7 @@ class SuperAdminCompanyController extends SuperAdminBaseController
             $totalAll = $countRes['count'] ?? 0;
             $response = $this->elasticService->getClient()->search($params);
         } catch (\Exception $e) {
-            Log::error('SuperAdmin skillskElastic ES Search Failed: ' . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
+            Log::error('SuperAdmin skillskElastic ES Search Failed: '.$e->getMessage(), ['trace' => $e->getTraceAsString()]);
             $response = ['hits' => ['hits' => [], 'total' => ['value' => 0]]];
         }
 
@@ -9666,7 +10140,7 @@ class SuperAdminCompanyController extends SuperAdminBaseController
                     $deletedCount++;
                 }
             } catch (\Exception $e) {
-                Log::warning("Failed to delete ES skill {$docId}: " . $e->getMessage());
+                Log::warning("Failed to delete ES skill {$docId}: ".$e->getMessage());
             }
         }
 
@@ -9674,7 +10148,7 @@ class SuperAdminCompanyController extends SuperAdminBaseController
         try {
             $this->elasticService->getClient()->indices()->refresh(['index' => ELASTIC_SKILLS]);
         } catch (\Exception $e) {
-            Log::warning('Failed to refresh ELASTIC_SKILLS index: ' . $e->getMessage());
+            Log::warning('Failed to refresh ELASTIC_SKILLS index: '.$e->getMessage());
         }
 
         return response()->json([
@@ -9729,6 +10203,7 @@ class SuperAdminCompanyController extends SuperAdminBaseController
 
                     if (($search['hits']['total']['value'] ?? 0) > 0) {
                         $skippedCount++;
+
                         continue;
                     }
 
@@ -9744,14 +10219,14 @@ class SuperAdminCompanyController extends SuperAdminBaseController
                     ]);
                     $addedCount++;
                 } catch (\Exception $e) {
-                    Log::error("Failed to index skill '{$skillName}': " . $e->getMessage());
+                    Log::error("Failed to index skill '{$skillName}': ".$e->getMessage());
                 }
             }
 
             try {
                 $this->elasticService->getClient()->indices()->refresh(['index' => ELASTIC_SKILLS]);
             } catch (\Exception $e) {
-                Log::warning('Failed to refresh ELASTIC_SKILLS index: ' . $e->getMessage());
+                Log::warning('Failed to refresh ELASTIC_SKILLS index: '.$e->getMessage());
             }
 
             $message = "{$addedCount} skill(s) added successfully.";
@@ -9786,7 +10261,8 @@ class SuperAdminCompanyController extends SuperAdminBaseController
 
             return Reply::success("Skill updated to '{$cleanSkillName}'.");
         } catch (\Exception $e) {
-            Log::error("Failed to update skill {$docId}: " . $e->getMessage());
+            Log::error("Failed to update skill {$docId}: ".$e->getMessage());
+
             return Reply::error('Failed to update skill in Elasticsearch.');
         }
     }
@@ -9801,7 +10277,7 @@ class SuperAdminCompanyController extends SuperAdminBaseController
                 return $id;
             }
         } catch (\Exception $e) {
-            Log::warning("getElasticDocId check failed for id {$id}: " . $e->getMessage());
+            Log::warning("getElasticDocId check failed for id {$id}: ".$e->getMessage());
         }
 
         return null;
@@ -9835,7 +10311,7 @@ class SuperAdminCompanyController extends SuperAdminBaseController
                 $this->elasticService->getClient()->indices()->create($params);
             }
         } catch (\Exception $e) {
-            Log::warning('ensureSkillsIndexExists encountered exception: ' . $e->getMessage());
+            Log::warning('ensureSkillsIndexExists encountered exception: '.$e->getMessage());
         }
     }
 

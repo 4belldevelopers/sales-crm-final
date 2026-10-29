@@ -73,12 +73,16 @@ Route::group(['middleware' => 'auth'], function () {
         Route::post('setting-google-meeting-store', [SuperAdminCompanyController::class, 'settingGoogleMeetingStore'])->name('company.settingGoogleMeetingStore');
 
         Route::post('google-meet-status-update', [SuperAdminCompanyController::class, 'googleMeetStatusUpdate'])->name('company.googleMeetStatusUpdate');
+        Route::post('google-meeting-update/{id}', [SuperAdminCompanyController::class, 'updateGoogleMeetingLink'])->name('company.updateGoogleMeetingLink');
+        Route::get('google-meeting-schedules-ajax', [SuperAdminCompanyController::class, 'getGoogleMeetingScheduleHistory'])->name('company.googleMeetingScheduleHistory');
 
         Route::get('ajax-bench-candidates/{status?}', [SuperAdminCompanyController::class, 'ajaxbenchNewCandidates'])->name('company.ajax-new-bench-candidates');
 
         Route::get('team-meeting-setting', [SuperAdminCompanyController::class, 'teamMeetingSetting'])->name('company.team_meeting_setting');
         Route::post('setting-team-meeting-store', [SuperAdminCompanyController::class, 'settingteamMeetingStore'])->name('company.settingteamMeetingStore');
         Route::post('team-meet-status-update', [SuperAdminCompanyController::class, 'teamMeetStatusUpdate'])->name('company.teamMeetStatusUpdate');
+        Route::post('team-meeting-update/{id}', [SuperAdminCompanyController::class, 'updateTeamMeetingLink'])->name('company.updateTeamMeetingLink');
+        Route::get('team-meeting-schedules-ajax', [SuperAdminCompanyController::class, 'getTeamMeetingScheduleHistory'])->name('company.teamMeetingScheduleHistory');
 
         Route::post('add-meeting-list', [SuperAdminCompanyController::class, 'addMeetingLists'])->name('company.addMeetingLists');
 

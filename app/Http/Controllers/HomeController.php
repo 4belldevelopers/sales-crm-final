@@ -16330,6 +16330,7 @@ class HomeController extends Controller
     {
         $request->validate([
             'meeting_link_import' => 'required|file|mimes:xlsx,csv',
+            'tablename' => 'required|in:google_meeting_lists,team_meeting_lists',
         ]);
 
         $url = '';
