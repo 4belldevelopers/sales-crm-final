@@ -363,8 +363,13 @@ class ClientActivityReadService
                                     ],
                                 ],
                                 'must_not' => [
-                                    ['terms' => ['job_master_status_id' => [8, '8']]],
-                                    ['terms' => ['master_status_id' => [8, '8']]],
+                                    ['terms' => ['job_master_status_id' => [8, 9, '8', '9']]],
+                                    [
+                                        'bool' => [
+                                            'must' => [['terms' => ['master_status_id' => [8, 9, '8', '9']]]],
+                                            'must_not' => [['range' => ['job_master_status_id' => ['gt' => 0]]]],
+                                        ],
+                                    ],
                                 ],
                             ],
                         ],
@@ -432,7 +437,14 @@ class ClientActivityReadService
         ];
 
         // Read counts across indices
-        $indexTimeline = defined('ELASTIC_CANDIDATE_TIMELINE') ? ELASTIC_CANDIDATE_TIMELINE : config('constants.ELASTIC_CANDIDATE_TIMELINE', 'local_candidate_timeline');
+        $timelineExisting = [];
+        foreach (['ats_candidate_timeline', 'local_candidate_timeline'] as $candidateTimelineIndex) {
+            if ($this->elasticService->indexExists($candidateTimelineIndex)) {
+                $timelineExisting[] = $candidateTimelineIndex;
+            }
+        }
+        $indexTimeline = ! empty($timelineExisting) ? implode(',', $timelineExisting) : 'ats_candidate_timeline';
+        $hasTimeline = ! empty($timelineExisting);
         $indexInterviews = defined('ELASTIC_INERTVIEW_TRACKER') ? ELASTIC_INERTVIEW_TRACKER : config('constants.ELASTIC_INERTVIEW_TRACKER', 'local_interview_tracker_elastic');
         $indexJobs = defined('ELASTIC_JOBS') ? ELASTIC_JOBS : config('constants.ELASTIC_JOBS', 'ats_jobs_elastic');
         $indexNotes = defined('ELASTIC_APPLICANT_NOTES') ? ELASTIC_APPLICANT_NOTES : config('constants.ELASTIC_APPLICANT_NOTES', 'local_applicant_notes');
@@ -441,7 +453,7 @@ class ClientActivityReadService
         $isDirect = ($query->clientType === 'direct');
 
         // 1. Timeline Counts (Pipeline & Offers)
-        if (! empty($clientJobIds) && (! $isDirect || ! empty($agencyCandidateAppIds)) && $this->elasticService->indexExists($indexTimeline)) {
+        if (! empty($clientJobIds) && (! $isDirect || ! empty($agencyCandidateAppIds)) && $hasTimeline) {
             try {
                 $baseMust = [['terms' => ['job_id' => $clientJobIds]]];
                 if ($isDirect) {
@@ -601,7 +613,14 @@ class ClientActivityReadService
      */
     protected function fetchMultiIndexEvents(ClientActivityQuery $query, array $clientJobIds, array $agencyCandidateAppIds = []): array
     {
-        $indexTimeline = defined('ELASTIC_CANDIDATE_TIMELINE') ? ELASTIC_CANDIDATE_TIMELINE : config('constants.ELASTIC_CANDIDATE_TIMELINE', 'local_candidate_timeline');
+        $timelineExisting = [];
+        foreach (['ats_candidate_timeline', 'local_candidate_timeline'] as $candidateTimelineIndex) {
+            if ($this->elasticService->indexExists($candidateTimelineIndex)) {
+                $timelineExisting[] = $candidateTimelineIndex;
+            }
+        }
+        $indexTimeline = ! empty($timelineExisting) ? implode(',', $timelineExisting) : 'ats_candidate_timeline';
+        $hasTimeline = ! empty($timelineExisting);
         $indexInterviews = defined('ELASTIC_INERTVIEW_TRACKER') ? ELASTIC_INERTVIEW_TRACKER : config('constants.ELASTIC_INERTVIEW_TRACKER', 'local_interview_tracker_elastic');
         $indexJobs = defined('ELASTIC_JOBS') ? ELASTIC_JOBS : config('constants.ELASTIC_JOBS', 'ats_jobs_elastic');
         $indexNotes = defined('ELASTIC_APPLICANT_NOTES') ? ELASTIC_APPLICANT_NOTES : config('constants.ELASTIC_APPLICANT_NOTES', 'local_applicant_notes');
@@ -614,7 +633,7 @@ class ClientActivityReadService
         $indexKeys = [];
 
         // 1. Timeline Search Query (Pipeline & Offers)
-        if (! empty($clientJobIds) && (! $isDirect || ! empty($agencyCandidateAppIds)) && in_array($query->category, ['all', 'pipeline', 'offers', 'candidates'], true) && $this->elasticService->indexExists($indexTimeline)) {
+        if (! empty($clientJobIds) && (! $isDirect || ! empty($agencyCandidateAppIds)) && in_array($query->category, ['all', 'pipeline', 'offers', 'candidates'], true) && $hasTimeline) {
             $must = [['terms' => ['job_id' => $clientJobIds]]];
             if ($isDirect) {
                 // Strictly candidates submitted by this operating agency for this job
@@ -1177,12 +1196,18 @@ class ClientActivityReadService
                     $agencyName = $serviceCompanyId > 0 ? $this->resolveTenantCompanyName($serviceCompanyId) : 'Agency';
 
                     if ($clientType === 'direct' && ! empty($s['recommendation_relation']) && is_array($s['recommendation_relation'])) {
+                        $sharerCompanyId = 0;
                         foreach ($s['recommendation_relation'] as $rec) {
                             $toComp = (int) ($rec['to_company_id'] ?? 0);
+                            $fromComp = (int) ($rec['from_company_id'] ?? 0);
                             $fStatus = (int) ($rec['final_status'] ?? 0);
-                            if ($toComp === $serviceCompanyId && in_array($fStatus, [1, 2], true)) {
+                            if (($toComp === $serviceCompanyId || $fromComp === $serviceCompanyId || $toComp === $tenantId || $fromComp === $tenantId) && in_array($fStatus, [1, 2], true)) {
                                 $isShared = true;
                                 $sharerUserId = (int) ($rec['from_user_id'] ?? 0);
+                                if ($sharerUserId <= 0 && ! empty($rec['to_user_id'])) {
+                                    $sharerUserId = (int) $rec['to_user_id'];
+                                }
+                                $sharerCompanyId = $fromComp > 0 ? $fromComp : $toComp;
                                 $sharedAt = $rec['from_created_at'] ?? $rec['created_at'] ?? $sharedAt;
                                 break;
                             }
@@ -1194,11 +1219,20 @@ class ClientActivityReadService
                                 $sharerName = $sharerProfile['name'] ?? null;
                                 $sharerCompany = $sharerProfile['company_name'] ?? null;
                             }
-                            if (empty($sharerName)) {
-                                $sharerName = 'Account Lead';
+                            if (empty($sharerName) || strtolower($sharerName) === 'account lead') {
+                                if (class_exists(\App\Services\CompanyRepresentativeService::class)) {
+                                    $rep = app(\App\Services\CompanyRepresentativeService::class)->resolveJobAgencyRepresentative($jid, $serviceCompanyId, $tenantId);
+                                    if (! empty($rep['representative']['name'])) {
+                                        $sharerName = $rep['representative']['name'];
+                                        $sharerUserId = (int) ($rep['representative_user_id'] ?? 0);
+                                    }
+                                }
+                            }
+                            if (empty($sharerName) || strtolower($sharerName) === 'account lead') {
+                                $sharerName = $creatorName;
                             }
                             if (empty($sharerCompany)) {
-                                $sharerCompany = $creatorCompany;
+                                $sharerCompany = $sharerCompanyId > 0 ? $this->resolveTenantCompanyName($sharerCompanyId) : $creatorCompany;
                             }
                         }
                     }

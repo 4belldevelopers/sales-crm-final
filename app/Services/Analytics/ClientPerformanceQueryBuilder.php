@@ -299,7 +299,7 @@ class ClientPerformanceQueryBuilder
                         'recruiter_info' => [
                             'top_hits' => [
                                 'size' => 1,
-                                '_source' => ['submitted_by', 'submitted_by_name', 'posted_by_image'],
+                                '_source' => ['submitted_by', 'submitted_by_name', 'posted_by', 'posted_by_image'],
                             ],
                         ],
                     ],

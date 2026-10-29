@@ -162,7 +162,12 @@ class CandidateDrawerQueryService
         $mustNot = [
             // Visibility Guard: In Review (status 8) and Archived (status 9) are strictly excluded from client-facing drawer views
             ['terms' => ['job_master_status_id' => [8, 9, '8', '9']]],
-            ['terms' => ['master_status_id' => [8, '8']]],
+            [
+                'bool' => [
+                    'must' => [['terms' => ['master_status_id' => [8, 9, '8', '9']]]],
+                    'must_not' => [['range' => ['job_master_status_id' => ['gt' => 0]]]],
+                ],
+            ],
         ];
 
         // Status 8 (In Review) Client Guard: In Review candidates must NEVER appear in client drawer
@@ -230,12 +235,22 @@ class CandidateDrawerQueryService
                         ['term' => ['ClientComID' => $companyId]],
                         ['term' => ['company_id' => $companyId]],
                         ['term' => ['client_comapny_id' => $companyId]],
+                        ['term' => ['thirdparty_company_id' => $companyId]],
                     ],
                     'minimum_should_match' => 1,
                 ],
             ];
-            // Align with Direct Client badge count in GeneralMethod
-            $filter[] = ['term' => ['final_status' => 1]];
+            // Align with Direct Client relationship: final_status 1 or 2 (Active/Approved share)
+            $filter[] = [
+                'bool' => [
+                    'should' => [
+                        ['terms' => ['final_status' => [1, 2]]],
+                        ['terms' => ['job_id' => ! empty($clientJobIds) ? $clientJobIds : [-1]]],
+                        ['terms' => ['jobId' => ! empty($clientJobIds) ? $clientJobIds : [-1]]],
+                    ],
+                    'minimum_should_match' => 1,
+                ],
+            ];
         } else {
             // Internal client scope:
             // Match candidates where client_id = clientId, OR where jobId belongs to any job of this client

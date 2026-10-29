@@ -154,28 +154,61 @@
                 }
                 $teamMeta = $teamCount > 0 ? ($teamCount . ' ' . ($teamCount === 1 ? 'Member' : 'Members')) : '—';
 
-                // 6. Sub-Card 4: Agency (Strictly Read-Only — Based on actual hired relationships, No matching badges)
+                // 6. Sub-Card 4: Agency Name Resolution (Strictly displays actual Agency Name, NEVER a count like "3 Agencies")
+                $agencyName = null;
                 $agencies = is_array($job->recommendation_relation ?? null) ? $job->recommendation_relation : [];
-                $hiredAgencies = collect($agencies)->filter(function($rel) {
-                    if (is_array($rel)) {
-                        return (isset($rel['final_status']) && (int)$rel['final_status'] === 1)
-                            || (isset($rel['from_status']) && (int)$rel['from_status'] === 1)
-                            || (!isset($rel['final_status']) && !isset($rel['from_status']));
-                    } elseif (is_object($rel)) {
-                        return (isset($rel->final_status) && (int)$rel->final_status === 1)
-                            || (isset($rel->from_status) && (int)$rel->from_status === 1)
-                            || (!isset($rel->final_status) && !isset($rel->from_status));
+                if (!empty($agencies)) {
+                    $selectedRel = null;
+                    foreach ($agencies as $rel) {
+                        $relArr = (array) $rel;
+                        $toCompId = (int) ($relArr['to_company_id'] ?? 0);
+                        if ($company_id > 0 && $toCompId === (int) $company_id) {
+                            $selectedRel = $relArr;
+                            break;
+                        }
                     }
-                    return false;
-                });
-                $hiredAgencyCount = $hiredAgencies->pluck('to_company_id')->filter()->unique()->count();
-                if ($hiredAgencyCount === 0 && count($agencies) > 0) {
-                    $hiredAgencyCount = count($agencies);
+                    if (!$selectedRel && isset($agencies[0])) {
+                        $selectedRel = (array) $agencies[0];
+                    }
+
+                    if ($selectedRel) {
+                        $targetAgencyId = (int) ($selectedRel['to_company_id'] ?? 0);
+                        if ($targetAgencyId > 0) {
+                            $cacheCompKey = "ats:tenant_comp_name:{$targetAgencyId}";
+                            $cachedCompName = \Illuminate\Support\Facades\Redis::get($cacheCompKey);
+                            if (!empty($cachedCompName)) {
+                                $agencyName = (string) $cachedCompName;
+                            } else {
+                                $cRow = \Illuminate\Support\Facades\DB::table('companies')->where('id', $targetAgencyId)->first(['company_name', 'name']);
+                                if ($cRow) {
+                                    $agencyName = $cRow->company_name ?? ($cRow->name ?? null);
+                                    if ($agencyName) {
+                                        \Illuminate\Support\Facades\Redis::setex($cacheCompKey, 86400, $agencyName);
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
 
-                $agencyText = $hiredAgencyCount > 0 
-                    ? ($hiredAgencyCount . ' ' . ($hiredAgencyCount === 1 ? 'Agency' : 'Agencies')) 
-                    : '—';
+                if (empty($agencyName)) {
+                    if (!empty($job->agency_name)) {
+                        $agencyName = $job->agency_name;
+                    } elseif (!empty($company_id)) {
+                        $cacheCompKey = "ats:tenant_comp_name:{$company_id}";
+                        $cachedCompName = \Illuminate\Support\Facades\Redis::get($cacheCompKey);
+                        if (!empty($cachedCompName)) {
+                            $agencyName = (string) $cachedCompName;
+                        } else {
+                            $cRow = \Illuminate\Support\Facades\DB::table('companies')->where('id', $company_id)->first(['company_name']);
+                            $agencyName = $cRow->company_name ?? '4Bell Technology';
+                            \Illuminate\Support\Facades\Redis::setex($cacheCompKey, 86400, $agencyName);
+                        }
+                    } else {
+                        $agencyName = '—';
+                    }
+                }
+                $agencyText = $agencyName;
 
                 // Authoritative Agency Representative: The specific user who shared this job with the agency
                 $agencyRepName = null;
@@ -326,14 +359,14 @@
                         </div>
                     </div>
 
-                    <!-- Sub-Card 4: Agency (Authoritative Agency Rep & Hired Count) -->
+                    <!-- Sub-Card 4: Agency (Display Actual Agency Name) -->
                     <div class="cd-job-subcard cd-subcard-agency">
                         <div class="cd-subcard-header">
                             <span class="cd-subcard-label"><i class="fa fa-handshake me-1 text-muted"></i>Agency</span>
                         </div>
                         <div class="cd-subcard-body">
                             @if($agencyText !== '—')
-                                <div class="cd-agency-val">{{ $agencyText }}</div>
+                                <div class="cd-agency-val" title="{{ $agencyText }}">{{ $agencyText }}</div>
                                 @if(!empty($agencyRepName))
                                     <div class="cd-val-sub text-success" title="Agency Representative: {{ $agencyRepName }} (User who shared this job with agency)" style="font-size: 10px; font-weight: 600;">
                                         <i class="fa fa-user-check me-1"></i>Rep: {{ \Illuminate\Support\Str::limit($agencyRepName, 12) }}

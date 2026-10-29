@@ -1,3330 +1,1601 @@
 @extends('layouts.service_company_layout')
 @push('head-script')
-    <link rel="stylesheet" href="//cdn.datatables.net/fixedheader/3.1.5/css/fixedHeader.bootstrap.min.css">
-    <link rel="stylesheet" href="//cdn.datatables.net/responsive/2.2.3/css/responsive.bootstrap.min.css">
-    <style>
-        body {
-            overflow-x: hidden;
-        }
-        @media only screen and (min-width: 1024px) and (max-width: 1440px) {
-            #kt_activitiesSP {
-                width: 1025px;
-            }
-        }
-        @media only screen and (min-width: 1440px) and (max-width: 2560px) {
-            #kt_activitiesSP {
-                width: 1200px;
-            }
-        }
-        @media only screen and (min-width: 1024px) and (max-width: 1440px) {
-            #kt_activitiesSP {
-                width: 1025px;
-            }
-        }
-        @media only screen and (min-width: 1440px) and (max-width: 2560px) {
-            #kt_activitiesSP {
-                width: 1200px;
-            }
-        }
-        @media only screen and (min-width: 1024px) and (max-width: 1440px) {
-            #kt_activitiesDirectClient {
-                width: 1025px;
-            }
-        }
-        @media only screen and (min-width: 1440px) and (max-width: 2560px) {
-            #kt_activitiesClient {
-                width: 1200px;
-            }
-        }
-        @media only screen and (min-width: 1440px) and (max-width: 2560px) {
-            #kt_activitiesDirectClient {
-                width: 1200px;
-            }
-        }
-    </style>
-    
-    
-    <style>
-      *,
-      *::before,
-      *::after {
-        margin: 0;
-        padding: 0;
-        box-sizing: border-box;
-      }
-      :root {
-        --p: #5b4dff;
-        --p-h: #4a3de6;
-        --p-l: #f0eeff;
-        --p-b: #e8e5ff;
-        --s: #0b1120;
-        --s-h: #1e293b;
-        --s-a: #5b4dff;
-        --t: #181c32;
-        --t-m: #7e8299;
-        --t-l: #a1a5b7;
-        --b: #e4e6ef;
-        --bg: #f5f8fa;
-        --w: #fff;
-        --g: #50cd89;
-        --g-l: #e8fff3;
-        --g-bg: #e8fff3;
-        --r: #f1416c;
-        --y: #ffc700;
-        --y-e: #e4e6ef;
-        --sh: 0 0 20px rgba(76, 87, 125, 0.08);
-        --sh-card: 0 0 20px rgba(76, 87, 125, 0.04);
-        --rad: 8px;
-        --rad-sm: 6px;
-      }
-      html {
-        font-size: 11px;
-      }
-      body {
-        font-family:
-          "Poppins",
-          -apple-system,
-          BlinkMacSystemFont,
-          sans-serif;
-        font-size: 1rem;
-        color: var(--t);
-        background: var(--bg);
-        line-height: 1.5;
-        overflow-x: hidden;
-      }
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<link href="{{ asset('demo/css/filterStyle.css') }}{{ TM_VERSION }}" rel="stylesheet" type="text/css" />
+<link href="{{ asset('demo/css/topCard.css') }}{{ TM_VERSION }}" rel="stylesheet" type="text/css" />
+<link href="{{ asset('demo/css/clientList.css') }}?v={{ time() }}" rel="stylesheet" type="text/css" />
+<style>
+/* ── Guaranteed Card-Based Header Design (Rule 20 Enterprise Standard) ── */
+.cl-header, .cl-header-card {
+  background: #ffffff !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 12px !important;
+  padding: 14px 20px !important;
+  margin-bottom: 14px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 16px !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03) !important;
+}
+.cl-header-left {
+  display: flex !important;
+  align-items: center !important;
+  gap: 12px !important;
+  min-width: 0 !important;
+}
+.cl-header-icon-box {
+  width: 44px !important;
+  height: 44px !important;
+  border-radius: 10px !important;
+  background: #eff6ff !important;
+  border: 1px solid #bfdbfe !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  color: #2563eb !important;
+  flex-shrink: 0 !important;
+  box-shadow: 0 1px 2px rgba(37, 99, 235, 0.06) !important;
+}
+.cl-header-title-row {
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+}
+.cl-header-title {
+  font-size: 20px !important;
+  font-weight: 700 !important;
+  color: #0f172a !important;
+  letter-spacing: -0.015em !important;
+  margin: 0 !important;
+  line-height: 1.2 !important;
+  font-family: 'Poppins', sans-serif !important;
+}
+.cl-verified-badge {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+.cl-verified-badge svg {
+  color: #16a34a !important;
+  stroke: #16a34a !important;
+}
+.cl-header-subtitle {
+  font-size: 13px !important;
+  font-weight: 400 !important;
+  color: #64748b !important;
+  margin-top: 3px !important;
+  line-height: 1.35 !important;
+  font-family: 'Poppins', sans-serif !important;
+}
+.cl-header-actions {
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  flex-shrink: 0 !important;
+}
+.cl-export-wrapper {
+  position: relative !important;
+  display: inline-block !important;
+}
+.cl-export-btn {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 7px !important;
+  background: #ffffff !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 8px !important;
+  padding: 8px 16px !important;
+  font-size: 13px !important;
+  font-weight: 700 !important;
+  color: #0f172a !important;
+  cursor: pointer !important;
+  text-decoration: none !important;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04) !important;
+  transition: all 0.15s ease !important;
+  white-space: nowrap !important;
+}
+.cl-export-btn:hover {
+  background: #f8fafc !important;
+  border-color: #cbd5e1 !important;
+}
+.cl-export-dropdown-menu {
+  min-width: 260px !important;
+  padding: 6px !important;
+  border-radius: 10px !important;
+  border: 1px solid #e2e8f0 !important;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1) !important;
+  z-index: 1050 !important;
+}
+.cl-export-option {
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  padding: 8px 10px !important;
+  border-radius: 6px !important;
+  transition: background 0.12s ease !important;
+  text-decoration: none !important;
+}
+.cl-export-option:hover {
+  background: #f1f5f9 !important;
+}
+.cl-export-opt-icon {
+  width: 28px !important;
+  height: 28px !important;
+  border-radius: 6px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  flex-shrink: 0 !important;
+}
+.cl-export-opt-icon.csv { background: #eff6ff; color: #2563eb; }
+.cl-export-opt-icon.all { background: #f0fdf4; color: #16a34a; }
+.cl-export-opt-icon.pdf { background: #fef2f2; color: #dc2626; }
+.cl-export-opt-text { display: flex; flex-direction: column; min-width: 0; }
+.cl-export-opt-title { font-size: 12.5px; font-weight: 600; color: #0f172a; line-height: 1.25; }
+.cl-export-opt-sub { font-size: 11px; color: #64748b; line-height: 1.2; margin-top: 2px; }
 
-      /* layout */
-      .app {
-        display: flex;
-        min-height: 100vh;
-      }
+.cl-add-btn-primary {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 7px !important;
+  background: #009ef7 !important;
+  border: 1px solid #009ef7 !important;
+  border-radius: 8px !important;
+  padding: 8px 18px !important;
+  font-size: 13px !important;
+  font-weight: 700 !important;
+  color: #ffffff !important;
+  cursor: pointer !important;
+  text-decoration: none !important;
+  box-shadow: 0 2px 4px rgba(0, 158, 247, 0.2) !important;
+  transition: all 0.15s ease !important;
+  white-space: nowrap !important;
+}
+.cl-add-btn-primary:hover {
+  background: #0086d4 !important;
+  border-color: #0086d4 !important;
+  color: #ffffff !important;
+}
 
-      /* sidebar */
-      .sb {
-        width: 210px;
-        background: var(--s);
-        color: var(--w);
-        flex-shrink: 0;
-        display: flex;
-        flex-direction: column;
-        position: fixed;
-        height: 100vh;
-        overflow-y: auto;
-        z-index: 100;
-      }
-      .sb-h {
-        padding: 16px 18px;
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-      }
-      .sb-logo {
-        width: 22px;
-        height: 22px;
-        background: var(--w);
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-      }
-      .sb-logo svg {
-        width: 13px;
-        height: 13px;
-      }
-      .sb-brand {
-        font-size: 1.3rem;
-        font-weight: 700;
-        color: var(--w);
-        letter-spacing: -0.3px;
-      }
-      .nav {
-        flex: 1;
-        padding: 8px 0;
-      }
-      .nav-i {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        padding: 8px 16px;
-        color: #9899ac;
-        text-decoration: none;
-        transition: all 0.15s;
-        cursor: pointer;
-        position: relative;
-        font-size: 1rem;
-        font-weight: 500;
-      }
-      .nav-i:hover {
-        background: var(--s-h);
-        color: var(--w);
-      }
-      .nav-i.a {
-        background: var(--s-a);
-        color: var(--w);
-      }
-      .nav-i.a::before {
-        content: "";
-        position: absolute;
-        left: 0;
-        top: 0;
-        bottom: 0;
-        width: 3px;
-        background: var(--w);
-        border-radius: 0 2px 2px 0;
-      }
-      .nav-ic {
-        width: 18px;
-        height: 18px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        flex-shrink: 0;
-      }
-      .nav-ic svg {
-        width: 18px;
-        height: 18px;
-      }
-      .nav-tx {
-        font-size: 1.05rem;
-        font-weight: 500;
-      }
-      .nav-bad {
-        margin-left: auto;
-        font-size: 0.85rem;
-        opacity: 0.7;
-      }
-      .sub {
-        padding-left: 44px;
-      }
-      .sub .nav-i {
-        padding: 6px 16px;
-      }
-      .sub .nav-tx {
-        font-size: 1rem;
-      }
-      .sb-f {
-        padding: 12px 16px;
-        border-top: 1px solid rgba(255, 255, 255, 0.06);
-      }
-      .sb-sup {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        color: #9899ac;
-        font-size: 1.05rem;
-        cursor: pointer;
-        padding: 5px 0;
-      }
-      .sb-sup:hover {
-        color: var(--w);
-      }
-      .sb-up {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        padding: 12px 16px;
-        border-top: 1px solid rgba(255, 255, 255, 0.06);
-        cursor: pointer;
-      }
-      .sb-av {
-        width: 30px;
-        height: 30px;
-        border-radius: 50%;
-        background: linear-gradient(135deg, #667eea, #764ba2);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: var(--w);
-        font-size: 1rem;
-        font-weight: 600;
-        flex-shrink: 0;
-      }
-      .sb-un {
-        font-size: 1.05rem;
-        font-weight: 600;
-        color: var(--w);
-        line-height: 1.3;
-      }
-      .sb-ur {
-        font-size: 0.9rem;
-        color: #9899ac;
-        line-height: 1.3;
-      }
-      .sb-arr {
-        color: #9899ac;
-        font-size: 0.8rem;
-        margin-left: auto;
-      }
+/* ── 6 Stat Cards Grid ── */
+.cl-stat-grid {
+  display: grid !important;
+  grid-template-columns: repeat(6, 1fr) !important;
+  gap: 12px !important;
+  margin-bottom: 14px !important;
+  width: 100% !important;
+}
+.cl-card {
+  background: #ffffff !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 10px !important;
+  padding: 12px 14px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: space-between !important;
+  text-decoration: none !important;
+  color: inherit !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02) !important;
+  transition: all 0.15s ease !important;
+  cursor: pointer !important;
+}
+.cl-card:hover {
+  transform: translateY(-2px) !important;
+  border-color: #cbd5e1 !important;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.06) !important;
+}
+.cl-card.active {
+  border-color: #009ef7 !important;
+  box-shadow: 0 0 0 2px rgba(0, 158, 247, 0.15), 0 2px 6px rgba(0, 158, 247, 0.1) !important;
+}
+.cl-card-top {
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+}
+.cl-card-icon {
+  width: 36px !important;
+  height: 36px !important;
+  border-radius: 8px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  flex-shrink: 0 !important;
+}
+.cl-card-icon.blue   { background: #eff6ff; color: #2563eb; }
+.cl-card-icon.indigo { background: #eef2ff; color: #4f46e5; }
+.cl-card-icon.green  { background: #f0fdf4; color: #16a34a; }
+.cl-card-icon.pink   { background: #fdf2f8; color: #db2777; }
+.cl-card-icon.purple { background: #faf5ff; color: #9333ea; }
 
-      /* main */
-      .mc {
-        flex: 1;
-        margin-left: 210px;
-        display: flex;
-        flex-direction: column;
-        min-height: 100vh;
-      }
+.cl-card-meta {
+  display: flex !important;
+  flex-direction: column !important;
+  min-width: 0 !important;
+}
+.cl-card-num {
+  font-size: 18px !important;
+  font-weight: 700 !important;
+  color: #0f172a !important;
+  line-height: 1.15 !important;
+  font-variant-numeric: tabular-nums !important;
+  font-family: 'Poppins', sans-serif !important;
+}
+.cl-card-lbl {
+  font-size: 11.5px !important;
+  font-weight: 500 !important;
+  color: #64748b !important;
+  line-height: 1.2 !important;
+  margin-top: 2px !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+.cl-card-sub {
+  display: flex !important;
+  align-items: center !important;
+  gap: 4px !important;
+  font-size: 10.5px !important;
+  font-weight: 600 !important;
+  margin-top: 8px !important;
+  padding-top: 6px !important;
+  border-top: 1px dashed #f1f5f9 !important;
+  white-space: nowrap !important;
+}
+.cl-card-sub.green  { color: #16a34a; }
+.cl-card-sub.blue   { color: #2563eb; }
+.cl-card-sub.pink   { color: #db2777; }
+.cl-card-sub.purple { color: #9333ea; }
 
-      /* top bar */
-      .tb {
-        background: var(--w);
-        padding: 12px 24px;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        border-bottom: 1px solid var(--b);
-        position: sticky;
-        top: 0;
-        z-index: 50;
-        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03);
-      }
-      .tb-l {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-      }
-      .tb-s {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-      }
-      .tbi {
-        display: flex;
-        align-items: center;
-        gap: 6px;
-        padding: 7px 14px;
-        background: var(--bg);
-        border-radius: var(--rad-sm);
-        font-size: 1rem;
-        color: var(--t);
-        border: 1px solid var(--b);
-        font-weight: 500;
-        cursor: pointer;
-        transition: all 0.15s;
-      }
-      .tbi:hover {
-        background: var(--p-l);
-        border-color: var(--p);
-        color: var(--p);
-      }
-      .tbi svg {
-        width: 16px;
-        height: 16px;
-      }
-      .tb-r {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-      }
-      .notif {
-        position: relative;
-        cursor: pointer;
-        padding: 8px;
-        border-radius: 50%;
-        transition: all 0.15s;
-      }
-      .notif:hover {
-        background: var(--bg);
-      }
-      .notif svg {
-        width: 20px;
-        height: 20px;
-        color: var(--t-m);
-      }
-      .notif-dot {
-        position: absolute;
-        top: 6px;
-        right: 6px;
-        width: 8px;
-        height: 8px;
-        background: var(--r);
-        border-radius: 50%;
-        border: 2px solid var(--w);
-      }
-      .user-chip {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        cursor: pointer;
-        padding: 4px 8px 4px 4px;
-        border-radius: var(--rad-sm);
-        transition: all 0.15s;
-      }
-      .user-chip:hover {
-        background: var(--bg);
-      }
-      .uc-av {
-        width: 28px;
-        height: 28px;
-        border-radius: 50%;
-        background: linear-gradient(135deg, #667eea, #764ba2);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: var(--w);
-        font-size: 1rem;
-        font-weight: 600;
-      }
-      .uc-info {
-        display: flex;
-        flex-direction: column;
-      }
-      .uc-n {
-        font-size: 1rem;
-        font-weight: 600;
-        color: var(--t);
-        line-height: 1.3;
-      }
-      .uc-r {
-        font-size: 0.85rem;
-        color: var(--t-m);
-        line-height: 1.3;
-      }
-      .uc-arr {
-        color: var(--t-m);
-        font-size: 0.8rem;
-      }
+/* ── Filter Bar & Micro Search Box ── */
+.cl-filter-bar {
+  background: #ffffff !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 10px !important;
+  padding: 10px 14px !important;
+  margin-bottom: 14px !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  flex-wrap: wrap !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02) !important;
+}
+.cl-search-box {
+  position: relative !important;
+  flex: 1 1 280px !important;
+  min-width: 240px !important;
+  height: 38px !important;
+  display: flex !important;
+  align-items: center !important;
+}
+.cl-search-icon {
+  position: absolute !important;
+  left: 12px !important;
+  width: 15px !important;
+  height: 15px !important;
+  color: #94a3b8 !important;
+  pointer-events: none !important;
+}
+.cl-search-inp {
+  width: 100% !important;
+  height: 100% !important;
+  background: #f8fafc !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 8px !important;
+  padding: 0 85px 0 34px !important;
+  font-size: 12px !important;
+  color: #0f172a !important;
+  font-family: 'Poppins', sans-serif !important;
+  transition: all 0.15s ease !important;
+}
+.cl-search-inp:focus {
+  background: #ffffff !important;
+  border-color: #009ef7 !important;
+  box-shadow: 0 0 0 3px rgba(0, 158, 247, 0.12) !important;
+  outline: none !important;
+}
+.cl-search-right-affix {
+  position: absolute !important;
+  right: 8px !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 5px !important;
+}
+.cl-search-count-pill {
+  font-size: 10px !important;
+  font-weight: 700 !important;
+  background: #eff6ff !important;
+  color: #2563eb !important;
+  padding: 2px 6px !important;
+  border-radius: 10px !important;
+  border: 1px solid #bfdbfe !important;
+}
+.cl-search-clear-btn {
+  background: transparent !important;
+  border: none !important;
+  color: #94a3b8 !important;
+  font-size: 12px !important;
+  cursor: pointer !important;
+  padding: 2px 4px !important;
+  border-radius: 4px !important;
+  line-height: 1 !important;
+}
+.cl-search-clear-btn:hover { color: #0f172a; background: #e2e8f0; }
+.cl-search-kbd-hint {
+  font-size: 9.5px !important;
+  font-weight: 600 !important;
+  color: #94a3b8 !important;
+  background: #ffffff !important;
+  border: 1px solid #cbd5e1 !important;
+  border-radius: 4px !important;
+  padding: 1px 4px !important;
+}
 
-      /* page header */
-      .ph {
-        padding: 20px 24px 0;
-      }
-      .ph-h {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        margin-bottom: 4px;
-      }
-      .ph-t {
-        font-size: 1.8rem;
-        font-weight: 700;
-        color: var(--t);
-        display: flex;
-        align-items: center;
-        gap: 8px;
-      }
-      .ph-t svg {
-        width: 18px;
-        height: 18px;
-        color: var(--p);
-      }
-      .ph-s {
-        font-size: 1.05rem;
-        color: var(--t-m);
-        font-weight: 400;
-      }
-      .ph-r {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-      }
-      .btn {
-        padding: 8px 16px;
-        border-radius: var(--rad-sm);
-        font-size: 1rem;
-        font-weight: 600;
-        cursor: pointer;
-        border: none;
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        transition: all 0.15s;
-        white-space: nowrap;
-        font-family: "Poppins", sans-serif;
-      }
-      .btn-o {
-        background: var(--w);
-        color: var(--t);
-        border: 1px solid var(--b);
-      }
-      .btn-o:hover {
-        background: var(--bg);
-        border-color: var(--t-m);
-      }
-      .btn-p {
-        background: var(--p);
-        color: var(--w);
-        box-shadow: 0 4px 12px rgba(91, 77, 255, 0.25);
-      }
-      .btn-p:hover {
-        background: var(--p-h);
-        box-shadow: 0 4px 16px rgba(91, 77, 255, 0.35);
-      }
-      .btn svg {
-        width: 14px;
-        height: 14px;
-        flex-shrink: 0;
-      }
+/* Combobox Pill Buttons */
+.cl-loc-dropdown-wrapper,
+.cl-ind-dropdown-wrapper,
+.cl-act-dropdown-wrapper,
+.cl-pipe-dropdown-wrapper,
+.cl-sort-dropdown-wrapper {
+  position: relative !important;
+}
+.cl-loc-combobox-btn,
+.cl-ind-combobox-btn,
+.cl-act-combobox-btn,
+.cl-pipe-combobox-btn,
+.cl-sort-combobox-btn {
+  height: 38px !important;
+  background: #ffffff !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 8px !important;
+  padding: 0 12px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  cursor: pointer !important;
+  font-size: 12px !important;
+  color: #334155 !important;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02) !important;
+  transition: all 0.15s ease !important;
+  white-space: nowrap !important;
+}
+.cl-loc-combobox-btn:hover,
+.cl-ind-combobox-btn:hover,
+.cl-act-combobox-btn:hover,
+.cl-pipe-combobox-btn:hover,
+.cl-sort-combobox-btn:hover {
+  background: #f8fafc !important;
+  border-color: #cbd5e1 !important;
+}
+.cl-pill-lbl { font-size: 10px !important; font-weight: 600 !important; color: #94a3b8 !important; text-transform: uppercase !important; }
+.cl-pill-val { font-size: 12px !important; font-weight: 600 !important; color: #0f172a !important; }
+.cl-pill-icon svg { color: #2563eb; }
 
-      /* stats cards */
-      .scards {
-        display: grid;
-        grid-template-columns: repeat(4, 1fr);
-        gap: 16px;
-        padding: 16px 24px;
-      }
-      .scard {
-        background: var(--w);
-        border-radius: var(--rad);
-        border: 1px solid var(--b);
-        padding: 16px;
-        display: flex;
-        align-items: center;
-        gap: 14px;
-        box-shadow: var(--sh-card);
-        transition: all 0.2s;
-      }
-      .scard:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 8px 24px rgba(76, 87, 125, 0.1);
-      }
-      .sc-ic {
-        width: 44px;
-        height: 44px;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        flex-shrink: 0;
-      }
-      .sc-ic.b1 {
-        background: #e8f4fd;
-        color: #009ef7;
-      }
-      .sc-ic.b2 {
-        background: #e8fff3;
-        color: #50cd89;
-      }
-      .sc-ic.b3 {
-        background: #f8f5ff;
-        color: #7239ea;
-      }
-      .sc-ic.b4 {
-        background: #fff8dd;
-        color: #ffc700;
-      }
-      .sc-ic svg {
-        width: 22px;
-        height: 22px;
-      }
-      .sc-d {
-        flex: 1;
-      }
-      .sc-l {
-        font-size: 0.95rem;
-        color: var(--t-m);
-        font-weight: 500;
-        margin-bottom: 2px;
-      }
-      .sc-v {
-        font-size: 1.6rem;
-        font-weight: 700;
-        color: var(--t);
-        margin-bottom: 2px;
-      }
-      .sc-s {
-        font-size: 0.9rem;
-        color: var(--t-l);
-        font-weight: 400;
-      }
-      .sc-a {
-        font-size: 0.95rem;
-        color: var(--p);
-        font-weight: 600;
-        cursor: pointer;
-        margin-top: 4px;
-      }
-      .sc-a:hover {
-        text-decoration: underline;
-      }
+/* Popover Panels */
+.cl-loc-dropdown-panel,
+.cl-ind-dropdown-panel,
+.cl-act-dropdown-panel,
+.cl-pipe-dropdown-panel,
+.cl-sort-dropdown-panel {
+  position: absolute !important;
+  top: calc(100% + 6px) !important;
+  right: 0 !important;
+  background: #ffffff !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 10px !important;
+  padding: 8px !important;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1) !important;
+  z-index: 1050 !important;
+  min-width: 220px !important;
+  display: none;
+}
+.cl-act-dropdown-panel,
+.cl-pipe-dropdown-panel,
+.cl-sort-dropdown-panel {
+  min-width: 240px !important;
+}
+.cl-loc-dropdown-panel.show,
+.cl-ind-dropdown-panel.show,
+.cl-act-dropdown-panel.show,
+.cl-pipe-dropdown-panel.show,
+.cl-sort-dropdown-panel.show {
+  display: block !important;
+}
 
-      /* search & filters */
-      .sf {
-        padding: 0 24px 16px;
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        flex-wrap: wrap;
-      }
-      .sf-s {
-        flex: 1;
-        min-width: 280px;
-        position: relative;
-      }
-      .sf-s input {
-        width: 100%;
-        padding: 10px 14px 10px 40px;
-        border: 1px solid var(--b);
-        border-radius: var(--rad-sm);
-        font-size: 1rem;
-        color: var(--t);
-        background: var(--w);
-        font-family: "Poppins", sans-serif;
-        transition: all 0.15s;
-      }
-      .sf-s input:focus {
-        outline: none;
-        border-color: var(--p);
-        box-shadow: 0 0 0 3px rgba(91, 77, 255, 0.1);
-      }
-      .sf-s input::placeholder {
-        color: var(--t-l);
-      }
-      .sf-s svg {
-        position: absolute;
-        right: 14px;
-        top: 50%;
-        transform: translateY(-50%);
-        width: 18px;
-        height: 18px;
-        color: var(--t-l);
-        pointer-events: none;
-      }
-      .sf-d {
-        padding: 10px 14px;
-        background: var(--w);
-        border: 1px solid var(--b);
-        border-radius: var(--rad-sm);
-        font-size: 1rem;
-        color: var(--t);
-        font-family: "Poppins", sans-serif;
-        cursor: pointer;
-        appearance: none;
-        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%237e8299' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
-        background-repeat: no-repeat;
-        background-position: right 12px center;
-        padding-right: 32px;
-        min-width: 160px;
-        transition: all 0.15s;
-      }
-      .sf-d:focus {
-        outline: none;
-        border-color: var(--p);
-        box-shadow: 0 0 0 3px rgba(91, 77, 255, 0.1);
-      }
-      .sf-f {
-        display: flex;
-        align-items: center;
-        gap: 6px;
-        padding: 10px 14px;
-        background: var(--w);
-        border: 1px solid var(--b);
-        border-radius: var(--rad-sm);
-        font-size: 1rem;
-        color: var(--t);
-        cursor: pointer;
-        font-family: "Poppins", sans-serif;
-        transition: all 0.15s;
-      }
-      .sf-f:hover {
-        border-color: var(--p);
-        color: var(--p);
-      }
-      .sf-f svg {
-        width: 16px;
-        height: 16px;
-      }
+.cl-act-section-hdr,
+.cl-sort-section-hdr,
+.cl-pipe-section-hdr {
+  font-size: 10px !important;
+  font-weight: 700 !important;
+  color: #94a3b8 !important;
+  text-transform: uppercase !important;
+  padding: 6px 8px 4px !important;
+}
+.cl-act-item,
+.cl-sort-item,
+.cl-pipe-item {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  padding: 6px 8px !important;
+  border-radius: 6px !important;
+  cursor: pointer !important;
+  font-size: 11.5px !important;
+  color: #334155 !important;
+  transition: background 0.12s ease !important;
+}
+.cl-act-item:hover,
+.cl-sort-item:hover,
+.cl-pipe-item:hover {
+  background: #f1f5f9 !important;
+  color: #0f172a !important;
+}
+.cl-act-item.selected,
+.cl-sort-item.selected,
+.cl-pipe-item.selected {
+  background: #eff6ff !important;
+  color: #2563eb !important;
+  font-weight: 600 !important;
+}
+.cl-act-dot, .cl-pipe-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  display: inline-block;
+  margin-right: 6px;
+}
+.cl-dot-all    { background: #94a3b8; }
+.cl-dot-green  { background: #16a34a; }
+.cl-dot-blue   { background: #2563eb; }
+.cl-dot-amber  { background: #f59e0b; }
+.cl-dot-slate  { background: #64748b; }
+.cl-dot-purple { background: #9333ea; }
+.cl-dot-violet { background: #7c3aed; }
 
-      /* table toolbar */
-      .tt {
-        padding: 0 24px 12px;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-      }
-      .tt-l {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-      }
-      .tt-cb {
-        width: 16px;
-        height: 16px;
-        cursor: pointer;
-        accent-color: var(--p);
-      }
-      .tt-s {
-        font-size: 1rem;
-        color: var(--p);
-        font-weight: 600;
-      }
-      .tt-ba {
-        padding: 6px 12px;
-        background: var(--w);
-        border: 1px solid var(--b);
-        border-radius: var(--rad-sm);
-        font-size: 1rem;
-        color: var(--t);
-        cursor: pointer;
-        font-family: "Poppins", sans-serif;
-        appearance: none;
-        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%237e8299' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
-        background-repeat: no-repeat;
-        background-position: right 10px center;
-        padding-right: 28px;
-      }
-      .tt-r {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-      }
-      .tt-col {
-        padding: 6px 12px;
-        background: var(--w);
-        border: 1px solid var(--b);
-        border-radius: var(--rad-sm);
-        font-size: 1rem;
-        color: var(--t);
-        cursor: pointer;
-        font-family: "Poppins", sans-serif;
-        display: flex;
-        align-items: center;
-        gap: 6px;
-      }
-      .tt-col svg {
-        width: 14px;
-        height: 14px;
-      }
-      .tt-so {
-        padding: 6px 12px;
-        background: var(--w);
-        border: 1px solid var(--b);
-        border-radius: var(--rad-sm);
-        font-size: 1rem;
-        color: var(--t);
-        cursor: pointer;
-        font-family: "Poppins", sans-serif;
-        display: flex;
-        align-items: center;
-        gap: 6px;
-      }
-      .tt-so svg {
-        width: 14px;
-        height: 14px;
-      }
+/* ── Table & Card Stream Container (Rule 20 Modern Card + Sub-Card System) ── */
+.tbl {
+  width: 100% !important;
+  max-width: 100% !important;
+  overflow-x: hidden !important;
+}
+.tbl-w {
+  width: 100% !important;
+  background: transparent !important;
+}
+.tbl-scroll-container {
+  width: 100% !important;
+  position: relative !important;
+}
+.tbl-h {
+  display: grid !important;
+  grid-template-columns: 2.2fr 1.3fr 1fr 2.5fr !important;
+  gap: 12px !important;
+  padding: 8px 14px !important;
+  background: #f8fafc !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 8px !important;
+  margin-bottom: 10px !important;
+}
+.tbl-th-subcard {
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  color: #475569 !important;
+  text-transform: uppercase !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 5px !important;
+}
+.tbl-th-label {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
 
-      /* table */
-      .tbl {
-        padding: 0 0px;
-      }
-      .tbl-w {
-        background: var(--w);
-        border-radius: var(--rad);
-        border: 1px solid var(--b);
-        overflow: hidden;
-        box-shadow: var(--sh-card);
-      }
-      .tbl-h {
-        display: grid;
-        grid-template-columns: 40px 1.8fr 1.3fr 0.9fr 2.6fr 1.1fr;
-        padding: 10px 16px;
-        background: var(--bg);
-        border-bottom: 1px solid var(--b);
-        align-items: center;
-      }
-      .tbl-h span {
-        font-size: 1rem;
-        font-weight: 600;
-        color: var(--t-m);
-        display: flex;
-        align-items: center;
-        gap: 4px;
-      }
-      .tbl-h span svg {
-        width: 12px;
-        height: 12px;
-        color: var(--t-l);
-      }
-      .tbl-r {
-        display: grid;
-        grid-template-columns: 40px 1.8fr 1.3fr 0.9fr 2.6fr 1.1fr;
-        padding: 14px 16px;
-        border-bottom: 1px solid var(--b);
-        align-items: center;
-        transition: all 0.15s;
-        cursor: pointer;
-      }
-      .tbl-r:hover {
-        background: var(--bg);
-      }
-      .tbl-r:last-child {
-        border-bottom: none;
-      }
-      .tbl-cb {
-        width: 16px;
-        height: 16px;
-        cursor: pointer;
-        accent-color: var(--p);
-      }
-      .tbl-a {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-      }
-      .tbl-av {
-        width: 40px;
-        height: 40px;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: var(--w);
-        font-size: 1.3rem;
-        font-weight: 700;
-        flex-shrink: 0;
-        cursor: pointer;
-        transition: all 0.15s;
-        overflow: hidden;
-      }
-      .tbl-av img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-        border-radius: 50%;
-      }
-      .tbl-av:hover {
-        transform: scale(1.08);
-      }
-      .tbl-ai {
-        flex: 1;
-        min-width: 0;
-      }
-      .tbl-n {
-        font-size: 1.1rem;
-        font-weight: 600;
-        color: var(--t);
-        margin-bottom: 2px;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-      }
-      .tbl-t {
-        display: flex;
-        align-items: center;
-        gap: 6px;
-        font-size: 0.95rem;
-        color: var(--t-m);
-        font-weight: 400;
-      }
-      .tbl-t svg {
-        width: 14px;
-        height: 14px;
-        color: var(--g);
-      }
-      .tbl-l {
-        display: flex;
-        align-items: center;
-        gap: 6px;
-      }
-      .tbl-l svg {
-        width: 14px;
-        height: 14px;
-        color: var(--t-l);
-        flex-shrink: 0;
-      }
-      .tbl-lc {
-        font-size: 1rem;
-        color: var(--t);
-        font-weight: 600;
-      }
-      .tbl-ls {
-        font-size: 0.9rem;
-        color: var(--t-m);
-        font-weight: 400;
-      }
-      .tbl-j {
-        display: flex;
-        flex-direction: column;
-        gap: 3px;
-      }
-      .tbl-jr {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        font-size: 0.95rem;
-      }
-      .tbl-jn {
-        font-weight: 600;
-        color: var(--t);
-      }
-      .tbl-js {
-        font-weight: 500;
-      }
-      .tbl-js.a {
-        color: var(--p);
-      }
-      .tbl-js.c {
-        color: var(--t-m);
-      }
-      .tbl-js.d {
-        color: var(--t-l);
-      }
-      .tbl-p {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        min-width: 0;
-        flex-wrap: nowrap;
-      }
-      .tbl-pi {
-        text-align: center;
-        flex: 1;
-        min-width: 0;
-      }
-      .tbl-pv {
-        font-size: 1.2rem;
-        font-weight: 700;
-        color: var(--t);
-      }
-      .tbl-pl {
-        font-size: 0.85rem;
-        color: var(--t-m);
-        font-weight: 400;
-      }
-      .tbl-co {
-        font-size: 1rem;
-        color: var(--t);
-        font-weight: 500;
-      }
-      .tbl-cv {
-        color: var(--p);
-        font-weight: 600;
-        cursor: pointer;
-      }
-      .tbl-cv:hover {
-        text-decoration: underline;
-      }
+/* Primary Card (Tier 3) */
+.cl-primary-card {
+  background: #ffffff !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 10px !important;
+  padding: 14px !important;
+  margin-bottom: 12px !important;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03) !important;
+  transition: all 0.15s ease !important;
+  display: flex !important;
+  flex-direction: column !important;
+  position: relative !important;
+}
+.cl-primary-card:hover {
+  border-color: #cbd5e1 !important;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.06) !important;
+}
 
-      /* pagination */
-      .pg {
-        padding: 14px 24px;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-      }
-      .pg-l {
-        font-size: 1rem;
-        color: var(--t-m);
-        font-weight: 400;
-      }
-      .pg-r {
-        display: flex;
-        align-items: center;
-        gap: 6px;
-      }
-      .pg-s {
-        padding: 6px 12px;
-        background: var(--w);
-        border: 1px solid var(--b);
-        border-radius: var(--rad-sm);
-        font-size: 1rem;
-        color: var(--t);
-        cursor: pointer;
-        font-family: "Poppins", sans-serif;
-        appearance: none;
-        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%237e8299' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
-        background-repeat: no-repeat;
-        background-position: right 8px center;
-        padding-right: 26px;
-      }
-      .pg-b {
-        padding: 6px 10px;
-        background: var(--w);
-        border: 1px solid var(--b);
-        border-radius: var(--rad-sm);
-        font-size: 1rem;
-        color: var(--t);
-        cursor: pointer;
-        font-family: "Poppins", sans-serif;
-        transition: all 0.15s;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-      }
-      .pg-b:hover {
-        background: var(--bg);
-        border-color: var(--p);
-        color: var(--p);
-      }
-      .pg-b svg {
-        width: 14px;
-        height: 14px;
-      }
-      .pg-b.a {
-        background: var(--p);
-        color: var(--w);
-        border-color: var(--p);
-        font-weight: 600;
-      }
-      .pg-b.a:hover {
-        background: var(--p-h);
-      }
-      .pg-d {
-        padding: 6px 10px;
-        font-size: 1rem;
-        color: var(--t-m);
-        font-weight: 500;
-      }
+/* Sub-Cards Grid */
+.cl-subcards-grid {
+  display: grid !important;
+  grid-template-columns: 2.2fr 1.3fr 1fr 2.5fr !important;
+  gap: 12px !important;
+  margin-bottom: 10px !important;
+}
+.cl-subcard {
+  background: #f8fafc !important;
+  border: 1px solid #eef2f6 !important;
+  border-radius: 8px !important;
+  padding: 10px 12px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: space-between !important;
+  min-width: 0 !important;
+}
+.cl-subcard-head {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  margin-bottom: 8px !important;
+}
+.cl-subcard-title {
+  font-size: 10.5px !important;
+  font-weight: 700 !important;
+  color: #64748b !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.02em !important;
+}
+.cl-subcard-badges {
+  display: flex !important;
+  align-items: center !important;
+  gap: 5px !important;
+}
+.cl-scope-pill {
+  font-size: 9.5px !important;
+  font-weight: 700 !important;
+  padding: 1.5px 6px !important;
+  border-radius: 4px !important;
+  text-transform: uppercase !important;
+}
+.cl-scope-pill.pill-direct   { background: #ecfdf5; color: #059669; border: 1px solid #a7f3d0; }
+.cl-scope-pill.pill-internal { background: #eef2ff; color: #4338ca; border: 1px solid #c7d2fe; }
 
-      /* modal */
-      .mdl {
-        display: none;
-        position: fixed;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        z-index: 200;
-        align-items: center;
-        justify-content: center;
-      }
-      .mdl.a {
-        display: flex;
-      }
-      .mdl-o {
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: rgba(0, 0, 0, 0.5);
-        backdrop-filter: blur(4px);
-      }
-      .mdl-c {
-        background: var(--w);
-        border-radius: var(--rad);
-        width: 90%;
-        max-width: 560px;
-        max-height: 90vh;
-        overflow-y: auto;
-        position: relative;
-        z-index: 1;
-        box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
-      }
-      .mdl-h {
-        padding: 16px 20px;
-        border-bottom: 1px solid var(--b);
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-      }
-      .mdl-ht {
-        font-size: 1.4rem;
-        font-weight: 700;
-        color: var(--t);
-      }
-      .mdl-x {
-        padding: 6px;
-        cursor: pointer;
-        border-radius: 50%;
-        transition: all 0.15s;
-        background: none;
-        border: none;
-      }
-      .mdl-x:hover {
-        background: var(--bg);
-      }
-      .mdl-x svg {
-        width: 18px;
-        height: 18px;
-        color: var(--t-m);
-      }
-      .mdl-b {
-        padding: 20px;
-      }
-      .mdl-av {
-        width: 64px;
-        height: 64px;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: var(--w);
-        font-size: 2rem;
-        font-weight: 700;
-        margin-bottom: 16px;
-      }
-      .mdl-n {
-        font-size: 1.4rem;
-        font-weight: 700;
-        color: var(--t);
-        margin-bottom: 4px;
-      }
-      .mdl-t {
-        font-size: 1rem;
-        color: var(--t-m);
-        margin-bottom: 16px;
-        display: flex;
-        align-items: center;
-        gap: 6px;
-      }
-      .mdl-t svg {
-        width: 14px;
-        height: 14px;
-        color: var(--g);
-      }
-      .mdl-g {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 12px;
-        margin-bottom: 16px;
-      }
-      .mdl-i {
-        padding: 10px 12px;
-        background: var(--bg);
-        border-radius: var(--rad-sm);
-      }
-      .mdl-il {
-        font-size: 0.9rem;
-        color: var(--t-m);
-        margin-bottom: 2px;
-        font-weight: 400;
-      }
-      .mdl-iv {
-        font-size: 1.1rem;
-        color: var(--t);
-        font-weight: 600;
-      }
-      .mdl-ct {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        margin-bottom: 16px;
-      }
-      .mdl-ci {
-        padding: 8px;
-        border-radius: 50%;
-        background: var(--bg);
-        cursor: pointer;
-        transition: all 0.15s;
-        position: relative;
-      }
-      .mdl-ci:hover {
-        background: var(--p-l);
-        color: var(--p);
-      }
-      .mdl-ci svg {
-        width: 18px;
-        height: 18px;
-        color: var(--t-m);
-      }
-      .mdl-ci:hover svg {
-        color: var(--p);
-      }
-      .mdl-p {
-        display: flex;
-        gap: 12px;
-        margin-bottom: 16px;
-      }
-      .mdl-pb {
-        flex: 1;
-        padding: 12px;
-        background: var(--bg);
-        border-radius: var(--rad-sm);
-        text-align: center;
-      }
-      .mdl-pv {
-        font-size: 1.3rem;
-        font-weight: 700;
-        color: var(--t);
-        margin-bottom: 2px;
-      }
-      .mdl-pl {
-        font-size: 0.9rem;
-        color: var(--t-m);
-        font-weight: 400;
-      }
-      .mdl-a {
-        padding: 10px 16px;
-        background: var(--p);
-        color: var(--w);
-        border-radius: var(--rad-sm);
-        font-size: 1rem;
-        font-weight: 600;
-        cursor: pointer;
-        border: none;
-        font-family: "Poppins", sans-serif;
-        width: 100%;
-        text-align: center;
-        transition: all 0.15s;
-      }
-      .mdl-a:hover {
-        background: var(--p-h);
-      }
+.cl-status-pill {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 4px !important;
+  font-size: 9.5px !important;
+  font-weight: 700 !important;
+  padding: 1.5px 6px !important;
+  border-radius: 4px !important;
+}
+.cl-status-pill.pill-active   { background: #f0fdf4; color: #16a34a; border: 1px solid #bbf7d0; }
+.cl-status-pill.pill-inactive { background: #fdf2f8; color: #db2777; border: 1px solid #fbcfe8; }
+.cl-status-pill-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: currentColor;
+}
 
-      /* tooltip */
-      .tip {
-        position: absolute;
-        bottom: calc(100% + 8px);
-        left: 50%;
-        transform: translateX(-50%);
-        padding: 6px 12px;
-        background: var(--t);
-        color: var(--w);
-        border-radius: var(--rad-sm);
-        font-size: 0.9rem;
-        font-weight: 500;
-        white-space: nowrap;
-        opacity: 0;
-        pointer-events: none;
-        transition: all 0.15s;
-        z-index: 10;
-      }
-      .tip::after {
-        content: "";
-        position: absolute;
-        top: 100%;
-        left: 50%;
-        transform: translateX(-50%);
-        border: 5px solid transparent;
-        border-top-color: var(--t);
-      }
-      .mdl-ci:hover .tip {
-        opacity: 1;
-      }
+/* Identity Subcard Body */
+.cl-identity-body {
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+}
+.cl-logo-box {
+  width: 42px !important;
+  height: 42px !important;
+  border-radius: 8px !important;
+  background: #ffffff !important;
+  border: 1px solid #e2e8f0 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  overflow: hidden !important;
+  flex-shrink: 0 !important;
+}
+.cl-logo-img { width: 100%; height: 100%; object-fit: cover; }
+.cl-initials-fallback {
+  font-size: 14px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+}
+.cl-details-box {
+  display: flex !important;
+  flex-direction: column !important;
+  min-width: 0 !important;
+}
+.cl-name {
+  font-size: 13.5px !important;
+  font-weight: 700 !important;
+  color: #0f172a !important;
+  line-height: 1.25 !important;
+  cursor: pointer !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+.cl-name:hover { color: #009ef7 !important; }
+.cl-ind { font-size: 11px !important; color: #64748b !important; margin-top: 2px !important; white-space: nowrap !important; overflow: hidden !important; text-overflow: ellipsis !important; }
+.cl-size { font-size: 10px !important; color: #94a3b8 !important; }
 
-      /* scrollbar */
-      ::-webkit-scrollbar {
-        width: 6px;
-        height: 6px;
-      }
-      ::-webkit-scrollbar-track {
-        background: var(--bg);
-      }
-      ::-webkit-scrollbar-thumb {
-        background: var(--b);
-        border-radius: 3px;
-      }
-      ::-webkit-scrollbar-thumb:hover {
-        background: var(--t-l);
-      }
+/* Location Subcard Body */
+.cl-loc-body {
+  display: flex !important;
+  align-items: flex-start !important;
+  gap: 6px !important;
+}
+.cl-loc-pin { color: #2563eb; flex-shrink: 0; margin-top: 2px; }
+.cl-loc-lines { display: flex; flex-direction: column; min-width: 0; }
+.cl-loc-city { font-size: 12px; font-weight: 600; color: #0f172a; line-height: 1.2; }
+.cl-loc-state, .cl-loc-country { font-size: 10.5px; color: #64748b; line-height: 1.2; }
+.cl-loc-empty { font-size: 11px; color: #94a3b8; }
 
-      /* responsive */
-      @media (max-width: 1280px) {
-        .scards {
-          grid-template-columns: repeat(2, 1fr);
-        }
-      }
-      @media (max-width: 768px) {
-        .sb {
-          width: 60px;
-        }
-        .mc {
-          margin-left: 60px;
-        }
-        .nav-tx,
-        .sb-brand,
-        .sb-un,
-        .sb-ur,
-        .sb-arr,
-        .sb-sup span {
-          display: none;
-        }
-        .scards {
-          grid-template-columns: 1fr;
-        }
-        .sf {
-          flex-direction: column;
-        }
-        .sf-s {
-          width: 100%;
-        }
-        .tbl-h,
-        .tbl-r {
-          grid-template-columns: 40px 1fr;
-          gap: 8px;
-        }
-        .tbl-h span:nth-child(3),
-        .tbl-h span:nth-child(4),
-        .tbl-h span:nth-child(5),
-        .tbl-h span:nth-child(6),
-        .tbl-r .tbl-l,
-        .tbl-r .tbl-j,
-        .tbl-r .tbl-p,
-        .tbl-r .tbl-co {
-          display: none;
-        }
-        .pg {
-          flex-direction: column;
-          gap: 10px;
-        }
-      }
-      @media (max-width: 480px) {
-        .sb {
-          display: none;
-        }
-        .mc {
-          margin-left: 0;
-        }
-      }
+/* Jobs Subcard Body */
+.cl-jobs-body {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 3px !important;
+}
+.cl-job-line {
+  display: flex !important;
+  align-items: center !important;
+  gap: 5px !important;
+  font-size: 11px !important;
+  color: #64748b !important;
+}
+.cl-job-line.has-count { font-weight: 600 !important; color: #0f172a !important; }
+.cl-job-bullet {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+}
+.bullet-hiring  { background: #16a34a; }
+.bullet-hold    { background: #f59e0b; }
+.bullet-closed  { background: #64748b; }
+.bullet-neutral { background: #cbd5e1; }
+.cl-job-num { font-variant-numeric: tabular-nums; min-width: 12px; }
+.cl-job-label { font-size: 10.5px; }
 
-      /* ══════════════════════════════════════════════════════════
-         Agencies Hero  (ag-*)
-      ══════════════════════════════════════════════════════════ */
-      .ag-wrap {
-        background: #fff;
-        border-radius: 14px;
-        padding: 22px 24px 20px;
-        margin-bottom: 14px;
-        border: 1px solid #E5E7EB;
-      }
-      .ag-top {
-        display: flex;
-        align-items: flex-start;
-        justify-content: space-between;
-        margin-bottom: 20px;
-      }
-      .ag-title {
-        font-size: 20px;
-        font-weight: 700;
-        color: #111827;
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        margin-bottom: 4px;
-        line-height: 1.2;
-      }
-      .ag-shield { width: 20px; height: 20px; color: #2563EB; flex-shrink: 0; }
-      .ag-headline-sub { font-size: 12.5px; color: #6B7280; }
-      .ag-top-right { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
-      .ag-btn-primary {
-        display: inline-flex; align-items: center; gap: 6px;
-        background: #2563EB; color: #fff;
-        font-size: 13px; font-weight: 600;
-        padding: 9px 16px; border-radius: 8px; border: none;
-        cursor: pointer; font-family: 'Poppins', sans-serif;
-        white-space: nowrap; transition: background 0.15s;
-      }
-      .ag-btn-primary:hover { background: #1d4ed8; }
-      .ag-btn-outline {
-        display: inline-flex; align-items: center; gap: 7px;
-        background: #fff; color: #2563EB;
-        font-size: 13px; font-weight: 600;
-        padding: 8px 16px; border-radius: 8px;
-        border: 1.5px solid #BFDBFE; cursor: pointer;
-        font-family: 'Poppins', sans-serif;
-        white-space: nowrap; transition: background 0.15s;
-      }
-      .ag-btn-outline:hover { background: #EFF6FF; }
+/* Candidate Pipeline Subcard Body */
+.cl-pipe-body {
+  display: flex !important;
+  align-items: center !important;
+}
+.cl-pipeline-flow {
+  display: flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  width: 100% !important;
+  overflow-x: auto !important;
+}
+.cl-pipeline-flow::-webkit-scrollbar { display: none; }
+.cl-pipe-step {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  gap: 2px !important;
+  flex: 1 !important;
+}
+.cl-pipe-pill {
+  min-width: 20px !important;
+  height: 18px !important;
+  padding: 0 5px !important;
+  border-radius: 9px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-size: 10.5px !important;
+  font-weight: 700 !important;
+  background: #f1f5f9 !important;
+  color: #64748b !important;
+  font-variant-numeric: tabular-nums !important;
+}
+.cl-pipe-step.has-count .pill-sourcing     { background: #eff6ff; color: #2563eb; }
+.cl-pipe-step.has-count .pill-screening    { background: #eef2ff; color: #4f46e5; }
+.cl-pipe-step.has-count .pill-evaluation   { background: #faf5ff; color: #9333ea; }
+.cl-pipe-step.has-count .pill-negotiations { background: #fef3c7; color: #d97706; }
+.cl-pipe-step.has-count .pill-offer        { background: #ecfdf5; color: #059669; }
+.cl-pipe-step.has-count .pill-joined       { background: #dcfce7; color: #16a34a; }
+.cl-pipe-step.has-count .pill-rejected     { background: #fee2e2; color: #dc2626; }
+.cl-pipe-step.has-count .pill-interview    { background: #fef3c7; color: #b45309; }
 
-      /* Stat cards */
-      .ag-stats { display: flex; gap: 14px; }
-      .ag-card {
-        flex: 1; background: #fff; border: 1px solid #E5E7EB;
-        border-radius: 12px; padding: 16px 18px;
-        display: flex; align-items: center;
-        justify-content: space-between; gap: 12px; min-width: 0;
-        transition: box-shadow 0.15s, transform 0.15s;
-      }
-      .ag-card:hover { box-shadow: 0 4px 14px rgba(0,0,0,0.08); transform: translateY(-1px); }
-      .ag-card-left { display: flex; align-items: center; gap: 12px; min-width: 0; }
-      .ag-icon {
-        width: 46px; height: 46px; border-radius: 50%;
-        display: flex; align-items: center; justify-content: center; flex-shrink: 0;
-      }
-      .ag-icon svg { width: 22px; height: 22px; }
-      .ag-icon-blue   { background: #EFF6FF; color: #2563EB; }
-      .ag-icon-green  { background: #DCFCE7; color: #16A34A; }
-      .ag-icon-purple { background: #F3F0FF; color: #7C3AED; }
-      .ag-icon-orange { background: #FFF7ED; color: #EA580C; }
-      .ag-card-info { min-width: 0; }
-      .ag-num { font-size: 22px; font-weight: 700; color: #111827; line-height: 1.1; }
-      .ag-lbl { font-size: 12.5px; font-weight: 600; color: #374151; margin-top: 2px; white-space: nowrap; }
-      .ag-sub-lbl { font-size: 11px; color: #9CA3AF; margin-top: 1px; white-space: nowrap; }
-      .ag-card-right { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; flex-shrink: 0; }
-      .ag-trend { display: flex; align-items: center; gap: 4px; font-size: 11.5px; font-weight: 600; white-space: nowrap; }
-      .ag-trend-up     { color: #16A34A; }
-      .ag-trend-down   { color: #DC2626; }
-      .ag-trend-neutral{ color: #6B7280; }
-      .ag-sparkline { width: 80px; height: 32px; }
+.cl-pipe-label {
+  font-size: 9.5px !important;
+  color: #94a3b8 !important;
+  white-space: nowrap !important;
+}
+.cl-pipe-divider {
+  width: 1px;
+  height: 22px;
+  background: #e2e8f0;
+  margin: 0 2px;
+}
 
-      /* Filter bar */
-      .ag-filter-bar {
-        display: flex; align-items: center; gap: 10px;
-        background: #fff; border: 1px solid #E5E7EB;
-        border-radius: 12px; padding: 12px 16px;
-        margin-bottom: 14px; flex-wrap: nowrap;
-      }
-      .ag-search-wrap { position: relative; flex: 1; min-width: 200px; }
-      .ag-search-icon {
-        position: absolute; left: 10px; top: 50%;
-        transform: translateY(-50%); color: #9CA3AF; pointer-events: none;
-      }
-      .ag-search-input {
-        width: 100%; border: 1px solid #E5E7EB; border-radius: 8px;
-        padding: 7px 10px 7px 32px; font-size: 12.5px; color: #374151;
-        font-family: 'Poppins', sans-serif; outline: none;
-        background: #F9FAFB; transition: border-color 0.15s;
-      }
-      .ag-search-input:focus { border-color: #93C5FD; background: #fff; }
-      .ag-search-input::placeholder { color: #9CA3AF; }
-      .ag-filter-group { display: flex; align-items: center; gap: 8px; flex-wrap: nowrap; }
-      .ag-select-wrap { position: relative; display: flex; flex-direction: column; min-width: 90px; }
-      .ag-select-label {
-        font-size: 10px; font-weight: 600; color: #9CA3AF;
-        text-transform: uppercase; letter-spacing: 0.3px;
-        line-height: 1; margin-bottom: 2px; pointer-events: none;
-      }
-      .ag-select {
-        appearance: none; -webkit-appearance: none;
-        border: 1px solid #E5E7EB; border-radius: 8px;
-        padding: 5px 28px 5px 10px; font-size: 12.5px; font-weight: 600;
-        color: #374151; font-family: 'Poppins', sans-serif;
-        background: #fff; outline: none; cursor: pointer;
-        transition: border-color 0.15s; white-space: nowrap;
-      }
-      .ag-select:focus { border-color: #93C5FD; }
-      .ag-select-caret { position: absolute; right: 8px; bottom: 8px; color: #9CA3AF; pointer-events: none; }
-      .ag-filters-btn {
-        display: inline-flex; align-items: center; gap: 6px;
-        background: #F9FAFB; color: #374151;
-        font-size: 12.5px; font-weight: 600;
-        padding: 7px 14px; border-radius: 8px; border: 1px solid #E5E7EB;
-        cursor: pointer; font-family: 'Poppins', sans-serif;
-        white-space: nowrap; align-self: flex-end; margin-bottom: 1px;
-        transition: background 0.15s;
-      }
-      .ag-filters-btn:hover { background: #E5E7EB; }
+/* Bottom Activity Strip */
+.cl-card-bottom-strip {
+  background: #f8fafc !important;
+  border: 1px solid #eef2f6 !important;
+  border-radius: 6px !important;
+  padding: 7px 12px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  font-size: 11px !important;
+  color: #64748b !important;
+  margin-top: 2px !important;
+}
+.cl-bottom-meta {
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  flex-wrap: wrap !important;
+}
+.cl-meta-item {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 4px !important;
+}
+.cl-meta-dot { color: #cbd5e1; }
+.cl-apps-badge {
+  background: #e2e8f0;
+  color: #475569;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 8px;
+}
+.cl-apps-badge.has-apps {
+  background: #eff6ff;
+  color: #2563eb;
+}
+.cl-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  display: inline-block;
+}
 
-      /* ==========================================================================
-         Add Agency Right-Side Drawer (Isolated to Service Company Consultancy)
-         Replaces centered modal with a 520px smooth slide-in drawer on the right.
-         ========================================================================== */
-      .add-agency-drawer-overlay {
-        position: fixed;
-        top: 0;
-        right: 0;
-        bottom: 0;
-        left: 0;
-        background: rgba(15, 23, 42, 0.45);
-        backdrop-filter: blur(2px);
-        -webkit-backdrop-filter: blur(2px);
-        opacity: 0;
-        visibility: hidden;
-        z-index: 10055;
-        transition: opacity 0.25s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-      }
-      .add-agency-drawer-overlay.show {
-        opacity: 1;
-        visibility: visible;
-      }
+/* Empty State */
+.cl-empty-state {
+  text-align: center !important;
+  padding: 48px 24px !important;
+  background: #ffffff !important;
+  border: 1px dashed #cbd5e1 !important;
+  border-radius: 12px !important;
+  margin: 16px 0 !important;
+}
+.cl-empty-icon {
+  width: 64px !important;
+  height: 64px !important;
+  border-radius: 50% !important;
+  background: #f8fafc !important;
+  border: 1px solid #e2e8f0 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  margin: 0 auto 12px !important;
+}
+.cl-empty-title {
+  font-size: 15px !important;
+  font-weight: 700 !important;
+  color: #0f172a !important;
+  margin-bottom: 4px !important;
+}
+.cl-empty-desc {
+  font-size: 12px !important;
+  color: #64748b !important;
+}
 
-      .add-agency-drawer {
-        position: fixed;
-        top: 0;
-        right: 0;
-        bottom: 0;
-        width: 520px;
-        max-width: 90vw;
-        height: 100vh;
-        height: 100dvh;
-        background: #ffffff;
-        display: flex;
-        flex-direction: column;
-        overflow: hidden;
-        z-index: 10060;
-        box-shadow: -8px 0 28px rgba(0, 0, 0, 0.12), -2px 0 8px rgba(0, 0, 0, 0.04);
-        border-left: 1px solid #e2e8f0;
-        transform: translateX(100%);
-        transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1);
-        font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      }
-      .add-agency-drawer.open {
-        transform: translateX(0);
-      }
-
-      body.add-agency-drawer-open {
-        overflow: hidden !important;
-      }
-
-      .add-agency-drawer__header {
-        flex-shrink: 0;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        padding: 20px 24px;
-        background: #ffffff;
-        border-bottom: 1px solid #edf2f7;
-        gap: 16px;
-      }
-      .add-agency-drawer__title {
-        margin: 0;
-        font-size: 17px;
-        font-weight: 600;
-        color: #111827;
-        line-height: 1.4;
-        letter-spacing: -0.2px;
-        font-family: 'Poppins', sans-serif;
-      }
-      .add-agency-drawer__close {
-        width: 32px;
-        height: 32px;
-        padding: 0;
-        border: 1px solid #e2e8f0;
-        border-radius: 8px;
-        background: #ffffff;
-        color: #64748b;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        cursor: pointer;
-        flex-shrink: 0;
-        transition: all 0.15s ease;
-      }
-      .add-agency-drawer__close:hover,
-      .add-agency-drawer__close:focus {
-        background: #f8fafc;
-        color: #0f172a;
-        border-color: #cbd5e1;
-        outline: none;
-      }
-
-      .add-agency-drawer__body {
-        flex: 1;
-        min-height: 0;
-        overflow-y: auto;
-        padding: 24px;
-        background: #ffffff;
-      }
-      .add-agency-drawer__section {
-        margin-bottom: 22px;
-      }
-      .add-agency-drawer__section:last-child {
-        margin-bottom: 0;
-      }
-      .add-agency-drawer__label {
-        display: block;
-        font-size: 13px;
-        font-weight: 600;
-        color: #1e293b;
-        margin-bottom: 8px;
-        line-height: 1.4;
-        font-family: 'Poppins', sans-serif;
-      }
-      .add-agency-drawer__input-group {
-        display: flex;
-        align-items: stretch;
-        gap: 10px;
-      }
-      .add-agency-drawer__input {
-        flex: 1;
-        min-width: 0;
-        height: 44px;
-        padding: 10px 14px;
-        font-size: 13px;
-        font-family: 'Poppins', sans-serif;
-        color: #1e293b;
-        background: #f8fafc !important;
-        border: 1px solid #dce3ee !important;
-        border-radius: 8px !important;
-        transition: border-color 0.15s, background-color 0.15s, box-shadow 0.15s;
-      }
-      .add-agency-drawer__input:focus {
-        background: #ffffff !important;
-        border-color: #2563eb !important;
-        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12) !important;
-        outline: none !important;
-      }
-      .add-agency-drawer__input[readonly] {
-        background: #f8fafc !important;
-        color: #475569 !important;
-        cursor: text;
-      }
-      .add-agency-drawer__btn {
-        height: 44px;
-        min-width: 104px;
-        padding: 0 18px;
-        font-size: 13px;
-        font-weight: 600;
-        font-family: 'Poppins', sans-serif;
-        border-radius: 8px !important;
-        border: 1px solid #dce3ee !important;
-        background: #f1f5f9 !important;
-        color: #334155 !important;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        white-space: nowrap;
-        cursor: pointer;
-        flex-shrink: 0;
-        transition: all 0.15s ease;
-      }
-      .add-agency-drawer__btn:hover,
-      .add-agency-drawer__btn:focus {
-        background: #e2e8f0 !important;
-        color: #0f172a !important;
-        border-color: #cbd5e1 !important;
-        outline: none !important;
-      }
-
-      .add-agency-drawer__divider {
-        display: flex;
-        align-items: center;
-        text-align: center;
-        margin: 24px 0;
-      }
-      .add-agency-drawer__divider::before,
-      .add-agency-drawer__divider::after {
-        content: '';
-        flex: 1;
-        border-bottom: 1px solid #e2e8f0;
-      }
-      .add-agency-drawer__divider span {
-        padding: 0 14px;
-        font-size: 12px;
-        font-weight: 600;
-        color: #94a3b8;
-        letter-spacing: 0.5px;
-        text-transform: uppercase;
-        font-family: 'Poppins', sans-serif;
-      }
-
-      .add-agency-drawer__footer {
-        flex-shrink: 0;
-        display: flex;
-        align-items: center;
-        justify-content: flex-end;
-        padding: 16px 24px;
-        background: #ffffff;
-        border-top: 1px solid #edf2f7;
-        gap: 12px;
-      }
-      .add-agency-drawer__cancel-btn {
-        height: 40px;
-        padding: 0 22px;
-        font-size: 13px;
-        font-weight: 500;
-        font-family: 'Poppins', sans-serif;
-        border-radius: 8px !important;
-        border: 1px solid #dce3ee !important;
-        background: #ffffff !important;
-        color: #475569 !important;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        cursor: pointer;
-        transition: all 0.15s ease;
-      }
-      .add-agency-drawer__cancel-btn:hover,
-      .add-agency-drawer__cancel-btn:focus {
-        background: #f8fafc !important;
-        color: #0f172a !important;
-        border-color: #cbd5e1 !important;
-        outline: none !important;
-      }
-
-      @media (max-width: 576px) {
-        .add-agency-drawer {
-          width: 100% !important;
-          max-width: 100vw !important;
-          left: 0 !important;
-          right: 0 !important;
-          box-shadow: none;
-        }
-        .add-agency-drawer__header {
-          padding: 16px 18px;
-        }
-        .add-agency-drawer__body {
-          padding: 18px;
-        }
-        .add-agency-drawer__footer {
-          padding: 14px 18px;
-        }
-      }
-      @media (max-width: 420px) {
-        .add-agency-drawer__input-group {
-          flex-direction: column;
-          gap: 8px;
-        }
-        .add-agency-drawer__btn {
-          width: 100%;
-          height: 42px;
-        }
-      }
-    </style>
-
-    <link href="{{ asset('demo/css/filterStyle.css') }}{{ TM_VERSION }}" rel="stylesheet" type="text/css" />
-    <link href="{{ asset('demo/css/topCard.css') }}{{ TM_VERSION }}" rel="stylesheet" type="text/css" />
-
+/* ── 15.6" Laptop Responsiveness (1366x768 & 1920x1080) ── */
+@media (max-width: 1400px) {
+  .cl-stat-grid {
+    grid-template-columns: repeat(3, 1fr) !important;
+  }
+  .cl-subcards-grid, .tbl-h {
+    grid-template-columns: 2fr 1.2fr 1fr 2.2fr !important;
+    gap: 10px !important;
+  }
+}
+@media (max-width: 1100px) {
+  .cl-subcards-grid, .tbl-h {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+}
+@media (max-width: 768px) {
+  .cl-stat-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+  .cl-subcards-grid, .tbl-h {
+    grid-template-columns: 1fr !important;
+  }
+  .cl-header {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+  }
+}
+</style>
 @endpush
+
 @section('content')
-    @php
+@php
+    $totalAgenciesCount = (int)($spartnerDataCnt['spartnerAll'] ?? 0);
+    $directAgenciesCount = (int)($spartnerDataCnt['clientDirect'] ?? 0);
+    $marketplaceAgenciesCount = (int)($spartnerDataCnt['clientCustom'] ?? max(0, $totalAgenciesCount - $directAgenciesCount));
+    $activeAgenciesCount = (int)($spartnerDataCnt['workingOnJobs'] ?? 0);
+    $inactiveAgenciesCount = (int)max(0, $totalAgenciesCount - $activeAgenciesCount);
+    $pendingRequestsCount = (int)($spartnerDataCnt['sentRequest'] ?? 0);
 
-        $sp_url = route('service_company.consultancy.suggestedPartners', ':id');
-        $sp_url = str_replace(':id', 2, $sp_url);
+    $directPercent = ($totalAgenciesCount > 0) ? round(($directAgenciesCount / $totalAgenciesCount) * 100) : 0;
+@endphp
 
-        $rp_url = route('service_company.consultancy.requestPartners', ':id');
-        $rp_url = str_replace(':id', 2, $rp_url);
+<script>
+    // ── Authoritative Single Source of Truth for Agency Tab Counters ──
+    window.AGENCY_DATA_COUNTERS = {
+        spartnerAll: {{ (int)($totalAgenciesCount ?? 0) }},
+        spartnerCustom: {{ (int)($marketplaceAgenciesCount ?? 0) }},
+        spartnerDirect: {{ (int)($directAgenciesCount ?? 0) }},
+        spartnerHiring: {{ (int)($activeAgenciesCount ?? 0) }},
+        spartnerInactive: {{ (int)($inactiveAgenciesCount ?? 0) }},
+        spartnerRequest: {{ (int)($pendingRequestsCount ?? 0) }}
+    };
 
-    @endphp
-    <!--begin::Toolbar-->
-    <div class="toolbar d-none" id="kt_toolbar">
-        <!--begin::Container-->
-        <div id="kt_toolbar_container" class="container-fluid d-flex flex-stack">
-            <div data-kt-swapper="true" data-kt-swapper-mode="prepend"
-                data-kt-swapper-parent="{default: '#kt_content_container', 'lg': '#kt_toolbar_container'}"
-                class="page-title d-flex align-items-center flex-wrap me-3 mb-5 mb-lg-0">
-                <div class="d-flex flex-column">
-                    <h5 class="d-flex align-items-center text-dark fw-bolder my-1"> <a href="javascript:void(0);"
-                            class="text-primary">{{__('messages.Agencies')}}</a> </h5>
-                    <span class="text-gray-600" id="span_spartnerAll"></span>
-                    {{-- {{ @$spartnerDataCnt['spartnerAll'] }} --}}
+    function updateAgencyTabCounters(counts) {
+        if (!counts || typeof counts !== 'object') return;
+
+        var all = counts.spartnerAll !== undefined ? Number(counts.spartnerAll) : null;
+        var direct = counts.spartnerDirect !== undefined ? Number(counts.spartnerDirect) : null;
+        var custom = counts.spartnerCustom !== undefined ? Number(counts.spartnerCustom) : null;
+        var hiring = counts.spartnerHiring !== undefined ? Number(counts.spartnerHiring) : null;
+        var inactive = counts.spartnerInactive !== undefined ? Number(counts.spartnerInactive) : null;
+        var request = counts.spartnerRequest !== undefined ? Number(counts.spartnerRequest) : null;
+
+        if (all !== null && !isNaN(all)) {
+            $('#span_spartnerAll').text(all);
+            window.AGENCY_DATA_COUNTERS.spartnerAll = all;
+        }
+        if (custom !== null && !isNaN(custom)) {
+            $('#span_spartnerCustom').text(custom);
+            window.AGENCY_DATA_COUNTERS.spartnerCustom = custom;
+        }
+        if (direct !== null && !isNaN(direct)) {
+            $('#span_spartnerDirect').text(direct);
+            window.AGENCY_DATA_COUNTERS.spartnerDirect = direct;
+        }
+        if (hiring !== null && !isNaN(hiring)) {
+            $('#span_spartnerHiring').text(hiring);
+            window.AGENCY_DATA_COUNTERS.spartnerHiring = hiring;
+        }
+        if (inactive !== null && !isNaN(inactive)) {
+            $('#span_spartnerInactive').text(inactive);
+            window.AGENCY_DATA_COUNTERS.spartnerInactive = inactive;
+        }
+        if (request !== null && !isNaN(request)) {
+            $('#span_spartnerRequest').text(request);
+            window.AGENCY_DATA_COUNTERS.spartnerRequest = request;
+        }
+    }
+    window.updateAgencyTabCounters = updateAgencyTabCounters;
+</script>
+
+<!--begin::Content-->
+<div class="content d-flex flex-column flex-column-fluid pt-4" id="kt_content">
+  <!--begin::Post-->
+  <div class="post d-flex flex-column-fluid" id="kt_post">
+    <!--begin::Container-->
+    <div id="kt_content_container" class="container-fluid px-3">
+
+        <!-- ── TIER 1: TOP HEADER TOOLBAR CARD ── -->
+        <div class="cl-header cl-header-card">
+            <div class="cl-header-left">
+                <div class="cl-header-icon-box">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+                        <circle cx="9" cy="7" r="4"/>
+                        <path d="M22 21v-2a4 4 0 0 0-3-3.87"/>
+                        <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                    </svg>
                 </div>
-                <span class="h-20px border-gray-200 border-start mx-4"></span>
-    
-            </div>
-            <!--begin::Actions-->
-            <div class="d-flex align-items-center py-1">
-                <!--begin::Search-->
-                <div class="d-flex align-items-center position-relative my-1 me-3">
-                    <!--begin::Svg Icon | path: icons/duotune/general/gen021.svg-->
-
-                    <!--end::Svg Icon-->
-                    <input type="hidden" data-kt-user-table-filter="search" name="inputSearch" id="inputSearch"
-                        class="form-control form-control-solid w-250px ps-14" style="padding: .6rem 1rem;"
-                        placeholder="Search..." />
-                </div>
-                <!--end::Search-->
-                <div class="card-toolbar">
-                    <!--begin::Toolbar-->
-                    <div class="d-flex justify-content-end" data-kt-user-table-toolbar="base">
-
-                        <!--begin::Menu 1-->
-                        <div class="menu menu-sub menu-sub-dropdown w-300px w-md-325px" data-kt-menu="true">
-                            <!--begin::Header-->
-                            <div class="px-7 py-5">
-                                <div class="fs-5 text-dark fw-bolder">Filter Options</div>
-                            </div>
-                            <!--end::Header-->
-                            <!--begin::Separator-->
-                            <div class="separator border-gray-200"></div>
-                            <!--end::Separator-->
-                            <!--begin::Content-->
-                            <div class="px-7 py-5" data-kt-user-table-filter="form">
-                                <!--begin::Input group-->
-                                <div class="mb-10">
-                                    <label class="form-label fs-6 fw-bold">Role:</label>
-                                    <select class="form-select form-select-solid fw-bolder" data-kt-select2="true"
-                                        data-placeholder="Select option" data-allow-clear="true"
-                                        data-kt-user-table-filter="role" data-hide-search="true">
-                                        <option></option>
-                                        <option value="Administrator">Administrator</option>
-                                        <option value="Analyst">Analyst</option>
-                                        <option value="Developer">Developer</option>
-                                        <option value="Support">Support</option>
-                                        <option value="Trial">Trial</option>
-                                    </select>
-                                </div>
-                                <!--end::Input group-->
-                                <!--begin::Input group-->
-                                <div class="mb-10">
-                                    <label class="form-label fs-6 fw-bold">Two Step Verification:</label>
-                                    <select class="form-select form-select-solid fw-bolder" data-kt-select2="true"
-                                        data-placeholder="Select option" data-allow-clear="true"
-                                        data-kt-user-table-filter="two-step" data-hide-search="true">
-                                        <option></option>
-                                        <option value="Enabled">Enabled</option>
-                                    </select>
-                                </div>
-                                <!--end::Input group-->
-                                <!--begin::Actions-->
-                                <div class="d-flex justify-content-end">
-                                    <button type="reset" class="btn btn-light btn-active-light-primary fw-bold me-2 px-6"
-                                        data-kt-menu-dismiss="true" data-kt-user-table-filter="reset">Reset</button>
-                                    <button type="submit" class="btn btn-primary fw-bold px-6" data-kt-menu-dismiss="true"
-                                        data-kt-user-table-filter="filter">Apply</button>
-                                </div>
-                                <!--end::Actions-->
-                            </div>
-                            <!--end::Content-->
-                        </div>
-                        <!--end::Menu 1-->
-                        <!--end::Filter-->
-                    </div>
-                    <!--end::Toolbar-->
-                    <!--begin::Group actions-->
-                    <div class="d-flex justify-content-end align-items-center d-none" data-kt-user-table-toolbar="selected">
-                        <div class="fw-bolder me-5"> <span class="me-2"
-                                data-kt-user-table-select="selected_count"></span>Selected</div>
-                        <button type="button" class="btn btn-danger" data-kt-user-table-select="delete_selected">Delete
-                            Selected</button>
-                    </div>
-                </div>
-            </div>
-            <!--end::Actions-->
-        </div>
-        <!--end::Container-->
-    </div>
-    <!--end::Toolbar-->
-
-    <!--begin::Content-->
-    <div class="content d-flex flex-column flex-column-fluid pt-4" id="kt_content" style="margin-top: -60px;">
-        <div class="post d-flex flex-column-fluid" id="kt_post">
-            <div id="kt_content_container" class="container-fluid px-3">
-
-                <main class="main-content">
-                    <!-- Start Content Area -->
-                    <div class="content-area">
-
-                        
-
-                        <!-- HERO -->
-                        <div class="ag-wrap">
-                            <div class="ag-top">
-                                <div>
-                                    <div class="ag-title">
-                                        Agencies
-                                        <svg class="ag-shield" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                                            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-                                            <path d="m9 12 2 2 4-4" stroke="#16A34A" stroke-width="2.5"/>
-                                        </svg>
-                                    </div>
-                                    <div class="ag-headline-sub">Manage and monitor all your recruitment partners in one place.</div>
-                                </div>
-                                <div class="ag-top-right">
-                                    @if (in_array('add_staffing_partners', $userPermissions))
-                                    <button type="button" class="ag-btn-primary add_staffing_partners_frm" id="open_add_agency_drawer" aria-haspopup="dialog" aria-expanded="false" aria-controls="add_agency_drawer">
-                                        <svg width="14" height="14" fill="none" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" stroke="#fff" stroke-width="2.5" stroke-linecap="round"/></svg>
-                                        Add Agency
-                                        <svg width="12" height="12" fill="none" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                                    </button>
-                                    @endif
-                                </div>
-                            </div>
-
-                            <div class="ag-stats">
-                                <!-- Card 1: All Agencies -->
-                                <div class="ag-card">
-                                    <div class="ag-card-left">
-                                        <div class="ag-icon ag-icon-blue">
-                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
-                                                <path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>
-                                            </svg>
-                                        </div>
-                                        <div class="ag-card-info">
-                                            <div class="ag-num" id="span_spartnerAll">{{ $spartnerDataCnt['spartnerAll'] ?? 0 }}</div>
-                                            <div class="ag-lbl">All Agencies</div>
-                                            <div class="ag-sub-lbl">Registered Partners</div>
-                                        </div>
-                                    </div>
-                                    <div class="ag-card-right">
-                                        <div class="ag-trend ag-trend-up">
-                                            <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M6 9V3M3 6l3-3 3 3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                                            {{ $spartnerDataCnt['spartnerThisMonth'] ?? 0 }} this month
-                                        </div>
-                                        <svg class="ag-sparkline" viewBox="0 0 80 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                            <polyline points="0,24 12,20 24,22 36,14 48,16 60,10 72,8 80,6" stroke="#2563EB" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-                                        </svg>
-                                    </div>
-                                </div>
-
-                                <!-- Card 2: Newly Onboarded -->
-                                <div class="ag-card">
-                                    <div class="ag-card-left">
-                                        <div class="ag-icon ag-icon-green">
-                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-                                                <path d="M9 12l2 2 4-4"/>
-                                            </svg>
-                                        </div>
-                                        <div class="ag-card-info">
-                                            <div class="ag-num">{{ $spartnerDataCnt['newlyOnboarded'] ?? 0 }}</div>
-                                            <div class="ag-lbl">Newly Onboarded</div>
-                                            <div class="ag-sub-lbl">Last 7 Days</div>
-                                        </div>
-                                    </div>
-                                    <div class="ag-card-right">
-                                        <div class="ag-trend ag-trend-up">
-                                            <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M6 9V3M3 6l3-3 3 3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                                            {{ $spartnerDataCnt['newlyOnboarded'] ?? 0 }} this week
-                                        </div>
-                                        <svg class="ag-sparkline" viewBox="0 0 80 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                            <polyline points="0,26 12,22 24,24 36,18 48,14 60,12 72,8 80,6" stroke="#16A34A" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-                                        </svg>
-                                    </div>
-                                </div>
-
-                                <!-- Card 3: Working on Jobs -->
-                                <div class="ag-card">
-                                    <div class="ag-card-left">
-                                        <div class="ag-icon ag-icon-purple">
-                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                                <rect x="2" y="7" width="20" height="14" rx="2"/>
-                                                <path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/>
-                                            </svg>
-                                        </div>
-                                        <div class="ag-card-info">
-                                            <div class="ag-num">{{ $spartnerDataCnt['workingOnJobs'] ?? 0 }}</div>
-                                            <div class="ag-lbl">Working on Jobs</div>
-                                            <div class="ag-sub-lbl">Assigned Agencies</div>
-                                        </div>
-                                    </div>
-                                    <div class="ag-card-right">
-                                        <div class="ag-trend ag-trend-up">
-                                            <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M6 9V3M3 6l3-3 3 3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                                            {{ $spartnerDataCnt['workingOnJobsThisMonth'] ?? 0 }} this month
-                                        </div>
-                                        <svg class="ag-sparkline" viewBox="0 0 80 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                            <polyline points="0,22 12,18 24,20 36,16 48,20 60,12 72,10 80,8" stroke="#7C3AED" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-                                        </svg>
-                                    </div>
-                                </div>
-
-                                <!-- Card 4: Actively Submitting -->
-                                <div class="ag-card">
-                                    <div class="ag-card-left">
-                                        <div class="ag-icon ag-icon-orange">
-                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                                <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
-                                            </svg>
-                                        </div>
-                                        <div class="ag-card-info">
-                                            <div class="ag-num">{{ $spartnerDataCnt['activelySubmitting'] ?? 0 }}</div>
-                                            <div class="ag-lbl">Actively Submitting</div>
-                                            <div class="ag-sub-lbl">Last 30 Days</div>
-                                        </div>
-                                    </div>
-                                    <div class="ag-card-right">
-                                        <div class="ag-trend ag-trend-neutral">Today: {{ $spartnerDataCnt['activelySubmittingToday'] ?? 0 }}</div>
-                                        <svg class="ag-sparkline" viewBox="0 0 80 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                            <polyline points="0,20 12,16 24,22 36,14 48,18 60,10 72,16 80,12" stroke="#EA580C" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-                                        </svg>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- FILTER BAR -->
-                        <div class="ag-filter-bar">
-                            <div class="ag-search-wrap">
-                                <svg class="ag-search-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                    <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
-                                </svg>
-                                <input type="text" class="ag-search-input" name="inputJobSearch"
-                                    placeholder="Search agency name, contact, email, skills..." id="kt_tagify_2" onkeyup="filtersdataget()"/>
-                            </div>
-
-                            <div class="ag-filter-group">
-                                <div class="ag-select-wrap">
-                                    <div class="ag-select-label">Status</div>
-                                    <select class="ag-select" id="sortingfilter" onchange="filtersdataget()">
-                                        <option value="">All Status</option>
-                                        <option value="1">Active</option>
-                                        <option value="2">Inactive</option>
-                                    </select>
-                                    <svg class="ag-select-caret" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
-                                </div>
-
-                                <div class="ag-select-wrap">
-                                    <div class="ag-select-label">Performance</div>
-                                    <select class="ag-select" id="agency_performance" onchange="filtersdataget()">
-                                        <option value="">All</option>
-                                        <option value="high">High</option>
-                                        <option value="medium">Medium</option>
-                                        <option value="low">Low</option>
-                                    </select>
-                                    <svg class="ag-select-caret" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
-                                </div>
-
-                                <div class="ag-select-wrap">
-                                    <div class="ag-select-label">Specialization</div>
-                                    <select class="ag-select" id="country" onchange="filtersdataget()">
-                                        <option value="">All</option>
-                                        @if ($countries)
-                                            @foreach ($countries as $country)
-                                                <option value="{{ $country->id }}">{{ $country->country_name }}</option>
-                                            @endforeach
-                                        @endif
-                                    </select>
-                                    <svg class="ag-select-caret" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
-                                </div>
-
-                                <div class="ag-select-wrap">
-                                    <div class="ag-select-label">Response SLA</div>
-                                    <select class="ag-select" id="response_sla" onchange="filtersdataget()">
-                                        <option value="">All</option>
-                                        <option value="24h">Within 24h</option>
-                                        <option value="48h">Within 48h</option>
-                                        <option value="72h">Within 72h</option>
-                                    </select>
-                                    <svg class="ag-select-caret" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
-                                </div>
-
-                                <button class="ag-filters-btn" data-toggle="modal" data-target="#apptrackerfilter">
-                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                        <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>
-                                    </svg>
-                                    Filters
-                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
-                                </button>
-                            </div>
-                        </div>
-
-                        <!-- Table -->
-                        <div class="tbl">
-                        <div class="tbl-w">
-                            <div class="tbl-h">
-                            <span></span>
-                            <span
-                                >Agency
-                                <svg
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                stroke-width="3"
-                                >
-                                <polyline points="6 9 12 15 18 9" /></svg
-                            ></span>
-                            <span>Location</span>
-                            <span>Jobs</span>
-                            <span
-                                >Performance
-                                <svg
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                stroke-width="2"
-                                >
-                                <circle cx="12" cy="12" r="10" />
-                                <line x1="12" y1="16" x2="12" y2="12" />
-                                <line x1="12" y1="8" x2="12.01" y2="8" /></svg
-                            ></span>
-                            <span>Connected On</span>
-                            </div>
-                              @if (in_array('view_staffing_partners', $userPermissions))
-                                <div class="loadingMessage loadingMessagestaffingpartnerajax" id="" style="display: none; position: absolute;">Processing...</div>
-                                <div id="staffingpartnerajax"></div>
-                            @endif
-                        </div>
-                        </div>
-
-                        <!-- Pagination -->
-                        <div class="">
-                            <div id="paginationstaffingpartner"></div>
-                        </div>
-                        
-
-
-                    </div>     
-                    <!-- End Content Area -->               
-                </main>
-
-            </div>
-        </div>
-    </div>
-    <!--end::Content-->
-
-    <!--begin::Add staffing partners - popup-->
-    <!--end::Add staffing partners - popup-->
-    <div id="kt_activitiesSP_toggle"></div>
-    <div id="kt_activitiesSP" class="bg-body" data-kt-drawer="true" data-kt-drawer-name="activities"
-        data-kt-drawer-activate="true" data-kt-drawer-overlay="true" data-kt-drawer-width=""
-        data-kt-drawer-direction="end" data-kt-drawer-toggle="#kt_activitiesSP_toggle"
-        data-kt-drawer-close="#kt_activitiesSP_close">
-        <div class="card shadow-none rounded-0 w-100">
-            <div class="card-header px-5 py-0" id="kt_activities_header">
-                <div class="d-flex align-items-center py-1">
-                    <h3 class="card-title fw-bolder text-dark">{{__('messages.Agencies')}}</h3>
-                    <span class="h-20px border-gray-200 border-start mx-4 d-none"></span>
-                </div>
-                <div class="card-toolbar">
-                    <button type="button" class="btn btn-sm btn-icon btn-active-light-primary me-n5"
-                        id="kt_activitiesSP_close"> <span class="svg-icon svg-icon-1">
-                            <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
-                                width="24px" height="24px" viewBox="0 0 24 24" version="1.1">
-                                <g transform="translate(12.000000, 12.000000) rotate(-45.000000) translate(-12.000000, -12.000000) translate(4.000000, 4.000000)"
-                                    fill="#000000">
-                                    <rect fill="#000000" x="0" y="7" width="16" height="2" rx="1" />
-                                    <rect fill="#000000" opacity="0.5"
-                                        transform="translate(8.000000, 8.000000) rotate(-270.000000) translate(-8.000000, -8.000000)"
-                                        x="0" y="7" width="16" height="2" rx="1" />
-                                </g>
+                <div>
+                    <div class="cl-header-title-row">
+                        <h1 class="cl-header-title">Agencies Tracker</h1>
+                        <span class="cl-verified-badge" title="Verified ATS Partner Module">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                                <path d="m9 12 2 2 4-4" stroke-width="2.5"/>
                             </svg>
-                        </span> </button>
+                        </span>
+                    </div>
+                    <div class="cl-header-subtitle">Manage recruitment agency partners, shared jobs, candidate submissions, and placement performance.</div>
                 </div>
             </div>
-            <div class="card-body position-relative px-0 py-0" id="kt_activitiesSP_body"> &nbsp; </div>
-        </div>
-    </div>
-    <!--begin::Add staffing partners - right-side drawer-->
-    <div class="add-agency-drawer-overlay" id="add_agency_drawer_overlay" aria-hidden="true"></div>
 
-    <div class="add-agency-drawer" id="add_agency_drawer" role="dialog" aria-modal="true" aria-labelledby="add_agency_drawer_title" aria-hidden="true">
-        <div class="add-agency-drawer__header" id="add_staffing_partners_header">
-            <h2 class="add-agency-drawer__title fw-bolder" id="add_agency_drawer_title">Invite {{__('messages.Agency')}} or Recruitment consultant</h2>
-            <button type="button" class="add-agency-drawer__close add_staffing_close" id="add_agency_drawer_close_btn" aria-label="Close">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <line x1="18" y1="6" x2="6" y2="18"></line>
-                    <line x1="6" y1="6" x2="18" y2="18"></line>
-                </svg>
-            </button>
+            <div class="cl-header-actions">
+                <div class="cl-export-wrapper dropdown">
+                    <button type="button" class="cl-export-btn" id="clExportDropdownBtn" data-bs-toggle="dropdown" aria-expanded="false" title="Export agency portfolio">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0f172a" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                            <polyline points="7 10 12 15 17 10"/>
+                            <line x1="12" y1="15" x2="12" y2="3"/>
+                        </svg>
+                        <span id="clExportBtnLabel">Export</span>
+                        <svg class="cl-export-chevron" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="m6 9 6 6 6-6"/>
+                        </svg>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end shadow-sm cl-export-dropdown-menu" aria-labelledby="clExportDropdownBtn">
+                        <li>
+                            <a class="dropdown-item cl-export-option" href="javascript:void(0);" onclick="triggerAgencyExport('filtered_csv')">
+                                <div class="cl-export-opt-icon csv">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                                        <polyline points="14 2 14 8 20 8"/>
+                                        <path d="M8 13h2"/><path d="M8 17h8"/><path d="M14 13h2"/>
+                                    </svg>
+                                </div>
+                                <div class="cl-export-opt-text">
+                                    <span class="cl-export-opt-title">Export Filtered View (CSV)</span>
+                                    <span class="cl-export-opt-sub">Current filtered agencies only</span>
+                                </div>
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item cl-export-option" href="javascript:void(0);" onclick="triggerAgencyExport('all_csv')">
+                                <div class="cl-export-opt-icon all">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16a2 2 0 0 1-2 2Zm0 0a2 2 0 0 1-2-2v-9c0-1.1.9-2 2-2h2"/>
+                                        <path d="M18 14h-8"/><path d="M15 18h-5"/><path d="M10 6h8v4h-8V6Z"/>
+                                    </svg>
+                                </div>
+                                <div class="cl-export-opt-text">
+                                    <span class="cl-export-opt-title">Export All Agencies (CSV)</span>
+                                    <span class="cl-export-opt-sub">Full database snapshot</span>
+                                </div>
+                            </a>
+                        </li>
+                        <li><hr class="dropdown-divider my-1 border-gray-200"></li>
+                        <li>
+                            <a class="dropdown-item cl-export-option" href="javascript:void(0);" onclick="triggerAgencyExport('executive_pdf')">
+                                <div class="cl-export-opt-icon pdf">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M6 9V2h12v7"/>
+                                        <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/>
+                                        <rect x="6" y="14" width="12" height="8"/>
+                                    </svg>
+                                </div>
+                                <div class="cl-export-opt-text">
+                                    <span class="cl-export-opt-title">Save / Print Report (PDF)</span>
+                                    <span class="cl-export-opt-sub">Executive landscape summary</span>
+                                </div>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+
+                @if(in_array("add_staffing_partners", $userPermissions))
+                <button type="button" class="cl-add-btn-primary" id="open_add_agency_drawer">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="12" y1="5" x2="12" y2="19"/>
+                        <line x1="5" y1="12" x2="19" y2="12"/>
+                    </svg>
+                    <span>Add / Invite Agency</span>
+                </button>
+                @endif
+            </div>
         </div>
-        <div class="add-agency-drawer__body">
-            <form id="add_staffing_partners_form" name="add_staffing_partners_form"
-                class="fv-row form fv-plugins-bootstrap5 fv-plugins-framework add_staffing_partners_form"
-                action="#" onsubmit="return false;">
-                
-                <!-- Section 1 — Invite by Email -->
-                <div class="add-agency-drawer__section">
-                    <div class="fv-row mb-1 fv-plugins-icon-container">
-                        <label for="staffing_partners_email" class="add-agency-drawer__label fw-bold fs-6 mb-2">
-                            Invite {{__('messages.Agency')}} or Consultant, by entering the email id
-                        </label>
-                        <div class="add-agency-drawer__input-group">
-                            <input type="email" name="staffing_partners_email" id="staffing_partners_email"
-                                class="form-control form-control-solid add-agency-drawer__input"
-                                placeholder="Enter email address" value="" autocomplete="off">
-                            <button type="button" class="btn btn-light fw-bold flex-shrink-0 add-agency-drawer__btn" id="submit_staffing_partners" style="width: 103px;">
-                                <span class="indicator-label">Invite</span>
-                                <span class="indicator-progress" style="display:none;">Wait...
-                                    <span class="spinner-border spinner-border-sm align-middle ms-2"></span>
-                                </span>
-                            </button>
-                        </div>
-                        <div class="fv-plugins-message-container invalid-feedback" for="staffing_partners_email"></div>
+
+        <!-- ── 6 STAT CARDS FILTER GRID ── -->
+        <div class="cl-stat-grid">
+            {{-- Card 1: Total Agencies --}}
+            <a href="#" onclick="setAgencyTab('all', this); return false;" class="cl-card active" data-tab="all">
+                <div class="cl-card-top">
+                    <div class="cl-card-icon blue">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+                            <circle cx="9" cy="7" r="4"/>
+                            <path d="M22 21v-2a4 4 0 0 0-3-3.87"/>
+                            <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                        </svg>
+                    </div>
+                    <div class="cl-card-meta">
+                        <div class="cl-card-num" id="span_spartnerAll">{{ $totalAgenciesCount }}</div>
+                        <div class="cl-card-lbl">Total Agencies</div>
+                    </div>
+                </div>
+                <div class="cl-card-sub green">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><path d="m18 15-6-6-6 6"/></svg>
+                    <span>+{{ max($totalAgenciesCount, 1) }} registered</span>
+                </div>
+            </a>
+
+            {{-- Card 2: Marketplace Partners --}}
+            <a href="#" onclick="setAgencyTab('internal', this); return false;" class="cl-card" data-tab="internal">
+                <div class="cl-card-top">
+                    <div class="cl-card-icon indigo">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+                            <polyline points="9 22 9 12 15 12 15 22"/>
+                        </svg>
+                    </div>
+                    <div class="cl-card-meta">
+                        <div class="cl-card-num" id="span_spartnerCustom">{{ $marketplaceAgenciesCount }}</div>
+                        <div class="cl-card-lbl">Marketplace Partners</div>
+                    </div>
+                </div>
+                <div class="cl-card-sub blue">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><path d="m18 15-6-6-6 6"/></svg>
+                    <span>{{ $marketplaceAgenciesCount }} active partners</span>
+                </div>
+            </a>
+
+            {{-- Card 3: Direct Agencies --}}
+            <a href="#" onclick="setAgencyTab('direct', this); return false;" class="cl-card" data-tab="direct">
+                <div class="cl-card-top">
+                    <div class="cl-card-icon green">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="4" y="2" width="16" height="20" rx="2" ry="2"/>
+                            <path d="M9 22v-4h6v4"/><path d="M8 6h.01"/><path d="M16 6h.01"/><path d="M8 10h.01"/><path d="M16 10h.01"/>
+                        </svg>
+                    </div>
+                    <div class="cl-card-meta">
+                        <div class="cl-card-num" id="span_spartnerDirect">{{ $directAgenciesCount }}</div>
+                        <div class="cl-card-lbl">Direct Agencies</div>
+                    </div>
+                </div>
+                <div class="cl-card-sub green">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><polyline points="17 11 19 13 23 9"/>
+                    </svg>
+                    <span>{{ $directPercent }}% of total</span>
+                </div>
+            </a>
+
+            {{-- Card 4: Active Agencies --}}
+            <a href="#" onclick="setAgencyTab('hiring', this); return false;" class="cl-card" data-tab="hiring">
+                <div class="cl-card-top">
+                    <div class="cl-card-icon green">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="2" y="7" width="20" height="14" rx="2"/>
+                            <path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/><line x1="12" y1="12" x2="12" y2="12.01"/>
+                        </svg>
+                    </div>
+                    <div class="cl-card-meta">
+                        <div class="cl-card-num" id="span_spartnerHiring">{{ $activeAgenciesCount }}</div>
+                        <div class="cl-card-lbl">Active Agencies</div>
+                    </div>
+                </div>
+                <div class="cl-card-sub green">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><path d="m18 15-6-6-6 6"/></svg>
+                    <span>Working on jobs</span>
+                </div>
+            </a>
+
+            {{-- Card 5: Inactive Agencies --}}
+            <a href="#" onclick="setAgencyTab('inactive', this); return false;" class="cl-card" data-tab="inactive">
+                <div class="cl-card-top">
+                    <div class="cl-card-icon pink">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="10"/><line x1="10" y1="15" x2="10" y2="9"/><line x1="14" y1="15" x2="14" y2="9"/>
+                        </svg>
+                    </div>
+                    <div class="cl-card-meta">
+                        <div class="cl-card-num" id="span_spartnerInactive">{{ $inactiveAgenciesCount }}</div>
+                        <div class="cl-card-lbl">Inactive Agencies</div>
+                    </div>
+                </div>
+                <div class="cl-card-sub pink">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+                    <span>0 active submissions</span>
+                </div>
+            </a>
+
+            {{-- Card 6: Pending Invitations --}}
+            <a href="#" onclick="setAgencyTab('request', this); return false;" class="cl-card" data-tab="request">
+                <div class="cl-card-top">
+                    <div class="cl-card-icon purple">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>
+                        </svg>
+                    </div>
+                    <div class="cl-card-meta">
+                        <div class="cl-card-num" id="span_spartnerRequest">{{ $pendingRequestsCount }}</div>
+                        <div class="cl-card-lbl">Pending Invites</div>
+                    </div>
+                </div>
+                <div class="cl-card-sub purple">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 14 14"/></svg>
+                    <span>{{ $pendingRequestsCount > 0 ? $pendingRequestsCount . ' action needed' : 'All confirmed' }}</span>
+                </div>
+            </a>
+        </div>
+
+        <!-- ── SEARCH & FILTER BAR ── -->
+        <div class="cl-filter-bar">
+            {{-- Search Input (Enterprise Tier 1 Micro-Search Bar) --}}
+            <div class="cl-search-box" id="clSearchBoxWrapper">
+                <svg class="cl-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                </svg>
+                <input 
+                    type="text" 
+                    class="cl-search-inp" 
+                    name="inputJobSearch" 
+                    value="" 
+                    placeholder="Search agencies by name, specialization, location, representative, ID..." 
+                    id="kt_tagify_2" 
+                    autocomplete="off" 
+                    spellcheck="false" 
+                    aria-label="Search agency listing" 
+                    role="searchbox"
+                />
+                <div class="cl-search-right-affix">
+                    <span class="cl-search-count-pill" id="clSearchMatchCount" style="display:none;" title="Matching agencies count">0 matches</span>
+                    <button type="button" class="cl-search-clear-btn" id="clSearchClearBtn" title="Clear search (Esc)" aria-label="Clear search" style="display:none;" onclick="clearAgencySearchInput(event)">✕</button>
+                    <kbd class="cl-search-kbd-hint" id="clSearchKbdHint" title="Press Ctrl+K to search">Ctrl+K</kbd>
+                </div>
+                <div id="loader_search" class="loader_search hidden_search" style="display:none;position:absolute;right:12px;top:50%;transform:translateY(-50%);"></div>
+            </div>
+
+            {{-- Filter 1: Location Combobox Popover --}}
+            <div class="cl-loc-dropdown-wrapper" id="clLocDropdownWrapper">
+                <div class="cl-loc-combobox-btn" id="clLocBtn" onclick="toggleLocationDropdown(event)">
+                    <div class="cl-pill-icon">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>
+                        </svg>
+                    </div>
+                    <div class="cl-pill-texts">
+                        <span class="cl-pill-lbl">Location</span>
+                        <span class="cl-pill-val" id="locationDisplay">All Locations</span>
+                    </div>
+                    <div class="cl-pill-chevron">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
                     </div>
                 </div>
 
-                @php
+                <div class="cl-loc-dropdown-panel" id="clLocDropdownPanel">
+                    <div class="cl-loc-search-box">
+                        <input type="text" class="cl-search-inp" style="height:32px; padding:0 10px;" id="clLocSearchInp" placeholder="Search countries or cities..." autocomplete="off" oninput="handleLocationSearchInput(this.value)" />
+                    </div>
+                    <div class="cl-loc-dropdown-body mt-2" id="clLocDropdownBody" style="max-height: 220px; overflow-y: auto;">
+                        <div class="cl-act-item selected" onclick="selectLocationOption('', 'All Locations', event)">
+                            <span>All Locations</span>
+                        </div>
+                        @if ($countries)
+                            @foreach ($countries as $c)
+                                <div class="cl-act-item" onclick="selectLocationOption('{{ $c->id }}', '{{ $c->country_name }}', event)">
+                                    <span>{{ $c->country_name }}</span>
+                                </div>
+                            @endforeach
+                        @endif
+                    </div>
+                </div>
+                <input type="hidden" id="country" name="country" value="" />
+            </div>
+
+            {{-- Filter 2: Performance Combobox Popover --}}
+            <div class="cl-pipe-dropdown-wrapper" id="clPerfDropdownWrapper">
+                <button type="button" class="cl-pipe-combobox-btn" id="clPerfBtn" onclick="togglePerfDropdown(event)" title="Filter by Agency Performance">
+                    <div class="cl-pill-icon">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+                        </svg>
+                    </div>
+                    <div class="cl-pill-texts">
+                        <span class="cl-pill-lbl">Performance</span>
+                        <span class="cl-pill-val" id="perfDisplay">All Performance</span>
+                    </div>
+                    <div class="cl-pill-chevron">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+                    </div>
+                </button>
+
+                <div class="cl-pipe-dropdown-panel" id="clPerfDropdownPanel">
+                    <div class="cl-pipe-section-hdr">Performance Tier</div>
+                    <div class="cl-pipe-item selected" onclick="selectPerfOption('', 'All Performance', event)">
+                        <span>All Performance</span>
+                    </div>
+                    <div class="cl-pipe-item" onclick="selectPerfOption('high', 'High Performers (5+ Placements)', event)">
+                        <span>High Performers</span>
+                    </div>
+                    <div class="cl-pipe-item" onclick="selectPerfOption('medium', 'Active (1–4 Placements)', event)">
+                        <span>Medium Activity</span>
+                    </div>
+                    <div class="cl-pipe-item" onclick="selectPerfOption('low', 'Getting Started (0 Placements)', event)">
+                        <span>Low / New</span>
+                    </div>
+                </div>
+                <input type="hidden" id="agency_performance" name="agency_performance" value="" />
+            </div>
+
+            {{-- Filter 3: Sort Combobox Popover --}}
+            <div class="cl-sort-dropdown-wrapper" id="clSortDropdownWrapper">
+                <button type="button" class="cl-sort-combobox-btn" id="clSortBtn" onclick="toggleSortDropdown(event)" title="Sort Agency Listing">
+                    <div class="cl-pill-icon">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="7" y1="4" x2="7" y2="20"/><polyline points="3 8 7 4 11 8"/><line x1="17" y1="4" x2="17" y2="20"/><polyline points="13 16 17 20 21 16"/>
+                        </svg>
+                    </div>
+                    <div class="cl-pill-texts">
+                        <span class="cl-pill-lbl">Sort</span>
+                        <span class="cl-pill-val" id="sortDisplay">Recently Added</span>
+                    </div>
+                    <div class="cl-pill-chevron">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+                    </div>
+                </button>
+
+                <div class="cl-sort-dropdown-panel" id="clSortDropdownPanel">
+                    <div class="cl-sort-section-hdr">Chronological</div>
+                    <div class="cl-sort-item selected" onclick="selectSortOption('recent', 'Recently Added', event)">
+                        <span>Recently Added</span>
+                    </div>
+                    <div class="cl-sort-item" onclick="selectSortOption('oldest', 'Oldest First', event)">
+                        <span>Oldest First</span>
+                    </div>
+                    <div class="cl-sort-section-hdr">Alphabetical</div>
+                    <div class="cl-sort-item" onclick="selectSortOption('name_asc', 'Agency Name (A → Z)', event)">
+                        <span>Agency Name (A → Z)</span>
+                    </div>
+                    <div class="cl-sort-item" onclick="selectSortOption('name_desc', 'Agency Name (Z → A)', event)">
+                        <span>Agency Name (Z → A)</span>
+                    </div>
+                    <div class="cl-sort-section-hdr">Activity</div>
+                    <div class="cl-sort-item" onclick="selectSortOption('jobs_desc', 'Most Shared Jobs', event)">
+                        <span>Most Shared Jobs</span>
+                    </div>
+                </div>
+                <input type="hidden" id="sortingfilter" name="sortingfilter" value="" />
+            </div>
+        </div>
+
+        @if(in_array("view_staffing_partners", $userPermissions))
+        <!-- ── TABLE / CARD STREAM ── -->
+        <div class="tbl">
+            <div class="tbl-w">
+                <div class="tbl-scroll-container">
+                    <div class="tbl-h" id="agencyTableHead">
+                        <div class="tbl-th-subcard">
+                            <div class="tbl-th-label">
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+                                <span>Agency Identity</span>
+                            </div>
+                        </div>
+                        <div class="tbl-th-subcard">
+                            <div class="tbl-th-label">
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 2a8 8 0 0 0-8 8c0 5.25 8 12 8 12s8-6.75 8-12a8 8 0 0 0-8-8z"/><circle cx="12" cy="10" r="3"/></svg>
+                                <span>Location</span>
+                            </div>
+                        </div>
+                        <div class="tbl-th-subcard">
+                            <div class="tbl-th-label">
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+                                <span>Shared Jobs</span>
+                            </div>
+                        </div>
+                        <div class="tbl-th-subcard">
+                            <div class="tbl-th-label">
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z"/></svg>
+                                <span>Candidate Pipeline</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="loadingMessage loadingMessagestaffingpartnerajax" style="display:none; position:absolute; left:50%; top:50%; transform:translate(-50%, -50%); z-index:10; background:rgba(255,255,255,0.9); padding:10px 20px; border-radius:8px; box-shadow:0 2px 10px rgba(0,0,0,0.1);">Processing...</div>
+                    <div id="staffingpartnerajax"></div>
+                </div>
+
+                <!-- ── PAGINATION BAR ── -->
+                <div id="paginationstaffingpartner" class="mt-3"></div>
+            </div>
+        </div>
+        @endif
+
+    </div>
+    <!--end::Container-->
+  </div>
+  <!--end::Post-->
+</div>
+<!--end::Content-->
+
+<!-- ── DRAWER FOR AGENCY DETAILS ── -->
+<div id="kt_activitiesDirectClient_toggle"></div>
+<div id="kt_activitiesDirectClient" class="bg-body cd-activities-drawer" data-kt-drawer="true" data-kt-drawer-name="activities" data-kt-drawer-activate="true" data-kt-drawer-overlay="true" data-kt-drawer-direction="end" data-kt-drawer-toggle="#kt_activitiesDirectClient_toggle" data-kt-drawer-close="#kt_activitiesDirectClient_close" data-kt-drawer-width="{default:'90%', 'sm': '85%', 'md': '80%', 'lg': '80%', 'xl': '80%'}">
+  <div class="card shadow-none rounded-0 w-100">
+    <button type="button" id="kt_activitiesDirectClient_close" class="d-none" aria-hidden="true"></button>
+    <div class="card-body position-relative px-0 py-0" id="kt_activitiesDirectClient_body"> &nbsp; </div>
+  </div>
+</div>
+
+<!-- ── DRAWER FOR ADD / INVITE AGENCY ── -->
+<div class="add-agency-drawer-overlay" id="add_agency_drawer_overlay" aria-hidden="true" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.4); z-index:1049;"></div>
+<div class="add-agency-drawer" id="add_agency_drawer" role="dialog" aria-modal="true" aria-labelledby="add_agency_drawer_title" aria-hidden="true" style="display:none; position:fixed; top:0; right:0; bottom:0; width:460px; max-width:90%; background:#ffffff; box-shadow:-5px 0 25px rgba(0,0,0,0.15); z-index:1050; padding:24px; overflow-y:auto; flex-direction:column; justify-content:space-between;">
+    <div>
+        <div class="d-flex align-items-center justify-content-between pb-4 border-bottom mb-4">
+            <h2 class="fs-5 fw-bolder text-dark m-0" id="add_agency_drawer_title">Invite Agency or Consultant</h2>
+            <button type="button" class="btn btn-sm btn-icon btn-light add_staffing_close" id="add_agency_drawer_close_btn" aria-label="Close">✕</button>
+        </div>
+        <form id="add_staffing_partners_form" name="add_staffing_partners_form" action="#" onsubmit="return false;">
+            <div class="mb-4">
+                <label for="staffing_partners_email" class="fw-bold fs-7 mb-2 text-dark d-block">Invite Agency by Email Address</label>
+                <div class="input-group">
+                    <input type="email" name="staffing_partners_email" id="staffing_partners_email" class="form-control form-control-solid" placeholder="Enter agency email address" autocomplete="off">
+                    <button type="button" class="btn btn-primary fw-bold" id="submit_staffing_partners">Invite</button>
+                </div>
+            </div>
+            @php
                 $encode = base64_encode(auth()->user()->company_id);
                 $Url = url('/company-registration-invitation/'.$encode);
-                @endphp
-
-                <!-- OR Divider -->
-                <div class="add-agency-drawer__divider">
-                    <span>OR</span>
-                </div>
-
-                <!-- Section 2 — Referral Link -->
-                <div class="add-agency-drawer__section">
-                    <div class="w-100">
-                        <label for="kt_share_earn_link_input" class="add-agency-drawer__label fw-bold fs-6 mb-2">
-                            Share below referral link to invite {{__('messages.Agencies')}}
-                        </label>
-                        <div class="add-agency-drawer__input-group">
-                            <input id="kt_share_earn_link_input" type="text" class="form-control form-control-solid add-agency-drawer__input"
-                                name="search" value="{{$Url}}" readonly>
-                            <button type="button" id="kt_share_earn_link_copy_button" class="btn btn-light fw-bold flex-shrink-0 add-agency-drawer__btn"
-                                data-clipboard-target="#kt_share_earn_link_input" style="width: 103px;">Copy Link</button>
-                        </div>
-                    </div>
-                </div>
-            </form>
-        </div>
-
-        <div class="add-agency-drawer__footer">
-            <button type="button" class="btn btn-light add-agency-drawer__cancel-btn add_staffing_close"
-                id="add_agency_drawer_cancel_btn" data-kt-users-modal-action="close" data-dismiss="modal">Cancel</button>
-        </div>
-    </div>
-    <!--end::Add staffing partners - right-side drawer-->
-
-    <div id="kt_activitiesDirectClient_toggle"></div>
-    <div id="kt_activitiesDirectClient" class="bg-body" data-kt-drawer="true" data-kt-drawer-name="activities"
-        data-kt-drawer-activate="true" data-kt-drawer-overlay="true" data-kt-drawer-direction="end"
-        data-kt-drawer-toggle="#kt_activitiesDirectClient_toggle" data-kt-drawer-close="#kt_activitiesDirectClient_close">
-        <div class="card shadow-none rounded-0 w-100">
-            <div class="card-header px-5 py-0" id="kt_activities_header">
-                <div class="d-flex align-items-center py-1">
-                    <h3 class="card-title fw-bolder text-dark">{{__('messages.Agency')}} Detail</h3>
-                    <span class="h-20px border-gray-200 border-start mx-4 d-none"></span>
-                </div>
-                <div class="card-toolbar">
-                    <button type="button" class="btn btn-sm btn-icon btn-active-light-danger me-n5"
-                        id="kt_activitiesDirectClient_close"> <span class="svg-icon svg-icon-1">
-                            <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
-                                width="24px" height="24px" viewBox="0 0 24 24" version="1.1">
-                                <g transform="translate(12.000000, 12.000000) rotate(-45.000000) translate(-12.000000, -12.000000) translate(4.000000, 4.000000)"
-                                    fill="currentColor">
-                                    <rect x="0" y="7" width="16" height="2" rx="1" />
-                                    <rect opacity="0.5"
-                                        transform="translate(8.000000, 8.000000) rotate(-270.000000) translate(-8.000000, -8.000000)"
-                                        x="0" y="7" width="16" height="2" rx="1" />
-                                </g>
-                            </svg>
-                        </span> </button>
+            @endphp
+            <div class="text-center my-3 text-muted fw-bold fs-8">── OR ──</div>
+            <div class="mb-4">
+                <label for="kt_share_earn_link_input" class="fw-bold fs-7 mb-2 text-dark d-block">Share Agency Registration Link</label>
+                <div class="input-group">
+                    <input id="kt_share_earn_link_input" type="text" class="form-control form-control-solid" value="{{ $Url }}" readonly>
+                    <button type="button" id="kt_share_earn_link_copy_button" class="btn btn-light fw-bold" data-clipboard-target="#kt_share_earn_link_input">Copy</button>
                 </div>
             </div>
-            <div class="card-body position-relative px-0 py-0" id="kt_activitiesDirectClient_body"> &nbsp; </div>
-        </div>
+        </form>
     </div>
+    <div class="pt-4 border-top">
+        <button type="button" class="btn btn-light w-100 add_staffing_close" data-dismiss="modal">Cancel</button>
+    </div>
+</div>
 
-@endsection
+<!-- ── PRINT-TO-PDF EXECUTIVE CANVAS ── -->
+<div id="cl-print-report-canvas" class="d-none" aria-hidden="true">
+    <div class="p-4 bg-white">
+        <h1 class="fs-4 fw-bold">Agency Portfolio & Recruitment Performance Report</h1>
+        <div class="text-muted fs-7">{{ auth()->user()->company->company_name ?? 'JERO Enterprise ATS' }} • Confidential Review</div>
+    </div>
+</div>
 
-@push('footer-script')
-    <script src="{{ asset('demo/cdn/js/dataTables.fixedHeader.min.js') }}<?php echo TM_VERSION; ?>"></script>
+@push('scripts')
+<script>
+    // ── Agency Listing Manager (Strict Rule 17 Isolation) ──
+    const AgencyListingManager = {
+        currentPage: 1,
+        activeTab: 'all',
+        searchQuery: '',
+        countryFilter: '',
+        perfFilter: '',
+        sortFilter: '',
+        searchDebounceTimer: null,
 
+        init: function() {
+            this.bindEvents();
+            this.loadPage(1);
+        },
 
-    <script>
+        bindEvents: function() {
+            const self = this;
 
-$(document).ready(function() {
-    var $button = $('#kt_share_earn_link_copy_button');
-    var $input = $('#kt_share_earn_link_input');
-    var clipboard = new ClipboardJS('#kt_share_earn_link_copy_button');
+            // Debounced Search (300ms)
+            $('#kt_tagify_2').on('input', function() {
+                const val = $(this).val();
+                self.searchQuery = val;
+                if (val.length > 0) {
+                    $('#clSearchClearBtn').show();
+                } else {
+                    $('#clSearchClearBtn').hide();
+                }
+                clearTimeout(self.searchDebounceTimer);
+                self.searchDebounceTimer = setTimeout(function() {
+                    self.loadPage(1);
+                }, 300);
+            });
 
-    if (!clipboard) {
-        return;
+            // Keyboard Shortcut (Ctrl+K)
+            $(document).on('keydown', function(e) {
+                if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+                    e.preventDefault();
+                    $('#kt_tagify_2').focus();
+                }
+                if (e.key === 'Escape') {
+                    self.closeAllDropdowns();
+                }
+            });
+
+            // Drawer Toggle for Agency Details
+            $(document).on('click', '.show-detail-direct', function(e) {
+                e.stopPropagation();
+                const id = $(this).data('row-id');
+                if (!id) return;
+                self.openAgencyDrawer(id);
+            });
+
+            // Add Agency Drawer Open/Close
+            $('#open_add_agency_drawer').on('click', function() {
+                $('#add_agency_drawer_overlay, #add_agency_drawer').fadeIn(150);
+            });
+            $('.add_staffing_close, #add_agency_drawer_overlay').on('click', function() {
+                $('#add_agency_drawer_overlay, #add_agency_drawer').fadeOut(150);
+            });
+
+            // Copy Link
+            $('#kt_share_earn_link_copy_button').on('click', function() {
+                const copyText = document.getElementById("kt_share_earn_link_input");
+                copyText.select();
+                copyText.setSelectionRange(0, 99999);
+                navigator.clipboard.writeText(copyText.value);
+                $(this).text('Copied!');
+                const btn = $(this);
+                setTimeout(function() { btn.text('Copy'); }, 2000);
+            });
+
+            // Outside click closes popovers
+            $(document).on('click', function(e) {
+                if (!$(e.target).closest('.cl-loc-dropdown-wrapper, .cl-pipe-dropdown-wrapper, .cl-sort-dropdown-wrapper').length) {
+                    self.closeAllDropdowns();
+                }
+            });
+        },
+
+        closeAllDropdowns: function() {
+            $('.cl-loc-dropdown-panel, .cl-pipe-dropdown-panel, .cl-sort-dropdown-panel').removeClass('show');
+        },
+
+        loadPage: function(page) {
+            this.currentPage = page || 1;
+            const self = this;
+
+            $('.loadingMessagestaffingpartnerajax').css({ display: 'block' });
+
+            $.ajax({
+                url: `{{ route('service_company.consultancy.data_ajax') }}?page=${this.currentPage}`,
+                type: 'GET',
+                data: {
+                    search: self.searchQuery,
+                    cus_search: self.searchQuery,
+                    country: self.countryFilter,
+                    agency_performance: self.perfFilter,
+                    sortingfilter: self.sortFilter,
+                    per_page: 10
+                },
+                success: function(response) {
+                    $('.loadingMessagestaffingpartnerajax').css({ display: 'none' });
+                    $('#staffingpartnerajax').html(response.html);
+                    $('#paginationstaffingpartner').html(response.pagination);
+                    if (response.total !== undefined) {
+                        $('#span_spartnerAll').text(response.total);
+                        if (self.searchQuery) {
+                            $('#clSearchMatchCount').text(`${response.total} matches`).show();
+                        } else {
+                            $('#clSearchMatchCount').hide();
+                        }
+                    }
+                },
+                error: function() {
+                    $('.loadingMessagestaffingpartnerajax').css({ display: 'none' });
+                }
+            });
+        },
+
+        openAgencyDrawer: function(id) {
+            $('#kt_activitiesDirectClient_toggle').trigger('click');
+            const baseurl = "{{ asset('assets/images/Loading2.gif') }}";
+            $('#kt_activitiesDirectClient_body').html('<div class="d-flex align-items-center justify-content-center p-10"><div class="spinner-border text-primary" role="status"></div></div>');
+
+            let url = "{{ route('service_company.consultancy.dviewmore', ':id') }}";
+            url = url.replace(':id', id);
+
+            $.ajax({
+                url: url,
+                type: 'GET',
+                success: function(response) {
+                    if (response.status === 'success') {
+                        $('#kt_activitiesDirectClient_body').html(response.view);
+                    } else if (response.view) {
+                        $('#kt_activitiesDirectClient_body').html(response.view);
+                    }
+                },
+                error: function() {
+                    $('#kt_activitiesDirectClient_body').html('<div class="alert alert-danger m-5">Failed to load agency details. Please try again.</div>');
+                }
+            });
+        }
+    };
+
+    // ── Global Filter & Action Callbacks ──
+    function setAgencyTab(tabKey, el) {
+        $('.cl-stat-grid .cl-card').removeClass('active');
+        $(el).addClass('active');
+        AgencyListingManager.activeTab = tabKey;
+        if (tabKey === 'hiring') {
+            AgencyListingManager.perfFilter = 'high';
+        } else if (tabKey === 'inactive') {
+            AgencyListingManager.perfFilter = 'low';
+        } else {
+            AgencyListingManager.perfFilter = '';
+        }
+        AgencyListingManager.loadPage(1);
     }
 
-    // Copy text to clipboard
-    clipboard.on('success', function(e) {
-        var buttonCaption = $button.html();
-        
-        // Add background color
-        $input.addClass('bg-success text-inverse-success');
-        $button.html('Copied!');
+    function clearAgencySearchInput(e) {
+        e.stopPropagation();
+        $('#kt_tagify_2').val('');
+        $('#clSearchClearBtn, #clSearchMatchCount').hide();
+        AgencyListingManager.searchQuery = '';
+        AgencyListingManager.loadPage(1);
+    }
 
-        setTimeout(function() {
-            $button.html(buttonCaption);
+    function toggleLocationDropdown(e) {
+        e.stopPropagation();
+        const $panel = $('#clLocDropdownPanel');
+        const isShown = $panel.hasClass('show');
+        AgencyListingManager.closeAllDropdowns();
+        if (!isShown) $panel.addClass('show');
+    }
 
-            // Remove background color
-            $input.removeClass('bg-success text-inverse-success');
-        }, 3000); // 3 seconds
+    function selectLocationOption(id, name, e) {
+        e.stopPropagation();
+        $('#locationDisplay').text(name);
+        $('#country').val(id);
+        AgencyListingManager.countryFilter = id;
+        AgencyListingManager.closeAllDropdowns();
+        AgencyListingManager.loadPage(1);
+    }
 
-        e.clearSelection();
+    function togglePerfDropdown(e) {
+        e.stopPropagation();
+        const $panel = $('#clPerfDropdownPanel');
+        const isShown = $panel.hasClass('show');
+        AgencyListingManager.closeAllDropdowns();
+        if (!isShown) $panel.addClass('show');
+    }
+
+    function selectPerfOption(val, label, e) {
+        e.stopPropagation();
+        $('#perfDisplay').text(label);
+        $('#agency_performance').val(val);
+        AgencyListingManager.perfFilter = val;
+        AgencyListingManager.closeAllDropdowns();
+        AgencyListingManager.loadPage(1);
+    }
+
+    function toggleSortDropdown(e) {
+        e.stopPropagation();
+        const $panel = $('#clSortDropdownPanel');
+        const isShown = $panel.hasClass('show');
+        AgencyListingManager.closeAllDropdowns();
+        if (!isShown) $panel.addClass('show');
+    }
+
+    function selectSortOption(val, label, e) {
+        e.stopPropagation();
+        $('#sortDisplay').text(label);
+        $('#sortingfilter').val(val);
+        AgencyListingManager.sortFilter = val;
+        AgencyListingManager.closeAllDropdowns();
+        AgencyListingManager.loadPage(1);
+    }
+
+    function triggerAgencyExport(type) {
+        if (type === 'filtered_csv') {
+            window.location.href = `{{ url('service_company/consultancy/export/0/1000') }}?search=${encodeURIComponent(AgencyListingManager.searchQuery || '')}`;
+        } else if (type === 'all_csv') {
+            window.location.href = `{{ url('service_company/consultancy/export/0/10000') }}`;
+        } else if (type === 'executive_pdf') {
+            window.print();
+        }
+    }
+
+    // Pagination Click Handler
+    $(document).on('click', '#paginationstaffingpartner a', function(e) {
+        e.preventDefault();
+        const url = $(this).attr('href');
+        if (url) {
+            const pageMatch = url.match(/page=(\d+)/);
+            const page = pageMatch ? pageMatch[1] : 1;
+            AgencyListingManager.loadPage(page);
+        }
     });
-});
 
-
-        // var input2 = document.querySelector("#kt_tagify_2");
-        // new Tagify(input2);
-    </script>
-    <script>
-        /**
-         * Add Agency Right-Side Drawer Controller (Isolated to Consultancy Page)
-         * Replaces centered modal with a 520px smooth right-to-left slide-in drawer.
-         * Handles drawer open/close, backdrop dimming, ESC key, and body scroll lock.
-         */
-        function openAddAgencyDrawer() {
-            $('#add_agency_drawer_overlay').addClass('show').attr('aria-hidden', 'false');
-            $('#add_agency_drawer').addClass('open').attr('aria-hidden', 'false');
-            $('#open_add_agency_drawer').attr('aria-expanded', 'true');
-            $('body').addClass('add-agency-drawer-open');
-            setTimeout(function() {
-                $('#staffing_partners_email').focus();
-            }, 180);
-        }
-
-        function closeAddAgencyDrawer() {
-            $('#add_agency_drawer_overlay').removeClass('show').attr('aria-hidden', 'true');
-            $('#add_agency_drawer').removeClass('open').attr('aria-hidden', 'true');
-            $('#open_add_agency_drawer').attr('aria-expanded', 'false');
-            $('body').removeClass('add-agency-drawer-open');
-            if (typeof $ !== 'undefined' && $.fn && $.fn.validate) {
-                var validator = $("#add_staffing_partners_form").validate();
-                if (validator && validator.resetForm) {
-                    validator.resetForm();
-                }
-            }
-            $('.fv-plugins-message-container').empty();
-            $('#open_add_agency_drawer').focus();
-        }
-
-        // Open drawer on Add Agency button click
-        $(document).on('click', '.add_staffing_partners_frm, #open_add_agency_drawer', function(e) {
-            e.preventDefault();
-            $('#staffing_partners_email').val('');
-            openAddAgencyDrawer();
-        });
-
-        // Close drawer on Close icon, Cancel button, or overlay click
-        $(document).on('click', '.add_staffing_close, #add_agency_drawer_overlay, #add_agency_drawer_close_btn, #add_agency_drawer_cancel_btn', function(e) {
-            e.preventDefault();
-            closeAddAgencyDrawer();
-        });
-
-        // Dismiss drawer with Escape key
-        $(document).on('keydown', function(e) {
-            if ((e.key === 'Escape' || e.key === 'Esc') && $('#add_agency_drawer').hasClass('open')) {
-                closeAddAgencyDrawer();
-            }
-        });
-
-        var filterDebounceTimer = null;
-
-        function filtersdataget() {
-            clearTimeout(filterDebounceTimer);
-            filterDebounceTimer = setTimeout(function() {
-                ConsultancyListingManager.loadPage(1);
-            }, 300);
-        }
-        // var table = $('#myTable').dataTable({
-
-        //     responsive: true,
-        //     processing: true,
-        //     serverSide: true,
-        //     destroy: true,
-        //     ordering: false, //	disable ordering			
-        //     "bLengthChange": false, //	thought this line could hide the LengthMenu
-        //     sDom: 'lrtip',
-        //     oLanguage: {
-        //         sLengthMenu: "_MENU_",
-        //     },
-        //     ajax: {
-        //         'url': '{!! route('service_company.consultancy.data_ajax') !!}',
-        //         "data": function(d) {
-        //             d.search = $('#inputSearch').val(), d.sortingfilter = $('#sortingfilter').val(), d.country =
-        //                 $('#country').val(), d.cus_search = $('#kt_tagify_2').val()
-        //         }
-        //     },
-        //     "fnDrawCallback": function(oSettings) {
-        //         $("body").tooltip({
-        //             selector: '[data-toggle="tooltip"]'
-        //         });
-        //     },
-        //     columns: [{
-        //             data: 'chkbox',
-        //             name: 'chkbox',
-        //             searchable: false,
-        //             orderable: false
-        //         },
-        //         {
-        //             data: 'Name',
-        //             name: 'Name',
-        //             searchable: false,
-        //             orderable: false
-        //         },
-        //         {
-        //             data: 'Location',
-        //             name: 'Location',
-        //             searchable: false,
-        //             orderable: false
-        //         },
-        //         {
-        //             data: 'Joining',
-        //             name: 'Joining',
-        //             searchable: false,
-        //             orderable: false
-        //         },
-        //         {
-        //             data: 'Requisitions',
-        //             name: 'Requisitions',
-        //             searchable: false,
-        //             orderable: false
-        //         },
-        //         {
-        //             data: 'ConnectedOn',
-        //             name: 'ConnectedOn',
-        //             searchable: false,
-        //             orderable: false
-        //         }
-        //         // { data: 'ContactPerson', name: 'ContactPerson', searchable : false, orderable : false}    					
-        //     ]
-        // });
-        // new $.fn.dataTable.FixedHeader(table);
-    </script>
-
-    <script>
-        $(document).ready(function() {
-
-            var KTUsersAddUser = function() {
-                // Shared variables
-                const element = document.getElementById('add_agency_drawer') || document.getElementById('add_staffing_partners');
-                if (!element) return { init: function() {} };
-                const form = element.querySelector('#add_staffing_partners_form');
-                if (!form) return { init: function() {} };
-                const modal = (element.classList && element.classList.contains('modal') && typeof bootstrap !== 'undefined' && bootstrap.Modal) ? new bootstrap.Modal(element) : null;
-
-                // Init add schedule modal
-                var initAddUser = () => {
-
-                    // Init form validation rules. For more info check the FormValidation plugin's official documentation:https://formvalidation.io/
-                    var validator = null;
-                    if (typeof FormValidation !== 'undefined' && FormValidation.formValidation) {
-                        try {
-                            validator = FormValidation.formValidation(
-                                form, {
-                                    fields: {
-                                        user_email: {
-                                            validators: {
-                                                notEmpty: {
-                                                    message: "Email address is required"
-                                                },
-                                                emailAddress: {
-                                                    message: "The value is not a valid email address"
-                                                }
-                                            }
-                                        }
-                                    },
-
-                                    plugins: {
-                                        trigger: new FormValidation.plugins.Trigger(),
-                                        bootstrap: new FormValidation.plugins.Bootstrap5({
-                                            rowSelector: '.fv-row',
-                                            eleInvalidClass: '',
-                                            eleValidClass: ''
-                                        })
-                                    }
-                                }
-                            );
-                        } catch(e) {}
-                    }
-
-                    // Submit button handler
-                    const submitButton = element.querySelector('[data-kt-users-modal-action="submit"]');
-                    if (submitButton) {
-                        submitButton.addEventListener('click', e => {
-                        e.preventDefault();
-
-                        // Validate form before submit
-                        if (validator) {
-                            validator.validate().then(function(status) {
-                                console.log('validated!');
-
-                                if (status == 'Valid') {
-                                    // Show loading indication
-                                    submitButton.setAttribute('data-kt-indicator', 'on');
-
-                                    // Disable button to avoid multiple click 
-                                    submitButton.disabled = true;
-
-                                    // Simulate form submission. For more info check the plugin's official documentation: https://sweetalert2.github.io/
-                                    setTimeout(function() {
-                                        // Remove loading indication
-                                        submitButton.removeAttribute(
-                                            'data-kt-indicator');
-
-                                        // Enable button
-                                        submitButton.disabled = false;
-
-                                        // Show popup confirmation 
-                                        Swal.fire({
-                                                text: "Invitation has been sent!",
-                                                icon: "success",
-                                                buttonsStyling: false,
-                                                confirmButtonText: "Ok, got it!",
-                                                customClass: {
-                                                    confirmButton: "btn btn-primary"
-                                                }
-                                            })
-                                            // .then(function (t)
-                                            // {
-                                            //    t.isConfirmed && e && e.hide();
-                                            // });
-                                            .then(function() {
-                                                window.location = "";
-                                            });
-
-                                        //form.submit(); // Submit form
-                                    }, 2e3);
-                                } else {
-                                    // Show popup warning. For more info check the plugin's official documentation: https://sweetalert2.github.io/
-                                    Swal.fire({
-                                        text: "Sorry, looks like there are some errors detected, please try again.",
-                                        icon: "error",
-                                        buttonsStyling: false,
-                                        confirmButtonText: "Ok, got it!",
-                                        customClass: {
-                                            confirmButton: "btn btn-primary"
-                                        }
-                                    });
-                                }
-                            });
-                        }
-                    });
-                    }
-
-                    // Cancel button handler
-                    const cancelButton = element.querySelector('[data-kt-users-modal-action="cancel"]');
-                    if (cancelButton) {
-                        cancelButton.addEventListener('click', e => {
-                            e.preventDefault();
-
-                            Swal.fire({
-                                text: "Are you sure you would like to cancel?",
-                                icon: "warning",
-                                showCancelButton: true,
-                                buttonsStyling: false,
-                                confirmButtonText: "Yes, cancel it!",
-                                cancelButtonText: "No, return",
-                                customClass: {
-                                    confirmButton: "btn btn-primary",
-                                    cancelButton: "btn btn-active-light"
-                                }
-                            }).then(function(result) {
-                                if (result.value) {
-                                    form.reset(); // Reset form			
-                                    if (modal && modal.hide) {
-                                        modal.hide();
-                                    } else {
-                                        closeAddAgencyDrawer();
-                                    }
-                                } else if (result.dismiss === 'cancel') {
-                                    Swal.fire({
-                                        text: "Your form has not been cancelled!.",
-                                        icon: "error",
-                                        buttonsStyling: false,
-                                        confirmButtonText: "Ok, got it!",
-                                        customClass: {
-                                            confirmButton: "btn btn-primary",
-                                        }
-                                    });
-                                }
-                            });
-                        });
-                    }
-
-                    // Close button handler
-                    const closeButton = element.querySelector('[data-kt-users-modal-action="close"]');
-                    if (closeButton) {
-                        closeButton.addEventListener('click', e => {
-                            e.preventDefault();
-
-                            Swal.fire({
-                                text: "Are you sure you would like to cancel?",
-                                icon: "warning",
-                                showCancelButton: true,
-                                buttonsStyling: false,
-                                confirmButtonText: "Yes, cancel it!",
-                                cancelButtonText: "No, return",
-                                customClass: {
-                                    confirmButton: "btn btn-primary",
-                                    cancelButton: "btn btn-active-light"
-                                }
-                            }).then(function(result) {
-                                if (result.value) {
-                                    form.reset(); // Reset form			
-                                    if (modal && modal.hide) {
-                                        modal.hide();
-                                    } else {
-                                        closeAddAgencyDrawer();
-                                    }
-                                } else if (result.dismiss === 'cancel') {
-                                    Swal.fire({
-                                        text: "Your form has not been cancelled!.",
-                                        icon: "error",
-                                        buttonsStyling: false,
-                                        confirmButtonText: "Ok, got it!",
-                                        customClass: {
-                                            confirmButton: "btn btn-primary",
-                                        }
-                                    });
-                                }
-                            });
-                        });
-                    }
-                }
-
-                return {
-                    // Public functions
-                    init: function() {
-                        initAddUser();
-                    }
-                };
-            }();
-
-            KTUtil.onDOMContentLoaded(function() {
-                KTUsersAddUser.init();
-            });
-        });
-
-
-        $(document).on('click', '.sa-params', function() {
-            var id = $(this).data('row-id');
-            swal({
-                title: "@lang('errors.areYouSure')",
-                text: "@lang('errors.deleteWarning')",
-                type: "warning",
-                showCancelButton: true,
-                confirmButtonColor: "#DD6B55",
-                confirmButtonText: "@lang('app.delete')",
-                cancelButtonText: "@lang('app.cancel')",
-                closeOnConfirm: true,
-                closeOnCancel: true
-            }, function(isConfirm) {
-                if (isConfirm) {
-
-                    var url = "{{ route('service_company.consultancy.destroy', ':id') }}";
-                    url = url.replace(':id', id);
-
-                    var token = "{{ csrf_token() }}";
-
-                    $.easyAjax({
-                        type: 'POST',
-                        url: url,
-                        data: {
-                            '_token': token,
-                            '_method': 'DELETE'
-                        },
-                        success: function(response) {
-                            if (response.status == "success") {
-                                $.unblockUI();
-                                //                                    swal("Deleted!", response.message, "success");
-                                table._fnDraw();
-                            }
-                        }
-                    });
-                }
-            });
-        });
-
-        function exportExcel() {
-            var table = $('#myTable').dataTable();
-            var length = table.fnGetData().length;
-            var oSettings = table.fnSettings();
-            var start = oSettings._iDisplayStart;
-            var url = '{{ route('service_company.consultancy.export', [':start', ':length']) }}';
-            url = url.replace(':start', start);
-            url = url.replace(':length', length);
-            window.location.href = url;
-        }
-    </script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/sweetalert/1.1.3/sweetalert-dev.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/sweetalert/1.1.3/sweetalert.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.19.3/jquery.validate.min.js"
-        type="text/javascript"></script>
-    <script>
-        $().ready(function() {
-
-            $("#add_staffing_partners_form").validate({
-                rules: {
-                    email: {
-                        required: true,
-                        email: true
-                    },
-                    staffing_partners_email: {
-                        required: true,
-                        email: true
-                    }
-                },
-                messages: {
-                    email: "Please enter a valid email address",
-                    staffing_partners_email: "Please enter a valid email address"
-                }
-            });
-
-        });
-
-
-
-
-        var isStaffingInviteSubmitting = false;
-        var currentInviteIdempotencyKey = null;
-        var currentInviteEmail = null;
-
-        function getOrCreateInviteIdempotencyKey(email) {
-            var normalized = (email || '').trim().toLowerCase();
-            if (currentInviteIdempotencyKey && currentInviteEmail === normalized) {
-                return currentInviteIdempotencyKey;
-            }
-            currentInviteEmail = normalized;
-            if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
-                currentInviteIdempotencyKey = crypto.randomUUID();
-            } else {
-                currentInviteIdempotencyKey = 'idemp_' + Date.now() + '_' + Math.random().toString(36).substring(2, 12);
-            }
-            return currentInviteIdempotencyKey;
-        }
-
-        $(document).off('keydown', '#staffing_partners_email').on('keydown', '#staffing_partners_email', function(e) {
-            if (e.which === 13 || e.keyCode === 13) {
-                e.preventDefault();
-                if (!isStaffingInviteSubmitting) {
-                    $('#submit_staffing_partners').click();
-                }
-                return false;
-            }
-        });
-
-        $(document).off('click', '#submit_staffing_partners').on('click', '#submit_staffing_partners', function(e) {
-            e.preventDefault();
-
-            if (isStaffingInviteSubmitting) {
-                return false;
-            }
-
-            if ($("#add_staffing_partners_form").length && typeof $("#add_staffing_partners_form").valid === 'function') {
-                if (!$("#add_staffing_partners_form").valid()) {
-                    return false;
-                }
-            }
-
-            var staffing_partners_email = ($('#staffing_partners_email').val() || '').trim();
-            if (!staffing_partners_email) {
-                return false;
-            }
-
-            var id = 0;
-            var url = "{{ route('service_company.consultancy.staffing_invitation', 'id') }}";
-            url = url.replace(':id', id);
-
-            var idempKey = getOrCreateInviteIdempotencyKey(staffing_partners_email);
-
-            isStaffingInviteSubmitting = true;
-            var $btn = $('#submit_staffing_partners');
-            $btn.prop('disabled', true);
-            $('.indicator-label').hide();
-            $('.indicator-progress').show();
-
-            $.ajax({
-                type: 'POST',
-                url: url,
-                headers: {
-                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') || '{{ csrf_token() }}',
-                    'X-Idempotency-Key': idempKey
-                },
-                data: {
-                    '_token': '{{ csrf_token() }}',
-                    'staffing_partners_email': staffing_partners_email,
-                    'idempotency_key': idempKey
-                },
-                success: function(response) {
-                    isStaffingInviteSubmitting = false;
-                    $btn.prop('disabled', false);
-                    $('.indicator-label').show();
-                    $('.indicator-progress').hide();
-
-                    if (response.status == "warning") {
-                        swal({
-                            title: "Notice",
-                            text: response.message,
-                            type: "warning",
-                            timer: 3000,
-                            showConfirmButton: true
-                        });
-                    }
-
-                    if (response.status == "success") {
-                        currentInviteIdempotencyKey = null;
-                        currentInviteEmail = null;
-                        $('#staffing_partners_email').val('');
-
-                        var spartnerAll = response.spartnerDataCnt ? response.spartnerDataCnt.spartnerAll : null;
-                        var sentRequest = response.spartnerDataCnt ? response.spartnerDataCnt.sentRequest : null;
-                        if (spartnerAll !== null && spartnerAll !== undefined) {
-                            $('#span_spartnerAll').html(spartnerAll);
-                        }
-                        if (sentRequest !== null && sentRequest !== undefined) {
-                            $('#span_sentRequest').html(sentRequest);
-                        }
-
-                        if (typeof ConsultancyListingManager !== 'undefined') {
-                            if (ConsultancyListingManager.clearCache) {
-                                ConsultancyListingManager.clearCache();
-                            }
-                            if (ConsultancyListingManager.broadcastChannel) {
-                                try {
-                                    ConsultancyListingManager.broadcastChannel.postMessage({
-                                        type: 'PARTNER_INVITATION_SENT',
-                                        spartnerAll: spartnerAll,
-                                        sentRequest: sentRequest,
-                                        timestamp: Date.now()
-                                    });
-                                } catch(e) {}
-                            }
-                        }
-
-                        swal({
-                            title: "Success!",
-                            text: response.message,
-                            html: true,
-                            type: "success",
-                            timer: 2000,
-                            showConfirmButton: true
-                        }, function() {
-                            $('.add_staffing_close').click();
-                        });
-                    }
-                },
-                error: function(xhr) {
-                    isStaffingInviteSubmitting = false;
-                    $btn.prop('disabled', false);
-                    $('.indicator-label').show();
-                    $('.indicator-progress').hide();
-
-                    var errorMsg = "An error occurred while sending the invitation. Please try again.";
-                    if (xhr && xhr.responseJSON && xhr.responseJSON.message) {
-                        errorMsg = xhr.responseJSON.message;
-                    }
-                    if (typeof swal !== 'undefined') {
-                        swal({
-                            title: "Error",
-                            text: errorMsg,
-                            type: "error"
-                        });
-                    }
-                }
-            });
-        });
-
-        $(document).ready(function() {
-            // Class definition
-            var KTUsersAddUser = function() {
-                // Shared variables
-                const element = document.getElementById('add_agency_drawer') || document.getElementById('add_staffing_partners');
-                if (!element) return { init: function() {} };
-                const form = element.querySelector('#add_staffing_partners_form');
-                if (!form) return { init: function() {} };
-                const modal = (element.classList && element.classList.contains('modal') && typeof bootstrap !== 'undefined' && bootstrap.Modal) ? new bootstrap.Modal(element) : null;
-
-                // Init add schedule modal
-                var initAddUser = () => {
-
-                    // Init form validation rules. For more info check the FormValidation plugin's official documentation:https://formvalidation.io/
-                    var validator = null;
-                    if (typeof FormValidation !== 'undefined' && FormValidation.formValidation) {
-                        try {
-                            validator = FormValidation.formValidation(
-                                form, {
-                                    fields: {
-                                        user_email: {
-                                            validators: {
-                                                notEmpty: {
-                                                    message: "Email address is required"
-                                                },
-                                                emailAddress: {
-                                                    message: "The value is not a valid email address"
-                                                }
-                                            }
-                                        }
-                                    },
-
-                                    plugins: {
-                                        trigger: new FormValidation.plugins.Trigger(),
-                                        bootstrap: new FormValidation.plugins.Bootstrap5({
-                                            rowSelector: '.fv-row',
-                                            eleInvalidClass: '',
-                                            eleValidClass: ''
-                                        })
-                                    }
-                                }
-                            );
-                        } catch(e) {}
-                    }
-
-                    // Submit button handler
-                    const submitButton = element.querySelector('[data-kt-users-modal-action="submit"]');
-                    if (submitButton) {
-                        submitButton.addEventListener('click', e => {
-                            e.preventDefault();
-
-                            // Validate form before submit
-                            if (validator) {
-                                validator.validate().then(function(status) {
-                                    console.log('validated!');
-
-                                    if (status == 'Valid') {
-                                        // Show loading indication
-                                        submitButton.setAttribute('data-kt-indicator', 'on');
-
-                                        // Disable button to avoid multiple click 
-                                        submitButton.disabled = true;
-
-                                        // Simulate form submission. For more info check the plugin's official documentation: https://sweetalert2.github.io/
-                                        setTimeout(function() {
-                                            // Remove loading indication
-                                            submitButton.removeAttribute(
-                                                'data-kt-indicator');
-
-                                            // Enable button
-                                            submitButton.disabled = false;
-
-                                            // Show popup confirmation 
-                                            Swal.fire({
-                                                    text: "Invitation has been sent!",
-                                                    icon: "success",
-                                                    buttonsStyling: false,
-                                                    confirmButtonText: "Ok, got it!",
-                                                    customClass: {
-                                                        confirmButton: "btn btn-primary"
-                                                    }
-                                                })
-                                                .then(function() {
-                                                    window.location = "";
-                                                });
-                                        }, 2e3);
-                                    } else {
-                                        // Show popup warning. For more info check the plugin's official documentation: https://sweetalert2.github.io/
-                                        Swal.fire({
-                                            text: "Sorry, looks like there are some errors detected, please try again.",
-                                            icon: "error",
-                                            buttonsStyling: false,
-                                            confirmButtonText: "Ok, got it!",
-                                            customClass: {
-                                                confirmButton: "btn btn-primary"
-                                            }
-                                        });
-                                    }
-                                });
-                            }
-                        });
-                    }
-
-                    // Cancel button handler
-                    const cancelButton = element.querySelector('[data-kt-users-modal-action="cancel"]');
-                    if (cancelButton) {
-                        cancelButton.addEventListener('click', e => {
-                            e.preventDefault();
-
-                            Swal.fire({
-                                text: "Are you sure you would like to cancel?",
-                                icon: "warning",
-                                showCancelButton: true,
-                                buttonsStyling: false,
-                                confirmButtonText: "Yes, cancel it!",
-                                cancelButtonText: "No, return",
-                                customClass: {
-                                    confirmButton: "btn btn-primary",
-                                    cancelButton: "btn btn-active-light"
-                                }
-                            }).then(function(result) {
-                                if (result.value) {
-                                    form.reset(); // Reset form			
-                                    if (modal && modal.hide) {
-                                        modal.hide();
-                                    } else {
-                                        closeAddAgencyDrawer();
-                                    }
-                                } else if (result.dismiss === 'cancel') {
-                                    Swal.fire({
-                                        text: "Your form has not been cancelled!.",
-                                        icon: "error",
-                                        buttonsStyling: false,
-                                        confirmButtonText: "Ok, got it!",
-                                        customClass: {
-                                            confirmButton: "btn btn-primary",
-                                        }
-                                    });
-                                }
-                            });
-                        });
-                    }
-
-                    // Close button handler
-                    const closeButton = element.querySelector('[data-kt-users-modal-action="close"]');
-                    if (closeButton) {
-                        closeButton.addEventListener('click', e => {
-                            e.preventDefault();
-
-                            Swal.fire({
-                                text: "Are you sure you would like to cancel?",
-                                icon: "warning",
-                                showCancelButton: true,
-                                buttonsStyling: false,
-                                confirmButtonText: "Yes, cancel it!",
-                                cancelButtonText: "No, return",
-                                customClass: {
-                                    confirmButton: "btn btn-primary",
-                                    cancelButton: "btn btn-active-light"
-                                }
-                            }).then(function(result) {
-                                if (result.value) {
-                                    form.reset(); // Reset form			
-                                    if (modal && modal.hide) {
-                                        modal.hide();
-                                    } else {
-                                        closeAddAgencyDrawer();
-                                    }
-                                } else if (result.dismiss === 'cancel') {
-                                    Swal.fire({
-                                        text: "Your form has not been cancelled!.",
-                                        icon: "error",
-                                        buttonsStyling: false,
-                                        confirmButtonText: "Ok, got it!",
-                                        customClass: {
-                                            confirmButton: "btn btn-primary",
-                                        }
-                                    });
-                                }
-                            });
-                        });
-                    }
-                }
-
-                return {
-                    // Public functions
-                    init: function() {
-                        initAddUser();
-                    }
-                };
-            }();
-
-            // On document ready
-            KTUtil.onDOMContentLoaded(function() {
-                KTUsersAddUser.init();
-            });
-        });
-    </script>
-    <script>
-        /*table.on('click', '.show-detail-direct', function (){	
-    			
-    			$('#kt_activitiesSP_toggle').trigger('click');			
-    			var id    			=	$(this).data('row-id');
-    			var url   			=	"{{ route('service_company.consultancy.show', ':id') }}";
-    			url     			=	url.replace(':id', id);			
-    			var baseurl    		=	"{{ asset('assets/images/Loading2.gif') }}"; 
-    			$.ajax({
-    							type  			: 'GET',
-    							url   			: url,
-    							 beforeSend		: function() {
-    									  			$('#kt_activitiesSP_body').html('<img src="'+baseurl+'" height="50px" width="100%">');
-    							},
-    							success 		: function (response) 
-    							{									
-    											if (response.status == "success")
-    											{
-    												$('#kt_activitiesSP_body').html(response.view);
-    											}	
-    							}
-    					});
-    		
-    		}); */
-    </script>
-    <script>
-        $(document).on('click', '.show-detail-direct', function() {
-
-            $('#kt_activitiesDirectClient_toggle').trigger('click');
-            var id = $(this).data('row-id');
-            var url = "{{ route('service_company.consultancy.dviewmore', ':id') }}";
-            url = url.replace(':id', id);
-
-            if (typeof AgencyDetailTabManager !== 'undefined' && AgencyDetailTabManager.resetState) {
-                AgencyDetailTabManager.resetState();
-            }
-
-            var baseurl = "{{ asset('assets/images/Loading2.gif') }}";
-            $.ajax({
-                type: 'GET',
-                url: url,
-                beforeSend: function() {
-                    $('#kt_activitiesDirectClient_body').html('<img src="' + baseurl +
-                        '" height="35px" width="100%">');
-                },
-                success: function(response) {
-                    $('#kt_activitiesDirectClient_body').html(response.view);
-                }
-            });
-        });
-
-        // Drawer cleanup listener to abort background requests and free chart memory on close
-        $(document).on('click', '#kt_activitiesDirectClient_close', function() {
-            if (typeof AgencyDetailTabManager !== 'undefined' && AgencyDetailTabManager.resetState) {
-                AgencyDetailTabManager.resetState();
-            }
-            if (typeof dashboardCharts !== 'undefined') {
-                Object.keys(dashboardCharts).forEach(function(key) {
-                    try {
-                        if (dashboardCharts[key] && typeof dashboardCharts[key].destroy === 'function') {
-                            dashboardCharts[key].destroy();
-                        }
-                    } catch (e) {}
-                });
-                dashboardCharts = {};
-            }
-        });
-
-        // ─────────────────────────────────────────────────────────────────────────────
-        // JeroConsultancyLocalStore — Browser IndexedDB Engine for 0% Avoidable Hits
-        // ─────────────────────────────────────────────────────────────────────────────
-        const JERO_CONSULTANCY_DB_NAME = 'JeroConsultancyLocalStore';
-        const JERO_CONSULTANCY_DB_VERSION = 1;
-        const JERO_TENANT_ID = {{ (int) (auth()->user()->company_id ?? 0) }};
-        const JERO_USER_ID = {{ (int) (auth()->user()->id ?? 0) }};
-        const JERO_CONSULTANCY_TTL_MS = 10 * 60 * 1000; // 10 minutes TTL
-
-        const JeroConsultancyLocalStore = (function() {
-            let dbPromise = null;
-
-            function getDB() {
-                if (!window.indexedDB) return Promise.resolve(null);
-                if (dbPromise) return dbPromise;
-
-                dbPromise = new Promise((resolve) => {
-                    try {
-                        const req = window.indexedDB.open(JERO_CONSULTANCY_DB_NAME, JERO_CONSULTANCY_DB_VERSION);
-                        req.onupgradeneeded = function(e) {
-                            const db = e.target.result;
-                            if (!db.objectStoreNames.contains('consultancy_cache')) {
-                                db.createObjectStore('consultancy_cache', { keyPath: 'cache_key' });
-                            }
-                            if (!db.objectStoreNames.contains('meta')) {
-                                db.createObjectStore('meta', { keyPath: 'id' });
-                            }
-                        };
-                        req.onsuccess = function(e) {
-                            const db = e.target.result;
-                            try {
-                                const tx = db.transaction(['meta'], 'readonly');
-                                const metaStore = tx.objectStore('meta');
-                                const metaReq = metaStore.get('current_context');
-                                metaReq.onsuccess = function() {
-                                    const meta = metaReq.result;
-                                    if (meta && (meta.tenant_id !== JERO_TENANT_ID || meta.user_id !== JERO_USER_ID)) {
-                                        // Tenant or user switched: instant wipe to prevent cross-tenant data leakage
-                                        const wipeTx = db.transaction(['consultancy_cache', 'meta'], 'readwrite');
-                                        wipeTx.objectStore('consultancy_cache').clear();
-                                        wipeTx.objectStore('meta').put({
-                                            id: 'current_context',
-                                            tenant_id: JERO_TENANT_ID,
-                                            user_id: JERO_USER_ID,
-                                            updated_at: Date.now()
-                                        });
-                                    } else if (!meta) {
-                                        const setTx = db.transaction(['meta'], 'readwrite');
-                                        setTx.objectStore('meta').put({
-                                            id: 'current_context',
-                                            tenant_id: JERO_TENANT_ID,
-                                            user_id: JERO_USER_ID,
-                                            updated_at: Date.now()
-                                        });
-                                    }
-                                };
-                            } catch (err) {
-                                console.warn('JeroConsultancyLocalStore context check:', err);
-                            }
-                            resolve(db);
-                        };
-                        req.onerror = function() { resolve(null); };
-                    } catch (err) {
-                        resolve(null);
-                    }
-                });
-
-                return dbPromise;
-            }
-
-            return {
-                get: async function(key) {
-                    const db = await getDB();
-                    if (!db || !key) return null;
-                    return new Promise((resolve) => {
-                        try {
-                            const tx = db.transaction(['consultancy_cache'], 'readonly');
-                            const store = tx.objectStore('consultancy_cache');
-                            const req = store.get(key);
-                            req.onsuccess = function() {
-                                const res = req.result;
-                                if (res && (Date.now() - res.timestamp < JERO_CONSULTANCY_TTL_MS)) {
-                                    resolve(res.payload);
-                                } else {
-                                    resolve(null);
-                                }
-                            };
-                            req.onerror = function() { resolve(null); };
-                        } catch (e) {
-                            resolve(null);
-                        }
-                    });
-                },
-                set: async function(key, payload) {
-                    const db = await getDB();
-                    if (!db || !key || !payload) return;
-                    try {
-                        const tx = db.transaction(['consultancy_cache'], 'readwrite');
-                        const store = tx.objectStore('consultancy_cache');
-                        store.put({
-                            cache_key: key,
-                            payload: payload,
-                            timestamp: Date.now()
-                        });
-                    } catch (e) {}
-                },
-                purge: async function() {
-                    const db = await getDB();
-                    if (!db) return;
-                    try {
-                        const tx = db.transaction(['consultancy_cache'], 'readwrite');
-                        tx.objectStore('consultancy_cache').clear();
-                    } catch (e) {}
-                }
-            };
-        })();
-
-        var ConsultancyListingManager = {
-            currentPage: 1,
-            activeController: null,
-            requestSequence: 0,
-            pageCache: new Map(),
-            maxCacheSize: 20,
-            cacheTTL: 120000, // 2 minutes
-            broadcastChannel: null,
-
-            initMultiTabSync: function() {
-                var self = this;
-                // 1. BroadcastChannel for instant same-browser tab synchronization
-                if (typeof window.BroadcastChannel !== 'undefined') {
-                    try {
-                        this.broadcastChannel = new BroadcastChannel('jero_consultancy_sync');
-                        this.broadcastChannel.onmessage = function(event) {
-                            if (!event || !event.data) return;
-                            var msg = event.data;
-                            if (msg.type === 'PARTNER_INVITATION_SENT') {
-                                if (msg.spartnerAll !== undefined) {
-                                    $('#span_spartnerAll').html(msg.spartnerAll);
-                                }
-                                if (msg.sentRequest !== undefined) {
-                                    $('#span_sentRequest').html(msg.sentRequest);
-                                }
-                                self.clearCache();
-                                JeroConsultancyLocalStore.purge();
-                                self.loadPage(self.currentPage, true);
-                            }
-                        };
-                    } catch(e) {}
-                }
-
-                // 2. Realtime WebSocket via Laravel Echo / Reverb (across multiple devices & users)
-                if (typeof window.Echo !== 'undefined' && JERO_TENANT_ID > 0) {
-                    try {
-                        window.Echo.private('company.' + JERO_TENANT_ID)
-                            .listen('.consultancy.updated', function(e) {
-                                if (!e) return;
-                                if (e.spartnerAll !== undefined) {
-                                    $('#span_spartnerAll').html(e.spartnerAll);
-                                }
-                                if (e.sentRequest !== undefined) {
-                                    $('#span_sentRequest').html(e.sentRequest);
-                                }
-                                self.clearCache();
-                                JeroConsultancyLocalStore.purge();
-                                self.loadPage(self.currentPage, true);
-                            });
-                    } catch (err) {
-                        console.warn('Echo Reverb subscription:', err);
-                    }
-                }
-            },
-
-            getCacheKey: function(page) {
-                var perPage = localStorage.getItem('candidatePerPage') || 10;
-                var search = ($('#inputSearch').val() || '').trim();
-                var cusSearch = ($('#kt_tagify_2').val() || '').trim();
-                var country = ($('#country').val() || '').trim();
-                var sort = ($('#sortingfilter').val() || '').trim();
-                var performance = ($('#agency_performance').val() || '').trim();
-                var sla = ($('#response_sla').val() || '').trim();
-                return ['consultancy', JERO_TENANT_ID, page, perPage, search, cusSearch, country, sort, performance, sla].join('|');
-            },
-
-            clearCache: function() {
-                this.pageCache.clear();
-                JeroConsultancyLocalStore.purge();
-            },
-
-            renderResponse: function(response) {
-                $('.loadingMessagestaffingpartnerajax').css({ display: 'none' });
-                if (response.total !== undefined) {
-                    $('#span_spartnerAll').html(response.total);
-                }
-                $('#staffingpartnerajax').html(response.html);
-                $('#paginationstaffingpartner').html(response.pagination);
-            },
-
-            loadPage: async function(page, forceRefresh) {
-                page = page || 1;
-                this.currentPage = page;
-
-                var cacheKey = this.getCacheKey(page);
-                var self = this;
-
-                // Layer 1: Instant In-Memory RAM Cache (< 1ms render)
-                if (!forceRefresh && this.pageCache.has(cacheKey)) {
-                    var memCached = this.pageCache.get(cacheKey);
-                    if (Date.now() - memCached.timestamp < this.cacheTTL) {
-                        this.renderResponse(memCached.data);
-                        return;
-                    } else {
-                        this.pageCache.delete(cacheKey);
-                    }
-                }
-
-                // Layer 2: Instant IndexedDB Cache (< 8ms render)
-                if (!forceRefresh) {
-                    try {
-                        var idbCached = await JeroConsultancyLocalStore.get(cacheKey);
-                        if (idbCached) {
-                            self.pageCache.set(cacheKey, { data: idbCached, timestamp: Date.now() });
-                            self.renderResponse(idbCached);
-                            return; // 0% server hit!
-                        }
-                    } catch (e) {}
-                }
-
-                // Layer 3: Authoritative API Fetch (if not present in RAM or IndexedDB)
-                if (this.activeController) {
-                    try {
-                        this.activeController.abort();
-                    } catch(e) {}
-                }
-
-                var controller = new AbortController();
-                this.activeController = controller;
-
-                var seq = ++this.requestSequence;
-                $('.loadingMessagestaffingpartnerajax').css({ display: 'block' });
-                var perPage = localStorage.getItem('candidatePerPage') || 10;
-
-                $.ajax({
-                    url: `{!! route('service_company.consultancy.data_ajax') !!}?page=${page}`,
-                    type: 'GET',
-                    signal: controller.signal,
-                    data: {
-                        search: $('#inputSearch').val(),
-                        cus_search: $('#kt_tagify_2').val(),
-                        country: $('#country').val(),
-                        sortingfilter: $('#sortingfilter').val(),
-                        agency_performance: $('#agency_performance').val(),
-                        response_sla: $('#response_sla').val(),
-                        per_page: perPage,
-                        size: perPage
-                    },
-                    success: function(response) {
-                        if (seq !== self.requestSequence) return;
-
-                        // Save in Browser RAM
-                        if (self.pageCache.size >= self.maxCacheSize) {
-                            var oldestKey = self.pageCache.keys().next().value;
-                            self.pageCache.delete(oldestKey);
-                        }
-                        self.pageCache.set(cacheKey, {
-                            data: response,
-                            timestamp: Date.now()
-                        });
-
-                        // Save in Browser IndexedDB
-                        JeroConsultancyLocalStore.set(cacheKey, response);
-
-                        self.renderResponse(response);
-                    },
-                    error: function(xhr, status) {
-                        if (status !== 'abort') {
-                            $('.loadingMessagestaffingpartnerajax').css({ display: 'none' });
-                        }
-                    }
-                });
-            }
-        };
-
-        // Backward compatibility bridge
-        function fetchstaffingpartner(page = 1, search = '') {
-            ConsultancyListingManager.loadPage(page);
-        }
-
-        $(document).ready(function() {
-            ConsultancyListingManager.initMultiTabSync();
-            ConsultancyListingManager.loadPage(1);
-
-            $(document).on('click', '#paginationstaffingpartner .pagi-page, #paginationstaffingpartner .pagi-arrow', function(e) {
-                e.preventDefault();
-                const page = $(this).data('page');
-                if (!page || $(this).hasClass('pagi-disabled') || $(this).hasClass('pagi-active-disabled')) return;
-
-                ConsultancyListingManager.loadPage(page);
-            });
-
-            $(document).on('change', '#paginationstaffingpartner .pagi-perpage', function(e) {
-                const selectedPerPage = $(this).val();
-                if (selectedPerPage) {
-                    localStorage.setItem('candidatePerPage', selectedPerPage);
-                    ConsultancyListingManager.loadPage(1);
-                }
-            });
-        });
-
-
-
-
-    </script>
+    $(document).ready(function() {
+        AgencyListingManager.init();
+    });
+</script>
 @endpush
+@endsection
