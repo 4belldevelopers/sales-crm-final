@@ -49,6 +49,7 @@ Route::group(['middleware' => 'auth'], function () {
         // language settings
         Route::get('language-settings/change-language', [LanguageSettingsController::class, 'changeLanguage'])->name('language-settings.change-language');
         Route::put('language-settings/change-language-status/{id}', [LanguageSettingsController::class, 'changeStatus'])->name('language-settings.changeStatus');
+        Route::put('language-settings/set-default/{id}', [LanguageSettingsController::class, 'setDefaultLanguage'])->name('language-settings.setDefault');
         Route::resource('language-settings', LanguageSettingsController::class);
         Route::resource('theme-settings', SuperAdminThemeSettingsController::class);
         Route::put('footer-settings/update-footer-menu/{id}', [SuperAdminFooterSettingsController::class, 'updateFooterMenu'])->name('footer-settings.updateFooterMenu');
