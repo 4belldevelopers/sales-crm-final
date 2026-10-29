@@ -92,7 +92,26 @@
         width:100%
       }
 
-      
+      /* Global Super Admin Offline Warning Banner Layout & Alignment */
+      #superadminOfflineBannerContainer {
+        position: relative;
+        z-index: 95;
+      }
+
+      /* On pages without an active toolbar (like Companies & Subscription), collapse the 55px Metronic toolbar void */
+      body:not(:has(#kt_toolbar:visible)) #superadminOfflineBannerContainer,
+      body.header-fixed:not(:has(#kt_toolbar)) #superadminOfflineBannerContainer {
+        margin-top: -48px;
+        margin-bottom: 8px;
+      }
+
+      /* When the offline banner is visible, neutralize negative top margins on page root containers */
+      body.superadmin-offline-active .superadmin-subscription-page,
+      body.superadmin-offline-active .sa-companies-page,
+      body:has(#superadminOfflineBannerContainer:not([style*="display: none"]):not([style*="display:none"])) .superadmin-subscription-page,
+      body:has(#superadminOfflineBannerContainer:not([style*="display: none"]):not([style*="display:none"])) .sa-companies-page {
+        margin-top: 0 !important;
+      }
     </style>
 
 </head>
@@ -130,7 +149,7 @@
                             <span class="fw-bold fs-7 text-gray-900">Offline Mode Active</span>
                             <span class="fs-8 text-gray-700">Network connection lost. Serving authoritative company records directly from Client RAM Cache.</span>
                         </div>
-                        <button type="button" class="btn-close ms-auto" aria-label="Close" onclick="$('#superadminOfflineBannerContainer').slideUp(150);"></button>
+                        <button type="button" class="btn-close ms-auto" aria-label="Close" onclick="$('#superadminOfflineBannerContainer').slideUp(150); $('body').removeClass('superadmin-offline-active');"></button>
                     </div>
                 </div>
 
@@ -2813,6 +2832,7 @@
             function showSuperAdminOfflineBanner() {
                 var container = $('#superadminOfflineBannerContainer');
                 if (container.length && !container.is(':visible')) {
+                    $('body').addClass('superadmin-offline-active');
                     container.slideDown(150);
                 }
             }
@@ -2820,6 +2840,7 @@
             function hideSuperAdminOfflineBanner() {
                 var container = $('#superadminOfflineBannerContainer');
                 if (container.length && container.is(':visible')) {
+                    $('body').removeClass('superadmin-offline-active');
                     container.slideUp(150);
                 }
             }
@@ -2838,10 +2859,16 @@
                 hideSuperAdminOfflineBanner();
             });
 
-            // Circuit-Breaker AJAX listeners: detect network connection drops (status 0)
+            // Circuit-Breaker AJAX listeners: detect genuine network connection drops
             if (typeof jQuery !== 'undefined') {
                 $(document).ajaxError(function(event, jqXHR, ajaxSettings, thrownError) {
-                    if ((typeof navigator !== 'undefined' && !navigator.onLine) || (jqXHR && jqXHR.status === 0)) {
+                    // Explicitly ignore client-side aborted or canceled requests (e.g. debounced search, tab switching, drawer navigation)
+                    if (thrownError === 'abort' || (jqXHR && (jqXHR.statusText === 'abort' || (jqXHR.status === 0 && jqXHR.readyState === 0)))) {
+                        return;
+                    }
+
+                    // Only trigger offline banner if browser is genuinely offline
+                    if (typeof navigator !== 'undefined' && !navigator.onLine) {
                         showSuperAdminOfflineBanner();
                     }
                 });
