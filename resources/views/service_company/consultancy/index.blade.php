@@ -159,19 +159,20 @@
   color: #ffffff !important;
 }
 
-/* ── 6 Stat Cards Grid ── */
+/* ── 6 Stat Cards Row (Strictly 1 Single Horizontal Row — Never Wraps) ── */
 .cl-stat-grid {
   display: grid !important;
-  grid-template-columns: repeat(6, 1fr) !important;
-  gap: 12px !important;
+  grid-template-columns: repeat(6, minmax(0, 1fr)) !important;
+  gap: 8px !important;
   margin-bottom: 14px !important;
   width: 100% !important;
+  box-sizing: border-box !important;
 }
 .cl-card {
   background: #ffffff !important;
   border: 1px solid #e2e8f0 !important;
   border-radius: 10px !important;
-  padding: 12px 14px !important;
+  padding: 10px 10px !important;
   display: flex !important;
   flex-direction: column !important;
   justify-content: space-between !important;
@@ -180,6 +181,8 @@
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02) !important;
   transition: all 0.15s ease !important;
   cursor: pointer !important;
+  min-width: 0 !important;
+  overflow: hidden !important;
 }
 .cl-card:hover {
   transform: translateY(-2px) !important;
@@ -193,16 +196,22 @@
 .cl-card-top {
   display: flex !important;
   align-items: center !important;
-  gap: 10px !important;
+  gap: 8px !important;
+  min-width: 0 !important;
 }
 .cl-card-icon {
-  width: 36px !important;
-  height: 36px !important;
-  border-radius: 8px !important;
+  width: 32px !important;
+  height: 32px !important;
+  min-width: 32px !important;
+  border-radius: 7px !important;
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
   flex-shrink: 0 !important;
+}
+.cl-card-icon svg {
+  width: 16px !important;
+  height: 16px !important;
 }
 .cl-card-icon.blue   { background: #eff6ff; color: #2563eb; }
 .cl-card-icon.indigo { background: #eef2ff; color: #4f46e5; }
@@ -214,9 +223,11 @@
   display: flex !important;
   flex-direction: column !important;
   min-width: 0 !important;
+  flex: 1 1 0% !important;
+  overflow: hidden !important;
 }
 .cl-card-num {
-  font-size: 18px !important;
+  font-size: 17px !important;
   font-weight: 700 !important;
   color: #0f172a !important;
   line-height: 1.15 !important;
@@ -224,11 +235,11 @@
   font-family: 'Poppins', sans-serif !important;
 }
 .cl-card-lbl {
-  font-size: 11.5px !important;
+  font-size: 11px !important;
   font-weight: 500 !important;
   color: #64748b !important;
   line-height: 1.2 !important;
-  margin-top: 2px !important;
+  margin-top: 1px !important;
   white-space: nowrap !important;
   overflow: hidden !important;
   text-overflow: ellipsis !important;
@@ -236,12 +247,19 @@
 .cl-card-sub {
   display: flex !important;
   align-items: center !important;
-  gap: 4px !important;
-  font-size: 10.5px !important;
+  gap: 3.5px !important;
+  font-size: 10px !important;
   font-weight: 600 !important;
-  margin-top: 8px !important;
-  padding-top: 6px !important;
+  margin-top: 6px !important;
+  padding-top: 4px !important;
   border-top: 1px dashed #f1f5f9 !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+.cl-card-sub span {
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
   white-space: nowrap !important;
 }
 .cl-card-sub.green  { color: #16a34a; }
@@ -790,24 +808,113 @@
   color: #64748b !important;
 }
 
-/* ── 15.6" Laptop Responsiveness (1366x768 & 1920x1080) ── */
-@media (max-width: 1400px) {
+/* ── 15.6" Laptop Responsiveness (1366x768 & 1920x1080) — Locked 6 Cards on 1 Row ── */
+@media (max-width: 1440px) {
   .cl-stat-grid {
-    grid-template-columns: repeat(3, 1fr) !important;
+    grid-template-columns: repeat(6, minmax(0, 1fr)) !important;
+    gap: 6px !important;
+  }
+  .cl-card {
+    padding: 8px 7px !important;
+  }
+  .cl-card-top {
+    gap: 6px !important;
+    margin-bottom: 2px !important;
+  }
+  .cl-card-icon {
+    width: 28px !important;
+    height: 28px !important;
+    min-width: 28px !important;
+    border-radius: 6px !important;
+  }
+  .cl-card-icon svg {
+    width: 14px !important;
+    height: 14px !important;
+  }
+  .cl-card-num {
+    font-size: 16px !important;
+  }
+  .cl-card-lbl {
+    font-size: 10px !important;
+  }
+  .cl-card-sub {
+    font-size: 9px !important;
+    gap: 3px !important;
+    margin-top: 4px !important;
+    padding-top: 3px !important;
+  }
+  .cl-card-sub svg {
+    width: 10px !important;
+    height: 10px !important;
   }
   .cl-subcards-grid, .tbl-h {
-    grid-template-columns: 2fr 1.2fr 1fr 2.2fr !important;
+    grid-template-columns: 2.2fr 1.3fr 1fr 2.5fr !important;
     gap: 10px !important;
   }
 }
-@media (max-width: 1100px) {
-  .cl-subcards-grid, .tbl-h {
-    grid-template-columns: repeat(2, 1fr) !important;
+
+@media (max-width: 1150px) {
+  .cl-stat-grid {
+    grid-template-columns: repeat(6, minmax(0, 1fr)) !important;
+    gap: 5px !important;
+  }
+  .cl-card {
+    padding: 6px 5px !important;
+    border-radius: 8px !important;
+  }
+  .cl-card-top {
+    gap: 5px !important;
+    margin-bottom: 2px !important;
+  }
+  .cl-card-icon {
+    width: 24px !important;
+    height: 24px !important;
+    min-width: 24px !important;
+    border-radius: 5px !important;
+  }
+  .cl-card-icon svg {
+    width: 12px !important;
+    height: 12px !important;
+  }
+  .cl-card-num {
+    font-size: 14.5px !important;
+  }
+  .cl-card-lbl {
+    font-size: 9px !important;
+  }
+  .cl-card-sub {
+    font-size: 8.5px !important;
+    gap: 2px !important;
+    margin-top: 3px !important;
+    padding-top: 2px !important;
+  }
+  .cl-card-sub svg {
+    width: 9px !important;
+    height: 9px !important;
   }
 }
+
 @media (max-width: 768px) {
   .cl-stat-grid {
-    grid-template-columns: repeat(2, 1fr) !important;
+    grid-template-columns: repeat(6, minmax(0, 1fr)) !important;
+    gap: 4px !important;
+  }
+  .cl-card {
+    padding: 5px 4px !important;
+  }
+  .cl-card-icon {
+    width: 20px !important;
+    height: 20px !important;
+    min-width: 20px !important;
+  }
+  .cl-card-num {
+    font-size: 13px !important;
+  }
+  .cl-card-lbl {
+    font-size: 8px !important;
+  }
+  .cl-card-sub {
+    font-size: 7.5px !important;
   }
   .cl-subcards-grid, .tbl-h {
     grid-template-columns: 1fr !important;
