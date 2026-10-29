@@ -20,6 +20,16 @@ Last updated: 2026-10-22 (Super Admin Companies Page UI Redesign, 100% CQRS Read
 - **Test coverage:** `TenantIsolationTest`, `BenchToJobAppTrackerPipelineContractTest`, `BenchTalentRequestPipelineContractTest`, `SuperAdminCompanyLoadTest`, `SuperAdminSubscriptionLoadTest`, `SuperAdminDashboardLoadTest` (100% green).
 - **V2_login blocking-scenarios architecture:** session-epoch pattern + Reverb `UserAccountSuspended` event + `SyncUserStatusAction` (cross-tenant-safe) + `BlockCompanyAction` (static bulk helper) + `block_log` audit table + drop all 20 `refresh:true` ES sites + grep-lint guard. See [docs/V2_login/BLOCKING_SCENARIOS_AUDIT.md](../docs/V2_login/BLOCKING_SCENARIOS_AUDIT.md), [ADR 0007](../docs/adr/0007-blocking-scenarios-architecture.md). Code not yet landed.
 
+- *2026-10-29* — **Marketplace Communication Contacts & 8-Column Card + Sub-Card Team Management Standard (100% COMPLETED & VERIFIED)**:
+  - **Module & Scope**: Service Company Team Management (`resources/views/service_company/team/index.blade.php`, `ajax_pages/team-list-ajax.blade.php`).
+  - **Card + Sub-Card Design (Rule 20)**:
+    - Replaced legacy tables with the Modern Card + Sub-Card Enterprise Design System (Rule 20).
+    - Top Marketplace Communication Contacts: 3-column card displaying Marketplace Overview, Client & Sales Communication SPOC, and Agency Communication SPOC with 1-click designation modals.
+    - Underlined navigation sub-tabs (`All Members`, `Active`, `Inactive`, `Invited`) with live badge counters and `Communication History` drawer action.
+    - Full-width search bar with debounce, Sort By (Last Active, Newest, Oldest), and Status filter dropdown.
+    - Roster stream converted to discrete 8-column sub-card cells per member card: Member identity avatar & details, Rank & Score pill, Workload counters (Active Jobs, Captain Jobs, TRM Talents), Role pill & permissions modal, Marketplace Communication badge / 1-click designation buttons, Status iOS toggle, Last Active freshness, and 3-dots action menu.
+  - **Pre-commit Verification**: `php -l` passed with 0 syntax errors, 0 forbidden debug calls, fully pushed to `origin/staging`.
+
 - *2026-10-29* — **Client Details Drawer Tier 2 Sub-Tabs Height & Geometry Calibration (100% COMPLETED & VERIFIED)**:
   - **User Feedback & Problem**:
     - Tabs card height was oversized (`min-height: 48px !important; padding: 8px 10px !important;`), leaving large 8px vertical gaps around 32px tab pills.
