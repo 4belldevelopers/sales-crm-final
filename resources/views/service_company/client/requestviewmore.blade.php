@@ -1724,14 +1724,14 @@
 
             <!-- ── KPI SUMMARY ROW: AUTHORITATIVE CLIENT-LEVEL BUSINESS TOTALS (Rule 20 Compliant) ── -->
             <div class="cd-kpi-grid">
-                <!-- KPI 1: Total Jobs Created -->
+                <!-- KPI 1: All Jobs -->
                 <div class="cd-kpi-card" title="Total jobs created for this client till date">
                     <div class="cd-kpi-icon cd-kpi-icon-blue">
                         <i class="fas fa-layer-group fa-solid"></i>
                     </div>
                     <div class="cd-kpi-body">
                         <div class="cd-kpi-num">{{ number_format($kpiTotalJobs ?? 0) }}</div>
-                        <div class="cd-kpi-lbl">Total Jobs Created</div>
+                        <div class="cd-kpi-lbl">All Jobs</div>
                     </div>
                 </div>
 
@@ -1746,47 +1746,47 @@
                     </div>
                 </div>
 
-                <!-- KPI 3: Candidates Submitted -->
+                <!-- KPI 3: All Candidates -->
                 <div class="cd-kpi-card" title="Total candidates submitted to this client till date">
                     <div class="cd-kpi-icon cd-kpi-icon-purple">
                         <i class="fas fa-user-check fa-solid"></i>
                     </div>
                     <div class="cd-kpi-body">
                         <div class="cd-kpi-num">{{ number_format($kpiSubmitted ?? 0) }}</div>
-                        <div class="cd-kpi-lbl">Candidates Submitted</div>
+                        <div class="cd-kpi-lbl">All Candidates</div>
                     </div>
                 </div>
 
-                <!-- KPI 4: Interviews Scheduled -->
+                <!-- KPI 4: All Interviews -->
                 <div class="cd-kpi-card" title="Total interviews scheduled for this client till date">
                     <div class="cd-kpi-icon cd-kpi-icon-amber">
                         <i class="fas fa-calendar-check fa-solid"></i>
                     </div>
                     <div class="cd-kpi-body">
                         <div class="cd-kpi-num">{{ number_format($kpiInterviews ?? 0) }}</div>
-                        <div class="cd-kpi-lbl">Interviews Scheduled</div>
+                        <div class="cd-kpi-lbl">All Interviews</div>
                     </div>
                 </div>
 
-                <!-- KPI 5: Offers Generated -->
+                <!-- KPI 5: All Offers -->
                 <div class="cd-kpi-card" title="Total offers generated for this client till date">
                     <div class="cd-kpi-icon cd-kpi-icon-rose">
                         <i class="fas fa-file-signature fa-solid"></i>
                     </div>
                     <div class="cd-kpi-body">
                         <div class="cd-kpi-num">{{ number_format($kpiOffers ?? 0) }}</div>
-                        <div class="cd-kpi-lbl">Offers Generated</div>
+                        <div class="cd-kpi-lbl">All Offers</div>
                     </div>
                 </div>
 
-                <!-- KPI 6: Joined -->
-                <div class="cd-kpi-card" title="Total candidates who have joined for this client till date">
+                <!-- KPI 6: All Joinings -->
+                <div class="cd-kpi-card" title="Total candidates joined for this client till date">
                     <div class="cd-kpi-icon cd-kpi-icon-teal">
                         <i class="fas fa-handshake fa-solid"></i>
                     </div>
                     <div class="cd-kpi-body">
                         <div class="cd-kpi-num">{{ number_format($kpiJoins ?? 0) }}</div>
-                        <div class="cd-kpi-lbl">Joined</div>
+                        <div class="cd-kpi-lbl">All Joinings</div>
                     </div>
                 </div>
             </div>

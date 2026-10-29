@@ -4570,14 +4570,14 @@
 
           <!-- ── KPI SUMMARY ROW: AUTHORITATIVE CLIENT-LEVEL BUSINESS TOTALS (Rule 20 Compliant) ── -->
           <div class="cd-kpi-grid">
-            <!-- KPI 1: Total Jobs Created -->
+            <!-- KPI 1: All Jobs -->
             <a href="javascript:void(0);" class="cd-kpi-card cd-kpi-nav-trigger" data-tab-target="#requisitions" title="Total jobs created for this client till date">
               <div class="cd-kpi-icon cd-kpi-icon-blue">
                 <i class="fas fa-layer-group fa-solid"></i>
               </div>
               <div class="cd-kpi-body">
                 <div class="cd-kpi-num" id="cdKpiTotalJobsDirect">{{ number_format($kpiTotalJobs ?? 0) }}</div>
-                <div class="cd-kpi-lbl">Total Jobs Created</div>
+                <div class="cd-kpi-lbl">All Jobs</div>
               </div>
             </a>
 
@@ -4592,47 +4592,47 @@
               </div>
             </a>
 
-            <!-- KPI 3: Candidates Submitted -->
+            <!-- KPI 3: All Candidates -->
             <a href="javascript:void(0);" class="cd-kpi-card cd-kpi-nav-trigger" data-tab-target="#candidate_list" title="Total candidates submitted to this client till date">
               <div class="cd-kpi-icon cd-kpi-icon-purple">
                 <i class="fas fa-user-check fa-solid"></i>
               </div>
               <div class="cd-kpi-body">
                 <div class="cd-kpi-num" id="cdKpiCandidatesSubmittedDirect">{{ number_format($kpiSubmitted ?? 0) }}</div>
-                <div class="cd-kpi-lbl">Candidates Submitted</div>
+                <div class="cd-kpi-lbl">All Candidates</div>
               </div>
             </a>
 
-            <!-- KPI 4: Interviews Scheduled -->
+            <!-- KPI 4: All Interviews -->
             <a href="javascript:void(0);" class="cd-kpi-card cd-kpi-nav-trigger" data-tab-target="#interview_tracker" title="Total interviews scheduled for this client till date">
               <div class="cd-kpi-icon cd-kpi-icon-amber">
                 <i class="fas fa-calendar-check fa-solid"></i>
               </div>
               <div class="cd-kpi-body">
                 <div class="cd-kpi-num" id="cdKpiInterviewsScheduledDirect">{{ number_format($kpiInterviews ?? 0) }}</div>
-                <div class="cd-kpi-lbl">Interviews Scheduled</div>
+                <div class="cd-kpi-lbl">All Interviews</div>
               </div>
             </a>
 
-            <!-- KPI 5: Offers Generated -->
+            <!-- KPI 5: All Offers -->
             <a href="javascript:void(0);" class="cd-kpi-card cd-kpi-nav-trigger" data-tab-target="#candidate_joining" title="Total offers generated for this client till date">
               <div class="cd-kpi-icon cd-kpi-icon-rose">
                 <i class="fas fa-file-signature fa-solid"></i>
               </div>
               <div class="cd-kpi-body">
                 <div class="cd-kpi-num" id="cdKpiOffersGeneratedDirect">{{ number_format($kpiOffers ?? 0) }}</div>
-                <div class="cd-kpi-lbl">Offers Generated</div>
+                <div class="cd-kpi-lbl">All Offers</div>
               </div>
             </a>
 
-            <!-- KPI 6: Joined -->
-            <a href="javascript:void(0);" class="cd-kpi-card cd-kpi-nav-trigger" data-tab-target="#candidate_joining" title="Total candidates who have joined for this client till date">
+            <!-- KPI 6: All Joinings -->
+            <a href="javascript:void(0);" class="cd-kpi-card cd-kpi-nav-trigger" data-tab-target="#candidate_joining" title="Total candidates joined for this client till date">
               <div class="cd-kpi-icon cd-kpi-icon-teal">
                 <i class="fas fa-handshake fa-solid"></i>
               </div>
               <div class="cd-kpi-body">
                 <div class="cd-kpi-num" id="cdKpiJoinedDirect">{{ number_format($kpiJoins ?? 0) }}</div>
-                <div class="cd-kpi-lbl">Joined</div>
+                <div class="cd-kpi-lbl">All Joinings</div>
               </div>
             </a>
           </div>
