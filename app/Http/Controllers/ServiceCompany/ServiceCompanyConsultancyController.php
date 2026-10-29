@@ -95,6 +95,8 @@ class ServiceCompanyConsultancyController extends ServiceCompanyBaseController
         $shouldSearch = [];
         $must = [];
 
+        $userId = (int) ($this->user ? $this->user->id : (auth()->id() ?? 0));
+
         $cachePayload = [
             'page' => $page,
             'size' => $size,
@@ -104,13 +106,13 @@ class ServiceCompanyConsultancyController extends ServiceCompanyBaseController
             'response_sla' => $slaFilter,
             'company' => $company_id,
             'custom_search' => $custom_search,
-            'user_id' => $this->user->id,
+            'user_id' => $userId,
             'valCheck' => $valCheck,
         ];
 
-        $versionKey = 'allconsultancy_version_user_'.$this->user->id;
+        $versionKey = 'allconsultancy_version_user_'.$userId;
         $version = cache()->get($versionKey, 1);
-        $cacheKeySet = 'ats:allconsultancy:'.$this->user->id.':'.$version.':'.md5(json_encode($cachePayload));
+        $cacheKeySet = 'ats:allconsultancy:'.$userId.':'.$version.':'.md5(json_encode($cachePayload));
         /* ----------------------------
         ⚡ Check DragonflyDB first
         ----------------------------- */
@@ -853,7 +855,7 @@ After completing these steps, they will be able to start collaborating with your
 
         $versionKey = 'consultancyviewmore_version_user_'.$userId;
         $version = cache()->get($versionKey, 1);
-        $cacheKeySet = 'consultancyviewmore_v7:'.$userId.':'.$version.':'.md5(json_encode($cachePayload));
+        $cacheKeySet = 'consultancyviewmore_v8:'.$userId.':'.$version.':'.md5(json_encode($cachePayload));
         /* ----------------------------
         ⚡ Check DragonflyDB / Redis first (Quick Win Step 4)
         ----------------------------- */

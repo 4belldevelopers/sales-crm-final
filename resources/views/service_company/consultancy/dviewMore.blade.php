@@ -835,9 +835,9 @@
                         </div>
                         <div class="cd-ov-body">
                             <div class="cd-ov-row"><span class="cd-ov-lbl">Entity Name</span><span class="cd-ov-val">{{ $detailName }}</span></div>
-                            <div class="cd-ov-row"><span class="cd-ov-lbl">Domain Focus</span><span class="cd-ov-val">{{ $directClientDetail->industry ?: 'Specialized Recruitment' }}</span></div>
-                            <div class="cd-ov-row"><span class="cd-ov-lbl">Headcount / Size</span><span class="cd-ov-val">{{ $directClientDetail->company_size ?: '10–50 Employees' }}</span></div>
-                            <div class="cd-ov-row"><span class="cd-ov-lbl">Founded</span><span class="cd-ov-val">{{ $directClientDetail->founded ?: '2018' }}</span></div>
+                            <div class="cd-ov-row"><span class="cd-ov-lbl">Domain Focus</span><span class="cd-ov-val">{{ ($directClientDetail->industry ?? null) ?: 'Specialized Recruitment' }}</span></div>
+                            <div class="cd-ov-row"><span class="cd-ov-lbl">Headcount / Size</span><span class="cd-ov-val">{{ ($directClientDetail->company_size ?? null) ?: '10–50 Employees' }}</span></div>
+                            <div class="cd-ov-row"><span class="cd-ov-lbl">Founded</span><span class="cd-ov-val">{{ ($directClientDetail->founded ?? null) ?: '2018' }}</span></div>
                             <div class="cd-ov-row"><span class="cd-ov-lbl">Partner ID</span><span class="cd-ov-val">#AG-{{ $agencyId }}</span></div>
                         </div>
                     </div>
