@@ -212,6 +212,7 @@ Route::group(['middleware' => 'auth'], function () {
         Route::post('reject_cvtracker/reject_mail_send', [SuperAdminCompanyController::class, 'reject_mail_send'])->name('company.reject_mail_send');
         Route::get('zoom-setting', [SuperAdminCompanyController::class, 'zoomSetting'])->name('company.zoom_setting');
         Route::post('setting-zoom-store', [SuperAdminCompanyController::class, 'settingZoomStore'])->name('company.settingZoomStore');
+        Route::post('zoom-setting/test-connection', [SuperAdminCompanyController::class, 'testZoomConnection'])->name('company.zoomTestConnection');
         Route::get('jobs/job_request/{id?}', [SuperAdminCompanyController::class, 'job_request'])->name('company.job_request');
 
         Route::get('jobs/recommandedrequest', [SuperAdminCompanyController::class, 'recommandedrequest'])->name('company.recommandedrequest');
