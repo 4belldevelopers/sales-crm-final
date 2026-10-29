@@ -227,15 +227,34 @@
         color: #ffffff !important;
         box-shadow: 0 2px 4px rgba(0, 158, 247, 0.2) !important;
     }
+    .brmnote-tab-btn.active i {
+        color: #ffffff !important;
+    }
     .brmnote-tab-badge {
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        min-width: 20px !important;
+        height: 18px !important;
+        padding: 0 6px !important;
+        border-radius: 10px !important;
         font-size: 10.5px !important;
         font-weight: 700 !important;
-        padding: 1px 6px !important;
-        border-radius: 10px !important;
         background: #f1f5f9 !important;
         color: #475569 !important;
+        transition: all 0.15s ease !important;
     }
-    .brmnote-tab-btn.active .brmnote-tab-badge {
+    .brmnote-tab-badge.badge-active {
+        background: #ecfdf5 !important;
+        color: #059669 !important;
+    }
+    .brmnote-tab-badge.badge-inactive {
+        background: #fef2f2 !important;
+        color: #dc2626 !important;
+    }
+    .brmnote-tab-btn.active .brmnote-tab-badge,
+    .brmnote-tab-btn.active .brmnote-tab-badge.badge-active,
+    .brmnote-tab-btn.active .brmnote-tab-badge.badge-inactive {
         background: rgba(255, 255, 255, 0.28) !important;
         color: #ffffff !important;
     }
@@ -652,11 +671,11 @@
                     </button>
                     <button type="button" class="brmnote-tab-btn" data-filter="active" onclick="filterTemplates('active', this)">
                         <i class="fas fa-check-circle text-success fs-8"></i> Active Templates
-                        <span class="brmnote-tab-badge" id="tabCountActive">{{ $activeCount ?? 0 }}</span>
+                        <span class="brmnote-tab-badge badge-active" id="tabCountActive">{{ $activeCount ?? 0 }}</span>
                     </button>
                     <button type="button" class="brmnote-tab-btn" data-filter="inactive" onclick="filterTemplates('inactive', this)">
                         <i class="fas fa-pause-circle text-danger fs-8"></i> Inactive Templates
-                        <span class="brmnote-tab-badge" id="tabCountInactive">{{ $inactiveCount ?? 0 }}</span>
+                        <span class="brmnote-tab-badge badge-inactive" id="tabCountInactive">{{ $inactiveCount ?? 0 }}</span>
                     </button>
                 </div>
 
@@ -707,7 +726,7 @@
                                 <!-- Sub-Card 2: Content Preview Snippet -->
                                 <div class="brmnote-subcard-content">
                                     <div class="brmnote-preview-snippet" id="preview-text-{{ $tpl->id }}">
-                                        {!! strip_tags($tpl->content) !!}
+                                        {{ $tpl->preview_text ?: strip_tags($tpl->content) }}
                                     </div>
                                     <a href="javascript:void(0)" class="brmnote-view-full-link" onclick="openPreviewModal({{ $tpl->id }})">
                                         <i class="fas fa-eye fs-9"></i> View Full Note
@@ -742,16 +761,16 @@
 
                                 <!-- Sub-Card 5: Action Toolbar -->
                                 <div class="brmnote-subcard-actions">
-                                    <button type="button" class="btn btn-sm btn-icon btn-light-primary brmnote-action-btn" onclick="copyTemplateContent({{ $tpl->id }})" title="Copy template content">
+                                    <button type="button" class="btn btn-sm btn-icon btn-light-primary brmnote-action-btn" onclick="copyTemplateContent({{ $tpl->id }})" title="Copy template content" data-bs-toggle="tooltip">
                                         <i class="fas fa-copy"></i>
                                     </button>
-                                    <button type="button" class="btn btn-sm btn-icon btn-light-info brmnote-action-btn" onclick="duplicateTemplate({{ $tpl->id }})" title="Duplicate template">
+                                    <button type="button" class="btn btn-sm btn-icon btn-light-info brmnote-action-btn" onclick="duplicateTemplate({{ $tpl->id }})" title="Duplicate template" data-bs-toggle="tooltip">
                                         <i class="fas fa-clone"></i>
                                     </button>
-                                    <button type="button" class="btn btn-sm btn-icon btn-light-warning brmnote-action-btn" onclick="openEditModal({{ $tpl->id }})" title="Edit template">
+                                    <button type="button" class="btn btn-sm btn-icon btn-light-warning brmnote-action-btn" onclick="openEditModal({{ $tpl->id }})" title="Edit template" data-bs-toggle="tooltip">
                                         <i class="fas fa-edit"></i>
                                     </button>
-                                    <button type="button" class="btn btn-sm btn-icon btn-light-danger brmnote-action-btn" onclick="deleteTemplate({{ $tpl->id }})" title="Delete template">
+                                    <button type="button" class="btn btn-sm btn-icon btn-light-danger brmnote-action-btn" onclick="deleteTemplate({{ $tpl->id }})" title="Delete template" data-bs-toggle="tooltip">
                                         <i class="fas fa-trash"></i>
                                     </button>
                                 </div>
@@ -1207,7 +1226,13 @@ function openPreviewModal(id) {
 
 function copyCurrentPreview() {
     if (_activePreviewId) {
+        var $btn = $('#previewCopyBtn');
+        var origHtml = $btn.html();
         copyTemplateContent(_activePreviewId);
+        $btn.html('<i class="fas fa-check text-success me-1"></i> Copied!');
+        setTimeout(function() {
+            $btn.html(origHtml);
+        }, 1500);
     }
 }
 
