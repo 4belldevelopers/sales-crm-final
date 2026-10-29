@@ -20,6 +20,22 @@ Last updated: 2026-10-22 (Super Admin Companies Page UI Redesign, 100% CQRS Read
 - **Test coverage:** `TenantIsolationTest`, `BenchToJobAppTrackerPipelineContractTest`, `BenchTalentRequestPipelineContractTest`, `SuperAdminCompanyLoadTest`, `SuperAdminSubscriptionLoadTest`, `SuperAdminDashboardLoadTest` (100% green).
 - **V2_login blocking-scenarios architecture:** session-epoch pattern + Reverb `UserAccountSuspended` event + `SyncUserStatusAction` (cross-tenant-safe) + `BlockCompanyAction` (static bulk helper) + `block_log` audit table + drop all 20 `refresh:true` ES sites + grep-lint guard. See [docs/V2_login/BLOCKING_SCENARIOS_AUDIT.md](../docs/V2_login/BLOCKING_SCENARIOS_AUDIT.md), [ADR 0007](../docs/adr/0007-blocking-scenarios-architecture.md). Code not yet landed.
 
+- *2026-10-29* — **Client Details Drawer Tier 2 Sub-Tabs Height & Geometry Calibration (100% COMPLETED & VERIFIED)**:
+  - **User Feedback & Problem**:
+    - Tabs card height was oversized (`min-height: 48px !important; padding: 8px 10px !important;`), leaving large 8px vertical gaps around 32px tab pills.
+    - Tab pill buttons ("card size") were not fitting snugly into the tabs card container height, causing an awkward floating pill appearance and pushing lower overview content ("About the Client", "Client Information") off-screen on 15.6" displays.
+  - **Architectural & Geometry Fix**:
+    1. **Tier 2 Container Height & Fit (`.cd-drawer-tabs-card`)**:
+       - Calibrated container height to `height: 40px !important; min-height: 40px !important;` with sleek `padding: 3px 6px !important;` and `border-radius: 8px !important;`.
+       - Enforced `margin: 0 14px 10px 14px !important;` for consistent 10px vertical rhythm between Hero, KPI Row, Sub-Tabs, and content cards.
+    2. **Tab Button Height & Internal Proportions (`.cd-tab-pill-btn`, `.cd-drawer-tabs-list`, `.nav-item`)**:
+       - Elevated tab pill height to `height: 34px !important;` with `padding: 0 10.5px !important;` and `border-radius: 6px !important;`.
+       - Matched `.cd-drawer-tabs-list` and `.cd-drawer-tabs-list .nav-item` to `height: 34px !important; display: flex !important; align-items: center !important;`.
+       - Mathematical alignment: `3px (top padding) + 34px (pill) + 3px (bottom padding) = 40px container height` (85% height fill ratio vs 66% previously).
+       - Buttons sit flush and snugly within the tabs card with symmetrical 3px clearance and zero border collision.
+  - **Scope**: Applied identically across all 3 client drawers (`resources/views/service_company/client/dviewMore.blade.php`, `show.blade.php`, `requestviewmore.blade.php`).
+
+
 - *2026-10-28* — **God-Level Universal Canonical Industry Architecture & Enterprise Combobox Redesign (100% COMPLETED & VERIFIED)**:
   - **Module & Scope**: Universal Industry Workflow across JERO ATS (Industry Master → Client Registration → Client Profile → Client Tracker → Client Edit → Filters/Search → Reports/Analytics).
   - **Architecture Decision (Universal Canonical SSOT)**:
