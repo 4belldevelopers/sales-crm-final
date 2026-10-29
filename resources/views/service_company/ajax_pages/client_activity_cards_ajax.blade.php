@@ -291,12 +291,18 @@
                             <div class="cd-activity-actor-attribution">
                                 {{ $attributionLabel }}:
                             </div>
-                            <div class="cd-activity-actor-name" title="{{ $attributionName }}">
-                                {{ $attributionName }}
-                            </div>
-                            <div class="cd-activity-actor-company" title="{{ $companyName }}">
-                                <i class="far fa-building me-1" style="font-size: 10px; color: #64748b;"></i>{{ $companyName }}
-                            </div>
+                            @if(($isSharedJob || str_contains(strtolower($attributionLabel), 'shared')) && !empty($companyName) && !empty($attributionName) && strtolower($attributionName) !== 'account lead')
+                                <div class="cd-activity-actor-name fw-bold text-dark" title="{{ $companyName }} — {{ $attributionName }}">
+                                    {{ $companyName }} — {{ $attributionName }}
+                                </div>
+                            @else
+                                <div class="cd-activity-actor-name" title="{{ $attributionName }}">
+                                    {{ $attributionName }}
+                                </div>
+                                <div class="cd-activity-actor-company" title="{{ $companyName }}">
+                                    <i class="far fa-building me-1" style="font-size: 10px; color: #64748b;"></i>{{ $companyName }}
+                                </div>
+                            @endif
                         </div>
                     </div>
 

@@ -142,45 +142,51 @@
                             @endif
                         </div>
                         <div class="tm-subcard-body">
-                            <!-- Scope explanation in layman terms -->
+                            <!-- Scope explanation in clean executive format -->
                             <div class="team-rep-scope-box">
                                 @if($isClientRep && $isAgencyRep)
-                                    <div class="rep-scope-desc text-primary fw-semibold">
-                                        <i class="fa-solid fa-check-double me-1 text-success"></i>Primary Face for Clients &amp; Agencies
+                                    <div class="rep-scope-desc text-primary fw-semibold fs-8">
+                                        <i class="fa-solid fa-star text-warning me-1"></i>Primary SPOC for Clients &amp; Agencies
                                     </div>
-                                    <div class="rep-scope-hint">Shown on direct client views and shared agency jobs.</div>
+                                    <div class="rep-scope-hint fs-9 text-muted">Direct client views &amp; shared partner jobs</div>
                                 @elseif($isClientRep)
-                                    <div class="rep-scope-desc text-primary fw-semibold">
-                                        <i class="fa-solid fa-circle-check me-1 text-success"></i>Client Communication Face
+                                    <div class="rep-scope-desc text-primary fw-semibold fs-8">
+                                        <i class="fa-solid fa-user-tie text-primary me-1"></i>Client Communication SPOC
                                     </div>
-                                    <div class="rep-scope-hint">Shown to Direct Clients on requisitions &amp; submissions.</div>
+                                    <div class="rep-scope-hint fs-9 text-muted">Shown on client requisitions &amp; pipelines</div>
                                 @elseif($isAgencyRep)
-                                    <div class="rep-scope-desc text-success fw-semibold">
-                                        <i class="fa-solid fa-circle-check me-1 text-success"></i>Agency Communication Face
+                                    <div class="rep-scope-desc text-success fw-semibold fs-8">
+                                        <i class="fa-solid fa-building-user text-success me-1"></i>Agency Partner SPOC
                                     </div>
-                                    <div class="rep-scope-hint">Default contact shown to Partner Agencies on invitations.</div>
+                                    <div class="rep-scope-hint fs-9 text-muted">Default contact on agency job invitations</div>
                                 @else
-                                    <div class="rep-scope-desc text-muted">
+                                    <div class="rep-scope-desc text-muted fs-8">
                                         @if($agencyShares > 0)
-                                            <i class="fa-solid fa-diagram-project me-1 text-primary"></i>Represents <strong>{{ $agencyShares }}</strong> shared agency {{ $agencyShares === 1 ? 'job' : 'jobs' }}
+                                            <span class="text-dark fw-semibold"><i class="fa-solid fa-diagram-project text-primary me-1"></i>Represents <strong>{{ $agencyShares }}</strong> shared {{ $agencyShares === 1 ? 'job' : 'jobs' }}</span>
                                         @else
-                                            <i class="fa-regular fa-circle-dot me-1 text-muted"></i>Internal team contributor
+                                            <i class="fa-regular fa-circle-dot me-1 text-muted"></i>Internal Contributor
                                         @endif
                                     </div>
-                                    <div class="rep-scope-hint">Not assigned as default company representative.</div>
+                                    <div class="rep-scope-hint fs-9 text-muted">
+                                        @if($agencyShares > 0)
+                                            Job-level authoritative attribution
+                                        @else
+                                            Standard organization permissions
+                                        @endif
+                                    </div>
                                 @endif
                             </div>
 
-                            <!-- Simple Layman Action Buttons -->
+                            <!-- Layman Action Buttons -->
                             <div class="team-rep-btn-row">
                                 @if(!$isClientRep)
                                     <button type="button" class="btn-rep-toggle btn-rep-client" onclick="setRepresentative({{ $row->id }}, 'client', '{{ addslashes($rawName) }}')" title="Make this user the company face shown to Clients">
-                                        <i class="fa-solid fa-user-check me-1"></i>Set as Client Rep
+                                        <i class="fa-solid fa-user-check me-1 text-primary"></i>Set Client Rep
                                     </button>
                                 @endif
                                 @if(!$isAgencyRep)
                                     <button type="button" class="btn-rep-toggle btn-rep-agency" onclick="setRepresentative({{ $row->id }}, 'agency', '{{ addslashes($rawName) }}')" title="Make this user the company face shown to Agencies">
-                                        <i class="fa-solid fa-building-user me-1"></i>Set as Agency Rep
+                                        <i class="fa-solid fa-building-circle-check me-1 text-success"></i>Set Agency Rep
                                     </button>
                                 @endif
                             </div>

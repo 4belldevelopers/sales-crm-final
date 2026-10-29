@@ -123,11 +123,16 @@ class ClientPerformanceScopeResolver
                                         'minimum_should_match' => 1,
                                     ],
                                 ],
-                                ['terms' => ['job_master_status_id' => PerformanceStatusMap::PIPELINE_WITH_IN_REVIEW_STATUSES]],
+                                ['terms' => ['job_master_status_id' => PerformanceStatusMap::SHARED_PIPELINE_STATUSES]],
                             ],
                             'must_not' => [
-                                ['terms' => ['job_master_status_id' => [9, '9']]],
-                                ['terms' => ['master_status_id' => [9, '9']]],
+                                ['terms' => ['job_master_status_id' => [8, 9, '8', '9']]],
+                                [
+                                    'bool' => [
+                                        'must' => [['terms' => ['master_status_id' => [8, 9, '8', '9']]]],
+                                        'must_not' => [['range' => ['job_master_status_id' => ['gt' => 0]]]],
+                                    ],
+                                ],
                             ],
                         ],
                     ],
@@ -227,11 +232,16 @@ class ClientPerformanceScopeResolver
                                     ],
                                 ],
                                 ['term' => ['final_status' => 1]],
-                                ['terms' => ['job_master_status_id' => PerformanceStatusMap::PIPELINE_WITH_IN_REVIEW_STATUSES]],
+                                ['terms' => ['job_master_status_id' => PerformanceStatusMap::SHARED_PIPELINE_STATUSES]],
                             ],
                             'must_not' => [
-                                ['terms' => ['job_master_status_id' => [9, '9']]],
-                                ['terms' => ['master_status_id' => [9, '9']]],
+                                ['terms' => ['job_master_status_id' => [8, 9, '8', '9']]],
+                                [
+                                    'bool' => [
+                                        'must' => [['terms' => ['master_status_id' => [8, 9, '8', '9']]]],
+                                        'must_not' => [['range' => ['job_master_status_id' => ['gt' => 0]]]],
+                                    ],
+                                ],
                             ],
                         ],
                     ],

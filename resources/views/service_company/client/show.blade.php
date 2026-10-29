@@ -742,32 +742,33 @@ use Carbon\Carbon;
             background: #ffffff !important;
             border: 1px solid #e2e8f0 !important;
             border-radius: 8px !important;
-            padding: 3px 6px !important;
+            padding: 5px 8px !important;
             margin: 0 14px 10px 14px !important;
             box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04) !important;
             width: auto !important;
             box-sizing: border-box !important;
-            overflow: hidden !important;
+            overflow: visible !important;
             display: flex !important;
             align-items: center !important;
-            height: 40px !important;
-            min-height: 40px !important;
+            min-height: 48px !important;
+            height: auto !important;
           }
           .cd-drawer-tabs-list {
             display: flex !important;
             align-items: center !important;
-            gap: 5px !important;
+            gap: 6px !important;
             overflow-x: auto !important;
-            overflow-y: hidden !important;
+            overflow-y: visible !important;
             -webkit-overflow-scrolling: touch !important;
             scrollbar-width: thin !important;
             scrollbar-color: #cbd5e1 transparent !important;
             list-style: none !important;
-            padding: 0 !important;
+            padding: 2px 0 !important;
             margin: 0 !important;
             flex-wrap: nowrap !important;
             width: 100% !important;
-            height: 34px !important;
+            min-height: 38px !important;
+            height: auto !important;
           }
           .cd-drawer-tabs-list::-webkit-scrollbar {
             height: 3px !important;
@@ -5326,14 +5327,6 @@ use Carbon\Carbon;
                                 <path d="M 45,118 L 55,118 L 52,128 L 48,128 Z" fill="#10b981" />
                               </svg>
                               <div class="cd-funnel-list">
-                                <div class="cd-funnel-item" id="funnelItemInReview" style="display:none;">
-                                  <div class="cd-funnel-stage">
-                                    <span class="cd-funnel-dot" style="background:#64748b;"></span>
-                                    <span class="cd-funnel-val" id="funnelCountInReview">0</span>
-                                    <span>In Review</span>
-                                  </div>
-                                  <span class="cd-funnel-pct" id="funnelPctInReview">Pipeline</span>
-                                </div>
                                 <div class="cd-funnel-item">
                                   <div class="cd-funnel-stage">
                                     <span class="cd-funnel-dot" style="background:#3b82f6;"></span>
@@ -5887,15 +5880,9 @@ use Carbon\Carbon;
             $banner.slideUp(150);
         }
 
-        // 3. Funnel Stages
+        // 3. Funnel Stages (In Review strictly excluded from Performance funnel)
         if (data.funnel && data.funnel.stages) {
             var st = data.funnel.stages;
-            if (data.funnel.in_review_count && data.funnel.in_review_count > 0) {
-                $('#funnelCountInReview').text(data.funnel.in_review_count);
-                $('#funnelItemInReview').show();
-            } else {
-                $('#funnelItemInReview').hide();
-            }
             if (st[0]) { $('#funnelCountCand').text(st[0].count); $('#funnelPctCand').text(st[0].conversion_pct); }
             if (st[1]) { $('#funnelCountScreened').text(st[1].count); $('#funnelPctScreened').text(st[1].conversion_pct); }
             if (st[2]) { $('#funnelCountInt').text(st[2].count); $('#funnelPctInt').text(st[2].conversion_pct); }

@@ -203,8 +203,8 @@ class ClientPerformanceAnalyticsService
         // Dual Candidate Dimensions: Submissions count (strictly statuses 1..6, excluding In Review 8 and Archived 9) vs Unique candidates
         $candCount = (int) ($cAggs['eligible_submissions']['submissions']['value'] ?? $cAggs['total_submissions']['value'] ?? 0);
         $uniqueCandCount = (int) ($cAggs['eligible_submissions']['unique_count']['value'] ?? $cAggs['unique_candidates']['value'] ?? 0);
-        $inReviewCount = (int) ($cAggs['in_review_candidates']['submissions']['value'] ?? 0);
-        $inReviewUniqueCount = (int) ($cAggs['in_review_candidates']['unique_count']['value'] ?? 0);
+        $inReviewCount = 0; // Strictly zero In Review candidates in Performance analytics (Rule 4)
+        $inReviewUniqueCount = 0;
         $screenedCount = (int) ($cAggs['screened_candidates']['unique_count']['value'] ?? 0);
         $interviewCount = (int) ($cAggs['interviewed_candidates']['unique_count']['value'] ?? 0);
         $offerCount = (int) ($cAggs['offered_candidates']['unique_count']['value'] ?? 0);
@@ -439,7 +439,7 @@ class ClientPerformanceAnalyticsService
 
     /**
      * Build Funnel progression with conversion rates and drop-offs.
-     * Incorporates the Hiring Pipeline exception: In Review candidates are reflected as part of the pipeline.
+     * Strictly counts candidates from Sourcing stage [1..6]. In Review candidates are 100% excluded.
      */
     protected function buildFunnel(int $cand, int $screened, int $interview, int $offer, int $joined, int $inReview = 0, int $inReviewUnique = 0): array
     {
@@ -450,9 +450,9 @@ class ClientPerformanceAnalyticsService
         $overallYield = $cand > 0 ? ($joined / $cand) * 100 : 0;
 
         return [
-            'in_review_count' => $inReview,
-            'in_review_unique_count' => $inReviewUnique,
-            'hiring_pipeline_total' => $cand + $inReview,
+            'in_review_count' => 0,
+            'in_review_unique_count' => 0,
+            'hiring_pipeline_total' => $cand,
             'stages' => [
                 [
                     'key' => 'candidates',
@@ -714,9 +714,31 @@ class ClientPerformanceAnalyticsService
             $joins = (int) ($b['joins']['unique_count']['value'] ?? 0);
             $joinRate = $sub > 0 ? sprintf('%.1f%%', ($joins / $sub) * 100) : '0.0%';
 
-            // Resolve name & avatar strictly from ES top_hits (0% MySQL reads)
+            // Resolve name & avatar strictly from ES top_hits (0% MySQL reads) with user profile resolution
             $topHit = $b['recruiter_info']['hits']['hits'][0]['_source'] ?? [];
-            $name = $topHit['submitted_by_name'] ?? $topHit['posted_by'] ?? ('Recruiter #'.$userId);
+            $name = $topHit['submitted_by_name'] ?? $topHit['posted_by'] ?? null;
+            if (empty($name) && $userId > 0) {
+                $uCacheKey = "ats:user_brief:{$userId}";
+                try {
+                    $cachedU = \Illuminate\Support\Facades\Redis::get($uCacheKey);
+                    if ($cachedU) {
+                        $uDec = json_decode($cachedU, true);
+                        $name = $uDec['name'] ?? null;
+                    }
+                } catch (\Throwable) {}
+                if (empty($name)) {
+                    $uRow = \Illuminate\Support\Facades\DB::table('users')->where('id', $userId)->first(['name']);
+                    if ($uRow) {
+                        $name = $uRow->name;
+                        try {
+                            \Illuminate\Support\Facades\Redis::setex($uCacheKey, 86400, json_encode(['id' => $userId, 'name' => $name]));
+                        } catch (\Throwable) {}
+                    }
+                }
+            }
+            if (empty($name)) {
+                $name = 'Recruiter #'.$userId;
+            }
             $avatar = ! empty($topHit['posted_by_image']) ? $topHit['posted_by_image'] : '/assets/media/avatars/300-1.jpg';
 
             $items[] = [

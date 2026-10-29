@@ -216,232 +216,216 @@
         .team-btn-light:hover { background: #f8fafc; color: #0f172a; border-color: #cbd5e1; }
 
         /* =========================================================================
-           Dedicated Communication Representatives Section
+           EXECUTIVE SPOC & REPRESENTATION HUB (Rule 20 Card + Sub-Card Standard)
            ========================================================================= */
-        .team-reps-card {
+        .team-spoc-card {
             background: #ffffff !important;
             border: 1px solid #e2e8f0 !important;
             border-radius: 10px !important;
-            padding: 16px 18px !important;
+            padding: 10px 14px !important;
             margin-bottom: 12px !important;
             box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03) !important;
         }
-        .team-reps-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            flex-wrap: wrap;
-            gap: 10px;
-            margin-bottom: 14px;
-            padding-bottom: 12px;
-            border-bottom: 1px solid #f1f5f9;
+        .team-spoc-grid {
+            display: grid !important;
+            grid-template-columns: minmax(0, 1.35fr) minmax(0, 1.35fr) minmax(0, 1.15fr) !important;
+            gap: 10px !important;
+            align-items: stretch !important;
         }
-        .team-reps-title-group h2 {
-            font-size: 15px;
-            font-weight: 700;
-            color: #0f172a;
-            margin: 0;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        .team-reps-subtitle {
-            font-size: 11.5px;
-            color: #64748b;
-            margin-top: 2px;
-        }
-        .team-reps-info-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 5px;
-            font-size: 11px;
-            font-weight: 500;
-            color: #0369a1;
-            background: #f0f9ff;
-            border: 1px solid #e0f2fe;
-            padding: 4px 10px;
-            border-radius: 6px;
-        }
-
-        /* Two Spotlight Sub-Cards Side by Side */
-        .team-reps-grid {
-            display: grid;
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-            gap: 14px;
-            margin-bottom: 12px;
-        }
-        .rep-spotlight-box {
+        .tm-spoc-subcard {
             background: #f8fafc;
             border: 1px solid #e2e8f0;
-            border-radius: 9px;
-            padding: 14px;
+            border-radius: 8px;
+            padding: 8px 12px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            gap: 6px;
             position: relative;
             transition: all .2s;
         }
-        .rep-spotlight-box:hover {
-            box-shadow: 0 3px 8px rgba(15, 23, 42, 0.04);
+        .tm-spoc-subcard:hover {
+            box-shadow: 0 2px 6px rgba(15, 23, 42, 0.04);
+            border-color: #cbd5e1;
         }
-        .rep-spotlight-client {
+        .tm-spoc-client {
             border-left: 3.5px solid #009ef7;
         }
-        .rep-spotlight-agency {
+        .tm-spoc-agency {
             border-left: 3.5px solid #10b981;
         }
-        .rep-spotlight-top {
+        .tm-spoc-rules {
+            border-left: 3.5px solid #8b5cf6;
+            background: #fcfaff;
+            border-color: #ede9fe;
+        }
+        .tm-spoc-header {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            gap: 8px;
-            margin-bottom: 8px;
+            gap: 6px;
         }
-        .rep-spotlight-tag {
-            font-size: 10.5px;
+        .tm-spoc-badge {
+            font-size: 10px;
             font-weight: 700;
             text-transform: uppercase;
             letter-spacing: 0.5px;
-            padding: 2px 8px;
+            padding: 2px 7px;
             border-radius: 4px;
+            display: inline-flex;
+            align-items: center;
         }
-        .rep-tag-client {
+        .tm-spoc-badge-client {
             background: #eff6ff;
             color: #009ef7;
+            border: 1px solid #dbeafe;
         }
-        .rep-tag-agency {
+        .tm-spoc-badge-agency {
             background: #ecfdf5;
             color: #059669;
+            border: 1px solid #a7f3d0;
         }
-        .rep-spotlight-question {
-            font-size: 13px;
-            font-weight: 700;
-            color: #0f172a;
-            margin-bottom: 3px;
+        .tm-spoc-badge-rules {
+            background: #f5f3ff;
+            color: #7c3aed;
+            border: 1px solid #ddd6fe;
         }
-        .rep-spotlight-desc {
-            font-size: 11.5px;
+        .tm-spoc-scope-hint {
+            font-size: 10.5px;
             color: #64748b;
-            line-height: 1.4;
-            margin-bottom: 12px;
+            font-weight: 500;
         }
-        .rep-spotlight-profile {
+        .tm-spoc-body {
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 10px;
             background: #ffffff;
-            border: 1px solid #e2e8f0;
-            border-radius: 8px;
-            padding: 10px 12px;
-            margin-bottom: 10px;
+            border: 1px solid #eef2f6;
+            border-radius: 7px;
+            padding: 6px 10px;
+            min-height: 44px;
         }
-        .rep-spotlight-avatar {
-            width: 44px;
-            height: 44px;
-            border-radius: 8px;
-            object-fit: cover;
-            flex-shrink: 0;
-            font-weight: 700;
-            font-size: 16px;
+        .tm-spoc-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 7px;
             display: flex;
             align-items: center;
             justify-content: center;
-        }
-        .rep-spotlight-name {
+            font-weight: 700;
             font-size: 13px;
+            flex-shrink: 0;
+            overflow: hidden;
+        }
+        .tm-spoc-details {
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            flex-grow: 1;
+        }
+        .tm-spoc-name-row {
+            display: flex;
+            align-items: baseline;
+            gap: 5px;
+            overflow: hidden;
+            white-space: nowrap;
+        }
+        .tm-spoc-name {
+            font-size: 12px;
             font-weight: 700;
             color: #0f172a;
-            line-height: 1.25;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
-        .rep-spotlight-designation {
-            font-size: 11.5px;
-            color: #64748b;
-        }
-        .rep-spotlight-contact {
+        .tm-spoc-role {
             font-size: 11px;
+            color: #64748b;
+            font-weight: 500;
+        }
+        .tm-spoc-contact {
+            font-size: 10.5px;
             color: #475569;
             display: flex;
-            gap: 12px;
-            margin-top: 2px;
-            flex-wrap: wrap;
-        }
-        .rep-spotlight-contact span {
-            display: inline-flex;
             align-items: center;
-            gap: 4px;
+            gap: 6px;
+            overflow: hidden;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+            margin-top: 1px;
         }
-        .rep-spotlight-actions {
+        .tm-spoc-bullet {
+            color: #cbd5e1;
+            font-size: 9px;
+        }
+        .tm-spoc-footer {
             display: flex;
             align-items: center;
-            justify-content: space-between;
-            gap: 8px;
-            flex-wrap: wrap;
+            justify-content: flex-end;
         }
-        .rep-spotlight-scope-text {
+        .tm-spoc-btn {
             font-size: 11px;
             font-weight: 600;
-            color: #0f172a;
-            display: inline-flex;
-            align-items: center;
-            gap: 5px;
-        }
-        .btn-change-rep {
-            font-size: 11.5px;
-            font-weight: 600;
-            padding: 5px 12px;
-            border-radius: 6px;
+            padding: 3px 9px;
+            border-radius: 5px;
             border: 1px solid #e2e8f0;
-            background: #fff;
-            color: #0f172a;
+            background: #ffffff;
+            color: #334155;
             cursor: pointer;
             transition: all .15s;
             display: inline-flex;
             align-items: center;
-            gap: 5px;
         }
-        .btn-change-rep:hover {
-            background: #f1f5f9;
-            color: #009ef7;
-            border-color: #009ef7;
-        }
-
-        /* Hierarchy & Clarification Banner */
-        .team-rep-hierarchy-banner {
-            background: #f8fafc;
-            border: 1px solid #e2e8f0;
-            border-radius: 8px;
-            padding: 10px 14px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 14px;
-            flex-wrap: wrap;
-        }
-        .rep-hierarchy-left {
-            display: flex;
-            align-items: center;
-            gap: 16px;
-            flex-wrap: wrap;
-        }
-        .rep-hierarchy-item {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            font-size: 11.5px;
-            color: #334155;
-        }
-        .rep-hierarchy-item strong {
-            font-weight: 700;
-            color: #0f172a;
-        }
-        .rep-hierarchy-rule-box {
-            font-size: 11px;
-            font-weight: 600;
-            color: #2563eb;
+        .tm-spoc-btn-client:hover {
             background: #eff6ff;
-            border: 1px solid #dbeafe;
-            padding: 4px 10px;
-            border-radius: 6px;
-            display: inline-flex;
+            color: #009ef7;
+            border-color: #bfdbfe;
+        }
+        .tm-spoc-btn-agency:hover {
+            background: #ecfdf5;
+            color: #059669;
+            border-color: #a7f3d0;
+        }
+        .tm-spoc-btn-rules:hover {
+            background: #f5f3ff;
+            color: #7c3aed;
+            border-color: #ddd6fe;
+        }
+        .tm-spoc-rules-body {
+            background: #ffffff;
+            border: 1px solid #ede9fe;
+            border-radius: 7px;
+            padding: 6px 10px;
+            min-height: 44px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            gap: 3px;
+        }
+        .tm-spoc-rules-flow {
+            display: flex;
             align-items: center;
-            gap: 6px;
+            gap: 5px;
+            font-size: 10.5px;
+        }
+        .tm-rule-step {
+            padding: 1.5px 5px;
+            border-radius: 4px;
+            background: #f1f5f9;
+            color: #475569;
+            font-weight: 600;
+        }
+        .tm-rule-step.active {
+            background: #eff6ff;
+            color: #009ef7;
+            border: 1px solid #bfdbfe;
+        }
+        .tm-spoc-rules-caption {
+            font-size: 10px;
+            color: #64748b;
+            line-height: 1.25;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         /* =========================================================================
@@ -934,7 +918,7 @@
 
         /* Responsive */
         @media (max-width: 1200px) {
-            .team-reps-grid { grid-template-columns: 1fr; }
+            .team-spoc-grid { grid-template-columns: 1fr !important; }
             .team-card-grid { grid-template-columns: 1fr 1fr !important; }
         }
         @media (max-width: 768px) {
@@ -1190,172 +1174,133 @@
                 <!-- ============================================================== -->
                 <!-- DEDICATED “COMPANY COMMUNICATION REPRESENTATIVES” SECTION       -->
                 <!-- ============================================================== -->
-                <div class="team-reps-card">
-                    <div class="team-reps-header">
-                        <div class="team-reps-title-group">
-                            <h2>
-                                <i class="fa-solid fa-handshake-angle text-primary"></i>
-                                <span>Company Communication Representatives</span>
-                            </h2>
-                            <div class="team-reps-subtitle">
-                                Designate which company user represents your organization when communicating with a <strong>Client</strong> or <strong>Agency</strong>.
-                            </div>
-                        </div>
-                        <div>
-                            <span class="team-reps-info-badge">
-                                <i class="fa-solid fa-circle-info"></i>
-                                <span>Authoritative Organization Representation Model</span>
-                            </span>
-                        </div>
-                    </div>
-
-                    <!-- Two Spotlight Sub-Cards Side by Side -->
-                    <div class="team-reps-grid">
+                <!-- ============================================================== -->
+                <!-- EXECUTIVE SPOC & REPRESENTATION HUB (Rule 20 Card + Sub-Card Standard) -->
+                <!-- ============================================================== -->
+                <div class="team-spoc-card">
+                    <div class="team-spoc-grid">
                         
-                        <!-- Spotlight 1: Client Communication Representative -->
-                        <div class="rep-spotlight-box rep-spotlight-client">
-                            <div class="rep-spotlight-top">
-                                <span class="rep-spotlight-tag rep-tag-client">
-                                    <i class="fa-solid fa-user-tie me-1"></i>Client Communication
+                        <!-- SPOC Sub-Card 1: Client Communication Representative -->
+                        <div class="tm-spoc-subcard tm-spoc-client">
+                            <div class="tm-spoc-header">
+                                <span class="tm-spoc-badge tm-spoc-badge-client">
+                                    <i class="fa-solid fa-user-tie me-1"></i>Client SPOC
                                 </span>
-                                <span class="text-primary fw-semibold fs-8">
-                                    <i class="fa-solid fa-eye me-1"></i>Visible on Client Views
-                                </span>
+                                <span class="tm-spoc-scope-hint">Visible to Direct Clients</span>
                             </div>
-                            <div class="rep-spotlight-question">Who is shown to Clients?</div>
-                            <div class="rep-spotlight-desc">
-                                This representative is displayed to <strong>Direct Clients</strong> across job requisitions, candidate review pipelines, and organization profiles.
-                            </div>
-
-                            <div class="rep-spotlight-profile" id="spotlightClientRepBox">
+                            <div class="tm-spoc-body" id="spotlightClientRepBox">
                                 @if(!empty($clientRep))
                                     @php
                                         $crInit = strtoupper(substr($clientRep['name'] ?? 'C', 0, 1));
                                     @endphp
-                                    <div class="rep-spotlight-avatar bg-light-primary text-primary">
+                                    <div class="tm-spoc-avatar bg-light-primary text-primary">
                                         @if(!empty($clientRep['image']))
-                                            <img src="{{ $clientRep['image'] }}" alt="{{ $clientRep['name'] }}" style="width:100%; height:100%; border-radius:8px; object-fit:cover;">
+                                            <img src="{{ $clientRep['image'] }}" alt="{{ $clientRep['name'] }}" style="width:100%; height:100%; border-radius:6px; object-fit:cover;">
                                         @else
                                             {{ $crInit }}
                                         @endif
                                     </div>
-                                    <div class="d-flex flex-column overflow-hidden flex-grow-1">
-                                        <div class="rep-spotlight-name" id="spotlightClientRepName">{{ $clientRep['name'] }}</div>
-                                        <div class="rep-spotlight-designation" id="spotlightClientRepDesig">{{ $clientRep['designation'] ?? 'Representative' }}</div>
-                                        <div class="rep-spotlight-contact">
+                                    <div class="tm-spoc-details">
+                                        <div class="tm-spoc-name-row">
+                                            <span class="tm-spoc-name" id="spotlightClientRepName">{{ $clientRep['name'] }}</span>
+                                            <span class="tm-spoc-role" id="spotlightClientRepDesig">({{ $clientRep['designation'] ?? 'Representative' }})</span>
+                                        </div>
+                                        <div class="tm-spoc-contact">
                                             <span id="spotlightClientRepEmail"><i class="fa-regular fa-envelope me-1"></i>{{ $clientRep['email'] }}</span>
                                             @if(!empty($clientRep['mobile']))
+                                                <span class="tm-spoc-bullet">•</span>
                                                 <span id="spotlightClientRepMobile"><i class="fa-solid fa-phone me-1"></i>{{ $clientRep['mobile'] }}</span>
                                             @endif
                                         </div>
                                     </div>
                                 @else
-                                    <div class="d-flex align-items-center gap-3 text-muted py-2">
-                                        <i class="fa-solid fa-user-xmark fa-2x"></i>
-                                        <div>
-                                            <div class="fw-bold fs-7 text-dark">No Client Representative Set</div>
-                                            <div class="fs-8">Click "Change Representative" below to assign one.</div>
-                                        </div>
+                                    <div class="d-flex align-items-center gap-2 text-muted py-1">
+                                        <i class="fa-solid fa-user-slash text-muted fs-6"></i>
+                                        <span class="fs-8 fw-semibold">No Client Representative Assigned</span>
                                     </div>
                                 @endif
                             </div>
-
-                            <div class="rep-spotlight-actions">
-                                <span class="rep-spotlight-scope-text">
-                                    <i class="fa-solid fa-circle-check text-success"></i>
-                                    <span>Primary Organization SPOC for Clients</span>
-                                </span>
-                                <button type="button" class="btn-change-rep" onclick="openRepModal('client')" title="Select a different team member to represent company to Clients">
-                                    <i class="fa-solid fa-user-pen text-primary"></i>
-                                    <span>Change Client Representative</span>
+                            <div class="tm-spoc-footer">
+                                <button type="button" class="tm-spoc-btn tm-spoc-btn-client" onclick="openRepModal('client')" title="Change Client Representative">
+                                    <i class="fa-solid fa-user-pen me-1"></i>Change Client Rep
                                 </button>
                             </div>
                         </div>
 
-                        <!-- Spotlight 2: Agency Communication Representative -->
-                        <div class="rep-spotlight-box rep-spotlight-agency">
-                            <div class="rep-spotlight-top">
-                                <span class="rep-spotlight-tag rep-tag-agency">
-                                    <i class="fa-solid fa-building-user me-1"></i>Agency Communication
+                        <!-- SPOC Sub-Card 2: Agency Communication Representative -->
+                        <div class="tm-spoc-subcard tm-spoc-agency">
+                            <div class="tm-spoc-header">
+                                <span class="tm-spoc-badge tm-spoc-badge-agency">
+                                    <i class="fa-solid fa-building-user me-1"></i>Agency SPOC
                                 </span>
-                                <span class="text-success fw-semibold fs-8">
-                                    <i class="fa-solid fa-handshake me-1"></i>Visible on Agency Views
-                                </span>
+                                <span class="tm-spoc-scope-hint">Visible to Partner Agencies</span>
                             </div>
-                            <div class="rep-spotlight-question">Who is shown to Agencies?</div>
-                            <div class="rep-spotlight-desc">
-                                Default representative shown to <strong>Partner Agencies</strong> on job invitations, unless overridden at the job level by the person who shared the job.
-                            </div>
-
-                            <div class="rep-spotlight-profile" id="spotlightAgencyRepBox">
+                            <div class="tm-spoc-body" id="spotlightAgencyRepBox">
                                 @if(!empty($agencyRep))
                                     @php
                                         $arInit = strtoupper(substr($agencyRep['name'] ?? 'A', 0, 1));
                                     @endphp
-                                    <div class="rep-spotlight-avatar bg-light-success text-success">
+                                    <div class="tm-spoc-avatar bg-light-success text-success">
                                         @if(!empty($agencyRep['image']))
-                                            <img src="{{ $agencyRep['image'] }}" alt="{{ $agencyRep['name'] }}" style="width:100%; height:100%; border-radius:8px; object-fit:cover;">
+                                            <img src="{{ $agencyRep['image'] }}" alt="{{ $agencyRep['name'] }}" style="width:100%; height:100%; border-radius:6px; object-fit:cover;">
                                         @else
                                             {{ $arInit }}
                                         @endif
                                     </div>
-                                    <div class="d-flex flex-column overflow-hidden flex-grow-1">
-                                        <div class="rep-spotlight-name" id="spotlightAgencyRepName">{{ $agencyRep['name'] }}</div>
-                                        <div class="rep-spotlight-designation" id="spotlightAgencyRepDesig">{{ $agencyRep['designation'] ?? 'Representative' }}</div>
-                                        <div class="rep-spotlight-contact">
+                                    <div class="tm-spoc-details">
+                                        <div class="tm-spoc-name-row">
+                                            <span class="tm-spoc-name" id="spotlightAgencyRepName">{{ $agencyRep['name'] }}</span>
+                                            <span class="tm-spoc-role" id="spotlightAgencyRepDesig">({{ $agencyRep['designation'] ?? 'Representative' }})</span>
+                                        </div>
+                                        <div class="tm-spoc-contact">
                                             <span id="spotlightAgencyRepEmail"><i class="fa-regular fa-envelope me-1"></i>{{ $agencyRep['email'] }}</span>
                                             @if(!empty($agencyRep['mobile']))
+                                                <span class="tm-spoc-bullet">•</span>
                                                 <span id="spotlightAgencyRepMobile"><i class="fa-solid fa-phone me-1"></i>{{ $agencyRep['mobile'] }}</span>
                                             @endif
                                         </div>
                                     </div>
                                 @else
-                                    <div class="d-flex align-items-center gap-3 text-muted py-2">
-                                        <i class="fa-solid fa-user-xmark fa-2x"></i>
-                                        <div>
-                                            <div class="fw-bold fs-7 text-dark">No Agency Representative Set</div>
-                                            <div class="fs-8">Click "Change Representative" below to assign one.</div>
-                                        </div>
+                                    <div class="d-flex align-items-center gap-2 text-muted py-1">
+                                        <i class="fa-solid fa-building-circle-xmark text-muted fs-6"></i>
+                                        <span class="fs-8 fw-semibold">No Agency Representative Assigned</span>
                                     </div>
                                 @endif
                             </div>
-
-                            <div class="rep-spotlight-actions">
-                                <span class="rep-spotlight-scope-text">
-                                    <i class="fa-solid fa-circle-check text-success"></i>
-                                    <span>Default Partner Agency Contact</span>
-                                </span>
-                                <button type="button" class="btn-change-rep" onclick="openRepModal('agency')" title="Select a different team member to represent company to Agencies">
-                                    <i class="fa-solid fa-user-pen text-success"></i>
-                                    <span>Change Agency Representative</span>
+                            <div class="tm-spoc-footer">
+                                <button type="button" class="tm-spoc-btn tm-spoc-btn-agency" onclick="openRepModal('agency')" title="Change Agency Representative">
+                                    <i class="fa-solid fa-user-pen me-1"></i>Change Agency Rep
                                 </button>
                             </div>
                         </div>
 
-                    </div>
+                        <!-- SPOC Sub-Card 3: Authoritative Hierarchy & Rules Trigger -->
+                        <div class="tm-spoc-subcard tm-spoc-rules">
+                            <div class="tm-spoc-header">
+                                <span class="tm-spoc-badge tm-spoc-badge-rules">
+                                    <i class="fa-solid fa-shield-halved me-1"></i>Representation Model
+                                </span>
+                                <span class="tm-spoc-scope-hint">Resolution Hierarchy</span>
+                            </div>
+                            <div class="tm-spoc-rules-body">
+                                <div class="tm-spoc-rules-flow">
+                                    <span class="tm-rule-step" title="1st Priority: Specific job and agency relationship">Job Sharer</span>
+                                    <i class="fa-solid fa-arrow-right fs-9 text-muted"></i>
+                                    <span class="tm-rule-step" title="2nd Priority: Partner addition attribution">Agency Adder</span>
+                                    <i class="fa-solid fa-arrow-right fs-9 text-muted"></i>
+                                    <span class="tm-rule-step active" title="3rd Priority: Default Company Representative">Default SPOC</span>
+                                </div>
+                                <div class="tm-spoc-rules-caption">
+                                    Authoritative identity shown on invitations and direct client pipelines.
+                                </div>
+                            </div>
+                            <div class="tm-spoc-footer">
+                                <button type="button" class="tm-spoc-btn tm-spoc-btn-rules" data-bs-toggle="modal" data-bs-target="#repRulesModal" title="View Full Representation Rules & Architecture">
+                                    <i class="fa-solid fa-circle-info me-1"></i>View Architecture
+                                </button>
+                            </div>
+                        </div>
 
-                    <!-- Clear Hierarchy & Role Rules Banner (Answers All 4 UX Goal Questions) -->
-                    <div class="team-rep-hierarchy-banner">
-                        <div class="rep-hierarchy-left">
-                            <span class="rep-hierarchy-item" title="The user who authored the requisition internally">
-                                <span>📌</span> <strong>Job Created By:</strong> Internal Author
-                            </span>
-                            <span class="rep-hierarchy-item" title="The specific user who shared the job with the agency">
-                                <span>🤝</span> <strong>Agency Shared By:</strong> Authoritative Representative
-                            </span>
-                            <span class="rep-hierarchy-item" title="The designated SPOC shown to the Client">
-                                <span>👤</span> <strong>Client Rep:</strong> Seen by Client
-                            </span>
-                            <span class="rep-hierarchy-item" title="The designated contact shown to Partner Agencies">
-                                <span>🏢</span> <strong>Agency Rep:</strong> Seen by Agency
-                            </span>
-                        </div>
-                        <div>
-                            <span class="rep-hierarchy-rule-box">
-                                <i class="fa-solid fa-arrow-trend-up"></i>
-                                <span>Priority: Job + Agency Relationship → User Who Shared/Added Agency → Representative</span>
-                            </span>
-                        </div>
                     </div>
                 </div>
 
@@ -1684,6 +1629,75 @@
                     </div>
                     <div class="modal-footer py-2 px-4" style="border-top: 1px solid #e2e8f0;">
                         <button type="button" class="btn btn-sm btn-light" data-bs-dismiss="modal" data-dismiss="modal">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {{-- Authoritative Representation Rules Modal --}}
+        <div class="modal fade" id="repRulesModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered modal-lg">
+                <div class="modal-content" style="border-radius: 12px; border: 1px solid #e2e8f0; box-shadow: 0 10px 25px rgba(15,23,42,0.12);">
+                    <div class="modal-header py-3 px-4" style="border-bottom: 1px solid #e2e8f0;">
+                        <div class="d-flex align-items-center gap-2">
+                            <div style="width:34px; height:34px; border-radius:8px; background:#eff6ff; color:#009ef7; display:flex; align-items:center; justify-content:center; font-size:16px;">
+                                <i class="fa-solid fa-shield-halved"></i>
+                            </div>
+                            <div>
+                                <h3 class="modal-title fs-6 fw-bold text-gray-900 mb-0">Company Representation Architecture &amp; Hierarchy</h3>
+                                <div class="text-muted fs-8 mt-1">Authoritative identity resolution across Direct Clients and Partner Agencies</div>
+                            </div>
+                        </div>
+                        <button type="button" class="btn btn-sm btn-icon btn-active-light-primary" data-bs-dismiss="modal" data-dismiss="modal" aria-label="Close">
+                            <i class="fa-solid fa-xmark"></i>
+                        </button>
+                    </div>
+                    <div class="modal-body p-4">
+                        <!-- 4 Pillars Grid -->
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-6">
+                                <div class="p-3 rounded-2" style="background:#f8fafc; border:1px solid #e2e8f0; border-left:3.5px solid #009ef7;">
+                                    <div class="fw-bold fs-7 text-dark mb-1"><i class="fa-solid fa-user-tie text-primary me-2"></i>Client SPOC</div>
+                                    <div class="fs-8 text-muted">The authoritative company representative shown to <strong>Direct Clients</strong> across job requisitions, candidate review pipelines, and organization profiles.</div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="p-3 rounded-2" style="background:#f8fafc; border:1px solid #e2e8f0; border-left:3.5px solid #10b981;">
+                                    <div class="fw-bold fs-7 text-dark mb-1"><i class="fa-solid fa-building-user text-success me-2"></i>Agency SPOC</div>
+                                    <div class="fs-8 text-muted">The default contact presented to <strong>Partner Agencies</strong> on job invitations, talent sharing feeds, and placement discussions.</div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="p-3 rounded-2" style="background:#f8fafc; border:1px solid #e2e8f0; border-left:3.5px solid #f59e0b;">
+                                    <div class="fw-bold fs-7 text-dark mb-1"><i class="fa-solid fa-pen-nib text-warning me-2"></i>Job Internal Author</div>
+                                    <div class="fs-8 text-muted">The team member who originally authored or opened the job requisition internally. Retained for internal audit trails.</div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="p-3 rounded-2" style="background:#f8fafc; border:1px solid #e2e8f0; border-left:3.5px solid #8b5cf6;">
+                                    <div class="fw-bold fs-7 text-dark mb-1"><i class="fa-solid fa-share-nodes text-purple me-2"></i>Job-Agency Sharer</div>
+                                    <div class="fs-8 text-muted">The specific team member who actively shared a requisition with an agency. Always takes top precedence on shared views.</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Priority Cascade Banner -->
+                        <div class="p-3 rounded-2" style="background:#eff6ff; border:1px solid #bfdbfe;">
+                            <div class="fw-bold fs-7 text-primary mb-2"><i class="fa-solid fa-arrow-trend-up me-2"></i>Authoritative Identity Priority Cascade</div>
+                            <div class="d-flex align-items-center gap-2 flex-wrap fs-8 text-dark">
+                                <span class="badge bg-white text-primary border border-primary px-2 py-1">1. Job + Agency Specific Sharer</span>
+                                <i class="fa-solid fa-arrow-right text-muted fs-9"></i>
+                                <span class="badge bg-white text-dark border px-2 py-1">2. User Who Added Partner Agency</span>
+                                <i class="fa-solid fa-arrow-right text-muted fs-9"></i>
+                                <span class="badge bg-primary text-white px-2 py-1">3. Default Company Representative</span>
+                            </div>
+                            <div class="fs-8 text-muted mt-2">
+                                This guarantees that partner agencies and clients always see the authoritative person they are actively working with, never a generic placeholder.
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer py-2 px-4" style="border-top: 1px solid #e2e8f0;">
+                        <button type="button" class="btn btn-sm btn-primary" data-bs-dismiss="modal" data-dismiss="modal">Got it</button>
                     </div>
                 </div>
             </div>
@@ -3619,19 +3633,21 @@
 				var init = (user.name || 'U').charAt(0).toUpperCase();
 
 				var avatarHtml = user.image 
-					? '<img src="' + user.image + '" alt="' + user.name + '" style="width:100%; height:100%; border-radius:8px; object-fit:cover;">' 
+					? '<img src="' + user.image + '" alt="' + user.name + '" style="width:100%; height:100%; border-radius:6px; object-fit:cover;">' 
 					: init;
 
-				var phoneHtml = user.mobile ? '<span id="spotlight' + prefix + 'RepMobile"><i class="fa-solid fa-phone me-1"></i>' + user.mobile + '</span>' : '';
+				var phoneHtml = user.mobile ? '<span class="tm-spoc-bullet">•</span><span id="spotlight' + prefix + 'RepMobile"><i class="fa-solid fa-phone me-1"></i>' + user.mobile + '</span>' : '';
 
 				var boxHtml = `
-					<div class="rep-spotlight-avatar ${themeBg}">
+					<div class="tm-spoc-avatar ${themeBg}">
 						${avatarHtml}
 					</div>
-					<div class="d-flex flex-column overflow-hidden flex-grow-1">
-						<div class="rep-spotlight-name" id="spotlight${prefix}RepName">${user.name}</div>
-						<div class="rep-spotlight-designation" id="spotlight${prefix}RepDesig">${user.designation || 'Representative'}</div>
-						<div class="rep-spotlight-contact">
+					<div class="tm-spoc-details">
+						<div class="tm-spoc-name-row">
+							<span class="tm-spoc-name" id="spotlight${prefix}RepName">${user.name}</span>
+							<span class="tm-spoc-role" id="spotlight${prefix}RepDesig">(${user.designation || 'Representative'})</span>
+						</div>
+						<div class="tm-spoc-contact">
 							<span id="spotlight${prefix}RepEmail"><i class="fa-regular fa-envelope me-1"></i>${user.email}</span>
 							${phoneHtml}
 						</div>
