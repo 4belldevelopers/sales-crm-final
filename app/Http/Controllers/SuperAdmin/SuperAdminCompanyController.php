@@ -2869,6 +2869,37 @@ class SuperAdminCompanyController extends SuperAdminBaseController
 
         $this->client_contact_info = DB::table('client_contact_info')->select('*')->where('client_id', $id)->take(1)->get();
 
+        // Authoritative Contacts / Team count via Elasticsearch ELASTIC_USERS_LIST with MySQL fallback
+        $this->total_contacts = 0;
+        if ($this->elasticService->indexExists(ELASTIC_USERS_LIST)) {
+            try {
+                $contactCountRes = $this->elasticService->getClient()->count([
+                    'index' => ELASTIC_USERS_LIST,
+                    'body' => [
+                        'query' => [
+                            'bool' => [
+                                'must' => [
+                                    [
+                                        'bool' => [
+                                            'should' => [
+                                                ['term' => ['company_id' => $id]],
+                                            ],
+                                            'minimum_should_match' => 1,
+                                        ],
+                                    ],
+                                ],
+                            ],
+                        ],
+                    ],
+                ]);
+                $this->total_contacts = (int) ($contactCountRes['count'] ?? 0);
+            } catch (\Throwable $e) {
+                $this->total_contacts = DB::table('users')->where('company_id', $id)->count();
+            }
+        } else {
+            $this->total_contacts = DB::table('users')->where('company_id', $id)->count();
+        }
+
         if ($this->elasticService->indexExists(ELASTIC_JOBS)) {
             try {
                 $jobCountRes = $this->elasticService->getClient()->count([
@@ -3813,22 +3844,21 @@ class SuperAdminCompanyController extends SuperAdminBaseController
     // 04/10/2024
     public function contactdata(Request $request)
     {
+        $company_id = $request->input('clientId') ?? $_REQUEST['clientId'] ?? 0;
 
-        $company_id = $_REQUEST['clientId'];
+        $searchTerms = trim($request->input('search') ?? $request->input('cus_search') ?? $request->input('q') ?? '');
+        $custom_search = $searchTerms;
 
-        $searchTerms = request('cus_search');
-        $custom_search = $searchTerms; // json_decode($searchTerms, true);
-
-        $searchQuery = $request->input('q');
         $page = max((int) $request->input('page', 1), 1);
-        $size = (int) $request->input('size', 10); // Default 20 results per page
+        $size = (int) $request->input('size', 10); // Default 10 results per page
         $from = ($page - 1) * $size;
 
         $sortField = 'id'; // Default sort field
         $sortOrder = 'desc'; // Default sort order
 
-        if (! empty($custom_search)) {
+        $must = [];
 
+        if (! empty($custom_search)) {
             $must[] = [
                 'bool' => [
                     'must' => [
@@ -3896,15 +3926,42 @@ class SuperAdminCompanyController extends SuperAdminBaseController
             ],
         ];
 
-        if (! $this->elasticService->indexExists(ELASTIC_USERS_LIST)) {
-            $total = 0;
-            $data = [];
-        } else {
-            $response = $this->elasticService->getClient()->search($params);
-            $total = $response['hits']['total']['value'] ?? 0;
-            $data = array_map(function ($hit) {
-                return $hit['_source'];
-            }, $response['hits']['hits']);
+        $total = 0;
+        $data = [];
+        $esExecuted = false;
+
+        if ($this->elasticService->indexExists(ELASTIC_USERS_LIST)) {
+            try {
+                $response = $this->elasticService->getClient()->search($params);
+                $total = $response['hits']['total']['value'] ?? 0;
+                $data = array_map(function ($hit) {
+                    return $hit['_source'];
+                }, $response['hits']['hits']);
+                $esExecuted = true;
+            } catch (\Throwable $e) {
+                Log::warning("SuperAdminCompanyController contactdata ES search failed for company {$company_id}: ".$e->getMessage());
+            }
+        }
+
+        if (! $esExecuted) {
+            $dbQuery = DB::table('users')->where('company_id', $company_id);
+            if (! empty($custom_search)) {
+                $dbQuery->where(function ($q) use ($custom_search) {
+                    $q->where('name', 'like', "%{$custom_search}%")
+                        ->orWhere('email', 'like', "%{$custom_search}%");
+                });
+            }
+            $total = $dbQuery->count();
+            $dbRows = $dbQuery
+                ->select('users.id', 'users.name', 'users.email', 'users.mobile', 'users.root_user', 'users.created_at', 'users.status', 'users.image', 'users.working_status')
+                ->orderBy($sortField === 'created_at' ? 'users.created_at' : 'users.id', $sortOrder)
+                ->offset($from)
+                ->limit($size)
+                ->get();
+
+            $data = $dbRows->map(function ($r) use ($company_id) {
+                return (array) $r + ['company_id' => $company_id];
+            })->toArray();
         }
 
         $pagination = [
@@ -3914,13 +3971,12 @@ class SuperAdminCompanyController extends SuperAdminBaseController
             'listType' => 'allcandidate',
         ];
 
-        // dd($pagination);
-
         $userPermissions = [];
 
         return response()->json([
             'html' => view('super-admin.ajax_pages.company-team-list-ajax', compact('data', 'userPermissions', 'company_id'))->render(),
             'total' => $total,
+            'company_id' => (int) $company_id,
             'pagination' => view('super-admin.ajax_pages.pagination', compact('pagination'))->render(),
         ]);
 

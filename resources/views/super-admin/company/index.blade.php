@@ -948,45 +948,63 @@ body:has(#kt_activitiesApplication.drawer-on) {
         // new $.fn.dataTable.FixedHeader( table );
 
 
+        var activeDrawerCompanyXHR = null;
+        var currentDrawerOpeningId = null;
+
         $(document).on('click', '.show-detail', function ()
         {
-        
+            var id = $(this).data('row-id');
+            currentDrawerOpeningId = id;
+
+            if (activeDrawerCompanyXHR && activeDrawerCompanyXHR.readyState !== 4) {
+                activeDrawerCompanyXHR.abort();
+            }
+
             $('#kt_activitiesClient_toggle').trigger('click');	
-            var id    		= $(this).data('row-id');
             var url   		= "{{ route('superadmin.company.viewmore',':id') }}";
             url     		= url.replace(':id', id);
             
             var baseurl    = "{{ asset('assets/images/Loading2.gif') }}"; 
-                    $.ajax({
-                            type  : 'GET',
-                            url   : url,
-                            beforeSend: function() {
-                                    $('#kt_activitiesClient_body').html('<img src="'+baseurl+'" height="35px" width="100%">');
-                            },
-                            success : function (response) {
-                                    $('#kt_activitiesClient_body').html(response.view);
+            activeDrawerCompanyXHR = $.ajax({
+                    type  : 'GET',
+                    url   : url,
+                    beforeSend: function() {
+                            $('#kt_activitiesClient_body').html('<div class="d-flex justify-content-center align-items-center py-20"><img src="'+baseurl+'" height="35px" width="35px"></div>');
+                    },
+                    success : function (response) {
+                            if (currentDrawerOpeningId === id) {
+                                $('#kt_activitiesClient_body').html(response.view);
                             }
-                    });
+                    }
+            });
         });
 
         $(document).on('click', '.show-detail-direct', function ()
         {
+            var id = $(this).data('row-id');
+            currentDrawerOpeningId = id;
+
+            if (activeDrawerCompanyXHR && activeDrawerCompanyXHR.readyState !== 4) {
+                activeDrawerCompanyXHR.abort();
+            }
+
             $('#kt_activitiesDirectClient_toggle').trigger('click');	
-            var id    		= $(this).data('row-id');
             var url   		= "{{ route('superadmin.company.viewmore',':id') }}";
             url     		= url.replace(':id', id);
             
             var baseurl    = "{{ asset('assets/images/Loading2.gif') }}"; 
-            $.ajax({
-                            type  : 'GET',
-                            url   : url,
-                            beforeSend: function() {
-                                    $('#kt_activitiesDirectClient_body').html('<img src="'+baseurl+'" height="35px" width="100%">');
-                            },
-                            success : function (response) {
-                                    $('#kt_activitiesDirectClient_body').html(response.view);
+            activeDrawerCompanyXHR = $.ajax({
+                    type  : 'GET',
+                    url   : url,
+                    beforeSend: function() {
+                            $('#kt_activitiesDirectClient_body').html('<div class="d-flex justify-content-center align-items-center py-20"><img src="'+baseurl+'" height="35px" width="35px"></div>');
+                    },
+                    success : function (response) {
+                            if (currentDrawerOpeningId === id) {
+                                $('#kt_activitiesDirectClient_body').html(response.view);
                             }
-                    });
+                    }
+            });
         }); 
 
 		$('body').on('click', '.sa-params', function(){

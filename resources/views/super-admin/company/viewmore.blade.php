@@ -2644,7 +2644,7 @@
                     </div>
                     <div class="kpi-label">Contacts</div>
                 </div>
-                <div class="kpi-number">{{ count($client_contact_info ?? []) }}</div>
+                <div class="kpi-number" id="drawerTopContactsCount">{{ number_format($total_contacts ?? 0) }}</div>
                 <div class="symbol-group symbol-hover mt-1">
                     @if ($client_contact_info)
                         @foreach ($client_contact_info as $cci)
@@ -2667,7 +2667,7 @@
             <div class="sa-tabs-bar">
                 <ul class="nav nav-tabs sa-nav-tabs" role="tablist" aria-label="Company Drawer Tabs">
                     <li class="nav-item" role="presentation"> <a class="nav-link active" data-toggle="tab" role="tab" id="tab-overview" aria-controls="overview" aria-selected="true" tabindex="0" href="#overview">Overview</a> </li>
-                    <li class="nav-item TeamListOpen" role="presentation"> <a class="nav-link" data-toggle="tab" role="tab" id="tab-contacts" aria-controls="contacts" aria-selected="false" tabindex="-1" href="#contacts">Contacts <span class="tab-count">{{ count($client_contact_info ?? []) }}</span></a> </li>
+                    <li class="nav-item TeamListOpen" role="presentation"> <a class="nav-link" data-toggle="tab" role="tab" id="tab-contacts" aria-controls="contacts" aria-selected="false" tabindex="-1" href="#contacts">Contacts <span class="tab-count">{{ $total_contacts ?? 0 }}</span></a> </li>
                     <li class="nav-item JobListOpen" role="presentation"> <a class="nav-link" data-toggle="tab" role="tab" id="tab-requisitions" aria-controls="requisitions" aria-selected="false" tabindex="-1" href="#requisitions">Jobs <span class="tab-count">{{ $active_requisition ?? 0 }}</span></a> </li>
                     <li class="nav-item" role="presentation"> <a class="nav-link" data-toggle="tab" role="tab" id="tab-timeline" aria-controls="timeline" aria-selected="false" tabindex="-1" href="#timeline">Timeline</a> </li>
                     <li class="nav-item" role="presentation"> <a class="nav-link" data-toggle="tab" role="tab" id="tab-packages" aria-controls="packages" aria-selected="false" tabindex="-1" href="#packages">Op. Package <span class="tab-count">{{ count($company_coins ?? []) }}</span></a> </li>
@@ -2875,7 +2875,7 @@
                             <div class="contacts-table-header">
                                 <div>
                                     <div class="contacts-table-title">
-                                        Contacts <span id="contactsHeadingCount">({{ count($client_contact_info ?? []) }})</span>
+                                        Contacts <span id="contactsHeadingCount">({{ $total_contacts ?? 0 }})</span>
                                     </div>
                                     <div class="contacts-table-subtitle">
                                         Manage and view all contacts associated with this company.
@@ -5070,76 +5070,81 @@ window.tagifyInstance = new Tagify(input);
                 }
             });
 
-            $(document).on('click','.TeamListOpen',function(){
-                fetchTeams();
-            });
+            var currentDrawerCompanyId = "{{ (int) @$client->id }}";
+            var activeTeamsAjax = null;
+            var contactsLoadedForCompany = null;
 
-            $(document).ready(function() {
-                    
-                    $(document).on('click', '#paginationTeams .page-link', function(e) {
-                            e.preventDefault();
+            function fetchTeams(page = 1, search = '') {
+                if (activeTeamsAjax && activeTeamsAjax.readyState !== 4) {
+                    activeTeamsAjax.abort();
+                }
 
-                            const page = $(this).data('page');
-                            if (!page || $(this).hasClass('disabled')) return;
+                var querySearch = (search !== '') ? search : ($('#inputSearch').val() || '');
+                $('.loadingMessageteamsListajax').css({ display: 'block' });
 
-                            // Disable the clicked pagination link
-                            $(this).addClass('disabled');
+                activeTeamsAjax = $.ajax({
+                    url: `{!! route('superadmin.company.contactdata') !!}?page=${page}`,
+                    type: 'GET',
+                    data: {
+                        search: querySearch,
+                        cus_search: $('#kt_tagify_2').val() || '',
+                        clientId: currentDrawerCompanyId,
+                        country: $('#country').val() || '',
+                        sortingfilter: $('#sortingfilter').val() || ''
+                    },
+                    success: function(response) {
+                        $('.loadingMessageteamsListajax').css({ display: 'none' });
 
-                            // Fetch data
-                            fetchTeams(page, $('#inputSearch').val()).then(() => {
-                                // Re-enable the links after successful data fetch
-                                $('#paginationTeams .page-link').removeClass('disabled');
-                            }).catch(() => {
-                                // Re-enable the links even if there's an error
-                                $('#paginationTeams .page-link').removeClass('disabled');
-                            });
-                            
-                    });
-            });
-            
-            var page_no = localStorage.getItem('currentPageTeam');
-            if (!page_no) {
-                page_no = 1;
-            }
+                        // Stale response protection: ignore response if drawer company has changed
+                        if (response.company_id && String(response.company_id) !== String(currentDrawerCompanyId)) {
+                            return;
+                        }
 
-			function fetchTeams(page = page_no, search = '') {
-				$('.loadingMessageteamsListajax').css({ display: 'block' });
-				return $.ajax({
-					url: `{!! route('superadmin.company.contactdata') !!}?page=${page}`,
-					type: 'GET',
-					data: {
-						search: $('#inputSearch').val(),
-						cus_search: $('#kt_tagify_2').val(),
-                        clientId: "{{ @$client->id }}",
-						country: $('#country').val(),
-						sortingfilter: $('#sortingfilter').val()
-					},
-					success: function(response) {
-						$('.loadingMessageteamsListajax').css({ display: 'none' });
-                        localStorage.setItem('currentPageTeam', page);
-						$('#teamsListajax').html(response.html);
-						$('#paginationTeams').html(response.pagination);
+                        $('#teamsListajax').html(response.html);
+                        $('#paginationTeams').html(response.pagination);
                         $('[data-bs-toggle="tooltip"], [data-toggle="tooltip"]').tooltip();
                         if (response.total !== undefined) {
                             $('#contactsHeadingCount').text('(' + response.total + ')');
                             $('.TeamListOpen .tab-count').text(response.total);
+                            $('#drawerTopContactsCount').text(response.total);
                         }
-					},
-                    error: function() {
-                        $('.loadingMessageteamsListajax').css({ display: 'none' });
+                    },
+                    error: function(xhr, status) {
+                        if (status !== 'abort') {
+                            $('.loadingMessageteamsListajax').css({ display: 'none' });
+                        }
                     }
-				});
-			}
+                });
+                return activeTeamsAjax;
+            }
+
+            $(document).off('click.companyContactsTab', '.TeamListOpen').on('click.companyContactsTab', '.TeamListOpen', function() {
+                if (contactsLoadedForCompany !== currentDrawerCompanyId || $.trim($('#teamsListajax').html()) === '') {
+                    fetchTeams(1);
+                    contactsLoadedForCompany = currentDrawerCompanyId;
+                }
+            });
+
+            $(document).off('click.companyContactsPagination', '#paginationTeams .page-link').on('click.companyContactsPagination', '#paginationTeams .page-link', function(e) {
+                e.preventDefault();
+                const page = $(this).data('page');
+                if (!page || $(this).hasClass('disabled')) return;
+                $(this).addClass('disabled');
+                fetchTeams(page, $('#inputSearch').val()).always(function() {
+                    $('#paginationTeams .page-link').removeClass('disabled');
+                });
+            });
 
             var contactSearchTimer;
-            $(document).on('keyup', '#inputSearch', function() {
+            $(document).off('keyup.companyContactsSearch', '#inputSearch').on('keyup.companyContactsSearch', '#inputSearch', function() {
                 clearTimeout(contactSearchTimer);
+                var searchVal = $(this).val();
                 contactSearchTimer = setTimeout(function() {
-                    fetchTeams(1);
+                    fetchTeams(1, searchVal);
                 }, 300);
             });
 
-            $(document).on('change', '#checkAllContacts', function() {
+            $(document).off('change.companyCheckAll', '#checkAllContacts').on('change.companyCheckAll', '#checkAllContacts', function() {
                 var isChecked = $(this).is(':checked');
                 $('#teamsListajax .chk_list_item:not(:disabled)').prop('checked', isChecked);
             });
