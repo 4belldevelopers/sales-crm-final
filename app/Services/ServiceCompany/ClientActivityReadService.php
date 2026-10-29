@@ -322,7 +322,7 @@ class ClientActivityReadService
             return []; // Internal clients have no agency ownership boundary restriction
         }
 
-        $cacheKey = "ats:client_agency_cand_ids:{$agencyCompanyId}:{$clientId}:" . md5(implode(',', $clientJobIds));
+        $cacheKey = "ats:client_agency_cand_ids:{$agencyCompanyId}:{$clientId}:".md5(implode(',', $clientJobIds));
         try {
             $cached = Redis::get($cacheKey);
             if ($cached) {
@@ -1334,17 +1334,18 @@ class ClientActivityReadService
                         'candidate_agency' => $uploaderCompany,
                         'experience_years' => (float) ($src['min_exp'] ?? 0),
                     ],
-                    'job' => [
+                    'job' => array_merge([
                         'id' => $jobId,
                         'code' => $jobId > 0 ? '#'.$jobId : '',
                         'title' => $resolvedJobTitle,
-                        'creator_name' => $jobProfile['creator_name'] ?? 'Account Manager',
-                        'creator_company' => $jobProfile['creator_company'] ?? $uploaderCompany,
                         'shared_by' => $jobProfile['shared_by_name'] ?? null,
                         'shared_by_name' => $jobProfile['shared_by_name'] ?? null,
                         'shared_by_company' => $jobProfile['shared_by_company'] ?? null,
                         'shared_with_agency' => $jobProfile['agency_name'] ?? null,
-                    ],
+                    ], ($query->clientType === 'direct') ? [] : [
+                        'creator_name' => $jobProfile['creator_name'] ?? 'Account Manager',
+                        'creator_company' => $jobProfile['creator_company'] ?? $uploaderCompany,
+                    ]),
                     'transition' => [
                         'from_stage_name' => $src['prev_process_name'] ?? 'Sourcing',
                         'to_stage_name' => $toStage,
@@ -1492,13 +1493,10 @@ class ClientActivityReadService
                         'name' => $isDirectShared ? $sharedByName : $creatorName,
                         'company_name' => $isDirectShared ? $sharedByCompany : $jobCompany,
                     ],
-                    'job' => [
+                    'job' => array_merge([
                         'id' => $jobId,
                         'code' => $jobId > 0 ? '#'.$jobId : '',
                         'title' => $resolvedJobTitle,
-                        'created_by' => $creatorName,
-                        'creator_name' => $creatorName,
-                        'creator_company' => $jobCompany,
                         'shared_by' => $sharedByName,
                         'shared_by_name' => $sharedByName,
                         'shared_by_company' => $sharedByCompany,
@@ -1507,9 +1505,13 @@ class ClientActivityReadService
                         'status' => $jobStatus,
                         'status_label' => $statusLabel,
                         'total_positions' => $totalPositions,
-                    ],
+                    ], $isDirectShared ? [] : [
+                        'created_by' => $creatorName,
+                        'creator_name' => $creatorName,
+                        'creator_company' => $jobCompany,
+                    ]),
                     'transition' => [
-                        'to_stage_name' => $isDirectShared ? ('Shared with ' . $sharedWithAgency) : ($statusLabel . ' Requisition'),
+                        'to_stage_name' => $isDirectShared ? ('Shared with '.$sharedWithAgency) : ($statusLabel.' Requisition'),
                         'status' => $isDirectShared ? 'active' : $jobStatus,
                     ],
                     'details' => [],

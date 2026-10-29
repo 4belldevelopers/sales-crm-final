@@ -2,6 +2,7 @@
 
 namespace App\Services\Analytics;
 
+use App\Services\Analytics\Contracts\PerformanceStatusMap;
 use App\Services\ElasticService;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
@@ -106,15 +107,10 @@ class ClientPerformanceAnalyticsService
         $jobQuery = $this->queryBuilder->buildJobQuery($scope, $boundaries);
         $jobResponse = $this->executeSearch($scope['indices']['jobs'], $jobQuery);
 
-        // Extract client job IDs for interview query
-        $clientJobIds = [];
-        if (!empty($jobResponse['hits']['hits'])) {
-            foreach ($jobResponse['hits']['hits'] as $hit) {
-                if (!empty($hit['_source']['id'])) {
-                    $clientJobIds[] = (int) $hit['_source']['id'];
-                }
-            }
-        }
+        // Canonical shared job IDs for interview tracking
+        $clientJobIds = !empty($scope['shared_job_ids'])
+            ? $scope['shared_job_ids']
+            : array_values(array_filter(array_map(fn($hit) => (int) ($hit['_source']['id'] ?? 0), $jobResponse['hits']['hits'] ?? [])));
 
         // Interview scheduled count from interview tracker
         $interviewResponse = null;
@@ -197,28 +193,38 @@ class ClientPerformanceAnalyticsService
         $jAggs = $jResp['aggregations'] ?? [];
         $iAggs = $iResp['aggregations'] ?? [];
 
-        // Current summary counts (using cardinality)
-        $candCount = $cAggs['total_candidates']['value'] ?? 0;
-        $screenedCount = $cAggs['screened_candidates']['unique_count']['value'] ?? 0;
-        $interviewCount = $cAggs['interviewed_candidates']['unique_count']['value'] ?? 0;
-        $offerCount = $cAggs['offered_candidates']['unique_count']['value'] ?? 0;
-        $joinCount = $cAggs['joined_candidates']['unique_count']['value'] ?? 0;
-        $scheduledCount = $iAggs['scheduled_count']['value'] ?? 0;
+        // Dual Candidate Dimensions: Submissions count (matching drawer badge) vs Unique candidates
+        $candCount = (int) ($cAggs['total_submissions']['value'] ?? $cAggs['total_candidates']['value'] ?? 0);
+        $uniqueCandCount = (int) ($cAggs['unique_candidates']['value'] ?? 0);
+        $screenedCount = (int) ($cAggs['screened_candidates']['unique_count']['value'] ?? 0);
+        $interviewCount = (int) ($cAggs['interviewed_candidates']['unique_count']['value'] ?? 0);
+        $offerCount = (int) ($cAggs['offered_candidates']['unique_count']['value'] ?? 0);
+        $joinCount = (int) ($cAggs['joined_candidates']['unique_count']['value'] ?? 0);
+        $scheduledCount = (int) ($iAggs['scheduled_count']['value'] ?? 0);
 
         // Previous summary counts
-        $prevCand = $pAggs['total_candidates']['value'] ?? 0;
-        $prevScreened = $pAggs['screened_candidates']['unique_count']['value'] ?? 0;
-        $prevInterview = $pAggs['interviewed_candidates']['unique_count']['value'] ?? 0;
-        $prevOffer = $pAggs['offered_candidates']['unique_count']['value'] ?? 0;
-        $prevJoin = $pAggs['joined_candidates']['unique_count']['value'] ?? 0;
+        $prevCand = (int) ($pAggs['total_submissions']['value'] ?? $pAggs['total_candidates']['value'] ?? 0);
+        $prevScreened = (int) ($pAggs['screened_candidates']['unique_count']['value'] ?? 0);
+        $prevInterview = (int) ($pAggs['interviewed_candidates']['unique_count']['value'] ?? 0);
+        $prevOffer = (int) ($pAggs['offered_candidates']['unique_count']['value'] ?? 0);
+        $prevJoin = (int) ($pAggs['joined_candidates']['unique_count']['value'] ?? 0);
 
         // Exact Time-to-Hire calculation from joined hits (placed_end_date - created_at)
         $tthData = $this->calculateTimeToHire($cResp['hits']['hits'] ?? []);
         $prevTthData = $this->calculateTimeToHire($pResp['hits']['hits'] ?? []);
 
-        // Build Summary object with safe deltas
+        // Build Summary object with safe deltas & dual candidate dimension
         $summary = [
-            'candidates' => $this->formatMetricWithDelta($candCount, $prevCand),
+            'candidates' => array_merge(
+                $this->formatMetricWithDelta($candCount, $prevCand),
+                [
+                    'submissions_count' => $candCount,
+                    'unique_count'      => $uniqueCandCount,
+                    'display_label'     => ($uniqueCandCount > 0 && $uniqueCandCount !== $candCount)
+                        ? "{$candCount} ({$uniqueCandCount} unique)"
+                        : (string) $candCount,
+                ]
+            ),
             'screened' => $this->formatMetricWithDelta($screenedCount, $prevScreened),
             'interviewed' => $this->formatMetricWithDelta($interviewCount, $prevInterview),
             'interviews_scheduled' => $this->formatMetricWithDelta($scheduledCount, 0),
@@ -243,19 +249,23 @@ class ClientPerformanceAnalyticsService
         // Build Velocity Trend
         $velocity = $this->buildVelocityTrend($cAggs['velocity_trend']['buckets'] ?? []);
 
+        // Compute genuine Time-to-Hire Trend (Zero-Data Rule: null for 0 joins)
+        $tthTrend = $this->buildTimeToHireTrend($velocity['labels'] ?? [], $cResp['hits']['hits'] ?? []);
+        $velocity['time_to_hire'] = $tthTrend;
+
         // Build Jobs Trend & Status Breakdown
         $jobsData = $this->buildJobsData($jResp, $jAggs);
 
-        // Build Offers vs Joins Trend
+        // Build Offers vs Joins Trend (real event data)
         $offersJoinsTrend = $this->buildOffersJoinsTrend($velocity['labels'] ?? [], $cAggs['velocity_trend']['buckets'] ?? []);
 
         // Build Job Types Breakdown
         $jobTypes = $this->buildJobTypesBreakdown($jAggs['employment_type_breakdown']['buckets'] ?? []);
 
-        // Build Top Roles
-        $topRoles = $this->buildTopRoles($jAggs['top_roles']['buckets'] ?? [], $cResp['hits']['hits'] ?? []);
+        // Build Top Roles from genuine candidate aggs & job metadata
+        $topRoles = $this->buildTopRoles($cAggs['job_roles_bucket']['buckets'] ?? [], $jResp['hits']['hits'] ?? []);
 
-        // Build Recruiter Performance
+        // Build Recruiter Performance from top hits (0% MySQL reads)
         $recruiters = $this->buildRecruiters($cAggs['recruiters_bucket']['buckets'] ?? [], $scope['auth_company_id']);
 
         // Build Deterministic Intelligence Insights
@@ -284,6 +294,8 @@ class ClientPerformanceAnalyticsService
             'meta' => [
                 'request_id'       => $requestId,
                 'schema_version'   => ClientPerformanceConstants::SCHEMA_VERSION,
+                'scope_version'    => 1,
+                'data_as_of'       => Carbon::now($boundaries['timezone'])->toIso8601String(),
                 'client_id'        => $scope['client_id'],
                 'client_name'      => $scope['client_name'],
                 'client_type'      => $scope['client_type'],
@@ -307,6 +319,7 @@ class ClientPerformanceAnalyticsService
             'roles'       => $topRoles,
             'recruiters'  => $recruiters,
             'insights'    => $insights,
+            'tth_trend'   => $tthTrend,
         ];
     }
 
@@ -316,19 +329,25 @@ class ClientPerformanceAnalyticsService
     protected function calculateTimeToHire(array $hits): array
     {
         $daysList = [];
+        $joinedStatusId = PerformanceStatusMap::STATUS_ID_MAP[PerformanceStatusMap::STAGE_JOINED][0] ?? 6;
+
         foreach ($hits as $hit) {
             $source = $hit['_source'] ?? [];
             $status = (int) ($source['job_master_status_id'] ?? 0);
-            if ($status === ClientPerformanceConstants::STATUS_JOINED && !empty($source['placed_end_date']) && !empty($source['created_at'])) {
-                try {
-                    $start = Carbon::parse($source['created_at']);
-                    $end = Carbon::parse($source['placed_end_date']);
-                    $diff = $start->diffInDays($end, false);
-                    if ($diff >= 0 && $diff <= 365) {
-                        $daysList[] = $diff;
+            if ($status === $joinedStatusId) {
+                $endDate = $source['placed_end_date'] ?? $source['of_joined_date'] ?? null;
+                $startDate = $source['created_at'] ?? null;
+                if (!empty($endDate) && !empty($startDate)) {
+                    try {
+                        $start = Carbon::parse($startDate);
+                        $end = Carbon::parse($endDate);
+                        $diff = $start->diffInDays($end, false);
+                        if ($diff >= 0 && $diff <= 365) {
+                            $daysList[] = $diff;
+                        }
+                    } catch (\Throwable $e) {
+                        // Ignore parse errors
                     }
-                } catch (\Throwable $e) {
-                    // Ignore parse errors
                 }
             }
         }
@@ -340,6 +359,50 @@ class ClientPerformanceAnalyticsService
             'avg_days' => $avg,
             'count'    => $count,
         ];
+    }
+
+    /**
+     * Compute monthly time-to-hire trend matching velocity labels.
+     * Months with 0 joins return null ('—').
+     */
+    protected function buildTimeToHireTrend(array $labels, array $candidateHits): array
+    {
+        $joinedStatusId = PerformanceStatusMap::STATUS_ID_MAP[PerformanceStatusMap::STAGE_JOINED][0] ?? 6;
+        $monthlyDurations = [];
+
+        foreach ($candidateHits as $hit) {
+            $source = $hit['_source'] ?? [];
+            $status = (int) ($source['job_master_status_id'] ?? 0);
+            if ($status === $joinedStatusId) {
+                $endDate = $source['placed_end_date'] ?? $source['of_joined_date'] ?? null;
+                $startDate = $source['created_at'] ?? null;
+                if (!empty($endDate) && !empty($startDate)) {
+                    try {
+                        $start = Carbon::parse($startDate);
+                        $end = Carbon::parse($endDate);
+                        $diff = $start->diffInDays($end, false);
+                        if ($diff >= 0 && $diff <= 365) {
+                            $monthKey = $end->format('M Y');
+                            $monthlyDurations[$monthKey][] = $diff;
+                        }
+                    } catch (\Throwable $e) {
+                        // ignore parse errors
+                    }
+                }
+            }
+        }
+
+        $trend = [];
+        foreach ($labels as $label) {
+            if (!empty($monthlyDurations[$label])) {
+                $durations = $monthlyDurations[$label];
+                $trend[] = (int) round(array_sum($durations) / count($durations));
+            } else {
+                $trend[] = null; // Authoritative Zero-Data Rule: null instead of 0 or 30
+            }
+        }
+
+        return $trend;
     }
 
     /**
@@ -430,8 +493,8 @@ class ClientPerformanceAnalyticsService
         foreach ($buckets as $b) {
             $keyStr = $b['key_as_string'] ?? '';
             $labels[] = !empty($keyStr) ? Carbon::parse($keyStr)->format('M Y') : 'Period';
-            $candidates[] = (int) ($b['unique_candidates']['value'] ?? $b['doc_count'] ?? 0);
-            $interviewed[] = (int) ($b['interviewed']['unique_count']['value'] ?? 0);
+            $candidates[] = (int) ($b['submissions']['value'] ?? $b['unique_candidates']['value'] ?? $b['doc_count'] ?? 0);
+            $interviewed[] = (int) ($b['interviewed']['submissions']['value'] ?? $b['interviewed']['unique_count']['value'] ?? 0);
         }
 
         // Fallback default months if empty
@@ -482,7 +545,7 @@ class ClientPerformanceAnalyticsService
     }
 
     /**
-     * Build Offers vs Joins Trend.
+     * Build Offers vs Joins Trend using real Elasticsearch aggregation counts.
      */
     protected function buildOffersJoinsTrend(array $labels, array $buckets): array
     {
@@ -490,8 +553,8 @@ class ClientPerformanceAnalyticsService
         $joins = [];
 
         foreach ($buckets as $b) {
-            $offers[] = (int) min(5, round(($b['doc_count'] ?? 0) * 0.2));
-            $joins[] = (int) min(3, round(($b['doc_count'] ?? 0) * 0.1));
+            $offers[] = (int) ($b['monthly_offers']['count']['value'] ?? $b['monthly_offers']['doc_count'] ?? 0);
+            $joins[] = (int) ($b['monthly_joins']['count']['value'] ?? $b['monthly_joins']['doc_count'] ?? 0);
         }
 
         if (empty($offers)) {
@@ -551,12 +614,21 @@ class ClientPerformanceAnalyticsService
     }
 
     /**
-     * Build Top Hiring Roles table data (limit 5).
+     * Build Top Hiring Roles table data (limit 5) using real Elasticsearch aggregations.
      */
-    protected function buildTopRoles(array $buckets, array $candidateHits): array
+    protected function buildTopRoles(array $buckets, array $jobHits): array
     {
         $items = [];
         $limit = 5;
+
+        // Map jobs by ID for fast lookup
+        $jobsMap = [];
+        foreach ($jobHits as $hit) {
+            $src = $hit['_source'] ?? [];
+            if (!empty($src['id'])) {
+                $jobsMap[(int) $src['id']] = $src;
+            }
+        }
 
         foreach ($buckets as $b) {
             if (count($items) >= $limit) {
@@ -564,19 +636,22 @@ class ClientPerformanceAnalyticsService
             }
 
             $jobId = (int) ($b['key'] ?? 0);
-            $details = $b['role_details']['hits']['hits'][0]['_source'] ?? [];
+            if ($jobId <= 0) {
+                continue;
+            }
 
-            $title = $details['title'] ?? ('Job #'.$jobId);
-            $positions = (int) ($details['total_positions'] ?? 1);
-            $status = ucfirst(strtolower($details['status'] ?? 'Active'));
-            $createdAt = $details['created_at'] ?? null;
+            $job = $jobsMap[$jobId] ?? [];
+            $title = $job['title'] ?? ('Job #'.$jobId);
+            $positions = (int) ($job['total_positions'] ?? 1);
+            $status = ucfirst(strtolower($job['status'] ?? 'Active'));
+            $createdAt = $job['created_at'] ?? null;
             $daysOpen = $createdAt ? max(1, Carbon::parse($createdAt)->diffInDays(now())) : 30;
 
-            // Compute conversion for this role
-            $submissions = (int) ($b['doc_count'] ?? 0);
-            $interviews = max(0, (int) round($submissions * 0.4));
-            $offers = max(0, (int) round($interviews * 0.3));
-            $joined = max(0, (int) round($offers * 0.6));
+            // Genuine metrics from sub-aggregations
+            $submissions = (int) ($b['submissions']['value'] ?? $b['doc_count'] ?? 0);
+            $interviews = (int) ($b['interviews']['count']['value'] ?? 0);
+            $offers = (int) ($b['offers']['count']['value'] ?? 0);
+            $joined = (int) ($b['joins']['count']['value'] ?? 0);
             $conversion = $submissions > 0 ? sprintf('%.1f%%', ($joined / $submissions) * 100) : '0.0%';
 
             $items[] = [
@@ -588,7 +663,7 @@ class ClientPerformanceAnalyticsService
                 'offers'                => $offers,
                 'joined'                => $joined,
                 'conversion_pct'        => $conversion,
-                'avg_time_to_hire_days' => 32,
+                'avg_time_to_hire_days' => $daysOpen,
                 'days_open'             => $daysOpen,
                 'status'                => $status === 'Active' ? 'Hiring' : $status,
             ];
@@ -602,15 +677,12 @@ class ClientPerformanceAnalyticsService
     }
 
     /**
-     * Build Recruiter Performance table data (limit 5).
+     * Build Recruiter Performance table data (limit 5) with 0% MySQL reads.
      */
     protected function buildRecruiters(array $buckets, int $companyId): array
     {
         $items = [];
         $limit = 5;
-
-        // Fetch user metadata from ELASTIC_USERS_LIST or cache
-        $usersIndex = config(ClientPerformanceConstants::CONFIG_INDEX_CLIENTS, 'local_users_list_elastic');
 
         foreach ($buckets as $b) {
             if (count($items) >= $limit) {
@@ -628,26 +700,22 @@ class ClientPerformanceAnalyticsService
             $joins = (int) ($b['joins']['unique_count']['value'] ?? 0);
             $joinRate = $sub > 0 ? sprintf('%.1f%%', ($joins / $sub) * 100) : '0.0%';
 
-            // Resolve name & avatar from cache
-            $userMeta = cache()->remember("user_meta_{$userId}", 86400, function () use ($userId) {
-                $u = \DB::table('users')->where('id', $userId)->select('id', 'name', 'image')->first();
-                return [
-                    'name'  => $u->name ?? 'Recruiter #'.$userId,
-                    'image' => !empty($u->image) ? $u->image : null,
-                ];
-            });
+            // Resolve name & avatar strictly from ES top_hits (0% MySQL reads)
+            $topHit = $b['recruiter_info']['hits']['hits'][0]['_source'] ?? [];
+            $name = $topHit['submitted_by_name'] ?? $topHit['posted_by'] ?? ('Recruiter #'.$userId);
+            $avatar = !empty($topHit['posted_by_image']) ? $topHit['posted_by_image'] : '/assets/media/avatars/300-1.jpg';
 
             $items[] = [
                 'user_id'               => $userId,
-                'name'                  => $userMeta['name'] ?? ('Recruiter #'.$userId),
-                'avatar'                => $userMeta['image'] ?? '/assets/media/avatars/300-1.jpg',
+                'name'                  => $name,
+                'avatar'                => $avatar,
                 'assigned_jobs'         => 1,
                 'submissions'           => $sub,
                 'interviews'            => $interviews,
                 'offers'                => $offers,
                 'joins'                 => $joins,
                 'join_rate_pct'         => $joinRate,
-                'avg_time_to_hire_days' => 28,
+                'avg_time_to_hire_days' => 0,
             ];
         }
 
