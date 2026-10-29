@@ -5112,9 +5112,34 @@ class SuperAdminCompanyController extends SuperAdminBaseController
         return Reply::success('Bulk status updated successfully.');
     }
 
+    /**
+     * Display listing of SuperAdmin Platform Features & Expiration Policies.
+     *
+     * Intent: CQRS Read path. Loads platform features with transparent caching,
+     * computes real-time KPI metrics for Tier 1 header toolbar card.
+     * Tenancy: Global system policies applied across all organizations.
+     *
+     * @return \Illuminate\View\View
+     */
     public function featuresList()
     {
-        $this->th_features = DB::table('features')->select('features.*')->orderBy('features.id', 'ASC')->get();
+        $this->pageTitle = 'Platform Feature Policies & Expiration Rules';
+
+        $this->th_features = Cache::remember('superadmin_features_list', 86400, function () {
+            return DB::table('features')->select('features.*')->orderBy('features.id', 'ASC')->get();
+        });
+
+        // Compute KPI telemetry for Tier 1 header toolbar card
+        $featuresCol = collect($this->th_features);
+        $this->totalFeaturesCount = $featuresCol->count();
+        $this->activeFeaturesCount = $featuresCol->where('status', 1)->count();
+        $this->inactiveFeaturesCount = $featuresCol->where('status', 0)->count();
+        $this->expirationsCount = $featuresCol->filter(function ($item) {
+            return stripos($item->title, 'expiration') !== false || stripos($item->title, 'experience') !== false || (int) $item->days > 0;
+        })->count();
+        $this->billingCount = $featuresCol->filter(function ($item) {
+            return stripos($item->title, 'credit') !== false || stripos($item->title, 'vendor') !== false || stripos($item->title, 'market') !== false;
+        })->count();
 
         return view('super-admin.features.index', $this->data);
     }
@@ -5446,37 +5471,152 @@ class SuperAdminCompanyController extends SuperAdminBaseController
         ]);
     }
 
+    /**
+     * Retrieve or edit a specific platform feature policy.
+     *
+     * Intent: Supports both standalone page render and AJAX in-place slide-over drawer render.
+     * Tenancy: Global policy scope.
+     *
+     * @param  int|string  $Id
+     * @return \Illuminate\View\View|\Illuminate\Http\JsonResponse
+     */
     public function featuresListupdate(Request $request, $Id)
     {
-        // dd($Id);
-        $this->th_features = DB::table('features')->select('features.*')->orderBy('features.id', 'ASC')->where('id', '=', $Id)->first();
-        // dd($this->th_email_template);
+        $Id = (int) $Id;
+        if ($Id > 0) {
+            $this->th_features = DB::table('features')->select('features.*')->where('id', '=', $Id)->first();
+        } else {
+            $this->th_features = (object) [
+                'id' => 0,
+                'title' => '',
+                'days' => 0,
+                'status' => 1,
+            ];
+        }
+
+        if ($request->ajax()) {
+            return Reply::dataOnly([
+                'status' => 'success',
+                'html' => view('super-admin.features.drawer-form', $this->data)->render(),
+                'feature' => $this->th_features,
+            ]);
+        }
 
         return view('super-admin.features.add-edit', $this->data);
     }
 
+    /**
+     * Store or update a platform feature policy.
+     *
+     * Intent: CQRS Write path. Strictly validates input, encapsulates database updates
+     * in a transaction, purges cached feature sets, and returns standard enterprise feedback.
+     *
+     * @return \Illuminate\Http\JsonResponse
+     */
     public function addEditfeaturesListupdate(Request $request)
     {
-        // dd($request->tokenId);
-        if ($request->tokenId == 0) {
-            //  dd($request->all());
-            $values = [
-                'title' => $request->title,
-                'days' => $request->days,
-                'status' => $request->status_is,
-            ];
-            DB::table('features')->insert($values);
-        } else {
-            $values = [
-                'title' => $request->title,
-                'days' => $request->days,
-                'status' => $request->status_is,
-            ];
-            DB::table('features')->where('id', '=', $request->tokenId)->update($values);
+        $validator = Validator::make($request->all(), [
+            'title' => 'required|string|max:255',
+            'days' => 'required|integer|min:0|max:3650',
+            'status_is' => 'required|in:0,1',
+            'tokenId' => 'nullable|integer',
+        ], [
+            'title.required' => 'Policy title is required.',
+            'days.required' => 'Validity / duration days is required.',
+            'days.integer' => 'Days must be a valid integer.',
+            'days.min' => 'Days cannot be negative.',
+            'days.max' => 'Days cannot exceed 3,650 (10 years).',
+            'status_is.required' => 'Policy status is required.',
+            'status_is.in' => 'Status must be either Active (1) or Inactive (0).',
+        ]);
+
+        if ($validator->fails()) {
+            return Reply::error($validator->errors()->first());
         }
 
-        return Reply::dataOnly(['status' => 'success']);
+        $tokenId = (int) ($request->tokenId ?? 0);
+        $values = [
+            'title' => trim($request->title),
+            'days' => (int) $request->days,
+            'status' => (int) $request->status_is,
+        ];
 
+        DB::beginTransaction();
+        try {
+            if ($tokenId === 0) {
+                $insertedId = DB::table('features')->insertGetId($values);
+                $values['id'] = $insertedId;
+            } else {
+                DB::table('features')->where('id', '=', $tokenId)->update($values);
+                $values['id'] = $tokenId;
+            }
+
+            // Invalidate cache immediately (Rule #6)
+            Cache::forget('superadmin_features_list');
+
+            DB::commit();
+
+            return Reply::success('Feature policy saved successfully.', [
+                'feature' => (object) $values,
+            ]);
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            Log::error('Error saving feature policy: '.$e->getMessage(), [
+                'request' => $request->all(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            return Reply::error('Failed to save feature policy. Please try again.');
+        }
+    }
+
+    /**
+     * Fast AJAX toggle switch for feature policy status (Active / Inactive).
+     *
+     * Intent: 1-click status flip with optimistic UI update and atomic cache eviction.
+     * Tenancy: Global system policy.
+     *
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function toggleFeatureStatus(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'id' => 'required|integer|exists:features,id',
+            'status' => 'required|in:0,1',
+        ], [
+            'id.required' => 'Feature policy ID is required.',
+            'id.exists' => 'Selected feature policy does not exist.',
+            'status.required' => 'Status value is required.',
+            'status.in' => 'Status must be either 0 or 1.',
+        ]);
+
+        if ($validator->fails()) {
+            return Reply::error($validator->errors()->first());
+        }
+
+        $id = (int) $request->id;
+        $status = (int) $request->status;
+
+        try {
+            DB::table('features')->where('id', $id)->update(['status' => $status]);
+
+            // Invalidate cache immediately (Rule #6)
+            Cache::forget('superadmin_features_list');
+
+            return Reply::dataOnly([
+                'status' => 'success',
+                'new_status' => $status,
+                'status_text' => $status === 1 ? 'Active' : 'Inactive',
+                'message' => 'Feature policy status updated successfully.',
+            ]);
+        } catch (\Throwable $e) {
+            Log::error('Error toggling feature status: '.$e->getMessage(), [
+                'id' => $id,
+                'status' => $status,
+            ]);
+
+            return Reply::error('Failed to update feature policy status.');
+        }
     }
 
     /**
