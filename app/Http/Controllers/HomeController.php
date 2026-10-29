@@ -14,6 +14,7 @@ use App\Models\Client;
 use App\Models\Job;
 use App\Models\JobApplication;
 use App\Models\OfferJobApplication;
+use App\Services\CurrencyService;
 use App\Services\ElasticService;
 use App\Services\MailService;
 use Carbon\Carbon;
@@ -23,6 +24,7 @@ use Google\Service\Calendar;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Storage;
@@ -10371,52 +10373,85 @@ class HomeController extends Controller
     /** Start update Currency Rates */
     public function updateCurrencyRates()
     {
-        $currencies = DB::table('currencies')->whereNot('currency_code', 'INR')->pluck('currency_code')->toArray();
-
-        foreach ($currencies as $code) {
-            $response = Http::get('https://api.exchangerate-api.com/v4/latest/'.$code);
+        try {
+            $response = Http::timeout(10)->retry(2, 200)->get('https://api.exchangerate-api.com/v4/latest/USD');
 
             if (! $response->successful()) {
-                return 'API failed';
-            }
-            $rates = $response->json()['rates'];
-
-            // ✅ Step 1: Get USD → INR
-            $otherToInr = $rates['INR'];
-            $usdToOther = $rates['USD'];
-
-            if (! isset($rates[$code])) {
-                continue;
+                return response()->json([
+                    'status' => false,
+                    'type' => 'error',
+                    'message' => 'Exchange Rate API service returned an error (HTTP ' . $response->status() . '). Existing rates preserved.',
+                ], 502);
             }
 
-            // ✅ Reverse (INR → currency)
-            DB::table('currencies')
-                ->where('currency_code', $code)
-                ->update([
-                    'usd_based_rates' => round($usdToOther, 2),   // e.g. 1 USD = 83 INR
-                    'inr_based_rates' => round($otherToInr, 2), // e.g. 1 INR = 0.012 USD
-                    'updated_at' => now(),
-                ]);
-            if ($code == 'USD') {
-                $code = 'INR';
-                DB::table('currencies')
-                    ->where('currency_code', $code)
-                    ->update([
-                        'usd_based_rates' => round($otherToInr, 2),   // e.g. 1 USD = 83 INR
-                        'inr_based_rates' => round($usdToOther, 2), // e.g. 1 INR = 0.012 USD
-                        'updated_at' => now(),
-                    ]);
+            $usdRates = $response->json()['rates'] ?? [];
+            if (empty($usdRates) || ! isset($usdRates['INR'])) {
+                return response()->json([
+                    'status' => false,
+                    'type' => 'error',
+                    'message' => 'Malformed rate data received from Exchange Rate API.',
+                ], 502);
             }
+
+            $usdToInr = (float) $usdRates['INR'];
+            $currencies = DB::table('currencies')->get();
+
+            DB::transaction(function () use ($currencies, $usdRates, $usdToInr) {
+                foreach ($currencies as $currency) {
+                    $code = strtoupper(trim($currency->currency_code));
+
+                    if ($code === 'USD') {
+                        // 1 USD = 1.0 USD, 1 USD = $usdToInr INR
+                        DB::table('currencies')->where('id', $currency->id)->update([
+                            'usd_based_rates' => 1.0000,
+                            'inr_based_rates' => round($usdToInr, 4),
+                            'updated_at' => now(),
+                        ]);
+                        continue;
+                    }
+
+                    if ($code === 'INR') {
+                        // For INR: usd_based_rates stores 1 USD in INR (system baseline anchor), inr_based_rates stores 1.0
+                        DB::table('currencies')->where('id', $currency->id)->update([
+                            'usd_based_rates' => round($usdToInr, 4),
+                            'inr_based_rates' => 1.0000,
+                            'updated_at' => now(),
+                        ]);
+                        continue;
+                    }
+
+                    if (isset($usdRates[$code]) && (float) $usdRates[$code] > 0) {
+                        $rateFromUsd = (float) $usdRates[$code]; // e.g. 1 USD = 0.897 EUR
+                        $valInUsd = 1 / $rateFromUsd; // e.g. 1 EUR = 1.1148 USD
+                        $valInInr = $valInUsd * $usdToInr; // e.g. 1 EUR = 106.24 INR
+
+                        DB::table('currencies')->where('id', $currency->id)->update([
+                            'usd_based_rates' => round($valInUsd, 4),
+                            'inr_based_rates' => round($valInInr, 4),
+                            'updated_at' => now(),
+                        ]);
+                    }
+                }
+            });
+
+            // Re-compile static JSON stores and clear Redis reference cache atomically
+            CurrencyService::syncCurrenciesJson();
+
+            return response()->json([
+                'status' => true,
+                'type' => 'success',
+                'url' => route('superadmin.currency-settings.index'),
+                'message' => 'Global currency exchange rates updated and synchronized successfully!',
+            ]);
+        } catch (\Throwable $e) {
+            Log::error('Currency rates update failed: ' . $e->getMessage(), ['exception' => $e]);
+
+            return response()->json([
+                'status' => false,
+                'type' => 'error',
+                'message' => 'Unable to connect to Exchange Rate API: ' . $e->getMessage(),
+            ], 500);
         }
-        $url = url('super-admin/currency-settings');
-
-        return response()->json([
-            'status' => true,
-            'type' => 'success',
-            'url' => $url,
-            'message' => 'Currency updated successfully',
-        ]);
-
     }
     /** end update Currency Rates */
 

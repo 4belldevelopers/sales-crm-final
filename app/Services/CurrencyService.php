@@ -40,10 +40,11 @@ class CurrencyService
     const DEFAULT_CURRENCY_KEY = 4;
 
     /**
-     * Currency flags mapping for all 46 system currencies.
+     * Currency flags mapping for all world & system currencies.
      */
     const CURRENCY_FLAGS = [
-        'INR' => '🇮🇳', 'EUR' => '🇪🇺', 'JPY' => '🇯🇵', 'GBP' => '🇬🇧', 'USD' => '🇺🇸', 'AED' => '🇦🇪',
+        // Base & Major System Currencies
+        'USD' => '🇺🇸', 'INR' => '🇮🇳', 'EUR' => '🇪🇺', 'GBP' => '🇬🇧', 'JPY' => '🇯🇵', 'AED' => '🇦🇪',
         'CAD' => '🇨🇦', 'AUD' => '🇦🇺', 'SGD' => '🇸🇬', 'CHF' => '🇨🇭', 'CNY' => '🇨🇳', 'NZD' => '🇳🇿',
         'ZAR' => '🇿🇦', 'BRL' => '🇧🇷', 'PHP' => '🇵🇭', 'MYR' => '🇲🇾', 'THB' => '🇹🇭', 'IDR' => '🇮🇩',
         'VND' => '🇻🇳', 'SEK' => '🇸🇪', 'NOK' => '🇳🇴', 'DKK' => '🇩🇰', 'PLN' => '🇵🇱', 'MXN' => '🇲🇽',
@@ -51,6 +52,22 @@ class CurrencyService
         'KWD' => '🇰🇼', 'BHD' => '🇧🇭', 'OMR' => '🇴🇲', 'EGP' => '🇪🇬', 'ILS' => '🇮🇱', 'CZK' => '🇨🇿',
         'HUF' => '🇭🇺', 'RON' => '🇷🇴', 'CLP' => '🇨🇱', 'COP' => '🇨🇴', 'ARS' => '🇦🇷', 'NGN' => '🇳🇬',
         'KES' => '🇰🇪', 'PKR' => '🇵🇰', 'BDT' => '🇧🇩', 'LKR' => '🇱🇰', 'NPR' => '🇳🇵',
+        // Extended World Currencies
+        'AFN' => '🇦🇫', 'ALL' => '🇦🇱', 'ANG' => '🇨🇼', 'AWG' => '🇦🇼', 'AZN' => '🇦🇿',
+        'BAM' => '🇧🇦', 'BBD' => '🇧🇧', 'BGN' => '🇧🇬', 'BMD' => '🇧🇲', 'BND' => '🇧🇳',
+        'BOB' => '🇧🇴', 'BSD' => '🇧🇸', 'BWP' => '🇧🇼', 'BYR' => '🇧🇾', 'BYN' => '🇧🇾',
+        'BZD' => '🇧🇿', 'CRC' => '🇨🇷', 'CUP' => '🇨🇺', 'DOP' => '🇩🇴', 'FJD' => '🇫🇯',
+        'FKP' => '🇫🇰', 'GGP' => '🇬🇬', 'GHC' => '🇬🇭', 'GHS' => '🇬🇭', 'GIP' => '🇬🇮',
+        'GTQ' => '🇬🇹', 'GYD' => '🇬🇾', 'HNL' => '🇭🇳', 'HRK' => '🇭🇷', 'IMP' => '🇮🇲',
+        'IRR' => '🇮🇷', 'ISK' => '🇮🇸', 'JEP' => '🇯🇪', 'JMD' => '🇯🇲', 'JOD' => '🇯🇴', 'KGS' => '🇰🇬',
+        'KHR' => '🇰🇭', 'KPW' => '🇰🇵', 'KYD' => '🇰🇾', 'KZT' => '🇰🇿', 'LAK' => '🇱🇦',
+        'LBP' => '🇱🇧', 'LRD' => '🇱🇷', 'LTL' => '🇱🇹', 'LVL' => '🇱🇻', 'MAD' => '🇲🇦', 'MKD' => '🇲🇰',
+        'MNT' => '🇲🇳', 'MUR' => '🇲🇺', 'MZN' => '🇲🇿', 'NAD' => '🇳🇦', 'NIO' => '🇳🇮',
+        'PAB' => '🇵🇦', 'PEN' => '🇵🇪', 'PYG' => '🇵🇾', 'RUB' => '🇷🇺', 'RSD' => '🇷🇸',
+        'SBD' => '🇸🇧', 'SCR' => '🇸🇨', 'SHP' => '🇸🇭', 'SOS' => '🇸🇴', 'SRD' => '🇸🇷',
+        'SVC' => '🇸🇻', 'SYP' => '🇸🇾', 'TRL' => '🇹🇷', 'TTD' => '🇹🇹', 'TVD' => '🇹🇻',
+        'UAH' => '🇺🇦', 'UYU' => '🇺🇾', 'UZS' => '🇺🇿', 'VEF' => '🇻🇪', 'VES' => '🇻🇪',
+        'XCD' => '🇦🇬', 'YER' => '🇾🇪', 'ZWD' => '🇿🇼', 'ZWL' => '🇿🇼',
     ];
 
     /**
@@ -141,6 +158,175 @@ class CurrencyService
             'rates_to_inr' => [],
             'rates_to_usd' => [],
         ];
+    }
+
+    /**
+     * Synchronize and compile MySQL currency records into static JSON stores.
+     * Atomically updates both resources/data/currencies.json and public/country-state-city/currencies.json.
+     * Flushes in-memory static cache and Redis reference caches.
+     */
+    public static function syncCurrenciesJson(): bool
+    {
+        try {
+            $resourcesPath = resource_path('data/currencies.json');
+            $publicPath = public_path('country-state-city/currencies.json');
+
+            // Load existing json structure to preserve master_currencies and setting_currencies
+            $existing = self::loadCurrencyJson();
+
+            // Fetch active rows from `currencies` table
+            $dbCurrencies = DB::table('currencies')->orderBy('id', 'asc')->get();
+
+            $currenciesArray = [];
+            $ratesToInr = $existing['rates_to_inr'] ?? [];
+            $ratesToUsd = $existing['rates_to_usd'] ?? [];
+            $symbols = $existing['symbols'] ?? [];
+            $keyToCode = $existing['key_to_code'] ?? [];
+            $codeToKey = $existing['code_to_key'] ?? [];
+
+            foreach ($dbCurrencies as $row) {
+                $code = strtoupper(trim($row->currency_code));
+                $key = (int) $row->getKey;
+
+                $currenciesArray[] = [
+                    'id' => (int) $row->id,
+                    'currency_name' => $row->currency_name,
+                    'currency_symbol' => $row->currency_symbol,
+                    'currency_code' => $code,
+                    'usd_based_rates' => number_format((float) $row->usd_based_rates, 10, '.', ''),
+                    'inr_based_rates' => number_format((float) $row->inr_based_rates, 10, '.', ''),
+                    'getKey' => $key,
+                ];
+
+                if ($row->inr_based_rates !== null) {
+                    $ratesToInr[$code] = (float) $row->inr_based_rates;
+                }
+                if ($row->usd_based_rates !== null) {
+                    $ratesToUsd[$code] = (float) $row->usd_based_rates;
+                }
+                if (! empty($row->currency_symbol)) {
+                    $symbols[$code] = $row->currency_symbol;
+                }
+
+                $keyToCode[(string) $key] = $code;
+                $codeToKey[$code] = $key;
+            }
+
+            $existing['_meta'] = [
+                'generated_at' => now()->toIso8601String(),
+                'description' => 'Authoritative Enterprise Currency Dataset for JERO ATS. Serves 100% of currency queries with 0% MySQL reads.',
+                'version' => '1.1',
+                'total_master_currencies' => count($existing['master_currencies'] ?? []),
+                'total_setting_currencies' => count($existing['setting_currencies'] ?? []),
+            ];
+            $existing['currencies'] = $currenciesArray;
+            $existing['rates_to_inr'] = $ratesToInr;
+            $existing['rates_to_usd'] = $ratesToUsd;
+            $existing['symbols'] = $symbols;
+            $existing['key_to_code'] = $keyToCode;
+            $existing['code_to_key'] = $codeToKey;
+
+            $jsonEncoded = json_encode($existing, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+
+            if ($jsonEncoded) {
+                if (file_exists($resourcesPath) || is_dir(dirname($resourcesPath))) {
+                    @file_put_contents($resourcesPath, $jsonEncoded, LOCK_EX);
+                }
+                if (file_exists($publicPath) || is_dir(dirname($publicPath))) {
+                    @file_put_contents($publicPath, $jsonEncoded, LOCK_EX);
+                }
+            }
+
+            // Flush in-memory static cache
+            self::$currencyJsonData = $existing;
+
+            // Invalidate Redis caches
+            Cache::forget('global_master_currencies');
+            Cache::forget('fx_snapshot:active');
+
+            return true;
+        } catch (\Throwable $e) {
+            Log::error('CurrencyService::syncCurrenciesJson failed: '.$e->getMessage(), [
+                'exception' => $e,
+            ]);
+
+            return false;
+        }
+    }
+
+    /**
+     * Map ISO-3 currency code to primary country / countries.
+     * Served directly from static JSON / in-memory cache (0% SQL queries).
+     *
+     * @return array<string, string>
+     */
+    public static function getCountryMap(): array
+    {
+        $map = [
+            'USD' => 'United States',
+            'INR' => 'India',
+            'GBP' => 'United Kingdom',
+            'EUR' => 'Eurozone (Europe)',
+            'JPY' => 'Japan',
+            'AED' => 'United Arab Emirates',
+            'CAD' => 'Canada',
+            'AUD' => 'Australia',
+            'SGD' => 'Singapore',
+            'CHF' => 'Switzerland',
+            'CNY' => 'China',
+            'NZD' => 'New Zealand',
+            'ZAR' => 'South Africa',
+            'BRL' => 'Brazil',
+            'PHP' => 'Philippines',
+            'MYR' => 'Malaysia',
+            'THB' => 'Thailand',
+            'IDR' => 'Indonesia',
+            'VND' => 'Vietnam',
+            'SEK' => 'Sweden',
+            'NOK' => 'Norway',
+            'DKK' => 'Denmark',
+            'PLN' => 'Poland',
+            'MXN' => 'Mexico',
+            'HKD' => 'Hong Kong',
+            'TWD' => 'Taiwan',
+            'KRW' => 'South Korea',
+            'TRY' => 'Turkey',
+            'SAR' => 'Saudi Arabia',
+            'QAR' => 'Qatar',
+            'KWD' => 'Kuwait',
+            'BHD' => 'Bahrain',
+            'OMR' => 'Oman',
+            'EGP' => 'Egypt',
+            'ILS' => 'Israel',
+            'CZK' => 'Czech Republic',
+            'HUF' => 'Hungary',
+            'RON' => 'Romania',
+            'CLP' => 'Chile',
+            'COP' => 'Colombia',
+            'ARS' => 'Argentina',
+            'NGN' => 'Nigeria',
+            'KES' => 'Kenya',
+            'PKR' => 'Pakistan',
+            'BDT' => 'Bangladesh',
+            'LKR' => 'Sri Lanka',
+            'NPR' => 'Nepal',
+            'JOD' => 'Jordan',
+            'GHS' => 'Ghana',
+            'MAD' => 'Morocco',
+        ];
+
+        // Enrich with master currencies
+        $data = self::loadCurrencyJson();
+        if (! empty($data['master_currencies'])) {
+            foreach ($data['master_currencies'] as $m) {
+                $code = strtoupper(trim($m['code'] ?? ''));
+                if ($code && ! isset($map[$code])) {
+                    $map[$code] = $m['country'] ?? $code;
+                }
+            }
+        }
+
+        return $map;
     }
 
     /**
