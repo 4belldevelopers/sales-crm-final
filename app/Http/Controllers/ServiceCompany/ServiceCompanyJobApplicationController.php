@@ -1678,6 +1678,25 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
 
     public function directclientCandidateJoinList(Request $request)
     {
+        // Strict Backend Tenancy Guard: Super Admin must NOT receive or see agency-specific direct offers/joining data
+        if (auth()->check()) {
+            $user = auth()->user();
+            $isSuperAdmin = (bool) ($user->is_superadmin ?? false)
+                || in_array((int) ($user->company_id ?? 0), \App\Helper\GeneralMethod::superAdminCompanyIds(), true)
+                || (method_exists($user, 'hasRole') && $user->hasRole('super_admin'))
+                || (int) ($user->company_id ?? 0) === 1;
+
+            if ($isSuperAdmin) {
+                return response()->json([
+                    'status' => 'success',
+                    'html' => '',
+                    'pagination' => '',
+                    'total' => 0,
+                    'latency_ms' => 0.0,
+                ]);
+            }
+        }
+
         $startTime = microtime(true);
         $from_company_id = (int) $request->clientid;
         $to_company_id = (int) auth()->user()->company_id;
@@ -1944,6 +1963,25 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
 
     public function directclientCandidateInterviewTracker(Request $request)
     {
+        // Strict Backend Tenancy Guard: Super Admin must NOT receive or see agency-specific direct interview data
+        if (auth()->check()) {
+            $user = auth()->user();
+            $isSuperAdmin = (bool) ($user->is_superadmin ?? false)
+                || in_array((int) ($user->company_id ?? 0), \App\Helper\GeneralMethod::superAdminCompanyIds(), true)
+                || (method_exists($user, 'hasRole') && $user->hasRole('super_admin'))
+                || (int) ($user->company_id ?? 0) === 1;
+
+            if ($isSuperAdmin) {
+                return response()->json([
+                    'status' => 'success',
+                    'data' => [],
+                    'pagination' => '',
+                    'total' => 0,
+                    'latency_ms' => 0.0,
+                ]);
+            }
+        }
+
         $startTime = microtime(true);
         $client_id = (int) $request->clientid;
         $company_id = (int) auth()->user()->company_id;
