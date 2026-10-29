@@ -25,30 +25,41 @@ class ClientPerformanceQueryBuilder
         $mustNotClauses = $scope['candidate_filter']['bool']['must_not'] ?? [];
 
         // Apply date range filter on created_at / sourcing_date
-        if (!empty($boundaries['current_start']) && !empty($boundaries['days'])) {
+        if (! empty($boundaries['current_start']) && ! empty($boundaries['days'])) {
             $mustClauses[] = [
                 'range' => [
                     'created_at' => [
-                        'gte'    => $boundaries['current_start'],
-                        'lte'    => $boundaries['current_end'],
+                        'gte' => $boundaries['current_start'],
+                        'lte' => $boundaries['current_end'],
                         'format' => 'strict_date_optional_time||epoch_millis',
                     ],
                 ],
             ];
         }
 
-        $interval = (!empty($boundaries['days']) && $boundaries['days'] <= 35) ? 'week' : 'month';
+        $interval = (! empty($boundaries['days']) && $boundaries['days'] <= 35) ? 'week' : 'month';
 
         return [
             'size' => 100, // Retrieve up to 100 joined hits for exact Time-to-Hire calculation
             'query' => [
                 'bool' => [
-                    'must'     => $mustClauses,
+                    'must' => $mustClauses,
                     'must_not' => $mustNotClauses,
                 ],
             ],
             'aggs' => [
-                // 1. Dual Candidate Dimensions (P0 Contract)
+                // 1. Dual Candidate Dimensions (P0 Contract: strictly statuses 1..6, excluding In Review 8 and Archived 9)
+                'eligible_submissions' => [
+                    'filter' => [
+                        'terms' => [
+                            'job_master_status_id' => PerformanceStatusMap::SHARED_PIPELINE_STATUSES,
+                        ],
+                    ],
+                    'aggs' => [
+                        'submissions' => ['value_count' => ['field' => 'id']],
+                        'unique_count' => ['cardinality' => ['field' => 'candidate_id']],
+                    ],
+                ],
                 'total_submissions' => [
                     'value_count' => [
                         'field' => 'id',
@@ -61,6 +72,19 @@ class ClientPerformanceQueryBuilder
                     ],
                 ],
 
+                // Hiring Pipeline Exception: In Review candidates reflected as part of the pipeline
+                'in_review_candidates' => [
+                    'filter' => [
+                        'terms' => [
+                            'job_master_status_id' => [8, '8'],
+                        ],
+                    ],
+                    'aggs' => [
+                        'submissions' => ['value_count' => ['field' => 'id']],
+                        'unique_count' => ['cardinality' => ['field' => 'candidate_id']],
+                    ],
+                ],
+
                 // 2. Screened milestone (statuses 2, 3, 4, 5, 6)
                 'screened_candidates' => [
                     'filter' => [
@@ -69,7 +93,7 @@ class ClientPerformanceQueryBuilder
                         ],
                     ],
                     'aggs' => [
-                        'submissions'  => ['value_count' => ['field' => 'id']],
+                        'submissions' => ['value_count' => ['field' => 'id']],
                         'unique_count' => ['cardinality' => ['field' => 'candidate_id']],
                     ],
                 ],
@@ -82,7 +106,7 @@ class ClientPerformanceQueryBuilder
                         ],
                     ],
                     'aggs' => [
-                        'submissions'  => ['value_count' => ['field' => 'id']],
+                        'submissions' => ['value_count' => ['field' => 'id']],
                         'unique_count' => ['cardinality' => ['field' => 'candidate_id']],
                     ],
                 ],
@@ -95,7 +119,7 @@ class ClientPerformanceQueryBuilder
                         ],
                     ],
                     'aggs' => [
-                        'submissions'  => ['value_count' => ['field' => 'id']],
+                        'submissions' => ['value_count' => ['field' => 'id']],
                         'unique_count' => ['cardinality' => ['field' => 'candidate_id']],
                     ],
                 ],
@@ -116,7 +140,7 @@ class ClientPerformanceQueryBuilder
                         ],
                     ],
                     'aggs' => [
-                        'submissions'  => ['value_count' => ['field' => 'id']],
+                        'submissions' => ['value_count' => ['field' => 'id']],
                         'unique_count' => ['cardinality' => ['field' => 'candidate_id']],
                     ],
                 ],
@@ -124,12 +148,23 @@ class ClientPerformanceQueryBuilder
                 // 6. Temporal Event Histogram (Event-based Sub-Aggregations)
                 'velocity_trend' => [
                     'date_histogram' => [
-                        'field'             => 'created_at',
+                        'field' => 'created_at',
                         'calendar_interval' => $interval,
-                        'format'            => 'yyyy-MM-dd',
-                        'min_doc_count'     => 0,
+                        'format' => 'yyyy-MM-dd',
+                        'min_doc_count' => 0,
                     ],
                     'aggs' => [
+                        'eligible_candidates' => [
+                            'filter' => [
+                                'terms' => [
+                                    'job_master_status_id' => PerformanceStatusMap::SHARED_PIPELINE_STATUSES,
+                                ],
+                            ],
+                            'aggs' => [
+                                'submissions' => ['value_count' => ['field' => 'id']],
+                                'unique_candidates' => ['cardinality' => ['field' => 'candidate_id']],
+                            ],
+                        ],
                         'submissions' => [
                             'value_count' => ['field' => 'id'],
                         ],
@@ -144,7 +179,7 @@ class ClientPerformanceQueryBuilder
                             ],
                             'aggs' => [
                                 'unique_count' => ['cardinality' => ['field' => 'candidate_id']],
-                                'submissions'  => ['value_count' => ['field' => 'id']],
+                                'submissions' => ['value_count' => ['field' => 'id']],
                             ],
                         ],
                         // Real Offers in this temporal bucket
@@ -176,7 +211,7 @@ class ClientPerformanceQueryBuilder
                 'job_roles_bucket' => [
                     'terms' => [
                         'field' => 'jobId',
-                        'size'  => 5,
+                        'size' => 5,
                         'order' => ['submissions' => 'desc'],
                     ],
                     'aggs' => [
@@ -202,7 +237,7 @@ class ClientPerformanceQueryBuilder
                         ],
                         'role_info' => [
                             'top_hits' => [
-                                'size'    => 1,
+                                'size' => 1,
                                 '_source' => ['jobId', 'title', 'employment_type'],
                             ],
                         ],
@@ -213,9 +248,20 @@ class ClientPerformanceQueryBuilder
                 'recruiters_bucket' => [
                     'terms' => [
                         'field' => 'submitted_by',
-                        'size'  => 5,
+                        'size' => 5,
                     ],
                     'aggs' => [
+                        'eligible_candidates' => [
+                            'filter' => [
+                                'terms' => [
+                                    'job_master_status_id' => PerformanceStatusMap::SHARED_PIPELINE_STATUSES,
+                                ],
+                            ],
+                            'aggs' => [
+                                'submissions' => ['value_count' => ['field' => 'id']],
+                                'unique_candidates' => ['cardinality' => ['field' => 'candidate_id']],
+                            ],
+                        ],
                         'submissions' => [
                             'value_count' => ['field' => 'id'],
                         ],
@@ -252,7 +298,7 @@ class ClientPerformanceQueryBuilder
                         ],
                         'recruiter_info' => [
                             'top_hits' => [
-                                'size'    => 1,
+                                'size' => 1,
                                 '_source' => ['submitted_by', 'submitted_by_name', 'posted_by_image'],
                             ],
                         ],
@@ -277,8 +323,8 @@ class ClientPerformanceQueryBuilder
         $mustClauses[] = [
             'range' => [
                 'created_at' => [
-                    'gte'    => $boundaries['previous_start'],
-                    'lte'    => $boundaries['previous_end'],
+                    'gte' => $boundaries['previous_start'],
+                    'lte' => $boundaries['previous_end'],
                     'format' => 'strict_date_optional_time||epoch_millis',
                 ],
             ],
@@ -288,24 +334,31 @@ class ClientPerformanceQueryBuilder
             'size' => 50,
             'query' => [
                 'bool' => [
-                    'must'     => $mustClauses,
+                    'must' => $mustClauses,
                     'must_not' => $mustNotClauses,
                 ],
             ],
             'aggs' => [
-                'total_submissions'   => ['value_count' => ['field' => 'id']],
-                'unique_candidates'   => ['cardinality' => ['field' => 'candidate_id']],
+                'eligible_submissions' => [
+                    'filter' => ['terms' => ['job_master_status_id' => PerformanceStatusMap::SHARED_PIPELINE_STATUSES]],
+                    'aggs' => [
+                        'submissions' => ['value_count' => ['field' => 'id']],
+                        'unique_count' => ['cardinality' => ['field' => 'candidate_id']],
+                    ],
+                ],
+                'total_submissions' => ['value_count' => ['field' => 'id']],
+                'unique_candidates' => ['cardinality' => ['field' => 'candidate_id']],
                 'screened_candidates' => [
                     'filter' => ['terms' => ['job_master_status_id' => PerformanceStatusMap::MILESTONE_SCREENED_STATUSES]],
-                    'aggs'   => ['unique_count' => ['cardinality' => ['field' => 'candidate_id']]],
+                    'aggs' => ['unique_count' => ['cardinality' => ['field' => 'candidate_id']]],
                 ],
                 'interviewed_candidates' => [
                     'filter' => ['terms' => ['job_master_status_id' => PerformanceStatusMap::MILESTONE_INTERVIEW_STATUSES]],
-                    'aggs'   => ['unique_count' => ['cardinality' => ['field' => 'candidate_id']]],
+                    'aggs' => ['unique_count' => ['cardinality' => ['field' => 'candidate_id']]],
                 ],
                 'offered_candidates' => [
                     'filter' => ['terms' => ['job_master_status_id' => PerformanceStatusMap::MILESTONE_OFFER_STATUSES]],
-                    'aggs'   => ['unique_count' => ['cardinality' => ['field' => 'candidate_id']]],
+                    'aggs' => ['unique_count' => ['cardinality' => ['field' => 'candidate_id']]],
                 ],
                 'joined_candidates' => [
                     'filter' => [
@@ -345,13 +398,13 @@ class ClientPerformanceQueryBuilder
                 'status_breakdown' => [
                     'terms' => [
                         'field' => 'status',
-                        'size'  => 5,
+                        'size' => 5,
                     ],
                 ],
                 'employment_type_breakdown' => [
                     'terms' => [
-                        'field'   => 'employment_type',
-                        'size'    => 10,
+                        'field' => 'employment_type',
+                        'size' => 10,
                         'missing' => -1,
                     ],
                 ],
@@ -377,10 +430,14 @@ class ClientPerformanceQueryBuilder
             'must' => [
                 $tenantQuery,
             ],
+            'must_not' => [
+                ['terms' => ['master_status_id' => [8, '8']]],
+                ['terms' => ['job_master_status_id' => [8, '8']]],
+            ],
         ];
 
         // Strict Shared Job Scoping
-        if (!empty($jobIds)) {
+        if (! empty($jobIds)) {
             $rootBool['must'][] = [
                 'terms' => [
                     'jobId' => $jobIds,
@@ -389,12 +446,12 @@ class ClientPerformanceQueryBuilder
         }
 
         // Event-Based Date Filtering on schedule_date
-        if (!empty($boundaries['current_start']) && !empty($boundaries['days'])) {
+        if (! empty($boundaries['current_start']) && ! empty($boundaries['days'])) {
             $rootBool['must'][] = [
                 'range' => [
                     'schedule_date' => [
-                        'gte'    => $boundaries['current_start'],
-                        'lte'    => $boundaries['current_end'],
+                        'gte' => $boundaries['current_start'],
+                        'lte' => $boundaries['current_end'],
                         'format' => 'strict_date_optional_time||epoch_millis',
                     ],
                 ],

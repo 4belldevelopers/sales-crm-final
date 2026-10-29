@@ -1529,33 +1529,38 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
         ];
 
         // Authoritative Tenancy Scoping (Pure Normalized Envelope + Migration Guard)
-        $query = \App\Services\Interview\InterviewTenantScope::forClient($company_id, $client_id, 'internal');
+        $tenantScope = \App\Services\Interview\InterviewTenantScope::forClient($company_id, $client_id, 'internal');
+
+        $query = [
+            'bool' => [
+                'must' => [
+                    $tenantScope,
+                ],
+                'must_not' => [
+                    ['terms' => ['master_status_id' => [8, '8']]],
+                    ['terms' => ['job_master_status_id' => [8, '8']]],
+                ],
+            ],
+        ];
 
         $search = trim((string) $request->input('search', $request->input('q', '')));
         if ($search !== '') {
-            $query = [
-                'bool' => [
-                    'must' => [
-                        $query,
-                        [
-                            'multi_match' => [
-                                'query' => $search,
-                                'fields' => [
-                                    'full_name^3',
-                                    'job_title^2',
-                                    'current_designation',
-                                    'interviewer_name',
-                                    'client_name',
-                                    'company_name',
-                                    'round_name',
-                                    'master_status_name',
-                                    'child_status_name',
-                                    'source',
-                                ],
-                                'type' => 'phrase_prefix',
-                            ],
-                        ],
+            $query['bool']['must'][] = [
+                'multi_match' => [
+                    'query' => $search,
+                    'fields' => [
+                        'full_name^3',
+                        'job_title^2',
+                        'current_designation',
+                        'interviewer_name',
+                        'client_name',
+                        'company_name',
+                        'round_name',
+                        'master_status_name',
+                        'child_status_name',
+                        'source',
                     ],
+                    'type' => 'phrase_prefix',
                 ],
             ];
         }
@@ -2005,33 +2010,38 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
         ];
 
         // Authoritative Tenancy Scoping for Direct Client
-        $query = \App\Services\Interview\InterviewTenantScope::forClient($company_id, $client_id, 'direct');
+        $tenantScope = \App\Services\Interview\InterviewTenantScope::forClient($company_id, $client_id, 'direct');
+
+        $query = [
+            'bool' => [
+                'must' => [
+                    $tenantScope,
+                ],
+                'must_not' => [
+                    ['terms' => ['master_status_id' => [8, '8']]],
+                    ['terms' => ['job_master_status_id' => [8, '8']]],
+                ],
+            ],
+        ];
 
         $search = trim((string) $request->input('search', $request->input('q', '')));
         if ($search !== '') {
-            $query = [
-                'bool' => [
-                    'must' => [
-                        $query,
-                        [
-                            'multi_match' => [
-                                'query' => $search,
-                                'fields' => [
-                                    'full_name^3',
-                                    'job_title^2',
-                                    'current_designation',
-                                    'interviewer_name',
-                                    'client_name',
-                                    'company_name',
-                                    'round_name',
-                                    'master_status_name',
-                                    'child_status_name',
-                                    'source',
-                                ],
-                                'type' => 'phrase_prefix',
-                            ],
-                        ],
+            $query['bool']['must'][] = [
+                'multi_match' => [
+                    'query' => $search,
+                    'fields' => [
+                        'full_name^3',
+                        'job_title^2',
+                        'current_designation',
+                        'interviewer_name',
+                        'client_name',
+                        'company_name',
+                        'round_name',
+                        'master_status_name',
+                        'child_status_name',
+                        'source',
                     ],
+                    'type' => 'phrase_prefix',
                 ],
             ];
         }

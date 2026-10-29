@@ -19,10 +19,15 @@ use Illuminate\Support\Str;
 class ClientPerformanceAnalyticsService
 {
     protected ElasticService $elasticService;
+
     protected ClientPerformanceScopeResolver $scopeResolver;
+
     protected ClientPerformanceDateRangeResolver $dateResolver;
+
     protected ClientPerformanceQueryBuilder $queryBuilder;
+
     protected ClientPerformanceInsightEngine $insightEngine;
+
     protected ClientPerformanceCacheManager $cacheManager;
 
     public function __construct(
@@ -44,14 +49,14 @@ class ClientPerformanceAnalyticsService
     /**
      * Generate the complete Client Performance Dashboard analytics payload.
      *
-     * @param  int     $authCompanyId Authenticated user's company ID
-     * @param  int     $clientId      Requested client ID
-     * @param  string  $clientType    'internal', 'direct', or 'auto'
-     * @param  string  $range         '30D', '3M', '6M', '12M', 'all'
-     * @param  string  $compare       'previous_period', 'previous_year', 'none'
-     * @param  string  $timezone      Tenant timezone
-     * @param  string|null $requestId Optional correlation ID
-     * @return array   Standardized ClientPerformanceDashboard contract
+     * @param  int  $authCompanyId  Authenticated user's company ID
+     * @param  int  $clientId  Requested client ID
+     * @param  string  $clientType  'internal', 'direct', or 'auto'
+     * @param  string  $range  '30D', '3M', '6M', '12M', 'all'
+     * @param  string  $compare  'previous_period', 'previous_year', 'none'
+     * @param  string  $timezone  Tenant timezone
+     * @param  string|null  $requestId  Optional correlation ID
+     * @return array Standardized ClientPerformanceDashboard contract
      */
     public function getPerformanceDashboard(
         int $authCompanyId,
@@ -86,6 +91,7 @@ class ClientPerformanceAnalyticsService
             $cachedData['meta']['cache_hit'] = true;
             $cachedData['meta']['request_id'] = $requestId;
             $cachedData['meta']['total_latency_ms'] = round((microtime(true) - $startTime) * 1000, 2);
+
             return $cachedData;
         }
 
@@ -108,13 +114,13 @@ class ClientPerformanceAnalyticsService
         $jobResponse = $this->executeSearch($scope['indices']['jobs'], $jobQuery);
 
         // Canonical shared job IDs for interview tracking
-        $clientJobIds = !empty($scope['shared_job_ids'])
+        $clientJobIds = ! empty($scope['shared_job_ids'])
             ? $scope['shared_job_ids']
-            : array_values(array_filter(array_map(fn($hit) => (int) ($hit['_source']['id'] ?? 0), $jobResponse['hits']['hits'] ?? [])));
+            : array_values(array_filter(array_map(fn ($hit) => (int) ($hit['_source']['id'] ?? 0), $jobResponse['hits']['hits'] ?? [])));
 
         // Interview scheduled count from interview tracker
         $interviewResponse = null;
-        if (!empty($scope['indices']['interviews'])) {
+        if (! empty($scope['indices']['interviews'])) {
             $interviewQuery = $this->queryBuilder->buildInterviewTrackerQuery($scope, $boundaries, $clientJobIds);
             $interviewResponse = $this->executeSearch($scope['indices']['interviews'], $interviewQuery);
         }
@@ -139,16 +145,16 @@ class ClientPerformanceAnalyticsService
 
         // 7. Structured Audit Telemetry
         Log::channel('daily')->info('Client Performance Analytics Generated', [
-            'request_id'       => $requestId,
-            'tenant_id'        => $authCompanyId,
-            'client_id'        => $clientId,
-            'client_type'      => $scope['client_type'],
-            'range'            => $boundaries['range'],
-            'compare'          => $boundaries['compare'],
-            'es_latency_ms'    => $esLatencyMs,
+            'request_id' => $requestId,
+            'tenant_id' => $authCompanyId,
+            'client_id' => $clientId,
+            'client_type' => $scope['client_type'],
+            'range' => $boundaries['range'],
+            'compare' => $boundaries['compare'],
+            'es_latency_ms' => $esLatencyMs,
             'total_latency_ms' => $dashboard['meta']['total_latency_ms'] ?? 0,
             'candidates_count' => $dashboard['summary']['candidates']['value'] ?? 0,
-            'joins_count'      => $dashboard['summary']['joins']['value'] ?? 0,
+            'joins_count' => $dashboard['summary']['joins']['value'] ?? 0,
         ]);
 
         return $dashboard;
@@ -160,16 +166,17 @@ class ClientPerformanceAnalyticsService
     protected function executeSearch(string $index, array $query): array
     {
         try {
-            if (!$this->elasticService->indexExists($index)) {
+            if (! $this->elasticService->indexExists($index)) {
                 return ['hits' => ['total' => ['value' => 0], 'hits' => []], 'aggregations' => []];
             }
 
             return $this->elasticService->getClient()->search([
                 'index' => $index,
-                'body'  => $query,
+                'body' => $query,
             ]);
         } catch (\Throwable $e) {
             Log::warning("Elasticsearch search failed on index {$index}: ".$e->getMessage());
+
             return ['hits' => ['total' => ['value' => 0], 'hits' => []], 'aggregations' => []];
         }
     }
@@ -193,17 +200,19 @@ class ClientPerformanceAnalyticsService
         $jAggs = $jResp['aggregations'] ?? [];
         $iAggs = $iResp['aggregations'] ?? [];
 
-        // Dual Candidate Dimensions: Submissions count (matching drawer badge) vs Unique candidates
-        $candCount = (int) ($cAggs['total_submissions']['value'] ?? $cAggs['total_candidates']['value'] ?? 0);
-        $uniqueCandCount = (int) ($cAggs['unique_candidates']['value'] ?? 0);
+        // Dual Candidate Dimensions: Submissions count (strictly statuses 1..6, excluding In Review 8 and Archived 9) vs Unique candidates
+        $candCount = (int) ($cAggs['eligible_submissions']['submissions']['value'] ?? $cAggs['total_submissions']['value'] ?? 0);
+        $uniqueCandCount = (int) ($cAggs['eligible_submissions']['unique_count']['value'] ?? $cAggs['unique_candidates']['value'] ?? 0);
+        $inReviewCount = (int) ($cAggs['in_review_candidates']['submissions']['value'] ?? 0);
+        $inReviewUniqueCount = (int) ($cAggs['in_review_candidates']['unique_count']['value'] ?? 0);
         $screenedCount = (int) ($cAggs['screened_candidates']['unique_count']['value'] ?? 0);
         $interviewCount = (int) ($cAggs['interviewed_candidates']['unique_count']['value'] ?? 0);
         $offerCount = (int) ($cAggs['offered_candidates']['unique_count']['value'] ?? 0);
         $joinCount = (int) ($cAggs['joined_candidates']['unique_count']['value'] ?? 0);
         $scheduledCount = (int) ($iAggs['scheduled_count']['value'] ?? 0);
 
-        // Previous summary counts
-        $prevCand = (int) ($pAggs['total_submissions']['value'] ?? $pAggs['total_candidates']['value'] ?? 0);
+        // Previous summary counts (strictly statuses 1..6, 0% In Review)
+        $prevCand = (int) ($pAggs['eligible_submissions']['submissions']['value'] ?? $pAggs['total_submissions']['value'] ?? 0);
         $prevScreened = (int) ($pAggs['screened_candidates']['unique_count']['value'] ?? 0);
         $prevInterview = (int) ($pAggs['interviewed_candidates']['unique_count']['value'] ?? 0);
         $prevOffer = (int) ($pAggs['offered_candidates']['unique_count']['value'] ?? 0);
@@ -219,8 +228,8 @@ class ClientPerformanceAnalyticsService
                 $this->formatMetricWithDelta($candCount, $prevCand),
                 [
                     'submissions_count' => $candCount,
-                    'unique_count'      => $uniqueCandCount,
-                    'display_label'     => ($uniqueCandCount > 0 && $uniqueCandCount !== $candCount)
+                    'unique_count' => $uniqueCandCount,
+                    'display_label' => ($uniqueCandCount > 0 && $uniqueCandCount !== $candCount)
                         ? "{$candCount} ({$uniqueCandCount} unique)"
                         : (string) $candCount,
                 ]
@@ -231,20 +240,20 @@ class ClientPerformanceAnalyticsService
             'offers' => $this->formatMetricWithDelta($offerCount, $prevOffer),
             'joins' => $this->formatMetricWithDelta($joinCount, $prevJoin),
             'avg_time_to_hire_days' => [
-                'value'       => $tthData['avg_days'],
+                'value' => $tthData['avg_days'],
                 'delta_value' => $prevTthData['avg_days'] !== null && $tthData['avg_days'] !== null
                     ? round($tthData['avg_days'] - $prevTthData['avg_days'], 1)
                     : null,
                 'delta_label' => $prevTthData['avg_days'] !== null && $tthData['avg_days'] !== null
                     ? sprintf('%+d d', round($tthData['avg_days'] - $prevTthData['avg_days']))
                     : ($tthData['avg_days'] !== null ? 'New' : '—'),
-                'formatted'   => $tthData['avg_days'] !== null ? $tthData['avg_days'].' days' : '—',
-                'placed_count'=> $tthData['count'],
+                'formatted' => $tthData['avg_days'] !== null ? $tthData['avg_days'].' days' : '—',
+                'placed_count' => $tthData['count'],
             ],
         ];
 
-        // Build Funnel Stages
-        $funnel = $this->buildFunnel($candCount, $screenedCount, $interviewCount, $offerCount, $joinCount);
+        // Build Funnel Stages (with Hiring Pipeline exception: In Review reflected in pipeline)
+        $funnel = $this->buildFunnel($candCount, $screenedCount, $interviewCount, $offerCount, $joinCount, $inReviewCount, $inReviewUniqueCount);
 
         // Build Velocity Trend
         $velocity = $this->buildVelocityTrend($cAggs['velocity_trend']['buckets'] ?? []);
@@ -292,34 +301,34 @@ class ClientPerformanceAnalyticsService
 
         return [
             'meta' => [
-                'request_id'       => $requestId,
-                'schema_version'   => ClientPerformanceConstants::SCHEMA_VERSION,
-                'scope_version'    => 1,
-                'data_as_of'       => Carbon::now($boundaries['timezone'])->toIso8601String(),
-                'client_id'        => $scope['client_id'],
-                'client_name'      => $scope['client_name'],
-                'client_type'      => $scope['client_type'],
-                'client_theme'     => $scope['theme'],
-                'theme_color'      => $scope['theme_color'],
-                'range'            => $boundaries['range'],
-                'compare'          => $boundaries['compare'],
-                'timezone'         => $boundaries['timezone'],
-                'generated_at'     => Carbon::now($boundaries['timezone'])->toIso8601String(),
-                'cache_hit'        => false,
-                'es_latency_ms'    => $esLatencyMs,
+                'request_id' => $requestId,
+                'schema_version' => ClientPerformanceConstants::SCHEMA_VERSION,
+                'scope_version' => 1,
+                'data_as_of' => Carbon::now($boundaries['timezone'])->toIso8601String(),
+                'client_id' => $scope['client_id'],
+                'client_name' => $scope['client_name'],
+                'client_type' => $scope['client_type'],
+                'client_theme' => $scope['theme'],
+                'theme_color' => $scope['theme_color'],
+                'range' => $boundaries['range'],
+                'compare' => $boundaries['compare'],
+                'timezone' => $boundaries['timezone'],
+                'generated_at' => Carbon::now($boundaries['timezone'])->toIso8601String(),
+                'cache_hit' => false,
+                'es_latency_ms' => $esLatencyMs,
                 'total_latency_ms' => $totalLatencyMs,
             ],
             'empty_state' => $emptyState,
-            'summary'     => $summary,
-            'funnel'      => $funnel,
-            'velocity'    => $velocity,
-            'jobs'        => $jobsData,
-            'offers'      => $offersJoinsTrend,
-            'job_types'   => $jobTypes,
-            'roles'       => $topRoles,
-            'recruiters'  => $recruiters,
-            'insights'    => $insights,
-            'tth_trend'   => $tthTrend,
+            'summary' => $summary,
+            'funnel' => $funnel,
+            'velocity' => $velocity,
+            'jobs' => $jobsData,
+            'offers' => $offersJoinsTrend,
+            'job_types' => $jobTypes,
+            'roles' => $topRoles,
+            'recruiters' => $recruiters,
+            'insights' => $insights,
+            'tth_trend' => $tthTrend,
         ];
     }
 
@@ -337,7 +346,7 @@ class ClientPerformanceAnalyticsService
             if ($status === $joinedStatusId) {
                 $endDate = $source['placed_end_date'] ?? $source['of_joined_date'] ?? null;
                 $startDate = $source['created_at'] ?? null;
-                if (!empty($endDate) && !empty($startDate)) {
+                if (! empty($endDate) && ! empty($startDate)) {
                     try {
                         $start = Carbon::parse($startDate);
                         $end = Carbon::parse($endDate);
@@ -357,7 +366,7 @@ class ClientPerformanceAnalyticsService
 
         return [
             'avg_days' => $avg,
-            'count'    => $count,
+            'count' => $count,
         ];
     }
 
@@ -376,7 +385,7 @@ class ClientPerformanceAnalyticsService
             if ($status === $joinedStatusId) {
                 $endDate = $source['placed_end_date'] ?? $source['of_joined_date'] ?? null;
                 $startDate = $source['created_at'] ?? null;
-                if (!empty($endDate) && !empty($startDate)) {
+                if (! empty($endDate) && ! empty($startDate)) {
                     try {
                         $start = Carbon::parse($startDate);
                         $end = Carbon::parse($endDate);
@@ -394,7 +403,7 @@ class ClientPerformanceAnalyticsService
 
         $trend = [];
         foreach ($labels as $label) {
-            if (!empty($monthlyDurations[$label])) {
+            if (! empty($monthlyDurations[$label])) {
                 $durations = $monthlyDurations[$label];
                 $trend[] = (int) round(array_sum($durations) / count($durations));
             } else {
@@ -412,7 +421,7 @@ class ClientPerformanceAnalyticsService
     {
         if ($previous === 0) {
             return [
-                'value'       => $current,
+                'value' => $current,
                 'delta_value' => null,
                 'delta_label' => $current > 0 ? 'New' : '0.0%',
             ];
@@ -422,7 +431,7 @@ class ClientPerformanceAnalyticsService
         $sign = $delta >= 0 ? '+' : '';
 
         return [
-            'value'       => $current,
+            'value' => $current,
             'delta_value' => round($delta, 1),
             'delta_label' => sprintf('%s%.1f%%', $sign, $delta),
         ];
@@ -430,8 +439,9 @@ class ClientPerformanceAnalyticsService
 
     /**
      * Build Funnel progression with conversion rates and drop-offs.
+     * Incorporates the Hiring Pipeline exception: In Review candidates are reflected as part of the pipeline.
      */
-    protected function buildFunnel(int $cand, int $screened, int $interview, int $offer, int $joined): array
+    protected function buildFunnel(int $cand, int $screened, int $interview, int $offer, int $joined, int $inReview = 0, int $inReviewUnique = 0): array
     {
         $screenedConv = $cand > 0 ? ($screened / $cand) * 100 : 0;
         $interviewConv = $screened > 0 ? ($interview / $screened) * 100 : 0;
@@ -440,41 +450,44 @@ class ClientPerformanceAnalyticsService
         $overallYield = $cand > 0 ? ($joined / $cand) * 100 : 0;
 
         return [
+            'in_review_count' => $inReview,
+            'in_review_unique_count' => $inReviewUnique,
+            'hiring_pipeline_total' => $cand + $inReview,
             'stages' => [
                 [
-                    'key'            => 'candidates',
-                    'label'          => 'Candidates',
-                    'count'          => $cand,
+                    'key' => 'candidates',
+                    'label' => 'Candidates',
+                    'count' => $cand,
                     'conversion_pct' => '100.0%',
-                    'drop_off_pct'   => '0.0%',
+                    'drop_off_pct' => '0.0%',
                 ],
                 [
-                    'key'            => 'screened',
-                    'label'          => 'Screened',
-                    'count'          => $screened,
+                    'key' => 'screened',
+                    'label' => 'Screened',
+                    'count' => $screened,
                     'conversion_pct' => sprintf('%.1f%%', $screenedConv),
-                    'drop_off_pct'   => sprintf('%.1f%%', max(0, 100 - $screenedConv)),
+                    'drop_off_pct' => sprintf('%.1f%%', max(0, 100 - $screenedConv)),
                 ],
                 [
-                    'key'            => 'interviewed',
-                    'label'          => 'Interviewed',
-                    'count'          => $interview,
+                    'key' => 'interviewed',
+                    'label' => 'Interviewed',
+                    'count' => $interview,
                     'conversion_pct' => sprintf('%.1f%%', $interviewConv),
-                    'drop_off_pct'   => sprintf('%.1f%%', max(0, 100 - $interviewConv)),
+                    'drop_off_pct' => sprintf('%.1f%%', max(0, 100 - $interviewConv)),
                 ],
                 [
-                    'key'            => 'offers',
-                    'label'          => 'Offers',
-                    'count'          => $offer,
+                    'key' => 'offers',
+                    'label' => 'Offers',
+                    'count' => $offer,
                     'conversion_pct' => sprintf('%.1f%%', $offerConv),
-                    'drop_off_pct'   => sprintf('%.1f%%', max(0, 100 - $offerConv)),
+                    'drop_off_pct' => sprintf('%.1f%%', max(0, 100 - $offerConv)),
                 ],
                 [
-                    'key'            => 'joined',
-                    'label'          => 'Joined',
-                    'count'          => $joined,
+                    'key' => 'joined',
+                    'label' => 'Joined',
+                    'count' => $joined,
                     'conversion_pct' => sprintf('%.1f%%', $joinConv),
-                    'drop_off_pct'   => sprintf('%.1f%%', max(0, 100 - $joinConv)),
+                    'drop_off_pct' => sprintf('%.1f%%', max(0, 100 - $joinConv)),
                 ],
             ],
             'overall_yield_pct' => sprintf('%.1f%%', $overallYield),
@@ -492,8 +505,8 @@ class ClientPerformanceAnalyticsService
 
         foreach ($buckets as $b) {
             $keyStr = $b['key_as_string'] ?? '';
-            $labels[] = !empty($keyStr) ? Carbon::parse($keyStr)->format('M Y') : 'Period';
-            $candidates[] = (int) ($b['submissions']['value'] ?? $b['unique_candidates']['value'] ?? $b['doc_count'] ?? 0);
+            $labels[] = ! empty($keyStr) ? Carbon::parse($keyStr)->format('M Y') : 'Period';
+            $candidates[] = (int) ($b['eligible_candidates']['submissions']['value'] ?? $b['eligible_candidates']['unique_candidates']['value'] ?? $b['submissions']['value'] ?? 0);
             $interviewed[] = (int) ($b['interviewed']['submissions']['value'] ?? $b['interviewed']['unique_count']['value'] ?? 0);
         }
 
@@ -508,8 +521,8 @@ class ClientPerformanceAnalyticsService
         }
 
         return [
-            'labels'                 => $labels,
-            'candidates_submitted'   => $candidates,
+            'labels' => $labels,
+            'candidates_submitted' => $candidates,
             'interviewed_candidates' => $interviewed,
         ];
     }
@@ -538,9 +551,9 @@ class ClientPerformanceAnalyticsService
 
         return [
             'total_count' => (int) $total,
-            'active'      => $active,
-            'hold'        => $hold,
-            'closed'      => $closed,
+            'active' => $active,
+            'hold' => $hold,
+            'closed' => $closed,
         ];
     }
 
@@ -564,7 +577,7 @@ class ClientPerformanceAnalyticsService
         }
 
         return [
-            'labels'           => $labels,
+            'labels' => $labels,
             'offers_generated' => $offers,
             'successful_joins' => $joins,
         ];
@@ -576,18 +589,18 @@ class ClientPerformanceAnalyticsService
     protected function buildJobTypesBreakdown(array $buckets): array
     {
         $names = [
-            ClientPerformanceConstants::EMPLOYMENT_FULL_TIME  => 'Full-Time',
-            ClientPerformanceConstants::EMPLOYMENT_CONTRACT   => 'Contract',
-            ClientPerformanceConstants::EMPLOYMENT_FREELANCE  => 'Freelance',
-            ClientPerformanceConstants::EMPLOYMENT_PART_TIME  => 'Part-Time',
-            ClientPerformanceConstants::EMPLOYMENT_UNSPECIFIED=> 'Unspecified',
+            ClientPerformanceConstants::EMPLOYMENT_FULL_TIME => 'Full-Time',
+            ClientPerformanceConstants::EMPLOYMENT_CONTRACT => 'Contract',
+            ClientPerformanceConstants::EMPLOYMENT_FREELANCE => 'Freelance',
+            ClientPerformanceConstants::EMPLOYMENT_PART_TIME => 'Part-Time',
+            ClientPerformanceConstants::EMPLOYMENT_UNSPECIFIED => 'Unspecified',
         ];
 
         $counts = [
-            'Full-Time'   => 0,
-            'Contract'    => 0,
-            'Freelance'   => 0,
-            'Part-Time'   => 0,
+            'Full-Time' => 0,
+            'Contract' => 0,
+            'Freelance' => 0,
+            'Part-Time' => 0,
             'Unspecified' => 0,
         ];
 
@@ -607,8 +620,8 @@ class ClientPerformanceAnalyticsService
         }, $countValues);
 
         return [
-            'labels'      => $labels,
-            'counts'      => $countValues,
+            'labels' => $labels,
+            'counts' => $countValues,
             'percentages' => $percentages,
         ];
     }
@@ -625,7 +638,7 @@ class ClientPerformanceAnalyticsService
         $jobsMap = [];
         foreach ($jobHits as $hit) {
             $src = $hit['_source'] ?? [];
-            if (!empty($src['id'])) {
+            if (! empty($src['id'])) {
                 $jobsMap[(int) $src['id']] = $src;
             }
         }
@@ -647,32 +660,32 @@ class ClientPerformanceAnalyticsService
             $createdAt = $job['created_at'] ?? null;
             $daysOpen = $createdAt ? max(1, Carbon::parse($createdAt)->diffInDays(now())) : 30;
 
-            // Genuine metrics from sub-aggregations
-            $submissions = (int) ($b['submissions']['value'] ?? $b['doc_count'] ?? 0);
+            // Genuine metrics from sub-aggregations (strictly eligible candidates [1..6], excluding In Review)
+            $submissions = (int) ($b['eligible_submissions']['count']['value'] ?? $b['submissions']['value'] ?? $b['doc_count'] ?? 0);
             $interviews = (int) ($b['interviews']['count']['value'] ?? 0);
             $offers = (int) ($b['offers']['count']['value'] ?? 0);
             $joined = (int) ($b['joins']['count']['value'] ?? 0);
             $conversion = $submissions > 0 ? sprintf('%.1f%%', ($joined / $submissions) * 100) : '0.0%';
 
             $items[] = [
-                'job_id'                => $jobId,
-                'title'                 => $title,
-                'openings'              => $positions,
-                'submissions'           => $submissions,
-                'interviews'            => $interviews,
-                'offers'                => $offers,
-                'joined'                => $joined,
-                'conversion_pct'        => $conversion,
+                'job_id' => $jobId,
+                'title' => $title,
+                'openings' => $positions,
+                'submissions' => $submissions,
+                'interviews' => $interviews,
+                'offers' => $offers,
+                'joined' => $joined,
+                'conversion_pct' => $conversion,
                 'avg_time_to_hire_days' => $daysOpen,
-                'days_open'             => $daysOpen,
-                'status'                => $status === 'Active' ? 'Hiring' : $status,
+                'days_open' => $daysOpen,
+                'status' => $status === 'Active' ? 'Hiring' : $status,
             ];
         }
 
         return [
             'total_count' => count($buckets),
-            'limit'       => $limit,
-            'items'       => $items,
+            'limit' => $limit,
+            'items' => $items,
         ];
     }
 
@@ -694,7 +707,8 @@ class ClientPerformanceAnalyticsService
                 continue;
             }
 
-            $sub = (int) ($b['submissions']['value'] ?? $b['doc_count'] ?? 0);
+            // Submissions strictly from eligible candidates [1..6], excluding In Review
+            $sub = (int) ($b['eligible_submissions']['count']['value'] ?? $b['submissions']['value'] ?? $b['doc_count'] ?? 0);
             $interviews = (int) ($b['interviews']['unique_count']['value'] ?? 0);
             $offers = (int) ($b['offers']['unique_count']['value'] ?? 0);
             $joins = (int) ($b['joins']['unique_count']['value'] ?? 0);
@@ -703,26 +717,26 @@ class ClientPerformanceAnalyticsService
             // Resolve name & avatar strictly from ES top_hits (0% MySQL reads)
             $topHit = $b['recruiter_info']['hits']['hits'][0]['_source'] ?? [];
             $name = $topHit['submitted_by_name'] ?? $topHit['posted_by'] ?? ('Recruiter #'.$userId);
-            $avatar = !empty($topHit['posted_by_image']) ? $topHit['posted_by_image'] : '/assets/media/avatars/300-1.jpg';
+            $avatar = ! empty($topHit['posted_by_image']) ? $topHit['posted_by_image'] : '/assets/media/avatars/300-1.jpg';
 
             $items[] = [
-                'user_id'               => $userId,
-                'name'                  => $name,
-                'avatar'                => $avatar,
-                'assigned_jobs'         => 1,
-                'submissions'           => $sub,
-                'interviews'            => $interviews,
-                'offers'                => $offers,
-                'joins'                 => $joins,
-                'join_rate_pct'         => $joinRate,
+                'user_id' => $userId,
+                'name' => $name,
+                'avatar' => $avatar,
+                'assigned_jobs' => 1,
+                'submissions' => $sub,
+                'interviews' => $interviews,
+                'offers' => $offers,
+                'joins' => $joins,
+                'join_rate_pct' => $joinRate,
                 'avg_time_to_hire_days' => 0,
             ];
         }
 
         return [
             'total_count' => count($buckets),
-            'limit'       => $limit,
-            'items'       => $items,
+            'limit' => $limit,
+            'items' => $items,
         ];
     }
 
@@ -734,36 +748,36 @@ class ClientPerformanceAnalyticsService
         if ($jobs === 0) {
             return [
                 'priority' => 1,
-                'code'     => 'NO_REQUISITIONS',
-                'title'    => 'No Requisitions Found',
-                'message'  => 'No active or historic requisitions have been registered for this client.',
+                'code' => 'NO_REQUISITIONS',
+                'title' => 'No Requisitions Found',
+                'message' => 'No active or historic requisitions have been registered for this client.',
             ];
         }
 
         if ($cands === 0) {
             return [
                 'priority' => 2,
-                'code'     => 'NO_CANDIDATE_ACTIVITY',
-                'title'    => 'No Candidate Activity',
-                'message'  => 'No candidate applications or submissions recorded for this client during this period.',
+                'code' => 'NO_CANDIDATE_ACTIVITY',
+                'title' => 'No Candidate Activity',
+                'message' => 'No candidate applications or submissions recorded for this client during this period.',
             ];
         }
 
         if ($interviews === 0) {
             return [
                 'priority' => 3,
-                'code'     => 'NO_INTERVIEWS',
-                'title'    => 'No Interviews Conducted',
-                'message'  => 'Candidates are currently in preliminary sourcing/screening stages. No interviews scheduled yet.',
+                'code' => 'NO_INTERVIEWS',
+                'title' => 'No Interviews Conducted',
+                'message' => 'Candidates are currently in preliminary sourcing/screening stages. No interviews scheduled yet.',
             ];
         }
 
         if ($joins === 0) {
             return [
                 'priority' => 4,
-                'code'     => 'PENDING_PLACEMENTS',
-                'title'    => 'Placements in Progress',
-                'message'  => 'Candidate pipeline active; awaiting finalized placements to compute full-cycle conversion.',
+                'code' => 'PENDING_PLACEMENTS',
+                'title' => 'Placements in Progress',
+                'message' => 'Candidate pipeline active; awaiting finalized placements to compute full-cycle conversion.',
             ];
         }
 

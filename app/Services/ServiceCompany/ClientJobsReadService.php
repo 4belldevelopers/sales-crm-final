@@ -253,6 +253,10 @@ class ClientJobsReadService
                                 ['terms' => ['job_id' => array_values($jobIds)]],
                                 ['term' => ['company_id' => (int) $query->serviceCompanyId]],
                             ],
+                            'must_not' => [
+                                ['terms' => ['job_master_status_id' => [8, 9, '8', '9']]],
+                                ['terms' => ['master_status_id' => [8, '8']]],
+                            ],
                         ],
                     ],
                     'aggs' => [

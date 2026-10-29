@@ -123,10 +123,11 @@ class ClientPerformanceScopeResolver
                                         'minimum_should_match' => 1,
                                     ],
                                 ],
-                                ['terms' => ['job_master_status_id' => PerformanceStatusMap::SHARED_PIPELINE_STATUSES]],
+                                ['terms' => ['job_master_status_id' => PerformanceStatusMap::PIPELINE_WITH_IN_REVIEW_STATUSES]],
                             ],
                             'must_not' => [
-                                ['terms' => ['job_master_status_id' => [PerformanceStatusMap::STAGE_IN_REVIEW, PerformanceStatusMap::STAGE_ARCHIVED]]],
+                                ['terms' => ['job_master_status_id' => [9, '9']]],
+                                ['terms' => ['master_status_id' => [9, '9']]],
                             ],
                         ],
                     ],
@@ -205,7 +206,7 @@ class ClientPerformanceScopeResolver
                     'candidate_filter' => [
                         'bool' => [
                             'must' => [
-                                ['terms' => ['jobId' => !empty($sharedJobIds) ? $sharedJobIds : [-1]]],
+                                ['terms' => ['jobId' => ! empty($sharedJobIds) ? $sharedJobIds : [-1]]],
                                 [
                                     'bool' => [
                                         'should' => [
@@ -226,10 +227,11 @@ class ClientPerformanceScopeResolver
                                     ],
                                 ],
                                 ['term' => ['final_status' => 1]],
-                                ['terms' => ['job_master_status_id' => PerformanceStatusMap::SHARED_PIPELINE_STATUSES]],
+                                ['terms' => ['job_master_status_id' => PerformanceStatusMap::PIPELINE_WITH_IN_REVIEW_STATUSES]],
                             ],
                             'must_not' => [
-                                ['terms' => ['job_master_status_id' => [PerformanceStatusMap::STAGE_IN_REVIEW, PerformanceStatusMap::STAGE_ARCHIVED]]],
+                                ['terms' => ['job_master_status_id' => [9, '9']]],
+                                ['terms' => ['master_status_id' => [9, '9']]],
                             ],
                         ],
                     ],
@@ -274,7 +276,7 @@ class ClientPerformanceScopeResolver
         $activeJobIds = [];
 
         try {
-            if (!$this->elasticService->indexExists($jobsIndex)) {
+            if (! $this->elasticService->indexExists($jobsIndex)) {
                 return ['shared_job_ids' => [], 'active_job_ids' => []];
             }
 
@@ -305,18 +307,18 @@ class ClientPerformanceScopeResolver
             }
 
             $searchRes = $this->elasticService->getClient()->search([
-                'index'   => $jobsIndex,
-                'size'    => 1000,
+                'index' => $jobsIndex,
+                'size' => 1000,
                 '_source' => ['id', 'status'],
-                'body'    => [
+                'body' => [
                     'query' => $query,
                 ],
             ]);
 
-            if (!empty($searchRes['hits']['hits'])) {
+            if (! empty($searchRes['hits']['hits'])) {
                 foreach ($searchRes['hits']['hits'] as $hit) {
                     $src = $hit['_source'] ?? [];
-                    if (!empty($src['id'])) {
+                    if (! empty($src['id'])) {
                         $jobId = (int) $src['id'];
                         $sharedJobIds[] = $jobId;
                         $status = strtolower(trim((string) ($src['status'] ?? '')));

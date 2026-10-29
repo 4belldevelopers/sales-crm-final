@@ -362,6 +362,10 @@ class ClientActivityReadService
                                         'minimum_should_match' => 1,
                                     ],
                                 ],
+                                'must_not' => [
+                                    ['terms' => ['job_master_status_id' => [8, '8']]],
+                                    ['terms' => ['master_status_id' => [8, '8']]],
+                                ],
                             ],
                         ],
                     ],
@@ -447,10 +451,25 @@ class ClientActivityReadService
                     $baseMust[] = ['range' => ['created_at' => $timeRange]];
                 }
 
-                // Total timeline events
+                $timelineMustNot = [
+                    ['terms' => ['candidate_status' => [8, '8']]],
+                    ['terms' => ['master_status_name' => ['In Review', 'InReview', 'in_review', 'inreview']]],
+                    ['terms' => ['master_process_name' => ['In Review', 'InReview', 'in_review', 'inreview']]],
+                    ['wildcard' => ['master_process_name' => '*Review*']],
+                    ['wildcard' => ['master_process_name' => '*review*']],
+                ];
+
+                // Total timeline events (strictly excluding In Review candidates/activities)
                 $totalRes = $this->elasticService->getClient()->count([
                     'index' => $indexTimeline,
-                    'body' => ['query' => ['bool' => ['must' => $baseMust]]],
+                    'body' => [
+                        'query' => [
+                            'bool' => [
+                                'must' => $baseMust,
+                                'must_not' => $timelineMustNot,
+                            ],
+                        ],
+                    ],
                 ]);
                 $totalTimeline = (int) ($totalRes['count'] ?? 0);
 
@@ -469,7 +488,14 @@ class ClientActivityReadService
                 ];
                 $offerRes = $this->elasticService->getClient()->count([
                     'index' => $indexTimeline,
-                    'body' => ['query' => ['bool' => ['must' => $offerMust]]],
+                    'body' => [
+                        'query' => [
+                            'bool' => [
+                                'must' => $offerMust,
+                                'must_not' => $timelineMustNot,
+                            ],
+                        ],
+                    ],
                 ]);
                 $offerCount = (int) ($offerRes['count'] ?? 0);
 
@@ -610,10 +636,23 @@ class ClientActivityReadService
                 ];
             }
 
+            $timelineMustNot = [
+                ['terms' => ['candidate_status' => [8, '8']]],
+                ['terms' => ['master_status_name' => ['In Review', 'InReview', 'in_review', 'inreview']]],
+                ['terms' => ['master_process_name' => ['In Review', 'InReview', 'in_review', 'inreview']]],
+                ['wildcard' => ['master_process_name' => '*Review*']],
+                ['wildcard' => ['master_process_name' => '*review*']],
+            ];
+
             $msearchPayload[] = ['index' => $indexTimeline];
             $msearchPayload[] = [
                 'size' => 60,
-                'query' => ['bool' => ['must' => $must]],
+                'query' => [
+                    'bool' => [
+                        'must' => $must,
+                        'must_not' => $timelineMustNot,
+                    ],
+                ],
                 'sort' => [['created_at' => ['order' => 'desc', 'unmapped_type' => 'date']]],
             ];
             $indexKeys[] = 'timeline';
@@ -890,7 +929,7 @@ class ClientActivityReadService
                 $params = [
                     'index' => $indices,
                     'size' => max((count($unresolvedIds) + count($unresolvedEmails)) * 2, 20),
-                    '_source' => ['id', 'wiseId', 'candidate_id', 'full_name', 'current_designation', 'email', 'posted_by', 'submitted_by', 'company_name', 'apl_company_name', 'submitted_by_company_name', 'cur_company_name'],
+                    '_source' => ['id', 'wiseId', 'candidate_id', 'full_name', 'current_designation', 'email', 'posted_by', 'submitted_by', 'company_name', 'apl_company_name', 'submitted_by_company_name', 'cur_company_name', 'job_master_status_id', 'master_status_id', 'master_status_name'],
                     'body' => [
                         'query' => [
                             'bool' => [
@@ -919,6 +958,11 @@ class ClientActivityReadService
                         $cComp = '4Bell Technology';
                     }
 
+                    $jStatusId = (int) ($s['job_master_status_id'] ?? 0);
+                    $mStatusId = (int) ($s['master_status_id'] ?? 0);
+                    $mStatusName = strtolower(trim((string) ($s['master_status_name'] ?? '')));
+                    $isInReview = ($jStatusId === 8 || $mStatusId === 8 || in_array($mStatusName, ['in review', 'inreview', 'in_review'], true));
+
                     $data = [
                         'name' => ! empty($cName) ? ucwords($cName) : null,
                         'designation' => ! empty($cDesig) ? ucwords($cDesig) : null,
@@ -926,6 +970,9 @@ class ClientActivityReadService
                         'company_name' => $this->formatCompanyName($cComp),
                         'wise_id' => $cid > 0 ? $cid : null,
                         'candidate_id' => $candAppId > 0 ? $candAppId : null,
+                        'is_in_review' => $isInReview,
+                        'job_master_status_id' => $jStatusId,
+                        'master_status_id' => $mStatusId,
                     ];
 
                     if ($cid > 0) {
@@ -1292,9 +1339,23 @@ class ClientActivityReadService
                     : ($profile['company_name'] ?? (! empty($src['cur_companyname']) ? $this->formatCompanyName((string) $src['cur_companyname']) : $this->resolveTenantCompanyName($query->tenantId)));
                 $targetWiseId = $profile['wise_id'] ?? $appId;
 
-                // Standardize Stage Status
                 $toStage = $src['master_process_name'] ?? 'Screening';
                 $toStageLower = strtolower(trim((string) $toStage));
+                $fromStage = $src['prev_process_name'] ?? 'Sourcing';
+                $fromStageLower = strtolower(trim((string) $fromStage));
+                $candidateStatus = (int) ($src['candidate_status'] ?? 0);
+
+                // Candidate Visibility Rule: Do not show any In Review candidate activity across client drawers
+                if (
+                    ! empty($profile['is_in_review'])
+                    || in_array($toStageLower, ['in review', 'inreview', 'in_review'], true)
+                    || in_array($fromStageLower, ['in review', 'inreview', 'in_review'], true)
+                    || $candidateStatus === 8
+                ) {
+                    continue;
+                }
+
+                // Standardize Stage Status
                 $stageStatus = 'pipeline';
                 if (in_array($toStageLower, ['offer', 'offered', 'offer released', 'offer accepted', 'joined', 'hired', 'selected'], true)) {
                     $stageStatus = 'active'; // 🟢 Green
@@ -1386,12 +1447,26 @@ class ClientActivityReadService
                         : ($targetWiseId > 0 ? "Candidate #{$targetWiseId}" : 'Candidate');
                 }
                 $resolvedCandidateName = $rawCandName;
+                $resolvedJobTitle = $jobProfile['title'] ?? (! empty($src['title']) ? ucwords(trim($src['title'])) : 'Open Requisition');
+                $resolvedDesignation = $intProfile['designation'] ?? (! empty($src['current_designation']) ? ucwords(trim($src['current_designation'])) : $resolvedJobTitle);
                 $uploaderName = $intProfile['uploader_name'] ?? (! empty($src['posted_by']) ? ucwords(trim($src['posted_by'])) : (! empty($src['source']) ? ucwords(trim($src['source'])) : 'Technical Recruiter'));
                 $intCompany = ($query->clientType === 'direct')
                     ? $this->resolveTenantCompanyName($query->serviceCompanyId)
                     : ($intProfile['company_name'] ?? (! empty($src['company_name']) ? $this->formatCompanyName((string) $src['company_name']) : (! empty($src['uc_company_name']) ? $this->formatCompanyName((string) $src['uc_company_name']) : $this->resolveTenantCompanyName($query->tenantId))));
 
                 $stage = $src['stage'] ?? $src['master_status_name'] ?? 'Interview';
+                $stageLower = strtolower(trim((string) $stage));
+                $intStatusId = (int) ($src['master_status_id'] ?? 0);
+
+                // Candidate Visibility Rule: Exclude In Review candidates from interviews activity
+                if (
+                    ! empty($intProfile['is_in_review'])
+                    || in_array($stageLower, ['in review', 'inreview', 'in_review'], true)
+                    || $intStatusId === 8
+                ) {
+                    continue;
+                }
+
                 $interviewMode = ! empty($src['mode_name']) ? $src['mode_name'] : (! empty($src['interview_type']) ? $src['interview_type'] : 'Video Call');
 
                 $normalized[] = [
@@ -1423,17 +1498,18 @@ class ClientActivityReadService
                         'candidate_uploaded_by' => $uploaderName,
                         'candidate_agency' => $intCompany,
                     ],
-                    'job' => [
+                    'job' => array_merge([
                         'id' => $jobId,
                         'code' => $jobId > 0 ? '#'.$jobId : '',
                         'title' => $resolvedJobTitle,
-                        'creator_name' => $jobProfile['creator_name'] ?? 'Account Manager',
-                        'creator_company' => $jobProfile['creator_company'] ?? $intCompany,
                         'shared_by' => $jobProfile['shared_by_name'] ?? null,
                         'shared_by_name' => $jobProfile['shared_by_name'] ?? null,
                         'shared_by_company' => $jobProfile['shared_by_company'] ?? null,
                         'shared_with_agency' => $jobProfile['agency_name'] ?? null,
-                    ],
+                    ], ($query->clientType === 'direct') ? [] : [
+                        'creator_name' => $jobProfile['creator_name'] ?? 'Account Manager',
+                        'creator_company' => $jobProfile['creator_company'] ?? $intCompany,
+                    ]),
                     'transition' => [
                         'from_stage_name' => 'Evaluation',
                         'to_stage_name' => $stage,
