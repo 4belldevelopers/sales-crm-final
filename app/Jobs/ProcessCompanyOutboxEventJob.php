@@ -330,7 +330,8 @@ class ProcessCompanyOutboxEventJob implements ShouldQueue
                 ]);
             }
 
-            // 3. Mark outbox record as COMPLETED
+            // 3. Invalidate company caches & mark outbox record as COMPLETED
+            Cache::forget('company:epoch:'.$companyId);
             DB::table('sys_outbox_events')
                 ->where('id', $eventId)
                 ->update([
