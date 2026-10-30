@@ -109,10 +109,10 @@
                  data-is-agency-rep="{{ $isAgencyRep ? '1' : '0' }}"
                  style="border-left: 3.5px solid {{ $cardAccent }};">
                 
-                <!-- Discrete 5 Upper Sub-Cards Grid -->
+                <!-- Discrete 5 Upper Sub-Cards Grid (Strictly 1 Row on 15.6") -->
                 <div class="tm-subcards-grid">
                     
-                    <!-- SUB-CARD 1: Member Identity (Name in 1st row, Designation in 2nd row, Email in 3rd row) -->
+                    <!-- SUB-CARD 1: Member Identity (Name 1st row, Designation 2nd row, Email 3rd row) -->
                     <div class="tm-subcard tm-subcard-identity">
                         <div class="tm-subcard-head">
                             <div class="tm-subcard-title-wrap">
@@ -223,36 +223,49 @@
                         </div>
                     </div>
 
-                    <!-- SUB-CARD 4: Performance & Rank -->
-                    <div class="tm-subcard tm-subcard-rank">
+                    <!-- SUB-CARD 4: Dedicated Account Status Card (Swapped Here) -->
+                    <div class="tm-subcard tm-subcard-status">
                         <div class="tm-subcard-head">
                             <div class="tm-subcard-title-wrap">
                                 <svg class="tm-subcard-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                                    <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/>
-                                    <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/>
-                                    <path d="M4 22h16"/>
-                                    <path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/>
-                                    <path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/>
-                                    <path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/>
+                                    <path d="M18.36 6.64a9 9 0 1 1-12.73 0"/>
+                                    <line x1="12" y1="2" x2="12" y2="12"/>
                                 </svg>
-                                <span class="tm-subcard-title">Performance</span>
+                                <span class="tm-subcard-title">Account Status</span>
                             </div>
-                            @if (!empty($teamRanks->rankMonth))
-                                <span class="tm-subcard-badge badge-month">{{ trim($teamRanks->rankMonth, '()') }}</span>
-                            @endif
+                            <span class="tm-subcard-badge {{ $row->status == 'active' ? 'badge-member' : 'badge-role' }}">
+                                {{ ucfirst($row->status ?? 'Active') }}
+                            </span>
                         </div>
-                        <div class="tm-rank-body">
-                            <div class="tm-rank-val-row">
-                                {!! $medal !!} <span class="tm-rank-number">{{ $teamRanks->rank }}</span>
-                            </div>
-                            <div class="tm-rank-actions-row">
-                                @if ($isRanked)
-                                    <span class="tm-score-text">Score: <strong>{{ $teamRanks->score }}</strong></span>
-                                @endif
-                                <button type="button" class="btn-view-score teamViewScore" data-user-id="{{ $row->id }}" title="Click to view detailed performance scoreboard">
-                                    <i class="fa-solid fa-chart-line me-1"></i>View Score
-                                </button>
-                            </div>
+                        <div class="tm-status-body">
+                            @if (!empty($row->password))
+                                <div class="tm-status-toggle-wrap">
+                                    <label class="ios-switch" title="Toggle active status">
+                                        <input type="checkbox" class="chkStatus" id="status_change_{{ $row->id }}" value="active"
+                                            {{ $row->status == 'active' ? 'checked' : '' }}
+                                            onclick="handleClick(this, {{ $row->id }});"
+                                            {{ $row->root_user == 1 ? 'disabled' : '' }}>
+                                        <span class="ios-slider"></span>
+                                    </label>
+                                    <div class="tm-status-info">
+                                        <span class="tm-status-text status_text {{ $row->status == 'active' ? 'text-success' : 'text-muted' }}">
+                                            {{ ucfirst($row->status) }}
+                                        </span>
+                                        @if ($row->root_user == 1)
+                                            <span class="tm-status-subnote">Owner (Always Active)</span>
+                                        @else
+                                            <span class="tm-status-subnote">Click switch to toggle</span>
+                                        @endif
+                                    </div>
+                                </div>
+                            @else
+                                <div class="tm-status-invited-wrap">
+                                    <span class="tm-status-text text-warning">Awaiting Signup</span>
+                                    <a href="javascript:;" class="btn-resend-invite" onclick="reSendhandleClick(this, {{ $row->id }});" title="Resend invitation email">
+                                        <i class="fa-solid fa-arrows-rotate me-1"></i>Resend Invite
+                                    </a>
+                                </div>
+                            @endif
                         </div>
                     </div>
 
@@ -307,10 +320,10 @@
 
                 </div>
 
-                <!-- SUB-CARD 6: BOTTOM ACTIVITY & CONTROL STRIP -->
+                <!-- SUB-CARD 6: BOTTOM ACTIVITY & PERFORMANCE STRIP (Single Row Standard) -->
                 <div class="tm-card-bottom-strip">
-                    <div class="tm-bottom-meta">
-                        <span class="tm-meta-item">
+                    <div class="tm-bottom-left-meta">
+                        <span class="tm-meta-item" title="Registration Date">
                             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                 <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
                                 <line x1="16" y1="2" x2="16" y2="6"/>
@@ -320,37 +333,36 @@
                             <span>Joined: <strong>{{ !empty($row->created_at) ? Carbon::parse($row->created_at)->format('d M, Y') : 'Recently' }}</strong></span>
                         </span>
                         <span class="tm-meta-dot">•</span>
-                        <span class="tm-meta-item">
+                        <span class="tm-meta-item" title="Last Login Freshness">
                             <span class="dot-pulse {{ $dotClass }}"></span>
                             <span>Last active: <strong>{{ $lastActive }}</strong></span>
                         </span>
                         @if (!empty($phone))
                             <span class="tm-meta-dot">•</span>
-                            <span class="tm-meta-item">
+                            <span class="tm-meta-item" title="Direct Phone">
                                 <i class="fa-solid fa-phone" style="font-size: 10px;"></i>
                                 <span>{{ $phone }}</span>
                             </span>
                         @endif
                     </div>
-                    <div class="tm-bottom-actions">
-                        @if (!empty($row->password))
-                            <label class="ios-switch-wrap" title="Toggle member status">
-                                <span class="ios-switch">
-                                    <input type="checkbox" class="chkStatus" id="status_change_{{ $row->id }}" value="active"
-                                        {{ $row->status == 'active' ? 'checked' : '' }}
-                                        onclick="handleClick(this, {{ $row->id }});"
-                                        {{ $row->root_user == 1 ? 'disabled' : '' }}>
-                                    <span class="ios-slider"></span>
-                                </span>
-                                <span class="ios-label status_text {{ $row->status == 'active' ? 'text-success' : 'text-muted' }}">
-                                    {{ ucfirst($row->status) }}
-                                </span>
-                            </label>
-                        @else
-                            <a href="javascript:;" class="text-primary fw-semibold fs-8" onclick="reSendhandleClick(this, {{ $row->id }});">
-                                <i class="fa-solid fa-arrows-rotate me-1"></i>Resend Invite
-                            </a>
-                        @endif
+
+                    <div class="tm-bottom-right-group">
+                        <!-- Performance Score & Rank (Swapped to bottom strip) -->
+                        <div class="tm-perf-strip-box">
+                            <span class="tm-perf-rank" title="Performance Rank">
+                                {!! $medal !!} <strong>{{ $teamRanks->rank }}</strong>
+                                @if (!empty($teamRanks->rankMonth))
+                                    <span class="tm-perf-month">{{ $teamRanks->rankMonth }}</span>
+                                @endif
+                            </span>
+                            @if ($isRanked)
+                                <span class="tm-meta-dot">•</span>
+                                <span class="tm-perf-score" title="Score Points">Score: <strong>{{ $teamRanks->score }} pts</strong></span>
+                            @endif
+                            <button type="button" class="btn-view-score teamViewScore" data-user-id="{{ $row->id }}" title="Click to view detailed performance scoreboard">
+                                <i class="fa-solid fa-chart-line me-1"></i>View Score
+                            </button>
+                        </div>
 
                         <button type="button" class="btn-view-profile show-detail-team" data-row-id="{{ $row->id }}" title="View Full Profile">
                             <span>View Profile</span>

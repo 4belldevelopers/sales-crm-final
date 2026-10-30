@@ -766,57 +766,84 @@
             font-variant-numeric: tabular-nums;
         }
 
-        /* Sub-Card 4: Performance & Rank */
-        .tm-rank-body {
+        /* Sub-Card 4: Dedicated Account Status (Swapped to Upper Grid) */
+        .tm-status-body {
             display: flex;
             flex-direction: column;
             justify-content: center;
             min-width: 0;
-            gap: 4px;
-        }
-        .tm-rank-val-row {
-            display: flex;
-            align-items: center;
             gap: 6px;
         }
-        .tm-rank-number {
-            font-size: 17px;
-            font-weight: 800;
-            color: #0f172a;
-            line-height: 1;
-            font-variant-numeric: tabular-nums;
-        }
-        .tm-rank-actions-row {
+        .tm-status-toggle-wrap {
             display: flex;
             align-items: center;
-            justify-content: space-between;
-            gap: 4px;
-            flex-wrap: wrap;
+            gap: 8px;
         }
-        .tm-score-text {
-            font-size: 10px;
-            font-weight: 600;
-            color: #64748b;
+        .ios-switch {
+            position: relative;
+            display: inline-block;
+            width: 34px;
+            height: 19px;
+            flex-shrink: 0;
+            margin: 0;
         }
-        .btn-view-score {
-            font-size: 10px;
-            font-weight: 600;
-            color: #059669;
-            background: #ecfdf5;
-            border: 1px solid #a7f3d0;
-            border-radius: 4px;
-            padding: 1.5px 7px;
+        .ios-switch input { opacity: 0; width: 0; height: 0; }
+        .ios-slider {
+            position: absolute;
             cursor: pointer;
+            inset: 0;
+            background-color: #cbd5e1;
+            transition: .2s;
+            border-radius: 19px;
+        }
+        .ios-slider:before {
+            position: absolute;
+            content: "";
+            height: 13px;
+            width: 13px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: .2s;
+            border-radius: 50%;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+        }
+        .ios-switch input:checked + .ios-slider { background-color: #009ef7; }
+        .ios-switch input:checked + .ios-slider:before { transform: translateX(15px); }
+        .ios-switch input:disabled + .ios-slider { opacity: .6; cursor: not-allowed; }
+        .tm-status-info {
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+        }
+        .tm-status-text {
+            font-size: 11.5px;
+            font-weight: 700;
+            line-height: 1.2;
+        }
+        .tm-status-subnote {
+            font-size: 9.5px;
+            color: #94a3b8;
+            line-height: 1.2;
+            margin-top: 1px;
+            white-space: nowrap;
+        }
+        .tm-status-invited-wrap {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+        .btn-resend-invite {
+            font-size: 11px;
+            font-weight: 600;
+            color: #009ef7;
+            text-decoration: none;
             display: inline-flex;
             align-items: center;
             gap: 4px;
-            text-decoration: none;
-            transition: all 0.15s ease;
-            white-space: nowrap;
         }
-        .btn-view-score:hover {
-            background: #d1fae5;
-            color: #047857;
+        .btn-resend-invite:hover {
+            text-decoration: underline;
         }
 
         /* Sub-Card 5: Marketplace Communication */
@@ -890,29 +917,32 @@
             color: #009ef7;
         }
 
-        /* Sub-Card 6: Bottom Activity & Control Strip */
+        /* Sub-Card 6: Bottom Activity & Performance Strip (Swapped to Bottom Strip) */
         .tm-card-bottom-strip {
             background: #f8fafc;
             border: 1px solid #eef2f6;
             border-radius: 6px;
-            padding: 6px 12px;
+            padding: 5px 12px;
             display: flex;
             align-items: center;
             justify-content: space-between;
             font-size: 11px;
             color: #64748b;
             margin-top: 2px;
+            gap: 12px;
         }
-        .tm-bottom-meta {
+        .tm-bottom-left-meta {
             display: flex;
             align-items: center;
-            gap: 12px;
-            flex-wrap: wrap;
+            gap: 10px;
+            flex-wrap: nowrap;
+            min-width: 0;
         }
         .tm-meta-item {
             display: inline-flex;
             align-items: center;
-            gap: 5px;
+            gap: 4px;
+            white-space: nowrap;
         }
         .tm-meta-dot {
             color: #cbd5e1;
@@ -928,51 +958,79 @@
         .dot-amber { background: #f59e0b; }
         .dot-gray  { background: #94a3b8; }
 
-        .tm-bottom-actions {
+        .tm-bottom-right-group {
             display: flex;
             align-items: center;
-            gap: 14px;
+            gap: 12px;
+            flex-shrink: 0;
         }
-        /* iOS Switch */
-        .ios-switch-wrap {
+        .tm-perf-strip-box {
             display: inline-flex;
             align-items: center;
-            gap: 6px;
-            cursor: pointer;
-        }
-        .ios-switch {
-            position: relative;
-            display: inline-block;
-            width: 32px;
-            height: 18px;
-        }
-        .ios-switch input { opacity: 0; width: 0; height: 0; }
-        .ios-slider {
-            position: absolute;
-            cursor: pointer;
-            inset: 0;
-            background-color: #cbd5e1;
-            transition: .2s;
-            border-radius: 18px;
-        }
-        .ios-slider:before {
-            position: absolute;
-            content: "";
-            height: 14px;
-            width: 14px;
-            left: 2px;
-            bottom: 2px;
-            background-color: white;
-            transition: .2s;
-            border-radius: 50%;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.2);
-        }
-        .ios-switch input:checked + .ios-slider { background-color: #009ef7; }
-        .ios-switch input:checked + .ios-slider:before { transform: translateX(14px); }
-        .ios-switch input:disabled + .ios-slider { opacity: .6; cursor: not-allowed; }
-        .ios-label {
+            gap: 7px;
+            padding: 2.5px 8px;
+            background: #f0fdf4;
+            border: 1px solid #bbf7d0;
+            border-radius: 6px;
             font-size: 11px;
+            color: #166534;
+        }
+        .tm-perf-rank {
             font-weight: 700;
+            display: inline-flex;
+            align-items: center;
+            gap: 3px;
+        }
+        .tm-perf-month {
+            font-size: 9.5px;
+            color: #4b5563;
+            font-weight: 500;
+        }
+        .tm-perf-score {
+            font-size: 10.5px;
+            font-weight: 600;
+        }
+        .btn-view-score {
+            font-size: 10px;
+            font-weight: 700;
+            color: #065f46;
+            background: #d1fae5;
+            border: 1px solid #6ee7b7;
+            border-radius: 4px;
+            padding: 1.5px 7px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            text-decoration: none;
+            transition: all 0.15s ease;
+            white-space: nowrap;
+        }
+        .btn-view-score:hover {
+            background: #a7f3d0;
+            color: #047857;
+        }
+
+        .btn-view-profile {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 3.5px 9px;
+            border-radius: 6px;
+            background: #eff6ff;
+            color: #009ef7;
+            font-size: 11px;
+            font-weight: 600;
+            border: 1px solid #bfdbfe;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.15s ease;
+            white-space: nowrap;
+        }
+        .btn-view-profile:hover {
+            background: #009ef7;
+            color: #ffffff;
+            border-color: #009ef7;
         }
 
         /* Empty State */
@@ -1994,7 +2052,7 @@
                             <div><i class="fa-solid fa-id-card me-1 text-primary"></i>Member Identity</div>
                             <div><i class="fa-solid fa-shield-halved me-1 text-primary"></i>System Role</div>
                             <div><i class="fa-solid fa-briefcase me-1 text-primary"></i>Workload &amp; Ops</div>
-                            <div><i class="fa-solid fa-chart-line me-1 text-primary"></i>Performance</div>
+                            <div><i class="fa-solid fa-power-off me-1 text-primary"></i>Account Status</div>
                             <div><i class="fa-solid fa-bullhorn me-1 text-primary"></i>Marketplace Roles</div>
                         </div>
 
