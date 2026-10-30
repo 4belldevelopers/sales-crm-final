@@ -401,11 +401,254 @@
 
 @push('footer-script')
 <script>
+// =============================================================================
+// 1. Enterprise Client Database: JeroCprDB (IndexedDB v2)
+// Scoped to Custom Plan Requests with Multi-Tenant & Session Isolation
+// =============================================================================
+class JeroCprDB {
+    static DB_NAME = 'JeroCprDB';
+    static DB_VERSION = 2;
+    static db = null;
+    static initPromise = null;
+    static isAvailable = typeof window !== 'undefined' && 'indexedDB' in window;
+
+    static async init(userId) {
+        if (!this.isAvailable) return null;
+        if (JeroCprDB.db) return JeroCprDB.db;
+        if (JeroCprDB.initPromise) return JeroCprDB.initPromise;
+
+        JeroCprDB.initPromise = new Promise(function(resolve) {
+            try {
+                var req = window.indexedDB.open(JeroCprDB.DB_NAME, JeroCprDB.DB_VERSION);
+                req.onupgradeneeded = function(e) {
+                    var db = e.target.result;
+                    if (db.objectStoreNames.contains('page_cache')) {
+                        db.deleteObjectStore('page_cache');
+                    }
+                    if (db.objectStoreNames.contains('dossiers')) {
+                        db.deleteObjectStore('dossiers');
+                    }
+                    if (db.objectStoreNames.contains('meta')) {
+                        db.deleteObjectStore('meta');
+                    }
+                    db.createObjectStore('page_cache', { keyPath: 'cacheKey' });
+                    db.createObjectStore('dossiers', { keyPath: 'id' });
+                    db.createObjectStore('meta', { keyPath: 'key' });
+                };
+                req.onblocked = function() {
+                    resolve(null);
+                };
+                req.onsuccess = async function(e) {
+                    try {
+                        JeroCprDB.db = e.target.result;
+                        var meta = await JeroCprDB.getMeta('auth_context');
+                        if (meta && meta.user_id !== userId) {
+                            await JeroCprDB.clearAll();
+                        }
+                        await JeroCprDB.setMeta('auth_context', {
+                            key: 'auth_context',
+                            user_id: userId,
+                            cached_at: Date.now()
+                        });
+                    } catch (mErr) {
+                        console.warn('IDB meta non-fatal warning:', mErr);
+                    }
+                    resolve(JeroCprDB.db);
+                };
+                req.onerror = function() {
+                    resolve(null);
+                };
+            } catch (err) {
+                resolve(null);
+            }
+        });
+
+        return JeroCprDB.initPromise;
+    }
+
+    static async ensureDB() {
+        if (JeroCprDB.db) return JeroCprDB.db;
+        return await JeroCprDB.init(window.currentUserId || 0);
+    }
+
+    static async getMeta(key) {
+        return new Promise(async function(resolve) {
+            var db = await JeroCprDB.ensureDB();
+            if (!db) return resolve(null);
+            try {
+                var tx = db.transaction('meta', 'readonly');
+                var req = tx.objectStore('meta').get(key);
+                req.onsuccess = function() { resolve(req.result || null); };
+                req.onerror = function() { resolve(null); };
+            } catch (e) { resolve(null); }
+        });
+    }
+
+    static async setMeta(key, value) {
+        return new Promise(async function(resolve) {
+            var db = await JeroCprDB.ensureDB();
+            if (!db) return resolve(false);
+            try {
+                var tx = db.transaction('meta', 'readwrite');
+                tx.objectStore('meta').put(value);
+                tx.oncomplete = function() { resolve(true); };
+                tx.onerror = function() { resolve(false); };
+            } catch (e) { resolve(false); }
+        });
+    }
+
+    static async getPage(cacheKey) {
+        return new Promise(async function(resolve) {
+            var db = await JeroCprDB.ensureDB();
+            if (!db) return resolve(null);
+            try {
+                var tx = db.transaction('page_cache', 'readonly');
+                var req = tx.objectStore('page_cache').get(cacheKey);
+                req.onsuccess = function() {
+                    var res = req.result;
+                    if (res && (Date.now() - (res.timestamp || 0) < 900000)) { // 15 min TTL
+                        resolve(res.payload);
+                    } else {
+                        resolve(null);
+                    }
+                };
+                req.onerror = function() { resolve(null); };
+            } catch (e) { resolve(null); }
+        });
+    }
+
+    static async putPage(cacheKey, payload) {
+        return new Promise(async function(resolve) {
+            var db = await JeroCprDB.ensureDB();
+            if (!db) return resolve(false);
+            try {
+                var tx = db.transaction('page_cache', 'readwrite');
+                tx.objectStore('page_cache').put({
+                    cacheKey: cacheKey,
+                    payload: payload,
+                    timestamp: Date.now()
+                });
+                tx.oncomplete = function() { resolve(true); };
+                tx.onerror = function() { resolve(false); };
+            } catch (e) { resolve(false); }
+        });
+    }
+
+    static async clearPageCache() {
+        return new Promise(async function(resolve) {
+            var db = await JeroCprDB.ensureDB();
+            if (!db) return resolve(false);
+            try {
+                var tx = db.transaction('page_cache', 'readwrite');
+                tx.objectStore('page_cache').clear();
+                tx.oncomplete = function() { resolve(true); };
+                tx.onerror = function() { resolve(false); };
+            } catch (e) { resolve(false); }
+        });
+    }
+
+    static async getDossier(id) {
+        return new Promise(async function(resolve) {
+            var db = await JeroCprDB.ensureDB();
+            if (!db) return resolve(null);
+            try {
+                var tx = db.transaction('dossiers', 'readonly');
+                var req = tx.objectStore('dossiers').get(String(id));
+                req.onsuccess = function() {
+                    var res = req.result;
+                    if (res && (Date.now() - (res.timestamp || 0) < 900000)) { // 15 min TTL
+                        resolve(res.payload);
+                    } else {
+                        resolve(null);
+                    }
+                };
+                req.onerror = function() { resolve(null); };
+            } catch (e) { resolve(null); }
+        });
+    }
+
+    static async putDossier(id, payload) {
+        return new Promise(async function(resolve) {
+            var db = await JeroCprDB.ensureDB();
+            if (!db) return resolve(false);
+            try {
+                var tx = db.transaction('dossiers', 'readwrite');
+                tx.objectStore('dossiers').put({
+                    id: String(id),
+                    payload: payload,
+                    timestamp: Date.now()
+                });
+                tx.oncomplete = function() { resolve(true); };
+                tx.onerror = function() { resolve(false); };
+            } catch (e) { resolve(false); }
+        });
+    }
+
+    static async deleteDossier(id) {
+        return new Promise(async function(resolve) {
+            var db = await JeroCprDB.ensureDB();
+            if (!db) return resolve(false);
+            try {
+                var tx = db.transaction('dossiers', 'readwrite');
+                tx.objectStore('dossiers').delete(String(id));
+                tx.oncomplete = function() { resolve(true); };
+                tx.onerror = function() { resolve(false); };
+            } catch (e) { resolve(false); }
+        });
+    }
+
+    static async clearAll() {
+        return new Promise(async function(resolve) {
+            var db = await JeroCprDB.ensureDB();
+            if (!db) return resolve(false);
+            try {
+                var tx = db.transaction(['page_cache', 'dossiers', 'meta'], 'readwrite');
+                tx.objectStore('page_cache').clear();
+                tx.objectStore('dossiers').clear();
+                tx.objectStore('meta').clear();
+                tx.oncomplete = function() { resolve(true); };
+                tx.onerror = function() { resolve(false); };
+            } catch (e) { resolve(false); }
+        });
+    }
+}
+
+// Bind to window for global developer inspection and client access
+window.JeroCprDB = JeroCprDB;
+
+const currentUserId = {{ (int) (auth()->id() ?? 0) }};
+window.currentUserId = currentUserId;
+
+// Eager initialization of IndexedDB on page load
+if (typeof JeroCprDB !== 'undefined' && JeroCprDB.init) {
+    JeroCprDB.init(currentUserId).catch(function(err) {
+        console.warn('JeroCprDB init non-fatal warning:', err);
+    });
+}
+
 $(document).ready(function() {
     var updateStatusUrlTemplate = "{{ route('superadmin.custom-plan-requests.updateStatus', ':id') }}";
     var showUrlTemplate = "{{ route('superadmin.custom-plan-requests.show', ':id') }}";
     var syncUrl = "{{ route('superadmin.custom-plan-requests.sync') }}";
 
+    // L1 In-Memory RAM Caches
+    var dossierRamCache = new Map();
+    var inFlightMutations = new Set();
+    var activeTableXhr = null;
+
+    // RFC-4122 UUID v4 Idempotency Key Generator
+    function generateUUIDv4() {
+        if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+            return crypto.randomUUID();
+        }
+        return '10000000-1000-4000-8000-100000000000'.replace(/[018]/g, function(c) {
+            return (c ^ (crypto.getRandomValues(new Uint8Array(1))[0] & (15 >> (c / 4)))).toString(16);
+        });
+    }
+
+    // =========================================================================
+    // DATATABLES INITIALIZATION WITH REQUEST CANCELLATION & CLIENT CACHE
+    // =========================================================================
     var table = $('#customPlanRequestsTable').DataTable({
         responsive: true,
         processing: true,
@@ -414,17 +657,67 @@ $(document).ready(function() {
         lengthChange: true,
         lengthMenu: [[10, 25, 50, 100], [10, 25, 50, 100]],
         dom: 'rt<"row mt-3"<"col-sm-12 col-md-5"i><"col-sm-12 col-md-7"p>>',
-        ajax: {
-            url: "{{ route('superadmin.custom-plan-requests.data') }}",
-            data: function(d) {
-                d.status = $('#cpr-status-filter').val();
-                var searchVal = $('#cpr-search').val() || '';
-                if (d.search && typeof d.search === 'object') {
-                    d.search.value = searchVal;
-                } else {
-                    d.search = { value: searchVal };
-                }
+        ajax: function(data, callback, settings) {
+            // Cancel previous in-flight AJAX request to prevent race conditions
+            if (activeTableXhr && activeTableXhr.readyState !== 4) {
+                activeTableXhr.abort();
             }
+
+            var statusFilter = $('#cpr-status-filter').val();
+            var searchVal = $('#cpr-search').val() || '';
+
+            data.status = statusFilter;
+            if (data.search && typeof data.search === 'object') {
+                data.search.value = searchVal;
+            } else {
+                data.search = { value: searchVal };
+            }
+
+            var cacheKey = 'cpr_page_' + statusFilter + '_' + encodeURIComponent(searchVal) + '_' + data.start + '_' + data.length;
+
+            var networkDone = false;
+            var cacheServed = false;
+
+            // 1. Instant cold hydration from IndexedDB L2 Cache (< 10ms)
+            JeroCprDB.getPage(cacheKey).then(function(cachedJson) {
+                if (cachedJson && cachedJson.data && !networkDone) {
+                    cacheServed = true;
+                    var renderData = Object.assign({}, cachedJson, { draw: data.draw });
+                    callback(renderData);
+                }
+            }).catch(function() {});
+
+            // 2. Authoritative network fetch from Elasticsearch
+            activeTableXhr = $.ajax({
+                url: "{{ route('superadmin.custom-plan-requests.data') }}",
+                type: 'GET',
+                data: data,
+                success: function(json) {
+                    networkDone = true;
+                    activeTableXhr = null;
+                    if (json && json.data) {
+                        JeroCprDB.putPage(cacheKey, json);
+                    }
+                    callback(json);
+                },
+                error: function(xhr, err, thrown) {
+                    networkDone = true;
+                    activeTableXhr = null;
+                    if (err === 'abort') return;
+                    if (!cacheServed) {
+                        JeroCprDB.getPage(cacheKey).then(function(cachedJson) {
+                            if (cachedJson) {
+                                var fallbackData = Object.assign({}, cachedJson, { draw: data.draw });
+                                callback(fallbackData);
+                            } else {
+                                callback({ draw: data.draw, recordsTotal: 0, recordsFiltered: 0, data: [] });
+                            }
+                        }).catch(function() {
+                            callback({ draw: data.draw, recordsTotal: 0, recordsFiltered: 0, data: [] });
+                        });
+                    }
+                }
+            });
         },
         language: (typeof languageOptions === 'function') ? languageOptions() : {},
         columns: [
@@ -440,7 +733,7 @@ $(document).ready(function() {
         ]
     });
 
-    // Real-time search filter with debounce
+    // Real-time search filter with 300ms debounce
     var searchTimer;
     $('#cpr-search').on('keyup', function() {
         clearTimeout(searchTimer);
@@ -713,6 +1006,12 @@ $(document).ready(function() {
         }
         localEntityVersions[data.id] = incomingVersion;
 
+        // Invalidate cached dossier and pages
+        dossierRamCache.delete(String(data.id));
+        dossierRamCache.delete(Number(data.id));
+        JeroCprDB.deleteDossier(data.id);
+        JeroCprDB.clearPageCache();
+
         // 1. Update KPI Counters live
         if (data.counts) {
             updateCounters(data.counts);
@@ -752,8 +1051,6 @@ $(document).ready(function() {
 
     // =========================================================================
     // MANUAL ON-DEMAND SYNC (0% Server Strain — Strictly User-Initiated Only)
-    // Zero background setInterval polling, zero auto-hitting server.
-    // Real-time synchronization is 100% event-driven via Reverb & BroadcastChannel.
     // =========================================================================
     var lastKnownSyncHash = null;
     var isSyncing = false;
@@ -779,6 +1076,7 @@ $(document).ready(function() {
 
                     if (hasChanged) {
                         updateCounters(res.counts);
+                        JeroCprDB.clearPageCache();
                         table.ajax.reload(null, false);
                     }
 
@@ -800,22 +1098,75 @@ $(document).ready(function() {
         });
     }
 
-    // Manual sync button (User-initiated only)
+    // Manual sync button
     $('#btn-manual-sync').on('click', function(e) {
         e.preventDefault();
         performManualSyncCheck();
     });
 
     // =========================================================================
-    // MODAL DIALOG HANDLERS
+    // MODAL DIALOG HANDLERS WITH MULTI-TIER CACHE (L1 RAM -> L2 IndexedDB -> L3 AJAX)
     // =========================================================================
 
-    // View Details Modal
-    $(document).on('click', '.btn-view-request', function() {
-        var id = $(this).data('id');
+    function populateViewDetailsModal(d) {
+        $('#view-reference').text(d.request_reference);
+        $('#detail-customer-name').text(d.customer_name);
+        $('#detail-customer-email').text(d.customer_email);
+        $('#detail-customer-mobile').text(d.customer_mobile);
+        $('#detail-company-name').text(d.company_name);
+        $('#detail-company-id').text(d.company_id ? d.company_id : 'N/A');
+        $('#detail-location').text(d.location);
+        $('#detail-request-type').text(d.request_type);
+        $('#detail-package-target').text(d.package_type + ' - ' + d.package_title);
+        $('#detail-status-badge').html(d.status_badge);
+        $('#detail-created-at').text(d.created_at);
+        $('#detail-updated-at').text(d.updated_at);
+        $('#detail-updated-by').text(d.updated_by_name);
+        $('#detail-admin-notes').text(d.admin_notes ? d.admin_notes : 'No administrative notes recorded yet.');
+
+        var logsHtml = '';
+        if (d.logs && d.logs.length > 0) {
+            $.each(d.logs, function(idx, log) {
+                logsHtml += '<tr>' +
+                    '<td><span class="badge badge-light-secondary">' + (log.previous_status ? log.previous_status : 'Created') + '</span> &rarr; <span class="badge badge-light-primary">' + log.new_status + '</span></td>' +
+                    '<td>' + (log.notes ? log.notes : '<span class="text-muted">-</span>') + '</td>' +
+                    '<td>' + log.updated_by + '</td>' +
+                    '<td>' + log.created_at + '</td>' +
+                '</tr>';
+            });
+        } else {
+            logsHtml = '<tr><td colspan="4" class="text-center text-muted">No status transitions recorded.</td></tr>';
+        }
+        $('#detail-logs-body').html(logsHtml);
+
+        $('#view-details-loading').hide();
+        $('#view-details-body').show();
+    }
+
+    // View Details Modal with L1 RAM -> L2 IndexedDB -> L3 AJAX
+    $(document).on('click', '.btn-view-request', async function() {
+        var id = Number($(this).data('id'));
         var url = showUrlTemplate.replace(':id', id);
 
         $('#modalViewDetails').data('active-id', id);
+
+        // Tier 1: L1 In-RAM Cache (< 1ms)
+        if (dossierRamCache.has(id)) {
+            populateViewDetailsModal(dossierRamCache.get(id));
+            showCustomPlanModal('modalViewDetails');
+            return;
+        }
+
+        // Tier 2: L2 IndexedDB Cache (< 5ms)
+        var cachedDossier = await JeroCprDB.getDossier(id);
+        if (cachedDossier) {
+            dossierRamCache.set(id, cachedDossier);
+            populateViewDetailsModal(cachedDossier);
+            showCustomPlanModal('modalViewDetails');
+            return;
+        }
+
+        // Tier 3: L3 Network AJAX
         $('#view-details-loading').show();
         $('#view-details-body').hide();
         showCustomPlanModal('modalViewDetails');
@@ -825,39 +1176,9 @@ $(document).ready(function() {
             type: 'GET',
             success: function(res) {
                 if (res.status === 'success') {
-                    var d = res.data;
-                    $('#view-reference').text(d.request_reference);
-                    $('#detail-customer-name').text(d.customer_name);
-                    $('#detail-customer-email').text(d.customer_email);
-                    $('#detail-customer-mobile').text(d.customer_mobile);
-                    $('#detail-company-name').text(d.company_name);
-                    $('#detail-company-id').text(d.company_id ? d.company_id : 'N/A');
-                    $('#detail-location').text(d.location);
-                    $('#detail-request-type').text(d.request_type);
-                    $('#detail-package-target').text(d.package_type + ' - ' + d.package_title);
-                    $('#detail-status-badge').html(d.status_badge);
-                    $('#detail-created-at').text(d.created_at);
-                    $('#detail-updated-at').text(d.updated_at);
-                    $('#detail-updated-by').text(d.updated_by_name);
-                    $('#detail-admin-notes').text(d.admin_notes ? d.admin_notes : 'No administrative notes recorded yet.');
-
-                    var logsHtml = '';
-                    if (d.logs && d.logs.length > 0) {
-                        $.each(d.logs, function(idx, log) {
-                            logsHtml += '<tr>' +
-                                '<td><span class="badge badge-light-secondary">' + (log.previous_status ? log.previous_status : 'Created') + '</span> &rarr; <span class="badge badge-light-primary">' + log.new_status + '</span></td>' +
-                                '<td>' + (log.notes ? log.notes : '<span class="text-muted">-</span>') + '</td>' +
-                                '<td>' + log.updated_by + '</td>' +
-                                '<td>' + log.created_at + '</td>' +
-                            '</tr>';
-                        });
-                    } else {
-                        logsHtml = '<tr><td colspan="4" class="text-center text-muted">No status transitions recorded.</td></tr>';
-                    }
-                    $('#detail-logs-body').html(logsHtml);
-
-                    $('#view-details-loading').hide();
-                    $('#view-details-body').show();
+                    dossierRamCache.set(id, res.data);
+                    JeroCprDB.putDossier(id, res.data);
+                    populateViewDetailsModal(res.data);
                 }
             },
             error: function() {
@@ -882,17 +1203,25 @@ $(document).ready(function() {
         showCustomPlanModal('modalUpdateStatus');
     });
 
-    // Submit Status Update
+    // Submit Status Update with In-Flight Lock & RFC-4122 UUID v4 Idempotency Key
     $('#formUpdateStatus').on('submit', function(e) {
         e.preventDefault();
 
         var id = $('#update-request-id').val();
+        var numId = Number(id);
+
+        // Guard against duplicate rapid submissions in user RAM
+        if (inFlightMutations.has(numId)) {
+            return;
+        }
+        inFlightMutations.add(numId);
+
         var currentVersion = $('#update-current-version').val();
         var url = updateStatusUrlTemplate.replace(':id', id);
         var $btn = $('#btn-save-status');
 
-        // Generate unique UUID-style Idempotency Key for mutation deduplication
-        var idempotencyKey = 'cpr_' + id + '_' + Date.now() + '_' + Math.random().toString(36).substring(2, 9);
+        // RFC-4122 UUID v4 Idempotency Key
+        var idempotencyKey = 'cpr_' + id + '_' + generateUUIDv4();
 
         $btn.prop('disabled', true);
         $btn.find('.indicator-label').addClass('d-none');
@@ -913,6 +1242,7 @@ $(document).ready(function() {
                 idempotency_key: idempotencyKey
             },
             success: function(response) {
+                inFlightMutations.delete(numId);
                 $btn.prop('disabled', false);
                 $btn.find('.indicator-label').removeClass('d-none');
                 $btn.find('.indicator-progress').addClass('d-none');
@@ -921,6 +1251,12 @@ $(document).ready(function() {
 
                 if (response.status === 'success') {
                     var entityVersion = response.entity_version || (parseInt(currentVersion, 10) + 1);
+
+                    // Invalidate L1 & L2 caches
+                    dossierRamCache.delete(numId);
+                    dossierRamCache.delete(String(numId));
+                    JeroCprDB.deleteDossier(numId);
+                    JeroCprDB.clearPageCache();
 
                     // 1. Instant local DOM Delta Patch (0ms latency)
                     applyStatusDeltaToDOM(
@@ -968,12 +1304,14 @@ $(document).ready(function() {
                 }
             },
             error: function(xhr) {
+                inFlightMutations.delete(numId);
                 $btn.prop('disabled', false);
                 $btn.find('.indicator-label').removeClass('d-none');
                 $btn.find('.indicator-progress').addClass('d-none');
 
                 if (xhr.status === 409) {
                     hideCustomPlanModal('modalUpdateStatus');
+                    JeroCprDB.clearPageCache();
                     table.ajax.reload(null, false);
                     var conflictMsg = (xhr.responseJSON && xhr.responseJSON.message) 
                         ? xhr.responseJSON.message 

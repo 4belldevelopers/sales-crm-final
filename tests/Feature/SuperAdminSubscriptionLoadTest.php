@@ -247,4 +247,59 @@ class SuperAdminSubscriptionLoadTest extends TestCase
             sprintf('p95 latency (%.2fms) must be under 150ms for full Blade compilation on Windows', $p95)
         );
     }
+
+    /**
+     * Test 6: Verify Outbox Architecture, Idempotency & Cache Invalidation on Company Active Toggle.
+     */
+    public function test_check_active_idempotency_and_outbox_event(): void
+    {
+        $company = DB::table('companies')->where('id', '>', 1)->first();
+        $this->assertNotNull($company, 'A test company must exist');
+
+        $initialStatus = $company->status;
+        $idempotencyKey = 'test-sub-idem-'.\Illuminate\Support\Str::uuid();
+
+        // 1. First execution: mutates status, creates outbox event, registers idempotency key
+        $req1 = Request::create('/super-admin/checkActive', 'POST', [
+            'id' => $company->id,
+            'idempotency_key' => $idempotencyKey,
+        ]);
+        $req1->headers->set('X-Idempotency-Key', $idempotencyKey);
+        $res1 = $this->controller->checkActive($req1);
+        $data1 = is_array($res1) ? $res1 : (method_exists($res1, 'getData') ? $res1->getData(true) : json_decode($res1->getContent(), true));
+
+        $this->assertEquals('success', $data1['status'] ?? null);
+        $expectedNewStatus = ($initialStatus === 'active') ? 'inactive' : 'active';
+        $this->assertEquals($expectedNewStatus, $data1['pack_status'] ?? null);
+
+        // 2. Assert sys_outbox_events record created
+        $outboxEvent = DB::table('sys_outbox_events')
+            ->where('aggregate_type', 'Company')
+            ->where('aggregate_id', $company->id)
+            ->where('idempotency_key', $idempotencyKey)
+            ->first();
+        $this->assertNotNull($outboxEvent, 'sys_outbox_events record must exist for the mutation');
+        $this->assertEquals('COMPANY_STATUS_TOGGLED', $outboxEvent->event_type);
+
+        // 3. Second execution with duplicate idempotency key: must replay cached response without re-mutating
+        $req2 = Request::create('/super-admin/checkActive', 'POST', [
+            'id' => $company->id,
+            'idempotency_key' => $idempotencyKey,
+        ]);
+        $req2->headers->set('X-Idempotency-Key', $idempotencyKey);
+        $res2 = $this->controller->checkActive($req2);
+        $data2 = is_array($res2) ? $res2 : (method_exists($res2, 'getData') ? $res2->getData(true) : json_decode($res2->getContent(), true));
+
+        $this->assertEquals('success', $data2['status'] ?? null);
+        $this->assertEquals($expectedNewStatus, $data2['pack_status'] ?? null);
+
+        // 4. Clean up / revert status to initial state
+        $revertKey = 'test-sub-revert-'.\Illuminate\Support\Str::uuid();
+        $reqRevert = Request::create('/super-admin/checkActive', 'POST', [
+            'id' => $company->id,
+            'idempotency_key' => $revertKey,
+        ]);
+        $reqRevert->headers->set('X-Idempotency-Key', $revertKey);
+        $this->controller->checkActive($reqRevert);
+    }
 }

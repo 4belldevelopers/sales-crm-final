@@ -483,8 +483,8 @@
 
     const centerTextPlugin = {
         id: 'centerTextPlugin',
-        beforeDraw(chart) {
-            const pluginOpts = chart.config.options.plugins.centerText;
+        afterDraw(chart) {
+            const pluginOpts = chart.config?.options?.plugins?.centerText;
             if (!pluginOpts || !pluginOpts.display) return;
 
             const { ctx, chartArea } = chart;
@@ -497,15 +497,16 @@
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
 
-            // Main bold count
-            ctx.font = "bold 22px 'Poppins', 'Segoe UI', sans-serif";
+            // Main bold count (ultra-crisp typography, high contrast)
+            ctx.font = "bold 26px 'Poppins', 'Segoe UI', sans-serif";
             ctx.fillStyle = '#0f172a';
-            ctx.fillText(pluginOpts.text || '0', centerX, centerY - (pluginOpts.subtext ? 8 : 0));
+            const textVal = (pluginOpts.text !== undefined && pluginOpts.text !== null) ? pluginOpts.text.toString() : '0';
+            ctx.fillText(textVal, centerX, centerY - (pluginOpts.subtext ? 10 : 0));
 
             // Subtitle
             if (pluginOpts.subtext) {
-                ctx.font = "500 11px 'Poppins', 'Segoe UI', sans-serif";
-                ctx.fillStyle = '#94a3b8';
+                ctx.font = "600 11px 'Poppins', 'Segoe UI', sans-serif";
+                ctx.fillStyle = '#64748b';
                 ctx.fillText(pluginOpts.subtext, centerX, centerY + 14);
             }
             ctx.restore();
@@ -515,9 +516,20 @@
     const barValueLabelsPlugin = {
         id: 'barValueLabelsPlugin',
         afterDatasetsDraw(chart) {
+            // Strictly guard: only execute on bar and line charts.
+            // Doughnut / pie charts must NEVER render bar labels (ArcElement centers cause text collision/smearing).
+            if (chart.config.type !== 'bar' && chart.config.type !== 'line') {
+                return;
+            }
+            if (chart.config?.options?.plugins?.barValueLabels?.display === false) {
+                return;
+            }
+
             const { ctx } = chart;
             chart.data.datasets.forEach((dataset, i) => {
                 const meta = chart.getDatasetMeta(i);
+                if (!meta || meta.hidden || !meta.data) return;
+
                 meta.data.forEach((bar, index) => {
                     const value = dataset.data[index];
                     if (value === undefined || value === null) return;
@@ -536,7 +548,7 @@
                         ctx.textAlign = 'center';
                         ctx.textBaseline = 'bottom';
                         ctx.fillText(value, bar.x, bar.y - 6);
-                    } else {
+                    } else if (chart.config.type === 'bar') {
                         // Vertical bar: render value above bar
                         ctx.textAlign = 'center';
                         ctx.textBaseline = 'bottom';
@@ -829,6 +841,7 @@
             responsive: true,
             maintainAspectRatio: false,
             plugins: {
+                barValueLabels: { display: false },
                 centerText: {
                     display: true,
                     text: compTotal.toString(),
@@ -941,6 +954,7 @@
             responsive: true,
             maintainAspectRatio: false,
             plugins: {
+                barValueLabels: { display: false },
                 centerText: {
                     display: true,
                     text: benchTotal.toString(),

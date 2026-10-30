@@ -370,7 +370,10 @@ class SuperAdminCompanyController extends SuperAdminBaseController
     public function subscription()
     {
         $coinEventType = 'operational';
-        $this->counts = $this->getSubscriptionKpiCounts($coinEventType);
+        $cacheKey = 'superadmin:subscription:kpi:'.$coinEventType;
+        $this->counts = Cache::remember($cacheKey, 60, function () use ($coinEventType) {
+            return $this->getSubscriptionKpiCounts($coinEventType);
+        });
 
         return view('super-admin.subscription.index', $this->data);
     }
@@ -549,7 +552,10 @@ class SuperAdminCompanyController extends SuperAdminBaseController
     public function countaccountviewmore($id)
     {
         $coinEventType = ((int) $id === 1) ? 'operational' : 'sales';
-        $counts = $this->getSubscriptionKpiCounts($coinEventType);
+        $cacheKey = 'superadmin:subscription:kpi:'.$coinEventType;
+        $counts = Cache::remember($cacheKey, 60, function () use ($coinEventType) {
+            return $this->getSubscriptionKpiCounts($coinEventType);
+        });
 
         return response()->json(['counts' => $counts]);
     }
@@ -564,6 +570,17 @@ class SuperAdminCompanyController extends SuperAdminBaseController
         $page = max((int) $request->input('page', 1), 1);
         $size = min(max((int) $request->input('size', 10), 1), 100);
         $from = ($page - 1) * $size;
+
+        $version = Cache::get('superadmin:subscription:version', 1);
+        $cacheParams = $request->only([
+            'page', 'size', 'pck_id', 'mstatus_id', 'q', 'location', 'package', 'status', 'sort', 'order',
+        ]);
+        $cacheKey = "superadmin:subscription:list:v{$version}:".md5(json_encode($cacheParams));
+
+        $cachedResponse = Cache::get($cacheKey);
+        if ($cachedResponse !== null && is_array($cachedResponse)) {
+            return response()->json($cachedResponse);
+        }
 
         $must = [];
         $filters = [];
@@ -801,11 +818,16 @@ class SuperAdminCompanyController extends SuperAdminBaseController
 
         $userPermissions = [];
 
-        return response()->json([
+        $responseData = [
             'html' => view('super-admin.ajax_pages.company_subscription_ajax', compact('data', 'userPermissions', 'coinEventType'))->render(),
             'total' => $total,
             'pagination' => view('super-admin.ajax_pages.pagination', compact('pagination'))->render(),
-        ]);
+            'items' => $data,
+        ];
+
+        Cache::put($cacheKey, $responseData, 30);
+
+        return response()->json($responseData);
     }
 
     public function subscriptiondata(Request $request)
@@ -15077,94 +15099,17 @@ class SuperAdminCompanyController extends SuperAdminBaseController
             return Reply::dataOnly(['status' => 'faild', 'message' => 'Invalid company ID']);
         }
 
-        return DB::transaction(function () use ($companyId) {
-            $row = DB::table('users')
-                ->where('company_id', '=', $companyId)
-                ->where('root_user', '=', 1)
-                ->lockForUpdate()
-                ->first();
+        $idempotencyKey = $request->header('X-Idempotency-Key') ?: $request->input('idempotency_key');
+        $result = $this->companyMutationService->toggleCompanyActive($companyId, $idempotencyKey);
 
-            if (! $row) {
-                return Reply::dataOnly(['status' => 'faild', 'message' => 'Root user not found']);
-            }
+        if (($result['status'] ?? '') === 'faild') {
+            return Reply::dataOnly(['status' => 'faild', 'message' => $result['message'] ?? 'Failed to update company status']);
+        }
 
-            $pack_status = ($row->status === 'active') ? 'inactive' : 'active';
-
-            // 1. Authoritative MySQL write
-            $result = DB::table('users')
-                ->where('company_id', '=', $companyId)
-                ->where('working_status', '=', 1)
-                ->update(['status' => $pack_status]);
-
-            DB::table('companies')
-                ->where('id', '=', $companyId)
-                ->update(['status' => $pack_status, 'updated_at' => now()]);
-
-            // 2. Cache Epoch Invalidation on blocking
-            if ($pack_status === 'inactive') {
-                Cache::put('company:epoch:'.$companyId, now()->timestamp, 7 * 24 * 3600);
-            }
-
-            $updateTime = now()->toIso8601String();
-
-            // 3. Elastic Users Sync
-            try {
-                if ($this->elasticService->indexExists(ELASTIC_USERS_LIST)) {
-                    $this->elasticService->getClient()->updateByQuery([
-                        'index' => ELASTIC_USERS_LIST,
-                        'body' => [
-                            'script' => [
-                                'source' => '
-                                    ctx._source.status = params.status;
-                                    ctx._source.working_status = params.working_status;
-                                    ctx._source.updated_at = params.updated_at;
-                                ',
-                                'lang' => 'painless',
-                                'params' => [
-                                    'status' => $pack_status,
-                                    'working_status' => 1,
-                                    'updated_at' => $updateTime,
-                                ],
-                            ],
-                            'query' => [
-                                'bool' => [
-                                    'must' => [
-                                        ['term' => ['company_id' => $companyId]],
-                                        ['term' => ['working_status' => 1]],
-                                    ],
-                                ],
-                            ],
-                        ],
-                    ]);
-                }
-            } catch (\Throwable $e) {
-                Log::error("checkActive: ELASTIC_USERS_LIST update failed for company {$companyId}: ".$e->getMessage());
-            }
-
-            // 4. Elastic Companies Index Sync (Single Document Atomic Update)
-            try {
-                if ($this->elasticService->indexExists(ELASTIC_COMPANIES_INDEX)) {
-                    $this->elasticService->getClient()->update([
-                        'index' => ELASTIC_COMPANIES_INDEX,
-                        'id' => (string) $companyId,
-                        'body' => [
-                            'doc' => [
-                                'status' => $pack_status,
-                                'updated_at' => $updateTime,
-                            ],
-                        ],
-                    ]);
-                }
-            } catch (\Throwable $e) {
-                Log::error("checkActive: ELASTIC_COMPANIES_INDEX update failed for company {$companyId}: ".$e->getMessage());
-            }
-
-            if ($result) {
-                return Reply::dataOnly(['status' => 'success', 'pack_status' => $pack_status]);
-            }
-
-            return Reply::dataOnly(['status' => 'faild', 'pack_status' => $pack_status]);
-        });
+        return Reply::dataOnly([
+            'status' => 'success',
+            'pack_status' => $result['pack_status'] ?? 'active',
+        ]);
     }
 
     public function checkStatusOperational(Request $request)
@@ -15174,30 +15119,17 @@ class SuperAdminCompanyController extends SuperAdminBaseController
             return Reply::dataOnly(['status' => 'faild', 'message' => 'Invalid company ID']);
         }
 
-        return DB::transaction(function () use ($companyId) {
-            $row = DB::table('company_coins')
-                ->where('company_id', '=', $companyId)
-                ->where('event_type', '=', 'operational')
-                ->lockForUpdate()
-                ->first();
+        $idempotencyKey = $request->header('X-Idempotency-Key') ?: $request->input('idempotency_key');
+        $result = $this->companyMutationService->toggleCoinPackStatus($companyId, 'operational', $idempotencyKey);
 
-            if (! $row) {
-                return Reply::dataOnly(['status' => 'faild', 'message' => 'Operational coins record not found']);
-            }
+        if (($result['status'] ?? '') === 'faild') {
+            return Reply::dataOnly(['status' => 'faild', 'message' => $result['message'] ?? 'Failed to update operational status']);
+        }
 
-            $pack_status = ($row->free_pack_status === 'active') ? 'block' : 'active';
-
-            $result = DB::table('company_coins')
-                ->where('company_id', '=', $companyId)
-                ->where('event_type', '=', 'operational')
-                ->update(['free_pack_status' => $pack_status, 'updated_at' => now()]);
-
-            if ($result) {
-                return Reply::dataOnly(['status' => 'success', 'pack_status' => $pack_status]);
-            }
-
-            return Reply::dataOnly(['status' => 'faild', 'pack_status' => $pack_status]);
-        });
+        return Reply::dataOnly([
+            'status' => 'success',
+            'pack_status' => $result['pack_status'] ?? 'active',
+        ]);
     }
 
     public function checkStatusSales(Request $request)
@@ -15207,30 +15139,17 @@ class SuperAdminCompanyController extends SuperAdminBaseController
             return Reply::dataOnly(['status' => 'faild', 'message' => 'Invalid company ID']);
         }
 
-        return DB::transaction(function () use ($companyId) {
-            $row = DB::table('company_coins')
-                ->where('company_id', '=', $companyId)
-                ->where('event_type', '=', 'sales')
-                ->lockForUpdate()
-                ->first();
+        $idempotencyKey = $request->header('X-Idempotency-Key') ?: $request->input('idempotency_key');
+        $result = $this->companyMutationService->toggleCoinPackStatus($companyId, 'sales', $idempotencyKey);
 
-            if (! $row) {
-                return Reply::dataOnly(['status' => 'faild', 'message' => 'Sales coins record not found']);
-            }
+        if (($result['status'] ?? '') === 'faild') {
+            return Reply::dataOnly(['status' => 'faild', 'message' => $result['message'] ?? 'Failed to update sales status']);
+        }
 
-            $pack_status = ($row->free_pack_status === 'active') ? 'block' : 'active';
-
-            $result = DB::table('company_coins')
-                ->where('company_id', '=', $companyId)
-                ->where('event_type', '=', 'sales')
-                ->update(['free_pack_status' => $pack_status, 'updated_at' => now()]);
-
-            if ($result) {
-                return Reply::dataOnly(['status' => 'success', 'pack_status' => $pack_status]);
-            }
-
-            return Reply::dataOnly(['status' => 'faild', 'pack_status' => $pack_status]);
-        });
+        return Reply::dataOnly([
+            'status' => 'success',
+            'pack_status' => $result['pack_status'] ?? 'active',
+        ]);
     }
 
     public function jobPublicMarket(Request $request)
