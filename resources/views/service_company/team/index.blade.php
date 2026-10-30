@@ -333,28 +333,6 @@
         .tm-card-sub.pink   { color: #e11d48; }
         .tm-card-sub.cyan   { color: #0891b2; }
 
-        .btn-comm-history {
-            background: #ffffff;
-            border: 1px solid #e2e8f0;
-            border-radius: 8px;
-            padding: 6px 13px;
-            font-size: 12px;
-            font-weight: 600;
-            color: #334155;
-            cursor: pointer;
-            transition: all .15s ease;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            height: 34px;
-            white-space: nowrap;
-        }
-        .btn-comm-history:hover {
-            background: #f8fafc;
-            border-color: #cbd5e1;
-            color: #0f172a;
-        }
-
         /* =========================================================================
            TIER 2.5: SEARCH & FILTER BAR (Pure White Card Standard)
            ========================================================================= */
@@ -471,12 +449,12 @@
             min-width: 1020px;
         }
 
-        /* Mathematical 8-Column Grid Definition (Shared by Legend & Cards) */
+        /* Mathematical 7-Column Grid Definition (Shared by Legend & Cards) */
         .team-roster-legend,
         .team-card-grid {
             display: grid !important;
-            grid-template-columns: minmax(180px, 2fr) minmax(85px, 0.85fr) minmax(130px, 1.3fr) minmax(110px, 1.1fr) minmax(195px, 2fr) minmax(85px, 0.85fr) minmax(95px, 0.95fr) 38px !important;
-            gap: 10px !important;
+            grid-template-columns: minmax(210px, 2.2fr) minmax(85px, 0.9fr) minmax(145px, 1.4fr) minmax(120px, 1.2fr) minmax(230px, 2.3fr) minmax(95px, 1fr) minmax(110px, 1.1fr) !important;
+            gap: 12px !important;
             align-items: center !important;
             box-sizing: border-box !important;
         }
@@ -490,6 +468,17 @@
             color: #64748b;
             text-transform: uppercase;
             letter-spacing: 0.5px;
+        }
+
+        .tm-owner-tag {
+            display: inline-flex;
+            align-items: center;
+            font-size: 11px;
+            font-weight: 600;
+            color: #b45309;
+            margin: 1px 0;
+            line-height: 1.2;
+            white-space: nowrap;
         }
 
         .team-cards-container {
@@ -803,72 +792,6 @@
             align-items: center;
             justify-content: center;
         }
-        .tm-action-wrap { position: relative; display: inline-block; }
-        .tm-action-btn {
-            width: 28px;
-            height: 28px;
-            border-radius: 6px;
-            border: 1px solid #e2e8f0;
-            background: #ffffff;
-            color: #64748b;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            transition: all .15s;
-            font-size: 13px;
-        }
-        .tm-action-btn:hover { background: #f8fafc; color: #0f172a; border-color: #cbd5e1; }
-        .tm-action-menu {
-            position: absolute;
-            right: 0;
-            top: 32px;
-            min-width: 200px;
-            background: #ffffff;
-            border: 1px solid #e2e8f0;
-            border-radius: 8px;
-            box-shadow: 0 8px 24px rgba(15, 23, 42, .08);
-            padding: 6px;
-            z-index: 100;
-            display: none;
-            text-align: left;
-        }
-        .tm-action-menu.show { display: block; }
-        .tm-action-item {
-            display: flex;
-            align-items: center;
-            font-size: 11.5px;
-            font-weight: 500;
-            color: #334155;
-            padding: 7px 10px;
-            border-radius: 6px;
-            cursor: pointer;
-            text-decoration: none;
-            transition: all .15s;
-        }
-        .tm-action-item:hover { background: #f1f5f9; color: #0f172a; }
-
-        /* Bottom Activity & Ownership Strip */
-        .tm-card-bottom-strip {
-            background: #fcfdfd;
-            border-top: 1px solid #f1f5f9;
-            padding: 7px 18px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 12px;
-            font-size: 11px;
-            border-bottom-left-radius: 9px;
-            border-bottom-right-radius: 9px;
-        }
-        .tm-strip-left { display: flex; align-items: center; gap: 8px; }
-        .tm-owner-badge { font-size: 11px; font-weight: 700; color: #b45309; }
-        .tm-strip-right { display: flex; align-items: center; gap: 10px; }
-        .tm-shares-info { font-size: 11px; color: #475569; display: inline-flex; align-items: center; }
-        .tm-bullet { color: #cbd5e1; }
-        .tm-shares-link { color: #009ef7; font-weight: 600; text-decoration: underline; cursor: pointer; }
-        .tm-shares-link:hover { color: #0077b6; }
-
         /* Empty State */
         .team-empty-card {
             background: #fff;
@@ -1858,37 +1781,22 @@
                     </div>
 
                     <div class="team-filter-controls">
+                        <!-- Hidden input to maintain JS status filter compatibility -->
+                        <input type="hidden" id="teamStatusFilterDropdown" value="all" />
+
                         <div class="team-filter-group">
-                            <span class="team-filter-label"><i class="fa-solid fa-arrow-down-short-wide me-1"></i>Sort by:</span>
+                            <span class="team-filter-label"><i class="fa-solid fa-arrow-down-short-wide me-1 text-muted"></i>Sort by:</span>
                             <select class="team-select-control" id="sortingfilter" onchange="fetchTeams(1)">
                                 <option value="">Last Active</option>
                                 <option value="1">Newest to Oldest</option>
                                 <option value="2">Oldest to Newest</option>
                             </select>
                         </div>
-
-                        <div class="team-filter-group">
-                            <span class="team-filter-label">Filter:</span>
-                            <select class="team-select-control" id="teamStatusFilterDropdown" onchange="changeStatusDropdown(this.value)">
-                                <option value="all">All Members</option>
-                                <option value="recruitment">Recruitment Team</option>
-                                <option value="client">Client &amp; Sales</option>
-                                <option value="vendor">Vendor &amp; Agency</option>
-                                <option value="finance">Finance &amp; Billing</option>
-                                <option value="inactive">Inactive Members</option>
-                                <option value="invited">Pending Invites</option>
-                            </select>
-                        </div>
-
-                        <button type="button" class="btn-comm-history" onclick="openAgencySharesModal()" title="View job-level communication mapping and history">
-                            <i class="fa-solid fa-clock-rotate-left me-1 text-muted"></i>
-                            <span>Communication History</span>
-                        </button>
                     </div>
                 </div>
 
                 <!-- ============================================================== -->
-                <!-- TIER 3: ROSTER COLUMN LEGEND & CARD STREAM                     -->
+                <!-- TIER 3: ROSTER COLUMN LEGEND & CARD STREAM (7 Columns Aligned) -->
                 <!-- ============================================================== -->
                 <div class="team-roster-wrap">
                     <div class="team-roster-inner">
@@ -1900,7 +1808,6 @@
                             <div>Communication Purpose</div>
                             <div>Status</div>
                             <div>Last Active</div>
-                            <div style="text-align: center;">Actions</div>
                         </div>
 
                         <div class="position-relative">
