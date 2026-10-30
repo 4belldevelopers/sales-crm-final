@@ -30,6 +30,7 @@ class AgencyListingService
 
     /**
      * Fetch top summary counter cards for the logged-in company with Redis caching.
+     * Strictly isolated to Agency Tracker data - 0% Client Tracker dependencies.
      *
      * @param  int  $companyId  Current authenticated user's company ID
      * @return array Summary counter metrics
@@ -41,93 +42,60 @@ class AgencyListingService
         return Cache::remember($cacheKey, now()->addMinutes(10), function () use ($companyId) {
             $counters = [];
 
-            // 1. All Connected Agencies (Optimized: Uses covering index idx_pair without redundant 3-table joins or in-memory collections)
-            $counters['spartnerAll'] = DB::table('staffing_company_relation')
-                ->where('staffing_company_relation.final_status', 1)
-                ->where('staffing_company_relation.from_company_id', $companyId)
-                ->whereNotNull('to_company_id')
-                ->distinct()
-                ->count('to_company_id');
-            $counters['clientAll'] = 0;
+            // 1. All Connected Agencies (spartnerAll)
+            $connectedAgencyIds = [];
+            if ($this->elasticService->indexExists(ELASTIC_CLIENT_AND_AGENCY_RELATION_INDEX)) {
+                try {
+                    $resAll = $this->elasticService->getClient()->search([
+                        'index' => ELASTIC_CLIENT_AND_AGENCY_RELATION_INDEX,
+                        'body' => [
+                            'size' => 10000,
+                            'query' => [
+                                'bool' => [
+                                    'must' => [
+                                        ['term' => ['from_company_id' => $companyId]],
+                                        ['term' => ['final_status' => 1]],
+                                    ],
+                                ],
+                            ],
+                            '_source' => ['to_company_id'],
+                        ],
+                    ]);
+                    $connectedAgencyIds = collect($resAll['hits']['hits'] ?? [])
+                        ->pluck('_source.to_company_id')
+                        ->filter()
+                        ->unique()
+                        ->values()
+                        ->toArray();
+                    $counters['spartnerAll'] = count($connectedAgencyIds);
+                } catch (\Exception $e) {
+                    $connectedAgencyIds = DB::table('staffing_company_relation')
+                        ->where('from_company_id', $companyId)
+                        ->where('final_status', 1)
+                        ->whereNotNull('to_company_id')
+                        ->distinct()
+                        ->pluck('to_company_id')
+                        ->toArray();
+                    $counters['spartnerAll'] = count($connectedAgencyIds);
+                }
+            } else {
+                $connectedAgencyIds = DB::table('staffing_company_relation')
+                    ->where('from_company_id', $companyId)
+                    ->where('final_status', 1)
+                    ->whereNotNull('to_company_id')
+                    ->distinct()
+                    ->pluck('to_company_id')
+                    ->toArray();
+                $counters['spartnerAll'] = count($connectedAgencyIds);
+            }
 
-            // 2. Sent Requests
+            // 2. Sent Pending Invitations (sentRequest)
             $counters['sentRequest'] = DB::table('staffing_company_invitation')
                 ->where('from_company_id', $companyId)
                 ->where('to_invitation_status', '!=', 1)
                 ->count();
 
-            // 3. Direct Clients via Elasticsearch
-            $clientDirect = 0;
-            if ($this->elasticService->indexExists(ELASTIC_CLIENT_AND_AGENCY_RELATION_INDEX)) {
-                try {
-                    $resDirect = $this->elasticService->getClient()->count([
-                        'index' => ELASTIC_CLIENT_AND_AGENCY_RELATION_INDEX,
-                        'body' => [
-                            'query' => [
-                                'bool' => [
-                                    'must' => [
-                                        ['term' => ['to_company_id' => $companyId]],
-                                        ['term' => ['final_status' => 1]],
-                                    ],
-                                    'must_not' => [
-                                        ['term' => ['from_company_id' => $companyId]],
-                                    ],
-                                ],
-                            ],
-                        ],
-                    ]);
-                    $clientDirect = $resDirect['count'] ?? 0;
-                } catch (\Exception $e) {
-                    $clientDirect = DB::table('staffing_company_relation')
-                        ->where('to_company_id', $companyId)
-                        ->where('from_company_id', '!=', $companyId)
-                        ->where('final_status', 1)
-                        ->count();
-                }
-            } else {
-                $clientDirect = DB::table('staffing_company_relation')
-                    ->where('to_company_id', $companyId)
-                    ->where('from_company_id', '!=', $companyId)
-                    ->where('final_status', 1)
-                    ->count();
-            }
-            $counters['clientDirect'] = $clientDirect;
-
-            // 4. Custom Clients via Elasticsearch
-            $clientCustom = 0;
-            if ($this->elasticService->indexExists(ELASTIC_CLIENT_LIST)) {
-                try {
-                    $resCustom = $this->elasticService->getClient()->count([
-                        'index' => ELASTIC_CLIENT_LIST,
-                        'body' => [
-                            'query' => [
-                                'bool' => [
-                                    'must' => [
-                                        ['term' => ['company_id' => $companyId]],
-                                    ],
-                                    'must_not' => [
-                                        ['term' => ['self_company' => 1]],
-                                    ],
-                                ],
-                            ],
-                        ],
-                    ]);
-                    $clientCustom = $resCustom['count'] ?? 0;
-                } catch (\Exception $e) {
-                    $clientCustom = DB::table('clients')
-                        ->where('self_company', '!=', 1)
-                        ->where('company_id', $companyId)
-                        ->count();
-                }
-            } else {
-                $clientCustom = DB::table('clients')
-                    ->where('self_company', '!=', 1)
-                    ->where('company_id', $companyId)
-                    ->count();
-            }
-            $counters['clientCustom'] = $clientCustom;
-
-            // 5. Agencies added this month
+            // 3. Agencies added this month
             $counters['spartnerThisMonth'] = DB::table('staffing_company_relation')
                 ->where('from_company_id', $companyId)
                 ->where('final_status', 1)
@@ -135,169 +103,14 @@ class AgencyListingService
                 ->whereMonth('created_at', now()->month)
                 ->count();
 
-            // 6. Newly Onboarded (last 7 days)
+            // 4. Newly Onboarded (last 7 days)
             $counters['newlyOnboarded'] = DB::table('staffing_company_relation')
                 ->where('from_company_id', $companyId)
                 ->where('final_status', 1)
                 ->where('created_at', '>=', now()->subDays(7))
                 ->count();
 
-            // Connected agency IDs
-            $connectedAgencyIds = DB::table('staffing_company_relation')
-                ->where('from_company_id', $companyId)
-                ->where('final_status', 1)
-                ->pluck('to_company_id')
-                ->toArray();
-
-            if (empty($connectedAgencyIds)) {
-                $counters['workingOnJobs'] = 0;
-                $counters['workingOnJobsThisMonth'] = 0;
-            } else {
-                // Working on Jobs (ES cardinality aggregation)
-                try {
-                    $esJobs = $this->elasticService->getClient()->search([
-                        'index' => ELASTIC_JOBS,
-                        'body' => [
-                            'size' => 0,
-                            'query' => [
-                                'bool' => [
-                                    'must' => [
-                                        ['term' => ['status' => 'active']],
-                                        [
-                                            'nested' => [
-                                                'path' => 'recommendation_relation',
-                                                'query' => [
-                                                    'bool' => [
-                                                        'must' => [
-                                                            ['term' => ['recommendation_relation.from_company_id' => $companyId]],
-                                                            ['term' => ['recommendation_relation.final_status' => 1]],
-                                                            ['terms' => ['recommendation_relation.to_company_id' => $connectedAgencyIds]],
-                                                        ],
-                                                    ],
-                                                ],
-                                            ],
-                                        ],
-                                    ],
-                                ],
-                            ],
-                            'aggs' => [
-                                'agencies' => [
-                                    'nested' => ['path' => 'recommendation_relation'],
-                                    'aggs' => [
-                                        'filtered' => [
-                                            'filter' => [
-                                                'bool' => [
-                                                    'must' => [
-                                                        ['term' => ['recommendation_relation.from_company_id' => $companyId]],
-                                                        ['term' => ['recommendation_relation.final_status' => 1]],
-                                                        ['terms' => ['recommendation_relation.to_company_id' => $connectedAgencyIds]],
-                                                    ],
-                                                ],
-                                            ],
-                                            'aggs' => [
-                                                'distinct_agencies' => [
-                                                    'cardinality' => ['field' => 'recommendation_relation.to_company_id'],
-                                                ],
-                                            ],
-                                        ],
-                                    ],
-                                ],
-                            ],
-                        ],
-                    ]);
-                    $counters['workingOnJobs'] = $esJobs['aggregations']['agencies']['filtered']['distinct_agencies']['value'] ?? 0;
-                } catch (\Exception $e) {
-                    $counters['workingOnJobs'] = 0;
-                }
-
-                // Working on Jobs This Month
-                try {
-                    $startOfMonth = now()->startOfMonth()->toIso8601String();
-                    $endOfMonth = now()->endOfMonth()->toIso8601String();
-                    $esJobsMonth = $this->elasticService->getClient()->search([
-                        'index' => ELASTIC_JOBS,
-                        'body' => [
-                            'size' => 0,
-                            'query' => [
-                                'bool' => [
-                                    'must' => [
-                                        [
-                                            'nested' => [
-                                                'path' => 'recommendation_relation',
-                                                'query' => [
-                                                    'bool' => [
-                                                        'must' => [
-                                                            ['term' => ['recommendation_relation.from_company_id' => $companyId]],
-                                                            ['term' => ['recommendation_relation.final_status' => 1]],
-                                                            ['terms' => ['recommendation_relation.to_company_id' => $connectedAgencyIds]],
-                                                            ['range' => ['recommendation_relation.created_at' => ['gte' => $startOfMonth, 'lte' => $endOfMonth]]],
-                                                        ],
-                                                    ],
-                                                ],
-                                            ],
-                                        ],
-                                    ],
-                                ],
-                            ],
-                            'aggs' => [
-                                'agencies' => [
-                                    'nested' => ['path' => 'recommendation_relation'],
-                                    'aggs' => [
-                                        'filtered' => [
-                                            'filter' => [
-                                                'bool' => [
-                                                    'must' => [
-                                                        ['term' => ['recommendation_relation.from_company_id' => $companyId]],
-                                                        ['term' => ['recommendation_relation.final_status' => 1]],
-                                                        ['terms' => ['recommendation_relation.to_company_id' => $connectedAgencyIds]],
-                                                        ['range' => ['recommendation_relation.created_at' => ['gte' => $startOfMonth, 'lte' => $endOfMonth]]],
-                                                    ],
-                                                ],
-                                            ],
-                                            'aggs' => [
-                                                'distinct_agencies' => [
-                                                    'cardinality' => ['field' => 'recommendation_relation.to_company_id'],
-                                                ],
-                                            ],
-                                        ],
-                                    ],
-                                ],
-                            ],
-                        ],
-                    ]);
-                    $counters['workingOnJobsThisMonth'] = $esJobsMonth['aggregations']['agencies']['filtered']['distinct_agencies']['value'] ?? 0;
-                } catch (\Exception $e) {
-                    $counters['workingOnJobsThisMonth'] = 0;
-                }
-            }
-
-            // 7. Actively Submitting in last 30 days
-            $counters['activelySubmitting'] = DB::table('job_applications')
-                ->join('staffing_company_relation', function ($join) use ($companyId) {
-                    $join->on('staffing_company_relation.to_company_id', '=', 'job_applications.thirdparty_company_id')
-                        ->where('staffing_company_relation.from_company_id', $companyId)
-                        ->where('staffing_company_relation.final_status', 1);
-                })
-                ->join('jobs', 'jobs.id', '=', 'job_applications.job_id')
-                ->where('jobs.company_id', $companyId)
-                ->where('job_applications.created_at', '>=', now()->subDays(30))
-                ->distinct('job_applications.thirdparty_company_id')
-                ->count('job_applications.thirdparty_company_id');
-
-            // 8. Actively Submitting Today
-            $counters['activelySubmittingToday'] = DB::table('job_applications')
-                ->join('staffing_company_relation', function ($join) use ($companyId) {
-                    $join->on('staffing_company_relation.to_company_id', '=', 'job_applications.thirdparty_company_id')
-                        ->where('staffing_company_relation.from_company_id', $companyId)
-                        ->where('staffing_company_relation.final_status', 1);
-                })
-                ->join('jobs', 'jobs.id', '=', 'job_applications.job_id')
-                ->where('jobs.company_id', $companyId)
-                ->whereDate('job_applications.created_at', now()->toDateString())
-                ->distinct('job_applications.thirdparty_company_id')
-                ->count('job_applications.thirdparty_company_id');
-
-            // 9. Newly Added Agencies: joined within last 180 days (capped at 10)
+            // 5. Newly Added Agencies: joined within last 180 days
             $recent180Ids = DB::table('staffing_company_relation')
                 ->where('from_company_id', $companyId)
                 ->where('final_status', 1)
@@ -306,10 +119,31 @@ class AgencyListingService
                 ->unique()
                 ->values()
                 ->toArray();
-            $counters['newlyAdded'] = min(10, count($recent180Ids));
+            $counters['newlyAdded'] = count($recent180Ids);
             $counters['newlyAddedTotal'] = count($recent180Ids);
 
-            // 10. Top Performing Agencies: agencies with verified pipeline activity / placements
+            // 6. Working on Active Jobs (hiring / active agencies)
+            $workingOnJobs = 0;
+            if (! empty($connectedAgencyIds)) {
+                try {
+                    $workingOnJobs = DB::table('recommendation_relation')
+                        ->join('jobs', 'jobs.id', '=', 'recommendation_relation.job_id')
+                        ->where('recommendation_relation.from_company_id', $companyId)
+                        ->whereIn('recommendation_relation.to_company_id', $connectedAgencyIds)
+                        ->where('recommendation_relation.final_status', 1)
+                        ->where('jobs.status', 'active')
+                        ->distinct()
+                        ->count('recommendation_relation.to_company_id');
+                } catch (\Exception $e) {
+                    $workingOnJobs = 0;
+                }
+            }
+            $counters['workingOnJobs'] = $workingOnJobs;
+
+            // 7. Inactive Agencies (connected agencies with 0 active jobs)
+            $counters['inactive'] = max(0, $counters['spartnerAll'] - $workingOnJobs);
+
+            // 8. Top Performing Agencies: agencies with verified pipeline activity / placements (interview, offer, joined)
             $topAgencyCount = 0;
             if (! empty($connectedAgencyIds)) {
                 $topAgencyCount = DB::table('add_job_wise_condidates')
@@ -326,8 +160,105 @@ class AgencyListingService
             }
             $counters['topPerforming'] = $topAgencyCount;
 
+            // 9. Actively Submitting in last 30 days
+            $counters['activelySubmitting'] = DB::table('job_applications')
+                ->join('staffing_company_relation', function ($join) use ($companyId) {
+                    $join->on('staffing_company_relation.to_company_id', '=', 'job_applications.thirdparty_company_id')
+                        ->where('staffing_company_relation.from_company_id', $companyId)
+                        ->where('staffing_company_relation.final_status', 1);
+                })
+                ->join('jobs', 'jobs.id', '=', 'job_applications.job_id')
+                ->where('jobs.company_id', $companyId)
+                ->where('job_applications.created_at', '>=', now()->subDays(30))
+                ->distinct('job_applications.thirdparty_company_id')
+                ->count('job_applications.thirdparty_company_id');
+
+            // 10. Actively Submitting Today
+            $counters['activelySubmittingToday'] = DB::table('job_applications')
+                ->join('staffing_company_relation', function ($join) use ($companyId) {
+                    $join->on('staffing_company_relation.to_company_id', '=', 'job_applications.thirdparty_company_id')
+                        ->where('staffing_company_relation.from_company_id', $companyId)
+                        ->where('staffing_company_relation.final_status', 1);
+                })
+                ->join('jobs', 'jobs.id', '=', 'job_applications.job_id')
+                ->where('jobs.company_id', $companyId)
+                ->whereDate('job_applications.created_at', now()->toDateString())
+                ->distinct('job_applications.thirdparty_company_id')
+                ->count('job_applications.thirdparty_company_id');
+
             return $counters;
         });
+    }
+
+    /**
+     * Resolve company IDs of top performing agencies with verified candidate pipeline placements.
+     *
+     * @param int $companyId
+     * @param array $agencyCompanyIds
+     * @return array
+     */
+    public function getTopPerformingAgencyIds(int $companyId, array $agencyCompanyIds): array
+    {
+        if (empty($agencyCompanyIds)) {
+            return [];
+        }
+
+        return DB::table('add_job_wise_condidates')
+            ->join('recommendation_relation', function ($join) use ($companyId) {
+                $join->on('recommendation_relation.job_id', '=', 'add_job_wise_condidates.job_id')
+                    ->on('recommendation_relation.to_company_id', '=', 'add_job_wise_condidates.thirdparty_company_id')
+                    ->where('recommendation_relation.from_company_id', '=', $companyId)
+                    ->where('recommendation_relation.final_status', '=', 1);
+            })
+            ->whereIn('add_job_wise_condidates.thirdparty_company_id', $agencyCompanyIds)
+            ->whereIn('add_job_wise_condidates.master_status_id', [3, 6, 7, 10])
+            ->distinct()
+            ->pluck('add_job_wise_condidates.thirdparty_company_id')
+            ->toArray();
+    }
+
+    /**
+     * Resolve company IDs of agencies currently assigned to active jobs.
+     *
+     * @param int $companyId
+     * @param array $agencyCompanyIds
+     * @return array
+     */
+    public function getActiveAgencyIds(int $companyId, array $agencyCompanyIds): array
+    {
+        if (empty($agencyCompanyIds)) {
+            return [];
+        }
+
+        return DB::table('recommendation_relation')
+            ->join('jobs', 'jobs.id', '=', 'recommendation_relation.job_id')
+            ->where('recommendation_relation.from_company_id', $companyId)
+            ->whereIn('recommendation_relation.to_company_id', $agencyCompanyIds)
+            ->where('recommendation_relation.final_status', 1)
+            ->where('jobs.status', 'active')
+            ->distinct()
+            ->pluck('recommendation_relation.to_company_id')
+            ->toArray();
+    }
+
+    /**
+     * Resolve company IDs of newly added agencies within given days.
+     *
+     * @param int $companyId
+     * @param int $days
+     * @return array
+     */
+    public function getRecentAgencyIds(int $companyId, int $days = 180): array
+    {
+        return DB::table('staffing_company_relation')
+            ->where('from_company_id', $companyId)
+            ->where('final_status', 1)
+            ->where('created_at', '>=', now()->subDays($days))
+            ->orderBy('created_at', 'desc')
+            ->pluck('to_company_id')
+            ->unique()
+            ->values()
+            ->toArray();
     }
 
     /**

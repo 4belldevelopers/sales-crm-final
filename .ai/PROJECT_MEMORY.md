@@ -20,7 +20,28 @@ Last updated: 2026-10-22 (Super Admin Companies Page UI Redesign, 100% CQRS Read
 - **Test coverage:** `TenantIsolationTest`, `BenchToJobAppTrackerPipelineContractTest`, `BenchTalentRequestPipelineContractTest`, `SuperAdminCompanyLoadTest`, `SuperAdminSubscriptionLoadTest`, `SuperAdminDashboardLoadTest` (100% green).
 - **V2_login blocking-scenarios architecture:** session-epoch pattern + Reverb `UserAccountSuspended` event + `SyncUserStatusAction` (cross-tenant-safe) + `BlockCompanyAction` (static bulk helper) + `block_log` audit table + drop all 20 `refresh:true` ES sites + grep-lint guard. See [docs/V2_login/BLOCKING_SCENARIOS_AUDIT.md](../docs/V2_login/BLOCKING_SCENARIOS_AUDIT.md), [ADR 0007](../docs/adr/0007-blocking-scenarios-architecture.md). Code not yet landed.
 
-- *2026-10-29* — **Marketplace Communication Contacts & 8-Column Card + Sub-Card Team Management Standard (100% COMPLETED & VERIFIED)**:
+- *2026-10-30* — **God-Level Agency Tracker & Complete Module Isolation Standard (100% COMPLETED & VERIFIED)**:
+  - **Module & Scope**: Service Company Agency Listing & Tracker (`resources/views/service_company/consultancy/index.blade.php`, `ajax_pages/staffing-partner-ajax.blade.php`, `app/Http/Controllers/ServiceCompany/ServiceCompanyConsultancyController.php`, `app/Services/AgencyListingService.php`, `resources/views/service_company/consultancy/dviewMore.blade.php`).
+  - **Complete Tenancy & Business Isolation (Rule 17)**:
+    - 0% Client Tracker dependencies: Zero cross-controller calls, zero shared client state, zero client-specific database queries, zero coupling between Agency Tracker and Client Tracker data structures.
+    - Agency relationships strictly resolved via `staffing_company_relation` and `staffing_company_invitation` with strict tenant scope (`from_company_id = auth()->user()->company_id`).
+    - Agency pipeline derived purely from `add_job_wise_condidates` joined with `recommendation_relation`.
+    - Agency activity recency derived purely from `job_applications` with `thirdparty_company_id`.
+  - **100% Dynamic Agency Metrics & 6 Stat Cards**:
+    - Cleaned up legacy client variables in `AgencyListingService::getSummaryCounters()`.
+    - Dynamic counters: `spartnerAll` (Total connected agencies), `newlyAdded` (Last 180 days), `topPerforming` (Agencies with candidate interview/offer/joined milestones), `workingOnJobs` (Actively working on open jobs), `inactive` (0 active jobs), and `sentRequest` (Pending outbound invitations).
+    - Single source of truth `window.AGENCY_DATA_COUNTERS` and `updateAgencyTabCounters` automatically sync card numbers and sub-badge progress on every AJAX cycle.
+  - **Modern Card + Sub-Card Enterprise Design System (Rule 20)**:
+    - 3-tier layout: Tier 1 pure white toolbar card (`#ffffff`, border `#e2e8f0`, radius 10px), Tier 2 6-card stat filter grid, Tier 3 primary card stream with 4 discrete sub-cards (Agency Identity, Location, Shared Jobs / Lifecycle, Candidate Pipeline / Timeline) and bottom activity strip.
+    - Dual mode support in AJAX blade: connected agency profile cards and outbound invitation status cards (with resend invite action and dispatch timeline).
+  - **Filter & Search Engine**:
+    - 5 dynamic combobox popovers: Location (Country with search and clear), Industry (Specialization with search and clear), Activity Recency (7d, 30d, inactive), Candidate Pipeline (Sourcing, Screening, Interview, Offers, Joined), and Sort (Chronological, Alphabetical, Workload).
+    - Enterprise micro-search bar with 300ms debounce, clear button `✕`, match pill counter (`# matches`), and `Ctrl+K` shortcut.
+    - Client-side SWR in-memory cache, single-flight locking, ETag / HTTP 304 Not Modified support, and seamless browser history synchronization (`pushState`/`popstate`).
+  - **Responsive & Tooltip Standards**:
+    - Strict 15.6" screen fit (`1366×768` and `1920×1080`) with zero window overflow per Rule 14.
+    - Rich, non-clipping, contextual tooltips on all badges, pills, pipeline nodes, locations, and actions.
+  - **Pre-commit Verification**: `php -l` passed with 0 syntax errors across all touched files, zero forbidden debug statements (`dd()`, `dump()`, `ray()`, `var_dump()`), zero `env()` outside `config/`.
   - **Module & Scope**: Service Company Team Management (`resources/views/service_company/team/index.blade.php`, `ajax_pages/team-list-ajax.blade.php`).
   - **Card + Sub-Card Design (Rule 20)**:
     - Replaced legacy tables with the Modern Card + Sub-Card Enterprise Design System (Rule 20).

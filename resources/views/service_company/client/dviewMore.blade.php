@@ -9160,6 +9160,7 @@
             ? window.ClientStateManager.getSelectedClientId()
             : (window.activeSelectedClientId || null);
         if (activeSelectedId && !isMatchingDirectClient(activeSelectedId)) {
+            $('.page-loader').css('display', 'none');
             return;
         }
 
