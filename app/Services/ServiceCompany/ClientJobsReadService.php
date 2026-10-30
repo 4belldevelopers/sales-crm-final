@@ -243,27 +243,65 @@ class ClientJobsReadService
         $logoMap = [];
 
         if (! empty($jobIds)) {
+            $candFilter = [
+                ['terms' => ['job_id' => array_values($jobIds)]],
+            ];
+
+            if ($query->clientType === 'internal') {
+                $candFilter[] = ['term' => ['company_id' => (int) $query->serviceCompanyId]];
+                if ($query->clientId > 0) {
+                    $candFilter[] = ['term' => ['client_id' => (int) $query->clientId]];
+                }
+            } else {
+                $allowedCompIds = array_values(array_filter([
+                    (int) $query->clientId,
+                    (int) $query->serviceCompanyId,
+                    (int) ($query->partnerCompanyId ?? 0),
+                    (int) $query->tenantId,
+                ]));
+                $candFilter[] = [
+                    'bool' => [
+                        'should' => [
+                            ['terms' => ['company_id' => $allowedCompIds]],
+                            ['terms' => ['from_company_id' => $allowedCompIds]],
+                            ['terms' => ['client_id' => $allowedCompIds]],
+                        ],
+                        'minimum_should_match' => 1,
+                    ],
+                ];
+            }
+
+            $mustNot = [];
+            if ($query->clientType === 'direct') {
+                $mustNot = [
+                    ['terms' => ['job_master_status_id' => [8, 9, '8', '9']]],
+                    [
+                        'bool' => [
+                            'must' => [['terms' => ['master_status_id' => [8, 9, '8', '9']]]],
+                            'must_not' => [['range' => ['job_master_status_id' => ['gt' => 0]]]],
+                        ],
+                    ],
+                ];
+            }
+
             $candParams = [
                 'index' => $indexCandidates,
                 'size' => 0,
                 'body' => [
                     'query' => [
                         'bool' => [
-                            'filter' => [
-                                ['terms' => ['job_id' => array_values($jobIds)]],
-                                ['term' => ['company_id' => (int) $query->serviceCompanyId]],
-                            ],
-                            'must_not' => [
-                                ['terms' => ['job_master_status_id' => [8, 9, '8', '9']]],
-                                ['terms' => ['master_status_id' => [8, '8']]],
-                            ],
+                            'filter' => $candFilter,
+                            'must_not' => $mustNot,
                         ],
                     ],
                     'aggs' => [
                         'by_job' => [
                             'terms' => ['field' => 'job_id', 'size' => count($jobIds)],
                             'aggs' => [
-                                'by_stage' => [
+                                'by_job_stage' => [
+                                    'terms' => ['field' => 'job_master_status_id', 'size' => 10],
+                                ],
+                                'by_master_stage' => [
                                     'terms' => ['field' => 'master_status_id', 'size' => 10],
                                 ],
                             ],
@@ -277,10 +315,29 @@ class ClientJobsReadService
                 $jobBuckets = $candResponse['aggregations']['by_job']['buckets'] ?? [];
                 foreach ($jobBuckets as $jb) {
                     $jId = (int) $jb['key'];
-                    $stageBuckets = $jb['by_stage']['buckets'] ?? [];
-                    foreach ($stageBuckets as $sb) {
-                        $sId = (int) $sb['key'];
-                        $pipelineStageMap[$jId][$sId] = (int) $sb['doc_count'];
+                    $jobStageBuckets = $jb['by_job_stage']['buckets'] ?? [];
+                    $masterStageBuckets = $jb['by_master_stage']['buckets'] ?? [];
+
+                    if (! empty($jobStageBuckets)) {
+                        foreach ($jobStageBuckets as $sb) {
+                            $sId = (int) $sb['key'];
+                            if ($sId > 0) {
+                                if ($query->clientType === 'direct' && $sId === 8) {
+                                    continue;
+                                }
+                                $pipelineStageMap[$jId][$sId] = ($pipelineStageMap[$jId][$sId] ?? 0) + (int) $sb['doc_count'];
+                            }
+                        }
+                    } else {
+                        foreach ($masterStageBuckets as $sb) {
+                            $sId = (int) $sb['key'];
+                            if ($sId > 0) {
+                                if ($query->clientType === 'direct' && $sId === 8) {
+                                    continue;
+                                }
+                                $pipelineStageMap[$jId][$sId] = ($pipelineStageMap[$jId][$sId] ?? 0) + (int) $sb['doc_count'];
+                            }
+                        }
                     }
                 }
             } catch (\Throwable $e) {
