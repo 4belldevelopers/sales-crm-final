@@ -90,9 +90,11 @@ class ServiceCompanyClientActivityController extends Controller
         $viewModel = $readService->getActivityStream($query);
 
         // 4. Render Phase 1 presentation compatibility cards
+        $companyTimezone = \App\Helper\GeneralMethod::defaultTimeZone($authContext->companyId);
         $html = view('service_company.ajax_pages.client_activity_cards_ajax', [
             'viewModel' => $viewModel,
             'items' => $viewModel->items,
+            'companyTimezone' => $companyTimezone,
         ])->render();
 
         // 5. Authoritative JSON-First Response Envelope
