@@ -398,23 +398,35 @@
             border-color: #94a3b8;
         }
 
-        /* Underlined Modern Sub-Tabs */
+        /* =========================================================================
+           TIER 2: MODERN UNDERLINED SUB-TABS & HISTORY BAR
+           ========================================================================= */
+        .team-subtabs-row {
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-between;
+            border-bottom: 2px solid #e2e8f0;
+            margin-bottom: 14px;
+            padding-bottom: 0px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
         .tm-nav-tabs {
             display: flex;
             align-items: center;
-            gap: 18px;
-            border-bottom: 2px solid transparent;
+            gap: 20px;
+            margin-bottom: -2px; /* Pulls active underline directly onto container's border */
         }
         .tm-nav-tab {
             background: transparent;
             border: none;
-            padding: 6px 4px 10px 4px;
-            font-size: 13px;
+            padding: 8px 4px 12px 4px;
+            font-size: 13.5px;
             font-weight: 600;
             color: #64748b;
             cursor: pointer;
             position: relative;
-            transition: all .15s;
+            transition: all .15s ease;
             display: inline-flex;
             align-items: center;
             gap: 6px;
@@ -425,170 +437,185 @@
         }
         .tm-nav-tab.active {
             color: #009ef7;
+            font-weight: 700;
         }
         .tm-nav-tab.active::after {
             content: '';
             position: absolute;
             left: 0;
             right: 0;
-            bottom: -2px;
-            height: 2.5px;
+            bottom: 0;
+            height: 3px;
             background: #009ef7;
-            border-radius: 2px;
+            border-radius: 3px 3px 0 0;
         }
         .tm-nav-count {
-            font-size: 11.5px;
-            color: inherit;
+            font-size: 12px;
             font-weight: 700;
+            color: inherit;
+        }
+        .btn-comm-history {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 6px 14px;
+            font-size: 12px;
+            font-weight: 600;
+            color: #334155;
+            cursor: pointer;
+            transition: all .15s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            margin-bottom: 6px;
+        }
+        .btn-comm-history:hover {
+            background: #f8fafc;
+            border-color: #cbd5e1;
+            color: #0f172a;
         }
 
-        /* Filter & Search Bar */
+        /* =========================================================================
+           TIER 2.5: SEARCH & FILTER BAR (Pure White Card Standard)
+           ========================================================================= */
         .team-filter-bar {
             background: #ffffff;
             border: 1px solid #e2e8f0;
             border-radius: 10px;
-            padding: 8px 16px;
+            padding: 8px 14px;
             display: flex;
             align-items: center;
             justify-content: space-between;
-            gap: 14px;
+            gap: 16px;
             box-shadow: 0 1px 3px rgba(15, 23, 42, 0.02);
             flex-wrap: wrap;
+            margin-bottom: 12px;
         }
         .team-filter-search {
             position: relative;
-            flex-grow: 1;
-            max-width: 380px;
+            flex: 1;
+            min-width: 260px;
+            max-width: 460px;
             display: flex;
             align-items: center;
         }
-        .team-filter-search i {
+        .team-filter-search i.fa-magnifying-glass {
             position: absolute;
             left: 10px;
-            font-size: 12px;
+            font-size: 13px;
             color: #94a3b8;
+            pointer-events: none;
         }
         .team-filter-search .team-search-input {
             width: 100%;
-            height: 32px;
-            padding: 0 30px 0 30px;
+            height: 34px;
+            padding: 0 32px 0 32px;
             border: 1px solid transparent;
             border-radius: 6px;
-            font-size: 12px;
+            font-size: 12.5px;
             font-family: 'Poppins', sans-serif;
             color: #0f172a;
             outline: none;
             transition: all .15s;
-            background: transparent;
+            background: #f8fafc;
         }
         .team-filter-search .team-search-input:focus {
             background: #ffffff;
             border-color: #009ef7;
-            box-shadow: 0 0 0 2px rgba(0, 158, 247, 0.1);
+            box-shadow: 0 0 0 2px rgba(0, 158, 247, 0.12);
         }
-
-        /* Roster Header Legend */
-        .team-roster-legend {
-            display: grid;
-            grid-template-columns: minmax(0, 2.2fr) minmax(0, 1fr) minmax(0, 1.8fr) minmax(0, 1.2fr) minmax(0, 2.4fr) minmax(0, 1.1fr) minmax(0, 1fr) 36px;
-            gap: 12px;
-            padding: 6px 18px;
-            font-size: 11px;
-            font-weight: 700;
-            color: #64748b;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-            background: #ffffff !important;
-            border: 1px solid #e2e8f0 !important;
-            border-radius: 10px !important;
-            padding: 8px 12px !important;
-            margin-bottom: 12px !important;
-            box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03) !important;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            flex-wrap: wrap;
-            gap: 12px;
-        }
-        .team-tabs-group {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            flex-wrap: wrap;
-        }
-        .team-tab-btn {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            background: #ffffff !important;
-            border: 1px solid #e2e8f0 !important;
-            border-radius: 8px !important;
-            padding: 6px 14px !important;
-            font-size: 11.5px !important;
-            font-weight: 600 !important;
-            color: #475569 !important;
+        .team-search-clear {
+            position: absolute;
+            right: 8px;
+            width: 20px;
+            height: 20px;
+            border: none;
+            background: transparent;
+            color: #94a3b8;
+            font-size: 13px;
             cursor: pointer;
-            transition: all .15s ease;
-        }
-        .team-tab-btn:hover {
-            background: #f8fafc !important;
-            border-color: #cbd5e1 !important;
-            color: #0f172a !important;
-        }
-        .team-tab-btn.active {
-            background: #009ef7 !important;
-            border-color: #009ef7 !important;
-            color: #ffffff !important;
-            box-shadow: 0 2px 4px rgba(0, 158, 247, 0.2) !important;
-        }
-        .team-tab-badge {
-            min-width: 18px;
-            height: 18px;
-            padding: 0 5px;
-            border-radius: 10px;
-            font-size: 10.5px;
-            font-weight: 700;
-            display: inline-flex;
+            display: none;
             align-items: center;
             justify-content: center;
-            background: #f1f5f9;
-            color: #334155;
-            font-variant-numeric: tabular-nums;
+            border-radius: 50%;
         }
-        .team-tab-btn.active .team-tab-badge {
-            background: rgba(255, 255, 255, 0.28) !important;
-            color: #ffffff !important;
-        }
-        .team-tabs-right {
+        .team-search-clear:hover { background: #e2e8f0; color: #0f172a; }
+
+        .team-filter-controls {
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 14px;
+            flex-wrap: wrap;
+        }
+        .team-filter-group {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .team-filter-label {
+            font-size: 12px;
+            font-weight: 600;
+            color: #64748b;
+            white-space: nowrap;
+            display: flex;
+            align-items: center;
+            gap: 4px;
         }
         .team-select-control {
-            height: 32px;
+            height: 34px;
             border: 1px solid #e2e8f0;
-            border-radius: 8px;
-            background: #fff;
-            font-size: 11.5px;
+            border-radius: 7px;
+            background: #ffffff;
+            font-size: 12px;
             font-weight: 600;
             font-family: 'Poppins', sans-serif;
-            color: #334155;
+            color: #1e293b;
             padding: 0 10px;
             outline: none;
             cursor: pointer;
+            transition: all .15s;
         }
         .team-select-control:focus {
             border-color: #009ef7;
         }
 
         /* =========================================================================
-           Tier 3: Primary Card Stream & Discrete Sub-Cards
+           TIER 3: ROSTER COLUMN LEGEND & CARD STREAM (8 Discrete Columns Aligned)
            ========================================================================= */
+        .team-roster-wrap {
+            width: 100%;
+            overflow-x: auto;
+            padding-bottom: 10px;
+        }
+        .team-roster-inner {
+            min-width: 1020px;
+        }
+
+        /* Mathematical 8-Column Grid Definition (Shared by Legend & Cards) */
+        .team-roster-legend,
+        .team-card-grid {
+            display: grid !important;
+            grid-template-columns: minmax(190px, 2.1fr) minmax(80px, 0.8fr) minmax(135px, 1.4fr) minmax(105px, 1.1fr) minmax(175px, 1.8fr) minmax(90px, 0.9fr) minmax(95px, 0.95fr) 38px !important;
+            gap: 12px !important;
+            align-items: center !important;
+            box-sizing: border-box !important;
+        }
+
+        .team-roster-legend {
+            border: 1px solid transparent;
+            padding: 6px 18px !important;
+            margin-bottom: 8px !important;
+            font-size: 11px;
+            font-weight: 700;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
         .team-cards-container {
             display: flex;
             flex-direction: column;
-            gap: 10px;
+            gap: 8px;
         }
         .team-card {
             background: #ffffff !important;
@@ -597,271 +624,305 @@
             box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03) !important;
             transition: all .2s cubic-bezier(.4, 0, .2, 1);
             overflow: hidden;
+            box-sizing: border-box;
         }
         .team-card:hover {
             border-color: #cbd5e1 !important;
-            box-shadow: 0 4px 14px rgba(15, 23, 42, 0.06) !important;
+            box-shadow: 0 4px 12px rgba(15, 23, 42, 0.06) !important;
         }
         .team-card-grid {
-            display: grid !important;
-            grid-template-columns: minmax(0, 2.3fr) minmax(0, 2.1fr) minmax(0, 1.8fr) minmax(0, 1.1fr) minmax(0, 1.4fr) !important;
-            gap: 10px !important;
-            padding: 12px 16px !important;
-        }
-        .tm-subcard {
-            background: #f8fafc;
-            border: 1px solid #eef2f6;
-            border-radius: 8px;
-            padding: 10px 12px;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-        }
-        .tm-subcard-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 6px;
-            margin-bottom: 8px;
-        }
-        .tm-subcard-label {
-            font-size: 10.5px;
-            font-weight: 700;
-            color: #64748b;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-        .tm-subcard-body {
-            flex: 1;
+            padding: 12px 18px !important;
+            min-height: 64px;
         }
 
-        /* Sub-Card 1: Profile */
-        .team-avatar {
-            width: 42px;
-            height: 42px;
-            border-radius: 9px;
+        /* Discrete Cell Elements */
+        .tm-cell {
+            min-width: 0;
+            overflow: hidden;
+        }
+
+        /* Col 1: Member Identity */
+        .tm-cell-member {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .tm-avatar {
+            width: 38px;
+            height: 38px;
+            border-radius: 8px;
             display: flex;
             align-items: center;
             justify-content: center;
             font-weight: 700;
-            font-size: 15px;
-            overflow: hidden;
+            font-size: 14px;
             flex-shrink: 0;
+            overflow: hidden;
         }
-        .team-avatar img { width: 100%; height: 100%; object-fit: cover; }
-        .team-member-name {
+        .tm-avatar img { width: 100%; height: 100%; object-fit: cover; }
+        .tm-member-name {
             font-size: 13.5px;
             font-weight: 700;
             color: #0f172a;
             line-height: 1.25;
             text-decoration: none;
-        }
-        .team-member-name:hover { color: #009ef7; }
-        .team-member-role {
-            font-size: 11.5px;
-            font-weight: 500;
-            color: #64748b;
-            margin-top: 1px;
-        }
-        .team-member-mail, .team-member-phone {
-            font-size: 11px;
-            color: #475569;
-            margin-top: 2px;
-            display: inline-flex;
-            align-items: center;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
+            display: block;
         }
-        .tm-badge-status {
-            font-size: 10.5px;
-            font-weight: 700;
-            padding: 2px 7px;
-            border-radius: 4px;
-        }
-        .status-active   { background: #dcfce7; color: #15803d; }
-        .status-inactive { background: #fee2e2; color: #b91c1c; }
-        .status-invited  { background: #fef3c7; color: #b45309; }
-
-        /* Sub-Card 2: Representation Role */
-        .badge-rep-pill {
-            font-size: 10.5px;
-            font-weight: 700;
-            padding: 2.5px 8px;
-            border-radius: 5px;
-            display: inline-flex;
-            align-items: center;
-        }
-        .badge-rep-client   { background: #eff6ff; color: #009ef7; border: 1px solid #bfdbfe; }
-        .badge-rep-agency   { background: #ecfdf5; color: #059669; border: 1px solid #a7f3d0; }
-        .badge-rep-dual     { background: #faf5ff; color: #7c3aed; border: 1px solid #e9d5ff; }
-        .badge-rep-standard { background: #f1f5f9; color: #64748b; border: 1px solid #e2e8f0; }
-
-        .team-rep-scope-box {
-            margin-bottom: 8px;
-        }
-        .rep-scope-desc {
-            font-size: 11.5px;
-            line-height: 1.35;
-        }
-        .rep-scope-hint {
-            font-size: 10.5px;
-            color: #64748b;
-            margin-top: 2px;
-        }
-        .team-rep-btn-row {
-            display: flex;
-            gap: 6px;
-            flex-wrap: wrap;
-            margin-top: 4px;
-        }
-        .btn-rep-toggle {
+        .tm-member-name:hover { color: #009ef7; }
+        .tm-member-email {
             font-size: 11px;
-            font-weight: 600;
-            padding: 4px 8px;
-            border-radius: 5px;
-            border: 1px solid #e2e8f0;
-            background: #ffffff;
-            cursor: pointer;
-            transition: all .15s;
-            display: inline-flex;
-            align-items: center;
-            color: #334155;
+            color: #64748b;
+            margin-top: 1px;
             white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: block;
         }
-        .btn-rep-client:hover { background: #eff6ff; color: #009ef7; border-color: #009ef7; }
-        .btn-rep-agency:hover { background: #ecfdf5; color: #059669; border-color: #059669; }
 
-        /* Sub-Card 3: Workload Grid */
-        .tm-workload-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 6px;
-        }
-        .tm-wl-cell {
-            background: #ffffff;
-            border: 1px solid #eef2f6;
-            border-radius: 6px;
-            padding: 5px 8px;
+        /* Col 2: Rank & Score */
+        .tm-cell-rank {
             display: flex;
             flex-direction: column;
+            align-items: flex-start;
+            justify-content: center;
         }
-        .tm-wl-val {
+        .tm-rank-val {
             font-size: 13px;
             font-weight: 700;
             color: #0f172a;
-            font-variant-numeric: tabular-nums;
-        }
-        .tm-wl-lbl {
-            font-size: 10px;
-            font-weight: 500;
-            color: #64748b;
-            margin-top: 1px;
-        }
-        .text-purple { color: #7c3aed !important; }
-        .text-indigo { color: #4f46e5 !important; }
-
-        /* Sub-Card 4: Rank & Score */
-        .tm-rank-val {
-            font-size: 14px;
-            font-weight: 700;
-            color: #0f172a;
+            line-height: 1.2;
+            display: flex;
+            align-items: center;
         }
         .tm-rank-month {
             font-size: 10.5px;
             color: #64748b;
             font-weight: 500;
-            margin-left: 4px;
+            margin-left: 3px;
         }
-        .team-score-link {
-            display: inline-flex;
-            align-items: center;
-            font-size: 11px;
-            font-weight: 600;
-            color: #059669;
-            background: #ecfdf5;
-            border: 1px solid #d1fae5;
-            border-radius: 5px;
-            padding: 3px 8px;
+        .tm-btn-view-score {
+            background: #d1fae5;
+            color: #065f46;
+            border: none;
+            border-radius: 12px;
+            padding: 2px 8px;
+            font-size: 10.5px;
+            font-weight: 700;
             cursor: pointer;
             transition: all .15s;
+            line-height: 1.35;
+            display: inline-flex;
+            align-items: center;
+            margin-top: 3px;
         }
-        .team-score-link:hover { background: #d1fae5; }
+        .tm-btn-view-score:hover {
+            background: #a7f3d0;
+            color: #047857;
+        }
 
-        /* Sub-Card 5: Controls & Role */
-        .team-role-pill {
+        /* Col 3: Workload */
+        .tm-cell-workload {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            gap: 3px;
+        }
+        .tm-wl-row {
             font-size: 11px;
-            font-weight: 600;
-            padding: 3px 9px;
-            border-radius: 6px;
-            display: inline-block;
+            color: #475569;
+            white-space: nowrap;
+            display: flex;
+            align-items: center;
+            line-height: 1.35;
         }
-        .role-admin   { background: #f3e8ff; color: #7e22ce; }
-        .role-lead    { background: #eff6ff; color: #1d4ed8; }
-        .role-default { background: #f1f5f9; color: #475569; }
+        .tm-wl-row i {
+            width: 14px;
+            text-align: center;
+            font-size: 11px;
+            flex-shrink: 0;
+        }
+        .tm-wl-row strong {
+            color: #0f172a;
+            font-weight: 700;
+            font-variant-numeric: tabular-nums;
+            margin-right: 2px;
+        }
 
-        .team-role-edit-btn {
-            width: 24px;
-            height: 24px;
+        /* Col 4: Role & Permissions */
+        .tm-cell-role {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .tm-role-badge {
+            font-size: 11px;
+            font-weight: 700;
+            padding: 3.5px 9px;
+            border-radius: 6px;
+            display: inline-flex;
+            align-items: center;
+            white-space: nowrap;
+        }
+        .role-admin   { background: #ede9fe; color: #6d28d9; }
+        .role-lead    { background: #e0f2fe; color: #0284c7; }
+        .role-default { background: #fef3c7; color: #b45309; }
+        .tm-btn-role-edit {
+            width: 22px;
+            height: 22px;
+            border-radius: 5px;
+            border: 1px solid #e2e8f0;
+            background: #ffffff;
+            color: #94a3b8;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 10px;
+            transition: all .15s;
+        }
+        .tm-btn-role-edit:hover {
+            background: #eff6ff;
+            color: #009ef7;
+            border-color: #009ef7;
+        }
+
+        /* Col 5: Marketplace Communication */
+        .tm-cell-communication {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            gap: 4px;
+        }
+        .tm-comm-badge {
+            font-size: 10.5px;
+            font-weight: 700;
+            padding: 3px 8px;
+            border-radius: 6px;
+            display: inline-flex;
+            align-items: center;
+            width: fit-content;
+            white-space: nowrap;
+        }
+        .tm-comm-badge.client { background: #dcfce7; color: #15803d; border: 1px solid #bbf7d0; }
+        .tm-comm-badge.agency { background: #ede9fe; color: #6d28d9; border: 1px solid #ddd6fe; }
+
+        .tm-btn-comm-action {
+            font-size: 10.5px;
+            font-weight: 600;
+            padding: 3px 8px;
+            border-radius: 6px;
+            border: 1px dashed #cbd5e1;
+            background: #ffffff;
+            color: #475569;
+            display: inline-flex;
+            align-items: center;
+            width: fit-content;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: all .15s;
+            font-family: inherit;
+        }
+        .tm-btn-comm-action.client:hover { background: #eff6ff; color: #1d4ed8; border-color: #93c5fd; border-style: solid; }
+        .tm-btn-comm-action.agency:hover { background: #faf5ff; color: #7c3aed; border-color: #c4b5fd; border-style: solid; }
+
+        /* Col 6: Status Toggle */
+        .tm-cell-status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .tm-switch {
+            position: relative;
+            display: inline-block;
+            width: 34px;
+            height: 18px;
+            flex-shrink: 0;
+            margin: 0;
+        }
+        .tm-switch input { opacity: 0; width: 0; height: 0; }
+        .tm-slider {
+            position: absolute;
+            cursor: pointer;
+            inset: 0;
+            background: #cbd5e1;
+            border-radius: 20px;
+            transition: .2s;
+        }
+        .tm-slider:before {
+            content: "";
+            position: absolute;
+            height: 12px;
+            width: 12px;
+            left: 3px;
+            bottom: 3px;
+            background: #fff;
+            border-radius: 50%;
+            transition: .2s;
+        }
+        .tm-switch input:checked + .tm-slider { background: #2563eb; }
+        .tm-switch input:checked + .tm-slider:before { transform: translateX(16px); }
+        .tm-switch input:disabled + .tm-slider { opacity: .6; cursor: not-allowed; }
+        .tm-status-text {
+            font-size: 11.5px;
+            font-weight: 700;
+        }
+
+        /* Col 7: Last Active */
+        .tm-cell-lastactive {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 11.5px;
+            color: #475569;
+            font-weight: 500;
+            white-space: nowrap;
+        }
+        .tm-dot { width: 7px; height: 7px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
+        .dot-green { background: #10b981; }
+        .dot-amber { background: #f59e0b; }
+        .dot-gray  { background: #94a3b8; }
+
+        /* Col 8: Row Actions */
+        .tm-cell-actions {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .tm-action-wrap { position: relative; display: inline-block; }
+        .tm-action-btn {
+            width: 28px;
+            height: 28px;
             border-radius: 6px;
             border: 1px solid #e2e8f0;
-            background: #fff;
+            background: #ffffff;
             color: #64748b;
             display: inline-flex;
             align-items: center;
             justify-content: center;
             cursor: pointer;
             transition: all .15s;
+            font-size: 13px;
         }
-        .team-role-edit-btn:hover { background: #eff6ff; color: #009ef7; border-color: #009ef7; }
-
-        .team-status-cell { display: flex; align-items: center; gap: 8px; }
-        .team-switch { position: relative; display: inline-block; width: 34px; height: 18px; }
-        .team-switch input { opacity: 0; width: 0; height: 0; }
-        .team-switch .slider {
-            position: absolute; cursor: pointer; inset: 0;
-            background: #cbd5e1; border-radius: 20px; transition: .2s;
-        }
-        .team-switch .slider:before {
-            content: ""; position: absolute; height: 12px; width: 12px;
-            left: 3px; bottom: 3px; background: #fff; border-radius: 50%; transition: .2s;
-        }
-        .team-switch input:checked + .slider { background: #10b981; }
-        .team-switch input:checked + .slider:before { transform: translateX(16px); }
-        .team-switch input:disabled + .slider { opacity: .6; cursor: not-allowed; }
-        .team-status-text { font-size: 11.5px; font-weight: 600; }
-
-        .team-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
-        .dot-green { background: #10b981; }
-        .dot-amber { background: #f59e0b; }
-        .dot-gray  { background: #94a3b8; }
-
-        .team-action-btn {
-            width: 28px; height: 28px;
-            border-radius: 6px;
-            border: 1px solid #e2e8f0; background: #fff;
-            color: #64748b;
-            display: inline-flex; align-items: center; justify-content: center;
-            cursor: pointer;
-            transition: all .15s;
-        }
-        .team-action-btn:hover { background: #f8fafc; color: #0f172a; }
-        .team-action-wrap { position: relative; display: inline-block; }
-        .team-action-menu {
+        .tm-action-btn:hover { background: #f8fafc; color: #0f172a; border-color: #cbd5e1; }
+        .tm-action-menu {
             position: absolute;
             right: 0;
             top: 32px;
             min-width: 200px;
-            background: #fff;
+            background: #ffffff;
             border: 1px solid #e2e8f0;
             border-radius: 8px;
             box-shadow: 0 8px 24px rgba(15, 23, 42, .08);
             padding: 6px;
-            z-index: 50;
+            z-index: 100;
             display: none;
+            text-align: left;
         }
-        .team-action-menu.show { display: block; }
-        .team-action-item {
+        .tm-action-menu.show { display: block; }
+        .tm-action-item {
             display: flex;
             align-items: center;
             font-size: 11.5px;
@@ -873,64 +934,95 @@
             text-decoration: none;
             transition: all .15s;
         }
-        .team-action-item:hover { background: #f1f5f9; color: #0f172a; }
+        .tm-action-item:hover { background: #f1f5f9; color: #0f172a; }
 
-        /* Bottom Activity Strip */
-        .team-card-bottom {
+        /* Bottom Activity & Ownership Strip */
+        .tm-card-bottom-strip {
             background: #fcfdfd;
             border-top: 1px solid #f1f5f9;
-            padding: 8px 16px;
+            padding: 7px 18px;
             display: flex;
             align-items: center;
             justify-content: space-between;
             gap: 12px;
-            flex-wrap: wrap;
-            font-size: 11.5px;
+            font-size: 11px;
+            border-bottom-left-radius: 9px;
+            border-bottom-right-radius: 9px;
         }
-        .tm-bottom-left {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            color: #64748b;
-        }
-        .tm-lastactive {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-        }
+        .tm-strip-left { display: flex; align-items: center; gap: 8px; }
+        .tm-owner-badge { font-size: 11px; font-weight: 700; color: #b45309; }
+        .tm-strip-right { display: flex; align-items: center; gap: 10px; }
+        .tm-shares-info { font-size: 11px; color: #475569; display: inline-flex; align-items: center; }
         .tm-bullet { color: #cbd5e1; }
-        .tm-root-badge {
-            font-size: 11px;
-            font-weight: 600;
-            color: #b45309;
-        }
-        .tm-bottom-right {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        .tm-agency-share-pill {
-            font-size: 11px;
-            color: #334155;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-        }
-        .tm-inspect-link {
-            color: #009ef7;
-            font-weight: 600;
-            text-decoration: underline;
-            cursor: pointer;
-        }
-        .tm-inspect-link:hover { color: #0077b6; }
+        .tm-shares-link { color: #009ef7; font-weight: 600; text-decoration: underline; cursor: pointer; }
+        .tm-shares-link:hover { color: #0077b6; }
 
-        /* Empty state */
+        /* Empty State */
         .team-empty-card {
             background: #fff;
             border: 1px solid #e2e8f0;
             border-radius: 10px;
             padding: 40px 20px;
             text-align: center;
+        }
+
+        /* Pagination Bar */
+        .team-pagination-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 4px 6px 4px;
+            font-size: 12px;
+            color: #64748b;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+        .team-pagination-info {
+            font-size: 12px;
+            color: #64748b;
+            font-weight: 500;
+        }
+        .team-pagination-pages {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .team-page-link {
+            min-width: 30px;
+            height: 30px;
+            padding: 0 6px;
+            border-radius: 6px;
+            border: 1px solid #e2e8f0;
+            background: #ffffff;
+            color: #334155;
+            font-size: 12px;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all .15s;
+            font-family: inherit;
+        }
+        .team-page-link:hover:not(.is-disabled):not(.is-active) {
+            background: #f8fafc;
+            border-color: #cbd5e1;
+            color: #0f172a;
+        }
+        .team-page-link.is-active {
+            background: #009ef7;
+            border-color: #009ef7;
+            color: #ffffff;
+        }
+        .team-page-link.is-disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+            background: #f8fafc;
+        }
+        .team-page-dots {
+            padding: 0 4px;
+            color: #94a3b8;
+            font-size: 12px;
         }
 
         /* Rep Selection Modal Items */
@@ -983,14 +1075,9 @@
             color: #64748b;
         }
 
-        /* Responsive */
-        @media (max-width: 1200px) {
+        /* Responsive Breakpoints */
+        @media (max-width: 1024px) {
             .team-mp-contacts-grid { grid-template-columns: 1fr !important; }
-            .team-card-grid { grid-template-columns: 1fr 1fr !important; }
-            .team-roster-legend { display: none !important; }
-        }
-        @media (max-width: 768px) {
-            .team-card-grid { grid-template-columns: 1fr !important; }
         }
 
         /* ========== Invite Drawer ========== */
@@ -1351,7 +1438,7 @@
                 <!-- ============================================================== -->
                 <!-- TIER 2: SUB-TABS & COMMUNICATION HISTORY ROW                    -->
                 <!-- ============================================================== -->
-                <div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
+                <div class="team-subtabs-row mb-3">
                     <div class="tm-nav-tabs">
                         <button type="button" class="tm-nav-tab active" data-status="all">
                             <span>All Members</span>
@@ -1372,7 +1459,7 @@
                     </div>
 
                     <div>
-                        <button type="button" class="btn btn-sm btn-white border border-gray-300 text-gray-800 fw-semibold shadow-xs" onclick="openAgencySharesModal()" title="View job-level communication mapping and history">
+                        <button type="button" class="btn-comm-history" onclick="openAgencySharesModal()" title="View job-level communication mapping and history">
                             <i class="fa-solid fa-clock-rotate-left me-1 text-muted"></i>
                             <span>Communication History</span>
                         </button>
@@ -1389,9 +1476,9 @@
                         <button type="button" class="team-search-clear" onclick="clearTeamFilters()" title="Clear Search">✕</button>
                     </div>
 
-                    <div class="d-flex align-items-center gap-3">
-                        <div class="d-flex align-items-center gap-2">
-                            <span class="text-muted fs-8 fw-semibold"><i class="fa-solid fa-arrow-down-short-wide me-1"></i>Sort by:</span>
+                    <div class="team-filter-controls">
+                        <div class="team-filter-group">
+                            <span class="team-filter-label"><i class="fa-solid fa-arrow-down-short-wide me-1"></i>Sort by:</span>
                             <select class="team-select-control" id="sortingfilter" onchange="fetchTeams(1)">
                                 <option value="">Last Active</option>
                                 <option value="1">Newest to Oldest</option>
@@ -1399,8 +1486,8 @@
                             </select>
                         </div>
 
-                        <div class="d-flex align-items-center gap-2">
-                            <span class="text-muted fs-8 fw-semibold">Status:</span>
+                        <div class="team-filter-group">
+                            <span class="team-filter-label">Status:</span>
                             <select class="team-select-control" id="teamStatusFilterDropdown" onchange="changeStatusDropdown(this.value)">
                                 <option value="all">All</option>
                                 <option value="active">Active</option>
@@ -1414,27 +1501,31 @@
                 <!-- ============================================================== -->
                 <!-- TIER 3: ROSTER COLUMN LEGEND & CARD STREAM                     -->
                 <!-- ============================================================== -->
-                <div class="team-roster-legend mb-2">
-                    <div>Member</div>
-                    <div>Rank</div>
-                    <div>Workload</div>
-                    <div>Role</div>
-                    <div>Communication</div>
-                    <div>Status</div>
-                    <div>Last Active</div>
-                    <div style="text-align: center;">Actions</div>
-                </div>
+                <div class="team-roster-wrap">
+                    <div class="team-roster-inner">
+                        <div class="team-roster-legend">
+                            <div>Member</div>
+                            <div>Rank</div>
+                            <div>Workload</div>
+                            <div>Role</div>
+                            <div>Communication</div>
+                            <div>Status</div>
+                            <div>Last Active</div>
+                            <div style="text-align: center;">Actions</div>
+                        </div>
 
-                <div class="position-relative">
-                    <div class="loadingMessage loadingMessageteamsListajax" style="display: none; position: absolute; z-index: 20; background: rgba(255,255,255,0.85); inset: 0; padding: 40px; text-align: center; font-weight: 600; color: #009ef7; border-radius: 10px;">
-                        <span class="spinner-border spinner-border-sm me-2"></span> Loading team members...
+                        <div class="position-relative">
+                            <div class="loadingMessage loadingMessageteamsListajax" style="display: none; position: absolute; z-index: 20; background: rgba(255,255,255,0.85); inset: 0; padding: 40px; text-align: center; font-weight: 600; color: #009ef7; border-radius: 10px;">
+                                <span class="spinner-border spinner-border-sm me-2"></span> Loading team members...
+                            </div>
+                            
+                            <!-- Dynamic Stream Container Populated via AJAX -->
+                            <div id="teamsListajax"></div>
+                            
+                            <!-- Pagination Bar -->
+                            <div id="paginationTeams" class="mt-2"></div>
+                        </div>
                     </div>
-                    
-                    <!-- Dynamic Stream Container Populated via AJAX -->
-                    <div id="teamsListajax"></div>
-                    
-                    <!-- Pagination Bar -->
-                    <div id="paginationTeams" class="mt-3"></div>
                 </div>
 
             </div>
@@ -1935,8 +2026,8 @@
             // Phase 2: Tenant-Scoped IndexedDB Store for Team Listing & Reference Data
             const CURRENT_COMPANY_ID = {{ (int) (auth()->user()->company_id ?? 0) }};
             const CURRENT_USER_ID = {{ (int) (auth()->user()->id ?? 0) }};
-            const TEAM_DB_NAME = 'jero_team_local_store_' + CURRENT_COMPANY_ID;
-            const TEAM_DB_VERSION = 1;
+            const TEAM_DB_NAME = 'jero_team_local_store_v2_' + CURRENT_COMPANY_ID;
+            const TEAM_DB_VERSION = 2;
             const TEAM_CACHE_TTL_MS = 15 * 60 * 1000; // 15 minutes TTL
 
             const JeroTeamLocalStore = (function() {
@@ -2376,7 +2467,7 @@
             function handleClick(currentValue, currentId) {
                 var chkStatus = currentValue.checked;
                 var userId = currentId;
-                var $statusText = $(currentValue).parents('td').find('.status_text');
+                var $statusText = $(currentValue).closest('.team-status-cell, .tm-cell-status, td').find('.status_text');
                 
                 // Optimistic UI update
                 if (chkStatus) {
@@ -3615,12 +3706,12 @@
 			function toggleTeamMenu(btn) {
 				var menu = btn.nextElementSibling;
 				var isOpen = menu.classList.contains('show');
-				document.querySelectorAll('.team-action-menu.show').forEach(function(m) { m.classList.remove('show'); });
+				document.querySelectorAll('.tm-action-menu.show, .team-action-menu.show').forEach(function(m) { m.classList.remove('show'); });
 				if (!isOpen) menu.classList.add('show');
 			}
 			$(document).on('click', function(e) {
-				if (!$(e.target).closest('.team-action-wrap').length) {
-					$('.team-action-menu.show').removeClass('show');
+				if (!$(e.target).closest('.tm-action-wrap, .team-action-wrap').length) {
+					$('.tm-action-menu.show, .team-action-menu.show').removeClass('show');
 				}
 			});
 

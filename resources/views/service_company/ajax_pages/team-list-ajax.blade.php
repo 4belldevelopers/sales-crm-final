@@ -85,107 +85,97 @@
                 <div class="team-card-grid">
                     
                     <!-- Sub-Card 1: Member Identity -->
-                    <div class="tm-subcard-cell tm-cell-member">
-                        <div class="d-flex align-items-center gap-3">
-                            <div class="team-avatar {{ $avatarClass }} show-detail-team" data-row-id="{{ $row->id }}" style="cursor:pointer;" title="View Profile">
-                                @if (!empty($row->image))
-                                    <img src="{{ $row->image }}" alt="{{ $rawName }}">
-                                @else
-                                    {{ strtoupper($strVal) }}
-                                @endif
-                            </div>
-                            <div class="d-flex flex-column overflow-hidden">
-                                <a href="javascript:void(0);" class="team-member-name show-detail-team" data-row-id="{{ $row->id }}" title="{{ ucwords(strtolower($rawName)) }}">
-                                    {{ ucwords(strtolower(mb_substr($rawName, 0, 24))) }}
-                                </a>
-                                <span class="team-member-mail" title="{{ $row->email }}">
-                                    {{ $row->email }}
-                                </span>
-                            </div>
+                    <div class="tm-cell tm-cell-member">
+                        <div class="tm-avatar {{ $avatarClass }}" title="{{ $rawName }}">
+                            @if (!empty($row->image))
+                                <img src="{{ $row->image }}" alt="{{ $rawName }}">
+                            @else
+                                {{ strtoupper($strVal) }}
+                            @endif
+                        </div>
+                        <div class="d-flex flex-column overflow-hidden">
+                            <span class="tm-member-name" title="{{ ucwords(strtolower($rawName)) }}">
+                                {{ ucwords(strtolower(mb_substr($rawName, 0, 24))) }}
+                            </span>
+                            <span class="tm-member-email" title="{{ $row->email }}">
+                                {{ $row->email }}
+                            </span>
                         </div>
                     </div>
 
                     <!-- Sub-Card 2: Rank & Score -->
-                    <div class="tm-subcard-cell tm-cell-rank">
-                        <div class="d-flex flex-column align-items-start">
-                            <div class="tm-rank-val">
-                                {!! $medal !!} <strong>{{ $teamRanks->rank }}</strong>
-                                @if (!empty($teamRanks->rankMonth))
-                                    <span class="tm-rank-month">{{ $teamRanks->rankMonth }}</span>
-                                @endif
-                            </div>
-                            <span class="badge-score-pill teamViewScore mt-1" data-user-id="{{ $row->id }}" title="Click to view detailed performance scoreboard">
-                                View Score
-                            </span>
+                    <div class="tm-cell tm-cell-rank">
+                        <div class="tm-rank-val">
+                            {!! $medal !!} <strong>{{ $teamRanks->rank }}</strong>
+                            @if (!empty($teamRanks->rankMonth))
+                                <span class="tm-rank-month">{{ $teamRanks->rankMonth }}</span>
+                            @endif
                         </div>
+                        <button type="button" class="tm-btn-view-score teamViewScore" data-user-id="{{ $row->id }}" title="Click to view detailed performance scoreboard">
+                            View Score
+                        </button>
                     </div>
 
                     <!-- Sub-Card 3: Workload -->
-                    <div class="tm-subcard-cell tm-cell-workload">
-                        <div class="d-flex flex-column gap-1">
-                            <span class="tm-wl-pill" title="Active Jobs Assigned">
-                                <i class="fa-solid fa-briefcase text-primary me-1"></i><strong>{{ $activeJobs }}</strong> Active Jobs
-                            </span>
-                            <span class="tm-wl-pill" title="SPOC / Captain on Jobs">
-                                <i class="fa-solid fa-crown text-purple me-1"></i><strong>{{ $captainJobs }}</strong> Captain Jobs
-                            </span>
-                            <span class="tm-wl-pill" title="Bench Talents Managed">
-                                <i class="fa-solid fa-users text-success me-1"></i><strong>{{ $trmTalents }}</strong> TRM Talents
-                            </span>
+                    <div class="tm-cell tm-cell-workload">
+                        <div class="tm-wl-row" title="Active Jobs Assigned">
+                            <i class="fa-solid fa-briefcase text-primary me-1"></i><strong>{{ $activeJobs }}</strong> Active Jobs
+                        </div>
+                        <div class="tm-wl-row" title="SPOC / Captain on Jobs">
+                            <i class="fa-solid fa-crown text-purple me-1"></i><strong>{{ $captainJobs }}</strong> Captain Jobs
+                        </div>
+                        <div class="tm-wl-row" title="Bench Talents Managed">
+                            <i class="fa-solid fa-users text-success me-1"></i><strong>{{ $trmTalents }}</strong> TRM Talents
                         </div>
                     </div>
 
                     <!-- Sub-Card 4: Role & Permissions -->
-                    <div class="tm-subcard-cell tm-cell-role">
-                        <div class="d-flex align-items-center gap-1">
-                            <span class="team-role-pill {{ $rolePill }}" title="Assigned system role">
-                                {{ $roleName }}
-                            </span>
-                            @if ($row->root_user != 1)
-                                <button type="button" class="team-role-edit-btn update-user-role" data-row-id="{{ $row->id }}" title="Edit Role">
-                                    <i class="fa-solid fa-pen-to-square"></i>
-                                </button>
-                            @endif
-                        </div>
+                    <div class="tm-cell tm-cell-role">
+                        <span class="tm-role-badge team-role-pill {{ $rolePill }}" title="Assigned system role">
+                            {{ $roleName }}
+                        </span>
+                        @if ($row->root_user != 1)
+                            <button type="button" class="tm-btn-role-edit update-user-role" data-row-id="{{ $row->id }}" title="Edit Role">
+                                <i class="fa-solid fa-pen-to-square"></i>
+                            </button>
+                        @endif
                     </div>
 
                     <!-- Sub-Card 5: Marketplace Communication SPOC -->
-                    <div class="tm-subcard-cell tm-cell-communication">
-                        <div class="d-flex flex-column gap-1">
-                            @if($isClientRep)
-                                <div class="tm-comm-badge client" title="Designated contact for Client & Sales Communication">
-                                    <i class="fa-solid fa-crown me-1 text-success"></i>Client &amp; Sales Contact
-                                </div>
-                            @else
-                                <button type="button" class="btn-comm-action client" onclick="setRepresentative({{ $row->id }}, 'client', '{{ addslashes($rawName) }}')" title="Assign as default Client &amp; Sales Contact">
-                                    <i class="fa-solid fa-building me-1 text-primary"></i>Set as Client &amp; Sales Contact
-                                </button>
-                            @endif
+                    <div class="tm-cell tm-cell-communication">
+                        @if($isClientRep)
+                            <div class="tm-comm-badge client" title="Designated contact for Client &amp; Sales Communication">
+                                <i class="fa-solid fa-crown me-1 text-success"></i>Client &amp; Sales Contact
+                            </div>
+                        @else
+                            <button type="button" class="tm-btn-comm-action client" onclick="setRepresentative({{ $row->id }}, 'client', '{{ addslashes($rawName) }}')" title="Assign as default Client &amp; Sales Contact">
+                                <i class="fa-solid fa-building me-1 text-primary"></i>Set as Client &amp; Sales Contact
+                            </button>
+                        @endif
 
-                            @if($isAgencyRep)
-                                <div class="tm-comm-badge agency" title="Designated contact for Partner Agency Communication">
-                                    <i class="fa-solid fa-crown me-1 text-purple"></i>Agency Contact
-                                </div>
-                            @else
-                                <button type="button" class="btn-comm-action agency" onclick="setRepresentative({{ $row->id }}, 'agency', '{{ addslashes($rawName) }}')" title="Assign as default Agency Contact">
-                                    <i class="fa-solid fa-users me-1 text-purple"></i>Set as Agency Contact
-                                </button>
-                            @endif
-                        </div>
+                        @if($isAgencyRep)
+                            <div class="tm-comm-badge agency" title="Designated contact for Partner Agency Communication">
+                                <i class="fa-solid fa-crown me-1 text-purple"></i>Agency Contact
+                            </div>
+                        @else
+                            <button type="button" class="tm-btn-comm-action agency" onclick="setRepresentative({{ $row->id }}, 'agency', '{{ addslashes($rawName) }}')" title="Assign as default Agency Contact">
+                                <i class="fa-solid fa-users me-1 text-purple"></i>Set as Agency Contact
+                            </button>
+                        @endif
                     </div>
 
                     <!-- Sub-Card 6: Status Toggle -->
-                    <div class="tm-subcard-cell tm-cell-status">
+                    <div class="tm-cell tm-cell-status">
                         @if (!empty($row->password))
                             <div class="team-status-cell">
-                                <label class="team-switch">
-                                    <input type="checkbox" class="chkStatus" value="active"
+                                <label class="tm-switch">
+                                    <input type="checkbox" class="chkStatus" id="status_change_{{ $row->id }}" value="active"
                                         {{ $row->status == 'active' ? 'checked' : '' }}
                                         onclick="handleClick(this, {{ $row->id }});"
                                         {{ $row->root_user == 1 ? 'disabled' : '' }}>
-                                    <span class="slider"></span>
+                                    <span class="tm-slider"></span>
                                 </label>
-                                <span class="team-status-text status_text {{ $row->status == 'active' ? 'text-success' : 'text-muted' }} fw-bold ms-2">
+                                <span class="tm-status-text status_text {{ $row->status == 'active' ? 'text-success' : 'text-muted' }} ms-2">
                                     {{ ucfirst($row->status) }}
                                 </span>
                             </div>
@@ -197,42 +187,37 @@
                     </div>
 
                     <!-- Sub-Card 7: Last Active -->
-                    <div class="tm-subcard-cell tm-cell-lastactive">
-                        <div class="d-flex align-items-center gap-1 fs-8 text-muted">
-                            <span class="team-dot {{ $dotClass }}"></span>
-                            <span>{{ $lastActive }}</span>
-                        </div>
+                    <div class="tm-cell tm-cell-lastactive">
+                        <span class="tm-dot {{ $dotClass }}"></span>
+                        <span>{{ $lastActive }}</span>
                     </div>
 
                     <!-- Sub-Card 8: Actions -->
-                    <div class="tm-subcard-cell tm-cell-actions text-center">
-                        <div class="team-action-wrap">
-                            <button class="team-action-btn" onclick="toggleTeamMenu(this)" title="More Actions">
+                    <div class="tm-cell tm-cell-actions">
+                        <div class="tm-action-wrap">
+                            <button type="button" class="tm-action-btn" onclick="toggleTeamMenu(this)" title="More Actions">
                                 <i class="fa-solid fa-ellipsis-vertical"></i>
                             </button>
-                            <div class="team-action-menu">
-                                <a class="team-action-item show-detail-team" data-row-id="{{ $row->id }}">
-                                    <i class="fa-regular fa-id-card me-2"></i>View Profile
-                                </a>
+                            <div class="tm-action-menu">
                                 @if ($row->root_user != 1)
-                                    <a class="team-action-item update-user-role" data-row-id="{{ $row->id }}">
-                                        <i class="fa-solid fa-user-shield me-2"></i>Edit Role
+                                    <a class="tm-action-item update-user-role" data-row-id="{{ $row->id }}">
+                                        <i class="fa-solid fa-user-shield me-2 text-primary"></i>Edit Role
                                     </a>
                                     @if (empty($row->password))
-                                        <a class="team-action-item" onclick="reSendhandleClick(this, {{ $row->id }});">
-                                            <i class="fa-solid fa-paper-plane me-2"></i>Resend Invitation
+                                        <a class="tm-action-item" onclick="reSendhandleClick(this, {{ $row->id }});">
+                                            <i class="fa-solid fa-paper-plane me-2 text-warning"></i>Resend Invitation
                                         </a>
                                     @endif
                                 @endif
-                                <a class="team-action-item" onclick="setRepresentative({{ $row->id }}, 'client', '{{ addslashes($rawName) }}')">
-                                    <i class="fa-solid fa-building me-2 text-primary"></i>Set as Client Contact
+                                <a class="tm-action-item" onclick="setRepresentative({{ $row->id }}, 'client', '{{ addslashes($rawName) }}')">
+                                    <i class="fa-solid fa-building me-2 text-success"></i>Set as Client Contact
                                 </a>
-                                <a class="team-action-item" onclick="setRepresentative({{ $row->id }}, 'agency', '{{ addslashes($rawName) }}')">
+                                <a class="tm-action-item" onclick="setRepresentative({{ $row->id }}, 'agency', '{{ addslashes($rawName) }}')">
                                     <i class="fa-solid fa-users me-2 text-purple"></i>Set as Agency Contact
                                 </a>
                                 @if($agencyShares > 0)
-                                    <a class="team-action-item" onclick="openAgencySharesModal({{ $row->id }}, '{{ addslashes($rawName) }}')">
-                                        <i class="fa-solid fa-diagram-project me-2 text-indigo"></i>Inspect Shared Jobs
+                                    <a class="tm-action-item" onclick="openAgencySharesModal({{ $row->id }}, '{{ addslashes($rawName) }}')">
+                                        <i class="fa-solid fa-diagram-project me-2 text-primary"></i>Inspect Shared Jobs
                                     </a>
                                 @endif
                             </div>
@@ -243,19 +228,19 @@
 
                 <!-- Bottom Activity & Ownership Strip (if owner or shares) -->
                 @if ($row->root_user == 1 || $agencyShares > 0)
-                    <div class="team-card-bottom">
-                        <div class="tm-bottom-left">
+                    <div class="tm-card-bottom-strip">
+                        <div class="tm-strip-left">
                             @if ($row->root_user == 1)
-                                <span class="tm-root-badge"><i class="fa-solid fa-crown me-1 text-warning"></i>Organization Owner</span>
+                                <span class="tm-owner-badge"><i class="fa-solid fa-crown me-1 text-warning"></i>Organization Owner</span>
                             @endif
                         </div>
-                        <div class="tm-bottom-right">
+                        <div class="tm-strip-right">
                             @if($agencyShares > 0)
-                                <span class="tm-agency-share-pill">
+                                <span class="tm-shares-info">
                                     <i class="fa-solid fa-diagram-project me-1 text-primary"></i>
                                     <span>Authoritative Representative on <strong>{{ $agencyShares }}</strong> shared agency {{ $agencyShares === 1 ? 'job' : 'jobs' }}</span>
-                                    <span class="tm-bullet">&bull;</span>
-                                    <a href="javascript:void(0);" onclick="openAgencySharesModal({{ $row->id }}, '{{ addslashes($rawName) }}')" class="tm-inspect-link">
+                                    <span class="tm-bullet mx-2">&bull;</span>
+                                    <a href="javascript:void(0);" onclick="openAgencySharesModal({{ $row->id }}, '{{ addslashes($rawName) }}')" class="tm-shares-link">
                                         Inspect Mapping
                                     </a>
                                 </span>
