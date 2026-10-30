@@ -1772,16 +1772,18 @@
             drawerEl.style.transform = 'none';
             drawerEl.style.zIndex = '999999';
 
-            var existingOverlay = document.querySelector('.drawer-overlay');
-            if (!existingOverlay) {
-                var overlay = document.createElement('div');
+            var overlay = document.querySelector('.drawer-overlay');
+            if (!overlay) {
+                overlay = document.createElement('div');
                 overlay.className = 'drawer-overlay agency-drawer-overlay';
-                overlay.style.zIndex = '999998';
-                overlay.onclick = function() {
-                    window.closeAgencyDrawer();
-                };
                 document.body.appendChild(overlay);
             }
+            overlay.style.zIndex = '999998';
+            overlay.style.cursor = 'pointer';
+            overlay.onclick = function(e) {
+                if (e) { e.preventDefault(); e.stopPropagation(); }
+                window.closeAgencyDrawer();
+            };
         }
 
         $('#kt_activitiesDirectClient_body').html('<div class="d-flex align-items-center justify-content-center p-10" style="min-height:300px;"><div class="spinner-border text-primary" role="status" style="width:3rem; height:3rem;"></div></div>');
@@ -1823,6 +1825,7 @@
         document.querySelectorAll('.drawer-overlay.agency-drawer-overlay, .drawer-overlay').forEach(function(ov) {
             ov.remove();
         });
+        $('.tbl-r.client-selected').removeClass('client-selected');
         document.body.removeAttribute('data-kt-drawer-activities');
         document.body.removeAttribute('data-kt-drawer');
         document.body.style.overflow = '';
@@ -1887,10 +1890,24 @@
                 }
             });
 
-            // Drawer Close Handlers
-            $(document).on('click', '#kt_activitiesDirectClient_close, #kt_activitiesDirectClient_close_btn, .cd-close-drawer', function(e) {
+            // Drawer Close Handlers & Overlay Clicks
+            $(document).on('click', '#kt_activitiesDirectClient_close, #kt_activitiesDirectClient_close_btn, .cd-close-drawer, .drawer-overlay, .agency-drawer-overlay', function(e) {
                 if (e) e.preventDefault();
                 window.closeAgencyDrawer();
+            });
+
+            // Auto close drawer when clicking anywhere outside of the drawer
+            $(document).on('mousedown.agencyDrawerOutside', function(e) {
+                var drawerEl = document.getElementById('kt_activitiesDirectClient');
+                if (drawerEl && (drawerEl.classList.contains('drawer-on') || drawerEl.style.transform === 'none')) {
+                    if ($(e.target).hasClass('drawer-overlay') || $(e.target).hasClass('agency-drawer-overlay')) {
+                        window.closeAgencyDrawer();
+                        return;
+                    }
+                    if (!drawerEl.contains(e.target) && !$(e.target).closest('.tbl-r, .show-detail-direct, #open_add_agency_drawer, .swal2-container, .modal').length) {
+                        window.closeAgencyDrawer();
+                    }
+                }
             });
 
             // Add Agency Drawer Open/Close
