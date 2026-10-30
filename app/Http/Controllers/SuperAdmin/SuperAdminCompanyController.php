@@ -45,6 +45,7 @@ use App\Services\Notification\NotificationHtmlSanitizer;
 use App\Services\Notification\NotificationTokenRegistry;
 use App\Services\SuperAdmin\SuperAdminBenchMutationService;
 use App\Services\SuperAdmin\SuperAdminJdMutationService;
+use App\Services\SuperAdmin\SuperAdminJobRequestCacheManager;
 use App\Services\SuperAdmin\SuperAdminNotificationMutationService;
 use Carbon\Carbon;
 use Crypt;
@@ -10550,30 +10551,48 @@ class SuperAdminCompanyController extends SuperAdminBaseController
     {
         $this->pageTitle = __('Job Collaboration Requests');
 
-        $pendingCount = 0;
-        $acceptedCount = 0;
-        if ($this->elasticService->indexExists(ELASTIC_JOB_REQUEST)) {
-            try {
-                $pRes = $this->elasticService->getClient()->count([
-                    'index' => ELASTIC_JOB_REQUEST,
-                    'body' => ['query' => ['term' => ['final_status' => 0]]],
-                ]);
-                $pendingCount = $pRes['count'] ?? 0;
+        $initialTab = request('tab', ((int) $id === 1 ? 'accepted' : 'pending'));
+        $this->initialTab = in_array($initialTab, ['accepted', 'pending'], true) ? $initialTab : 'pending';
 
-                $aRes = $this->elasticService->getClient()->count([
-                    'index' => ELASTIC_JOB_REQUEST,
-                    'body' => ['query' => ['terms' => ['final_status' => [1, 2, 3]]]],
-                ]);
-                $acceptedCount = $aRes['count'] ?? 0;
-            } catch (\Throwable $e) {
-                // Keep 0 fallback
+        $version = SuperAdminJobRequestCacheManager::getVersion();
+        $countsKey = SuperAdminJobRequestCacheManager::countsKey($version);
+
+        $this->dataCnt = SuperAdminJobRequestCacheManager::rememberWithStampedeProtection(
+            key: $countsKey,
+            ttlSeconds: SuperAdminJobRequestCacheManager::DEFAULT_COUNTS_TTL,
+            computation: function () {
+                $pendingCount = 0;
+                $acceptedCount = 0;
+                if ($this->elasticService->indexExists(ELASTIC_JOB_REQUEST)) {
+                    $circuitBreaker = app(\App\Services\ElasticsearchCircuitBreaker::class);
+                    try {
+                        $pRes = $circuitBreaker->execute(function () {
+                            return $this->elasticService->getClient()->count([
+                                'index' => ELASTIC_JOB_REQUEST,
+                                'body' => ['query' => ['term' => ['final_status' => 0]]],
+                            ]);
+                        }, fn () => null);
+                        $pendingCount = $pRes['count'] ?? 0;
+
+                        $aRes = $circuitBreaker->execute(function () {
+                            return $this->elasticService->getClient()->count([
+                                'index' => ELASTIC_JOB_REQUEST,
+                                'body' => ['query' => ['terms' => ['final_status' => [1, 2, 3]]]],
+                            ]);
+                        }, fn () => null);
+                        $acceptedCount = $aRes['count'] ?? 0;
+                    } catch (\Throwable $e) {
+                        Log::warning('SuperAdmin job_request ES count error: '.$e->getMessage());
+                    }
+                }
+
+                return [
+                    'jobRequest' => $pendingCount,
+                    'jobAccepted' => $acceptedCount,
+                    'customRequisition' => $acceptedCount,
+                ];
             }
-        }
-
-        $this->dataCnt = [
-            'jobRequest' => $pendingCount,
-            'jobAccepted' => $acceptedCount,
-        ];
+        );
 
         return view('super-admin.jobs.job_request', $this->data);
     }
@@ -10731,61 +10750,99 @@ class SuperAdminCompanyController extends SuperAdminBaseController
             ],
         ];
 
-        $total = 0;
-        $data = [];
-        $pendingCount = 0;
-        $acceptedCount = 0;
-
-        if ($this->elasticService->indexExists(ELASTIC_JOB_REQUEST)) {
-            try {
-                $response = $this->elasticService->getClient()->search($params);
-                $total = $response['hits']['total']['value'] ?? 0;
-                $data = array_map(function ($hit) {
-                    return $hit['_source'];
-                }, $response['hits']['hits']);
-
-                $pRes = $this->elasticService->getClient()->count([
-                    'index' => ELASTIC_JOB_REQUEST,
-                    'body' => ['query' => ['term' => ['final_status' => 0]]],
-                ]);
-                $pendingCount = $pRes['count'] ?? 0;
-
-                $aRes = $this->elasticService->getClient()->count([
-                    'index' => ELASTIC_JOB_REQUEST,
-                    'body' => ['query' => ['terms' => ['final_status' => [1, 2, 3]]]],
-                ]);
-                $acceptedCount = $aRes['count'] ?? 0;
-            } catch (\Throwable $e) {
-                Log::error('SuperAdmin all_recommandedrequest_data_ajax ES Error: '.$e->getMessage());
-            }
-        }
-
-        // Format DTOs for client-first in-RAM rendering
-        $formattedData = [];
-        foreach ($data as $row) {
-            $formattedData[] = $this->formatJobRequestDto($row, $salaryMode, $currencySymbole, $job_status, $feedback_status);
-        }
-
-        $pagination = [
-            'total' => $total,
-            'current_page' => $page,
-            'last_page' => (int) ceil($total / $size),
-            'listType' => 'allcandidate',
-        ];
-        $userPermissions = [];
-
-        return response()->json([
-            'status' => 'success',
-            'data' => $formattedData,
-            'raw_data' => $data,
-            'total' => $total,
-            'pendingCount' => $pendingCount,
-            'acceptedCount' => $acceptedCount,
-            'current_page' => $page,
-            'last_page' => (int) ceil($total / $size),
+        $version = SuperAdminJobRequestCacheManager::getVersion();
+        $cacheParams = [
+            'tab' => 'pending',
+            'search' => $searchQuery,
+            'page' => $page,
             'size' => $size,
-            'html' => view('super-admin.ajax_pages.recommandedrequestpending_data_ajax', compact('data', 'userPermissions', 'salaryMode', 'currencySymbole', 'job_status', 'feedback_status'))->render(),
-        ]);
+        ];
+        $cacheKey = SuperAdminJobRequestCacheManager::listKey($version, $cacheParams, 'pending');
+        $circuitBreaker = app(\App\Services\ElasticsearchCircuitBreaker::class);
+        $cbState = $circuitBreaker->getState();
+
+        $cachedPayload = SuperAdminJobRequestCacheManager::rememberWithStampedeProtection(
+            key: $cacheKey,
+            ttlSeconds: SuperAdminJobRequestCacheManager::DEFAULT_LIST_TTL,
+            computation: function () use ($params, $circuitBreaker, $salaryMode, $currencySymbole, $job_status, $feedback_status, $page, $size) {
+                $total = 0;
+                $data = [];
+                $pendingCount = 0;
+                $acceptedCount = 0;
+
+                if ($this->elasticService->indexExists(ELASTIC_JOB_REQUEST)) {
+                    $esResult = $circuitBreaker->execute(
+                        action: function () use ($params) {
+                            return $this->elasticService->getClient()->search($params);
+                        },
+                        fallback: function (\Throwable $e) {
+                            Log::warning('SuperAdmin all_recommandedrequest_data_ajax ES circuit breaker fallback: '.$e->getMessage());
+
+                            return null;
+                        }
+                    );
+
+                    if ($esResult !== null) {
+                        $total = $esResult['hits']['total']['value'] ?? 0;
+                        $data = array_map(function ($hit) {
+                            return $hit['_source'];
+                        }, $esResult['hits']['hits']);
+
+                        try {
+                            $pRes = $circuitBreaker->execute(function () {
+                                return $this->elasticService->getClient()->count([
+                                    'index' => ELASTIC_JOB_REQUEST,
+                                    'body' => ['query' => ['term' => ['final_status' => 0]]],
+                                ]);
+                            }, fn () => null);
+                            $pendingCount = $pRes['count'] ?? 0;
+
+                            $aRes = $circuitBreaker->execute(function () {
+                                return $this->elasticService->getClient()->count([
+                                    'index' => ELASTIC_JOB_REQUEST,
+                                    'body' => ['query' => ['terms' => ['final_status' => [1, 2, 3]]]],
+                                ]);
+                            }, fn () => null);
+                            $acceptedCount = $aRes['count'] ?? 0;
+                        } catch (\Throwable $e) {
+                            // keep 0
+                        }
+                    }
+                }
+
+                // Format DTOs for client-first in-RAM rendering
+                $formattedData = [];
+                foreach ($data as $row) {
+                    $formattedData[] = $this->formatJobRequestDto($row, $salaryMode, $currencySymbole, $job_status, $feedback_status);
+                }
+
+                $userPermissions = [];
+
+                return [
+                    'status' => 'success',
+                    'data' => $formattedData,
+                    'raw_data' => $data,
+                    'total' => $total,
+                    'pendingCount' => $pendingCount,
+                    'acceptedCount' => $acceptedCount,
+                    'current_page' => $page,
+                    'last_page' => (int) ceil($total / $size),
+                    'size' => $size,
+                    'html' => view('super-admin.ajax_pages.recommandedrequestpending_data_ajax', compact('data', 'userPermissions', 'salaryMode', 'currencySymbole', 'job_status', 'feedback_status'))->render(),
+                ];
+            },
+            snapshotKey: 'sa:job_requests:snapshot:pending'
+        );
+
+        $responseData = $cachedPayload;
+        if (! empty($responseData['data']) && is_array($responseData['data'])) {
+            SuperAdminJobRequestCacheManager::applyMutationDeltas($responseData['data']);
+        }
+
+        return response()->json($responseData)
+            ->header('X-Circuit-Breaker', $cbState)
+            ->header('X-Data-Version', (string) $version)
+            ->header('X-Cache-Status', 'ACTIVE');
     }
 
     public function recommandedrequest(Request $request)
@@ -11162,59 +11219,69 @@ class SuperAdminCompanyController extends SuperAdminBaseController
             return response()->noContent(304)->header('ETag', $etag);
         }
 
-        $version = Cache::get('superadmin:jobs:version', 1);
-        $this->dataCnt = Cache::remember("superadmin:jobs:kpi:v{$version}", 300, function () {
-            $counts = [
-                'allRequisition' => 0,
-                'clientRequisition' => 0,
-                'customRequisition' => 0,
-                'jobRequest' => 0,
-                'hiringCount' => 0,
-                'holdCount' => 0,
-                'closedCount' => 0,
-                'removedCount' => 0,
-                'allTabCount' => 0,
-            ];
-            if ($this->elasticService->indexExists(ELASTIC_JOBS)) {
-                try {
-                    $aggs = $this->elasticService->getClient()->search([
-                        'index' => ELASTIC_JOBS,
-                        'size' => 0,
-                        'body' => [
-                            'aggs' => [
-                                'by_status' => [
-                                    'terms' => ['field' => 'status', 'size' => 10],
+        $version = \App\Services\SuperAdminJobsCacheManager::getVersion();
+        $this->dataCnt = \App\Services\SuperAdminJobsCacheManager::rememberWithStampedeProtection(
+            \App\Services\SuperAdminJobsCacheManager::kpiKey($version),
+            300,
+            function () {
+                $counts = [
+                    'allRequisition' => 0,
+                    'clientRequisition' => 0,
+                    'customRequisition' => 0,
+                    'jobRequest' => 0,
+                    'hiringCount' => 0,
+                    'holdCount' => 0,
+                    'closedCount' => 0,
+                    'removedCount' => 0,
+                    'allTabCount' => 0,
+                ];
+                if ($this->elasticService->indexExists(ELASTIC_JOBS)) {
+                    $circuitBreaker = app(\App\Services\ElasticsearchCircuitBreaker::class);
+                    try {
+                        $aggs = $circuitBreaker->execute(function () {
+                            return $this->elasticService->getClient()->search([
+                                'index' => ELASTIC_JOBS,
+                                'size' => 0,
+                                'body' => [
+                                    'aggs' => [
+                                        'by_status' => [
+                                            'terms' => ['field' => 'status', 'size' => 10],
+                                        ],
+                                        'internal_jobs' => [
+                                            'filter' => ['term' => ['self_company' => 1]],
+                                        ],
+                                    ],
                                 ],
-                                'internal_jobs' => [
-                                    'filter' => ['term' => ['self_company' => 1]],
-                                ],
-                            ],
-                        ],
-                    ]);
-                    $total = (int) ($aggs['hits']['total']['value'] ?? 0);
-                    $counts['allRequisition'] = $total;
-                    $counts['allTabCount'] = $total;
-                    $counts['customRequisition'] = (int) ($aggs['aggregations']['internal_jobs']['doc_count'] ?? 0);
-                    $counts['clientRequisition'] = max(0, $total - $counts['customRequisition']);
+                            ]);
+                        }, fn () => null);
 
-                    foreach ($aggs['aggregations']['by_status']['buckets'] ?? [] as $b) {
-                        $st = $b['key'] ?? '';
-                        $cnt = (int) ($b['doc_count'] ?? 0);
-                        if ($st === 'active') {
-                            $counts['hiringCount'] = $cnt;
-                        } elseif ($st === 'hold') {
-                            $counts['holdCount'] = $cnt;
-                        } elseif ($st === 'inactive') {
-                            $counts['closedCount'] = $cnt;
+                        if ($aggs) {
+                            $total = (int) ($aggs['hits']['total']['value'] ?? 0);
+                            $counts['allRequisition'] = $total;
+                            $counts['allTabCount'] = $total;
+                            $counts['customRequisition'] = (int) ($aggs['aggregations']['internal_jobs']['doc_count'] ?? 0);
+                            $counts['clientRequisition'] = max(0, $total - $counts['customRequisition']);
+
+                            foreach ($aggs['aggregations']['by_status']['buckets'] ?? [] as $b) {
+                                $st = $b['key'] ?? '';
+                                $cnt = (int) ($b['doc_count'] ?? 0);
+                                if ($st === 'active') {
+                                    $counts['hiringCount'] = $cnt;
+                                } elseif ($st === 'hold') {
+                                    $counts['holdCount'] = $cnt;
+                                } elseif ($st === 'inactive') {
+                                    $counts['closedCount'] = $cnt;
+                                }
+                            }
                         }
+                    } catch (\Throwable $e) {
+                        Log::warning('SuperAdmin jobLists KPI aggs failed: '.$e->getMessage());
                     }
-                } catch (\Throwable $e) {
-                    Log::warning('SuperAdmin jobLists KPI aggs failed: '.$e->getMessage());
                 }
-            }
 
-            return $counts;
-        });
+                return $counts;
+            }
+        );
 
         $this->totalJobs = $this->dataCnt['allRequisition'] ?? 0;
         $this->activeJobs = $this->dataCnt['hiringCount'] ?? 0;
@@ -11225,7 +11292,8 @@ class SuperAdminCompanyController extends SuperAdminBaseController
         return response()
             ->view('super-admin.jobs.all-jobs-data', $this->data)
             ->header('ETag', $etag)
-            ->header('Cache-Control', 'private, must-revalidate');
+            ->header('Cache-Control', 'private, must-revalidate')
+            ->header('X-Data-Version', (string) $version);
     }
 
     /**
@@ -11253,8 +11321,8 @@ class SuperAdminCompanyController extends SuperAdminBaseController
         $custom_search = trim(request('custom_search', request('search', request('q', ''))));
         $requisition_type = request('requisition_type', request('kpi', 'all'));
 
-        // Tier 1: Redis / Dragonfly L2 Query Caching with Generation Versioning
-        $version = Cache::get('superadmin:jobs:version', 1);
+        // Tier 1: Redis / Dragonfly L2 Query Caching with Unified Versioning & Stampede Protection
+        $version = \App\Services\SuperAdminJobsCacheManager::getVersion();
         $cacheParams = [
             'page' => $page,
             'size' => $size,
@@ -11265,11 +11333,13 @@ class SuperAdminCompanyController extends SuperAdminBaseController
             'custom_search' => $custom_search,
             'requisition_type' => $requisition_type,
         ];
-        $cacheKey = "superadmin:jobs:list:v{$version}:".md5(json_encode($cacheParams));
+        $cacheKey = \App\Services\SuperAdminJobsCacheManager::listKey($version, $cacheParams);
 
         $cachedResponse = Cache::get($cacheKey);
         if ($cachedResponse !== null && is_array($cachedResponse)) {
-            return response()->json($cachedResponse);
+            return response()->json($cachedResponse)
+                ->header('X-Cache-Status', 'HIT')
+                ->header('X-Data-Version', (string) $version);
         }
 
         $statusArr = ['active', 'hold', 'inactive'];
@@ -11454,18 +11524,39 @@ class SuperAdminCompanyController extends SuperAdminBaseController
             ],
         ];
 
+        $circuitBreaker = app(\App\Services\ElasticsearchCircuitBreaker::class);
+        $cbState = $circuitBreaker->getState();
+
         if (! $this->elasticService->indexExists(ELASTIC_JOBS)) {
             $total = 0;
             $data = [];
         } else {
-            try {
-                $response = $this->elasticService->getClient()->search($params);
-                $total = $response['hits']['total']['value'] ?? 0;
-                $data = array_map(fn ($hit) => $hit['_source'], $response['hits']['hits'] ?? []);
-            } catch (\Throwable $e) {
-                Log::warning('SuperAdmin all_jobs_data_ajax ES search failed: '.$e->getMessage());
+            $esResult = $circuitBreaker->execute(
+                action: function () use ($params) {
+                    return $this->elasticService->getClient()->search($params);
+                },
+                fallback: function (\Throwable $e) {
+                    Log::warning('SuperAdmin all_jobs_data_ajax ES circuit breaker fallback: '.$e->getMessage());
+
+                    return null;
+                }
+            );
+
+            if ($esResult === null) {
+                // Circuit Breaker is OPEN or call failed: attempt degraded snapshot retrieval
+                $snapshot = Cache::get('sa:jobs:snapshot:latest');
+                if (is_array($snapshot) && ! empty($snapshot['jobs'])) {
+                    return response()->json($snapshot)
+                        ->header('X-Circuit-Breaker', 'OPEN-DEGRADED')
+                        ->header('X-Cache-Status', 'FALLBACK_SNAPSHOT')
+                        ->header('X-Data-Version', (string) $version);
+                }
+
                 $total = 0;
                 $data = [];
+            } else {
+                $total = $esResult['hits']['total']['value'] ?? 0;
+                $data = array_map(fn ($hit) => $hit['_source'], $esResult['hits']['hits'] ?? []);
             }
         }
 
@@ -11687,6 +11778,20 @@ class SuperAdminCompanyController extends SuperAdminBaseController
                 $jobComId = (int) ($row->comId ?? 0);
                 $jobClientId = (int) ($row->client_id ?? 0);
 
+                // Read-After-Write Consistency Guarantee: overlay authoritative mutation deltas
+                $mutationDelta = \App\Services\SuperAdminJobsCacheManager::getMutationDelta($targetJobId);
+                if ($mutationDelta) {
+                    if (isset($mutationDelta['status'])) {
+                        $row->status = $mutationDelta['status'];
+                    }
+                    if (isset($mutationDelta['auto_date_job'])) {
+                        $row->auto_date_job = $mutationDelta['auto_date_job'];
+                    }
+                    if (isset($mutationDelta['public_market_status'])) {
+                        $row->public_market_status = $mutationDelta['public_market_status'];
+                    }
+                }
+
                 // Check recommendation relation for Direct Client detection
                 $relationItem = collect($row->recommendation_relation ?? [])->first();
                 $isDirectClientJob = ! empty($relationItem) && (($relationItem['final_status'] ?? 0) > 0);
@@ -11894,35 +11999,40 @@ class SuperAdminCompanyController extends SuperAdminBaseController
             }
         }
 
-        // 8. DYNAMIC STATUS COUNTS FOR STATUS TABS (Universal Aggregation cached in Redis)
-        $statusCountsKey = "superadmin:jobs:status_counts:v{$version}";
-        $statusCounts = Cache::remember($statusCountsKey, 60, function () {
+        // 8. DYNAMIC STATUS COUNTS FOR STATUS TABS (Universal Aggregation cached in Redis with Stampede Protection)
+        $statusCountsKey = \App\Services\SuperAdminJobsCacheManager::statusCountsKey($version);
+        $statusCounts = \App\Services\SuperAdminJobsCacheManager::rememberWithStampedeProtection($statusCountsKey, 60, function () use ($circuitBreaker) {
             $counts = ['all' => 0, 'active' => 0, 'hold' => 0, 'inactive' => 0, 'removed' => 0];
             if ($this->elasticService->indexExists(ELASTIC_JOBS)) {
                 try {
-                    $statusAggs = $this->elasticService->getClient()->search([
-                        'index' => ELASTIC_JOBS,
-                        'size' => 0,
-                        'body' => [
-                            'aggs' => [
-                                'by_status' => [
-                                    'terms' => ['field' => 'status', 'size' => 10],
+                    $statusAggs = $circuitBreaker->execute(function () {
+                        return $this->elasticService->getClient()->search([
+                            'index' => ELASTIC_JOBS,
+                            'size' => 0,
+                            'body' => [
+                                'aggs' => [
+                                    'by_status' => [
+                                        'terms' => ['field' => 'status', 'size' => 10],
+                                    ],
                                 ],
                             ],
-                        ],
-                    ]);
-                    foreach ($statusAggs['aggregations']['by_status']['buckets'] ?? [] as $b) {
-                        $st = $b['key'] ?? '';
-                        $cnt = (int) ($b['doc_count'] ?? 0);
-                        if ($st === 'active') {
-                            $counts['active'] = $cnt;
-                        } elseif ($st === 'hold') {
-                            $counts['hold'] = $cnt;
-                        } elseif ($st === 'inactive') {
-                            $counts['inactive'] = $cnt;
+                        ]);
+                    }, fn () => null);
+
+                    if ($statusAggs) {
+                        foreach ($statusAggs['aggregations']['by_status']['buckets'] ?? [] as $b) {
+                            $st = $b['key'] ?? '';
+                            $cnt = (int) ($b['doc_count'] ?? 0);
+                            if ($st === 'active') {
+                                $counts['active'] = $cnt;
+                            } elseif ($st === 'hold') {
+                                $counts['hold'] = $cnt;
+                            } elseif ($st === 'inactive') {
+                                $counts['inactive'] = $cnt;
+                            }
                         }
+                        $counts['all'] = $counts['active'] + $counts['hold'] + $counts['inactive'];
                     }
-                    $counts['all'] = $counts['active'] + $counts['hold'] + $counts['inactive'];
                 } catch (\Throwable) {
                 }
             }
@@ -11940,7 +12050,10 @@ class SuperAdminCompanyController extends SuperAdminBaseController
 
         Cache::put($cacheKey, $resultResponse, 60);
 
-        return response()->json($resultResponse);
+        return response()->json($resultResponse)
+            ->header('X-Cache-Status', 'MISS')
+            ->header('X-Data-Version', (string) $version)
+            ->header('X-Circuit-Breaker', $cbState);
     }
 
     /**
@@ -11950,8 +12063,8 @@ class SuperAdminCompanyController extends SuperAdminBaseController
     {
         $this->id = (int) $id;
         if ($this->id) {
-            $version = Cache::get('superadmin:jobs:version', 1);
-            $cacheKey = "superadmin:jobs:status_view:v{$version}:{$this->id}";
+            $version = \App\Services\SuperAdminJobsCacheManager::getVersion();
+            $cacheKey = \App\Services\SuperAdminJobsCacheManager::statusViewKey($version, $this->id);
 
             $cachedView = Cache::get($cacheKey);
             if ($cachedView) {
@@ -12022,8 +12135,8 @@ class SuperAdminCompanyController extends SuperAdminBaseController
     public function jobViewMore(Request $request, $id)
     {
         $realJobId = (int) $id;
-        $version = Cache::get('superadmin:jobs:version', 1);
-        $drawerCacheKey = "superadmin:jobs:drawer:v{$version}:{$realJobId}";
+        $version = \App\Services\SuperAdminJobsCacheManager::getVersion();
+        $drawerCacheKey = \App\Services\SuperAdminJobsCacheManager::drawerKey($version, $realJobId);
         $cachedView = Cache::get($drawerCacheKey);
         if ($cachedView) {
             return response()->json([
@@ -13948,34 +14061,7 @@ class SuperAdminCompanyController extends SuperAdminBaseController
 
     public function job_request_accept($id)
     {
-        $this->pageTitle = __('Job Collaboration Requests - Accepted');
-
-        $pendingCount = 0;
-        $acceptedCount = 0;
-        if ($this->elasticService->indexExists(ELASTIC_JOB_REQUEST)) {
-            try {
-                $pRes = $this->elasticService->getClient()->count([
-                    'index' => ELASTIC_JOB_REQUEST,
-                    'body' => ['query' => ['term' => ['final_status' => 0]]],
-                ]);
-                $pendingCount = $pRes['count'] ?? 0;
-
-                $aRes = $this->elasticService->getClient()->count([
-                    'index' => ELASTIC_JOB_REQUEST,
-                    'body' => ['query' => ['terms' => ['final_status' => [1, 2, 3]]]],
-                ]);
-                $acceptedCount = $aRes['count'] ?? 0;
-            } catch (\Throwable $e) {
-                // Keep 0 fallback
-            }
-        }
-
-        $this->dataCnt = [
-            'jobRequest' => $pendingCount,
-            'jobAccepted' => $acceptedCount,
-        ];
-
-        return view('super-admin.jobs.job_request_accept', $this->data);
+        return redirect()->to(url('super-admin/jobs/job_request/'.$id.'?tab=accepted'));
     }
 
     /**
@@ -14033,62 +14119,106 @@ class SuperAdminCompanyController extends SuperAdminBaseController
             ],
         ];
 
-        $total = 0;
-        $data = [];
-        $pendingCount = 0;
-        $acceptedCount = 0;
-
-        if ($this->elasticService->indexExists(ELASTIC_JOB_REQUEST)) {
-            try {
-                $response = $this->elasticService->getClient()->search($params);
-                $total = $response['hits']['total']['value'] ?? 0;
-                $data = array_map(function ($hit) {
-                    return $hit['_source'];
-                }, $response['hits']['hits']);
-
-                $pRes = $this->elasticService->getClient()->count([
-                    'index' => ELASTIC_JOB_REQUEST,
-                    'body' => ['query' => ['term' => ['final_status' => 0]]],
-                ]);
-                $pendingCount = $pRes['count'] ?? 0;
-
-                $aRes = $this->elasticService->getClient()->count([
-                    'index' => ELASTIC_JOB_REQUEST,
-                    'body' => ['query' => ['terms' => ['final_status' => [1, 2, 3]]]],
-                ]);
-                $acceptedCount = $aRes['count'] ?? 0;
-            } catch (\Throwable $e) {
-                Log::error('SuperAdmin recommandedrequest_accept_ajax ES Error: '.$e->getMessage());
-            }
-        }
-
-        // Format DTOs for client-first in-RAM rendering
-        $formattedData = [];
-        foreach ($data as $row) {
-            $formattedData[] = $this->formatJobRequestDto($row, $salaryMode, $currencySymbole, $job_status, $feedback_status);
-        }
-
-        $pagination = [
-            'total' => $total,
-            'current_page' => $page,
-            'last_page' => (int) ceil($total / $size),
-            'listType' => 'allcandidate',
-        ];
-        $userPermissions = [];
-
-        return response()->json([
-            'status' => 'success',
-            'data' => $formattedData,
-            'raw_data' => $data,
-            'total' => $total,
-            'pendingCount' => $pendingCount,
-            'acceptedCount' => $acceptedCount,
-            'current_page' => $page,
-            'last_page' => (int) ceil($total / $size),
+        $version = SuperAdminJobRequestCacheManager::getVersion();
+        $cacheParams = [
+            'tab' => 'accepted',
+            'search' => $searchQuery,
+            'page' => $page,
             'size' => $size,
-            'html' => view('super-admin.ajax_pages.recommandedrequestaccept_data_ajax', compact('data', 'userPermissions', 'salaryMode', 'currencySymbole', 'job_status', 'feedback_status'))->render(),
-            'pagination' => view('super-admin.ajax_pages.pagination', compact('pagination'))->render(),
-        ]);
+        ];
+        $cacheKey = SuperAdminJobRequestCacheManager::listKey($version, $cacheParams, 'accepted');
+        $circuitBreaker = app(\App\Services\ElasticsearchCircuitBreaker::class);
+        $cbState = $circuitBreaker->getState();
+
+        $cachedPayload = SuperAdminJobRequestCacheManager::rememberWithStampedeProtection(
+            key: $cacheKey,
+            ttlSeconds: SuperAdminJobRequestCacheManager::DEFAULT_LIST_TTL,
+            computation: function () use ($params, $circuitBreaker, $salaryMode, $currencySymbole, $job_status, $feedback_status, $page, $size) {
+                $total = 0;
+                $data = [];
+                $pendingCount = 0;
+                $acceptedCount = 0;
+
+                if ($this->elasticService->indexExists(ELASTIC_JOB_REQUEST)) {
+                    $esResult = $circuitBreaker->execute(
+                        action: function () use ($params) {
+                            return $this->elasticService->getClient()->search($params);
+                        },
+                        fallback: function (\Throwable $e) {
+                            Log::warning('SuperAdmin recommandedrequest_accept_ajax ES circuit breaker fallback: '.$e->getMessage());
+
+                            return null;
+                        }
+                    );
+
+                    if ($esResult !== null) {
+                        $total = $esResult['hits']['total']['value'] ?? 0;
+                        $data = array_map(function ($hit) {
+                            return $hit['_source'];
+                        }, $esResult['hits']['hits']);
+
+                        try {
+                            $pRes = $circuitBreaker->execute(function () {
+                                return $this->elasticService->getClient()->count([
+                                    'index' => ELASTIC_JOB_REQUEST,
+                                    'body' => ['query' => ['term' => ['final_status' => 0]]],
+                                ]);
+                            }, fn () => null);
+                            $pendingCount = $pRes['count'] ?? 0;
+
+                            $aRes = $circuitBreaker->execute(function () {
+                                return $this->elasticService->getClient()->count([
+                                    'index' => ELASTIC_JOB_REQUEST,
+                                    'body' => ['query' => ['terms' => ['final_status' => [1, 2, 3]]]],
+                                ]);
+                            }, fn () => null);
+                            $acceptedCount = $aRes['count'] ?? 0;
+                        } catch (\Throwable $e) {
+                            // keep 0
+                        }
+                    }
+                }
+
+                // Format DTOs for client-first in-RAM rendering
+                $formattedData = [];
+                foreach ($data as $row) {
+                    $formattedData[] = $this->formatJobRequestDto($row, $salaryMode, $currencySymbole, $job_status, $feedback_status);
+                }
+
+                $pagination = [
+                    'total' => $total,
+                    'current_page' => $page,
+                    'last_page' => (int) ceil($total / $size),
+                    'listType' => 'allcandidate',
+                ];
+                $userPermissions = [];
+
+                return [
+                    'status' => 'success',
+                    'data' => $formattedData,
+                    'raw_data' => $data,
+                    'total' => $total,
+                    'pendingCount' => $pendingCount,
+                    'acceptedCount' => $acceptedCount,
+                    'current_page' => $page,
+                    'last_page' => (int) ceil($total / $size),
+                    'size' => $size,
+                    'html' => view('super-admin.ajax_pages.recommandedrequestaccept_data_ajax', compact('data', 'userPermissions', 'salaryMode', 'currencySymbole', 'job_status', 'feedback_status'))->render(),
+                    'pagination' => view('super-admin.ajax_pages.pagination', compact('pagination'))->render(),
+                ];
+            },
+            snapshotKey: 'sa:job_requests:snapshot:accepted'
+        );
+
+        $responseData = $cachedPayload;
+        if (! empty($responseData['data']) && is_array($responseData['data'])) {
+            SuperAdminJobRequestCacheManager::applyMutationDeltas($responseData['data']);
+        }
+
+        return response()->json($responseData)
+            ->header('X-Circuit-Breaker', $cbState)
+            ->header('X-Data-Version', (string) $version)
+            ->header('X-Cache-Status', 'ACTIVE');
     }
 
     /**
@@ -14765,8 +14895,8 @@ class SuperAdminCompanyController extends SuperAdminBaseController
 
     public function hmlisting($id)
     {
-        $version = Cache::get('superadmin:jobs:version', 1);
-        $hmCacheKey = "superadmin:jobs:hmlisting:v{$version}:{$id}";
+        $version = \App\Services\SuperAdminJobsCacheManager::getVersion();
+        $hmCacheKey = \App\Services\SuperAdminJobsCacheManager::hmlistingKey($version, (int) $id);
         $cachedView = Cache::get($hmCacheKey);
         if ($cachedView) {
             return Reply::dataOnly(['status' => 'success', 'view' => $cachedView]);

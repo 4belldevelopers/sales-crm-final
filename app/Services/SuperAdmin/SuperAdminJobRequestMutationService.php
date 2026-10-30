@@ -30,31 +30,33 @@ class SuperAdminJobRequestMutationService
     /**
      * Synthesize or format an idempotency key for a Job Request mutation.
      *
-     * @param int $recRelationId Target recommendation_relation ID
-     * @param string $action Action name (e.g., 'accept', 'reject', 'terms')
-     * @param string|null $providedKey Client-supplied UUID
+     * @param  int  $recRelationId  Target recommendation_relation ID
+     * @param  string  $action  Action name (e.g., 'accept', 'reject', 'terms')
+     * @param  string|null  $providedKey  Client-supplied UUID
      * @return string Sanitized idempotency key (max 64 chars)
      */
     public function formatIdempotencyKey(int $recRelationId, string $action, ?string $providedKey = null): string
     {
         if ($providedKey && trim($providedKey) !== '') {
             $cleanKey = preg_replace('/[^a-zA-Z0-9_\-\:\.]/', '', trim($providedKey));
+
             return substr($cleanKey, 0, 64);
         }
 
         $entropy = substr(sha1(uniqid((string) $recRelationId, true)), 0, 12);
+
         return substr("sajr_{$recRelationId}_{$action}_{$entropy}", 0, 64);
     }
 
     /**
      * Update the final_status of a Job Collaboration Request (0 = Pending, 1 = Accepted, 2 = Rejected, 3 = Closed).
      *
-     * @param int $recRelationId Target recommendation_relation ID
-     * @param int $finalStatus Target final_status (0, 1, 2, or 3)
-     * @param string|null $idempotencyKey Client-supplied or generated idempotency key
-     * @param int|null $adminId Authenticated administrator user ID
-     * @param string|null $adminName Authenticated administrator name
-     * @param string|null $accepterms Optional contract terms string
+     * @param  int  $recRelationId  Target recommendation_relation ID
+     * @param  int  $finalStatus  Target final_status (0, 1, 2, or 3)
+     * @param  string|null  $idempotencyKey  Client-supplied or generated idempotency key
+     * @param  int|null  $adminId  Authenticated administrator user ID
+     * @param  string|null  $adminName  Authenticated administrator name
+     * @param  string|null  $accepterms  Optional contract terms string
      * @return array Standardized JSON response payload
      */
     public function updateJobRequestStatus(
@@ -100,17 +102,54 @@ class SuperAdminJobRequestMutationService
             if ($existing) {
                 if ($existing->status === 'COMPLETED') {
                     $cachedBody = json_decode($existing->response_body, true);
+
                     return is_array($cachedBody)
                         ? array_merge($cachedBody, ['replayed' => true])
                         : ['status' => 'success', 'data' => ['replayed' => true]];
                 }
 
                 if ($existing->status === 'PROCESSING') {
-                    abort(409, 'A status mutation for this Job Collaboration Request is already in progress.');
+                    $maxWaitMs = 1500;
+                    $stepMs = 50;
+                    $elapsedMs = 0;
+
+                    while ($elapsedMs < $maxWaitMs) {
+                        usleep($stepMs * 1000);
+                        $elapsedMs += $stepMs;
+
+                        $poll = DB::table('sys_idempotency_keys')
+                            ->where('tenant_id', 0)
+                            ->where('idempotency_key', $idempotencyKey)
+                            ->first();
+
+                        if ($poll && $poll->status === 'COMPLETED' && $poll->response_body) {
+                            $payload = json_decode((string) $poll->response_body, true);
+                            if (is_array($payload)) {
+                                $payload['is_replayed'] = true;
+
+                                return $payload;
+                            }
+                        }
+
+                        if ($poll && $poll->status === 'FAILED_FINAL') {
+                            return [
+                                'status' => 'error',
+                                'message' => 'Status update failed: '.($poll->last_error ?? 'Unknown error'),
+                                'http_status' => 500,
+                            ];
+                        }
+                    }
+
+                    return [
+                        'status' => 'error',
+                        'message' => 'This job collaboration request status update is currently being processed. Please do not double submit.',
+                        'http_status' => 409,
+                    ];
                 }
 
                 if ($existing->status === 'FAILED_FINAL') {
                     $cachedBody = json_decode($existing->response_body, true);
+
                     return is_array($cachedBody)
                         ? $cachedBody
                         : ['status' => 'error', 'message' => $existing->last_error];
@@ -222,6 +261,16 @@ class SuperAdminJobRequestMutationService
 
             DB::commit();
 
+            // Set Authoritative Mutation Delta in Redis for immediate read-after-write consistency
+            SuperAdminJobRequestCacheManager::setMutationDelta($recRelationId, [
+                'final_status' => $finalStatus,
+                'status_label' => $statusText,
+                'accepterms' => $accepterms ?? $rec->accepterms,
+            ]);
+
+            // Atomically invalidate generation caches
+            SuperAdminJobRequestCacheManager::invalidateAll($recRelationId);
+
             // 5. Asynchronous Outbox Worker Dispatch with Fast-Path Execution
             if ($outboxId) {
                 try {
@@ -249,7 +298,7 @@ class SuperAdminJobRequestMutationService
                     'updated_at' => Carbon::now(),
                 ]);
 
-            Log::error("[JOB_REQUEST_MUTATION] Failed to update Job Request #{$recRelationId}: " . $e->getMessage(), [
+            Log::error("[JOB_REQUEST_MUTATION] Failed to update Job Request #{$recRelationId}: ".$e->getMessage(), [
                 'trace' => $e->getTraceAsString(),
             ]);
 
@@ -260,11 +309,11 @@ class SuperAdminJobRequestMutationService
     /**
      * Update the contract terms (accepterms) of a Job Collaboration Request.
      *
-     * @param int $recRelationId Target recommendation_relation ID
-     * @param string $terms Contract terms content
-     * @param string|null $idempotencyKey Client-supplied or generated idempotency key
-     * @param int|null $adminId Authenticated administrator user ID
-     * @param string|null $adminName Authenticated administrator name
+     * @param  int  $recRelationId  Target recommendation_relation ID
+     * @param  string  $terms  Contract terms content
+     * @param  string|null  $idempotencyKey  Client-supplied or generated idempotency key
+     * @param  int|null  $adminId  Authenticated administrator user ID
+     * @param  string|null  $adminName  Authenticated administrator name
      * @return array Standardized JSON response payload
      */
     public function updateJobRequestTerms(
@@ -302,13 +351,49 @@ class SuperAdminJobRequestMutationService
             if ($existing) {
                 if ($existing->status === 'COMPLETED') {
                     $cachedBody = json_decode($existing->response_body, true);
+
                     return is_array($cachedBody)
                         ? array_merge($cachedBody, ['replayed' => true])
                         : ['status' => 'success', 'data' => ['replayed' => true]];
                 }
 
                 if ($existing->status === 'PROCESSING') {
-                    abort(409, 'A terms update for this Job Collaboration Request is already in progress.');
+                    $maxWaitMs = 1500;
+                    $stepMs = 50;
+                    $elapsedMs = 0;
+
+                    while ($elapsedMs < $maxWaitMs) {
+                        usleep($stepMs * 1000);
+                        $elapsedMs += $stepMs;
+
+                        $poll = DB::table('sys_idempotency_keys')
+                            ->where('tenant_id', 0)
+                            ->where('idempotency_key', $idempotencyKey)
+                            ->first();
+
+                        if ($poll && $poll->status === 'COMPLETED' && $poll->response_body) {
+                            $payload = json_decode((string) $poll->response_body, true);
+                            if (is_array($payload)) {
+                                $payload['is_replayed'] = true;
+
+                                return $payload;
+                            }
+                        }
+
+                        if ($poll && $poll->status === 'FAILED_FINAL') {
+                            return [
+                                'status' => 'error',
+                                'message' => 'Terms update failed: '.($poll->last_error ?? 'Unknown error'),
+                                'http_status' => 500,
+                            ];
+                        }
+                    }
+
+                    return [
+                        'status' => 'error',
+                        'message' => 'A terms update for this Job Collaboration Request is currently being processed. Please do not double submit.',
+                        'http_status' => 409,
+                    ];
                 }
 
                 DB::table('sys_idempotency_keys')
@@ -391,6 +476,14 @@ class SuperAdminJobRequestMutationService
 
             DB::commit();
 
+            // Set Authoritative Mutation Delta in Redis for immediate read-after-write consistency
+            SuperAdminJobRequestCacheManager::setMutationDelta($recRelationId, [
+                'accepterms' => $terms,
+            ]);
+
+            // Atomically invalidate generation caches
+            SuperAdminJobRequestCacheManager::invalidateAll($recRelationId);
+
             // 5. Fast-path outbox execution
             if ($outboxId) {
                 try {
@@ -424,11 +517,11 @@ class SuperAdminJobRequestMutationService
     /**
      * Bulk update status for multiple Job Collaboration Requests.
      *
-     * @param array<int> $recRelationIds Array of recommendation_relation IDs
-     * @param int $finalStatus Target final_status (1: Accept, 2: Reject)
-     * @param string|null $idempotencyKey Client idempotency key prefix
-     * @param int|null $adminId Authenticated administrator user ID
-     * @param string|null $adminName Authenticated administrator name
+     * @param  array<int>  $recRelationIds  Array of recommendation_relation IDs
+     * @param  int  $finalStatus  Target final_status (1: Accept, 2: Reject)
+     * @param  string|null  $idempotencyKey  Client idempotency key prefix
+     * @param  int|null  $adminId  Authenticated administrator user ID
+     * @param  string|null  $adminName  Authenticated administrator name
      * @return array Standardized summary response
      */
     public function batchUpdateStatus(

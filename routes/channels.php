@@ -57,3 +57,8 @@ Broadcast::channel('superadmin-job-requests', function ($user) {
     return (bool) ($user && (! empty($user->is_superadmin) || ! empty($user->root_user)));
 });
 
+// Super Admin private channel for Job Requisitions real-time delta synchronization
+Broadcast::channel('superadmin.jobs', function ($user) {
+    return (bool) ($user && (! empty($user->is_superadmin) || (int) ($user->role_id ?? 0) === 1 || ! empty($user->root_user)));
+});
+

@@ -4,6 +4,7 @@ namespace App\Jobs;
 
 use App\Events\SuperAdminJobRequestUpdatedEvent;
 use App\Services\ElasticService;
+use App\Services\SuperAdmin\SuperAdminJobRequestCacheManager;
 use Carbon\Carbon;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -141,11 +142,14 @@ class ProcessJobRequestOutboxEventJob implements ShouldQueue
                         'refresh' => true,
                     ]);
                 } catch (\Throwable $e) {
-                    Log::warning("ProcessJobRequestOutboxEventJob: ES update failed for relation {$recRelationId}: " . $e->getMessage());
+                    Log::warning("ProcessJobRequestOutboxEventJob: ES update failed for relation {$recRelationId}: ".$e->getMessage());
                 }
             }
 
-            // 3. Compute live counters directly from Elasticsearch
+            // Invalidate Redis list & search caches atomically
+            SuperAdminJobRequestCacheManager::invalidateAll($recRelationId);
+
+            // 3. Compute live counters directly from Elasticsearch (0% DB Read Strain)
             $pendingCount = 0;
             $acceptedCount = 0;
             if ($elasticService->indexExists(ELASTIC_JOB_REQUEST)) {
@@ -162,9 +166,8 @@ class ProcessJobRequestOutboxEventJob implements ShouldQueue
                     ]);
                     $acceptedCount = $aRes['count'] ?? 0;
                 } catch (\Throwable $e) {
-                    // Fallback to DB count
-                    $pendingCount = DB::table('recommendation_relation')->where('final_status', 0)->count();
-                    $acceptedCount = DB::table('recommendation_relation')->whereIn('final_status', [1, 2, 3])->count();
+                    // Log warning, avoid synchronous DB lock contention
+                    Log::warning('ProcessJobRequestOutboxEventJob ES count fallback note: '.$e->getMessage());
                 }
             }
 
@@ -172,21 +175,25 @@ class ProcessJobRequestOutboxEventJob implements ShouldQueue
             $statusBadgeClass = ($finalStatus === 0) ? 'badge-light-warning' : (($finalStatus === 1) ? 'badge-light-success' : 'badge-light-danger');
 
             // 4. Broadcast Real-Time WebSocket Event via Reverb
-            broadcast(new SuperAdminJobRequestUpdatedEvent(
-                recRelationId: $recRelationId,
-                jobId: $jobId,
-                finalStatus: $finalStatus,
-                statusLabel: $statusLabel,
-                statusBadgeClass: $statusBadgeClass,
-                actionType: $action,
-                updatedAt: Carbon::now()->format('d M, Y H:i'),
-                counters: [
-                    'jobRequest' => $pendingCount,
-                    'jobAccepted' => $acceptedCount,
-                ],
-                adminName: $adminName,
-                entityVersion: (int) ($event->aggregate_version ?? 1)
-            ));
+            try {
+                broadcast(new SuperAdminJobRequestUpdatedEvent(
+                    recRelationId: $recRelationId,
+                    jobId: $jobId,
+                    finalStatus: $finalStatus,
+                    statusLabel: $statusLabel,
+                    statusBadgeClass: $statusBadgeClass,
+                    actionType: $action,
+                    updatedAt: Carbon::now()->format('d M, Y H:i'),
+                    counters: [
+                        'jobRequest' => $pendingCount,
+                        'jobAccepted' => $acceptedCount,
+                    ],
+                    adminName: $adminName,
+                    entityVersion: (int) ($event->aggregate_version ?? 1)
+                ));
+            } catch (\Throwable $e) {
+                Log::warning('ProcessJobRequestOutboxEventJob broadcast warning: '.$e->getMessage());
+            }
 
             // 5. Mark Outbox Event as COMPLETED
             DB::table('sys_outbox_events')
@@ -198,7 +205,7 @@ class ProcessJobRequestOutboxEventJob implements ShouldQueue
                 ]);
 
         } catch (\Throwable $e) {
-            Log::error("ProcessJobRequestOutboxEventJob failed for event {$eventId}: " . $e->getMessage(), [
+            Log::error("ProcessJobRequestOutboxEventJob failed for event {$eventId}: ".$e->getMessage(), [
                 'trace' => $e->getTraceAsString(),
             ]);
 

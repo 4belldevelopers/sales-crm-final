@@ -15,8 +15,9 @@ use Illuminate\Support\Facades\Log;
  *
  * Intent: Encapsulates atomic write mutations for Job requisitions executed by Super Admin.
  * Enforces transactional outbox persistence (sys_outbox_events), RFC-4122/hash-based
- * distributed idempotency (sys_idempotency_keys), row-locked concurrency safety,
- * atomic multi-tenant cache invalidation (Redis generation versioning), and dual-store
+ * distributed idempotency (sys_idempotency_keys) with concurrent spin-wait replay,
+ * row-locked concurrency safety, atomic multi-tenant cache invalidation via
+ * SuperAdminJobsCacheManager, authoritative mutation delta overlay, and dual-store
  * synchronization with Elasticsearch (ELASTIC_JOBS).
  *
  * Tenancy Note: Universal Super Admin execution context scoped to target tenant_id ($job->company_id).
@@ -96,7 +97,39 @@ class SuperAdminJobMutationService
                 }
             }
 
+            // Concurrent Request Handling: bounded spin-wait (up to 1.5s) for in-flight transaction
             if ($existing && $existing->status === 'PROCESSING') {
+                $maxWaitMs = 1500;
+                $stepMs = 50;
+                $elapsedMs = 0;
+
+                while ($elapsedMs < $maxWaitMs) {
+                    usleep($stepMs * 1000);
+                    $elapsedMs += $stepMs;
+
+                    $poll = DB::table('sys_idempotency_keys')
+                        ->where('tenant_id', $tenantId)
+                        ->where('idempotency_key', $idempotencyKey)
+                        ->first();
+
+                    if ($poll && $poll->status === 'COMPLETED' && $poll->response_body) {
+                        $payload = json_decode((string) $poll->response_body, true);
+                        if (is_array($payload)) {
+                            $payload['is_replayed'] = true;
+
+                            return $payload;
+                        }
+                    }
+
+                    if ($poll && $poll->status === 'FAILED_FINAL') {
+                        return [
+                            'status' => 'error',
+                            'message' => 'Status update failed: '.($poll->last_error ?? 'Unknown error'),
+                            'http_status' => 500,
+                        ];
+                    }
+                }
+
                 return [
                     'status' => 'error',
                     'message' => 'This job status update is currently being processed. Please do not double submit.',
@@ -136,7 +169,7 @@ class SuperAdminJobMutationService
                 'created_at' => Carbon::now(),
             ]);
 
-            // Append to sys_outbox_events
+            // Append to sys_outbox_events with initial status PENDING
             $outboxPayload = [
                 'job_id' => $jobId,
                 'company_id' => $tenantId,
@@ -202,40 +235,63 @@ class SuperAdminJobMutationService
             ];
         }
 
-        // 4. Post-Commit Atomic Cache Invalidation
-        $this->flushJobsCaches($jobId);
+        // 4. Store Authoritative In-Memory Mutation Delta & Invalidate Caches
+        SuperAdminJobsCacheManager::setMutationDelta($jobId, [
+            'status' => $status,
+            'auto_date_job' => $updateData['auto_date_job'] ?? null,
+            'public_market_status' => $updateData['public_market_status'] ?? null,
+        ]);
+        SuperAdminJobsCacheManager::invalidateAll($jobId);
 
-        // 5. Fast-Path Dual-Store Synchronization & Asynchronous Outbox Worker
+        // 5. Fast-Path Dual-Store Synchronization & Strictly-Fenced Outbox Completion
+        $esSuccess = false;
+        $broadcastSuccess = false;
+
         try {
             GeneralMethod::elasticJobsAddEditUpdateIndex($jobId);
-
-            if ($outboxId) {
-                DB::table('sys_outbox_events')
-                    ->where('id', $outboxId)
-                    ->update([
-                        'status' => 'COMPLETED',
-                        'processed_at' => now(),
-                    ]);
-            }
+            $esSuccess = true;
         } catch (\Throwable $e) {
             Log::warning("SuperAdminJobMutationService fast-path ES sync warning for Job #{$jobId}: ".$e->getMessage());
-            // Dispatch async outbox worker for guaranteed retry
-            if ($outboxId) {
-                ProcessJobOutboxEventJob::dispatch((int) $outboxId);
-            }
         }
 
-        // 6. Real-Time Reverb WebSocket Broadcasting
         try {
+            $sequenceId = (int) (microtime(true) * 1000);
             broadcast(new JobStatusChanged(
                 companyId: (int) $tenantId,
                 jobId: (int) $jobId,
                 oldStatus: (string) $oldStatus,
                 newStatus: (string) $status,
-                jobTitle: (string) ($job->title ?? '')
+                jobTitle: (string) ($job->title ?? ''),
+                sequenceId: $sequenceId
             ));
+            $broadcastSuccess = true;
         } catch (\Throwable $e) {
             Log::warning('SuperAdminJobMutationService JobStatusChanged broadcast warning: '.$e->getMessage());
+        }
+
+        // 6. Strict Outbox Completion Semantics
+        if ($outboxId) {
+            if ($esSuccess && $broadcastSuccess) {
+                // Both side-effects succeeded synchronously
+                DB::table('sys_outbox_events')
+                    ->where('id', $outboxId)
+                    ->update([
+                        'status' => 'COMPLETED',
+                        'processed_at' => now(),
+                        'last_error' => null,
+                    ]);
+            } else {
+                // One or both failed: keep event for worker retry with exponential backoff
+                DB::table('sys_outbox_events')
+                    ->where('id', $outboxId)
+                    ->update([
+                        'status' => 'FAILED',
+                        'attempts' => 1,
+                        'available_at' => now()->addSeconds(5),
+                        'last_error' => 'Fast-path incomplete: ES='.($esSuccess ? 'OK' : 'FAIL').', Broadcast='.($broadcastSuccess ? 'OK' : 'FAIL'),
+                    ]);
+                ProcessJobOutboxEventJob::dispatch((int) $outboxId);
+            }
         }
 
         return $responsePayload;
@@ -243,26 +299,12 @@ class SuperAdminJobMutationService
 
     /**
      * Invalidate all in-memory Redis/Dragonfly query and entity caches for jobs.
-     * Incrementing the generation version invalidates all cached list query fingerprints in O(1) time.
+     * Delegates to centralized SuperAdminJobsCacheManager for O(1) invalidation.
      *
      * @param  int|null  $jobId  Optional specific job identifier
      */
     public function flushJobsCaches(?int $jobId = null): void
     {
-        if ($jobId) {
-            Cache::forget("v3:status_job:{$jobId}");
-            Cache::forget("v3:status_log:{$jobId}");
-            Cache::forget("superadmin:jobs:viewmore:{$jobId}");
-            Cache::forget("superadmin:jobs:hmlisting:{$jobId}");
-        }
-
-        Cache::forget('ats:superadmin_jobs_data_cnt');
-
-        // Increment generation counter for O(1) invalidation of all cached list queries
-        if (Cache::has('superadmin:jobs:version')) {
-            Cache::increment('superadmin:jobs:version');
-        } else {
-            Cache::put('superadmin:jobs:version', 2, 86400 * 30);
-        }
+        SuperAdminJobsCacheManager::invalidateAll($jobId);
     }
 }
