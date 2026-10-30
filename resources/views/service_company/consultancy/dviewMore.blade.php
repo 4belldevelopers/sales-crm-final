@@ -1712,11 +1712,11 @@
                                 'hold' => 'badge-light-warning text-warning',
                                 default => 'badge-light-secondary text-muted'
                             };
-                            $minSal = !empty($job->minimum_salary) ? '₹'.number_format($job->minimum_salary) : 'Competitive';
-                            $maxSal = !empty($job->maximum_salary) ? ' – ₹'.number_format($job->maximum_salary) : '';
-                            $minExp = $job->minimum_experience ?? 3;
-                            $maxExp = $job->maximum_experience ?? 6;
-                            $loc = $job->city_name ?: ($job->work_mode ?: 'Hybrid / Onsite');
+                            $minSal = !empty($job->min_salary) ? '₹'.number_format($job->min_salary) : (!empty($job->minimum_salary) ? '₹'.number_format($job->minimum_salary) : 'Competitive');
+                            $maxSal = !empty($job->max_salary) ? ' – ₹'.number_format($job->max_salary) : (!empty($job->maximum_salary) ? ' – ₹'.number_format($job->maximum_salary) : '');
+                            $minExp = $job->min_exp ?? ($job->minimum_experience ?? 3);
+                            $maxExp = $job->max_exp ?? ($job->maximum_experience ?? 6);
+                            $loc = ($job->city_name ?? null) ?: (($job->work_type ?? null) ?: 'Hybrid / Onsite');
                         @endphp
                         <div class="cd-primary-card js-job-item" data-status="{{ $jobStatus }}">
                             <div class="cd-subcards-grid">

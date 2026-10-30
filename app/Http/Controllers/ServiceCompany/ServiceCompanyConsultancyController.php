@@ -961,20 +961,18 @@ After completing these steps, they will be able to start collaborating with your
 
         $this->sharedJobs = DB::table('recommendation_relation')
             ->join('jobs', 'jobs.id', '=', 'recommendation_relation.job_id')
-            ->leftJoin('job_locations', 'job_locations.job_id', '=', 'jobs.id')
+            ->leftJoin('job_locations', 'job_locations.id', '=', 'jobs.location_id')
             ->select(
                 'jobs.id',
                 'jobs.title',
-                'jobs.job_id as job_code',
                 'jobs.status',
                 'jobs.total_positions',
-                'jobs.minimum_salary',
-                'jobs.maximum_salary',
-                'jobs.minimum_experience',
-                'jobs.maximum_experience',
-                'jobs.work_mode',
+                'jobs.min_salary',
+                'jobs.max_salary',
+                'jobs.min_exp',
+                'jobs.max_exp',
                 'jobs.created_at',
-                'job_locations.city_name',
+                'job_locations.location as city_name',
                 'recommendation_relation.created_at as shared_at'
             )
             ->where('recommendation_relation.from_company_id', '=', $company_id)
@@ -1041,22 +1039,21 @@ After completing these steps, they will be able to start collaborating with your
             ->get();
 
         // ── 4. Interviews Schedule ──
-        $this->interviewsList = DB::table('interview_schedule')
-            ->join('job_applications', 'job_applications.id', '=', 'interview_schedule.job_application_id')
-            ->leftJoin('jobs', 'jobs.id', '=', 'interview_schedule.job_id')
+        $this->interviewsList = DB::table('interview_schedules')
+            ->join('job_applications', 'job_applications.id', '=', 'interview_schedules.job_application_id')
+            ->leftJoin('jobs', 'jobs.id', '=', 'job_applications.job_id')
             ->select(
-                'interview_schedule.id',
-                'interview_schedule.schedule_date',
-                'interview_schedule.schedule_time',
-                'interview_schedule.status',
-                'interview_schedule.video_type',
-                'interview_schedule.meeting_url',
+                'interview_schedules.id',
+                'interview_schedules.schedule_date',
+                'interview_schedules.schedule_from_time as schedule_time',
+                'interview_schedules.status',
+                'interview_schedules.url_link as meeting_url',
                 'job_applications.full_name as candidate_name',
                 'jobs.title as job_title'
             )
-            ->where('interview_schedule.company_id', '=', $company_id)
+            ->where('interview_schedules.company_id', '=', $company_id)
             ->where('job_applications.thirdparty_company_id', '=', $partnerCompanyId)
-            ->orderBy('interview_schedule.schedule_date', 'desc')
+            ->orderBy('interview_schedules.schedule_date', 'desc')
             ->limit(20)
             ->get();
 
