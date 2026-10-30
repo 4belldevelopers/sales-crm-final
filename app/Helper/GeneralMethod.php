@@ -15770,7 +15770,12 @@ END:VCALENDAR";
                                 'must' => $candidateMust,
                                 'must_not' => [
                                     ['terms' => ['job_master_status_id' => [8, 9, '8', '9']]],
-                                    ['terms' => ['master_status_id' => [8, '8']]],
+                                    [
+                                        'bool' => [
+                                            'must' => [['terms' => ['master_status_id' => [8, 9, '8', '9']]]],
+                                            'must_not' => [['range' => ['job_master_status_id' => ['gt' => 0]]]],
+                                        ],
+                                    ],
                                 ],
                             ],
                         ],
@@ -15944,7 +15949,12 @@ END:VCALENDAR";
                                 ],
                                 'must_not' => [
                                     ['terms' => ['job_master_status_id' => [8, 9, '8', '9']]],
-                                    ['terms' => ['master_status_id' => [8, '8']]],
+                                    [
+                                        'bool' => [
+                                            'must' => [['terms' => ['master_status_id' => [8, 9, '8', '9']]]],
+                                            'must_not' => [['range' => ['job_master_status_id' => ['gt' => 0]]]],
+                                        ],
+                                    ],
                                 ],
                             ],
                         ],

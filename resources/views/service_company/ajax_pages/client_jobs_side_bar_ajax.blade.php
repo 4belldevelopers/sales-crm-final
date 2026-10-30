@@ -156,13 +156,17 @@
 
                 // 6. Sub-Card 4: Agency Name Resolution (Strictly displays actual Agency Name, NEVER a count like "3 Agencies")
                 $agencyName = null;
+                $viewerCompanyId = (int) (auth()->user()->company_id ?? ($company_id ?? 0));
+                if ($viewerCompanyId <= 1) {
+                    $viewerCompanyId = 2; // Default to agency company 4Bell Technology
+                }
                 $agencies = is_array($job->recommendation_relation ?? null) ? $job->recommendation_relation : [];
                 if (!empty($agencies)) {
                     $selectedRel = null;
                     foreach ($agencies as $rel) {
                         $relArr = (array) $rel;
                         $toCompId = (int) ($relArr['to_company_id'] ?? 0);
-                        if ($company_id > 0 && $toCompId === (int) $company_id) {
+                        if ($viewerCompanyId > 0 && $toCompId === $viewerCompanyId) {
                             $selectedRel = $relArr;
                             break;
                         }
@@ -173,6 +177,9 @@
 
                     if ($selectedRel) {
                         $targetAgencyId = (int) ($selectedRel['to_company_id'] ?? 0);
+                        if ($targetAgencyId <= 0 && !empty($viewerCompanyId)) {
+                            $targetAgencyId = $viewerCompanyId;
+                        }
                         if ($targetAgencyId > 0) {
                             $cacheCompKey = "ats:tenant_comp_name:{$targetAgencyId}";
                             $cachedCompName = \Illuminate\Support\Facades\Redis::get($cacheCompKey);
@@ -194,18 +201,18 @@
                 if (empty($agencyName)) {
                     if (!empty($job->agency_name)) {
                         $agencyName = $job->agency_name;
-                    } elseif (!empty($company_id)) {
-                        $cacheCompKey = "ats:tenant_comp_name:{$company_id}";
+                    } elseif (!empty($viewerCompanyId)) {
+                        $cacheCompKey = "ats:tenant_comp_name:{$viewerCompanyId}";
                         $cachedCompName = \Illuminate\Support\Facades\Redis::get($cacheCompKey);
                         if (!empty($cachedCompName)) {
                             $agencyName = (string) $cachedCompName;
                         } else {
-                            $cRow = \Illuminate\Support\Facades\DB::table('companies')->where('id', $company_id)->first(['company_name']);
+                            $cRow = \Illuminate\Support\Facades\DB::table('companies')->where('id', $viewerCompanyId)->first(['company_name']);
                             $agencyName = $cRow->company_name ?? '4Bell Technology';
                             \Illuminate\Support\Facades\Redis::setex($cacheCompKey, 86400, $agencyName);
                         }
                     } else {
-                        $agencyName = '—';
+                        $agencyName = '4Bell Technology';
                     }
                 }
                 $agencyText = $agencyName;
