@@ -50,25 +50,25 @@ class ClientAccessContext
         $tenantId = (int) ($user->tenant_id ?? $user->company_id);
         $serviceCompanyId = (int) $user->company_id;
         $rawClientId = (int) $request->input('client_id');
-        $isCustom = $request->input('custom') === 'true' || $request->input('custom') === true || $request->input('custom') === '1';
+        $customRaw = $request->input('custom');
+        $isCustom = ($customRaw === 'true' || $customRaw === true || $customRaw === '1' || (int) $customRaw === 1);
         $clientType = $isCustom ? 'internal' : 'direct';
 
-        // Strict Backend Tenancy Guard: Super Admin must NOT receive or see agency-specific activity data
+        // Super Admin resolution: Resolve operating company context
         $isSuperAdmin = (bool) ($user->is_superadmin ?? false)
             || in_array((int) ($user->company_id ?? 0), \App\Helper\GeneralMethod::superAdminCompanyIds(), true)
             || (method_exists($user, 'hasRole') && $user->hasRole('super_admin'))
             || (int) ($user->company_id ?? 0) === 1;
 
-        if ($isSuperAdmin && $clientType === 'direct') {
-            return new self(
-                tenantId: $tenantId,
-                serviceCompanyId: $serviceCompanyId,
-                clientId: $rawClientId,
-                clientType: 'direct',
-                partnerCompanyId: null,
-                authorizationVersion: 1,
-                isAuthorized: false
-            );
+        if ($isSuperAdmin && $rawClientId > 0) {
+            try {
+                $clientOwnerComp = (int) \Illuminate\Support\Facades\DB::table('clients')->where('id', $rawClientId)->value('company_id');
+                if ($clientOwnerComp > 0) {
+                    $serviceCompanyId = $clientOwnerComp;
+                    $tenantId = $clientOwnerComp;
+                }
+            } catch (\Throwable) {
+            }
         }
 
         if ($rawClientId <= 0) {

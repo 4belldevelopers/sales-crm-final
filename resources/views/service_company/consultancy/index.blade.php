@@ -438,12 +438,16 @@
   border-color: #cbd5e1 !important;
 }
 .cl-loc-combobox-btn.has-filter,
+.cl-ind-combobox-btn.has-filter,
+.cl-act-combobox-btn.has-filter,
 .cl-pipe-combobox-btn.has-filter,
 .cl-sort-combobox-btn.has-filter {
   border-color: #009ef7 !important;
   background: #f0fdf4 !important;
 }
 .cl-loc-combobox-btn.has-filter .cl-pill-val,
+.cl-ind-combobox-btn.has-filter .cl-pill-val,
+.cl-act-combobox-btn.has-filter .cl-pill-val,
 .cl-pipe-combobox-btn.has-filter .cl-pill-val,
 .cl-sort-combobox-btn.has-filter .cl-pill-val {
   color: #009ef7 !important;
@@ -1095,6 +1099,7 @@
 
 @section('content')
 @php
+    $currentTab = $initialTab ?? 'all';
     $totalAgenciesCount = (int)($spartnerDataCnt['spartnerAll'] ?? 0);
     $newlyAddedCount = (int)($spartnerDataCnt['newlyAdded'] ?? 0);
     $topPerformingCount = (int)($spartnerDataCnt['topPerforming'] ?? 0);
@@ -1118,15 +1123,16 @@
         if (!counts || typeof counts !== 'object') return;
 
         var all = counts.spartnerAll !== undefined ? Number(counts.spartnerAll) : null;
-        var newlyAdded = counts.spartnerNewlyAdded !== undefined ? Number(counts.spartnerNewlyAdded) : null;
-        var topPerforming = counts.spartnerTopPerforming !== undefined ? Number(counts.spartnerTopPerforming) : null;
-        var hiring = counts.spartnerHiring !== undefined ? Number(counts.spartnerHiring) : null;
-        var inactive = counts.spartnerInactive !== undefined ? Number(counts.spartnerInactive) : null;
-        var request = counts.spartnerRequest !== undefined ? Number(counts.spartnerRequest) : null;
+        var newlyAdded = counts.newlyAdded !== undefined ? Number(counts.newlyAdded) : (counts.spartnerNewlyAdded !== undefined ? Number(counts.spartnerNewlyAdded) : null);
+        var topPerforming = counts.topPerforming !== undefined ? Number(counts.topPerforming) : (counts.spartnerTopPerforming !== undefined ? Number(counts.spartnerTopPerforming) : null);
+        var hiring = counts.workingOnJobs !== undefined ? Number(counts.workingOnJobs) : (counts.spartnerHiring !== undefined ? Number(counts.spartnerHiring) : null);
+        var inactive = counts.inactive !== undefined ? Number(counts.inactive) : (counts.spartnerInactive !== undefined ? Number(counts.spartnerInactive) : null);
+        var request = counts.sentRequest !== undefined ? Number(counts.sentRequest) : (counts.spartnerRequest !== undefined ? Number(counts.spartnerRequest) : null);
 
         if (all !== null && !isNaN(all)) {
             $('#span_spartnerAll').text(all);
             window.AGENCY_DATA_COUNTERS.spartnerAll = all;
+            $('#span_spartnerAll').closest('.cl-card').find('.cl-card-sub span').text('+' + Math.max(all, 1) + ' registered');
         }
         if (newlyAdded !== null && !isNaN(newlyAdded)) {
             $('#span_spartnerNewlyAdded').text(newlyAdded);
@@ -1147,6 +1153,7 @@
         if (request !== null && !isNaN(request)) {
             $('#span_spartnerRequest').text(request);
             window.AGENCY_DATA_COUNTERS.spartnerRequest = request;
+            $('#span_spartnerRequest').closest('.cl-card').find('.cl-card-sub span').text(request > 0 ? request + ' action needed' : 'All confirmed');
         }
     }
     window.updateAgencyTabCounters = updateAgencyTabCounters;
@@ -1258,10 +1265,10 @@
             </div>
         </div>
 
-        <!-- ── 6 STAT CARDS FILTER GRID ── -->
+        <!-- ── 6 STAT CARDS FILTER GRID (Rule 20 Enterprise Standard) ── -->
         <div class="cl-stat-grid">
             {{-- Card 1: Total Agencies --}}
-            <a href="#" onclick="setAgencyTab('all', this); return false;" class="cl-card active" data-tab="all">
+            <a href="#" onclick="setAgencyTab('all', this); return false;" class="cl-card {{ ($currentTab ?? 'all') === 'all' ? 'active' : '' }}" data-tab="all" title="View all verified connected staffing agency partners">
                 <div class="cl-card-top">
                     <div class="cl-card-icon blue">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -1276,14 +1283,14 @@
                         <div class="cl-card-lbl">Total Agencies</div>
                     </div>
                 </div>
-                <div class="cl-card-sub green">
+                <div class="cl-card-sub green" title="Total registered agency count">
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><path d="m18 15-6-6-6 6"/></svg>
                     <span>+{{ max($totalAgenciesCount, 1) }} registered</span>
                 </div>
             </a>
 
             {{-- Card 2: Newly Added Agencies --}}
-            <a href="#" onclick="setAgencyTab('newly_added', this); return false;" class="cl-card" data-tab="newly_added">
+            <a href="#" onclick="setAgencyTab('newly_added', this); return false;" class="cl-card {{ ($currentTab ?? 'all') === 'newly_added' ? 'active' : '' }}" data-tab="newly_added" title="View agencies onboarded in the last 180 days">
                 <div class="cl-card-top">
                     <div class="cl-card-icon indigo">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -1298,14 +1305,14 @@
                         <div class="cl-card-lbl">Newly Added</div>
                     </div>
                 </div>
-                <div class="cl-card-sub blue">
+                <div class="cl-card-sub blue" title="Agencies partnered within the last 180 days">
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><path d="m18 15-6-6-6 6"/></svg>
-                    <span>Upto 180 days (max 10)</span>
+                    <span>Last 180 days</span>
                 </div>
             </a>
 
             {{-- Card 3: Top Performing Agencies --}}
-            <a href="#" onclick="setAgencyTab('top_performing', this); return false;" class="cl-card" data-tab="top_performing">
+            <a href="#" onclick="setAgencyTab('top_performing', this); return false;" class="cl-card {{ ($currentTab ?? 'all') === 'top_performing' ? 'active' : '' }}" data-tab="top_performing" title="View high-performing agencies with verified candidate placements, offers, or interviews">
                 <div class="cl-card-top">
                     <div class="cl-card-icon green">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -1317,16 +1324,16 @@
                         <div class="cl-card-lbl">Top Performing</div>
                     </div>
                 </div>
-                <div class="cl-card-sub green">
+                <div class="cl-card-sub green" title="Agencies with successful placements and candidate velocity">
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/>
                     </svg>
-                    <span>High placement score</span>
+                    <span>With placements</span>
                 </div>
             </a>
 
             {{-- Card 4: Active Agencies --}}
-            <a href="#" onclick="setAgencyTab('hiring', this); return false;" class="cl-card" data-tab="hiring">
+            <a href="#" onclick="setAgencyTab('hiring', this); return false;" class="cl-card {{ ($currentTab ?? 'all') === 'hiring' ? 'active' : '' }}" data-tab="hiring" title="View active agencies currently working on live assigned jobs">
                 <div class="cl-card-top">
                     <div class="cl-card-icon green">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -1339,14 +1346,14 @@
                         <div class="cl-card-lbl">Active Agencies</div>
                     </div>
                 </div>
-                <div class="cl-card-sub green">
+                <div class="cl-card-sub green" title="Agencies actively assigned to open recruitment jobs">
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><path d="m18 15-6-6-6 6"/></svg>
                     <span>Working on jobs</span>
                 </div>
             </a>
 
             {{-- Card 5: Inactive Agencies --}}
-            <a href="#" onclick="setAgencyTab('inactive', this); return false;" class="cl-card" data-tab="inactive">
+            <a href="#" onclick="setAgencyTab('inactive', this); return false;" class="cl-card {{ ($currentTab ?? 'all') === 'inactive' ? 'active' : '' }}" data-tab="inactive" title="View agencies with zero currently active job assignments">
                 <div class="cl-card-top">
                     <div class="cl-card-icon pink">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -1358,14 +1365,14 @@
                         <div class="cl-card-lbl">Inactive Agencies</div>
                     </div>
                 </div>
-                <div class="cl-card-sub pink">
+                <div class="cl-card-sub pink" title="Agencies with no currently active shared positions">
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
-                    <span>0 active submissions</span>
+                    <span>0 active jobs</span>
                 </div>
             </a>
 
             {{-- Card 6: Pending Invitations --}}
-            <a href="#" onclick="setAgencyTab('request', this); return false;" class="cl-card" data-tab="request">
+            <a href="#" onclick="setAgencyTab('request', this); return false;" class="cl-card {{ ($currentTab ?? 'all') === 'request' ? 'active' : '' }}" data-tab="request" title="View outbound agency partnership invitations awaiting acceptance or registration">
                 <div class="cl-card-top">
                     <div class="cl-card-icon purple">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -1377,18 +1384,18 @@
                         <div class="cl-card-lbl">Pending Invites</div>
                     </div>
                 </div>
-                <div class="cl-card-sub purple">
+                <div class="cl-card-sub purple" title="Invitations sent to prospective agency partners">
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 14 14"/></svg>
                     <span>{{ $pendingRequestsCount > 0 ? $pendingRequestsCount . ' action needed' : 'All confirmed' }}</span>
                 </div>
             </a>
         </div>
 
-        <!-- ── SEARCH & FILTER BAR ── -->
+        <!-- ── SEARCH & FILTER BAR (Rule 20 Enterprise Standard) ── -->
         <div class="cl-filter-bar">
             {{-- Search Input (Enterprise Tier 1 Micro-Search Bar) --}}
             <div class="cl-search-box" id="clSearchBoxWrapper">
-                <svg class="cl-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <svg class="cl-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                     <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
                 </svg>
                 <input 
@@ -1413,7 +1420,7 @@
 
             {{-- Filter 1: Location Combobox Popover --}}
             <div class="cl-loc-dropdown-wrapper" id="clLocDropdownWrapper">
-                <div class="cl-loc-combobox-btn" id="clLocBtn" onclick="toggleLocationDropdown(event)">
+                <div class="cl-loc-combobox-btn" id="clLocBtn" onclick="toggleLocationDropdown(event)" title="Filter by agency headquarters country or location">
                     <div class="cl-pill-icon">
                         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>
@@ -1423,7 +1430,7 @@
                         <span class="cl-pill-lbl">Location</span>
                         <span class="cl-pill-val" id="locationDisplay">All Locations</span>
                     </div>
-                    <div class="cl-pill-clear" id="locationClearBtn" onclick="clearLocationFilter(event)" title="Reset Location" style="display:none;">✕</div>
+                    <div class="cl-pill-clear" id="locationClearBtn" onclick="clearLocationFilter(event)" title="Reset Location to All" style="display:none;">✕</div>
                     <div class="cl-pill-chevron">
                         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
                     </div>
@@ -1431,17 +1438,17 @@
 
                 <div class="cl-loc-dropdown-panel" id="clLocDropdownPanel">
                     <div class="cl-loc-search-box" style="position: relative;">
-                        <input type="text" class="cl-search-inp" style="height:32px; padding:0 26px 0 10px;" id="clLocSearchInp" placeholder="Search countries or cities..." autocomplete="off" oninput="handleLocationSearchInput(this.value)" />
+                        <input type="text" class="cl-search-inp" style="height:32px; padding:0 26px 0 10px;" id="clLocSearchInp" placeholder="Search countries..." autocomplete="off" oninput="handleLocationSearchInput(this.value)" />
                         <span class="cl-pill-clear" id="clLocSearchClear" onclick="$('#clLocSearchInp').val(''); handleLocationSearchInput(''); $(this).hide();" style="position: absolute; right: 14px; top: 50%; transform: translateY(-50%); display:none;">✕</span>
                     </div>
                     <div class="cl-loc-dropdown-body mt-2" id="clLocDropdownBody" style="max-height: 220px; overflow-y: auto;">
-                        <div class="cl-act-item selected" onclick="selectLocationOption('', 'All Locations', event)">
+                        <div class="cl-act-item selected" onclick="selectLocationOption('', 'All Locations', event)" title="Show agencies across all locations">
                             <span>All Locations</span>
                             <span class="cl-act-check">✓</span>
                         </div>
-                        @if ($countries)
+                        @if (!empty($countries))
                             @foreach ($countries as $c)
-                                <div class="cl-act-item" onclick="selectLocationOption('{{ $c->id }}', '{{ $c->country_name }}', event)">
+                                <div class="cl-act-item" onclick="selectLocationOption('{{ $c->id }}', '{{ $c->country_name }}', event)" title="{{ $c->country_name }}">
                                     <span>{{ $c->country_name }}</span>
                                     <span class="cl-act-check" style="display:none;">✓</span>
                                 </div>
@@ -1452,49 +1459,139 @@
                 <input type="hidden" id="country" name="country" value="" />
             </div>
 
-            {{-- Filter 2: Performance Combobox Popover --}}
-            <div class="cl-pipe-dropdown-wrapper" id="clPerfDropdownWrapper">
-                <button type="button" class="cl-pipe-combobox-btn" id="clPerfBtn" onclick="togglePerfDropdown(event)" title="Filter by Agency Performance">
+            {{-- Filter 2: Industry / Specialization Combobox Popover --}}
+            <div class="cl-ind-dropdown-wrapper" id="clIndDropdownWrapper">
+                <button type="button" class="cl-ind-combobox-btn" id="clIndBtn" onclick="toggleIndustryDropdown(event)" title="Filter by agency industry specialization">
+                    <div class="cl-pill-icon">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="2" y="7" width="20" height="14" rx="2" ry="2"/>
+                            <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>
+                        </svg>
+                    </div>
+                    <div class="cl-pill-texts">
+                        <span class="cl-pill-lbl">Industry</span>
+                        <span class="cl-pill-val" id="industryDisplay">All Industries</span>
+                    </div>
+                    <div class="cl-pill-clear" id="industryClearBtn" onclick="clearIndustryFilter(event)" title="Reset Industry to All" style="display:none;">✕</div>
+                    <div class="cl-pill-chevron">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+                    </div>
+                </button>
+
+                <div class="cl-ind-dropdown-panel" id="clIndDropdownPanel">
+                    <div class="cl-ind-search-box" style="position: relative;">
+                        <input type="text" class="cl-search-inp" style="height:32px; padding:0 26px 0 10px;" id="clIndSearchInp" placeholder="Search industries..." autocomplete="off" oninput="handleIndustrySearchInput(this.value)" />
+                        <span class="cl-pill-clear" id="clIndSearchClear" onclick="$('#clIndSearchInp').val(''); handleIndustrySearchInput(''); $(this).hide();" style="position: absolute; right: 14px; top: 50%; transform: translateY(-50%); display:none;">✕</span>
+                    </div>
+                    <div class="cl-ind-dropdown-body mt-2" id="clIndDropdownBody" style="max-height: 220px; overflow-y: auto;">
+                        <div class="cl-act-item selected" onclick="selectIndustryOption('', 'All Industries', event)" title="Show all recruitment industries">
+                            <span>All Industries</span>
+                            <span class="cl-act-check">✓</span>
+                        </div>
+                        @if (!empty($industries))
+                            @foreach ($industries as $ind)
+                                <div class="cl-act-item" onclick="selectIndustryOption('{{ $ind->ind_id }}', '{{ $ind->ind_name }}', event)" title="{{ $ind->ind_name }}">
+                                    <span>{{ $ind->ind_name }}</span>
+                                    <span class="cl-act-check" style="display:none;">✓</span>
+                                </div>
+                            @endforeach
+                        @endif
+                    </div>
+                </div>
+                <input type="hidden" id="industry" name="industry" value="" />
+            </div>
+
+            {{-- Filter 3: Activity Recency Combobox Popover --}}
+            <div class="cl-act-dropdown-wrapper" id="clActDropdownWrapper">
+                <button type="button" class="cl-act-combobox-btn" id="clActBtn" onclick="toggleActivityDropdown(event)" title="Filter by agency recent workflow or submission activity">
                     <div class="cl-pill-icon">
                         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
                         </svg>
                     </div>
                     <div class="cl-pill-texts">
-                        <span class="cl-pill-lbl">Performance</span>
-                        <span class="cl-pill-val" id="perfDisplay">All Performance</span>
+                        <span class="cl-pill-lbl">Activity</span>
+                        <span class="cl-pill-val" id="activityDisplay">All Activity</span>
                     </div>
-                    <div class="cl-pill-clear" id="perfClearBtn" onclick="clearPerfFilter(event)" title="Reset Performance" style="display:none;">✕</div>
+                    <div class="cl-pill-clear" id="activityClearBtn" onclick="clearActivityFilter(event)" title="Reset Activity to All" style="display:none;">✕</div>
                     <div class="cl-pill-chevron">
                         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
                     </div>
                 </button>
 
-                <div class="cl-pipe-dropdown-panel" id="clPerfDropdownPanel">
-                    <div class="cl-pipe-section-hdr">Performance Tier</div>
-                    <div class="cl-pipe-item selected" onclick="selectPerfOption('', 'All Performance', event)">
-                        <span>All Performance</span>
+                <div class="cl-act-dropdown-panel" id="clActDropdownPanel">
+                    <div class="cl-act-section-hdr">Recency Window</div>
+                    <div class="cl-act-item selected" onclick="selectActivityOption('', 'All Activity', event)" title="All connected agencies regardless of recency">
+                        <span>All Activity</span>
                         <span class="cl-act-check">✓</span>
                     </div>
-                    <div class="cl-pipe-item" onclick="selectPerfOption('high', 'High Performers (5+ Placements)', event)">
-                        <span>High Performers</span>
+                    <div class="cl-act-item" onclick="selectActivityOption('7d', 'Active This Week (0–7d)', event)" title="Agencies with candidate submissions in the last 7 days">
+                        <span>Active This Week (0–7d)</span>
                         <span class="cl-act-check" style="display:none;">✓</span>
                     </div>
-                    <div class="cl-pipe-item" onclick="selectPerfOption('medium', 'Active (1–4 Placements)', event)">
-                        <span>Medium Activity</span>
+                    <div class="cl-act-item" onclick="selectActivityOption('30d', 'Active This Month (8–30d)', event)" title="Agencies with candidate submissions in the last 30 days">
+                        <span>Active This Month (8–30d)</span>
                         <span class="cl-act-check" style="display:none;">✓</span>
                     </div>
-                    <div class="cl-pipe-item" onclick="selectPerfOption('low', 'Getting Started (0 Placements)', event)">
-                        <span>Low / New</span>
+                    <div class="cl-act-item" onclick="selectActivityOption('inactive', 'No Submissions (>30d)', event)" title="Agencies with no candidate submissions in the last 30 days">
+                        <span>No Recent Activity</span>
                         <span class="cl-act-check" style="display:none;">✓</span>
                     </div>
                 </div>
-                <input type="hidden" id="agency_performance" name="agency_performance" value="" />
+                <input type="hidden" id="activity" name="activity" value="" />
             </div>
 
-            {{-- Filter 3: Sort Combobox Popover --}}
+            {{-- Filter 4: Candidate Pipeline Combobox Popover --}}
+            <div class="cl-pipe-dropdown-wrapper" id="clPipeDropdownWrapper">
+                <button type="button" class="cl-pipe-combobox-btn" id="clPipeBtn" onclick="togglePipelineDropdown(event)" title="Filter by candidate pipeline stage presence">
+                    <div class="cl-pill-icon">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z"/>
+                        </svg>
+                    </div>
+                    <div class="cl-pill-texts">
+                        <span class="cl-pill-lbl">Pipeline</span>
+                        <span class="cl-pill-val" id="pipelineDisplay">All Pipeline</span>
+                    </div>
+                    <div class="cl-pill-clear" id="pipelineClearBtn" onclick="clearPipelineFilter(event)" title="Reset Pipeline to All" style="display:none;">✕</div>
+                    <div class="cl-pill-chevron">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+                    </div>
+                </button>
+
+                <div class="cl-pipe-dropdown-panel" id="clPipeDropdownPanel">
+                    <div class="cl-pipe-section-hdr">Pipeline Funnel Stage</div>
+                    <div class="cl-pipe-item selected" onclick="selectPipelineOption('', 'All Pipeline', event)" title="All agencies across any stage">
+                        <span>All Pipeline</span>
+                        <span class="cl-act-check">✓</span>
+                    </div>
+                    <div class="cl-pipe-item" onclick="selectPipelineOption('sourcing', 'Sourcing Stage', event)" title="Agencies with candidates currently in Sourcing stage">
+                        <span>Sourcing Stage</span>
+                        <span class="cl-act-check" style="display:none;">✓</span>
+                    </div>
+                    <div class="cl-pipe-item" onclick="selectPipelineOption('screening', 'Screening Stage', event)" title="Agencies with candidates in Screening / Evaluation">
+                        <span>Screening Stage</span>
+                        <span class="cl-act-check" style="display:none;">✓</span>
+                    </div>
+                    <div class="cl-pipe-item" onclick="selectPipelineOption('interview', 'Interview Stage', event)" title="Agencies with active interview candidates">
+                        <span>Interview Stage</span>
+                        <span class="cl-act-check" style="display:none;">✓</span>
+                    </div>
+                    <div class="cl-pipe-item" onclick="selectPipelineOption('offers', 'Offers Stage', event)" title="Agencies with candidate offer letters extended">
+                        <span>Offers Stage</span>
+                        <span class="cl-act-check" style="display:none;">✓</span>
+                    </div>
+                    <div class="cl-pipe-item" onclick="selectPipelineOption('joined', 'Joined Stage', event)" title="Agencies with confirmed joined placements">
+                        <span>Joined Stage</span>
+                        <span class="cl-act-check" style="display:none;">✓</span>
+                    </div>
+                </div>
+                <input type="hidden" id="pipeline" name="pipeline" value="" />
+            </div>
+
+            {{-- Filter 5: Sort Combobox Popover --}}
             <div class="cl-sort-dropdown-wrapper" id="clSortDropdownWrapper">
-                <button type="button" class="cl-sort-combobox-btn" id="clSortBtn" onclick="toggleSortDropdown(event)" title="Sort Agency Listing">
+                <button type="button" class="cl-sort-combobox-btn" id="clSortBtn" onclick="toggleSortDropdown(event)" title="Sort Agency Listing by chronological, alphabetical, or workload criteria">
                     <div class="cl-pill-icon">
                         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <line x1="7" y1="4" x2="7" y2="20"/><polyline points="3 8 7 4 11 8"/><line x1="17" y1="4" x2="17" y2="20"/><polyline points="13 16 17 20 21 16"/>
@@ -1504,7 +1601,7 @@
                         <span class="cl-pill-lbl">Sort</span>
                         <span class="cl-pill-val" id="sortDisplay">Recently Added</span>
                     </div>
-                    <div class="cl-pill-clear" id="sortClearBtn" onclick="clearSortFilter(event)" title="Reset Sort" style="display:none;">✕</div>
+                    <div class="cl-pill-clear" id="sortClearBtn" onclick="clearSortFilter(event)" title="Reset Sort to Recently Added" style="display:none;">✕</div>
                     <div class="cl-pill-chevron">
                         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
                     </div>
@@ -1512,25 +1609,25 @@
 
                 <div class="cl-sort-dropdown-panel" id="clSortDropdownPanel">
                     <div class="cl-sort-section-hdr">Chronological</div>
-                    <div class="cl-sort-item selected" onclick="selectSortOption('recent', 'Recently Added', event)">
+                    <div class="cl-sort-item selected" onclick="selectSortOption('recent', 'Recently Added', event)" title="Sort by newest partnership date">
                         <span>Recently Added</span>
                         <span class="cl-act-check">✓</span>
                     </div>
-                    <div class="cl-sort-item" onclick="selectSortOption('oldest', 'Oldest First', event)">
+                    <div class="cl-sort-item" onclick="selectSortOption('oldest', 'Oldest First', event)" title="Sort by oldest partnership date">
                         <span>Oldest First</span>
                         <span class="cl-act-check" style="display:none;">✓</span>
                     </div>
                     <div class="cl-sort-section-hdr">Alphabetical</div>
-                    <div class="cl-sort-item" onclick="selectSortOption('name_asc', 'Agency Name (A → Z)', event)">
+                    <div class="cl-sort-item" onclick="selectSortOption('name_asc', 'Agency Name (A → Z)', event)" title="Sort alphabetically A to Z">
                         <span>Agency Name (A → Z)</span>
                         <span class="cl-act-check" style="display:none;">✓</span>
                     </div>
-                    <div class="cl-sort-item" onclick="selectSortOption('name_desc', 'Agency Name (Z → A)', event)">
+                    <div class="cl-sort-item" onclick="selectSortOption('name_desc', 'Agency Name (Z → A)', event)" title="Sort alphabetically Z to A">
                         <span>Agency Name (Z → A)</span>
                         <span class="cl-act-check" style="display:none;">✓</span>
                     </div>
-                    <div class="cl-sort-section-hdr">Activity</div>
-                    <div class="cl-sort-item" onclick="selectSortOption('jobs_desc', 'Most Shared Jobs', event)">
+                    <div class="cl-sort-section-hdr">Workload & Activity</div>
+                    <div class="cl-sort-item" onclick="selectSortOption('jobs_desc', 'Most Shared Jobs', event)" title="Sort by active shared jobs count">
                         <span>Most Shared Jobs</span>
                         <span class="cl-act-check" style="display:none;">✓</span>
                     </div>
@@ -1645,21 +1742,13 @@
     // ── Global Filter & Action Callbacks (Strict Rule 17 Isolation) ──
     window.setAgencyTab = function(tabKey, el) {
         $('.cl-stat-grid .cl-card').removeClass('active');
-        $(el).addClass('active');
+        if (el) {
+            $(el).addClass('active');
+        } else {
+            $(`.cl-stat-grid .cl-card[data-tab="${tabKey}"]`).addClass('active');
+        }
         if (window.AgencyListingManager) {
-            window.AgencyListingManager.activeTab = tabKey;
-            if (tabKey === 'newly_added') {
-                window.AgencyListingManager.perfFilter = '';
-            } else if (tabKey === 'top_performing') {
-                window.AgencyListingManager.perfFilter = 'high';
-            } else if (tabKey === 'hiring') {
-                window.AgencyListingManager.perfFilter = 'high';
-            } else if (tabKey === 'inactive') {
-                window.AgencyListingManager.perfFilter = 'low';
-            } else {
-                window.AgencyListingManager.perfFilter = '';
-            }
-            window.AgencyListingManager.loadPage(1);
+            window.AgencyListingManager.setTab(tabKey);
         }
     };
 
@@ -1668,11 +1757,11 @@
         $('#kt_tagify_2').val('');
         $('#clSearchClearBtn, #clSearchMatchCount').hide();
         if (window.AgencyListingManager) {
-            window.AgencyListingManager.searchQuery = '';
-            window.AgencyListingManager.loadPage(1);
+            window.AgencyListingManager.setSearch('');
         }
     };
 
+    // ── Combobox 1: Location ──
     window.toggleLocationDropdown = function(e) {
         if (e) e.stopPropagation();
         const $panel = $('#clLocDropdownPanel');
@@ -1685,11 +1774,9 @@
         if (e) e.stopPropagation();
         $('#locationDisplay').text(name);
         $('#country').val(id);
-        $('#clLocDropdownBody .cl-act-item').removeClass('selected');
-        $('#clLocDropdownBody .cl-act-item .cl-act-check').hide();
+        $('#clLocDropdownBody .cl-act-item').removeClass('selected').find('.cl-act-check').hide();
         if (e && e.currentTarget) {
-            $(e.currentTarget).addClass('selected');
-            $(e.currentTarget).find('.cl-act-check').show();
+            $(e.currentTarget).addClass('selected').find('.cl-act-check').show();
         }
 
         if (id) {
@@ -1711,8 +1798,7 @@
         if (e) e.stopPropagation();
         $('#locationDisplay').text('All Locations');
         $('#country').val('');
-        $('#clLocDropdownBody .cl-act-item').removeClass('selected');
-        $('#clLocDropdownBody .cl-act-item .cl-act-check').hide();
+        $('#clLocDropdownBody .cl-act-item').removeClass('selected').find('.cl-act-check').hide();
         $('#clLocDropdownBody .cl-act-item').first().addClass('selected').find('.cl-act-check').show();
         $('#clLocBtn').removeClass('has-filter');
         $('#locationClearBtn').hide();
@@ -1724,68 +1810,178 @@
     };
 
     window.handleLocationSearchInput = function(val) {
-        val = (val || '').toLowerCase();
+        val = (val || '').toLowerCase().trim();
         if (val.length > 0) {
             $('#clLocSearchClear').show();
         } else {
             $('#clLocSearchClear').hide();
         }
-        $('#clLocDropdownBody .cl-act-item').each(function() {
+        $('#clLocDropdownBody .cl-act-item').each(function(idx) {
+            if (idx === 0) return;
             var text = $(this).text().toLowerCase();
             $(this).toggle(text.indexOf(val) > -1);
         });
     };
 
-    window.togglePerfDropdown = function(e) {
+    // ── Combobox 2: Industry ──
+    window.toggleIndustryDropdown = function(e) {
         if (e) e.stopPropagation();
-        const $panel = $('#clPerfDropdownPanel');
+        const $panel = $('#clIndDropdownPanel');
         const isShown = $panel.hasClass('show');
         if (window.AgencyListingManager) window.AgencyListingManager.closeAllDropdowns();
         if (!isShown) $panel.addClass('show');
     };
 
-    window.selectPerfOption = function(val, label, e) {
+    window.selectIndustryOption = function(id, name, e) {
         if (e) e.stopPropagation();
-        $('#perfDisplay').text(label);
-        $('#agency_performance').val(val);
-        $('#clPerfDropdownPanel .cl-pipe-item').removeClass('selected');
-        $('#clPerfDropdownPanel .cl-pipe-item .cl-act-check').hide();
+        $('#industryDisplay').text(name);
+        $('#industry').val(id);
+        $('#clIndDropdownBody .cl-act-item').removeClass('selected').find('.cl-act-check').hide();
         if (e && e.currentTarget) {
-            $(e.currentTarget).addClass('selected');
-            $(e.currentTarget).find('.cl-act-check').show();
+            $(e.currentTarget).addClass('selected').find('.cl-act-check').show();
+        }
+
+        if (id) {
+            $('#clIndBtn').addClass('has-filter');
+            $('#industryClearBtn').show();
+        } else {
+            $('#clIndBtn').removeClass('has-filter');
+            $('#industryClearBtn').hide();
+        }
+
+        if (window.AgencyListingManager) {
+            window.AgencyListingManager.industryFilter = id;
+            window.AgencyListingManager.closeAllDropdowns();
+            window.AgencyListingManager.loadPage(1);
+        }
+    };
+
+    window.clearIndustryFilter = function(e) {
+        if (e) e.stopPropagation();
+        $('#industryDisplay').text('All Industries');
+        $('#industry').val('');
+        $('#clIndDropdownBody .cl-act-item').removeClass('selected').find('.cl-act-check').hide();
+        $('#clIndDropdownBody .cl-act-item').first().addClass('selected').find('.cl-act-check').show();
+        $('#clIndBtn').removeClass('has-filter');
+        $('#industryClearBtn').hide();
+        if (window.AgencyListingManager) {
+            window.AgencyListingManager.industryFilter = '';
+            window.AgencyListingManager.closeAllDropdowns();
+            window.AgencyListingManager.loadPage(1);
+        }
+    };
+
+    window.handleIndustrySearchInput = function(val) {
+        val = (val || '').toLowerCase().trim();
+        if (val.length > 0) {
+            $('#clIndSearchClear').show();
+        } else {
+            $('#clIndSearchClear').hide();
+        }
+        $('#clIndDropdownBody .cl-act-item').each(function(idx) {
+            if (idx === 0) return;
+            var text = $(this).text().toLowerCase();
+            $(this).toggle(text.indexOf(val) > -1);
+        });
+    };
+
+    // ── Combobox 3: Activity Recency ──
+    window.toggleActivityDropdown = function(e) {
+        if (e) e.stopPropagation();
+        const $panel = $('#clActDropdownPanel');
+        const isShown = $panel.hasClass('show');
+        if (window.AgencyListingManager) window.AgencyListingManager.closeAllDropdowns();
+        if (!isShown) $panel.addClass('show');
+    };
+
+    window.selectActivityOption = function(val, label, e) {
+        if (e) e.stopPropagation();
+        $('#activityDisplay').text(label);
+        $('#activity').val(val);
+        $('#clActDropdownPanel .cl-act-item').removeClass('selected').find('.cl-act-check').hide();
+        if (e && e.currentTarget) {
+            $(e.currentTarget).addClass('selected').find('.cl-act-check').show();
         }
 
         if (val) {
-            $('#clPerfBtn').addClass('has-filter');
-            $('#perfClearBtn').show();
+            $('#clActBtn').addClass('has-filter');
+            $('#activityClearBtn').show();
         } else {
-            $('#clPerfBtn').removeClass('has-filter');
-            $('#perfClearBtn').hide();
+            $('#clActBtn').removeClass('has-filter');
+            $('#activityClearBtn').hide();
         }
 
         if (window.AgencyListingManager) {
-            window.AgencyListingManager.perfFilter = val;
+            window.AgencyListingManager.activityFilter = val;
             window.AgencyListingManager.closeAllDropdowns();
             window.AgencyListingManager.loadPage(1);
         }
     };
 
-    window.clearPerfFilter = function(e) {
+    window.clearActivityFilter = function(e) {
         if (e) e.stopPropagation();
-        $('#perfDisplay').text('All Performance');
-        $('#agency_performance').val('');
-        $('#clPerfDropdownPanel .cl-pipe-item').removeClass('selected');
-        $('#clPerfDropdownPanel .cl-pipe-item .cl-act-check').hide();
-        $('#clPerfDropdownPanel .cl-pipe-item').first().addClass('selected').find('.cl-act-check').show();
-        $('#clPerfBtn').removeClass('has-filter');
-        $('#perfClearBtn').hide();
+        $('#activityDisplay').text('All Activity');
+        $('#activity').val('');
+        $('#clActDropdownPanel .cl-act-item').removeClass('selected').find('.cl-act-check').hide();
+        $('#clActDropdownPanel .cl-act-item').first().addClass('selected').find('.cl-act-check').show();
+        $('#clActBtn').removeClass('has-filter');
+        $('#activityClearBtn').hide();
         if (window.AgencyListingManager) {
-            window.AgencyListingManager.perfFilter = '';
+            window.AgencyListingManager.activityFilter = '';
             window.AgencyListingManager.closeAllDropdowns();
             window.AgencyListingManager.loadPage(1);
         }
     };
 
+    // ── Combobox 4: Pipeline ──
+    window.togglePipelineDropdown = function(e) {
+        if (e) e.stopPropagation();
+        const $panel = $('#clPipeDropdownPanel');
+        const isShown = $panel.hasClass('show');
+        if (window.AgencyListingManager) window.AgencyListingManager.closeAllDropdowns();
+        if (!isShown) $panel.addClass('show');
+    };
+
+    window.selectPipelineOption = function(val, label, e) {
+        if (e) e.stopPropagation();
+        $('#pipelineDisplay').text(label);
+        $('#pipeline').val(val);
+        $('#clPipeDropdownPanel .cl-pipe-item').removeClass('selected').find('.cl-act-check').hide();
+        if (e && e.currentTarget) {
+            $(e.currentTarget).addClass('selected').find('.cl-act-check').show();
+        }
+
+        if (val) {
+            $('#clPipeBtn').addClass('has-filter');
+            $('#pipelineClearBtn').show();
+        } else {
+            $('#clPipeBtn').removeClass('has-filter');
+            $('#pipelineClearBtn').hide();
+        }
+
+        if (window.AgencyListingManager) {
+            window.AgencyListingManager.pipelineFilter = val;
+            window.AgencyListingManager.closeAllDropdowns();
+            window.AgencyListingManager.loadPage(1);
+        }
+    };
+
+    window.clearPipelineFilter = function(e) {
+        if (e) e.stopPropagation();
+        $('#pipelineDisplay').text('All Pipeline');
+        $('#pipeline').val('');
+        $('#clPipeDropdownPanel .cl-pipe-item').removeClass('selected').find('.cl-act-check').hide();
+        $('#clPipeDropdownPanel .cl-pipe-item').first().addClass('selected').find('.cl-act-check').show();
+        $('#clPipeBtn').removeClass('has-filter');
+        $('#pipelineClearBtn').hide();
+        if (window.AgencyListingManager) {
+            window.AgencyListingManager.pipelineFilter = '';
+            window.AgencyListingManager.closeAllDropdowns();
+            window.AgencyListingManager.loadPage(1);
+        }
+    };
+
+    // ── Combobox 5: Sort ──
     window.toggleSortDropdown = function(e) {
         if (e) e.stopPropagation();
         const $panel = $('#clSortDropdownPanel');
@@ -1798,11 +1994,9 @@
         if (e) e.stopPropagation();
         $('#sortDisplay').text(label);
         $('#sortingfilter').val(val);
-        $('#clSortDropdownPanel .cl-sort-item').removeClass('selected');
-        $('#clSortDropdownPanel .cl-sort-item .cl-act-check').hide();
+        $('#clSortDropdownPanel .cl-sort-item').removeClass('selected').find('.cl-act-check').hide();
         if (e && e.currentTarget) {
-            $(e.currentTarget).addClass('selected');
-            $(e.currentTarget).find('.cl-act-check').show();
+            $(e.currentTarget).addClass('selected').find('.cl-act-check').show();
         }
 
         if (val && val !== 'recent') {
@@ -1825,6 +2019,7 @@
         selectSortOption('recent', 'Recently Added', e);
     };
 
+    // ── Agency Export Options ──
     window.triggerAgencyExport = function(type) {
         if (type === 'filtered_csv') {
             const q = (window.AgencyListingManager && window.AgencyListingManager.searchQuery) ? window.AgencyListingManager.searchQuery : '';
@@ -1836,6 +2031,7 @@
         }
     };
 
+    // ── Enterprise Drawer Architecture ──
     window.openAgencyDrawer = function(id) {
         if (!id) return;
         $('[data-row-id]').closest('.tbl-r').removeClass('client-selected');
@@ -1937,21 +2133,250 @@
         document.body.style.overflow = '';
     };
 
-    // ── Agency Listing Manager Object ──
+    // ── Agency Listing Manager: SWR Cache, URL Sync & Complete Page Isolation ──
     const AgencyListingManager = {
         currentPage: 1,
-        activeTab: 'all',
+        activeTab: '{{ $initialTab ?? "all" }}',
         searchQuery: '',
         countryFilter: '',
-        perfFilter: '',
-        sortFilter: '',
+        industryFilter: '',
+        activityFilter: '',
+        pipelineFilter: '',
+        sortFilter: 'recent',
         searchDebounceTimer: null,
+        cache: {},
+        activeXhr: null,
 
         init: function() {
+            this.readUrlParams();
             this.bindEvents();
-            // If initialHtml is empty, fetch page 1
-            if (!$('#staffingpartnerajax').children().length) {
-                this.loadPage(1);
+
+            if (!$('#staffingpartnerajax').children().length || this.hasCustomInitialFilters()) {
+                this.loadPage(this.currentPage, true);
+            }
+        },
+
+        readUrlParams: function() {
+            const params = new URLSearchParams(window.location.search);
+            if (params.has('tab')) {
+                const tab = params.get('tab');
+                if (['all', 'newly_added', 'top_performing', 'hiring', 'inactive', 'request'].indexOf(tab) > -1) {
+                    this.activeTab = tab;
+                    $('.cl-stat-grid .cl-card').removeClass('active');
+                    $(`.cl-stat-grid .cl-card[data-tab="${tab}"]`).addClass('active');
+                }
+            }
+            if (params.has('search') || params.has('q')) {
+                this.searchQuery = params.get('search') || params.get('q') || '';
+                $('#kt_tagify_2').val(this.searchQuery);
+                if (this.searchQuery) $('#clSearchClearBtn').show();
+            }
+            if (params.has('country')) {
+                this.countryFilter = params.get('country');
+                $('#country').val(this.countryFilter);
+                const $item = $(`#clLocDropdownBody .cl-act-item[onclick*="'${this.countryFilter}'"]`);
+                if ($item.length) {
+                    const name = $item.find('span').first().text();
+                    $('#locationDisplay').text(name);
+                    $('#clLocBtn').addClass('has-filter');
+                    $('#locationClearBtn').show();
+                    $('#clLocDropdownBody .cl-act-item').removeClass('selected').find('.cl-act-check').hide();
+                    $item.addClass('selected').find('.cl-act-check').show();
+                }
+            }
+            if (params.has('industry')) {
+                this.industryFilter = params.get('industry');
+                $('#industry').val(this.industryFilter);
+                const $item = $(`#clIndDropdownBody .cl-act-item[onclick*="'${this.industryFilter}'"]`);
+                if ($item.length) {
+                    const name = $item.find('span').first().text();
+                    $('#industryDisplay').text(name);
+                    $('#clIndBtn').addClass('has-filter');
+                    $('#industryClearBtn').show();
+                    $('#clIndDropdownBody .cl-act-item').removeClass('selected').find('.cl-act-check').hide();
+                    $item.addClass('selected').find('.cl-act-check').show();
+                }
+            }
+            if (params.has('activity')) {
+                this.activityFilter = params.get('activity');
+                $('#activity').val(this.activityFilter);
+                const $item = $(`#clActDropdownPanel .cl-act-item[onclick*="'${this.activityFilter}'"]`);
+                if ($item.length) {
+                    const name = $item.find('span').first().text();
+                    $('#activityDisplay').text(name);
+                    $('#clActBtn').addClass('has-filter');
+                    $('#activityClearBtn').show();
+                    $('#clActDropdownPanel .cl-act-item').removeClass('selected').find('.cl-act-check').hide();
+                    $item.addClass('selected').find('.cl-act-check').show();
+                }
+            }
+            if (params.has('pipeline')) {
+                this.pipelineFilter = params.get('pipeline');
+                $('#pipeline').val(this.pipelineFilter);
+                const $item = $(`#clPipeDropdownPanel .cl-pipe-item[onclick*="'${this.pipelineFilter}'"]`);
+                if ($item.length) {
+                    const name = $item.find('span').first().text();
+                    $('#pipelineDisplay').text(name);
+                    $('#clPipeBtn').addClass('has-filter');
+                    $('#pipelineClearBtn').show();
+                    $('#clPipeDropdownPanel .cl-pipe-item').removeClass('selected').find('.cl-act-check').hide();
+                    $item.addClass('selected').find('.cl-act-check').show();
+                }
+            }
+            if (params.has('sort') || params.has('sortingfilter')) {
+                this.sortFilter = params.get('sort') || params.get('sortingfilter') || 'recent';
+                $('#sortingfilter').val(this.sortFilter);
+                const $item = $(`#clSortDropdownPanel .cl-sort-item[onclick*="'${this.sortFilter}'"]`);
+                if ($item.length) {
+                    const name = $item.find('span').first().text();
+                    $('#sortDisplay').text(name);
+                    if (this.sortFilter !== 'recent') {
+                        $('#clSortBtn').addClass('has-filter');
+                        $('#sortClearBtn').show();
+                    }
+                    $('#clSortDropdownPanel .cl-sort-item').removeClass('selected').find('.cl-act-check').hide();
+                    $item.addClass('selected').find('.cl-act-check').show();
+                }
+            }
+            if (params.has('page')) {
+                const page = parseInt(params.get('page'), 10);
+                if (!isNaN(page) && page > 0) this.currentPage = page;
+            }
+        },
+
+        hasCustomInitialFilters: function() {
+            return !!(this.searchQuery || this.countryFilter || this.industryFilter || this.activityFilter || this.pipelineFilter || (this.sortFilter && this.sortFilter !== 'recent') || this.currentPage > 1 || (this.activeTab && this.activeTab !== 'all'));
+        },
+
+        syncUrl: function() {
+            const params = new URLSearchParams();
+            if (this.activeTab && this.activeTab !== 'all') params.set('tab', this.activeTab);
+            if (this.searchQuery) params.set('search', this.searchQuery);
+            if (this.countryFilter) params.set('country', this.countryFilter);
+            if (this.industryFilter) params.set('industry', this.industryFilter);
+            if (this.activityFilter) params.set('activity', this.activityFilter);
+            if (this.pipelineFilter) params.set('pipeline', this.pipelineFilter);
+            if (this.sortFilter && this.sortFilter !== 'recent') params.set('sort', this.sortFilter);
+            if (this.currentPage > 1) params.set('page', this.currentPage);
+
+            const newUrl = window.location.pathname + (params.toString() ? '?' + params.toString() : '');
+            window.history.replaceState({
+                tab: this.activeTab,
+                search: this.searchQuery,
+                country: this.countryFilter,
+                industry: this.industryFilter,
+                activity: this.activityFilter,
+                pipeline: this.pipelineFilter,
+                sort: this.sortFilter,
+                page: this.currentPage
+            }, '', newUrl);
+        },
+
+        setTab: function(tabKey) {
+            if (this.activeTab === tabKey) return;
+            this.activeTab = tabKey;
+            this.updateTableHeaders(tabKey);
+            this.loadPage(1);
+        },
+
+        setSearch: function(query) {
+            this.searchQuery = query;
+            this.loadPage(1);
+        },
+
+        updateTableHeaders: function(tabKey) {
+            const $headers = $('#agencyTableHead .tbl-th-subcard');
+            if ($headers.length >= 4) {
+                if (tabKey === 'request') {
+                    $headers.eq(2).find('span').text('Invitation Lifecycle');
+                    $headers.eq(3).find('span').text('Dispatch Timeline');
+                } else {
+                    $headers.eq(2).find('span').text('Shared Jobs');
+                    $headers.eq(3).find('span').text('Candidate Pipeline');
+                }
+            }
+        },
+
+        closeAllDropdowns: function() {
+            $('.cl-loc-dropdown-panel, .cl-ind-dropdown-panel, .cl-act-dropdown-panel, .cl-pipe-dropdown-panel, .cl-sort-dropdown-panel').removeClass('show');
+        },
+
+        getCacheKey: function(page) {
+            return `tab:${this.activeTab}|p:${page}|q:${this.searchQuery}|co:${this.countryFilter}|ind:${this.industryFilter}|act:${this.activityFilter}|pip:${this.pipelineFilter}|srt:${this.sortFilter}`;
+        },
+
+        loadPage: function(page, bypassCache) {
+            this.currentPage = page || 1;
+            this.syncUrl();
+            this.updateTableHeaders(this.activeTab);
+
+            const cacheKey = this.getCacheKey(this.currentPage);
+            const self = this;
+
+            // SWR In-Memory cache check
+            if (!bypassCache && this.cache[cacheKey]) {
+                const cached = this.cache[cacheKey];
+                this.renderResponse(cached);
+                // Background revalidation
+                this.fetchPage(this.currentPage, cacheKey, true);
+                return;
+            }
+
+            this.fetchPage(this.currentPage, cacheKey, false);
+        },
+
+        fetchPage: function(page, cacheKey, isBackground) {
+            const self = this;
+            if (!isBackground) {
+                $('.loadingMessagestaffingpartnerajax').css({ display: 'block' });
+            }
+
+            if (this.activeXhr && typeof this.activeXhr.abort === 'function') {
+                this.activeXhr.abort();
+            }
+
+            this.activeXhr = $.ajax({
+                url: `{{ route('service_company.consultancy.data_ajax') }}?page=${page}`,
+                type: 'GET',
+                data: {
+                    tab: self.activeTab,
+                    search: self.searchQuery,
+                    cus_search: self.searchQuery,
+                    country: self.countryFilter,
+                    industry: self.industryFilter,
+                    activity: self.activityFilter,
+                    pipeline: self.pipelineFilter,
+                    sortingfilter: self.sortFilter,
+                    per_page: 10
+                },
+                success: function(response) {
+                    $('.loadingMessagestaffingpartnerajax').css({ display: 'none' });
+                    self.cache[cacheKey] = response;
+                    self.renderResponse(response);
+                },
+                error: function(xhr, status) {
+                    if (status !== 'abort') {
+                        $('.loadingMessagestaffingpartnerajax').css({ display: 'none' });
+                    }
+                }
+            });
+        },
+
+        renderResponse: function(response) {
+            if (!response) return;
+            $('#staffingpartnerajax').html(response.html);
+            $('#paginationstaffingpartner').html(response.pagination);
+
+            if (response.total !== undefined) {
+                if (this.searchQuery) {
+                    $('#clSearchMatchCount').text(`${response.total} matches`).show();
+                } else {
+                    $('#clSearchMatchCount').hide();
+                }
+            }
+
+            if (response.agencyDataCnt) {
+                window.updateAgencyTabCounters(response.agencyDataCnt);
             }
         },
 
@@ -1973,7 +2398,7 @@
                 }, 300);
             });
 
-            // Keyboard Shortcut (Ctrl+K)
+            // Keyboard Shortcuts: Ctrl+K / Cmd+K / Esc
             $(document).on('keydown', function(e) {
                 if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
                     e.preventDefault();
@@ -1985,9 +2410,9 @@
                 }
             });
 
-            // Row-Level and Button Delegation to Open Drawer
+            // Row Click Delegation to Open Drawer (ignoring actions, links, buttons, inputs)
             $(document).on('click', '.tbl-r, .show-detail-direct', function(e) {
-                if ($(e.target).closest('input, button, a, .tbl-cb, .tbl-cell-check, .dropdown-menu').length > 0) {
+                if ($(e.target).closest('input, button, a, .tbl-cb, .tbl-cell-check, .dropdown-menu, .resend-agency-invite').length > 0) {
                     return;
                 }
                 const id = $(this).data('row-id') || $(this).closest('[data-row-id]').data('row-id') || $(this).find('[data-row-id]').first().data('row-id');
@@ -2042,16 +2467,17 @@
                 }
                 const url = "{{ route('service_company.consultancy.staffing_invitation', 0) }}";
                 $.ajax({
-                    type: 'GET',
+                    type: 'POST',
                     url: url,
-                    data: { staffing_partners_email: email },
+                    data: { 
+                        staffing_partners_email: email,
+                        _token: '{{ csrf_token() }}'
+                    },
                     success: function(response) {
                         $('#staffing_partners_email').val('');
                         if (response.status === 'warning') {
                             if (typeof Swal !== 'undefined') {
                                 Swal.fire({ icon: 'warning', title: 'Warning', text: response.message });
-                            } else if (typeof swal !== 'undefined') {
-                                swal({ title: 'Warning!', text: response.message, type: 'warning' });
                             } else {
                                 alert(response.message);
                             }
@@ -2059,16 +2485,58 @@
                             $('#add_agency_drawer_overlay, #add_agency_drawer').fadeOut(150);
                             if (typeof Swal !== 'undefined') {
                                 Swal.fire({ icon: 'success', title: 'Invited!', text: response.message || 'Invitation sent successfully.' });
-                            } else if (typeof swal !== 'undefined') {
-                                swal({ title: 'Success!', text: response.message || 'Invitation sent successfully.', type: 'success' });
                             } else {
                                 alert('Invitation sent successfully.');
                             }
-                            self.loadPage(1);
+                            self.loadPage(1, true);
                         }
                     },
                     error: function(xhr) {
                         const msg = (xhr.responseJSON && xhr.responseJSON.message) ? xhr.responseJSON.message : 'Failed to send invitation.';
+                        if (typeof Swal !== 'undefined') {
+                            Swal.fire({ icon: 'error', title: 'Error', text: msg });
+                        } else {
+                            alert(msg);
+                        }
+                    }
+                });
+            });
+
+            // Resend Agency Invitation Click Handler
+            $(document).on('click', '.resend-agency-invite', function(e) {
+                if (e) { e.preventDefault(); e.stopPropagation(); }
+                const email = $(this).data('email');
+                if (!email) return;
+                const $btn = $(this);
+                const originalHtml = $btn.html();
+                $btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-1" role="status" style="width:11px; height:11px;"></span> Resending...');
+
+                $.ajax({
+                    url: "{{ route('service_company.consultancy.staffing_invitation', 0) }}",
+                    type: 'POST',
+                    data: {
+                        staffing_partners_email: email,
+                        _token: '{{ csrf_token() }}'
+                    },
+                    success: function(response) {
+                        $btn.prop('disabled', false).html(originalHtml);
+                        if (response.status === 'success') {
+                            if (typeof Swal !== 'undefined') {
+                                Swal.fire({ icon: 'success', title: 'Invitation Resent', text: response.message || 'Invitation resent successfully.' });
+                            } else {
+                                alert('Invitation resent successfully.');
+                            }
+                        } else {
+                            if (typeof Swal !== 'undefined') {
+                                Swal.fire({ icon: 'warning', title: 'Notice', text: response.message });
+                            } else {
+                                alert(response.message);
+                            }
+                        }
+                    },
+                    error: function(xhr) {
+                        $btn.prop('disabled', false).html(originalHtml);
+                        const msg = (xhr.responseJSON && xhr.responseJSON.message) ? xhr.responseJSON.message : 'Failed to resend invitation.';
                         if (typeof Swal !== 'undefined') {
                             Swal.fire({ icon: 'error', title: 'Error', text: msg });
                         } else {
@@ -2093,51 +2561,33 @@
 
             // Outside click closes popovers
             $(document).on('click', function(e) {
-                if (!$(e.target).closest('.cl-loc-dropdown-wrapper, .cl-pipe-dropdown-wrapper, .cl-sort-dropdown-wrapper').length) {
+                if (!$(e.target).closest('.cl-loc-dropdown-wrapper, .cl-ind-dropdown-wrapper, .cl-act-dropdown-wrapper, .cl-pipe-dropdown-wrapper, .cl-sort-dropdown-wrapper').length) {
                     self.closeAllDropdowns();
                 }
             });
-        },
 
-        closeAllDropdowns: function() {
-            $('.cl-loc-dropdown-panel, .cl-pipe-dropdown-panel, .cl-sort-dropdown-panel').removeClass('show');
-        },
+            // Browser Back/Forward navigation support
+            window.addEventListener('popstate', function(e) {
+                if (e.state) {
+                    self.activeTab = e.state.tab || 'all';
+                    self.searchQuery = e.state.search || '';
+                    self.countryFilter = e.state.country || '';
+                    self.industryFilter = e.state.industry || '';
+                    self.activityFilter = e.state.activity || '';
+                    self.pipelineFilter = e.state.pipeline || '';
+                    self.sortFilter = e.state.sort || 'recent';
+                    self.currentPage = e.state.page || 1;
 
-        loadPage: function(page) {
-            this.currentPage = page || 1;
-            const self = this;
+                    $('.cl-stat-grid .cl-card').removeClass('active');
+                    $(`.cl-stat-grid .cl-card[data-tab="${self.activeTab}"]`).addClass('active');
+                    $('#kt_tagify_2').val(self.searchQuery);
+                    $('#country').val(self.countryFilter);
+                    $('#industry').val(self.industryFilter);
+                    $('#activity').val(self.activityFilter);
+                    $('#pipeline').val(self.pipelineFilter);
+                    $('#sortingfilter').val(self.sortFilter);
 
-            $('.loadingMessagestaffingpartnerajax').css({ display: 'block' });
-
-            $.ajax({
-                url: `{{ route('service_company.consultancy.data_ajax') }}?page=${this.currentPage}`,
-                type: 'GET',
-                data: {
-                    tab: self.activeTab,
-                    search: self.searchQuery,
-                    cus_search: self.searchQuery,
-                    country: self.countryFilter,
-                    agency_performance: self.perfFilter,
-                    sortingfilter: self.sortFilter,
-                    per_page: 10
-                },
-                success: function(response) {
-                    $('.loadingMessagestaffingpartnerajax').css({ display: 'none' });
-                    $('#staffingpartnerajax').html(response.html);
-                    $('#paginationstaffingpartner').html(response.pagination);
-                    if (response.total !== undefined) {
-                        if (self.activeTab === 'all' && !self.searchQuery && !self.countryFilter && !self.perfFilter) {
-                            $('#span_spartnerAll').text(response.total);
-                        }
-                        if (self.searchQuery) {
-                            $('#clSearchMatchCount').text(`${response.total} matches`).show();
-                        } else {
-                            $('#clSearchMatchCount').hide();
-                        }
-                    }
-                },
-                error: function() {
-                    $('.loadingMessagestaffingpartnerajax').css({ display: 'none' });
+                    self.loadPage(self.currentPage, true);
                 }
             });
         }
@@ -2151,8 +2601,9 @@
         const url = $(this).attr('href');
         if (url) {
             const pageMatch = url.match(/page=(\d+)/);
-            const page = pageMatch ? pageMatch[1] : 1;
+            const page = pageMatch ? parseInt(pageMatch[1], 10) : 1;
             AgencyListingManager.loadPage(page);
+            $('html, body').animate({ scrollTop: $('#agencyTableHead').offset().top - 120 }, 200);
         }
     });
 

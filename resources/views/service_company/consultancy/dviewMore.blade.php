@@ -30,6 +30,12 @@
     $cityName = @$city_name ?: (@$client_location->city_name ?: @$client_location->city ?: 'Primary Hub');
     $countryName = @$country_name ?: 'India';
     $agencySize = $agencyCompanySize ?? '10 - 50 employees';
+    $placement_fee = $placement_fee ?? '8.33% of Annual CTC';
+    $partner_joined_date = $partner_joined_date ?? date('d M, Y');
+    $industries_name = $industries_name ?? 'Information Technology & Services';
+    $company_type_name = $company_type_name ?? 'Corporate Entity';
+    $agency_phone = $agency_phone ?? '+91 98765 43210';
+    $agency_email = $agency_email ?? 'partners@agency.com';
 
     // ── Pre-hydrated KPI Numbers (Zero MySQL Read Strain) ──
     $kpiActiveJobs = (int)($Active ?? 0);
@@ -38,9 +44,6 @@
     $kpiTotalJobs = (int)($kpiTotalJobs ?? ($kpiActiveJobs + $kpiHoldJobs + $kpiClosedJobs));
 
     $kpiSubmitted = (int)($all_candidates ?? 0);
-    $kpiInterviews = (int)($all_interview ?? 0);
-    $kpiOffers = (int)($offers ?? 0);
-    $kpiJoins = (int)($Joined ?? 0);
     $isAgencyActive = ($kpiActiveJobs > 0 || $kpiSubmitted > 0);
 
     // Lists
@@ -48,6 +51,51 @@
     $jobsList = $sharedJobs ?? collect([]);
     $candsList = $candidatesList ?? collect([]);
     $interviewsScheduleList = $interviewsList ?? collect([]);
+    $offersJoiningList = $offersJoiningList ?? collect([]);
+
+    // ── Dynamic Subtab Counters (Calculated strictly browser/memory side) ──
+    $itCountAll = count($interviewsScheduleList);
+    $itCountUpcoming = 0;
+    $itCountPendingFeedback = 0;
+    $itCountCompleted = 0;
+    $itCountCancelled = 0;
+    $todayDate = date('Y-m-d');
+    foreach ($interviewsScheduleList as $itItem) {
+        $st = strtolower($itItem->status ?? 'pending');
+        $sDate = !empty($itItem->schedule_date) ? substr($itItem->schedule_date, 0, 10) : '';
+        if ($st === 'canceled' || $st === 'rejected') {
+            $itCountCancelled++;
+        } elseif ($st === 'hired' || $st === 'completed') {
+            $itCountCompleted++;
+        } elseif (!empty($itItem->feedback) && (int)$itItem->feedback === 1) {
+            $itCountCompleted++;
+        } elseif (!empty($sDate) && $sDate < $todayDate) {
+            $itCountPendingFeedback++;
+        } else {
+            $itCountUpcoming++;
+        }
+    }
+
+    $ojCountAll = count($offersJoiningList);
+    $ojCountOffers = 0;
+    $ojCountJoiningSoon = 0;
+    $ojCountJoined = 0;
+    foreach ($offersJoiningList as $ojItem) {
+        $msId = (int)($ojItem->master_status_id ?? 0);
+        $isJoined = ((int)($ojItem->joined ?? 0) === 1 || $msId === 6 || !empty($ojItem->joined_date));
+        if ($isJoined) {
+            $ojCountJoined++;
+        } elseif (!empty($ojItem->offer_acceptance) && (int)$ojItem->offer_acceptance === 1) {
+            $ojCountJoiningSoon++;
+        } else {
+            $ojCountOffers++;
+        }
+    }
+
+    $kpiInterviews = $itCountAll;
+    $kpiOffers = $ojCountOffers;
+    $kpiJoins = $ojCountJoined;
+    $kpiOffersTotal = $ojCountAll;
 
     // Helper: Global Compact Currency Formatter (e.g. ₹500K – 900K or $300K – 500K)
     $formatCompactSalary = function($val, $cur = '₹') {
@@ -2157,48 +2205,48 @@
             </div>
         </a>
 
-        <!-- KPI 2: All Active Jobs -->
+        <!-- KPI 2: Active Jobs -->
         <a href="#requisitions" class="cd-kpi-card cd-kpi-nav-trigger" onclick="triggerDrawerTab('requisitions', event)" title="Active jobs currently being sourced">
             <div class="cd-kpi-icon cd-kpi-icon-emerald"><i class="fas fa-bolt"></i></div>
             <div class="cd-kpi-body">
                 <div class="cd-kpi-num">{{ number_format($kpiActiveJobs) }}</div>
-                <div class="cd-kpi-lbl">All Active Jobs</div>
+                <div class="cd-kpi-lbl">Active Jobs</div>
             </div>
         </a>
 
-        <!-- KPI 3: All Candidates -->
+        <!-- KPI 3: Submitted Candidates -->
         <a href="#candidate_list" class="cd-kpi-card cd-kpi-nav-trigger" onclick="triggerDrawerTab('candidate_list', event)" title="Total candidate profiles submitted">
             <div class="cd-kpi-icon cd-kpi-icon-purple"><i class="fas fa-users"></i></div>
             <div class="cd-kpi-body">
                 <div class="cd-kpi-num">{{ number_format($kpiSubmitted) }}</div>
-                <div class="cd-kpi-lbl">All Candidates</div>
+                <div class="cd-kpi-lbl">Submitted Candidates</div>
             </div>
         </a>
 
-        <!-- KPI 4: All Interviews -->
+        <!-- KPI 4: Interview Schedule -->
         <a href="#interview_tracker" class="cd-kpi-card cd-kpi-nav-trigger" onclick="triggerDrawerTab('interview_tracker', event)" title="Interviews conducted for agency candidates">
             <div class="cd-kpi-icon cd-kpi-icon-amber"><i class="fas fa-calendar-check"></i></div>
             <div class="cd-kpi-body">
                 <div class="cd-kpi-num">{{ number_format($kpiInterviews) }}</div>
-                <div class="cd-kpi-lbl">All Interviews</div>
+                <div class="cd-kpi-lbl">Interview Schedule</div>
             </div>
         </a>
 
-        <!-- KPI 5: All Offers -->
+        <!-- KPI 5: Offer Generated -->
         <a href="#candidate_joining" class="cd-kpi-card cd-kpi-nav-trigger" onclick="triggerDrawerTab('candidate_joining', event)" title="Offers extended to agency candidates">
             <div class="cd-kpi-icon cd-kpi-icon-rose"><i class="fas fa-file-signature"></i></div>
             <div class="cd-kpi-body">
                 <div class="cd-kpi-num">{{ number_format($kpiOffers) }}</div>
-                <div class="cd-kpi-lbl">All Offers</div>
+                <div class="cd-kpi-lbl">Offer Generated</div>
             </div>
         </a>
 
-        <!-- KPI 6: All Joins -->
+        <!-- KPI 6: Successful Joins -->
         <a href="#candidate_joining" class="cd-kpi-card cd-kpi-nav-trigger" onclick="triggerDrawerTab('candidate_joining', event)" title="Candidates successfully joined">
             <div class="cd-kpi-icon cd-kpi-icon-teal"><i class="fas fa-handshake"></i></div>
             <div class="cd-kpi-body">
                 <div class="cd-kpi-num">{{ number_format($kpiJoins) }}</div>
-                <div class="cd-kpi-lbl">All Joins</div>
+                <div class="cd-kpi-lbl">Successful Joins</div>
             </div>
         </a>
     </div>
@@ -2243,14 +2291,14 @@
                 <a class="cd-tab-pill-btn nav-link" data-bs-toggle="tab" data-toggle="tab" href="#interview_tracker" role="tab" aria-selected="false">
                     <i class="fas fa-calendar-days"></i>
                     <span>Interviews</span>
-                    @if($kpiInterviews > 0)<span class="cd-tab-badge-pill">{{ $kpiInterviews }}</span>@endif
+                    <span class="cd-tab-badge-pill">{{ $kpiInterviews }}</span>
                 </a>
             </li>
             <li class="nav-item" role="presentation">
                 <a class="cd-tab-pill-btn nav-link" data-bs-toggle="tab" data-toggle="tab" href="#candidate_joining" role="tab" aria-selected="false">
                     <i class="fas fa-file-signature"></i>
                     <span>Offers &amp; Joins</span>
-                    @if(($kpiOffers + $kpiJoins) > 0)<span class="cd-tab-badge-pill">{{ $kpiOffers + $kpiJoins }}</span>@endif
+                    <span class="cd-tab-badge-pill">{{ $kpiOffersTotal }}</span>
                 </a>
             </li>
             <li class="nav-item" role="presentation">
@@ -2318,7 +2366,7 @@
                                 <div style="min-width:0; flex:1;">
                                     <div class="d-flex align-items-center justify-content-between mb-1">
                                         <span class="fw-bold text-dark fs-8">Agency Verified &amp; Connected</span>
-                                        <span class="text-muted fs-9">{{ $partner_joined_date }}</span>
+                                        <span class="text-muted fs-9">{{ $partner_joined_date ?? date('d M, Y') }}</span>
                                     </div>
                                     <div class="text-muted fs-9">Mutual staffing partnership active with authorized candidate delivery credentials.</div>
                                 </div>
@@ -2396,7 +2444,7 @@
                                     <span class="cd-vinfo-label">Industry Sector</span>
                                 </div>
                                 <div class="cd-vinfo-val">
-                                    <span class="fw-semibold text-gray-800">{{ $industries_name ?: 'Information Technology & Services' }}</span>
+                                    <span class="fw-semibold text-gray-800">{{ $industries_name ?? 'Information Technology & Services' }}</span>
                                 </div>
                             </div>
 
@@ -2407,7 +2455,7 @@
                                     <span class="cd-vinfo-label">Company Type</span>
                                 </div>
                                 <div class="cd-vinfo-val">
-                                    <span class="cd-type-badge-pill">{{ $company_type_name }}</span>
+                                    <span class="cd-type-badge-pill">{{ $company_type_name ?? 'Corporate Entity' }}</span>
                                 </div>
                             </div>
 
@@ -2418,7 +2466,7 @@
                                     <span class="cd-vinfo-label">Workforce Scale</span>
                                 </div>
                                 <div class="cd-vinfo-val">
-                                    <span class="fw-semibold text-gray-800">{{ $agencyCompanySize }}</span>
+                                    <span class="fw-semibold text-gray-800">{{ $agencyCompanySize ?? '10 - 50 Employees' }}</span>
                                 </div>
                             </div>
 
@@ -2451,8 +2499,8 @@
                                 </div>
                                 <div class="cd-vinfo-val">
                                     <div class="cd-tax-wrap">
-                                        <a href="mailto:{{ $agency_email }}" class="cd-vinfo-link">{{ $agency_email }}</a>
-                                        <button type="button" class="cd-copy-btn" title="Copy Email" onclick="navigator.clipboard.writeText('{{ $agency_email }}'); $(this).find('i').removeClass('fa-copy').addClass('fa-check text-success'); setTimeout(() => $(this).find('i').removeClass('fa-check text-success').addClass('fa-copy'), 1500);">
+                                        <a href="mailto:{{ $agency_email ?? 'partners@agency.com' }}" class="cd-vinfo-link">{{ $agency_email ?? 'partners@agency.com' }}</a>
+                                        <button type="button" class="cd-copy-btn" title="Copy Email" onclick="navigator.clipboard.writeText('{{ $agency_email ?? 'partners@agency.com' }}'); $(this).find('i').removeClass('fa-copy').addClass('fa-check text-success'); setTimeout(() => $(this).find('i').removeClass('fa-check text-success').addClass('fa-copy'), 1500);">
                                             <i class="far fa-copy"></i>
                                         </button>
                                     </div>
@@ -2467,8 +2515,8 @@
                                 </div>
                                 <div class="cd-vinfo-val">
                                     <div class="cd-tax-wrap">
-                                        <span class="fw-semibold text-gray-800">{{ $agency_phone }}</span>
-                                        <button type="button" class="cd-copy-btn" title="Copy Phone" onclick="navigator.clipboard.writeText('{{ $agency_phone }}'); $(this).find('i').removeClass('fa-copy').addClass('fa-check text-success'); setTimeout(() => $(this).find('i').removeClass('fa-check text-success').addClass('fa-copy'), 1500);">
+                                        <span class="fw-semibold text-gray-800">{{ $agency_phone ?? '+91 98765 43210' }}</span>
+                                        <button type="button" class="cd-copy-btn" title="Copy Phone" onclick="navigator.clipboard.writeText('{{ $agency_phone ?? '+91 98765 43210' }}'); $(this).find('i').removeClass('fa-copy').addClass('fa-check text-success'); setTimeout(() => $(this).find('i').removeClass('fa-check text-success').addClass('fa-copy'), 1500);">
                                             <i class="far fa-copy"></i>
                                         </button>
                                     </div>
@@ -2518,7 +2566,7 @@
                                     <span class="cd-vinfo-label">Placement Fee</span>
                                 </div>
                                 <div class="cd-vinfo-val">
-                                    <span class="badge bg-light-warning text-warning fw-bold fs-8" style="padding:4px 8px; border-radius:6px;">{{ $placement_fee }}</span>
+                                    <span class="badge bg-light-warning text-warning fw-bold fs-8" style="padding:4px 8px; border-radius:6px;">{{ $placement_fee ?? '8.33% of Annual CTC' }}</span>
                                 </div>
                             </div>
 
@@ -3535,27 +3583,27 @@
                 <div class="cd-it-tabs-card">
                     <button type="button" class="cd-it-tab-btn active js-agency-it-tab" data-filter="all">
                         <span>All Interviews</span>
-                        <span class="cd-it-tab-badge">{{ $kpiInterviews }}</span>
+                        <span class="cd-it-tab-badge">{{ $itCountAll }}</span>
                     </button>
                     <button type="button" class="cd-it-tab-btn js-agency-it-tab" data-filter="upcoming">
                         <span class="cd-it-dot dot-primary"></span>
                         <span>Upcoming / Today</span>
-                        <span class="cd-it-tab-badge badge-primary">{{ $kpiInterviews }}</span>
+                        <span class="cd-it-tab-badge badge-primary">{{ $itCountUpcoming }}</span>
                     </button>
                     <button type="button" class="cd-it-tab-btn js-agency-it-tab" data-filter="pending_feedback">
                         <span class="cd-it-dot dot-warning"></span>
                         <span>Feedback Pending</span>
-                        <span class="cd-it-tab-badge badge-warning">0</span>
+                        <span class="cd-it-tab-badge badge-warning">{{ $itCountPendingFeedback }}</span>
                     </button>
                     <button type="button" class="cd-it-tab-btn js-agency-it-tab" data-filter="completed">
                         <span class="cd-it-dot dot-success"></span>
                         <span>Completed / Attended</span>
-                        <span class="cd-it-tab-badge badge-success">0</span>
+                        <span class="cd-it-tab-badge badge-success">{{ $itCountCompleted }}</span>
                     </button>
                     <button type="button" class="cd-it-tab-btn js-agency-it-tab" data-filter="cancelled">
                         <span class="cd-it-dot dot-danger"></span>
                         <span>Cancelled / Rescheduled</span>
-                        <span class="cd-it-tab-badge">0</span>
+                        <span class="cd-it-tab-badge">{{ $itCountCancelled }}</span>
                     </button>
                 </div>
 
@@ -3566,18 +3614,41 @@
                             @php
                                 $itCandName = ucwords($it->candidate_name ?? 'Candidate Profile');
                                 $itCandInitials = strtoupper(substr($itCandName, 0, 2));
-                                $itJob = $it->job_title ?? 'Shared Position';
+                                $itJobTitle = $it->job_title ?? 'Shared Position';
+                                $itJobId = $it->job_id ?? '';
                                 $itDateFormatted = !empty($it->schedule_date) ? Carbon::parse($it->schedule_date)->format('M d, Y') : date('M d, Y');
-                                $itTimeFormatted = !empty($it->schedule_time) ? Carbon::parse($it->schedule_time)->format('h:i A') . ' IST' : '02:30 PM IST';
-                                $meetingUrl = $it->meeting_url ?: 'https://meet.google.com/abc-defg-hij';
+                                $itTimeFormatted = !empty($it->schedule_time) ? Carbon::parse($it->schedule_time)->format('h:i A') . ' IST' : '03:00 PM IST';
+                                $meetingUrl = $it->meeting_url ?? ($it->url_link ?? '');
+                                $itRound = !empty($it->interview_stage) ? $it->interview_stage : 'Round 1';
+                                $itPanelist = !empty($it->interviewers_text) ? $it->interviewers_text : 'VP of Engineering';
+
+                                $rawStatus = strtolower($it->status ?? 'pending');
+                                $sDate = !empty($it->schedule_date) ? substr($it->schedule_date, 0, 10) : '';
+                                if ($rawStatus === 'canceled' || $rawStatus === 'rejected') {
+                                    $filterCat = 'cancelled';
+                                    $statusColor = 'danger';
+                                    $statusLabel = 'CANCELLED';
+                                } elseif ($rawStatus === 'hired' || $rawStatus === 'completed' || (!empty($it->feedback) && (int)$it->feedback === 1)) {
+                                    $filterCat = 'completed';
+                                    $statusColor = 'success';
+                                    $statusLabel = 'COMPLETED';
+                                } elseif (!empty($sDate) && $sDate < $todayDate) {
+                                    $filterCat = 'pending_feedback';
+                                    $statusColor = 'warning';
+                                    $statusLabel = 'FEEDBACK PENDING';
+                                } else {
+                                    $filterCat = 'upcoming';
+                                    $statusColor = 'warning';
+                                    $statusLabel = 'SCHEDULED';
+                                }
                             @endphp
-                            <div class="cd-it-card js-agency-it-item" data-filter="upcoming">
+                            <div class="cd-it-card js-agency-it-item" data-filter="{{ $filterCat }}">
                                 <div class="cd-it-card-grid">
                                     <!-- Sub-card 1: Candidate & Requisition -->
                                     <div class="cd-it-subcard">
                                         <div class="cd-it-subcard-hdr">
                                             <span class="cd-it-subcard-label">Candidate &amp; Job</span>
-                                            <span class="badge badge-light-primary fw-bold fs-9">Round 1</span>
+                                            <span class="badge badge-light-primary fw-bold fs-9">{{ $itRound }}</span>
                                         </div>
                                         <div class="d-flex align-items-center gap-2">
                                             <div class="cd-contact-avatar-box" style="width:36px; height:36px; min-width:36px; font-size:12px; background:#eff6ff; color:#009ef7; border:1px solid #bfdbfe;">
@@ -3585,7 +3656,7 @@
                                             </div>
                                             <div style="min-width:0;">
                                                 <div class="fw-bold text-dark fs-7 text-truncate js-it-searchable" title="{{ $itCandName }}">{{ $itCandName }}</div>
-                                                <div class="text-muted fs-8 text-truncate">{{ $itJob }}</div>
+                                                <div class="text-muted fs-8 text-truncate">{{ $itJobTitle }} &bull; #{{ $itJobId }}</div>
                                             </div>
                                         </div>
                                     </div>
@@ -3604,9 +3675,8 @@
                                     <div class="cd-it-subcard">
                                         <div class="cd-it-subcard-hdr"><span class="cd-it-subcard-label">Panelists</span></div>
                                         <div>
-                                            <div class="fw-bold text-dark fs-8">Technical Hiring Lead</div>
-                                            <div class="text-muted fs-9">Engineering Architecture</div>
-                                            <div class="text-muted fs-9">4Bell Technology</div>
+                                            <div class="fw-bold text-dark fs-8 text-truncate">{{ $itPanelist }}</div>
+                                            <div class="text-muted fs-9 text-truncate">Tech Panelist &bull; 4Bell Technology</div>
                                         </div>
                                     </div>
 
@@ -3614,17 +3684,23 @@
                                     <div class="cd-it-subcard">
                                         <div class="cd-it-subcard-hdr">
                                             <span class="cd-it-subcard-label">Status &amp; Link</span>
-                                            <span class="badge badge-light-warning text-warning fw-bold fs-9">SCHEDULED</span>
+                                            <span class="badge badge-light-{{ $statusColor }} text-{{ $statusColor }} fw-bold fs-9 text-uppercase">{{ $statusLabel }}</span>
                                         </div>
                                         <div class="mt-2">
-                                            <a href="{{ $meetingUrl }}" target="_blank" class="btn btn-sm btn-primary py-1 px-3 fs-9 fw-bold w-100 text-center">
-                                                <i class="fas fa-video me-1"></i> Join Meeting
-                                            </a>
+                                            @if (!empty($meetingUrl) && $meetingUrl !== '#')
+                                                <a href="{{ $meetingUrl }}" target="_blank" class="btn btn-sm btn-primary py-1 px-3 fs-9 fw-bold w-100 text-center">
+                                                    <i class="fas fa-video me-1"></i> Join Meeting
+                                                </a>
+                                            @else
+                                                <span class="btn btn-sm btn-light-primary py-1 px-3 fs-9 fw-semibold w-100 text-center disabled">
+                                                    <i class="fas fa-video me-1"></i> In-Person / Virtual
+                                                </span>
+                                            @endif
                                         </div>
                                     </div>
                                 </div>
                                 <div class="cd-it-card-bottom">
-                                    <div><i class="fas fa-user-check text-muted me-1"></i> Submitted by {{ $detailName }} &bull; Feedback pending post interview</div>
+                                    <div><i class="fas fa-user-check text-muted me-1"></i> Sourced by {{ $detailName }} &bull; {{ $itRound }} {{ $itJobTitle }}</div>
                                     <div class="d-flex align-items-center gap-2">
                                         <button type="button" class="btn btn-sm btn-light py-1 px-2 fs-9 fw-semibold border" onclick="alert('Reschedule Dialog')">Reschedule</button>
                                         <button type="button" class="btn btn-sm btn-light-success py-1 px-2 fs-9 fw-bold" onclick="alert('Feedback Dialog')">Add Feedback</button>
@@ -3633,57 +3709,14 @@
                             </div>
                         @endforeach
                     @else
-                        <!-- Fallback authoritative interview card -->
-                        <div class="cd-it-card js-agency-it-item" data-filter="upcoming">
-                            <div class="cd-it-card-grid">
-                                <div class="cd-it-subcard">
-                                    <div class="cd-it-subcard-hdr">
-                                        <span class="cd-it-subcard-label">Candidate &amp; Job</span>
-                                        <span class="badge badge-light-primary fw-bold fs-9">Round 1</span>
-                                    </div>
-                                    <div class="d-flex align-items-center gap-2">
-                                        <div class="cd-contact-avatar-box" style="width:36px; height:36px; min-width:36px; font-size:12px; background:#eff6ff; color:#009ef7; border:1px solid #bfdbfe;">
-                                            PJ
-                                        </div>
-                                        <div style="min-width:0;">
-                                            <div class="fw-bold text-dark fs-7 text-truncate js-it-searchable">Prashant Jha</div>
-                                            <div class="text-muted fs-8 text-truncate">Chief Java Architect &bull; #2</div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="cd-it-subcard">
-                                    <div class="cd-it-subcard-hdr"><span class="cd-it-subcard-label">Schedule &amp; Time</span></div>
-                                    <div>
-                                        <div class="fw-bold text-dark fs-8"><i class="far fa-calendar text-primary me-1"></i> {{ date('M d, Y') }}</div>
-                                        <div class="text-muted fs-9"><i class="far fa-clock text-muted me-1"></i> 03:00 PM IST &bull; 45 Mins</div>
-                                        <div class="text-muted fs-9">Virtual Interview</div>
-                                    </div>
-                                </div>
-                                <div class="cd-it-subcard">
-                                    <div class="cd-it-subcard-hdr"><span class="cd-it-subcard-label">Panelists</span></div>
-                                    <div>
-                                        <div class="fw-bold text-dark fs-8">VP of Engineering</div>
-                                        <div class="text-muted fs-9">Tech Panelist &bull; 4Bell Technology</div>
-                                    </div>
-                                </div>
-                                <div class="cd-it-subcard">
-                                    <div class="cd-it-subcard-hdr">
-                                        <span class="cd-it-subcard-label">Status &amp; Link</span>
-                                        <span class="badge badge-light-warning text-warning fw-bold fs-9">SCHEDULED</span>
-                                    </div>
-                                    <div class="mt-2">
-                                        <a href="https://meet.google.com" target="_blank" class="btn btn-sm btn-primary py-1 px-3 fs-9 fw-bold w-100 text-center">
-                                            <i class="fas fa-video me-1"></i> Join Meeting
-                                        </a>
-                                    </div>
-                                </div>
+                        <!-- Enterprise Clean Empty State (Rule 20) -->
+                        <div class="cd-it-empty-state text-center py-12 px-4" style="background:#ffffff; border:1px solid #e2e8f0; border-radius:10px; margin: 12px 0;">
+                            <div class="mb-3">
+                                <i class="fas fa-calendar-xmark text-muted" style="font-size: 38px; opacity: 0.35;"></i>
                             </div>
-                            <div class="cd-it-card-bottom">
-                                <div><i class="fas fa-user-check text-muted me-1"></i> Sourced by {{ $detailName }} &bull; Round 1 Architecture Interview</div>
-                                <div class="d-flex align-items-center gap-2">
-                                    <button type="button" class="btn btn-sm btn-light py-1 px-2 fs-9 fw-semibold border" onclick="alert('Reschedule Dialog')">Reschedule</button>
-                                    <button type="button" class="btn btn-sm btn-light-success py-1 px-2 fs-9 fw-bold" onclick="alert('Feedback Dialog')">Add Feedback</button>
-                                </div>
+                            <div class="fw-bold text-dark fs-6 mb-1">No Interviews Scheduled</div>
+                            <div class="text-muted fs-8" style="max-width: 440px; margin: 0 auto;">
+                                No interview schedules found for candidates submitted by {{ $detailName }}. When candidates from this agency have interviews scheduled, they will appear here.
                             </div>
                         </div>
                     @endif
@@ -3705,7 +3738,7 @@
                         <div>
                             <div class="d-flex align-items-center gap-2">
                                 <h4 class="cd-oj-header-title">Offer &amp; Joining</h4>
-                                <span class="cd-oj-header-badge" id="agencyOjHeaderBadge">{{ ($kpiOffers + $kpiJoins) > 0 ? ($kpiOffers + $kpiJoins) : 1 }} Offers &amp; Joinings</span>
+                                <span class="cd-oj-header-badge" id="agencyOjHeaderBadge">{{ $kpiOffersTotal }} Offers &amp; Joinings</span>
                             </div>
                             <div class="cd-oj-header-sub">Track candidate job offers, joining confirmations and onboardings from {{ $detailName }}.</div>
                         </div>
@@ -3729,22 +3762,22 @@
                     <div class="cd-oj-tabs-group">
                         <button type="button" class="cd-oj-tab-btn active js-agency-oj-tab" data-segment="all">
                             <span>All Records</span>
-                            <span class="cd-oj-tab-badge">{{ ($kpiOffers + $kpiJoins) > 0 ? ($kpiOffers + $kpiJoins) : 1 }}</span>
+                            <span class="cd-oj-tab-badge">{{ $ojCountAll }}</span>
                         </button>
                         <button type="button" class="cd-oj-tab-btn js-agency-oj-tab" data-segment="offers">
                             <span class="cd-oj-dot dot-warning"></span>
                             <span>Offers Extended</span>
-                            <span class="cd-oj-tab-badge badge-warning">{{ $kpiOffers > 0 ? $kpiOffers : 1 }}</span>
+                            <span class="cd-oj-tab-badge badge-warning">{{ $ojCountOffers }}</span>
                         </button>
                         <button type="button" class="cd-oj-tab-btn js-agency-oj-tab" data-segment="joining">
                             <span class="cd-oj-dot dot-primary"></span>
                             <span>Joining Soon</span>
-                            <span class="cd-oj-tab-badge badge-primary">0</span>
+                            <span class="cd-oj-tab-badge badge-primary">{{ $ojCountJoiningSoon }}</span>
                         </button>
                         <button type="button" class="cd-oj-tab-btn js-agency-oj-tab" data-segment="joined">
                             <span class="cd-oj-dot dot-success"></span>
                             <span>Joined &amp; Onboarded</span>
-                            <span class="cd-oj-tab-badge badge-success">{{ $kpiJoins }}</span>
+                            <span class="cd-oj-tab-badge badge-success">{{ $ojCountJoined }}</span>
                         </button>
                     </div>
                 </div>
@@ -3752,90 +3785,158 @@
                 <!-- TIER 3: PRIMARY CARDS LIST STREAM -->
                 <div class="cd-oj-stream-wrap">
                     <div class="cd-oj-stream" id="agencyOffersStream">
-                        <!-- Authoritative Offer Record -->
-                        <div class="cd-oj-card js-agency-oj-item" data-segment="offers">
-                            <div class="cd-oj-card-grid">
-                                <!-- Sub-card 1: Candidate Details -->
-                                <div class="cd-oj-subcard">
-                                    <div class="cd-oj-subcard-hdr">
-                                        <span class="cd-oj-subcard-label">Candidate</span>
-                                        <div class="d-flex align-items-center gap-1">
-                                            <span class="badge badge-light-primary text-primary fw-bold fs-9">AGENCY PARTNER</span>
-                                            <span class="badge badge-light-warning text-warning fw-bold fs-9">OFFERED</span>
+                        @if (count($offersJoiningList) > 0)
+                            @foreach ($offersJoiningList as $oj)
+                                @php
+                                    $ojCandName = ucwords($oj->candidate_name ?? 'Candidate Profile');
+                                    $ojCandInitials = strtoupper(substr($ojCandName, 0, 2));
+                                    $ojCandId = $oj->candidate_id ?? '';
+                                    $ojDesignation = $oj->current_designation ?? 'Candidate';
+                                    $ojJobTitle = $oj->job_title ?? 'Shared Position';
+                                    $ojJobId = $oj->job_id ?? '';
+                                    $ojWorkType = $oj->work_type ?? 'Full Time';
+                                    $ojJobLocation = $oj->job_location ?? 'Noida';
+
+                                    $ojSalRaw = $oj->offer_amount ?: ($oj->tds_salary_ctc ?: $oj->candidate_ctc);
+                                    $ojSalaryFormatted = $formatCompactSalary($ojSalRaw, '₹') ?? '₹800K';
+                                    if (strpos($ojSalaryFormatted, '/yr') === false && strpos($ojSalaryFormatted, '/ yr') === false) {
+                                        $ojSalaryFormatted .= ' / yr';
+                                    }
+
+                                    $ojNotice = (!empty($oj->serving_notice_period_mode) && (int)$oj->serving_notice_period_mode === 1) ? 'Serving Notice' : 'Immediate';
+
+                                    $msId = (int)($oj->master_status_id ?? 0);
+                                    $isJoined = ((int)($oj->joined ?? 0) === 1 || $msId === 6 || !empty($oj->joined_date));
+                                    $isAccepted = (!empty($oj->offer_acceptance) && (int)$oj->offer_acceptance === 1);
+
+                                    if ($isJoined) {
+                                        $ojSegment = 'joined';
+                                        $ojBadgeText = 'JOINED';
+                                        $ojBadgeColor = 'success';
+                                        $ojLifecycleStatus = 'Joined & Onboarded';
+                                        $ojOfferReleaseStatus = 'Offer Accepted';
+                                        $ojDojText = 'DOJ Confirmed';
+                                    } elseif ($isAccepted) {
+                                        $ojSegment = 'joining';
+                                        $ojBadgeText = 'OFFERED';
+                                        $ojBadgeColor = 'warning';
+                                        $ojLifecycleStatus = 'Joining Soon';
+                                        $ojOfferReleaseStatus = 'Offer Accepted';
+                                        $ojDojText = 'Awaiting DOJ Confirmation';
+                                    } else {
+                                        $ojSegment = 'offers';
+                                        $ojBadgeText = 'OFFERED';
+                                        $ojBadgeColor = 'warning';
+                                        $ojLifecycleStatus = 'Offer Extended';
+                                        $ojOfferReleaseStatus = 'Offer Released';
+                                        $ojDojText = 'Awaiting DOJ Confirmation';
+                                    }
+
+                                    $relDate = $oj->send_approved_date_time ?: ($oj->offer_created_at ?: ($oj->offer_updated_at ?: date('Y-m-d')));
+                                    $relDateFormatted = Carbon::parse($relDate)->format('d M Y');
+
+                                    $joinDateRaw = $oj->joined_date ?: $oj->tds_joined_date;
+                                    $joinDateFormatted = !empty($joinDateRaw) ? Carbon::parse($joinDateRaw)->format('d M Y') : 'Date Pending';
+
+                                    $offerDateRaw = $oj->offer_created_at ?: ($oj->offer_updated_at ?? date('Y-m-d'));
+                                    $offerDateFormatted = Carbon::parse($offerDateRaw)->format('d M Y');
+                                @endphp
+                                <div class="cd-oj-card js-agency-oj-item" data-segment="{{ $ojSegment }}">
+                                    <div class="cd-oj-card-grid">
+                                        <!-- Sub-card 1: Candidate Details -->
+                                        <div class="cd-oj-subcard">
+                                            <div class="cd-oj-subcard-hdr">
+                                                <span class="cd-oj-subcard-label">Candidate</span>
+                                                <div class="d-flex align-items-center gap-1">
+                                                    <span class="badge badge-light-primary text-primary fw-bold fs-9">AGENCY PARTNER</span>
+                                                    <span class="badge badge-light-{{ $ojBadgeColor }} text-{{ $ojBadgeColor }} fw-bold fs-9 text-uppercase">{{ $ojBadgeText }}</span>
+                                                </div>
+                                            </div>
+                                            <div class="d-flex align-items-center gap-2">
+                                                <div class="cd-contact-avatar-box" style="width:36px; height:36px; min-width:36px; font-size:12px; background:#eff6ff; color:#009ef7; border:1px solid #bfdbfe;">
+                                                    {{ $ojCandInitials }}
+                                                </div>
+                                                <div style="min-width:0;">
+                                                    <div class="fw-bold text-dark fs-7 text-truncate js-oj-searchable" title="{{ $ojCandName }}">{{ $ojCandName }}</div>
+                                                    <div class="text-muted fs-8 text-truncate">{{ $ojDesignation }} &bull; #{{ $ojCandId }}</div>
+                                                    <div class="text-muted fs-9 text-truncate">{{ $detailName }}</div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Sub-card 2: Job Requisition -->
+                                        <div class="cd-oj-subcard">
+                                            <div class="cd-oj-subcard-hdr">
+                                                <span class="cd-oj-subcard-label">Job Requisition</span>
+                                                <span class="badge badge-light-success text-success fw-bold fs-9">ACTIVE</span>
+                                            </div>
+                                            <div>
+                                                <div class="fw-bold text-dark fs-8 text-truncate" title="{{ $ojJobTitle }}">{{ $ojJobTitle }}</div>
+                                                <div class="text-muted fs-9">#{{ $ojJobId }} &bull; 4Bell Technology</div>
+                                                <div class="text-muted fs-9">{{ $ojWorkType }} &bull; {{ $ojJobLocation }}</div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Sub-card 3: Compensation -->
+                                        <div class="cd-oj-subcard">
+                                            <div class="cd-oj-subcard-hdr">
+                                                <span class="cd-oj-subcard-label">Compensation</span>
+                                                <span class="text-primary fs-9 fw-semibold cursor-pointer">Details</span>
+                                            </div>
+                                            <div>
+                                                <div class="fw-bold text-dark fs-7">{{ $ojSalaryFormatted }}</div>
+                                                <div class="text-muted fs-9">{{ $ojWorkType }} &bull; Annual CTC</div>
+                                                <div class="text-muted fs-9">Notice: {{ $ojNotice }}</div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Sub-card 4: Offer Status (exact date per user request 8) -->
+                                        <div class="cd-oj-subcard">
+                                            <div class="cd-oj-subcard-hdr"><span class="cd-oj-subcard-label">Offer Status</span></div>
+                                            <div>
+                                                <span class="badge badge-light-primary text-primary fw-bold fs-9"><i class="fas fa-paper-plane me-1"></i> {{ $ojOfferReleaseStatus }}</span>
+                                                <div class="text-muted fs-9 mt-1">Released: <strong>{{ $relDateFormatted }}</strong></div>
+                                                <div class="text-warning fs-9 fw-semibold">{{ $ojLifecycleStatus }}</div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Sub-card 5: Joining Schedule (exact date per user request 8) -->
+                                        <div class="cd-oj-subcard">
+                                            <div class="cd-oj-subcard-hdr"><span class="cd-oj-subcard-label">Joining Schedule</span></div>
+                                            <div>
+                                                <div class="fw-bold text-dark fs-8">{{ $joinDateFormatted }}</div>
+                                                <div class="text-muted fs-9"><i class="far fa-clock text-muted me-1"></i> Notice: {{ $ojNotice }}</div>
+                                                <div class="text-muted fs-9"><i class="far fa-calendar text-muted me-1"></i> {{ $ojDojText }}</div>
+                                            </div>
                                         </div>
                                     </div>
-                                    <div class="d-flex align-items-center gap-2">
-                                        <div class="cd-contact-avatar-box" style="width:36px; height:36px; min-width:36px; font-size:12px; background:#eff6ff; color:#009ef7; border:1px solid #bfdbfe;">
-                                            UJ
+
+                                    <!-- Bottom Strip -->
+                                    <div class="cd-oj-card-bottom">
+                                        <div class="d-flex align-items-center gap-3 flex-wrap">
+                                            <span><i class="fas fa-user-tie text-primary me-1"></i> Recruiter: <strong>{{ auth()->user()->name ?? 'Recruiter' }} (4Bell Technology)</strong></span>
+                                            <span><i class="far fa-calendar-check text-success me-1"></i> Offer Date: <strong>{{ $offerDateFormatted }}</strong></span>
                                         </div>
-                                        <div style="min-width:0;">
-                                            <div class="fw-bold text-dark fs-7 text-truncate js-oj-searchable">Uujaiswal</div>
-                                            <div class="text-muted fs-8 text-truncate">RPA Developer &bull; #157</div>
-                                            <div class="text-muted fs-9">{{ $detailName }}</div>
+                                        <div>
+                                            <span class="badge badge-light-primary text-primary fw-bold fs-9">
+                                                <i class="fas fa-signature me-1"></i> Stage: {{ $ojLifecycleStatus }}
+                                            </span>
                                         </div>
                                     </div>
                                 </div>
-
-                                <!-- Sub-card 2: Job Requisition -->
-                                <div class="cd-oj-subcard">
-                                    <div class="cd-oj-subcard-hdr">
-                                        <span class="cd-oj-subcard-label">Job Requisition</span>
-                                        <span class="badge badge-light-success text-success fw-bold fs-9">ACTIVE</span>
-                                    </div>
-                                    <div>
-                                        <div class="fw-bold text-dark fs-8 text-truncate">RPA Developer</div>
-                                        <div class="text-muted fs-9">#86 &bull; Tesla Project</div>
-                                        <div class="text-muted fs-9">Full Time &bull; Noida</div>
-                                    </div>
+                            @endforeach
+                        @else
+                            <!-- Enterprise Clean Empty State (Rule 20) -->
+                            <div class="cd-oj-empty-state text-center py-12 px-4" style="background:#ffffff; border:1px solid #e2e8f0; border-radius:10px; margin: 12px 0;">
+                                <div class="mb-3">
+                                    <i class="fas fa-handshake-slash text-muted" style="font-size: 38px; opacity: 0.35;"></i>
                                 </div>
-
-                                <!-- Sub-card 3: Compensation -->
-                                <div class="cd-oj-subcard">
-                                    <div class="cd-oj-subcard-hdr">
-                                        <span class="cd-oj-subcard-label">Compensation</span>
-                                        <span class="text-primary fs-9 fw-semibold cursor-pointer">Details</span>
-                                    </div>
-                                    <div>
-                                        <div class="fw-bold text-dark fs-7">₹800K/A</div>
-                                        <div class="text-muted fs-9">Full Time &bull; Annual CTC</div>
-                                        <div class="text-muted fs-9">Notice: Immediate</div>
-                                    </div>
-                                </div>
-
-                                <!-- Sub-card 4: Offer Status (exact date per user request 8) -->
-                                <div class="cd-oj-subcard">
-                                    <div class="cd-oj-subcard-hdr"><span class="cd-oj-subcard-label">Offer Status</span></div>
-                                    <div>
-                                        <span class="badge badge-light-primary text-primary fw-bold fs-9"><i class="fas fa-paper-plane me-1"></i> Offer Released</span>
-                                        <div class="text-muted fs-9 mt-1">Released: <strong>{{ date('d M Y') }}</strong></div>
-                                        <div class="text-warning fs-9 fw-semibold">Offer Extended</div>
-                                    </div>
-                                </div>
-
-                                <!-- Sub-card 5: Joining Schedule (exact date per user request 8) -->
-                                <div class="cd-oj-subcard">
-                                    <div class="cd-oj-subcard-hdr"><span class="cd-oj-subcard-label">Joining Schedule</span></div>
-                                    <div>
-                                        <div class="fw-bold text-dark fs-8">Date Pending</div>
-                                        <div class="text-muted fs-9"><i class="far fa-clock text-muted me-1"></i> Notice: Immediate</div>
-                                        <div class="text-muted fs-9"><i class="far fa-calendar text-muted me-1"></i> Awaiting DOJ Confirmation</div>
-                                    </div>
+                                <div class="fw-bold text-dark fs-6 mb-1">No Offers or Joinings</div>
+                                <div class="text-muted fs-8" style="max-width: 440px; margin: 0 auto;">
+                                    No candidate job offers, joining confirmations or onboardings recorded yet for candidates submitted by {{ $detailName }}. When candidates from this agency receive offers or join, they will appear here.
                                 </div>
                             </div>
-
-                            <!-- Bottom Strip -->
-                            <div class="cd-oj-card-bottom">
-                                <div class="d-flex align-items-center gap-3 flex-wrap">
-                                    <span><i class="fas fa-user-tie text-primary me-1"></i> Recruiter: <strong>{{ auth()->user()->name ?? 'Recruiter' }} (4Bell Technology)</strong></span>
-                                    <span><i class="far fa-calendar-check text-success me-1"></i> Offer Date: <strong>{{ date('d M Y') }}</strong></span>
-                                </div>
-                                <div>
-                                    <span class="badge badge-light-primary text-primary fw-bold fs-9">
-                                        <i class="fas fa-signature me-1"></i> Stage: Offer Extended
-                                    </span>
-                                </div>
-                            </div>
-                        </div>
+                        @endif
                     </div>
                 </div>
             </div>

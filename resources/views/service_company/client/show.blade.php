@@ -8447,6 +8447,7 @@ use Carbon\Carbon;
             ? window.ClientStateManager.getSelectedClientId()
             : (window.activeSelectedClientId || null);
         if (curSelId && parseInt(curSelId, 10) !== parseInt(clientid, 10)) {
+            $('.page-loader').css('display', 'none');
             return;
         }
 
@@ -8474,13 +8475,13 @@ use Carbon\Carbon;
                 clientid: clientid
             },
             success: function(response) {
+                $('.page-loader').css('display', 'none');
                 var verifySelId = window.ClientStateManager && typeof window.ClientStateManager.getSelectedClientId === 'function'
                     ? window.ClientStateManager.getSelectedClientId()
                     : (window.activeSelectedClientId || null);
                 if (verifySelId && parseInt(verifySelId, 10) !== parseInt(clientid, 10)) {
                     return;
                 }
-                $('.page-loader').css('display', 'none');
                 $('#candidatetListJoin').html(response.html);
                 $('#paginationcandidatejoin').html(response.pagination);
                 if (response.counts) {
