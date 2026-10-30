@@ -220,6 +220,98 @@ class ProcessCompanyOutboxEventJob implements ShouldQueue
                         ],
                     ]);
                 }
+            } elseif ($eventType === 'COMPANY_STATUS_TOGGLED') {
+                $packStatus = $payload['pack_status'] ?? ($payload['status'] ?? 'active');
+                $updateTime = now()->toIso8601String();
+
+                // 1. Elastic Users Sync
+                try {
+                    if ($elasticService->indexExists(ELASTIC_USERS_LIST)) {
+                        $elasticService->getClient()->updateByQuery([
+                            'index' => ELASTIC_USERS_LIST,
+                            'body' => [
+                                'script' => [
+                                    'source' => '
+                                        ctx._source.status = params.status;
+                                        ctx._source.working_status = params.working_status;
+                                        ctx._source.updated_at = params.updated_at;
+                                    ',
+                                    'lang' => 'painless',
+                                    'params' => [
+                                        'status' => $packStatus,
+                                        'working_status' => 1,
+                                        'updated_at' => $updateTime,
+                                    ],
+                                ],
+                                'query' => [
+                                    'bool' => [
+                                        'must' => [
+                                            ['term' => ['company_id' => $companyId]],
+                                            ['term' => ['working_status' => 1]],
+                                        ],
+                                    ],
+                                ],
+                            ],
+                        ]);
+                    }
+                } catch (\Throwable $e) {
+                    Log::error("ProcessCompanyOutboxEventJob: ELASTIC_USERS_LIST update failed for company {$companyId}: ".$e->getMessage());
+                }
+
+                // 2. Elastic Companies Sync
+                try {
+                    if ($elasticService->indexExists(ELASTIC_COMPANIES_INDEX)) {
+                        $elasticService->getClient()->update([
+                            'index' => ELASTIC_COMPANIES_INDEX,
+                            'id' => (string) $companyId,
+                            'retry_on_conflict' => 5,
+                            'body' => [
+                                'doc' => [
+                                    'status' => $packStatus,
+                                    'updated_at' => $updateTime,
+                                    'curr_date' => $updateTime,
+                                ],
+                                'doc_as_upsert' => true,
+                                'detect_noop' => false,
+                            ],
+                        ]);
+                    }
+                } catch (\Throwable $e) {
+                    Log::error("ProcessCompanyOutboxEventJob: ELASTIC_COMPANIES_INDEX update failed for company {$companyId}: ".$e->getMessage());
+                }
+            } elseif ($eventType === 'COMPANY_COIN_STATUS_TOGGLED') {
+                $coinEventType = $payload['coin_event_type'] ?? 'operational';
+                $packStatus = $payload['pack_status'] ?? 'active';
+
+                try {
+                    if ($elasticService->indexExists(ELASTIC_COMPANIES_INDEX)) {
+                        $elasticService->getClient()->update([
+                            'index' => ELASTIC_COMPANIES_INDEX,
+                            'id' => (string) $companyId,
+                            'retry_on_conflict' => 5,
+                            'body' => [
+                                'script' => [
+                                    'source' => '
+                                        if (ctx._source.company_coins != null) {
+                                            for (int i = 0; i < ctx._source.company_coins.length; i++) {
+                                                if (ctx._source.company_coins[i].event_type == params.event_type) {
+                                                    ctx._source.company_coins[i].free_pack_status = params.status;
+                                                }
+                                            }
+                                        }
+                                    ',
+                                    'lang' => 'painless',
+                                    'params' => [
+                                        'event_type' => $coinEventType,
+                                        'status' => $packStatus,
+                                    ],
+                                ],
+                            ],
+                        ]);
+                    }
+                } catch (\Throwable $e) {
+                    Log::error("ProcessCompanyOutboxEventJob: ELASTIC_COMPANIES_INDEX coin update failed for company {$companyId}: ".$e->getMessage());
+                }
             }
 
             // 2. Broadcast real-time delta pulse to Super Admin sessions via Reverb

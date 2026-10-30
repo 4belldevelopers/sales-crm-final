@@ -774,8 +774,203 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/sweetalert/1.1.3/sweetalert.min.js"></script>
 
 <script>
+/**
+ * Super Admin Subscription Management Isolated Frontend Engine
+ * GOD-Level 10K Architecture: CQRS + In-RAM State + IndexedDB L2 Cache + Outbox Idempotency + Real-time Delta
+ * Complies with docs/CODE_DOCUMENTATION_STANDARD.md & Rule 17.
+ */
 (function($) {
     'use strict';
+
+    // =============================================================================
+    // 1. Enterprise Client Database: JeroSubscriptionDB (IndexedDB v1)
+    // =============================================================================
+    class JeroSubscriptionDB {
+        static DB_NAME = 'JeroSubscriptionDB';
+        static DB_VERSION = 1;
+        static db = null;
+        static isAvailable = typeof window !== 'undefined' && 'indexedDB' in window;
+
+        static async init(userId) {
+            if (!this.isAvailable) return null;
+            return new Promise(function(resolve) {
+                try {
+                    const req = window.indexedDB.open(JeroSubscriptionDB.DB_NAME, JeroSubscriptionDB.DB_VERSION);
+                    req.onupgradeneeded = function(e) {
+                        const db = e.target.result;
+                        if (!db.objectStoreNames.contains('page_cache')) {
+                            db.createObjectStore('page_cache', { keyPath: 'cacheKey' });
+                        }
+                        if (!db.objectStoreNames.contains('dossiers')) {
+                            db.createObjectStore('dossiers', { keyPath: 'id' });
+                        }
+                        if (!db.objectStoreNames.contains('meta')) {
+                            db.createObjectStore('meta', { keyPath: 'key' });
+                        }
+                    };
+                    req.onblocked = function() {
+                        resolve(null);
+                    };
+                    req.onsuccess = async function(e) {
+                        try {
+                            JeroSubscriptionDB.db = e.target.result;
+                            const meta = await JeroSubscriptionDB.getMeta('auth_context');
+                            if (meta && meta.user_id !== userId) {
+                                await JeroSubscriptionDB.clearAll();
+                            }
+                            await JeroSubscriptionDB.setMeta('auth_context', {
+                                key: 'auth_context',
+                                user_id: userId,
+                                cached_at: Date.now()
+                            });
+                        } catch (mErr) {
+                            console.warn('IDB meta non-fatal warning:', mErr);
+                        }
+                        resolve(JeroSubscriptionDB.db);
+                    };
+                    req.onerror = function() {
+                        resolve(null);
+                    };
+                } catch (err) {
+                    resolve(null);
+                }
+            });
+        }
+
+        static async getMeta(key) {
+            return new Promise(function(resolve) {
+                if (!JeroSubscriptionDB.db) return resolve(null);
+                try {
+                    const tx = JeroSubscriptionDB.db.transaction('meta', 'readonly');
+                    const req = tx.objectStore('meta').get(key);
+                    req.onsuccess = function() { resolve(req.result || null); };
+                    req.onerror = function() { resolve(null); };
+                } catch (e) { resolve(null); }
+            });
+        }
+
+        static async setMeta(key, value) {
+            return new Promise(function(resolve) {
+                if (!JeroSubscriptionDB.db) return resolve(false);
+                try {
+                    const tx = JeroSubscriptionDB.db.transaction('meta', 'readwrite');
+                    tx.objectStore('meta').put(value);
+                    tx.oncomplete = function() { resolve(true); };
+                    tx.onerror = function() { resolve(false); };
+                } catch (e) { resolve(false); }
+            });
+        }
+
+        static async getPage(cacheKey) {
+            return new Promise(function(resolve) {
+                if (!JeroSubscriptionDB.db) return resolve(null);
+                try {
+                    const tx = JeroSubscriptionDB.db.transaction('page_cache', 'readonly');
+                    const req = tx.objectStore('page_cache').get(cacheKey);
+                    req.onsuccess = function() {
+                        const res = req.result;
+                        if (res && (Date.now() - (res.timestamp || 0) < 900000)) { // 15 min TTL
+                            resolve(res);
+                        } else {
+                            resolve(null);
+                        }
+                    };
+                    req.onerror = function() { resolve(null); };
+                } catch (e) { resolve(null); }
+            });
+        }
+
+        static async putPage(cacheKey, payload) {
+            return new Promise(function(resolve) {
+                if (!JeroSubscriptionDB.db) return resolve(false);
+                try {
+                    const tx = JeroSubscriptionDB.db.transaction('page_cache', 'readwrite');
+                    tx.objectStore('page_cache').put({
+                        cacheKey: cacheKey,
+                        html: payload.html,
+                        pagination: payload.pagination,
+                        total: payload.total,
+                        timestamp: Date.now()
+                    });
+                    tx.oncomplete = function() { resolve(true); };
+                    tx.onerror = function() { resolve(false); };
+                } catch (e) { resolve(false); }
+            });
+        }
+
+        static async clearPageCache() {
+            return new Promise(function(resolve) {
+                if (!JeroSubscriptionDB.db) return resolve(false);
+                try {
+                    const tx = JeroSubscriptionDB.db.transaction('page_cache', 'readwrite');
+                    tx.objectStore('page_cache').clear();
+                    tx.oncomplete = function() { resolve(true); };
+                    tx.onerror = function() { resolve(false); };
+                } catch (e) { resolve(false); }
+            });
+        }
+
+        static async getDossier(id) {
+            return new Promise(function(resolve) {
+                if (!JeroSubscriptionDB.db) return resolve(null);
+                try {
+                    const tx = JeroSubscriptionDB.db.transaction('dossiers', 'readonly');
+                    const req = tx.objectStore('dossiers').get(String(id));
+                    req.onsuccess = function() {
+                        const res = req.result;
+                        if (res && (Date.now() - (res.timestamp || 0) < 900000)) { // 15 min TTL
+                            resolve(res.view);
+                        } else {
+                            resolve(null);
+                        }
+                    };
+                    req.onerror = function() { resolve(null); };
+                } catch (e) { resolve(null); }
+            });
+        }
+
+        static async putDossier(id, view) {
+            return new Promise(function(resolve) {
+                if (!JeroSubscriptionDB.db) return resolve(false);
+                try {
+                    const tx = JeroSubscriptionDB.db.transaction('dossiers', 'readwrite');
+                    tx.objectStore('dossiers').put({
+                        id: String(id),
+                        view: view,
+                        timestamp: Date.now()
+                    });
+                    tx.oncomplete = function() { resolve(true); };
+                    tx.onerror = function() { resolve(false); };
+                } catch (e) { resolve(false); }
+            });
+        }
+
+        static async deleteDossier(id) {
+            return new Promise(function(resolve) {
+                if (!JeroSubscriptionDB.db) return resolve(false);
+                try {
+                    const tx = JeroSubscriptionDB.db.transaction('dossiers', 'readwrite');
+                    tx.objectStore('dossiers').delete(String(id));
+                    tx.oncomplete = function() { resolve(true); };
+                    tx.onerror = function() { resolve(false); };
+                } catch (e) { resolve(false); }
+            });
+        }
+
+        static async clearAll() {
+            return new Promise(function(resolve) {
+                if (!JeroSubscriptionDB.db) return resolve(false);
+                try {
+                    const tx = JeroSubscriptionDB.db.transaction(['page_cache', 'dossiers', 'meta'], 'readwrite');
+                    tx.objectStore('page_cache').clear();
+                    tx.objectStore('dossiers').clear();
+                    tx.objectStore('meta').clear();
+                    tx.oncomplete = function() { resolve(true); };
+                    tx.onerror = function() { resolve(false); };
+                } catch (e) { resolve(false); }
+            });
+        }
+    }
 
     /**
      * Super Admin Subscription Page Isolation Controller
@@ -784,6 +979,7 @@
      * and guarantees 0% cross-module regression.
      */
     const rootSelector = '.superadmin-subscription-page';
+    const currentUserId = {{ (int) (auth()->id() ?? 0) }};
 
     function initializeSubscriptionPage() {
         const $root = $(rootSelector);
@@ -792,11 +988,23 @@
             return;
         }
 
-        // Active in-flight XHR tracker
+        // Initialize IndexedDB in the background safely without blocking UI
+        if (typeof JeroSubscriptionDB !== 'undefined' && JeroSubscriptionDB.init) {
+            JeroSubscriptionDB.init(currentUserId).catch(function(err) {
+                console.warn('JeroSubscriptionDB init non-fatal warning:', err);
+            });
+        }
+
+        // Active in-flight XHR tracker & Mutation Locks
         let activeFetchXhr = null;
         let activeKpiXhr = null;
         let searchDebounceTimer = null;
         let lastFetchTimestamp = Date.now();
+        const inFlightMutations = new Set();
+        const dossierRamCache = new Map();
+
+        // Cross-tab synchronization channel
+        const subscriptionChannel = typeof BroadcastChannel !== 'undefined' ? new BroadcastChannel('jero_subscription_sync') : null;
 
         // Structured Client State
         const SubscriptionState = {
@@ -811,6 +1019,14 @@
             sortCol: 'id',
             sortDir: 'desc'
         };
+
+        // Utility: Generate RFC-4122 Compliant UUID v4 for Outbox Idempotency
+        function generateIdempotencyKey() {
+            if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+                return crypto.randomUUID();
+            }
+            return 'sub-idem-' + Date.now() + '-' + Math.random().toString(36).substring(2, 11);
+        }
 
         // Session RAM Cache (Non-authoritative static lookups & KPI caching with short TTL)
         const SessionRAMCache = {
@@ -845,14 +1061,12 @@
             }
         }
 
-        // Authoritative Data Fetch via Elasticsearch
-        function fetchSubscription(page = 1) {
+        // Authoritative Data Fetch via Elasticsearch with Instant Cold IndexedDB Hydration
+        async function fetchSubscription(page = 1) {
             SubscriptionState.currentPage = page;
 
             // Abort previous in-flight table request
             abortPendingRequests();
-
-            $root.find('#subscriptionLoading').show();
 
             // Read current state values scoped to root
             SubscriptionState.packageTab = $root.find('#pck_id').val();
@@ -864,6 +1078,30 @@
             SubscriptionState.sortCol = $root.find('#sort_col').val();
             SubscriptionState.sortDir = $root.find('#sort_dir').val();
             SubscriptionState.pageSize = 10;
+
+            const cacheKey = `p_${page}_pck_${SubscriptionState.packageTab}_st_${SubscriptionState.filterStatus}_q_${encodeURIComponent(SubscriptionState.searchQuery)}_loc_${SubscriptionState.locationVal}_pkg_${SubscriptionState.packageVal}_stat_${SubscriptionState.statusVal}_srt_${SubscriptionState.sortCol}_${SubscriptionState.sortDir}`;
+
+            // Check IndexedDB L2 cache for instant cold rendering (<15ms)
+            let hasHydratedFromIdb = false;
+            try {
+                const cachedPage = await JeroSubscriptionDB.getPage(cacheKey);
+                if (cachedPage && cachedPage.html) {
+                    $root.find('#subscriptionList').html(cachedPage.html);
+                    $root.find('#paginationsubscription').html(cachedPage.pagination || '');
+                    const total = cachedPage.total || 0;
+                    const size = SubscriptionState.pageSize;
+                    const from = total === 0 ? 0 : (SubscriptionState.currentPage - 1) * size + 1;
+                    const to = Math.min(SubscriptionState.currentPage * size, total);
+                    $root.find('#subscriptionSummary').text(`Showing ${from} to ${to} of ${total} records.`);
+                    hasHydratedFromIdb = true;
+                }
+            } catch (idbErr) {
+                console.warn('IDB cold hydration warning:', idbErr);
+            }
+
+            if (!hasHydratedFromIdb) {
+                $root.find('#subscriptionLoading').show();
+            }
 
             activeFetchXhr = $.ajax({
                 url: "{{ route('superadmin.company.allSubscriptionDataAjax') }}",
@@ -892,12 +1130,21 @@
                     const from = total === 0 ? 0 : (SubscriptionState.currentPage - 1) * size + 1;
                     const to = Math.min(SubscriptionState.currentPage * size, total);
                     $root.find('#subscriptionSummary').text(`Showing ${from} to ${to} of ${total} records.`);
+
+                    // Persist to IndexedDB cache for instant hydration
+                    try {
+                        JeroSubscriptionDB.putPage(cacheKey, response);
+                    } catch (cacheErr) {
+                        console.warn('IDB putPage non-fatal error:', cacheErr);
+                    }
                 },
                 error: function(xhr, status) {
                     // Do not display error if request was intentionally aborted
                     if (status === 'abort') return;
                     $root.find('#subscriptionLoading').hide();
-                    $root.find('#subscriptionList').html('<tr><td colspan="10" class="text-center py-5 text-danger">Failed to load subscriptions. Please check network connection and try again.</td></tr>');
+                    if (!hasHydratedFromIdb) {
+                        $root.find('#subscriptionList').html('<tr><td colspan="10" class="text-center py-5 text-danger">Failed to load subscriptions. Please check network connection and try again.</td></tr>');
+                    }
                 },
                 complete: function() {
                     activeFetchXhr = null;
@@ -1034,19 +1281,48 @@
             fetchSubscription(page);
         });
 
-        // Company Details Drawer Trigger
-        $root.on('click', '.show-detail', function() {
+        // Company Details Drawer Trigger with Multi-Tier Cache (L1 RAM -> L2 IndexedDB -> L3 AJAX)
+        $root.on('click', '.show-detail', async function() {
             $root.find('#kt_activitiesClient_toggle').trigger('click');
             const id = $(this).data('row-id');
             const url = "{{ route('superadmin.company.viewmore', ':id') }}".replace(':id', id);
 
+            // L1 RAM Cache (< 1ms)
+            if (dossierRamCache.has(String(id))) {
+                $root.find('#kt_activitiesClient_body').html(dossierRamCache.get(String(id)));
+                return;
+            }
+
+            // L2 IndexedDB Cache (< 5ms)
+            try {
+                const cachedView = await JeroSubscriptionDB.getDossier(id);
+                if (cachedView) {
+                    dossierRamCache.set(String(id), cachedView);
+                    $root.find('#kt_activitiesClient_body').html(cachedView);
+                    return;
+                }
+            } catch (err) {
+                console.warn('IDB dossier read error:', err);
+            }
+
+            // L3 Network Fetch
             $root.find('#kt_activitiesClient_body').html('<div class="d-flex justify-content-center py-10"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div></div>');
 
             $.ajax({
                 type: 'GET',
                 url: url,
                 success: function(response) {
-                    $root.find('#kt_activitiesClient_body').html(response.view);
+                    if (response && response.view) {
+                        dossierRamCache.set(String(id), response.view);
+                        try {
+                            JeroSubscriptionDB.putDossier(id, response.view);
+                        } catch (putErr) {
+                            console.warn('IDB dossier write error:', putErr);
+                        }
+                        $root.find('#kt_activitiesClient_body').html(response.view);
+                    } else {
+                        $root.find('#kt_activitiesClient_body').html('<div class="p-5 text-muted">No details available.</div>');
+                    }
                 },
                 error: function() {
                     $root.find('#kt_activitiesClient_body').html('<div class="p-5 text-danger">Failed to load company details.</div>');
@@ -1079,19 +1355,26 @@
             });
         });
 
-        // Action: Optimistic Toggle Company Active Status
+        // Action: Toggle Company Active Status with Outbox Idempotency & In-Flight Lock
         $root.on('click', '.action-toggle-active', function(e) {
             e.preventDefault();
             const $btn = $(this);
             const id = $btn.data('row-id');
+
+            // Duplicate request prevention: reject if already in-flight for this company
+            if (inFlightMutations.has(id)) {
+                return;
+            }
+
             const token = "{{ csrf_token() }}";
             const url = "{{ route('superadmin.company.checkActive') }}";
+            const idempotencyKey = generateIdempotencyKey();
 
             const $row = $btn.closest('tr');
             const $badgeCell = $row.find('.status-cell');
             const wasActive = $btn.find('i').hasClass('text-danger'); // Red power icon indicates Deactivate action on an Active company
 
-            // Disable button during in-flight mutation to prevent double-clicks
+            inFlightMutations.add(id);
             $btn.addClass('disabled pe-none');
 
             // Optimistic DOM update
@@ -1106,7 +1389,14 @@
             $.ajax({
                 type: 'POST',
                 url: url,
-                data: { _token: token, id: id },
+                headers: {
+                    'X-Idempotency-Key': idempotencyKey
+                },
+                data: {
+                    _token: token,
+                    id: id,
+                    idempotency_key: idempotencyKey
+                },
                 success: function(response) {
                     if (response.status === 'success') {
                         const isNowActive = response.pack_status === 'active';
@@ -1117,7 +1407,20 @@
                             $badgeCell.html('<span class="badge badge-light-danger d-inline-flex align-items-center py-1 px-3 fs-7" style="border-radius: 12px; font-weight: 600;"><span class="bullet bullet-dot bg-danger h-6px w-6px me-2"></span> Inactive</span>');
                             $btn.html('<i class="fa-solid fa-power-off me-2 text-success fs-7"></i> Activate');
                         }
+
+                        // Broadcast cross-tab synchronization
+                        if (subscriptionChannel) {
+                            subscriptionChannel.postMessage({
+                                type: 'STATUS_TOGGLED',
+                                companyId: id,
+                                status: response.pack_status,
+                                timestamp: Date.now()
+                            });
+                        }
+
+                        // Invalidate RAM and IndexedDB caches
                         SessionRAMCache.invalidateKpi();
+                        JeroSubscriptionDB.clearPageCache();
                         refreshKpiCounts($root.find('#pck_id').val(), true);
                     } else {
                         revertToggle();
@@ -1130,6 +1433,7 @@
                     }
                 },
                 complete: function() {
+                    inFlightMutations.delete(id);
                     $btn.removeClass('disabled pe-none');
                 }
             });
@@ -1145,12 +1449,16 @@
             }
         });
 
-        // Action: SweetAlert Delete Company with DOM Reconciliation
+        // Action: SweetAlert Delete Company with Outbox Idempotency & DOM Reconciliation
         $root.on('click', '.sa-params', function(e) {
             e.preventDefault();
             const $btn = $(this);
             const id = $btn.data('row-id');
             const $row = $btn.closest('tr');
+
+            if (inFlightMutations.has(id)) {
+                return;
+            }
 
             swal({
                 title: "@lang('errors.areYouSure')",
@@ -1165,18 +1473,40 @@
                 if (isConfirm) {
                     const url = "{{ route('superadmin.company.destroy', ':id') }}".replace(':id', id);
                     const token = "{{ csrf_token() }}";
+                    const idempotencyKey = generateIdempotencyKey();
 
-                    // Optimistic opacity reduction
+                    inFlightMutations.add(id);
                     $row.css('opacity', '0.5');
 
                     $.ajax({
                         type: 'POST',
                         url: url,
-                        data: { _token: token, _method: 'DELETE' },
+                        headers: {
+                            'X-Idempotency-Key': idempotencyKey
+                        },
+                        data: {
+                            _token: token,
+                            _method: 'DELETE',
+                            idempotency_key: idempotencyKey
+                        },
                         success: function(response) {
                             $row.fadeOut(300, function() {
                                 $(this).remove();
+
+                                // Cross-tab broadcast
+                                if (subscriptionChannel) {
+                                    subscriptionChannel.postMessage({
+                                        type: 'COMPANY_DELETED',
+                                        companyId: id,
+                                        timestamp: Date.now()
+                                    });
+                                }
+
                                 SessionRAMCache.invalidateKpi();
+                                JeroSubscriptionDB.clearPageCache();
+                                JeroSubscriptionDB.deleteDossier(id);
+                                dossierRamCache.delete(String(id));
+
                                 fetchSubscription(SubscriptionState.currentPage);
                                 refreshKpiCounts($root.find('#pck_id').val(), true);
                             });
@@ -1186,6 +1516,9 @@
                             if (typeof swal !== 'undefined') {
                                 swal("@lang('app.error')", "Failed to delete company.", "error");
                             }
+                        },
+                        complete: function() {
+                            inFlightMutations.delete(id);
                         }
                     });
                 }
@@ -1195,6 +1528,7 @@
         // Drawer Close State Reconciliation: Ensures fresh data when returning to table
         $root.on('click', '#kt_activitiesClient_close, #kt_activitiesWallet_close, .drawer-overlay', function() {
             SessionRAMCache.invalidateKpi();
+            JeroSubscriptionDB.clearPageCache();
             fetchSubscription(SubscriptionState.currentPage);
             refreshKpiCounts($root.find('#pck_id').val(), true);
         });
@@ -1208,12 +1542,75 @@
                     if (drawerObj && typeof drawerObj.on === 'function') {
                         drawerObj.on('kt.drawer.after.hidden', function() {
                             SessionRAMCache.invalidateKpi();
+                            JeroSubscriptionDB.clearPageCache();
                             fetchSubscription(SubscriptionState.currentPage);
                             refreshKpiCounts($root.find('#pck_id').val(), true);
                         });
                     }
                 }
             });
+        }
+
+        // Cross-tab Synchronization Listener (BroadcastChannel)
+        if (subscriptionChannel) {
+            subscriptionChannel.onmessage = function(event) {
+                const data = event.data;
+                if (!data) return;
+
+                SessionRAMCache.invalidateKpi();
+                JeroSubscriptionDB.clearPageCache();
+
+                if (data.type === 'COMPANY_DELETED' && data.companyId) {
+                    JeroSubscriptionDB.deleteDossier(data.companyId);
+                    dossierRamCache.delete(String(data.companyId));
+                }
+
+                fetchSubscription(SubscriptionState.currentPage);
+                refreshKpiCounts($root.find('#pck_id').val(), true);
+            };
+        }
+
+        // Real-Time WebSockets Synchronization via Laravel Reverb / Echo
+        if (typeof window.Echo !== 'undefined') {
+            try {
+                window.Echo.private('superadmin.companies')
+                    .listen('.company.delta.updated', function(event) {
+                        SessionRAMCache.invalidateKpi();
+                        JeroSubscriptionDB.clearPageCache();
+
+                        if (event.companyId) {
+                            JeroSubscriptionDB.deleteDossier(event.companyId);
+                            dossierRamCache.delete(String(event.companyId));
+                        }
+
+                        if (event.action === 'deleted') {
+                            const $row = $root.find(`tr:has([data-row-id="${event.companyId}"])`);
+                            if ($row.length) {
+                                $row.fadeOut(300, function() {
+                                    $(this).remove();
+                                });
+                            }
+                        } else if (event.action === 'active' || event.action === 'inactive') {
+                            const $row = $root.find(`tr:has([data-row-id="${event.companyId}"])`);
+                            if ($row.length) {
+                                const isNowActive = (event.action === 'active');
+                                const $badgeCell = $row.find('.status-cell');
+                                const $btn = $row.find('.action-toggle-active');
+                                if (isNowActive) {
+                                    $badgeCell.html('<span class="badge badge-light-success d-inline-flex align-items-center py-1 px-3 fs-7" style="border-radius: 12px; font-weight: 600;"><span class="bullet bullet-dot bg-success h-6px w-6px me-2"></span> Active</span>');
+                                    $btn.html('<i class="fa-solid fa-power-off me-2 text-danger fs-7"></i> Deactivate');
+                                } else {
+                                    $badgeCell.html('<span class="badge badge-light-danger d-inline-flex align-items-center py-1 px-3 fs-7" style="border-radius: 12px; font-weight: 600;"><span class="bullet bullet-dot bg-danger h-6px w-6px me-2"></span> Inactive</span>');
+                                    $btn.html('<i class="fa-solid fa-power-off me-2 text-success fs-7"></i> Activate');
+                                }
+                            }
+                        }
+
+                        refreshKpiCounts($root.find('#pck_id').val(), true);
+                    });
+            } catch (echoErr) {
+                console.warn('Echo real-time listener non-fatal error:', echoErr);
+            }
         }
 
         // Zero Stale Data: Automatic re-validation on tab focus if data is older than 60 seconds
@@ -1240,6 +1637,9 @@
             abortPendingRequests();
             clearTimeout(searchDebounceTimer);
             SessionRAMCache.invalidateKpi();
+            if (subscriptionChannel) {
+                subscriptionChannel.close();
+            }
             document.removeEventListener('visibilitychange', visibilityHandler);
             window.removeEventListener('online', onlineHandler);
         });

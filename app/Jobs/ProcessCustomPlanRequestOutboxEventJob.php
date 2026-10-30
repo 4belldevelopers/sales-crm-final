@@ -3,6 +3,8 @@
 namespace App\Jobs;
 
 use App\Events\CustomPlanRequestDeltaUpdated;
+use App\Models\CustomPlanRequest;
+use App\Services\ElasticCustomPlanRequestIndex;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -126,10 +128,27 @@ class ProcessCustomPlanRequestOutboxEventJob implements ShouldQueue
                 ]);
             }
 
-            // 2. Invalidate cached analytics counts
-            Cache::forget('custom_plan_requests_counts');
+            // 2. Synchronize to Elasticsearch local_custom_plan_requests
+            try {
+                $cprId = (int) ($event->aggregate_id ?? $payload['id'] ?? 0);
+                if ($cprId > 0) {
+                    $cpr = CustomPlanRequest::find($cprId);
+                    if ($cpr) {
+                        app(ElasticCustomPlanRequestIndex::class)->indexRequest($cpr);
+                    }
+                }
+            } catch (\Throwable $esEx) {
+                Log::warning('[CPR_OUTBOX] Elasticsearch sync failed in worker: '.$esEx->getMessage(), [
+                    'event_id' => $eventId,
+                ]);
+            }
 
-            // 3. Mark outbox record as COMPLETED
+            // 3. Invalidate cached analytics counts and generation version
+            Cache::forget('superadmin:cpr:kpi');
+            Cache::forget('custom_plan_requests_counts');
+            Cache::increment('superadmin:cpr:version');
+
+            // 4. Mark outbox record as COMPLETED
             DB::table('sys_outbox_events')
                 ->where('id', $eventId)
                 ->update([

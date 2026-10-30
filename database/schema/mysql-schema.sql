@@ -5041,5 +5041,56 @@ CREATE TABLE `marketplace_risk_rules` (
   KEY `idx_risk_category_active` (`category`, `is_active`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+DROP TABLE IF EXISTS `custom_plan_requests`;
+CREATE TABLE `custom_plan_requests` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `request_reference` varchar(64) NOT NULL,
+  `company_id` int(10) unsigned DEFAULT NULL,
+  `user_id` int(10) unsigned DEFAULT NULL,
+  `customer_name` varchar(191) NOT NULL,
+  `customer_email` varchar(191) NOT NULL,
+  `customer_mobile` varchar(50) DEFAULT NULL,
+  `company_name` varchar(191) DEFAULT NULL,
+  `location` text DEFAULT NULL,
+  `request_type` varchar(100) NOT NULL DEFAULT 'Custom Subscription Plan',
+  `package_type` varchar(50) DEFAULT NULL,
+  `package_id` int(10) unsigned DEFAULT NULL,
+  `package_title` varchar(191) DEFAULT NULL,
+  `status` enum('New','In Progress','Contacted','Resolved','Closed') NOT NULL DEFAULT 'New',
+  `aggregate_version` int(10) unsigned NOT NULL DEFAULT 1,
+  `message` text DEFAULT NULL,
+  `admin_notes` text DEFAULT NULL,
+  `assigned_to` int(10) unsigned DEFAULT NULL,
+  `updated_by` int(10) unsigned DEFAULT NULL,
+  `last_status_updated_at` timestamp NULL DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `custom_plan_requests_request_reference_unique` (`request_reference`),
+  KEY `idx_cpr_created_at` (`created_at`),
+  KEY `idx_cpr_company_id` (`company_id`),
+  KEY `idx_cpr_user_id` (`user_id`),
+  KEY `idx_cpr_customer_email` (`customer_email`),
+  KEY `idx_cpr_status` (`status`),
+  KEY `idx_cpr_assigned_to` (`assigned_to`),
+  KEY `idx_cpr_updated_at` (`updated_at`),
+  KEY `idx_cpr_status_updated_at` (`status`,`updated_at`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+DROP TABLE IF EXISTS `custom_plan_request_logs`;
+CREATE TABLE `custom_plan_request_logs` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `custom_plan_request_id` bigint(20) unsigned NOT NULL,
+  `previous_status` varchar(32) DEFAULT NULL,
+  `new_status` varchar(32) NOT NULL,
+  `notes` text DEFAULT NULL,
+  `updated_by` int(10) unsigned DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`),
+  KEY `idx_cprl_request_id` (`custom_plan_request_id`),
+  CONSTRAINT `custom_plan_request_logs_custom_plan_request_id_foreign` FOREIGN KEY (`custom_plan_request_id`) REFERENCES `custom_plan_requests` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+
 
 

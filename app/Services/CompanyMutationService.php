@@ -258,6 +258,8 @@ class CompanyMutationService
                 }
                 $company->delete();
 
+                static::flushSubscriptionCaches();
+
                 return [
                     'status' => 'success',
                     'action' => 'deleted',
@@ -570,5 +572,135 @@ class CompanyMutationService
                 ];
             }
         );
+    }
+
+    /**
+     * Atomically toggle company and root user active/inactive status with outbox persistence and idempotency.
+     */
+    public function toggleCompanyActive(int $companyId, ?string $idempotencyKey = null, array $options = []): array
+    {
+        $tenantId = $companyId;
+
+        return $this->executeMutation(
+            tenantId: $tenantId,
+            companyId: $companyId,
+            eventType: 'COMPANY_STATUS_TOGGLED',
+            operation: 'toggle_active',
+            payload: $options,
+            idempotencyKey: $idempotencyKey,
+            domainLogic: function () use ($companyId) {
+                $user = DB::table('users')
+                    ->where('company_id', '=', $companyId)
+                    ->where('root_user', '=', 1)
+                    ->lockForUpdate()
+                    ->first();
+
+                if (! $user) {
+                    return [
+                        'status' => 'faild',
+                        'message' => 'Root user not found',
+                    ];
+                }
+
+                $pack_status = ($user->status === 'active') ? 'inactive' : 'active';
+
+                // 1. Authoritative MySQL writes
+                DB::table('users')
+                    ->where('company_id', '=', $companyId)
+                    ->where('working_status', '=', 1)
+                    ->update(['status' => $pack_status]);
+
+                DB::table('companies')
+                    ->where('id', '=', $companyId)
+                    ->update(['status' => $pack_status, 'updated_at' => now()]);
+
+                // 2. Cache Epoch Invalidation on blocking
+                if ($pack_status === 'inactive') {
+                    Cache::put('company:epoch:'.$companyId, now()->timestamp, 7 * 24 * 3600);
+                }
+
+                // 3. Invalidate Redis subscription caches
+                static::flushSubscriptionCaches();
+
+                return [
+                    'status' => 'success',
+                    'pack_status' => $pack_status,
+                    'action' => $pack_status,
+                    'company_id' => $companyId,
+                    'delta' => [
+                        'status' => $pack_status,
+                    ],
+                    'message' => 'Status updated successfully',
+                ];
+            }
+        );
+    }
+
+    /**
+     * Atomically toggle operational or sales free pack status with outbox persistence and idempotency.
+     */
+    public function toggleCoinPackStatus(int $companyId, string $coinEventType, ?string $idempotencyKey = null, array $options = []): array
+    {
+        $tenantId = $companyId;
+
+        return $this->executeMutation(
+            tenantId: $tenantId,
+            companyId: $companyId,
+            eventType: 'COMPANY_COIN_STATUS_TOGGLED',
+            operation: 'toggle_coin_pack_'.$coinEventType,
+            payload: array_merge($options, ['coin_event_type' => $coinEventType]),
+            idempotencyKey: $idempotencyKey,
+            domainLogic: function () use ($companyId, $coinEventType) {
+                $row = DB::table('company_coins')
+                    ->where('company_id', '=', $companyId)
+                    ->where('event_type', '=', $coinEventType)
+                    ->lockForUpdate()
+                    ->first();
+
+                if (! $row) {
+                    return [
+                        'status' => 'faild',
+                        'message' => ucfirst($coinEventType).' coins record not found',
+                    ];
+                }
+
+                $pack_status = ($row->free_pack_status === 'active') ? 'block' : 'active';
+
+                DB::table('company_coins')
+                    ->where('company_id', '=', $companyId)
+                    ->where('event_type', '=', $coinEventType)
+                    ->update(['free_pack_status' => $pack_status, 'updated_at' => now()]);
+
+                // Invalidate Redis subscription caches
+                static::flushSubscriptionCaches();
+
+                return [
+                    'status' => 'success',
+                    'pack_status' => $pack_status,
+                    'action' => $pack_status,
+                    'coin_event_type' => $coinEventType,
+                    'company_id' => $companyId,
+                    'delta' => [
+                        'free_pack_status' => $pack_status,
+                        'event_type' => $coinEventType,
+                    ],
+                    'message' => 'Package status updated successfully',
+                ];
+            }
+        );
+    }
+
+    /**
+     * Flush all Super Admin Subscription KPI and list caches in Redis.
+     */
+    public static function flushSubscriptionCaches(): void
+    {
+        try {
+            Cache::forget('superadmin:subscription:kpi:operational');
+            Cache::forget('superadmin:subscription:kpi:sales');
+            Cache::increment('superadmin:subscription:version');
+        } catch (\Throwable $e) {
+            Log::warning('flushSubscriptionCaches: Cache invalidation warning: '.$e->getMessage());
+        }
     }
 }
