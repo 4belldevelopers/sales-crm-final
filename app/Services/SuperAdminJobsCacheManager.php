@@ -10,7 +10,8 @@ use Illuminate\Support\Facades\Log;
  *
  * Intent: Centralized cache manager for the Super Admin Jobs Requisitions domain.
  * Enforces unified cache key schema, O(1) generation versioning, distributed stampede
- * protection (single-flight locking with double-checked cache verification), and authoritative
+ * protection (single-flight locking with double-checked cache verification), generation-aware
+ * cache write protection (discards stale race writes), telemetry tracking, and authoritative
  * mutation delta overlay for read-after-write consistency guarantees.
  *
  * Tenancy Note: Universal Super Admin execution context scoped across all tenants.
@@ -25,6 +26,12 @@ class SuperAdminJobsCacheManager
 
     public const DELTA_PREFIX = 'sa:jobs:delta:';
 
+    public const SNAPSHOT_KEY = 'sa:jobs:snapshot:latest';
+
+    public const TELEMETRY_HITS_KEY = 'telemetry:sa:jobs:hits';
+
+    public const TELEMETRY_MISSES_KEY = 'telemetry:sa:jobs:misses';
+
     public const DEFAULT_VERSION_TTL = 2592000; // 30 days
 
     public const DEFAULT_LIST_TTL = 60; // 60 seconds
@@ -34,6 +41,8 @@ class SuperAdminJobsCacheManager
     public const DEFAULT_DRAWER_TTL = 1800; // 30 minutes
 
     public const DEFAULT_DELTA_TTL = 60; // 60 seconds
+
+    public const MAX_SNAPSHOT_AGE_SECONDS = 14400; // 4 hours maximum freshness for degraded snapshot
 
     /**
      * Get the current global generation version.
@@ -170,12 +179,72 @@ class SuperAdminJobsCacheManager
     }
 
     /**
-     * Fetch from cache with distributed stampede protection (single-flight locking).
+     * Retrieve latest snapshot with freshness validation.
+     */
+    public static function getLatestSnapshot(int $maxAgeSeconds = self::MAX_SNAPSHOT_AGE_SECONDS): ?array
+    {
+        try {
+            $data = Cache::get(self::SNAPSHOT_KEY);
+            if (! is_array($data) || empty($data['payload'])) {
+                return null;
+            }
+
+            $age = time() - (int) ($data['timestamp'] ?? 0);
+            if ($age > $maxAgeSeconds) {
+                Log::warning("SuperAdminJobsCacheManager: Latest snapshot expired (age: {$age}s > {$maxAgeSeconds}s). Discarding.");
+
+                return null;
+            }
+
+            $payload = $data['payload'];
+            $payload['snapshot_age_seconds'] = $age;
+
+            return $payload;
+        } catch (\Throwable $e) {
+            return null;
+        }
+    }
+
+    /**
+     * Get operational telemetry metrics for cache hits, misses, and ratio.
+     */
+    public static function getTelemetryMetrics(): array
+    {
+        try {
+            $hits = (int) Cache::get(self::TELEMETRY_HITS_KEY, 0);
+            $misses = (int) Cache::get(self::TELEMETRY_MISSES_KEY, 0);
+            $total = $hits + $misses;
+            $hitRatio = $total > 0 ? round(($hits / $total) * 100, 2) : 100.0;
+
+            return [
+                'hits' => $hits,
+                'misses' => $misses,
+                'total_requests' => $total,
+                'hit_ratio_percent' => $hitRatio,
+                'current_version' => self::getVersion(),
+            ];
+        } catch (\Throwable $e) {
+            return [
+                'hits' => 0,
+                'misses' => 0,
+                'total_requests' => 0,
+                'hit_ratio_percent' => 100.0,
+                'current_version' => 1,
+            ];
+        }
+    }
+
+    /**
+     * Fetch from cache with distributed stampede protection and generation-aware write guard.
      *
      * Prevents the Thundering Herd problem: when a cache key misses or expires under 10K concurrency,
      * only ONE worker process is granted the lock to compute the value from Elasticsearch/database.
-     * All other concurrent requests poll briefly (spin-wait) to receive the leader's computed value,
-     * dropping server and database strain to 0%.
+     * All other concurrent requests poll briefly (spin-wait) to receive the leader's computed value.
+     *
+     * Generation-Aware Cache Guard:
+     * Validates that the cache version hasn't changed during execution of the computation closure.
+     * If a concurrent write incremented the version during computation, the stale result is DISCARDED
+     * to prevent polluting the new generation with stale data.
      *
      * @param  string  $key  Cache key to look up
      * @param  int  $ttlSeconds  Cache time-to-live in seconds
@@ -195,12 +264,16 @@ class SuperAdminJobsCacheManager
         try {
             $cached = Cache::get($key);
             if ($cached !== null) {
+                Cache::increment(self::TELEMETRY_HITS_KEY);
+
                 return $cached;
             }
         } catch (\Throwable $e) {
-            // Redis connection issue fallback
             return $computation();
         }
+
+        // Cache Miss
+        Cache::increment(self::TELEMETRY_MISSES_KEY);
 
         // 2. Slow Path: Cache Miss - Acquire Single-Flight Distributed Lock
         $lockKey = "lock:{$key}";
@@ -208,24 +281,40 @@ class SuperAdminJobsCacheManager
         try {
             $lock = Cache::lock($lockKey, $lockTimeout);
         } catch (\Throwable $e) {
-            // Lock driver fallback
         }
 
         if ($lock && $lock->get()) {
             try {
-                // Double-checked locking: check if another worker just computed it
+                // Double-checked locking
                 $cached = Cache::get($key);
                 if ($cached !== null) {
+                    Cache::increment(self::TELEMETRY_HITS_KEY);
+
                     return $cached;
                 }
+
+                $startVersion = self::getVersion();
 
                 // Leader executes computation
                 $result = $computation();
 
+                // Generation-Aware Write Guard: check if version mutated during computation
+                $endVersion = self::getVersion();
+                if ($endVersion !== $startVersion) {
+                    Log::warning("SuperAdminJobsCacheManager: Generation race detected (started v{$startVersion}, now v{$endVersion}). Discarding stale write for key: {$key}");
+
+                    return $result;
+                }
+
                 if ($result !== null) {
                     Cache::put($key, $result, $ttlSeconds);
-                    // Also store a fallback snapshot for emergency circuit breaker
-                    Cache::put('sa:jobs:snapshot:latest', $result, 86400);
+
+                    // Store authoritative snapshot with metadata for circuit breaker
+                    Cache::put(self::SNAPSHOT_KEY, [
+                        'payload' => $result,
+                        'timestamp' => time(),
+                        'version' => $endVersion,
+                    ], 86400);
                 }
 
                 return $result;
@@ -235,7 +324,7 @@ class SuperAdminJobsCacheManager
         }
 
         // 3. Follower Process: Spin-wait for leader to complete computation
-        $stepMs = 25; // 25ms poll intervals
+        $stepMs = 25;
         $elapsedMs = 0;
 
         while ($elapsedMs < $maxWaitMs) {
@@ -245,6 +334,8 @@ class SuperAdminJobsCacheManager
             try {
                 $cached = Cache::get($key);
                 if ($cached !== null) {
+                    Cache::increment(self::TELEMETRY_HITS_KEY);
+
                     return $cached;
                 }
             } catch (\Throwable $e) {
@@ -252,19 +343,19 @@ class SuperAdminJobsCacheManager
             }
         }
 
-        // 4. Fallback if leader timed out: execute computation directly or return degraded snapshot
-        try {
-            $snapshot = Cache::get('sa:jobs:snapshot:latest');
-            if ($snapshot !== null) {
-                return $snapshot;
-            }
-        } catch (\Throwable $e) {
+        // 4. Fallback if leader timed out: retrieve latest fresh snapshot or execute computation
+        $snapshot = self::getLatestSnapshot();
+        if ($snapshot !== null) {
+            return $snapshot;
         }
 
+        $fbStartVersion = self::getVersion();
         $result = $computation();
         if ($result !== null) {
             try {
-                Cache::put($key, $result, $ttlSeconds);
+                if (self::getVersion() === $fbStartVersion) {
+                    Cache::put($key, $result, $ttlSeconds);
+                }
             } catch (\Throwable $e) {
             }
         }

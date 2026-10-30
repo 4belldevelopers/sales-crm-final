@@ -62,3 +62,14 @@ Broadcast::channel('superadmin.jobs', function ($user) {
     return (bool) ($user && (! empty($user->is_superadmin) || (int) ($user->role_id ?? 0) === 1 || ! empty($user->root_user)));
 });
 
+// Super Admin private channel for Candidate Lists real-time delta synchronization
+Broadcast::channel('superadmin.candidates', function ($user) {
+    return (bool) ($user && (! empty($user->is_superadmin) || (int) ($user->role_id ?? 0) === 1 || ! empty($user->root_user)));
+});
+
+// Super Admin private channel for Meeting Tracker & Schedule Hub real-time delta synchronization
+Broadcast::channel('superadmin.meetings', function ($user) {
+    return (bool) ($user && (! empty($user->is_superadmin) || (int) ($user->role_id ?? 0) === 1 || ! empty($user->root_user)));
+});
+
+

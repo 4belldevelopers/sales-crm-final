@@ -938,10 +938,30 @@
         drawerCache: new Map()
     };
 
-    // Client-side IndexedDB Caching (jero_superadmin_candidates_db)
+    // Client-side IndexedDB Caching (jero_superadmin_candidates_db v2)
     const IDB_NAME = 'jero_superadmin_candidates_db';
-    const IDB_VER = 1;
+    const IDB_VER = 2;
     const IDB_TTL_MS = 10 * 60 * 1000; // 10 minutes
+    const CURRENT_USER_ID = {{ (int) (auth()->id() ?? 0) }};
+
+    const candidateSyncChannel = ('BroadcastChannel' in window) ? new BroadcastChannel('jero_superadmin_candidates_sync') : null;
+    if (candidateSyncChannel) {
+        candidateSyncChannel.onmessage = function(e) {
+            if (e.data && e.data.type === 'CANDIDATE_MUTATED') {
+                openCandidatesDB().then(db => {
+                    if (db) {
+                        try {
+                            const tx = db.transaction('candidate_pages', 'readwrite');
+                            tx.objectStore('candidate_pages').clear();
+                        } catch(err) {}
+                    }
+                });
+                if (window.SuperAdminCVTrackerState) {
+                    fetchCandidates(window.SuperAdminCVTrackerState.page || 1);
+                }
+            }
+        };
+    }
 
     function openCandidatesDB() {
         return new Promise((resolve, reject) => {
@@ -954,6 +974,9 @@
                 }
                 if (!db.objectStoreNames.contains('candidate_drawers')) {
                     db.createObjectStore('candidate_drawers', { keyPath: 'id' });
+                }
+                if (!db.objectStoreNames.contains('meta')) {
+                    db.createObjectStore('meta', { keyPath: 'key' });
                 }
             };
             req.onsuccess = () => resolve(req.result);
@@ -970,7 +993,7 @@
                 const req = tx.objectStore('candidate_pages').get(cacheKey);
                 req.onsuccess = () => {
                     const rec = req.result;
-                    if (rec && (Date.now() - rec.timestamp < IDB_TTL_MS)) {
+                    if (rec && rec.user_id === CURRENT_USER_ID && (Date.now() - rec.timestamp < IDB_TTL_MS)) {
                         resolve(rec.data);
                     } else {
                         resolve(null);
@@ -990,7 +1013,44 @@
             const tx = db.transaction('candidate_pages', 'readwrite');
             tx.objectStore('candidate_pages').put({
                 cacheKey: cacheKey,
+                user_id: CURRENT_USER_ID,
                 data: data,
+                timestamp: Date.now()
+            });
+        } catch(e) {}
+    }
+
+    async function getCachedDrawer(id) {
+        try {
+            const db = await openCandidatesDB();
+            if (!db) return null;
+            return new Promise((resolve) => {
+                const tx = db.transaction('candidate_drawers', 'readonly');
+                const req = tx.objectStore('candidate_drawers').get(String(id));
+                req.onsuccess = () => {
+                    const rec = req.result;
+                    if (rec && rec.user_id === CURRENT_USER_ID && (Date.now() - rec.timestamp < 30 * 60 * 1000)) {
+                        resolve(rec.view);
+                    } else {
+                        resolve(null);
+                    }
+                };
+                req.onerror = () => resolve(null);
+            });
+        } catch(e) {
+            return null;
+        }
+    }
+
+    async function putCachedDrawer(id, view) {
+        try {
+            const db = await openCandidatesDB();
+            if (!db) return;
+            const tx = db.transaction('candidate_drawers', 'readwrite');
+            tx.objectStore('candidate_drawers').put({
+                id: String(id),
+                user_id: CURRENT_USER_ID,
+                view: view,
                 timestamp: Date.now()
             });
         } catch(e) {}
@@ -998,7 +1058,7 @@
 
     // Helper: generate canonical idempotency key
     function generateIdempotencyKey() {
-        return 'idemp_' + (window.crypto && crypto.randomUUID ? crypto.randomUUID() : (Date.now() + '_' + Math.random().toString(36).substring(2)));
+        return 'sac_' + (window.crypto && crypto.randomUUID ? crypto.randomUUID() : (Date.now() + '_' + Math.random().toString(36).substring(2)));
     }
 
     // Initialize Tagify for Skills & Location
@@ -1287,7 +1347,7 @@
     });
 
     // Authoritative Fetch Candidates (Client-First / In-RAM + IndexedDB + ES Backend)
-    async function fetchCandidates(page = 1) {
+    async function fetchCandidates(page = 1, forceRefresh = false) {
         window.SuperAdminCVTrackerState.page = page;
         const searchQuery = $('#kt_tagify_2').val() || '';
         const sort = $('#sortingfilter').val() || '1';
@@ -1324,10 +1384,14 @@
 
         const cacheKey = 'sa_cand_' + btoa(JSON.stringify(requestParams));
 
-        // 1. Check IndexedDB cache for instant hydration (< 20ms)
-        const cached = await getCachedPage(cacheKey);
-        if (cached) {
-            applyResponseData(cached);
+        // 1. Check IndexedDB cache for instant hydration (< 20ms) unless forceRefresh
+        if (!forceRefresh) {
+            const cached = await getCachedPage(cacheKey);
+            if (cached) {
+                applyResponseData(cached);
+            } else {
+                $('.loadingMessage').css({ display: 'flex' });
+            }
         } else {
             $('.loadingMessage').css({ display: 'flex' });
         }
@@ -1354,6 +1418,20 @@
         } catch(err) {
             $('#loader_search').addClass('d-none');
             $('.loadingMessage').css({ display: 'none' });
+
+            // Authorization safety: Wipe local browser cache if unauthorized or session expired
+            if (err && (err.status === 401 || err.status === 403)) {
+                openCandidatesDB().then(db => {
+                    if (db) {
+                        try {
+                            const tx = db.transaction(['candidate_pages', 'candidate_drawers'], 'readwrite');
+                            tx.objectStore('candidate_pages').clear();
+                            tx.objectStore('candidate_drawers').clear();
+                        } catch(e) {}
+                    }
+                });
+            }
+
             if (err.statusText !== 'abort') {
                 console.error('Candidate fetch error:', err);
             }
@@ -1594,9 +1672,13 @@
         $('#csd_drawer_close').trigger('click');
     });
 
-    // Submit stage with Idempotency Key & Optimistic UI Update
+    // Submit stage with Idempotency Key & Optimistic UI Update with Double-Click Protection
+    let _isSubmittingCandidateStage = false;
     $(document).on('click', '#custom_stage_submit', function(e) {
         e.preventDefault();
+        if (_isSubmittingCandidateStage) return;
+        _isSubmittingCandidateStage = true;
+
         const submitBtn = $(this);
         const form = $('#status_frm');
         const idempotencyKey = generateIdempotencyKey();
@@ -1606,7 +1688,7 @@
         submitBtn.find('.indicator-progress').show();
 
         $.ajax({
-            url: "{{ route('service_company.job-applications.stage_submit') }}",
+            url: "{{ route('superadmin.company.candidateStageSubmit') }}",
             type: 'POST',
             data: form.serialize(),
             headers: {
@@ -1614,6 +1696,7 @@
                 'X-Requested-With': 'XMLHttpRequest'
             },
             success: function(resp) {
+                _isSubmittingCandidateStage = false;
                 submitBtn.prop('disabled', false);
                 submitBtn.find('.indicator-label').show();
                 submitBtn.find('.indicator-progress').hide();
@@ -1634,16 +1717,25 @@
                     // Invalidate IndexedDB cache and re-fetch counts
                     openCandidatesDB().then(db => {
                         if (db) {
-                            const tx = db.transaction('candidate_pages', 'readwrite');
-                            tx.objectStore('candidate_pages').clear();
+                            try {
+                                const tx = db.transaction('candidate_pages', 'readwrite');
+                                tx.objectStore('candidate_pages').clear();
+                            } catch(e) {}
                         }
                     });
+
+                    // Broadcast cross-tab mutation event
+                    if (candidateSyncChannel) {
+                        candidateSyncChannel.postMessage({ type: 'CANDIDATE_MUTATED', wiseId: wiseId });
+                    }
+
                     fetchCandidates(window.SuperAdminCVTrackerState.page);
                 } else {
                     Swal.fire('Notice', resp.message || 'Unable to update stage.', 'warning');
                 }
             },
             error: function(err) {
+                _isSubmittingCandidateStage = false;
                 submitBtn.prop('disabled', false);
                 submitBtn.find('.indicator-label').show();
                 submitBtn.find('.indicator-progress').hide();
@@ -1652,9 +1744,9 @@
         });
     });
 
-    // ===== CANDIDATE DETAILS DRAWER: SSOT FAST RAM CACHE & INSTANT LOAD =====
+    // ===== CANDIDATE DETAILS DRAWER: MULTI-TIER L1 RAM + L2 INDEXEDDB CACHE =====
     window.__saCandidateDrawerCache = window.__saCandidateDrawerCache || new Map();
-    $(document).on('click', '.show-application-detail', function(e) {
+    $(document).on('click', '.show-application-detail', async function(e) {
         e.preventDefault();
         e.stopPropagation();
         if (e.stopImmediatePropagation) e.stopImmediatePropagation();
@@ -1665,12 +1757,23 @@
 
         $('#kt_activitiesApplication_toggle').trigger('click');
 
+        // L1 Cache: In-RAM Map (< 1ms)
         if (window.__saCandidateDrawerCache.has(id)) {
             $('#application_show_right_bar').html(window.__saCandidateDrawerCache.get(id));
             if (typeof KTMenu !== 'undefined') KTMenu.createInstances();
             return;
         }
 
+        // L2 Cache: IndexedDB Store (< 5ms)
+        const idbView = await getCachedDrawer(id);
+        if (idbView) {
+            window.__saCandidateDrawerCache.set(id, idbView);
+            $('#application_show_right_bar').html(idbView);
+            if (typeof KTMenu !== 'undefined') KTMenu.createInstances();
+            return;
+        }
+
+        // L3 Cache: Cold Network Fetch
         var loaderHtml = 
             '<div class="d-flex flex-column align-items-center justify-content-center p-10" style="min-height: 380px;">' +
             '  <div class="spinner-border text-primary mb-4" role="status" style="width: 2.8rem; height: 2.8rem;"></div>' +
@@ -1686,6 +1789,7 @@
             success: function(resp) {
                 if (resp && resp.view) {
                     window.__saCandidateDrawerCache.set(id, resp.view);
+                    putCachedDrawer(id, resp.view);
                     $('#application_show_right_bar').html(resp.view);
                     if (typeof KTMenu !== 'undefined') KTMenu.createInstances();
                 }
@@ -1709,5 +1813,89 @@
             if (drawer) drawer.hide();
         }
     });
+
+    // Real-Time WebSockets Listener (Private Channel superadmin.candidates) with Reconnection & Gap Detection
+    window._lastCandidateSequenceId = 0;
+    window._candidateAggregateVersions = window._candidateAggregateVersions || new Map();
+    window._echoWasDisconnected = false;
+
+    if (typeof Echo !== 'undefined') {
+        try {
+            // Handle connection drops and re-synchronize state on reconnect
+            if (Echo.connector && Echo.connector.pusher && Echo.connector.pusher.connection) {
+                Echo.connector.pusher.connection.bind('connected', function() {
+                    if (window._echoWasDisconnected) {
+                        window._echoWasDisconnected = false;
+                        if (typeof fetchCandidates === 'function' && window.SuperAdminCVTrackerState) {
+                            fetchCandidates(window.SuperAdminCVTrackerState.page, true);
+                        }
+                    }
+                });
+                Echo.connector.pusher.connection.bind('disconnected', function() {
+                    window._echoWasDisconnected = true;
+                });
+            }
+
+            Echo.private('superadmin.candidates')
+                .listen('.candidate.updated', function(event) {
+                    // Sequence Ordering & Drop Protection
+                    if (event.sequence_id && event.sequence_id <= window._lastCandidateSequenceId) {
+                        return; // Discard stale out-of-order event
+                    }
+
+                    // Sequence Gap Detection: If packets were dropped, recover authoritative snapshot
+                    if (window._lastCandidateSequenceId > 0 && event.sequence_id > (window._lastCandidateSequenceId + 1)) {
+                        if (typeof fetchCandidates === 'function' && window.SuperAdminCVTrackerState) {
+                            fetchCandidates(window.SuperAdminCVTrackerState.page, true);
+                        }
+                    }
+
+                    if (event.sequence_id) {
+                        window._lastCandidateSequenceId = event.sequence_id;
+                    }
+
+                    // Aggregate Version Stale-Event Protection
+                    if (event.aggregate_version && event.wise_id) {
+                        const lastVer = window._candidateAggregateVersions.get(String(event.wise_id)) || 0;
+                        if (event.aggregate_version <= lastVer) {
+                            return; // Discard older aggregate version
+                        }
+                        window._candidateAggregateVersions.set(String(event.wise_id), event.aggregate_version);
+                    }
+
+                    // Invalidate local IndexedDB cache
+                    openCandidatesDB().then(db => {
+                        if (db) {
+                            try {
+                                const tx = db.transaction('candidate_pages', 'readwrite');
+                                tx.objectStore('candidate_pages').clear();
+                            } catch(e) {}
+                        }
+                    });
+
+                    // Evict from drawer cache
+                    if (event.wise_id && window.__saCandidateDrawerCache) {
+                        window.__saCandidateDrawerCache.delete(String(event.wise_id));
+                    }
+
+                    // Optimistically update visible row if present
+                    if (event.wise_id) {
+                        const row = $(`tr[data-wise-id="${event.wise_id}"]`);
+                        if (row.length) {
+                            const badge = row.find('.client_stage_sub_stage span.badge');
+                            if (badge.length && event.stage_name) {
+                                badge.text(event.stage_name);
+                                if (event.stage_css) {
+                                    badge.attr('class', 'badge fw-bolder fs-6 px-2 py-1 ' + event.stage_css);
+                                }
+                            }
+                            row.css('transition', 'background-color 0.4s ease');
+                            row.css('background-color', '#f0fdf4');
+                            setTimeout(() => row.css('background-color', ''), 1200);
+                        }
+                    }
+                });
+        } catch(e) {}
+    }
 </script>
 @endpush

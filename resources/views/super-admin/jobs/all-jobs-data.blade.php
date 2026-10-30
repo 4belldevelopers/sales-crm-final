@@ -1552,19 +1552,61 @@ data-kt-drawer-toggle="#kt_activitiesJob_toggle" data-kt-drawer-close="#kt_activ
         const handleJobStatusEvent = function(event) {
             if (!event || !event.jobId) return;
 
-            // Monotonic Sequence Check: drop stale/out-of-order events
-            if (event.sequence_id && window._lastJobSequenceId && event.sequence_id <= window._lastJobSequenceId) {
-                console.warn('[Reverb SuperAdmin] Discarded out-of-order event:', event);
-                return;
+            // 1. Event ID Deduplication (Ring buffer of 500 IDs)
+            if (!window._processedJobEvents) {
+                window._processedJobEvents = new Set();
             }
-            if (event.sequence_id) {
-                window._lastJobSequenceId = event.sequence_id;
+            if (event.event_id) {
+                if (window._processedJobEvents.has(event.event_id)) {
+                    return; // Discard duplicate event
+                }
+                window._processedJobEvents.add(event.event_id);
+                if (window._processedJobEvents.size > 500) {
+                    const firstKey = window._processedJobEvents.values().next().value;
+                    window._processedJobEvents.delete(firstKey);
+                }
             }
 
             const jobId = parseInt(event.jobId, 10);
             const newStatus = (event.newStatus || '').toLowerCase();
+            const streamSeq = event.stream_sequence ? parseInt(event.stream_sequence, 10) : 0;
+            const aggVer = event.aggregate_version ? parseInt(event.aggregate_version, 10) : 0;
 
-            // Targeted Dossier & Memory Eviction
+            // 2. Monotonic Stream Sequence & Gap Detection
+            if (streamSeq > 0 && window._lastJobStreamSeq && streamSeq <= window._lastJobStreamSeq) {
+                console.warn('[Reverb SuperAdmin] Discarded out-of-order stream event:', event);
+                return;
+            }
+
+            if (streamSeq > 0 && window._lastJobStreamSeq && streamSeq > (window._lastJobStreamSeq + 1)) {
+                console.warn('[Reverb SuperAdmin] Stream sequence gap detected (expected ' + (window._lastJobStreamSeq + 1) + ', got ' + streamSeq + '). Triggering authoritative snapshot refresh.');
+                window._lastJobStreamSeq = streamSeq;
+                if (window.SuperAdminJobsLocalStore && typeof window.SuperAdminJobsLocalStore.clearExpired === 'function') {
+                    window.SuperAdminJobsLocalStore.clearExpired(0);
+                }
+                if (typeof fetchCandidates === 'function') {
+                    fetchCandidates();
+                }
+                return;
+            }
+
+            if (streamSeq > 0) {
+                window._lastJobStreamSeq = streamSeq;
+            }
+
+            // 3. Per-Job Aggregate Version Guard
+            if (!window._jobAggregateVersions) {
+                window._jobAggregateVersions = {};
+            }
+            if (aggVer > 0 && window._jobAggregateVersions['job_' + jobId] && aggVer < window._jobAggregateVersions['job_' + jobId]) {
+                console.warn('[Reverb SuperAdmin] Discarded older aggregate version event for job ' + jobId);
+                return;
+            }
+            if (aggVer > 0) {
+                window._jobAggregateVersions['job_' + jobId] = aggVer;
+            }
+
+            // 4. Targeted Dossier & Memory Eviction
             delete window.jobDrawerCache['job_' + jobId];
             if (window.SuperAdminJobsLocalStore && typeof window.SuperAdminJobsLocalStore.deleteDossier === 'function') {
                 window.SuperAdminJobsLocalStore.deleteDossier('job_' + jobId);
@@ -1575,7 +1617,14 @@ data-kt-drawer-toggle="#kt_activitiesJob_toggle" data-kt-drawer-close="#kt_activ
                 } catch (e) {}
             }
 
-            if (window.jobsState && window.jobsState.all) {
+            // 5. Update local state and check active status tab membership
+            const currentActiveStatusTab = $('.jh-tab.active').data('status') || 'all';
+            if (currentActiveStatusTab !== 'all' && currentActiveStatusTab !== newStatus) {
+                // Mutation moved job outside currently filtered tab — refresh authoritative listing
+                if (typeof fetchCandidates === 'function') {
+                    fetchCandidates();
+                }
+            } else if (window.jobsState && window.jobsState.all) {
                 let targetJob = window.jobsState.all.find(j => parseInt(j.id, 10) === jobId);
                 if (targetJob) {
                     targetJob.status_raw = newStatus;
@@ -1604,6 +1653,18 @@ data-kt-drawer-toggle="#kt_activitiesJob_toggle" data-kt-drawer-close="#kt_activ
             } else {
                 window.Echo.channel('superadmin-jobs')
                     .listen('.JobStatusChanged', handleJobStatusEvent);
+            }
+
+            // Reconnection Recovery: sync state if reconnect occurs after a sequence was tracked
+            if (window.Echo.connector && window.Echo.connector.pusher && window.Echo.connector.pusher.connection) {
+                window.Echo.connector.pusher.connection.bind('connected', function () {
+                    if (window._lastJobStreamSeq > 0) {
+                        console.info('[Reverb SuperAdmin] Reconnected to Reverb/Echo. Syncing authoritative state...');
+                        if (typeof fetchCandidates === 'function') {
+                            fetchCandidates();
+                        }
+                    }
+                });
             }
         } catch (err) {
             console.warn('[Reverb SuperAdmin Jobs] sync error:', err);
