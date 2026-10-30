@@ -152,9 +152,11 @@
                     <div class="cl-subcard-head">
                         <span class="cl-subcard-title">Agency Identity</span>
                         <div class="cl-subcard-badges">
-                            <span class="cl-scope-pill {{ $scopeClass }} {{ $client_type_css }}" data-row-id="{{ $row->client_id }}">
-                                {{ $scopeLabel }}
-                            </span>
+                            @if (!$isDirect)
+                                <span class="cl-scope-pill {{ $scopeClass }} {{ $client_type_css }}" data-row-id="{{ $row->client_id }}">
+                                    {{ $scopeLabel }}
+                                </span>
+                            @endif
                             <span class="cl-status-pill {{ $Active > 0 ? 'pill-active' : 'pill-inactive' }}">
                                 <span class="cl-status-pill-dot"></span>
                                 <span>{{ $Active > 0 ? 'Active' : 'Inactive' }}</span>

@@ -540,47 +540,78 @@
   border: 1px solid #e2e8f0 !important;
   border-radius: 10px !important;
   padding: 8px 12px !important;
-  margin-bottom: 12px !important;
-  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03) !important;
+  min-height: 52px !important;
+  margin-bottom: 14px !important;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04) !important;
+  overflow: visible !important;
+  display: flex !important;
+  align-items: center !important;
 }
 .cd-drawer-tabs-list {
   display: flex !important;
   align-items: center !important;
   gap: 8px !important;
   overflow-x: auto !important;
+  overflow-y: visible !important;
   flex-wrap: nowrap !important;
   margin: 0 !important;
-  padding: 0 !important;
+  padding: 4px 2px !important;
   list-style: none !important;
   border: none !important;
+  border-bottom: 0 !important;
+  width: 100% !important;
 }
 .cd-drawer-tabs-list::-webkit-scrollbar { display: none; }
+.cd-drawer-tabs-list.nav-tabs { border-bottom: 0 !important; }
+.cd-drawer-tabs-list .nav-item {
+  margin: 0 !important;
+  padding: 0 !important;
+}
 .cd-tab-pill-btn {
   background: #ffffff !important;
   border: 1px solid #e2e8f0 !important;
   border-radius: 8px !important;
-  padding: 6px 14px !important;
+  height: 34px !important;
+  padding: 0 14px !important;
   font-size: 11.5px !important;
   font-weight: 600 !important;
   color: #475569 !important;
   text-decoration: none !important;
   display: inline-flex !important;
   align-items: center !important;
-  gap: 6px !important;
+  justify-content: center !important;
+  gap: 7px !important;
   white-space: nowrap !important;
   transition: all 0.15s ease !important;
   cursor: pointer !important;
+  box-sizing: border-box !important;
+  margin: 0 !important;
+  margin-bottom: 0 !important;
+}
+.cd-tab-pill-btn i {
+  color: #94a3b8 !important; /* light, visible tab icon */
+  font-size: 12px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  transition: color 0.15s ease !important;
 }
 .cd-tab-pill-btn:hover {
   background: #f8fafc !important;
   border-color: #cbd5e1 !important;
   color: #0f172a !important;
 }
+.cd-tab-pill-btn:hover i {
+  color: #009ef7 !important;
+}
 .cd-tab-pill-btn.active {
   background: #009ef7 !important;
   border-color: #009ef7 !important;
   color: #ffffff !important;
-  box-shadow: 0 2px 4px rgba(0, 158, 247, 0.2) !important;
+  box-shadow: 0 2px 5px rgba(0, 158, 247, 0.25) !important;
+}
+.cd-tab-pill-btn.active i {
+  color: #ffffff !important;
 }
 .cd-tab-badge-pill {
   font-size: 10px !important;
@@ -589,6 +620,7 @@
   border-radius: 10px !important;
   background: #f1f5f9 !important;
   color: #475569 !important;
+  line-height: 1.2 !important;
 }
 .cd-tab-pill-btn.active .cd-tab-badge-pill {
   background: rgba(255, 255, 255, 0.28) !important;
@@ -729,11 +761,13 @@
   border: 1px solid #e2e8f0 !important;
   border-radius: 8px !important;
   padding: 6px 10px !important;
+  min-height: 44px !important;
   margin-bottom: 12px !important;
   display: flex !important;
   align-items: center !important;
   gap: 6px !important;
   overflow-x: auto !important;
+  overflow-y: visible !important;
   flex-wrap: nowrap !important;
 }
 .cd-subtab-btn {
@@ -1263,9 +1297,6 @@
                 <span class="cd-agency-id-pill">#AG-{{ $agencyId }}</span>
             </div>
             <div class="cd-top-badge-row">
-                <span class="cd-agency-type-badge-pill">
-                    <i class="fas fa-handshake me-1"></i> Direct Agency Partner
-                </span>
                 @if ($isAgencyActive)
                     <span class="cd-status-badge-active" title="Agency is actively working on positions">
                         <span class="cd-pulse-emerald"></span> Active Partner
@@ -1282,10 +1313,6 @@
             <button type="button" class="cd-hdr-action-btn primary" onclick="triggerDrawerTab('requisitions', event)" title="Share an open job position with this agency">
                 <i class="fas fa-plus"></i>
                 <span>Share Job</span>
-            </button>
-            <button type="button" class="cd-hdr-action-btn followup" onclick="triggerDrawerTab('recent_activity', event)" title="Log interaction notes or agency touchpoints">
-                <i class="fas fa-comment-dots"></i>
-                <span>Log Note</span>
             </button>
             <div class="cd-top-close-wrap">
                 <button type="button" class="cd-hdr-btn-close cd-close-drawer" id="kt_activitiesDirectClient_close_btn" onclick="if(window.closeAgencyDrawer){window.closeAgencyDrawer();}else{$('#kt_activitiesDirectClient_close').trigger('click');}" title="Close Drawer">
@@ -1348,11 +1375,6 @@
 
             <!-- Right Flank: Scope & Status / Positions -->
             <div class="cd-hero-right-flank">
-                <div>
-                    <span class="cd-pill-scope-direct">
-                        <i class="fas fa-handshake me-1"></i> Direct Agency Partner
-                    </span>
-                </div>
                 <div class="cd-hero-status-pos-row">
                     @if ($isAgencyActive)
                         <span class="cd-status-badge-active" title="Agency is actively working on positions">
@@ -1395,48 +1417,48 @@
             </div>
         </a>
 
-        <!-- KPI 2: Active Shared Jobs -->
+        <!-- KPI 2: All Active Jobs -->
         <a href="#requisitions" class="cd-kpi-card cd-kpi-nav-trigger" onclick="triggerDrawerTab('requisitions', event)" title="Active jobs currently being sourced">
             <div class="cd-kpi-icon cd-kpi-icon-emerald"><i class="fas fa-bolt"></i></div>
             <div class="cd-kpi-body">
                 <div class="cd-kpi-num">{{ number_format($kpiActiveJobs) }}</div>
-                <div class="cd-kpi-lbl">Active Jobs</div>
+                <div class="cd-kpi-lbl">All Active Jobs</div>
             </div>
         </a>
 
-        <!-- KPI 3: Candidates Submitted -->
+        <!-- KPI 3: All Candidates -->
         <a href="#candidate_list" class="cd-kpi-card cd-kpi-nav-trigger" onclick="triggerDrawerTab('candidate_list', event)" title="Total candidate profiles submitted">
             <div class="cd-kpi-icon cd-kpi-icon-purple"><i class="fas fa-users"></i></div>
             <div class="cd-kpi-body">
                 <div class="cd-kpi-num">{{ number_format($kpiSubmitted) }}</div>
-                <div class="cd-kpi-lbl">Submitted Candidates</div>
+                <div class="cd-kpi-lbl">All Candidates</div>
             </div>
         </a>
 
-        <!-- KPI 4: Interviews Scheduled -->
+        <!-- KPI 4: All Interviews -->
         <a href="#interview_tracker" class="cd-kpi-card cd-kpi-nav-trigger" onclick="triggerDrawerTab('interview_tracker', event)" title="Interviews conducted for agency candidates">
             <div class="cd-kpi-icon cd-kpi-icon-amber"><i class="fas fa-calendar-check"></i></div>
             <div class="cd-kpi-body">
                 <div class="cd-kpi-num">{{ number_format($kpiInterviews) }}</div>
-                <div class="cd-kpi-lbl">Interviews Scheduled</div>
+                <div class="cd-kpi-lbl">All Interviews</div>
             </div>
         </a>
 
-        <!-- KPI 5: Offers Generated -->
+        <!-- KPI 5: All Offers -->
         <a href="#candidate_joining" class="cd-kpi-card cd-kpi-nav-trigger" onclick="triggerDrawerTab('candidate_joining', event)" title="Offers extended to agency candidates">
             <div class="cd-kpi-icon cd-kpi-icon-rose"><i class="fas fa-file-signature"></i></div>
             <div class="cd-kpi-body">
                 <div class="cd-kpi-num">{{ number_format($kpiOffers) }}</div>
-                <div class="cd-kpi-lbl">Offers Generated</div>
+                <div class="cd-kpi-lbl">All Offers</div>
             </div>
         </a>
 
-        <!-- KPI 6: Successful Placements -->
+        <!-- KPI 6: All Joins -->
         <a href="#candidate_joining" class="cd-kpi-card cd-kpi-nav-trigger" onclick="triggerDrawerTab('candidate_joining', event)" title="Candidates successfully joined">
             <div class="cd-kpi-icon cd-kpi-icon-teal"><i class="fas fa-handshake"></i></div>
             <div class="cd-kpi-body">
                 <div class="cd-kpi-num">{{ number_format($kpiJoins) }}</div>
-                <div class="cd-kpi-lbl">Successful Joins</div>
+                <div class="cd-kpi-lbl">All Joins</div>
             </div>
         </a>
     </div>
@@ -1515,15 +1537,19 @@
                         <div class="cd-subcard-header">
                             <div class="cd-subcard-header-left">
                                 <div class="cd-subcard-header-icon blue"><i class="fas fa-info-circle"></i></div>
-                                <h4 class="cd-subcard-heading">About the Recruitment Agency</h4>
+                                <h4 class="cd-subcard-heading">About {{ $detailName }}</h4>
                             </div>
-                            @if (!empty($webClean))
-                                <a href="{{ str_starts_with($webClean, 'http') ? $webClean : 'https://'.$webClean }}" target="_blank" class="text-primary fw-bold fs-8 text-decoration-none d-inline-flex align-items-center gap-1">
-                                    Official Portal <i class="fas fa-arrow-up-right-from-square fs-9"></i>
+                            @if (!empty($webClean) && $webClean !== '-')
+                                @php
+                                    $cleanWebLink = preg_replace('#^https?://(www\.)?#i', '', rtrim($webClean, '/'));
+                                    $webHref = str_starts_with($webClean, 'http') ? $webClean : 'https://'.$webClean;
+                                @endphp
+                                <a href="{{ $webHref }}" target="_blank" class="text-primary fw-bold fs-8 text-decoration-none d-inline-flex align-items-center gap-1" title="Visit {{ $detailName }} Website">
+                                    {{ $cleanWebLink }} <i class="fas fa-arrow-up-right-from-square fs-9"></i>
                                 </a>
                             @endif
                         </div>
-                        <div style="font-size: 11.5px; color: #475569; line-height: 1.5; margin-bottom: 12px;">
+                        <div style="font-size: 11.5px; color: #475569; line-height: 1.5; margin-bottom: 0;">
                             @php
                                 $agencyDescClean = trim(strip_tags((string)($agency_description ?? ($directClientDetail->description ?? ($directClientDetail->companies_description ?? '')))));
                             @endphp
@@ -1532,14 +1558,6 @@
                             @else
                                 {{ $detailName }} is a verified enterprise talent acquisition partner specialized in sourcing top-tier technology, business operations, and leadership talent. Authorized to submit qualified candidate profiles across shared job requisitions under active SLA guarantees.
                             @endif
-                        </div>
-                        <div class="cd-kv-row">
-                            <span class="cd-kv-lbl">Specialization Focus</span>
-                            <span class="cd-kv-val">{{ !empty($tagsArr) && count($tagsArr) > 0 ? implode(' • ', array_slice($tagsArr, 0, 3)) : 'IT Consulting • Software Engineering • Talent Advisory' }}</span>
-                        </div>
-                        <div class="cd-kv-row">
-                            <span class="cd-kv-lbl">Partner Network Tier</span>
-                            <span class="cd-kv-val text-primary fw-bold"><i class="fas fa-shield-halved text-success me-1"></i>Enterprise Direct Agency</span>
                         </div>
                     </div>
 
