@@ -1409,8 +1409,8 @@
           .cd-drawer-tabs-card {
             background: #ffffff !important;
             border: 1px solid #e2e8f0 !important;
-            border-radius: 8px !important;
-            padding: 5px 8px !important;
+            border-radius: 10px !important;
+            padding: 6px 10px !important;
             margin: 0 14px 10px 14px !important;
             box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04) !important;
             width: auto !important;
@@ -1418,7 +1418,7 @@
             overflow: visible !important;
             display: flex !important;
             align-items: center !important;
-            min-height: 48px !important;
+            min-height: 50px !important;
             height: auto !important;
           }
           .cd-drawer-tabs-list {
@@ -1426,17 +1426,17 @@
             align-items: center !important;
             gap: 6px !important;
             overflow-x: auto !important;
-            overflow-y: visible !important;
+            overflow-y: hidden !important;
             -webkit-overflow-scrolling: touch !important;
             scrollbar-width: thin !important;
             scrollbar-color: #cbd5e1 transparent !important;
             list-style: none !important;
-            padding: 2px 0 !important;
+            padding: 0 !important;
             margin: 0 !important;
             flex-wrap: nowrap !important;
             width: 100% !important;
             min-height: 38px !important;
-            height: auto !important;
+            height: 38px !important;
           }
           .cd-drawer-tabs-list::-webkit-scrollbar {
             height: 3px !important;
@@ -1460,7 +1460,7 @@
             background: #f8fafc !important;
             border: 1px solid #e2e8f0 !important;
             border-radius: 6px !important;
-            padding: 0 10.5px !important;
+            padding: 0 11px !important;
             font-size: 11px !important;
             font-weight: 600 !important;
             color: #475569 !important;
@@ -1468,14 +1468,14 @@
             align-items: center !important;
             justify-content: center !important;
             gap: 5px !important;
-            height: 34px !important;
+            height: 32px !important;
             text-decoration: none !important;
             box-shadow: 0 1px 2px rgba(15, 23, 42, 0.02) !important;
             transition: all 0.15s ease-in-out !important;
             cursor: pointer !important;
             white-space: nowrap !important;
             flex-shrink: 0 !important;
-            line-height: 1 !important;
+            line-height: 30px !important;
             box-sizing: border-box !important;
           }
           .cd-tab-pill-btn i {
@@ -6370,9 +6370,12 @@
             data.recruiters.items.forEach(function(rec, idx) {
                 var initials = rec.name.split(' ').map(function(n){ return n[0]; }).join('').substring(0, 2).toUpperCase();
                 var pctVal = parseFloat(rec.join_rate_pct) || 0;
+                var candLabel = rec.submissions + (rec.submissions === 1 ? ' Candidate' : ' Candidates');
+                var recruiterDisplay = '<strong>' + rec.name + '</strong>' +
+                    ' <span class="text-muted fs-8 ms-1 fw-normal">— ' + candLabel + '</span>';
                 recHtml += '<tr>' +
                     '<td>' + (idx + 1) + '</td>' +
-                    '<td><span class="cd-recruiter-avatar" style="background:#ecfdf5; color:#059669;">' + initials + '</span>' + rec.name + '</td>' +
+                    '<td><div class="d-flex align-items-center gap-2"><span class="cd-recruiter-avatar" style="background:#ecfdf5; color:#059669;">' + initials + '</span><div>' + recruiterDisplay + '</div></div></td>' +
                     '<td>' + rec.submissions + '</td>' +
                     '<td>' + rec.interviews + '</td>' +
                     '<td>' + rec.offers + '</td>' +

@@ -51,7 +51,12 @@
             $attribution = $item['attribution'] ?? [];
             $isSharedJob = ($eventType === 'job.shared') || !empty($job['shared_by_name']);
             $attributionLabel = $attribution['label'] ?? ($isSharedJob ? 'Shared by' : ($category === 'jobs' ? 'Created by' : ($category === 'crm' ? 'Logged by' : 'Uploaded by')));
-            $attributionName = $attribution['name'] ?? ($actor['name'] ?? ($isSharedJob ? ($job['shared_by_name'] ?? 'Account Lead') : ($category === 'jobs' ? 'Account Manager' : 'Technical Recruiter')));
+            $attributionName = $attribution['name'] ?? ($actor['name'] ?? ($isSharedJob ? ($job['shared_by_name'] ?? 'Vibhanshu Jaiswal') : ($category === 'jobs' ? 'Account Manager' : 'Technical Recruiter')));
+            if ($isSharedJob && (empty($attributionName) || strtolower($attributionName) === 'account lead')) {
+                $attributionName = !empty($job['shared_by_name']) && strtolower($job['shared_by_name']) !== 'account lead'
+                    ? $job['shared_by_name']
+                    : (!empty($actor['name']) && strtolower($actor['name']) !== 'account lead' ? $actor['name'] : 'Vibhanshu Jaiswal');
+            }
             $companyName = $attribution['company_name'] ?? ($actor['company_name'] ?? ($isSharedJob ? ($job['shared_by_company'] ?? '4Bell Technology') : ($category === 'jobs' ? ($job['creator_company'] ?? '4Bell Technology') : ($candidate['uploader_company'] ?? '4Bell Technology'))));
             if (empty($companyName) || strtolower($companyName) === 'account lead' || strtolower($companyName) === 'technical recruiter') {
                 $companyName = '4Bell Technology';
@@ -291,7 +296,7 @@
                             <div class="cd-activity-actor-attribution">
                                 {{ $attributionLabel }}:
                             </div>
-                            @if(($isSharedJob || str_contains(strtolower($attributionLabel), 'shared')) && !empty($companyName) && !empty($attributionName) && strtolower($attributionName) !== 'account lead')
+                            @if($isSharedJob || str_contains(strtolower($attributionLabel), 'shared') || $eventType === 'job.shared')
                                 <div class="cd-activity-actor-name fw-bold text-dark" title="{{ $companyName }} — {{ $attributionName }}">
                                     {{ $companyName }} — {{ $attributionName }}
                                 </div>

@@ -625,17 +625,44 @@ class CandidateDrawerQueryService
 
         try {
             if ($this->elasticService->indexExists($indexJobs)) {
-                $scopeMust = [
-                    ['term' => ['client_id' => $clientId]],
-                ];
                 if ($clientType === 'internal') {
-                    $scopeMust[] = [
-                        'bool' => [
-                            'should' => [
-                                ['term' => ['company_id' => $companyId]],
-                                ['term' => ['comId' => $companyId]],
+                    $scopeMust = [
+                        ['term' => ['client_id' => $clientId]],
+                        [
+                            'bool' => [
+                                'should' => [
+                                    ['term' => ['company_id' => $companyId]],
+                                    ['term' => ['comId' => $companyId]],
+                                ],
+                                'minimum_should_match' => 1,
                             ],
-                            'minimum_should_match' => 1,
+                        ],
+                    ];
+                } else {
+                    $scopeMust = [
+                        [
+                            'bool' => [
+                                'should' => [
+                                    ['term' => ['client_id' => $clientId]],
+                                    ['term' => ['company_id' => $clientId]],
+                                    ['term' => ['comId' => $clientId]],
+                                    [
+                                        'nested' => [
+                                            'path' => 'recommendation_relation',
+                                            'query' => [
+                                                'bool' => [
+                                                    'must' => [
+                                                        ['term' => ['recommendation_relation.to_company_id' => $companyId]],
+                                                        ['terms' => ['recommendation_relation.final_status' => [1, 2]]],
+                                                        ['term' => ['recommendation_relation.from_company_id' => $clientId]],
+                                                    ],
+                                                ],
+                                            ],
+                                        ],
+                                    ],
+                                ],
+                                'minimum_should_match' => 1,
+                            ],
                         ],
                     ];
                 }

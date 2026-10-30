@@ -88,7 +88,7 @@ class ClientActivityReadService
         $clientType = $query->clientType;
         $partnerCompanyId = $query->partnerCompanyId;
 
-        // Strict Backend Tenancy Guard: Super Admin must NOT receive or see agency-specific activity streams (Rule 6)
+        // Admin / SuperAdmin tenancy resolution for direct client activity streams
         if ($clientType === 'direct' && auth()->check()) {
             $user = auth()->user();
             $isSuperAdmin = (bool) ($user->is_superadmin ?? false)
@@ -97,42 +97,10 @@ class ClientActivityReadService
                 || (int) ($user->company_id ?? 0) === 1;
 
             if ($isSuperAdmin) {
-                return new ClientActivityTabViewModel(
-                    items: [],
-                    kpis: [
-                        'total_activities' => 0,
-                        'pipeline_events' => 0,
-                        'interview_events' => 0,
-                        'offer_events' => 0,
-                        'job_events' => 0,
-                        'note_events' => 0,
-                        'all' => 0,
-                        'jobs' => 0,
-                        'candidates' => 0,
-                        'interviews' => 0,
-                        'pipeline' => 0,
-                        'offers' => 0,
-                        'crm' => 0,
-                    ],
-                    sync: [
-                        'baseline_sequence' => 0,
-                        'from_sequence' => 0,
-                        'to_sequence' => 0,
-                        'last_contiguous_sequence' => 0,
-                        'highest_sequence' => 0,
-                        'highest_authoritative_sequence' => 0,
-                        'highest_projected_sequence' => 0,
-                        'missing_sequences' => [],
-                        'projection_lagging' => false,
-                        'projection_lag_seconds' => 0.0,
-                        'projection_version' => 1,
-                    ],
-                    pagination: ['next_cursor' => null, 'has_more' => false],
-                    health: ['score' => 0, 'label' => 'Inactive', 'last_activity_at' => null],
-                    meta: ['latency_ms' => 0.0, 'generated_at' => now()->toIso8601String()],
-                    activeFilters: ['category' => $query->category, 'timeframe' => $query->timeframe, 'search' => $query->search],
-                    clientType: $clientType
-                );
+                if ($serviceCompanyId <= 1) {
+                    $serviceCompanyId = ($partnerCompanyId && $partnerCompanyId > 1) ? $partnerCompanyId : 2;
+                    $tenantId = $serviceCompanyId;
+                }
             }
         }
 
@@ -1086,6 +1054,26 @@ class ClientActivityReadService
             }
         } catch (\Throwable $e) {
             Log::warning('ClientActivityReadService: Failed to resolve user profile', ['user_id' => $userId, 'error' => $e->getMessage()]);
+        }
+
+        if (empty($userProfile) && $userId > 0) {
+            try {
+                $uRow = \Illuminate\Support\Facades\DB::table('users')->where('id', $userId)->first(['name', 'company_id']);
+                if ($uRow && !empty($uRow->name)) {
+                    $uCompName = !empty($uRow->company_id) ? $this->resolveTenantCompanyName((int) $uRow->company_id) : '4Bell Technology';
+                    $userProfile = [
+                        'id' => $userId,
+                        'name' => ucwords(trim($uRow->name)),
+                        'company_name' => $this->formatCompanyName($uCompName),
+                        'image' => null,
+                    ];
+                    try {
+                        Redis::setex($cacheKey, 86400, json_encode($userProfile));
+                    } catch (\Throwable) {
+                    }
+                }
+            } catch (\Throwable) {
+            }
         }
 
         return $userProfile;
