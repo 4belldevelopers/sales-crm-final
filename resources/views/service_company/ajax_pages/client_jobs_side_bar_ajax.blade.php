@@ -392,12 +392,12 @@
                             </div>
                         </div>
                         <div class="cd-details-body">
-                            <div class="cd-logo-box" style="background-color: {{ $logoColor }};">
+                            <div class="cd-logo-box" style="background-color: #ffffff; border: 1px solid #e2e8f0;">
                                 @if(!empty($logoUrl))
                                     <img src="{{ $logoUrl }}" alt="{{ $clientDisplayName }}" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
-                                    <span style="display:none;">{{ $logoInitial }}</span>
+                                    <span style="display:none; color: #009ef7; font-weight: 700;">{{ $logoInitial }}</span>
                                 @else
-                                    <span>{{ $logoInitial }}</span>
+                                    <span style="color: #009ef7; font-weight: 700;">{{ $logoInitial }}</span>
                                 @endif
                             </div>
                             <div class="cd-details-text">
@@ -491,13 +491,7 @@
                             <div class="cd-track-summary">
                                 <span>Applications: <strong>{{ $totalApps }}</strong></span>
                                 <span class="cd-bullet">&bull;</span>
-                                <span>Sourcing: <strong>{{ $totalSourcing }}</strong></span>
-                                <span class="cd-bullet">&bull;</span>
                                 <span>Interviews: <strong>{{ $totalInterviews }}</strong></span>
-                                <span class="cd-bullet">&bull;</span>
-                                <span>Offers: <strong>{{ $totalOffers }}</strong></span>
-                                <span class="cd-bullet">&bull;</span>
-                                <span>Joined: <strong>{{ $totalJoined }}</strong></span>
                             </div>
                         </div>
                     </div>
