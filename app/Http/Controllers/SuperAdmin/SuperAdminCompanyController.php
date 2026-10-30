@@ -11152,15 +11152,18 @@ class SuperAdminCompanyController extends SuperAdminBaseController
 
     public function jobLists($id)
     {
+        $this->user = $this->user ?? auth()->user();
+        $this->userData = $this->user;
         $this->pageTitle = __('All Jobs');
 
-        $etagSource = ($this->user->id ?? auth()->id()).':superadmin_jobs:'.($id ?? 0);
+        $etagSource = ($this->user->id ?? auth()->id() ?? 0).':superadmin_jobs:'.($id ?? 0);
         $etag = '"'.hash('sha256', $etagSource).'"';
         if (request()->header('If-None-Match') === $etag) {
             return response()->noContent(304)->header('ETag', $etag);
         }
 
-        $this->dataCnt = Cache::remember('ats:superadmin_jobs_data_cnt', 300, function () {
+        $version = Cache::get('superadmin:jobs:version', 1);
+        $this->dataCnt = Cache::remember("superadmin:jobs:kpi:v{$version}", 300, function () {
             $counts = [
                 'allRequisition' => 0,
                 'clientRequisition' => 0,
@@ -11205,7 +11208,8 @@ class SuperAdminCompanyController extends SuperAdminBaseController
                             $counts['closedCount'] = $cnt;
                         }
                     }
-                } catch (\Throwable) {
+                } catch (\Throwable $e) {
+                    Log::warning('SuperAdmin jobLists KPI aggs failed: '.$e->getMessage());
                 }
             }
 
@@ -11224,6 +11228,14 @@ class SuperAdminCompanyController extends SuperAdminBaseController
             ->header('Cache-Control', 'private, must-revalidate');
     }
 
+    /**
+     * Alias for all_jobs_data route (/jobs/joblists).
+     */
+    public function all_jobs_data($id = 0)
+    {
+        return $this->jobLists($id);
+    }
+
     public function all_jobs_data_ajax(Request $request)
     {
         $userId = $this->user->id ?? auth()->id();
@@ -11231,7 +11243,7 @@ class SuperAdminCompanyController extends SuperAdminBaseController
         $currencySymbole = GeneralMethod::currencySymbole();
 
         $page = max((int) $request->input('page', 1), 1);
-        $size = (int) $request->input('size', 10);
+        $size = min(max((int) $request->input('size', 10), 1), 100);
         $from = ($page - 1) * $size;
 
         $custom_status = request('custom_status', 'all');
@@ -11240,6 +11252,25 @@ class SuperAdminCompanyController extends SuperAdminBaseController
         $experience_filter = request('experience_filter', 'all');
         $custom_search = trim(request('custom_search', request('search', request('q', ''))));
         $requisition_type = request('requisition_type', request('kpi', 'all'));
+
+        // Tier 1: Redis / Dragonfly L2 Query Caching with Generation Versioning
+        $version = Cache::get('superadmin:jobs:version', 1);
+        $cacheParams = [
+            'page' => $page,
+            'size' => $size,
+            'custom_status' => $custom_status,
+            'custom_hiringtype' => $custom_hiringtype,
+            'employment_type' => $employment_type,
+            'experience_filter' => $experience_filter,
+            'custom_search' => $custom_search,
+            'requisition_type' => $requisition_type,
+        ];
+        $cacheKey = "superadmin:jobs:list:v{$version}:".md5(json_encode($cacheParams));
+
+        $cachedResponse = Cache::get($cacheKey);
+        if ($cachedResponse !== null && is_array($cachedResponse)) {
+            return response()->json($cachedResponse);
+        }
 
         $statusArr = ['active', 'hold', 'inactive'];
         $must = [];
@@ -11405,7 +11436,7 @@ class SuperAdminCompanyController extends SuperAdminBaseController
             ];
         }
 
-        // 7. ELASTICSEARCH SEARCH EXECUTION
+        // 7. ELASTICSEARCH SEARCH EXECUTION (Circuit Breaker try/catch)
         $params = [
             'index' => ELASTIC_JOBS,
             'request_cache' => true,
@@ -11427,9 +11458,15 @@ class SuperAdminCompanyController extends SuperAdminBaseController
             $total = 0;
             $data = [];
         } else {
-            $response = $this->elasticService->getClient()->search($params);
-            $total = $response['hits']['total']['value'] ?? 0;
-            $data = array_map(fn ($hit) => $hit['_source'], $response['hits']['hits'] ?? []);
+            try {
+                $response = $this->elasticService->getClient()->search($params);
+                $total = $response['hits']['total']['value'] ?? 0;
+                $data = array_map(fn ($hit) => $hit['_source'], $response['hits']['hits'] ?? []);
+            } catch (\Throwable $e) {
+                Log::warning('SuperAdmin all_jobs_data_ajax ES search failed: '.$e->getMessage());
+                $total = 0;
+                $data = [];
+            }
         }
 
         $pagination = [
@@ -11857,44 +11894,53 @@ class SuperAdminCompanyController extends SuperAdminBaseController
             }
         }
 
-        // 8. DYNAMIC STATUS COUNTS FOR STATUS TABS (Universal Aggregation)
-        $statusCounts = ['all' => 0, 'active' => 0, 'hold' => 0, 'inactive' => 0, 'removed' => 0];
-        if ($this->elasticService->indexExists(ELASTIC_JOBS)) {
-            try {
-                $statusAggs = $this->elasticService->getClient()->search([
-                    'index' => ELASTIC_JOBS,
-                    'size' => 0,
-                    'body' => [
-                        'aggs' => [
-                            'by_status' => [
-                                'terms' => ['field' => 'status', 'size' => 10],
+        // 8. DYNAMIC STATUS COUNTS FOR STATUS TABS (Universal Aggregation cached in Redis)
+        $statusCountsKey = "superadmin:jobs:status_counts:v{$version}";
+        $statusCounts = Cache::remember($statusCountsKey, 60, function () {
+            $counts = ['all' => 0, 'active' => 0, 'hold' => 0, 'inactive' => 0, 'removed' => 0];
+            if ($this->elasticService->indexExists(ELASTIC_JOBS)) {
+                try {
+                    $statusAggs = $this->elasticService->getClient()->search([
+                        'index' => ELASTIC_JOBS,
+                        'size' => 0,
+                        'body' => [
+                            'aggs' => [
+                                'by_status' => [
+                                    'terms' => ['field' => 'status', 'size' => 10],
+                                ],
                             ],
                         ],
-                    ],
-                ]);
-                foreach ($statusAggs['aggregations']['by_status']['buckets'] ?? [] as $b) {
-                    $st = $b['key'] ?? '';
-                    $cnt = (int) ($b['doc_count'] ?? 0);
-                    if ($st === 'active') {
-                        $statusCounts['active'] = $cnt;
-                    } elseif ($st === 'hold') {
-                        $statusCounts['hold'] = $cnt;
-                    } elseif ($st === 'inactive') {
-                        $statusCounts['inactive'] = $cnt;
+                    ]);
+                    foreach ($statusAggs['aggregations']['by_status']['buckets'] ?? [] as $b) {
+                        $st = $b['key'] ?? '';
+                        $cnt = (int) ($b['doc_count'] ?? 0);
+                        if ($st === 'active') {
+                            $counts['active'] = $cnt;
+                        } elseif ($st === 'hold') {
+                            $counts['hold'] = $cnt;
+                        } elseif ($st === 'inactive') {
+                            $counts['inactive'] = $cnt;
+                        }
                     }
+                    $counts['all'] = $counts['active'] + $counts['hold'] + $counts['inactive'];
+                } catch (\Throwable) {
                 }
-                $statusCounts['all'] = $statusCounts['active'] + $statusCounts['hold'] + $statusCounts['inactive'];
-            } catch (\Throwable) {
             }
-        }
 
-        return response()->json([
+            return $counts;
+        });
+
+        $resultResponse = [
             'html' => '',
             'jobs' => $formattedJobs,
             'total' => $total,
             'pagination' => view('super-admin.ajax_pages.pagination', compact('pagination'))->render(),
             'status_counts' => $statusCounts,
-        ]);
+        ];
+
+        Cache::put($cacheKey, $resultResponse, 60);
+
+        return response()->json($resultResponse);
     }
 
     /**
@@ -11904,6 +11950,17 @@ class SuperAdminCompanyController extends SuperAdminBaseController
     {
         $this->id = (int) $id;
         if ($this->id) {
+            $version = Cache::get('superadmin:jobs:version', 1);
+            $cacheKey = "superadmin:jobs:status_view:v{$version}:{$this->id}";
+
+            $cachedView = Cache::get($cacheKey);
+            if ($cachedView) {
+                return response()->json([
+                    'status' => 'success',
+                    'view' => $cachedView,
+                ]);
+            }
+
             $this->job = Cache::remember("v3:status_job:{$this->id}", 3600, function () {
                 return DB::table('jobs')->where('id', '=', $this->id)->first();
             });
@@ -11927,6 +11984,10 @@ class SuperAdminCompanyController extends SuperAdminBaseController
 
         $view = view('super-admin.jobs.status', $this->data)->render();
 
+        if (! empty($cacheKey)) {
+            Cache::put($cacheKey, $view, 1800);
+        }
+
         return response()->json([
             'status' => 'success',
             'view' => $view,
@@ -11939,176 +12000,20 @@ class SuperAdminCompanyController extends SuperAdminBaseController
      */
     public function newUpdateJobstatus(Request $request)
     {
-        $job_id = (int) $request->input('job_id');
+        $jobId = (int) $request->input('job_id');
         $status = strtolower(trim((string) ($request->input('status') ?: $request->input('job_status') ?: '')));
-        if ($status === 'hiring') {
-            $status = 'active';
-        } elseif ($status === 'closed') {
-            $status = 'inactive';
-        }
-
-        if (! in_array($status, ['active', 'hold', 'inactive'])) {
-            return response()->json(['status' => 'error', 'message' => 'Invalid status. Status must be active, hold, or inactive.'], 422);
-        }
-        $rawToStatus = $status;
-
-        $job = DB::table('jobs')->where('id', $job_id)->first();
-        if (! $job) {
-            return response()->json(['status' => 'error', 'message' => 'Job not found.'], 404);
-        }
-
-        $tenantId = (int) ($job->company_id ?? 0);
         $idempotencyKey = $request->header('X-Idempotency-Key')
-            ?: $request->input('idempotency_key')
-            ?: ('sa_job_stat_'.$job_id.'_'.substr(md5($job_id.':'.$status.':'.now()->format('YmdH')), 0, 16));
+            ?: $request->input('idempotency_key');
 
-        $canonicalHash = hash('sha256', $tenantId.':'.$job_id.':'.$status);
-
-        // 1. Atomic Idempotency Claim (sys_idempotency_keys table)
-        $claimed = DB::table('sys_idempotency_keys')->insertOrIgnore([
-            'tenant_id' => $tenantId,
-            'idempotency_key' => $idempotencyKey,
-            'request_hash' => $canonicalHash,
-            'status' => 'PROCESSING',
-            'expires_at' => now()->addHours(24),
-            'created_at' => now(),
-            'updated_at' => now(),
+        $mutationService = app(\App\Services\SuperAdminJobMutationService::class);
+        $result = $mutationService->updateJobStatus($jobId, $status, $idempotencyKey, [
+            'user_id' => auth()->id() ?? 1,
         ]);
 
-        if ($claimed === 0) {
-            $existing = DB::table('sys_idempotency_keys')
-                ->where('tenant_id', $tenantId)
-                ->where('idempotency_key', $idempotencyKey)
-                ->first();
+        $httpStatus = $result['http_status'] ?? ($result['status'] === 'success' ? 200 : 500);
+        unset($result['http_status']);
 
-            if ($existing && $existing->status === 'COMPLETED' && $existing->response_body) {
-                return response()->json(json_decode($existing->response_body, true), $existing->response_status ?? 200);
-            }
-
-            if ($existing && $existing->status === 'PROCESSING') {
-                return response()->json([
-                    'status' => 'error',
-                    'message' => 'This job status update is currently being processed. Please do not double submit.',
-                ], 409);
-            }
-        }
-
-        // 2. Transactional Write + Outbox Event Append
-        $outboxId = null;
-        DB::beginTransaction();
-        try {
-            $oldStatus = $job->status;
-            $data = ['status' => $status];
-
-            if ($status === 'active') {
-                $data['auto_date_job'] = Carbon::today();
-            } elseif ($status === 'inactive') {
-                $data['public_market_status'] = 0;
-            }
-
-            DB::table('jobs')->where('id', $job_id)->update($data);
-
-            // Log status transition
-            DB::table('job_status_logs')->insert([
-                'job_id' => $job_id,
-                'company_id' => $tenantId,
-                'from_status' => $oldStatus,
-                'to_status' => $rawToStatus,
-                'changed_by' => auth()->id() ?? 1,
-                'created_at' => Carbon::now(),
-            ]);
-
-            // Append to sys_outbox_events
-            $outboxPayload = [
-                'job_id' => $job_id,
-                'company_id' => $tenantId,
-                'old_status' => $oldStatus,
-                'new_status' => $rawToStatus,
-                'title' => (string) ($job->title ?? ''),
-                'changed_by' => auth()->id() ?? 1,
-                'timestamp' => now()->toIso8601String(),
-            ];
-
-            $outboxId = DB::table('sys_outbox_events')->insertGetId([
-                'tenant_id' => $tenantId,
-                'idempotency_key' => $idempotencyKey,
-                'aggregate_type' => 'job',
-                'aggregate_id' => $job_id,
-                'aggregate_version' => 1,
-                'event_type' => 'job.status_updated',
-                'payload' => json_encode($outboxPayload),
-                'status' => 'PENDING',
-                'available_at' => now(),
-                'created_at' => now(),
-            ]);
-
-            $responsePayload = [
-                'status' => 'success',
-                'message' => 'Job status updated successfully.',
-                'job_id' => $job_id,
-                'new_status' => $rawToStatus,
-                'outbox_id' => $outboxId,
-            ];
-
-            // 3. Mark Idempotency Key COMPLETED
-            DB::table('sys_idempotency_keys')
-                ->where('tenant_id', $tenantId)
-                ->where('idempotency_key', $idempotencyKey)
-                ->update([
-                    'status' => 'COMPLETED',
-                    'response_status' => 200,
-                    'response_body' => json_encode($responsePayload),
-                    'completed_at' => now(),
-                    'updated_at' => now(),
-                ]);
-
-            DB::commit();
-        } catch (\Throwable $e) {
-            DB::rollBack();
-
-            DB::table('sys_idempotency_keys')
-                ->where('tenant_id', $tenantId)
-                ->where('idempotency_key', $idempotencyKey)
-                ->update([
-                    'status' => 'FAILED_FINAL',
-                    'last_error' => $e->getMessage(),
-                    'updated_at' => now(),
-                ]);
-
-            Log::error('SuperAdmin newUpdateJobstatus failure: '.$e->getMessage());
-
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Failed to update job status: '.$e->getMessage(),
-            ], 500);
-        }
-
-        // 4. Post-Commit Asynchronous Sync & Cache Invalidation
-        Cache::forget("v3:status_job:{$job_id}");
-        Cache::forget("v3:status_log:{$job_id}");
-        Cache::forget('ats:superadmin_jobs_data_cnt');
-
-        // Synchronize Elasticsearch index
-        try {
-            GeneralMethod::elasticJobsAddEditUpdateIndex($job_id);
-        } catch (\Throwable $e) {
-            Log::warning('SuperAdmin elasticJobsAddEditUpdateIndex warning: '.$e->getMessage());
-        }
-
-        // Real-Time Reverb WebSocket Broadcast
-        try {
-            broadcast(new \App\Events\JobStatusChanged(
-                companyId: (int) $tenantId,
-                jobId: (int) $job_id,
-                oldStatus: (string) $job->status,
-                newStatus: (string) $rawToStatus,
-                jobTitle: (string) ($job->title ?? '')
-            ));
-        } catch (\Throwable $e) {
-            Log::warning('SuperAdmin JobStatusChanged broadcast warning: '.$e->getMessage());
-        }
-
-        return response()->json($responsePayload);
+        return response()->json($result, $httpStatus);
     }
 
     /**
@@ -12117,6 +12022,15 @@ class SuperAdminCompanyController extends SuperAdminBaseController
     public function jobViewMore(Request $request, $id)
     {
         $realJobId = (int) $id;
+        $version = Cache::get('superadmin:jobs:version', 1);
+        $drawerCacheKey = "superadmin:jobs:drawer:v{$version}:{$realJobId}";
+        $cachedView = Cache::get($drawerCacheKey);
+        if ($cachedView) {
+            return response()->json([
+                'status' => 'success',
+                'view' => $cachedView,
+            ]);
+        }
 
         // Try Elasticsearch first (CQRS Read-Only Universal Scope)
         $jobDoc = null;
@@ -12258,10 +12172,8 @@ class SuperAdminCompanyController extends SuperAdminBaseController
         $this->tabshow = true;
         $this->viewmore = true;
 
-        $cacheKey = "ats:superadmin_job_drawer:{$realJobId}";
-        $view = Cache::remember($cacheKey, 900, function () {
-            return view('super-admin.jobs.show', $this->data)->render();
-        });
+        $view = view('super-admin.jobs.show', $this->data)->render();
+        Cache::put($drawerCacheKey, $view, 1800);
 
         return response()->json([
             'status' => 'success',
@@ -14853,6 +14765,13 @@ class SuperAdminCompanyController extends SuperAdminBaseController
 
     public function hmlisting($id)
     {
+        $version = Cache::get('superadmin:jobs:version', 1);
+        $hmCacheKey = "superadmin:jobs:hmlisting:v{$version}:{$id}";
+        $cachedView = Cache::get($hmCacheKey);
+        if ($cachedView) {
+            return Reply::dataOnly(['status' => 'success', 'view' => $cachedView]);
+        }
+
         $recommendation = DB::table('recommendation_relation')->where('id', '=', $id)->first();
         if ($recommendation) {
             $this->currentJobId = $recommendation->job_id;
@@ -14890,6 +14809,7 @@ class SuperAdminCompanyController extends SuperAdminBaseController
             ->orderBy('job_assign.id', 'DESC')
             ->get();
         $view = view('super-admin.jobs.hmlisting', $this->data)->render();
+        Cache::put($hmCacheKey, $view, 1800);
 
         return Reply::dataOnly(['status' => 'success', 'view' => $view]);
     }

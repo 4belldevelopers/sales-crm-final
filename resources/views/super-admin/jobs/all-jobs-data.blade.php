@@ -663,7 +663,7 @@ data-kt-drawer-toggle="#kt_activitiesJob_toggle" data-kt-drawer-close="#kt_activ
      */
     const SuperAdminJobsLocalStore = (function() {
         const DB_NAME = 'jero_superadmin_jobs_db';
-        const DB_VERSION = 2;
+        const DB_VERSION = 3;
         const CURRENT_USER_ID = {{ (int) (auth()->user()->id ?? 0) }};
         const JOBS_CACHE_TTL_MS = 15 * 60 * 1000; // 15 minutes TTL
 
@@ -681,10 +681,14 @@ data-kt-drawer-toggle="#kt_activitiesJob_toggle" data-kt-drawer-close="#kt_activ
                         if (db.objectStoreNames.contains('jobs_cache')) {
                             db.deleteObjectStore('jobs_cache');
                         }
+                        if (db.objectStoreNames.contains('dossiers')) {
+                            db.deleteObjectStore('dossiers');
+                        }
                         if (db.objectStoreNames.contains('meta')) {
                             db.deleteObjectStore('meta');
                         }
                         db.createObjectStore('jobs_cache', { keyPath: 'cache_key' });
+                        db.createObjectStore('dossiers', { keyPath: 'id' });
                         db.createObjectStore('meta', { keyPath: 'id' });
                     };
                     req.onsuccess = function(e) {
@@ -696,8 +700,9 @@ data-kt-drawer-toggle="#kt_activitiesJob_toggle" data-kt-drawer-close="#kt_activ
                             metaReq.onsuccess = function() {
                                 const meta = metaReq.result;
                                 if (meta && meta.user_id !== CURRENT_USER_ID) {
-                                    const wipeTx = db.transaction(['jobs_cache', 'meta'], 'readwrite');
+                                    const wipeTx = db.transaction(['jobs_cache', 'dossiers', 'meta'], 'readwrite');
                                     wipeTx.objectStore('jobs_cache').clear();
+                                    wipeTx.objectStore('dossiers').clear();
                                     wipeTx.objectStore('meta').put({ id: 'current_context', user_id: CURRENT_USER_ID, is_superadmin: 1, updated_at: Date.now() });
                                 } else if (!meta) {
                                     const setTx = db.transaction(['meta'], 'readwrite');
@@ -754,12 +759,48 @@ data-kt-drawer-toggle="#kt_activitiesJob_toggle" data-kt-drawer-close="#kt_activ
                     });
                 } catch (e) {}
             },
+            getDossier: async function(id) {
+                const db = await getDB();
+                if (!db || !id) return null;
+                return new Promise((resolve) => {
+                    try {
+                        const tx = db.transaction(['dossiers'], 'readonly');
+                        const store = tx.objectStore('dossiers');
+                        const req = store.get(id);
+                        req.onsuccess = function() {
+                            const res = req.result;
+                            if (res && (Date.now() - res.timestamp < JOBS_CACHE_TTL_MS)) {
+                                resolve(res.html);
+                            } else {
+                                resolve(null);
+                            }
+                        };
+                        req.onerror = function() { resolve(null); };
+                    } catch (e) {
+                        resolve(null);
+                    }
+                });
+            },
+            setDossier: async function(id, html) {
+                const db = await getDB();
+                if (!db || !id || !html) return;
+                try {
+                    const tx = db.transaction(['dossiers'], 'readwrite');
+                    const store = tx.objectStore('dossiers');
+                    store.put({
+                        id: id,
+                        html: html,
+                        timestamp: Date.now()
+                    });
+                } catch (e) {}
+            },
             purge: async function() {
                 const db = await getDB();
                 if (!db) return;
                 try {
-                    const tx = db.transaction(['jobs_cache'], 'readwrite');
+                    const tx = db.transaction(['jobs_cache', 'dossiers'], 'readwrite');
                     tx.objectStore('jobs_cache').clear();
+                    tx.objectStore('dossiers').clear();
                 } catch (e) {}
             }
         };
@@ -1355,13 +1396,24 @@ data-kt-drawer-toggle="#kt_activitiesJob_toggle" data-kt-drawer-close="#kt_activ
         });
     });
 
-    $(document).on('click', '.show-detail, .client-show-detail', function () {
+    $(document).on('click', '.show-detail, .client-show-detail', async function () {
         $('#kt_activitiesJob_toggle').trigger('click');
         var id = $(this).data('row-id');
         var cacheKey = 'job_' + id;
         if (window.jobDrawerCache && window.jobDrawerCache[cacheKey]) {
             $('#kt_activitiesJob_body').html(window.jobDrawerCache[cacheKey]);
             return;
+        }
+
+        if (window.SuperAdminJobsLocalStore && typeof window.SuperAdminJobsLocalStore.getDossier === 'function') {
+            try {
+                var cachedDossier = await window.SuperAdminJobsLocalStore.getDossier(cacheKey);
+                if (cachedDossier) {
+                    window.jobDrawerCache[cacheKey] = cachedDossier;
+                    $('#kt_activitiesJob_body').html(cachedDossier);
+                    return;
+                }
+            } catch (err) {}
         }
 
         var url = "{{ route('superadmin.company.jobs.job_viewmore', ':id') }}".replace(':id', id);
@@ -1375,6 +1427,9 @@ data-kt-drawer-toggle="#kt_activitiesJob_toggle" data-kt-drawer-close="#kt_activ
             success: function (response) {
                 if (response.view) {
                     window.jobDrawerCache[cacheKey] = response.view;
+                    if (window.SuperAdminJobsLocalStore && typeof window.SuperAdminJobsLocalStore.setDossier === 'function') {
+                        window.SuperAdminJobsLocalStore.setDossier(cacheKey, response.view);
+                    }
                     $('#kt_activitiesJob_body').html(response.view);
                 }
             },
@@ -1387,13 +1442,24 @@ data-kt-drawer-toggle="#kt_activitiesJob_toggle" data-kt-drawer-close="#kt_activ
         });
     });
 
-    $(document).on('click', '.hm-listing, .team-listing', function () {
+    $(document).on('click', '.hm-listing, .team-listing', async function () {
         $('#kt_activitiesRecruiter_toggle').trigger('click');
         var id = $(this).data('row-id');
         var cacheKey = 'hm_' + id;
         if (window.jobDrawerCache && window.jobDrawerCache[cacheKey]) {
             $('#kt_activitiesRecruiter_body').html(window.jobDrawerCache[cacheKey]);
             return;
+        }
+
+        if (window.SuperAdminJobsLocalStore && typeof window.SuperAdminJobsLocalStore.getDossier === 'function') {
+            try {
+                var cachedDossier = await window.SuperAdminJobsLocalStore.getDossier(cacheKey);
+                if (cachedDossier) {
+                    window.jobDrawerCache[cacheKey] = cachedDossier;
+                    $('#kt_activitiesRecruiter_body').html(cachedDossier);
+                    return;
+                }
+            } catch (err) {}
         }
 
         var url = "{{ route('superadmin.company.hmlisting', ':id') }}".replace(':id', id);
@@ -1407,6 +1473,9 @@ data-kt-drawer-toggle="#kt_activitiesJob_toggle" data-kt-drawer-close="#kt_activ
             success: function (response) {
                 if (response.view) {
                     window.jobDrawerCache[cacheKey] = response.view;
+                    if (window.SuperAdminJobsLocalStore && typeof window.SuperAdminJobsLocalStore.setDossier === 'function') {
+                        window.SuperAdminJobsLocalStore.setDossier(cacheKey, response.view);
+                    }
                     $('#kt_activitiesRecruiter_body').html(response.view);
                 }
             }
