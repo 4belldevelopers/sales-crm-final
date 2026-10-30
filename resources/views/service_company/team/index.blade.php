@@ -399,66 +399,130 @@
         }
 
         /* =========================================================================
-           TIER 2: MODERN UNDERLINED SUB-TABS & HISTORY BAR
+           TIER 2: 8 STAT CARDS ROW (Card-Based Tabs — Strictly 1 Single Horizontal Row)
            ========================================================================= */
-        .team-subtabs-row {
-            display: flex;
-            align-items: flex-end;
-            justify-content: space-between;
-            border-bottom: 2px solid #e2e8f0;
-            margin-bottom: 14px;
-            padding-bottom: 0px;
-            flex-wrap: wrap;
-            gap: 10px;
+        .tm-stat-grid-wrap {
+            width: 100% !important;
+            overflow-x: auto !important;
+            overflow-y: hidden !important;
+            scrollbar-width: none !important;
+            -ms-overflow-style: none !important;
+            margin-bottom: 14px !important;
         }
-        .tm-nav-tabs {
-            display: flex;
-            align-items: center;
-            gap: 20px;
-            margin-bottom: -2px; /* Pulls active underline directly onto container's border */
+        .tm-stat-grid-wrap::-webkit-scrollbar {
+            display: none !important;
         }
-        .tm-nav-tab {
-            background: transparent;
-            border: none;
-            padding: 8px 4px 12px 4px;
-            font-size: 13.5px;
-            font-weight: 600;
-            color: #64748b;
-            cursor: pointer;
-            position: relative;
-            transition: all .15s ease;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            outline: none;
+        .tm-stat-grid {
+            display: grid !important;
+            grid-template-columns: repeat(8, minmax(0, 1fr)) !important;
+            gap: 6px !important;
+            width: 100% !important;
+            min-width: 980px !important;
+            box-sizing: border-box !important;
         }
-        .tm-nav-tab:hover {
-            color: #0f172a;
+        .tm-stat-card {
+            background: #ffffff !important;
+            border: 1px solid #e2e8f0 !important;
+            border-radius: 10px !important;
+            padding: 9px 8px !important;
+            display: flex !important;
+            flex-direction: column !important;
+            justify-content: space-between !important;
+            text-decoration: none !important;
+            color: inherit !important;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02) !important;
+            transition: all 0.15s ease !important;
+            cursor: pointer !important;
+            min-width: 0 !important;
+            overflow: hidden !important;
         }
-        .tm-nav-tab.active {
-            color: #009ef7;
-            font-weight: 700;
+        .tm-stat-card:hover {
+            transform: translateY(-2px) !important;
+            border-color: #cbd5e1 !important;
+            box-shadow: 0 4px 12px rgba(15, 23, 42, 0.06) !important;
         }
-        .tm-nav-tab.active::after {
-            content: '';
-            position: absolute;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            height: 3px;
-            background: #009ef7;
-            border-radius: 3px 3px 0 0;
+        .tm-stat-card.active {
+            border-color: #009ef7 !important;
+            box-shadow: 0 0 0 2px rgba(0, 158, 247, 0.15), 0 2px 6px rgba(0, 158, 247, 0.1) !important;
         }
-        .tm-nav-count {
-            font-size: 12px;
-            font-weight: 700;
-            color: inherit;
+        .tm-card-top {
+            display: flex !important;
+            align-items: center !important;
+            gap: 7px !important;
+            min-width: 0 !important;
         }
+        .tm-card-icon {
+            width: 28px !important;
+            height: 28px !important;
+            min-width: 28px !important;
+            border-radius: 7px !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            flex-shrink: 0 !important;
+            font-size: 12px !important;
+        }
+        .tm-card-icon.blue   { background: #eff6ff; color: #2563eb; }
+        .tm-card-icon.indigo { background: #eef2ff; color: #4f46e5; }
+        .tm-card-icon.green  { background: #f0fdf4; color: #16a34a; }
+        .tm-card-icon.purple { background: #faf5ff; color: #9333ea; }
+        .tm-card-icon.amber  { background: #fffbeb; color: #d97706; }
+        .tm-card-icon.teal   { background: #f0fdfa; color: #0d9488; }
+        .tm-card-icon.pink   { background: #fff1f2; color: #e11d48; }
+        .tm-card-icon.cyan   { background: #ecfeff; color: #0891b2; }
+
+        .tm-card-meta {
+            display: flex !important;
+            flex-direction: column !important;
+            min-width: 0 !important;
+            flex: 1 1 0% !important;
+            overflow: hidden !important;
+        }
+        .tm-card-num {
+            font-size: 15px !important;
+            font-weight: 700 !important;
+            color: #0f172a !important;
+            line-height: 1.15 !important;
+            font-variant-numeric: tabular-nums !important;
+            font-family: 'Poppins', sans-serif !important;
+        }
+        .tm-card-lbl {
+            font-size: 10.5px !important;
+            font-weight: 600 !important;
+            color: #64748b !important;
+            line-height: 1.2 !important;
+            margin-top: 1px !important;
+            white-space: nowrap !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+        }
+        .tm-card-sub {
+            display: flex !important;
+            align-items: center !important;
+            gap: 3px !important;
+            font-size: 8.5px !important;
+            font-weight: 600 !important;
+            margin-top: 5px !important;
+            padding-top: 3px !important;
+            border-top: 1px dashed #f1f5f9 !important;
+            white-space: nowrap !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+        }
+        .tm-card-sub.blue   { color: #2563eb; }
+        .tm-card-sub.indigo { color: #4f46e5; }
+        .tm-card-sub.green  { color: #16a34a; }
+        .tm-card-sub.purple { color: #9333ea; }
+        .tm-card-sub.amber  { color: #d97706; }
+        .tm-card-sub.teal   { color: #0d9488; }
+        .tm-card-sub.pink   { color: #e11d48; }
+        .tm-card-sub.cyan   { color: #0891b2; }
+
         .btn-comm-history {
             background: #ffffff;
             border: 1px solid #e2e8f0;
             border-radius: 8px;
-            padding: 6px 14px;
+            padding: 6px 13px;
             font-size: 12px;
             font-weight: 600;
             color: #334155;
@@ -467,7 +531,8 @@
             display: inline-flex;
             align-items: center;
             gap: 6px;
-            margin-bottom: 6px;
+            height: 34px;
+            white-space: nowrap;
         }
         .btn-comm-history:hover {
             background: #f8fafc;
@@ -595,8 +660,8 @@
         .team-roster-legend,
         .team-card-grid {
             display: grid !important;
-            grid-template-columns: minmax(190px, 2.1fr) minmax(80px, 0.8fr) minmax(135px, 1.4fr) minmax(105px, 1.1fr) minmax(175px, 1.8fr) minmax(90px, 0.9fr) minmax(95px, 0.95fr) 38px !important;
-            gap: 12px !important;
+            grid-template-columns: minmax(180px, 2fr) minmax(85px, 0.85fr) minmax(130px, 1.3fr) minmax(110px, 1.1fr) minmax(195px, 2fr) minmax(85px, 0.85fr) minmax(95px, 0.95fr) 38px !important;
+            gap: 10px !important;
             align-items: center !important;
             box-sizing: border-box !important;
         }
@@ -789,44 +854,75 @@
             border-color: #009ef7;
         }
 
-        /* Col 5: Marketplace Communication */
+        /* Col 5: Corporate Communication Purpose */
         .tm-cell-communication {
             display: flex;
-            flex-direction: column;
-            justify-content: center;
-            gap: 4px;
+            align-items: center;
+            min-width: 0;
         }
-        .tm-comm-badge {
-            font-size: 10.5px;
-            font-weight: 700;
-            padding: 3px 8px;
-            border-radius: 6px;
+        .tm-comm-chip {
             display: inline-flex;
             align-items: center;
-            width: fit-content;
+            font-size: 10px;
+            font-weight: 600;
+            padding: 2.5px 6.5px;
+            border-radius: 5px;
+            line-height: 1.25;
             white-space: nowrap;
         }
-        .tm-comm-badge.client { background: #dcfce7; color: #15803d; border: 1px solid #bbf7d0; }
-        .tm-comm-badge.agency { background: #ede9fe; color: #6d28d9; border: 1px solid #ddd6fe; }
+        .tm-comm-chip.client  { background: #f0fdf4; color: #16a34a; border: 1px solid #bbf7d0; }
+        .tm-comm-chip.vendor  { background: #faf5ff; color: #9333ea; border: 1px solid #e9d5ff; }
+        .tm-comm-chip.finance { background: #fffbeb; color: #d97706; border: 1px solid #fde68a; }
+        .tm-comm-chip.legal   { background: #f0fdfa; color: #0d9488; border: 1px solid #99f6e4; }
 
-        .tm-btn-comm-action {
+        .tm-btn-edit-comm {
+            width: 20px;
+            height: 20px;
+            border-radius: 4px;
+            border: 1px solid #e2e8f0;
+            background: #ffffff;
+            color: #94a3b8;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 9px;
+            transition: all .15s;
+            padding: 0;
+            flex-shrink: 0;
+        }
+        .tm-btn-edit-comm:hover {
+            background: #eff6ff;
+            color: #009ef7;
+            border-color: #009ef7;
+        }
+
+        .tm-btn-add-comm {
             font-size: 10.5px;
             font-weight: 600;
-            padding: 3px 8px;
+            padding: 3px 9px;
             border-radius: 6px;
             border: 1px dashed #cbd5e1;
             background: #ffffff;
-            color: #475569;
+            color: #64748b;
             display: inline-flex;
             align-items: center;
-            width: fit-content;
             cursor: pointer;
             white-space: nowrap;
             transition: all .15s;
             font-family: inherit;
         }
-        .tm-btn-comm-action.client:hover { background: #eff6ff; color: #1d4ed8; border-color: #93c5fd; border-style: solid; }
-        .tm-btn-comm-action.agency:hover { background: #faf5ff; color: #7c3aed; border-color: #c4b5fd; border-style: solid; }
+        .tm-btn-add-comm:hover {
+            background: #eff6ff;
+            color: #009ef7;
+            border-color: #009ef7;
+            border-style: solid;
+        }
+
+        .comm-channel-opt:hover {
+            border-color: #009ef7 !important;
+            background: #f8fafc !important;
+        }
 
         /* Col 6: Status Toggle */
         .tm-cell-status {
@@ -1075,7 +1171,56 @@
             color: #64748b;
         }
 
-        /* Responsive Breakpoints */
+        /* Responsive Breakpoints & 15.6" Screen Optimization */
+        @media (max-width: 1440px) {
+            .tm-stat-grid {
+                gap: 5px !important;
+            }
+            .tm-stat-card {
+                padding: 7px 5px !important;
+            }
+            .tm-card-top {
+                gap: 5px !important;
+            }
+            .tm-card-icon {
+                width: 26px !important;
+                height: 26px !important;
+                min-width: 26px !important;
+                font-size: 11px !important;
+            }
+            .tm-card-num {
+                font-size: 14px !important;
+            }
+            .tm-card-lbl {
+                font-size: 9.5px !important;
+            }
+            .tm-card-sub {
+                font-size: 8px !important;
+            }
+        }
+        @media (max-width: 1150px) {
+            .tm-stat-grid {
+                gap: 4px !important;
+            }
+            .tm-stat-card {
+                padding: 6px 4px !important;
+            }
+            .tm-card-icon {
+                width: 24px !important;
+                height: 24px !important;
+                min-width: 24px !important;
+                font-size: 10px !important;
+            }
+            .tm-card-num {
+                font-size: 13px !important;
+            }
+            .tm-card-lbl {
+                font-size: 9px !important;
+            }
+            .tm-card-sub {
+                font-size: 7.5px !important;
+            }
+        }
         @media (max-width: 1024px) {
             .team-mp-contacts-grid { grid-template-columns: 1fr !important; }
         }
@@ -1436,33 +1581,145 @@
                 </div>
 
                 <!-- ============================================================== -->
-                <!-- TIER 2: SUB-TABS & COMMUNICATION HISTORY ROW                    -->
+                <!-- TIER 2: 8 STAT CARDS ROW (Card-Based Tabs — Locked in 1 Row)   -->
                 <!-- ============================================================== -->
-                <div class="team-subtabs-row mb-3">
-                    <div class="tm-nav-tabs">
-                        <button type="button" class="tm-nav-tab active" data-status="all">
-                            <span>All Members</span>
-                            <span class="tm-nav-count" id="tab-count-all">({{ $teamCounts['total'] ?? 0 }})</span>
-                        </button>
-                        <button type="button" class="tm-nav-tab" data-status="active">
-                            <span>Active</span>
-                            <span class="tm-nav-count" id="tab-count-active">({{ $teamCounts['active'] ?? 0 }})</span>
-                        </button>
-                        <button type="button" class="tm-nav-tab" data-status="inactive">
-                            <span>Inactive</span>
-                            <span class="tm-nav-count" id="tab-count-inactive">({{ $teamCounts['inactive'] ?? 0 }})</span>
-                        </button>
-                        <button type="button" class="tm-nav-tab" data-status="invited">
-                            <span>Invited</span>
-                            <span class="tm-nav-count" id="tab-count-invited">({{ $teamCounts['invited'] ?? 0 }})</span>
-                        </button>
-                    </div>
+                <div class="tm-stat-grid-wrap mb-3">
+                    <div class="tm-stat-grid">
+                        {{-- Card 1: All Members --}}
+                        <a href="javascript:void(0);" onclick="setTeamTab('all', this);" class="tm-stat-card active" data-tab="all">
+                            <div class="tm-card-top">
+                                <div class="tm-card-icon blue">
+                                    <i class="fa-solid fa-users"></i>
+                                </div>
+                                <div class="tm-card-meta">
+                                    <div class="tm-card-num" id="span_teamAll">{{ $teamCounts['total'] ?? 0 }}</div>
+                                    <div class="tm-card-lbl" title="All Members">All Members</div>
+                                </div>
+                            </div>
+                            <div class="tm-card-sub blue">
+                                <i class="fa-solid fa-arrow-up" style="font-size: 8px;"></i>
+                                <span>+{{ max($teamCounts['total'] ?? 0, 1) }} registered</span>
+                            </div>
+                        </a>
 
-                    <div>
-                        <button type="button" class="btn-comm-history" onclick="openAgencySharesModal()" title="View job-level communication mapping and history">
-                            <i class="fa-solid fa-clock-rotate-left me-1 text-muted"></i>
-                            <span>Communication History</span>
-                        </button>
+                        {{-- Card 2: Recruitment Team --}}
+                        <a href="javascript:void(0);" onclick="setTeamTab('recruitment', this);" class="tm-stat-card" data-tab="recruitment">
+                            <div class="tm-card-top">
+                                <div class="tm-card-icon indigo">
+                                    <i class="fa-solid fa-briefcase"></i>
+                                </div>
+                                <div class="tm-card-meta">
+                                    <div class="tm-card-num" id="span_teamRecruitment">{{ $teamCounts['recruitment'] ?? 0 }}</div>
+                                    <div class="tm-card-lbl" title="Recruitment Team">Recruitment Team</div>
+                                </div>
+                            </div>
+                            <div class="tm-card-sub indigo">
+                                <i class="fa-solid fa-user-check" style="font-size: 8px;"></i>
+                                <span>Active recruiters</span>
+                            </div>
+                        </a>
+
+                        {{-- Card 3: Client & Sales --}}
+                        <a href="javascript:void(0);" onclick="setTeamTab('client', this);" class="tm-stat-card" data-tab="client">
+                            <div class="tm-card-top">
+                                <div class="tm-card-icon green">
+                                    <i class="fa-solid fa-building"></i>
+                                </div>
+                                <div class="tm-card-meta">
+                                    <div class="tm-card-num" id="span_teamClient">{{ $teamCounts['client'] ?? 0 }}</div>
+                                    <div class="tm-card-lbl" title="Client & Sales">Client &amp; Sales</div>
+                                </div>
+                            </div>
+                            <div class="tm-card-sub green">
+                                <i class="fa-solid fa-handshake" style="font-size: 8px;"></i>
+                                <span>Client contacts</span>
+                            </div>
+                        </a>
+
+                        {{-- Card 4: Vendor & Agency --}}
+                        <a href="javascript:void(0);" onclick="setTeamTab('vendor', this);" class="tm-stat-card" data-tab="vendor">
+                            <div class="tm-card-top">
+                                <div class="tm-card-icon purple">
+                                    <i class="fa-solid fa-handshake-angle"></i>
+                                </div>
+                                <div class="tm-card-meta">
+                                    <div class="tm-card-num" id="span_teamVendor">{{ $teamCounts['vendor'] ?? 0 }}</div>
+                                    <div class="tm-card-lbl" title="Vendor & Agency">Vendor &amp; Agency</div>
+                                </div>
+                            </div>
+                            <div class="tm-card-sub purple">
+                                <i class="fa-solid fa-store" style="font-size: 8px;"></i>
+                                <span>Agency partners</span>
+                            </div>
+                        </a>
+
+                        {{-- Card 5: Finance & Billing --}}
+                        <a href="javascript:void(0);" onclick="setTeamTab('finance', this);" class="tm-stat-card" data-tab="finance">
+                            <div class="tm-card-top">
+                                <div class="tm-card-icon amber">
+                                    <i class="fa-solid fa-credit-card"></i>
+                                </div>
+                                <div class="tm-card-meta">
+                                    <div class="tm-card-num" id="span_teamFinance">{{ $teamCounts['finance'] ?? 0 }}</div>
+                                    <div class="tm-card-lbl" title="Finance & Billing">Finance &amp; Billing</div>
+                                </div>
+                            </div>
+                            <div class="tm-card-sub amber">
+                                <i class="fa-solid fa-receipt" style="font-size: 8px;"></i>
+                                <span>Invoices &amp; billing</span>
+                            </div>
+                        </a>
+
+                        {{-- Card 6: Legal & Contract --}}
+                        <a href="javascript:void(0);" onclick="setTeamTab('legal', this);" class="tm-stat-card" data-tab="legal">
+                            <div class="tm-card-top">
+                                <div class="tm-card-icon teal">
+                                    <i class="fa-solid fa-scale-balanced"></i>
+                                </div>
+                                <div class="tm-card-meta">
+                                    <div class="tm-card-num" id="span_teamLegal">{{ $teamCounts['legal'] ?? 0 }}</div>
+                                    <div class="tm-card-lbl" title="Legal & Contract">Legal &amp; Contract</div>
+                                </div>
+                            </div>
+                            <div class="tm-card-sub teal">
+                                <i class="fa-solid fa-shield-halved" style="font-size: 8px;"></i>
+                                <span>SLA &amp; contracts</span>
+                            </div>
+                        </a>
+
+                        {{-- Card 7: Inactive Members --}}
+                        <a href="javascript:void(0);" onclick="setTeamTab('inactive', this);" class="tm-stat-card" data-tab="inactive">
+                            <div class="tm-card-top">
+                                <div class="tm-card-icon pink">
+                                    <i class="fa-solid fa-user-slash"></i>
+                                </div>
+                                <div class="tm-card-meta">
+                                    <div class="tm-card-num" id="span_teamInactive">{{ $teamCounts['inactive'] ?? 0 }}</div>
+                                    <div class="tm-card-lbl" title="Inactive Members">Inactive Members</div>
+                                </div>
+                            </div>
+                            <div class="tm-card-sub pink">
+                                <i class="fa-solid fa-pause" style="font-size: 8px;"></i>
+                                <span>Offboarded/paused</span>
+                            </div>
+                        </a>
+
+                        {{-- Card 8: Pending Invites --}}
+                        <a href="javascript:void(0);" onclick="setTeamTab('invited', this);" class="tm-stat-card" data-tab="invited">
+                            <div class="tm-card-top">
+                                <div class="tm-card-icon cyan">
+                                    <i class="fa-solid fa-envelope-open-text"></i>
+                                </div>
+                                <div class="tm-card-meta">
+                                    <div class="tm-card-num" id="span_teamInvited">{{ $teamCounts['invited'] ?? 0 }}</div>
+                                    <div class="tm-card-lbl" title="Pending Invites">Pending Invites</div>
+                                </div>
+                            </div>
+                            <div class="tm-card-sub cyan">
+                                <i class="fa-solid fa-clock" style="font-size: 8px;"></i>
+                                <span>Awaiting signup</span>
+                            </div>
+                        </a>
                     </div>
                 </div>
 
@@ -1487,14 +1744,23 @@
                         </div>
 
                         <div class="team-filter-group">
-                            <span class="team-filter-label">Status:</span>
+                            <span class="team-filter-label">Filter:</span>
                             <select class="team-select-control" id="teamStatusFilterDropdown" onchange="changeStatusDropdown(this.value)">
-                                <option value="all">All</option>
-                                <option value="active">Active</option>
-                                <option value="inactive">Inactive</option>
-                                <option value="invited">Invited</option>
+                                <option value="all">All Members</option>
+                                <option value="recruitment">Recruitment Team</option>
+                                <option value="client">Client &amp; Sales</option>
+                                <option value="vendor">Vendor &amp; Agency</option>
+                                <option value="finance">Finance &amp; Billing</option>
+                                <option value="legal">Legal &amp; Contract</option>
+                                <option value="inactive">Inactive Members</option>
+                                <option value="invited">Pending Invites</option>
                             </select>
                         </div>
+
+                        <button type="button" class="btn-comm-history" onclick="openAgencySharesModal()" title="View job-level communication mapping and history">
+                            <i class="fa-solid fa-clock-rotate-left me-1 text-muted"></i>
+                            <span>Communication History</span>
+                        </button>
                     </div>
                 </div>
 
@@ -1508,7 +1774,7 @@
                             <div>Rank</div>
                             <div>Workload</div>
                             <div>Role</div>
-                            <div>Communication</div>
+                            <div>Communication Purpose</div>
                             <div>Status</div>
                             <div>Last Active</div>
                             <div style="text-align: center;">Actions</div>
@@ -1747,6 +2013,102 @@
                         <button type="button" class="btn btn-sm btn-light" data-bs-dismiss="modal" data-dismiss="modal">Cancel</button>
                         <button type="button" class="btn btn-sm btn-primary" id="btnConfirmRep" onclick="submitRepSelection()">
                             <i class="fa-solid fa-check me-1"></i> Confirm Representative
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================================== -->
+        <!-- MULTI-SELECT COMMUNICATION PURPOSE ASSIGNMENT MODAL            -->
+        <!-- ============================================================== -->
+        <div class="modal fade" id="assignCommModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered" style="max-width: 490px;">
+                <div class="modal-content" style="border-radius: 12px; border: 1px solid #e2e8f0; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1), 0 8px 10px -6px rgba(0,0,0,0.1);">
+                    <div class="modal-header py-3 px-4" style="border-bottom: 1px solid #f1f5f9;">
+                        <div class="d-flex align-items-center gap-2">
+                            <div style="width: 34px; height: 34px; border-radius: 8px; background: #eff6ff; color: #009ef7; display: flex; align-items: center; justify-content: center; font-size: 14px;">
+                                <i class="fa-solid fa-bullhorn"></i>
+                            </div>
+                            <div>
+                                <h5 class="modal-title fw-bolder fs-6 text-gray-900 mb-0">Assign Communication Purpose</h5>
+                                <div class="text-muted fs-8">Configure external representative channels for this member</div>
+                            </div>
+                        </div>
+                        <button type="button" class="btn btn-sm btn-icon btn-active-light-primary" data-bs-dismiss="modal" data-dismiss="modal" aria-label="Close">
+                            <i class="fa-solid fa-xmark"></i>
+                        </button>
+                    </div>
+                    <div class="modal-body py-3 px-4">
+                        <!-- Target User Preview -->
+                        <div class="d-flex align-items-center gap-3 p-2 mb-3" style="background: #f8fafc; border-radius: 8px; border: 1px solid #e2e8f0;">
+                            <div id="assignCommUserAvatar" style="width: 36px; height: 36px; border-radius: 7px; background: #0f172a; color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; flex-shrink: 0;">
+                                U
+                            </div>
+                            <div class="overflow-hidden">
+                                <div id="assignCommUserName" class="fw-bold fs-7 text-dark text-truncate">User Name</div>
+                                <div class="text-muted fs-8">Selecting roles designates this person for corporate partner outreach.</div>
+                            </div>
+                        </div>
+
+                        <input type="hidden" id="assignCommUserId" value="" />
+
+                        <!-- 4 Channel Checkboxes -->
+                        <div class="d-flex flex-column gap-2">
+                            <!-- Channel 1: Client & Sales -->
+                            <label class="comm-channel-opt d-flex align-items-start gap-2 p-3 rounded cursor-pointer" style="border: 1px solid #e2e8f0; transition: all .15s; background: #fff;">
+                                <input type="checkbox" class="form-check-input mt-1 comm-channel-checkbox" value="client" id="chk_comm_client" style="border-radius: 4px; border-color: #cbd5e1; cursor: pointer;">
+                                <div class="flex-grow-1">
+                                    <div class="d-flex align-items-center justify-content-between">
+                                        <span class="fw-bold fs-7 text-dark"><i class="fa-solid fa-building me-1 text-success"></i> Client &amp; Sales Communication</span>
+                                        <span class="badge" style="background: #f0fdf4; color: #16a34a; font-size: 10px; font-weight: 600;">Clients</span>
+                                    </div>
+                                    <div class="text-muted fs-8 mt-1">Designated contact for prospective clients, sales enquiries, and direct job requisition discussions.</div>
+                                </div>
+                            </label>
+
+                            <!-- Channel 2: Vendor & Agency -->
+                            <label class="comm-channel-opt d-flex align-items-start gap-2 p-3 rounded cursor-pointer" style="border: 1px solid #e2e8f0; transition: all .15s; background: #fff;">
+                                <input type="checkbox" class="form-check-input mt-1 comm-channel-checkbox" value="vendor" id="chk_comm_vendor" style="border-radius: 4px; border-color: #cbd5e1; cursor: pointer;">
+                                <div class="flex-grow-1">
+                                    <div class="d-flex align-items-center justify-content-between">
+                                        <span class="fw-bold fs-7 text-dark"><i class="fa-solid fa-handshake me-1 text-purple"></i> Vendor &amp; Agency Communication</span>
+                                        <span class="badge" style="background: #faf5ff; color: #9333ea; font-size: 10px; font-weight: 600;">Agencies</span>
+                                    </div>
+                                    <div class="text-muted fs-8 mt-1">Designated contact for staffing agencies, headhunters, candidate shares, and split-fee partnerships.</div>
+                                </div>
+                            </label>
+
+                            <!-- Channel 3: Finance & Billing -->
+                            <label class="comm-channel-opt d-flex align-items-start gap-2 p-3 rounded cursor-pointer" style="border: 1px solid #e2e8f0; transition: all .15s; background: #fff;">
+                                <input type="checkbox" class="form-check-input mt-1 comm-channel-checkbox" value="finance" id="chk_comm_finance" style="border-radius: 4px; border-color: #cbd5e1; cursor: pointer;">
+                                <div class="flex-grow-1">
+                                    <div class="d-flex align-items-center justify-content-between">
+                                        <span class="fw-bold fs-7 text-dark"><i class="fa-solid fa-credit-card me-1 text-warning"></i> Finance &amp; Billing Communication</span>
+                                        <span class="badge" style="background: #fffbeb; color: #d97706; font-size: 10px; font-weight: 600;">Invoicing</span>
+                                    </div>
+                                    <div class="text-muted fs-8 mt-1">Point of contact for client billing, commission payouts, PO confirmation, and invoice reconciliation.</div>
+                                </div>
+                            </label>
+
+                            <!-- Channel 4: Legal & Contract -->
+                            <label class="comm-channel-opt d-flex align-items-start gap-2 p-3 rounded cursor-pointer" style="border: 1px solid #e2e8f0; transition: all .15s; background: #fff;">
+                                <input type="checkbox" class="form-check-input mt-1 comm-channel-checkbox" value="legal" id="chk_comm_legal" style="border-radius: 4px; border-color: #cbd5e1; cursor: pointer;">
+                                <div class="flex-grow-1">
+                                    <div class="d-flex align-items-center justify-content-between">
+                                        <span class="fw-bold fs-7 text-dark"><i class="fa-solid fa-scale-balanced me-1 text-teal"></i> Legal &amp; Contract Compliance</span>
+                                        <span class="badge" style="background: #f0fdfa; color: #0d9488; font-size: 10px; font-weight: 600;">Legal</span>
+                                    </div>
+                                    <div class="text-muted fs-8 mt-1">Authority for Master Services Agreements (MSAs), NDAs, data privacy clauses, and legal signoffs.</div>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+                    <div class="modal-footer py-2 px-4" style="border-top: 1px solid #e2e8f0;">
+                        <button type="button" class="btn btn-sm btn-light" data-bs-dismiss="modal" data-dismiss="modal">Cancel</button>
+                        <button type="button" class="btn btn-sm btn-primary" id="btnSaveCommRoles" onclick="saveCommunicationRoles()">
+                            <span class="indicator-label"><i class="fa-solid fa-check me-1"></i> Save Assignments</span>
+                            <span class="indicator-progress d-none"><span class="spinner-border spinner-border-sm align-middle me-2"></span> Saving...</span>
                         </button>
                     </div>
                 </div>
@@ -3615,6 +3977,15 @@
 						updateTeamSelectedCount();
 
 						if (response.counts) {
+							$('#span_teamAll').text(response.counts.total || 0);
+							$('#span_teamRecruitment').text(response.counts.recruitment || 0);
+							$('#span_teamClient').text(response.counts.client || 0);
+							$('#span_teamVendor').text(response.counts.vendor || 0);
+							$('#span_teamFinance').text(response.counts.finance || 0);
+							$('#span_teamLegal').text(response.counts.legal || 0);
+							$('#span_teamInactive').text(response.counts.inactive || 0);
+							$('#span_teamInvited').text(response.counts.invited || 0);
+
 							$('#stat-total-members').text(response.counts.total);
 							$('#stat-active-members').text(response.counts.active);
 							$('#stat-inactive-members').text(response.counts.inactive);
@@ -3646,20 +4017,109 @@
 				return currentTeamFetchXhr;
 			}
 
-			// Switch status tabs (All / Active / Inactive / Invited / Representatives)
-			$(document).on('click', '.team-tab-btn, .team-tab, .tm-nav-tab', function() {
-				$('.team-tab-btn, .team-tab, .tm-nav-tab').removeClass('active');
-				$(this).addClass('active');
-				teamStatusTab = $(this).data('status');
-				$('#teamStatusFilterDropdown').val(teamStatusTab);
+			function setTeamTab(tab, el) {
+				teamStatusTab = tab;
+				$('.tm-stat-grid .tm-stat-card').removeClass('active');
+				$(el).addClass('active');
+				$('#teamStatusFilterDropdown').val(tab);
 				fetchTeams(1);
-			});
+			}
 
 			function changeStatusDropdown(val) {
 				teamStatusTab = val;
-				$('.tm-nav-tab, .team-tab-btn, .team-tab').removeClass('active');
-				$('.tm-nav-tab[data-status="' + val + '"]').addClass('active');
+				$('.tm-stat-grid .tm-stat-card').removeClass('active');
+				$('.tm-stat-grid .tm-stat-card[data-tab="' + val + '"]').addClass('active');
 				fetchTeams(1);
+			}
+
+			// =========================================================
+			// Multi-Select Corporate Communication Purpose Assignment
+			// =========================================================
+			function openAssignCommModal(userId, userName, channels) {
+				$('#assignCommUserId').val(userId);
+				$('#assignCommUserName').text(userName);
+				$('#assignCommUserAvatar').text((userName && userName.length > 0) ? userName.charAt(0).toUpperCase() : 'U');
+
+				// Reset checkboxes
+				$('.comm-channel-checkbox').prop('checked', false);
+				$('.comm-channel-opt').css('border-color', '#e2e8f0').css('background', '#fff');
+
+				if (Array.isArray(channels)) {
+					channels.forEach(function(ch) {
+						var $chk = $('#chk_comm_' + ch);
+						if ($chk.length) {
+							$chk.prop('checked', true);
+							$chk.closest('.comm-channel-opt').css('border-color', '#009ef7').css('background', '#f0f9ff');
+						}
+					});
+				}
+
+				$('#assignCommModal').modal('show');
+			}
+
+			// Highlight channel checkbox card when toggled
+			$(document).on('change', '.comm-channel-checkbox', function() {
+				var $opt = $(this).closest('.comm-channel-opt');
+				if ($(this).is(':checked')) {
+					$opt.css('border-color', '#009ef7').css('background', '#f0f9ff');
+				} else {
+					$opt.css('border-color', '#e2e8f0').css('background', '#fff');
+				}
+			});
+
+			function saveCommunicationRoles() {
+				var userId = $('#assignCommUserId').val();
+				if (!userId) return;
+
+				var selectedChannels = [];
+				$('.comm-channel-checkbox:checked').each(function() {
+					selectedChannels.push($(this).val());
+				});
+
+				var $btn = $('#btnSaveCommRoles');
+				$btn.find('.indicator-label').addClass('d-none');
+				$btn.find('.indicator-progress').removeClass('d-none');
+				$btn.prop('disabled', true);
+
+				$.ajax({
+					url: '{{ route("service_company.team.set_communication_roles") }}',
+					type: 'POST',
+					data: {
+						_token: '{{ csrf_token() }}',
+						user_id: userId,
+						channels: selectedChannels
+					},
+					success: function(response) {
+						$btn.find('.indicator-label').removeClass('d-none');
+						$btn.find('.indicator-progress').addClass('d-none');
+						$btn.prop('disabled', false);
+
+						$('#assignCommModal').modal('hide');
+
+						// Invalidate IndexedDB cache so fresh state displays instantly
+						if (window.JeroTeamLocalStore) {
+							try { window.JeroTeamLocalStore.clear(); } catch(e){}
+						}
+
+						fetchTeams(page_no);
+
+						if (typeof toastr !== 'undefined') {
+							toastr.success(response.message || 'Communication roles updated successfully.');
+						}
+					},
+					error: function(xhr) {
+						$btn.find('.indicator-label').removeClass('d-none');
+						$btn.find('.indicator-progress').addClass('d-none');
+						$btn.prop('disabled', false);
+
+						var msg = (xhr.responseJSON && xhr.responseJSON.message) ? xhr.responseJSON.message : 'Failed to update communication roles.';
+						if (typeof toastr !== 'undefined') {
+							toastr.error(msg);
+						} else {
+							alert(msg);
+						}
+					}
+				});
 			}
 
 			// Dynamic Search with 300ms debounce
