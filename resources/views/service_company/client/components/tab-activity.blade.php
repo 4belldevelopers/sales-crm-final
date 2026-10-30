@@ -536,19 +536,8 @@
                 var comp = attr.company_name || actor.company_name || '4Bell Technology';
                 var occurred = new Date(item.occurred_at || (item.client_activity_sequence ? item.client_activity_sequence * 1000 : Date.now()));
 
-                // Calculate time ago
-                var seconds = Math.floor((Date.now() - occurred.getTime()) / 1000);
-                var timeAgo = 'Just now';
-                if (seconds >= 86400) {
-                    var d = Math.floor(seconds / 86400);
-                    timeAgo = d + (d === 1 ? ' day ago' : ' days ago');
-                } else if (seconds >= 3600) {
-                    var h = Math.floor(seconds / 3600);
-                    timeAgo = h + (h === 1 ? ' hr ago' : ' hrs ago');
-                } else if (seconds >= 60) {
-                    var m = Math.floor(seconds / 60);
-                    timeAgo = m + (m === 1 ? ' min ago' : ' mins ago');
-                }
+                // Exact date formatting instead of relative time (e.g. Sep 16, 2026)
+                var exactDate = occurred.toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' });
 
                 var dotColor = '#009ef7';
                 var dotBg = '#eff6ff';
@@ -613,7 +602,7 @@
                         <div style="display: flex; align-items: center; gap: 10px; flex-shrink: 0;">
                             <span style="font-size: 11px; color: #475569; font-weight: 500;">${role}</span>
                             <span class="badge ${badgeClass}" style="font-size: 10px; font-weight: 600; padding: 3px 8px; border-radius: 6px;">${badgeText}</span>
-                            <span style="font-size: 10.5px; color: #94a3b8; min-width: 60px; text-align: right;">${timeAgo}</span>
+                            <span style="font-size: 10.5px; color: #64748b; font-weight: 600; min-width: 75px; text-align: right;">${exactDate}</span>
                         </div>
                     </div>
                 `;
