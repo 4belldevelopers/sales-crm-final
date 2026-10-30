@@ -117,10 +117,15 @@
                                 {{ strtoupper($strVal) }}
                             @endif
                         </div>
-                        <div class="d-flex flex-column overflow-hidden">
+                        <div class="d-flex flex-column overflow-hidden min-w-0">
                             <span class="tm-member-name" title="{{ ucwords(strtolower($rawName)) }}">
                                 {{ ucwords(strtolower(mb_substr($rawName, 0, 24))) }}
                             </span>
+                            @if ($row->root_user == 1)
+                                <span class="tm-owner-tag" title="Organization Owner">
+                                    <i class="fa-solid fa-crown text-warning me-1"></i>Organization Owner
+                                </span>
+                            @endif
                             <span class="tm-member-email" title="{{ $row->email }}">
                                 {{ $row->email }}
                             </span>
@@ -232,65 +237,7 @@
                         <span>{{ $lastActive }}</span>
                     </div>
 
-                    <!-- Sub-Card 8: Actions -->
-                    <div class="tm-cell tm-cell-actions">
-                        <div class="tm-action-wrap">
-                            <button type="button" class="tm-action-btn" onclick="toggleTeamMenu(this)" title="More Actions">
-                                <i class="fa-solid fa-ellipsis-vertical"></i>
-                            </button>
-                            <div class="tm-action-menu">
-                                @if ($row->root_user != 1)
-                                    <a class="tm-action-item update-user-role" data-row-id="{{ $row->id }}">
-                                        <i class="fa-solid fa-user-shield me-2 text-primary"></i>Edit Role
-                                    </a>
-                                    @if (empty($row->password))
-                                        <a class="tm-action-item" onclick="reSendhandleClick(this, {{ $row->id }});">
-                                            <i class="fa-solid fa-paper-plane me-2 text-warning"></i>Resend Invitation
-                                        </a>
-                                    @endif
-                                @endif
-                                <a class="tm-action-item" data-user='@json($userData)' onclick="openAssignCommDrawer(this)">
-                                    <i class="fa-solid fa-bullhorn me-2 text-primary"></i>Assign Communication Purpose
-                                </a>
-                                <a class="tm-action-item" onclick="setRepresentative({{ $row->id }}, 'client', '{{ addslashes($rawName) }}')">
-                                    <i class="fa-solid fa-building me-2 text-success"></i>Set as Client Contact
-                                </a>
-                                <a class="tm-action-item" onclick="setRepresentative({{ $row->id }}, 'agency', '{{ addslashes($rawName) }}')">
-                                    <i class="fa-solid fa-users me-2 text-purple"></i>Set as Agency Contact
-                                </a>
-                                @if($agencyShares > 0)
-                                    <a class="tm-action-item" onclick="openAgencySharesModal({{ $row->id }}, '{{ addslashes($rawName) }}')">
-                                        <i class="fa-solid fa-diagram-project me-2 text-primary"></i>Inspect Shared Jobs
-                                    </a>
-                                @endif
-                            </div>
-                        </div>
-                    </div>
-
                 </div>
-
-                <!-- Bottom Activity & Ownership Strip (if owner or shares) -->
-                @if ($row->root_user == 1 || $agencyShares > 0)
-                    <div class="tm-card-bottom-strip">
-                        <div class="tm-strip-left">
-                            @if ($row->root_user == 1)
-                                <span class="tm-owner-badge"><i class="fa-solid fa-crown me-1 text-warning"></i>Organization Owner</span>
-                            @endif
-                        </div>
-                        <div class="tm-strip-right">
-                            @if($agencyShares > 0)
-                                <span class="tm-shares-info">
-                                    <i class="fa-solid fa-diagram-project me-1 text-primary"></i>
-                                    <span>Authoritative Representative on <strong>{{ $agencyShares }}</strong> shared agency {{ $agencyShares === 1 ? 'job' : 'jobs' }}</span>
-                                    <span class="tm-bullet mx-2">&bull;</span>
-                                    <a href="javascript:void(0);" onclick="openAgencySharesModal({{ $row->id }}, '{{ addslashes($rawName) }}')" class="tm-shares-link">
-                                        Inspect Mapping
-                                    </a>
-                                </span>
-                            @endif
-                        </div>
-                    </div>
-                @endif
 
             </div>
         @endforeach
