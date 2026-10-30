@@ -571,7 +571,7 @@
                     }
                     heading = (job.title || 'Requisition') + (job.id ? ' (#' + job.id + ')' : (job.code ? ' (' + job.code + ')' : ''));
                     if (item.event_type === 'job.shared' || job.shared_by_name) {
-                        subtext = 'Shared by: ' + (comp ? comp + ' — ' : '') + (job.shared_by_name || attr.name || actor.name || 'Vibhanshu Jaiswal');
+                        subtext = 'Shared by ' + (job.shared_by_name || attr.name || actor.name || 'Vibhanshu Jaiswal') + (comp ? ' • ' + comp : '');
                     } else {
                         subtext = 'Created by ' + (job.creator_name || 'Account Manager') + ' • ' + comp;
                     }
