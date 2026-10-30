@@ -97,13 +97,11 @@ class ServiceCompanyTeamController extends ServiceCompanyBaseController
                 $clientCount = 0;
                 $vendorCount = 0;
                 $financeCount = 0;
-                $legalCount = 0;
 
                 foreach ($allRolesMap as $uid => $channels) {
                     if (in_array('client', $channels, true)) $clientCount++;
                     if (in_array('vendor', $channels, true)) $vendorCount++;
                     if (in_array('finance', $channels, true)) $financeCount++;
-                    if (in_array('legal', $channels, true)) $legalCount++;
                 }
 
                 // If default reps not explicitly in tags, ensure at least 1 count
@@ -126,7 +124,6 @@ class ServiceCompanyTeamController extends ServiceCompanyBaseController
                     'client' => (int) max($clientCount, 1),
                     'vendor' => (int) max($vendorCount, 1),
                     'finance' => (int) $financeCount,
-                    'legal' => (int) $legalCount,
                     'suspended' => 0,
                     'captain' => (int) $captain,
                     'trm' => (int) $trm,
@@ -326,7 +323,7 @@ class ServiceCompanyTeamController extends ServiceCompanyBaseController
                 $must[] = ['bool' => ['must_not' => [['wildcard' => ['email_verification_code' => '?*']]]]];
             } elseif ($statusTab === 'suspended') {
                 $must[] = ['term' => ['status' => 'suspended']];
-            } elseif (in_array($statusTab, ['recruitment', 'client', 'vendor', 'finance', 'legal', 'representatives'], true)) {
+            } elseif (in_array($statusTab, ['recruitment', 'client', 'vendor', 'finance', 'representatives'], true)) {
                 // Roles and recruitment are active users, filtered in memory on ranked collection
                 $must[] = ['term' => ['status' => 'active']];
             } else {
@@ -598,13 +595,6 @@ class ServiceCompanyTeamController extends ServiceCompanyBaseController
                 $uid = (int) ($u['id'] ?? 0);
                 $roles = $allRolesMap[$uid] ?? [];
                 return in_array('finance', $roles, true);
-            })->values();
-            $total = $allRankedUsers->count();
-        } elseif ($statusTab === 'legal') {
-            $allRankedUsers = $allRankedUsers->filter(function ($u) use ($allRolesMap) {
-                $uid = (int) ($u['id'] ?? 0);
-                $roles = $allRolesMap[$uid] ?? [];
-                return in_array('legal', $roles, true);
             })->values();
             $total = $allRankedUsers->count();
         } elseif ($statusTab === 'recruitment') {
