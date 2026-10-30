@@ -573,6 +573,7 @@ Route::group(['middleware' => 'auth'], function () {
                 Route::get('team/scoreboard', [ServiceCompanyTeamController::class, 'teamScoreboard'])->name('team.scoreboard');
                 Route::get('team/representatives-data', [ServiceCompanyTeamController::class, 'representativesData'])->name('team.representatives_data');
                 Route::post('team/set-default-representative', [ServiceCompanyTeamController::class, 'setDefaultRepresentative'])->name('team.set_default_representative');
+                Route::post('team/set-communication-roles', [ServiceCompanyTeamController::class, 'setCommunicationRoles'])->name('team.set_communication_roles');
                 Route::post('team/change-job-representative', [ServiceCompanyTeamController::class, 'changeJobRepresentative'])->name('team.change_job_representative');
                 Route::get('team/job-agency-representatives/{jobId?}', [ServiceCompanyTeamController::class, 'jobAgencyRepresentatives'])->name('team.job_agency_representatives');
                 Route::resource('team', ServiceCompanyTeamController::class)->except(['show']);

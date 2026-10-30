@@ -72,19 +72,6 @@ class ClientPerformanceQueryBuilder
                     ],
                 ],
 
-                // Hiring Pipeline Exception: In Review candidates reflected as part of the pipeline
-                'in_review_candidates' => [
-                    'filter' => [
-                        'terms' => [
-                            'job_master_status_id' => [8, '8'],
-                        ],
-                    ],
-                    'aggs' => [
-                        'submissions' => ['value_count' => ['field' => 'id']],
-                        'unique_count' => ['cardinality' => ['field' => 'candidate_id']],
-                    ],
-                ],
-
                 // 2. Screened milestone (statuses 2, 3, 4, 5, 6)
                 'screened_candidates' => [
                     'filter' => [

@@ -473,13 +473,44 @@
         },
 
         updateKpiCounters: function(kpi) {
-            if (!kpi) return;
-            $('#cdActivityCountAll').text(kpi.all !== undefined ? kpi.all : (kpi.total_activities || 0));
-            $('#cdActivityCountPipeline').text(kpi.pipeline !== undefined ? kpi.pipeline : (kpi.pipeline_events || 0));
-            $('#cdActivityCountInterviews').text(kpi.interviews !== undefined ? kpi.interviews : (kpi.interview_events || 0));
-            $('#cdActivityCountOffers').text(kpi.offers !== undefined ? kpi.offers : (kpi.offer_events || 0));
-            $('#cdActivityCountJobs').text(kpi.jobs !== undefined ? kpi.jobs : (kpi.job_events || 0));
-            $('#cdActivityCountCrm').text(kpi.crm !== undefined ? kpi.crm : (kpi.note_events || 0));
+            var counts = {
+                all: 0,
+                pipeline: 0,
+                interviews: 0,
+                offers: 0,
+                jobs: 0,
+                crm: 0
+            };
+
+            if (this.allActivities && Array.isArray(this.allActivities) && this.allActivities.length > 0) {
+                counts.all = this.allActivities.length;
+                this.allActivities.forEach(function(item) {
+                    var cat = item.category || 'pipeline';
+                    if (counts[cat] !== undefined) {
+                        counts[cat]++;
+                    } else if (cat === 'offer' || cat === 'offers') {
+                        counts.offers++;
+                    } else if (cat === 'interview' || cat === 'interviews') {
+                        counts.interviews++;
+                    } else if (cat === 'job' || cat === 'jobs') {
+                        counts.jobs++;
+                    }
+                });
+            } else if (kpi) {
+                counts.all = kpi.all !== undefined ? kpi.all : (kpi.total_activities || 0);
+                counts.pipeline = kpi.pipeline !== undefined ? kpi.pipeline : (kpi.pipeline_events || 0);
+                counts.interviews = kpi.interviews !== undefined ? kpi.interviews : (kpi.interview_events || 0);
+                counts.offers = kpi.offers !== undefined ? kpi.offers : (kpi.offer_events || 0);
+                counts.jobs = kpi.jobs !== undefined ? kpi.jobs : (kpi.job_events || 0);
+                counts.crm = kpi.crm !== undefined ? kpi.crm : (kpi.note_events || 0);
+            }
+
+            $('#cdActivityCountAll').text(counts.all);
+            $('#cdActivityCountPipeline').text(counts.pipeline);
+            $('#cdActivityCountInterviews').text(counts.interviews);
+            $('#cdActivityCountOffers').text(counts.offers);
+            $('#cdActivityCountJobs').text(counts.jobs);
+            $('#cdActivityCountCrm').text(counts.crm);
         },
 
         updateHealthStatus: function(health) {
@@ -536,19 +567,9 @@
                 var comp = attr.company_name || actor.company_name || '4Bell Technology';
                 var occurred = new Date(item.occurred_at || (item.client_activity_sequence ? item.client_activity_sequence * 1000 : Date.now()));
 
-                // Calculate time ago
-                var seconds = Math.floor((Date.now() - occurred.getTime()) / 1000);
-                var timeAgo = 'Just now';
-                if (seconds >= 86400) {
-                    var d = Math.floor(seconds / 86400);
-                    timeAgo = d + (d === 1 ? ' day ago' : ' days ago');
-                } else if (seconds >= 3600) {
-                    var h = Math.floor(seconds / 3600);
-                    timeAgo = h + (h === 1 ? ' hr ago' : ' hrs ago');
-                } else if (seconds >= 60) {
-                    var m = Math.floor(seconds / 60);
-                    timeAgo = m + (m === 1 ? ' min ago' : ' mins ago');
-                }
+                // Exact date and time formatting with timezone (e.g. Sep 16, 2026, 12:03 PM IST)
+                var exactDate = occurred.toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' });
+                var exactTime = occurred.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', timeZoneName: 'short' });
 
                 var dotColor = '#009ef7';
                 var dotBg = '#eff6ff';
@@ -570,13 +591,17 @@
                         dotColor = '#ef4444'; dotBg = '#fef2f2'; badgeClass = 'cd-tl-badge-red'; badgeText = 'Closed';
                     }
                     heading = (job.title || 'Requisition') + (job.id ? ' (#' + job.id + ')' : (job.code ? ' (' + job.code + ')' : ''));
-                    subtext = 'Created by ' + (job.creator_name || 'Account Manager') + ' • ' + comp;
+                    if (item.event_type === 'job.shared' || job.shared_by_name) {
+                        subtext = 'Shared by ' + (job.shared_by_name || attr.name || 'Client Partner') + ' • ' + (job.shared_by_company || attr.company_name || comp);
+                    } else {
+                        subtext = 'Created by ' + (job.creator_name || 'Account Manager') + ' • ' + comp;
+                    }
                     role = (job.total_positions || 1) + ' ' + ((job.total_positions || 1) === 1 ? 'Opening' : 'Openings');
                 } else if (cat === 'interviews') {
                     iconClass = 'fa-video';
                     dotColor = '#7c3aed'; dotBg = '#f5f3ff'; badgeClass = 'cd-tl-badge-purple'; badgeText = 'Interview';
                     heading = 'Interview: ' + (cand.name || 'Candidate');
-                    subtext = 'Scheduled by ' + (attr.name || actor.name || 'Coordinator') + ' • ' + comp;
+                    subtext = (attr.label || 'Scheduled by') + ' ' + (attr.name || actor.name || 'Coordinator') + ' • ' + comp;
                     role = cand.designation || job.title || 'Candidate';
                 } else {
                     iconClass = 'fa-user';
@@ -590,8 +615,14 @@
                     } else {
                         dotColor = '#009ef7'; dotBg = '#eff6ff'; badgeClass = 'cd-tl-badge-blue'; badgeText = trans.to_stage_name || 'Screening';
                     }
-                    heading = (cand.name || 'Candidate') + (trans.from_stage_name ? ' (' + trans.from_stage_name + ' → ' + (trans.to_stage_name || 'Screening') + ')' : '');
-                    subtext = 'Uploaded by ' + (attr.name || actor.name || 'Recruiter') + ' • ' + comp;
+                    if (item.event_type === 'candidate.uploaded') {
+                        heading = (cand.name || 'Candidate') + ' (Submitted to ' + (trans.to_stage_name || 'Sourcing') + ')';
+                    } else if (item.event_type === 'interview.feedback') {
+                        heading = (cand.name || 'Candidate') + ' (Interview Feedback Submitted)';
+                    } else {
+                        heading = (cand.name || 'Candidate') + (trans.from_stage_name && trans.from_stage_name !== trans.to_stage_name ? ' (' + trans.from_stage_name + ' → ' + (trans.to_stage_name || 'Screening') + ')' : '');
+                    }
+                    subtext = (attr.label || 'Submitted by') + ' ' + (attr.name || actor.name || 'Recruiter') + ' • ' + comp;
                     role = cand.designation || 'Candidate';
                 }
 
@@ -609,7 +640,7 @@
                         <div style="display: flex; align-items: center; gap: 10px; flex-shrink: 0;">
                             <span style="font-size: 11px; color: #475569; font-weight: 500;">${role}</span>
                             <span class="badge ${badgeClass}" style="font-size: 10px; font-weight: 600; padding: 3px 8px; border-radius: 6px;">${badgeText}</span>
-                            <span style="font-size: 10.5px; color: #94a3b8; min-width: 60px; text-align: right;">${timeAgo}</span>
+                            <span style="font-size: 10px; color: #64748b; font-weight: 600; min-width: 95px; text-align: right; line-height: 1.25;" title="${exactDate} ${exactTime}">${exactDate}<br><span style="font-size: 9px; color: #94a3b8; font-weight: 500;">${exactTime}</span></span>
                         </div>
                     </div>
                 `;

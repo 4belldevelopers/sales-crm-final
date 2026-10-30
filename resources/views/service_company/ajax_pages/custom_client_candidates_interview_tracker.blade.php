@@ -1,3 +1,5 @@
+@include('service_company.client.components.tab-interviews-style')
+
 @php
     use App\Helper\GeneralMethod;
     use Carbon\Carbon;
@@ -220,6 +222,7 @@
 @else
     <div class="cd-it-empty">
         <i class="fas fa-calendar-times fs-2 text-gray-300 d-block mb-2"></i>
-        No interviews scheduled for this client.
+        <div class="fw-bold text-gray-700 fs-6">No Scheduled Interviews</div>
+        <div class="text-muted fs-8 mt-1">No interviews scheduled for this client's candidates.</div>
     </div>
 @endif

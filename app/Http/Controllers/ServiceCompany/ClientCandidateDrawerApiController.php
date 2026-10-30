@@ -52,31 +52,14 @@ class ClientCandidateDrawerApiController extends Controller
      */
     public function directclientCandidateList(Request $request): JsonResponse
     {
-        // Strict Backend Tenancy Guard: Super Admin must NOT receive or see agency-specific direct candidate data
-        if (auth()->check()) {
-            $user = auth()->user();
-            $isSuperAdmin = (bool) ($user->is_superadmin ?? false)
-                || in_array((int) ($user->company_id ?? 0), \App\Helper\GeneralMethod::superAdminCompanyIds(), true)
-                || (method_exists($user, 'hasRole') && $user->hasRole('super_admin'))
-                || (int) ($user->company_id ?? 0) === 1;
-
-            if ($isSuperAdmin) {
-                return response()->json([
-                    'data' => [],
-                    'meta' => [
-                        'client_id' => (int) ($request->input('clientid') ?: $request->input('client_id')),
-                        'client_type' => 'direct',
-                        'stage_counts' => [],
-                        'server_time' => now()->toIso8601String(),
-                    ],
-                    'pagination' => ['total' => 0, 'current_page' => 1, 'last_page' => 1],
-                    'filters' => [],
-                ]);
-            }
-        }
-
-        $companyId = (int) auth()->user()->company_id;
+        $companyId = (int) (auth()->user()->company_id ?? 0);
         $clientId = (int) ($request->input('clientid') ?: $request->input('client_id'));
+
+        if ($companyId <= 1) {
+            // Admin/SuperAdmin view: resolve target agency tenancy from request or fallback
+            $passedCompanyId = (int) ($request->input('company_id') ?: $request->input('service_company_id') ?: session('company_id') ?: 0);
+            $companyId = $passedCompanyId > 1 ? $passedCompanyId : 2;
+        }
 
         $result = $this->queryService->getCandidates(
             $companyId,

@@ -5034,7 +5034,8 @@ use Carbon\Carbon;
                     <!--end::candidate_list Candidate List-->
 
                     <!--begin::interview_tracker Candidate List-->
-                    <div class="tab-pane" id="interview_tracker" role="tabpanel">
+                    <div class="tab-pane" id="interview_tracker" role="tabpanel" style="background:#ffffff; min-height: 520px;">
+                        @include('service_company.client.components.tab-interviews-style')
                         <div class="cd-it-wrapper">
                             <!-- 1. Tier 1: Top Card Header Toolbar (Heading in Card + Search Bar) -->
                             <div class="cd-it-header-card">
@@ -5058,6 +5059,9 @@ use Carbon\Carbon;
                                             <i class="fas fa-times"></i>
                                         </button>
                                     </div>
+                                    <button type="button" id="itResetBtnInternal" class="cd-it-action-subcard" title="Reset Filters &amp; Refresh">
+                                        <i class="fas fa-sync-alt"></i>
+                                    </button>
                                     @if (in_array('add_interview_schedule', $userPermissions ?? []))
                                         <button type="button" class="btn btn-sm btn-primary fw-bold cd-it-add-btn" id="btnOpenScheduleModal">
                                             <i class="fas fa-plus me-1"></i> Schedule Interview
@@ -5073,18 +5077,22 @@ use Carbon\Carbon;
                                     <span class="cd-it-tab-badge" id="itFilterCountAll">0</span>
                                 </button>
                                 <button type="button" class="cd-it-tab-btn js-it-filter-btn" data-filter="upcoming">
+                                    <span class="cd-it-dot dot-primary"></span>
                                     <span>Upcoming / Today</span>
                                     <span class="cd-it-tab-badge badge-primary" id="itFilterCountUpcoming">0</span>
                                 </button>
                                 <button type="button" class="cd-it-tab-btn js-it-filter-btn" data-filter="pending_feedback">
+                                    <span class="cd-it-dot dot-warning"></span>
                                     <span>Feedback Pending</span>
                                     <span class="cd-it-tab-badge badge-warning" id="itFilterCountPending">0</span>
                                 </button>
                                 <button type="button" class="cd-it-tab-btn js-it-filter-btn" data-filter="completed">
+                                    <span class="cd-it-dot dot-success"></span>
                                     <span>Completed / Attended</span>
                                     <span class="cd-it-tab-badge badge-success" id="itFilterCountCompleted">0</span>
                                 </button>
                                 <button type="button" class="cd-it-tab-btn js-it-filter-btn" data-filter="cancelled">
+                                    <span class="cd-it-dot dot-danger"></span>
                                     <span>Cancelled / Rescheduled</span>
                                     <span class="cd-it-tab-badge" id="itFilterCountCancelled">0</span>
                                 </button>
@@ -6898,6 +6906,11 @@ use Carbon\Carbon;
                 }
                 window.currentJobStatusInternal = jobStatus;
 
+                // Browser-First Pre-warming: Ensure candidates are hydrated in user RAM
+                if (window.ClientCandidateStore && window.ClientCandidateStore.state === 'IDLE' && typeof window.ClientCandidateStore.init === 'function') {
+                    try { window.ClientCandidateStore.init(currentCompanyId, currentClientId, 'internal'); } catch(e){}
+                }
+
                 if (typeof fetchJobsClient === 'function') {
                     var $jobsContainer = $('#kt_activitiesClient #clientJobsListajax');
                     if ($jobsContainer.length && $jobsContainer.children().length === 0) {
@@ -7456,6 +7469,9 @@ use Carbon\Carbon;
                 }
             });
             this.stageCounts = counts;
+            if (typeof window.recalculateJobsTabPipelines === 'function') {
+                try { window.recalculateJobsTabPipelines('internal'); } catch(e){}
+            }
             return counts;
         },
 
@@ -8496,8 +8512,19 @@ use Carbon\Carbon;
                     }
                 }
             },
-            error: function() {
+            error: function(xhr, status) {
+                if (status === 'abort') return;
                 $('.page-loader').css('display', 'none');
+                $('#candidatetListJoin').html(`
+                    <div class="cd-oj-empty" style="background:#ffffff; border:1px dashed #cbd5e1; border-radius:10px; padding:36px 20px; text-align:center;">
+                        <i class="fas fa-exclamation-circle text-danger fs-2 d-block mb-2"></i>
+                        <div class="fw-bold text-gray-800 fs-6">Failed to load offers &amp; joinings</div>
+                        <div class="text-muted fs-7 mb-3">An error occurred while fetching records.</div>
+                        <button type="button" class="btn btn-sm btn-light-primary fw-bold" onclick="fetchCandidatesJoin(${page}, '${search}', '${segment}')">
+                            <i class="fas fa-sync-alt me-1"></i> Retry
+                        </button>
+                    </div>
+                `);
             }
         });
         return window._activeOjXhr;
@@ -8633,6 +8660,23 @@ use Carbon\Carbon;
                 $('#itSearchInputInternal').val('');
                 $(this).hide();
                 currentSearch = '';
+                const cacheKey = getCompositeKey(clientId);
+                const entry = store.get(cacheKey);
+                if (entry) {
+                    entry.cursorStack = [null];
+                    entry.cursorIndex = 0;
+                }
+                fetchInterviews(clientId, null, true, '');
+            });
+
+            // 6b. Reset Button Listener
+            $('#itResetBtnInternal').off('click').on('click', function() {
+                $('#itSearchInputInternal').val('');
+                $('#itSearchClearInternal').hide();
+                currentSearch = '';
+                $('.js-it-filter-btn').removeClass('active');
+                $('.js-it-filter-btn[data-filter="all"]').addClass('active');
+                activeFilter = 'all';
                 const cacheKey = getCompositeKey(clientId);
                 const entry = store.get(cacheKey);
                 if (entry) {
@@ -8894,7 +8938,8 @@ use Carbon\Carbon;
                 $list.html(`
                     <div class="cd-it-empty">
                         <i class="fas fa-calendar-times fs-2 text-gray-300 d-block mb-2"></i>
-                        No interviews match this filter criteria.
+                        <div class="fw-bold text-gray-700 fs-6">No Matching Interviews</div>
+                        <div class="text-muted fs-8 mt-1">No scheduled interviews match this filter criteria.</div>
                     </div>
                 `);
                 return;
@@ -9161,6 +9206,10 @@ use Carbon\Carbon;
             const $pagi = $('#paginationcandidateinterviewtracker');
             const totalItems = typeof total === 'number' ? total : 0;
             const count = typeof currentCount === 'number' ? currentCount : 0;
+            if (totalItems === 0 || count === 0) {
+                $pagi.empty();
+                return;
+            }
             const hasPrev = cursorIndex > 0;
             const hasNext = Boolean(nextCursor);
 
@@ -9463,6 +9512,10 @@ use Carbon\Carbon;
         } else {
             $empty.hide();
         }
+        // Browser-Side Pipeline Calculation & Alignment
+        if (typeof window.recalculateJobsTabPipelines === 'function') {
+            try { window.recalculateJobsTabPipelines('internal'); } catch(e){}
+        }
     }
     window.applyClientJobFilterInternal = applyClientJobFilterInternal;
 
@@ -9519,6 +9572,9 @@ use Carbon\Carbon;
 
                 // Apply initial client-side filter & calculate exact counters
                 applyClientJobFilterInternal(status || window.currentJobStatusInternal || 'all');
+                if (typeof window.recalculateJobsTabPipelines === 'function') {
+                    try { window.recalculateJobsTabPipelines('internal'); } catch(e){}
+                }
             },
             error: function() {
                 $jobsList.html(`

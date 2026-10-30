@@ -13,10 +13,11 @@
 
     @foreach($items as $item)
         @php
-            $occurred = \Carbon\Carbon::parse($item['occurred_at'] ?? now());
-            $itemDateStr = $occurred->isToday() ? 'Today' : ($occurred->isYesterday() ? 'Yesterday' : $occurred->format('M d, Y'));
-            $timeFormatted = $occurred->format('h:i A');
-            $timeAgo = $occurred->diffForHumans();
+            $tenantTz = !empty($companyTimezone) ? $companyTimezone : (auth()->check() ? \App\Helper\GeneralMethod::defaultTimeZone(auth()->user()->company_id) : 'Asia/Kolkata');
+            $occurred = \Carbon\Carbon::parse($item['occurred_at'] ?? now())->setTimezone($tenantTz);
+            $itemDateStr = $occurred->format('M d, Y');
+            $timeFormatted = $occurred->format('h:i A T');
+            $exactDate = $occurred->format('M d, Y');
             $category = $item['category'] ?? 'pipeline';
             $eventType = $item['event_type'] ?? '';
             $candidate = $item['candidate'] ?? null;
@@ -47,14 +48,14 @@
             }
             $jobOpenings = (int) ($job['total_positions'] ?? 1);
 
-            // Attribution & Actor Company Resolution (NEVER recruiter role)
+            // Attribution & Actor Company Resolution (Point 2: Direct Client job sharer = Client User & Client Comp; Agency action = Agency User & Agency Comp)
             $attribution = $item['attribution'] ?? [];
             $isSharedJob = ($eventType === 'job.shared') || !empty($job['shared_by_name']);
             $attributionLabel = $attribution['label'] ?? ($isSharedJob ? 'Shared by' : ($category === 'jobs' ? 'Created by' : ($category === 'crm' ? 'Logged by' : 'Uploaded by')));
-            $attributionName = $attribution['name'] ?? ($actor['name'] ?? ($isSharedJob ? ($job['shared_by_name'] ?? 'Account Lead') : ($category === 'jobs' ? 'Account Manager' : 'Technical Recruiter')));
-            $companyName = $attribution['company_name'] ?? ($actor['company_name'] ?? ($isSharedJob ? ($job['shared_by_company'] ?? '4Bell Technology') : ($category === 'jobs' ? ($job['creator_company'] ?? '4Bell Technology') : ($candidate['uploader_company'] ?? '4Bell Technology'))));
-            if (empty($companyName) || strtolower($companyName) === 'account lead' || strtolower($companyName) === 'technical recruiter') {
-                $companyName = '4Bell Technology';
+            $attributionName = $attribution['name'] ?? ($actor['name'] ?? ($isSharedJob ? ($job['shared_by_name'] ?? 'Client Partner') : 'Technical Recruiter'));
+            $companyName = $attribution['company_name'] ?? ($actor['company_name'] ?? ($isSharedJob ? ($job['shared_by_company'] ?? '') : ''));
+            if (empty($companyName) || strtolower($companyName) === 'account lead') {
+                $companyName = $isSharedJob ? ($job['shared_by_company'] ?? 'Client Company') : ($actor['company_name'] ?? '4Bell Technology');
             }
 
             // Standardize Stage & Status Colors:
@@ -84,6 +85,8 @@
                 'candidate.joined' => 'Candidate Joined',
                 'offer.sent' => 'Offer Extended',
                 'interview.scheduled' => 'Interview Scheduled',
+                'interview.feedback' => 'Interview Feedback Submitted',
+                'candidate.uploaded' => 'Candidate Submitted',
                 'client.note_added' => 'Client Note Logged',
                 default => ($category === 'jobs' ? ($isSharedJob ? 'Job Shared' : 'Job Requisition Created') : ($category === 'interviews' ? 'Interview Scheduled' : 'Candidate Stage Changed'))
             };
@@ -218,16 +221,26 @@
                                 $toStage = $transition['to_stage_name'] ?? 'Screening';
                             @endphp
                             <div class="cd-activity-stage-transition">
-                                @if(!empty($fromStage) && strtolower($fromStage) !== strtolower($toStage))
+                                @if($eventType === 'candidate.uploaded')
+                                    <span class="cd-status-badge status-active">
+                                        <i class="fas fa-user-check" style="font-size: 10px;"></i>
+                                        Submitted to {{ $toStage }}
+                                    </span>
+                                @elseif(!empty($fromStage) && strtolower($fromStage) !== strtolower($toStage))
                                     <span class="cd-activity-stage-badge cd-activity-stage-from">
                                         {{ $fromStage }}
                                     </span>
                                     <i class="fas fa-arrow-right cd-activity-stage-arrow"></i>
+                                    <span class="cd-status-badge {{ $transBadgeClass }}">
+                                        <i class="fas {{ $transIcon }}" style="font-size: 10px;"></i>
+                                        {{ $toStage }}
+                                    </span>
+                                @else
+                                    <span class="cd-status-badge {{ $transBadgeClass }}">
+                                        <i class="fas {{ $transIcon }}" style="font-size: 10px;"></i>
+                                        {{ $toStage }}
+                                    </span>
                                 @endif
-                                <span class="cd-status-badge {{ $transBadgeClass }}">
-                                    <i class="fas {{ $transIcon }}" style="font-size: 10px;"></i>
-                                    {{ $toStage }}
-                                </span>
 
                                 @if(!empty($details['compensation']['amount']) && empty($details['compensation']['is_confidential']))
                                     <span class="cd-status-badge status-active">
@@ -244,7 +257,13 @@
                                 @if(!empty($details['scheduled_time']))
                                     <span class="cd-activity-stage-badge cd-activity-stage-from" style="font-size: 10.5px;">
                                         <i class="far fa-clock me-1" style="font-size: 10px;"></i>
-                                        {{ \Carbon\Carbon::parse($details['scheduled_time'])->format('M d, h:i A') }}
+                                        {{ \Carbon\Carbon::parse($details['scheduled_time'])->setTimezone($tenantTz)->format('M d, h:i A T') }}
+                                    </span>
+                                @endif
+                                @if(!empty($details['feedback']))
+                                    <span class="cd-activity-stage-badge cd-activity-stage-to" style="font-size: 10.5px;" title="{{ $details['feedback'] }}">
+                                        <i class="fas fa-comment-dots text-primary me-1" style="font-size: 10px;"></i>
+                                        Feedback: {{ \Illuminate\Support\Str::limit($details['feedback'], 25) }}
                                     </span>
                                 @endif
                             </div>
@@ -291,14 +310,10 @@
                             <div class="cd-activity-actor-attribution">
                                 {{ $attributionLabel }}:
                             </div>
-                            @if(($isSharedJob || str_contains(strtolower($attributionLabel), 'shared')) && !empty($companyName) && !empty($attributionName) && strtolower($attributionName) !== 'account lead')
-                                <div class="cd-activity-actor-name fw-bold text-dark" title="{{ $companyName }} — {{ $attributionName }}">
-                                    {{ $companyName }} — {{ $attributionName }}
-                                </div>
-                            @else
-                                <div class="cd-activity-actor-name" title="{{ $attributionName }}">
-                                    {{ $attributionName }}
-                                </div>
+                            <div class="cd-activity-actor-name" title="{{ $attributionName }}">
+                                {{ $attributionName }}
+                            </div>
+                            @if(!empty($companyName))
                                 <div class="cd-activity-actor-company" title="{{ $companyName }}">
                                     <i class="far fa-building me-1" style="font-size: 10px; color: #64748b;"></i>{{ $companyName }}
                                 </div>
@@ -309,8 +324,8 @@
                     {{-- 4. Time & Action Sub-Card (Strictly Read-Only, ZERO Job Drawer Trigger) --}}
                     <div class="cd-activity-subcard-actions">
                         <div class="cd-activity-time-wrap">
-                            <div class="cd-activity-time-ago" title="{{ $occurred->toIso8601String() }}">
-                                {{ $timeAgo }}
+                            <div class="cd-activity-time-ago" title="{{ $occurred->format('M d, Y h:i A') }}">
+                                {{ $exactDate }}
                             </div>
                             <div class="cd-activity-time-clock">
                                 {{ $timeFormatted }}

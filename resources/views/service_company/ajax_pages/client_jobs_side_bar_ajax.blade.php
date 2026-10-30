@@ -101,20 +101,32 @@
                 $minSalRaw = (float) ($job->min_salary ?? 0);
                 $maxSalRaw = (float) ($job->max_salary ?? 0);
 
-                if ($minSalRaw >= 100000) {
-                    $minSalFmt = number_format($minSalRaw / 100000, 2) . ' L';
-                } elseif ($minSalRaw > 0) {
-                    $minSalFmt = number_format($minSalRaw);
-                } else {
-                    $minSalFmt = '0';
-                }
+                // Global compact K/M formatting (0% Lakhs, Lacs, Crores, or India-specific notation)
+                $fmtK = function($num) {
+                    $num = (float) $num;
+                    if ($num <= 0) return '0';
+                    if ($num >= 1000000) {
+                        $v = round($num / 1000000, 1);
+                        return ($v == (int)$v ? (int)$v : $v) . 'M';
+                    }
+                    if ($num >= 1000) {
+                        $v = round($num / 1000, 1);
+                        return ($v == (int)$v ? (int)$v : $v) . 'K';
+                    }
+                    return (string) round($num);
+                };
 
-                if ($maxSalRaw >= 100000) {
-                    $maxSalFmt = number_format($maxSalRaw / 100000, 2) . ' L';
+                $minK = $fmtK($minSalRaw);
+                $maxK = $fmtK($maxSalRaw);
+
+                if ($minSalRaw > 0 && $maxSalRaw > 0) {
+                    $compText = "{$currSym} {$minK} – {$maxK}";
+                } elseif ($minSalRaw > 0) {
+                    $compText = "{$currSym} {$minK}";
                 } elseif ($maxSalRaw > 0) {
-                    $maxSalFmt = number_format($maxSalRaw);
+                    $compText = "{$currSym} {$maxK}";
                 } else {
-                    $maxSalFmt = '0';
+                    $compText = "{$currSym} 0";
                 }
 
                 $empType = ((int) ($job->employment_type ?? 0)) === 1 ? 'Contract' : 'Full-Time';
@@ -136,7 +148,7 @@
                     $workMode = 'Hybrid';
                 }
 
-                // 4. Hiring Manager
+                // 4. Hiring Manager & Client Representative Attribution
                 $contacts = $job->client_contact_info_jobs ?? [];
                 $hmName = 'Hiring Manager';
                 $hmTitle = 'Role';
@@ -145,24 +157,54 @@
                     $hmTitle = ucwords(strtolower($contacts[0]['contact_person_designation'] ?? 'Role'));
                 }
 
-                // 5. Sub-Card 3: Team (Strictly Read-Only — No matching badges)
+                // 5. Sub-Card 3: Team (Captain / Primary Representative First)
                 $team = $job->job_assign ?? [];
                 $teamCount = count($team);
-                $teamName = 'Team';
-                if (!empty($team) && isset($team[0])) {
-                    $teamName = ucwords(strtolower($team[0]['user_name'] ?? 'Team'));
+                $primaryRepName = null;
+
+                if (!empty($team)) {
+                    foreach ($team as $member) {
+                        $mArr = (array) $member;
+                        $uId = (int) ($mArr['user_id'] ?? 0);
+                        $spokId = (int) ($mArr['spok_user_id'] ?? 0);
+                        $isCap = !empty($mArr['is_captain']) || ($uId > 0 && $uId === $spokId);
+                        if ($isCap && !empty($mArr['user_name'])) {
+                            $primaryRepName = ucwords(strtolower(trim($mArr['user_name'])));
+                            break;
+                        }
+                    }
+                    if (empty($primaryRepName) && isset($team[0])) {
+                        $firstMember = (array) $team[0];
+                        if (!empty($firstMember['user_name'])) {
+                            $primaryRepName = ucwords(strtolower(trim($firstMember['user_name'])));
+                        }
+                    }
                 }
-                $teamMeta = $teamCount > 0 ? ($teamCount . ' ' . ($teamCount === 1 ? 'Member' : 'Members')) : '—';
+
+                if (empty($primaryRepName)) {
+                    $primaryRepName = 'Team';
+                }
+
+                $otherCount = max(0, $teamCount - 1);
+                if ($otherCount > 0) {
+                    $teamMeta = '+ ' . $otherCount . ' other member' . ($otherCount > 1 ? 's' : '');
+                } else {
+                    $teamMeta = 'No other members';
+                }
 
                 // 6. Sub-Card 4: Agency Name Resolution (Strictly displays actual Agency Name, NEVER a count like "3 Agencies")
                 $agencyName = null;
+                $viewerCompanyId = (int) (auth()->user()->company_id ?? ($company_id ?? 0));
+                if ($viewerCompanyId <= 1) {
+                    $viewerCompanyId = 2; // Default to agency company 4Bell Technology
+                }
                 $agencies = is_array($job->recommendation_relation ?? null) ? $job->recommendation_relation : [];
                 if (!empty($agencies)) {
                     $selectedRel = null;
                     foreach ($agencies as $rel) {
                         $relArr = (array) $rel;
                         $toCompId = (int) ($relArr['to_company_id'] ?? 0);
-                        if ($company_id > 0 && $toCompId === (int) $company_id) {
+                        if ($viewerCompanyId > 0 && $toCompId === $viewerCompanyId) {
                             $selectedRel = $relArr;
                             break;
                         }
@@ -173,15 +215,18 @@
 
                     if ($selectedRel) {
                         $targetAgencyId = (int) ($selectedRel['to_company_id'] ?? 0);
+                        if ($targetAgencyId <= 0 && !empty($viewerCompanyId)) {
+                            $targetAgencyId = $viewerCompanyId;
+                        }
                         if ($targetAgencyId > 0) {
                             $cacheCompKey = "ats:tenant_comp_name:{$targetAgencyId}";
                             $cachedCompName = \Illuminate\Support\Facades\Redis::get($cacheCompKey);
                             if (!empty($cachedCompName)) {
                                 $agencyName = (string) $cachedCompName;
                             } else {
-                                $cRow = \Illuminate\Support\Facades\DB::table('companies')->where('id', $targetAgencyId)->first(['company_name', 'name']);
+                                $cRow = \Illuminate\Support\Facades\DB::table('companies')->where('id', $targetAgencyId)->first(['company_name']);
                                 if ($cRow) {
-                                    $agencyName = $cRow->company_name ?? ($cRow->name ?? null);
+                                    $agencyName = $cRow->company_name ?? null;
                                     if ($agencyName) {
                                         \Illuminate\Support\Facades\Redis::setex($cacheCompKey, 86400, $agencyName);
                                     }
@@ -194,18 +239,18 @@
                 if (empty($agencyName)) {
                     if (!empty($job->agency_name)) {
                         $agencyName = $job->agency_name;
-                    } elseif (!empty($company_id)) {
-                        $cacheCompKey = "ats:tenant_comp_name:{$company_id}";
+                    } elseif (!empty($viewerCompanyId)) {
+                        $cacheCompKey = "ats:tenant_comp_name:{$viewerCompanyId}";
                         $cachedCompName = \Illuminate\Support\Facades\Redis::get($cacheCompKey);
                         if (!empty($cachedCompName)) {
                             $agencyName = (string) $cachedCompName;
                         } else {
-                            $cRow = \Illuminate\Support\Facades\DB::table('companies')->where('id', $company_id)->first(['company_name']);
+                            $cRow = \Illuminate\Support\Facades\DB::table('companies')->where('id', $viewerCompanyId)->first(['company_name']);
                             $agencyName = $cRow->company_name ?? '4Bell Technology';
                             \Illuminate\Support\Facades\Redis::setex($cacheCompKey, 86400, $agencyName);
                         }
                     } else {
-                        $agencyName = '—';
+                        $agencyName = '4Bell Technology';
                     }
                 }
                 $agencyText = $agencyName;
@@ -243,12 +288,55 @@
 
                 $totalApps = 0;
                 $totalInterviews = 0;
+                $totalOffers = 0;
+                $totalJoined = 0;
+                $totalSourcing = (int) ($jobStageCounts[1] ?? 0);
+
                 foreach ($pipelineStages as $st) {
                     $c = (int) ($jobStageCounts[$st['id']] ?? 0);
+                    // Rule 10: In Review candidates must NOT be counted anywhere in direct client pipeline!
+                    if ($isDirect && $st['id'] === 8) {
+                        continue;
+                    }
                     $totalApps += $c;
                     if (in_array($st['id'], [3, 4])) {
                         $totalInterviews += $c;
+                    } elseif ($st['id'] === 5) {
+                        $totalOffers += $c;
+                    } elseif ($st['id'] === 6) {
+                        $totalJoined += $c;
                     }
+                }
+
+                // Client Representative & Company Attribution (Actual User · Company Name)
+                $clientCompany = !empty($resolvedClient) ? ucwords(strtolower($resolvedClient)) : 'Client';
+                $clientRepUser = null;
+
+                if (!empty($contacts) && isset($contacts[0])) {
+                    $cName = trim((string)($contacts[0]['contact_person_name'] ?? ''));
+                    if (!empty($cName) && !in_array(strtolower($cName), ['hiring manager', 'client', 'contact'], true)) {
+                        $clientRepUser = ucwords(strtolower($cName));
+                    }
+                }
+
+                if (empty($clientRepUser) && !empty($agencies)) {
+                    $firstRel = (array) $agencies[0];
+                    $fromUName = trim((string)($firstRel['from_user_name'] ?? $firstRel['user_name'] ?? ''));
+                    if (!empty($fromUName)) {
+                        $clientRepUser = ucwords(strtolower($fromUName));
+                    }
+                }
+
+                if (empty($clientRepUser) && !empty($jobCreatorName)) {
+                    $clientRepUser = $jobCreatorName;
+                }
+
+                if (!empty($clientRepUser) && !empty($clientCompany)) {
+                    $clientRepAttribution = "{$clientRepUser} · {$clientCompany}";
+                } elseif (!empty($clientRepUser)) {
+                    $clientRepAttribution = $clientRepUser;
+                } else {
+                    $clientRepAttribution = $clientCompany;
                 }
 
                 // 8. Sub-Card 6: Bottom Activity Strip (Skills & Date)
@@ -273,7 +361,8 @@
                     $cityName,
                     $workMode,
                     $hmName,
-                    $teamName,
+                    $primaryRepName,
+                    $clientRepAttribution,
                     implode(' ', $skills),
                     $empType,
                     $clientDisplayName
@@ -285,6 +374,10 @@
                  data-entity="job" 
                  data-job-id="{{ $jobId }}"
                  data-status="{{ $normalizedStatus }}"
+                 data-client-type="{{ $isDirect ? 'direct' : 'internal' }}"
+                 data-min-sal="{{ $minSalRaw }}"
+                 data-max-sal="{{ $maxSalRaw }}"
+                 data-currency="{{ $currCode }}"
                  data-search="{{ $searchHaystack }}"
                  style="cursor: pointer;">
                 <!-- Upper Sub-Cards Grid (5 Sections) -->
@@ -299,12 +392,12 @@
                             </div>
                         </div>
                         <div class="cd-details-body">
-                            <div class="cd-logo-box" style="background-color: {{ $logoColor }};">
+                            <div class="cd-logo-box" style="background-color: #ffffff; border: 1px solid #e2e8f0;">
                                 @if(!empty($logoUrl))
                                     <img src="{{ $logoUrl }}" alt="{{ $clientDisplayName }}" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
-                                    <span style="display:none;">{{ $logoInitial }}</span>
+                                    <span style="display:none; color: #009ef7; font-weight: 700;">{{ $logoInitial }}</span>
                                 @else
-                                    <span>{{ $logoInitial }}</span>
+                                    <span style="color: #009ef7; font-weight: 700;">{{ $logoInitial }}</span>
                                 @endif
                             </div>
                             <div class="cd-details-text">
@@ -335,7 +428,7 @@
                         </div>
                         <div class="cd-subcard-body">
                             <div class="cd-val-salary">
-                                <strong>{{ $currSym }}{{ $minSalFmt }} - {{ $maxSalFmt }}</strong>
+                                <strong>{{ $compText }}</strong>
                             </div>
                             <div class="cd-val-exp">
                                 <i class="far fa-clock text-muted me-1"></i><span>{{ $expText }}</span>
@@ -348,13 +441,13 @@
                         </div>
                     </div>
 
-                    <!-- Sub-Card 3: Team / Ownership (No Matching Badge) -->
+                    <!-- Sub-Card 3: Team / Ownership (Captain / Primary Rep First) -->
                     <div class="cd-job-subcard cd-subcard-team">
                         <div class="cd-subcard-header">
                             <span class="cd-subcard-label"><i class="fa fa-users me-1 text-muted"></i>Team</span>
                         </div>
                         <div class="cd-subcard-body">
-                            <div class="cd-val-name" title="{{ $teamName }}">{{ $teamName }}</div>
+                            <div class="cd-val-name" title="{{ $primaryRepName }}"><strong>{{ $primaryRepName }}</strong></div>
                             <div class="cd-val-sub">{{ $teamMeta }}</div>
                         </div>
                     </div>
@@ -387,7 +480,7 @@
                             <div class="cd-pipeline-track">
                                 @foreach ($pipelineStages as $stage)
                                     @php
-                                        $stageCount = $jobStageCounts[$stage['id']] ?? 0;
+                                        $stageCount = ($isDirect && $stage['id'] === 8) ? 0 : ($jobStageCounts[$stage['id']] ?? 0);
                                     @endphp
                                     <div class="cd-track-stage" title="{{ $stage['label'] }}: {{ $stageCount }}">
                                         <span class="cd-track-label">{{ $stage['label'] }}</span>
@@ -396,7 +489,7 @@
                                 @endforeach
                             </div>
                             <div class="cd-track-summary">
-                                <span>Apps: <strong>{{ $totalApps }}</strong></span>
+                                <span>Applications: <strong>{{ $totalApps }}</strong></span>
                                 <span class="cd-bullet">&bull;</span>
                                 <span>Interviews: <strong>{{ $totalInterviews }}</strong></span>
                             </div>
@@ -412,7 +505,10 @@
                             <span class="cd-bullet">&bull;</span>
                             <span title="Job Created By: {{ $jobCreatorName }} (Internal Author)"><i class="far fa-user text-muted me-1"></i>Created by: <strong>{{ \Illuminate\Support\Str::limit($jobCreatorName, 12) }}</strong></span>
                         @endif
-                        @if(!empty($hmName) && $hmName !== 'Hiring Manager')
+                        @if(!empty($clientRepAttribution))
+                            <span class="cd-bullet">&bull;</span>
+                            <span title="Client Representative: {{ $clientRepAttribution }}"><i class="far fa-id-badge text-primary me-1"></i>Client Rep: <strong>{{ $clientRepAttribution }}</strong></span>
+                        @elseif(!empty($hmName) && $hmName !== 'Hiring Manager')
                             <span class="cd-bullet">&bull;</span>
                             <span title="Client SPOC: {{ $hmName }} ({{ $hmTitle }})"><i class="far fa-id-badge text-primary me-1"></i>Client Rep: <strong>{{ \Illuminate\Support\Str::limit($hmName, 12) }}</strong></span>
                         @endif

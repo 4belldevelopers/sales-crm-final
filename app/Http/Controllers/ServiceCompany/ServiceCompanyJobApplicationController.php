@@ -1310,16 +1310,16 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
 
         // Fail-closed Dragonfly/Redis tenant authorization (0% MySQL reads on fast path)
         $authorizedClients = Cache::remember("tenant:{$company_id}:authorized_client_ids", 300, function () use ($company_id) {
-            return DB::table('client')->where('company_id', $company_id)->pluck('id')->map(fn ($id) => (int) $id)->toArray();
+            return DB::table('clients')->where('company_id', $company_id)->pluck('id')->map(fn ($id) => (int) $id)->toArray();
         });
         if (! in_array($clientId, $authorizedClients, true)) {
             $authorizedDirectClients = Cache::remember("tenant:{$company_id}:authorized_direct_client_ids", 300, function () use ($company_id) {
-                return DB::table('client_invitations')
+                return DB::table('staffing_company_invitation')
                     ->where(function ($q) use ($company_id) {
                         $q->where('from_company_id', $company_id)->orWhere('to_company_id', $company_id);
                     })
                     ->pluck('from_company_id')
-                    ->merge(DB::table('client_invitations')->where('to_company_id', $company_id)->pluck('to_company_id'))
+                    ->merge(DB::table('staffing_company_invitation')->where('to_company_id', $company_id)->pluck('to_company_id'))
                     ->unique()
                     ->map(fn ($id) => (int) $id)
                     ->toArray();
@@ -1484,6 +1484,55 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
             }
         }
 
+        // Batch fetch real offer lifecycle data from offer_job_applications & offer_create_main_tds (0% N+1)
+        $offerMeta = [];
+        $candAppIds = array_filter(array_column($data, 'candidate_id'));
+        $candOfferIds = array_filter(array_column($data, 'offer_id'));
+        if (! empty($candAppIds) || ! empty($candOfferIds)) {
+            $offerQuery = DB::table('offer_job_applications as o')
+                ->leftJoin('offer_create_main_tds as t', function ($j) {
+                    $j->on('t.offer_id', '=', 'o.id')->whereIn('t.status', [1, 3]);
+                })
+                ->whereNull('o.deleted_at')
+                ->where(function ($q) use ($candAppIds, $candOfferIds) {
+                    if (! empty($candOfferIds)) {
+                        $q->whereIn('o.id', array_unique($candOfferIds));
+                    }
+                    if (! empty($candAppIds)) {
+                        $q->orWhereIn('o.application_id', array_unique($candAppIds));
+                    }
+                })
+                ->select(
+                    'o.id as offer_id',
+                    'o.application_id',
+                    'o.offer_amount',
+                    'o.offer_currency',
+                    'o.offer_mode',
+                    'o.offer_release',
+                    'o.offer_acceptance',
+                    'o.sub_for_approval',
+                    'o.joined',
+                    'o.joined_date',
+                    'o.updated_at as salary_saved_at',
+                    't.candidate_status',
+                    't.send_approved_date_time',
+                    't.send_accept_date_time',
+                    't.accept_date_time',
+                    't.salary_ctc as tds_salary_ctc',
+                    't.joined_date as tds_joined_date'
+                )
+                ->get();
+
+            foreach ($offerQuery as $m) {
+                if ($m->offer_id) {
+                    $offerMeta['offer_'.$m->offer_id] = $m;
+                }
+                if ($m->application_id) {
+                    $offerMeta['app_'.$m->application_id] = $m;
+                }
+            }
+        }
+
         $pagination = [
             'total' => $total,
             'current_page' => $page,
@@ -1492,7 +1541,7 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
         ];
 
         return response()->json([
-            'html' => view('service_company.ajax_pages.custom_client_candidates_join', compact('data', 'company_id', 'jobsMap', 'citiesMap', 'statusMap', 'jobAssignMap', 'jobSkillsMap'))->render(),
+            'html' => view('service_company.ajax_pages.custom_client_candidates_join', compact('data', 'company_id', 'jobsMap', 'citiesMap', 'statusMap', 'jobAssignMap', 'jobSkillsMap', 'offerMeta'))->render(),
             'pagination' => view('service_company.ajax_pages.pagination', compact('pagination'))->render(),
             'counts' => [
                 'all' => $allCount,
@@ -1713,12 +1762,12 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
 
         // Fail-closed authorization check using tenant cache (0% MySQL reads)
         $authorizedDirectClients = Cache::remember("tenant:{$company_id}:authorized_direct_client_ids", 300, function () use ($company_id) {
-            return DB::table('client_invitations')
+            return DB::table('staffing_company_invitation')
                 ->where(function ($q) use ($company_id) {
                     $q->where('from_company_id', $company_id)->orWhere('to_company_id', $company_id);
                 })
                 ->pluck('from_company_id')
-                ->merge(DB::table('client_invitations')->where('to_company_id', $company_id)->pluck('to_company_id'))
+                ->merge(DB::table('staffing_company_invitation')->where('to_company_id', $company_id)->pluck('to_company_id'))
                 ->unique()
                 ->map(fn ($id) => (int) $id)
                 ->toArray();
@@ -1946,6 +1995,55 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
             }
         }
 
+        // Batch fetch real offer lifecycle data from offer_job_applications & offer_create_main_tds (0% N+1)
+        $offerMeta = [];
+        $candAppIds = array_filter(array_column($data, 'candidate_id'));
+        $candOfferIds = array_filter(array_column($data, 'offer_id'));
+        if (! empty($candAppIds) || ! empty($candOfferIds)) {
+            $offerQuery = DB::table('offer_job_applications as o')
+                ->leftJoin('offer_create_main_tds as t', function ($j) {
+                    $j->on('t.offer_id', '=', 'o.id')->whereIn('t.status', [1, 3]);
+                })
+                ->whereNull('o.deleted_at')
+                ->where(function ($q) use ($candAppIds, $candOfferIds) {
+                    if (! empty($candOfferIds)) {
+                        $q->whereIn('o.id', array_unique($candOfferIds));
+                    }
+                    if (! empty($candAppIds)) {
+                        $q->orWhereIn('o.application_id', array_unique($candAppIds));
+                    }
+                })
+                ->select(
+                    'o.id as offer_id',
+                    'o.application_id',
+                    'o.offer_amount',
+                    'o.offer_currency',
+                    'o.offer_mode',
+                    'o.offer_release',
+                    'o.offer_acceptance',
+                    'o.sub_for_approval',
+                    'o.joined',
+                    'o.joined_date',
+                    'o.updated_at as salary_saved_at',
+                    't.candidate_status',
+                    't.send_approved_date_time',
+                    't.send_accept_date_time',
+                    't.accept_date_time',
+                    't.salary_ctc as tds_salary_ctc',
+                    't.joined_date as tds_joined_date'
+                )
+                ->get();
+
+            foreach ($offerQuery as $m) {
+                if ($m->offer_id) {
+                    $offerMeta['offer_'.$m->offer_id] = $m;
+                }
+                if ($m->application_id) {
+                    $offerMeta['app_'.$m->application_id] = $m;
+                }
+            }
+        }
+
         $pagination = [
             'total' => $total,
             'current_page' => $page,
@@ -1954,7 +2052,7 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
         ];
 
         return response()->json([
-            'html' => view('service_company.ajax_pages.custom_client_candidates_join', compact('data', 'company_id', 'jobsMap', 'citiesMap', 'statusMap', 'jobAssignMap', 'jobSkillsMap'))->render(),
+            'html' => view('service_company.ajax_pages.custom_client_candidates_join', compact('data', 'company_id', 'jobsMap', 'citiesMap', 'statusMap', 'jobAssignMap', 'jobSkillsMap', 'offerMeta'))->render(),
             'pagination' => view('service_company.ajax_pages.pagination', compact('pagination'))->render(),
             'counts' => [
                 'all' => $allCount,

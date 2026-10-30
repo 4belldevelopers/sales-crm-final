@@ -216,379 +216,275 @@
         .team-btn-light:hover { background: #f8fafc; color: #0f172a; border-color: #cbd5e1; }
 
         /* =========================================================================
-           TOP CARD: MARKETPLACE COMMUNICATION CONTACTS (Rule 20 Enterprise Card)
+           TIER 2: 7 STAT CARDS ROW (Card-Based Tabs — Strictly 1 Single Horizontal Row)
            ========================================================================= */
-        .team-mp-contacts-card {
+        .tm-stat-grid-wrap {
+            width: 100% !important;
+            overflow-x: auto !important;
+            overflow-y: hidden !important;
+            scrollbar-width: none !important;
+            -ms-overflow-style: none !important;
+            margin-bottom: 14px !important;
+        }
+        .tm-stat-grid-wrap::-webkit-scrollbar {
+            display: none !important;
+        }
+        .tm-stat-grid {
+            display: grid !important;
+            grid-template-columns: repeat(7, minmax(0, 1fr)) !important;
+            gap: 7px !important;
+            width: 100% !important;
+            min-width: 900px !important;
+            box-sizing: border-box !important;
+        }
+        .tm-stat-card {
             background: #ffffff !important;
             border: 1px solid #e2e8f0 !important;
-            border-radius: 12px !important;
-            padding: 18px 20px !important;
-            margin-bottom: 16px !important;
-            box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03) !important;
+            border-radius: 10px !important;
+            padding: 9px 8px !important;
+            display: flex !important;
+            flex-direction: column !important;
+            justify-content: space-between !important;
+            text-decoration: none !important;
+            color: inherit !important;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02) !important;
+            transition: all 0.15s ease !important;
+            cursor: pointer !important;
+            min-width: 0 !important;
+            overflow: hidden !important;
         }
-        .team-mp-contacts-grid {
-            display: grid !important;
-            grid-template-columns: minmax(0, 1.15fr) minmax(0, 1.4fr) minmax(0, 1.4fr) !important;
-            gap: 16px !important;
-            align-items: stretch !important;
+        .tm-stat-card:hover {
+            transform: translateY(-2px) !important;
+            border-color: #cbd5e1 !important;
+            box-shadow: 0 4px 12px rgba(15, 23, 42, 0.06) !important;
         }
-        .tm-mp-col {
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
+        .tm-stat-card.active {
+            border-color: #009ef7 !important;
+            box-shadow: 0 0 0 2px rgba(0, 158, 247, 0.15), 0 2px 6px rgba(0, 158, 247, 0.1) !important;
         }
-        .tm-mp-overview-col {
-            padding-right: 6px;
+        .tm-card-top {
+            display: flex !important;
+            align-items: center !important;
+            gap: 7px !important;
+            min-width: 0 !important;
         }
-        .tm-mp-icon-wrap {
-            width: 44px;
-            height: 44px;
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-shrink: 0;
+        .tm-card-icon {
+            width: 28px !important;
+            height: 28px !important;
+            min-width: 28px !important;
+            border-radius: 7px !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            flex-shrink: 0 !important;
+            font-size: 12px !important;
         }
-        .bg-light-teal { background: #f0fdfa !important; }
-        .text-teal { color: #0d9488 !important; }
-        .bg-light-purple { background: #f5f3ff !important; }
-        .text-purple { color: #7c3aed !important; }
-        .badge-light-purple { background: #f3e8ff; color: #7c3aed !important; }
-        .shadow-xs { box-shadow: 0 1px 2px rgba(15, 23, 42, 0.05); }
+        .tm-card-icon.blue   { background: #eff6ff; color: #2563eb; }
+        .tm-card-icon.indigo { background: #eef2ff; color: #4f46e5; }
+        .tm-card-icon.green  { background: #f0fdf4; color: #16a34a; }
+        .tm-card-icon.purple { background: #faf5ff; color: #9333ea; }
+        .tm-card-icon.amber  { background: #fffbeb; color: #d97706; }
+        .tm-card-icon.pink   { background: #fff1f2; color: #e11d48; }
+        .tm-card-icon.cyan   { background: #ecfeff; color: #0891b2; }
 
-        .tm-mp-col-title {
-            font-size: 14px;
-            font-weight: 700;
-            color: #0f172a;
-            margin: 0 0 4px 0;
-            line-height: 1.3;
+        .tm-card-meta {
+            display: flex !important;
+            flex-direction: column !important;
+            min-width: 0 !important;
+            flex: 1 1 0% !important;
+            overflow: hidden !important;
         }
-        .tm-mp-col-desc {
-            font-size: 11.5px;
-            color: #64748b;
-            margin: 0;
-            line-height: 1.45;
+        .tm-card-num {
+            font-size: 15px !important;
+            font-weight: 700 !important;
+            color: #0f172a !important;
+            line-height: 1.15 !important;
+            font-variant-numeric: tabular-nums !important;
+            font-family: 'Poppins', sans-serif !important;
         }
-        .tm-mp-info-box {
-            margin-top: 14px;
-            background: #eff6ff;
-            border: 1px solid #dbeafe;
-            border-radius: 8px;
-            padding: 10px 12px;
-            display: flex;
-            align-items: flex-start;
-            gap: 8px;
-            font-size: 11px;
-            color: #1e40af;
-            line-height: 1.45;
+        .tm-card-lbl {
+            font-size: 10.5px !important;
+            font-weight: 600 !important;
+            color: #64748b !important;
+            line-height: 1.2 !important;
+            margin-top: 1px !important;
+            white-space: nowrap !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
         }
+        .tm-card-sub {
+            display: flex !important;
+            align-items: center !important;
+            gap: 3px !important;
+            font-size: 8.5px !important;
+            font-weight: 600 !important;
+            margin-top: 5px !important;
+            padding-top: 3px !important;
+            border-top: 1px dashed #f1f5f9 !important;
+            white-space: nowrap !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+        }
+        .tm-card-sub.blue   { color: #2563eb; }
+        .tm-card-sub.indigo { color: #4f46e5; }
+        .tm-card-sub.green  { color: #16a34a; }
+        .tm-card-sub.purple { color: #9333ea; }
+        .tm-card-sub.amber  { color: #d97706; }
+        .tm-card-sub.pink   { color: #e11d48; }
+        .tm-card-sub.cyan   { color: #0891b2; }
 
-        /* 2 Spotlight Communication Boxes (Client & Agency) */
-        .tm-mp-box {
-            border-radius: 10px;
-            padding: 14px;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            transition: all .2s;
-        }
-        .tm-mp-client-box {
-            background: #f0fdf4;
-            border: 1px solid #bbf7d0;
-        }
-        .tm-mp-agency-box {
-            background: #f5f3ff;
-            border: 1px solid #ddd6fe;
-        }
-        .tm-mp-box-head {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 8px;
-            margin-bottom: 4px;
-        }
-        .tm-mp-box-icon {
-            width: 28px;
-            height: 28px;
-            border-radius: 7px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 13px;
-        }
-        .tm-mp-box-title {
-            font-size: 13.5px;
-            font-weight: 700;
-            color: #0f172a;
-        }
-        .tm-mp-box-subtitle {
-            font-size: 11px;
-            color: #64748b;
-            margin-bottom: 12px;
-            line-height: 1.4;
-        }
-        .tm-mp-profile-box {
-            background: #ffffff;
-            border: 1px solid rgba(0,0,0,0.06);
-            border-radius: 8px;
-            padding: 10px 12px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-        .tm-mp-avatar {
-            width: 38px;
-            height: 38px;
-            border-radius: 8px;
-            background: #0f172a;
-            color: #ffffff;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 700;
-            font-size: 15px;
-            flex-shrink: 0;
-            overflow: hidden;
-        }
-        .tm-mp-profile-details {
-            flex-grow: 1;
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
-            gap: 1px;
-        }
-        .tm-mp-profile-name {
-            font-size: 13px;
-            font-weight: 700;
-            color: #0f172a;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-        .tm-mp-profile-role {
-            font-size: 11px;
-            color: #64748b;
-        }
-        .tm-mp-profile-contact {
-            font-size: 10.5px;
-            color: #475569;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            margin-top: 1px;
-        }
-        .btn-mp-change {
-            background: #ffffff;
-            border: 1px solid #cbd5e1;
-            border-radius: 6px;
-            padding: 5px 11px;
-            font-size: 11px;
-            font-weight: 600;
-            color: #0f172a;
-            cursor: pointer;
-            transition: all .15s;
-            white-space: nowrap;
-            flex-shrink: 0;
-        }
-        .btn-mp-change:hover {
-            background: #f8fafc;
-            border-color: #94a3b8;
-        }
-
-        /* Underlined Modern Sub-Tabs */
-        .tm-nav-tabs {
-            display: flex;
-            align-items: center;
-            gap: 18px;
-            border-bottom: 2px solid transparent;
-        }
-        .tm-nav-tab {
-            background: transparent;
-            border: none;
-            padding: 6px 4px 10px 4px;
-            font-size: 13px;
-            font-weight: 600;
-            color: #64748b;
-            cursor: pointer;
-            position: relative;
-            transition: all .15s;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            outline: none;
-        }
-        .tm-nav-tab:hover {
-            color: #0f172a;
-        }
-        .tm-nav-tab.active {
-            color: #009ef7;
-        }
-        .tm-nav-tab.active::after {
-            content: '';
-            position: absolute;
-            left: 0;
-            right: 0;
-            bottom: -2px;
-            height: 2.5px;
-            background: #009ef7;
-            border-radius: 2px;
-        }
-        .tm-nav-count {
-            font-size: 11.5px;
-            color: inherit;
-            font-weight: 700;
-        }
-
-        /* Filter & Search Bar */
+        /* =========================================================================
+           TIER 2.5: SEARCH & FILTER BAR (Pure White Card Standard)
+           ========================================================================= */
         .team-filter-bar {
             background: #ffffff;
             border: 1px solid #e2e8f0;
             border-radius: 10px;
-            padding: 8px 16px;
+            padding: 8px 14px;
             display: flex;
             align-items: center;
             justify-content: space-between;
-            gap: 14px;
+            gap: 16px;
             box-shadow: 0 1px 3px rgba(15, 23, 42, 0.02);
             flex-wrap: wrap;
+            margin-bottom: 12px;
         }
         .team-filter-search {
             position: relative;
-            flex-grow: 1;
-            max-width: 380px;
+            flex: 1;
+            min-width: 260px;
+            max-width: 460px;
             display: flex;
             align-items: center;
         }
-        .team-filter-search i {
+        .team-filter-search i.fa-magnifying-glass {
             position: absolute;
             left: 10px;
-            font-size: 12px;
+            font-size: 13px;
             color: #94a3b8;
+            pointer-events: none;
         }
         .team-filter-search .team-search-input {
             width: 100%;
-            height: 32px;
-            padding: 0 30px 0 30px;
+            height: 34px;
+            padding: 0 32px 0 32px;
             border: 1px solid transparent;
             border-radius: 6px;
-            font-size: 12px;
+            font-size: 12.5px;
             font-family: 'Poppins', sans-serif;
             color: #0f172a;
             outline: none;
             transition: all .15s;
-            background: transparent;
+            background: #f8fafc;
         }
         .team-filter-search .team-search-input:focus {
             background: #ffffff;
             border-color: #009ef7;
-            box-shadow: 0 0 0 2px rgba(0, 158, 247, 0.1);
+            box-shadow: 0 0 0 2px rgba(0, 158, 247, 0.12);
         }
-
-        /* Roster Header Legend */
-        .team-roster-legend {
-            display: grid;
-            grid-template-columns: minmax(0, 2.2fr) minmax(0, 1fr) minmax(0, 1.8fr) minmax(0, 1.2fr) minmax(0, 2.4fr) minmax(0, 1.1fr) minmax(0, 1fr) 36px;
-            gap: 12px;
-            padding: 6px 18px;
-            font-size: 11px;
-            font-weight: 700;
-            color: #64748b;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-            background: #ffffff !important;
-            border: 1px solid #e2e8f0 !important;
-            border-radius: 10px !important;
-            padding: 8px 12px !important;
-            margin-bottom: 12px !important;
-            box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03) !important;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            flex-wrap: wrap;
-            gap: 12px;
-        }
-        .team-tabs-group {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            flex-wrap: wrap;
-        }
-        .team-tab-btn {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            background: #ffffff !important;
-            border: 1px solid #e2e8f0 !important;
-            border-radius: 8px !important;
-            padding: 6px 14px !important;
-            font-size: 11.5px !important;
-            font-weight: 600 !important;
-            color: #475569 !important;
+        .team-search-clear {
+            position: absolute;
+            right: 8px;
+            width: 20px;
+            height: 20px;
+            border: none;
+            background: transparent;
+            color: #94a3b8;
+            font-size: 13px;
             cursor: pointer;
-            transition: all .15s ease;
-        }
-        .team-tab-btn:hover {
-            background: #f8fafc !important;
-            border-color: #cbd5e1 !important;
-            color: #0f172a !important;
-        }
-        .team-tab-btn.active {
-            background: #009ef7 !important;
-            border-color: #009ef7 !important;
-            color: #ffffff !important;
-            box-shadow: 0 2px 4px rgba(0, 158, 247, 0.2) !important;
-        }
-        .team-tab-badge {
-            min-width: 18px;
-            height: 18px;
-            padding: 0 5px;
-            border-radius: 10px;
-            font-size: 10.5px;
-            font-weight: 700;
-            display: inline-flex;
+            display: none;
             align-items: center;
             justify-content: center;
-            background: #f1f5f9;
-            color: #334155;
-            font-variant-numeric: tabular-nums;
+            border-radius: 50%;
         }
-        .team-tab-btn.active .team-tab-badge {
-            background: rgba(255, 255, 255, 0.28) !important;
-            color: #ffffff !important;
-        }
-        .team-tabs-right {
+        .team-search-clear:hover { background: #e2e8f0; color: #0f172a; }
+
+        .team-filter-controls {
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 14px;
+            flex-wrap: wrap;
+        }
+        .team-filter-group {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .team-filter-label {
+            font-size: 12px;
+            font-weight: 600;
+            color: #64748b;
+            white-space: nowrap;
+            display: flex;
+            align-items: center;
+            gap: 4px;
         }
         .team-select-control {
-            height: 32px;
+            height: 34px;
             border: 1px solid #e2e8f0;
-            border-radius: 8px;
-            background: #fff;
-            font-size: 11.5px;
+            border-radius: 7px;
+            background: #ffffff;
+            font-size: 12px;
             font-weight: 600;
             font-family: 'Poppins', sans-serif;
-            color: #334155;
+            color: #1e293b;
             padding: 0 10px;
             outline: none;
             cursor: pointer;
+            transition: all .15s;
         }
         .team-select-control:focus {
             border-color: #009ef7;
         }
 
         /* =========================================================================
-           Tier 3: Primary Card Stream & Discrete Sub-Cards
+           TIER 3: ROSTER COLUMN LEGEND & CARD STREAM (8 Discrete Columns Aligned)
            ========================================================================= */
+        .team-roster-wrap {
+            width: 100%;
+            overflow-x: auto;
+            padding-bottom: 10px;
+        }
+        .team-roster-inner {
+            min-width: 1020px;
+        }
+
+        /* Mathematical 7-Column Grid Definition (Shared by Legend & Cards) */
+        .team-roster-legend,
+        .team-card-grid {
+            display: grid !important;
+            grid-template-columns: minmax(210px, 2.2fr) minmax(85px, 0.9fr) minmax(185px, 1.8fr) minmax(115px, 1.1fr) minmax(220px, 2.2fr) minmax(95px, 1fr) minmax(105px, 1fr) !important;
+            gap: 12px !important;
+            align-items: center !important;
+            box-sizing: border-box !important;
+        }
+
+        .team-roster-legend {
+            border: 1px solid transparent;
+            padding: 6px 18px !important;
+            margin-bottom: 8px !important;
+            font-size: 11px;
+            font-weight: 700;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .tm-owner-tag {
+            display: inline-flex;
+            align-items: center;
+            font-size: 11px;
+            font-weight: 600;
+            color: #b45309;
+            margin: 1px 0;
+            line-height: 1.2;
+            white-space: nowrap;
+        }
+
         .team-cards-container {
             display: flex;
             flex-direction: column;
-            gap: 10px;
+            gap: 8px;
         }
         .team-card {
             background: #ffffff !important;
@@ -597,340 +493,371 @@
             box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03) !important;
             transition: all .2s cubic-bezier(.4, 0, .2, 1);
             overflow: hidden;
+            box-sizing: border-box;
         }
         .team-card:hover {
             border-color: #cbd5e1 !important;
-            box-shadow: 0 4px 14px rgba(15, 23, 42, 0.06) !important;
+            box-shadow: 0 4px 12px rgba(15, 23, 42, 0.06) !important;
         }
         .team-card-grid {
-            display: grid !important;
-            grid-template-columns: minmax(0, 2.3fr) minmax(0, 2.1fr) minmax(0, 1.8fr) minmax(0, 1.1fr) minmax(0, 1.4fr) !important;
-            gap: 10px !important;
-            padding: 12px 16px !important;
-        }
-        .tm-subcard {
-            background: #f8fafc;
-            border: 1px solid #eef2f6;
-            border-radius: 8px;
-            padding: 10px 12px;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-        }
-        .tm-subcard-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 6px;
-            margin-bottom: 8px;
-        }
-        .tm-subcard-label {
-            font-size: 10.5px;
-            font-weight: 700;
-            color: #64748b;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-        .tm-subcard-body {
-            flex: 1;
+            padding: 12px 18px !important;
+            min-height: 64px;
         }
 
-        /* Sub-Card 1: Profile */
-        .team-avatar {
-            width: 42px;
-            height: 42px;
-            border-radius: 9px;
+        /* Discrete Cell Elements */
+        .tm-cell {
+            min-width: 0;
+            overflow: hidden;
+        }
+
+        /* Col 1: Member Identity */
+        .tm-cell-member {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .tm-avatar {
+            width: 38px;
+            height: 38px;
+            border-radius: 8px;
             display: flex;
             align-items: center;
             justify-content: center;
             font-weight: 700;
-            font-size: 15px;
-            overflow: hidden;
+            font-size: 14px;
             flex-shrink: 0;
+            overflow: hidden;
         }
-        .team-avatar img { width: 100%; height: 100%; object-fit: cover; }
-        .team-member-name {
+        .tm-avatar img { width: 100%; height: 100%; object-fit: cover; }
+        .tm-member-name {
             font-size: 13.5px;
             font-weight: 700;
             color: #0f172a;
             line-height: 1.25;
             text-decoration: none;
-        }
-        .team-member-name:hover { color: #009ef7; }
-        .team-member-role {
-            font-size: 11.5px;
-            font-weight: 500;
-            color: #64748b;
-            margin-top: 1px;
-        }
-        .team-member-mail, .team-member-phone {
-            font-size: 11px;
-            color: #475569;
-            margin-top: 2px;
-            display: inline-flex;
-            align-items: center;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
+            display: block;
         }
-        .tm-badge-status {
-            font-size: 10.5px;
-            font-weight: 700;
-            padding: 2px 7px;
-            border-radius: 4px;
-        }
-        .status-active   { background: #dcfce7; color: #15803d; }
-        .status-inactive { background: #fee2e2; color: #b91c1c; }
-        .status-invited  { background: #fef3c7; color: #b45309; }
-
-        /* Sub-Card 2: Representation Role */
-        .badge-rep-pill {
-            font-size: 10.5px;
-            font-weight: 700;
-            padding: 2.5px 8px;
-            border-radius: 5px;
-            display: inline-flex;
-            align-items: center;
-        }
-        .badge-rep-client   { background: #eff6ff; color: #009ef7; border: 1px solid #bfdbfe; }
-        .badge-rep-agency   { background: #ecfdf5; color: #059669; border: 1px solid #a7f3d0; }
-        .badge-rep-dual     { background: #faf5ff; color: #7c3aed; border: 1px solid #e9d5ff; }
-        .badge-rep-standard { background: #f1f5f9; color: #64748b; border: 1px solid #e2e8f0; }
-
-        .team-rep-scope-box {
-            margin-bottom: 8px;
-        }
-        .rep-scope-desc {
-            font-size: 11.5px;
-            line-height: 1.35;
-        }
-        .rep-scope-hint {
-            font-size: 10.5px;
-            color: #64748b;
-            margin-top: 2px;
-        }
-        .team-rep-btn-row {
-            display: flex;
-            gap: 6px;
-            flex-wrap: wrap;
-            margin-top: 4px;
-        }
-        .btn-rep-toggle {
+        .tm-member-name:hover { color: #009ef7; }
+        .tm-member-email {
             font-size: 11px;
-            font-weight: 600;
-            padding: 4px 8px;
-            border-radius: 5px;
-            border: 1px solid #e2e8f0;
-            background: #ffffff;
-            cursor: pointer;
-            transition: all .15s;
-            display: inline-flex;
-            align-items: center;
-            color: #334155;
+            color: #64748b;
+            margin-top: 1px;
             white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: block;
         }
-        .btn-rep-client:hover { background: #eff6ff; color: #009ef7; border-color: #009ef7; }
-        .btn-rep-agency:hover { background: #ecfdf5; color: #059669; border-color: #059669; }
 
-        /* Sub-Card 3: Workload Grid */
-        .tm-workload-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 6px;
-        }
-        .tm-wl-cell {
-            background: #ffffff;
-            border: 1px solid #eef2f6;
-            border-radius: 6px;
-            padding: 5px 8px;
+        /* Col 2: Rank & Score */
+        .tm-cell-rank {
             display: flex;
             flex-direction: column;
+            align-items: flex-start;
+            justify-content: center;
         }
-        .tm-wl-val {
+        .tm-rank-val {
             font-size: 13px;
             font-weight: 700;
             color: #0f172a;
-            font-variant-numeric: tabular-nums;
-        }
-        .tm-wl-lbl {
-            font-size: 10px;
-            font-weight: 500;
-            color: #64748b;
-            margin-top: 1px;
-        }
-        .text-purple { color: #7c3aed !important; }
-        .text-indigo { color: #4f46e5 !important; }
-
-        /* Sub-Card 4: Rank & Score */
-        .tm-rank-val {
-            font-size: 14px;
-            font-weight: 700;
-            color: #0f172a;
+            line-height: 1.2;
+            display: flex;
+            align-items: center;
         }
         .tm-rank-month {
             font-size: 10.5px;
             color: #64748b;
             font-weight: 500;
-            margin-left: 4px;
+            margin-left: 3px;
         }
-        .team-score-link {
-            display: inline-flex;
-            align-items: center;
-            font-size: 11px;
-            font-weight: 600;
-            color: #059669;
-            background: #ecfdf5;
-            border: 1px solid #d1fae5;
-            border-radius: 5px;
-            padding: 3px 8px;
+        .tm-btn-view-score {
+            background: #d1fae5;
+            color: #065f46;
+            border: none;
+            border-radius: 12px;
+            padding: 2px 8px;
+            font-size: 10.5px;
+            font-weight: 700;
             cursor: pointer;
             transition: all .15s;
+            line-height: 1.35;
+            display: inline-flex;
+            align-items: center;
+            margin-top: 3px;
         }
-        .team-score-link:hover { background: #d1fae5; }
+        .tm-btn-view-score:hover {
+            background: #a7f3d0;
+            color: #047857;
+        }
 
-        /* Sub-Card 5: Controls & Role */
-        .team-role-pill {
+        /* Col 3: Workload */
+        .tm-cell-workload {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            gap: 3px;
+        }
+        .tm-wl-row {
             font-size: 11px;
-            font-weight: 600;
-            padding: 3px 9px;
-            border-radius: 6px;
-            display: inline-block;
+            color: #475569;
+            white-space: nowrap;
+            display: flex;
+            align-items: center;
+            line-height: 1.35;
         }
-        .role-admin   { background: #f3e8ff; color: #7e22ce; }
-        .role-lead    { background: #eff6ff; color: #1d4ed8; }
-        .role-default { background: #f1f5f9; color: #475569; }
+        .tm-wl-row i {
+            width: 14px;
+            text-align: center;
+            font-size: 11px;
+            flex-shrink: 0;
+        }
+        .tm-wl-row strong {
+            color: #0f172a;
+            font-weight: 700;
+            font-variant-numeric: tabular-nums;
+            margin-right: 2px;
+        }
 
-        .team-role-edit-btn {
-            width: 24px;
-            height: 24px;
+        /* Col 4: Role & Permissions */
+        .tm-cell-role {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .tm-role-badge {
+            font-size: 11px;
+            font-weight: 700;
+            padding: 3.5px 9px;
             border-radius: 6px;
+            display: inline-flex;
+            align-items: center;
+            white-space: nowrap;
+        }
+        .role-admin   { background: #ede9fe; color: #6d28d9; }
+        .role-lead    { background: #e0f2fe; color: #0284c7; }
+        .role-default { background: #fef3c7; color: #b45309; }
+        .tm-btn-role-edit {
+            width: 22px;
+            height: 22px;
+            border-radius: 5px;
             border: 1px solid #e2e8f0;
-            background: #fff;
-            color: #64748b;
+            background: #ffffff;
+            color: #94a3b8;
             display: inline-flex;
             align-items: center;
             justify-content: center;
             cursor: pointer;
+            font-size: 10px;
             transition: all .15s;
         }
-        .team-role-edit-btn:hover { background: #eff6ff; color: #009ef7; border-color: #009ef7; }
-
-        .team-status-cell { display: flex; align-items: center; gap: 8px; }
-        .team-switch { position: relative; display: inline-block; width: 34px; height: 18px; }
-        .team-switch input { opacity: 0; width: 0; height: 0; }
-        .team-switch .slider {
-            position: absolute; cursor: pointer; inset: 0;
-            background: #cbd5e1; border-radius: 20px; transition: .2s;
+        .tm-btn-role-edit:hover {
+            background: #eff6ff;
+            color: #009ef7;
+            border-color: #009ef7;
         }
-        .team-switch .slider:before {
-            content: ""; position: absolute; height: 12px; width: 12px;
-            left: 3px; bottom: 3px; background: #fff; border-radius: 50%; transition: .2s;
-        }
-        .team-switch input:checked + .slider { background: #10b981; }
-        .team-switch input:checked + .slider:before { transform: translateX(16px); }
-        .team-switch input:disabled + .slider { opacity: .6; cursor: not-allowed; }
-        .team-status-text { font-size: 11.5px; font-weight: 600; }
 
-        .team-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+        /* Col 5: Corporate Communication Purpose */
+        .tm-cell-communication {
+            display: flex;
+            align-items: center;
+            min-width: 0;
+        }
+        .tm-comm-chip {
+            display: inline-flex;
+            align-items: center;
+            font-size: 10px;
+            font-weight: 600;
+            padding: 2.5px 6.5px;
+            border-radius: 5px;
+            line-height: 1.25;
+            white-space: nowrap;
+        }
+        .tm-comm-chip.client      { background: #f0fdf4; color: #16a34a; border: 1px solid #bbf7d0; }
+        .tm-comm-chip.vendor      { background: #faf5ff; color: #9333ea; border: 1px solid #e9d5ff; }
+        .tm-comm-chip.agency      { background: #faf5ff; color: #9333ea; border: 1px solid #e9d5ff; }
+        .tm-comm-chip.recruitment { background: #e6fcf5; color: #059669; border: 1px solid #a7f3d0; }
+        .tm-comm-chip.finance     { background: #fffbeb; color: #d97706; border: 1px solid #fde68a; }
+
+        .tm-btn-edit-comm {
+            width: 20px;
+            height: 20px;
+            border-radius: 4px;
+            border: 1px solid #e2e8f0;
+            background: #ffffff;
+            color: #94a3b8;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 9px;
+            transition: all .15s;
+            padding: 0;
+            flex-shrink: 0;
+        }
+        .tm-btn-edit-comm:hover {
+            background: #eff6ff;
+            color: #009ef7;
+            border-color: #009ef7;
+        }
+
+        .tm-btn-add-comm {
+            font-size: 10.5px;
+            font-weight: 600;
+            padding: 3px 9px;
+            border-radius: 6px;
+            border: 1px dashed #cbd5e1;
+            background: #ffffff;
+            color: #64748b;
+            display: inline-flex;
+            align-items: center;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: all .15s;
+            font-family: inherit;
+        }
+        .tm-btn-add-comm:hover {
+            background: #eff6ff;
+            color: #009ef7;
+            border-color: #009ef7;
+            border-style: solid;
+        }
+
+        .comm-channel-opt:hover {
+            border-color: #009ef7 !important;
+            background: #f8fafc !important;
+        }
+
+        /* Col 6: Status Toggle */
+        .tm-cell-status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .tm-switch {
+            position: relative;
+            display: inline-block;
+            width: 34px;
+            height: 18px;
+            flex-shrink: 0;
+            margin: 0;
+        }
+        .tm-switch input { opacity: 0; width: 0; height: 0; }
+        .tm-slider {
+            position: absolute;
+            cursor: pointer;
+            inset: 0;
+            background: #cbd5e1;
+            border-radius: 20px;
+            transition: .2s;
+        }
+        .tm-slider:before {
+            content: "";
+            position: absolute;
+            height: 12px;
+            width: 12px;
+            left: 3px;
+            bottom: 3px;
+            background: #fff;
+            border-radius: 50%;
+            transition: .2s;
+        }
+        .tm-switch input:checked + .tm-slider { background: #2563eb; }
+        .tm-switch input:checked + .tm-slider:before { transform: translateX(16px); }
+        .tm-switch input:disabled + .tm-slider { opacity: .6; cursor: not-allowed; }
+        .tm-status-text {
+            font-size: 11.5px;
+            font-weight: 700;
+        }
+
+        /* Col 7: Last Active */
+        .tm-cell-lastactive {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 11.5px;
+            color: #475569;
+            font-weight: 500;
+            white-space: nowrap;
+        }
+        .tm-dot { width: 7px; height: 7px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
         .dot-green { background: #10b981; }
         .dot-amber { background: #f59e0b; }
         .dot-gray  { background: #94a3b8; }
 
-        .team-action-btn {
-            width: 28px; height: 28px;
-            border-radius: 6px;
-            border: 1px solid #e2e8f0; background: #fff;
-            color: #64748b;
-            display: inline-flex; align-items: center; justify-content: center;
-            cursor: pointer;
-            transition: all .15s;
-        }
-        .team-action-btn:hover { background: #f8fafc; color: #0f172a; }
-        .team-action-wrap { position: relative; display: inline-block; }
-        .team-action-menu {
-            position: absolute;
-            right: 0;
-            top: 32px;
-            min-width: 200px;
-            background: #fff;
-            border: 1px solid #e2e8f0;
-            border-radius: 8px;
-            box-shadow: 0 8px 24px rgba(15, 23, 42, .08);
-            padding: 6px;
-            z-index: 50;
-            display: none;
-        }
-        .team-action-menu.show { display: block; }
-        .team-action-item {
+        /* Col 8: Row Actions */
+        .tm-cell-actions {
             display: flex;
             align-items: center;
-            font-size: 11.5px;
-            font-weight: 500;
-            color: #334155;
-            padding: 7px 10px;
-            border-radius: 6px;
-            cursor: pointer;
-            text-decoration: none;
-            transition: all .15s;
+            justify-content: center;
         }
-        .team-action-item:hover { background: #f1f5f9; color: #0f172a; }
-
-        /* Bottom Activity Strip */
-        .team-card-bottom {
-            background: #fcfdfd;
-            border-top: 1px solid #f1f5f9;
-            padding: 8px 16px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 12px;
-            flex-wrap: wrap;
-            font-size: 11.5px;
-        }
-        .tm-bottom-left {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            color: #64748b;
-        }
-        .tm-lastactive {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-        }
-        .tm-bullet { color: #cbd5e1; }
-        .tm-root-badge {
-            font-size: 11px;
-            font-weight: 600;
-            color: #b45309;
-        }
-        .tm-bottom-right {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        .tm-agency-share-pill {
-            font-size: 11px;
-            color: #334155;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-        }
-        .tm-inspect-link {
-            color: #009ef7;
-            font-weight: 600;
-            text-decoration: underline;
-            cursor: pointer;
-        }
-        .tm-inspect-link:hover { color: #0077b6; }
-
-        /* Empty state */
+        /* Empty State */
         .team-empty-card {
             background: #fff;
             border: 1px solid #e2e8f0;
             border-radius: 10px;
             padding: 40px 20px;
             text-align: center;
+        }
+
+        /* Pagination Bar */
+        .team-pagination-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 4px 6px 4px;
+            font-size: 12px;
+            color: #64748b;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+        .team-pagination-info {
+            font-size: 12px;
+            color: #64748b;
+            font-weight: 500;
+        }
+        .team-pagination-pages {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .team-page-link {
+            min-width: 30px;
+            height: 30px;
+            padding: 0 6px;
+            border-radius: 6px;
+            border: 1px solid #e2e8f0;
+            background: #ffffff;
+            color: #334155;
+            font-size: 12px;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all .15s;
+            font-family: inherit;
+        }
+        .team-page-link:hover:not(.is-disabled):not(.is-active) {
+            background: #f8fafc;
+            border-color: #cbd5e1;
+            color: #0f172a;
+        }
+        .team-page-link.is-active {
+            background: #009ef7;
+            border-color: #009ef7;
+            color: #ffffff;
+        }
+        .team-page-link.is-disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+            background: #f8fafc;
+        }
+        .team-page-dots {
+            padding: 0 4px;
+            color: #94a3b8;
+            font-size: 12px;
         }
 
         /* Rep Selection Modal Items */
@@ -983,14 +910,57 @@
             color: #64748b;
         }
 
-        /* Responsive */
-        @media (max-width: 1200px) {
-            .team-mp-contacts-grid { grid-template-columns: 1fr !important; }
-            .team-card-grid { grid-template-columns: 1fr 1fr !important; }
-            .team-roster-legend { display: none !important; }
+        /* Responsive Breakpoints & 15.6" Screen Optimization (Strictly 7 Cards on 1 Row) */
+        @media (max-width: 1440px) {
+            .tm-stat-grid {
+                grid-template-columns: repeat(7, minmax(0, 1fr)) !important;
+                gap: 5px !important;
+            }
+            .tm-stat-card {
+                padding: 7px 5px !important;
+            }
+            .tm-card-top {
+                gap: 5px !important;
+            }
+            .tm-card-icon {
+                width: 26px !important;
+                height: 26px !important;
+                min-width: 26px !important;
+                font-size: 11px !important;
+            }
+            .tm-card-num {
+                font-size: 14px !important;
+            }
+            .tm-card-lbl {
+                font-size: 9.5px !important;
+            }
+            .tm-card-sub {
+                font-size: 8px !important;
+            }
         }
-        @media (max-width: 768px) {
-            .team-card-grid { grid-template-columns: 1fr !important; }
+        @media (max-width: 1150px) {
+            .tm-stat-grid {
+                grid-template-columns: repeat(7, minmax(0, 1fr)) !important;
+                gap: 4px !important;
+            }
+            .tm-stat-card {
+                padding: 6px 4px !important;
+            }
+            .tm-card-icon {
+                width: 24px !important;
+                height: 24px !important;
+                min-width: 24px !important;
+                font-size: 10px !important;
+            }
+            .tm-card-num {
+                font-size: 13px !important;
+            }
+            .tm-card-lbl {
+                font-size: 9px !important;
+            }
+            .tm-card-sub {
+                font-size: 7.5px !important;
+            }
         }
 
         /* ========== Invite Drawer ========== */
@@ -1179,6 +1149,458 @@
         @media (max-width: 768px) {
             .team-stats-row { grid-template-columns: 1fr; }
         }
+
+        /* =========================================================================
+           Assign Communication Contacts Right Drawer (Rule 20 Enterprise Standard)
+           ========================================================================= */
+        .comm-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.45);
+            backdrop-filter: blur(2px);
+            z-index: 1040;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity .25s ease;
+        }
+        .comm-overlay.open {
+            opacity: 1;
+            pointer-events: all;
+        }
+        .comm-drawer {
+            position: fixed;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            width: 560px;
+            max-width: 100vw;
+            background: #ffffff;
+            box-shadow: -12px 0 35px -5px rgba(15, 23, 42, 0.15);
+            z-index: 1050;
+            display: flex;
+            flex-direction: column;
+            transform: translateX(100%);
+            transition: transform .3s cubic-bezier(.4, 0, .2, 1);
+            font-family: 'Poppins', sans-serif;
+        }
+        .comm-drawer.open {
+            transform: translateX(0);
+        }
+        .comm-drawer-head {
+            padding: 22px 26px 18px 26px;
+            border-bottom: 1px solid #f1f5f9;
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 12px;
+            flex-shrink: 0;
+        }
+        .comm-drawer-title {
+            font-size: 17px;
+            font-weight: 700;
+            color: #0f172a;
+            margin: 0;
+            line-height: 1.3;
+        }
+        .comm-drawer-subtitle {
+            font-size: 12px;
+            color: #64748b;
+            margin: 4px 0 0 0;
+            line-height: 1.45;
+        }
+        .comm-drawer-close {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            border: 1px solid transparent;
+            background: #f8fafc;
+            color: #64748b;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all .15s;
+            flex-shrink: 0;
+            font-size: 15px;
+        }
+        .comm-drawer-close:hover {
+            background: #e2e8f0;
+            color: #0f172a;
+        }
+        .comm-drawer-body {
+            flex: 1;
+            overflow-y: auto;
+            padding: 22px 26px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        .comm-drawer-body::-webkit-scrollbar {
+            width: 6px;
+        }
+        .comm-drawer-body::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+        .comm-drawer-body::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        /* Target Member Profile Card inside Drawer */
+        .comm-user-card {
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 14px 16px;
+            background: #ffffff;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 14px;
+            flex-wrap: wrap;
+        }
+        .comm-user-card-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            min-width: 0;
+        }
+        .comm-user-avatar {
+            width: 44px;
+            height: 44px;
+            border-radius: 10px;
+            background: #0f172a;
+            color: #ffffff;
+            font-weight: 700;
+            font-size: 17px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            overflow: hidden;
+        }
+        .comm-user-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .comm-user-info {
+            min-width: 0;
+        }
+        .comm-user-name {
+            font-size: 14.5px;
+            font-weight: 700;
+            color: #0f172a;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .comm-role-badge {
+            background: #eff6ff;
+            color: #009ef7;
+            font-size: 11px;
+            font-weight: 600;
+            padding: 2px 8px;
+            border-radius: 6px;
+            border: 1px solid #dbeafe;
+            white-space: nowrap;
+        }
+        .comm-user-contacts {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            margin-top: 4px;
+            font-size: 11.5px;
+            color: #64748b;
+            flex-wrap: wrap;
+        }
+        .comm-user-card-right {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-shrink: 0;
+            flex-wrap: wrap;
+        }
+        .comm-status-pill {
+            background: #ecfdf5;
+            color: #10b981;
+            border: 1px solid #a7f3d0;
+            border-radius: 20px;
+            padding: 3px 10px;
+            font-size: 11px;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .comm-status-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: #10b981;
+        }
+        .comm-last-active-text {
+            font-size: 11.5px;
+            color: #94a3b8;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .comm-last-active-dot {
+            width: 5px;
+            height: 5px;
+            border-radius: 50%;
+            background: #cbd5e1;
+        }
+
+        /* Section Head */
+        .comm-section-title {
+            font-size: 14.5px;
+            font-weight: 700;
+            color: #0f172a;
+        }
+        .comm-section-subtitle {
+            font-size: 11.5px;
+            color: #64748b;
+            margin-top: 2px;
+        }
+        .comm-btn-clear {
+            border: 1px solid #e2e8f0;
+            background: #ffffff;
+            border-radius: 8px;
+            padding: 6px 12px;
+            font-size: 12px;
+            font-weight: 600;
+            color: #334155;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+            transition: all .15s;
+        }
+        .comm-btn-clear:hover {
+            background: #f8fafc;
+            border-color: #cbd5e1;
+            color: #0f172a;
+        }
+
+        /* 4 Channel Cards */
+        .comm-card {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 13px 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 14px;
+            transition: all .2s ease;
+        }
+        .comm-card.is-active {
+            border-color: #93c5fd;
+            background: #f8fbff;
+        }
+        .comm-card-main {
+            display: flex;
+            align-items: center;
+            gap: 13px;
+            min-width: 0;
+        }
+        .comm-card-icon {
+            width: 42px;
+            height: 42px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            flex-shrink: 0;
+        }
+        .comm-card-icon.icon-client { background: #dcfce7; color: #16a34a; }
+        .comm-card-icon.icon-agency { background: #f3e8ff; color: #9333ea; }
+        .comm-card-icon.icon-recruitment { background: #e6fcf5; color: #00b96b; }
+        .comm-card-icon.icon-finance { background: #fff4e6; color: #f59e0b; }
+
+        .comm-card-text {
+            min-width: 0;
+        }
+        .comm-card-title {
+            font-size: 13.5px;
+            font-weight: 700;
+            color: #0f172a;
+            line-height: 1.25;
+        }
+        .comm-card-desc {
+            font-size: 11.5px;
+            color: #64748b;
+            line-height: 1.35;
+            margin-top: 3px;
+        }
+        .comm-card-controls {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-shrink: 0;
+        }
+
+        /* iOS Toggle Switch */
+        .comm-ios-switch {
+            position: relative;
+            display: inline-block;
+            width: 44px;
+            height: 24px;
+            margin: 0;
+            cursor: pointer;
+        }
+        .comm-ios-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+            position: absolute;
+        }
+        .comm-ios-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #cbd5e1;
+            transition: .25s ease;
+            border-radius: 24px;
+        }
+        .comm-ios-slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: .25s ease;
+            border-radius: 50%;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+        }
+        .comm-ios-switch input:checked + .comm-ios-slider {
+            background-color: #009ef7;
+        }
+        .comm-ios-switch input:checked + .comm-ios-slider:before {
+            transform: translateX(20px);
+        }
+
+        /* Priority Dropdown */
+        .comm-prio-select {
+            appearance: none;
+            -webkit-appearance: none;
+            background-color: #ffffff;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='%2364748b'%3E%3Cpath fill-rule='evenodd' d='M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z' clip-rule='evenodd'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 10px center;
+            background-size: 14px 14px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 6px 30px 6px 12px;
+            font-size: 12.5px;
+            font-weight: 500;
+            color: #1e293b;
+            width: 116px;
+            cursor: pointer;
+            transition: all .15s ease;
+        }
+        .comm-prio-select:focus {
+            outline: none;
+            border-color: #009ef7;
+            box-shadow: 0 0 0 3px rgba(0, 158, 247, 0.12);
+        }
+        .comm-prio-select:disabled {
+            background-color: #f8fafc;
+            color: #94a3b8;
+            border-color: #e2e8f0;
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
+        /* Info Alert Box */
+        .comm-info-box {
+            background: #eff6ff;
+            border: 1px solid #bfdbfe;
+            border-radius: 10px;
+            padding: 12px 14px;
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+        }
+        .comm-info-icon {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #009ef7;
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            font-weight: 700;
+            flex-shrink: 0;
+            margin-top: 1px;
+        }
+        .comm-info-text {
+            font-size: 12px;
+            color: #1e40af;
+            line-height: 1.45;
+            font-weight: 400;
+        }
+
+        /* Drawer Footer */
+        .comm-drawer-foot {
+            padding: 16px 26px;
+            border-top: 1px solid #e2e8f0;
+            background: #ffffff;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 12px;
+            flex-shrink: 0;
+        }
+        .comm-btn-cancel {
+            border: 1px solid #e2e8f0;
+            background: #ffffff;
+            color: #475569;
+            font-weight: 600;
+            font-size: 13px;
+            padding: 9px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all .15s ease;
+        }
+        .comm-btn-cancel:hover {
+            background: #f8fafc;
+            color: #1e293b;
+            border-color: #cbd5e1;
+        }
+        .comm-btn-save {
+            background: #009ef7;
+            border: 1px solid #009ef7;
+            color: #ffffff;
+            font-weight: 600;
+            font-size: 13px;
+            padding: 9px 22px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all .15s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            box-shadow: 0 1px 2px rgba(0, 158, 247, 0.2);
+        }
+        .comm-btn-save:hover {
+            background: #008be0;
+            border-color: #008be0;
+        }
+        .comm-btn-save:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+        }
     </style>
 @endpush 
  
@@ -1223,159 +1645,128 @@
                 </div>
 
                 <!-- ============================================================== -->
-                <!-- MARKETPLACE COMMUNICATION CONTACTS (3-Column Executive Card)    -->
+                <!-- TIER 2: 7 STAT CARDS ROW (Card-Based Tabs — Locked in 1 Row)   -->
                 <!-- ============================================================== -->
-                <div class="team-mp-contacts-card mb-4">
-                    <div class="team-mp-contacts-grid">
-                        
-                        <!-- Column 1: Marketplace Communication Contacts Overview -->
-                        <div class="tm-mp-col tm-mp-overview-col">
-                            <div class="d-flex align-items-start gap-3">
-                                <div class="tm-mp-icon-wrap bg-light-teal text-teal">
-                                    <i class="fa-solid fa-bullhorn fs-4"></i>
+                <div class="tm-stat-grid-wrap mb-3">
+                    <div class="tm-stat-grid">
+                        {{-- Card 1: All Members --}}
+                        <a href="javascript:void(0);" onclick="setTeamTab('all', this);" class="tm-stat-card active" data-tab="all">
+                            <div class="tm-card-top">
+                                <div class="tm-card-icon blue">
+                                    <i class="fa-solid fa-users"></i>
                                 </div>
-                                <div>
-                                    <h3 class="tm-mp-col-title">Marketplace Communication Contacts</h3>
-                                    <p class="tm-mp-col-desc">Select team members who will be the default contact for client and agency communication through Jero Marketplace.</p>
+                                <div class="tm-card-meta">
+                                    <div class="tm-card-num" id="span_teamAll">{{ $teamCounts['total'] ?? 0 }}</div>
+                                    <div class="tm-card-lbl" title="All Members">All Members</div>
                                 </div>
                             </div>
-                            <div class="tm-mp-info-box">
-                                <i class="fa-solid fa-circle-info text-primary mt-1"></i>
-                                <span>When your company is discovered through Jero Marketplace Search or a relevant Job Request is initiated, the selected contact person's business contact details will be shared with the client or agency for communication.</span>
+                            <div class="tm-card-sub blue">
+                                <i class="fa-solid fa-arrow-up" style="font-size: 8px;"></i>
+                                <span>+{{ max($teamCounts['total'] ?? 0, 1) }} registered</span>
                             </div>
-                        </div>
+                        </a>
 
-                        <!-- Column 2: Client & Sales Communication -->
-                        <div class="tm-mp-col tm-mp-box tm-mp-client-box">
-                            <div class="tm-mp-box-head">
-                                <div class="d-flex align-items-center gap-2">
-                                    <div class="tm-mp-box-icon text-success bg-white shadow-xs">
-                                        <i class="fa-solid fa-building"></i>
-                                    </div>
-                                    <div class="tm-mp-box-title">Client &amp; Sales Communication</div>
+                        {{-- Card 2: Recruitment Team --}}
+                        <a href="javascript:void(0);" onclick="setTeamTab('recruitment', this);" class="tm-stat-card" data-tab="recruitment">
+                            <div class="tm-card-top">
+                                <div class="tm-card-icon indigo">
+                                    <i class="fa-solid fa-briefcase"></i>
                                 </div>
-                                <span class="badge badge-light-success text-success fw-bold fs-9">
-                                    <i class="fa-solid fa-crown me-1"></i>Default Contact
-                                </span>
-                            </div>
-                            <div class="tm-mp-box-subtitle">
-                                Used for client enquiries, sales communication, profile discovery and client job requests.
-                            </div>
-                            <div class="tm-mp-profile-box" id="spotlightClientRepBox">
-                                @if(!empty($clientRep))
-                                    @php
-                                        $crInit = strtoupper(substr($clientRep['name'] ?? 'C', 0, 1));
-                                    @endphp
-                                    <div class="tm-mp-avatar">
-                                        @if(!empty($clientRep['image']))
-                                            <img src="{{ $clientRep['image'] }}" alt="{{ $clientRep['name'] }}" style="width:100%; height:100%; border-radius:6px; object-fit:cover;">
-                                        @else
-                                            {{ $crInit }}
-                                        @endif
-                                    </div>
-                                    <div class="tm-mp-profile-details">
-                                        <div class="tm-mp-profile-name" id="spotlightClientRepName">{{ $clientRep['name'] }}</div>
-                                        <div class="tm-mp-profile-role" id="spotlightClientRepDesig">{{ $clientRep['designation'] ?? 'Administrator' }}</div>
-                                        <div class="tm-mp-profile-contact">
-                                            <span id="spotlightClientRepEmail"><i class="fa-regular fa-envelope me-1"></i>{{ $clientRep['email'] }}</span>
-                                            @if(!empty($clientRep['mobile']))
-                                                <span id="spotlightClientRepMobile"><i class="fa-solid fa-phone me-1"></i>{{ $clientRep['mobile'] }}</span>
-                                            @endif
-                                        </div>
-                                    </div>
-                                    <button type="button" class="btn-mp-change" onclick="openRepModal('client')" title="Change Client &amp; Sales Contact">
-                                        Change Contact
-                                    </button>
-                                @else
-                                    <div class="d-flex align-items-center justify-content-between w-100 py-1">
-                                        <span class="fs-8 text-muted">No Contact Assigned</span>
-                                        <button type="button" class="btn-mp-change" onclick="openRepModal('client')">Assign Contact</button>
-                                    </div>
-                                @endif
-                            </div>
-                        </div>
-
-                        <!-- Column 3: Agency Communication -->
-                        <div class="tm-mp-col tm-mp-box tm-mp-agency-box">
-                            <div class="tm-mp-box-head">
-                                <div class="d-flex align-items-center gap-2">
-                                    <div class="tm-mp-box-icon text-purple bg-white shadow-xs">
-                                        <i class="fa-solid fa-users"></i>
-                                    </div>
-                                    <div class="tm-mp-box-title">Agency Communication</div>
+                                <div class="tm-card-meta">
+                                    <div class="tm-card-num" id="span_teamRecruitment">{{ $teamCounts['recruitment'] ?? 0 }}</div>
+                                    <div class="tm-card-lbl" title="Recruitment Team">Recruitment Team</div>
                                 </div>
-                                <span class="badge badge-light-purple text-purple fw-bold fs-9">
-                                    <i class="fa-solid fa-crown me-1"></i>Default Contact
-                                </span>
                             </div>
-                            <div class="tm-mp-box-subtitle">
-                                Used for agency enquiries, job requests, candidate submissions and other marketplace communication.
+                            <div class="tm-card-sub indigo">
+                                <i class="fa-solid fa-user-check" style="font-size: 8px;"></i>
+                                <span>Active recruiters</span>
                             </div>
-                            <div class="tm-mp-profile-box" id="spotlightAgencyRepBox">
-                                @if(!empty($agencyRep))
-                                    @php
-                                        $arInit = strtoupper(substr($agencyRep['name'] ?? 'A', 0, 1));
-                                    @endphp
-                                    <div class="tm-mp-avatar">
-                                        @if(!empty($agencyRep['image']))
-                                            <img src="{{ $agencyRep['image'] }}" alt="{{ $agencyRep['name'] }}" style="width:100%; height:100%; border-radius:6px; object-fit:cover;">
-                                        @else
-                                            {{ $arInit }}
-                                        @endif
-                                    </div>
-                                    <div class="tm-mp-profile-details">
-                                        <div class="tm-mp-profile-name" id="spotlightAgencyRepName">{{ $agencyRep['name'] }}</div>
-                                        <div class="tm-mp-profile-role" id="spotlightAgencyRepDesig">{{ $agencyRep['designation'] ?? 'Administrator' }}</div>
-                                        <div class="tm-mp-profile-contact">
-                                            <span id="spotlightAgencyRepEmail"><i class="fa-regular fa-envelope me-1"></i>{{ $agencyRep['email'] }}</span>
-                                            @if(!empty($agencyRep['mobile']))
-                                                <span id="spotlightAgencyRepMobile"><i class="fa-solid fa-phone me-1"></i>{{ $agencyRep['mobile'] }}</span>
-                                            @endif
-                                        </div>
-                                    </div>
-                                    <button type="button" class="btn-mp-change" onclick="openRepModal('agency')" title="Change Agency Contact">
-                                        Change Contact
-                                    </button>
-                                @else
-                                    <div class="d-flex align-items-center justify-content-between w-100 py-1">
-                                        <span class="fs-8 text-muted">No Contact Assigned</span>
-                                        <button type="button" class="btn-mp-change" onclick="openRepModal('agency')">Assign Contact</button>
-                                    </div>
-                                @endif
+                        </a>
+
+                        {{-- Card 3: Client & Sales --}}
+                        <a href="javascript:void(0);" onclick="setTeamTab('client', this);" class="tm-stat-card" data-tab="client">
+                            <div class="tm-card-top">
+                                <div class="tm-card-icon green">
+                                    <i class="fa-solid fa-building"></i>
+                                </div>
+                                <div class="tm-card-meta">
+                                    <div class="tm-card-num" id="span_teamClient">{{ $teamCounts['client'] ?? 0 }}</div>
+                                    <div class="tm-card-lbl" title="Client & Sales">Client &amp; Sales</div>
+                                </div>
                             </div>
-                        </div>
+                            <div class="tm-card-sub green">
+                                <i class="fa-solid fa-handshake" style="font-size: 8px;"></i>
+                                <span>Client contacts</span>
+                            </div>
+                        </a>
 
-                    </div>
-                </div>
+                        {{-- Card 4: Vendor & Agency --}}
+                        <a href="javascript:void(0);" onclick="setTeamTab('vendor', this);" class="tm-stat-card" data-tab="vendor">
+                            <div class="tm-card-top">
+                                <div class="tm-card-icon purple">
+                                    <i class="fa-solid fa-handshake-angle"></i>
+                                </div>
+                                <div class="tm-card-meta">
+                                    <div class="tm-card-num" id="span_teamVendor">{{ $teamCounts['vendor'] ?? 0 }}</div>
+                                    <div class="tm-card-lbl" title="Vendor & Agency">Vendor &amp; Agency</div>
+                                </div>
+                            </div>
+                            <div class="tm-card-sub purple">
+                                <i class="fa-solid fa-store" style="font-size: 8px;"></i>
+                                <span>Agency partners</span>
+                            </div>
+                        </a>
 
-                <!-- ============================================================== -->
-                <!-- TIER 2: SUB-TABS & COMMUNICATION HISTORY ROW                    -->
-                <!-- ============================================================== -->
-                <div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
-                    <div class="tm-nav-tabs">
-                        <button type="button" class="tm-nav-tab active" data-status="all">
-                            <span>All Members</span>
-                            <span class="tm-nav-count" id="tab-count-all">({{ $teamCounts['total'] ?? 0 }})</span>
-                        </button>
-                        <button type="button" class="tm-nav-tab" data-status="active">
-                            <span>Active</span>
-                            <span class="tm-nav-count" id="tab-count-active">({{ $teamCounts['active'] ?? 0 }})</span>
-                        </button>
-                        <button type="button" class="tm-nav-tab" data-status="inactive">
-                            <span>Inactive</span>
-                            <span class="tm-nav-count" id="tab-count-inactive">({{ $teamCounts['inactive'] ?? 0 }})</span>
-                        </button>
-                        <button type="button" class="tm-nav-tab" data-status="invited">
-                            <span>Invited</span>
-                            <span class="tm-nav-count" id="tab-count-invited">({{ $teamCounts['invited'] ?? 0 }})</span>
-                        </button>
-                    </div>
+                        {{-- Card 5: Finance & Billing --}}
+                        <a href="javascript:void(0);" onclick="setTeamTab('finance', this);" class="tm-stat-card" data-tab="finance">
+                            <div class="tm-card-top">
+                                <div class="tm-card-icon amber">
+                                    <i class="fa-solid fa-credit-card"></i>
+                                </div>
+                                <div class="tm-card-meta">
+                                    <div class="tm-card-num" id="span_teamFinance">{{ $teamCounts['finance'] ?? 0 }}</div>
+                                    <div class="tm-card-lbl" title="Finance & Billing">Finance &amp; Billing</div>
+                                </div>
+                            </div>
+                            <div class="tm-card-sub amber">
+                                <i class="fa-solid fa-receipt" style="font-size: 8px;"></i>
+                                <span>Invoices &amp; billing</span>
+                            </div>
+                        </a>
 
-                    <div>
-                        <button type="button" class="btn btn-sm btn-white border border-gray-300 text-gray-800 fw-semibold shadow-xs" onclick="openAgencySharesModal()" title="View job-level communication mapping and history">
-                            <i class="fa-solid fa-clock-rotate-left me-1 text-muted"></i>
-                            <span>Communication History</span>
-                        </button>
+                        {{-- Card 6: Inactive Members --}}
+                        <a href="javascript:void(0);" onclick="setTeamTab('inactive', this);" class="tm-stat-card" data-tab="inactive">
+                            <div class="tm-card-top">
+                                <div class="tm-card-icon pink">
+                                    <i class="fa-solid fa-user-slash"></i>
+                                </div>
+                                <div class="tm-card-meta">
+                                    <div class="tm-card-num" id="span_teamInactive">{{ $teamCounts['inactive'] ?? 0 }}</div>
+                                    <div class="tm-card-lbl" title="Inactive Members">Inactive Members</div>
+                                </div>
+                            </div>
+                            <div class="tm-card-sub pink">
+                                <i class="fa-solid fa-pause" style="font-size: 8px;"></i>
+                                <span>Offboarded/paused</span>
+                            </div>
+                        </a>
+
+                        {{-- Card 7: Pending Invites --}}
+                        <a href="javascript:void(0);" onclick="setTeamTab('invited', this);" class="tm-stat-card" data-tab="invited">
+                            <div class="tm-card-top">
+                                <div class="tm-card-icon cyan">
+                                    <i class="fa-solid fa-envelope-open-text"></i>
+                                </div>
+                                <div class="tm-card-meta">
+                                    <div class="tm-card-num" id="span_teamInvited">{{ $teamCounts['invited'] ?? 0 }}</div>
+                                    <div class="tm-card-lbl" title="Pending Invites">Pending Invites</div>
+                                </div>
+                            </div>
+                            <div class="tm-card-sub cyan">
+                                <i class="fa-solid fa-clock" style="font-size: 8px;"></i>
+                                <span>Awaiting signup</span>
+                            </div>
+                        </a>
                     </div>
                 </div>
 
@@ -1389,52 +1780,48 @@
                         <button type="button" class="team-search-clear" onclick="clearTeamFilters()" title="Clear Search">✕</button>
                     </div>
 
-                    <div class="d-flex align-items-center gap-3">
-                        <div class="d-flex align-items-center gap-2">
-                            <span class="text-muted fs-8 fw-semibold"><i class="fa-solid fa-arrow-down-short-wide me-1"></i>Sort by:</span>
+                    <div class="team-filter-controls">
+                        <!-- Hidden input to maintain JS status filter compatibility -->
+                        <input type="hidden" id="teamStatusFilterDropdown" value="all" />
+
+                        <div class="team-filter-group">
+                            <span class="team-filter-label"><i class="fa-solid fa-arrow-down-short-wide me-1 text-muted"></i>Sort by:</span>
                             <select class="team-select-control" id="sortingfilter" onchange="fetchTeams(1)">
                                 <option value="">Last Active</option>
                                 <option value="1">Newest to Oldest</option>
                                 <option value="2">Oldest to Newest</option>
                             </select>
                         </div>
+                    </div>
+                </div>
 
-                        <div class="d-flex align-items-center gap-2">
-                            <span class="text-muted fs-8 fw-semibold">Status:</span>
-                            <select class="team-select-control" id="teamStatusFilterDropdown" onchange="changeStatusDropdown(this.value)">
-                                <option value="all">All</option>
-                                <option value="active">Active</option>
-                                <option value="inactive">Inactive</option>
-                                <option value="invited">Invited</option>
-                            </select>
+                <!-- ============================================================== -->
+                <!-- TIER 3: ROSTER COLUMN LEGEND & CARD STREAM (7 Columns Aligned) -->
+                <!-- ============================================================== -->
+                <div class="team-roster-wrap">
+                    <div class="team-roster-inner">
+                        <div class="team-roster-legend">
+                            <div>Member</div>
+                            <div>Rank</div>
+                            <div>Workload</div>
+                            <div>Role</div>
+                            <div>Communication Purpose</div>
+                            <div>Status</div>
+                            <div>Last Active</div>
+                        </div>
+
+                        <div class="position-relative">
+                            <div class="loadingMessage loadingMessageteamsListajax" style="display: none; position: absolute; z-index: 20; background: rgba(255,255,255,0.85); inset: 0; padding: 40px; text-align: center; font-weight: 600; color: #009ef7; border-radius: 10px;">
+                                <span class="spinner-border spinner-border-sm me-2"></span> Loading team members...
+                            </div>
+                            
+                            <!-- Dynamic Stream Container Populated via AJAX -->
+                            <div id="teamsListajax"></div>
+                            
+                            <!-- Pagination Bar -->
+                            <div id="paginationTeams" class="mt-2"></div>
                         </div>
                     </div>
-                </div>
-
-                <!-- ============================================================== -->
-                <!-- TIER 3: ROSTER COLUMN LEGEND & CARD STREAM                     -->
-                <!-- ============================================================== -->
-                <div class="team-roster-legend mb-2">
-                    <div>Member</div>
-                    <div>Rank</div>
-                    <div>Workload</div>
-                    <div>Role</div>
-                    <div>Communication</div>
-                    <div>Status</div>
-                    <div>Last Active</div>
-                    <div style="text-align: center;">Actions</div>
-                </div>
-
-                <div class="position-relative">
-                    <div class="loadingMessage loadingMessageteamsListajax" style="display: none; position: absolute; z-index: 20; background: rgba(255,255,255,0.85); inset: 0; padding: 40px; text-align: center; font-weight: 600; color: #009ef7; border-radius: 10px;">
-                        <span class="spinner-border spinner-border-sm me-2"></span> Loading team members...
-                    </div>
-                    
-                    <!-- Dynamic Stream Container Populated via AJAX -->
-                    <div id="teamsListajax"></div>
-                    
-                    <!-- Pagination Bar -->
-                    <div id="paginationTeams" class="mt-3"></div>
                 </div>
 
             </div>
@@ -1659,6 +2046,186 @@
                         </button>
                     </div>
                 </div>
+            </div>
+        </div>
+
+        <!-- ============================================================== -->
+        <!-- ASSIGN COMMUNICATION CONTACTS RIGHT DRAWER (RULE 20 STANDARD)  -->
+        <!-- ============================================================== -->
+        <div class="comm-overlay" id="commOverlay"></div>
+        <div class="comm-drawer" id="commDrawer" role="dialog" aria-modal="true" aria-label="Assign Communication Contacts">
+            <!-- Drawer Header -->
+            <div class="comm-drawer-head">
+                <div>
+                    <h5 class="comm-drawer-title">Assign Communication Contacts</h5>
+                    <p class="comm-drawer-subtitle">Select the communication types this member will be responsible for and set the contact priority for each.</p>
+                </div>
+                <button type="button" class="comm-drawer-close" id="commDrawerClose" onclick="closeAssignCommDrawer()" aria-label="Close">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <!-- Drawer Body -->
+            <div class="comm-drawer-body">
+                <input type="hidden" id="commDrawerUserId" value="" />
+
+                <!-- Member Identity Card -->
+                <div class="comm-user-card">
+                    <div class="comm-user-card-left">
+                        <div class="comm-user-avatar" id="commDrawerAvatar">U</div>
+                        <div class="comm-user-info">
+                            <div class="d-flex align-items-center flex-wrap gap-2">
+                                <span class="comm-user-name" id="commDrawerName">Member Name</span>
+                                <span class="comm-role-badge" id="commDrawerRole">Member</span>
+                            </div>
+                            <div class="comm-user-contacts">
+                                <span id="commDrawerEmailWrap"><i class="fa-regular fa-envelope me-1 text-muted"></i><span id="commDrawerEmail">email@example.com</span></span>
+                                <span id="commDrawerPhoneWrap"><i class="fa-solid fa-phone me-1 text-muted"></i><span id="commDrawerPhone">+91 0000000000</span></span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="comm-user-card-right">
+                        <div class="comm-status-pill" id="commDrawerStatusPill">
+                            <span class="comm-status-dot" id="commDrawerStatusDot"></span>
+                            <span id="commDrawerStatusText">Active</span>
+                        </div>
+                        <div class="comm-last-active-text" id="commDrawerLastActive">
+                            <span class="comm-last-active-dot"></span>
+                            <span id="commDrawerLastActiveText">Last active: Recently</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Section Title & Clear All -->
+                <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+                    <div>
+                        <h6 class="comm-section-title mb-0">Communication Types</h6>
+                        <p class="comm-section-subtitle mb-0">Enable the communication types this member will be responsible for and set the contact priority.</p>
+                    </div>
+                    <button type="button" class="comm-btn-clear" onclick="clearAllCommDrawerRoles()" title="Disable all communication types">
+                        <i class="fa-solid fa-arrows-rotate"></i>
+                        <span>Clear All</span>
+                    </button>
+                </div>
+
+                <!-- 4 Channel Cards -->
+                <div class="d-flex flex-column gap-3" id="commDrawerCardsList">
+                    <!-- Channel 1: Client & Sales -->
+                    <div class="comm-card" id="commCard_client" data-channel="client">
+                        <div class="comm-card-main">
+                            <div class="comm-card-icon icon-client">
+                                <i class="fa-solid fa-users"></i>
+                            </div>
+                            <div class="comm-card-text">
+                                <div class="comm-card-title">Client &amp; Sales</div>
+                                <div class="comm-card-desc">Client enquiries, sales communication, profile discovery and client job requests.</div>
+                            </div>
+                        </div>
+                        <div class="comm-card-controls">
+                            <label class="comm-ios-switch" title="Toggle Client &amp; Sales representation">
+                                <input type="checkbox" class="comm-drawer-toggle" data-channel="client" id="commToggle_client">
+                                <span class="comm-ios-slider"></span>
+                            </label>
+                            <select class="comm-prio-select" data-channel="client" id="commPrio_client" disabled title="Contact Priority">
+                                <option value="Primary" selected>Primary</option>
+                                <option value="Secondary">Secondary</option>
+                                <option value="Backup">Backup</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Channel 2: Agency -->
+                    <div class="comm-card" id="commCard_agency" data-channel="agency">
+                        <div class="comm-card-main">
+                            <div class="comm-card-icon icon-agency">
+                                <i class="fa-solid fa-shapes"></i>
+                            </div>
+                            <div class="comm-card-text">
+                                <div class="comm-card-title">Agency</div>
+                                <div class="comm-card-desc">Agency enquiries, job requests, candidate submissions and marketplace communication.</div>
+                            </div>
+                        </div>
+                        <div class="comm-card-controls">
+                            <label class="comm-ios-switch" title="Toggle Agency representation">
+                                <input type="checkbox" class="comm-drawer-toggle" data-channel="agency" id="commToggle_agency">
+                                <span class="comm-ios-slider"></span>
+                            </label>
+                            <select class="comm-prio-select" data-channel="agency" id="commPrio_agency" disabled title="Contact Priority">
+                                <option value="Primary" selected>Primary</option>
+                                <option value="Secondary">Secondary</option>
+                                <option value="Backup">Backup</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Channel 3: Recruitment / Talent -->
+                    <div class="comm-card" id="commCard_recruitment" data-channel="recruitment">
+                        <div class="comm-card-main">
+                            <div class="comm-card-icon icon-recruitment">
+                                <i class="fa-solid fa-id-card-clip"></i>
+                            </div>
+                            <div class="comm-card-text">
+                                <div class="comm-card-title">Recruitment / Talent</div>
+                                <div class="comm-card-desc">Candidate coordination, interviews, hiring operations and talent related communication.</div>
+                            </div>
+                        </div>
+                        <div class="comm-card-controls">
+                            <label class="comm-ios-switch" title="Toggle Recruitment / Talent representation">
+                                <input type="checkbox" class="comm-drawer-toggle" data-channel="recruitment" id="commToggle_recruitment">
+                                <span class="comm-ios-slider"></span>
+                            </label>
+                            <select class="comm-prio-select" data-channel="recruitment" id="commPrio_recruitment" disabled title="Contact Priority">
+                                <option value="Primary" selected>Primary</option>
+                                <option value="Secondary">Secondary</option>
+                                <option value="Backup">Backup</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Channel 4: Billing & Invoicing -->
+                    <div class="comm-card" id="commCard_finance" data-channel="finance">
+                        <div class="comm-card-main">
+                            <div class="comm-card-icon icon-finance">
+                                <i class="fa-solid fa-file-invoice-dollar"></i>
+                            </div>
+                            <div class="comm-card-text">
+                                <div class="comm-card-title">Billing &amp; Invoicing</div>
+                                <div class="comm-card-desc">Invoices, billing, payment queries and financial transactions.</div>
+                            </div>
+                        </div>
+                        <div class="comm-card-controls">
+                            <label class="comm-ios-switch" title="Toggle Billing &amp; Invoicing representation">
+                                <input type="checkbox" class="comm-drawer-toggle" data-channel="finance" id="commToggle_finance">
+                                <span class="comm-ios-slider"></span>
+                            </label>
+                            <select class="comm-prio-select" data-channel="finance" id="commPrio_finance" disabled title="Contact Priority">
+                                <option value="Primary" selected>Primary</option>
+                                <option value="Secondary">Secondary</option>
+                                <option value="Backup">Backup</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Info Alert Callout -->
+                <div class="comm-info-box">
+                    <div class="comm-info-icon">
+                        <i class="fa-solid fa-info"></i>
+                    </div>
+                    <div class="comm-info-text">
+                        <div>A member can be assigned to multiple communication types.</div>
+                        <div>You can set different priority levels (Primary, Secondary, Backup) for each type.</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Drawer Footer -->
+            <div class="comm-drawer-foot">
+                <button type="button" class="comm-btn-cancel" onclick="closeAssignCommDrawer()">Cancel</button>
+                <button type="button" class="comm-btn-save" id="btnSaveCommRoles" onclick="saveCommunicationRoles()">
+                    <span class="indicator-label">Save Assignments</span>
+                    <span class="indicator-progress d-none"><span class="spinner-border spinner-border-sm align-middle me-2"></span> Saving...</span>
+                </button>
             </div>
         </div>
 
@@ -1935,8 +2502,8 @@
             // Phase 2: Tenant-Scoped IndexedDB Store for Team Listing & Reference Data
             const CURRENT_COMPANY_ID = {{ (int) (auth()->user()->company_id ?? 0) }};
             const CURRENT_USER_ID = {{ (int) (auth()->user()->id ?? 0) }};
-            const TEAM_DB_NAME = 'jero_team_local_store_' + CURRENT_COMPANY_ID;
-            const TEAM_DB_VERSION = 1;
+            const TEAM_DB_NAME = 'jero_team_local_store_v2_' + CURRENT_COMPANY_ID;
+            const TEAM_DB_VERSION = 2;
             const TEAM_CACHE_TTL_MS = 15 * 60 * 1000; // 15 minutes TTL
 
             const JeroTeamLocalStore = (function() {
@@ -2376,7 +2943,7 @@
             function handleClick(currentValue, currentId) {
                 var chkStatus = currentValue.checked;
                 var userId = currentId;
-                var $statusText = $(currentValue).parents('td').find('.status_text');
+                var $statusText = $(currentValue).closest('.team-status-cell, .tm-cell-status, td').find('.status_text');
                 
                 // Optimistic UI update
                 if (chkStatus) {
@@ -3524,6 +4091,14 @@
 						updateTeamSelectedCount();
 
 						if (response.counts) {
+							$('#span_teamAll').text(response.counts.total || 0);
+							$('#span_teamRecruitment').text(response.counts.recruitment || 0);
+							$('#span_teamClient').text(response.counts.client || 0);
+							$('#span_teamVendor').text(response.counts.vendor || 0);
+							$('#span_teamFinance').text(response.counts.finance || 0);
+							$('#span_teamInactive').text(response.counts.inactive || 0);
+							$('#span_teamInvited').text(response.counts.invited || 0);
+
 							$('#stat-total-members').text(response.counts.total);
 							$('#stat-active-members').text(response.counts.active);
 							$('#stat-inactive-members').text(response.counts.inactive);
@@ -3555,21 +4130,237 @@
 				return currentTeamFetchXhr;
 			}
 
-			// Switch status tabs (All / Active / Inactive / Invited / Representatives)
-			$(document).on('click', '.team-tab-btn, .team-tab, .tm-nav-tab', function() {
-				$('.team-tab-btn, .team-tab, .tm-nav-tab').removeClass('active');
-				$(this).addClass('active');
-				teamStatusTab = $(this).data('status');
-				$('#teamStatusFilterDropdown').val(teamStatusTab);
+			function setTeamTab(tab, el) {
+				teamStatusTab = tab;
+				$('.tm-stat-grid .tm-stat-card').removeClass('active');
+				$(el).addClass('active');
+				$('#teamStatusFilterDropdown').val(tab);
 				fetchTeams(1);
-			});
+			}
 
 			function changeStatusDropdown(val) {
 				teamStatusTab = val;
-				$('.tm-nav-tab, .team-tab-btn, .team-tab').removeClass('active');
-				$('.tm-nav-tab[data-status="' + val + '"]').addClass('active');
+				$('.tm-stat-grid .tm-stat-card').removeClass('active');
+				$('.tm-stat-grid .tm-stat-card[data-tab="' + val + '"]').addClass('active');
 				fetchTeams(1);
 			}
+
+			// =========================================================
+			// Assign Communication Contacts Right Drawer Controller
+			// =========================================================
+			function openAssignCommDrawer(trigger) {
+				var user = null;
+				if (typeof trigger === 'object' && trigger !== null) {
+					if (trigger.getAttribute && trigger.getAttribute('data-user')) {
+						try { user = JSON.parse(trigger.getAttribute('data-user')); } catch(e){}
+					} else if (trigger.id) {
+						user = trigger;
+					}
+				}
+
+				if (!user || !user.id) {
+					console.error('Invalid user payload for communication drawer', trigger);
+					return;
+				}
+
+				$('#commDrawerUserId').val(user.id);
+				$('#commDrawerName').text(user.name || 'Member');
+				$('#commDrawerRole').text(user.role || 'Member');
+
+				// Avatar
+				var $avatar = $('#commDrawerAvatar');
+				if (user.image && user.image.length > 5) {
+					$avatar.html('<img src="' + user.image + '" alt="' + (user.name || '') + '">');
+				} else {
+					var initial = user.initial || (user.name ? user.name.charAt(0).toUpperCase() : 'U');
+					$avatar.text(initial);
+				}
+
+				// Email & Phone
+				if (user.email) {
+					$('#commDrawerEmail').text(user.email);
+					$('#commDrawerEmailWrap').show();
+				} else {
+					$('#commDrawerEmailWrap').hide();
+				}
+
+				if (user.phone) {
+					$('#commDrawerPhone').text(user.phone);
+					$('#commDrawerPhoneWrap').show();
+				} else {
+					$('#commDrawerPhoneWrap').hide();
+				}
+
+				// Status & Last Active
+				var statusStr = (user.status || 'active').toLowerCase();
+				if (statusStr === 'active') {
+					$('#commDrawerStatusPill').css({ 'background': '#ecfdf5', 'color': '#10b981', 'border-color': '#a7f3d0' });
+					$('#commDrawerStatusDot').css('background', '#10b981');
+					$('#commDrawerStatusText').text('Active');
+				} else {
+					$('#commDrawerStatusPill').css({ 'background': '#fffbeb', 'color': '#d97706', 'border-color': '#fde68a' });
+					$('#commDrawerStatusDot').css('background', '#f59e0b');
+					$('#commDrawerStatusText').text(statusStr.charAt(0).toUpperCase() + statusStr.slice(1));
+				}
+
+				$('#commDrawerLastActiveText').text(user.last_active ? 'Last active: ' + user.last_active : 'Never logged in');
+
+				// Reset all channel cards, switches, and selects
+				var channels = Array.isArray(user.channels) ? user.channels : [];
+				var prios = (user.priorities && typeof user.priorities === 'object') ? user.priorities : {};
+
+				var availableChannels = ['client', 'agency', 'recruitment', 'finance'];
+				availableChannels.forEach(function(ch) {
+					var isChecked = channels.indexOf(ch) !== -1;
+					if (ch === 'agency' && channels.indexOf('vendor') !== -1) {
+						isChecked = true;
+					}
+
+					var $card = $('#commCard_' + ch);
+					var $toggle = $('#commToggle_' + ch);
+					var $prio = $('#commPrio_' + ch);
+
+					$toggle.prop('checked', isChecked);
+					if (isChecked) {
+						$card.addClass('is-active');
+						$prio.prop('disabled', false);
+						var userPrio = prios[ch] || (ch === 'agency' ? (prios['vendor'] || 'Primary') : 'Primary');
+						$prio.val(userPrio);
+					} else {
+						$card.removeClass('is-active');
+						$prio.prop('disabled', true);
+						$prio.val('Primary');
+					}
+				});
+
+				// Slide open drawer
+				$('#commOverlay').addClass('open');
+				$('#commDrawer').addClass('open');
+				$('body').css('overflow', 'hidden');
+			}
+
+			function closeAssignCommDrawer() {
+				$('#commOverlay').removeClass('open');
+				$('#commDrawer').removeClass('open');
+				$('body').css('overflow', '');
+			}
+
+			function clearAllCommDrawerRoles() {
+				var availableChannels = ['client', 'agency', 'recruitment', 'finance'];
+				availableChannels.forEach(function(ch) {
+					$('#commCard_' + ch).removeClass('is-active');
+					$('#commToggle_' + ch).prop('checked', false);
+					$('#commPrio_' + ch).prop('disabled', true).val('Primary');
+				});
+			}
+
+			// Handle toggle switch change inside drawer
+			$(document).on('change', '.comm-drawer-toggle', function() {
+				var ch = $(this).data('channel');
+				var isChecked = $(this).is(':checked');
+				var $card = $('#commCard_' + ch);
+				var $prio = $('#commPrio_' + ch);
+
+				if (isChecked) {
+					$card.addClass('is-active');
+					$prio.prop('disabled', false);
+				} else {
+					$card.removeClass('is-active');
+					$prio.prop('disabled', true);
+				}
+			});
+
+			// Save Assignments
+			function saveCommunicationRoles() {
+				var userId = $('#commDrawerUserId').val();
+				if (!userId) return;
+
+				var selectedChannels = [];
+				var priorities = {};
+
+				$('.comm-drawer-toggle:checked').each(function() {
+					var ch = $(this).data('channel');
+					selectedChannels.push(ch);
+					if (ch === 'agency') {
+						selectedChannels.push('vendor');
+					}
+					var prioVal = $('#commPrio_' + ch).val() || 'Primary';
+					priorities[ch] = prioVal;
+					if (ch === 'agency') {
+						priorities['vendor'] = prioVal;
+					}
+				});
+
+				var $btn = $('#btnSaveCommRoles');
+				$btn.find('.indicator-label').addClass('d-none');
+				$btn.find('.indicator-progress').removeClass('d-none');
+				$btn.prop('disabled', true);
+
+				$.ajax({
+					url: '{{ route("service_company.team.set_communication_roles") }}',
+					type: 'POST',
+					data: {
+						_token: '{{ csrf_token() }}',
+						user_id: userId,
+						channels: selectedChannels,
+						priorities: priorities
+					},
+					success: function(response) {
+						$btn.find('.indicator-label').removeClass('d-none');
+						$btn.find('.indicator-progress').addClass('d-none');
+						$btn.prop('disabled', false);
+
+						closeAssignCommDrawer();
+
+						// Invalidate IndexedDB cache so fresh state displays instantly
+						if (window.JeroTeamLocalStore) {
+							try { window.JeroTeamLocalStore.clear(); } catch(e){}
+						}
+
+						// Update tab badge counters if returned
+						if (response.counts) {
+							var c = response.counts;
+							if (c.total !== undefined) $('.tm-count-all').text(c.total);
+							if (c.recruitment !== undefined) $('.tm-count-recruitment').text(c.recruitment);
+							if (c.client !== undefined) $('.tm-count-client').text(c.client);
+							if (c.vendor !== undefined) $('.tm-count-agency').text(c.vendor);
+							if (c.finance !== undefined) $('.tm-count-finance').text(c.finance);
+							if (c.inactive !== undefined) $('.tm-count-inactive').text(c.inactive);
+							if (c.invited !== undefined) $('.tm-count-invited').text(c.invited);
+						}
+
+						fetchTeams(page_no);
+
+						if (typeof toastr !== 'undefined') {
+							toastr.success(response.message || 'Communication roles updated successfully.');
+						}
+					},
+					error: function(xhr) {
+						$btn.find('.indicator-label').removeClass('d-none');
+						$btn.find('.indicator-progress').addClass('d-none');
+						$btn.prop('disabled', false);
+
+						var msg = (xhr.responseJSON && xhr.responseJSON.message) ? xhr.responseJSON.message : 'Failed to update communication roles.';
+						if (typeof toastr !== 'undefined') {
+							toastr.error(msg);
+						} else {
+							alert(msg);
+						}
+					}
+				});
+			}
+
+			// Backwards compatibility alias
+			function openAssignCommModal(userId, userName, channels) {
+				openAssignCommDrawer({ id: userId, name: userName, channels: channels || [] });
+			}
+
+			$('#commOverlay').on('click', closeAssignCommDrawer);
+			$(document).on('keydown', function(e) {
+				if (e.key === 'Escape' && $('#commDrawer').hasClass('open')) {
+					closeAssignCommDrawer();
+				}
+			});
 
 			// Dynamic Search with 300ms debounce
 			var teamSearchTimeout = null;
@@ -3615,12 +4406,12 @@
 			function toggleTeamMenu(btn) {
 				var menu = btn.nextElementSibling;
 				var isOpen = menu.classList.contains('show');
-				document.querySelectorAll('.team-action-menu.show').forEach(function(m) { m.classList.remove('show'); });
+				document.querySelectorAll('.tm-action-menu.show, .team-action-menu.show').forEach(function(m) { m.classList.remove('show'); });
 				if (!isOpen) menu.classList.add('show');
 			}
 			$(document).on('click', function(e) {
-				if (!$(e.target).closest('.team-action-wrap').length) {
-					$('.team-action-menu.show').removeClass('show');
+				if (!$(e.target).closest('.tm-action-wrap, .team-action-wrap').length) {
+					$('.tm-action-menu.show, .team-action-menu.show').removeClass('show');
 				}
 			});
 
