@@ -6898,6 +6898,11 @@ use Carbon\Carbon;
                 }
                 window.currentJobStatusInternal = jobStatus;
 
+                // Browser-First Pre-warming: Ensure candidates are hydrated in user RAM
+                if (window.ClientCandidateStore && window.ClientCandidateStore.state === 'IDLE' && typeof window.ClientCandidateStore.init === 'function') {
+                    try { window.ClientCandidateStore.init(currentCompanyId, currentClientId, 'internal'); } catch(e){}
+                }
+
                 if (typeof fetchJobsClient === 'function') {
                     var $jobsContainer = $('#kt_activitiesClient #clientJobsListajax');
                     if ($jobsContainer.length && $jobsContainer.children().length === 0) {
@@ -7456,6 +7461,9 @@ use Carbon\Carbon;
                 }
             });
             this.stageCounts = counts;
+            if (typeof window.recalculateJobsTabPipelines === 'function') {
+                try { window.recalculateJobsTabPipelines('internal'); } catch(e){}
+            }
             return counts;
         },
 
@@ -9463,6 +9471,10 @@ use Carbon\Carbon;
         } else {
             $empty.hide();
         }
+        // Browser-Side Pipeline Calculation & Alignment
+        if (typeof window.recalculateJobsTabPipelines === 'function') {
+            try { window.recalculateJobsTabPipelines('internal'); } catch(e){}
+        }
     }
     window.applyClientJobFilterInternal = applyClientJobFilterInternal;
 
@@ -9519,6 +9531,9 @@ use Carbon\Carbon;
 
                 // Apply initial client-side filter & calculate exact counters
                 applyClientJobFilterInternal(status || window.currentJobStatusInternal || 'all');
+                if (typeof window.recalculateJobsTabPipelines === 'function') {
+                    try { window.recalculateJobsTabPipelines('internal'); } catch(e){}
+                }
             },
             error: function() {
                 $jobsList.html(`

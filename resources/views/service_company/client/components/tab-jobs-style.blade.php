@@ -905,4 +905,199 @@ window.openJobDrawer = window.openJobDrawer || function(jobId, options) {
 window.openJobDetailsDrawer = window.openJobDrawer;
 if (typeof JobStateManager === 'undefined') window.JobStateManager = {};
 window.JobStateManager.openJobDrawer = window.openJobDrawer;
+
+// ==========================================================================
+// Browser-First Pipeline & Formatting Engine (0% Server Load)
+// ==========================================================================
+window.formatGlobalCompensation = window.formatGlobalCompensation || function(minSal, maxSal, currencyCodeOrId) {
+    var symbolMap = {
+        'INR': '₹', '132': '₹', '0': '₹',
+        'USD': '$', '1': '$',
+        'EUR': '€', '2': '€',
+        'GBP': '£', '3': '£',
+        'AED': 'AED',
+        'CAD': 'CA$',
+        'AUD': 'A$',
+        'SGD': 'S$',
+        'JPY': '¥'
+    };
+    var currKey = String(currencyCodeOrId || '132').toUpperCase().trim();
+    var sym = symbolMap[currKey] || (isNaN(currKey) ? currKey : '$');
+
+    function fmtK(num) {
+        num = parseFloat(num) || 0;
+        if (num <= 0) return '0';
+        if (num >= 1000000) {
+            var v = Math.round((num / 1000000) * 10) / 10;
+            return (v % 1 === 0 ? v.toFixed(0) : v.toString()) + 'M';
+        }
+        if (num >= 1000) {
+            var v = Math.round((num / 1000) * 10) / 10;
+            return (v % 1 === 0 ? v.toFixed(0) : v.toString()) + 'K';
+        }
+        return Math.round(num).toString();
+    }
+
+    var minNum = parseFloat(minSal) || 0;
+    var maxNum = parseFloat(maxSal) || 0;
+    var minK = fmtK(minNum);
+    var maxK = fmtK(maxNum);
+
+    if (minNum > 0 && maxNum > 0) {
+        return sym + ' ' + minK + ' – ' + maxK;
+    } else if (minNum > 0) {
+        return sym + ' ' + minK;
+    } else if (maxNum > 0) {
+        return sym + ' ' + maxK;
+    }
+    return sym + ' 0';
+};
+
+window.ClientJobsPipelineEngine = window.ClientJobsPipelineEngine || {
+    recalculate: function(clientType) {
+        var isDirect = (clientType === 'direct')
+            || ($('#kt_activitiesDirectClient').length > 0 && $('#kt_activitiesDirectClient').is(':visible'));
+        var containerSelector = isDirect 
+            ? '#kt_activitiesDirectClient #directclientJobsListajax' 
+            : '#kt_activitiesClient #clientJobsListajax';
+        var $container = $(containerSelector);
+        if (!$container.length) return;
+
+        var $cards = $container.find('.cd-job-card');
+        if (!$cards.length) return;
+
+        var candidates = [];
+        if (isDirect && window.ClientCandidateStoreDirect && Array.isArray(window.ClientCandidateStoreDirect.allCandidates)) {
+            candidates = window.ClientCandidateStoreDirect.allCandidates;
+        } else if (!isDirect && window.ClientCandidateStore && Array.isArray(window.ClientCandidateStore.allCandidates)) {
+            candidates = window.ClientCandidateStore.allCandidates;
+        }
+
+        // 0% Server Load: If candidates are not hydrated yet in browser memory, keep server-rendered projection
+        if (!candidates || candidates.length === 0) {
+            return;
+        }
+
+        $cards.each(function() {
+            var $card = $(this);
+            var jobId = parseInt($card.attr('data-job-id') || $card.data('job-id'), 10);
+            if (!jobId) return;
+
+            // Strict Job-Level Scope: Filter candidates strictly belonging to this job
+            var jobCands = candidates.filter(function(cand) {
+                var cJobId = parseInt(cand.job_id || cand.jobId, 10);
+                return cJobId === jobId;
+            });
+
+            var counts = {
+                1: 0, // SOU
+                2: 0, // SCR
+                3: 0, // EVA
+                4: 0, // NEG
+                5: 0, // OFF
+                6: 0, // JOI
+                7: 0, // REJ
+                8: 0  // INW
+            };
+
+            var totalApps = 0;
+            var totalInterviews = 0;
+            var totalOffers = 0;
+            var totalJoined = 0;
+            var totalSourcing = 0;
+
+            jobCands.forEach(function(cand) {
+                var jSid = parseInt(cand.job_master_status_id, 10);
+                var mSid = parseInt(cand.master_status_id, 10);
+                var sid = (!isNaN(jSid) && jSid > 0) ? jSid : ((!isNaN(mSid) && mSid > 0) ? mSid : 0);
+
+                var isInReview = (sid === 8);
+                if (!isInReview) {
+                    var sName = String(cand.child_status_name || cand.master_status_name || cand.name || '').toLowerCase().trim();
+                    if (sid <= 0 && (sName === 'inreview' || sName === 'in review')) {
+                        isInReview = true;
+                    }
+                }
+
+                // Rule 10: In Review candidates must NOT be included anywhere for Direct Client!
+                if (isDirect && isInReview) {
+                    return; // Dropped client-side
+                }
+
+                if (isInReview) {
+                    counts[8]++;
+                    totalApps++;
+                    return;
+                }
+
+                if (sid === 1) {
+                    counts[1]++;
+                    totalSourcing++;
+                    totalApps++;
+                } else if (sid === 2) {
+                    counts[2]++;
+                    totalApps++;
+                } else if (sid === 3) {
+                    counts[3]++;
+                    totalInterviews++;
+                    totalApps++;
+                } else if (sid === 4) {
+                    counts[4]++;
+                    totalInterviews++;
+                    totalApps++;
+                } else if (sid === 5) {
+                    counts[5]++;
+                    totalOffers++;
+                    totalApps++;
+                } else if (sid === 6) {
+                    counts[6]++;
+                    totalJoined++;
+                    totalApps++;
+                } else if (sid === 7 || sid === 9) {
+                    counts[7]++;
+                    totalApps++;
+                } else {
+                    var sName = String(cand.child_status_name || cand.master_status_name || cand.name || '').toLowerCase().trim();
+                    if (sName.indexOf('sourc') !== -1) { counts[1]++; totalSourcing++; totalApps++; }
+                    else if (sName.indexOf('screen') !== -1) { counts[2]++; totalApps++; }
+                    else if (sName.indexOf('eval') !== -1 || sName.indexOf('interview') !== -1) { counts[3]++; totalInterviews++; totalApps++; }
+                    else if (sName.indexOf('negot') !== -1) { counts[4]++; totalInterviews++; totalApps++; }
+                    else if (sName.indexOf('offer') !== -1) { counts[5]++; totalOffers++; totalApps++; }
+                    else if (sName.indexOf('join') !== -1 || sName.indexOf('onboard') !== -1) { counts[6]++; totalJoined++; totalApps++; }
+                    else if (sName.indexOf('reject') !== -1) { counts[7]++; totalApps++; }
+                    else { counts[1]++; totalSourcing++; totalApps++; }
+                }
+            });
+
+            // Update 8 track badge elements
+            $card.find('.s-inw').text(counts[8]);
+            $card.find('.s-sou').text(counts[1]);
+            $card.find('.s-scr').text(counts[2]);
+            $card.find('.s-eva').text(counts[3]);
+            $card.find('.s-neg').text(counts[4]);
+            $card.find('.s-off').text(counts[5]);
+            $card.find('.s-joi').text(counts[6]);
+            $card.find('.s-rej').text(counts[7]);
+
+            // Update track summary strip with mandatory 'Applications' naming
+            $card.find('.cd-track-summary').html(
+                `<span>Applications: <strong>${totalApps}</strong></span>` +
+                `<span class="cd-bullet">&bull;</span>` +
+                `<span>Sourcing: <strong>${totalSourcing}</strong></span>` +
+                `<span class="cd-bullet">&bull;</span>` +
+                `<span>Interviews: <strong>${totalInterviews}</strong></span>` +
+                `<span class="cd-bullet">&bull;</span>` +
+                `<span>Offers: <strong>${totalOffers}</strong></span>` +
+                `<span class="cd-bullet">&bull;</span>` +
+                `<span>Joined: <strong>${totalJoined}</strong></span>`
+            );
+        });
+    }
+};
+
+window.recalculateJobsTabPipelines = window.recalculateJobsTabPipelines || function(clientType) {
+    if (window.ClientJobsPipelineEngine && typeof window.ClientJobsPipelineEngine.recalculate === 'function') {
+        window.ClientJobsPipelineEngine.recalculate(clientType);
+    }
+};
 </script>
