@@ -877,7 +877,7 @@ After completing these steps, they will be able to start collaborating with your
 
         $versionKey = 'consultancyviewmore_version_user_'.$userId;
         $version = cache()->get($versionKey, 1);
-        $cacheKeySet = 'consultancyviewmore_v11:'.$userId.':'.$version.':'.md5(json_encode($cachePayload));
+        $cacheKeySet = 'consultancyviewmore_v12:'.$userId.':'.$version.':'.md5(json_encode($cachePayload));
         /* ----------------------------
         ⚡ Check DragonflyDB / Redis first (Quick Win Step 4)
         ----------------------------- */

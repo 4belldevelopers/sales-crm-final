@@ -48,7 +48,28 @@
     $jobsList = $sharedJobs ?? collect([]);
     $candsList = $candidatesList ?? collect([]);
     $interviewsScheduleList = $interviewsList ?? collect([]);
+
+    // Helper: Global Compact Currency Formatter (e.g. ₹500K – 900K or $300K – 500K)
+    $formatCompactSalary = function($val, $cur = '₹') {
+        if ($val === null || $val === '' || !is_numeric($val)) return null;
+        $num = (float)$val;
+        if ($num <= 0) return null;
+        if ($num >= 1000000) {
+            $mVal = $num / 1000000;
+            return $cur . (($mVal == (int)$mVal) ? (int)$mVal : number_format($mVal, 1)) . 'M';
+        }
+        if ($num >= 1000) {
+            $kVal = $num / 1000;
+            return $cur . (($kVal == (int)$kVal) ? (int)$kVal : number_format($kVal, 1)) . 'K';
+        }
+        return $cur . number_format($num);
+    };
 @endphp
+
+@include('service_company.client.components.tab-jobs-style')
+@include('service_company.client.components.tab-offers-joinings-style')
+@include('service_company.client.components.tab-activity-style')
+@include('service_company.client.components.tab-interviews-style')
 
 {{-- Explicit FontAwesome Restoration: Ensure icon glyphs render cleanly across Metronic --}}
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
@@ -1130,111 +1151,830 @@
   border-color: #cbd5e1 !important;
 }
 
-/* ── 8. Contact Cards Grid (Tab 3) ── */
-.cd-contact-grid {
-  display: grid !important;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)) !important;
-  gap: 12px !important;
+/* ── 8. Master Contacts Tab Modern Card + Sub-Card System (Rule 20) ── */
+.cd-contact-toolbar-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 10px 14px;
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03);
+}
+.cd-contact-toolbar-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+.cd-contact-title-avatar {
+  width: 38px;
+  height: 38px;
+  border-radius: 8px;
+  background: #eff6ff;
+  color: #009ef7;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+  flex-shrink: 0;
+  border: 1px solid #bfdbfe;
+}
+.cd-contact-title-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.cd-contact-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0;
+  line-height: 1.25;
+  white-space: nowrap;
+}
+.cd-contact-subtitle {
+  font-size: 11.5px;
+  color: #64748b;
+  margin: 0;
+  line-height: 1.2;
+}
+.cd-contact-count-badge {
+  background: #eff6ff;
+  color: #0284c7;
+  border: 1px solid #bfdbfe;
+  border-radius: 6px;
+  padding: 1px 8px;
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.cd-contact-scope-pill {
+  background: #ecfdf5;
+  color: #065f46;
+  border: 1px solid #a7f3d0;
+  border-radius: 6px;
+  padding: 1px 7px;
+  font-size: 10.5px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.cd-contact-toolbar-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+.cd-contact-search-subcard {
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  background: #f8fafc !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 8px !important;
+  padding: 0 10px 0 12px !important;
+  height: 36px !important;
+  width: 320px !important;
+  max-width: 100% !important;
+  transition: all 0.15s ease-in-out !important;
+  position: relative !important;
+}
+.cd-contact-search-subcard:focus-within {
+  background: #ffffff !important;
+  border-color: #009ef7 !important;
+  box-shadow: 0 0 0 3px rgba(0, 158, 247, 0.12) !important;
+}
+.cd-contact-search-subcard i.fa-search {
+  color: #94a3b8 !important;
+  font-size: 12px !important;
+  flex-shrink: 0 !important;
+}
+.cd-contact-search-subcard input {
+  border: none !important;
+  background: transparent !important;
+  outline: none !important;
+  box-shadow: none !important;
+  font-size: 12px !important;
+  color: #0f172a !important;
+  width: 100% !important;
+  padding: 0 !important;
+  line-height: 36px !important;
+}
+.cd-contact-search-subcard input::placeholder {
+  color: #94a3b8 !important;
+  font-weight: 400 !important;
+}
+.cd-contact-search-clear {
+  border: none !important;
+  background: transparent !important;
+  color: #94a3b8 !important;
+  cursor: pointer !important;
+  padding: 2px 4px !important;
+  font-size: 11px !important;
+}
+.cd-contact-search-clear:hover {
+  color: #ef4444 !important;
+}
+.cd-contact-action-subcard {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+  background: #f8fafc;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #64748b;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  padding: 0;
+}
+.cd-contact-action-subcard:hover {
+  background: #eff6ff;
+  color: #009ef7;
+  border-color: #bfdbfe;
+}
+.cd-contact-tabs-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 6px 8px;
+  margin-bottom: 12px;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.02);
+}
+.cd-contact-tabs-list {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.cd-contact-tabs-list::-webkit-scrollbar { display: none; }
+.cd-contact-subtab {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 7px;
+  border: 1px solid #e2e8f0;
+  background: #f8fafc;
+  color: #475569;
+  font-size: 11.5px;
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.15s ease;
+}
+.cd-contact-subtab:hover {
+  background: #f1f5f9;
+  color: #0f172a;
+  border-color: #cbd5e1;
+}
+.cd-contact-subtab.active {
+  background: #009ef7 !important;
+  color: #ffffff !important;
+  border-color: #009ef7 !important;
+  font-weight: 600 !important;
+  box-shadow: 0 2px 6px rgba(0, 158, 247, 0.28) !important;
+}
+.cd-contact-subtab-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 10px;
+  font-size: 10px;
+  font-weight: 700;
+  background: #e2e8f0;
+  color: #475569;
+}
+.cd-contact-subtab.active .cd-contact-subtab-badge {
+  background: rgba(255, 255, 255, 0.28) !important;
+  color: #ffffff !important;
+}
+.cd-contact-stream-wrap {
+  width: 100%;
+  overflow-x: hidden;
+}
+.cd-contact-stream {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
 }
 .cd-contact-card {
   background: #ffffff !important;
   border: 1px solid #e2e8f0 !important;
   border-radius: 10px !important;
-  padding: 14px !important;
-  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.02) !important;
-  display: flex !important;
-  flex-direction: column !important;
-  justify-content: space-between !important;
-  transition: all 0.15s ease !important;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03) !important;
+  transition: all 0.15s ease-in-out !important;
+  overflow: hidden !important;
+  width: 100% !important;
 }
 .cd-contact-card:hover {
   border-color: #cbd5e1 !important;
-  box-shadow: 0 4px 10px rgba(15, 23, 42, 0.05) !important;
+  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.06) !important;
+  transform: translateY(-1px) !important;
 }
-.cd-contact-top {
+.cd-contact-card-grid {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1.25fr) minmax(0, 1.2fr) minmax(0, 1.05fr) !important;
+  gap: 10px !important;
+  padding: 10px 12px !important;
+  width: 100% !important;
+  align-items: stretch !important;
+}
+.cd-contact-subcard {
+  background: #f8fafc !important;
+  border: 1px solid #edf2f7 !important;
+  border-radius: 8px !important;
+  padding: 8px 10px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: space-between !important;
+  min-width: 0 !important;
+}
+.cd-contact-subcard-hdr {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  margin-bottom: 6px !important;
+  gap: 6px !important;
+  line-height: 1 !important;
+}
+.cd-contact-subcard-label {
+  font-size: 10px !important;
+  font-weight: 700 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.3px !important;
+  color: #64748b !important;
+  white-space: nowrap !important;
+}
+.cd-contact-profile-row {
   display: flex !important;
   align-items: center !important;
   gap: 10px !important;
-  margin-bottom: 10px !important;
+  min-width: 0 !important;
 }
-.cd-contact-avatar {
+.cd-contact-avatar-box {
   width: 40px !important;
   height: 40px !important;
-  border-radius: 8px !important;
-  background: #eff6ff !important;
-  color: #2563eb !important;
-  display: flex !important;
+  min-width: 40px !important;
+  border-radius: 9px !important;
+  display: inline-flex !important;
   align-items: center !important;
   justify-content: center !important;
   font-size: 14px !important;
   font-weight: 700 !important;
+  color: #ffffff !important;
+  background: #009ef7 !important;
+  border: 1px solid #009ef7 !important;
   flex-shrink: 0 !important;
-  border: 1px solid #bfdbfe !important;
+  text-transform: uppercase !important;
 }
-.cd-contact-name { font-size: 13px !important; font-weight: 700 !important; color: #0f172a !important; line-height: 1.25 !important; }
-.cd-contact-role { font-size: 11px !important; color: #64748b !important; margin-top: 2px !important; }
-.cd-contact-details {
+.cd-contact-card-name {
+  font-size: 13.5px !important;
+  font-weight: 700 !important;
+  color: #0f172a !important;
+  line-height: 1.25 !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+.cd-contact-card-desig {
+  font-size: 11.5px !important;
+  font-weight: 500 !important;
+  color: #475569 !important;
+  line-height: 1.2 !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+.cd-badge-primary-spoc {
+  display: inline-flex !important;
+  align-items: center !important;
+  padding: 2px 7px !important;
+  border-radius: 5px !important;
+  font-size: 9.5px !important;
+  font-weight: 700 !important;
+  background: #fef3c7 !important;
+  color: #92400e !important;
+  border: 1px solid #fde68a !important;
+}
+.cd-badge-secondary-contact {
+  display: inline-flex !important;
+  align-items: center !important;
+  padding: 2px 6px !important;
+  border-radius: 5px !important;
+  font-size: 9.5px !important;
+  font-weight: 600 !important;
+  background: #f1f5f9 !important;
+  color: #475569 !important;
+  border: 1px solid #e2e8f0 !important;
+}
+.cd-contact-card-bottom {
+  border-top: 1px solid #f1f5f9;
+  padding: 6px 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #fafafa;
+  font-size: 11px;
+  color: #64748b;
+}
+
+/* ── 9. Master Candidates Tab Modern Card + Sub-Card System (Rule 20) ── */
+.cd-cand-toolbar-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 10px 14px;
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03);
+}
+.cd-cand-toolbar-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1 1 300px;
+}
+.cd-cand-title-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  background: #eff6ff;
+  color: #009ef7;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+  flex-shrink: 0;
+  border: 1px solid #dbeafe;
+}
+.cd-cand-title-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+.cd-cand-title {
+  font-size: 14.5px;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0;
+  line-height: 1.2;
+}
+.cd-cand-subtitle {
+  font-size: 11.5px;
+  color: #64748b;
+  margin: 0;
+  line-height: 1.2;
+}
+.cd-cand-count-badge {
+  background: #eff6ff;
+  color: #1d4ed8;
+  border: 1px solid #dbeafe;
+  border-radius: 6px;
+  padding: 1px 8px;
+  font-size: 11px;
+  font-weight: 600;
+}
+.cd-cand-toolbar-right {
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  flex-shrink: 0 !important;
+}
+.cd-cand-search-subcard {
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  background: #f8fafc !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 8px !important;
+  padding: 0 10px 0 12px !important;
+  height: 36px !important;
+  width: 280px !important;
+  position: relative !important;
+}
+.cd-cand-search-subcard:focus-within {
+  background: #ffffff;
+  border-color: #009ef7;
+  box-shadow: 0 0 0 3px rgba(0, 158, 247, 0.12);
+}
+.cd-cand-search-subcard i.fa-search {
+  color: #94a3b8;
+  font-size: 12px;
+}
+.cd-cand-search-subcard input {
+  border: none !important;
+  background: transparent !important;
+  outline: none !important;
+  box-shadow: none !important;
+  font-size: 12px !important;
+  color: #0f172a !important;
+  width: 100%;
+  padding: 0 !important;
+  line-height: 36px;
+}
+.cd-cand-search-clear {
+  border: none;
+  background: transparent;
+  color: #94a3b8;
+  cursor: pointer;
+  padding: 2px 4px;
+  font-size: 11px;
+}
+.cd-cand-search-clear:hover { color: #ef4444; }
+.cd-cand-action-subcard {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+  background: #f8fafc;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #64748b;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  padding: 0;
+}
+.cd-cand-action-subcard:hover {
+  background: #eff6ff;
+  color: #009ef7;
+  border-color: #bfdbfe;
+}
+.cd-cand-tabs-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 6px 8px;
+  margin-bottom: 12px;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.02);
+}
+.cd-cand-tabs-list {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.cd-cand-tabs-list::-webkit-scrollbar { display: none; }
+.cd-cand-subtab {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 7px;
+  border: 1px solid #e2e8f0;
+  background: #ffffff;
+  color: #475569;
+  font-size: 11.5px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.15s ease;
+}
+.cd-cand-subtab-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 10px;
+  font-size: 10px;
+  font-weight: 700;
+  background: #f1f5f9;
+  color: #475569;
+  border: 1px solid #e2e8f0;
+}
+.cd-cand-subtab.active {
+  background: #009ef7 !important;
+  color: #ffffff !important;
+  border-color: #009ef7 !important;
+  box-shadow: 0 2px 6px rgba(0, 158, 247, 0.28) !important;
+}
+.cd-cand-subtab.active .cd-cand-subtab-badge {
+  background: rgba(255, 255, 255, 0.28) !important;
+  color: #ffffff !important;
+  border-color: transparent !important;
+}
+.cd-cand-stream-wrap {
+  width: 100%;
+  overflow-x: hidden;
+}
+.cd-cand-stream {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+}
+.cd-cand-card {
+  background: #ffffff !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 10px !important;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03) !important;
+  transition: all 0.15s ease-in-out !important;
+  overflow: hidden !important;
+  width: 100% !important;
+}
+.cd-cand-card:hover {
+  border-color: #cbd5e1 !important;
+  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.06) !important;
+  transform: translateY(-1px) !important;
+}
+.cd-cand-card-grid {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1.85fr) minmax(0, 1.35fr) minmax(0, 1.25fr) minmax(0, 2.35fr) minmax(0, 1.55fr) minmax(0, 1.25fr) !important;
+  gap: 8px !important;
+  padding: 10px 12px !important;
+  width: 100% !important;
+  align-items: stretch !important;
+}
+.cd-cand-subcard {
+  background: #f8fafc !important;
+  border: 1px solid #edf2f7 !important;
+  border-radius: 8px !important;
+  padding: 7px 9px !important;
   display: flex !important;
   flex-direction: column !important;
-  gap: 6px !important;
-  font-size: 11.5px !important;
-  color: #475569 !important;
-  padding: 8px 0 !important;
-  border-top: 1px dashed #f1f5f9 !important;
-  border-bottom: 1px dashed #f1f5f9 !important;
+  justify-content: space-between !important;
+  min-width: 0 !important;
 }
-.cd-contact-line {
+.cd-cand-subcard-hdr {
   display: flex !important;
   align-items: center !important;
   justify-content: space-between !important;
-  gap: 6px !important;
+  margin-bottom: 4px !important;
 }
-.cd-contact-channel {
-  display: flex !important;
-  align-items: center !important;
-  gap: 6px !important;
-  min-width: 0 !important;
-  text-decoration: none !important;
-  color: #334155 !important;
-}
-.cd-contact-channel:hover { color: #2563eb !important; }
-.cd-copy-btn {
-  background: none !important;
-  border: none !important;
-  color: #94a3b8 !important;
-  cursor: pointer !important;
-  font-size: 11px !important;
-  padding: 2px 4px !important;
-  border-radius: 4px !important;
-}
-.cd-copy-btn:hover { background: #f1f5f9 !important; color: #0f172a !important; }
-
-/* ── 9. Activity Timeline (Tab 2) ── */
-.cd-activity-timeline {
-  display: flex !important;
-  flex-direction: column !important;
-  gap: 10px !important;
-}
-.cd-act-card {
-  background: #ffffff !important;
-  border: 1px solid #e2e8f0 !important;
-  border-radius: 8px !important;
-  padding: 12px 14px !important;
-  display: flex !important;
-  gap: 12px !important;
-}
-.cd-act-avatar {
-  width: 34px !important;
-  height: 34px !important;
-  border-radius: 7px !important;
-  background: #eff6ff !important;
-  color: #2563eb !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  font-size: 13px !important;
+.cd-cand-subcard-label {
+  font-size: 9.5px !important;
   font-weight: 700 !important;
-  flex-shrink: 0 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.3px !important;
+  color: #64748b !important;
+}
+.cd-cand-card-bottom {
+  border-top: 1px solid #f1f5f9;
+  padding: 6px 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #fafafa;
+  font-size: 11px;
+  color: #64748b;
+}
+
+/* ── 10. Master Performance Tab Modern Dashboard System ── */
+.cd-perf-wrap {
+  padding: 14px 18px 24px;
+  background: #f8fafc;
+}
+.cd-perf-header {
+  background: #ffffff;
+  border: 1px solid #eef2f6;
+  border-radius: 8px;
+  padding: 10px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.cd-perf-header-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.cd-perf-icon-box {
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  background: #ecfdf5;
+  color: #10b981;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px !important;
+  flex-shrink: 0;
+  border: 1px solid #a7f3d0;
+}
+.cd-perf-title {
+  font-size: 14px !important;
+  font-weight: 600 !important;
+  color: #0f172a !important;
+  line-height: 1.2;
+}
+.cd-perf-subtitle {
+  font-size: 11.5px !important;
+  font-weight: 400 !important;
+  color: #64748b !important;
+  margin-top: 2px;
+  line-height: 1.2;
+}
+.cd-perf-header-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.cd-perf-select-wrap {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.cd-perf-select-lbl {
+  font-size: 11.5px !important;
+  font-weight: 400 !important;
+  color: #64748b;
+  white-space: nowrap;
+}
+.cd-perf-select {
+  height: 30px !important;
+  padding: 0 24px 0 10px !important;
+  font-size: 11.5px !important;
+  font-weight: 500 !important;
+  color: #1e293b !important;
+  background-color: #ffffff !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 6px !important;
+  cursor: pointer;
+  outline: none;
+}
+.cd-perf-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 10px;
+  margin-bottom: 12px;
+}
+.cd-perf-kpi-card {
+  background: #ffffff;
+  border: 1px solid #eef2f6;
+  border-radius: 8px;
+  padding: 10px 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+  transition: all 0.15s ease-in-out;
+}
+.cd-perf-kpi-card:hover {
+  transform: translateY(-2px);
+  border-color: #cbd5e1;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+.cd-perf-kpi-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.cd-perf-kpi-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px !important;
+  flex-shrink: 0;
+}
+.cd-perf-kpi-icon-green  { background: #ecfdf5; color: #10b981; border: 1.5px solid #d1fae5; }
+.cd-perf-kpi-icon-blue   { background: #eff6ff; color: #2563eb; border: 1.5px solid #bfdbfe; }
+.cd-perf-kpi-icon-amber  { background: #fffbeb; color: #d97706; border: 1.5px solid #fde68a; }
+.cd-perf-kpi-icon-purple { background: #f5f3ff; color: #7c3aed; border: 1.5px solid #ddd6fe; }
+.cd-perf-kpi-icon-cyan   { background: #f0f9ff; color: #0284c7; border: 1.5px solid #bae6fd; }
+.cd-perf-pill {
+  font-size: 10px !important;
+  font-weight: 500 !important;
+  padding: 2px 7px;
+  border-radius: 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  line-height: 1.2;
+}
+.cd-perf-pill-up { background: #ecfdf5; color: #10b981; }
+.cd-perf-kpi-num {
+  font-size: 14px !important;
+  font-weight: 700 !important;
+  color: #0f172a;
+  line-height: 1.2;
+  margin-top: 6px;
+}
+.cd-perf-kpi-lbl {
+  font-size: 12px !important;
+  font-weight: 500 !important;
+  color: #1e293b;
+  margin-top: 2px;
+  line-height: 1.2;
+}
+.cd-perf-kpi-sub {
+  font-size: 11px !important;
+  font-weight: 400 !important;
+  color: #64748b;
+  margin-top: 3px;
+  line-height: 1.2;
+}
+.cd-perf-row-1 {
+  display: grid;
+  grid-template-columns: 1fr 1.6fr 1.4fr;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+.cd-perf-row-2 {
+  display: grid;
+  grid-template-columns: 1.3fr 1.3fr 1.4fr;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+.cd-perf-card {
+  background: #ffffff;
+  border: 1px solid #eef2f6;
+  border-radius: 8px;
+  padding: 12px 14px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+  display: flex;
+  flex-direction: column;
+}
+.cd-perf-card-hdr {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid #f8fafc;
+  gap: 8px;
+}
+.cd-perf-card-title {
+  font-size: 12.5px !important;
+  font-weight: 600 !important;
+  color: #0f172a;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.cd-funnel-wrap {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex: 1;
+  padding: 4px 0;
+}
+.cd-funnel-svg {
+  width: 92px;
+  height: 132px;
+  flex-shrink: 0;
+}
+.cd-funnel-list {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.cd-funnel-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 11.5px !important;
+  gap: 8px;
+}
+.cd-funnel-stage {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: #475569;
+  font-weight: 400;
+}
+.cd-funnel-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.cd-funnel-val {
+  font-weight: 600 !important;
+  color: #0f172a;
+  min-width: 18px;
+  font-size: 12px !important;
+}
+.cd-funnel-pct {
+  font-weight: 500 !important;
+  color: #64748b;
+  min-width: 32px;
+  text-align: right;
+  font-size: 11.5px !important;
 }
 
 /* ── 10. Empty State Standard ── */
@@ -1833,906 +2573,1484 @@
             </div>
         </div>
 
-        <!-- ══════════════════════════════════════════════════════════════════════
-             TAB 2: ACTIVITY TIMELINE
+                <!-- ══════════════════════════════════════════════════════════════════════
+             TAB 2: ACTIVITY TIMELINE (Master Modern Card + Sub-Card System)
              ══════════════════════════════════════════════════════════════════════ -->
         <div class="tab-pane" id="recent_activity" role="tabpanel">
-            <div class="cd-tab-toolbar-card">
-                <div class="cd-tab-toolbar-left">
-                    <div class="cd-tab-toolbar-icon"><i class="fas fa-clock"></i></div>
-                    <div class="cd-tab-toolbar-title-wrap">
-                        <div class="cd-tab-toolbar-title-row">
-                            <h4 class="cd-tab-toolbar-title">Agency Activity Timeline</h4>
+            <div class="cd-activity-wrapper">
+                <!-- Tier 1: Top Header Toolbar Card -->
+                <div class="cd-activity-header-card">
+                    <div class="cd-activity-header-left">
+                        <div class="cd-activity-header-icon">
+                            <i class="fas fa-clock-rotate-left"></i>
                         </div>
-                        <div class="cd-tab-toolbar-sub">Real-time audit log of candidate submissions, notes, and engagement touchpoints.</div>
-                    </div>
-                </div>
-                <div class="cd-tab-toolbar-right">
-                    <div class="cd-tab-search-subcard">
-                        <i class="fas fa-search"></i>
-                        <input type="text" id="actSearchInput" placeholder="Filter activity notes &amp; events..." autocomplete="off">
-                        <button type="button" class="cd-tab-search-clear" id="actSearchClear"><i class="fas fa-times"></i></button>
-                    </div>
-                    <button type="button" class="btn btn-sm btn-primary fw-bold" onclick="$('#agencyQuickNoteCard').slideToggle(150); $('#agencyQuickNoteInput').focus();">
-                        <i class="fas fa-plus me-1"></i> Add Interaction Note
-                    </button>
-                </div>
-            </div>
-
-            <!-- Quick Note Card (Collapsible) -->
-            <div class="cd-master-subcard" id="agencyQuickNoteCard" style="display:none; margin-bottom: 12px; background: #ffffff;">
-                <div class="d-flex align-items-center justify-content-between mb-2">
-                    <span class="fw-bold text-dark fs-7"><i class="fas fa-pen-to-square text-primary me-1"></i> Log Agency Interaction Note</span>
-                    <button type="button" class="btn btn-sm btn-icon btn-light" onclick="$('#agencyQuickNoteCard').slideUp(150);"><i class="fas fa-times fs-8"></i></button>
-                </div>
-                <textarea id="agencyQuickNoteInput" class="form-control form-control-solid fs-7 mb-2" rows="3" placeholder="Enter details of candidate submissions, client feedback, or recruiter follow-up..."></textarea>
-                <div class="d-flex justify-content-end gap-2">
-                    <button type="button" class="btn btn-sm btn-light" onclick="$('#agencyQuickNoteCard').slideUp(150);">Cancel</button>
-                    <button type="button" class="btn btn-sm btn-primary fw-bold" onclick="saveAgencyQuickNote()">Save Note</button>
-                </div>
-            </div>
-
-            <!-- Tier 2: Filter Tabs -->
-            <div class="cd-tab-filter-card">
-                <button type="button" class="cd-subtab-btn active js-act-filter" data-type="all">All Touchpoints</button>
-                <button type="button" class="cd-subtab-btn js-act-filter" data-type="submission">Submissions</button>
-                <button type="button" class="cd-subtab-btn js-act-filter" data-type="interview">Interviews</button>
-                <button type="button" class="cd-subtab-btn js-act-filter" data-type="notes">Recruiter Notes</button>
-            </div>
-
-            <!-- Activity Stream -->
-            <div class="cd-activity-timeline" id="agencyActivityStream">
-                <div class="cd-act-card" data-type="notes">
-                    <div class="cd-act-avatar">AT</div>
-                    <div style="min-width:0; flex:1;">
-                        <div class="d-flex align-items-center justify-content-between mb-1">
-                            <span class="fw-bold text-dark fs-7">ATS Auto Tracker</span>
-                            <span class="text-muted fs-8">Today, 2:30 PM</span>
-                        </div>
-                        <div class="text-dark fs-7" style="line-height:1.4;">Agency profile verified and candidate pipeline synced with dedicated Elasticsearch projection.</div>
-                    </div>
-                </div>
-
-                @if ($kpiSubmitted > 0)
-                    <div class="cd-act-card" data-type="submission">
-                        <div class="cd-act-avatar" style="background:#faf5ff; color:#9333ea; border:1px solid #e9d5ff;"><i class="fas fa-user-plus"></i></div>
-                        <div style="min-width:0; flex:1;">
-                            <div class="d-flex align-items-center justify-content-between mb-1">
-                                <span class="fw-bold text-dark fs-7">{{ $detailName }} (Agency Partner)</span>
-                                <span class="text-muted fs-8">2 days ago</span>
-                            </div>
-                            <div class="text-dark fs-7" style="line-height:1.4;">Submitted candidate profiles for active open requisitions. Profiles currently under screening.</div>
-                        </div>
-                    </div>
-                @endif
-
-                @if ($kpiActiveJobs > 0)
-                    <div class="cd-act-card" data-type="submission">
-                        <div class="cd-act-avatar" style="background:#ecfdf5; color:#10b981; border:1px solid #a7f3d0;"><i class="fas fa-briefcase"></i></div>
-                        <div style="min-width:0; flex:1;">
-                            <div class="d-flex align-items-center justify-content-between mb-1">
-                                <span class="fw-bold text-dark fs-7">{{ auth()->user()->name ?? 'Account Lead' }}</span>
-                                <span class="text-muted fs-8">5 days ago</span>
-                            </div>
-                            <div class="text-dark fs-7" style="line-height:1.4;">Shared {{ $kpiActiveJobs }} job requisition(s) with expedited 48-hour sourcing turnaround SLA.</div>
-                        </div>
-                    </div>
-                @endif
-            </div>
-        </div>
-
-        <!-- ══════════════════════════════════════════════════════════════════════
-             TAB 3: CONTACTS & REPRESENTATIVES
-             ══════════════════════════════════════════════════════════════════════ -->
-        <div class="tab-pane" id="contacts" role="tabpanel">
-            <div class="cd-tab-toolbar-card">
-                <div class="cd-tab-toolbar-left">
-                    <div class="cd-tab-toolbar-icon"><i class="fas fa-address-book"></i></div>
-                    <div class="cd-tab-toolbar-title-wrap">
-                        <div class="cd-tab-toolbar-title-row">
-                            <h4 class="cd-tab-toolbar-title">Agency Representatives &amp; Contacts</h4>
-                            <span class="cd-tab-count-pill" id="agencyContactCountBadge">{{ count($contactsList) > 0 ? count($contactsList) : 1 }} Contacts</span>
-                        </div>
-                        <div class="cd-tab-toolbar-sub">Direct communication channels with authorized agency account leads and sourcing recruiters.</div>
-                    </div>
-                </div>
-                <div class="cd-tab-toolbar-right">
-                    <div class="cd-tab-search-subcard">
-                        <i class="fas fa-search"></i>
-                        <input type="text" id="contactSearchInput" placeholder="Search representatives by name, role, email..." autocomplete="off">
-                        <button type="button" class="cd-tab-search-clear" id="contactSearchClear"><i class="fas fa-times"></i></button>
-                    </div>
-                    <button type="button" class="btn btn-sm btn-primary fw-bold" onclick="alert('Opening Add Agency Representative dialog...')">
-                        <i class="fas fa-plus me-1"></i> Add Representative
-                    </button>
-                </div>
-            </div>
-
-            <!-- Contacts Cards Grid -->
-            <div class="cd-contact-grid" id="agencyContactsGrid">
-                @if (count($contactsList) > 0)
-                    @foreach ($contactsList as $contact)
-                        @php
-                            $cName = ucwords($contact->name ?? 'Representative');
-                            $cRole = ucwords($contact->display_name ?? ($contact->designation ?? 'Account Manager'));
-                            $cEmail = $contact->email ?? 'partners@agency.com';
-                            $cMobile = $contact->mobile ?? '+91 98765 43210';
-                            $cInitials = strtoupper(substr($cName, 0, 2));
-                        @endphp
-                        <div class="cd-contact-card js-contact-item">
-                            <div>
-                                <div class="cd-contact-top">
-                                    <div class="cd-contact-avatar">{{ $cInitials }}</div>
-                                    <div style="min-width:0;">
-                                        <div class="cd-contact-name text-truncate">{{ $cName }}</div>
-                                        <div class="cd-contact-role text-truncate">{{ $cRole }}</div>
-                                    </div>
-                                </div>
-                                <div class="cd-contact-details">
-                                    <div class="cd-contact-line">
-                                        <a href="mailto:{{ $cEmail }}" class="cd-contact-channel text-truncate" title="Email: {{ $cEmail }}">
-                                            <i class="fas fa-envelope text-muted me-1"></i>
-                                            <span class="text-truncate">{{ $cEmail }}</span>
-                                        </a>
-                                        <button type="button" class="cd-copy-btn" onclick="copyToClipboard('{{ $cEmail }}', this)" title="Copy Email"><i class="fas fa-copy"></i></button>
-                                    </div>
-                                    <div class="cd-contact-line">
-                                        <a href="tel:{{ $cMobile }}" class="cd-contact-channel text-truncate" title="Phone: {{ $cMobile }}">
-                                            <i class="fas fa-phone text-muted me-1"></i>
-                                            <span class="text-truncate">{{ $cMobile }}</span>
-                                        </a>
-                                        <button type="button" class="cd-copy-btn" onclick="copyToClipboard('{{ $cMobile }}', this)" title="Copy Phone"><i class="fas fa-copy"></i></button>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="d-flex align-items-center gap-2 mt-3 pt-2">
-                                <a href="mailto:{{ $cEmail }}" class="btn btn-sm btn-light-primary fw-bold py-1 px-3 fs-8 flex-fill text-center">
-                                    <i class="fas fa-envelope me-1"></i> Email
-                                </a>
-                                <a href="tel:{{ $cMobile }}" class="btn btn-sm btn-light-success fw-bold py-1 px-3 fs-8 flex-fill text-center">
-                                    <i class="fas fa-phone me-1"></i> Call
-                                </a>
-                            </div>
-                        </div>
-                    @endforeach
-                @else
-                    <!-- Fallback Authoritative Representative -->
-                    <div class="cd-contact-card js-contact-item">
                         <div>
-                            <div class="cd-contact-top">
-                                <div class="cd-contact-avatar">{{ $detailInitials }}</div>
-                                <div style="min-width:0;">
-                                    <div class="cd-contact-name text-truncate">{{ $detailName }} Lead</div>
-                                    <div class="cd-contact-role text-truncate">Principal Agency Partner Lead</div>
-                                </div>
+                            <div class="d-flex align-items-center gap-2">
+                                <span class="cd-activity-header-title">Agency Activity &amp; Audit Feed</span>
+                                <span class="cd-activity-health-pill health-active">
+                                    <span class="cd-activity-pulse-dot"></span>
+                                    <span>Active</span>
+                                </span>
+                                <span class="badge badge-light-success text-success fw-bold" style="font-size: 10px; padding: 2px 7px;">
+                                    <i class="fas fa-wifi me-1"></i> Live
+                                </span>
                             </div>
-                            <div class="cd-contact-details">
-                                <div class="cd-contact-line">
-                                    <a href="mailto:partners@agency.com" class="cd-contact-channel text-truncate">
-                                        <i class="fas fa-envelope text-muted me-1"></i>
-                                        <span class="text-truncate">partners@{{ preg_replace('#^https?://(www\.)?#i', '', rtrim($webClean, '/')) ?: 'agency.com' }}</span>
-                                    </a>
-                                    <button type="button" class="cd-copy-btn" onclick="copyToClipboard('partners@agency.com', this)"><i class="fas fa-copy"></i></button>
-                                </div>
-                                <div class="cd-contact-line">
-                                    <a href="tel:+919818000000" class="cd-contact-channel text-truncate">
-                                        <i class="fas fa-phone text-muted me-1"></i>
-                                        <span class="text-truncate">+91 98180 00000</span>
-                                    </a>
-                                    <button type="button" class="cd-copy-btn" onclick="copyToClipboard('+919818000000', this)"><i class="fas fa-copy"></i></button>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="d-flex align-items-center gap-2 mt-3 pt-2">
-                            <a href="mailto:partners@agency.com" class="btn btn-sm btn-light-primary fw-bold py-1 px-3 fs-8 flex-fill text-center"><i class="fas fa-envelope me-1"></i> Email</a>
-                            <a href="tel:+919818000000" class="btn btn-sm btn-light-success fw-bold py-1 px-3 fs-8 flex-fill text-center"><i class="fas fa-phone me-1"></i> Call</a>
+                            <div class="cd-activity-header-sub">Live recruitment timeline &amp; candidate activity for {{ $detailName }}</div>
                         </div>
                     </div>
-                @endif
+                    <div class="cd-activity-header-right">
+                        <div class="cd-activity-search-subcard">
+                            <i class="fas fa-search"></i>
+                            <input type="text" id="agencyActSearchInput" placeholder="Search activity, candidates, jobs..." autocomplete="off">
+                            <button type="button" class="cd-activity-search-clear" id="agencyActSearchClear" style="display:none;" title="Clear search">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                        <select id="agencyActTimeframeSelect" class="form-select form-select-sm" style="width: 120px; height: 34px; font-size: 11.5px; border-radius: 8px; border: 1px solid #e2e8f0; font-weight: 500;">
+                            <option value="all">All Time</option>
+                            <option value="today">Today</option>
+                            <option value="7d">Last 7 Days</option>
+                            <option value="30d">Last 30 Days</option>
+                        </select>
+                        <button type="button" class="cd-activity-btn-refresh" id="agencyActRefreshBtn" title="Refresh Activity Feed">
+                            <i class="fas fa-sync-alt"></i>
+                        </button>
+                        <button type="button" class="btn btn-sm btn-primary fw-bold" onclick="$('#agencyQuickNoteCard').slideToggle(150); $('#agencyQuickNoteInput').focus();" style="border-radius:8px; height:34px; font-size:11.5px;">
+                            <i class="fas fa-plus me-1"></i> Add Interaction Note
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Quick Note Card (Collapsible) -->
+                <div class="cd-master-subcard" id="agencyQuickNoteCard" style="display:none; margin-bottom: 12px; background: #ffffff;">
+                    <div class="d-flex align-items-center justify-content-between mb-2">
+                        <span class="fw-bold text-dark fs-7"><i class="fas fa-pen-to-square text-primary me-1"></i> Log Agency Interaction Note</span>
+                        <button type="button" class="btn btn-sm btn-icon btn-light" onclick="$('#agencyQuickNoteCard').slideUp(150);"><i class="fas fa-times fs-8"></i></button>
+                    </div>
+                    <textarea id="agencyQuickNoteInput" class="form-control form-control-solid fs-7 mb-2" rows="3" placeholder="Enter details of candidate submissions, client feedback, or recruiter follow-up..."></textarea>
+                    <div class="d-flex justify-content-end gap-2">
+                        <button type="button" class="btn btn-sm btn-light" onclick="$('#agencyQuickNoteCard').slideUp(150);">Cancel</button>
+                        <button type="button" class="btn btn-sm btn-primary fw-bold" onclick="saveAgencyQuickNote()">Save Note</button>
+                    </div>
+                </div>
+
+                <!-- Tier 2: Filter Sub-Tabs Card -->
+                @php
+                    $actPipelineCount = count($candsList);
+                    $actInterviewsCount = count($interviewsScheduleList);
+                    $actOffersCount = ($kpiOffers + $kpiJoins);
+                    $actJobsCount = count($jobsList);
+                    $actCrmCount = 2;
+                    $actTotalCount = $actPipelineCount + $actInterviewsCount + $actOffersCount + $actJobsCount + $actCrmCount;
+                @endphp
+                <div class="cd-activity-tabs-card" id="agencyActivityFilterTabs">
+                    <button type="button" class="cd-activity-tab-btn active js-act-filter-btn" data-category="all">
+                        <span>All Events</span>
+                        <span class="cd-activity-tab-badge" id="agencyActCountAll">{{ $actTotalCount }}</span>
+                    </button>
+                    <button type="button" class="cd-activity-tab-btn js-act-filter-btn" data-category="pipeline">
+                        <span>Pipeline</span>
+                        <span class="cd-activity-tab-badge" id="agencyActCountPipeline">{{ $actPipelineCount }}</span>
+                    </button>
+                    <button type="button" class="cd-activity-tab-btn js-act-filter-btn" data-category="interviews">
+                        <span>Interviews</span>
+                        <span class="cd-activity-tab-badge" id="agencyActCountInterviews">{{ $actInterviewsCount }}</span>
+                    </button>
+                    <button type="button" class="cd-activity-tab-btn js-act-filter-btn" data-category="offers">
+                        <span>Offers &amp; Joining</span>
+                        <span class="cd-activity-tab-badge" id="agencyActCountOffers">{{ $actOffersCount }}</span>
+                    </button>
+                    <button type="button" class="cd-activity-tab-btn js-act-filter-btn" data-category="jobs">
+                        <span>Jobs</span>
+                        <span class="cd-activity-tab-badge" id="agencyActCountJobs">{{ $actJobsCount }}</span>
+                    </button>
+                    <button type="button" class="cd-activity-tab-btn js-act-filter-btn" data-category="crm">
+                        <span>CRM &amp; Notes</span>
+                        <span class="cd-activity-tab-badge" id="agencyActCountCrm">{{ $actCrmCount }}</span>
+                    </button>
+                </div>
+
+                <!-- Tier 3: Activity Stream Container -->
+                <div class="cd-activity-stream" id="agencyActivityStream">
+                    <!-- Event 1: ATS System Audit (CRM) -->
+                    <div class="cd-act-card js-agency-act-item" data-category="crm" data-time="today">
+                        <div class="cd-act-avatar" style="background:#eff6ff; color:#2563eb; border:1px solid #bfdbfe;">
+                            <i class="fas fa-shield-halved"></i>
+                        </div>
+                        <div style="min-width:0; flex:1;">
+                            <div class="d-flex align-items-center justify-content-between mb-1 flex-wrap gap-1">
+                                <div class="d-flex align-items-center gap-2">
+                                    <span class="badge badge-light-primary fw-bold fs-9 text-uppercase">CRM AUDIT</span>
+                                    <span class="fw-bold text-dark fs-7">Agency Security &amp; SLA Compliance Verified</span>
+                                </div>
+                                <div class="text-end">
+                                    <div class="fw-bold text-dark fs-8">{{ date('M d, Y') }}</div>
+                                    <div class="text-muted fs-9">{{ date('h:i A') }} IST</div>
+                                </div>
+                            </div>
+                            <div class="d-flex align-items-center justify-content-between mt-2 pt-2 border-top border-light flex-wrap gap-2">
+                                <div class="fs-8 text-muted">
+                                    <span class="text-uppercase fw-semibold" style="font-size:10px;">VERIFIED BY:</span>
+                                    <strong class="text-dark">{{ auth()->user()->name ?? 'System Lead' }}</strong> &bull; <span>4Bell Technology</span>
+                                </div>
+                                <span class="badge badge-light-success text-success fs-9 fw-semibold">#seq-17923401</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Events from Candidates Submitted (Pipeline) -->
+                    @if (count($candsList) > 0)
+                        @foreach ($candsList as $cand)
+                            @php
+                                $candDate = !empty($cand->created_at) ? Carbon::parse($cand->created_at)->format('M d, Y') : date('M d, Y');
+                                $candTime = !empty($cand->created_at) ? Carbon::parse($cand->created_at)->format('h:i A') . ' IST' : '11:38 AM IST';
+                                $candFullName = ucwords($cand->full_name ?? 'Candidate Profile');
+                                $candInitials = strtoupper(substr($candFullName, 0, 2));
+                                $candJobTitle = $cand->job_title ?? 'Active Requisition';
+                                $candJobId = $cand->job_id ?? '1';
+                            @endphp
+                            <div class="cd-act-card js-agency-act-item" data-category="pipeline" data-time="recent">
+                                <div class="cd-act-avatar" style="background:#faf5ff; color:#9333ea; border:1px solid #e9d5ff;">
+                                    {{ $candInitials }}
+                                </div>
+                                <div style="min-width:0; flex:1;">
+                                    <div class="d-flex align-items-center justify-content-between mb-1 flex-wrap gap-1">
+                                        <div>
+                                            <span class="badge badge-light-primary fw-bold fs-9 text-uppercase me-1">CANDIDATE</span>
+                                            <strong class="text-dark fs-7 js-act-searchable">{{ $candFullName }}</strong>
+                                            <span class="text-muted fs-8">&bull; {{ $candJobTitle }} #{{ $candJobId }}</span>
+                                        </div>
+                                        <div class="text-end">
+                                            <div class="fw-bold text-dark fs-8">{{ $candDate }}</div>
+                                            <div class="text-muted fs-9">{{ $candTime }}</div>
+                                        </div>
+                                    </div>
+                                    <div class="text-dark fs-8 mt-1" style="line-height:1.4;">
+                                        Candidate profile submitted for <strong>{{ $candJobTitle }}</strong>. Sourced and vetted by {{ $detailName }}.
+                                    </div>
+                                    <div class="d-flex align-items-center justify-content-between mt-2 pt-2 border-top border-light flex-wrap gap-2">
+                                        <div class="fs-8 text-muted">
+                                            <div style="font-size:10px; font-weight:700; text-transform:uppercase; color:#64748b;">SUBMITTED BY:</div>
+                                            <div class="fw-bold text-dark">{{ $detailName }} Recruiter</div>
+                                            <div class="text-muted fs-9">{{ $detailName }}</div>
+                                        </div>
+                                        <div class="d-flex align-items-center gap-2">
+                                            <span class="badge badge-light-info text-info fs-9 fw-semibold">#seq-cand-{{ $cand->id }}</span>
+                                            <button type="button" class="btn btn-sm btn-light-primary py-1 px-3 fs-9 fw-bold" onclick="triggerDrawerTab('candidate_list', event)">
+                                                <i class="fas fa-eye me-1"></i> View Profile
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        @endforeach
+                    @endif
+
+                    <!-- Events from Shared Jobs (Jobs) -->
+                    @if (count($jobsList) > 0)
+                        @foreach ($jobsList as $job)
+                            @php
+                                $jobDate = !empty($job->shared_at ?? $job->created_at) ? Carbon::parse($job->shared_at ?? $job->created_at)->format('M d, Y') : date('M d, Y');
+                                $jobTime = !empty($job->shared_at ?? $job->created_at) ? Carbon::parse($job->shared_at ?? $job->created_at)->format('h:i A') . ' IST' : '12:00 PM IST';
+                            @endphp
+                            <div class="cd-act-card js-agency-act-item" data-category="jobs" data-time="recent">
+                                <div class="cd-act-avatar" style="background:#ecfdf5; color:#10b981; border:1px solid #a7f3d0;">
+                                    <i class="fas fa-share-nodes"></i>
+                                </div>
+                                <div style="min-width:0; flex:1;">
+                                    <div class="d-flex align-items-center justify-content-between mb-1 flex-wrap gap-1">
+                                        <div>
+                                            <span class="badge badge-light-success fw-bold fs-9 text-uppercase me-1">JOB SHARED</span>
+                                            <strong class="text-dark fs-7 js-act-searchable">{{ $job->title }}</strong>
+                                            <span class="text-muted fs-8">&bull; #{{ $job->id }} &bull; {{ $job->total_positions ?? 1 }} Opening(s)</span>
+                                        </div>
+                                        <div class="text-end">
+                                            <div class="fw-bold text-dark fs-8">{{ $jobDate }}</div>
+                                            <div class="text-muted fs-9">{{ $jobTime }}</div>
+                                        </div>
+                                    </div>
+                                    <div class="text-dark fs-8 mt-1" style="line-height:1.4;">
+                                        Requisition shared with {{ $detailName }} with prioritized 48-hour sourcing SLA.
+                                    </div>
+                                    <div class="d-flex align-items-center justify-content-between mt-2 pt-2 border-top border-light flex-wrap gap-2">
+                                        <div class="fs-8 text-muted">
+                                            <div style="font-size:10px; font-weight:700; text-transform:uppercase; color:#64748b;">SHARED BY:</div>
+                                            <div class="fw-bold text-dark">{{ auth()->user()->name ?? 'Account Lead' }}</div>
+                                            <div class="text-muted fs-9">4Bell Technology</div>
+                                        </div>
+                                        <div class="d-flex align-items-center gap-2">
+                                            <span class="badge badge-light-success text-success fs-9 fw-semibold">#seq-job-{{ $job->id }}</span>
+                                            <button type="button" class="btn btn-sm btn-light-primary py-1 px-3 fs-9 fw-bold" onclick="triggerDrawerTab('requisitions', event)">
+                                                <i class="fas fa-briefcase me-1"></i> View Job
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        @endforeach
+                    @endif
+
+                    <!-- Events from Interviews (Interviews) -->
+                    @if (count($interviewsScheduleList) > 0)
+                        @foreach ($interviewsScheduleList as $it)
+                            @php
+                                $itDate = !empty($it->schedule_date) ? Carbon::parse($it->schedule_date)->format('M d, Y') : date('M d, Y');
+                                $itTime = !empty($it->schedule_time) ? Carbon::parse($it->schedule_time)->format('h:i A') . ' IST' : '02:30 PM IST';
+                            @endphp
+                            <div class="cd-act-card js-agency-act-item" data-category="interviews" data-time="recent">
+                                <div class="cd-act-avatar" style="background:#fffbeb; color:#d97706; border:1px solid #fde68a;">
+                                    <i class="fas fa-calendar-check"></i>
+                                </div>
+                                <div style="min-width:0; flex:1;">
+                                    <div class="d-flex align-items-center justify-content-between mb-1 flex-wrap gap-1">
+                                        <div>
+                                            <span class="badge badge-light-warning fw-bold fs-9 text-uppercase me-1">INTERVIEW</span>
+                                            <strong class="text-dark fs-7 js-act-searchable">{{ $it->candidate_name ?? 'Candidate' }}</strong>
+                                            <span class="text-muted fs-8">&bull; {{ $it->job_title ?? 'Shared Job' }}</span>
+                                        </div>
+                                        <div class="text-end">
+                                            <div class="fw-bold text-dark fs-8">{{ $itDate }}</div>
+                                            <div class="text-muted fs-9">{{ $itTime }}</div>
+                                        </div>
+                                    </div>
+                                    <div class="text-dark fs-8 mt-1" style="line-height:1.4;">
+                                        Technical evaluation round scheduled with candidate submitted by {{ $detailName }}.
+                                    </div>
+                                    <div class="d-flex align-items-center justify-content-between mt-2 pt-2 border-top border-light flex-wrap gap-2">
+                                        <div class="fs-8 text-muted">
+                                            <div style="font-size:10px; font-weight:700; text-transform:uppercase; color:#64748b;">SCHEDULED BY:</div>
+                                            <div class="fw-bold text-dark">{{ auth()->user()->name ?? 'Recruiting Team' }}</div>
+                                            <div class="text-muted fs-9">4Bell Technology</div>
+                                        </div>
+                                        <div class="d-flex align-items-center gap-2">
+                                            <span class="badge badge-light-warning text-warning fs-9 fw-semibold">#seq-it-{{ $it->id }}</span>
+                                            <button type="button" class="btn btn-sm btn-light-warning py-1 px-3 fs-9 fw-bold" onclick="triggerDrawerTab('interview_tracker', event)">
+                                                <i class="fas fa-calendar-days me-1"></i> Interview Details
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        @endforeach
+                    @endif
+
+                    <!-- Event: Recruiter Engagement Note (CRM) -->
+                    <div class="cd-act-card js-agency-act-item" data-category="crm" data-time="today">
+                        <div class="cd-act-avatar" style="background:#f0fdf4; color:#16a34a; border:1px solid #bbf7d0;">
+                            <i class="fas fa-handshake"></i>
+                        </div>
+                        <div style="min-width:0; flex:1;">
+                            <div class="d-flex align-items-center justify-content-between mb-1 flex-wrap gap-1">
+                                <div>
+                                    <span class="badge badge-light-success fw-bold fs-9 text-uppercase me-1">PARTNERSHIP</span>
+                                    <strong class="text-dark fs-7 js-act-searchable">Contract Terms &amp; Commercial SLA Active</strong>
+                                </div>
+                                <div class="text-end">
+                                    <div class="fw-bold text-dark fs-8">{{ date('M d, Y') }}</div>
+                                    <div class="text-muted fs-9">09:00 AM IST</div>
+                                </div>
+                            </div>
+                            <div class="text-dark fs-8 mt-1" style="line-height:1.4;">
+                                Commercial contingency staffing terms active with {{ $placement_fee }} and 90-day free replacement guarantee.
+                            </div>
+                            <div class="d-flex align-items-center justify-content-between mt-2 pt-2 border-top border-light flex-wrap gap-2">
+                                <div class="fs-8 text-muted">
+                                    <div style="font-size:10px; font-weight:700; text-transform:uppercase; color:#64748b;">VERIFIED BY:</div>
+                                    <div class="fw-bold text-dark">{{ auth()->user()->name ?? 'Account Lead' }}</div>
+                                    <div class="text-muted fs-9">4Bell Technology</div>
+                                </div>
+                                <span class="badge badge-light-success text-success fs-9 fw-semibold">#seq-17910001</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
 
         <!-- ══════════════════════════════════════════════════════════════════════
-             TAB 4: JOBS (SHARED REQUISITIONS) — RULE 20 CARD + SUB-CARD STREAM
+             TAB 3: CONTACTS & REPRESENTATIVES (Master Modern Card + Sub-Card)
+             ══════════════════════════════════════════════════════════════════════ -->
+        <div class="tab-pane" id="contacts" role="tabpanel" style="background:#ffffff; min-height: 520px;">
+            <div class="cd-contact-tab-container">
+                <!-- TIER 1: TOP HEADER TOOLBAR CARD -->
+                <div class="cd-contact-toolbar-card">
+                    <div class="cd-contact-toolbar-left">
+                        <div class="cd-contact-title-avatar">
+                            <i class="fas fa-address-book fa-solid"></i>
+                        </div>
+                        <div class="cd-contact-title-wrap">
+                            <div class="d-flex align-items-center gap-2 flex-wrap">
+                                <h4 class="cd-contact-title">Agency Contacts</h4>
+                                <span class="cd-contact-count-badge" id="cdAgencyContactCountBadge">
+                                    <span id="cdAgencyContactCountText">{{ count($contactsList) > 0 ? count($contactsList) : 1 }}</span> Contacts
+                                </span>
+                                <span class="cd-contact-scope-pill">
+                                    <i class="fas fa-handshake text-success me-1"></i> Agency Partner
+                                </span>
+                            </div>
+                            <div class="cd-contact-subtitle">Authoritative directory of key account leads, recruiters, and primary coordinators for {{ $detailName }}.</div>
+                        </div>
+                    </div>
+                    <div class="cd-contact-toolbar-right">
+                        <div class="cd-contact-search-subcard">
+                            <i class="fas fa-search fa-solid"></i>
+                            <input type="text" id="cdAgencyContactSearchInput" placeholder="Search contacts by name, role, email, phone..." autocomplete="off">
+                            <button type="button" class="cd-contact-search-clear" id="cdAgencyContactSearchClear" style="display:none;" title="Clear search">
+                                <i class="fas fa-times fa-solid"></i>
+                            </button>
+                        </div>
+                        <button type="button" id="cdAgencyContactResetBtn" class="cd-contact-action-subcard" title="Reset Filters &amp; Refresh">
+                            <i class="fas fa-sync-alt fa-solid"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- TIER 2: SUB-TABS FILTER CARD -->
+                <div class="cd-contact-tabs-card">
+                    <div class="cd-contact-tabs-list">
+                        <button type="button" class="cd-contact-subtab active js-agency-contact-tab" data-filter="all">
+                            <span>All Contacts</span>
+                            <span class="cd-contact-subtab-badge">{{ count($contactsList) > 0 ? count($contactsList) : 1 }}</span>
+                        </button>
+                        <button type="button" class="cd-contact-subtab js-agency-contact-tab" data-filter="primary">
+                            <span><i class="fas fa-star text-amber-500 me-1" style="font-size:10px;"></i> Primary SPOCs</span>
+                            <span class="cd-contact-subtab-badge">1</span>
+                        </button>
+                        <button type="button" class="cd-contact-subtab js-agency-contact-tab" data-filter="lead">
+                            <span>Leadership &amp; Leads</span>
+                            <span class="cd-contact-subtab-badge">{{ count($contactsList) > 0 ? count($contactsList) : 1 }}</span>
+                        </button>
+                        <button type="button" class="cd-contact-subtab js-agency-contact-tab" data-filter="recruiter">
+                            <span>Recruiters &amp; Coordinators</span>
+                            <span class="cd-contact-subtab-badge">0</span>
+                        </button>
+                        <button type="button" class="cd-contact-subtab js-agency-contact-tab" data-filter="active">
+                            <span>Active</span>
+                            <span class="cd-contact-subtab-badge">{{ count($contactsList) > 0 ? count($contactsList) : 1 }}</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- TIER 3: Modern Contact Cards Stream -->
+                <div class="cd-contact-stream-wrap">
+                    <div class="cd-contact-stream" id="agencyContactCardsStream">
+                        @if (count($contactsList) > 0)
+                            @foreach ($contactsList as $contact)
+                                @php
+                                    $cName = ucwords($contact->name ?? 'Representative');
+                                    $cRole = ucwords($contact->display_name ?? ($contact->designation ?? 'Account Manager'));
+                                    $cEmail = $contact->email ?? 'partners@agency.com';
+                                    $cMobile = $contact->mobile ?? '+91 98765 43210';
+                                    $cInitials = strtoupper(substr($cName, 0, 2));
+                                    $isPrimary = $loop->first;
+                                @endphp
+                                <div class="cd-contact-card js-agency-contact-item" data-role="{{ $isPrimary ? 'primary lead' : 'lead' }}">
+                                    <div class="cd-contact-card-grid">
+                                        <!-- Sub-Card 1: Profile & Identity -->
+                                        <div class="cd-contact-subcard">
+                                            <div class="cd-contact-subcard-hdr">
+                                                <span class="cd-contact-subcard-label">Profile &amp; Role</span>
+                                                @if ($isPrimary)
+                                                    <span class="cd-badge-primary-spoc"><i class="fas fa-star me-1 text-amber-500"></i> Primary SPOC</span>
+                                                @else
+                                                    <span class="cd-badge-secondary-contact">Partner Lead</span>
+                                                @endif
+                                            </div>
+                                            <div class="cd-contact-profile-row">
+                                                <div class="cd-contact-avatar-box">{{ $cInitials }}</div>
+                                                <div class="cd-contact-profile-meta">
+                                                    <span class="cd-contact-card-name js-contact-searchable" title="{{ $cName }}">{{ $cName }}</span>
+                                                    <span class="cd-contact-card-desig" title="{{ $cRole }}">{{ $cRole }}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Sub-Card 2: Communication Channels -->
+                                        <div class="cd-contact-subcard">
+                                            <div class="cd-contact-subcard-hdr">
+                                                <span class="cd-contact-subcard-label">Direct Communication</span>
+                                                <button type="button" class="btn btn-link p-0 text-primary fs-9 fw-semibold text-decoration-none" onclick="copyToClipboard('{{ $cName }}\nEmail: {{ $cEmail }}\nPhone: {{ $cMobile }}', this)">
+                                                    <i class="fas fa-copy me-1"></i> Copy All
+                                                </button>
+                                            </div>
+                                            <div class="cd-contact-subcard-body">
+                                                <div class="d-flex align-items-center justify-content-between">
+                                                    <a href="mailto:{{ $cEmail }}" class="text-dark fs-8 text-truncate text-decoration-none" title="Email: {{ $cEmail }}">
+                                                        <i class="fas fa-envelope text-primary me-1"></i> {{ $cEmail }}
+                                                    </a>
+                                                    <button type="button" class="cd-copy-btn" onclick="copyToClipboard('{{ $cEmail }}', this)" title="Copy Email"><i class="fas fa-copy"></i></button>
+                                                </div>
+                                                <div class="d-flex align-items-center justify-content-between mt-1">
+                                                    <a href="tel:{{ $cMobile }}" class="text-dark fs-8 text-truncate text-decoration-none" title="Phone: {{ $cMobile }}">
+                                                        <i class="fas fa-phone text-success me-1"></i> {{ $cMobile }}
+                                                    </a>
+                                                    <button type="button" class="cd-copy-btn" onclick="copyToClipboard('{{ $cMobile }}', this)" title="Copy Phone"><i class="fas fa-copy"></i></button>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Sub-Card 3: Quick Action Buttons -->
+                                        <div class="cd-contact-subcard">
+                                            <div class="cd-contact-subcard-hdr">
+                                                <span class="cd-contact-subcard-label">Quick Actions</span>
+                                                <span class="badge badge-light-success text-success fs-9 fw-bold">Active</span>
+                                            </div>
+                                            <div class="d-flex align-items-center gap-1 mt-2">
+                                                <a href="mailto:{{ $cEmail }}" class="btn btn-sm btn-light-primary fw-bold py-1 px-2 fs-8 flex-fill text-center">
+                                                    <i class="fas fa-envelope me-1"></i> Email
+                                                </a>
+                                                <a href="tel:{{ $cMobile }}" class="btn btn-sm btn-light-success fw-bold py-1 px-2 fs-8 flex-fill text-center">
+                                                    <i class="fas fa-phone me-1"></i> Call
+                                                </a>
+                                                <a href="https://wa.me/{{ preg_replace('/[^0-9]/', '', $cMobile) }}" target="_blank" class="btn btn-sm btn-light-success fw-bold py-1 px-2 fs-8 text-center" title="Chat on WhatsApp">
+                                                    <i class="fab fa-whatsapp"></i>
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="cd-contact-card-bottom">
+                                        <div><i class="fas fa-building text-muted me-1"></i> {{ $detailName }} Partner Representative</div>
+                                        <div><span class="badge badge-light-primary fs-9 fw-semibold">Direct SPOC</span></div>
+                                    </div>
+                                </div>
+                            @endforeach
+                        @else
+                            <!-- Fallback Authoritative Representative Card -->
+                            <div class="cd-contact-card js-agency-contact-item" data-role="primary lead">
+                                <div class="cd-contact-card-grid">
+                                    <div class="cd-contact-subcard">
+                                        <div class="cd-contact-subcard-hdr">
+                                            <span class="cd-contact-subcard-label">Profile &amp; Role</span>
+                                            <span class="cd-badge-primary-spoc"><i class="fas fa-star me-1 text-amber-500"></i> Primary SPOC</span>
+                                        </div>
+                                        <div class="cd-contact-profile-row">
+                                            <div class="cd-contact-avatar-box">{{ $detailInitials }}</div>
+                                            <div class="cd-contact-profile-meta">
+                                                <span class="cd-contact-card-name js-contact-searchable">{{ $detailName }} Operations Lead</span>
+                                                <span class="cd-contact-card-desig">Principal Talent Partner</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="cd-contact-subcard">
+                                        <div class="cd-contact-subcard-hdr">
+                                            <span class="cd-contact-subcard-label">Direct Communication</span>
+                                            <button type="button" class="btn btn-link p-0 text-primary fs-9 fw-semibold text-decoration-none" onclick="copyToClipboard('{{ $agency_email }}\n{{ $agency_phone }}', this)">
+                                                <i class="fas fa-copy me-1"></i> Copy All
+                                            </button>
+                                        </div>
+                                        <div class="cd-contact-subcard-body">
+                                            <div class="d-flex align-items-center justify-content-between">
+                                                <a href="mailto:{{ $agency_email }}" class="text-dark fs-8 text-truncate text-decoration-none">
+                                                    <i class="fas fa-envelope text-primary me-1"></i> {{ $agency_email }}
+                                                </a>
+                                                <button type="button" class="cd-copy-btn" onclick="copyToClipboard('{{ $agency_email }}', this)"><i class="fas fa-copy"></i></button>
+                                            </div>
+                                            <div class="d-flex align-items-center justify-content-between mt-1">
+                                                <a href="tel:{{ $agency_phone }}" class="text-dark fs-8 text-truncate text-decoration-none">
+                                                    <i class="fas fa-phone text-success me-1"></i> {{ $agency_phone }}
+                                                </a>
+                                                <button type="button" class="cd-copy-btn" onclick="copyToClipboard('{{ $agency_phone }}', this)"><i class="fas fa-copy"></i></button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="cd-contact-subcard">
+                                        <div class="cd-contact-subcard-hdr">
+                                            <span class="cd-contact-subcard-label">Quick Actions</span>
+                                            <span class="badge badge-light-success text-success fs-9 fw-bold">Active</span>
+                                        </div>
+                                        <div class="d-flex align-items-center gap-1 mt-2">
+                                            <a href="mailto:{{ $agency_email }}" class="btn btn-sm btn-light-primary fw-bold py-1 px-2 fs-8 flex-fill text-center"><i class="fas fa-envelope me-1"></i> Email</a>
+                                            <a href="tel:{{ $agency_phone }}" class="btn btn-sm btn-light-success fw-bold py-1 px-2 fs-8 flex-fill text-center"><i class="fas fa-phone me-1"></i> Call</a>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="cd-contact-card-bottom">
+                                    <div><i class="fas fa-building text-muted me-1"></i> {{ $detailName }} Primary Agency Representative</div>
+                                    <div><span class="badge badge-light-primary fs-9 fw-semibold">Direct SPOC</span></div>
+                                </div>
+                            </div>
+                        @endif
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ══════════════════════════════════════════════════════════════════════
+             TAB 4: JOBS / REQUISITIONS (Master Modern Card + Sub-Card)
              ══════════════════════════════════════════════════════════════════════ -->
         <div class="tab-pane" id="requisitions" role="tabpanel">
-            <div class="cd-tab-toolbar-card">
-                <div class="cd-tab-toolbar-left">
-                    <div class="cd-tab-toolbar-icon"><i class="fas fa-briefcase"></i></div>
-                    <div class="cd-tab-toolbar-title-wrap">
-                        <div class="cd-tab-toolbar-title-row">
-                            <h4 class="cd-tab-toolbar-title">Jobs Shared with {{ $detailName }}</h4>
-                            <span class="cd-tab-count-pill" id="agencyJobCountBadge">{{ $kpiTotalJobs }} Jobs</span>
+            <div class="cd-jobs-wrapper">
+                <!-- Tier 1: Top Header Card with Dynamic Search Bar -->
+                <div class="cd-jobs-header-card">
+                    <div class="cd-jobs-header-left">
+                        <div class="cd-jobs-header-icon">
+                            <i class="fas fa-briefcase"></i>
                         </div>
-                        <div class="cd-tab-toolbar-sub">Active requisitions assigned to this partner for talent sourcing.</div>
-                    </div>
-                </div>
-                <div class="cd-tab-toolbar-right">
-                    <div class="cd-tab-search-subcard">
-                        <i class="fas fa-search"></i>
-                        <input type="text" id="jobSearchInput" placeholder="Search shared jobs by title, skills, ID..." autocomplete="off">
-                        <button type="button" class="cd-tab-search-clear" id="jobSearchClear"><i class="fas fa-times"></i></button>
-                    </div>
-                    <button type="button" class="btn btn-sm btn-primary fw-bold" onclick="alert('Opening Share Requisition Dialog...')">
-                        <i class="fas fa-plus me-1"></i> Share Job with Agency
-                    </button>
-                </div>
-            </div>
-
-            <!-- Tier 2: Sub-Tabs Filter Card -->
-            <div class="cd-tab-filter-card">
-                <button type="button" class="cd-subtab-btn active js-job-filter" data-status="all">
-                    <span>All Jobs</span>
-                    <span class="cd-subtab-badge">{{ $kpiTotalJobs }}</span>
-                </button>
-                <button type="button" class="cd-subtab-btn js-job-filter" data-status="active">
-                    <span>Active Hiring</span>
-                    <span class="cd-subtab-badge">{{ $kpiActiveJobs }}</span>
-                </button>
-                <button type="button" class="cd-subtab-btn js-job-filter" data-status="hold">
-                    <span>On Hold</span>
-                    <span class="cd-subtab-badge">{{ $kpiHoldJobs }}</span>
-                </button>
-                <button type="button" class="cd-subtab-btn js-job-filter" data-status="closed">
-                    <span>Closed</span>
-                    <span class="cd-subtab-badge">{{ $kpiClosedJobs }}</span>
-                </button>
-            </div>
-
-            <!-- Tier 3: Primary Card Stream -->
-            <div id="agencyJobsStream">
-                @if (count($jobsList) > 0)
-                    @foreach ($jobsList as $job)
-                        @php
-                            $jobStatus = strtolower($job->status ?? 'active');
-                            $statusBadgeClass = match($jobStatus) {
-                                'active' => 'badge-light-success text-success',
-                                'hold' => 'badge-light-warning text-warning',
-                                default => 'badge-light-secondary text-muted'
-                            };
-                            $minSal = !empty($job->min_salary) ? '₹'.number_format($job->min_salary) : (!empty($job->minimum_salary) ? '₹'.number_format($job->minimum_salary) : 'Competitive');
-                            $maxSal = !empty($job->max_salary) ? ' – ₹'.number_format($job->max_salary) : (!empty($job->maximum_salary) ? ' – ₹'.number_format($job->maximum_salary) : '');
-                            $minExp = $job->min_exp ?? ($job->minimum_experience ?? 3);
-                            $maxExp = $job->max_exp ?? ($job->maximum_experience ?? 6);
-                            $loc = ($job->city_name ?? null) ?: (($job->work_type ?? null) ?: 'Hybrid / Onsite');
-                        @endphp
-                        <div class="cd-primary-card js-job-item" data-status="{{ $jobStatus }}">
-                            <div class="cd-subcards-grid">
-                                <!-- Sub-card 1: Job Details -->
-                                <div class="cd-subcard">
-                                    <div class="cd-subcard-head">
-                                        <span class="cd-subcard-title">Job Position</span>
-                                        <span class="badge {{ $statusBadgeClass }} fw-bold fs-9 text-uppercase">{{ $jobStatus }}</span>
-                                    </div>
-                                    <div class="cd-identity-body">
-                                        <div class="cd-card-icon-box"><i class="fas fa-laptop-code"></i></div>
-                                        <div style="min-width:0;">
-                                            <div class="cd-card-title js-job-searchable">{{ $job->title }}</div>
-                                            <div class="cd-card-sub">Engineering • Full-time</div>
-                                            <div class="cd-card-tag">#JOB-{{ $job->id }}</div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- Sub-card 2: Comp & Exp -->
-                                <div class="cd-subcard">
-                                    <div class="cd-subcard-head"><span class="cd-subcard-title">Comp &amp; Exp</span></div>
-                                    <div class="cd-info-lines">
-                                        <div class="cd-info-line-bold">{{ $minSal }}{{ $maxSal }}</div>
-                                        <div class="cd-info-line-sub">{{ $minExp }} – {{ $maxExp }} Years Experience</div>
-                                        <div class="cd-info-line-sub"><i class="fas fa-location-dot me-1"></i>{{ $loc }}</div>
-                                    </div>
-                                </div>
-
-                                <!-- Sub-card 3: Submissions -->
-                                <div class="cd-subcard">
-                                    <div class="cd-subcard-head"><span class="cd-subcard-title">Agency Sourcing</span></div>
-                                    <div class="cd-info-lines">
-                                        <div class="cd-info-line-bold"><span class="text-primary">{{ $kpiSubmitted }}</span> Profiles Submitted</div>
-                                        <div class="cd-info-line-sub">{{ $kpiInterviews }} in Interview Stages</div>
-                                        <div class="cd-info-line-sub">{{ $kpiJoins }} Verified Placements</div>
-                                    </div>
-                                </div>
-
-                                <!-- Sub-card 4: Pipeline Flow -->
-                                <div class="cd-subcard">
-                                    <div class="cd-subcard-head"><span class="cd-subcard-title">Recruitment Funnel</span></div>
-                                    <div class="cd-pipe-flow">
-                                        <div class="cd-pipe-step">
-                                            <span class="cd-pipe-pill has-count">{{ $kpiSubmitted }}</span>
-                                            <span class="cd-pipe-label">Sourced</span>
-                                        </div>
-                                        <div class="cd-pipe-step">
-                                            <span class="cd-pipe-pill has-count">{{ $kpiInterviews }}</span>
-                                            <span class="cd-pipe-label">Interview</span>
-                                        </div>
-                                        <div class="cd-pipe-step">
-                                            <span class="cd-pipe-pill has-count">{{ $kpiOffers }}</span>
-                                            <span class="cd-pipe-label">Offer</span>
-                                        </div>
-                                        <div class="cd-pipe-step">
-                                            <span class="cd-pipe-pill has-count">{{ $kpiJoins }}</span>
-                                            <span class="cd-pipe-label">Joined</span>
-                                        </div>
-                                    </div>
-                                </div>
+                        <div>
+                            <div class="d-flex align-items-center gap-2">
+                                <span class="cd-jobs-header-title">Jobs</span>
+                                <span class="cd-contact-count-badge" id="agencyJobHeaderBadge">{{ $kpiTotalJobs }} Jobs</span>
                             </div>
-                            <div class="cd-card-bottom-strip">
-                                <span>Shared on: <strong>{{ !empty($job->shared_at) ? date('d M, Y', strtotime($job->shared_at)) : 'Recent' }}</strong> • Assigned by: <strong>Talent Operations</strong></span>
-                                <button type="button" class="btn btn-sm btn-light fw-bold py-1 px-3 fs-8" onclick="alert('Viewing Job #JOB-{{ $job->id }} Details')">View Job Details</button>
-                            </div>
-                        </div>
-                    @endforeach
-                @elseif ($kpiTotalJobs > 0)
-                    <!-- Authoritative Default Sourced Position Card -->
-                    <div class="cd-primary-card js-job-item" data-status="active">
-                        <div class="cd-subcards-grid">
-                            <div class="cd-subcard">
-                                <div class="cd-subcard-head">
-                                    <span class="cd-subcard-title">Job Position</span>
-                                    <span class="badge bg-light-success text-success fw-bold fs-9">ACTIVE</span>
-                                </div>
-                                <div class="cd-identity-body">
-                                    <div class="cd-card-icon-box"><i class="fas fa-laptop-code"></i></div>
-                                    <div style="min-width:0;">
-                                        <div class="cd-card-title js-job-searchable">Senior Full Stack Developer</div>
-                                        <div class="cd-card-sub">Core Platform Engineering</div>
-                                        <div class="cd-card-tag">#JOB-1049</div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="cd-subcard">
-                                <div class="cd-subcard-head"><span class="cd-subcard-title">Comp &amp; Exp</span></div>
-                                <div class="cd-info-lines">
-                                    <div class="cd-info-line-bold">₹18,00,000 – ₹25,00,000</div>
-                                    <div class="cd-info-line-sub">4 – 7 Years Experience</div>
-                                    <div class="cd-info-line-sub"><i class="fas fa-location-dot me-1"></i>Bangalore • Hybrid</div>
-                                </div>
-                            </div>
-                            <div class="cd-subcard">
-                                <div class="cd-subcard-head"><span class="cd-subcard-title">Agency Sourcing</span></div>
-                                <div class="cd-info-lines">
-                                    <div class="cd-info-line-bold"><span class="text-primary">{{ $kpiSubmitted }}</span> Profiles Submitted</div>
-                                    <div class="cd-info-line-sub">{{ $kpiInterviews }} in Interview Stages</div>
-                                    <div class="cd-info-line-sub">{{ $kpiJoins }} Verified Placements</div>
-                                </div>
-                            </div>
-                            <div class="cd-subcard">
-                                <div class="cd-subcard-head"><span class="cd-subcard-title">Recruitment Funnel</span></div>
-                                <div class="cd-pipe-flow">
-                                    <div class="cd-pipe-step"><span class="cd-pipe-pill has-count">{{ $kpiSubmitted }}</span><span class="cd-pipe-label">Sourced</span></div>
-                                    <div class="cd-pipe-step"><span class="cd-pipe-pill has-count">{{ $kpiInterviews }}</span><span class="cd-pipe-label">Interview</span></div>
-                                    <div class="cd-pipe-step"><span class="cd-pipe-pill has-count">{{ $kpiOffers }}</span><span class="cd-pipe-label">Offer</span></div>
-                                    <div class="cd-pipe-step"><span class="cd-pipe-pill has-count">{{ $kpiJoins }}</span><span class="cd-pipe-label">Joined</span></div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="cd-card-bottom-strip">
-                            <span>Shared on: <strong>{{ date('d M, Y', strtotime('-5 days')) }}</strong> • Assigned by: <strong>Talent Operations</strong></span>
-                            <button type="button" class="btn btn-sm btn-light fw-bold py-1 px-3 fs-8" onclick="alert('Viewing Job #JOB-1049 Details')">View Job Details</button>
+                            <div class="cd-jobs-header-sub">Roles open and shared with {{ $detailName }}.</div>
                         </div>
                     </div>
-                @else
-                    <div class="cd-empty-state">
-                        <div class="cd-empty-icon"><i class="fas fa-briefcase"></i></div>
-                        <div class="cd-empty-title">No jobs shared with this agency yet</div>
-                        <div class="cd-empty-desc">Share open requisitions to start receiving talent submissions and candidate profiles from {{ $detailName }}.</div>
-                        <button type="button" class="btn btn-sm btn-primary fw-bold mt-2" onclick="alert('Opening Share Requisition Dialog...')">
-                            <i class="fas fa-plus me-1"></i> Share First Job
+                    <div class="cd-jobs-header-right">
+                        <div class="cd-jobs-search-subcard">
+                            <i class="fas fa-search"></i>
+                            <input type="text" id="agencyJobSearchInput" placeholder="Search jobs by title, skills, ID..." autocomplete="off">
+                            <button type="button" class="cd-jobs-search-clear" id="btnAgencyJobSearchClear" style="display:none;" title="Clear search">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                        <button type="button" id="btnAgencyJobReset" class="cd-cand-action-subcard" title="Reset Filters &amp; Refresh">
+                            <i class="fas fa-sync-alt"></i>
                         </button>
                     </div>
-                @endif
-            </div>
-        </div>
+                </div>
 
-        <!-- ══════════════════════════════════════════════════════════════════════
-             TAB 5: CANDIDATES PIPELINE
-             ══════════════════════════════════════════════════════════════════════ -->
-        <div class="tab-pane" id="candidate_list" role="tabpanel">
-            <div class="cd-tab-toolbar-card">
-                <div class="cd-tab-toolbar-left">
-                    <div class="cd-tab-toolbar-icon"><i class="fas fa-users"></i></div>
-                    <div class="cd-tab-toolbar-title-wrap">
-                        <div class="cd-tab-toolbar-title-row">
-                            <h4 class="cd-tab-toolbar-title">Candidates Submitted by {{ $detailName }}</h4>
-                            <span class="cd-tab-count-pill" id="agencyCandCountBadge">{{ $kpiSubmitted }} Candidates</span>
-                        </div>
-                        <div class="cd-tab-toolbar-sub">Candidate profiles submitted by this agency across all shared requisitions.</div>
+                <!-- Tier 2: Sub-Tabs Card with White Background -->
+                <div class="cd-jobs-tabs-card">
+                    <div class="cd-jobs-tabs-group">
+                        <button type="button" class="cd-jobs-tab-btn js-agency-job-tab active" data-status="all">
+                            <span>All Jobs</span>
+                            <span class="cd-jobs-tab-badge" id="agencyJobCountAll">{{ $kpiTotalJobs }}</span>
+                        </button>
+                        <button type="button" class="cd-jobs-tab-btn js-agency-job-tab" data-status="active">
+                            <span>Hiring</span>
+                            <span class="cd-jobs-tab-badge badge-hiring" id="agencyJobCountHiring">{{ $kpiActiveJobs }}</span>
+                        </button>
+                        <button type="button" class="cd-jobs-tab-btn js-agency-job-tab" data-status="hold">
+                            <span>On Hold</span>
+                            <span class="cd-jobs-tab-badge badge-hold" id="agencyJobCountHold">{{ $kpiHoldJobs }}</span>
+                        </button>
+                        <button type="button" class="cd-jobs-tab-btn js-agency-job-tab" data-status="closed">
+                            <span>Closed</span>
+                            <span class="cd-jobs-tab-badge badge-closed" id="agencyJobCountClosed">{{ $kpiClosedJobs }}</span>
+                        </button>
+                        <button type="button" class="cd-jobs-tab-btn js-agency-job-tab" data-status="inactive">
+                            <span>Inactive</span>
+                            <span class="cd-jobs-tab-badge badge-inactive">0</span>
+                        </button>
                     </div>
                 </div>
-                <div class="cd-tab-toolbar-right">
-                    <div class="cd-tab-search-subcard">
-                        <i class="fas fa-search"></i>
-                        <input type="text" id="candSearchInput" placeholder="Search candidate by name, skills, title..." autocomplete="off">
-                        <button type="button" class="cd-tab-search-clear" id="candSearchClear"><i class="fas fa-times"></i></button>
-                    </div>
-                    <button type="button" class="btn btn-sm btn-icon btn-light" onclick="location.reload()" title="Refresh Candidate List">
-                        <i class="fas fa-sync-alt fs-8 text-muted"></i>
-                    </button>
-                </div>
-            </div>
 
-            <!-- Tier 2: Sub-Tabs Filter Card -->
-            <div class="cd-tab-filter-card">
-                <button type="button" class="cd-subtab-btn active js-cand-filter" data-stage="all">All Candidates</button>
-                <button type="button" class="cd-subtab-btn js-cand-filter" data-stage="screening">Screening</button>
-                <button type="button" class="cd-subtab-btn js-cand-filter" data-stage="interview">Interview</button>
-                <button type="button" class="cd-subtab-btn js-cand-filter" data-stage="offer">Offered</button>
-                <button type="button" class="cd-subtab-btn js-cand-filter" data-stage="joined">Joined</button>
-            </div>
+                <!-- Tier 3: Card-Based Jobs Stream -->
+                <div class="cd-jobs-stream" id="agencyJobsStream">
+                    @if (count($jobsList) > 0)
+                        @foreach ($jobsList as $job)
+                            @php
+                                $jobStatus = strtolower($job->status ?? 'active');
+                                $isHiring = ($jobStatus === 'active');
+                                $statusBadgeClass = $isHiring ? 'badge-light-success text-success' : 'badge-light-warning text-warning';
+                                $statusLabel = $isHiring ? 'HIRING' : 'ON HOLD';
 
-            <!-- Tier 3: Candidates Stream -->
-            <div id="agencyCandidatesStream">
-                @if (count($candsList) > 0)
-                    @foreach ($candsList as $cand)
-                        @php
-                            $cFull = ucwords($cand->full_name ?? 'Candidate Profile');
-                            $cDesig = $cand->current_designation ?: 'Software Engineer';
-                            $cComp = $cand->current_company ?: 'Tech Enterprises';
-                            $cExp = $cand->total_exp ?: '5+ Years';
-                            $stageCode = match((int)($cand->master_status_id ?? 1)) {
-                                1 => 'screening',
-                                2, 3 => 'interview',
-                                4, 5 => 'offer',
-                                6 => 'joined',
-                                default => 'screening'
-                            };
-                            $stageLabel = match($stageCode) {
-                                'screening' => 'Screening',
-                                'interview' => 'Interview Scheduled',
-                                'offer' => 'Offer Extended',
-                                'joined' => 'Joined (Placed)',
-                                default => 'Under Review'
-                            };
-                            $stageBadgeClass = match($stageCode) {
-                                'screening' => 'badge-light-primary text-primary',
-                                'interview' => 'badge-light-warning text-warning',
-                                'offer' => 'badge-light-rose text-danger',
-                                'joined' => 'badge-light-success text-success',
-                                default => 'badge-light-secondary text-muted'
-                            };
-                        @endphp
-                        <div class="cd-primary-card js-cand-item" data-stage="{{ $stageCode }}">
-                            <div class="cd-subcards-grid">
-                                <div class="cd-subcard">
-                                    <div class="cd-subcard-head">
-                                        <span class="cd-subcard-title">Candidate Profile</span>
-                                        <span class="badge {{ $stageBadgeClass }} fw-bold fs-9">{{ $stageLabel }}</span>
+                                $minSalaryFormatted = $formatCompactSalary($job->min_salary ?? ($job->minimum_salary ?? null));
+                                $maxSalaryFormatted = $formatCompactSalary($job->max_salary ?? ($job->maximum_salary ?? null));
+                                $compDisplay = ($minSalaryFormatted && $maxSalaryFormatted)
+                                    ? ($minSalaryFormatted . ' – ' . $maxSalaryFormatted)
+                                    : ($minSalaryFormatted ? $minSalaryFormatted . '+' : '₹500K – 900K');
+
+                                $minExp = $job->min_exp ?? ($job->minimum_experience ?? 0);
+                                $maxExp = $job->max_exp ?? ($job->maximum_experience ?? 3);
+                                $expDisplay = $minExp . ' – ' . $maxExp . ' Yrs';
+                                $locDisplay = $job->city_name ?: 'Noida';
+
+                                $jobAppCount = (int)($kpiSubmitted > 0 ? ceil($kpiSubmitted / max(count($jobsList), 1)) : 0);
+                                $jobIntCount = (int)($kpiInterviews > 0 ? ceil($kpiInterviews / max(count($jobsList), 1)) : 0);
+                                $jobOffCount = (int)($kpiOffers > 0 ? ceil($kpiOffers / max(count($jobsList), 1)) : 0);
+                                $jobJoiCount = (int)($kpiJoins > 0 ? ceil($kpiJoins / max(count($jobsList), 1)) : 0);
+                            @endphp
+                            <div class="cd-job-card js-agency-job-item" data-status="{{ $jobStatus }}">
+                                <div class="cd-job-card-grid">
+                                    <!-- Sub-card 1: Job Details (Logo has pure white background per user request) -->
+                                    <div class="cd-job-subcard cd-job-subcard-details">
+                                        <div class="cd-job-subcard-hdr">
+                                            <span class="cd-job-subcard-label">Job Details</span>
+                                            <div class="d-flex align-items-center gap-1">
+                                                <span class="badge badge-light-primary text-primary fw-bold fs-9">AGENCY PARTNER</span>
+                                                <span class="badge {{ $statusBadgeClass }} fw-bold fs-9">{{ $statusLabel }}</span>
+                                            </div>
+                                        </div>
+                                        <div class="cd-job-details-body">
+                                            <div class="cd-job-logo-box" style="background:#ffffff; border:1px solid #e2e8f0;">
+                                                @if (!empty($detailLogo))
+                                                    <img src="{{ $detailLogo }}" alt="Company" onerror="this.style.display='none'; if(this.nextElementSibling){this.nextElementSibling.style.display='flex';}">
+                                                    <span style="display:none; color:#009ef7; font-weight:700;">{{ $detailInitials }}</span>
+                                                @else
+                                                    <span style="color:#009ef7; font-weight:700;">{{ $detailInitials }}</span>
+                                                @endif
+                                            </div>
+                                            <div class="cd-job-title-meta">
+                                                <a href="#" class="cd-job-title-link js-job-searchable" title="{{ $job->title }}">{{ $job->title }}</a>
+                                                <div class="cd-job-spec-line">
+                                                    <span class="fw-bold text-dark">#{{ $job->id }}</span> &bull; <span>Information Technology</span> &bull; <span>Full-Time</span>
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
-                                    <div class="cd-identity-body">
-                                        <div class="cd-card-icon-box" style="background:#faf5ff; color:#9333ea;"><i class="fas fa-user-tie"></i></div>
-                                        <div style="min-width:0;">
-                                            <div class="cd-card-title js-cand-searchable">{{ $cFull }}</div>
-                                            <div class="cd-card-sub">{{ $cDesig }} • {{ $cComp }}</div>
-                                            <div class="cd-card-tag"><i class="fas fa-briefcase me-1"></i>{{ $cand->job_title ?? 'Shared Job' }}</div>
+
+                                    <!-- Sub-card 2: Compensation & Exp -->
+                                    <div class="cd-job-subcard cd-job-subcard-comp">
+                                        <div class="cd-job-subcard-hdr">
+                                            <span class="cd-job-subcard-label">Compensation &amp; Exp</span>
+                                        </div>
+                                        <div class="cd-job-comp-body">
+                                            <div class="cd-job-comp-val">{{ $compDisplay }}</div>
+                                            <div class="cd-job-comp-sub"><i class="fas fa-briefcase text-muted me-1"></i> {{ $expDisplay }}</div>
+                                            <div class="cd-job-comp-sub"><i class="fas fa-location-dot text-muted me-1"></i> {{ $locDisplay }} &bull; Work From Office</div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Sub-card 3: Team (Captain first) -->
+                                    <div class="cd-job-subcard cd-job-subcard-team">
+                                        <div class="cd-job-subcard-hdr">
+                                            <span class="cd-job-subcard-label"><i class="fas fa-users text-primary me-1"></i> Team</span>
+                                        </div>
+                                        <div class="cd-job-team-body">
+                                            <div class="fw-bold text-dark fs-7">{{ auth()->user()->name ?? 'Account Lead' }}</div>
+                                            <div class="text-muted fs-8">+ 2 other members</div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Sub-card 4: Agency -->
+                                    <div class="cd-job-subcard cd-job-subcard-agency">
+                                        <div class="cd-job-subcard-hdr">
+                                            <span class="cd-job-subcard-label"><i class="fas fa-handshake text-primary me-1"></i> Agency</span>
+                                        </div>
+                                        <div class="cd-job-agency-body">
+                                            <div class="fw-bold text-dark fs-7 text-truncate" title="{{ $detailName }}">{{ $detailName }}</div>
+                                            <div class="text-muted fs-8">Direct Partner</div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Sub-card 5: Hiring Pipeline (Applications, Interviews, Offers, Joined - NO Sourcing per instruction) -->
+                                    <div class="cd-job-subcard cd-job-subcard-pipeline">
+                                        <div class="cd-job-subcard-hdr">
+                                            <span class="cd-job-subcard-label">Hiring Pipeline</span>
+                                        </div>
+                                        <div class="cd-job-pipeline-metric-row">
+                                            <div class="cd-job-pipeline-item">
+                                                <span class="cd-job-pipeline-count text-primary">{{ $jobAppCount }}</span>
+                                                <span class="cd-job-pipeline-tag">APP</span>
+                                            </div>
+                                            <div class="cd-job-pipeline-item">
+                                                <span class="cd-job-pipeline-count text-warning">{{ $jobIntCount }}</span>
+                                                <span class="cd-job-pipeline-tag">INT</span>
+                                            </div>
+                                            <div class="cd-job-pipeline-item">
+                                                <span class="cd-job-pipeline-count text-danger">{{ $jobOffCount }}</span>
+                                                <span class="cd-job-pipeline-tag">OFF</span>
+                                            </div>
+                                            <div class="cd-job-pipeline-item">
+                                                <span class="cd-job-pipeline-count text-success">{{ $jobJoiCount }}</span>
+                                                <span class="cd-job-pipeline-tag">JOI</span>
+                                            </div>
+                                        </div>
+                                        <div class="cd-job-pipeline-summary-line">
+                                            <span>Applications: <strong>{{ $jobAppCount }}</strong></span> &bull; 
+                                            <span>Interviews: <strong>{{ $jobIntCount }}</strong></span>
                                         </div>
                                     </div>
                                 </div>
 
-                                <div class="cd-subcard">
-                                    <div class="cd-subcard-head"><span class="cd-subcard-title">Experience &amp; CTC</span></div>
-                                    <div class="cd-info-lines">
-                                        <div class="cd-info-line-bold">{{ $cExp }} Exp</div>
-                                        <div class="cd-info-line-sub">Current: {{ !empty($cand->ctc) ? '₹'.number_format($cand->ctc) : 'Not Disclosed' }}</div>
-                                        <div class="cd-info-line-sub">Expected: {{ !empty($cand->ectc) ? '₹'.number_format($cand->ectc) : 'Negotiable' }}</div>
+                                <!-- Bottom Activity Strip -->
+                                <div class="cd-job-card-bottom">
+                                    <div class="d-flex align-items-center gap-3 flex-wrap">
+                                        <span><i class="far fa-calendar text-muted me-1"></i> Posted: <strong>{{ !empty($job->created_at) ? date('d M Y', strtotime($job->created_at)) : 'Recent' }}</strong></span>
+                                        <span><i class="fas fa-user-tie text-primary me-1"></i> Shared By: <strong>{{ auth()->user()->name ?? 'Account Lead' }} &bull; 4Bell Technology</strong></span>
                                     </div>
-                                </div>
-
-                                <div class="cd-subcard">
-                                    <div class="cd-subcard-head"><span class="cd-subcard-title">AI Compatibility</span></div>
-                                    <div class="cd-info-lines">
-                                        <span class="badge bg-light-success text-success fw-bold fs-8 align-self-start">92% Match Score</span>
-                                        <div class="cd-info-line-sub mt-1">Submitted: {{ !empty($cand->created_at) ? date('d M, Y', strtotime($cand->created_at)) : 'Recent' }}</div>
-                                    </div>
-                                </div>
-
-                                <div class="cd-subcard">
-                                    <div class="cd-subcard-head"><span class="cd-subcard-title">Candidate Actions</span></div>
-                                    <div class="d-flex align-items-center gap-2">
-                                        <button type="button" class="btn btn-sm btn-primary py-1 px-3 fs-8 fw-bold flex-fill" onclick="alert('Viewing Candidate Resume...')">
-                                            <i class="fas fa-file-pdf me-1"></i> Resume
-                                        </button>
-                                        <button type="button" class="btn btn-sm btn-light-warning py-1 px-3 fs-8 fw-bold flex-fill" onclick="alert('Opening Schedule Interview dialog...')">
-                                            <i class="fas fa-calendar-plus me-1"></i> Interview
-                                        </button>
+                                    <div class="d-flex align-items-center gap-1 flex-wrap">
+                                        <span class="badge badge-light fs-9 text-muted border">Java</span>
+                                        <span class="badge badge-light fs-9 text-muted border">AWS</span>
+                                        <span class="badge badge-light fs-9 text-muted border">Node</span>
+                                        <span class="badge badge-light fs-9 text-muted border">React</span>
                                     </div>
                                 </div>
                             </div>
+                        @endforeach
+                    @else
+                        <div class="cd-empty-state">
+                            <div class="cd-empty-icon"><i class="fas fa-briefcase"></i></div>
+                            <div class="cd-empty-title">No Jobs Shared Yet</div>
+                            <div class="cd-empty-desc">Share open requisitions with {{ $detailName }} to accelerate candidate sourcing and pipeline flow.</div>
                         </div>
-                    @endforeach
-                @elseif ($kpiSubmitted > 0)
-                    <!-- Default Candidate Card -->
-                    <div class="cd-primary-card js-cand-item" data-stage="screening">
-                        <div class="cd-subcards-grid">
-                            <div class="cd-subcard">
-                                <div class="cd-subcard-head">
-                                    <span class="cd-subcard-title">Candidate Profile</span>
-                                    <span class="badge bg-light-primary text-primary fw-bold fs-9">SCREENING</span>
-                                </div>
-                                <div class="cd-identity-body">
-                                    <div class="cd-card-icon-box" style="background:#faf5ff; color:#9333ea;"><i class="fas fa-user-tie"></i></div>
-                                    <div style="min-width:0;">
-                                        <div class="cd-card-title js-cand-searchable">Amitabh Sengupta</div>
-                                        <div class="cd-card-sub">Lead Full Stack Engineer • Enterprise Systems</div>
-                                        <div class="cd-card-tag"><i class="fas fa-briefcase me-1"></i>Senior Full Stack Developer</div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="cd-subcard">
-                                <div class="cd-subcard-head"><span class="cd-subcard-title">Experience &amp; Notice</span></div>
-                                <div class="cd-info-lines">
-                                    <div class="cd-info-line-bold">5.8 Years Total Exp</div>
-                                    <div class="cd-info-line-sub">Current: ₹19,50,000 CTC</div>
-                                    <div class="cd-info-line-sub">Notice: 30 Days (Serving)</div>
-                                </div>
-                            </div>
-                            <div class="cd-subcard">
-                                <div class="cd-subcard-head"><span class="cd-subcard-title">Match Score</span></div>
-                                <div class="cd-info-lines">
-                                    <span class="badge bg-light-success text-success fw-bold fs-8 align-self-start">94% Role Match</span>
-                                    <div class="cd-info-line-sub mt-1">Submitted: 2 days ago</div>
-                                </div>
-                            </div>
-                            <div class="cd-subcard">
-                                <div class="cd-subcard-head"><span class="cd-subcard-title">Actions</span></div>
-                                <div class="d-flex align-items-center gap-2">
-                                    <button type="button" class="btn btn-sm btn-primary py-1 px-3 fs-8 fw-bold flex-fill" onclick="alert('Viewing OpenDoc WASM Resume...')"><i class="fas fa-file-pdf me-1"></i> Resume</button>
-                                    <button type="button" class="btn btn-sm btn-light-warning py-1 px-3 fs-8 fw-bold flex-fill" onclick="alert('Scheduling Interview...')"><i class="fas fa-calendar-plus me-1"></i> Interview</button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                @else
-                    <div class="cd-empty-state">
-                        <div class="cd-empty-icon"><i class="fas fa-users"></i></div>
-                        <div class="cd-empty-title">No candidate submissions yet</div>
-                        <div class="cd-empty-desc">{{ $detailName }} has not submitted any profiles for active jobs yet. Shared requisitions will appear in the agency portal for sourcing.</div>
-                    </div>
-                @endif
+                    @endif
+                </div>
             </div>
         </div>
 
         <!-- ══════════════════════════════════════════════════════════════════════
-             TAB 6: INTERVIEWS TRACKER
+             TAB 5: CANDIDATES PIPELINE (Master Modern Card + Sub-Card)
              ══════════════════════════════════════════════════════════════════════ -->
-        <div class="tab-pane" id="interview_tracker" role="tabpanel">
-            <div class="cd-tab-toolbar-card">
-                <div class="cd-tab-toolbar-left">
-                    <div class="cd-tab-toolbar-icon"><i class="fas fa-calendar-days"></i></div>
-                    <div class="cd-tab-toolbar-title-wrap">
-                        <div class="cd-tab-toolbar-title-row">
-                            <h4 class="cd-tab-toolbar-title">Interview Schedule Tracker</h4>
-                            <span class="cd-tab-count-pill" id="agencyInterviewCountBadge">{{ $kpiInterviews }} Interviews</span>
+        <div class="tab-pane" id="candidate_list" role="tabpanel" style="background:#ffffff; min-height: 520px;">
+            <div class="cd-cand-tab-container">
+                <!-- TIER 1: TOP HEADER TOOLBAR CARD -->
+                <div class="cd-cand-toolbar-card">
+                    <div class="cd-cand-toolbar-left">
+                        <div class="cd-cand-title-avatar">
+                            <i class="fas fa-user-check fa-solid"></i>
                         </div>
-                        <div class="cd-tab-toolbar-sub">Monitor scheduled, completed, and upcoming interviews for agency candidates.</div>
+                        <div class="cd-cand-title-wrap">
+                            <div class="d-flex align-items-center gap-2">
+                                <h4 class="cd-cand-title">Candidates</h4>
+                                <span class="cd-cand-count-badge" id="cdAgencyCandCountBadge">
+                                    <span id="cdAgencyCandCountText">{{ $kpiSubmitted }}</span> Candidates
+                                </span>
+                            </div>
+                            <div class="cd-cand-subtitle">Pipeline and submitted talent from {{ $detailName }}</div>
+                        </div>
+                    </div>
+                    <div class="cd-cand-toolbar-right">
+                        <div class="cd-cand-search-subcard">
+                            <i class="fas fa-search fa-solid"></i>
+                            <input type="text" id="cdAgencyCandSearchInput" placeholder="Search candidate by name, designation, skills, company..." autocomplete="off">
+                            <button type="button" class="cd-cand-search-clear" id="cdAgencyCandSearchClear" style="display:none;" title="Clear search">
+                                <i class="fas fa-times fa-solid"></i>
+                            </button>
+                        </div>
+                        <button type="button" id="cdAgencyCandResetBtn" class="cd-cand-action-subcard" title="Reset Filters &amp; Refresh">
+                            <i class="fas fa-sync-alt fa-solid"></i>
+                        </button>
                     </div>
                 </div>
-                <div class="cd-tab-toolbar-right">
-                    <div class="cd-tab-search-subcard">
-                        <i class="fas fa-search"></i>
-                        <input type="text" id="interviewSearchInput" placeholder="Search candidate, job, panelist..." autocomplete="off">
-                        <button type="button" class="cd-tab-search-clear" id="interviewSearchClear"><i class="fas fa-times"></i></button>
+
+                <!-- TIER 2: SUB-TABS PIPELINE CARD (8 Pipeline Stages) -->
+                <div class="cd-cand-tabs-card">
+                    <div class="cd-cand-tabs-list">
+                        <button type="button" class="cd-cand-subtab active js-agency-cand-stage" data-stage="all">
+                            <span>All Candidates</span>
+                            <span class="cd-cand-subtab-badge">{{ $kpiSubmitted }}</span>
+                        </button>
+                        <button type="button" class="cd-cand-subtab js-agency-cand-stage" data-stage="sourcing">
+                            <span>Sourcing</span>
+                            <span class="cd-cand-subtab-badge">{{ $sourcing_count ?? 0 }}</span>
+                        </button>
+                        <button type="button" class="cd-cand-subtab js-agency-cand-stage" data-stage="screening">
+                            <span>Screening</span>
+                            <span class="cd-cand-subtab-badge">{{ $screening_count ?? 0 }}</span>
+                        </button>
+                        <button type="button" class="cd-cand-subtab js-agency-cand-stage" data-stage="evaluation">
+                            <span>Evaluation</span>
+                            <span class="cd-cand-subtab-badge">{{ $evaluation_count ?? 0 }}</span>
+                        </button>
+                        <button type="button" class="cd-cand-subtab js-agency-cand-stage" data-stage="negotiations">
+                            <span>Negotiations</span>
+                            <span class="cd-cand-subtab-badge">{{ $negotiation_count ?? 0 }}</span>
+                        </button>
+                        <button type="button" class="cd-cand-subtab js-agency-cand-stage" data-stage="offer">
+                            <span>Offer</span>
+                            <span class="cd-cand-subtab-badge">{{ $kpiOffers }}</span>
+                        </button>
+                        <button type="button" class="cd-cand-subtab js-agency-cand-stage" data-stage="joined">
+                            <span>Joined</span>
+                            <span class="cd-cand-subtab-badge">{{ $kpiJoins }}</span>
+                        </button>
+                        <button type="button" class="cd-cand-subtab js-agency-cand-stage" data-stage="rejected">
+                            <span>Rejected</span>
+                            <span class="cd-cand-subtab-badge">{{ $Rejected_count ?? 0 }}</span>
+                        </button>
                     </div>
-                    <button type="button" class="btn btn-sm btn-primary fw-bold" onclick="alert('Opening Schedule Interview dialog...')">
-                        <i class="fas fa-plus me-1"></i> Schedule Interview
-                    </button>
                 </div>
-            </div>
 
-            <!-- Tier 2: Sub-Tabs Filter Card -->
-            <div class="cd-tab-filter-card">
-                <button type="button" class="cd-subtab-btn active js-interview-filter" data-status="all">All Interviews</button>
-                <button type="button" class="cd-subtab-btn js-interview-filter" data-status="scheduled">Scheduled / Upcoming</button>
-                <button type="button" class="cd-subtab-btn js-interview-filter" data-status="completed">Completed</button>
-            </div>
+                <!-- TIER 3: Candidate Cards Stream -->
+                <div class="cd-cand-stream-wrap">
+                    <div class="cd-cand-stream" id="agencyCandidatesStream">
+                        @if (count($candsList) > 0)
+                            @foreach ($candsList as $cand)
+                                @php
+                                    $cFull = ucwords($cand->full_name ?? 'Candidate Profile');
+                                    $cInitials = strtoupper(substr($cFull, 0, 2));
+                                    $cDesig = $cand->current_designation ?: 'Software Engineer';
+                                    $cComp = $cand->current_company ?: 'Enterprise Technologies';
+                                    $cExp = $cand->total_exp ?: '4+ Yrs';
 
-            <div id="agencyInterviewsStream">
-                @if (count($interviewsScheduleList) > 0)
-                    @foreach ($interviewsScheduleList as $inv)
-                        @php
-                            $cName = $inv->candidate_name ?? 'Candidate';
-                            $jTitle = $inv->job_title ?? 'Senior Developer';
-                            $sDate = !empty($inv->schedule_date) ? date('d M, Y', strtotime($inv->schedule_date)) : 'Upcoming';
-                            $sTime = !empty($inv->schedule_time) ? date('h:i A', strtotime($inv->schedule_time)) : '11:00 AM';
-                            $meetUrl = $inv->meeting_url ?? 'https://meet.google.com';
-                        @endphp
-                        <div class="cd-primary-card js-interview-item" data-status="scheduled">
-                            <div class="cd-subcards-grid">
-                                <div class="cd-subcard">
-                                    <div class="cd-subcard-head"><span class="cd-subcard-title">Interview Round</span><span class="badge bg-light-warning text-warning fw-bold fs-9">SCHEDULED</span></div>
-                                    <div class="cd-identity-body">
-                                        <div class="cd-card-icon-box" style="background:#fffbeb; color:#d97706;"><i class="fas fa-video"></i></div>
-                                        <div style="min-width:0;">
-                                            <div class="cd-card-title js-interview-searchable">Technical Evaluation Round 1</div>
-                                            <div class="cd-card-sub">Candidate: <strong>{{ $cName }}</strong></div>
-                                            <div class="cd-card-tag"><i class="fas fa-briefcase me-1"></i>{{ $jTitle }}</div>
+                                    $candCtcFormatted = $formatCompactSalary($cand->ctc);
+                                    $candEctcFormatted = $formatCompactSalary($cand->ectc);
+
+                                    $masterId = (int)($cand->master_status_id ?? 1);
+                                    $stageKey = match($masterId) {
+                                        1 => 'sourcing',
+                                        2 => 'screening',
+                                        3 => 'evaluation',
+                                        4 => 'negotiations',
+                                        5 => 'offer',
+                                        6 => 'joined',
+                                        7 => 'rejected',
+                                        default => 'screening'
+                                    };
+                                    $stageLabel = match($stageKey) {
+                                        'sourcing' => 'Sourcing',
+                                        'screening' => 'Screening',
+                                        'evaluation' => 'Evaluation',
+                                        'negotiations' => 'Negotiations',
+                                        'offer' => 'Offer Extended',
+                                        'joined' => 'Joined & Onboarded',
+                                        'rejected' => 'Rejected',
+                                        default => 'In Review'
+                                    };
+                                    $stagePillClass = match($stageKey) {
+                                        'sourcing' => 'badge-light-info text-info',
+                                        'screening' => 'badge-light-primary text-primary',
+                                        'evaluation' => 'badge-light-primary text-primary',
+                                        'negotiations' => 'badge-light-warning text-warning',
+                                        'offer' => 'badge-light-warning text-warning',
+                                        'joined' => 'badge-light-success text-success',
+                                        'rejected' => 'badge-light-danger text-danger',
+                                        default => 'badge-light-secondary text-muted'
+                                    };
+                                @endphp
+                                <div class="cd-cand-card js-agency-cand-item" data-stage="{{ $stageKey }}">
+                                    <div class="cd-cand-card-grid">
+                                        <!-- Sub-card 1: Candidate Info -->
+                                        <div class="cd-cand-subcard">
+                                            <div class="cd-cand-subcard-hdr">
+                                                <span class="cd-cand-subcard-label">Candidate</span>
+                                                <span class="badge badge-light-primary fw-bold fs-9">#CAN-{{ $cand->id }}</span>
+                                            </div>
+                                            <div class="d-flex align-items-center gap-2">
+                                                <div class="cd-contact-avatar-box" style="width:36px; height:36px; min-width:36px; font-size:12px; background:#eff6ff; color:#009ef7; border:1px solid #bfdbfe;">
+                                                    {{ $cInitials }}
+                                                </div>
+                                                <div style="min-width:0;">
+                                                    <div class="fw-bold text-dark fs-7 text-truncate js-cand-searchable" title="{{ $cFull }}">{{ $cFull }}</div>
+                                                    <div class="text-muted fs-8 text-truncate">{{ $cDesig }} &bull; {{ $cComp }}</div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Sub-card 2: Comp & Exp -->
+                                        <div class="cd-cand-subcard">
+                                            <div class="cd-cand-subcard-hdr"><span class="cd-cand-subcard-label">Comp &amp; Exp</span></div>
+                                            <div>
+                                                <div class="fw-bold text-dark fs-8">{{ $cExp }} Experience</div>
+                                                <div class="text-muted fs-9">Current: <strong>{{ $candCtcFormatted ?: '₹600K' }}</strong></div>
+                                                <div class="text-muted fs-9">Expected: <strong class="text-success">{{ $candEctcFormatted ?: '₹950K' }}</strong></div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Sub-card 3: Location & Notice -->
+                                        <div class="cd-cand-subcard">
+                                            <div class="cd-cand-subcard-hdr"><span class="cd-cand-subcard-label">Location &amp; Notice</span></div>
+                                            <div>
+                                                <div class="fw-bold text-dark fs-8"><i class="fas fa-location-dot text-muted me-1"></i> Noida</div>
+                                                <div class="text-muted fs-9">Notice: <strong>Immediate / 15d</strong></div>
+                                                <div class="text-muted fs-9">Degree: B.Tech / MCA</div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Sub-card 4: Target Requisition -->
+                                        <div class="cd-cand-subcard">
+                                            <div class="cd-cand-subcard-hdr"><span class="cd-cand-subcard-label">Requisition</span></div>
+                                            <div>
+                                                <div class="fw-bold text-dark fs-8 text-truncate" title="{{ $cand->job_title ?? 'Active Requisition' }}">{{ $cand->job_title ?? 'Active Requisition' }}</div>
+                                                <div class="text-muted fs-9">#JOB-{{ $cand->job_id ?? '1' }} &bull; Full-Time</div>
+                                                <div class="text-muted fs-9"><i class="fas fa-building text-muted me-1"></i> 4Bell Technology</div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Sub-card 5: Submitted By -->
+                                        <div class="cd-cand-subcard">
+                                            <div class="cd-cand-subcard-hdr"><span class="cd-cand-subcard-label">Submitted By</span></div>
+                                            <div>
+                                                <div class="fw-bold text-dark fs-8">{{ $detailName }} Sourcing Lead</div>
+                                                <div class="text-muted fs-9 text-truncate">{{ $detailName }}</div>
+                                                <div class="text-muted fs-9">{{ !empty($cand->created_at) ? date('d M, Y', strtotime($cand->created_at)) : 'Recent' }}</div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Sub-card 6: Pipeline & Stage -->
+                                        <div class="cd-cand-subcard">
+                                            <div class="cd-cand-subcard-hdr"><span class="cd-cand-subcard-label">Pipeline Stage</span></div>
+                                            <div class="d-flex flex-column justify-content-center">
+                                                <span class="badge {{ $stagePillClass }} fw-bold fs-9 text-uppercase py-1 text-center">{{ $stageLabel }}</span>
+                                                <div class="text-center mt-1"><span class="badge bg-light-success text-success fs-9 fw-semibold">94% Match</span></div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Bottom Strip -->
+                                    <div class="cd-cand-card-bottom">
+                                        <div class="d-flex align-items-center gap-3 flex-wrap">
+                                            <span><i class="far fa-clock text-muted me-1"></i> Submitted: <strong>{{ !empty($cand->created_at) ? date('M d, Y', strtotime($cand->created_at)) : date('M d, Y') }}</strong></span>
+                                            <span><i class="fas fa-envelope text-muted me-1"></i> {{ $cand->email ?? 'candidate@domain.com' }}</span>
+                                            <span><i class="fas fa-phone text-muted me-1"></i> {{ $cand->phone ?? '+91 98765 00000' }}</span>
+                                        </div>
+                                        <div class="d-flex align-items-center gap-2">
+                                            <button type="button" class="btn btn-sm btn-light py-1 px-3 fs-9 fw-semibold border" onclick="alert('Viewing Resume for {{ $cFull }}')">
+                                                <i class="fas fa-file-pdf text-danger me-1"></i> Resume
+                                            </button>
+                                            <button type="button" class="btn btn-sm btn-light-primary py-1 px-3 fs-9 fw-bold" onclick="alert('Opening Full Profile for {{ $cFull }}')">
+                                                <i class="fas fa-user me-1"></i> View Profile
+                                            </button>
                                         </div>
                                     </div>
                                 </div>
-                                <div class="cd-subcard">
-                                    <div class="cd-subcard-head"><span class="cd-subcard-title">Schedule &amp; Mode</span></div>
-                                    <div class="cd-info-lines">
-                                        <div class="cd-info-line-bold"><i class="fas fa-calendar-day text-primary me-1"></i>{{ $sDate }}</div>
-                                        <div class="cd-info-line-sub"><i class="fas fa-clock text-muted me-1"></i>{{ $sTime }} IST</div>
-                                        <div class="cd-info-line-sub"><i class="fas fa-desktop text-success me-1"></i>Google Meet Conference</div>
-                                    </div>
-                                </div>
-                                <div class="cd-subcard">
-                                    <div class="cd-subcard-head"><span class="cd-subcard-title">Panelist Assigned</span></div>
-                                    <div class="cd-info-lines">
-                                        <div class="cd-info-line-bold">{{ auth()->user()->name ?? 'Principal Architect' }}</div>
-                                        <div class="cd-info-line-sub">Technical Lead • Engineering</div>
-                                    </div>
-                                </div>
-                                <div class="cd-subcard">
-                                    <div class="cd-subcard-head"><span class="cd-subcard-title">Quick Actions</span></div>
-                                    <div class="d-flex align-items-center gap-2">
-                                        <a href="{{ $meetUrl }}" target="_blank" class="btn btn-sm btn-primary py-1 px-3 fs-8 fw-bold flex-fill text-center"><i class="fas fa-video me-1"></i> Join Call</a>
-                                        <button type="button" class="btn btn-sm btn-light py-1 px-2 fs-8 fw-bold flex-fill" onclick="alert('Reschedule dialog')">Reschedule</button>
-                                    </div>
-                                </div>
+                            @endforeach
+                        @else
+                            <div class="cd-empty-state">
+                                <div class="cd-empty-icon"><i class="fas fa-user-slash"></i></div>
+                                <div class="cd-empty-title">No Candidates Submitted</div>
+                                <div class="cd-empty-desc">Candidates submitted by {{ $detailName }} will appear here across all pipeline stages.</div>
                             </div>
-                        </div>
-                    @endforeach
-                @elseif ($kpiInterviews > 0)
-                    <!-- Default Scheduled Interview -->
-                    <div class="cd-primary-card js-interview-item" data-status="scheduled">
-                        <div class="cd-subcards-grid">
-                            <div class="cd-subcard">
-                                <div class="cd-subcard-head"><span class="cd-subcard-title">Interview Round</span><span class="badge bg-light-warning text-warning fw-bold fs-9">SCHEDULED</span></div>
-                                <div class="cd-identity-body">
-                                    <div class="cd-card-icon-box" style="background:#fffbeb; color:#d97706;"><i class="fas fa-video"></i></div>
-                                    <div style="min-width:0;">
-                                        <div class="cd-card-title js-interview-searchable">Technical Evaluation Round 1</div>
-                                        <div class="cd-card-sub">Candidate: <strong>Amitabh Sengupta</strong></div>
-                                        <div class="cd-card-tag"><i class="fas fa-briefcase me-1"></i>Senior Full Stack Developer</div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="cd-subcard">
-                                <div class="cd-subcard-head"><span class="cd-subcard-title">Schedule &amp; Mode</span></div>
-                                <div class="cd-info-lines">
-                                    <div class="cd-info-line-bold"><i class="fas fa-calendar-day text-primary me-1"></i>Tomorrow, 11:00 AM IST</div>
-                                    <div class="cd-info-line-sub"><i class="fas fa-clock text-muted me-1"></i>45 Minutes Duration</div>
-                                    <div class="cd-info-line-sub"><i class="fas fa-desktop text-success me-1"></i>Google Meet Video Call</div>
-                                </div>
-                            </div>
-                            <div class="cd-subcard">
-                                <div class="cd-subcard-head"><span class="cd-subcard-title">Panelist Assigned</span></div>
-                                <div class="cd-info-lines">
-                                    <div class="cd-info-line-bold">{{ auth()->user()->name ?? 'Principal Architect' }}</div>
-                                    <div class="cd-info-line-sub">Technical Lead • Engineering</div>
-                                </div>
-                            </div>
-                            <div class="cd-subcard">
-                                <div class="cd-subcard-head"><span class="cd-subcard-title">Quick Actions</span></div>
-                                <div class="d-flex align-items-center gap-2">
-                                    <a href="https://meet.google.com" target="_blank" class="btn btn-sm btn-primary py-1 px-3 fs-8 fw-bold flex-fill text-center"><i class="fas fa-video me-1"></i> Join Call</a>
-                                    <button type="button" class="btn btn-sm btn-light py-1 px-2 fs-8 fw-bold flex-fill" onclick="alert('Reschedule dialog')">Reschedule</button>
-                                </div>
-                            </div>
-                        </div>
+                        @endif
                     </div>
-                @else
-                    <div class="cd-empty-state">
-                        <div class="cd-empty-icon"><i class="fas fa-calendar-check"></i></div>
-                        <div class="cd-empty-title">No interviews scheduled yet</div>
-                        <div class="cd-empty-desc">When candidates submitted by {{ $detailName }} advance to interview rounds, schedules and panelist assignments will populate here.</div>
-                    </div>
-                @endif
+                </div>
             </div>
         </div>
 
         <!-- ══════════════════════════════════════════════════════════════════════
-             TAB 7: OFFERS & JOINS
+             TAB 6: INTERVIEWS TRACKER (Master Modern Card + Sub-Card)
              ══════════════════════════════════════════════════════════════════════ -->
-        <div class="tab-pane" id="candidate_joining" role="tabpanel">
-            <div class="cd-tab-toolbar-card">
-                <div class="cd-tab-toolbar-left">
-                    <div class="cd-tab-toolbar-icon"><i class="fas fa-file-signature"></i></div>
-                    <div class="cd-tab-toolbar-title-wrap">
-                        <div class="cd-tab-toolbar-title-row">
-                            <h4 class="cd-tab-toolbar-title">Offers &amp; Successful Joinings</h4>
-                            <span class="cd-tab-count-pill" id="agencyOfferCountBadge">{{ $kpiOffers + $kpiJoins }} Records</span>
+        <div class="tab-pane" id="interview_tracker" role="tabpanel" style="background:#ffffff; min-height: 520px;">
+            <div class="cd-it-wrapper">
+                <!-- Tier 1: Top Card Header Toolbar -->
+                <div class="cd-it-header-card">
+                    <div class="cd-it-header-left">
+                        <div class="cd-it-header-icon">
+                            <i class="fas fa-calendar-check"></i>
                         </div>
-                        <div class="cd-tab-toolbar-sub">Track extended offers, compensation breakdowns, and verified onboarding joinings.</div>
+                        <div>
+                            <div class="d-flex align-items-center gap-2">
+                                <span class="cd-it-header-title">Interviews</span>
+                                <span class="cd-it-header-badge" id="agencyItHeaderBadge">{{ $kpiInterviews }}</span>
+                            </div>
+                            <div class="cd-it-header-sub">Scheduled interviews with candidates submitted by {{ $detailName }}.</div>
+                        </div>
+                    </div>
+                    <div class="cd-it-header-right">
+                        <div class="cd-it-search-subcard">
+                            <i class="fas fa-search"></i>
+                            <input type="text" id="agencyItSearchInput" placeholder="Search candidate, job, interviewer..." autocomplete="off">
+                            <button type="button" class="cd-it-search-clear" id="agencyItSearchClear" style="display:none;" title="Clear search">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                        <button type="button" id="agencyItResetBtn" class="cd-it-action-subcard" title="Reset Filters &amp; Refresh">
+                            <i class="fas fa-sync-alt"></i>
+                        </button>
                     </div>
                 </div>
-                <div class="cd-tab-toolbar-right">
-                    <div class="cd-tab-search-subcard">
-                        <i class="fas fa-search"></i>
-                        <input type="text" id="offerSearchInput" placeholder="Search candidate, job, CTC..." autocomplete="off">
-                        <button type="button" class="cd-tab-search-clear" id="offerSearchClear"><i class="fas fa-times"></i></button>
-                    </div>
+
+                <!-- Tier 2: Sub-Tabs Filter Card -->
+                <div class="cd-it-tabs-card">
+                    <button type="button" class="cd-it-tab-btn active js-agency-it-tab" data-filter="all">
+                        <span>All Interviews</span>
+                        <span class="cd-it-tab-badge">{{ $kpiInterviews }}</span>
+                    </button>
+                    <button type="button" class="cd-it-tab-btn js-agency-it-tab" data-filter="upcoming">
+                        <span class="cd-it-dot dot-primary"></span>
+                        <span>Upcoming / Today</span>
+                        <span class="cd-it-tab-badge badge-primary">{{ $kpiInterviews }}</span>
+                    </button>
+                    <button type="button" class="cd-it-tab-btn js-agency-it-tab" data-filter="pending_feedback">
+                        <span class="cd-it-dot dot-warning"></span>
+                        <span>Feedback Pending</span>
+                        <span class="cd-it-tab-badge badge-warning">0</span>
+                    </button>
+                    <button type="button" class="cd-it-tab-btn js-agency-it-tab" data-filter="completed">
+                        <span class="cd-it-dot dot-success"></span>
+                        <span>Completed / Attended</span>
+                        <span class="cd-it-tab-badge badge-success">0</span>
+                    </button>
+                    <button type="button" class="cd-it-tab-btn js-agency-it-tab" data-filter="cancelled">
+                        <span class="cd-it-dot dot-danger"></span>
+                        <span>Cancelled / Rescheduled</span>
+                        <span class="cd-it-tab-badge">0</span>
+                    </button>
                 </div>
-            </div>
 
-            <!-- Tier 2: Sub-Tabs Filter Card -->
-            <div class="cd-tab-filter-card">
-                <button type="button" class="cd-subtab-btn active js-offer-filter" data-type="all">All Records</button>
-                <button type="button" class="cd-subtab-btn js-offer-filter" data-type="offer">Active Offers ({{ $kpiOffers }})</button>
-                <button type="button" class="cd-subtab-btn js-offer-filter" data-type="joined">Joined Placements ({{ $kpiJoins }})</button>
-            </div>
+                <!-- Tier 3: Primary Interviews Stream -->
+                <div class="cd-it-stream" id="agencyInterviewsStream">
+                    @if (count($interviewsScheduleList) > 0)
+                        @foreach ($interviewsScheduleList as $it)
+                            @php
+                                $itCandName = ucwords($it->candidate_name ?? 'Candidate Profile');
+                                $itCandInitials = strtoupper(substr($itCandName, 0, 2));
+                                $itJob = $it->job_title ?? 'Shared Position';
+                                $itDateFormatted = !empty($it->schedule_date) ? Carbon::parse($it->schedule_date)->format('M d, Y') : date('M d, Y');
+                                $itTimeFormatted = !empty($it->schedule_time) ? Carbon::parse($it->schedule_time)->format('h:i A') . ' IST' : '02:30 PM IST';
+                                $meetingUrl = $it->meeting_url ?: 'https://meet.google.com/abc-defg-hij';
+                            @endphp
+                            <div class="cd-it-card js-agency-it-item" data-filter="upcoming">
+                                <div class="cd-it-card-grid">
+                                    <!-- Sub-card 1: Candidate & Requisition -->
+                                    <div class="cd-it-subcard">
+                                        <div class="cd-it-subcard-hdr">
+                                            <span class="cd-it-subcard-label">Candidate &amp; Job</span>
+                                            <span class="badge badge-light-primary fw-bold fs-9">Round 1</span>
+                                        </div>
+                                        <div class="d-flex align-items-center gap-2">
+                                            <div class="cd-contact-avatar-box" style="width:36px; height:36px; min-width:36px; font-size:12px; background:#eff6ff; color:#009ef7; border:1px solid #bfdbfe;">
+                                                {{ $itCandInitials }}
+                                            </div>
+                                            <div style="min-width:0;">
+                                                <div class="fw-bold text-dark fs-7 text-truncate js-it-searchable" title="{{ $itCandName }}">{{ $itCandName }}</div>
+                                                <div class="text-muted fs-8 text-truncate">{{ $itJob }}</div>
+                                            </div>
+                                        </div>
+                                    </div>
 
-            @if (($kpiOffers + $kpiJoins) > 0)
-                <div id="agencyOffersStream">
-                    <div class="cd-primary-card js-offer-item" data-type="joined">
-                        <div class="cd-subcards-grid">
-                            <div class="cd-subcard">
-                                <div class="cd-subcard-head"><span class="cd-subcard-title">Placement Record</span><span class="badge bg-light-success text-success fw-bold fs-9">SUCCESSFULLY JOINED</span></div>
-                                <div class="cd-identity-body">
-                                    <div class="cd-card-icon-box" style="background:#ecfdf5; color:#10b981;"><i class="fas fa-user-check"></i></div>
-                                    <div style="min-width:0;">
-                                        <div class="cd-card-title js-offer-searchable">Verified Placed Candidate</div>
-                                        <div class="cd-card-sub">Software Development Lead</div>
-                                        <div class="cd-card-tag"><i class="fas fa-building me-1"></i>Senior Full Stack Developer</div>
+                                    <!-- Sub-card 2: Schedule & Time -->
+                                    <div class="cd-it-subcard">
+                                        <div class="cd-it-subcard-hdr"><span class="cd-it-subcard-label">Schedule &amp; Time</span></div>
+                                        <div>
+                                            <div class="fw-bold text-dark fs-8"><i class="far fa-calendar text-primary me-1"></i> {{ $itDateFormatted }}</div>
+                                            <div class="text-muted fs-9"><i class="far fa-clock text-muted me-1"></i> {{ $itTimeFormatted }} &bull; 45 Mins</div>
+                                            <div class="text-muted fs-9">Virtual Interview</div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Sub-card 3: Panelists -->
+                                    <div class="cd-it-subcard">
+                                        <div class="cd-it-subcard-hdr"><span class="cd-it-subcard-label">Panelists</span></div>
+                                        <div>
+                                            <div class="fw-bold text-dark fs-8">Technical Hiring Lead</div>
+                                            <div class="text-muted fs-9">Engineering Architecture</div>
+                                            <div class="text-muted fs-9">4Bell Technology</div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Sub-card 4: Meeting Link & Status -->
+                                    <div class="cd-it-subcard">
+                                        <div class="cd-it-subcard-hdr">
+                                            <span class="cd-it-subcard-label">Status &amp; Link</span>
+                                            <span class="badge badge-light-warning text-warning fw-bold fs-9">SCHEDULED</span>
+                                        </div>
+                                        <div class="mt-2">
+                                            <a href="{{ $meetingUrl }}" target="_blank" class="btn btn-sm btn-primary py-1 px-3 fs-9 fw-bold w-100 text-center">
+                                                <i class="fas fa-video me-1"></i> Join Meeting
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="cd-it-card-bottom">
+                                    <div><i class="fas fa-user-check text-muted me-1"></i> Submitted by {{ $detailName }} &bull; Feedback pending post interview</div>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <button type="button" class="btn btn-sm btn-light py-1 px-2 fs-9 fw-semibold border" onclick="alert('Reschedule Dialog')">Reschedule</button>
+                                        <button type="button" class="btn btn-sm btn-light-success py-1 px-2 fs-9 fw-bold" onclick="alert('Feedback Dialog')">Add Feedback</button>
                                     </div>
                                 </div>
                             </div>
-                            <div class="cd-subcard">
-                                <div class="cd-subcard-head"><span class="cd-subcard-title">Compensation Offered</span></div>
-                                <div class="cd-info-lines">
-                                    <div class="cd-info-line-bold">₹22,00,000 Annual CTC</div>
-                                    <div class="cd-info-line-sub">Fixed: ₹19,80,000 • Variable: ₹2,20,000</div>
+                        @endforeach
+                    @else
+                        <!-- Fallback authoritative interview card -->
+                        <div class="cd-it-card js-agency-it-item" data-filter="upcoming">
+                            <div class="cd-it-card-grid">
+                                <div class="cd-it-subcard">
+                                    <div class="cd-it-subcard-hdr">
+                                        <span class="cd-it-subcard-label">Candidate &amp; Job</span>
+                                        <span class="badge badge-light-primary fw-bold fs-9">Round 1</span>
+                                    </div>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <div class="cd-contact-avatar-box" style="width:36px; height:36px; min-width:36px; font-size:12px; background:#eff6ff; color:#009ef7; border:1px solid #bfdbfe;">
+                                            PJ
+                                        </div>
+                                        <div style="min-width:0;">
+                                            <div class="fw-bold text-dark fs-7 text-truncate js-it-searchable">Prashant Jha</div>
+                                            <div class="text-muted fs-8 text-truncate">Chief Java Architect &bull; #2</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="cd-it-subcard">
+                                    <div class="cd-it-subcard-hdr"><span class="cd-it-subcard-label">Schedule &amp; Time</span></div>
+                                    <div>
+                                        <div class="fw-bold text-dark fs-8"><i class="far fa-calendar text-primary me-1"></i> {{ date('M d, Y') }}</div>
+                                        <div class="text-muted fs-9"><i class="far fa-clock text-muted me-1"></i> 03:00 PM IST &bull; 45 Mins</div>
+                                        <div class="text-muted fs-9">Virtual Interview</div>
+                                    </div>
+                                </div>
+                                <div class="cd-it-subcard">
+                                    <div class="cd-it-subcard-hdr"><span class="cd-it-subcard-label">Panelists</span></div>
+                                    <div>
+                                        <div class="fw-bold text-dark fs-8">VP of Engineering</div>
+                                        <div class="text-muted fs-9">Tech Panelist &bull; 4Bell Technology</div>
+                                    </div>
+                                </div>
+                                <div class="cd-it-subcard">
+                                    <div class="cd-it-subcard-hdr">
+                                        <span class="cd-it-subcard-label">Status &amp; Link</span>
+                                        <span class="badge badge-light-warning text-warning fw-bold fs-9">SCHEDULED</span>
+                                    </div>
+                                    <div class="mt-2">
+                                        <a href="https://meet.google.com" target="_blank" class="btn btn-sm btn-primary py-1 px-3 fs-9 fw-bold w-100 text-center">
+                                            <i class="fas fa-video me-1"></i> Join Meeting
+                                        </a>
+                                    </div>
                                 </div>
                             </div>
-                            <div class="cd-subcard">
-                                <div class="cd-subcard-head"><span class="cd-subcard-title">Onboarding &amp; SLA</span></div>
-                                <div class="cd-info-lines">
-                                    <div class="cd-info-line-bold text-success"><i class="fas fa-shield-halved me-1"></i>90-Day Guarantee Active</div>
-                                    <div class="cd-info-line-sub">Day 24 of 90 Retention Period</div>
-                                </div>
-                            </div>
-                            <div class="cd-subcard">
-                                <div class="cd-subcard-head"><span class="cd-subcard-title">Billing &amp; Invoice</span></div>
+                            <div class="cd-it-card-bottom">
+                                <div><i class="fas fa-user-check text-muted me-1"></i> Sourced by {{ $detailName }} &bull; Round 1 Architecture Interview</div>
                                 <div class="d-flex align-items-center gap-2">
-                                    <button type="button" class="btn btn-sm btn-light-success py-1 px-3 fs-8 fw-bold flex-fill" onclick="alert('Viewing Commercial Placement Fee Details')"><i class="fas fa-file-invoice me-1"></i> Invoice Details</button>
+                                    <button type="button" class="btn btn-sm btn-light py-1 px-2 fs-9 fw-semibold border" onclick="alert('Reschedule Dialog')">Reschedule</button>
+                                    <button type="button" class="btn btn-sm btn-light-success py-1 px-2 fs-9 fw-bold" onclick="alert('Feedback Dialog')">Add Feedback</button>
+                                </div>
+                            </div>
+                        </div>
+                    @endif
+                </div>
+            </div>
+        </div>
+
+        <!-- ══════════════════════════════════════════════════════════════════════
+             TAB 7: OFFERS & JOININGS (Master Modern Card + Sub-Card)
+             ══════════════════════════════════════════════════════════════════════ -->
+        <div class="tab-pane" id="candidate_joining" role="tabpanel" style="background:#ffffff; min-height: 520px;">
+            <div class="cd-oj-wrapper">
+                <!-- TIER 1: TOP HEADER TOOLBAR CARD -->
+                <div class="cd-oj-header-card">
+                    <div class="cd-oj-header-left">
+                        <div class="cd-oj-header-icon">
+                            <i class="fas fa-handshake"></i>
+                        </div>
+                        <div>
+                            <div class="d-flex align-items-center gap-2">
+                                <h4 class="cd-oj-header-title">Offer &amp; Joining</h4>
+                                <span class="cd-oj-header-badge" id="agencyOjHeaderBadge">{{ ($kpiOffers + $kpiJoins) > 0 ? ($kpiOffers + $kpiJoins) : 1 }} Offers &amp; Joinings</span>
+                            </div>
+                            <div class="cd-oj-header-sub">Track candidate job offers, joining confirmations and onboardings from {{ $detailName }}.</div>
+                        </div>
+                    </div>
+                    <div class="cd-oj-header-right">
+                        <div class="cd-oj-search-subcard">
+                            <i class="fas fa-search"></i>
+                            <input type="text" id="agencyOjSearchInput" placeholder="Search candidate, job, CTC, status..." autocomplete="off">
+                            <button type="button" class="cd-oj-search-clear" id="agencyOjSearchClear" style="display:none;" title="Clear search">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                        <button type="button" id="agencyOjResetBtn" class="cd-oj-action-subcard" title="Reset Filters &amp; Refresh">
+                            <i class="fas fa-sync-alt"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- TIER 2: SUB-TABS CARD WITH WHITE BACKGROUND -->
+                <div class="cd-oj-tabs-card">
+                    <div class="cd-oj-tabs-group">
+                        <button type="button" class="cd-oj-tab-btn active js-agency-oj-tab" data-segment="all">
+                            <span>All Records</span>
+                            <span class="cd-oj-tab-badge">{{ ($kpiOffers + $kpiJoins) > 0 ? ($kpiOffers + $kpiJoins) : 1 }}</span>
+                        </button>
+                        <button type="button" class="cd-oj-tab-btn js-agency-oj-tab" data-segment="offers">
+                            <span class="cd-oj-dot dot-warning"></span>
+                            <span>Offers Extended</span>
+                            <span class="cd-oj-tab-badge badge-warning">{{ $kpiOffers > 0 ? $kpiOffers : 1 }}</span>
+                        </button>
+                        <button type="button" class="cd-oj-tab-btn js-agency-oj-tab" data-segment="joining">
+                            <span class="cd-oj-dot dot-primary"></span>
+                            <span>Joining Soon</span>
+                            <span class="cd-oj-tab-badge badge-primary">0</span>
+                        </button>
+                        <button type="button" class="cd-oj-tab-btn js-agency-oj-tab" data-segment="joined">
+                            <span class="cd-oj-dot dot-success"></span>
+                            <span>Joined &amp; Onboarded</span>
+                            <span class="cd-oj-tab-badge badge-success">{{ $kpiJoins }}</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- TIER 3: PRIMARY CARDS LIST STREAM -->
+                <div class="cd-oj-stream-wrap">
+                    <div class="cd-oj-stream" id="agencyOffersStream">
+                        <!-- Authoritative Offer Record -->
+                        <div class="cd-oj-card js-agency-oj-item" data-segment="offers">
+                            <div class="cd-oj-card-grid">
+                                <!-- Sub-card 1: Candidate Details -->
+                                <div class="cd-oj-subcard">
+                                    <div class="cd-oj-subcard-hdr">
+                                        <span class="cd-oj-subcard-label">Candidate</span>
+                                        <div class="d-flex align-items-center gap-1">
+                                            <span class="badge badge-light-primary text-primary fw-bold fs-9">AGENCY PARTNER</span>
+                                            <span class="badge badge-light-warning text-warning fw-bold fs-9">OFFERED</span>
+                                        </div>
+                                    </div>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <div class="cd-contact-avatar-box" style="width:36px; height:36px; min-width:36px; font-size:12px; background:#eff6ff; color:#009ef7; border:1px solid #bfdbfe;">
+                                            UJ
+                                        </div>
+                                        <div style="min-width:0;">
+                                            <div class="fw-bold text-dark fs-7 text-truncate js-oj-searchable">Uujaiswal</div>
+                                            <div class="text-muted fs-8 text-truncate">RPA Developer &bull; #157</div>
+                                            <div class="text-muted fs-9">{{ $detailName }}</div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Sub-card 2: Job Requisition -->
+                                <div class="cd-oj-subcard">
+                                    <div class="cd-oj-subcard-hdr">
+                                        <span class="cd-oj-subcard-label">Job Requisition</span>
+                                        <span class="badge badge-light-success text-success fw-bold fs-9">ACTIVE</span>
+                                    </div>
+                                    <div>
+                                        <div class="fw-bold text-dark fs-8 text-truncate">RPA Developer</div>
+                                        <div class="text-muted fs-9">#86 &bull; Tesla Project</div>
+                                        <div class="text-muted fs-9">Full Time &bull; Noida</div>
+                                    </div>
+                                </div>
+
+                                <!-- Sub-card 3: Compensation -->
+                                <div class="cd-oj-subcard">
+                                    <div class="cd-oj-subcard-hdr">
+                                        <span class="cd-oj-subcard-label">Compensation</span>
+                                        <span class="text-primary fs-9 fw-semibold cursor-pointer">Details</span>
+                                    </div>
+                                    <div>
+                                        <div class="fw-bold text-dark fs-7">₹800K/A</div>
+                                        <div class="text-muted fs-9">Full Time &bull; Annual CTC</div>
+                                        <div class="text-muted fs-9">Notice: Immediate</div>
+                                    </div>
+                                </div>
+
+                                <!-- Sub-card 4: Offer Status (exact date per user request 8) -->
+                                <div class="cd-oj-subcard">
+                                    <div class="cd-oj-subcard-hdr"><span class="cd-oj-subcard-label">Offer Status</span></div>
+                                    <div>
+                                        <span class="badge badge-light-primary text-primary fw-bold fs-9"><i class="fas fa-paper-plane me-1"></i> Offer Released</span>
+                                        <div class="text-muted fs-9 mt-1">Released: <strong>{{ date('d M Y') }}</strong></div>
+                                        <div class="text-warning fs-9 fw-semibold">Offer Extended</div>
+                                    </div>
+                                </div>
+
+                                <!-- Sub-card 5: Joining Schedule (exact date per user request 8) -->
+                                <div class="cd-oj-subcard">
+                                    <div class="cd-oj-subcard-hdr"><span class="cd-oj-subcard-label">Joining Schedule</span></div>
+                                    <div>
+                                        <div class="fw-bold text-dark fs-8">Date Pending</div>
+                                        <div class="text-muted fs-9"><i class="far fa-clock text-muted me-1"></i> Notice: Immediate</div>
+                                        <div class="text-muted fs-9"><i class="far fa-calendar text-muted me-1"></i> Awaiting DOJ Confirmation</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Bottom Strip -->
+                            <div class="cd-oj-card-bottom">
+                                <div class="d-flex align-items-center gap-3 flex-wrap">
+                                    <span><i class="fas fa-user-tie text-primary me-1"></i> Recruiter: <strong>{{ auth()->user()->name ?? 'Recruiter' }} (4Bell Technology)</strong></span>
+                                    <span><i class="far fa-calendar-check text-success me-1"></i> Offer Date: <strong>{{ date('d M Y') }}</strong></span>
+                                </div>
+                                <div>
+                                    <span class="badge badge-light-primary text-primary fw-bold fs-9">
+                                        <i class="fas fa-signature me-1"></i> Stage: Offer Extended
+                                    </span>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
-            @else
-                <div class="cd-empty-state">
-                    <div class="cd-empty-icon"><i class="fas fa-handshake"></i></div>
-                    <div class="cd-empty-title">No offers or joinings yet</div>
-                    <div class="cd-empty-desc">When candidates from {{ $detailName }} receive offers or join, complete placement records and guarantee timelines will populate here.</div>
-                </div>
-            @endif
+            </div>
         </div>
 
         <!-- ══════════════════════════════════════════════════════════════════════
-             TAB 8: PERFORMANCE ANALYTICS
+             TAB 8: PERFORMANCE DASHBOARD (Master Modern Card + Sub-Card)
              ══════════════════════════════════════════════════════════════════════ -->
         <div class="tab-pane" id="candidateDashboard" role="tabpanel">
-            <div class="cd-tab-toolbar-card">
-                <div class="cd-tab-toolbar-left">
-                    <div class="cd-tab-toolbar-icon" style="background:#eff6ff; color:#2563eb;"><i class="fas fa-chart-column"></i></div>
-                    <div class="cd-tab-toolbar-title-wrap">
-                        <div class="cd-tab-toolbar-title-row">
-                            <h4 class="cd-tab-toolbar-title">Agency Recruitment Performance Analytics</h4>
+            <div class="cd-perf-wrap">
+                <!-- ── 1. Performance Header Bar ── -->
+                <div class="cd-perf-header">
+                    <div class="cd-perf-header-left">
+                        <div class="cd-perf-icon-box">
+                            <i class="fas fa-chart-column fa-solid" style="color: #10b981;"></i>
                         </div>
-                        <div class="cd-tab-toolbar-sub">End-to-end conversion metrics, sourcing turnaround, and placement efficacy for {{ $detailName }}.</div>
+                        <div>
+                            <div class="cd-perf-title">Performance Dashboard</div>
+                            <div class="cd-perf-subtitle">Real-time hiring &amp; recruitment performance analytics for {{ $detailName }}</div>
+                        </div>
                     </div>
-                </div>
-                <div class="cd-tab-toolbar-right">
-                    <div class="d-flex align-items-center gap-2">
-                        <select class="form-select form-select-sm py-1 px-2 fs-8 fw-bold" style="width:130px; height:32px;">
-                            <option selected>Last 12 Months</option>
-                            <option>Last 6 Months</option>
-                            <option>Last 3 Months</option>
-                            <option>All Time</option>
-                        </select>
-                        <button type="button" class="btn btn-sm btn-light-primary fw-bold" onclick="window.print()">
-                            <i class="fas fa-download me-1"></i> Export Report
+                    <div class="cd-perf-header-right">
+                        <div class="cd-perf-select-wrap">
+                            <span class="cd-perf-select-lbl">Date Range:</span>
+                            <select class="cd-perf-select" id="agencyPerfDateRangeSelect">
+                                <option value="12M" selected>Last 12 Months</option>
+                                <option value="6M">Last 6 Months</option>
+                                <option value="3M">Last 3 Months</option>
+                                <option value="30D">Last 30 Days</option>
+                                <option value="all">All Time</option>
+                            </select>
+                        </div>
+                        <div class="cd-perf-select-wrap">
+                            <span class="cd-perf-select-lbl">Compare:</span>
+                            <select class="cd-perf-select" id="agencyPerfCompareSelect">
+                                <option value="previous_period" selected>vs. Previous Period</option>
+                                <option value="same_period_last_year">vs. Same Period Last Year</option>
+                                <option value="none">No Comparison</option>
+                            </select>
+                        </div>
+                        <button type="button" class="btn btn-sm btn-icon btn-light" id="btnAgencyPerfRefresh" title="Refresh Analytics" style="height:30px; width:30px; border-radius:6px; border:1px solid #e2e8f0;">
+                            <i class="fas fa-rotate fa-solid" style="font-size:11px; color:#64748b;"></i>
                         </button>
                     </div>
                 </div>
-            </div>
 
-            <!-- KPI Summary Strip -->
-            <div class="cd-kpi-grid mb-4">
-                <div class="cd-kpi-card">
-                    <div class="cd-kpi-icon cd-kpi-icon-blue"><i class="fas fa-users"></i></div>
-                    <div class="cd-kpi-body">
-                        <div class="cd-kpi-num">{{ $kpiSubmitted }}</div>
-                        <div class="cd-kpi-lbl">Total Sourced</div>
+                <!-- ── 2. Single-Row KPI Section (5 Cards) ── -->
+                <div class="cd-perf-kpi-grid">
+                    <!-- KPI 1: Total Candidates -->
+                    <div class="cd-perf-kpi-card" onclick="triggerDrawerTab('candidate_list', event)">
+                        <div class="cd-perf-kpi-top">
+                            <div class="cd-perf-kpi-icon cd-perf-kpi-icon-green"><i class="fas fa-users fa-solid"></i></div>
+                            <span class="cd-perf-pill cd-perf-pill-up"><i class="fas fa-arrow-up fa-solid" style="font-size:8px;"></i>0.0%</span>
+                        </div>
+                        <div class="cd-perf-kpi-num">{{ number_format($kpiSubmitted) }}</div>
+                        <div class="cd-perf-kpi-lbl">Total Candidates</div>
+                        <div class="cd-perf-kpi-sub">Submitted by this agency</div>
+                        <div class="cd-perf-kpi-comp">vs. previous period</div>
                     </div>
-                </div>
-                <div class="cd-kpi-card">
-                    <div class="cd-kpi-icon cd-kpi-icon-amber"><i class="fas fa-percent"></i></div>
-                    <div class="cd-kpi-body">
-                        <div class="cd-kpi-num">{{ $kpiSubmitted > 0 ? round(($kpiInterviews / $kpiSubmitted) * 100) : 0 }}%</div>
-                        <div class="cd-kpi-lbl">Interview Rate</div>
-                    </div>
-                </div>
-                <div class="cd-kpi-card">
-                    <div class="cd-kpi-icon cd-kpi-icon-rose"><i class="fas fa-gift"></i></div>
-                    <div class="cd-kpi-body">
-                        <div class="cd-kpi-num">{{ $kpiInterviews > 0 ? round(($kpiOffers / $kpiInterviews) * 100) : 0 }}%</div>
-                        <div class="cd-kpi-lbl">Offer Conversion</div>
-                    </div>
-                </div>
-                <div class="cd-kpi-card">
-                    <div class="cd-kpi-icon cd-kpi-icon-emerald"><i class="fas fa-clock"></i></div>
-                    <div class="cd-kpi-body">
-                        <div class="cd-kpi-num">14 Days</div>
-                        <div class="cd-kpi-lbl">Avg Sourcing SLA</div>
-                    </div>
-                </div>
-                <div class="cd-kpi-card">
-                    <div class="cd-kpi-icon cd-kpi-icon-teal"><i class="fas fa-handshake"></i></div>
-                    <div class="cd-kpi-body">
-                        <div class="cd-kpi-num">{{ $kpiJoins }}</div>
-                        <div class="cd-kpi-lbl">Total Placements</div>
-                    </div>
-                </div>
-            </div>
 
-            <!-- Funnel & Quality Scorecard Grid -->
-            <div class="cd-overview-grid">
-                <div class="cd-master-subcard">
-                    <div class="cd-subcard-header">
-                        <div class="cd-subcard-header-left">
-                            <div class="cd-subcard-header-icon blue"><i class="fas fa-filter"></i></div>
-                            <h4 class="cd-subcard-heading">Recruitment Pipeline Funnel</h4>
+                    <!-- KPI 2: Interviews Scheduled -->
+                    <div class="cd-perf-kpi-card" onclick="triggerDrawerTab('interview_tracker', event)">
+                        <div class="cd-perf-kpi-top">
+                            <div class="cd-perf-kpi-icon cd-perf-kpi-icon-blue"><i class="fas fa-calendar-days fa-solid"></i></div>
+                            <span class="cd-perf-pill cd-perf-pill-up"><i class="fas fa-arrow-up fa-solid" style="font-size:8px;"></i>0.0%</span>
                         </div>
+                        <div class="cd-perf-kpi-num">{{ number_format($kpiInterviews) }}</div>
+                        <div class="cd-perf-kpi-lbl">Interviews Scheduled</div>
+                        <div class="cd-perf-kpi-sub">Across all rounds</div>
+                        <div class="cd-perf-kpi-comp">vs. previous period</div>
                     </div>
-                    <div class="d-flex flex-column gap-3 py-2">
-                        <div>
-                            <div class="d-flex justify-content-between fs-8 fw-bold mb-1">
-                                <span>1. Sourced &amp; Screened</span>
-                                <span>{{ $kpiSubmitted }} candidates</span>
-                            </div>
-                            <div class="progress" style="height: 6px;">
-                                <div class="progress-bar bg-primary" role="progressbar" style="width: 100%;"></div>
-                            </div>
+
+                    <!-- KPI 3: Offers Generated -->
+                    <div class="cd-perf-kpi-card" onclick="triggerDrawerTab('candidate_joining', event)">
+                        <div class="cd-perf-kpi-top">
+                            <div class="cd-perf-kpi-icon cd-perf-kpi-icon-amber"><i class="fas fa-file-signature fa-solid"></i></div>
+                            <span class="cd-perf-pill cd-perf-pill-up"><i class="fas fa-arrow-up fa-solid" style="font-size:8px;"></i>0.0%</span>
                         </div>
-                        <div>
-                            <div class="d-flex justify-content-between fs-8 fw-bold mb-1">
-                                <span>2. Interviews Conducted</span>
-                                <span>{{ $kpiInterviews }} candidates</span>
-                            </div>
-                            <div class="progress" style="height: 6px;">
-                                <div class="progress-bar bg-warning" role="progressbar" style="width: {{ $kpiSubmitted > 0 ? min(round(($kpiInterviews / $kpiSubmitted) * 100), 100) : 0 }}%;"></div>
-                            </div>
+                        <div class="cd-perf-kpi-num">{{ number_format($kpiOffers) }}</div>
+                        <div class="cd-perf-kpi-lbl">Offers Generated</div>
+                        <div class="cd-perf-kpi-sub">Offer letters sent</div>
+                        <div class="cd-perf-kpi-comp">vs. previous period</div>
+                    </div>
+
+                    <!-- KPI 4: Successful Joins -->
+                    <div class="cd-perf-kpi-card" onclick="triggerDrawerTab('candidate_joining', event)">
+                        <div class="cd-perf-kpi-top">
+                            <div class="cd-perf-kpi-icon cd-perf-kpi-icon-purple"><i class="fas fa-user-check fa-solid"></i></div>
+                            <span class="cd-perf-pill cd-perf-pill-up"><i class="fas fa-arrow-up fa-solid" style="font-size:8px;"></i>0.0%</span>
                         </div>
-                        <div>
-                            <div class="d-flex justify-content-between fs-8 fw-bold mb-1">
-                                <span>3. Job Offers Extended</span>
-                                <span>{{ $kpiOffers }} offers</span>
-                            </div>
-                            <div class="progress" style="height: 6px;">
-                                <div class="progress-bar bg-danger" role="progressbar" style="width: {{ $kpiSubmitted > 0 ? min(round(($kpiOffers / $kpiSubmitted) * 100), 100) : 0 }}%;"></div>
-                            </div>
+                        <div class="cd-perf-kpi-num">{{ number_format($kpiJoins) }}</div>
+                        <div class="cd-perf-kpi-lbl">Successful Joins</div>
+                        <div class="cd-perf-kpi-sub">Candidates placed</div>
+                        <div class="cd-perf-kpi-comp">vs. previous period</div>
+                    </div>
+
+                    <!-- KPI 5: Sourcing Turnaround SLA -->
+                    <div class="cd-perf-kpi-card">
+                        <div class="cd-perf-kpi-top">
+                            <div class="cd-perf-kpi-icon cd-perf-kpi-icon-cyan"><i class="fas fa-bolt fa-solid"></i></div>
+                            <span class="cd-perf-pill cd-perf-pill-up">48h SLA</span>
                         </div>
-                        <div>
-                            <div class="d-flex justify-content-between fs-8 fw-bold mb-1">
-                                <span>4. Successful Joins</span>
-                                <span>{{ $kpiJoins }} placed</span>
-                            </div>
-                            <div class="progress" style="height: 6px;">
-                                <div class="progress-bar bg-success" role="progressbar" style="width: {{ $kpiSubmitted > 0 ? min(round(($kpiJoins / $kpiSubmitted) * 100), 100) : 0 }}%;"></div>
-                            </div>
-                        </div>
+                        <div class="cd-perf-kpi-num">{{ $placement_fee }}</div>
+                        <div class="cd-perf-kpi-lbl">Placement Fee Rate</div>
+                        <div class="cd-perf-kpi-sub">90-Day Free Replacement</div>
+                        <div class="cd-perf-kpi-comp">Contracted commercial terms</div>
                     </div>
                 </div>
 
-                <div class="cd-master-subcard">
-                    <div class="cd-subcard-header">
-                        <div class="cd-subcard-header-left">
-                            <div class="cd-subcard-header-icon emerald"><i class="fas fa-medal"></i></div>
-                            <h4 class="cd-subcard-heading">Partnership Quality Benchmark</h4>
+                <!-- ── 3. Analytics Grid Row 1 (Funnel & SLA Scorecard) ── -->
+                <div class="cd-perf-row-1">
+                    <!-- Funnel Card -->
+                    <div class="cd-perf-card">
+                        <div class="cd-perf-card-hdr">
+                            <div class="cd-perf-card-title"><i class="fas fa-filter text-success"></i> Recruitment Pipeline Funnel</div>
                         </div>
-                        <span class="badge bg-light-success text-success fw-bold fs-9">EXCELLENT</span>
+                        <div class="cd-funnel-wrap">
+                            <svg class="cd-funnel-svg" viewBox="0 0 100 130" preserveAspectRatio="none">
+                                <path d="M 4,4 L 96,4 L 84,32 L 16,32 Z" fill="#3b82f6" />
+                                <path d="M 17,36 L 83,36 L 73,64 L 27,64 Z" fill="#6366f1" />
+                                <path d="M 28,68 L 72,68 L 63,96 L 37,96 Z" fill="#8b5cf6" />
+                                <path d="M 38,100 L 62,100 L 55,116 L 45,116 Z" fill="#f59e0b" />
+                                <path d="M 45,118 L 55,118 L 52,128 L 48,128 Z" fill="#10b981" />
+                            </svg>
+                            <div class="cd-funnel-list">
+                                <div class="cd-funnel-item">
+                                    <div class="cd-funnel-stage"><span class="cd-funnel-dot" style="background:#3b82f6;"></span><span>Submitted</span></div>
+                                    <span class="cd-funnel-val">{{ $kpiSubmitted }}</span>
+                                    <span class="cd-funnel-pct">100%</span>
+                                </div>
+                                <div class="cd-funnel-item">
+                                    <div class="cd-funnel-stage"><span class="cd-funnel-dot" style="background:#6366f1;"></span><span>Screened</span></div>
+                                    <span class="cd-funnel-val">{{ $screening_count ?? 0 }}</span>
+                                    <span class="cd-funnel-pct">{{ $kpiSubmitted > 0 ? round((($screening_count ?? 0) / $kpiSubmitted) * 100) : 0 }}%</span>
+                                </div>
+                                <div class="cd-funnel-item">
+                                    <div class="cd-funnel-stage"><span class="cd-funnel-dot" style="background:#8b5cf6;"></span><span>Interviews</span></div>
+                                    <span class="cd-funnel-val">{{ $kpiInterviews }}</span>
+                                    <span class="cd-funnel-pct">{{ $kpiSubmitted > 0 ? round(($kpiInterviews / $kpiSubmitted) * 100) : 0 }}%</span>
+                                </div>
+                                <div class="cd-funnel-item">
+                                    <div class="cd-funnel-stage"><span class="cd-funnel-dot" style="background:#f59e0b;"></span><span>Offers</span></div>
+                                    <span class="cd-funnel-val">{{ $kpiOffers }}</span>
+                                    <span class="cd-funnel-pct">{{ $kpiSubmitted > 0 ? round(($kpiOffers / $kpiSubmitted) * 100) : 0 }}%</span>
+                                </div>
+                                <div class="cd-funnel-item">
+                                    <div class="cd-funnel-stage"><span class="cd-funnel-dot" style="background:#10b981;"></span><span>Joined</span></div>
+                                    <span class="cd-funnel-val">{{ $kpiJoins }}</span>
+                                    <span class="cd-funnel-pct">{{ $kpiSubmitted > 0 ? round(($kpiJoins / $kpiSubmitted) * 100) : 0 }}%</span>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                    <div class="cd-kv-row"><span class="cd-kv-lbl">SLA Compliance Rate</span><span class="cd-kv-val text-success fw-bold">96.4%</span></div>
-                    <div class="cd-kv-row"><span class="cd-kv-lbl">Candidate Retention (90-Day Guarantee)</span><span class="cd-kv-val text-success fw-bold">100% Retained</span></div>
-                    <div class="cd-kv-row"><span class="cd-kv-lbl">Profile Rejection Ratio</span><span class="cd-kv-val text-primary fw-bold">&lt; 8% Rejections</span></div>
-                    <div class="cd-kv-row"><span class="cd-kv-lbl">Average Offer Acceptance Rate</span><span class="cd-kv-val">91.2%</span></div>
-                    <div class="p-3 bg-light rounded mt-3">
-                        <div class="text-muted fs-8" style="line-height:1.4;">
-                            <i class="fas fa-circle-check text-success me-1"></i> This partner ranks in the top tier of recruitment agencies with high quality candidate fit and zero early dropouts.
+
+                    <!-- SLA Performance Card -->
+                    <div class="cd-perf-card">
+                        <div class="cd-perf-card-hdr">
+                            <div class="cd-perf-card-title"><i class="fas fa-clock text-primary"></i> Sourcing Turnaround &amp; SLA Metrics</div>
+                            <span class="badge badge-light-success text-success fw-bold fs-9">96.4% Compliance</span>
+                        </div>
+                        <div class="d-flex flex-column gap-3 py-2">
+                            <div>
+                                <div class="d-flex justify-content-between fs-8 fw-semibold mb-1">
+                                    <span>First Profile Submission (&lt; 48 Hours)</span>
+                                    <span class="text-success fw-bold">98.2%</span>
+                                </div>
+                                <div class="progress" style="height: 6px; background:#f1f5f9;">
+                                    <div class="progress-bar bg-success" style="width: 98.2%;"></div>
+                                </div>
+                            </div>
+                            <div>
+                                <div class="d-flex justify-content-between fs-8 fw-semibold mb-1">
+                                    <span>Interview Availability Confirmation</span>
+                                    <span class="text-primary fw-bold">94.0%</span>
+                                </div>
+                                <div class="progress" style="height: 6px; background:#f1f5f9;">
+                                    <div class="progress-bar bg-primary" style="width: 94%;"></div>
+                                </div>
+                            </div>
+                            <div>
+                                <div class="d-flex justify-content-between fs-8 fw-semibold mb-1">
+                                    <span>Offer Acceptance SLA</span>
+                                    <span class="text-warning fw-bold">91.5%</span>
+                                </div>
+                                <div class="progress" style="height: 6px; background:#f1f5f9;">
+                                    <div class="progress-bar bg-warning" style="width: 91.5%;"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Requisition Fulfillment Card -->
+                    <div class="cd-perf-card">
+                        <div class="cd-perf-card-hdr">
+                            <div class="cd-perf-card-title"><i class="fas fa-medal text-warning"></i> Quality &amp; Retention Benchmark</div>
+                            <span class="badge bg-light-success text-success fw-bold fs-9">EXCELLENT</span>
+                        </div>
+                        <div class="d-flex flex-column gap-2 py-1">
+                            <div class="d-flex justify-content-between fs-8 py-1 border-bottom border-light">
+                                <span class="text-muted">90-Day Guarantee Retention:</span>
+                                <span class="text-success fw-bold">100% Retained</span>
+                            </div>
+                            <div class="d-flex justify-content-between fs-8 py-1 border-bottom border-light">
+                                <span class="text-muted">Profile Rejection Ratio:</span>
+                                <span class="text-primary fw-bold">&lt; 8% Rejections</span>
+                            </div>
+                            <div class="d-flex justify-content-between fs-8 py-1 border-bottom border-light">
+                                <span class="text-muted">Direct SPOC Rating:</span>
+                                <span class="text-warning fw-bold"><i class="fas fa-star text-warning"></i> 4.9 / 5.0</span>
+                            </div>
+                            <div class="p-2 bg-light rounded mt-1">
+                                <div class="text-muted fs-9" style="line-height:1.35;">
+                                    <i class="fas fa-circle-check text-success me-1"></i> Ranks in top tier of enterprise agencies with verified talent pipeline and zero early dropouts.
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -2746,8 +4064,6 @@
     // ── Agency Drawer Tab Switcher (Standard Bootstrap & Fallback Native Execution) ──
     window.triggerDrawerTab = function(tabId, e) {
         if (e && typeof e.preventDefault === 'function') e.preventDefault();
-        
-        // Clean tabId without leading #
         tabId = tabId.replace(/^#/, '');
 
         // 1. Activate tab pill button
@@ -2777,23 +4093,29 @@
         }
     });
 
-    // ── Universal Real-Time Search Filtering inside Tabs ──
-    function setupTabSearch(inputId, clearId, itemClass, textSelector) {
+    // ── Universal Real-Time 300ms Debounced Search ──
+    function setupTabDebouncedSearch(inputId, clearId, itemSelector, textSelector) {
+        var debounceTimer = null;
         $(document).on('input', inputId, function() {
-            var val = $(this).val().toLowerCase().trim();
+            var $this = $(this);
+            var val = $this.val().trim();
             if (val.length > 0) {
                 $(clearId).show();
             } else {
                 $(clearId).hide();
             }
-            $(itemClass).each(function() {
-                var txt = $(this).find(textSelector).text().toLowerCase();
-                if (val === '' || txt.indexOf(val) !== -1) {
-                    $(this).show();
-                } else {
-                    $(this).hide();
-                }
-            });
+            clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(function() {
+                var q = val.toLowerCase();
+                $(itemSelector).each(function() {
+                    var txt = $(this).find(textSelector).text().toLowerCase();
+                    if (q === '' || txt.indexOf(q) !== -1) {
+                        $(this).show();
+                    } else {
+                        $(this).hide();
+                    }
+                });
+            }, 300);
         });
 
         $(document).on('click', clearId, function() {
@@ -2802,24 +4124,108 @@
         });
     }
 
-    setupTabSearch('#jobSearchInput', '#jobSearchClear', '.js-job-item', '.js-job-searchable');
-    setupTabSearch('#candSearchInput', '#candSearchClear', '.js-cand-item', '.js-cand-searchable');
-    setupTabSearch('#contactSearchInput', '#contactSearchClear', '.js-contact-item', '.cd-contact-name');
-    setupTabSearch('#interviewSearchInput', '#interviewSearchClear', '.js-interview-item', '.js-interview-searchable');
-    setupTabSearch('#offerSearchInput', '#offerSearchClear', '.js-offer-item', '.js-offer-searchable');
-    setupTabSearch('#actSearchInput', '#actSearchClear', '#agencyActivityStream .cd-act-card', 'div');
+    setupTabDebouncedSearch('#agencyJobSearchInput', '#btnAgencyJobSearchClear', '.js-agency-job-item', '.js-job-searchable');
+    setupTabDebouncedSearch('#cdAgencyContactSearchInput', '#cdAgencyContactSearchClear', '.js-agency-contact-item', '.js-contact-searchable');
+    setupTabDebouncedSearch('#cdAgencyCandSearchInput', '#cdAgencyCandSearchClear', '.js-agency-cand-item', '.js-cand-searchable');
+    setupTabDebouncedSearch('#agencyItSearchInput', '#agencyItSearchClear', '.js-agency-it-item', '.js-it-searchable');
+    setupTabDebouncedSearch('#agencyOjSearchInput', '#agencyOjSearchClear', '.js-agency-oj-item', '.js-oj-searchable');
+    setupTabDebouncedSearch('#agencyActSearchInput', '#agencyActSearchClear', '.js-agency-act-item', '.js-act-searchable');
+
+    // Reset Buttons
+    $(document).on('click', '#btnAgencyJobReset', function() {
+        $('#agencyJobSearchInput').val('').trigger('input');
+        $('.js-agency-job-tab[data-status="all"]').trigger('click');
+    });
+    $(document).on('click', '#cdAgencyContactResetBtn', function() {
+        $('#cdAgencyContactSearchInput').val('').trigger('input');
+        $('.js-agency-contact-tab[data-filter="all"]').trigger('click');
+    });
+    $(document).on('click', '#cdAgencyCandResetBtn', function() {
+        $('#cdAgencyCandSearchInput').val('').trigger('input');
+        $('.js-agency-cand-stage[data-stage="all"]').trigger('click');
+    });
+    $(document).on('click', '#agencyItResetBtn', function() {
+        $('#agencyItSearchInput').val('').trigger('input');
+        $('.js-agency-it-tab[data-filter="all"]').trigger('click');
+    });
+    $(document).on('click', '#agencyOjResetBtn', function() {
+        $('#agencyOjSearchInput').val('').trigger('input');
+        $('.js-agency-oj-tab[data-segment="all"]').trigger('click');
+    });
+    $(document).on('click', '#agencyActRefreshBtn', function() {
+        $('#agencyActSearchInput').val('').trigger('input');
+        $('#agencyActTimeframeSelect').val('all');
+        $('.js-act-filter-btn[data-category="all"]').trigger('click');
+    });
 
     // ── Sub-Tabs Filter Handlers ──
-    // Jobs Filter
-    $(document).on('click', '.js-job-filter', function(e) {
+    // 1. Activity Filter
+    $(document).on('click', '.js-act-filter-btn', function(e) {
         e.preventDefault();
-        $('.js-job-filter').removeClass('active');
+        $('.js-act-filter-btn').removeClass('active');
+        $(this).addClass('active');
+        var cat = $(this).data('category');
+        if (cat === 'all') {
+            $('.js-agency-act-item').show();
+        } else {
+            $('.js-agency-act-item').each(function() {
+                if ($(this).data('category') === cat) {
+                    $(this).show();
+                } else {
+                    $(this).hide();
+                }
+            });
+        }
+    });
+
+    // Timeframe Filter
+    $(document).on('change', '#agencyActTimeframeSelect', function() {
+        var val = $(this).val();
+        if (val === 'all') {
+            $('.js-agency-act-item').show();
+        } else if (val === 'today') {
+            $('.js-agency-act-item').each(function() {
+                if ($(this).data('time') === 'today') {
+                    $(this).show();
+                } else {
+                    $(this).hide();
+                }
+            });
+        } else {
+            $('.js-agency-act-item').show();
+        }
+    });
+
+    // 2. Contacts Filter
+    $(document).on('click', '.js-agency-contact-tab', function(e) {
+        e.preventDefault();
+        $('.js-agency-contact-tab').removeClass('active');
+        $(this).addClass('active');
+        var filter = $(this).data('filter');
+        if (filter === 'all' || filter === 'active') {
+            $('.js-agency-contact-item').show();
+        } else {
+            $('.js-agency-contact-item').each(function() {
+                var role = ($(this).data('role') || '').toLowerCase();
+                if (role.indexOf(filter) !== -1) {
+                    $(this).show();
+                } else {
+                    $(this).hide();
+                }
+            });
+        }
+    });
+
+    // 3. Jobs Filter
+    $(document).on('click', '.js-agency-job-tab', function(e) {
+        e.preventDefault();
+        $('.js-agency-job-tab').removeClass('active');
         $(this).addClass('active');
         var status = $(this).data('status');
         if (status === 'all') {
-            $('.js-job-item').show();
+            $('.js-agency-job-item').show();
         } else {
-            $('.js-job-item').each(function() {
+            $('.js-agency-job-item').each(function() {
                 if ($(this).data('status') === status) {
                     $(this).show();
                 } else {
@@ -2829,16 +4235,16 @@
         }
     });
 
-    // Candidates Filter
-    $(document).on('click', '.js-cand-filter', function(e) {
+    // 4. Candidates Pipeline Filter (8 stages)
+    $(document).on('click', '.js-agency-cand-stage', function(e) {
         e.preventDefault();
-        $('.js-cand-filter').removeClass('active');
+        $('.js-agency-cand-stage').removeClass('active');
         $(this).addClass('active');
         var stage = $(this).data('stage');
         if (stage === 'all') {
-            $('.js-cand-item').show();
+            $('.js-agency-cand-item').show();
         } else {
-            $('.js-cand-item').each(function() {
+            $('.js-agency-cand-item').each(function() {
                 if ($(this).data('stage') === stage) {
                     $(this).show();
                 } else {
@@ -2848,17 +4254,17 @@
         }
     });
 
-    // Interviews Filter
-    $(document).on('click', '.js-interview-filter', function(e) {
+    // 5. Interviews Filter
+    $(document).on('click', '.js-agency-it-tab', function(e) {
         e.preventDefault();
-        $('.js-interview-filter').removeClass('active');
+        $('.js-agency-it-tab').removeClass('active');
         $(this).addClass('active');
-        var status = $(this).data('status');
-        if (status === 'all') {
-            $('.js-interview-item').show();
+        var filter = $(this).data('filter');
+        if (filter === 'all' || filter === 'upcoming') {
+            $('.js-agency-it-item').show();
         } else {
-            $('.js-interview-item').each(function() {
-                if ($(this).data('status') === status) {
+            $('.js-agency-it-item').each(function() {
+                if ($(this).data('filter') === filter) {
                     $(this).show();
                 } else {
                     $(this).hide();
@@ -2867,36 +4273,17 @@
         }
     });
 
-    // Offers Filter
-    $(document).on('click', '.js-offer-filter', function(e) {
+    // 6. Offers & Joins Filter
+    $(document).on('click', '.js-agency-oj-tab', function(e) {
         e.preventDefault();
-        $('.js-offer-filter').removeClass('active');
+        $('.js-agency-oj-tab').removeClass('active');
         $(this).addClass('active');
-        var type = $(this).data('type');
-        if (type === 'all') {
-            $('.js-offer-item').show();
+        var segment = $(this).data('segment');
+        if (segment === 'all') {
+            $('.js-agency-oj-item').show();
         } else {
-            $('.js-offer-item').each(function() {
-                if ($(this).data('type') === type) {
-                    $(this).show();
-                } else {
-                    $(this).hide();
-                }
-            });
-        }
-    });
-
-    // Activity Filter
-    $(document).on('click', '.js-act-filter', function(e) {
-        e.preventDefault();
-        $('.js-act-filter').removeClass('active');
-        $(this).addClass('active');
-        var type = $(this).data('type');
-        if (type === 'all') {
-            $('#agencyActivityStream .cd-act-card').show();
-        } else {
-            $('#agencyActivityStream .cd-act-card').each(function() {
-                if ($(this).data('type') === type) {
+            $('.js-agency-oj-item').each(function() {
+                if ($(this).data('segment') === segment) {
                     $(this).show();
                 } else {
                     $(this).hide();
@@ -2913,20 +4300,38 @@
             return;
         }
         var newCard = `
-            <div class="cd-act-card" data-type="notes">
-                <div class="cd-act-avatar"><i class="fas fa-comment-dots text-primary"></i></div>
+            <div class="cd-act-card js-agency-act-item" data-category="crm" data-time="today">
+                <div class="cd-act-avatar" style="background:#eff6ff; color:#2563eb; border:1px solid #bfdbfe;">
+                    <i class="fas fa-comment-dots"></i>
+                </div>
                 <div style="min-width:0; flex:1;">
                     <div class="d-flex align-items-center justify-content-between mb-1">
-                        <span class="fw-bold text-dark fs-7">{{ auth()->user()->name ?? 'Recruiter' }}</span>
-                        <span class="text-muted fs-8">Just now</span>
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="badge badge-light-primary fw-bold fs-9 text-uppercase">RECRUITER NOTE</span>
+                            <span class="fw-bold text-dark fs-7">${$('<div>').text(note).html()}</span>
+                        </div>
+                        <div class="text-end">
+                            <div class="fw-bold text-dark fs-8">{{ date('M d, Y') }}</div>
+                            <div class="text-muted fs-9">{{ date('h:i A') }} IST</div>
+                        </div>
                     </div>
-                    <div class="text-dark fs-7" style="line-height:1.4;">${$('<div>').text(note).html()}</div>
+                    <div class="d-flex align-items-center justify-content-between mt-2 pt-2 border-top border-light">
+                        <div class="fs-8 text-muted">
+                            <span class="text-uppercase fw-semibold" style="font-size:10px;">LOGGED BY:</span>
+                            <strong class="text-dark">{{ auth()->user()->name ?? 'Recruiter' }}</strong> &bull; <span>4Bell Technology</span>
+                        </div>
+                        <span class="badge badge-light-info text-info fs-9 fw-semibold">#seq-note-new</span>
+                    </div>
                 </div>
             </div>
         `;
         $('#agencyActivityStream').prepend(newCard);
         $('#agencyQuickNoteInput').val('');
         $('#agencyQuickNoteCard').slideUp(150);
+        var curCount = parseInt($('#agencyActCountAll').text() || '0', 10) + 1;
+        $('#agencyActCountAll').text(curCount);
+        var crmCount = parseInt($('#agencyActCountCrm').text() || '0', 10) + 1;
+        $('#agencyActCountCrm').text(crmCount);
     };
 
     // Copy to clipboard helper
