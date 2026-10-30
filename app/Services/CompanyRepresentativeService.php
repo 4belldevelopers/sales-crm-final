@@ -492,8 +492,7 @@ class CompanyRepresentativeService
                 $q->where('tag_name', 'like', 'rep:client:%')
                   ->orWhere('tag_name', 'like', 'rep:vendor:%')
                   ->orWhere('tag_name', 'like', 'rep:agency:%')
-                  ->orWhere('tag_name', 'like', 'rep:finance:%')
-                  ->orWhere('tag_name', 'like', 'rep:legal:%');
+                  ->orWhere('tag_name', 'like', 'rep:finance:%');
             })
             ->pluck('tag_name')
             ->toArray();
@@ -561,7 +560,7 @@ class CompanyRepresentativeService
             return ['status' => 'error', 'message' => 'Invalid company or user ID.'];
         }
 
-        $validChannels = ['client', 'vendor', 'finance', 'legal'];
+        $validChannels = ['client', 'vendor', 'finance'];
         $cleanChannels = array_values(array_intersect($validChannels, array_map('strtolower', array_map('trim', $channels))));
 
         // Validate user belongs to company and is active
@@ -583,8 +582,7 @@ class CompanyRepresentativeService
                     $q->where('tag_name', 'rep:client:' . $userId)
                       ->orWhere('tag_name', 'rep:vendor:' . $userId)
                       ->orWhere('tag_name', 'rep:agency:' . $userId)
-                      ->orWhere('tag_name', 'rep:finance:' . $userId)
-                      ->orWhere('tag_name', 'rep:legal:' . $userId);
+                      ->orWhere('tag_name', 'rep:finance:' . $userId);
                 })
                 ->delete();
 

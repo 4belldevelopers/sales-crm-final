@@ -167,11 +167,6 @@
                                         <i class="fa-solid fa-credit-card me-1"></i>Finance &amp; Billing
                                     </span>
                                 @endif
-                                @if (in_array('legal', $channels, true))
-                                    <span class="tm-comm-chip legal" title="Point of contact for Legal &amp; Contract Compliance">
-                                        <i class="fa-solid fa-scale-balanced me-1"></i>Legal &amp; Contract
-                                    </span>
-                                @endif
                                 <button type="button" class="tm-btn-edit-comm" onclick="openAssignCommModal({{ $row->id }}, '{{ addslashes($rawName) }}', {{ json_encode($channels) }})" title="Edit communication channels">
                                     <i class="fa-solid fa-pen"></i>
                                 </button>

@@ -216,190 +216,7 @@
         .team-btn-light:hover { background: #f8fafc; color: #0f172a; border-color: #cbd5e1; }
 
         /* =========================================================================
-           TOP CARD: MARKETPLACE COMMUNICATION CONTACTS (Rule 20 Enterprise Card)
-           ========================================================================= */
-        .team-mp-contacts-card {
-            background: #ffffff !important;
-            border: 1px solid #e2e8f0 !important;
-            border-radius: 12px !important;
-            padding: 18px 20px !important;
-            margin-bottom: 16px !important;
-            box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03) !important;
-        }
-        .team-mp-contacts-grid {
-            display: grid !important;
-            grid-template-columns: minmax(0, 1.15fr) minmax(0, 1.4fr) minmax(0, 1.4fr) !important;
-            gap: 16px !important;
-            align-items: stretch !important;
-        }
-        .tm-mp-col {
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-        }
-        .tm-mp-overview-col {
-            padding-right: 6px;
-        }
-        .tm-mp-icon-wrap {
-            width: 44px;
-            height: 44px;
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-shrink: 0;
-        }
-        .bg-light-teal { background: #f0fdfa !important; }
-        .text-teal { color: #0d9488 !important; }
-        .bg-light-purple { background: #f5f3ff !important; }
-        .text-purple { color: #7c3aed !important; }
-        .badge-light-purple { background: #f3e8ff; color: #7c3aed !important; }
-        .shadow-xs { box-shadow: 0 1px 2px rgba(15, 23, 42, 0.05); }
-
-        .tm-mp-col-title {
-            font-size: 14px;
-            font-weight: 700;
-            color: #0f172a;
-            margin: 0 0 4px 0;
-            line-height: 1.3;
-        }
-        .tm-mp-col-desc {
-            font-size: 11.5px;
-            color: #64748b;
-            margin: 0;
-            line-height: 1.45;
-        }
-        .tm-mp-info-box {
-            margin-top: 14px;
-            background: #eff6ff;
-            border: 1px solid #dbeafe;
-            border-radius: 8px;
-            padding: 10px 12px;
-            display: flex;
-            align-items: flex-start;
-            gap: 8px;
-            font-size: 11px;
-            color: #1e40af;
-            line-height: 1.45;
-        }
-
-        /* 2 Spotlight Communication Boxes (Client & Agency) */
-        .tm-mp-box {
-            border-radius: 10px;
-            padding: 14px;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            transition: all .2s;
-        }
-        .tm-mp-client-box {
-            background: #f0fdf4;
-            border: 1px solid #bbf7d0;
-        }
-        .tm-mp-agency-box {
-            background: #f5f3ff;
-            border: 1px solid #ddd6fe;
-        }
-        .tm-mp-box-head {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 8px;
-            margin-bottom: 4px;
-        }
-        .tm-mp-box-icon {
-            width: 28px;
-            height: 28px;
-            border-radius: 7px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 13px;
-        }
-        .tm-mp-box-title {
-            font-size: 13.5px;
-            font-weight: 700;
-            color: #0f172a;
-        }
-        .tm-mp-box-subtitle {
-            font-size: 11px;
-            color: #64748b;
-            margin-bottom: 12px;
-            line-height: 1.4;
-        }
-        .tm-mp-profile-box {
-            background: #ffffff;
-            border: 1px solid rgba(0,0,0,0.06);
-            border-radius: 8px;
-            padding: 10px 12px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-        .tm-mp-avatar {
-            width: 38px;
-            height: 38px;
-            border-radius: 8px;
-            background: #0f172a;
-            color: #ffffff;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 700;
-            font-size: 15px;
-            flex-shrink: 0;
-            overflow: hidden;
-        }
-        .tm-mp-profile-details {
-            flex-grow: 1;
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
-            gap: 1px;
-        }
-        .tm-mp-profile-name {
-            font-size: 13px;
-            font-weight: 700;
-            color: #0f172a;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-        .tm-mp-profile-role {
-            font-size: 11px;
-            color: #64748b;
-        }
-        .tm-mp-profile-contact {
-            font-size: 10.5px;
-            color: #475569;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            margin-top: 1px;
-        }
-        .btn-mp-change {
-            background: #ffffff;
-            border: 1px solid #cbd5e1;
-            border-radius: 6px;
-            padding: 5px 11px;
-            font-size: 11px;
-            font-weight: 600;
-            color: #0f172a;
-            cursor: pointer;
-            transition: all .15s;
-            white-space: nowrap;
-            flex-shrink: 0;
-        }
-        .btn-mp-change:hover {
-            background: #f8fafc;
-            border-color: #94a3b8;
-        }
-
-        /* =========================================================================
-           TIER 2: 8 STAT CARDS ROW (Card-Based Tabs — Strictly 1 Single Horizontal Row)
+           TIER 2: 7 STAT CARDS ROW (Card-Based Tabs — Strictly 1 Single Horizontal Row)
            ========================================================================= */
         .tm-stat-grid-wrap {
             width: 100% !important;
@@ -414,10 +231,10 @@
         }
         .tm-stat-grid {
             display: grid !important;
-            grid-template-columns: repeat(8, minmax(0, 1fr)) !important;
-            gap: 6px !important;
+            grid-template-columns: repeat(7, minmax(0, 1fr)) !important;
+            gap: 7px !important;
             width: 100% !important;
-            min-width: 980px !important;
+            min-width: 900px !important;
             box-sizing: border-box !important;
         }
         .tm-stat-card {
@@ -467,7 +284,6 @@
         .tm-card-icon.green  { background: #f0fdf4; color: #16a34a; }
         .tm-card-icon.purple { background: #faf5ff; color: #9333ea; }
         .tm-card-icon.amber  { background: #fffbeb; color: #d97706; }
-        .tm-card-icon.teal   { background: #f0fdfa; color: #0d9488; }
         .tm-card-icon.pink   { background: #fff1f2; color: #e11d48; }
         .tm-card-icon.cyan   { background: #ecfeff; color: #0891b2; }
 
@@ -514,7 +330,6 @@
         .tm-card-sub.green  { color: #16a34a; }
         .tm-card-sub.purple { color: #9333ea; }
         .tm-card-sub.amber  { color: #d97706; }
-        .tm-card-sub.teal   { color: #0d9488; }
         .tm-card-sub.pink   { color: #e11d48; }
         .tm-card-sub.cyan   { color: #0891b2; }
 
@@ -1171,9 +986,10 @@
             color: #64748b;
         }
 
-        /* Responsive Breakpoints & 15.6" Screen Optimization */
+        /* Responsive Breakpoints & 15.6" Screen Optimization (Strictly 7 Cards on 1 Row) */
         @media (max-width: 1440px) {
             .tm-stat-grid {
+                grid-template-columns: repeat(7, minmax(0, 1fr)) !important;
                 gap: 5px !important;
             }
             .tm-stat-card {
@@ -1200,6 +1016,7 @@
         }
         @media (max-width: 1150px) {
             .tm-stat-grid {
+                grid-template-columns: repeat(7, minmax(0, 1fr)) !important;
                 gap: 4px !important;
             }
             .tm-stat-card {
@@ -1220,9 +1037,6 @@
             .tm-card-sub {
                 font-size: 7.5px !important;
             }
-        }
-        @media (max-width: 1024px) {
-            .team-mp-contacts-grid { grid-template-columns: 1fr !important; }
         }
 
         /* ========== Invite Drawer ========== */
@@ -1455,133 +1269,7 @@
                 </div>
 
                 <!-- ============================================================== -->
-                <!-- MARKETPLACE COMMUNICATION CONTACTS (3-Column Executive Card)    -->
-                <!-- ============================================================== -->
-                <div class="team-mp-contacts-card mb-4">
-                    <div class="team-mp-contacts-grid">
-                        
-                        <!-- Column 1: Marketplace Communication Contacts Overview -->
-                        <div class="tm-mp-col tm-mp-overview-col">
-                            <div class="d-flex align-items-start gap-3">
-                                <div class="tm-mp-icon-wrap bg-light-teal text-teal">
-                                    <i class="fa-solid fa-bullhorn fs-4"></i>
-                                </div>
-                                <div>
-                                    <h3 class="tm-mp-col-title">Marketplace Communication Contacts</h3>
-                                    <p class="tm-mp-col-desc">Select team members who will be the default contact for client and agency communication through Jero Marketplace.</p>
-                                </div>
-                            </div>
-                            <div class="tm-mp-info-box">
-                                <i class="fa-solid fa-circle-info text-primary mt-1"></i>
-                                <span>When your company is discovered through Jero Marketplace Search or a relevant Job Request is initiated, the selected contact person's business contact details will be shared with the client or agency for communication.</span>
-                            </div>
-                        </div>
-
-                        <!-- Column 2: Client & Sales Communication -->
-                        <div class="tm-mp-col tm-mp-box tm-mp-client-box">
-                            <div class="tm-mp-box-head">
-                                <div class="d-flex align-items-center gap-2">
-                                    <div class="tm-mp-box-icon text-success bg-white shadow-xs">
-                                        <i class="fa-solid fa-building"></i>
-                                    </div>
-                                    <div class="tm-mp-box-title">Client &amp; Sales Communication</div>
-                                </div>
-                                <span class="badge badge-light-success text-success fw-bold fs-9">
-                                    <i class="fa-solid fa-crown me-1"></i>Default Contact
-                                </span>
-                            </div>
-                            <div class="tm-mp-box-subtitle">
-                                Used for client enquiries, sales communication, profile discovery and client job requests.
-                            </div>
-                            <div class="tm-mp-profile-box" id="spotlightClientRepBox">
-                                @if(!empty($clientRep))
-                                    @php
-                                        $crInit = strtoupper(substr($clientRep['name'] ?? 'C', 0, 1));
-                                    @endphp
-                                    <div class="tm-mp-avatar">
-                                        @if(!empty($clientRep['image']))
-                                            <img src="{{ $clientRep['image'] }}" alt="{{ $clientRep['name'] }}" style="width:100%; height:100%; border-radius:6px; object-fit:cover;">
-                                        @else
-                                            {{ $crInit }}
-                                        @endif
-                                    </div>
-                                    <div class="tm-mp-profile-details">
-                                        <div class="tm-mp-profile-name" id="spotlightClientRepName">{{ $clientRep['name'] }}</div>
-                                        <div class="tm-mp-profile-role" id="spotlightClientRepDesig">{{ $clientRep['designation'] ?? 'Administrator' }}</div>
-                                        <div class="tm-mp-profile-contact">
-                                            <span id="spotlightClientRepEmail"><i class="fa-regular fa-envelope me-1"></i>{{ $clientRep['email'] }}</span>
-                                            @if(!empty($clientRep['mobile']))
-                                                <span id="spotlightClientRepMobile"><i class="fa-solid fa-phone me-1"></i>{{ $clientRep['mobile'] }}</span>
-                                            @endif
-                                        </div>
-                                    </div>
-                                    <button type="button" class="btn-mp-change" onclick="openRepModal('client')" title="Change Client &amp; Sales Contact">
-                                        Change Contact
-                                    </button>
-                                @else
-                                    <div class="d-flex align-items-center justify-content-between w-100 py-1">
-                                        <span class="fs-8 text-muted">No Contact Assigned</span>
-                                        <button type="button" class="btn-mp-change" onclick="openRepModal('client')">Assign Contact</button>
-                                    </div>
-                                @endif
-                            </div>
-                        </div>
-
-                        <!-- Column 3: Agency Communication -->
-                        <div class="tm-mp-col tm-mp-box tm-mp-agency-box">
-                            <div class="tm-mp-box-head">
-                                <div class="d-flex align-items-center gap-2">
-                                    <div class="tm-mp-box-icon text-purple bg-white shadow-xs">
-                                        <i class="fa-solid fa-users"></i>
-                                    </div>
-                                    <div class="tm-mp-box-title">Agency Communication</div>
-                                </div>
-                                <span class="badge badge-light-purple text-purple fw-bold fs-9">
-                                    <i class="fa-solid fa-crown me-1"></i>Default Contact
-                                </span>
-                            </div>
-                            <div class="tm-mp-box-subtitle">
-                                Used for agency enquiries, job requests, candidate submissions and other marketplace communication.
-                            </div>
-                            <div class="tm-mp-profile-box" id="spotlightAgencyRepBox">
-                                @if(!empty($agencyRep))
-                                    @php
-                                        $arInit = strtoupper(substr($agencyRep['name'] ?? 'A', 0, 1));
-                                    @endphp
-                                    <div class="tm-mp-avatar">
-                                        @if(!empty($agencyRep['image']))
-                                            <img src="{{ $agencyRep['image'] }}" alt="{{ $agencyRep['name'] }}" style="width:100%; height:100%; border-radius:6px; object-fit:cover;">
-                                        @else
-                                            {{ $arInit }}
-                                        @endif
-                                    </div>
-                                    <div class="tm-mp-profile-details">
-                                        <div class="tm-mp-profile-name" id="spotlightAgencyRepName">{{ $agencyRep['name'] }}</div>
-                                        <div class="tm-mp-profile-role" id="spotlightAgencyRepDesig">{{ $agencyRep['designation'] ?? 'Administrator' }}</div>
-                                        <div class="tm-mp-profile-contact">
-                                            <span id="spotlightAgencyRepEmail"><i class="fa-regular fa-envelope me-1"></i>{{ $agencyRep['email'] }}</span>
-                                            @if(!empty($agencyRep['mobile']))
-                                                <span id="spotlightAgencyRepMobile"><i class="fa-solid fa-phone me-1"></i>{{ $agencyRep['mobile'] }}</span>
-                                            @endif
-                                        </div>
-                                    </div>
-                                    <button type="button" class="btn-mp-change" onclick="openRepModal('agency')" title="Change Agency Contact">
-                                        Change Contact
-                                    </button>
-                                @else
-                                    <div class="d-flex align-items-center justify-content-between w-100 py-1">
-                                        <span class="fs-8 text-muted">No Contact Assigned</span>
-                                        <button type="button" class="btn-mp-change" onclick="openRepModal('agency')">Assign Contact</button>
-                                    </div>
-                                @endif
-                            </div>
-                        </div>
-
-                    </div>
-                </div>
-
-                <!-- ============================================================== -->
-                <!-- TIER 2: 8 STAT CARDS ROW (Card-Based Tabs — Locked in 1 Row)   -->
+                <!-- TIER 2: 7 STAT CARDS ROW (Card-Based Tabs — Locked in 1 Row)   -->
                 <!-- ============================================================== -->
                 <div class="tm-stat-grid-wrap mb-3">
                     <div class="tm-stat-grid">
@@ -1670,24 +1358,7 @@
                             </div>
                         </a>
 
-                        {{-- Card 6: Legal & Contract --}}
-                        <a href="javascript:void(0);" onclick="setTeamTab('legal', this);" class="tm-stat-card" data-tab="legal">
-                            <div class="tm-card-top">
-                                <div class="tm-card-icon teal">
-                                    <i class="fa-solid fa-scale-balanced"></i>
-                                </div>
-                                <div class="tm-card-meta">
-                                    <div class="tm-card-num" id="span_teamLegal">{{ $teamCounts['legal'] ?? 0 }}</div>
-                                    <div class="tm-card-lbl" title="Legal & Contract">Legal &amp; Contract</div>
-                                </div>
-                            </div>
-                            <div class="tm-card-sub teal">
-                                <i class="fa-solid fa-shield-halved" style="font-size: 8px;"></i>
-                                <span>SLA &amp; contracts</span>
-                            </div>
-                        </a>
-
-                        {{-- Card 7: Inactive Members --}}
+                        {{-- Card 6: Inactive Members --}}
                         <a href="javascript:void(0);" onclick="setTeamTab('inactive', this);" class="tm-stat-card" data-tab="inactive">
                             <div class="tm-card-top">
                                 <div class="tm-card-icon pink">
@@ -1704,7 +1375,7 @@
                             </div>
                         </a>
 
-                        {{-- Card 8: Pending Invites --}}
+                        {{-- Card 7: Pending Invites --}}
                         <a href="javascript:void(0);" onclick="setTeamTab('invited', this);" class="tm-stat-card" data-tab="invited">
                             <div class="tm-card-top">
                                 <div class="tm-card-icon cyan">
@@ -1751,7 +1422,6 @@
                                 <option value="client">Client &amp; Sales</option>
                                 <option value="vendor">Vendor &amp; Agency</option>
                                 <option value="finance">Finance &amp; Billing</option>
-                                <option value="legal">Legal &amp; Contract</option>
                                 <option value="inactive">Inactive Members</option>
                                 <option value="invited">Pending Invites</option>
                             </select>
@@ -2088,18 +1758,6 @@
                                         <span class="badge" style="background: #fffbeb; color: #d97706; font-size: 10px; font-weight: 600;">Invoicing</span>
                                     </div>
                                     <div class="text-muted fs-8 mt-1">Point of contact for client billing, commission payouts, PO confirmation, and invoice reconciliation.</div>
-                                </div>
-                            </label>
-
-                            <!-- Channel 4: Legal & Contract -->
-                            <label class="comm-channel-opt d-flex align-items-start gap-2 p-3 rounded cursor-pointer" style="border: 1px solid #e2e8f0; transition: all .15s; background: #fff;">
-                                <input type="checkbox" class="form-check-input mt-1 comm-channel-checkbox" value="legal" id="chk_comm_legal" style="border-radius: 4px; border-color: #cbd5e1; cursor: pointer;">
-                                <div class="flex-grow-1">
-                                    <div class="d-flex align-items-center justify-content-between">
-                                        <span class="fw-bold fs-7 text-dark"><i class="fa-solid fa-scale-balanced me-1 text-teal"></i> Legal &amp; Contract Compliance</span>
-                                        <span class="badge" style="background: #f0fdfa; color: #0d9488; font-size: 10px; font-weight: 600;">Legal</span>
-                                    </div>
-                                    <div class="text-muted fs-8 mt-1">Authority for Master Services Agreements (MSAs), NDAs, data privacy clauses, and legal signoffs.</div>
                                 </div>
                             </label>
                         </div>
@@ -3982,7 +3640,6 @@
 							$('#span_teamClient').text(response.counts.client || 0);
 							$('#span_teamVendor').text(response.counts.vendor || 0);
 							$('#span_teamFinance').text(response.counts.finance || 0);
-							$('#span_teamLegal').text(response.counts.legal || 0);
 							$('#span_teamInactive').text(response.counts.inactive || 0);
 							$('#span_teamInvited').text(response.counts.invited || 0);
 
