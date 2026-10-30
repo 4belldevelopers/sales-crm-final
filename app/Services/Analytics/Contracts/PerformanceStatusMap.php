@@ -65,9 +65,9 @@ class PerformanceStatusMap
     public const SHARED_PIPELINE_STATUSES = [1, 2, 3, 4, 5, 6];
 
     /**
-     * Pipeline statuses including In Review (status 8) strictly for the Performance Tab's Hiring Pipeline funnel/column exception.
+     * Pipeline statuses strictly for the Performance Tab's Hiring Pipeline funnel (strictly statuses 1..6, 0% In Review).
      */
-    public const PIPELINE_WITH_IN_REVIEW_STATUSES = [1, 2, 3, 4, 5, 6, 8];
+    public const PIPELINE_WITH_IN_REVIEW_STATUSES = [1, 2, 3, 4, 5, 6];
 
     // Pipeline Milestone Sets (Cumulative Funnel Reach from Sourcing onward)
     public const MILESTONE_SOURCING_STATUSES = [1, 2, 3, 4, 5, 6];

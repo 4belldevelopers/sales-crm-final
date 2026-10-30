@@ -1671,17 +1671,18 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
         ]);
 
         return response()->json([
-            'html'       => view('service_company.ajax_pages.client_jobs_side_bar_ajax', compact('viewModel', 'userPermissions', 'company_id', 'custom'))->render(),
-            'total'      => $viewModel->filteredCount,
-            'kpi'        => [
+            'html'             => view('service_company.ajax_pages.client_jobs_side_bar_ajax', compact('viewModel', 'userPermissions', 'company_id', 'custom'))->render(),
+            'total'            => $viewModel->filteredCount,
+            'kpi'              => [
                 'total'    => $viewModel->totalCount,
                 'hiring'   => $viewModel->hiringCount,
                 'hold'     => $viewModel->holdCount,
                 'closed'   => $viewModel->closedCount,
                 'inactive' => $viewModel->inactiveCount,
             ],
-            'tabs'       => $viewModel->tabs,
-            'pagination' => view('service_company.ajax_pages.pagination', ['pagination' => array_merge(['listType' => 'client_jobs'], $viewModel->pagination)])->render(),
+            'tabs'             => $viewModel->tabs,
+            'pipelineStageMap' => $viewModel->pipelineStageMap,
+            'pagination'       => view('service_company.ajax_pages.pagination', ['pagination' => array_merge(['listType' => 'client_jobs'], $viewModel->pagination)])->render(),
         ]);
     }
 

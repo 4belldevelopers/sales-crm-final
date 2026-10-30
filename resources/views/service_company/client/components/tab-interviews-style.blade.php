@@ -160,6 +160,26 @@
     color: #ef4444 !important;
 }
 
+.cd-it-action-subcard {
+    width: 36px !important;
+    height: 36px !important;
+    border-radius: 8px !important;
+    background: #f8fafc !important;
+    border: 1px solid #e2e8f0 !important;
+    color: #64748b !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    cursor: pointer !important;
+    transition: all 0.15s ease !important;
+}
+
+.cd-it-action-subcard:hover {
+    background: #ffffff !important;
+    border-color: #009ef7 !important;
+    color: #009ef7 !important;
+}
+
 .cd-it-add-btn {
     height: 36px !important;
     display: inline-flex !important;
@@ -258,6 +278,17 @@
     background: #dcfce7 !important;
     color: #15803d !important;
 }
+
+.cd-it-dot {
+    width: 6px !important;
+    height: 6px !important;
+    border-radius: 50% !important;
+    display: inline-block !important;
+}
+.cd-it-dot.dot-primary { background: #3b82f6 !important; }
+.cd-it-dot.dot-warning { background: #f59e0b !important; }
+.cd-it-dot.dot-success { background: #10b981 !important; }
+.cd-it-dot.dot-danger  { background: #ef4444 !important; }
 
 /* ==========================================================================
    3. Tier 3: Master Primary Candidate Interview Card
@@ -1081,7 +1112,18 @@
 /* ==========================================================================
    7. Loading, Error & Empty State Cards
    ========================================================================== */
-.cd-it-empty,
+.cd-it-empty {
+    background: #ffffff !important;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 10px !important;
+    padding: 42px 16px !important;
+    text-align: center !important;
+    color: #94a3b8 !important;
+    font-size: 13px !important;
+    margin: 8px 0 !important;
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03) !important;
+}
+
 .cd-it-loading,
 .cd-it-error {
     background: #ffffff !important;
@@ -1130,4 +1172,3 @@
     }
 }
 </style>
-<script src="{{ asset('assets/js/components/jero-panelist-component.js') }}"></script>

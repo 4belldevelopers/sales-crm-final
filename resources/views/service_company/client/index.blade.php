@@ -2031,6 +2031,7 @@
 
 @push('footer-script')
 <script src="{{ asset('demo/cdn/js/dataTables.fixedHeader.min.js') }}{{ TM_VERSION }}"></script>
+<script src="{{ asset('assets/js/components/jero-panelist-component.js') }}{{ TM_VERSION }}"></script>
 <!-- JERO Distributed Client Runtime (JDCR V5.2) Local Persistent Engine & Incremental Renderer -->
 <script src="{{ asset('assets/service_company/client/cl-entity-db.js') }}{{ TM_VERSION }}"></script>
 <script src="{{ asset('assets/service_company/client/cl-drawer-view.js') }}{{ TM_VERSION }}"></script>

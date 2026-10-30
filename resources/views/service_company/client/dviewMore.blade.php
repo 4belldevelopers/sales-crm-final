@@ -1409,8 +1409,8 @@
           .cd-drawer-tabs-card {
             background: #ffffff !important;
             border: 1px solid #e2e8f0 !important;
-            border-radius: 8px !important;
-            padding: 5px 8px !important;
+            border-radius: 10px !important;
+            padding: 6px 10px !important;
             margin: 0 14px 10px 14px !important;
             box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04) !important;
             width: auto !important;
@@ -1418,7 +1418,7 @@
             overflow: visible !important;
             display: flex !important;
             align-items: center !important;
-            min-height: 48px !important;
+            min-height: 50px !important;
             height: auto !important;
           }
           .cd-drawer-tabs-list {
@@ -1426,17 +1426,17 @@
             align-items: center !important;
             gap: 6px !important;
             overflow-x: auto !important;
-            overflow-y: visible !important;
+            overflow-y: hidden !important;
             -webkit-overflow-scrolling: touch !important;
             scrollbar-width: thin !important;
             scrollbar-color: #cbd5e1 transparent !important;
             list-style: none !important;
-            padding: 2px 0 !important;
+            padding: 0 !important;
             margin: 0 !important;
             flex-wrap: nowrap !important;
             width: 100% !important;
             min-height: 38px !important;
-            height: auto !important;
+            height: 38px !important;
           }
           .cd-drawer-tabs-list::-webkit-scrollbar {
             height: 3px !important;
@@ -1460,7 +1460,7 @@
             background: #f8fafc !important;
             border: 1px solid #e2e8f0 !important;
             border-radius: 6px !important;
-            padding: 0 10.5px !important;
+            padding: 0 11px !important;
             font-size: 11px !important;
             font-weight: 600 !important;
             color: #475569 !important;
@@ -1468,14 +1468,14 @@
             align-items: center !important;
             justify-content: center !important;
             gap: 5px !important;
-            height: 34px !important;
+            height: 32px !important;
             text-decoration: none !important;
             box-shadow: 0 1px 2px rgba(15, 23, 42, 0.02) !important;
             transition: all 0.15s ease-in-out !important;
             cursor: pointer !important;
             white-space: nowrap !important;
             flex-shrink: 0 !important;
-            line-height: 1 !important;
+            line-height: 30px !important;
             box-sizing: border-box !important;
           }
           .cd-tab-pill-btn i {
@@ -5456,7 +5456,8 @@
                     <!--end::candidate_list Candidate List-->
 
                     <!--begin::interview_tracker Candidate List-->
-                    <div class="tab-pane" id="interview_tracker" role="tabpanel">
+                    <div class="tab-pane" id="interview_tracker" role="tabpanel" style="background:#ffffff; min-height: 520px;">
+                        @include('service_company.client.components.tab-interviews-style')
                         <div class="cd-it-wrapper">
                             <!-- 1. Tier 1: Top Card Header Toolbar (Heading in Card + Search Bar) -->
                             <div class="cd-it-header-card">
@@ -5480,6 +5481,9 @@
                                             <i class="fas fa-times"></i>
                                         </button>
                                     </div>
+                                    <button type="button" id="itResetBtnDirect" class="cd-it-action-subcard" title="Reset Filters &amp; Refresh">
+                                        <i class="fas fa-sync-alt"></i>
+                                    </button>
                                     @if (in_array('add_interview_schedule', $userPermissions ?? []))
                                         <button type="button" class="btn btn-sm btn-primary fw-bold cd-it-add-btn" id="btnOpenScheduleModal">
                                             <i class="fas fa-plus me-1"></i> Schedule Interview
@@ -5495,18 +5499,22 @@
                                     <span class="cd-it-tab-badge" id="itFilterCountAll">0</span>
                                 </button>
                                 <button type="button" class="cd-it-tab-btn js-it-filter-btn" data-filter="upcoming">
+                                    <span class="cd-it-dot dot-primary"></span>
                                     <span>Upcoming / Today</span>
                                     <span class="cd-it-tab-badge badge-primary" id="itFilterCountUpcoming">0</span>
                                 </button>
                                 <button type="button" class="cd-it-tab-btn js-it-filter-btn" data-filter="pending_feedback">
+                                    <span class="cd-it-dot dot-warning"></span>
                                     <span>Feedback Pending</span>
                                     <span class="cd-it-tab-badge badge-warning" id="itFilterCountPending">0</span>
                                 </button>
                                 <button type="button" class="cd-it-tab-btn js-it-filter-btn" data-filter="completed">
+                                    <span class="cd-it-dot dot-success"></span>
                                     <span>Completed / Attended</span>
                                     <span class="cd-it-tab-badge badge-success" id="itFilterCountCompleted">0</span>
                                 </button>
                                 <button type="button" class="cd-it-tab-btn js-it-filter-btn" data-filter="cancelled">
+                                    <span class="cd-it-dot dot-danger"></span>
                                     <span>Cancelled / Rescheduled</span>
                                     <span class="cd-it-tab-badge" id="itFilterCountCancelled">0</span>
                                 </button>
@@ -6370,9 +6378,12 @@
             data.recruiters.items.forEach(function(rec, idx) {
                 var initials = rec.name.split(' ').map(function(n){ return n[0]; }).join('').substring(0, 2).toUpperCase();
                 var pctVal = parseFloat(rec.join_rate_pct) || 0;
+                var candLabel = rec.submissions + (rec.submissions === 1 ? ' Candidate' : ' Candidates');
+                var recruiterDisplay = '<strong>' + rec.name + '</strong>' +
+                    ' <span class="text-muted fs-8 ms-1 fw-normal">— ' + candLabel + '</span>';
                 recHtml += '<tr>' +
                     '<td>' + (idx + 1) + '</td>' +
-                    '<td><span class="cd-recruiter-avatar" style="background:#ecfdf5; color:#059669;">' + initials + '</span>' + rec.name + '</td>' +
+                    '<td><div class="d-flex align-items-center gap-2"><span class="cd-recruiter-avatar" style="background:#ecfdf5; color:#059669;">' + initials + '</span><div>' + recruiterDisplay + '</div></div></td>' +
                     '<td>' + rec.submissions + '</td>' +
                     '<td>' + rec.interviews + '</td>' +
                     '<td>' + rec.offers + '</td>' +
@@ -7596,6 +7607,11 @@
                 }
                 window.currentJobStatusDirect = jobStatus;
 
+                // Browser-First Pre-warming: Ensure candidates are hydrated in user RAM
+                if (window.ClientCandidateStoreDirect && window.ClientCandidateStoreDirect.state === 'IDLE' && typeof window.ClientCandidateStoreDirect.init === 'function') {
+                    try { window.ClientCandidateStoreDirect.init(currentCompanyId, dcClientId, 'direct'); } catch(e){}
+                }
+
                 if (typeof fetchJobsClientdirect === 'function') {
                     var $directJobsList = $('#kt_activitiesDirectClient #directclientJobsListajax');
                     if ($directJobsList.length && $directJobsList.children().length === 0) {
@@ -8149,6 +8165,9 @@
                 }
             });
             this.stageCounts = counts;
+            if (typeof window.recalculateJobsTabPipelines === 'function') {
+                try { window.recalculateJobsTabPipelines('direct'); } catch(e){}
+            }
             return counts;
         },
 
@@ -9204,8 +9223,19 @@
                     }
                 }
             },
-            error: function() {
+            error: function(xhr, status) {
+                if (status === 'abort') return;
                 $('.page-loader').css('display', 'none');
+                $('#candidatetListJoin').html(`
+                    <div class="cd-oj-empty" style="background:#ffffff; border:1px dashed #cbd5e1; border-radius:10px; padding:36px 20px; text-align:center;">
+                        <i class="fas fa-exclamation-circle text-danger fs-2 d-block mb-2"></i>
+                        <div class="fw-bold text-gray-800 fs-6">Failed to load offers &amp; joinings</div>
+                        <div class="text-muted fs-7 mb-3">An error occurred while fetching records.</div>
+                        <button type="button" class="btn btn-sm btn-light-primary fw-bold" onclick="directfetchCandidatesJoin(${page}, '${search}', '${segment}')">
+                            <i class="fas fa-sync-alt me-1"></i> Retry
+                        </button>
+                    </div>
+                `);
             }
         });
         return window._activeOjDirectXhr;
@@ -9344,6 +9374,23 @@
                 $('#itSearchInputDirect').val('');
                 $(this).hide();
                 currentSearch = '';
+                const cacheKey = getCompositeKey(clientId);
+                const entry = store.get(cacheKey);
+                if (entry) {
+                    entry.cursorStack = [null];
+                    entry.cursorIndex = 0;
+                }
+                fetchInterviews(clientId, null, true, '');
+            });
+
+            // 6b. Reset Button Listener
+            $('#itResetBtnDirect').off('click').on('click', function() {
+                $('#itSearchInputDirect').val('');
+                $('#itSearchClearDirect').hide();
+                currentSearch = '';
+                $('.js-it-filter-btn').removeClass('active');
+                $('.js-it-filter-btn[data-filter="all"]').addClass('active');
+                activeFilter = 'all';
                 const cacheKey = getCompositeKey(clientId);
                 const entry = store.get(cacheKey);
                 if (entry) {
@@ -9605,7 +9652,8 @@
                 $list.html(`
                     <div class="cd-it-empty">
                         <i class="fas fa-calendar-times fs-2 text-gray-300 d-block mb-2"></i>
-                        No interviews match this filter criteria.
+                        <div class="fw-bold text-gray-700 fs-6">No Matching Interviews</div>
+                        <div class="text-muted fs-8 mt-1">No scheduled interviews match this filter criteria.</div>
                     </div>
                 `);
                 return;
@@ -9872,6 +9920,10 @@
             const $pagi = $('#paginationcandidateinterviewtracker');
             const totalItems = typeof total === 'number' ? total : 0;
             const count = typeof currentCount === 'number' ? currentCount : 0;
+            if (totalItems === 0 || count === 0) {
+                $pagi.empty();
+                return;
+            }
             const hasPrev = cursorIndex > 0;
             const hasNext = Boolean(nextCursor);
 
@@ -10069,6 +10121,10 @@
         } else {
             $empty.hide();
         }
+        // Browser-Side Pipeline Calculation & Alignment
+        if (typeof window.recalculateJobsTabPipelines === 'function') {
+            try { window.recalculateJobsTabPipelines('direct'); } catch(e){}
+        }
     }
     window.applyClientJobFilterDirect = applyClientJobFilterDirect;
 
@@ -10128,6 +10184,9 @@
 
                 // Apply initial client-side filter & calculate exact counters
                 applyClientJobFilterDirect(status || window.currentJobStatusDirect || 'all');
+                if (typeof window.recalculateJobsTabPipelines === 'function') {
+                    try { window.recalculateJobsTabPipelines('direct'); } catch(e){}
+                }
             },
             error: function() {
                 $directJobsList.html(`

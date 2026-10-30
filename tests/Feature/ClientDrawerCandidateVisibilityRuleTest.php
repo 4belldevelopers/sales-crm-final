@@ -240,6 +240,16 @@ class ClientDrawerCandidateVisibilityRuleTest extends TestCase
                     $hasMasterStatusExclusion = true;
                 }
             }
+            if (isset($clause['bool']['must'])) {
+                foreach ($clause['bool']['must'] as $sub) {
+                    if (isset($sub['terms']['master_status_id'])) {
+                        $terms = $sub['terms']['master_status_id'];
+                        if (in_array(8, $terms) || in_array('8', $terms)) {
+                            $hasMasterStatusExclusion = true;
+                        }
+                    }
+                }
+            }
         }
 
         $this->assertTrue($hasJobMasterStatusExclusion, 'Direct Client query must strictly exclude job_master_status_id 8 in must_not');
@@ -744,13 +754,13 @@ class ClientDrawerCandidateVisibilityRuleTest extends TestCase
             range: '12M'
         );
 
-        // Hiring Pipeline Funnel EXCEPTION: reflects in_review_count and hiring_pipeline_total
+        // Hiring Pipeline Funnel: Strictly excludes In Review candidates (0% In Review)
         $funnel = $dashboard['funnel'];
-        $this->assertEquals(10, $funnel['in_review_count'], 'Hiring Pipeline must reflect in_review_count');
-        $this->assertEquals(10, $funnel['in_review_unique_count']);
-        $this->assertEquals(50, $funnel['hiring_pipeline_total'], 'Hiring pipeline total must sum eligible + in review (40 + 10 = 50)');
+        $this->assertEquals(0, $funnel['in_review_count'], 'Hiring Pipeline in_review_count must be strictly 0');
+        $this->assertEquals(0, $funnel['in_review_unique_count'], 'Hiring Pipeline in_review_unique_count must be strictly 0');
+        $this->assertEquals(40, $funnel['hiring_pipeline_total'], 'Hiring pipeline total must strictly equal eligible submissions (40)');
 
-        // Funnel stages themselves still begin with eligible candidate count (40)
+        // Funnel stages begin with eligible candidate count (40)
         $this->assertEquals(40, $funnel['stages'][0]['count']);
         $this->assertEquals('Candidates', $funnel['stages'][0]['label']);
     }
