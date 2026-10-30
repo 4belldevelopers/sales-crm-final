@@ -457,170 +457,301 @@
             min-width: 1020px;
         }
 
-        /* Mathematical 7-Column Grid Definition (Shared by Legend & Cards) */
+        /* =========================================================================
+           TIER 3: CARD + SUB-CARD STREAM & 5-COLUMN LEGEND (Rule 20 Enterprise Standard)
+           ========================================================================= */
+        .team-roster-wrap {
+            width: 100%;
+            overflow-x: auto;
+            padding-bottom: 10px;
+        }
+        .team-roster-inner {
+            min-width: 1020px;
+        }
+
+        /* 5-Column Grid Definition for Legend & Sub-Cards (Zero Overflow on 15.6" screens) */
         .team-roster-legend,
-        .team-card-grid {
+        .tm-subcards-grid {
             display: grid !important;
-            grid-template-columns: minmax(210px, 2.2fr) minmax(85px, 0.9fr) minmax(185px, 1.8fr) minmax(115px, 1.1fr) minmax(220px, 2.2fr) minmax(95px, 1fr) minmax(105px, 1fr) !important;
-            gap: 12px !important;
-            align-items: center !important;
+            grid-template-columns: minmax(0, 1.8fr) minmax(0, 1.15fr) minmax(0, 1.25fr) minmax(0, 1.05fr) minmax(0, 1.65fr) !important;
+            gap: 8px !important;
+            align-items: stretch !important;
             box-sizing: border-box !important;
+            width: 100% !important;
         }
 
         .team-roster-legend {
             border: 1px solid transparent;
-            padding: 6px 18px !important;
-            margin-bottom: 8px !important;
-            font-size: 11px;
-            font-weight: 700;
-            color: #64748b;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
+            padding: 4px 14px 8px !important;
+            font-size: 10.5px !important;
+            font-weight: 700 !important;
+            color: #64748b !important;
+            text-transform: uppercase !important;
+            letter-spacing: 0.04em !important;
         }
-
-        .tm-owner-tag {
-            display: inline-flex;
+        .team-roster-legend > div {
+            display: flex;
             align-items: center;
-            font-size: 11px;
-            font-weight: 600;
-            color: #b45309;
-            margin: 1px 0;
-            line-height: 1.2;
-            white-space: nowrap;
+            gap: 5px;
         }
 
         .team-cards-container {
             display: flex;
             flex-direction: column;
-            gap: 8px;
+            gap: 10px;
         }
-        .team-card {
+
+        /* Master Primary Card */
+        .tm-primary-card {
             background: #ffffff !important;
             border: 1px solid #e2e8f0 !important;
-            border-radius: 10px !important;
+            border-radius: 12px !important;
+            padding: 10px !important;
             box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03) !important;
-            transition: all .2s cubic-bezier(.4, 0, .2, 1);
-            overflow: hidden;
+            transition: all 0.2s cubic-bezier(.4, 0, .2, 1);
+            display: flex;
+            flex-direction: column;
+            position: relative;
             box-sizing: border-box;
         }
-        .team-card:hover {
+        .tm-primary-card:hover {
             border-color: #cbd5e1 !important;
-            box-shadow: 0 4px 12px rgba(15, 23, 42, 0.06) !important;
-        }
-        .team-card-grid {
-            padding: 12px 18px !important;
-            min-height: 64px;
+            box-shadow: 0 4px 14px rgba(15, 23, 42, 0.07) !important;
+            transform: translateY(-1px);
         }
 
-        /* Discrete Cell Elements */
-        .tm-cell {
+        /* Discrete Sub-Card Base Container */
+        .tm-subcard {
+            background: #f8fafc !important;
+            border: 1px solid #edf2f7 !important;
+            border-radius: 8px !important;
+            padding: 10px 11px !important;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
             min-width: 0;
-            overflow: hidden;
+            position: relative;
+            box-sizing: border-box;
         }
-
-        /* Col 1: Member Identity */
-        .tm-cell-member {
+        .tm-subcard-head {
             display: flex;
             align-items: center;
-            gap: 12px;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            min-width: 0;
+            gap: 6px;
+        }
+        .tm-subcard-title-wrap {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            min-width: 0;
+        }
+        .tm-subcard-icon {
+            flex-shrink: 0;
+        }
+        .tm-subcard-title {
+            font-size: 10px;
+            font-weight: 700;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+            white-space: nowrap;
+        }
+        .tm-subcard-badge {
+            font-size: 9.5px;
+            font-weight: 700;
+            padding: 1.5px 6px;
+            border-radius: 4px;
+            white-space: nowrap;
+        }
+        .badge-owner {
+            background: #fef3c7;
+            color: #d97706;
+            border: 1px solid #fde68a;
+        }
+        .badge-rep {
+            background: #eff6ff;
+            color: #009ef7;
+            border: 1px solid #bfdbfe;
+        }
+        .badge-count {
+            background: #e2e8f0;
+            color: #475569;
+        }
+        .badge-role {
+            background: #f1f5f9;
+            color: #475569;
+        }
+        .badge-month {
+            background: #eef2ff;
+            color: #4f46e5;
+        }
+        .badge-member {
+            background: #f0fdf4;
+            color: #16a34a;
+            border: 1px solid #bbf7d0;
+        }
+
+        /* Sub-Card 1: Member Identity */
+        .tm-identity-body {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            min-width: 0;
         }
         .tm-avatar {
-            width: 38px;
-            height: 38px;
-            border-radius: 8px;
+            width: 44px;
+            height: 44px;
+            border-radius: 10px;
             display: flex;
             align-items: center;
             justify-content: center;
             font-weight: 700;
-            font-size: 14px;
+            font-size: 16px;
             flex-shrink: 0;
             overflow: hidden;
             cursor: pointer;
-            transition: transform .15s ease, box-shadow .15s ease;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+            transition: transform 0.15s ease, box-shadow 0.15s ease;
+            margin-top: 1px;
         }
         .tm-avatar:hover {
             transform: scale(1.04);
             box-shadow: 0 2px 6px rgba(0, 158, 247, 0.2);
         }
         .tm-avatar img { width: 100%; height: 100%; object-fit: cover; }
+        .tm-identity-details {
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+            flex: 1 1 0%;
+            overflow: hidden;
+        }
         .tm-member-name {
             font-size: 13.5px;
             font-weight: 700;
             color: #0f172a;
             line-height: 1.25;
-            text-decoration: none;
+            cursor: pointer;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
             display: block;
-            cursor: pointer;
-            transition: color .15s;
+            transition: color 0.15s ease;
         }
         .tm-member-name:hover { color: #009ef7; }
-        .tm-member-email {
+        .tm-member-designation {
             font-size: 11px;
-            color: #64748b;
-            margin-top: 1px;
+            font-weight: 600;
+            color: #475569;
+            margin-top: 2px;
+            line-height: 1.3;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
-            display: block;
-        }
-
-        /* Col 2: Rank & Score */
-        .tm-cell-rank {
-            display: flex;
-            flex-direction: column;
-            align-items: flex-start;
-            justify-content: center;
-        }
-        .tm-rank-val {
-            font-size: 13px;
-            font-weight: 700;
-            color: #0f172a;
-            line-height: 1.2;
             display: flex;
             align-items: center;
+            gap: 4px;
         }
-        .tm-rank-month {
+        .tm-member-email-wrap {
             font-size: 10.5px;
             color: #64748b;
-            font-weight: 500;
-            margin-left: 3px;
-        }
-        .tm-btn-view-score {
-            background: #d1fae5;
-            color: #065f46;
-            border: none;
-            border-radius: 12px;
-            padding: 2px 8px;
-            font-size: 10.5px;
-            font-weight: 700;
-            cursor: pointer;
-            transition: all .15s;
-            line-height: 1.35;
-            display: inline-flex;
-            align-items: center;
             margin-top: 3px;
+            line-height: 1.3;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: flex;
+            align-items: center;
+            gap: 4px;
         }
-        .tm-btn-view-score:hover {
-            background: #a7f3d0;
-            color: #047857;
+        .tm-member-email-link {
+            color: inherit;
+            text-decoration: none;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
         }
+        .tm-member-email-link:hover { color: #009ef7; }
 
-        /* Col 3: Workload */
-        .tm-cell-workload {
+        /* Sub-Card 2: Dedicated System Role & Permissions */
+        .tm-role-body {
             display: flex;
             flex-direction: column;
             justify-content: center;
-            gap: 3px;
+            min-width: 0;
+            gap: 6px;
+        }
+        .tm-role-badge-row {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .tm-role-badge {
+            font-size: 11px;
+            font-weight: 700;
+            padding: 3px 8px;
+            border-radius: 5px;
+            white-space: nowrap;
+            display: inline-flex;
+            align-items: center;
+        }
+        .role-admin   { background: #ede9fe; color: #6d28d9; border: 1px solid #ddd6fe; }
+        .role-lead    { background: #e0f2fe; color: #0284c7; border: 1px solid #bae6fd; }
+        .role-default { background: #fef3c7; color: #b45309; border: 1px solid #fde68a; }
+
+        .tm-role-action-row {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .btn-change-role {
+            font-size: 11px;
+            font-weight: 600;
+            padding: 3.5px 8px;
+            border-radius: 6px;
+            border: 1px solid #cbd5e1;
+            background: #ffffff;
+            color: #334155;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            transition: all 0.15s ease;
+            white-space: nowrap;
+            box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+        }
+        .btn-change-role:hover {
+            background: #eff6ff;
+            border-color: #009ef7;
+            color: #009ef7;
+        }
+        .tm-role-locked-note {
+            font-size: 10px;
+            font-weight: 600;
+            color: #94a3b8;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        /* Sub-Card 3: Workload & Ops */
+        .tm-workload-body {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            min-width: 0;
         }
         .tm-wl-row {
+            display: flex;
+            align-items: center;
+            gap: 5px;
             font-size: 11px;
             color: #475569;
             white-space: nowrap;
-            display: flex;
-            align-items: center;
+            overflow: hidden;
+            text-overflow: ellipsis;
             line-height: 1.35;
         }
         .tm-wl-row i {
@@ -630,31 +761,94 @@
             flex-shrink: 0;
         }
         .tm-wl-row strong {
-            color: #0f172a;
             font-weight: 700;
+            color: #0f172a;
             font-variant-numeric: tabular-nums;
-            margin-right: 2px;
         }
 
-        /* Col 4: Role & Permissions */
-        .tm-cell-role {
+        /* Sub-Card 4: Performance & Rank */
+        .tm-rank-body {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            min-width: 0;
+            gap: 4px;
+        }
+        .tm-rank-val-row {
             display: flex;
             align-items: center;
-            gap: 5px;
+            gap: 6px;
         }
-        .tm-role-badge {
-            font-size: 11px;
-            font-weight: 700;
-            padding: 3.5px 9px;
-            border-radius: 6px;
+        .tm-rank-number {
+            font-size: 17px;
+            font-weight: 800;
+            color: #0f172a;
+            line-height: 1;
+            font-variant-numeric: tabular-nums;
+        }
+        .tm-rank-actions-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 4px;
+            flex-wrap: wrap;
+        }
+        .tm-score-text {
+            font-size: 10px;
+            font-weight: 600;
+            color: #64748b;
+        }
+        .btn-view-score {
+            font-size: 10px;
+            font-weight: 600;
+            color: #059669;
+            background: #ecfdf5;
+            border: 1px solid #a7f3d0;
+            border-radius: 4px;
+            padding: 1.5px 7px;
+            cursor: pointer;
             display: inline-flex;
             align-items: center;
+            gap: 4px;
+            text-decoration: none;
+            transition: all 0.15s ease;
             white-space: nowrap;
         }
-        .role-admin   { background: #ede9fe; color: #6d28d9; }
-        .role-lead    { background: #e0f2fe; color: #0284c7; }
-        .role-default { background: #fef3c7; color: #b45309; }
-        .tm-btn-role-edit {
+        .btn-view-score:hover {
+            background: #d1fae5;
+            color: #047857;
+        }
+
+        /* Sub-Card 5: Marketplace Communication */
+        .tm-comm-body {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 4px;
+            min-width: 0;
+        }
+        .tm-comm-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 10px;
+            font-weight: 600;
+            padding: 2px 6.5px;
+            border-radius: 5px;
+            line-height: 1.25;
+            white-space: nowrap;
+        }
+        .tm-comm-chip.client      { background: #f0fdf4; color: #16a34a; border: 1px solid #bbf7d0; }
+        .tm-comm-chip.vendor      { background: #faf5ff; color: #9333ea; border: 1px solid #e9d5ff; }
+        .tm-comm-chip.agency      { background: #faf5ff; color: #9333ea; border: 1px solid #e9d5ff; }
+        .tm-comm-chip.recruitment { background: #e6fcf5; color: #059669; border: 1px solid #a7f3d0; }
+        .tm-comm-chip .prio-tag {
+            font-size: 8px;
+            opacity: 0.85;
+            text-transform: uppercase;
+            font-weight: 700;
+        }
+        .btn-edit-comm-icon {
             width: 22px;
             height: 22px;
             border-radius: 5px;
@@ -665,148 +859,122 @@
             align-items: center;
             justify-content: center;
             cursor: pointer;
-            font-size: 10px;
-            transition: all .15s;
-        }
-        .tm-btn-role-edit:hover {
-            background: #eff6ff;
-            color: #009ef7;
-            border-color: #009ef7;
-        }
-
-        /* Col 5: Corporate Communication Purpose */
-        .tm-cell-communication {
-            display: flex;
-            align-items: center;
-            min-width: 0;
-        }
-        .tm-comm-chip {
-            display: inline-flex;
-            align-items: center;
-            font-size: 10px;
-            font-weight: 600;
-            padding: 2.5px 6.5px;
-            border-radius: 5px;
-            line-height: 1.25;
-            white-space: nowrap;
-        }
-        .tm-comm-chip.client      { background: #f0fdf4; color: #16a34a; border: 1px solid #bbf7d0; }
-        .tm-comm-chip.vendor      { background: #faf5ff; color: #9333ea; border: 1px solid #e9d5ff; }
-        .tm-comm-chip.agency      { background: #faf5ff; color: #9333ea; border: 1px solid #e9d5ff; }
-        .tm-comm-chip.recruitment { background: #e6fcf5; color: #059669; border: 1px solid #a7f3d0; }
-
-        .tm-btn-edit-comm {
-            width: 20px;
-            height: 20px;
-            border-radius: 4px;
-            border: 1px solid #e2e8f0;
-            background: #ffffff;
-            color: #94a3b8;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            font-size: 9px;
-            transition: all .15s;
-            padding: 0;
+            font-size: 9.5px;
+            transition: all 0.15s ease;
             flex-shrink: 0;
         }
-        .tm-btn-edit-comm:hover {
+        .btn-edit-comm-icon:hover {
             background: #eff6ff;
             color: #009ef7;
             border-color: #009ef7;
         }
-
-        .tm-btn-add-comm {
-            font-size: 10.5px;
+        .btn-assign-comm-empty {
+            font-size: 11px;
             font-weight: 600;
-            padding: 3px 9px;
+            padding: 3.5px 9px;
             border-radius: 6px;
             border: 1px dashed #cbd5e1;
             background: #ffffff;
             color: #64748b;
+            cursor: pointer;
             display: inline-flex;
             align-items: center;
-            cursor: pointer;
+            gap: 5px;
+            transition: all 0.15s ease;
             white-space: nowrap;
-            transition: all .15s;
-            font-family: inherit;
         }
-        .tm-btn-add-comm:hover {
-            background: #eff6ff;
-            color: #009ef7;
+        .btn-assign-comm-empty:hover {
             border-color: #009ef7;
             border-style: solid;
+            background: #eff6ff;
+            color: #009ef7;
         }
 
-        .comm-channel-opt:hover {
-            border-color: #009ef7 !important;
-            background: #f8fafc !important;
-        }
-
-        /* Col 6: Status Toggle */
-        .tm-cell-status {
+        /* Sub-Card 6: Bottom Activity & Control Strip */
+        .tm-card-bottom-strip {
+            background: #f8fafc;
+            border: 1px solid #eef2f6;
+            border-radius: 6px;
+            padding: 6px 12px;
             display: flex;
             align-items: center;
-            gap: 8px;
+            justify-content: space-between;
+            font-size: 11px;
+            color: #64748b;
+            margin-top: 2px;
         }
-        .tm-switch {
-            position: relative;
-            display: inline-block;
-            width: 34px;
-            height: 18px;
-            flex-shrink: 0;
-            margin: 0;
+        .tm-bottom-meta {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
         }
-        .tm-switch input { opacity: 0; width: 0; height: 0; }
-        .tm-slider {
-            position: absolute;
-            cursor: pointer;
-            inset: 0;
-            background: #cbd5e1;
-            border-radius: 20px;
-            transition: .2s;
+        .tm-meta-item {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
         }
-        .tm-slider:before {
-            content: "";
-            position: absolute;
-            height: 12px;
-            width: 12px;
-            left: 3px;
-            bottom: 3px;
-            background: #fff;
+        .tm-meta-dot {
+            color: #cbd5e1;
+        }
+        .dot-pulse {
+            width: 6.5px;
+            height: 6.5px;
             border-radius: 50%;
-            transition: .2s;
+            display: inline-block;
+            flex-shrink: 0;
         }
-        .tm-switch input:checked + .tm-slider { background: #2563eb; }
-        .tm-switch input:checked + .tm-slider:before { transform: translateX(16px); }
-        .tm-switch input:disabled + .tm-slider { opacity: .6; cursor: not-allowed; }
-        .tm-status-text {
-            font-size: 11.5px;
-            font-weight: 700;
-        }
-
-        /* Col 7: Last Active */
-        .tm-cell-lastactive {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            font-size: 11.5px;
-            color: #475569;
-            font-weight: 500;
-            white-space: nowrap;
-        }
-        .tm-dot { width: 7px; height: 7px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
         .dot-green { background: #10b981; }
         .dot-amber { background: #f59e0b; }
         .dot-gray  { background: #94a3b8; }
 
-        /* Col 8: Row Actions */
-        .tm-cell-actions {
+        .tm-bottom-actions {
             display: flex;
             align-items: center;
-            justify-content: center;
+            gap: 14px;
         }
+        /* iOS Switch */
+        .ios-switch-wrap {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+        }
+        .ios-switch {
+            position: relative;
+            display: inline-block;
+            width: 32px;
+            height: 18px;
+        }
+        .ios-switch input { opacity: 0; width: 0; height: 0; }
+        .ios-slider {
+            position: absolute;
+            cursor: pointer;
+            inset: 0;
+            background-color: #cbd5e1;
+            transition: .2s;
+            border-radius: 18px;
+        }
+        .ios-slider:before {
+            position: absolute;
+            content: "";
+            height: 14px;
+            width: 14px;
+            left: 2px;
+            bottom: 2px;
+            background-color: white;
+            transition: .2s;
+            border-radius: 50%;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+        }
+        .ios-switch input:checked + .ios-slider { background-color: #009ef7; }
+        .ios-switch input:checked + .ios-slider:before { transform: translateX(14px); }
+        .ios-switch input:disabled + .ios-slider { opacity: .6; cursor: not-allowed; }
+        .ios-label {
+            font-size: 11px;
+            font-weight: 700;
+        }
+
         /* Empty State */
         .team-empty-card {
             background: #fff;
@@ -925,38 +1093,43 @@
             color: #64748b;
         }
 
-        /* Responsive Breakpoints & 15.6" Screen Optimization (Strictly 7 Cards on 1 Row) */
+        /* Responsive Breakpoints & 15.6" Screen Optimization (Strictly 6 Cards on 1 Row) */
         @media (max-width: 1440px) {
             .tm-stat-grid {
-                grid-template-columns: repeat(7, minmax(0, 1fr)) !important;
-                gap: 5px !important;
+                grid-template-columns: repeat(6, minmax(0, 1fr)) !important;
+                gap: 6px !important;
             }
             .tm-stat-card {
-                padding: 7px 5px !important;
+                padding: 8px 6px !important;
             }
             .tm-card-top {
-                gap: 5px !important;
+                gap: 6px !important;
             }
             .tm-card-icon {
-                width: 26px !important;
-                height: 26px !important;
-                min-width: 26px !important;
-                font-size: 11px !important;
+                width: 28px !important;
+                height: 28px !important;
+                min-width: 28px !important;
+                font-size: 12px !important;
             }
             .tm-card-num {
-                font-size: 14px !important;
+                font-size: 15px !important;
             }
             .tm-card-lbl {
-                font-size: 9.5px !important;
+                font-size: 10px !important;
             }
             .tm-card-sub {
-                font-size: 8px !important;
+                font-size: 8.5px !important;
+            }
+            .tm-subcards-grid,
+            .team-roster-legend {
+                grid-template-columns: minmax(0, 1.75fr) minmax(0, 1.15fr) minmax(0, 1.25fr) minmax(0, 1.05fr) minmax(0, 1.6fr) !important;
+                gap: 6px !important;
             }
         }
         @media (max-width: 1150px) {
             .tm-stat-grid {
-                grid-template-columns: repeat(7, minmax(0, 1fr)) !important;
-                gap: 4px !important;
+                grid-template-columns: repeat(6, minmax(0, 1fr)) !important;
+                gap: 5px !important;
             }
             .tm-stat-card {
                 padding: 6px 4px !important;
@@ -975,6 +1148,26 @@
             }
             .tm-card-sub {
                 font-size: 7.5px !important;
+            }
+            .team-roster-legend {
+                display: none !important;
+            }
+            .tm-subcards-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+                gap: 8px !important;
+            }
+        }
+        @media (max-width: 640px) {
+            .tm-subcards-grid {
+                grid-template-columns: 1fr !important;
+            }
+            .tm-stat-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+            }
+            .tm-card-bottom-strip {
+                flex-direction: column !important;
+                align-items: flex-start !important;
+                gap: 8px !important;
             }
         }
 
@@ -1798,13 +1991,11 @@
                 <div class="team-roster-wrap">
                     <div class="team-roster-inner">
                         <div class="team-roster-legend">
-                            <div>Member</div>
-                            <div>Rank</div>
-                            <div>Workload</div>
-                            <div>Role</div>
-                            <div>Communication Purpose</div>
-                            <div>Status</div>
-                            <div>Last Active</div>
+                            <div><i class="fa-solid fa-id-card me-1 text-primary"></i>Member Identity</div>
+                            <div><i class="fa-solid fa-shield-halved me-1 text-primary"></i>System Role</div>
+                            <div><i class="fa-solid fa-briefcase me-1 text-primary"></i>Workload &amp; Ops</div>
+                            <div><i class="fa-solid fa-chart-line me-1 text-primary"></i>Performance</div>
+                            <div><i class="fa-solid fa-bullhorn me-1 text-primary"></i>Marketplace Roles</div>
                         </div>
 
                         <div class="position-relative">
