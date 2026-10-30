@@ -527,6 +527,12 @@
             font-size: 14px;
             flex-shrink: 0;
             overflow: hidden;
+            cursor: pointer;
+            transition: transform .15s ease, box-shadow .15s ease;
+        }
+        .tm-avatar:hover {
+            transform: scale(1.04);
+            box-shadow: 0 2px 6px rgba(0, 158, 247, 0.2);
         }
         .tm-avatar img { width: 100%; height: 100%; object-fit: cover; }
         .tm-member-name {
@@ -539,6 +545,8 @@
             overflow: hidden;
             text-overflow: ellipsis;
             display: block;
+            cursor: pointer;
+            transition: color .15s;
         }
         .tm-member-name:hover { color: #009ef7; }
         .tm-member-email {
@@ -2840,7 +2848,10 @@
                 $("#kt_activitiesClient_close").click();
             });
             $(document).on('click', '.drawer-overlay', function() {
-              $("#kt_activitiesClient_close").click();
+                if (typeof window.closeTeamMemberDrawer === 'function') {
+                    window.closeTeamMemberDrawer();
+                }
+                $("#kt_activitiesClient_close").click();
             });
 
 
