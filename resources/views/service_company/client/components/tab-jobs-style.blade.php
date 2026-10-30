@@ -404,7 +404,10 @@
     justify-content: center !important;
     font-weight: 700 !important;
     font-size: 14px !important;
-    color: #ffffff !important;
+    color: #009ef7 !important;
+    background-color: #ffffff !important;
+    border: 1px solid #e2e8f0 !important;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03) !important;
     flex-shrink: 0 !important;
     overflow: hidden !important;
 }
@@ -412,7 +415,14 @@
 .cd-logo-box img {
     width: 100% !important;
     height: 100% !important;
-    object-fit: cover !important;
+    object-fit: contain !important;
+    background-color: #ffffff !important;
+}
+
+.cd-logo-box span {
+    color: #009ef7 !important;
+    font-weight: 700 !important;
+    font-size: 14px !important;
 }
 
 .cd-details-text {
@@ -1079,17 +1089,11 @@ window.ClientJobsPipelineEngine = window.ClientJobsPipelineEngine || {
             $card.find('.s-joi').text(counts[6]);
             $card.find('.s-rej').text(counts[7]);
 
-            // Update track summary strip with mandatory 'Applications' naming
+            // Update track summary strip: strictly Applications and Interviews with counters
             $card.find('.cd-track-summary').html(
                 `<span>Applications: <strong>${totalApps}</strong></span>` +
                 `<span class="cd-bullet">&bull;</span>` +
-                `<span>Sourcing: <strong>${totalSourcing}</strong></span>` +
-                `<span class="cd-bullet">&bull;</span>` +
-                `<span>Interviews: <strong>${totalInterviews}</strong></span>` +
-                `<span class="cd-bullet">&bull;</span>` +
-                `<span>Offers: <strong>${totalOffers}</strong></span>` +
-                `<span class="cd-bullet">&bull;</span>` +
-                `<span>Joined: <strong>${totalJoined}</strong></span>`
+                `<span>Interviews: <strong>${totalInterviews}</strong></span>`
             );
         });
     }

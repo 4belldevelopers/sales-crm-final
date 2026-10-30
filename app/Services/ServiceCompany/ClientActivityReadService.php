@@ -121,6 +121,38 @@ class ClientActivityReadService
         // Step 4: In-Memory Normalization, Permission Masking & Sorting
         $normalizedEvents = $this->normalizeAndSortEvents($rawEvents, $query);
 
+        // Derive authoritative KPIs directly from normalized events for the base query
+        if ($query->category === 'all' && empty($query->search) && $query->timeframe === 'all') {
+            $catCounts = [
+                'pipeline' => 0,
+                'interviews' => 0,
+                'offers' => 0,
+                'jobs' => 0,
+                'crm' => 0,
+            ];
+            foreach ($normalizedEvents as $ev) {
+                $c = $ev['category'] ?? 'pipeline';
+                if (isset($catCounts[$c])) {
+                    $catCounts[$c]++;
+                }
+            }
+            $kpis = [
+                'total_activities' => count($normalizedEvents),
+                'pipeline_events' => $catCounts['pipeline'],
+                'interview_events' => $catCounts['interviews'],
+                'offer_events' => $catCounts['offers'],
+                'job_events' => $catCounts['jobs'],
+                'note_events' => $catCounts['crm'],
+                'all' => count($normalizedEvents),
+                'jobs' => $catCounts['jobs'],
+                'candidates' => $catCounts['pipeline'] + $catCounts['offers'],
+                'interviews' => $catCounts['interviews'],
+                'pipeline' => $catCounts['pipeline'],
+                'offers' => $catCounts['offers'],
+                'crm' => $catCounts['crm'],
+            ];
+        }
+
         // Step 5: Sequence Range Filtering & Cursor Pagination
         $paginationResult = $this->applyCursorPagination($normalizedEvents, $query);
         $paginatedItems = $paginationResult['items'];
@@ -952,7 +984,7 @@ class ClientActivityReadService
                     $jStatusId = (int) ($s['job_master_status_id'] ?? 0);
                     $mStatusId = (int) ($s['master_status_id'] ?? 0);
                     $mStatusName = strtolower(trim((string) ($s['master_status_name'] ?? '')));
-                    $isInReview = ($jStatusId === 8 || $mStatusId === 8 || in_array($mStatusName, ['in review', 'inreview', 'in_review'], true));
+                    $isInReview = ($jStatusId === 8 || ($jStatusId <= 0 && ($mStatusId === 8 || in_array($mStatusName, ['in review', 'inreview', 'in_review'], true))));
 
                     $existingProfile = $profiles["id:{$candAppId}"] ?? $profiles["id:{$cid}"] ?? null;
                     if ($existingProfile && ! empty($existingProfile['name']) && empty($cName)) {
@@ -1406,11 +1438,19 @@ class ClientActivityReadService
             $type = $entry['source_type'];
             $src = $entry['hit']['_source'] ?? [];
             $id = (string) ($entry['hit']['_id'] ?? '');
+            $profile = null;
+            $jobProfile = null;
 
             $createdAt = $src['created_at'] ?? $src['updated_at'] ?? now()->toIso8601String();
             $timestamp = Carbon::parse($createdAt)->timestamp;
 
             if ($type === 'timeline') {
+                $appId = (int) ($src['application_id'] ?? 0);
+                $jobId = (int) ($src['job_id'] ?? 0);
+                $appEmail = strtolower(trim((string) ($src['application_email'] ?? '')));
+                $profile = $candProfiles["id:{$appId}"] ?? $candProfiles["em:{$appEmail}"] ?? null;
+                $jobProfile = $jobProfiles[$jobId] ?? null;
+
                 $processName = $src['master_process_name'] ?? 'Pipeline';
                 $toStage = $processName;
                 $toStageLower = strtolower(trim((string) $toStage));
@@ -1438,8 +1478,13 @@ class ClientActivityReadService
                 // Candidate Visibility Rule: Do not show In Review candidate activity across client drawers.
                 // In Review is strictly pre-submission/internal.
                 $candidateStatus = (int) ($src['candidate_status'] ?? 0);
+                $isCandidateInReview = ! empty($profile['is_in_review']);
+                if (! empty($profile['job_master_status_id']) && (int) $profile['job_master_status_id'] !== 8) {
+                    $isCandidateInReview = false;
+                }
+
                 if (
-                    ! empty($profile['is_in_review'])
+                    $isCandidateInReview
                     || $candidateStatus === 8
                     || in_array($toStageLower, ['in review', 'inreview', 'in_review'], true)
                 ) {
@@ -1470,12 +1515,6 @@ class ClientActivityReadService
                     $offerAmount = (float) $src['offer_amount'];
                     $isConfidential = false;
                 }
-
-                $appId = (int) ($src['application_id'] ?? 0);
-                $jobId = (int) ($src['job_id'] ?? 0);
-                $appEmail = strtolower(trim((string) ($src['application_email'] ?? '')));
-                $profile = $candProfiles["id:{$appId}"] ?? $candProfiles["em:{$appEmail}"] ?? null;
-                $jobProfile = $jobProfiles[$jobId] ?? null;
 
                 $targetWiseId = $profile['wise_id'] ?? $appId;
 

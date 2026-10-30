@@ -353,7 +353,7 @@ class ClientJobsReadService
                 $initial = strtoupper(mb_substr(trim($title), 0, 1));
                 $logoMap[$jId] = [
                     'initial' => $initial ?: 'J',
-                    'color' => $this->getInitialColor($initial),
+                    'color' => '#ffffff',
                 ];
             }
         }
@@ -484,23 +484,10 @@ class ClientJobsReadService
     }
 
     /**
-     * Resolves initial brand color matching Metronic enterprise design system.
+     * Resolves initial brand color matching Modern Card + Sub-Card enterprise design standard (#ffffff).
      */
     protected function getInitialColor(string $initial): string
     {
-        $ord = ord(strtolower($initial));
-        if ($ord >= 97 && $ord <= 101) {
-            return '#f64e60'; // light danger
-        } elseif ($ord >= 102 && $ord <= 106) {
-            return '#ffc700'; // light warning
-        } elseif ($ord >= 107 && $ord <= 111) {
-            return '#009ef7'; // light primary
-        } elseif ($ord >= 112 && $ord <= 116) {
-            return '#50cd89'; // light success
-        } elseif ($ord >= 117 && $ord <= 121) {
-            return '#3f4254'; // dark secondary
-        }
-
-        return '#a1a5b7'; // default neutral gray
+        return '#ffffff';
     }
 }

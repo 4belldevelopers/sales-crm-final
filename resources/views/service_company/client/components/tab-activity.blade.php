@@ -473,13 +473,44 @@
         },
 
         updateKpiCounters: function(kpi) {
-            if (!kpi) return;
-            $('#cdActivityCountAll').text(kpi.all !== undefined ? kpi.all : (kpi.total_activities || 0));
-            $('#cdActivityCountPipeline').text(kpi.pipeline !== undefined ? kpi.pipeline : (kpi.pipeline_events || 0));
-            $('#cdActivityCountInterviews').text(kpi.interviews !== undefined ? kpi.interviews : (kpi.interview_events || 0));
-            $('#cdActivityCountOffers').text(kpi.offers !== undefined ? kpi.offers : (kpi.offer_events || 0));
-            $('#cdActivityCountJobs').text(kpi.jobs !== undefined ? kpi.jobs : (kpi.job_events || 0));
-            $('#cdActivityCountCrm').text(kpi.crm !== undefined ? kpi.crm : (kpi.note_events || 0));
+            var counts = {
+                all: 0,
+                pipeline: 0,
+                interviews: 0,
+                offers: 0,
+                jobs: 0,
+                crm: 0
+            };
+
+            if (this.allActivities && Array.isArray(this.allActivities) && this.allActivities.length > 0) {
+                counts.all = this.allActivities.length;
+                this.allActivities.forEach(function(item) {
+                    var cat = item.category || 'pipeline';
+                    if (counts[cat] !== undefined) {
+                        counts[cat]++;
+                    } else if (cat === 'offer' || cat === 'offers') {
+                        counts.offers++;
+                    } else if (cat === 'interview' || cat === 'interviews') {
+                        counts.interviews++;
+                    } else if (cat === 'job' || cat === 'jobs') {
+                        counts.jobs++;
+                    }
+                });
+            } else if (kpi) {
+                counts.all = kpi.all !== undefined ? kpi.all : (kpi.total_activities || 0);
+                counts.pipeline = kpi.pipeline !== undefined ? kpi.pipeline : (kpi.pipeline_events || 0);
+                counts.interviews = kpi.interviews !== undefined ? kpi.interviews : (kpi.interview_events || 0);
+                counts.offers = kpi.offers !== undefined ? kpi.offers : (kpi.offer_events || 0);
+                counts.jobs = kpi.jobs !== undefined ? kpi.jobs : (kpi.job_events || 0);
+                counts.crm = kpi.crm !== undefined ? kpi.crm : (kpi.note_events || 0);
+            }
+
+            $('#cdActivityCountAll').text(counts.all);
+            $('#cdActivityCountPipeline').text(counts.pipeline);
+            $('#cdActivityCountInterviews').text(counts.interviews);
+            $('#cdActivityCountOffers').text(counts.offers);
+            $('#cdActivityCountJobs').text(counts.jobs);
+            $('#cdActivityCountCrm').text(counts.crm);
         },
 
         updateHealthStatus: function(health) {
