@@ -129,6 +129,8 @@ class CompanyMutationService
                 $currentVersion = (int) Cache::get($versionKey, 1);
                 $newVersion = $currentVersion + 1;
                 Cache::put($versionKey, $newVersion, now()->addDays(7));
+                Cache::forget("sa:company:drawer:html:{$companyId}:u{$tenantId}:v{$currentVersion}");
+                Cache::forget("company:epoch:{$companyId}");
 
                 // 3. Atomically write to sys_outbox_events
                 $outboxId = DB::table('sys_outbox_events')->insertGetId([
