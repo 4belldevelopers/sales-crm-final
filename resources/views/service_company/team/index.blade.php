@@ -216,7 +216,7 @@
         .team-btn-light:hover { background: #f8fafc; color: #0f172a; border-color: #cbd5e1; }
 
         /* =========================================================================
-           TIER 2: 7 STAT CARDS ROW (Card-Based Tabs — Strictly 1 Single Horizontal Row)
+           TIER 2: 6 STAT CARDS ROW (Card-Based Tabs — Perfectly Balanced Enterprise Standard)
            ========================================================================= */
         .tm-stat-grid-wrap {
             width: 100% !important;
@@ -231,59 +231,67 @@
         }
         .tm-stat-grid {
             display: grid !important;
-            grid-template-columns: repeat(7, minmax(0, 1fr)) !important;
-            gap: 7px !important;
+            grid-template-columns: repeat(6, minmax(0, 1fr)) !important;
+            gap: 10px !important;
             width: 100% !important;
-            min-width: 900px !important;
+            min-width: 820px !important;
             box-sizing: border-box !important;
         }
         .tm-stat-card {
             background: #ffffff !important;
             border: 1px solid #e2e8f0 !important;
             border-radius: 10px !important;
-            padding: 9px 8px !important;
+            padding: 10px 12px 9px !important;
             display: flex !important;
             flex-direction: column !important;
             justify-content: space-between !important;
             text-decoration: none !important;
             color: inherit !important;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02) !important;
-            transition: all 0.15s ease !important;
+            box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03) !important;
+            transition: all 0.18s cubic-bezier(.4, 0, .2, 1) !important;
             cursor: pointer !important;
             min-width: 0 !important;
             overflow: hidden !important;
+            position: relative !important;
         }
         .tm-stat-card:hover {
             transform: translateY(-2px) !important;
             border-color: #cbd5e1 !important;
-            box-shadow: 0 4px 12px rgba(15, 23, 42, 0.06) !important;
+            box-shadow: 0 4px 12px rgba(15, 23, 42, 0.07) !important;
         }
         .tm-stat-card.active {
             border-color: #009ef7 !important;
-            box-shadow: 0 0 0 2px rgba(0, 158, 247, 0.15), 0 2px 6px rgba(0, 158, 247, 0.1) !important;
+            box-shadow: 0 0 0 2px rgba(0, 158, 247, 0.18), 0 3px 8px rgba(0, 158, 247, 0.12) !important;
+            background: #ffffff !important;
+        }
+        .tm-stat-card.active .tm-card-num {
+            color: #009ef7 !important;
         }
         .tm-card-top {
             display: flex !important;
             align-items: center !important;
-            gap: 7px !important;
+            gap: 10px !important;
             min-width: 0 !important;
         }
         .tm-card-icon {
-            width: 28px !important;
-            height: 28px !important;
-            min-width: 28px !important;
-            border-radius: 7px !important;
+            width: 32px !important;
+            height: 32px !important;
+            min-width: 32px !important;
+            border-radius: 8px !important;
             display: flex !important;
             align-items: center !important;
             justify-content: center !important;
             flex-shrink: 0 !important;
-            font-size: 12px !important;
+            font-size: 13.5px !important;
+            transition: transform 0.15s ease !important;
         }
-        .tm-card-icon.blue   { background: #eff6ff; color: #2563eb; }
+        .tm-stat-card:hover .tm-card-icon {
+            transform: scale(1.06);
+        }
+        .tm-card-icon.blue   { background: #eff6ff; color: #009ef7; }
         .tm-card-icon.indigo { background: #eef2ff; color: #4f46e5; }
         .tm-card-icon.green  { background: #f0fdf4; color: #16a34a; }
         .tm-card-icon.purple { background: #faf5ff; color: #9333ea; }
-        .tm-card-icon.amber  { background: #fffbeb; color: #d97706; }
         .tm-card-icon.pink   { background: #fff1f2; color: #e11d48; }
         .tm-card-icon.cyan   { background: #ecfeff; color: #0891b2; }
 
@@ -295,18 +303,19 @@
             overflow: hidden !important;
         }
         .tm-card-num {
-            font-size: 15px !important;
+            font-size: 16px !important;
             font-weight: 700 !important;
             color: #0f172a !important;
-            line-height: 1.15 !important;
+            line-height: 1.2 !important;
             font-variant-numeric: tabular-nums !important;
             font-family: 'Poppins', sans-serif !important;
+            transition: color 0.15s ease !important;
         }
         .tm-card-lbl {
-            font-size: 10.5px !important;
+            font-size: 11px !important;
             font-weight: 600 !important;
-            color: #64748b !important;
-            line-height: 1.2 !important;
+            color: #475569 !important;
+            line-height: 1.25 !important;
             margin-top: 1px !important;
             white-space: nowrap !important;
             overflow: hidden !important;
@@ -315,21 +324,20 @@
         .tm-card-sub {
             display: flex !important;
             align-items: center !important;
-            gap: 3px !important;
-            font-size: 8.5px !important;
+            gap: 4px !important;
+            font-size: 9.5px !important;
             font-weight: 600 !important;
-            margin-top: 5px !important;
-            padding-top: 3px !important;
+            margin-top: 6px !important;
+            padding-top: 5px !important;
             border-top: 1px dashed #f1f5f9 !important;
             white-space: nowrap !important;
             overflow: hidden !important;
             text-overflow: ellipsis !important;
         }
-        .tm-card-sub.blue   { color: #2563eb; }
+        .tm-card-sub.blue   { color: #009ef7; }
         .tm-card-sub.indigo { color: #4f46e5; }
         .tm-card-sub.green  { color: #16a34a; }
         .tm-card-sub.purple { color: #9333ea; }
-        .tm-card-sub.amber  { color: #d97706; }
         .tm-card-sub.pink   { color: #e11d48; }
         .tm-card-sub.cyan   { color: #0891b2; }
 
@@ -686,7 +694,6 @@
         .tm-comm-chip.vendor      { background: #faf5ff; color: #9333ea; border: 1px solid #e9d5ff; }
         .tm-comm-chip.agency      { background: #faf5ff; color: #9333ea; border: 1px solid #e9d5ff; }
         .tm-comm-chip.recruitment { background: #e6fcf5; color: #059669; border: 1px solid #a7f3d0; }
-        .tm-comm-chip.finance     { background: #fffbeb; color: #d97706; border: 1px solid #fde68a; }
 
         .tm-btn-edit-comm {
             width: 20px;
@@ -1426,7 +1433,6 @@
         .comm-card-icon.icon-client { background: #dcfce7; color: #16a34a; }
         .comm-card-icon.icon-agency { background: #f3e8ff; color: #9333ea; }
         .comm-card-icon.icon-recruitment { background: #e6fcf5; color: #00b96b; }
-        .comm-card-icon.icon-finance { background: #fff4e6; color: #f59e0b; }
 
         .comm-card-text {
             min-width: 0;
@@ -1653,7 +1659,7 @@
                 </div>
 
                 <!-- ============================================================== -->
-                <!-- TIER 2: 7 STAT CARDS ROW (Card-Based Tabs — Locked in 1 Row)   -->
+                <!-- TIER 2: 6 STAT CARDS ROW (Card-Based Tabs — Enterprise Grid)   -->
                 <!-- ============================================================== -->
                 <div class="tm-stat-grid-wrap mb-3">
                     <div class="tm-stat-grid">
@@ -1725,24 +1731,7 @@
                             </div>
                         </a>
 
-                        {{-- Card 5: Finance & Billing --}}
-                        <a href="javascript:void(0);" onclick="setTeamTab('finance', this);" class="tm-stat-card" data-tab="finance">
-                            <div class="tm-card-top">
-                                <div class="tm-card-icon amber">
-                                    <i class="fa-solid fa-credit-card"></i>
-                                </div>
-                                <div class="tm-card-meta">
-                                    <div class="tm-card-num" id="span_teamFinance">{{ $teamCounts['finance'] ?? 0 }}</div>
-                                    <div class="tm-card-lbl" title="Finance & Billing">Finance &amp; Billing</div>
-                                </div>
-                            </div>
-                            <div class="tm-card-sub amber">
-                                <i class="fa-solid fa-receipt" style="font-size: 8px;"></i>
-                                <span>Invoices &amp; billing</span>
-                            </div>
-                        </a>
-
-                        {{-- Card 6: Inactive Members --}}
+                        {{-- Card 5: Inactive Members --}}
                         <a href="javascript:void(0);" onclick="setTeamTab('inactive', this);" class="tm-stat-card" data-tab="inactive">
                             <div class="tm-card-top">
                                 <div class="tm-card-icon pink">
@@ -1759,7 +1748,7 @@
                             </div>
                         </a>
 
-                        {{-- Card 7: Pending Invites --}}
+                        {{-- Card 6: Pending Invites --}}
                         <a href="javascript:void(0);" onclick="setTeamTab('invited', this);" class="tm-stat-card" data-tab="invited">
                             <div class="tm-card-top">
                                 <div class="tm-card-icon cyan">
@@ -2183,30 +2172,6 @@
                                 <span class="comm-ios-slider"></span>
                             </label>
                             <select class="comm-prio-select" data-channel="recruitment" id="commPrio_recruitment" disabled title="Contact Priority">
-                                <option value="Primary" selected>Primary</option>
-                                <option value="Secondary">Secondary</option>
-                                <option value="Backup">Backup</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <!-- Channel 4: Billing & Invoicing -->
-                    <div class="comm-card" id="commCard_finance" data-channel="finance">
-                        <div class="comm-card-main">
-                            <div class="comm-card-icon icon-finance">
-                                <i class="fa-solid fa-file-invoice-dollar"></i>
-                            </div>
-                            <div class="comm-card-text">
-                                <div class="comm-card-title">Billing &amp; Invoicing</div>
-                                <div class="comm-card-desc">Invoices, billing, payment queries and financial transactions.</div>
-                            </div>
-                        </div>
-                        <div class="comm-card-controls">
-                            <label class="comm-ios-switch" title="Toggle Billing &amp; Invoicing representation">
-                                <input type="checkbox" class="comm-drawer-toggle" data-channel="finance" id="commToggle_finance">
-                                <span class="comm-ios-slider"></span>
-                            </label>
-                            <select class="comm-prio-select" data-channel="finance" id="commPrio_finance" disabled title="Contact Priority">
                                 <option value="Primary" selected>Primary</option>
                                 <option value="Secondary">Secondary</option>
                                 <option value="Backup">Backup</option>
@@ -4106,7 +4071,6 @@
 							$('#span_teamRecruitment').text(response.counts.recruitment || 0);
 							$('#span_teamClient').text(response.counts.client || 0);
 							$('#span_teamVendor').text(response.counts.vendor || 0);
-							$('#span_teamFinance').text(response.counts.finance || 0);
 							$('#span_teamInactive').text(response.counts.inactive || 0);
 							$('#span_teamInvited').text(response.counts.invited || 0);
 
@@ -4220,7 +4184,7 @@
 				var channels = Array.isArray(user.channels) ? user.channels : [];
 				var prios = (user.priorities && typeof user.priorities === 'object') ? user.priorities : {};
 
-				var availableChannels = ['client', 'agency', 'recruitment', 'finance'];
+				var availableChannels = ['client', 'agency', 'recruitment'];
 				availableChannels.forEach(function(ch) {
 					var isChecked = channels.indexOf(ch) !== -1;
 					if (ch === 'agency' && channels.indexOf('vendor') !== -1) {
@@ -4257,7 +4221,7 @@
 			}
 
 			function clearAllCommDrawerRoles() {
-				var availableChannels = ['client', 'agency', 'recruitment', 'finance'];
+				var availableChannels = ['client', 'agency', 'recruitment'];
 				availableChannels.forEach(function(ch) {
 					$('#commCard_' + ch).removeClass('is-active');
 					$('#commToggle_' + ch).prop('checked', false);
@@ -4335,7 +4299,6 @@
 							if (c.recruitment !== undefined) $('.tm-count-recruitment').text(c.recruitment);
 							if (c.client !== undefined) $('.tm-count-client').text(c.client);
 							if (c.vendor !== undefined) $('.tm-count-agency').text(c.vendor);
-							if (c.finance !== undefined) $('.tm-count-finance').text(c.finance);
 							if (c.inactive !== undefined) $('.tm-count-inactive').text(c.inactive);
 							if (c.invited !== undefined) $('.tm-count-invited').text(c.invited);
 						}
