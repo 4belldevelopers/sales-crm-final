@@ -153,8 +153,8 @@
                         <div class="tm-wl-row" title="SPOC / Captain on Jobs">
                             <i class="fa-solid fa-crown text-purple me-1"></i><strong>{{ $captainJobs }}</strong> Captain Jobs
                         </div>
-                        <div class="tm-wl-row" title="Bench Talents Managed">
-                            <i class="fa-solid fa-users text-success me-1"></i><strong>{{ $trmTalents }}</strong> TRM Talents
+                        <div class="tm-wl-row" title="Bench Talents Managed (Relationship Manager)">
+                            <i class="fa-solid fa-users text-success me-1"></i><strong>{{ $trmTalents }}</strong> Relationship Manager(Bench)
                         </div>
                     </div>
 

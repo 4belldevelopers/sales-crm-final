@@ -453,7 +453,7 @@
         .team-roster-legend,
         .team-card-grid {
             display: grid !important;
-            grid-template-columns: minmax(210px, 2.2fr) minmax(85px, 0.9fr) minmax(145px, 1.4fr) minmax(120px, 1.2fr) minmax(230px, 2.3fr) minmax(95px, 1fr) minmax(110px, 1.1fr) !important;
+            grid-template-columns: minmax(210px, 2.2fr) minmax(85px, 0.9fr) minmax(185px, 1.8fr) minmax(115px, 1.1fr) minmax(220px, 2.2fr) minmax(95px, 1fr) minmax(105px, 1fr) !important;
             gap: 12px !important;
             align-items: center !important;
             box-sizing: border-box !important;
