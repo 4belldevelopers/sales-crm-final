@@ -2,7 +2,6 @@
 
 namespace App\Services;
 
-use App\Helper\GeneralMethod;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Cache;
@@ -31,9 +30,6 @@ class CompanyRepresentativeService
     /**
      * Get default communication representatives (Client & Agency) for a company.
      * Checks Redis first, then database (company_tags / root_user fallback).
-     *
-     * @param int $companyId
-     * @return array
      */
     public function getDefaultRepresentatives(int $companyId): array
     {
@@ -47,11 +43,11 @@ class CompanyRepresentativeService
         $cacheKey = "ats:company_rep:defaults:{$companyId}";
         try {
             $cached = Cache::get($cacheKey);
-            if (!empty($cached) && is_array($cached)) {
+            if (! empty($cached) && is_array($cached)) {
                 return $cached;
             }
         } catch (\Throwable $e) {
-            Log::warning("CompanyRepresentativeService: cache read error for {$companyId}: " . $e->getMessage());
+            Log::warning("CompanyRepresentativeService: cache read error for {$companyId}: ".$e->getMessage());
         }
 
         // 1. Check persistent tags in company_tags
@@ -59,7 +55,7 @@ class CompanyRepresentativeService
             ->where('company_id', $companyId)
             ->where(function ($q) {
                 $q->where('tag_name', 'like', 'rep:client:%')
-                  ->orWhere('tag_name', 'like', 'rep:agency:%');
+                    ->orWhere('tag_name', 'like', 'rep:agency:%');
             })
             ->pluck('tag_name')
             ->toArray();
@@ -82,7 +78,7 @@ class CompanyRepresentativeService
         }
 
         // 2. Fallback to Root User / First Active Admin if not explicitly set
-        if (!$clientRepUserId || !$agencyRepUserId) {
+        if (! $clientRepUserId || ! $agencyRepUserId) {
             $fallbackUser = DB::table('users')
                 ->where('company_id', $companyId)
                 ->where('status', 'active')
@@ -91,10 +87,10 @@ class CompanyRepresentativeService
                 ->first(['id']);
 
             $defaultFallbackId = $fallbackUser ? (int) $fallbackUser->id : 0;
-            if (!$clientRepUserId) {
+            if (! $clientRepUserId) {
                 $clientRepUserId = $defaultFallbackId;
             }
-            if (!$agencyRepUserId) {
+            if (! $agencyRepUserId) {
                 $agencyRepUserId = $defaultFallbackId;
             }
         }
@@ -112,7 +108,7 @@ class CompanyRepresentativeService
         try {
             Cache::put($cacheKey, $result, now()->addSeconds(self::CACHE_TTL_SECONDS));
         } catch (\Throwable $e) {
-            Log::warning("CompanyRepresentativeService: cache write error for {$companyId}: " . $e->getMessage());
+            Log::warning("CompanyRepresentativeService: cache write error for {$companyId}: ".$e->getMessage());
         }
 
         return $result;
@@ -121,10 +117,7 @@ class CompanyRepresentativeService
     /**
      * Set default representative for Client or Agency communication.
      *
-     * @param int $companyId
-     * @param int $userId
-     * @param string $type ('client' or 'agency')
-     * @return array
+     * @param  string  $type  ('client' or 'agency')
      */
     public function setDefaultRepresentative(int $companyId, int $userId, string $type): array
     {
@@ -133,7 +126,7 @@ class CompanyRepresentativeService
         }
 
         $type = strtolower(trim($type));
-        if (!in_array($type, ['client', 'agency'], true)) {
+        if (! in_array($type, ['client', 'agency'], true)) {
             return ['status' => 'error', 'message' => 'Invalid representative type. Must be "client" or "agency".'];
         }
 
@@ -144,7 +137,7 @@ class CompanyRepresentativeService
             ->where('status', 'active')
             ->first(['id', 'name', 'email']);
 
-        if (!$user) {
+        if (! $user) {
             return ['status' => 'error', 'message' => 'Selected user was not found or is not active in this company.'];
         }
 
@@ -187,11 +180,6 @@ class CompanyRepresentativeService
      *
      * The job creator does not automatically become the representative unless they
      * are also the user who shared/added the agency.
-     *
-     * @param int $jobId
-     * @param int $agencyCompanyId
-     * @param int $fromCompanyId
-     * @return array
      */
     public function resolveJobAgencyRepresentative(int $jobId, int $agencyCompanyId, int $fromCompanyId): array
     {
@@ -210,7 +198,7 @@ class CompanyRepresentativeService
             ->orderBy('id', 'desc')
             ->first(['id', 'from_user_id', 'created_at', 'from_created_at', 'final_status']);
 
-        $sharerUserId = ($rec && !empty($rec->from_user_id)) ? (int) $rec->from_user_id : 0;
+        $sharerUserId = ($rec && ! empty($rec->from_user_id)) ? (int) $rec->from_user_id : 0;
         $sharedAt = $rec ? ($rec->from_created_at ?? $rec->created_at) : null;
         $relationId = $rec ? (int) $rec->id : 0;
 
@@ -243,12 +231,6 @@ class CompanyRepresentativeService
     /**
      * Change / Reassign the representative for a specific Job + Agency relationship.
      * Updates recommendation_relation.from_user_id atomically.
-     *
-     * @param int $companyId
-     * @param int $jobId
-     * @param int $agencyCompanyId
-     * @param int $newUserId
-     * @return array
      */
     public function changeJobAgencyRepresentative(int $companyId, int $jobId, int $agencyCompanyId, int $newUserId): array
     {
@@ -263,7 +245,7 @@ class CompanyRepresentativeService
             ->where('status', 'active')
             ->first(['id', 'name', 'email']);
 
-        if (!$newUser) {
+        if (! $newUser) {
             return ['status' => 'error', 'message' => 'Selected representative was not found or is not active.'];
         }
 
@@ -309,10 +291,6 @@ class CompanyRepresentativeService
 
     /**
      * Resolves compact user representation summary.
-     *
-     * @param int $userId
-     * @param int $companyId
-     * @return array|null
      */
     public function resolveUserSummary(int $userId, int $companyId): ?array
     {
@@ -323,10 +301,11 @@ class CompanyRepresentativeService
         $cacheKey = "ats:user_rep_summary:{$companyId}:{$userId}";
         try {
             $cached = Cache::get($cacheKey);
-            if (!empty($cached) && is_array($cached)) {
+            if (! empty($cached) && is_array($cached)) {
                 return $cached;
             }
-        } catch (\Throwable $e) {}
+        } catch (\Throwable $e) {
+        }
 
         $user = DB::table('users')
             ->leftJoin('users_profile', 'users_profile.user_id', '=', 'users.id')
@@ -348,7 +327,7 @@ class CompanyRepresentativeService
             ])
             ->first();
 
-        if (!$user) {
+        if (! $user) {
             return null;
         }
 
@@ -372,12 +351,12 @@ class CompanyRepresentativeService
             ->distinct()
             ->count('jobs.id');
 
-        $roleTitle = !empty($user->role_name) ? ucwords(strtolower($user->role_name)) : 'Member';
-        $designation = !empty($user->designation) ? ucwords(strtolower($user->designation)) : $roleTitle;
+        $roleTitle = ! empty($user->role_name) ? ucwords(strtolower($user->role_name)) : 'Member';
+        $designation = ! empty($user->designation) ? ucwords(strtolower($user->designation)) : $roleTitle;
 
         $phone = '';
-        if (!empty($user->mobile)) {
-            $phone = (!empty($user->calling_code) ? '+' . ltrim($user->calling_code, '+') . ' ' : '') . $user->mobile;
+        if (! empty($user->mobile)) {
+            $phone = (! empty($user->calling_code) ? '+'.ltrim($user->calling_code, '+').' ' : '').$user->mobile;
         }
 
         $summary = [
@@ -399,7 +378,8 @@ class CompanyRepresentativeService
 
         try {
             Cache::put($cacheKey, $summary, now()->addMinutes(60));
-        } catch (\Throwable $e) {}
+        } catch (\Throwable $e) {
+        }
 
         return $summary;
     }
@@ -407,9 +387,6 @@ class CompanyRepresentativeService
     /**
      * Get team members who are eligible to act as company representatives.
      * All active users in the company can be chosen.
-     *
-     * @param int $companyId
-     * @return array
      */
     public function getEligibleRepresentatives(int $companyId): array
     {
@@ -442,12 +419,12 @@ class CompanyRepresentativeService
             $isClient = ($u->id == $clientRepId);
             $isAgency = ($u->id == $agencyRepId);
 
-            $roleTitle = !empty($u->role_name) ? ucwords(strtolower($u->role_name)) : 'Member';
-            $desig = !empty($u->designation) ? ucwords(strtolower($u->designation)) : $roleTitle;
+            $roleTitle = ! empty($u->role_name) ? ucwords(strtolower($u->role_name)) : 'Member';
+            $desig = ! empty($u->designation) ? ucwords(strtolower($u->designation)) : $roleTitle;
 
             $phone = '';
-            if (!empty($u->mobile)) {
-                $phone = (!empty($u->calling_code) ? '+' . ltrim($u->calling_code, '+') . ' ' : '') . $u->mobile;
+            if (! empty($u->mobile)) {
+                $phone = (! empty($u->calling_code) ? '+'.ltrim($u->calling_code, '+').' ' : '').$u->mobile;
             }
 
             return [
@@ -468,9 +445,6 @@ class CompanyRepresentativeService
     /**
      * Get all communication channel assignments for a company.
      * Returns: [ userId => ['client', 'vendor', 'finance', 'legal'], ... ]
-     *
-     * @param int $companyId
-     * @return array
      */
     public function getAllCompanyCommunicationRoles(int $companyId): array
     {
@@ -481,18 +455,20 @@ class CompanyRepresentativeService
         $cacheKey = "ats:company_rep:all_roles:{$companyId}";
         try {
             $cached = Cache::get($cacheKey);
-            if (!empty($cached) && is_array($cached)) {
+            if (! empty($cached) && is_array($cached)) {
                 return $cached;
             }
-        } catch (\Throwable $e) {}
+        } catch (\Throwable $e) {
+        }
 
         $tags = DB::table('company_tags')
             ->where('company_id', $companyId)
             ->where(function ($q) {
                 $q->where('tag_name', 'like', 'rep:client:%')
-                  ->orWhere('tag_name', 'like', 'rep:vendor:%')
-                  ->orWhere('tag_name', 'like', 'rep:agency:%')
-                  ->orWhere('tag_name', 'like', 'rep:finance:%');
+                    ->orWhere('tag_name', 'like', 'rep:vendor:%')
+                    ->orWhere('tag_name', 'like', 'rep:agency:%')
+                    ->orWhere('tag_name', 'like', 'rep:recruitment:%')
+                    ->orWhere('tag_name', 'like', 'rep:finance:%');
             })
             ->pluck('tag_name')
             ->toArray();
@@ -507,10 +483,10 @@ class CompanyRepresentativeService
                 }
                 $uid = (int) $parts[2];
                 if ($uid > 0) {
-                    if (!isset($rolesMap[$uid])) {
+                    if (! isset($rolesMap[$uid])) {
                         $rolesMap[$uid] = [];
                     }
-                    if (!in_array($type, $rolesMap[$uid], true)) {
+                    if (! in_array($type, $rolesMap[$uid], true)) {
                         $rolesMap[$uid][] = $type;
                     }
                 }
@@ -519,48 +495,101 @@ class CompanyRepresentativeService
 
         // If defaults exist, guarantee they are present in the map
         $defaults = $this->getDefaultRepresentatives($companyId);
-        if (!empty($defaults['client_rep_id'])) {
+        if (! empty($defaults['client_rep_id'])) {
             $cId = (int) $defaults['client_rep_id'];
-            if (!isset($rolesMap[$cId])) {
+            if (! isset($rolesMap[$cId])) {
                 $rolesMap[$cId] = [];
             }
-            if (!in_array('client', $rolesMap[$cId], true)) {
+            if (! in_array('client', $rolesMap[$cId], true)) {
                 $rolesMap[$cId][] = 'client';
             }
         }
-        if (!empty($defaults['agency_rep_id'])) {
+        if (! empty($defaults['agency_rep_id'])) {
             $aId = (int) $defaults['agency_rep_id'];
-            if (!isset($rolesMap[$aId])) {
+            if (! isset($rolesMap[$aId])) {
                 $rolesMap[$aId] = [];
             }
-            if (!in_array('vendor', $rolesMap[$aId], true)) {
+            if (! in_array('vendor', $rolesMap[$aId], true)) {
                 $rolesMap[$aId][] = 'vendor';
             }
         }
 
         try {
             Cache::put($cacheKey, $rolesMap, now()->addSeconds(self::CACHE_TTL_SECONDS));
-        } catch (\Throwable $e) {}
+        } catch (\Throwable $e) {
+        }
 
         return $rolesMap;
     }
 
     /**
-     * Set / update communication channel roles for a specific user.
-     * Channels can be any combination of: ['client', 'vendor', 'finance', 'legal']
-     *
-     * @param int $companyId
-     * @param int $userId
-     * @param array $channels
-     * @return array
+     * Get all communication priorities mapped by user ID.
+     * Returns: [ userId => [ 'client' => 'Primary', 'agency' => 'Secondary', ... ], ... ]
      */
-    public function setUserCommunicationRoles(int $companyId, int $userId, array $channels): array
+    public function getAllCompanyCommunicationPriorities(int $companyId): array
+    {
+        if ($companyId <= 0) {
+            return [];
+        }
+
+        $cacheKey = "ats:company_rep:all_prios:{$companyId}";
+        try {
+            $cached = Cache::get($cacheKey);
+            if (! empty($cached) && is_array($cached)) {
+                return $cached;
+            }
+        } catch (\Throwable $e) {
+        }
+
+        $tags = DB::table('company_tags')
+            ->where('company_id', $companyId)
+            ->where('tag_name', 'like', 'rep_prio:%')
+            ->pluck('tag_name')
+            ->toArray();
+
+        $prioMap = [];
+        foreach ($tags as $tag) {
+            $parts = explode(':', $tag);
+            // rep_prio:{channel}:{uid}:{priority}
+            if (count($parts) === 4 && $parts[0] === 'rep_prio') {
+                $ch = $parts[1];
+                if ($ch === 'vendor') {
+                    $ch = 'agency';
+                }
+                $uid = (int) $parts[2];
+                $prio = ucfirst(strtolower($parts[3]));
+                if ($uid > 0) {
+                    if (! isset($prioMap[$uid])) {
+                        $prioMap[$uid] = [];
+                    }
+                    $prioMap[$uid][$ch] = $prio;
+                    if ($ch === 'agency') {
+                        $prioMap[$uid]['vendor'] = $prio;
+                    }
+                }
+            }
+        }
+
+        try {
+            Cache::put($cacheKey, $prioMap, now()->addSeconds(self::CACHE_TTL_SECONDS));
+        } catch (\Throwable $e) {
+        }
+
+        return $prioMap;
+    }
+
+    /**
+     * Set / update communication channel roles & priorities for a specific user.
+     * Channels can be any combination of: ['client', 'agency', 'vendor', 'recruitment', 'finance']
+     * Priorities: [ 'client' => 'Primary', 'agency' => 'Secondary', ... ]
+     */
+    public function setUserCommunicationRoles(int $companyId, int $userId, array $channels, array $priorities = []): array
     {
         if ($companyId <= 0 || $userId <= 0) {
             return ['status' => 'error', 'message' => 'Invalid company or user ID.'];
         }
 
-        $validChannels = ['client', 'vendor', 'finance'];
+        $validChannels = ['client', 'agency', 'vendor', 'recruitment', 'finance'];
         $cleanChannels = array_values(array_intersect($validChannels, array_map('strtolower', array_map('trim', $channels))));
 
         // Validate user belongs to company and is active
@@ -570,23 +599,25 @@ class CompanyRepresentativeService
             ->where('status', 'active')
             ->first(['id', 'name', 'email']);
 
-        if (!$user) {
+        if (! $user) {
             return ['status' => 'error', 'message' => 'Selected user was not found or is not active in this company.'];
         }
 
-        DB::transaction(function () use ($companyId, $userId, $cleanChannels) {
-            // Delete existing channel tags for this user
+        DB::transaction(function () use ($companyId, $userId, $cleanChannels, $priorities) {
+            // Delete existing channel tags and priorities for this user
             DB::table('company_tags')
                 ->where('company_id', $companyId)
                 ->where(function ($q) use ($userId) {
-                    $q->where('tag_name', 'rep:client:' . $userId)
-                      ->orWhere('tag_name', 'rep:vendor:' . $userId)
-                      ->orWhere('tag_name', 'rep:agency:' . $userId)
-                      ->orWhere('tag_name', 'rep:finance:' . $userId);
+                    $q->where('tag_name', 'rep:client:'.$userId)
+                        ->orWhere('tag_name', 'rep:vendor:'.$userId)
+                        ->orWhere('tag_name', 'rep:agency:'.$userId)
+                        ->orWhere('tag_name', 'rep:recruitment:'.$userId)
+                        ->orWhere('tag_name', 'rep:finance:'.$userId)
+                        ->orWhere('tag_name', 'like', 'rep_prio:%:'.$userId.':%');
                 })
                 ->delete();
 
-            // Insert new channel tags
+            // Insert new channel and priority tags
             $now = now();
             $inserts = [];
             foreach ($cleanChannels as $ch) {
@@ -596,17 +627,37 @@ class CompanyRepresentativeService
                     'created_at' => $now,
                     'updated_at' => $now,
                 ];
-                if ($ch === 'vendor') {
+
+                $prioRaw = $priorities[$ch] ?? ($priorities['agency'] ?? ($priorities['vendor'] ?? 'Primary'));
+                $prio = ucfirst(strtolower(trim((string) $prioRaw)));
+                if (! in_array($prio, ['Primary', 'Secondary', 'Backup'], true)) {
+                    $prio = 'Primary';
+                }
+
+                $inserts[] = [
+                    'company_id' => $companyId,
+                    'tag_name' => "rep_prio:{$ch}:{$userId}:{$prio}",
+                    'created_at' => $now,
+                    'updated_at' => $now,
+                ];
+
+                if (($ch === 'agency' || $ch === 'vendor') && ! in_array('vendor', $cleanChannels, true)) {
                     $inserts[] = [
                         'company_id' => $companyId,
-                        'tag_name' => "rep:agency:{$userId}",
+                        'tag_name' => "rep:vendor:{$userId}",
+                        'created_at' => $now,
+                        'updated_at' => $now,
+                    ];
+                    $inserts[] = [
+                        'company_id' => $companyId,
+                        'tag_name' => "rep_prio:vendor:{$userId}:{$prio}",
                         'created_at' => $now,
                         'updated_at' => $now,
                     ];
                 }
             }
 
-            if (!empty($inserts)) {
+            if (! empty($inserts)) {
                 DB::table('company_tags')->insert($inserts);
             }
         });
@@ -614,6 +665,7 @@ class CompanyRepresentativeService
         // Invalidate tenant caches
         $this->invalidateTenantRepresentativeCache($companyId);
         Cache::forget("ats:company_rep:all_roles:{$companyId}");
+        Cache::forget("ats:company_rep:all_prios:{$companyId}");
 
         return [
             'status' => 'success',
@@ -625,9 +677,6 @@ class CompanyRepresentativeService
 
     /**
      * Invalidate tenant representative cache across Dragonfly/Redis.
-     *
-     * @param int $companyId
-     * @return void
      */
     public function invalidateTenantRepresentativeCache(int $companyId): void
     {
@@ -638,16 +687,17 @@ class CompanyRepresentativeService
         try {
             Cache::forget("ats:company_rep:defaults:{$companyId}");
             Cache::forget("ats:company_rep:all_roles:{$companyId}");
+            Cache::forget("ats:company_rep:all_prios:{$companyId}");
             Cache::forget("ats:teamcounts:{$companyId}");
 
-            $versionKey = 'ats:teamversion:company_' . $companyId;
+            $versionKey = 'ats:teamversion:company_'.$companyId;
             if (Cache::has($versionKey)) {
                 Cache::increment($versionKey);
             } else {
                 Cache::put($versionKey, 2, now()->addDays(30));
             }
         } catch (\Throwable $e) {
-            Log::warning("CompanyRepresentativeService: cache invalidation error: " . $e->getMessage());
+            Log::warning('CompanyRepresentativeService: cache invalidation error: '.$e->getMessage());
         }
     }
 }

@@ -685,10 +685,11 @@
             line-height: 1.25;
             white-space: nowrap;
         }
-        .tm-comm-chip.client  { background: #f0fdf4; color: #16a34a; border: 1px solid #bbf7d0; }
-        .tm-comm-chip.vendor  { background: #faf5ff; color: #9333ea; border: 1px solid #e9d5ff; }
-        .tm-comm-chip.finance { background: #fffbeb; color: #d97706; border: 1px solid #fde68a; }
-        .tm-comm-chip.legal   { background: #f0fdfa; color: #0d9488; border: 1px solid #99f6e4; }
+        .tm-comm-chip.client      { background: #f0fdf4; color: #16a34a; border: 1px solid #bbf7d0; }
+        .tm-comm-chip.vendor      { background: #faf5ff; color: #9333ea; border: 1px solid #e9d5ff; }
+        .tm-comm-chip.agency      { background: #faf5ff; color: #9333ea; border: 1px solid #e9d5ff; }
+        .tm-comm-chip.recruitment { background: #e6fcf5; color: #059669; border: 1px solid #a7f3d0; }
+        .tm-comm-chip.finance     { background: #fffbeb; color: #d97706; border: 1px solid #fde68a; }
 
         .tm-btn-edit-comm {
             width: 20px;
@@ -1225,6 +1226,458 @@
         @media (max-width: 768px) {
             .team-stats-row { grid-template-columns: 1fr; }
         }
+
+        /* =========================================================================
+           Assign Communication Contacts Right Drawer (Rule 20 Enterprise Standard)
+           ========================================================================= */
+        .comm-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.45);
+            backdrop-filter: blur(2px);
+            z-index: 1040;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity .25s ease;
+        }
+        .comm-overlay.open {
+            opacity: 1;
+            pointer-events: all;
+        }
+        .comm-drawer {
+            position: fixed;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            width: 560px;
+            max-width: 100vw;
+            background: #ffffff;
+            box-shadow: -12px 0 35px -5px rgba(15, 23, 42, 0.15);
+            z-index: 1050;
+            display: flex;
+            flex-direction: column;
+            transform: translateX(100%);
+            transition: transform .3s cubic-bezier(.4, 0, .2, 1);
+            font-family: 'Poppins', sans-serif;
+        }
+        .comm-drawer.open {
+            transform: translateX(0);
+        }
+        .comm-drawer-head {
+            padding: 22px 26px 18px 26px;
+            border-bottom: 1px solid #f1f5f9;
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 12px;
+            flex-shrink: 0;
+        }
+        .comm-drawer-title {
+            font-size: 17px;
+            font-weight: 700;
+            color: #0f172a;
+            margin: 0;
+            line-height: 1.3;
+        }
+        .comm-drawer-subtitle {
+            font-size: 12px;
+            color: #64748b;
+            margin: 4px 0 0 0;
+            line-height: 1.45;
+        }
+        .comm-drawer-close {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            border: 1px solid transparent;
+            background: #f8fafc;
+            color: #64748b;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all .15s;
+            flex-shrink: 0;
+            font-size: 15px;
+        }
+        .comm-drawer-close:hover {
+            background: #e2e8f0;
+            color: #0f172a;
+        }
+        .comm-drawer-body {
+            flex: 1;
+            overflow-y: auto;
+            padding: 22px 26px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        .comm-drawer-body::-webkit-scrollbar {
+            width: 6px;
+        }
+        .comm-drawer-body::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+        .comm-drawer-body::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        /* Target Member Profile Card inside Drawer */
+        .comm-user-card {
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 14px 16px;
+            background: #ffffff;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 14px;
+            flex-wrap: wrap;
+        }
+        .comm-user-card-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            min-width: 0;
+        }
+        .comm-user-avatar {
+            width: 44px;
+            height: 44px;
+            border-radius: 10px;
+            background: #0f172a;
+            color: #ffffff;
+            font-weight: 700;
+            font-size: 17px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            overflow: hidden;
+        }
+        .comm-user-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .comm-user-info {
+            min-width: 0;
+        }
+        .comm-user-name {
+            font-size: 14.5px;
+            font-weight: 700;
+            color: #0f172a;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .comm-role-badge {
+            background: #eff6ff;
+            color: #009ef7;
+            font-size: 11px;
+            font-weight: 600;
+            padding: 2px 8px;
+            border-radius: 6px;
+            border: 1px solid #dbeafe;
+            white-space: nowrap;
+        }
+        .comm-user-contacts {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            margin-top: 4px;
+            font-size: 11.5px;
+            color: #64748b;
+            flex-wrap: wrap;
+        }
+        .comm-user-card-right {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-shrink: 0;
+            flex-wrap: wrap;
+        }
+        .comm-status-pill {
+            background: #ecfdf5;
+            color: #10b981;
+            border: 1px solid #a7f3d0;
+            border-radius: 20px;
+            padding: 3px 10px;
+            font-size: 11px;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .comm-status-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: #10b981;
+        }
+        .comm-last-active-text {
+            font-size: 11.5px;
+            color: #94a3b8;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .comm-last-active-dot {
+            width: 5px;
+            height: 5px;
+            border-radius: 50%;
+            background: #cbd5e1;
+        }
+
+        /* Section Head */
+        .comm-section-title {
+            font-size: 14.5px;
+            font-weight: 700;
+            color: #0f172a;
+        }
+        .comm-section-subtitle {
+            font-size: 11.5px;
+            color: #64748b;
+            margin-top: 2px;
+        }
+        .comm-btn-clear {
+            border: 1px solid #e2e8f0;
+            background: #ffffff;
+            border-radius: 8px;
+            padding: 6px 12px;
+            font-size: 12px;
+            font-weight: 600;
+            color: #334155;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+            transition: all .15s;
+        }
+        .comm-btn-clear:hover {
+            background: #f8fafc;
+            border-color: #cbd5e1;
+            color: #0f172a;
+        }
+
+        /* 4 Channel Cards */
+        .comm-card {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 13px 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 14px;
+            transition: all .2s ease;
+        }
+        .comm-card.is-active {
+            border-color: #93c5fd;
+            background: #f8fbff;
+        }
+        .comm-card-main {
+            display: flex;
+            align-items: center;
+            gap: 13px;
+            min-width: 0;
+        }
+        .comm-card-icon {
+            width: 42px;
+            height: 42px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            flex-shrink: 0;
+        }
+        .comm-card-icon.icon-client { background: #dcfce7; color: #16a34a; }
+        .comm-card-icon.icon-agency { background: #f3e8ff; color: #9333ea; }
+        .comm-card-icon.icon-recruitment { background: #e6fcf5; color: #00b96b; }
+        .comm-card-icon.icon-finance { background: #fff4e6; color: #f59e0b; }
+
+        .comm-card-text {
+            min-width: 0;
+        }
+        .comm-card-title {
+            font-size: 13.5px;
+            font-weight: 700;
+            color: #0f172a;
+            line-height: 1.25;
+        }
+        .comm-card-desc {
+            font-size: 11.5px;
+            color: #64748b;
+            line-height: 1.35;
+            margin-top: 3px;
+        }
+        .comm-card-controls {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-shrink: 0;
+        }
+
+        /* iOS Toggle Switch */
+        .comm-ios-switch {
+            position: relative;
+            display: inline-block;
+            width: 44px;
+            height: 24px;
+            margin: 0;
+            cursor: pointer;
+        }
+        .comm-ios-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+            position: absolute;
+        }
+        .comm-ios-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #cbd5e1;
+            transition: .25s ease;
+            border-radius: 24px;
+        }
+        .comm-ios-slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: .25s ease;
+            border-radius: 50%;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+        }
+        .comm-ios-switch input:checked + .comm-ios-slider {
+            background-color: #009ef7;
+        }
+        .comm-ios-switch input:checked + .comm-ios-slider:before {
+            transform: translateX(20px);
+        }
+
+        /* Priority Dropdown */
+        .comm-prio-select {
+            appearance: none;
+            -webkit-appearance: none;
+            background-color: #ffffff;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='%2364748b'%3E%3Cpath fill-rule='evenodd' d='M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z' clip-rule='evenodd'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 10px center;
+            background-size: 14px 14px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 6px 30px 6px 12px;
+            font-size: 12.5px;
+            font-weight: 500;
+            color: #1e293b;
+            width: 116px;
+            cursor: pointer;
+            transition: all .15s ease;
+        }
+        .comm-prio-select:focus {
+            outline: none;
+            border-color: #009ef7;
+            box-shadow: 0 0 0 3px rgba(0, 158, 247, 0.12);
+        }
+        .comm-prio-select:disabled {
+            background-color: #f8fafc;
+            color: #94a3b8;
+            border-color: #e2e8f0;
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
+        /* Info Alert Box */
+        .comm-info-box {
+            background: #eff6ff;
+            border: 1px solid #bfdbfe;
+            border-radius: 10px;
+            padding: 12px 14px;
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+        }
+        .comm-info-icon {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #009ef7;
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            font-weight: 700;
+            flex-shrink: 0;
+            margin-top: 1px;
+        }
+        .comm-info-text {
+            font-size: 12px;
+            color: #1e40af;
+            line-height: 1.45;
+            font-weight: 400;
+        }
+
+        /* Drawer Footer */
+        .comm-drawer-foot {
+            padding: 16px 26px;
+            border-top: 1px solid #e2e8f0;
+            background: #ffffff;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 12px;
+            flex-shrink: 0;
+        }
+        .comm-btn-cancel {
+            border: 1px solid #e2e8f0;
+            background: #ffffff;
+            color: #475569;
+            font-weight: 600;
+            font-size: 13px;
+            padding: 9px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all .15s ease;
+        }
+        .comm-btn-cancel:hover {
+            background: #f8fafc;
+            color: #1e293b;
+            border-color: #cbd5e1;
+        }
+        .comm-btn-save {
+            background: #009ef7;
+            border: 1px solid #009ef7;
+            color: #ffffff;
+            font-weight: 600;
+            font-size: 13px;
+            padding: 9px 22px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all .15s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            box-shadow: 0 1px 2px rgba(0, 158, 247, 0.2);
+        }
+        .comm-btn-save:hover {
+            background: #008be0;
+            border-color: #008be0;
+        }
+        .comm-btn-save:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+        }
     </style>
 @endpush 
  
@@ -1690,86 +2143,182 @@
         </div>
 
         <!-- ============================================================== -->
-        <!-- MULTI-SELECT COMMUNICATION PURPOSE ASSIGNMENT MODAL            -->
+        <!-- ASSIGN COMMUNICATION CONTACTS RIGHT DRAWER (RULE 20 STANDARD)  -->
         <!-- ============================================================== -->
-        <div class="modal fade" id="assignCommModal" tabindex="-1" aria-hidden="true">
-            <div class="modal-dialog modal-dialog-centered" style="max-width: 490px;">
-                <div class="modal-content" style="border-radius: 12px; border: 1px solid #e2e8f0; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1), 0 8px 10px -6px rgba(0,0,0,0.1);">
-                    <div class="modal-header py-3 px-4" style="border-bottom: 1px solid #f1f5f9;">
-                        <div class="d-flex align-items-center gap-2">
-                            <div style="width: 34px; height: 34px; border-radius: 8px; background: #eff6ff; color: #009ef7; display: flex; align-items: center; justify-content: center; font-size: 14px;">
-                                <i class="fa-solid fa-bullhorn"></i>
-                            </div>
-                            <div>
-                                <h5 class="modal-title fw-bolder fs-6 text-gray-900 mb-0">Assign Communication Purpose</h5>
-                                <div class="text-muted fs-8">Configure external representative channels for this member</div>
-                            </div>
-                        </div>
-                        <button type="button" class="btn btn-sm btn-icon btn-active-light-primary" data-bs-dismiss="modal" data-dismiss="modal" aria-label="Close">
-                            <i class="fa-solid fa-xmark"></i>
-                        </button>
-                    </div>
-                    <div class="modal-body py-3 px-4">
-                        <!-- Target User Preview -->
-                        <div class="d-flex align-items-center gap-3 p-2 mb-3" style="background: #f8fafc; border-radius: 8px; border: 1px solid #e2e8f0;">
-                            <div id="assignCommUserAvatar" style="width: 36px; height: 36px; border-radius: 7px; background: #0f172a; color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; flex-shrink: 0;">
-                                U
-                            </div>
-                            <div class="overflow-hidden">
-                                <div id="assignCommUserName" class="fw-bold fs-7 text-dark text-truncate">User Name</div>
-                                <div class="text-muted fs-8">Selecting roles designates this person for corporate partner outreach.</div>
-                            </div>
-                        </div>
+        <div class="comm-overlay" id="commOverlay"></div>
+        <div class="comm-drawer" id="commDrawer" role="dialog" aria-modal="true" aria-label="Assign Communication Contacts">
+            <!-- Drawer Header -->
+            <div class="comm-drawer-head">
+                <div>
+                    <h5 class="comm-drawer-title">Assign Communication Contacts</h5>
+                    <p class="comm-drawer-subtitle">Select the communication types this member will be responsible for and set the contact priority for each.</p>
+                </div>
+                <button type="button" class="comm-drawer-close" id="commDrawerClose" onclick="closeAssignCommDrawer()" aria-label="Close">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
 
-                        <input type="hidden" id="assignCommUserId" value="" />
+            <!-- Drawer Body -->
+            <div class="comm-drawer-body">
+                <input type="hidden" id="commDrawerUserId" value="" />
 
-                        <!-- 4 Channel Checkboxes -->
-                        <div class="d-flex flex-column gap-2">
-                            <!-- Channel 1: Client & Sales -->
-                            <label class="comm-channel-opt d-flex align-items-start gap-2 p-3 rounded cursor-pointer" style="border: 1px solid #e2e8f0; transition: all .15s; background: #fff;">
-                                <input type="checkbox" class="form-check-input mt-1 comm-channel-checkbox" value="client" id="chk_comm_client" style="border-radius: 4px; border-color: #cbd5e1; cursor: pointer;">
-                                <div class="flex-grow-1">
-                                    <div class="d-flex align-items-center justify-content-between">
-                                        <span class="fw-bold fs-7 text-dark"><i class="fa-solid fa-building me-1 text-success"></i> Client &amp; Sales Communication</span>
-                                        <span class="badge" style="background: #f0fdf4; color: #16a34a; font-size: 10px; font-weight: 600;">Clients</span>
-                                    </div>
-                                    <div class="text-muted fs-8 mt-1">Designated contact for prospective clients, sales enquiries, and direct job requisition discussions.</div>
-                                </div>
-                            </label>
-
-                            <!-- Channel 2: Vendor & Agency -->
-                            <label class="comm-channel-opt d-flex align-items-start gap-2 p-3 rounded cursor-pointer" style="border: 1px solid #e2e8f0; transition: all .15s; background: #fff;">
-                                <input type="checkbox" class="form-check-input mt-1 comm-channel-checkbox" value="vendor" id="chk_comm_vendor" style="border-radius: 4px; border-color: #cbd5e1; cursor: pointer;">
-                                <div class="flex-grow-1">
-                                    <div class="d-flex align-items-center justify-content-between">
-                                        <span class="fw-bold fs-7 text-dark"><i class="fa-solid fa-handshake me-1 text-purple"></i> Vendor &amp; Agency Communication</span>
-                                        <span class="badge" style="background: #faf5ff; color: #9333ea; font-size: 10px; font-weight: 600;">Agencies</span>
-                                    </div>
-                                    <div class="text-muted fs-8 mt-1">Designated contact for staffing agencies, headhunters, candidate shares, and split-fee partnerships.</div>
-                                </div>
-                            </label>
-
-                            <!-- Channel 3: Finance & Billing -->
-                            <label class="comm-channel-opt d-flex align-items-start gap-2 p-3 rounded cursor-pointer" style="border: 1px solid #e2e8f0; transition: all .15s; background: #fff;">
-                                <input type="checkbox" class="form-check-input mt-1 comm-channel-checkbox" value="finance" id="chk_comm_finance" style="border-radius: 4px; border-color: #cbd5e1; cursor: pointer;">
-                                <div class="flex-grow-1">
-                                    <div class="d-flex align-items-center justify-content-between">
-                                        <span class="fw-bold fs-7 text-dark"><i class="fa-solid fa-credit-card me-1 text-warning"></i> Finance &amp; Billing Communication</span>
-                                        <span class="badge" style="background: #fffbeb; color: #d97706; font-size: 10px; font-weight: 600;">Invoicing</span>
-                                    </div>
-                                    <div class="text-muted fs-8 mt-1">Point of contact for client billing, commission payouts, PO confirmation, and invoice reconciliation.</div>
-                                </div>
-                            </label>
+                <!-- Member Identity Card -->
+                <div class="comm-user-card">
+                    <div class="comm-user-card-left">
+                        <div class="comm-user-avatar" id="commDrawerAvatar">U</div>
+                        <div class="comm-user-info">
+                            <div class="d-flex align-items-center flex-wrap gap-2">
+                                <span class="comm-user-name" id="commDrawerName">Member Name</span>
+                                <span class="comm-role-badge" id="commDrawerRole">Member</span>
+                            </div>
+                            <div class="comm-user-contacts">
+                                <span id="commDrawerEmailWrap"><i class="fa-regular fa-envelope me-1 text-muted"></i><span id="commDrawerEmail">email@example.com</span></span>
+                                <span id="commDrawerPhoneWrap"><i class="fa-solid fa-phone me-1 text-muted"></i><span id="commDrawerPhone">+91 0000000000</span></span>
+                            </div>
                         </div>
                     </div>
-                    <div class="modal-footer py-2 px-4" style="border-top: 1px solid #e2e8f0;">
-                        <button type="button" class="btn btn-sm btn-light" data-bs-dismiss="modal" data-dismiss="modal">Cancel</button>
-                        <button type="button" class="btn btn-sm btn-primary" id="btnSaveCommRoles" onclick="saveCommunicationRoles()">
-                            <span class="indicator-label"><i class="fa-solid fa-check me-1"></i> Save Assignments</span>
-                            <span class="indicator-progress d-none"><span class="spinner-border spinner-border-sm align-middle me-2"></span> Saving...</span>
-                        </button>
+                    <div class="comm-user-card-right">
+                        <div class="comm-status-pill" id="commDrawerStatusPill">
+                            <span class="comm-status-dot" id="commDrawerStatusDot"></span>
+                            <span id="commDrawerStatusText">Active</span>
+                        </div>
+                        <div class="comm-last-active-text" id="commDrawerLastActive">
+                            <span class="comm-last-active-dot"></span>
+                            <span id="commDrawerLastActiveText">Last active: Recently</span>
+                        </div>
                     </div>
                 </div>
+
+                <!-- Section Title & Clear All -->
+                <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+                    <div>
+                        <h6 class="comm-section-title mb-0">Communication Types</h6>
+                        <p class="comm-section-subtitle mb-0">Enable the communication types this member will be responsible for and set the contact priority.</p>
+                    </div>
+                    <button type="button" class="comm-btn-clear" onclick="clearAllCommDrawerRoles()" title="Disable all communication types">
+                        <i class="fa-solid fa-arrows-rotate"></i>
+                        <span>Clear All</span>
+                    </button>
+                </div>
+
+                <!-- 4 Channel Cards -->
+                <div class="d-flex flex-column gap-3" id="commDrawerCardsList">
+                    <!-- Channel 1: Client & Sales -->
+                    <div class="comm-card" id="commCard_client" data-channel="client">
+                        <div class="comm-card-main">
+                            <div class="comm-card-icon icon-client">
+                                <i class="fa-solid fa-users"></i>
+                            </div>
+                            <div class="comm-card-text">
+                                <div class="comm-card-title">Client &amp; Sales</div>
+                                <div class="comm-card-desc">Client enquiries, sales communication, profile discovery and client job requests.</div>
+                            </div>
+                        </div>
+                        <div class="comm-card-controls">
+                            <label class="comm-ios-switch" title="Toggle Client &amp; Sales representation">
+                                <input type="checkbox" class="comm-drawer-toggle" data-channel="client" id="commToggle_client">
+                                <span class="comm-ios-slider"></span>
+                            </label>
+                            <select class="comm-prio-select" data-channel="client" id="commPrio_client" disabled title="Contact Priority">
+                                <option value="Primary" selected>Primary</option>
+                                <option value="Secondary">Secondary</option>
+                                <option value="Backup">Backup</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Channel 2: Agency -->
+                    <div class="comm-card" id="commCard_agency" data-channel="agency">
+                        <div class="comm-card-main">
+                            <div class="comm-card-icon icon-agency">
+                                <i class="fa-solid fa-shapes"></i>
+                            </div>
+                            <div class="comm-card-text">
+                                <div class="comm-card-title">Agency</div>
+                                <div class="comm-card-desc">Agency enquiries, job requests, candidate submissions and marketplace communication.</div>
+                            </div>
+                        </div>
+                        <div class="comm-card-controls">
+                            <label class="comm-ios-switch" title="Toggle Agency representation">
+                                <input type="checkbox" class="comm-drawer-toggle" data-channel="agency" id="commToggle_agency">
+                                <span class="comm-ios-slider"></span>
+                            </label>
+                            <select class="comm-prio-select" data-channel="agency" id="commPrio_agency" disabled title="Contact Priority">
+                                <option value="Primary" selected>Primary</option>
+                                <option value="Secondary">Secondary</option>
+                                <option value="Backup">Backup</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Channel 3: Recruitment / Talent -->
+                    <div class="comm-card" id="commCard_recruitment" data-channel="recruitment">
+                        <div class="comm-card-main">
+                            <div class="comm-card-icon icon-recruitment">
+                                <i class="fa-solid fa-id-card-clip"></i>
+                            </div>
+                            <div class="comm-card-text">
+                                <div class="comm-card-title">Recruitment / Talent</div>
+                                <div class="comm-card-desc">Candidate coordination, interviews, hiring operations and talent related communication.</div>
+                            </div>
+                        </div>
+                        <div class="comm-card-controls">
+                            <label class="comm-ios-switch" title="Toggle Recruitment / Talent representation">
+                                <input type="checkbox" class="comm-drawer-toggle" data-channel="recruitment" id="commToggle_recruitment">
+                                <span class="comm-ios-slider"></span>
+                            </label>
+                            <select class="comm-prio-select" data-channel="recruitment" id="commPrio_recruitment" disabled title="Contact Priority">
+                                <option value="Primary" selected>Primary</option>
+                                <option value="Secondary">Secondary</option>
+                                <option value="Backup">Backup</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Channel 4: Billing & Invoicing -->
+                    <div class="comm-card" id="commCard_finance" data-channel="finance">
+                        <div class="comm-card-main">
+                            <div class="comm-card-icon icon-finance">
+                                <i class="fa-solid fa-file-invoice-dollar"></i>
+                            </div>
+                            <div class="comm-card-text">
+                                <div class="comm-card-title">Billing &amp; Invoicing</div>
+                                <div class="comm-card-desc">Invoices, billing, payment queries and financial transactions.</div>
+                            </div>
+                        </div>
+                        <div class="comm-card-controls">
+                            <label class="comm-ios-switch" title="Toggle Billing &amp; Invoicing representation">
+                                <input type="checkbox" class="comm-drawer-toggle" data-channel="finance" id="commToggle_finance">
+                                <span class="comm-ios-slider"></span>
+                            </label>
+                            <select class="comm-prio-select" data-channel="finance" id="commPrio_finance" disabled title="Contact Priority">
+                                <option value="Primary" selected>Primary</option>
+                                <option value="Secondary">Secondary</option>
+                                <option value="Backup">Backup</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Info Alert Callout -->
+                <div class="comm-info-box">
+                    <div class="comm-info-icon">
+                        <i class="fa-solid fa-info"></i>
+                    </div>
+                    <div class="comm-info-text">
+                        <div>A member can be assigned to multiple communication types.</div>
+                        <div>You can set different priority levels (Primary, Secondary, Backup) for each type.</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Drawer Footer -->
+            <div class="comm-drawer-foot">
+                <button type="button" class="comm-btn-cancel" onclick="closeAssignCommDrawer()">Cancel</button>
+                <button type="button" class="comm-btn-save" id="btnSaveCommRoles" onclick="saveCommunicationRoles()">
+                    <span class="indicator-label">Save Assignments</span>
+                    <span class="indicator-progress d-none"><span class="spinner-border spinner-border-sm align-middle me-2"></span> Saving...</span>
+                </button>
             </div>
         </div>
 
@@ -3690,47 +4239,149 @@
 			}
 
 			// =========================================================
-			// Multi-Select Corporate Communication Purpose Assignment
+			// Assign Communication Contacts Right Drawer Controller
 			// =========================================================
-			function openAssignCommModal(userId, userName, channels) {
-				$('#assignCommUserId').val(userId);
-				$('#assignCommUserName').text(userName);
-				$('#assignCommUserAvatar').text((userName && userName.length > 0) ? userName.charAt(0).toUpperCase() : 'U');
-
-				// Reset checkboxes
-				$('.comm-channel-checkbox').prop('checked', false);
-				$('.comm-channel-opt').css('border-color', '#e2e8f0').css('background', '#fff');
-
-				if (Array.isArray(channels)) {
-					channels.forEach(function(ch) {
-						var $chk = $('#chk_comm_' + ch);
-						if ($chk.length) {
-							$chk.prop('checked', true);
-							$chk.closest('.comm-channel-opt').css('border-color', '#009ef7').css('background', '#f0f9ff');
-						}
-					});
+			function openAssignCommDrawer(trigger) {
+				var user = null;
+				if (typeof trigger === 'object' && trigger !== null) {
+					if (trigger.getAttribute && trigger.getAttribute('data-user')) {
+						try { user = JSON.parse(trigger.getAttribute('data-user')); } catch(e){}
+					} else if (trigger.id) {
+						user = trigger;
+					}
 				}
 
-				$('#assignCommModal').modal('show');
+				if (!user || !user.id) {
+					console.error('Invalid user payload for communication drawer', trigger);
+					return;
+				}
+
+				$('#commDrawerUserId').val(user.id);
+				$('#commDrawerName').text(user.name || 'Member');
+				$('#commDrawerRole').text(user.role || 'Member');
+
+				// Avatar
+				var $avatar = $('#commDrawerAvatar');
+				if (user.image && user.image.length > 5) {
+					$avatar.html('<img src="' + user.image + '" alt="' + (user.name || '') + '">');
+				} else {
+					var initial = user.initial || (user.name ? user.name.charAt(0).toUpperCase() : 'U');
+					$avatar.text(initial);
+				}
+
+				// Email & Phone
+				if (user.email) {
+					$('#commDrawerEmail').text(user.email);
+					$('#commDrawerEmailWrap').show();
+				} else {
+					$('#commDrawerEmailWrap').hide();
+				}
+
+				if (user.phone) {
+					$('#commDrawerPhone').text(user.phone);
+					$('#commDrawerPhoneWrap').show();
+				} else {
+					$('#commDrawerPhoneWrap').hide();
+				}
+
+				// Status & Last Active
+				var statusStr = (user.status || 'active').toLowerCase();
+				if (statusStr === 'active') {
+					$('#commDrawerStatusPill').css({ 'background': '#ecfdf5', 'color': '#10b981', 'border-color': '#a7f3d0' });
+					$('#commDrawerStatusDot').css('background', '#10b981');
+					$('#commDrawerStatusText').text('Active');
+				} else {
+					$('#commDrawerStatusPill').css({ 'background': '#fffbeb', 'color': '#d97706', 'border-color': '#fde68a' });
+					$('#commDrawerStatusDot').css('background', '#f59e0b');
+					$('#commDrawerStatusText').text(statusStr.charAt(0).toUpperCase() + statusStr.slice(1));
+				}
+
+				$('#commDrawerLastActiveText').text(user.last_active ? 'Last active: ' + user.last_active : 'Never logged in');
+
+				// Reset all channel cards, switches, and selects
+				var channels = Array.isArray(user.channels) ? user.channels : [];
+				var prios = (user.priorities && typeof user.priorities === 'object') ? user.priorities : {};
+
+				var availableChannels = ['client', 'agency', 'recruitment', 'finance'];
+				availableChannels.forEach(function(ch) {
+					var isChecked = channels.indexOf(ch) !== -1;
+					if (ch === 'agency' && channels.indexOf('vendor') !== -1) {
+						isChecked = true;
+					}
+
+					var $card = $('#commCard_' + ch);
+					var $toggle = $('#commToggle_' + ch);
+					var $prio = $('#commPrio_' + ch);
+
+					$toggle.prop('checked', isChecked);
+					if (isChecked) {
+						$card.addClass('is-active');
+						$prio.prop('disabled', false);
+						var userPrio = prios[ch] || (ch === 'agency' ? (prios['vendor'] || 'Primary') : 'Primary');
+						$prio.val(userPrio);
+					} else {
+						$card.removeClass('is-active');
+						$prio.prop('disabled', true);
+						$prio.val('Primary');
+					}
+				});
+
+				// Slide open drawer
+				$('#commOverlay').addClass('open');
+				$('#commDrawer').addClass('open');
+				$('body').css('overflow', 'hidden');
 			}
 
-			// Highlight channel checkbox card when toggled
-			$(document).on('change', '.comm-channel-checkbox', function() {
-				var $opt = $(this).closest('.comm-channel-opt');
-				if ($(this).is(':checked')) {
-					$opt.css('border-color', '#009ef7').css('background', '#f0f9ff');
+			function closeAssignCommDrawer() {
+				$('#commOverlay').removeClass('open');
+				$('#commDrawer').removeClass('open');
+				$('body').css('overflow', '');
+			}
+
+			function clearAllCommDrawerRoles() {
+				var availableChannels = ['client', 'agency', 'recruitment', 'finance'];
+				availableChannels.forEach(function(ch) {
+					$('#commCard_' + ch).removeClass('is-active');
+					$('#commToggle_' + ch).prop('checked', false);
+					$('#commPrio_' + ch).prop('disabled', true).val('Primary');
+				});
+			}
+
+			// Handle toggle switch change inside drawer
+			$(document).on('change', '.comm-drawer-toggle', function() {
+				var ch = $(this).data('channel');
+				var isChecked = $(this).is(':checked');
+				var $card = $('#commCard_' + ch);
+				var $prio = $('#commPrio_' + ch);
+
+				if (isChecked) {
+					$card.addClass('is-active');
+					$prio.prop('disabled', false);
 				} else {
-					$opt.css('border-color', '#e2e8f0').css('background', '#fff');
+					$card.removeClass('is-active');
+					$prio.prop('disabled', true);
 				}
 			});
 
+			// Save Assignments
 			function saveCommunicationRoles() {
-				var userId = $('#assignCommUserId').val();
+				var userId = $('#commDrawerUserId').val();
 				if (!userId) return;
 
 				var selectedChannels = [];
-				$('.comm-channel-checkbox:checked').each(function() {
-					selectedChannels.push($(this).val());
+				var priorities = {};
+
+				$('.comm-drawer-toggle:checked').each(function() {
+					var ch = $(this).data('channel');
+					selectedChannels.push(ch);
+					if (ch === 'agency') {
+						selectedChannels.push('vendor');
+					}
+					var prioVal = $('#commPrio_' + ch).val() || 'Primary';
+					priorities[ch] = prioVal;
+					if (ch === 'agency') {
+						priorities['vendor'] = prioVal;
+					}
 				});
 
 				var $btn = $('#btnSaveCommRoles');
@@ -3744,18 +4395,31 @@
 					data: {
 						_token: '{{ csrf_token() }}',
 						user_id: userId,
-						channels: selectedChannels
+						channels: selectedChannels,
+						priorities: priorities
 					},
 					success: function(response) {
 						$btn.find('.indicator-label').removeClass('d-none');
 						$btn.find('.indicator-progress').addClass('d-none');
 						$btn.prop('disabled', false);
 
-						$('#assignCommModal').modal('hide');
+						closeAssignCommDrawer();
 
 						// Invalidate IndexedDB cache so fresh state displays instantly
 						if (window.JeroTeamLocalStore) {
 							try { window.JeroTeamLocalStore.clear(); } catch(e){}
+						}
+
+						// Update tab badge counters if returned
+						if (response.counts) {
+							var c = response.counts;
+							if (c.total !== undefined) $('.tm-count-all').text(c.total);
+							if (c.recruitment !== undefined) $('.tm-count-recruitment').text(c.recruitment);
+							if (c.client !== undefined) $('.tm-count-client').text(c.client);
+							if (c.vendor !== undefined) $('.tm-count-agency').text(c.vendor);
+							if (c.finance !== undefined) $('.tm-count-finance').text(c.finance);
+							if (c.inactive !== undefined) $('.tm-count-inactive').text(c.inactive);
+							if (c.invited !== undefined) $('.tm-count-invited').text(c.invited);
 						}
 
 						fetchTeams(page_no);
@@ -3778,6 +4442,18 @@
 					}
 				});
 			}
+
+			// Backwards compatibility alias
+			function openAssignCommModal(userId, userName, channels) {
+				openAssignCommDrawer({ id: userId, name: userName, channels: channels || [] });
+			}
+
+			$('#commOverlay').on('click', closeAssignCommDrawer);
+			$(document).on('keydown', function(e) {
+				if (e.key === 'Escape' && $('#commDrawer').hasClass('open')) {
+					closeAssignCommDrawer();
+				}
+			});
 
 			// Dynamic Search with 300ms debounce
 			var teamSearchTimeout = null;
