@@ -1310,16 +1310,16 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
 
         // Fail-closed Dragonfly/Redis tenant authorization (0% MySQL reads on fast path)
         $authorizedClients = Cache::remember("tenant:{$company_id}:authorized_client_ids", 300, function () use ($company_id) {
-            return DB::table('client')->where('company_id', $company_id)->pluck('id')->map(fn ($id) => (int) $id)->toArray();
+            return DB::table('clients')->where('company_id', $company_id)->pluck('id')->map(fn ($id) => (int) $id)->toArray();
         });
         if (! in_array($clientId, $authorizedClients, true)) {
             $authorizedDirectClients = Cache::remember("tenant:{$company_id}:authorized_direct_client_ids", 300, function () use ($company_id) {
-                return DB::table('client_invitations')
+                return DB::table('staffing_company_invitation')
                     ->where(function ($q) use ($company_id) {
                         $q->where('from_company_id', $company_id)->orWhere('to_company_id', $company_id);
                     })
                     ->pluck('from_company_id')
-                    ->merge(DB::table('client_invitations')->where('to_company_id', $company_id)->pluck('to_company_id'))
+                    ->merge(DB::table('staffing_company_invitation')->where('to_company_id', $company_id)->pluck('to_company_id'))
                     ->unique()
                     ->map(fn ($id) => (int) $id)
                     ->toArray();
@@ -1713,12 +1713,12 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
 
         // Fail-closed authorization check using tenant cache (0% MySQL reads)
         $authorizedDirectClients = Cache::remember("tenant:{$company_id}:authorized_direct_client_ids", 300, function () use ($company_id) {
-            return DB::table('client_invitations')
+            return DB::table('staffing_company_invitation')
                 ->where(function ($q) use ($company_id) {
                     $q->where('from_company_id', $company_id)->orWhere('to_company_id', $company_id);
                 })
                 ->pluck('from_company_id')
-                ->merge(DB::table('client_invitations')->where('to_company_id', $company_id)->pluck('to_company_id'))
+                ->merge(DB::table('staffing_company_invitation')->where('to_company_id', $company_id)->pluck('to_company_id'))
                 ->unique()
                 ->map(fn ($id) => (int) $id)
                 ->toArray();
