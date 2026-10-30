@@ -877,7 +877,7 @@ After completing these steps, they will be able to start collaborating with your
 
         $versionKey = 'consultancyviewmore_version_user_'.$userId;
         $version = cache()->get($versionKey, 1);
-        $cacheKeySet = 'consultancyviewmore_v8:'.$userId.':'.$version.':'.md5(json_encode($cachePayload));
+        $cacheKeySet = 'consultancyviewmore_v9:'.$userId.':'.$version.':'.md5(json_encode($cachePayload));
         /* ----------------------------
         ⚡ Check DragonflyDB / Redis first (Quick Win Step 4)
         ----------------------------- */
@@ -932,8 +932,12 @@ After completing these steps, they will be able to start collaborating with your
             }
         }
 
-        // Quick Win Step 5b: Queries 1 & 2 deleted; Query 3 below provides exact final value
+        // ── 1. Requisitions Status Breakdown & Shared Jobs List ──
         $this->active_requisition = 0;
+        $this->Active = 0;
+        $this->Hold = 0;
+        $this->Closed = 0;
+        $this->kpiTotalJobs = 0;
 
         $requisitionRow = DB::table('recommendation_relation')
             ->join('jobs', 'jobs.id', '=', 'recommendation_relation.job_id')
@@ -947,8 +951,118 @@ After completing these steps, they will be able to start collaborating with your
             ->where('recommendation_relation.final_status', '=', 1)
             ->first();
 
-        if ($requisitionRow && $requisitionRow->active > 0) {
-            $this->active_requisition = $requisitionRow->active;
+        if ($requisitionRow) {
+            $this->Active = (int) ($requisitionRow->active ?? 0);
+            $this->Hold = (int) ($requisitionRow->hold ?? 0);
+            $this->Closed = (int) ($requisitionRow->inactive ?? 0);
+            $this->active_requisition = $this->Active;
+            $this->kpiTotalJobs = $this->Active + $this->Hold + $this->Closed;
+        }
+
+        $this->sharedJobs = DB::table('recommendation_relation')
+            ->join('jobs', 'jobs.id', '=', 'recommendation_relation.job_id')
+            ->leftJoin('job_locations', 'job_locations.job_id', '=', 'jobs.id')
+            ->select(
+                'jobs.id',
+                'jobs.title',
+                'jobs.job_id as job_code',
+                'jobs.status',
+                'jobs.total_positions',
+                'jobs.minimum_salary',
+                'jobs.maximum_salary',
+                'jobs.minimum_experience',
+                'jobs.maximum_experience',
+                'jobs.work_mode',
+                'jobs.created_at',
+                'job_locations.city_name',
+                'recommendation_relation.created_at as shared_at'
+            )
+            ->where('recommendation_relation.from_company_id', '=', $company_id)
+            ->where('recommendation_relation.to_company_id', '=', $partnerCompanyId)
+            ->where('recommendation_relation.final_status', '=', 1)
+            ->orderBy('recommendation_relation.id', 'desc')
+            ->limit(20)
+            ->get();
+
+        // ── 2. Candidates Pipeline Aggregation ──
+        $dbCandStats = DB::table('add_job_wise_condidates')
+            ->select(
+                DB::raw('COUNT(CASE WHEN master_status_id = 1 THEN 1 END) AS sourcing_count'),
+                DB::raw('COUNT(CASE WHEN master_status_id = 2 THEN 1 END) AS screening_count'),
+                DB::raw('COUNT(CASE WHEN master_status_id = 3 THEN 1 END) AS evaluation_count'),
+                DB::raw('COUNT(CASE WHEN master_status_id = 4 THEN 1 END) AS negotiation_count'),
+                DB::raw('COUNT(CASE WHEN master_status_id = 5 THEN 1 END) AS offer_count'),
+                DB::raw('COUNT(CASE WHEN master_status_id = 6 THEN 1 END) AS joined_count'),
+                DB::raw('COUNT(CASE WHEN master_status_id = 7 THEN 1 END) AS rejected_count'),
+                DB::raw('COUNT(CASE WHEN master_status_id = 8 THEN 1 END) AS inreview_count'),
+                DB::raw('COUNT(*) AS total_count')
+            )
+            ->where('company_id', '=', $company_id)
+            ->where('thirdparty_company_id', '=', $partnerCompanyId)
+            ->whereNotIn('master_status_id', [9])
+            ->first();
+
+        $this->all_candidates = $dbCandStats ? (int) $dbCandStats->total_count : 0;
+        $this->sourcing_count = $dbCandStats ? (int) $dbCandStats->sourcing_count : 0;
+        $this->screening_count = $dbCandStats ? (int) $dbCandStats->screening_count : 0;
+        $this->evaluation_count = $dbCandStats ? (int) $dbCandStats->evaluation_count : 0;
+        $this->negotiation_count = $dbCandStats ? (int) $dbCandStats->negotiation_count : 0;
+        $this->offers = $dbCandStats ? (int) $dbCandStats->offer_count : 0;
+        $this->Joined = $dbCandStats ? (int) $dbCandStats->joined_count : 0;
+        $this->Rejected_count = $dbCandStats ? (int) $dbCandStats->rejected_count : 0;
+        $this->inreview_count = $dbCandStats ? (int) $dbCandStats->inreview_count : 0;
+        $this->joined_count = $this->Joined;
+        $this->offer_count = $this->offers;
+        $this->total_candidates = $this->all_candidates;
+
+        // ── 3. Submitted Candidates List ──
+        $this->candidatesList = DB::table('job_applications')
+            ->leftJoin('jobs', 'jobs.id', '=', 'job_applications.job_id')
+            ->leftJoin('add_job_wise_condidates', 'add_job_wise_condidates.job_application_id', '=', 'job_applications.id')
+            ->select(
+                'job_applications.id',
+                'job_applications.full_name',
+                'job_applications.email',
+                'job_applications.phone',
+                'job_applications.total_exp',
+                'job_applications.current_company',
+                'job_applications.current_designation',
+                'job_applications.ctc',
+                'job_applications.ectc',
+                'job_applications.created_at',
+                'jobs.title as job_title',
+                'jobs.id as job_id',
+                'add_job_wise_condidates.master_status_id'
+            )
+            ->where('job_applications.company_id', '=', $company_id)
+            ->where('job_applications.thirdparty_company_id', '=', $partnerCompanyId)
+            ->orderBy('job_applications.id', 'desc')
+            ->limit(20)
+            ->get();
+
+        // ── 4. Interviews Schedule ──
+        $this->interviewsList = DB::table('interview_schedule')
+            ->join('job_applications', 'job_applications.id', '=', 'interview_schedule.job_application_id')
+            ->leftJoin('jobs', 'jobs.id', '=', 'interview_schedule.job_id')
+            ->select(
+                'interview_schedule.id',
+                'interview_schedule.schedule_date',
+                'interview_schedule.schedule_time',
+                'interview_schedule.status',
+                'interview_schedule.video_type',
+                'interview_schedule.meeting_url',
+                'job_applications.full_name as candidate_name',
+                'jobs.title as job_title'
+            )
+            ->where('interview_schedule.company_id', '=', $company_id)
+            ->where('job_applications.thirdparty_company_id', '=', $partnerCompanyId)
+            ->orderBy('interview_schedule.schedule_date', 'desc')
+            ->limit(20)
+            ->get();
+
+        $this->all_interview = count($this->interviewsList);
+        if ($this->all_interview == 0 && ($this->screening_count + $this->evaluation_count) > 0) {
+            $this->all_interview = (int) ($this->screening_count + $this->evaluation_count);
         }
 
         $this->client_contact_info = DB::table('roles')
@@ -979,6 +1093,21 @@ After completing these steps, they will be able to start collaborating with your
         // Guarantee directClientDetail->company_id is ALWAYS set to partnerCompanyId
         if ($this->directClientDetail) {
             $this->directClientDetail->company_id = $partnerCompanyId;
+        }
+
+        // ── 5. Company Size Resolution ──
+        $compSizeFrom = @$this->directClientDetail->company_size_from;
+        $compSizeTo = @$this->directClientDetail->company_size;
+        if ($compSizeFrom || $compSizeTo) {
+            if ($compSizeFrom && $compSizeTo) {
+                $this->agencyCompanySize = number_format((int) $compSizeFrom).' - '.number_format((int) $compSizeTo).' employees';
+            } elseif ($compSizeTo) {
+                $this->agencyCompanySize = number_format((int) $compSizeTo).' employees';
+            } else {
+                $this->agencyCompanySize = number_format((int) $compSizeFrom).'+ employees';
+            }
+        } else {
+            $this->agencyCompanySize = '10 - 50 employees';
         }
 
         // $startOfMonth = Carbon::now()->startOfMonth();
