@@ -932,7 +932,11 @@ class ClientActivityReadService
                     $s = $hit['_source'] ?? [];
                     $cid = (int) ($s['id'] ?? $s['wiseId'] ?? 0);
                     $candAppId = (int) ($s['candidate_id'] ?? 0);
-                    $cName = trim((string) ($s['full_name'] ?? ''));
+                    $rawCName = trim((string) ($s['full_name'] ?? ''));
+                    $isPlaceholderName = empty($rawCName)
+                        || in_array(strtolower($rawCName), ['shared by', 'shared', 'candidate', 'in review', 'inreview'], true)
+                        || preg_match('/^candidate\s*#?\d*$/i', $rawCName);
+                    $cName = $isPlaceholderName ? null : $rawCName;
                     $cDesig = trim((string) ($s['current_designation'] ?? ''));
                     $cEmail = strtolower(trim((string) ($s['email'] ?? '')));
                     $uName = trim((string) ($s['posted_by'] ?? ''));
@@ -950,10 +954,15 @@ class ClientActivityReadService
                     $mStatusName = strtolower(trim((string) ($s['master_status_name'] ?? '')));
                     $isInReview = ($jStatusId === 8 || $mStatusId === 8 || in_array($mStatusName, ['in review', 'inreview', 'in_review'], true));
 
+                    $existingProfile = $profiles["id:{$candAppId}"] ?? $profiles["id:{$cid}"] ?? null;
+                    if ($existingProfile && ! empty($existingProfile['name']) && empty($cName)) {
+                        continue; // Do not overwrite an already resolved valid candidate name with an invalid/empty one
+                    }
+
                     $data = [
-                        'name' => ! empty($cName) ? ucwords($cName) : null,
-                        'designation' => ! empty($cDesig) ? ucwords($cDesig) : null,
-                        'uploader_name' => ! empty($uName) ? ucwords($uName) : null,
+                        'name' => ! empty($cName) ? ucwords($cName) : ($existingProfile['name'] ?? null),
+                        'designation' => ! empty($cDesig) ? ucwords($cDesig) : ($existingProfile['designation'] ?? null),
+                        'uploader_name' => ! empty($uName) ? ucwords($uName) : ($existingProfile['uploader_name'] ?? null),
                         'company_name' => $this->formatCompanyName($cComp),
                         'wise_id' => $cid > 0 ? $cid : null,
                         'candidate_id' => $candAppId > 0 ? $candAppId : null,
@@ -964,28 +973,88 @@ class ClientActivityReadService
 
                     if ($cid > 0) {
                         $profiles["id:{$cid}"] = $data;
-                        try {
-                            Redis::setex("ats:cand_brief:id:{$cid}", 600, json_encode($data));
-                        } catch (\Throwable) {
+                        if (! empty($data['name'])) {
+                            try {
+                                Redis::setex("ats:cand_brief:id:{$cid}", 600, json_encode($data));
+                            } catch (\Throwable) {
+                            }
                         }
                     }
                     if ($candAppId > 0) {
                         $profiles["id:{$candAppId}"] = $data;
-                        try {
-                            Redis::setex("ats:cand_brief:id:{$candAppId}", 600, json_encode($data));
-                        } catch (\Throwable) {
+                        if (! empty($data['name'])) {
+                            try {
+                                Redis::setex("ats:cand_brief:id:{$candAppId}", 600, json_encode($data));
+                            } catch (\Throwable) {
+                            }
                         }
                     }
                     if (! empty($cEmail)) {
                         $profiles["em:{$cEmail}"] = $data;
-                        try {
-                            Redis::setex("ats:cand_brief:em:{$cEmail}", 600, json_encode($data));
-                        } catch (\Throwable) {
+                        if (! empty($data['name'])) {
+                            try {
+                                Redis::setex("ats:cand_brief:em:{$cEmail}", 600, json_encode($data));
+                            } catch (\Throwable) {
+                            }
                         }
                     }
                 }
             } catch (\Throwable $e) {
                 Log::warning('ClientActivityReadService: resolveCandidateProfiles ES query error', ['error' => $e->getMessage()]);
+            }
+        }
+
+        // 3. MySQL Fallback: Resolve real candidate full name if still missing/unresolved
+        if (! empty($cleanIds)) {
+            $unresolvedCandidates = [];
+            foreach ($cleanIds as $idToCheck) {
+                if (empty($profiles["id:{$idToCheck}"]['name'])) {
+                    $unresolvedCandidates[] = $idToCheck;
+                }
+            }
+
+            if (! empty($unresolvedCandidates)) {
+                try {
+                    $dbCands = DB::table('job_applications')
+                        ->whereIn('id', $unresolvedCandidates)
+                        ->select('id', 'full_name', 'email', 'current_designation', 'status_id', 'master_status_id', 'submitted_by', 'thirdparty_company_id', 'company_id')
+                        ->get();
+
+                    foreach ($dbCands as $dbCand) {
+                        $jStatusId = (int) ($dbCand->master_status_id ?? 0);
+                        $isInReview = ($jStatusId === 8 || (int) $dbCand->status_id === 8);
+                        $uProfile = $dbCand->submitted_by ? $this->resolveUserProfile((int) $dbCand->submitted_by) : [];
+                        $candName = trim((string) ($dbCand->full_name ?? ''));
+                        $candCleanName = ! in_array(strtolower($candName), ['shared by', 'shared', 'candidate', 'in review'], true)
+                            ? ucwords($candName)
+                            : null;
+
+                        $data = [
+                            'name' => $candCleanName,
+                            'designation' => ! empty($dbCand->current_designation) ? ucwords(trim($dbCand->current_designation)) : null,
+                            'uploader_name' => $uProfile['name'] ?? 'Technical Recruiter',
+                            'company_name' => $this->resolveTenantCompanyName($dbCand->thirdparty_company_id ?: 2),
+                            'wise_id' => (int) $dbCand->id,
+                            'candidate_id' => (int) $dbCand->id,
+                            'is_in_review' => $isInReview,
+                            'job_master_status_id' => $jStatusId,
+                            'master_status_id' => $jStatusId,
+                        ];
+
+                        $profiles["id:{$dbCand->id}"] = $data;
+                        if (! empty($candCleanName)) {
+                            try {
+                                Redis::setex("ats:cand_brief:id:{$dbCand->id}", 86400, json_encode($data));
+                                if (! empty($dbCand->email)) {
+                                    Redis::setex('ats:cand_brief:em:'.strtolower(trim($dbCand->email)), 86400, json_encode($data));
+                                }
+                            } catch (\Throwable) {
+                            }
+                        }
+                    }
+                } catch (\Throwable $e) {
+                    Log::warning('ClientActivityReadService: resolveCandidateProfiles DB fallback error', ['error' => $e->getMessage()]);
+                }
             }
         }
 
@@ -1059,8 +1128,8 @@ class ClientActivityReadService
         if (empty($userProfile) && $userId > 0) {
             try {
                 $uRow = \Illuminate\Support\Facades\DB::table('users')->where('id', $userId)->first(['name', 'company_id']);
-                if ($uRow && !empty($uRow->name)) {
-                    $uCompName = !empty($uRow->company_id) ? $this->resolveTenantCompanyName((int) $uRow->company_id) : '4Bell Technology';
+                if ($uRow && ! empty($uRow->name)) {
+                    $uCompName = ! empty($uRow->company_id) ? $this->resolveTenantCompanyName((int) $uRow->company_id) : '4Bell Technology';
                     $userProfile = [
                         'id' => $userId,
                         'name' => ucwords(trim($uRow->name)),
@@ -1183,46 +1252,74 @@ class ClientActivityReadService
                     $sharedAt = $s['created_at'] ?? now()->toIso8601String();
                     $agencyName = $serviceCompanyId > 0 ? $this->resolveTenantCompanyName($serviceCompanyId) : 'Agency';
 
-                    if ($clientType === 'direct' && ! empty($s['recommendation_relation']) && is_array($s['recommendation_relation'])) {
-                        $sharerCompanyId = 0;
-                        foreach ($s['recommendation_relation'] as $rec) {
-                            $toComp = (int) ($rec['to_company_id'] ?? 0);
-                            $fromComp = (int) ($rec['from_company_id'] ?? 0);
-                            $fStatus = (int) ($rec['final_status'] ?? 0);
-                            if (($toComp === $serviceCompanyId || $fromComp === $serviceCompanyId || $toComp === $tenantId || $fromComp === $tenantId) && in_array($fStatus, [1, 2], true)) {
-                                $isShared = true;
-                                $sharerUserId = (int) ($rec['from_user_id'] ?? 0);
-                                if ($sharerUserId <= 0 && ! empty($rec['to_user_id'])) {
-                                    $sharerUserId = (int) $rec['to_user_id'];
+                    if ($clientType === 'direct') {
+                        $isShared = true;
+                        $sharerCompanyId = $tenantId;
+
+                        if (! empty($s['recommendation_relation']) && is_array($s['recommendation_relation'])) {
+                            foreach ($s['recommendation_relation'] as $rec) {
+                                $toComp = (int) ($rec['to_company_id'] ?? 0);
+                                $fromComp = (int) ($rec['from_company_id'] ?? 0);
+                                $fStatus = (int) ($rec['final_status'] ?? 0);
+                                if ($fromComp === $tenantId && ($toComp === $serviceCompanyId || $toComp > 0) && in_array($fStatus, [1, 2], true)) {
+                                    $sharerUserId = (int) ($rec['from_user_id'] ?? 0);
+                                    $fromCreated = $rec['from_created_at'] ?? '';
+                                    if (! empty($rec['created_at']) && (empty($fromCreated) || str_contains($fromCreated, '00:00:00'))) {
+                                        $sharedAt = $rec['created_at'];
+                                    } else {
+                                        $sharedAt = $fromCreated ?: ($rec['created_at'] ?? $sharedAt);
+                                    }
+                                    break;
                                 }
-                                $sharerCompanyId = $fromComp > 0 ? $fromComp : $toComp;
-                                $sharedAt = $rec['from_created_at'] ?? $rec['created_at'] ?? $sharedAt;
-                                break;
                             }
                         }
 
-                        if ($isShared) {
-                            if ($sharerUserId > 0) {
-                                $sharerProfile = $this->resolveUserProfile($sharerUserId);
-                                $sharerName = $sharerProfile['name'] ?? null;
-                                $sharerCompany = $sharerProfile['company_name'] ?? null;
-                            }
-                            if (empty($sharerName) || strtolower($sharerName) === 'account lead') {
-                                if (class_exists(\App\Services\CompanyRepresentativeService::class)) {
-                                    $rep = app(\App\Services\CompanyRepresentativeService::class)->resolveJobAgencyRepresentative($jid, $serviceCompanyId, $tenantId);
-                                    if (! empty($rep['representative']['name'])) {
-                                        $sharerName = $rep['representative']['name'];
-                                        $sharerUserId = (int) ($rep['representative_user_id'] ?? 0);
-                                    }
+                        // DB Fallback for recommendation_relation if not present in ES
+                        if ($sharerUserId <= 0) {
+                            try {
+                                $dbRec = DB::table('recommendation_relation')
+                                    ->where('job_id', $jid)
+                                    ->where('from_company_id', $tenantId)
+                                    ->where(function ($q) use ($serviceCompanyId) {
+                                        $q->where('to_company_id', $serviceCompanyId)->orWhere('to_company_id', '>', 0);
+                                    })
+                                    ->whereIn('final_status', [1, 2])
+                                    ->first();
+                                if ($dbRec) {
+                                    $sharerUserId = (int) $dbRec->from_user_id;
+                                    $sharedAt = ! empty($dbRec->created_at) ? $dbRec->created_at : ($dbRec->from_created_at ?? $sharedAt);
                                 }
-                            }
-                            if (empty($sharerName) || strtolower($sharerName) === 'account lead') {
-                                $sharerName = $creatorName;
-                            }
-                            if (empty($sharerCompany)) {
-                                $sharerCompany = $sharerCompanyId > 0 ? $this->resolveTenantCompanyName($sharerCompanyId) : $creatorCompany;
+                            } catch (\Throwable) {
                             }
                         }
+
+                        // Resolve Direct Client User Name
+                        if ($sharerUserId > 0) {
+                            $sharerProfile = $this->resolveUserProfile($sharerUserId);
+                            $sharerName = $sharerProfile['name'] ?? null;
+                        }
+
+                        // Direct Client Company User fallback if sharer user profile is generic or empty
+                        if (empty($sharerName) || strtolower($sharerName) === 'account lead') {
+                            try {
+                                $clientUser = DB::table('users')->where('company_id', $tenantId)->first();
+                                if ($clientUser) {
+                                    $sharerName = $clientUser->name ?? trim($clientUser->first_name.' '.$clientUser->last_name);
+                                }
+                            } catch (\Throwable) {
+                            }
+                        }
+
+                        if (empty($sharerName) || strtolower($sharerName) === 'account lead') {
+                            $sharerName = $creatorName;
+                        }
+                        $sharerCompany = $this->resolveTenantCompanyName($tenantId);
+                    }
+
+                    // Avoid overwriting a valid Direct Client profile with an unrelated agency hit
+                    $existing = $profiles[$jid] ?? null;
+                    if ($existing && ! empty($existing['shared_by_name']) && $clientType === 'direct') {
+                        continue;
                     }
 
                     $data = [
@@ -1301,8 +1398,9 @@ class ClientActivityReadService
             }
         }
 
-        $candProfiles = $this->resolveCandidateProfiles($appIds, $appEmails, $query->tenantId);
-        $jobProfiles = $this->resolveJobProfiles($jobIds, $query->tenantId, $query->serviceCompanyId, $query->clientType);
+        $directClientId = ($query->clientType === 'direct') ? ($query->clientId > 0 ? $query->clientId : $query->tenantId) : $query->tenantId;
+        $candProfiles = $this->resolveCandidateProfiles($appIds, $appEmails, $directClientId);
+        $jobProfiles = $this->resolveJobProfiles($jobIds, $directClientId, $query->serviceCompanyId, $query->clientType);
 
         foreach ($rawEvents as $entry) {
             $type = $entry['source_type'];
@@ -1314,17 +1412,57 @@ class ClientActivityReadService
 
             if ($type === 'timeline') {
                 $processName = $src['master_process_name'] ?? 'Pipeline';
-                $isOffer = in_array(strtolower($processName), ['offer', 'offered', 'offer released', 'offer accepted', 'joined', 'hired'], true);
-                $category = $isOffer ? 'offers' : 'pipeline';
+                $toStage = $processName;
+                $toStageLower = strtolower(trim((string) $toStage));
+                $fromStage = $src['prev_process_name'] ?? '';
+                $fromStageLower = strtolower(trim((string) $fromStage));
+                $eventId = (int) ($src['event_id'] ?? 0);
+                $note = trim((string) ($src['note'] ?? ''));
+                $hasFeedback = ! empty($src['feedback']) || ! empty($src['comment']) || ! empty($src['average_star_rating']);
+                $hasInterviewSchedule = ! empty($src['interview_schedule_date']) || $eventId === 3 || str_contains(strtolower($note), 'interview');
+                $isOffer = in_array($toStageLower, ['offer', 'offered', 'offer released', 'offer accepted', 'joined', 'hired', 'selected'], true);
+
+                if ($hasInterviewSchedule) {
+                    $category = 'interviews';
+                } elseif ($isOffer) {
+                    $category = 'offers';
+                } else {
+                    $category = 'pipeline';
+                }
 
                 // Check category filter
                 if ($query->category !== 'all' && $query->category !== 'candidates' && $query->category !== $category) {
                     continue;
                 }
 
-                $eventType = $isOffer
-                    ? (in_array(strtolower($processName), ['joined', 'hired'], true) ? 'candidate.joined' : 'offer.sent')
-                    : 'candidate.stage_changed';
+                // Candidate Visibility Rule: Do not show In Review candidate activity across client drawers.
+                // In Review is strictly pre-submission/internal.
+                $candidateStatus = (int) ($src['candidate_status'] ?? 0);
+                if (
+                    ! empty($profile['is_in_review'])
+                    || $candidateStatus === 8
+                    || in_array($toStageLower, ['in review', 'inreview', 'in_review'], true)
+                ) {
+                    continue;
+                }
+
+                // Classify Granular Candidate Event Types
+                if ($isOffer) {
+                    $eventType = in_array($toStageLower, ['joined', 'hired'], true) ? 'candidate.joined' : 'offer.sent';
+                    $attributionLabel = in_array($toStageLower, ['joined', 'hired'], true) ? 'Placed by' : 'Offered by';
+                } elseif ($hasInterviewSchedule) {
+                    $eventType = 'interview.scheduled';
+                    $attributionLabel = 'Scheduled by';
+                } elseif ($hasFeedback) {
+                    $eventType = 'interview.feedback';
+                    $attributionLabel = 'Feedback by';
+                } elseif (($eventId === 1 && $toStageLower === 'sourcing') || ($fromStageLower === 'inreview' && $toStageLower === 'sourcing')) {
+                    $eventType = 'candidate.uploaded'; // Candidate submitted / sourced to client
+                    $attributionLabel = 'Submitted by';
+                } else {
+                    $eventType = 'candidate.stage_changed';
+                    $attributionLabel = 'Moved by';
+                }
 
                 $offerAmount = null;
                 $isConfidential = true;
@@ -1341,12 +1479,21 @@ class ClientActivityReadService
 
                 $targetWiseId = $profile['wise_id'] ?? $appId;
 
-                // Candidate Name: SSOT candidate full name, sanitize "Shared By" anomaly
+                // Candidate Name: SSOT candidate full name, with fallback to MySQL job_applications
                 $rawCandName = $profile['name'] ?? (! empty($src['candidate_name']) ? ucwords(trim($src['candidate_name'])) : null);
-                if (empty($rawCandName) || in_array(strtolower($rawCandName), ['candidate', 'shared by', 'shared'], true)) {
-                    $rawCandName = (! empty($profile['name']) && ! in_array(strtolower($profile['name']), ['shared by', 'shared'], true))
-                        ? $profile['name']
-                        : ($targetWiseId > 0 ? "Candidate #{$targetWiseId}" : 'Candidate');
+                if (empty($rawCandName) || in_array(strtolower($rawCandName), ['candidate', 'shared by', 'shared', 'in review'], true) || preg_match('/^candidate\s*#?\d*$/i', $rawCandName)) {
+                    if ($appId > 0) {
+                        try {
+                            $dbCandName = DB::table('job_applications')->where('id', $appId)->value('full_name');
+                            if (! empty($dbCandName) && ! in_array(strtolower(trim($dbCandName)), ['candidate', 'shared by', 'shared', 'in review'], true)) {
+                                $rawCandName = ucwords(trim($dbCandName));
+                            }
+                        } catch (\Throwable) {
+                        }
+                    }
+                }
+                if (empty($rawCandName)) {
+                    $rawCandName = ($targetWiseId > 0 ? "Candidate #{$targetWiseId}" : 'Candidate');
                 }
                 $resolvedCandidateName = $rawCandName;
 
@@ -1360,22 +1507,6 @@ class ClientActivityReadService
                     ? $this->resolveTenantCompanyName($query->serviceCompanyId)
                     : ($profile['company_name'] ?? (! empty($src['cur_companyname']) ? $this->formatCompanyName((string) $src['cur_companyname']) : $this->resolveTenantCompanyName($query->tenantId)));
                 $targetWiseId = $profile['wise_id'] ?? $appId;
-
-                $toStage = $src['master_process_name'] ?? 'Screening';
-                $toStageLower = strtolower(trim((string) $toStage));
-                $fromStage = $src['prev_process_name'] ?? 'Sourcing';
-                $fromStageLower = strtolower(trim((string) $fromStage));
-                $candidateStatus = (int) ($src['candidate_status'] ?? 0);
-
-                // Candidate Visibility Rule: Do not show any In Review candidate activity across client drawers
-                if (
-                    ! empty($profile['is_in_review'])
-                    || in_array($toStageLower, ['in review', 'inreview', 'in_review'], true)
-                    || in_array($fromStageLower, ['in review', 'inreview', 'in_review'], true)
-                    || $candidateStatus === 8
-                ) {
-                    continue;
-                }
 
                 // Standardize Stage Status
                 $stageStatus = 'pipeline';
@@ -1401,7 +1532,7 @@ class ClientActivityReadService
                         'avatar_version' => 1,
                     ],
                     'attribution' => [
-                        'label' => 'Uploaded by',
+                        'label' => $attributionLabel,
                         'name' => $uploaderName,
                         'company_name' => $uploaderCompany,
                     ],
@@ -1430,14 +1561,16 @@ class ClientActivityReadService
                         'creator_company' => $jobProfile['creator_company'] ?? $uploaderCompany,
                     ]),
                     'transition' => [
-                        'from_stage_name' => $src['prev_process_name'] ?? 'Sourcing',
+                        'from_stage_name' => $fromStage ?: ($eventType === 'candidate.uploaded' ? 'Submitted' : 'Sourcing'),
                         'to_stage_name' => $toStage,
                         'status' => $stageStatus,
                         'client_spoc_name' => $src['name_hr'] ?? null,
                     ],
                     'details' => [
-                        'interview_mode' => $src['interview_mode'] ?? null,
+                        'interview_mode' => $src['interview_mode'] ?? 'Video Call',
                         'scheduled_time' => $src['interview_schedule_date'] ?? null,
+                        'feedback' => $src['feedback'] ?? ($src['comment'] ?? null),
+                        'rating' => $src['average_star_rating'] ?? null,
                         'compensation' => [
                             'currency' => $src['offer_currency'] ?? 'INR',
                             'amount' => $offerAmount,
