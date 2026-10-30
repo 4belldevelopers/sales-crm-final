@@ -74,19 +74,35 @@
 }
 .cd-scope *, .cd-scope *::before, .cd-scope *::after {
   box-sizing: border-box !important;
+}
+.cd-scope h1, .cd-scope h2, .cd-scope h3, .cd-scope h4, .cd-scope h5, .cd-scope h6,
+.cd-scope p, .cd-scope span, .cd-scope div, .cd-scope a, .cd-scope button,
+.cd-scope input, .cd-scope select, .cd-scope textarea, .cd-scope label, .cd-scope td, .cd-scope th {
   font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
 }
 
 /* ── Explicit FontAwesome Restoration ── */
 .cd-scope i,
 .cd-scope [class*="fa-"],
+.cd-scope [class*="fa-"]::before,
+.cd-scope [class*="fa-"]::after,
 .cd-scope [class^="fa-"],
+.cd-scope [class^="fa-"]::before,
+.cd-scope [class^="fa-"]::after,
 .cd-scope .fa,
 .cd-scope .fas,
 .cd-scope .far,
 .cd-scope .fab,
 .cd-scope .fa-solid,
-.cd-scope .fa-regular {
+.cd-scope .fa-regular,
+.cd-scope .fa-brands,
+.cd-scope .fa::before,
+.cd-scope .fas::before,
+.cd-scope .far::before,
+.cd-scope .fab::before,
+.cd-scope .fa-solid::before,
+.cd-scope .fa-regular::before,
+.cd-scope .fa-brands::before {
   font-family: "Font Awesome 6 Free", "Font Awesome 5 Free", "FontAwesome" !important;
   font-style: normal !important;
   font-variant: normal !important;
@@ -95,9 +111,17 @@
   display: inline-block !important;
 }
 .cd-scope .fa-solid,
-.cd-scope .fas { font-weight: 900 !important; }
+.cd-scope .fa-solid::before,
+.cd-scope .fas,
+.cd-scope .fas::before { font-weight: 900 !important; }
 .cd-scope .fa-regular,
-.cd-scope .far { font-weight: 400 !important; }
+.cd-scope .fa-regular::before,
+.cd-scope .far,
+.cd-scope .far::before { font-weight: 400 !important; }
+.cd-scope .fa-brands,
+.cd-scope .fa-brands::before,
+.cd-scope .fab,
+.cd-scope .fab::before { font-family: "Font Awesome 6 Brands", "Font Awesome 5 Brands", "FontAwesome" !important; font-weight: 400 !important; }
 
 /* ── TIER 1: Sticky Top Action Header Toolbar Card (.cd-top-bar) ── */
 .cd-top-bar {
@@ -950,6 +974,128 @@
 .cd-kv-lbl { color: #64748b !important; font-weight: 500 !important; }
 .cd-kv-val { color: #0f172a !important; font-weight: 600 !important; text-align: right !important; }
 
+/* ── Vertical Info List (Replicated from Client Drawer) ── */
+.cd-vertical-info-list {
+  display: flex !important;
+  flex-direction: column !important;
+  width: 100% !important;
+}
+.cd-vinfo-row {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 12px !important;
+  padding: 8px 2px !important;
+  border-bottom: 1px solid #f1f5f9 !important;
+  min-width: 0 !important;
+  transition: background-color 0.15s ease !important;
+}
+.cd-vinfo-row:first-child { padding-top: 2px !important; }
+.cd-vinfo-row:last-child { border-bottom: none !important; padding-bottom: 2px !important; }
+.cd-vinfo-row:hover { background-color: #f8fafc !important; }
+.cd-vinfo-key {
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  flex: 0 0 140px !important;
+  min-width: 120px !important;
+}
+.cd-vinfo-icon {
+  width: 26px !important;
+  height: 26px !important;
+  border-radius: 6px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-size: 11px !important;
+  flex-shrink: 0 !important;
+}
+.cd-vinfo-icon.red     { background: #fef2f2 !important; color: #ef4444 !important; }
+.cd-vinfo-icon.blue    { background: #eff6ff !important; color: #2563eb !important; }
+.cd-vinfo-icon.green   { background: #ecfdf5 !important; color: #059669 !important; }
+.cd-vinfo-icon.amber   { background: #fefce8 !important; color: #ca8a04 !important; }
+.cd-vinfo-icon.purple  { background: #f5f3ff !important; color: #7c3aed !important; }
+.cd-vinfo-icon.sky     { background: #f0f9ff !important; color: #0284c7 !important; }
+.cd-vinfo-icon.emerald { background: #f0fdf4 !important; color: #16a34a !important; }
+.cd-vinfo-icon.orange  { background: #fff7ed !important; color: #ea580c !important; }
+.cd-vinfo-icon.slate   { background: #f8fafc !important; color: #475569 !important; border: 1px solid #e2e8f0 !important; }
+.cd-vinfo-icon.cyan    { background: #ecfeff !important; color: #0891b2 !important; }
+.cd-vinfo-icon.indigo  { background: #eef2ff !important; color: #4f46e5 !important; }
+
+.cd-vinfo-label {
+  font-size: 11.5px !important;
+  font-weight: 600 !important;
+  color: #64748b !important;
+  letter-spacing: -0.1px !important;
+  line-height: 1.3 !important;
+}
+.cd-vinfo-val {
+  flex: 1 !important;
+  min-width: 0 !important;
+  text-align: right !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: flex-end !important;
+  justify-content: center !important;
+  font-size: 12px !important;
+  font-weight: 500 !important;
+  color: #0f172a !important;
+  word-break: break-word !important;
+}
+.cd-vinfo-link {
+  color: #2563eb !important;
+  font-weight: 600 !important;
+  text-decoration: none !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 4px !important;
+  transition: color 0.15s ease !important;
+}
+.cd-vinfo-link:hover { color: #1d4ed8 !important; text-decoration: underline !important; }
+.cd-vintage-chip {
+  font-size: 10.5px !important;
+  color: #64748b !important;
+  font-weight: 500 !important;
+  margin-left: 4px !important;
+}
+.cd-type-badge-pill {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 4px !important;
+  background: #f1f5f9 !important;
+  color: #334155 !important;
+  border: 1px solid #e2e8f0 !important;
+  padding: 2px 7px !important;
+  border-radius: 4px !important;
+  font-size: 11px !important;
+  font-weight: 600 !important;
+}
+.cd-tax-wrap {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+}
+.cd-copy-btn {
+  background: transparent !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 4px !important;
+  color: #64748b !important;
+  width: 22px !important;
+  height: 22px !important;
+  padding: 0 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-size: 10px !important;
+  cursor: pointer !important;
+  transition: all 0.15s ease !important;
+}
+.cd-copy-btn:hover {
+  background: #f8fafc !important;
+  color: #0f172a !important;
+  border-color: #cbd5e1 !important;
+}
+
 /* ── 8. Contact Cards Grid (Tab 3) ── */
 .cd-contact-grid {
   display: grid !important;
@@ -1358,13 +1504,13 @@
     <div class="tab-content cd-tab-content-wrapper">
 
         <!-- ══════════════════════════════════════════════════════════════════════
-             TAB 1: OVERVIEW
+             TAB 1: OVERVIEW (Rule 20 Enterprise Card + Sub-Card Standard)
              ══════════════════════════════════════════════════════════════════════ -->
         <div class="tab-pane active show" id="overview" role="tabpanel">
             <div class="cd-overview-grid">
                 <!-- Left Column -->
                 <div>
-                    <!-- About Agency Sub-Card -->
+                    <!-- Sub-Card 1: About Agency -->
                     <div class="cd-master-subcard">
                         <div class="cd-subcard-header">
                             <div class="cd-subcard-header-left">
@@ -1372,46 +1518,71 @@
                                 <h4 class="cd-subcard-heading">About the Recruitment Agency</h4>
                             </div>
                             @if (!empty($webClean))
-                                <a href="{{ str_starts_with($webClean, 'http') ? $webClean : 'https://'.$webClean }}" target="_blank" class="text-primary fw-bold fs-8 text-decoration-none">
-                                    Official Portal <i class="fas fa-external-link-alt ms-1 fs-9"></i>
+                                <a href="{{ str_starts_with($webClean, 'http') ? $webClean : 'https://'.$webClean }}" target="_blank" class="text-primary fw-bold fs-8 text-decoration-none d-inline-flex align-items-center gap-1">
+                                    Official Portal <i class="fas fa-arrow-up-right-from-square fs-9"></i>
                                 </a>
                             @endif
                         </div>
                         <div style="font-size: 11.5px; color: #475569; line-height: 1.5; margin-bottom: 12px;">
-                            {{ $detailName }} is a verified enterprise talent acquisition partner specialized in sourcing top-tier technology, business operations, and leadership talent. Authorized to submit qualified candidate profiles across shared job requisitions under active SLA guarantees.
+                            @php
+                                $agencyDescClean = trim(strip_tags((string)($agency_description ?? ($directClientDetail->description ?? ($directClientDetail->companies_description ?? '')))));
+                            @endphp
+                            @if(!empty($agencyDescClean))
+                                {!! !empty($agency_description) ? $agency_description : ($directClientDetail->description ?? $directClientDetail->companies_description) !!}
+                            @else
+                                {{ $detailName }} is a verified enterprise talent acquisition partner specialized in sourcing top-tier technology, business operations, and leadership talent. Authorized to submit qualified candidate profiles across shared job requisitions under active SLA guarantees.
+                            @endif
                         </div>
-                        <div class="cd-kv-row"><span class="cd-kv-lbl">Specialization Focus</span><span class="cd-kv-val">{{ implode(' • ', array_slice($tagsArr, 0, 3)) }}</span></div>
-                        <div class="cd-kv-row"><span class="cd-kv-lbl">Partner Network Tier</span><span class="cd-kv-val text-primary fw-bold">Enterprise Direct Agency</span></div>
+                        <div class="cd-kv-row">
+                            <span class="cd-kv-lbl">Specialization Focus</span>
+                            <span class="cd-kv-val">{{ !empty($tagsArr) && count($tagsArr) > 0 ? implode(' • ', array_slice($tagsArr, 0, 3)) : 'IT Consulting • Software Engineering • Talent Advisory' }}</span>
+                        </div>
+                        <div class="cd-kv-row">
+                            <span class="cd-kv-lbl">Partner Network Tier</span>
+                            <span class="cd-kv-val text-primary fw-bold"><i class="fas fa-shield-halved text-success me-1"></i>Enterprise Direct Agency</span>
+                        </div>
                     </div>
 
-                    <!-- Recent Activity Preview -->
+                    <!-- Sub-Card 2: Recent Touchpoint Activity Preview -->
                     <div class="cd-master-subcard">
                         <div class="cd-subcard-header">
                             <div class="cd-subcard-header-left">
                                 <div class="cd-subcard-header-icon amber"><i class="fas fa-clock"></i></div>
                                 <h4 class="cd-subcard-heading">Recent Touchpoint Activity</h4>
                             </div>
-                            <a href="#recent_activity" onclick="triggerDrawerTab('recent_activity', event)" class="text-primary fw-bold fs-8 text-decoration-none">View All ›</a>
+                            <a href="#recent_activity" onclick="triggerDrawerTab('recent_activity', event)" class="text-primary fw-bold fs-8 text-decoration-none d-inline-flex align-items-center gap-1">
+                                View Activity Log <i class="fas fa-arrow-right fs-9"></i>
+                            </a>
                         </div>
                         <div class="cd-activity-timeline">
-                            <div class="cd-act-card" style="padding: 8px 10px;">
-                                <div class="cd-act-avatar" style="width:28px; height:28px; font-size:11px;"><i class="fas fa-check-double text-success"></i></div>
+                            <div class="cd-act-card" style="padding: 10px 12px; margin-bottom: 8px;">
+                                <div class="cd-act-avatar" style="width:30px; height:30px; font-size:12px; background:#ecfdf5; color:#10b981; border:1px solid #a7f3d0;"><i class="fas fa-handshake"></i></div>
                                 <div style="min-width:0; flex:1;">
                                     <div class="d-flex align-items-center justify-content-between mb-1">
-                                        <span class="fw-bold text-dark fs-8">Agency Profile Verified</span>
-                                        <span class="text-muted fs-9">Recently</span>
+                                        <span class="fw-bold text-dark fs-8">Agency Verified &amp; Connected</span>
+                                        <span class="text-muted fs-9">{{ $partner_joined_date }}</span>
                                     </div>
-                                    <div class="text-muted fs-9">Partner record confirmed with active candidate delivery credentials.</div>
+                                    <div class="text-muted fs-9">Mutual staffing partnership active with authorized candidate delivery credentials.</div>
                                 </div>
                             </div>
-                            <div class="cd-act-card" style="padding: 8px 10px;">
-                                <div class="cd-act-avatar" style="width:28px; height:28px; font-size:11px;"><i class="fas fa-layer-group text-primary"></i></div>
+                            <div class="cd-act-card" style="padding: 10px 12px; margin-bottom: 8px;">
+                                <div class="cd-act-avatar" style="width:30px; height:30px; font-size:12px; background:#eff6ff; color:#2563eb; border:1px solid #bfdbfe;"><i class="fas fa-briefcase"></i></div>
                                 <div style="min-width:0; flex:1;">
                                     <div class="d-flex align-items-center justify-content-between mb-1">
-                                        <span class="fw-bold text-dark fs-8">Requisition Sourcing Active</span>
-                                        <span class="text-muted fs-9">{{ $kpiActiveJobs }} Active Jobs</span>
+                                        <span class="fw-bold text-dark fs-8">{{ $kpiTotalJobs }} Shared Job Requisitions</span>
+                                        <span class="badge bg-light-primary text-primary fw-bold fs-9">{{ $kpiActiveJobs }} Active</span>
                                     </div>
-                                    <div class="text-muted fs-9">Agency actively sourcing profiles across open requisitions.</div>
+                                    <div class="text-muted fs-9">Agency actively authorized to source and submit qualified candidate profiles.</div>
+                                </div>
+                            </div>
+                            <div class="cd-act-card" style="padding: 10px 12px;">
+                                <div class="cd-act-avatar" style="width:30px; height:30px; font-size:12px; background:#faf5ff; color:#7c3aed; border:1px solid #e9d5ff;"><i class="fas fa-users"></i></div>
+                                <div style="min-width:0; flex:1;">
+                                    <div class="d-flex align-items-center justify-content-between mb-1">
+                                        <span class="fw-bold text-dark fs-8">{{ $kpiSubmitted }} Candidates Submitted</span>
+                                        <span class="text-muted fs-9">{{ $kpiJoins }} Joined</span>
+                                    </div>
+                                    <div class="text-muted fs-9">Active delivery pipeline spanning {{ $kpiInterviews }} interview rounds and {{ $kpiOffers }} offers released.</div>
                                 </div>
                             </div>
                         </div>
@@ -1420,36 +1591,225 @@
 
                 <!-- Right Column -->
                 <div>
-                    <!-- Agency Specifications Sub-Card -->
+                    <!-- Sub-Card 3: Agency Specifications & Metadata (Enterprise Vertical Info Layout) -->
                     <div class="cd-master-subcard">
                         <div class="cd-subcard-header">
                             <div class="cd-subcard-header-left">
                                 <div class="cd-subcard-header-icon purple"><i class="fas fa-building"></i></div>
                                 <h4 class="cd-subcard-heading">Agency Specifications &amp; Metadata</h4>
                             </div>
-                            <span class="badge bg-light-primary text-primary fw-bold fs-9">#AG-{{ $agencyId }}</span>
+                            <span class="badge bg-light-primary text-primary fw-bold" style="font-size:10px; padding:3px 7px;">
+                                <i class="fas fa-id-badge me-1"></i>#AG-{{ $agencyId }}
+                            </span>
                         </div>
-                        <div class="cd-kv-row"><span class="cd-kv-lbl">Legal Entity</span><span class="cd-kv-val">{{ $detailName }}</span></div>
-                        <div class="cd-kv-row"><span class="cd-kv-lbl">Headcount / Size</span><span class="cd-kv-val">{{ $agencySize }}</span></div>
-                        <div class="cd-kv-row"><span class="cd-kv-lbl">Industry Sector</span><span class="cd-kv-val">{{ ($directClientDetail->industry ?? null) ?: 'Staffing & Talent Advisory' }}</span></div>
-                        <div class="cd-kv-row"><span class="cd-kv-lbl">Founded</span><span class="cd-kv-val">{{ ($directClientDetail->founded ?? null) ?: '2019' }}</span></div>
-                        <div class="cd-kv-row"><span class="cd-kv-lbl">Primary Hub</span><span class="cd-kv-val">{{ $cityName }}, {{ $countryName }}</span></div>
+                        <div class="cd-vertical-info-list">
+                            <!-- 1. Legal Entity -->
+                            <div class="cd-vinfo-row">
+                                <div class="cd-vinfo-key">
+                                    <div class="cd-vinfo-icon indigo"><i class="fas fa-building"></i></div>
+                                    <span class="cd-vinfo-label">Legal Entity</span>
+                                </div>
+                                <div class="cd-vinfo-val">
+                                    <span class="fw-semibold text-gray-900">{{ $detailName }}</span>
+                                </div>
+                            </div>
+
+                            <!-- 2. Website -->
+                            <div class="cd-vinfo-row">
+                                <div class="cd-vinfo-key">
+                                    <div class="cd-vinfo-icon blue"><i class="fas fa-globe"></i></div>
+                                    <span class="cd-vinfo-label">Website</span>
+                                </div>
+                                <div class="cd-vinfo-val">
+                                    @if (!empty($webClean))
+                                        <a href="{{ str_starts_with($webClean, 'http') ? $webClean : 'https://'.$webClean }}" target="_blank" class="cd-vinfo-link">
+                                            {{ $webClean }} <i class="fas fa-arrow-up-right-from-square" style="font-size:9px;"></i>
+                                        </a>
+                                    @else
+                                        <span class="text-muted">—</span>
+                                    @endif
+                                </div>
+                            </div>
+
+                            <!-- 3. Industry Sector -->
+                            <div class="cd-vinfo-row">
+                                <div class="cd-vinfo-key">
+                                    <div class="cd-vinfo-icon purple"><i class="fas fa-industry"></i></div>
+                                    <span class="cd-vinfo-label">Industry Sector</span>
+                                </div>
+                                <div class="cd-vinfo-val">
+                                    <span class="fw-semibold text-gray-800">{{ $industries_name ?: 'Information Technology & Services' }}</span>
+                                </div>
+                            </div>
+
+                            <!-- 4. Company Type -->
+                            <div class="cd-vinfo-row">
+                                <div class="cd-vinfo-key">
+                                    <div class="cd-vinfo-icon sky"><i class="fas fa-landmark"></i></div>
+                                    <span class="cd-vinfo-label">Company Type</span>
+                                </div>
+                                <div class="cd-vinfo-val">
+                                    <span class="cd-type-badge-pill">{{ $company_type_name }}</span>
+                                </div>
+                            </div>
+
+                            <!-- 5. Workforce Scale -->
+                            <div class="cd-vinfo-row">
+                                <div class="cd-vinfo-key">
+                                    <div class="cd-vinfo-icon emerald"><i class="fas fa-users"></i></div>
+                                    <span class="cd-vinfo-label">Workforce Scale</span>
+                                </div>
+                                <div class="cd-vinfo-val">
+                                    <span class="fw-semibold text-gray-800">{{ $agencyCompanySize }}</span>
+                                </div>
+                            </div>
+
+                            <!-- 6. Founded Year & Vintage -->
+                            <div class="cd-vinfo-row">
+                                <div class="cd-vinfo-key">
+                                    <div class="cd-vinfo-icon orange"><i class="fas fa-calendar-alt"></i></div>
+                                    <span class="cd-vinfo-label">Founded</span>
+                                </div>
+                                <div class="cd-vinfo-val">
+                                    @php
+                                        $fYear = (int)($founded ?? ($directClientDetail->founded ?? 2019));
+                                        $currYr = (int)date('Y');
+                                        $vintage = $currYr - $fYear;
+                                    @endphp
+                                    <div>
+                                        <span class="fw-semibold text-gray-800">{{ $fYear }}</span>
+                                        @if($vintage > 0)
+                                            <span class="cd-vintage-chip">({{ $vintage }} yrs active)</span>
+                                        @endif
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 7. Corporate Email -->
+                            <div class="cd-vinfo-row">
+                                <div class="cd-vinfo-key">
+                                    <div class="cd-vinfo-icon cyan"><i class="fas fa-envelope"></i></div>
+                                    <span class="cd-vinfo-label">Agency Email</span>
+                                </div>
+                                <div class="cd-vinfo-val">
+                                    <div class="cd-tax-wrap">
+                                        <a href="mailto:{{ $agency_email }}" class="cd-vinfo-link">{{ $agency_email }}</a>
+                                        <button type="button" class="cd-copy-btn" title="Copy Email" onclick="navigator.clipboard.writeText('{{ $agency_email }}'); $(this).find('i').removeClass('fa-copy').addClass('fa-check text-success'); setTimeout(() => $(this).find('i').removeClass('fa-check text-success').addClass('fa-copy'), 1500);">
+                                            <i class="far fa-copy"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 8. Corporate Phone -->
+                            <div class="cd-vinfo-row">
+                                <div class="cd-vinfo-key">
+                                    <div class="cd-vinfo-icon green"><i class="fas fa-phone"></i></div>
+                                    <span class="cd-vinfo-label">Contact Phone</span>
+                                </div>
+                                <div class="cd-vinfo-val">
+                                    <div class="cd-tax-wrap">
+                                        <span class="fw-semibold text-gray-800">{{ $agency_phone }}</span>
+                                        <button type="button" class="cd-copy-btn" title="Copy Phone" onclick="navigator.clipboard.writeText('{{ $agency_phone }}'); $(this).find('i').removeClass('fa-copy').addClass('fa-check text-success'); setTimeout(() => $(this).find('i').removeClass('fa-check text-success').addClass('fa-copy'), 1500);">
+                                            <i class="far fa-copy"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 9. Primary Operating Hub -->
+                            <div class="cd-vinfo-row">
+                                <div class="cd-vinfo-key">
+                                    <div class="cd-vinfo-icon red"><i class="fas fa-location-dot"></i></div>
+                                    <span class="cd-vinfo-label">Operating Hub</span>
+                                </div>
+                                <div class="cd-vinfo-val">
+                                    <span class="fw-semibold text-gray-800">{{ ($cityName ?: '') . ($cityName && $countryName ? ', ' : '') . ($countryName ?: 'Ballia, India') }}</span>
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
-                    <!-- Commercial Agreement & SLAs -->
+                    <!-- Sub-Card 4: Commercial Agreement & SLAs -->
                     <div class="cd-master-subcard">
                         <div class="cd-subcard-header">
                             <div class="cd-subcard-header-left">
                                 <div class="cd-subcard-header-icon emerald"><i class="fas fa-file-contract"></i></div>
                                 <h4 class="cd-subcard-heading">Commercial Agreement &amp; SLAs</h4>
                             </div>
-                            <span class="badge bg-light-success text-success fw-bold fs-9">Active &amp; Signed</span>
+                            <span class="badge bg-light-success text-success fw-bold" style="font-size:10px; padding:3px 7px;">
+                                <i class="fas fa-file-signature me-1"></i>Active &amp; Signed
+                            </span>
                         </div>
-                        <div class="cd-kv-row"><span class="cd-kv-lbl">Engagement Model</span><span class="cd-kv-val">Contingency Recruitment</span></div>
-                        <div class="cd-kv-row"><span class="cd-kv-lbl">Placement Fee</span><span class="cd-kv-val">8.33% of First Year CTC</span></div>
-                        <div class="cd-kv-row"><span class="cd-kv-lbl">Guarantee Period</span><span class="cd-kv-val">90 Days Free Replacement</span></div>
-                        <div class="cd-kv-row"><span class="cd-kv-lbl">Invoice Payment Terms</span><span class="cd-kv-val">Net 30 Days from Joining</span></div>
-                        <div class="cd-kv-row"><span class="cd-kv-lbl">Assigned Vendor Lead</span><span class="cd-kv-val text-primary fw-bold">{{ auth()->user()->name ?? 'Talent Operations' }}</span></div>
+                        <div class="cd-vertical-info-list">
+                            <!-- 1. Engagement Model -->
+                            <div class="cd-vinfo-row">
+                                <div class="cd-vinfo-key">
+                                    <div class="cd-vinfo-icon blue"><i class="fas fa-handshake"></i></div>
+                                    <span class="cd-vinfo-label">Engagement Model</span>
+                                </div>
+                                <div class="cd-vinfo-val">
+                                    <span class="fw-semibold text-gray-800">Contingency Staffing</span>
+                                </div>
+                            </div>
+
+                            <!-- 2. Placement Success Fee -->
+                            <div class="cd-vinfo-row">
+                                <div class="cd-vinfo-key">
+                                    <div class="cd-vinfo-icon amber"><i class="fas fa-percent"></i></div>
+                                    <span class="cd-vinfo-label">Placement Fee</span>
+                                </div>
+                                <div class="cd-vinfo-val">
+                                    <span class="badge bg-light-warning text-warning fw-bold fs-8" style="padding:4px 8px; border-radius:6px;">{{ $placement_fee }}</span>
+                                </div>
+                            </div>
+
+                            <!-- 3. Guarantee Period -->
+                            <div class="cd-vinfo-row">
+                                <div class="cd-vinfo-key">
+                                    <div class="cd-vinfo-icon emerald"><i class="fas fa-shield-halved"></i></div>
+                                    <span class="cd-vinfo-label">Guarantee Period</span>
+                                </div>
+                                <div class="cd-vinfo-val">
+                                    <span class="fw-semibold text-gray-800">90 Days Free Replacement</span>
+                                </div>
+                            </div>
+
+                            <!-- 4. Payment Terms -->
+                            <div class="cd-vinfo-row">
+                                <div class="cd-vinfo-key">
+                                    <div class="cd-vinfo-icon sky"><i class="fas fa-file-invoice-dollar"></i></div>
+                                    <span class="cd-vinfo-label">Invoice Terms</span>
+                                </div>
+                                <div class="cd-vinfo-val">
+                                    <span class="fw-semibold text-gray-800">Net 30 Days from Joining</span>
+                                </div>
+                            </div>
+
+                            <!-- 5. Assigned Vendor Lead -->
+                            <div class="cd-vinfo-row">
+                                <div class="cd-vinfo-key">
+                                    <div class="cd-vinfo-icon purple"><i class="fas fa-user-tie"></i></div>
+                                    <span class="cd-vinfo-label">Vendor Lead</span>
+                                </div>
+                                <div class="cd-vinfo-val">
+                                    <span class="text-primary fw-bold">{{ auth()->user()->name ?? 'Talent Operations' }}</span>
+                                </div>
+                            </div>
+
+                            <!-- 6. SLA Turnaround Guarantee -->
+                            <div class="cd-vinfo-row">
+                                <div class="cd-vinfo-key">
+                                    <div class="cd-vinfo-icon orange"><i class="fas fa-bolt"></i></div>
+                                    <span class="cd-vinfo-label">Submission SLA</span>
+                                </div>
+                                <div class="cd-vinfo-val">
+                                    <span class="badge bg-light-info text-info fw-semibold" style="font-size:10px; padding:3px 7px;">
+                                        <i class="fas fa-clock me-1"></i>48-Hour Profile Turnaround
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>

@@ -64,8 +64,13 @@
     $listType   = $pagination['listType'] ?? 'records';
     $from       = ($curPage - 1) * $perPage + 1;
     $to         = min($curPage * $perPage, $total);
-    $label      = (isset($pagination['listType']) && $pagination['listType'] === 'allcandidate')
-                  ? 'companies' : 'records';
+    $label      = match($listType) {
+        'allcandidate', 'candidates' => 'candidates',
+        'companies' => 'companies',
+        'jobs' => 'jobs',
+        'interviews' => 'interviews',
+        default => 'records',
+    };
 @endphp
 
 <div class="pagi-bar">

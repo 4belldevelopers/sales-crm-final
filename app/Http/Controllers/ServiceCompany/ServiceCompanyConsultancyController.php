@@ -877,7 +877,7 @@ After completing these steps, they will be able to start collaborating with your
 
         $versionKey = 'consultancyviewmore_version_user_'.$userId;
         $version = cache()->get($versionKey, 1);
-        $cacheKeySet = 'consultancyviewmore_v9:'.$userId.':'.$version.':'.md5(json_encode($cachePayload));
+        $cacheKeySet = 'consultancyviewmore_v10:'.$userId.':'.$version.':'.md5(json_encode($cachePayload));
         /* ----------------------------
         ⚡ Check DragonflyDB / Redis first (Quick Win Step 4)
         ----------------------------- */
@@ -900,7 +900,8 @@ After completing these steps, they will be able to start collaborating with your
             ->select(
                 'companies.id as company_id', 'companies.description as companies_description',
                 'clients.id as client_id', 'clients.name', 'clients.logo_logical_path', 'clients.industry', 'clients.tags', 'clients.website', 'clients.description',
-                'companies.id as companies_id', 'companies.logo', 'companies.company_type', 'companies.company_size', 'companies.founded',
+                'companies.id as companies_id', 'companies.logo', 'companies.company_type', 'companies.company_size_from', 'companies.company_size', 'companies.founded',
+                'companies.success_per', 'companies.company_phone', 'companies.calling_code', 'companies.company_email',
                 'staffing_company_relation.created_at as to_created_at', 'staffing_company_relation.from_company_id', 'staffing_company_relation.to_company_id', 'companies.industries_type', 'companies.created_at', 'companies.website', 'companies.industries'
             )
             ->join('companies', 'companies.id', '=', 'clients.company_id')
@@ -1080,7 +1081,19 @@ After completing these steps, they will be able to start collaborating with your
 
                 $response = $this->elasticService->getClient()->get($params);
                 if (! empty($response['_source'])) {
-                    $this->directClientDetail = (object) $response['_source'];
+                    $dbDetail = (array) $this->directClientDetail;
+                    $esDetail = (array) $response['_source'];
+                    $merged = array_merge($dbDetail, $esDetail);
+                    if (isset($dbDetail['success_per']) && ! isset($esDetail['success_per'])) {
+                        $merged['success_per'] = $dbDetail['success_per'];
+                    }
+                    if (! empty($dbDetail['company_phone']) && empty($esDetail['company_phone'])) {
+                        $merged['company_phone'] = $dbDetail['company_phone'];
+                    }
+                    if (! empty($dbDetail['calling_code']) && empty($esDetail['calling_code'])) {
+                        $merged['calling_code'] = $dbDetail['calling_code'];
+                    }
+                    $this->directClientDetail = (object) $merged;
                 }
             } catch (\Exception $e) {
                 // Keep DB fallback if ES fails
@@ -1094,18 +1107,42 @@ After completing these steps, they will be able to start collaborating with your
 
         // ── 5. Company Size Resolution ──
         $compSizeFrom = @$this->directClientDetail->company_size_from;
-        $compSizeTo = @$this->directClientDetail->company_size;
-        if ($compSizeFrom || $compSizeTo) {
-            if ($compSizeFrom && $compSizeTo) {
-                $this->agencyCompanySize = number_format((int) $compSizeFrom).' - '.number_format((int) $compSizeTo).' employees';
-            } elseif ($compSizeTo) {
-                $this->agencyCompanySize = number_format((int) $compSizeTo).' employees';
-            } else {
-                $this->agencyCompanySize = number_format((int) $compSizeFrom).'+ employees';
-            }
-        } else {
-            $this->agencyCompanySize = '10 - 50 employees';
+        $compSizeTo = @$this->directClientDetail->company_sizes ?: @$this->directClientDetail->company_size;
+        $this->agencyCompanySize = '10 – 50 Employees';
+        if ($compSizeFrom && $compSizeTo) {
+            $this->agencyCompanySize = number_format((int) $compSizeFrom).' – '.number_format((int) $compSizeTo).' Employees';
+        } elseif ($compSizeFrom) {
+            $this->agencyCompanySize = number_format((int) $compSizeFrom).'+ Employees';
         }
+
+        // ── 6. Dynamic Industry & Company Type Resolution ──
+        $industryId = (int) (@$this->directClientDetail->industries ?: (@$this->directClientDetail->industry ?: 0));
+        $this->industries_name = 'Information Technology & Services';
+        if ($industryId > 0) {
+            $resolvedInd = DB::table('td_industries')->where('ind_id', $industryId)->value('ind_name');
+            if ($resolvedInd) {
+                $this->industries_name = $resolvedInd;
+            }
+        }
+
+        $companyTypes = GeneralMethod::industries_type_arr();
+        $rawType = @$this->directClientDetail->company_type;
+        $this->company_type_name = $companyTypes[$rawType] ?? 'Corporate Entity';
+
+        // ── 7. Dynamic Commercial Agreement & Placement Fee ──
+        $successPer = @$this->directClientDetail->success_per;
+        $this->placement_fee = (! empty($successPer) && $successPer > 0) ? ((float) $successPer).'% of Annual CTC' : '8.33% of Annual CTC';
+
+        // ── 8. Agency Contact & Communication Meta ──
+        $callingCode = @$this->directClientDetail->calling_code ?: '+91';
+        $rawPhone = @$this->directClientDetail->company_phone ?: @$this->directClientDetail->contact_number;
+        $this->agency_phone = $rawPhone ? ($callingCode.' '.$rawPhone) : '+91 98765 43210';
+        $this->agency_email = @$this->directClientDetail->company_email ?: (@$this->directClientDetail->email ?: 'partners@agency.com');
+
+        // ── 9. Agency Description & Partnership Date ──
+        $this->agency_description = @$this->directClientDetail->description ?: @$this->directClientDetail->companies_description;
+        $this->partner_joined_date = ! empty(@$this->directClientDetail->created_at) ? Carbon::parse($this->directClientDetail->created_at)->format('d M, Y') : date('d M, Y');
+        $this->founded = ! empty(@$this->directClientDetail->founded) ? $this->directClientDetail->founded : 2019;
 
         // $startOfMonth = Carbon::now()->startOfMonth();
         $startOfMonth = Carbon::now()->startOfMonth()->subMonths(3);
