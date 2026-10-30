@@ -249,36 +249,36 @@
                         <div class="cl-pipeline-flow">
                             <div class="cl-pipe-step step-sourcing {{ $sourced > 0 ? 'has-count' : '' }}" title="Sourcing: {{ $sourced }}">
                                 <span class="cl-pipe-pill pill-sourcing">{{ $sourced }}</span>
-                                <span class="cl-pipe-label">Sourcing</span>
+                                <span class="cl-pipe-label" title="Sourcing">Sourcing</span>
                             </div>
                             <div class="cl-pipe-step step-screening {{ $evaluated > 0 ? 'has-count' : '' }}" title="Screening: {{ $evaluated }}">
                                 <span class="cl-pipe-pill pill-screening">{{ $evaluated }}</span>
-                                <span class="cl-pipe-label">Screening</span>
+                                <span class="cl-pipe-label" title="Screening">Screening</span>
                             </div>
                             <div class="cl-pipe-step step-evaluation {{ $evaluated > 0 ? 'has-count' : '' }}" title="Evaluation: {{ $evaluated }}">
                                 <span class="cl-pipe-pill pill-evaluation">{{ $evaluated }}</span>
-                                <span class="cl-pipe-label">Evaluation</span>
+                                <span class="cl-pipe-label" title="Evaluation">Evaluation</span>
                             </div>
                             <div class="cl-pipe-step step-negotiations no-count" title="Negotiation: 0">
                                 <span class="cl-pipe-pill pill-negotiations">0</span>
-                                <span class="cl-pipe-label">Negotiation</span>
+                                <span class="cl-pipe-label" title="Negotiation">Negotiation</span>
                             </div>
                             <div class="cl-pipe-step step-offer {{ $offers > 0 ? 'has-count' : '' }}" title="Offer: {{ $offers }}">
                                 <span class="cl-pipe-pill pill-offer">{{ $offers }}</span>
-                                <span class="cl-pipe-label">Offer</span>
+                                <span class="cl-pipe-label" title="Offer">Offer</span>
                             </div>
                             <div class="cl-pipe-step step-joined {{ $Joined > 0 ? 'has-count' : '' }}" title="Joined: {{ $Joined }}">
                                 <span class="cl-pipe-pill pill-joined">{{ $Joined }}</span>
-                                <span class="cl-pipe-label">Joined</span>
+                                <span class="cl-pipe-label" title="Joined">Joined</span>
                             </div>
                             <div class="cl-pipe-step step-rejected no-count" title="Rejected: 0">
                                 <span class="cl-pipe-pill pill-rejected">0</span>
-                                <span class="cl-pipe-label">Rejected</span>
+                                <span class="cl-pipe-label" title="Rejected">Rejected</span>
                             </div>
                             <div class="cl-pipe-divider" aria-hidden="true"></div>
                             <div class="cl-pipe-step step-interview {{ $all_interview > 0 ? 'has-count' : '' }}" title="Interview: {{ $all_interview }}">
                                 <span class="cl-pipe-pill pill-interview">{{ $all_interview }}</span>
-                                <span class="cl-pipe-label">Interview</span>
+                                <span class="cl-pipe-label" title="Interview">Interview</span>
                             </div>
                         </div>
                     </div>
