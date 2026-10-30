@@ -794,6 +794,14 @@ data-kt-drawer-toggle="#kt_activitiesJob_toggle" data-kt-drawer-close="#kt_activ
                     });
                 } catch (e) {}
             },
+            deleteDossier: async function(id) {
+                const db = await getDB();
+                if (!db || !id) return;
+                try {
+                    const tx = db.transaction(['dossiers'], 'readwrite');
+                    tx.objectStore('dossiers').delete(id);
+                } catch (e) {}
+            },
             purge: async function() {
                 const db = await getDB();
                 if (!db) return;
@@ -807,9 +815,30 @@ data-kt-drawer-toggle="#kt_activitiesJob_toggle" data-kt-drawer-close="#kt_activ
     })();
     window.SuperAdminJobsLocalStore = SuperAdminJobsLocalStore;
 
+    // Cross-Tab Synchronization via BroadcastChannel
+    const saJobsSyncChannel = (typeof window.BroadcastChannel === 'function') ? new BroadcastChannel('superadmin_jobs_sync') : null;
+    if (saJobsSyncChannel) {
+        saJobsSyncChannel.onmessage = function(e) {
+            const msg = e.data;
+            if (msg && msg.action === 'evict_job' && msg.jobId) {
+                delete window.jobDrawerCache['job_' + msg.jobId];
+                if (window.SuperAdminJobsLocalStore) {
+                    window.SuperAdminJobsLocalStore.deleteDossier('job_' + msg.jobId);
+                }
+            } else if (msg && msg.action === 'purge_all') {
+                window.jobDrawerCache = {};
+                if (window.SuperAdminJobsLocalStore) {
+                    window.SuperAdminJobsLocalStore.purge();
+                }
+            }
+        };
+    }
+    window.saJobsSyncChannel = saJobsSyncChannel;
+
     // In-memory cache for opened drawer views (zero repeat network roundtrips)
     window.jobDrawerCache = window.jobDrawerCache || {};
     window.lastAuthoritativeSearch = '';
+    window._lastJobSequenceId = 0;
 
     var page_no = localStorage.getItem('currentPageJobs');
     if (!page_no) {
@@ -1520,38 +1549,62 @@ data-kt-drawer-toggle="#kt_activitiesJob_toggle" data-kt-drawer-close="#kt_activ
     function initSuperAdminReverbSync() {
         if (!window.Echo) return;
 
+        const handleJobStatusEvent = function(event) {
+            if (!event || !event.jobId) return;
+
+            // Monotonic Sequence Check: drop stale/out-of-order events
+            if (event.sequence_id && window._lastJobSequenceId && event.sequence_id <= window._lastJobSequenceId) {
+                console.warn('[Reverb SuperAdmin] Discarded out-of-order event:', event);
+                return;
+            }
+            if (event.sequence_id) {
+                window._lastJobSequenceId = event.sequence_id;
+            }
+
+            const jobId = parseInt(event.jobId, 10);
+            const newStatus = (event.newStatus || '').toLowerCase();
+
+            // Targeted Dossier & Memory Eviction
+            delete window.jobDrawerCache['job_' + jobId];
+            if (window.SuperAdminJobsLocalStore && typeof window.SuperAdminJobsLocalStore.deleteDossier === 'function') {
+                window.SuperAdminJobsLocalStore.deleteDossier('job_' + jobId);
+            }
+            if (window.saJobsSyncChannel) {
+                try {
+                    window.saJobsSyncChannel.postMessage({ action: 'evict_job', jobId: jobId });
+                } catch (e) {}
+            }
+
+            if (window.jobsState && window.jobsState.all) {
+                let targetJob = window.jobsState.all.find(j => parseInt(j.id, 10) === jobId);
+                if (targetJob) {
+                    targetJob.status_raw = newStatus;
+                    targetJob.status = (newStatus === 'active') ? 'Hiring' : ((newStatus === 'hold') ? 'Hold' : 'Closed');
+                    $('#allJobList').html(renderJobsClientSide(window.jobsState.filtered));
+                }
+            }
+
+            if (event.status_counts) {
+                $('.jh-tab[data-status="all"] .jh-badge').text(event.status_counts.all || 0);
+                $('.jh-tab[data-status="active"] .jh-badge').text(event.status_counts.active || 0);
+                $('.jh-tab[data-status="hold"] .jh-badge').text(event.status_counts.hold || 0);
+                $('.jh-tab[data-status="inactive"] .jh-badge').text(event.status_counts.inactive || 0);
+            }
+
+            if (typeof showToastr === 'function' && event.jobTitle) {
+                showToastr('info', 'Job "' + event.jobTitle + '" status updated to ' + event.newStatus, 'Job Status Updated');
+            }
+        };
+
         try {
-            window.Echo.channel('superadmin-jobs')
-                .listen('.JobStatusChanged', function(event) {
-                    if (!event || !event.jobId) return;
-                    const jobId = parseInt(event.jobId, 10);
-                    const newStatus = (event.newStatus || '').toLowerCase();
-
-                    if (window.SuperAdminJobsLocalStore) {
-                        window.SuperAdminJobsLocalStore.purge();
-                    }
-                    window.jobDrawerCache = {};
-
-                    if (window.jobsState && window.jobsState.all) {
-                        let targetJob = window.jobsState.all.find(j => parseInt(j.id, 10) === jobId);
-                        if (targetJob) {
-                            targetJob.status_raw = newStatus;
-                            targetJob.status = (newStatus === 'active') ? 'Hiring' : ((newStatus === 'hold') ? 'Hold' : 'Closed');
-                            $('#allJobList').html(renderJobsClientSide(window.jobsState.filtered));
-                        }
-                    }
-
-                    if (event.status_counts) {
-                        $('.jh-tab[data-status="all"] .jh-badge').text(event.status_counts.all || 0);
-                        $('.jh-tab[data-status="active"] .jh-badge').text(event.status_counts.active || 0);
-                        $('.jh-tab[data-status="hold"] .jh-badge').text(event.status_counts.hold || 0);
-                        $('.jh-tab[data-status="inactive"] .jh-badge').text(event.status_counts.inactive || 0);
-                    }
-
-                    if (typeof showToastr === 'function' && event.jobTitle) {
-                        showToastr('info', 'Job "' + event.jobTitle + '" status updated to ' + event.newStatus, 'Job Status Updated');
-                    }
-                });
+            // Subscribe to authorized private channel with public fallback
+            if (typeof window.Echo.private === 'function') {
+                window.Echo.private('superadmin.jobs')
+                    .listen('.JobStatusChanged', handleJobStatusEvent);
+            } else {
+                window.Echo.channel('superadmin-jobs')
+                    .listen('.JobStatusChanged', handleJobStatusEvent);
+            }
         } catch (err) {
             console.warn('[Reverb SuperAdmin Jobs] sync error:', err);
         }

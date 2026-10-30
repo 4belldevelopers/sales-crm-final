@@ -4,12 +4,12 @@ namespace App\Jobs;
 
 use App\Events\JobStatusChanged;
 use App\Helper\GeneralMethod;
+use App\Services\SuperAdminJobsCacheManager;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
@@ -18,8 +18,12 @@ use Illuminate\Support\Facades\Log;
  *
  * Intent: Asynchronous background worker processing transactional outbox records
  * for Job requisition domain mutations (sys_outbox_events). Guarantees at-least-once delivery,
- * dual-store synchronization to Elasticsearch ELASTIC_JOBS, Reverb WebSocket broadcasting,
- * and Dead-Letter Queue (DLQ) tracking under high concurrency.
+ * dual-store synchronization to Elasticsearch ELASTIC_JOBS, Reverb WebSocket broadcasting
+ * with monotonic sequence ordering, and Dead-Letter Queue (DLQ) tracking under high concurrency.
+ *
+ * State Machine & Completion Semantics:
+ * - PENDING/FAILED -> PROCESSING (with row lock & heartbeat lease) -> COMPLETED.
+ * - On failure -> FAILED with exponential backoff -> DEAD_LETTER after 5 attempts.
  *
  * Tenancy Note: Universal Super Admin execution context scoped to target tenant_id ($job->company_id).
  * Database Truth: database/schema/mysql-schema.sql (sys_outbox_events).
@@ -31,19 +35,10 @@ class ProcessJobOutboxEventJob implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-    /**
-     * Number of allowed attempts before dead-lettering.
-     */
     public int $tries = 5;
 
-    /**
-     * Exponential backoff in seconds.
-     */
     public int $backoff = 10;
 
-    /**
-     * Timeout for worker execution in seconds.
-     */
     public int $timeout = 60;
 
     /**
@@ -116,7 +111,7 @@ class ProcessJobOutboxEventJob implements ShouldQueue
                 return;
             }
 
-            // Claim the event as PROCESSING
+            // Claim the event as PROCESSING with heartbeat timestamp
             DB::table('sys_outbox_events')
                 ->where('id', $eventId)
                 ->update([
@@ -146,24 +141,22 @@ class ProcessJobOutboxEventJob implements ShouldQueue
                 GeneralMethod::elasticJobsAddEditUpdateIndex($jobId);
             }
 
-            // 2. Invalidate In-Memory Redis Generation Version & Caches
-            Cache::forget("v3:status_job:{$jobId}");
-            Cache::forget("v3:status_log:{$jobId}");
-            Cache::forget("superadmin:jobs:viewmore:{$jobId}");
-            Cache::forget('ats:superadmin_jobs_data_cnt');
+            // 2. Authoritative Mutation Delta & Redis Cache Invalidation
+            SuperAdminJobsCacheManager::setMutationDelta($jobId, [
+                'status' => $newStatus,
+            ]);
+            SuperAdminJobsCacheManager::invalidateAll($jobId);
 
-            if (Cache::has('superadmin:jobs:version')) {
-                Cache::increment('superadmin:jobs:version');
-            }
-
-            // 3. Reverb WebSocket Broadcast
+            // 3. Reverb WebSocket Broadcast with monotonic sequence ordering
+            $sequenceId = (int) (microtime(true) * 1000);
             try {
                 broadcast(new JobStatusChanged(
                     companyId: (int) $tenantId,
                     jobId: (int) $jobId,
                     oldStatus: (string) $oldStatus,
                     newStatus: (string) $newStatus,
-                    jobTitle: (string) $title
+                    jobTitle: (string) $title,
+                    sequenceId: $sequenceId
                 ));
             } catch (\Throwable $e) {
                 Log::warning('ProcessJobOutboxEventJob broadcast warning: '.$e->getMessage());

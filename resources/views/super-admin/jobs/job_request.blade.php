@@ -934,9 +934,16 @@
                         </button>
                     </div>
 
+                    @php
+                        $activeTab = $initialTab ?? request('tab', 'pending');
+                        $isAcceptedInitial = ($activeTab === 'accepted');
+                        $initialCount = $isAcceptedInitial
+                            ? (int) (@$dataCnt['jobAccepted'] ?? @$dataCnt['customRequisition'] ?? 0)
+                            : (int) (@$dataCnt['jobRequest'] ?? 0);
+                    @endphp
                     <!-- Live Count Badge -->
-                    <span class="badge badge-light-primary fw-bold px-3 py-2" id="headerLiveBadge">
-                        <span id="headerLiveCount">{{ (int) (@$dataCnt['jobRequest'] ?? 0) }}</span> Pending
+                    <span class="badge {{ $isAcceptedInitial ? 'badge-light-success' : 'badge-light-primary' }} fw-bold px-3 py-2" id="headerLiveBadge">
+                        <span id="headerLiveCount">{{ $initialCount }}</span> <span id="headerLiveStatusText">{{ $isAcceptedInitial ? 'Accepted' : 'Pending' }}</span>
                     </span>
 
                     <!-- Refresh Button -->
@@ -952,18 +959,18 @@
                  ==================================================================== -->
             <div class="cd-jr-tabs-card">
                 <div class="cd-jr-tabs-group">
-                    <!-- Tab 1: Job Requests Pending (Active) -->
-                    <a href="javascript:void(0);" class="cd-jr-tab-btn active" id="tabJobRequestPending">
+                    <!-- Tab 1: Job Requests Pending -->
+                    <a href="javascript:void(0);" class="cd-jr-tab-btn {{ ! $isAcceptedInitial ? 'active' : '' }}" id="tabJobRequestPending" data-tab="pending">
                         <i class="fas fa-clock"></i>
                         <span>Job Requests Pending</span>
                         <span class="cd-jr-tab-badge" id="span_jobRequest">{{ (int) (@$dataCnt['jobRequest'] ?? 0) }}</span>
                     </a>
 
                     <!-- Tab 2: Job Accepted -->
-                    <a href="{{ url('super-admin/jobs/job_request_accept/0') }}" class="cd-jr-tab-btn" id="tabJobRequestAccepted">
+                    <a href="javascript:void(0);" class="cd-jr-tab-btn {{ $isAcceptedInitial ? 'active' : '' }}" id="tabJobRequestAccepted" data-tab="accepted">
                         <i class="fas fa-check-circle"></i>
                         <span>Job Accepted</span>
-                        <span class="cd-jr-tab-badge" id="span_customRequisition">{{ (int) (@$dataCnt['customRequisition'] ?? 0) }}</span>
+                        <span class="cd-jr-tab-badge" id="span_customRequisition">{{ (int) (@$dataCnt['jobAccepted'] ?? @$dataCnt['customRequisition'] ?? 0) }}</span>
                     </a>
                 </div>
 
@@ -1125,30 +1132,37 @@
         // Drawer memory cache
         window.jobDrawerCache = {};
 
+        const urlParams = new URLSearchParams(window.location.search);
+        const initialTabParam = urlParams.get('tab') || "{{ $activeTab ?? 'pending' }}";
+        const currentActiveTab = (initialTabParam === 'accepted') ? 'accepted' : 'pending';
+
         // In-RAM State Store
         window.jobRequestsState = {
             all: [],
             filtered: [],
             total: 0,
             pendingCount: {{ (int) (@$dataCnt['jobRequest'] ?? 0) }},
-            acceptedCount: {{ (int) (@$dataCnt['customRequisition'] ?? 0) }},
+            acceptedCount: {{ (int) (@$dataCnt['jobAccepted'] ?? @$dataCnt['customRequisition'] ?? 0) }},
             currentPage: 1,
             pageSize: 10,
             searchQuery: '',
-            statusFilter: 'pending'
+            statusFilter: currentActiveTab
         };
 
         // Active abort controller for in-flight requests
         window.jobRequestsAbortController = null;
 
         /**
-         * Phase 5: IndexedDB LocalStore Integration
+         * Phase 5: IndexedDB LocalStore Integration (Per-Tab Partitioned)
          */
         const JobRequestsLocalStore = (function() {
             const DB_NAME = 'jero_superadmin_job_requests_db';
-            const DB_VERSION = 1;
+            const DB_VERSION = 2;
             const CURRENT_USER_ID = {{ (int) (auth()->user()->id ?? 0) }};
-            const CACHE_KEY = 'pending_requests_page_1';
+
+            function getCacheKey(tab) {
+                return (tab === 'accepted') ? 'accepted_requests_page_1' : 'pending_requests_page_1';
+            }
 
             function openDB() {
                 if (!window.indexedDB) return Promise.resolve(null);
@@ -1169,36 +1183,54 @@
             }
 
             return {
-                get: async function() {
+                get: async function(tab = 'pending') {
                     const db = await openDB();
                     if (!db) return null;
+                    const cacheKey = getCacheKey(tab);
                     return new Promise((resolve) => {
                         try {
-                            const tx = db.transaction(['job_requests_cache'], 'readonly');
-                            const store = tx.objectStore('job_requests_cache');
-                            const req = store.get(CACHE_KEY);
-                            req.onsuccess = function() {
-                                const res = req.result;
-                                if (res && res.data && (Date.now() - res.timestamp < 10 * 60 * 1000)) {
-                                    resolve(res.data);
-                                } else {
+                            const tx = db.transaction(['job_requests_cache', 'meta'], 'readonly');
+                            const metaStore = tx.objectStore('meta');
+                            const metaReq = metaStore.get('auth');
+                            metaReq.onsuccess = function() {
+                                const meta = metaReq.result;
+                                if (meta && meta.user_id !== CURRENT_USER_ID) {
                                     resolve(null);
+                                    return;
                                 }
+                                const store = tx.objectStore('job_requests_cache');
+                                const req = store.get(cacheKey);
+                                req.onsuccess = function() {
+                                    const res = req.result;
+                                    if (res && res.data && (Date.now() - res.timestamp < 10 * 60 * 1000)) {
+                                        resolve(res.data);
+                                    } else {
+                                        resolve(null);
+                                    }
+                                };
+                                req.onerror = function() { resolve(null); };
                             };
-                            req.onerror = function() { resolve(null); };
+                            metaReq.onerror = function() { resolve(null); };
                         } catch (e) { resolve(null); }
                     });
                 },
-                set: async function(data) {
+                set: async function(tab = 'pending', data) {
                     const db = await openDB();
                     if (!db || !data) return;
+                    const cacheKey = getCacheKey(tab);
                     try {
-                        const tx = db.transaction(['job_requests_cache'], 'readwrite');
+                        const tx = db.transaction(['job_requests_cache', 'meta'], 'readwrite');
                         const store = tx.objectStore('job_requests_cache');
                         store.put({
-                            cache_key: CACHE_KEY,
+                            cache_key: cacheKey,
                             data: data,
                             timestamp: Date.now()
+                        });
+                        const metaStore = tx.objectStore('meta');
+                        metaStore.put({
+                            id: 'auth',
+                            user_id: CURRENT_USER_ID,
+                            updated_at: Date.now()
                         });
                     } catch (e) {}
                 }
@@ -1550,8 +1582,12 @@
 
             $('#refreshIcon').addClass('fa-spin');
 
+            const currentTab = window.jobRequestsState.statusFilter || 'pending';
             const size = window.jobRequestsState.pageSize || 10;
-            const url = `{{ route('superadmin.company.all_recommandedrequest_data_ajax') }}?page=${page}&size=${size}`;
+            const endpoint = (currentTab === 'accepted')
+                ? "{{ route('superadmin.company.recommandedrequest_accept_ajax') }}"
+                : "{{ route('superadmin.company.all_recommandedrequest_data_ajax') }}";
+            const url = `${endpoint}?page=${page}&size=${size}`;
 
             $.ajax({
                 url: url,
@@ -1582,7 +1618,10 @@
                         window.jobRequestsState.pageSize = pageSize;
 
                         // Update counters
-                        $('#headerLiveCount').text(response.pendingCount || total || 0);
+                        const activeCount = (currentTab === 'accepted')
+                            ? (response.acceptedCount !== undefined ? response.acceptedCount : total)
+                            : (response.pendingCount !== undefined ? response.pendingCount : total);
+                        $('#headerLiveCount').text(activeCount);
                         $('#span_jobRequest').text(response.pendingCount || 0);
                         $('#span_customRequisition').text(response.acceptedCount || 0);
 
@@ -1594,7 +1633,7 @@
 
                         // Cache page 1 to IndexedDB for <20ms hydration
                         if (page === 1 && !searchQuery) {
-                            JobRequestsLocalStore.set(response);
+                            JobRequestsLocalStore.set(currentTab, response);
                         }
                     } else {
                         $('#jobRequestsStreamContainer').html(`
@@ -1627,12 +1666,16 @@
         $(document).ready(function() {
 
             // 1. Instant <20ms IndexedDB Hydration
-            JobRequestsLocalStore.get().then((cachedResponse) => {
+            const initialTab = window.jobRequestsState.statusFilter || 'pending';
+            JobRequestsLocalStore.get(initialTab).then((cachedResponse) => {
                 if (cachedResponse && cachedResponse.data && cachedResponse.data.length > 0) {
                     window.jobRequestsState.all = cachedResponse.data;
                     window.jobRequestsState.filtered = cachedResponse.data;
                     $('#jobRequestsStreamContainer').html(renderJobRequestsClientSide(cachedResponse.data));
-                    $('#headerLiveCount').text(cachedResponse.pendingCount || cachedResponse.total || 0);
+                    const count = (initialTab === 'accepted')
+                        ? (cachedResponse.acceptedCount || cachedResponse.total || 0)
+                        : (cachedResponse.pendingCount || cachedResponse.total || 0);
+                    $('#headerLiveCount').text(count);
                     $('#span_jobRequest').text(cachedResponse.pendingCount || 0);
                     $('#span_customRequisition').text(cachedResponse.acceptedCount || 0);
                     if (cachedResponse.total) {
@@ -1643,6 +1686,57 @@
                 fetchJobRequests(1, '');
             }).catch(() => {
                 fetchJobRequests(1, '');
+            });
+
+            // 1b. Tab Filter Switching (Single-Page Dynamic Filter)
+            $(document).on('click', '.cd-jr-tab-btn', function(e) {
+                e.preventDefault();
+                const targetTab = $(this).data('tab');
+                if (!targetTab || targetTab === window.jobRequestsState.statusFilter) return;
+
+                $('.cd-jr-tab-btn').removeClass('active');
+                $(this).addClass('active');
+
+                window.jobRequestsState.statusFilter = targetTab;
+                window.jobRequestsState.currentPage = 1;
+
+                const isAccepted = (targetTab === 'accepted');
+                $('#headerLiveBadge')
+                    .removeClass('badge-light-primary badge-light-success')
+                    .addClass(isAccepted ? 'badge-light-success' : 'badge-light-primary');
+                $('#headerLiveStatusText').text(isAccepted ? 'Accepted' : 'Pending');
+                $('#headerLiveCount').text(isAccepted ? window.jobRequestsState.acceptedCount : window.jobRequestsState.pendingCount);
+
+                const currentUrl = new URL(window.location.href);
+                currentUrl.searchParams.set('tab', targetTab);
+                window.history.replaceState({ tab: targetTab }, '', currentUrl.toString());
+
+                JobRequestsLocalStore.get(targetTab).then((cachedResponse) => {
+                    if (cachedResponse && cachedResponse.data && cachedResponse.data.length > 0) {
+                        window.jobRequestsState.all = cachedResponse.data;
+                        window.jobRequestsState.filtered = cachedResponse.data;
+                        $('#jobRequestsStreamContainer').html(renderJobRequestsClientSide(cachedResponse.data));
+                        $('#paginationContainer').html(renderPagination(cachedResponse.total, 1, cachedResponse.size || 10));
+                    } else {
+                        $('#jobRequestsStreamContainer').html(`
+                            <div class="cd-jr-skeleton-card">
+                                <div class="cd-skeleton-line" style="width: 40%;"></div>
+                                <div class="cd-skeleton-line" style="width: 70%;"></div>
+                                <div class="cd-skeleton-line" style="width: 90%;"></div>
+                            </div>
+                            <div class="cd-jr-skeleton-card">
+                                <div class="cd-skeleton-line" style="width: 35%;"></div>
+                                <div class="cd-skeleton-line" style="width: 65%;"></div>
+                                <div class="cd-skeleton-line" style="width: 85%;"></div>
+                            </div>
+                        `);
+                    }
+                    const q = $('#inputJobRequestSearch').val() || '';
+                    fetchJobRequests(1, q);
+                }).catch(() => {
+                    const q = $('#inputJobRequestSearch').val() || '';
+                    fetchJobRequests(1, q);
+                });
             });
 
             // 2. Debounced Search Input (In-RAM 0ms first + debounced server query)
@@ -1899,8 +1993,17 @@
                 }
             }
 
+            window._lastJobRequestSequenceId = 0;
             function handleRealtimeUpdate(delta) {
                 if (!delta || !delta.rec_relation_id) return;
+
+                // Monotonic Sequence Ordering Check: drop stale/out-of-order events
+                if (delta.version && delta.version < window._lastJobRequestSequenceId) {
+                    return;
+                }
+                if (delta.version) {
+                    window._lastJobRequestSequenceId = delta.version;
+                }
 
                 const item = window.jobRequestsState.all.find(x => String(x.id) === String(delta.rec_relation_id));
                 if (item) {
@@ -1940,11 +2043,16 @@
                 if (delta.counters) {
                     if (delta.counters.jobRequest !== undefined) {
                         $('#span_jobRequest').text(delta.counters.jobRequest);
-                        $('#headerLiveCount').text(delta.counters.jobRequest);
+                        window.jobRequestsState.pendingCount = delta.counters.jobRequest;
                     }
                     if (delta.counters.jobAccepted !== undefined) {
                         $('#span_customRequisition').text(delta.counters.jobAccepted);
+                        window.jobRequestsState.acceptedCount = delta.counters.jobAccepted;
                     }
+                    const activeCount = (window.jobRequestsState.statusFilter === 'accepted')
+                        ? (delta.counters.jobAccepted ?? window.jobRequestsState.acceptedCount)
+                        : (delta.counters.jobRequest ?? window.jobRequestsState.pendingCount);
+                    $('#headerLiveCount').text(activeCount);
                 }
             }
 

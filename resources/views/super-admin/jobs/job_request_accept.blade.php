@@ -1668,8 +1668,36 @@
                 };
             }
 
+            // Real-Time Reverb / Echo Listener
+            if (typeof window.Echo !== 'undefined') {
+                try {
+                    window.Echo.channel('superadmin-job-requests')
+                        .listen('.job-request.updated', function(e) {
+                            handleRealtimeUpdate(e);
+
+                            if (crossTabChannel) {
+                                crossTabChannel.postMessage({
+                                    type: 'job_request_updated',
+                                    payload: e
+                                });
+                            }
+                        });
+                } catch(err) {
+                    console.warn('Real-time Echo listener note:', err);
+                }
+            }
+
+            window._lastJobRequestAcceptSequenceId = 0;
             function handleRealtimeUpdate(delta) {
                 if (!delta || !delta.rec_relation_id) return;
+
+                // Monotonic Sequence Ordering Check: drop stale/out-of-order events
+                if (delta.version && delta.version < window._lastJobRequestAcceptSequenceId) {
+                    return;
+                }
+                if (delta.version) {
+                    window._lastJobRequestAcceptSequenceId = delta.version;
+                }
 
                 const item = window.jobRequestsState.all.find(x => String(x.id) === String(delta.rec_relation_id));
                 if (item) {
