@@ -110,7 +110,7 @@
                     
                     <!-- Sub-Card 1: Member Identity -->
                     <div class="tm-cell tm-cell-member">
-                        <div class="tm-avatar {{ $avatarClass }}" title="{{ $rawName }}">
+                        <div class="tm-avatar {{ $avatarClass }} show-detail-team" data-row-id="{{ $row->id }}" role="button" tabindex="0" title="View {{ $rawName }} Profile" style="cursor: pointer;">
                             @if (!empty($row->image))
                                 <img src="{{ $row->image }}" alt="{{ $rawName }}">
                             @else
@@ -118,7 +118,7 @@
                             @endif
                         </div>
                         <div class="d-flex flex-column overflow-hidden min-w-0">
-                            <span class="tm-member-name" title="{{ ucwords(strtolower($rawName)) }}">
+                            <span class="tm-member-name show-detail-team" data-row-id="{{ $row->id }}" role="button" tabindex="0" title="View {{ ucwords(strtolower($rawName)) }} Profile" style="cursor: pointer;">
                                 {{ ucwords(strtolower(mb_substr($rawName, 0, 24))) }}
                             </span>
                             @if ($row->root_user == 1)

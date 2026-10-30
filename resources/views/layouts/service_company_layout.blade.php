@@ -245,11 +245,23 @@
             }
         }
 
+        #kt_activitiesClientTeam {
+            width: 100% !important;
+            max-width: 100vw !important;
+            z-index: 1000005 !important;
+            overflow-y: auto !important;
+        }
         @media only screen and (min-width: 1024px) and (max-width: 1440px){
-        #kt_activitiesClientTeam {width: 1025px;}
+            #kt_activitiesClientTeam {
+                width: 1025px !important;
+                max-width: 90vw !important;
+            }
         }
         @media only screen and (min-width: 1440px) and (max-width: 2560px){
-        #kt_activitiesClientTeam {width: 1200px;}
+            #kt_activitiesClientTeam {
+                width: 1200px !important;
+                max-width: 85vw !important;
+            }
         }
         .star{
           position: absolute !important;
@@ -977,8 +989,9 @@
 
 
       <div id="kt_activitiesClientTeam_toggle"></div>
-        <div id="kt_activitiesClientTeam" class="bg-body" data-kt-drawer="true" data-kt-drawer-name="activities"
+        <div id="kt_activitiesClientTeam" class="bg-body drawer drawer-end" data-kt-drawer="true" data-kt-drawer-name="activitiesClientTeam"
             data-kt-drawer-activate="true" data-kt-drawer-overlay="true" data-kt-drawer-direction="end"
+            data-kt-drawer-width="{default:'100%', 'lg':'1025px', 'xxl':'1200px'}"
             data-kt-drawer-toggle="#kt_activitiesClientTeam_toggle" data-kt-drawer-close="#kt_activitiesClientTeam_close">
             <div class="card shadow-none rounded-0 w-100">
                 <div class="card-body position-relative px-0 py-0" id="kt_activitiesClientTeam_body"> &nbsp; </div>
@@ -2349,29 +2362,86 @@ $(document).on('click', '.hm-listing', function ()
 
 
 
+            window.closeTeamMemberDrawer = function() {
+                var drawerEl = document.getElementById('kt_activitiesClientTeam');
+                if (drawerEl) {
+                    drawerEl.classList.remove('drawer-on');
+                    drawerEl.style.removeProperty('transform');
+                    drawerEl.style.removeProperty('z-index');
+                    var drawer = (typeof KTDrawer !== 'undefined') ? KTDrawer.getInstance(drawerEl) : null;
+                    if (drawer) {
+                        try { drawer.hide(); } catch(e) {}
+                    }
+                }
+                $('.drawer-overlay').remove();
+                $('body').removeClass('drawer-on');
+            };
+
+            $(document).on('click', '#kt_activitiesClientTeam_close', function(e) {
+                if (e && typeof e.preventDefault === 'function') e.preventDefault();
+                closeTeamMemberDrawer();
+            });
+
             $(document).on('click', '.show-detail-team', function handler(e) {
                 e.preventDefault();
-                $('#kt_activitiesClientTeam_toggle').trigger('click');
                 var id = $(this).data('row-id');
+                if (!id) return;
+
+                var drawerEl = document.getElementById('kt_activitiesClientTeam');
+                if (drawerEl) {
+                    var drawer = (typeof KTDrawer !== 'undefined') ? KTDrawer.getInstance(drawerEl) : null;
+                    if (drawer) {
+                        try { drawer.show(); } catch(e) {}
+                    } else {
+                        $('#kt_activitiesClientTeam_toggle').trigger('click');
+                    }
+                }
+
                 var url = "{{ route('service_company.team.viewmore', ':id') }}";
                 url = url.replace(':id', id);
-                var baseurl = "{{ asset('assets/images/Loading2.gif') }}";
                 var currentPageTeam = $('.custom-pagination .page-link.active').data('page');
-                localStorage.setItem('currentPageTeam', currentPageTeam);
+                if (currentPageTeam) {
+                    localStorage.setItem('currentPageTeam', currentPageTeam);
+                }
                 
                 $.ajax({
                     type: 'GET',
                     url: url,
                     beforeSend: function() {
-                        $('#kt_activitiesClientTeam_body').html('<img src="'+baseurl+'" height="35px" width="100%">');
+                        $('#kt_activitiesClientTeam_body').html(
+                            '<div class="d-flex flex-column align-items-center justify-content-center py-20" style="min-height:360px;">' +
+                            '  <div class="spinner-border text-primary" role="status" style="width:2.5rem;height:2.5rem;">' +
+                            '    <span class="visually-hidden">Loading...</span>' +
+                            '  </div>' +
+                            '  <div class="text-muted fw-semibold mt-4 fs-7 font-family-poppins">Loading team member details...</div>' +
+                            '</div>'
+                        );
                     },
                     success: function(response) {
-                        console.log("Team data" + response);
-                        $("#kt_activitiesClientTeam").removeAttr("style");
-                        $(".closeclass").addClass("drawer-overlay");
-                        $(".closeclass").attr("style", "z-index: 109");
-                        
-                        $('#kt_activitiesClientTeam_body').html(response.view);
+                        if (response && response.view) {
+                            $('#kt_activitiesClientTeam_body').html(response.view);
+                            if (drawerEl) {
+                                drawerEl.classList.add('drawer-on');
+                            }
+                        } else {
+                            $('#kt_activitiesClientTeam_body').html(
+                                '<div class="text-center py-15">' +
+                                '  <i class="fa-solid fa-triangle-exclamation text-danger fs-1 mb-3"></i>' +
+                                '  <h5 class="fw-bold text-gray-800">Failed to load member profile</h5>' +
+                                '  <button type="button" class="btn btn-sm btn-light-primary mt-3" onclick="closeTeamMemberDrawer()">Close</button>' +
+                                '</div>'
+                            );
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        $('#kt_activitiesClientTeam_body').html(
+                            '<div class="text-center py-15">' +
+                            '  <i class="fa-solid fa-triangle-exclamation text-danger fs-1 mb-3"></i>' +
+                            '  <h5 class="fw-bold text-gray-800">Failed to load member profile</h5>' +
+                            '  <p class="text-muted fs-7 mt-2">Please check your connection and try again.</p>' +
+                            '  <button type="button" class="btn btn-sm btn-light-primary mt-3" onclick="closeTeamMemberDrawer()">Close</button>' +
+                            '</div>'
+                        );
                     }
                 });
             });
