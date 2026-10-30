@@ -79,6 +79,23 @@
                 } elseif ($isInvited) {
                     $cardAccent = '#f59e0b';
                 }
+
+                // Prepare user payload for the Assign Communication Contacts Right Drawer
+                $priorities = (array) ($row->priorities ?? []);
+                $userData = [
+                    'id' => (int) $row->id,
+                    'name' => $rawName,
+                    'email' => (string) ($row->email ?? ''),
+                    'phone' => (string) $phone,
+                    'image' => (string) ($row->image ?? ''),
+                    'initial' => strtoupper($strVal),
+                    'avatar_class' => $avatarClass,
+                    'role' => $roleName,
+                    'status' => strtolower($row->status ?? 'active'),
+                    'last_active' => $lastActive,
+                    'channels' => $channels,
+                    'priorities' => $priorities,
+                ];
             @endphp
 
             <!-- Primary Team Member Card (Rule 20 Enterprise Card + Sub-Card System) -->
@@ -153,26 +170,35 @@
                         @if (!empty($channels) && count($channels) > 0)
                             <div class="d-flex flex-wrap align-items-center gap-1">
                                 @if (in_array('client', $channels, true))
-                                    <span class="tm-comm-chip client" title="Point of contact for Client &amp; Sales Communication">
-                                        <i class="fa-solid fa-building me-1"></i>Client &amp; Sales
+                                    @php $p = $priorities['client'] ?? 'Primary'; @endphp
+                                    <span class="tm-comm-chip client" title="{{ $p }} contact for Client &amp; Sales">
+                                        <i class="fa-solid fa-users me-1"></i>Client &amp; Sales
                                     </span>
                                 @endif
                                 @if (in_array('vendor', $channels, true) || in_array('agency', $channels, true))
-                                    <span class="tm-comm-chip vendor" title="Point of contact for Vendor &amp; Agency Communication">
-                                        <i class="fa-solid fa-handshake me-1"></i>Vendor &amp; Agency
+                                    @php $p = $priorities['agency'] ?? ($priorities['vendor'] ?? 'Primary'); @endphp
+                                    <span class="tm-comm-chip vendor" title="{{ $p }} contact for Agency">
+                                        <i class="fa-solid fa-shapes me-1"></i>Agency
+                                    </span>
+                                @endif
+                                @if (in_array('recruitment', $channels, true))
+                                    @php $p = $priorities['recruitment'] ?? 'Primary'; @endphp
+                                    <span class="tm-comm-chip recruitment" title="{{ $p }} contact for Recruitment / Talent">
+                                        <i class="fa-solid fa-id-card-clip me-1"></i>Recruitment
                                     </span>
                                 @endif
                                 @if (in_array('finance', $channels, true))
-                                    <span class="tm-comm-chip finance" title="Point of contact for Finance &amp; Billing Communication">
-                                        <i class="fa-solid fa-credit-card me-1"></i>Finance &amp; Billing
+                                    @php $p = $priorities['finance'] ?? 'Primary'; @endphp
+                                    <span class="tm-comm-chip finance" title="{{ $p }} contact for Billing &amp; Invoicing">
+                                        <i class="fa-solid fa-file-invoice-dollar me-1"></i>Billing &amp; Invoicing
                                     </span>
                                 @endif
-                                <button type="button" class="tm-btn-edit-comm" onclick="openAssignCommModal({{ $row->id }}, '{{ addslashes($rawName) }}', {{ json_encode($channels) }})" title="Edit communication channels">
+                                <button type="button" class="tm-btn-edit-comm" data-user='@json($userData)' onclick="openAssignCommDrawer(this)" title="Edit communication channels &amp; priorities">
                                     <i class="fa-solid fa-pen"></i>
                                 </button>
                             </div>
                         @else
-                            <button type="button" class="tm-btn-add-comm" onclick="openAssignCommModal({{ $row->id }}, '{{ addslashes($rawName) }}', [])" title="Assign corporate communication channels to this member">
+                            <button type="button" class="tm-btn-add-comm" data-user='@json($userData)' onclick="openAssignCommDrawer(this)" title="Assign corporate communication channels to this member">
                                 <i class="fa-solid fa-plus me-1 text-primary"></i>Assign Purpose
                             </button>
                         @endif
@@ -223,7 +249,7 @@
                                         </a>
                                     @endif
                                 @endif
-                                <a class="tm-action-item" onclick="openAssignCommModal({{ $row->id }}, '{{ addslashes($rawName) }}', {{ json_encode($channels) }})">
+                                <a class="tm-action-item" data-user='@json($userData)' onclick="openAssignCommDrawer(this)">
                                     <i class="fa-solid fa-bullhorn me-2 text-primary"></i>Assign Communication Purpose
                                 </a>
                                 <a class="tm-action-item" onclick="setRepresentative({{ $row->id }}, 'client', '{{ addslashes($rawName) }}')">
