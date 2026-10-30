@@ -73,6 +73,7 @@
     display: inline-flex !important;
     align-items: center !important;
     justify-content: center !important;
+    gap: 4px !important;
     padding: 1.5px 8px !important;
     font-size: 11px !important;
     font-weight: 700 !important;
@@ -619,16 +620,67 @@
     line-height: 1.2 !important;
 }
 
+.pill-pending {
+    background: #fef3c7 !important;
+    color: #d97706 !important;
+    border: 1px solid #fde68a !important;
+}
+
+.pill-created {
+    background: #e0e7ff !important;
+    color: #4f46e5 !important;
+    border: 1px solid #c7d2fe !important;
+}
+
+.pill-approval {
+    background: #ffedd5 !important;
+    color: #c2410c !important;
+    border: 1px solid #fed7aa !important;
+}
+
 .pill-offered {
     background: #eff6ff !important;
     color: #2563eb !important;
     border: 1px solid #bfdbfe !important;
 }
 
+.pill-accepted {
+    background: #dcfce7 !important;
+    color: #16a34a !important;
+    border: 1px solid #bbf7d0 !important;
+}
+
+.pill-rejected {
+    background: #fee2e2 !important;
+    color: #dc2626 !important;
+    border: 1px solid #fecaca !important;
+}
+
+.pill-expired {
+    background: #f1f5f9 !important;
+    color: #64748b !important;
+    border: 1px solid #e2e8f0 !important;
+}
+
 .pill-joined {
     background: #f0fdf4 !important;
     color: #16a34a !important;
     border: 1px solid #bbf7d0 !important;
+}
+
+.cd-oj-comp-pending {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 4px !important;
+    font-size: 11px !important;
+    font-weight: 700 !important;
+    color: #d97706 !important;
+    background: #fef3c7 !important;
+    border: 1px solid #fde68a !important;
+    padding: 2px 7px !important;
+    border-radius: 6px !important;
+    line-height: 1.2 !important;
+    margin-bottom: 2px !important;
 }
 
 .cd-oj-subtext {
@@ -660,6 +712,30 @@
     background: #f0fdf4 !important;
     color: #15803d !important;
     border: 1px solid #dcfce7 !important;
+}
+
+.cd-oj-substage-badge.badge-pending {
+    background: #fef3c7 !important;
+    color: #d97706 !important;
+    border: 1px solid #fde68a !important;
+}
+
+.cd-oj-substage-badge.badge-accepted {
+    background: #dcfce7 !important;
+    color: #16a34a !important;
+    border: 1px solid #bbf7d0 !important;
+}
+
+.cd-oj-substage-badge.badge-rejected {
+    background: #fee2e2 !important;
+    color: #dc2626 !important;
+    border: 1px solid #fecaca !important;
+}
+
+.cd-oj-substage-badge.badge-expired {
+    background: #f1f5f9 !important;
+    color: #64748b !important;
+    border: 1px solid #e2e8f0 !important;
 }
 
 /* Sub-Card 5: Joining Schedule */
