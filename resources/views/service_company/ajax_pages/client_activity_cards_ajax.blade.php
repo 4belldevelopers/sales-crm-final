@@ -14,9 +14,9 @@
     @foreach($items as $item)
         @php
             $occurred = \Carbon\Carbon::parse($item['occurred_at'] ?? now());
-            $itemDateStr = $occurred->isToday() ? 'Today' : ($occurred->isYesterday() ? 'Yesterday' : $occurred->format('M d, Y'));
+            $itemDateStr = $occurred->format('M d, Y');
             $timeFormatted = $occurred->format('h:i A');
-            $timeAgo = $occurred->diffForHumans();
+            $exactDate = $occurred->format('M d, Y');
             $category = $item['category'] ?? 'pipeline';
             $eventType = $item['event_type'] ?? '';
             $candidate = $item['candidate'] ?? null;
@@ -310,8 +310,8 @@
                     {{-- 4. Time & Action Sub-Card (Strictly Read-Only, ZERO Job Drawer Trigger) --}}
                     <div class="cd-activity-subcard-actions">
                         <div class="cd-activity-time-wrap">
-                            <div class="cd-activity-time-ago" title="{{ $occurred->toIso8601String() }}">
-                                {{ $timeAgo }}
+                            <div class="cd-activity-time-ago" title="{{ $occurred->format('M d, Y h:i A') }}">
+                                {{ $exactDate }}
                             </div>
                             <div class="cd-activity-time-clock">
                                 {{ $timeFormatted }}
