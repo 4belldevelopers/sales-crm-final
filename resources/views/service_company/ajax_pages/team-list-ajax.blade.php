@@ -33,9 +33,16 @@
                 $trmTalents   = (int) ($row->pre_trm_talents ?? 0);
                 $agencyShares = (int) ($row->pre_agency_shares ?? 0);
 
-                // Communication Representative status
+                // Communication Representative & Channel Roles
                 $isClientRep = !empty($row->is_client_rep);
                 $isAgencyRep = !empty($row->is_agency_rep);
+                $channels = (array) ($row->channels ?? []);
+                if ($isClientRep && !in_array('client', $channels, true)) {
+                    $channels[] = 'client';
+                }
+                if ($isAgencyRep && !in_array('vendor', $channels, true)) {
+                    $channels[] = 'vendor';
+                }
 
                 // Role pill
                 $roleName = ucwords(strtolower(@$row->display_name ?? 'Recruiter'));
@@ -141,25 +148,37 @@
                         @endif
                     </div>
 
-                    <!-- Sub-Card 5: Marketplace Communication SPOC -->
+                    <!-- Sub-Card 5: Corporate Communication Purpose -->
                     <div class="tm-cell tm-cell-communication">
-                        @if($isClientRep)
-                            <div class="tm-comm-badge client" title="Designated contact for Client &amp; Sales Communication">
-                                <i class="fa-solid fa-crown me-1 text-success"></i>Client &amp; Sales Contact
+                        @if (!empty($channels) && count($channels) > 0)
+                            <div class="d-flex flex-wrap align-items-center gap-1">
+                                @if (in_array('client', $channels, true))
+                                    <span class="tm-comm-chip client" title="Point of contact for Client &amp; Sales Communication">
+                                        <i class="fa-solid fa-building me-1"></i>Client &amp; Sales
+                                    </span>
+                                @endif
+                                @if (in_array('vendor', $channels, true) || in_array('agency', $channels, true))
+                                    <span class="tm-comm-chip vendor" title="Point of contact for Vendor &amp; Agency Communication">
+                                        <i class="fa-solid fa-handshake me-1"></i>Vendor &amp; Agency
+                                    </span>
+                                @endif
+                                @if (in_array('finance', $channels, true))
+                                    <span class="tm-comm-chip finance" title="Point of contact for Finance &amp; Billing Communication">
+                                        <i class="fa-solid fa-credit-card me-1"></i>Finance &amp; Billing
+                                    </span>
+                                @endif
+                                @if (in_array('legal', $channels, true))
+                                    <span class="tm-comm-chip legal" title="Point of contact for Legal &amp; Contract Compliance">
+                                        <i class="fa-solid fa-scale-balanced me-1"></i>Legal &amp; Contract
+                                    </span>
+                                @endif
+                                <button type="button" class="tm-btn-edit-comm" onclick="openAssignCommModal({{ $row->id }}, '{{ addslashes($rawName) }}', {{ json_encode($channels) }})" title="Edit communication channels">
+                                    <i class="fa-solid fa-pen"></i>
+                                </button>
                             </div>
                         @else
-                            <button type="button" class="tm-btn-comm-action client" onclick="setRepresentative({{ $row->id }}, 'client', '{{ addslashes($rawName) }}')" title="Assign as default Client &amp; Sales Contact">
-                                <i class="fa-solid fa-building me-1 text-primary"></i>Set as Client &amp; Sales Contact
-                            </button>
-                        @endif
-
-                        @if($isAgencyRep)
-                            <div class="tm-comm-badge agency" title="Designated contact for Partner Agency Communication">
-                                <i class="fa-solid fa-crown me-1 text-purple"></i>Agency Contact
-                            </div>
-                        @else
-                            <button type="button" class="tm-btn-comm-action agency" onclick="setRepresentative({{ $row->id }}, 'agency', '{{ addslashes($rawName) }}')" title="Assign as default Agency Contact">
-                                <i class="fa-solid fa-users me-1 text-purple"></i>Set as Agency Contact
+                            <button type="button" class="tm-btn-add-comm" onclick="openAssignCommModal({{ $row->id }}, '{{ addslashes($rawName) }}', [])" title="Assign corporate communication channels to this member">
+                                <i class="fa-solid fa-plus me-1 text-primary"></i>Assign Purpose
                             </button>
                         @endif
                     </div>
@@ -209,6 +228,9 @@
                                         </a>
                                     @endif
                                 @endif
+                                <a class="tm-action-item" onclick="openAssignCommModal({{ $row->id }}, '{{ addslashes($rawName) }}', {{ json_encode($channels) }})">
+                                    <i class="fa-solid fa-bullhorn me-2 text-primary"></i>Assign Communication Purpose
+                                </a>
                                 <a class="tm-action-item" onclick="setRepresentative({{ $row->id }}, 'client', '{{ addslashes($rawName) }}')">
                                     <i class="fa-solid fa-building me-2 text-success"></i>Set as Client Contact
                                 </a>

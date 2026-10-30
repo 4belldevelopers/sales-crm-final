@@ -78,8 +78,7 @@ class ServiceCompanyTeamController extends ServiceCompanyBaseController
                     ->distinct()
                     ->count('submitted_by');
 
-                // Communication Representatives Count:
-                // Includes default client rep, default agency rep, and any team member who actively shared a job with an agency.
+                // Communication Representatives & Channel Roles Mapping
                 $repService = app(CompanyRepresentativeService::class);
                 $defaults = $repService->getDefaultRepresentatives($companyId);
                 $repUserIds = array_filter([(int) ($defaults['client_rep_id'] ?? 0), (int) ($defaults['agency_rep_id'] ?? 0)]);
@@ -93,17 +92,45 @@ class ServiceCompanyTeamController extends ServiceCompanyBaseController
                     ->toArray();
 
                 $allRepIds = array_unique(array_merge($repUserIds, $agencySharerIds));
-                $representativesCount = count($allRepIds);
+                $allRolesMap = $repService->getAllCompanyCommunicationRoles($companyId);
+
+                $clientCount = 0;
+                $vendorCount = 0;
+                $financeCount = 0;
+                $legalCount = 0;
+
+                foreach ($allRolesMap as $uid => $channels) {
+                    if (in_array('client', $channels, true)) $clientCount++;
+                    if (in_array('vendor', $channels, true)) $vendorCount++;
+                    if (in_array('finance', $channels, true)) $financeCount++;
+                    if (in_array('legal', $channels, true)) $legalCount++;
+                }
+
+                // If default reps not explicitly in tags, ensure at least 1 count
+                if ($clientCount === 0 && !empty($defaults['client_rep_id'])) $clientCount = 1;
+                if ($vendorCount === 0 && !empty($defaults['agency_rep_id'])) $vendorCount = 1;
+
+                // Recruitment members: Active recruiters / sourcers (non-root)
+                $recruitmentCount = User::query()
+                    ->where('company_id', $companyId)
+                    ->where('status', 'active')
+                    ->where('root_user', '!=', 1)
+                    ->count();
 
                 return [
                     'total' => (int) ($status->total ?? 0),
                     'active' => (int) ($status->active ?? 0),
                     'inactive' => (int) ($status->inactive ?? 0),
                     'invited' => (int) ($status->invited ?? 0),
-                    'suspended' => 0, // users.status enum has no "suspended" state yet
+                    'recruitment' => (int) max($recruitmentCount, 1),
+                    'client' => (int) max($clientCount, 1),
+                    'vendor' => (int) max($vendorCount, 1),
+                    'finance' => (int) $financeCount,
+                    'legal' => (int) $legalCount,
+                    'suspended' => 0,
                     'captain' => (int) $captain,
                     'trm' => (int) $trm,
-                    'representatives' => (int) $representativesCount,
+                    'representatives' => (int) count($allRepIds),
                 ];
             }
         );
@@ -299,8 +326,8 @@ class ServiceCompanyTeamController extends ServiceCompanyBaseController
                 $must[] = ['bool' => ['must_not' => [['wildcard' => ['email_verification_code' => '?*']]]]];
             } elseif ($statusTab === 'suspended') {
                 $must[] = ['term' => ['status' => 'suspended']];
-            } elseif ($statusTab === 'representatives') {
-                // Representatives tab: Active constraint applied, detailed filter applied in ranked collection
+            } elseif (in_array($statusTab, ['recruitment', 'client', 'vendor', 'finance', 'legal', 'representatives'], true)) {
+                // Roles and recruitment are active users, filtered in memory on ranked collection
                 $must[] = ['term' => ['status' => 'active']];
             } else {
                 $must[] = ['term' => ['status' => $statusTab]];
@@ -545,10 +572,44 @@ class ServiceCompanyTeamController extends ServiceCompanyBaseController
             ->toArray();
 
         $allRepUserIds = array_unique(array_filter(array_merge([$defaultClientRepId, $defaultAgencyRepId], $allAgencySharerIds)));
+        $allRolesMap = $repService->getAllCompanyCommunicationRoles($company_id);
 
         if ($statusTab === 'representatives') {
             $allRankedUsers = $allRankedUsers->filter(function ($u) use ($allRepUserIds) {
                 return in_array((int) ($u['id'] ?? 0), $allRepUserIds, true);
+            })->values();
+            $total = $allRankedUsers->count();
+        } elseif ($statusTab === 'client') {
+            $allRankedUsers = $allRankedUsers->filter(function ($u) use ($allRolesMap, $defaultClientRepId) {
+                $uid = (int) ($u['id'] ?? 0);
+                $roles = $allRolesMap[$uid] ?? [];
+                return in_array('client', $roles, true) || $uid === $defaultClientRepId;
+            })->values();
+            $total = $allRankedUsers->count();
+        } elseif ($statusTab === 'vendor') {
+            $allRankedUsers = $allRankedUsers->filter(function ($u) use ($allRolesMap, $defaultAgencyRepId, $allAgencySharerIds) {
+                $uid = (int) ($u['id'] ?? 0);
+                $roles = $allRolesMap[$uid] ?? [];
+                return in_array('vendor', $roles, true) || $uid === $defaultAgencyRepId || in_array($uid, $allAgencySharerIds, true);
+            })->values();
+            $total = $allRankedUsers->count();
+        } elseif ($statusTab === 'finance') {
+            $allRankedUsers = $allRankedUsers->filter(function ($u) use ($allRolesMap) {
+                $uid = (int) ($u['id'] ?? 0);
+                $roles = $allRolesMap[$uid] ?? [];
+                return in_array('finance', $roles, true);
+            })->values();
+            $total = $allRankedUsers->count();
+        } elseif ($statusTab === 'legal') {
+            $allRankedUsers = $allRankedUsers->filter(function ($u) use ($allRolesMap) {
+                $uid = (int) ($u['id'] ?? 0);
+                $roles = $allRolesMap[$uid] ?? [];
+                return in_array('legal', $roles, true);
+            })->values();
+            $total = $allRankedUsers->count();
+        } elseif ($statusTab === 'recruitment') {
+            $allRankedUsers = $allRankedUsers->filter(function ($u) {
+                return ((int) ($u['root_user'] ?? 0) !== 1) && (strtolower($u['status'] ?? '') === 'active');
             })->values();
             $total = $allRankedUsers->count();
         }
@@ -593,7 +654,7 @@ class ServiceCompanyTeamController extends ServiceCompanyBaseController
             ->groupBy('from_user_id')
             ->pluck('total', 'from_user_id') : collect();
 
-        $data = $data->map(function ($item) use ($activeJobsMap, $captainJobsMap, $trmTalentsMap, $rankMonth, $defaultClientRepId, $defaultAgencyRepId, $agencySharesMap) {
+        $data = $data->map(function ($item) use ($activeJobsMap, $captainJobsMap, $trmTalentsMap, $rankMonth, $defaultClientRepId, $defaultAgencyRepId, $agencySharesMap, $allRolesMap) {
             $uid = (int) $item['id'];
             $item['pre_active_jobs'] = (int) ($activeJobsMap[$uid] ?? 0);
             $item['pre_captain_jobs'] = (int) ($captainJobsMap[$uid] ?? 0);
@@ -604,6 +665,15 @@ class ServiceCompanyTeamController extends ServiceCompanyBaseController
             $item['is_client_rep'] = ($uid === $defaultClientRepId);
             $item['is_agency_rep'] = ($uid === $defaultAgencyRepId);
             $item['pre_agency_shares'] = (int) ($agencySharesMap[$uid] ?? 0);
+
+            $userRoles = $allRolesMap[$uid] ?? [];
+            if ($item['is_client_rep'] && !in_array('client', $userRoles, true)) {
+                $userRoles[] = 'client';
+            }
+            if ($item['is_agency_rep'] && !in_array('vendor', $userRoles, true)) {
+                $userRoles[] = 'vendor';
+            }
+            $item['channels'] = array_values(array_unique($userRoles));
 
             return $item;
         });
@@ -663,6 +733,34 @@ class ServiceCompanyTeamController extends ServiceCompanyBaseController
 
         if (($result['status'] ?? '') === 'success') {
             $this->clearTeamCache($companyId);
+        }
+
+        return response()->json($result);
+    }
+
+    /**
+     * Set communication channel roles for a team member (Multi-channel selection).
+     */
+    public function setCommunicationRoles(Request $request)
+    {
+        abort_if(Gate::denies('edit_team'), 403);
+        $companyId = (int) $this->user->company_id;
+        $userId = (int) $request->input('user_id');
+        $channels = (array) $request->input('channels', []);
+
+        if ($userId <= 0) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Invalid user ID.',
+            ], 422);
+        }
+
+        $repService = app(CompanyRepresentativeService::class);
+        $result = $repService->setUserCommunicationRoles($companyId, $userId, $channels);
+
+        if (($result['status'] ?? '') === 'success') {
+            $this->clearTeamCache($companyId);
+            $result['counts'] = $this->getTeamCounts($companyId);
         }
 
         return response()->json($result);
