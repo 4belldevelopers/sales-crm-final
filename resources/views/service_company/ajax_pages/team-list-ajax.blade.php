@@ -192,12 +192,6 @@
                                         <i class="fa-solid fa-id-card-clip me-1"></i>Recruitment
                                     </span>
                                 @endif
-                                @if (in_array('finance', $channels, true))
-                                    @php $p = $priorities['finance'] ?? 'Primary'; @endphp
-                                    <span class="tm-comm-chip finance" title="{{ $p }} contact for Billing &amp; Invoicing">
-                                        <i class="fa-solid fa-file-invoice-dollar me-1"></i>Billing &amp; Invoicing
-                                    </span>
-                                @endif
                                 <button type="button" class="tm-btn-edit-comm" data-user='@json($userData)' onclick="openAssignCommDrawer(this)" title="Edit communication channels &amp; priorities">
                                     <i class="fa-solid fa-pen"></i>
                                 </button>
