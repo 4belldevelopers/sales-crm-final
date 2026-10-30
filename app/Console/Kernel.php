@@ -120,6 +120,64 @@ class Kernel extends ConsoleKernel
             ->dailyAt('03:30')
             ->withoutOverlapping(10)
             ->runInBackground();
+
+        // Super Admin Candidates Transactional Outbox & Drift Maintenance
+        $schedule->command('superadmin:candidates:outbox-prune --days=7')
+            ->dailyAt('03:40')
+            ->withoutOverlapping(10)
+            ->runInBackground();
+
+        $schedule->command('superadmin:candidates:drift --limit=200 --chunk=50 --sleep-ms=20 --heal')
+            ->dailyAt('02:40')
+            ->withoutOverlapping(20)
+            ->runInBackground();
+
+        $schedule->command('superadmin:candidates:dlq-retry --limit=50')
+            ->everyFifteenMinutes()
+            ->withoutOverlapping(5)
+            ->runInBackground();
+
+        // Super Admin Jobs Transactional Outbox Sweeper & Maintenance
+        $schedule->job(new \App\Jobs\ProcessJobOutboxEventJob)
+            ->everyMinute()
+            ->withoutOverlapping(2)
+            ->runInBackground();
+
+        $schedule->command('superadmin:jobs:drift --heal --limit=200')
+            ->dailyAt('02:50')
+            ->withoutOverlapping(20)
+            ->runInBackground();
+
+        $schedule->command('superadmin:jobs:dlq --retry')
+            ->everyFifteenMinutes()
+            ->withoutOverlapping(5)
+            ->runInBackground();
+
+        $schedule->command('superadmin:jobs:outbox-prune --days=14')
+            ->dailyAt('03:50')
+            ->withoutOverlapping(10)
+            ->runInBackground();
+
+        // Super Admin Meetings Transactional Outbox Sweeper & Maintenance
+        $schedule->job(new \App\Jobs\ProcessMeetingOutboxEventJob)
+            ->everyMinute()
+            ->withoutOverlapping(2)
+            ->runInBackground();
+
+        $schedule->command('superadmin:meetings:drift --heal --limit=200')
+            ->dailyAt('02:55')
+            ->withoutOverlapping(20)
+            ->runInBackground();
+
+        $schedule->command('superadmin:meetings:dlq --retry')
+            ->everyFifteenMinutes()
+            ->withoutOverlapping(5)
+            ->runInBackground();
+
+        $schedule->command('superadmin:meetings:outbox-prune --days=14')
+            ->dailyAt('03:55')
+            ->withoutOverlapping(10)
+            ->runInBackground();
     }
 
     protected function commands()

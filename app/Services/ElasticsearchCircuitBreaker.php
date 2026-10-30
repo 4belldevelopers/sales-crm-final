@@ -67,7 +67,13 @@ class ElasticsearchCircuitBreaker
             return self::STATE_CLOSED;
         }
     }
-
+    /**
+     * Check if the circuit breaker is available (not OPEN).
+     */
+    public static function isAvailable(): bool
+    {
+        return app(self::class)->getState() !== self::STATE_OPEN;
+    }
     /**
      * Execute a callable guarded by the circuit breaker with a fallback strategy.
      *

@@ -28,15 +28,27 @@ class JobStatusChanged implements ShouldBroadcast
 
     public readonly int $sequenceId;
 
+    public readonly int $aggregateVersion;
+
+    public readonly string $eventId;
+
+    public readonly int $streamSequence;
+
     public function __construct(
         public readonly int $companyId,
         public readonly int $jobId,
         public readonly string $oldStatus,
         public readonly string $newStatus,
         public readonly string $jobTitle = '',
-        ?int $sequenceId = null
+        ?int $sequenceId = null,
+        int $aggregateVersion = 1,
+        ?string $eventId = null,
+        ?int $streamSequence = null
     ) {
-        $this->sequenceId = $sequenceId ?? (int) (microtime(true) * 1000);
+        $this->eventId = $eventId ?? (string) \Illuminate\Support\Str::uuid();
+        $this->streamSequence = $streamSequence ?? (int) \Illuminate\Support\Facades\Cache::increment('stream:sa:jobs:seq');
+        $this->sequenceId = $sequenceId ?? $this->streamSequence;
+        $this->aggregateVersion = $aggregateVersion;
     }
 
     public function broadcastOn(): array
@@ -57,12 +69,15 @@ class JobStatusChanged implements ShouldBroadcast
     public function broadcastWith(): array
     {
         return [
+            'event_id' => $this->eventId,
             'companyId' => $this->companyId,
             'jobId' => $this->jobId,
             'oldStatus' => $this->oldStatus,
             'newStatus' => $this->newStatus,
             'jobTitle' => $this->jobTitle,
+            'stream_sequence' => $this->streamSequence,
             'sequence_id' => $this->sequenceId,
+            'aggregate_version' => $this->aggregateVersion,
             'version' => SuperAdminJobsCacheManager::getVersion(),
             'tenant_version' => (int) cache()->get('tenant_'.$this->companyId.'_client_version', 1),
             'timestamp' => now()->toIso8601String(),

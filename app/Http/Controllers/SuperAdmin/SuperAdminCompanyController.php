@@ -16,7 +16,7 @@ use App\Http\Requests\SuperAdmin\DeleteSkillRequest;
 use App\Http\Requests\SuperAdmin\StoreOrUpdateSkillRequest;
 use App\Http\Requests\SuperAdmin\ToggleNotificationStatusRequest;
 use App\Http\Requests\SuperAdmin\UpdateEmailNotificationRequest;
-use App\MeetingComment;
+use App\Models\MeetingComment;
 use App\Models\AddJobWiseCondidate;
 use App\Models\ApplicationStatus;
 use App\Models\Client;
@@ -43,9 +43,13 @@ use App\Services\MailService;
 use App\Services\MarketplaceModerationService;
 use App\Services\Notification\NotificationHtmlSanitizer;
 use App\Services\Notification\NotificationTokenRegistry;
+use App\Services\ElasticsearchCircuitBreaker;
+use App\Services\SuperAdminCandidateListsCacheManager;
 use App\Services\SuperAdmin\SuperAdminBenchMutationService;
+use App\Services\SuperAdmin\SuperAdminCandidateMutationService;
 use App\Services\SuperAdmin\SuperAdminJdMutationService;
-use App\Services\SuperAdmin\SuperAdminJobRequestCacheManager;
+use App\Services\SuperAdminMeetingScheduleCacheManager;
+use App\Services\SuperAdmin\SuperAdminMeetingMutationService;
 use App\Services\SuperAdmin\SuperAdminNotificationMutationService;
 use Carbon\Carbon;
 use Crypt;
@@ -4156,74 +4160,190 @@ class SuperAdminCompanyController extends SuperAdminBaseController
 
     }
 
+    /**
+     * Intent: List and track scheduled client/agency/interview meetings for Super Admin.
+    /**
+     * Intent: List and track scheduled client/agency/interview meetings for Super Admin.
+     * Tenancy note: Super Admin has global view across all tenant organizations.
+     * CQRS Architecture: Zero MySQL reads on cached hits via Redis L2 cache,
+     * distributed stampede protection, degraded circuit breaker snapshot fallback,
+     * and authoritative channel resolution via left joins.
+     */
     public function meetingScheduleList(Request $request)
     {
+        $isSuperAdmin = Auth::check() && (! empty(Auth::user()->is_superadmin) || (int) (Auth::user()->role_id ?? 0) === 1 || ! empty(Auth::user()->root_user));
+        if (! $isSuperAdmin) {
+            abort(403, 'Unauthorized access to Super Admin Meeting Schedule Tracker.');
+        }
 
         $perPage = (int) $request->input('per_page', $request->input('size', $request->input('limit', 50)));
         $perPage = min(max($perPage, 1), 100);
-        $this->totalMeetingSchedules = MeetingSchedule::all()->count();
-        $this->MeetingSchedule = MeetingSchedule::with('comments', 'toCompany', 'fromCompany', 'users_main')->orderBy('id', 'desc')->paginate($perPage)->appends($request->query());
 
-        return view('super-admin.company.meeting-list', $this->data);
+        // Circuit Breaker Guard: serve degraded snapshot if circuit is open
+        if (! ElasticsearchCircuitBreaker::isAvailable()) {
+            $snapshot = SuperAdminMeetingScheduleCacheManager::getLatestSnapshot();
+            if ($snapshot) {
+                $this->totalMeetingSchedules = $snapshot['total'] ?? 0;
+                $this->MeetingSchedule = $snapshot['paginator'] ?? new LengthAwarePaginator([], 0, $perPage);
 
-    }
-
-    public function meetingComment(Request $request, $id)
-    {
-        $html = '';
-        $interview_feedback = DB::table('meeting_comments')
-            ->select('meeting_comments.*', 'users.name', 'users.image')
-            ->join('users', 'users.id', '=', 'meeting_comments.comment_by')
-            ->where('meeting_comments.meeting_schedule_id', @$id)
-            ->orderByDesc('meeting_comments.id')
-            ->get();
-        if (! empty($interview_feedback)) {
-            foreach ($interview_feedback as $intfeed) {
-
-                $newDate = date('d-m-Y', strtotime($intfeed->comment_date));
-                $newTime = date('H:i A', strtotime($intfeed->comment_date));
-
-                $imagePath = '';
-                $imagePath = url('public/user-uploads/team_profile_img/'.@$intfeed->image);
-
-                $feedback_star_imagePath = $feedback_star_text = '';
-
-                $feedback_star_imagePath = url('public/img/star/5-blank.png');
-                $feedback_star_text = 'Blank';
-
-                $html .= '<div class="overflow-auto pb-5">
-                    <div class="d-flex align-items-center border border-dashed border-gray-300 rounded min-w-700px p-5">
-                    <div class="mb-1"> 
-                    <a href="#" class="fs-5 fw-bold text-gray-800 text-hover-primary mb-2">
-                    <img src="'.str_replace('index.php', '', @$feedback_star_imagePath).'" alt="'.@$feedback_star_text.'"  />&nbsp;Meeting Feedback:
-                    </a>
-                    <p> '.$intfeed->comments.' </p>
-                    <div class="d-flex align-items-center mt-1 fs-6">
-                    <div class="text-muted me-2 fs-7">Added at '.@$newTime.' | '.@$newDate.' by</div>
-                    <div class="symbol symbol-circle symbol-25px" data-toggle="tooltip" data-boundary="window" data-placement="top" title="'.@$intfeed->name.'"> 
-                    <img src="'.str_replace('index.php', '', @$imagePath).'" alt="'.@$intfeed->name.'"> 
-                    </div>   
-                    </div>
-                    </div>
-                    </div>
-                    </div>';
+                return response(view('super-admin.company.meeting-list', $this->data))
+                    ->header('X-Circuit-Breaker', 'OPEN-DEGRADED');
             }
         }
 
-        return response()->json(['html' => $html]);
+        $version = SuperAdminMeetingScheduleCacheManager::getVersion();
+        $cacheParams = [
+            'page' => (int) $request->input('page', 1),
+            'per_page' => $perPage,
+        ];
+        $cacheKey = SuperAdminMeetingScheduleCacheManager::listKey($version, $cacheParams);
 
+        $cachedData = SuperAdminMeetingScheduleCacheManager::rememberWithStampedeProtection(
+            $cacheKey,
+            SuperAdminMeetingScheduleCacheManager::DEFAULT_LIST_TTL,
+            function () use ($perPage, $request) {
+                // Eliminates catastrophic all()->count() full-table hydration in PHP memory
+                $totalCount = MeetingSchedule::count();
+
+                $paginator = MeetingSchedule::with(['comments', 'toCompany', 'fromCompany', 'users_main'])
+                    ->leftJoin('interview_mode', 'interview_mode.id', '=', 'meeting_schedules.interview_mode')
+                    ->leftJoin('interview_mode_lavel', 'interview_mode_lavel.id', '=', 'meeting_schedules.interview_mode_level')
+                    ->select(
+                        'meeting_schedules.*',
+                        'interview_mode.name as mode_name',
+                        'interview_mode_lavel.name as sub_mode_name'
+                    )
+                    ->orderBy('meeting_schedules.id', 'desc')
+                    ->paginate($perPage)
+                    ->appends($request->query());
+
+                SuperAdminMeetingScheduleCacheManager::saveSnapshot([
+                    'total' => $totalCount,
+                    'paginator' => $paginator,
+                ]);
+
+                return [
+                    'total' => $totalCount,
+                    'paginator' => $paginator,
+                ];
+            }
+        );
+
+        $this->totalMeetingSchedules = $cachedData['total'];
+        $this->MeetingSchedule = $cachedData['paginator'];
+
+        return view('super-admin.company.meeting-list', $this->data);
     }
 
-    public function meetingcommentnew(Request $request)
+    /**
+     * Intent: Fetch meeting comments/feedback with author details and relative timestamps.
+     * Backwards-compatible: Returns exact original HTML string for superadmin_layout.blade.php
+     * alongside structured JSON data with Redis L2 stampede protection.
+     */
+    public function meetingComment(Request $request, $id)
     {
-        $MeetingComment = new MeetingComment;
-        $MeetingComment->meeting_schedule_id = $request->meet_id;
-        $MeetingComment->comment_by = auth()->user()->id;
-        $MeetingComment->comments = $request->comments;
+        $version = SuperAdminMeetingScheduleCacheManager::getVersion();
+        $cacheKey = SuperAdminMeetingScheduleCacheManager::commentKey($version, (int) $id);
 
-        $MeetingComment->save();
+        $cachedResponse = SuperAdminMeetingScheduleCacheManager::rememberWithStampedeProtection(
+            $cacheKey,
+            SuperAdminMeetingScheduleCacheManager::DEFAULT_COMMENT_TTL,
+            function () use ($id) {
+                $comments = DB::table('meeting_comments')
+                    ->select('meeting_comments.*', 'users.name', 'users.image')
+                    ->join('users', 'users.id', '=', 'meeting_comments.comment_by')
+                    ->where('meeting_comments.meeting_schedule_id', $id)
+                    ->orderByDesc('meeting_comments.id')
+                    ->get();
 
-        return response()->json(['status' => true]);
+                $formattedComments = [];
+                $html = '';
+
+                if (! empty($comments)) {
+                    foreach ($comments as $intfeed) {
+                        $commentDate = Carbon::parse($intfeed->comment_date);
+                        $newDate = $commentDate->format('d-m-Y');
+                        $newTime = $commentDate->format('H:i A');
+                        $relativeTime = $commentDate->diffForHumans();
+
+                        $imagePath = ! empty($intfeed->image)
+                            ? url('public/user-uploads/team_profile_img/'.$intfeed->image)
+                            : '';
+
+                        $feedback_star_imagePath = url('public/img/star/5-blank.png');
+                        $feedback_star_text = 'Blank';
+
+                        $name = $intfeed->name ?? 'User';
+                        $cleanComments = e($intfeed->comments);
+
+                        $formattedComments[] = [
+                            'id' => $intfeed->id,
+                            'name' => $name,
+                            'image' => $imagePath,
+                            'comments' => $cleanComments,
+                            'date' => $newDate,
+                            'time' => $newTime,
+                            'relative_time' => $relativeTime,
+                        ];
+
+                        $html .= '<div class="overflow-auto pb-5">
+                            <div class="d-flex align-items-center border border-dashed border-gray-300 rounded min-w-700px p-5">
+                            <div class="mb-1"> 
+                            <a href="#" class="fs-5 fw-bold text-gray-800 text-hover-primary mb-2">
+                            <img src="'.str_replace('index.php', '', @$feedback_star_imagePath).'" alt="'.@$feedback_star_text.'"  />&nbsp;Meeting Feedback:
+                            </a>
+                            <p> '.$cleanComments.' </p>
+                            <div class="d-flex align-items-center mt-1 fs-6">
+                            <div class="text-muted me-2 fs-7">Added at '.@$newTime.' | '.@$newDate.' by</div>
+                            <div class="symbol symbol-circle symbol-25px" data-toggle="tooltip" data-boundary="window" data-placement="top" title="'.@$name.'"> 
+                            <img src="'.str_replace('index.php', '', @$imagePath).'" alt="'.@$name.'"> 
+                            </div>   
+                            </div>
+                            </div>
+                            </div>
+                            </div>';
+                    }
+                }
+
+                return [
+                    'status' => true,
+                    'count' => count($formattedComments),
+                    'comments' => $formattedComments,
+                    'html' => $html,
+                ];
+            }
+        );
+
+        return response()->json($cachedResponse);
+    }
+
+    /**
+     * Intent: Save a new internal note or meeting feedback comment with two-tier idempotency
+     * and transactional outbox.
+     */
+    public function meetingcommentnew(Request $request, SuperAdminMeetingMutationService $mutationService)
+    {
+        $meetId = (int) $request->input('meet_id');
+        $rawComments = (string) $request->input('comments');
+        $idempotencyKey = $request->header('X-Idempotency-Key', $request->input('idempotency_key'));
+        $userId = (int) (auth()->id() ?? 1);
+
+        $result = $mutationService->addComment($meetId, $rawComments, $userId, $idempotencyKey);
+
+        return response()->json($result, $result['http_status'] ?? 200);
+    }
+
+    /**
+     * Intent: Safely remove a meeting schedule and its associated comments with idempotency.
+     */
+    public function meetingScheduleDelete(Request $request, $id, SuperAdminMeetingMutationService $mutationService)
+    {
+        $idempotencyKey = $request->header('X-Idempotency-Key', $request->input('idempotency_key'));
+        $userId = (int) (auth()->id() ?? 1);
+
+        $result = $mutationService->deleteMeeting((int) $id, $userId, $idempotencyKey);
+
+        return response()->json($result, $result['http_status'] ?? 200);
     }
 
     public function all_data(Request $request)
@@ -4709,59 +4829,17 @@ class SuperAdminCompanyController extends SuperAdminBaseController
 
     }
 
-    public function storeSchedule(Request $request)
+    public function storeSchedule(Request $request, SuperAdminMeetingMutationService $mutationService)
     {
+        $idempotencyKey = $request->header('X-Idempotency-Key', $request->input('idempotency_key'));
+        $userId = (int) ($this->user->id ?? auth()->id() ?? 1);
 
-        $application_id = $interview_type = $interviewDate = $master_status_id = $child_status_id = $interview_mode = $interview_mode_lavel = $interviewers = $panellist = '';
-        $application_id = @$request->application_id;
-        $interview_type = @$request->interview_type;
-        $interviewDate = @$request->interviewDate;
-        $interview_mode = @$request->interview_mode;
-        $interview_mode_lavel = @$request->interview_mode_lavel;
-        $master_status_id = @$request->master_status_id;
-        $url_address = @$request->url;
-        $interviewers = @$request->interviewers;
-        $panellist = @$request->panellist;
-        $ourpanellist = @$request->ourpanellist;
-        $to_company_id = @$request->meeting_company_id;
-        $from_company_id = auth()->user()->company_id;
+        $result = $mutationService->storeSchedule($request->all(), $userId, $idempotencyKey);
 
-        // INTERVIEW SCHEDULE
-        $meetingSchedule = new MeetingSchedule;
-        if (! empty($request->interview_type)) {
-            $meetingSchedule->interview_type = $interview_type;
-        }
-        $meetingSchedule->schedule_date = $interviewDate;
-        $meetingSchedule->from_company_id = $from_company_id;
-        $meetingSchedule->to_company_id = $to_company_id;
-        if (! empty($interview_mode)) {
-            $meetingSchedule->interview_mode = $interview_mode;
-        }
-        if (! empty($interview_mode_lavel)) {
-            $meetingSchedule->interview_mode_level = $interview_mode_lavel;
-        }
-
-        if (! empty($panellist)) {
-            $meetingSchedule->company_team = $panellist;
-        }
-        if (! empty($ourpanellist)) {
-            $meetingSchedule->our_team = $ourpanellist;
-        }
-
-        if (! empty($url_address)) {
-            $meetingSchedule->url_address = $url_address;
-        }
-
-        $meetingSchedule->created_by = $this->user->id;
-        $meetingSchedule->updated_by = $this->user->id;
-
-        $meetingSchedule->created_at = date('Y-m-d H:i:s');
-        $meetingSchedule->updated_at = date('Y-m-d H:i:s');
-
-        $meetingSchedule->save();
-
-        return Reply::dataOnly(['status' => 'success', 'message' => 'Meeting Reschedule successfully !']);
-
+        return Reply::dataOnly([
+            'status' => 'success',
+            'message' => $result['message'] ?? 'Meeting Reschedule successfully !',
+        ]);
     }
 
     public function addresslist($cid)
@@ -11306,7 +11384,12 @@ class SuperAdminCompanyController extends SuperAdminBaseController
 
     public function all_jobs_data_ajax(Request $request)
     {
-        $userId = $this->user->id ?? auth()->id();
+        $authUser = $this->user ?? auth()->user();
+        if (! $authUser || (! $authUser->is_superadmin && ! $authUser->root_user && (int) ($authUser->role_id ?? 0) !== 1)) {
+            return response()->json(['status' => 'error', 'message' => 'Unauthorized access.'], 403);
+        }
+
+        $userId = $authUser->id ?? auth()->id();
         $salaryMode = GeneralMethod::salaryMode();
         $currencySymbole = GeneralMethod::currencySymbole();
 
@@ -11544,11 +11627,14 @@ class SuperAdminCompanyController extends SuperAdminBaseController
 
             if ($esResult === null) {
                 // Circuit Breaker is OPEN or call failed: attempt degraded snapshot retrieval
-                $snapshot = Cache::get('sa:jobs:snapshot:latest');
+                $snapshot = \App\Services\SuperAdminJobsCacheManager::getLatestSnapshot();
                 if (is_array($snapshot) && ! empty($snapshot['jobs'])) {
+                    $age = $snapshot['snapshot_age_seconds'] ?? 0;
+
                     return response()->json($snapshot)
                         ->header('X-Circuit-Breaker', 'OPEN-DEGRADED')
                         ->header('X-Cache-Status', 'FALLBACK_SNAPSHOT')
+                        ->header('X-Snapshot-Age-Seconds', (string) $age)
                         ->header('X-Data-Version', (string) $version);
                 }
 
@@ -11789,6 +11875,14 @@ class SuperAdminCompanyController extends SuperAdminBaseController
                     }
                     if (isset($mutationDelta['public_market_status'])) {
                         $row->public_market_status = $mutationDelta['public_market_status'];
+                    }
+                }
+
+                // Filter Tab Membership Guard: if filtering by a specific status, ensure mutated status still belongs
+                if ($custom_status !== '' && $custom_status !== 'all') {
+                    $jobEffectiveStatus = strtolower(trim((string) ($row->status ?? '')));
+                    if ($jobEffectiveStatus !== $custom_status) {
+                        continue;
                     }
                 }
 
@@ -12307,390 +12401,502 @@ class SuperAdminCompanyController extends SuperAdminBaseController
             ->toArray());
         $this->default_skill = '';
 
-        // Initial KPI seed for the CV Tracker hero cards and stage tabs
-        $this->candidateStats = [
-            'total' => 0,
-            'today' => 0,
-            'this_week' => 0,
-            'immediate' => 0,
-            'without_resume' => 0,
-            'tabs' => [
-                'inreview' => 0, 'sourcing' => 0, 'screening' => 0, 'evaluation' => 0,
-                'negotiation' => 0, 'offered' => 0, 'joined' => 0, 'rejected' => 0,
-            ],
-        ];
+        // Initial KPI seed for the CV Tracker hero cards and stage tabs with stampede protection
+        $version = SuperAdminCandidateListsCacheManager::getVersion();
+        $this->candidateStats = SuperAdminCandidateListsCacheManager::rememberWithStampedeProtection(
+            SuperAdminCandidateListsCacheManager::kpiKey($version, ['seed' => 'initial']),
+            SuperAdminCandidateListsCacheManager::DEFAULT_KPI_TTL,
+            function () {
+                $cb = app(ElasticsearchCircuitBreaker::class);
+
+                return $cb->execute(function () {
+                    $index = defined('ELASTIC_CANDIDATES') ? ELASTIC_CANDIDATES : config('constants.ELASTIC_CANDIDATES', 'elastic_candidates');
+                    if (! $this->elasticService->indexExists($index)) {
+                        return [
+                            'total' => 0, 'today' => 0, 'this_week' => 0, 'immediate' => 0, 'without_resume' => 0,
+                            'tabs' => ['inreview' => 0, 'sourcing' => 0, 'screening' => 0, 'evaluation' => 0, 'negotiation' => 0, 'offered' => 0, 'joined' => 0, 'rejected' => 0],
+                        ];
+                    }
+
+                    $aggParams = [
+                        'index' => $index,
+                        'request_cache' => true,
+                        'body' => [
+                            'size' => 0,
+                            'track_total_hits' => true,
+                            'aggs' => [
+                                'today' => ['filter' => ['range' => ['created_at' => ['gte' => 'now/d', 'lt' => 'now+1d/d']]]],
+                                'this_week' => ['filter' => ['range' => ['created_at' => ['gte' => 'now/w', 'lt' => 'now+1w/w']]]],
+                                'immediate' => ['filter' => ['term' => ['np_id.keyword' => 'Immediate']]],
+                                'without_resume' => ['filter' => [
+                                    'bool' => [
+                                        'should' => [
+                                            ['bool' => ['must_not' => [['exists' => ['field' => 'resume']]]]],
+                                            ['term' => ['resume.keyword' => '']],
+                                        ],
+                                        'minimum_should_match' => 1,
+                                    ],
+                                ]],
+                                'by_status' => ['terms' => ['field' => 'job_master_status_id', 'size' => 20]],
+                            ],
+                        ],
+                    ];
+
+                    $aggResp = $this->elasticService->getClient()->search($aggParams);
+                    $ca = $aggResp['aggregations'] ?? [];
+                    $statusBuckets = [];
+                    foreach (($ca['by_status']['buckets'] ?? []) as $b) {
+                        $statusBuckets[(int) $b['key']] = (int) $b['doc_count'];
+                    }
+
+                    return [
+                        'total' => (int) ($aggResp['hits']['total']['value'] ?? 0),
+                        'today' => (int) ($ca['today']['doc_count'] ?? 0),
+                        'this_week' => (int) ($ca['this_week']['doc_count'] ?? 0),
+                        'immediate' => (int) ($ca['immediate']['doc_count'] ?? 0),
+                        'without_resume' => (int) ($ca['without_resume']['doc_count'] ?? 0),
+                        'tabs' => [
+                            'inreview' => $statusBuckets[8] ?? 0,
+                            'sourcing' => $statusBuckets[1] ?? 0,
+                            'screening' => $statusBuckets[2] ?? 0,
+                            'evaluation' => $statusBuckets[3] ?? 0,
+                            'negotiation' => $statusBuckets[4] ?? 0,
+                            'offered' => $statusBuckets[5] ?? 0,
+                            'joined' => $statusBuckets[6] ?? 0,
+                            'rejected' => ($statusBuckets[7] ?? 0) + ($statusBuckets[9] ?? 0),
+                        ],
+                    ];
+                }, function () {
+                    return [
+                        'total' => 0, 'today' => 0, 'this_week' => 0, 'immediate' => 0, 'without_resume' => 0,
+                        'tabs' => ['inreview' => 0, 'sourcing' => 0, 'screening' => 0, 'evaluation' => 0, 'negotiation' => 0, 'offered' => 0, 'joined' => 0, 'rejected' => 0],
+                    ];
+                });
+            }
+        );
 
         return view('super-admin.candidates.index', $this->data);
     }
 
     public function canndidateListAjax(Request $request)
     {
-        $currency = GeneralMethod::currency();
-        $salaryMode = GeneralMethod::salaryMode();
-        $currencySymbole = GeneralMethod::currencySymbole();
-        $job_status_arr = GeneralMethod::job_status();
+        $version = SuperAdminCandidateListsCacheManager::getVersion();
+        $cacheParams = $request->only([
+            'page', 'per_page', 'size', 'limit', 'sortingfilter', 'cus_search',
+            'kt_tagify_location', 'kt_tagify_education', 'kt_tagify_users',
+            'min_exp', 'max_exp', 'min_sal', 'max_sal', 'app_int_notice',
+            'app_int_activity', 'app_int_status', 'stage_tab',
+        ]);
+        $cacheKey = SuperAdminCandidateListsCacheManager::listKey($version, $cacheParams);
 
-        $page = max((int) $request->input('page', 1), 1);
-        $size = (int) $request->input('per_page', $request->input('size', $request->input('limit', 10)));
-        if ($size <= 0) {
-            $size = 10;
-        }
-        $from = ($page - 1) * $size;
-        $valCheck = $request->input('sortingfilter');
+        $payload = SuperAdminCandidateListsCacheManager::rememberWithStampedeProtection(
+            $cacheKey,
+            SuperAdminCandidateListsCacheManager::DEFAULT_LIST_TTL,
+            function () use ($request) {
+                $currency = GeneralMethod::currency();
+                $salaryMode = GeneralMethod::salaryMode();
+                $currencySymbole = GeneralMethod::currencySymbole();
+                $job_status_arr = GeneralMethod::job_status();
 
-        $searchTerms = request('cus_search');
-        $custom_search = trim((string) $searchTerms);
-        $conditions = [];
-
-        if (! empty($custom_search)) {
-            $conditions[] = [
-                'bool' => [
-                    'should' => [
-                        ['match_phrase_prefix' => ['full_name' => '*'.strtolower($custom_search).'*']],
-                        ['wildcard' => ['email' => '*'.strtolower($custom_search).'*']],
-                        ['wildcard' => ['phone' => '*'.$custom_search.'*']],
-                        ['match_phrase_prefix' => ['title' => '*'.strtolower($custom_search).'*']],
-                        ['wildcard' => ['country_name' => '*'.strtolower($custom_search).'*']],
-                        ['match_phrase_prefix' => ['qualification_name' => '*'.strtolower($custom_search).'*']],
-                        ['wildcard' => ['state_name' => '*'.strtolower($custom_search).'*']],
-                        ['wildcard' => ['city_name' => '*'.strtolower($custom_search).'*']],
-                        ['wildcard' => ['posted_by' => '*'.strtolower($custom_search).'*']],
-                        ['wildcard' => ['company_name' => '*'.strtolower($custom_search).'*']],
-                    ],
-                    'minimum_should_match' => 1,
-                ],
-            ];
-        }
-
-        $filters = [];
-
-        // 1. Location filter
-        $locationRaw = request('kt_tagify_location');
-        if (! empty($locationRaw)) {
-            $locArray = json_decode($locationRaw, true);
-            if (is_array($locArray) && ! empty($locArray)) {
-                $locShould = [];
-                foreach ($locArray as $locItem) {
-                    $locVal = strtolower(trim($locItem['value'] ?? ''));
-                    if (! empty($locVal)) {
-                        $locShould[] = ['match_phrase_prefix' => ['city_name' => $locVal]];
-                        $locShould[] = ['match_phrase_prefix' => ['state_name' => $locVal]];
-                        $locShould[] = ['match_phrase_prefix' => ['country_name' => $locVal]];
-                    }
+                $page = max((int) $request->input('page', 1), 1);
+                $size = (int) $request->input('per_page', $request->input('size', $request->input('limit', 10)));
+                if ($size <= 0) {
+                    $size = 10;
                 }
-                if (! empty($locShould)) {
-                    $filters[] = ['bool' => ['should' => $locShould, 'minimum_should_match' => 1]];
-                }
-            }
-        }
+                $from = ($page - 1) * $size;
+                $valCheck = $request->input('sortingfilter');
 
-        // 2. Education filter
-        $educationRaw = request('kt_tagify_education');
-        if (! empty($educationRaw)) {
-            $eduArray = json_decode($educationRaw, true);
-            if (is_array($eduArray) && ! empty($eduArray)) {
-                $eduShould = [];
-                foreach ($eduArray as $eduItem) {
-                    $eduVal = strtolower(trim($eduItem['value'] ?? ''));
-                    if (! empty($eduVal)) {
-                        $eduShould[] = ['match_phrase' => ['qualification_name' => $eduVal]];
-                    }
-                }
-                if (! empty($eduShould)) {
-                    $filters[] = ['bool' => ['should' => $eduShould, 'minimum_should_match' => 1]];
-                }
-            }
-        }
+                $searchTerms = $request->input('cus_search');
+                $custom_search = trim((string) $searchTerms);
+                $conditions = [];
 
-        // 3. Skills filter (Tagify with mandatory star support)
-        $skillsRaw = request('kt_tagify_users');
-        $mandatorySkillsForDisplay = [];
-        $optionalSkillsForDisplay = [];
-        if (! empty($skillsRaw)) {
-            $parsedSkills = json_decode($skillsRaw, true);
-            if (is_array($parsedSkills)) {
-                $mandatoryMust = [];
-                $optionalShould = [];
-                foreach ($parsedSkills as $sItem) {
-                    $sVal = strtolower(trim($sItem['value'] ?? ''));
-                    if (! empty($sVal)) {
-                        if (! empty($sItem['checked'])) {
-                            $mandatorySkillsForDisplay[] = $sVal;
-                            $mandatoryMust[] = ['match_phrase_prefix' => ['skills' => $sVal]];
-                        } else {
-                            $optionalSkillsForDisplay[] = $sVal;
-                            $optionalShould[] = ['match_phrase_prefix' => ['skills' => $sVal]];
+                if (! empty($custom_search)) {
+                    $conditions[] = [
+                        'bool' => [
+                            'should' => [
+                                ['match_phrase_prefix' => ['full_name' => '*'.strtolower($custom_search).'*']],
+                                ['wildcard' => ['email' => '*'.strtolower($custom_search).'*']],
+                                ['wildcard' => ['phone' => '*'.$custom_search.'*']],
+                                ['match_phrase_prefix' => ['title' => '*'.strtolower($custom_search).'*']],
+                                ['wildcard' => ['country_name' => '*'.strtolower($custom_search).'*']],
+                                ['match_phrase_prefix' => ['qualification_name' => '*'.strtolower($custom_search).'*']],
+                                ['wildcard' => ['state_name' => '*'.strtolower($custom_search).'*']],
+                                ['wildcard' => ['city_name' => '*'.strtolower($custom_search).'*']],
+                                ['wildcard' => ['posted_by' => '*'.strtolower($custom_search).'*']],
+                                ['wildcard' => ['company_name' => '*'.strtolower($custom_search).'*']],
+                            ],
+                            'minimum_should_match' => 1,
+                        ],
+                    ];
+                }
+
+                $filters = [];
+
+                // 1. Location filter
+                $locationRaw = $request->input('kt_tagify_location');
+                if (! empty($locationRaw)) {
+                    $locArray = json_decode($locationRaw, true);
+                    if (is_array($locArray) && ! empty($locArray)) {
+                        $locShould = [];
+                        foreach ($locArray as $locItem) {
+                            $locVal = strtolower(trim($locItem['value'] ?? ''));
+                            if (! empty($locVal)) {
+                                $locShould[] = ['match_phrase_prefix' => ['city_name' => $locVal]];
+                                $locShould[] = ['match_phrase_prefix' => ['state_name' => $locVal]];
+                                $locShould[] = ['match_phrase_prefix' => ['country_name' => $locVal]];
+                            }
+                        }
+                        if (! empty($locShould)) {
+                            $filters[] = ['bool' => ['should' => $locShould, 'minimum_should_match' => 1]];
                         }
                     }
                 }
-                if (! empty($mandatoryMust)) {
-                    $filters[] = ['bool' => ['must' => $mandatoryMust]];
+
+                // 2. Education filter
+                $educationRaw = $request->input('kt_tagify_education');
+                if (! empty($educationRaw)) {
+                    $eduArray = json_decode($educationRaw, true);
+                    if (is_array($eduArray) && ! empty($eduArray)) {
+                        $eduShould = [];
+                        foreach ($eduArray as $eduItem) {
+                            $eduVal = strtolower(trim($eduItem['value'] ?? ''));
+                            if (! empty($eduVal)) {
+                                $eduShould[] = ['match_phrase' => ['qualification_name' => $eduVal]];
+                            }
+                        }
+                        if (! empty($eduShould)) {
+                            $filters[] = ['bool' => ['should' => $eduShould, 'minimum_should_match' => 1]];
+                        }
+                    }
                 }
-                if (! empty($optionalShould)) {
-                    $filters[] = ['bool' => ['should' => $optionalShould, 'minimum_should_match' => 1]];
+
+                // 3. Skills filter (Tagify with mandatory star support)
+                $skillsRaw = $request->input('kt_tagify_users');
+                $mandatorySkillsForDisplay = [];
+                $optionalSkillsForDisplay = [];
+                if (! empty($skillsRaw)) {
+                    $parsedSkills = json_decode($skillsRaw, true);
+                    if (is_array($parsedSkills)) {
+                        $mandatoryMust = [];
+                        $optionalShould = [];
+                        foreach ($parsedSkills as $sItem) {
+                            $sVal = strtolower(trim($sItem['value'] ?? ''));
+                            if (! empty($sVal)) {
+                                if (! empty($sItem['checked'])) {
+                                    $mandatorySkillsForDisplay[] = $sVal;
+                                    $mandatoryMust[] = ['match_phrase_prefix' => ['skills' => $sVal]];
+                                } else {
+                                    $optionalSkillsForDisplay[] = $sVal;
+                                    $optionalShould[] = ['match_phrase_prefix' => ['skills' => $sVal]];
+                                }
+                            }
+                        }
+                        if (! empty($mandatoryMust)) {
+                            $filters[] = ['bool' => ['must' => $mandatoryMust]];
+                        }
+                        if (! empty($optionalShould)) {
+                            $filters[] = ['bool' => ['should' => $optionalShould, 'minimum_should_match' => 1]];
+                        }
+                    }
                 }
-            }
-        }
 
-        // 4. Experience range
-        $minExp = request('min_exp');
-        $maxExp = request('max_exp');
-        $expRange = [];
-        if ($minExp !== '' && $minExp !== null) {
-            $expRange['gte'] = (float) $minExp;
-        }
-        if ($maxExp !== '' && $maxExp !== null) {
-            $expRange['lte'] = (float) $maxExp;
-        }
-        if (! empty($expRange)) {
-            $filters[] = ['range' => ['total_exp' => $expRange]];
-        }
+                // 4. Experience range
+                $minExp = $request->input('min_exp');
+                $maxExp = $request->input('max_exp');
+                $expRange = [];
+                if ($minExp !== '' && $minExp !== null) {
+                    $expRange['gte'] = (float) $minExp;
+                }
+                if ($maxExp !== '' && $maxExp !== null) {
+                    $expRange['lte'] = (float) $maxExp;
+                }
+                if (! empty($expRange)) {
+                    $filters[] = ['range' => ['total_exp' => $expRange]];
+                }
 
-        // 5. Salary range
-        $minSal = request('min_sal');
-        $maxSal = request('max_sal');
-        $salRange = [];
-        if ($minSal !== '' && $minSal !== null) {
-            $salRange['gte'] = (float) $minSal;
-        }
-        if ($maxSal !== '' && $maxSal !== null) {
-            $salRange['lte'] = (float) $maxSal;
-        }
-        if (! empty($salRange)) {
-            $filters[] = ['range' => ['ctc' => $salRange]];
-        }
+                // 5. Salary range
+                $minSal = $request->input('min_sal');
+                $maxSal = $request->input('max_sal');
+                $salRange = [];
+                if ($minSal !== '' && $minSal !== null) {
+                    $salRange['gte'] = (float) $minSal;
+                }
+                if ($maxSal !== '' && $maxSal !== null) {
+                    $salRange['lte'] = (float) $maxSal;
+                }
+                if (! empty($salRange)) {
+                    $filters[] = ['range' => ['ctc' => $salRange]];
+                }
 
-        // 6. Notice period filter
-        $appIntNotice = (int) request('app_int_notice', 1);
-        $currentDate = date('Y-m-d H:i:s');
-        if ($appIntNotice > 1) {
-            $noticeFilter = $this->getNoticePeriodFilterSuperAdmin($appIntNotice, $currentDate);
-            if ($noticeFilter) {
-                $filters[] = $noticeFilter;
-            }
-        }
+                // 6. Notice period filter
+                $appIntNotice = (int) $request->input('app_int_notice', 1);
+                $currentDate = date('Y-m-d H:i:s');
+                if ($appIntNotice > 1) {
+                    $noticeFilter = $this->getNoticePeriodFilterSuperAdmin($appIntNotice, $currentDate);
+                    if ($noticeFilter) {
+                        $filters[] = $noticeFilter;
+                    }
+                }
 
-        // 7. Activity filter
-        $appIntActivity = (int) request('app_int_activity', 1);
-        if ($appIntActivity > 1) {
-            $currentTs = strtotime($currentDate);
-            $d30 = date('Y-m-d H:i:s', strtotime('-30 days', $currentTs));
-            $d60 = date('Y-m-d H:i:s', strtotime('-60 days', $currentTs));
-            $d90 = date('Y-m-d H:i:s', strtotime('-90 days', $currentTs));
-            $d180 = date('Y-m-d H:i:s', strtotime('-180 days', $currentTs));
-            $d365 = date('Y-m-d H:i:s', strtotime('-365 days', $currentTs));
-            $actFilter = $this->getActivityFilterSuperAdmin($appIntActivity, $d30, $d60, $d90, $d180, $d365, $currentDate);
-            if ($actFilter) {
-                $filters[] = $actFilter;
-            }
-        }
+                // 7. Activity filter
+                $appIntActivity = (int) $request->input('app_int_activity', 1);
+                if ($appIntActivity > 1) {
+                    $currentTs = strtotime($currentDate);
+                    $d30 = date('Y-m-d H:i:s', strtotime('-30 days', $currentTs));
+                    $d60 = date('Y-m-d H:i:s', strtotime('-60 days', $currentTs));
+                    $d90 = date('Y-m-d H:i:s', strtotime('-90 days', $currentTs));
+                    $d180 = date('Y-m-d H:i:s', strtotime('-180 days', $currentTs));
+                    $d365 = date('Y-m-d H:i:s', strtotime('-365 days', $currentTs));
+                    $actFilter = $this->getActivityFilterSuperAdmin($appIntActivity, $d30, $d60, $d90, $d180, $d365, $currentDate);
+                    if ($actFilter) {
+                        $filters[] = $actFilter;
+                    }
+                }
 
-        // 8. Drawer Stage filter (app_int_status)
-        $appIntStatus = (int) request('app_int_status', 0);
-        if ($appIntStatus > 0) {
-            $filters[] = ['term' => ['job_master_status_id' => $appIntStatus]];
-        }
+                // 8. Drawer Stage filter (app_int_status)
+                $appIntStatus = (int) $request->input('app_int_status', 0);
+                if ($appIntStatus > 0) {
+                    $filters[] = ['term' => ['job_master_status_id' => $appIntStatus]];
+                }
 
-        // Build base bool query (excluding active stage_tab filter so aggregations show full totals)
-        $baseBoolQuery = [
-            'bool' => [
-                'must' => ! empty($conditions) ? $conditions : [['match_all' => (object) []]],
-                'filter' => $filters,
-            ],
-        ];
-
-        // 9. Active Stage Tab filter (applied only to paginated candidate hits)
-        $stageTab = request('stage_tab');
-        $paginatedBoolQuery = $baseBoolQuery;
-        if (! empty($stageTab) && $stageTab !== 'all') {
-            $stageIds = array_filter(array_map('intval', explode(',', (string) $stageTab)));
-            if (! empty($stageIds)) {
-                $paginatedBoolQuery['bool']['filter'][] = ['terms' => ['job_master_status_id' => array_values($stageIds)]];
-            }
-        }
-
-        // Sorting
-        $sort = [];
-        switch ((int) $valCheck) {
-            case 1:
-                $sort[] = ['created_at' => ['order' => 'desc']];
-                break;
-            case 2:
-                $sort[] = ['created_at' => ['order' => 'asc']];
-                break;
-            case 3:
-                $sort[] = ['ctc' => ['order' => 'asc', 'unmapped_type' => 'float']];
-                break;
-            case 4:
-                $sort[] = ['ctc' => ['order' => 'desc', 'unmapped_type' => 'float']];
-                break;
-            case 7:
-                $sort[] = ['total_exp' => ['order' => 'desc', 'unmapped_type' => 'float']];
-                break;
-            case 8:
-                $sort[] = ['total_exp' => ['order' => 'asc', 'unmapped_type' => 'float']];
-                break;
-            case 21:
-            case 9:
-                $sort[] = [
-                    '_script' => [
-                        'type' => 'number',
-                        'script' => [
-                            'lang' => 'painless',
-                            'source' => "doc.containsKey('np_id.keyword') && doc['np_id.keyword'].size() > 0 && doc['np_id.keyword'].value == 'Immediate' ? 0 : 1",
-                        ],
-                        'order' => 'asc',
+                // Build base bool query (excluding active stage_tab filter so aggregations show full totals)
+                $baseBoolQuery = [
+                    'bool' => [
+                        'must' => ! empty($conditions) ? $conditions : [['match_all' => (object) []]],
+                        'filter' => $filters,
                     ],
                 ];
-                $sort[] = ['created_at' => ['order' => 'desc']];
-                break;
-            case 10:
-                $sort[] = ['send_accept_date_time' => ['order' => 'desc']];
-                break;
-            case 11:
-                $sort[] = ['send_accept_date_time' => ['order' => 'asc']];
-                break;
-            default:
-                $sort[] = ['created_at' => ['order' => 'desc']];
-                break;
-        }
 
-        $params = [
-            'index' => ELASTIC_CANDIDATES,
-            'request_cache' => true,
-            'body' => [
-                'from' => $from,
-                'size' => $size,
-                'sort' => $sort,
-                'track_total_hits' => true,
-                'query' => $paginatedBoolQuery,
-            ],
-        ];
+                // 9. Active Stage Tab filter (applied only to paginated candidate hits)
+                $stageTab = $request->input('stage_tab');
+                $paginatedBoolQuery = $baseBoolQuery;
+                if (! empty($stageTab) && $stageTab !== 'all') {
+                    $stageIds = array_filter(array_map('intval', explode(',', (string) $stageTab)));
+                    if (! empty($stageIds)) {
+                        $paginatedBoolQuery['bool']['filter'][] = ['terms' => ['job_master_status_id' => array_values($stageIds)]];
+                    }
+                }
 
-        if (! $this->elasticService->indexExists(ELASTIC_CANDIDATES)) {
-            $total = 0;
-            $data = [];
-            $candidateStats = [
-                'total' => 0, 'today' => 0, 'this_week' => 0, 'immediate' => 0, 'without_resume' => 0,
-                'tabs' => ['inreview' => 0, 'sourcing' => 0, 'screening' => 0, 'evaluation' => 0, 'negotiation' => 0, 'offered' => 0, 'joined' => 0, 'rejected' => 0],
-            ];
-        } else {
-            $response = $this->elasticService->getClient()->search($params);
-            $total = $response['hits']['total']['value'] ?? 0;
-            $data = array_map(fn ($hit) => $hit['_source'], $response['hits']['hits']);
-
-            // Bulk ES size:0 aggregation over baseBoolQuery for Hero KPI stats and stage tabs
-            $aggParams = [
-                'index' => ELASTIC_CANDIDATES,
-                'request_cache' => true,
-                'body' => [
-                    'size' => 0,
-                    'track_total_hits' => true,
-                    'query' => $baseBoolQuery,
-                    'aggs' => [
-                        'today' => ['filter' => ['range' => ['created_at' => ['gte' => 'now/d', 'lt' => 'now+1d/d']]]],
-                        'this_week' => ['filter' => ['range' => ['created_at' => ['gte' => 'now/w', 'lt' => 'now+1w/w']]]],
-                        'immediate' => ['filter' => ['term' => ['np_id.keyword' => 'Immediate']]],
-                        'without_resume' => ['filter' => [
-                            'bool' => [
-                                'should' => [
-                                    ['bool' => ['must_not' => [['exists' => ['field' => 'resume']]]]],
-                                    ['term' => ['resume.keyword' => '']],
+                // Sorting
+                $sort = [];
+                switch ((int) $valCheck) {
+                    case 1:
+                        $sort[] = ['created_at' => ['order' => 'desc']];
+                        break;
+                    case 2:
+                        $sort[] = ['created_at' => ['order' => 'asc']];
+                        break;
+                    case 3:
+                        $sort[] = ['ctc' => ['order' => 'asc', 'unmapped_type' => 'float']];
+                        break;
+                    case 4:
+                        $sort[] = ['ctc' => ['order' => 'desc', 'unmapped_type' => 'float']];
+                        break;
+                    case 7:
+                        $sort[] = ['total_exp' => ['order' => 'desc', 'unmapped_type' => 'float']];
+                        break;
+                    case 8:
+                        $sort[] = ['total_exp' => ['order' => 'asc', 'unmapped_type' => 'float']];
+                        break;
+                    case 21:
+                    case 9:
+                        $sort[] = [
+                            '_script' => [
+                                'type' => 'number',
+                                'script' => [
+                                    'lang' => 'painless',
+                                    'source' => "doc.containsKey('np_id.keyword') && doc['np_id.keyword'].size() > 0 && doc['np_id.keyword'].value == 'Immediate' ? 0 : 1",
                                 ],
-                                'minimum_should_match' => 1,
+                                'order' => 'asc',
                             ],
-                        ]],
-                        'by_status' => ['terms' => ['field' => 'job_master_status_id', 'size' => 20]],
+                        ];
+                        $sort[] = ['created_at' => ['order' => 'desc']];
+                        break;
+                    case 10:
+                        $sort[] = ['send_accept_date_time' => ['order' => 'desc']];
+                        break;
+                    case 11:
+                        $sort[] = ['send_accept_date_time' => ['order' => 'asc']];
+                        break;
+                    default:
+                        $sort[] = ['created_at' => ['order' => 'desc']];
+                        break;
+                }
+
+                $index = defined('ELASTIC_CANDIDATES') ? ELASTIC_CANDIDATES : config('constants.ELASTIC_CANDIDATES', 'elastic_candidates');
+
+                $params = [
+                    'index' => $index,
+                    'request_cache' => true,
+                    'body' => [
+                        'from' => $from,
+                        'size' => $size,
+                        'sort' => $sort,
+                        'track_total_hits' => true,
+                        'query' => $paginatedBoolQuery,
                     ],
-                ],
-            ];
+                ];
 
-            $aggResp = $this->elasticService->getClient()->search($aggParams);
-            $ca = $aggResp['aggregations'] ?? [];
-            $statusBuckets = [];
-            foreach (($ca['by_status']['buckets'] ?? []) as $b) {
-                $statusBuckets[(int) $b['key']] = (int) $b['doc_count'];
-            }
+                $aggParams = [
+                    'index' => $index,
+                    'request_cache' => true,
+                    'body' => [
+                        'size' => 0,
+                        'track_total_hits' => true,
+                        'query' => $baseBoolQuery,
+                        'aggs' => [
+                            'today' => ['filter' => ['range' => ['created_at' => ['gte' => 'now/d', 'lt' => 'now+1d/d']]]],
+                            'this_week' => ['filter' => ['range' => ['created_at' => ['gte' => 'now/w', 'lt' => 'now+1w/w']]]],
+                            'immediate' => ['filter' => ['term' => ['np_id.keyword' => 'Immediate']]],
+                            'without_resume' => ['filter' => [
+                                'bool' => [
+                                    'should' => [
+                                        ['bool' => ['must_not' => [['exists' => ['field' => 'resume']]]]],
+                                        ['term' => ['resume.keyword' => '']],
+                                    ],
+                                    'minimum_should_match' => 1,
+                                ],
+                            ]],
+                            'by_status' => ['terms' => ['field' => 'job_master_status_id', 'size' => 20]],
+                        ],
+                    ],
+                ];
 
-            $candidateStats = [
-                'total' => (int) ($aggResp['hits']['total']['value'] ?? 0),
-                'today' => (int) ($ca['today']['doc_count'] ?? 0),
-                'this_week' => (int) ($ca['this_week']['doc_count'] ?? 0),
-                'immediate' => (int) ($ca['immediate']['doc_count'] ?? 0),
-                'without_resume' => (int) ($ca['without_resume']['doc_count'] ?? 0),
-                'tabs' => [
-                    'inreview' => $statusBuckets[8] ?? 0,
-                    'sourcing' => $statusBuckets[1] ?? 0,
-                    'screening' => $statusBuckets[2] ?? 0,
-                    'evaluation' => $statusBuckets[3] ?? 0,
-                    'negotiation' => $statusBuckets[4] ?? 0,
-                    'offered' => $statusBuckets[5] ?? 0,
-                    'joined' => $statusBuckets[6] ?? 0,
-                    'rejected' => ($statusBuckets[7] ?? 0) + ($statusBuckets[9] ?? 0),
-                ],
-            ];
-        }
+                // Circuit Breaker Execution
+                $cb = app(ElasticsearchCircuitBreaker::class);
+                $searchResult = $cb->execute(function () use ($index, $params, $aggParams) {
+                    if (! $this->elasticService->indexExists($index)) {
+                        return [
+                            'total' => 0,
+                            'data' => [],
+                            'candidateStats' => [
+                                'total' => 0, 'today' => 0, 'this_week' => 0, 'immediate' => 0, 'without_resume' => 0,
+                                'tabs' => ['inreview' => 0, 'sourcing' => 0, 'screening' => 0, 'evaluation' => 0, 'negotiation' => 0, 'offered' => 0, 'joined' => 0, 'rejected' => 0],
+                            ],
+                        ];
+                    }
 
-        // Batch lookups to eliminate 100% of in-loop MySQL queries in Blade
-        $companyMap = [];
-        $cityMap = [];
-        $jobDetailsMap = [];
+                    $response = $this->elasticService->getClient()->search($params);
+                    $total = $response['hits']['total']['value'] ?? 0;
+                    $data = array_map(fn ($hit) => $hit['_source'], $response['hits']['hits']);
 
-        if (! empty($data)) {
-            $companyIdsOnPage = collect($data)->map(function ($r) {
-                return [(int) ($r['company_id'] ?? 0), (int) ($r['client_comapny_id'] ?? 0), (int) ($r['ClientComID'] ?? 0)];
-            })->flatten()->filter()->unique()->values()->all();
+                    $aggResp = $this->elasticService->getClient()->search($aggParams);
+                    $ca = $aggResp['aggregations'] ?? [];
+                    $statusBuckets = [];
+                    foreach (($ca['by_status']['buckets'] ?? []) as $b) {
+                        $statusBuckets[(int) $b['key']] = (int) $b['doc_count'];
+                    }
 
-            if (! empty($companyIdsOnPage)) {
-                $companyMap = \Illuminate\Support\Facades\Cache::remember('batch_companies_'.md5(implode(',', $companyIdsOnPage)), 3600, fn () => DB::table('companies')
-                    ->whereIn('id', $companyIdsOnPage)
-                    ->pluck('company_name', 'id')
-                    ->toArray());
-            }
+                    $candidateStats = [
+                        'total' => (int) ($aggResp['hits']['total']['value'] ?? 0),
+                        'today' => (int) ($ca['today']['doc_count'] ?? 0),
+                        'this_week' => (int) ($ca['this_week']['doc_count'] ?? 0),
+                        'immediate' => (int) ($ca['immediate']['doc_count'] ?? 0),
+                        'without_resume' => (int) ($ca['without_resume']['doc_count'] ?? 0),
+                        'tabs' => [
+                            'inreview' => $statusBuckets[8] ?? 0,
+                            'sourcing' => $statusBuckets[1] ?? 0,
+                            'screening' => $statusBuckets[2] ?? 0,
+                            'evaluation' => $statusBuckets[3] ?? 0,
+                            'negotiation' => $statusBuckets[4] ?? 0,
+                            'offered' => $statusBuckets[5] ?? 0,
+                            'joined' => $statusBuckets[6] ?? 0,
+                            'rejected' => ($statusBuckets[7] ?? 0) + ($statusBuckets[9] ?? 0),
+                        ],
+                    ];
 
-            $cityIdsOnPage = collect($data)->pluck('city_id')->filter()->unique()->values()->all();
-            if (! empty($cityIdsOnPage)) {
-                $cityMap = \Illuminate\Support\Facades\Cache::remember('batch_cities_'.md5(implode(',', $cityIdsOnPage)), 3600, fn () => DB::table('city_list')
-                    ->whereIn('city_id', $cityIdsOnPage)
-                    ->pluck('city', 'city_id')
-                    ->toArray());
-            }
+                    return [
+                        'total' => $total,
+                        'data' => $data,
+                        'candidateStats' => $candidateStats,
+                    ];
+                }, function () {
+                    $snapshot = Cache::get(SuperAdminCandidateListsCacheManager::SNAPSHOT_KEY);
+                    if ($snapshot && is_array($snapshot)) {
+                        return $snapshot;
+                    }
 
-            $jobIdsOnPage = collect($data)->pluck('jobId')->filter()->unique()->values()->all();
-            if (! empty($jobIdsOnPage)) {
-                $jobDetailsMap = \Illuminate\Support\Facades\Cache::remember('batch_jobs_'.md5(implode(',', $jobIdsOnPage)), 1800, function () use ($jobIdsOnPage) {
-                    return DB::table('jobs')
-                        ->leftJoin('clients', 'clients.id', '=', 'jobs.client_id')
-                        ->whereIn('jobs.id', $jobIdsOnPage)
-                        ->select('jobs.id', 'jobs.max_sal_mode', 'jobs.max_salary_currency', 'jobs.status', 'jobs.title', 'clients.name as client_name')
-                        ->get()
-                        ->keyBy('id')
-                        ->toArray();
+                    return [
+                        'total' => 0,
+                        'data' => [],
+                        'candidateStats' => [
+                            'total' => 0, 'today' => 0, 'this_week' => 0, 'immediate' => 0, 'without_resume' => 0,
+                            'tabs' => ['inreview' => 0, 'sourcing' => 0, 'screening' => 0, 'evaluation' => 0, 'negotiation' => 0, 'offered' => 0, 'joined' => 0, 'rejected' => 0],
+                        ],
+                    ];
                 });
+
+                $total = $searchResult['total'];
+                $data = $searchResult['data'];
+                $candidateStats = $searchResult['candidateStats'];
+
+                // Overlays active authoritative mutation deltas for 0ms lag read-after-write consistency
+                SuperAdminCandidateListsCacheManager::applyMutationDeltas($data);
+
+                // Batch lookups to eliminate 100% of in-loop MySQL queries in Blade
+                $companyMap = [];
+                $cityMap = [];
+                $jobDetailsMap = [];
+
+                if (! empty($data)) {
+                    $companyIdsOnPage = collect($data)->map(function ($r) {
+                        return [(int) ($r['company_id'] ?? 0), (int) ($r['client_comapny_id'] ?? 0), (int) ($r['ClientComID'] ?? 0)];
+                    })->flatten()->filter()->unique()->values()->all();
+
+                    if (! empty($companyIdsOnPage)) {
+                        $companyMap = \Illuminate\Support\Facades\Cache::remember('batch_companies_'.md5(implode(',', $companyIdsOnPage)), 3600, fn () => DB::table('companies')
+                            ->whereIn('id', $companyIdsOnPage)
+                            ->pluck('company_name', 'id')
+                            ->toArray());
+                    }
+
+                    $cityIdsOnPage = collect($data)->pluck('city_id')->filter()->unique()->values()->all();
+                    if (! empty($cityIdsOnPage)) {
+                        $cityMap = \Illuminate\Support\Facades\Cache::remember('batch_cities_'.md5(implode(',', $cityIdsOnPage)), 3600, fn () => DB::table('city_list')
+                            ->whereIn('city_id', $cityIdsOnPage)
+                            ->pluck('city', 'city_id')
+                            ->toArray());
+                    }
+
+                    $jobIdsOnPage = collect($data)->pluck('jobId')->filter()->unique()->values()->all();
+                    if (! empty($jobIdsOnPage)) {
+                        $jobDetailsMap = \Illuminate\Support\Facades\Cache::remember('batch_jobs_'.md5(implode(',', $jobIdsOnPage)), 1800, function () use ($jobIdsOnPage) {
+                            return DB::table('jobs')
+                                ->leftJoin('clients', 'clients.id', '=', 'jobs.client_id')
+                                ->whereIn('jobs.id', $jobIdsOnPage)
+                                ->select('jobs.id', 'jobs.max_sal_mode', 'jobs.max_salary_currency', 'jobs.status', 'jobs.title', 'clients.name as client_name')
+                                ->get()
+                                ->keyBy('id')
+                                ->toArray();
+                        });
+                    }
+                }
+
+                $pagination = [
+                    'total' => $total,
+                    'current_page' => $page,
+                    'last_page' => (int) ceil($total / max($size, 1)),
+                    'per_page' => $size,
+                    'listType' => 'allcandidate',
+                ];
+
+                $userPermissions = [];
+                $limit = '';
+
+                return [
+                    'html' => view('super-admin.ajax_pages.all_candidates_ajax', compact(
+                        'data', 'userPermissions', 'limit', 'salaryMode', 'currencySymbole',
+                        'job_status_arr', 'currency', 'companyMap', 'cityMap', 'jobDetailsMap',
+                        'mandatorySkillsForDisplay', 'optionalSkillsForDisplay'
+                    ))->render(),
+                    'total' => $total,
+                    'pagination' => view('super-admin.ajax_pages.pagination', compact('pagination'))->render(),
+                    'candidateStats' => $candidateStats,
+                ];
             }
-        }
+        );
 
-        $pagination = [
-            'total' => $total,
-            'current_page' => $page,
-            'last_page' => (int) ceil($total / max($size, 1)),
-            'per_page' => $size,
-            'listType' => 'allcandidate',
-        ];
-
-        $userPermissions = [];
-        $limit = '';
-
-        return response()->json([
-            'html' => view('super-admin.ajax_pages.all_candidates_ajax', compact(
-                'data', 'userPermissions', 'limit', 'salaryMode', 'currencySymbole',
-                'job_status_arr', 'currency', 'companyMap', 'cityMap', 'jobDetailsMap',
-                'mandatorySkillsForDisplay', 'optionalSkillsForDisplay'
-            ))->render(),
-            'total' => $total,
-            'pagination' => view('super-admin.ajax_pages.pagination', compact('pagination'))->render(),
-            'candidateStats' => $candidateStats,
-        ]);
+        return response()->json($payload);
     }
 
     protected function getNoticePeriodFilterSuperAdmin($app_int_notice, $current_date)
@@ -13629,12 +13835,14 @@ class SuperAdminCompanyController extends SuperAdminBaseController
 
     public function candidatedatashow($id)
     {
+        $version = SuperAdminCandidateListsCacheManager::getVersion();
+        $cacheKey = SuperAdminCandidateListsCacheManager::drawerKey($version, (int) $id);
 
-        // dd($id);
-
-        $company_id = '';
-        $company_id = auth()->user()->company_id;
-        // dd(auth()->user());
+        $view = SuperAdminCandidateListsCacheManager::rememberWithStampedeProtection(
+            $cacheKey,
+            SuperAdminCandidateListsCacheManager::DEFAULT_DRAWER_TTL,
+            function () use ($id) {
+                $company_id = auth()->user()->company_id ?? 0;
 
         $this->currency = GeneralMethod::currency();
         $this->salaryMode = GeneralMethod::salaryMode();
@@ -14051,12 +14259,35 @@ class SuperAdminCompanyController extends SuperAdminBaseController
 
         $this->jobWiseCanId = $id;
 
-        // $view = view('service_company.job-applications.show', $this->data)->render();
-        // dd("jd");
-        $view = view('super-admin.candidates.showdetail', $this->data)->render();
+        return view('super-admin.candidates.showdetail', $this->data)->render();
+    });
 
-        return Reply::dataOnly(['status' => 'success', 'view' => $view]);
+    return Reply::dataOnly(['status' => 'success', 'view' => $view]);
+}
 
+    /**
+     * Intent: Super Admin Candidate Stage Mutation endpoint with two-tier idempotency and transactional outbox.
+     * Tenancy: Super Admin tenant boundary (tenant_id = 0).
+     */
+    public function candidateStageSubmit(Request $request, SuperAdminCandidateMutationService $mutationService)
+    {
+        $wiseId = (int) $request->input('id', $request->input('job_application_id', $request->input('wise_id', 0)));
+        $masterStatusId = (int) $request->input('status', $request->input('master_status_id', 0));
+        $childStatusId = $request->has('child_status_id') ? (int) $request->input('child_status_id') : null;
+        $idempotencyKey = $request->header('X-Idempotency-Key', $request->input('idempotency_key'));
+        $adminId = auth()->id();
+        $adminName = auth()->user()->name ?? 'Super Admin';
+
+        $result = $mutationService->updateCandidateStage(
+            $wiseId,
+            $masterStatusId,
+            $childStatusId,
+            $idempotencyKey,
+            $adminId,
+            $adminName
+        );
+
+        return response()->json($result, $result['http_status'] ?? 200);
     }
 
     public function job_request_accept($id)

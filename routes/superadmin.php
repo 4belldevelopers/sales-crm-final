@@ -155,6 +155,7 @@ Route::group(['middleware' => 'auth'], function () {
 
         Route::get('meeting-comment/{id}', [SuperAdminCompanyController::class, 'meetingComment'])->name('company.meeting-comment');
         Route::post('meeting-comment-new/{id?}', [SuperAdminCompanyController::class, 'meetingcommentnew'])->name('company.meeting-comment-new');
+        Route::post('meeting-schedule-delete/{id}', [SuperAdminCompanyController::class, 'meetingScheduleDelete'])->name('company.meeting-schedule-delete');
 
         Route::get('email-themes', [SuperAdminCompanyController::class, 'emailThemes'])->name('company.emailthemes');
         Route::any('email-themes/update/{id}', [SuperAdminCompanyController::class, 'emailThemesupdate'])->name('company.emailThemesupdate');
@@ -240,6 +241,7 @@ Route::group(['middleware' => 'auth'], function () {
         Route::get('candidate-data-lists-ajax', [SuperAdminCompanyController::class, 'canndidateListAjax'])->name('company.canndidateListAjax');
 
         Route::get('candidatedatashow/{id}', [SuperAdminCompanyController::class, 'candidatedatashow'])->name('company.job-applications.candidatedatashow');
+        Route::post('candidate/stage-submit', [SuperAdminCompanyController::class, 'candidateStageSubmit'])->name('company.candidateStageSubmit');
 
         Route::get('jobs/job_request_accept/{id?}', [SuperAdminCompanyController::class, 'job_request_accept'])->name('company.job_request_accept');
         Route::get('jobs/recommandedrequest_accept', [SuperAdminCompanyController::class, 'recommandedrequest_accept'])->name('company.recommandedrequest_accept');
