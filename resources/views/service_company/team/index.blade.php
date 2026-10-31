@@ -469,8 +469,7 @@
             min-width: 1020px;
         }
 
-        /* 5-Column Grid Definition for Legend & Sub-Cards (Zero Overflow on 15.6" screens) */
-        .team-roster-legend,
+        /* 5-Column Grid Definition for Sub-Cards (Zero Overflow on 15.6" screens) */
         .tm-subcards-grid {
             display: grid !important;
             grid-template-columns: minmax(0, 1.8fr) minmax(0, 1.15fr) minmax(0, 1.25fr) minmax(0, 1.05fr) minmax(0, 1.65fr) !important;
@@ -478,21 +477,6 @@
             align-items: stretch !important;
             box-sizing: border-box !important;
             width: 100% !important;
-        }
-
-        .team-roster-legend {
-            border: 1px solid transparent;
-            padding: 4px 14px 8px !important;
-            font-size: 10.5px !important;
-            font-weight: 700 !important;
-            color: #64748b !important;
-            text-transform: uppercase !important;
-            letter-spacing: 0.04em !important;
-        }
-        .team-roster-legend > div {
-            display: flex;
-            align-items: center;
-            gap: 5px;
         }
 
         .team-cards-container {
@@ -766,18 +750,22 @@
             font-variant-numeric: tabular-nums;
         }
 
-        /* Sub-Card 4: Dedicated Account Status (Swapped to Upper Grid) */
+        /* Sub-Card 4: Dedicated Account Status (3 Clear Rows per Rule 20) */
         .tm-status-body {
             display: flex;
             flex-direction: column;
-            justify-content: center;
+            justify-content: flex-start;
             min-width: 0;
-            gap: 6px;
+            gap: 2.5px;
         }
-        .tm-status-toggle-wrap {
+        .tm-status-row {
             display: flex;
             align-items: center;
-            gap: 8px;
+            min-width: 0;
+            line-height: 1.25;
+        }
+        .tm-status-row-control {
+            margin-bottom: 1px;
         }
         .ios-switch {
             position: relative;
@@ -811,30 +799,35 @@
         .ios-switch input:checked + .ios-slider { background-color: #009ef7; }
         .ios-switch input:checked + .ios-slider:before { transform: translateX(15px); }
         .ios-switch input:disabled + .ios-slider { opacity: .6; cursor: not-allowed; }
-        .tm-status-info {
-            display: flex;
-            flex-direction: column;
-            min-width: 0;
-        }
-        .tm-status-text {
-            font-size: 11.5px;
+        .tm-status-row-label .tm-status-text {
+            font-size: 12px;
             font-weight: 700;
             line-height: 1.2;
         }
-        .tm-status-subnote {
-            font-size: 9.5px;
+        .tm-status-row-sub .tm-status-subnote {
+            font-size: 10px;
             color: #94a3b8;
             line-height: 1.2;
-            margin-top: 1px;
             white-space: nowrap;
         }
-        .tm-status-invited-wrap {
-            display: flex;
-            flex-direction: column;
-            gap: 2px;
+        .btn-resend-invite-icon {
+            width: 26px;
+            height: 26px;
+            border-radius: 6px;
+            border: 1px solid #fde68a;
+            background: #fffbeb;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all .15s;
+        }
+        .btn-resend-invite-icon:hover {
+            background: #fef3c7;
+            border-color: #f59e0b;
         }
         .btn-resend-invite {
-            font-size: 11px;
+            font-size: 10.5px;
             font-weight: 600;
             color: #009ef7;
             text-decoration: none;
@@ -1178,8 +1171,7 @@
             .tm-card-sub {
                 font-size: 8.5px !important;
             }
-            .tm-subcards-grid,
-            .team-roster-legend {
+            .tm-subcards-grid {
                 grid-template-columns: minmax(0, 1.75fr) minmax(0, 1.15fr) minmax(0, 1.25fr) minmax(0, 1.05fr) minmax(0, 1.6fr) !important;
                 gap: 6px !important;
             }
@@ -1206,9 +1198,6 @@
             }
             .tm-card-sub {
                 font-size: 7.5px !important;
-            }
-            .team-roster-legend {
-                display: none !important;
             }
             .tm-subcards-grid {
                 grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
@@ -1901,10 +1890,10 @@
                     </div>
 
                     <div class="team-toolbar-right">
-                        <!-- Action Button: Invite Member -->
+                        <!-- Action Button: Add/Invite Members -->
                         <button type="button" class="team-btn-primary" id="openInviteDrawer">
-                            <i class="fa-solid fa-plus me-1"></i>
-                            <span>Invite Member</span>
+                            <i class="fa-solid fa-plus text-white" style="font-size: 11px;"></i>
+                            <span>Add/Invite Members</span>
                         </button>
                     </div>
                 </div>
@@ -1961,7 +1950,7 @@
                             </div>
                             <div class="tm-card-sub green">
                                 <i class="fa-solid fa-handshake" style="font-size: 8px;"></i>
-                                <span>Client contacts</span>
+                                <span>Client Representative</span>
                             </div>
                         </a>
 
@@ -1978,7 +1967,7 @@
                             </div>
                             <div class="tm-card-sub purple">
                                 <i class="fa-solid fa-store" style="font-size: 8px;"></i>
-                                <span>Agency partners</span>
+                                <span>Agency Representative</span>
                             </div>
                         </a>
 
@@ -2044,18 +2033,10 @@
                 </div>
 
                 <!-- ============================================================== -->
-                <!-- TIER 3: ROSTER COLUMN LEGEND & CARD STREAM (7 Columns Aligned) -->
+                <!-- TIER 3: CARD-DRIVEN MEMBER STREAM (Direct Card Flow)           -->
                 <!-- ============================================================== -->
                 <div class="team-roster-wrap">
                     <div class="team-roster-inner">
-                        <div class="team-roster-legend">
-                            <div><i class="fa-solid fa-id-card me-1 text-primary"></i>Member Identity</div>
-                            <div><i class="fa-solid fa-shield-halved me-1 text-primary"></i>System Role</div>
-                            <div><i class="fa-solid fa-briefcase me-1 text-primary"></i>Workload &amp; Ops</div>
-                            <div><i class="fa-solid fa-power-off me-1 text-primary"></i>Account Status</div>
-                            <div><i class="fa-solid fa-bullhorn me-1 text-primary"></i>Marketplace Roles</div>
-                        </div>
-
                         <div class="position-relative">
                             <div class="loadingMessage loadingMessageteamsListajax" style="display: none; position: absolute; z-index: 20; background: rgba(255,255,255,0.85); inset: 0; padding: 40px; text-align: center; font-weight: 600; color: #009ef7; border-radius: 10px;">
                                 <span class="spinner-border spinner-border-sm me-2"></span> Loading team members...
@@ -2724,8 +2705,8 @@
             // Phase 2: Tenant-Scoped IndexedDB Store for Team Listing & Reference Data
             const CURRENT_COMPANY_ID = {{ (int) (auth()->user()->company_id ?? 0) }};
             const CURRENT_USER_ID = {{ (int) (auth()->user()->id ?? 0) }};
-            const TEAM_DB_NAME = 'jero_team_local_store_v3_' + CURRENT_COMPANY_ID;
-            const TEAM_DB_VERSION = 3;
+            const TEAM_DB_NAME = 'jero_team_local_store_v4_' + CURRENT_COMPANY_ID;
+            const TEAM_DB_VERSION = 4;
             const TEAM_CACHE_TTL_MS = 15 * 60 * 1000; // 15 minutes TTL
 
             const JeroTeamLocalStore = (function() {
