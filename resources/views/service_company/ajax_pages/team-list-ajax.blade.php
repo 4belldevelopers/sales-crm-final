@@ -227,7 +227,7 @@
                                 <i class="fa-solid fa-crown text-purple me-1"></i><span><strong>{{ $captainJobs }}</strong> Captain Jobs</span>
                             </div>
                             <div class="tm-wl-row" title="Bench Talents Managed (Bench Talent Representative)">
-                                <i class="fa-solid fa-users text-success me-1"></i><span><strong>{{ $trmTalents }}</strong> Bench Talent Representative</span>
+                                <i class="fa-solid fa-users text-success me-1"></i><span title="Bench Talents Managed (Bench Talent Representative)"><strong>{{ $trmTalents }}</strong> Bench Talent Rep</span>
                             </div>
                         </div>
                     </div>

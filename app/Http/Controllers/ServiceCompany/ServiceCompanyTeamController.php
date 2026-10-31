@@ -282,7 +282,7 @@ class ServiceCompanyTeamController extends ServiceCompanyBaseController
         // V7: Tenant-scoped version key so all company team members see fresh updates instantly
         $versionKey = 'ats:teamversion:company_'.$company_id;
         $version = cache()->get($versionKey, 1);
-        $cacheKeySet = 'ats:allteam_v8:company:'.$company_id.':'.$version.':'.md5(json_encode($cachePayload));
+        $cacheKeySet = 'ats:allteam_v9:company:'.$company_id.':'.$version.':'.md5(json_encode($cachePayload));
         /* ----------------------------
         ⚡ Check DragonflyDB first
         ----------------------------- */
@@ -661,6 +661,7 @@ class ServiceCompanyTeamController extends ServiceCompanyBaseController
             ->pluck('total', 'spok_user_id') : collect();
 
         $trmTalentsMap = ! empty($userIds) ? DB::table('bench_assign')
+            ->where('company_id', $company_id)
             ->whereIn('user_id', $userIds)
             ->select('user_id', DB::raw('COUNT(*) as total'))
             ->groupBy('user_id')

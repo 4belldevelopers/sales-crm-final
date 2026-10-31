@@ -1119,6 +1119,10 @@
             flex-wrap: wrap;
             gap: 12px;
         }
+        /* Guard against any duplicate pagination inside stream container */
+        #teamsListajax .team-pagination-bar {
+            display: none !important;
+        }
         .team-pagination-info {
             font-size: 12px;
             color: #64748b;
@@ -2894,8 +2898,8 @@
             // Phase 2: Tenant-Scoped IndexedDB Store for Team Listing & Reference Data
             const CURRENT_COMPANY_ID = {{ (int) (auth()->user()->company_id ?? 0) }};
             const CURRENT_USER_ID = {{ (int) (auth()->user()->id ?? 0) }};
-            const TEAM_DB_NAME = 'jero_team_local_store_v10_' + CURRENT_COMPANY_ID;
-            const TEAM_DB_VERSION = 9;
+            const TEAM_DB_NAME = 'jero_team_local_store_v11_' + CURRENT_COMPANY_ID;
+            const TEAM_DB_VERSION = 10;
             const TEAM_CACHE_TTL_MS = 15 * 60 * 1000; // 15 minutes TTL
 
             const JeroTeamLocalStore = (function() {
