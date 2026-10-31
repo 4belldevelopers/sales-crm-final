@@ -186,11 +186,6 @@
                                 </svg>
                                 <span class="tm-subcard-title">System Role</span>
                             </div>
-                            @if ($row->root_user == 1)
-                                <span class="tm-subcard-badge badge-owner">Full Access</span>
-                            @else
-                                <span class="tm-subcard-badge badge-role">Editable</span>
-                            @endif
                         </div>
                         <div class="tm-role-body">
                             <div class="tm-role-badge-row">
@@ -212,7 +207,7 @@
                         </div>
                     </div>
 
-                    <!-- SUB-CARD 3: Workload & Ops -->
+                    <!-- SUB-CARD 3: Workload -->
                     <div class="tm-subcard tm-subcard-workload">
                         <div class="tm-subcard-head">
                             <div class="tm-subcard-title-wrap">
@@ -220,7 +215,7 @@
                                     <rect x="2" y="7" width="20" height="14" rx="2" ry="2"/>
                                     <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>
                                 </svg>
-                                <span class="tm-subcard-title">Workload &amp; Ops</span>
+                                <span class="tm-subcard-title">Workload</span>
                             </div>
                             <span class="tm-subcard-badge badge-count">{{ $activeJobs + $captainJobs + $trmTalents }} Ops</span>
                         </div>
@@ -306,37 +301,45 @@
                                 <i class="fa-solid fa-address-book text-primary" style="font-size: 11px;"></i>
                                 <span class="tm-subcard-title">Contact Details Visibility</span>
                             </div>
-                            @if ($publicCount > 0)
-                                <span class="tm-subcard-badge badge-rep" title="Publicly listed for {{ $publicCount }} enquiry types">
-                                    <i class="fa-solid fa-eye text-success me-1"></i>Public ({{ $publicCount }})
-                                </span>
-                            @else
-                                <span class="tm-subcard-badge badge-role" title="Contact details kept private">
-                                    <i class="fa-solid fa-eye-slash me-1"></i>Private
-                                </span>
-                            @endif
-                        </div>
-                        <div class="tm-comm-body">
-                            @if ($publicCount > 0)
-                                <div class="d-flex flex-wrap align-items-center gap-1">
-                                    @if (in_array('client', $channels, true))
-                                        <span class="tm-comm-chip client" title="Contact details shared for Sales &amp; Client Enquiries">
-                                            <i class="fa-solid fa-phone me-1"></i>Sales &amp; Client Enquiries
-                                        </span>
-                                    @endif
-                                    @if (in_array('agency', $channels, true))
-                                        <span class="tm-comm-chip vendor" title="Contact details shared for Agency Queries">
-                                            <i class="fa-solid fa-phone me-1"></i>Agency Queries
-                                        </span>
-                                    @endif
-                                    @if (in_array('bench', $channels, true))
-                                        <span class="tm-comm-chip recruitment" title="Contact details shared for Bench Talent Enquiries">
-                                            <i class="fa-solid fa-phone me-1"></i>Bench Talent Enquiries
-                                        </span>
-                                    @endif
+                            <div class="d-flex align-items-center gap-1 flex-shrink-0">
+                                @if ($publicCount > 0)
+                                    <span class="tm-subcard-badge badge-rep" title="{{ $publicCount }} Enquiry Channels Enabled">
+                                        <i class="fa-solid fa-circle-check text-success me-1"></i>({{ $publicCount }})
+                                    </span>
                                     <button type="button" class="btn-edit-comm-icon" data-user='@json($userData)' onclick="openAssignCommDrawer(this)" title="Edit contact sharing channels">
                                         <i class="fa-solid fa-pen"></i>
                                     </button>
+                                @else
+                                    <span class="tm-subcard-badge badge-role" title="Contact details kept private">
+                                        <i class="fa-solid fa-eye-slash me-1"></i>Private
+                                    </span>
+                                @endif
+                            </div>
+                        </div>
+                        <div class="tm-comm-body">
+                            @if ($publicCount > 0)
+                                <div class="tm-comm-rows-list">
+                                    @if (in_array('client', $channels, true))
+                                        <div class="tm-comm-row">
+                                            <span class="tm-comm-chip client" title="Sales &amp; Client Enquiries">
+                                                <i class="fa-solid fa-phone me-1"></i>Sales &amp; Client Enquiries
+                                            </span>
+                                        </div>
+                                    @endif
+                                    @if (in_array('agency', $channels, true))
+                                        <div class="tm-comm-row">
+                                            <span class="tm-comm-chip vendor" title="Agency Queries">
+                                                <i class="fa-solid fa-phone me-1"></i>Agency Queries
+                                            </span>
+                                        </div>
+                                    @endif
+                                    @if (in_array('bench', $channels, true))
+                                        <div class="tm-comm-row">
+                                            <span class="tm-comm-chip recruitment" title="Bench Talent Enquiries">
+                                                <i class="fa-solid fa-phone me-1"></i>Bench Talent Enquiries
+                                            </span>
+                                        </div>
+                                    @endif
                                 </div>
                             @else
                                 <div class="d-flex align-items-center justify-content-between w-100 gap-1 flex-wrap">
@@ -406,10 +409,6 @@
 
             </div>
         @endforeach
-
-        <div class="d-flex align-items-center justify-content-between pt-2 pb-1 px-1 text-muted fs-8">
-            <div>Showing 1 to {{ count($data) }} of {{ $total ?? count($data) }} members</div>
-        </div>
     </div>
 @else
     <div class="team-empty-card">
