@@ -9,15 +9,8 @@
 /* ── Guaranteed Card-Based Header Design (Rule 20 Enterprise Standard) ── */
 .kt_content_agency,
 #kt_content.kt_content_agency {
-  margin-top: -60px !important;
-  padding-top: 0 !important;
-}
-#kt_content,
-.content {
-  padding-top: 0 !important;
-}
-#kt_content_container {
-  padding-top: 0 !important;
+  margin-top: -30px !important;
+  padding-top: 14px !important;
 }
 .cd-activities-drawer {
   width: 80% !important;
@@ -139,7 +132,9 @@
   transition: all 0.15s ease !important;
   white-space: nowrap !important;
 }
-.cl-export-btn:hover {
+.cl-export-btn:hover,
+.cl-export-btn.show,
+.cl-export-btn.active {
   background: #f8fafc !important;
   border-color: #cbd5e1 !important;
 }
@@ -151,12 +146,12 @@
   left: auto !important;
   margin-top: 6px !important;
   min-width: 270px !important;
-  padding: 8px !important;
+  padding: 6px !important;
   background: #ffffff !important;
   border-radius: 10px !important;
   border: 1px solid #e2e8f0 !important;
   box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.12), 0 8px 10px -6px rgba(15, 23, 42, 0.08) !important;
-  z-index: 1060 !important;
+  z-index: 1080 !important;
 }
 .cl-export-dropdown-menu.show {
   display: block !important;
@@ -1639,7 +1634,7 @@
 </script>
 
 <!--begin::Content-->
-<div class="content d-flex flex-column flex-column-fluid pt-0 kt_content_agency" id="kt_content">
+<div class="content d-flex flex-column flex-column-fluid pt-3 kt_content_agency" id="kt_content">
   <!--begin::Post-->
   <div class="post d-flex flex-column-fluid" id="kt_post">
     <!--begin::Container-->
@@ -1671,8 +1666,8 @@
             </div>
 
             <div class="cl-header-actions">
-                <div class="cl-export-wrapper dropdown">
-                    <button type="button" class="cl-export-btn" id="clExportDropdownBtn" data-bs-toggle="dropdown" aria-expanded="false" title="Export agency portfolio">
+                <div class="cl-export-wrapper dropdown" id="clExportWrapper">
+                    <button type="button" class="cl-export-btn" id="clExportDropdownBtn" onclick="toggleAgencyExportDropdown(event)" title="Export agency portfolio">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0f172a" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
                             <polyline points="7 10 12 15 17 10"/>
@@ -1683,9 +1678,9 @@
                             <path d="m6 9 6 6 6-6"/>
                         </svg>
                     </button>
-                    <ul class="dropdown-menu dropdown-menu-end shadow-sm cl-export-dropdown-menu" aria-labelledby="clExportDropdownBtn">
+                    <ul class="dropdown-menu dropdown-menu-end shadow-sm cl-export-dropdown-menu" id="clExportDropdownMenu" aria-labelledby="clExportDropdownBtn">
                         <li>
-                            <a class="dropdown-item cl-export-option" href="javascript:void(0);" onclick="triggerAgencyExport('filtered_csv')">
+                            <a class="dropdown-item cl-export-option" href="javascript:void(0);" onclick="triggerAgencyExport('filtered_csv', event)">
                                 <div class="cl-export-opt-icon csv">
                                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                         <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
@@ -1700,7 +1695,7 @@
                             </a>
                         </li>
                         <li>
-                            <a class="dropdown-item cl-export-option" href="javascript:void(0);" onclick="triggerAgencyExport('all_csv')">
+                            <a class="dropdown-item cl-export-option" href="javascript:void(0);" onclick="triggerAgencyExport('all_csv', event)">
                                 <div class="cl-export-opt-icon all">
                                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                         <path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16a2 2 0 0 1-2 2Zm0 0a2 2 0 0 1-2-2v-9c0-1.1.9-2 2-2h2"/>
@@ -1715,7 +1710,7 @@
                         </li>
                         <li><hr class="dropdown-divider my-1 border-gray-200"></li>
                         <li>
-                            <a class="dropdown-item cl-export-option" href="javascript:void(0);" onclick="triggerAgencyExport('executive_pdf')">
+                            <a class="dropdown-item cl-export-option" href="javascript:void(0);" onclick="triggerAgencyExport('executive_pdf', event)">
                                 <div class="cl-export-opt-icon pdf">
                                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                         <path d="M6 9V2h12v7"/>
@@ -3016,9 +3011,30 @@
         }
     };
 
-    window.triggerAgencyExport = function(type) {
-        $('.cl-export-dropdown-menu').removeClass('show');
-        $('#clExportDropdownBtn').removeClass('show');
+    window.toggleAgencyExportDropdown = function(e) {
+        if (e) {
+            e.stopPropagation();
+            e.preventDefault();
+        }
+        const $menu = $('#clExportDropdownMenu');
+        const isShown = $menu.hasClass('show');
+        if (window.AgencyListingManager) window.AgencyListingManager.closeAllDropdowns();
+        if (!isShown) {
+            $menu.addClass('show');
+            $('#clExportDropdownBtn').addClass('show active');
+        } else {
+            $menu.removeClass('show');
+            $('#clExportDropdownBtn').removeClass('show active');
+        }
+    };
+
+    window.triggerAgencyExport = function(type, e) {
+        if (e) {
+            e.stopPropagation();
+            e.preventDefault();
+        }
+        $('#clExportDropdownMenu').removeClass('show');
+        $('#clExportDropdownBtn').removeClass('show active');
         if (type === 'filtered_csv') {
             window.AgencyExportManager.exportFilteredCsv();
         } else if (type === 'all_csv') {
@@ -3028,30 +3044,17 @@
         }
     };
 
-    // ── Export Dropdown Toggle Listeners ──
-    $(document).on('click', '#clExportDropdownBtn', function(e) {
-        e.preventDefault();
-        e.stopPropagation();
-        const $menu = $(this).siblings('.cl-export-dropdown-menu');
-        const isShown = $menu.hasClass('show');
-        $('.cl-export-dropdown-menu').removeClass('show');
-        $('#clExportDropdownBtn').removeClass('show');
-        if (!isShown) {
-            $menu.addClass('show');
-            $(this).addClass('show');
-        }
-    });
-
+    // ── Export Dropdown Outside Click Listener ──
     $(document).on('click', function(e) {
-        if (!$(e.target).closest('.cl-export-wrapper').length) {
-            $('.cl-export-dropdown-menu').removeClass('show');
-            $('#clExportDropdownBtn').removeClass('show');
+        if (!$(e.target).closest('#clExportWrapper').length) {
+            $('#clExportDropdownMenu').removeClass('show');
+            $('#clExportDropdownBtn').removeClass('show active');
         }
     });
 
-    $(document).on('click', '.cl-export-dropdown-menu a', function() {
-        $('.cl-export-dropdown-menu').removeClass('show');
-        $('#clExportDropdownBtn').removeClass('show');
+    $(document).on('click', '#clExportDropdownMenu a', function(e) {
+        $('#clExportDropdownMenu').removeClass('show');
+        $('#clExportDropdownBtn').removeClass('show active');
     });
 
     // ── Tab Management ──
@@ -3312,8 +3315,8 @@
         },
 
         closeAllDropdowns: function() {
-            $('.cl-loc-dropdown-panel, .cl-ind-dropdown-panel, .cl-act-dropdown-panel, .cl-pipe-dropdown-panel, .cl-sort-dropdown-panel').removeClass('show');
-            $('#clLocBtn, #clIndBtn, #clActBtn, #clPipeBtn, #clSortBtn').removeClass('active');
+            $('.cl-loc-dropdown-panel, .cl-ind-dropdown-panel, .cl-act-dropdown-panel, .cl-pipe-dropdown-panel, .cl-sort-dropdown-panel, #clExportDropdownMenu').removeClass('show');
+            $('#clLocBtn, #clIndBtn, #clActBtn, #clPipeBtn, #clSortBtn, #clExportDropdownBtn').removeClass('active show');
         },
 
         getCacheKey: function(page) {

@@ -2098,10 +2098,6 @@
         </div>
 
         <div class="cd-top-right-actions">
-            <button type="button" class="cd-hdr-action-btn primary" onclick="triggerDrawerTab('requisitions', event)" title="Share an open job position with this agency">
-                <i class="fas fa-plus"></i>
-                <span>Share Job</span>
-            </button>
             <div class="cd-top-close-wrap">
                 <button type="button" class="cd-hdr-btn-close cd-close-drawer" id="kt_activitiesDirectClient_close_btn" onclick="if(window.closeAgencyDrawer){window.closeAgencyDrawer();}else{$('#kt_activitiesDirectClient_close').trigger('click');}" title="Close Drawer">
                     <i class="fas fa-times"></i>
@@ -2197,6 +2193,7 @@
     <!-- ── AUTHORITATIVE HERO KPI STRIP (Strictly 6 Cards in 1 Row on 15.6" Screens) ── -->
     <div class="cd-kpi-grid">
         <!-- KPI 1: All Shared Jobs -->
+        <!-- KPI 1: All Shared Jobs -->
         <a href="#requisitions" class="cd-kpi-card cd-kpi-nav-trigger" onclick="triggerDrawerTab('requisitions', event)" title="Total jobs shared with this agency">
             <div class="cd-kpi-icon cd-kpi-icon-blue"><i class="fas fa-layer-group"></i></div>
             <div class="cd-kpi-body">
@@ -2205,48 +2202,48 @@
             </div>
         </a>
 
-        <!-- KPI 2: Active Jobs -->
+        <!-- KPI 2: All Active Jobs -->
         <a href="#requisitions" class="cd-kpi-card cd-kpi-nav-trigger" onclick="triggerDrawerTab('requisitions', event)" title="Active jobs currently being sourced">
             <div class="cd-kpi-icon cd-kpi-icon-emerald"><i class="fas fa-bolt"></i></div>
             <div class="cd-kpi-body">
                 <div class="cd-kpi-num">{{ number_format($kpiActiveJobs) }}</div>
-                <div class="cd-kpi-lbl">Active Jobs</div>
+                <div class="cd-kpi-lbl">All Active Jobs</div>
             </div>
         </a>
 
-        <!-- KPI 3: Candidates Submitted -->
+        <!-- KPI 3: All Candidates -->
         <a href="#candidate_list" class="cd-kpi-card cd-kpi-nav-trigger" onclick="triggerDrawerTab('candidate_list', event)" title="Total candidate profiles submitted">
             <div class="cd-kpi-icon cd-kpi-icon-purple"><i class="fas fa-users"></i></div>
             <div class="cd-kpi-body">
                 <div class="cd-kpi-num">{{ number_format($kpiSubmitted) }}</div>
-                <div class="cd-kpi-lbl">Candidates Submitted</div>
+                <div class="cd-kpi-lbl">All Candidates</div>
             </div>
         </a>
 
-        <!-- KPI 4: Interviews Scheduled -->
+        <!-- KPI 4: All Interviews -->
         <a href="#interview_tracker" class="cd-kpi-card cd-kpi-nav-trigger" onclick="triggerDrawerTab('interview_tracker', event)" title="Interviews conducted for agency candidates">
             <div class="cd-kpi-icon cd-kpi-icon-amber"><i class="fas fa-calendar-check"></i></div>
             <div class="cd-kpi-body">
                 <div class="cd-kpi-num">{{ number_format($kpiInterviews) }}</div>
-                <div class="cd-kpi-lbl">Interviews Scheduled</div>
+                <div class="cd-kpi-lbl">All Interviews</div>
             </div>
         </a>
 
-        <!-- KPI 5: Offers Generated -->
+        <!-- KPI 5: All Offers -->
         <a href="#candidate_joining" class="cd-kpi-card cd-kpi-nav-trigger" onclick="triggerDrawerTab('candidate_joining', event)" title="Offers extended to agency candidates">
             <div class="cd-kpi-icon cd-kpi-icon-rose"><i class="fas fa-file-signature"></i></div>
             <div class="cd-kpi-body">
                 <div class="cd-kpi-num">{{ number_format($kpiOffers) }}</div>
-                <div class="cd-kpi-lbl">Offers Generated</div>
+                <div class="cd-kpi-lbl">All Offers</div>
             </div>
         </a>
 
-        <!-- KPI 6: Successful Joins -->
+        <!-- KPI 6: All Joined -->
         <a href="#candidate_joining" class="cd-kpi-card cd-kpi-nav-trigger" onclick="triggerDrawerTab('candidate_joining', event)" title="Candidates successfully joined">
             <div class="cd-kpi-icon cd-kpi-icon-teal"><i class="fas fa-handshake"></i></div>
             <div class="cd-kpi-body">
                 <div class="cd-kpi-num">{{ number_format($kpiJoins) }}</div>
-                <div class="cd-kpi-lbl">Successful Joins</div>
+                <div class="cd-kpi-lbl">All Joined</div>
             </div>
         </a>
     </div>
