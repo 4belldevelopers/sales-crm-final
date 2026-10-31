@@ -7,9 +7,14 @@
 <link href="{{ asset('demo/css/clientList.css') }}?v={{ time() }}" rel="stylesheet" type="text/css" />
 <style>
 /* ── Guaranteed Card-Based Header Design (Rule 20 Enterprise Standard) ── */
+.kt_content_agency,
+#kt_content.kt_content_agency {
+  margin-top: -60px !important;
+  padding-top: 0 !important;
+}
 #kt_content,
 .content {
-  padding-top: 6px !important;
+  padding-top: 0 !important;
 }
 #kt_content_container {
   padding-top: 0 !important;
@@ -139,12 +144,22 @@
   border-color: #cbd5e1 !important;
 }
 .cl-export-dropdown-menu {
-  min-width: 260px !important;
-  padding: 6px !important;
+  display: none;
+  position: absolute !important;
+  top: 100% !important;
+  right: 0 !important;
+  left: auto !important;
+  margin-top: 6px !important;
+  min-width: 270px !important;
+  padding: 8px !important;
+  background: #ffffff !important;
   border-radius: 10px !important;
   border: 1px solid #e2e8f0 !important;
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1) !important;
-  z-index: 1050 !important;
+  box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.12), 0 8px 10px -6px rgba(15, 23, 42, 0.08) !important;
+  z-index: 1060 !important;
+}
+.cl-export-dropdown-menu.show {
+  display: block !important;
 }
 .cl-export-option {
   display: flex !important;
@@ -469,86 +484,568 @@
 .cl-pill-val { font-size: 12px !important; font-weight: 600 !important; color: #0f172a !important; }
 .cl-pill-icon svg { color: #2563eb; }
 
-/* Popover Panels */
-.cl-loc-dropdown-panel,
-.cl-ind-dropdown-panel,
-.cl-act-dropdown-panel,
-.cl-pipe-dropdown-panel,
-.cl-sort-dropdown-panel {
-  position: absolute !important;
-  top: calc(100% + 6px) !important;
-  right: 0 !important;
-  background: #ffffff !important;
-  border: 1px solid #e2e8f0 !important;
-  border-radius: 10px !important;
-  padding: 8px !important;
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1) !important;
-  z-index: 1050 !important;
-  min-width: 220px !important;
+/* ── Enterprise Combobox Popovers (Exact Reference Design Standard) ── */
+.cl-loc-dropdown-panel {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  width: 310px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.12), 0 8px 10px -6px rgba(15, 23, 42, 0.06);
+  z-index: 1050;
+  display: none;
+  flex-direction: column;
+  overflow: hidden;
+  animation: clLocFadeIn 0.15s ease-out;
+}
+@keyframes clLocFadeIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.cl-loc-dropdown-panel.show { display: flex; }
+.cl-loc-search-box {
+  padding: 10px 12px;
+  border-bottom: 1px solid #f1f5f9;
+  background: #fafafa;
+  position: relative;
+}
+.cl-loc-search-inp {
+  width: 100%;
+  height: 34px;
+  border: 1px solid #e2e8f0;
+  border-radius: 7px;
+  padding: 0 28px 0 30px;
+  font-size: 12px;
+  font-family: inherit;
+  color: #0f172a;
+  background: #ffffff;
+  outline: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.cl-loc-search-inp:focus {
+  border-color: #f59e0b;
+  box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.15);
+}
+.cl-loc-search-icon {
+  position: absolute;
+  left: 20px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #94a3b8;
+  pointer-events: none;
+}
+.cl-loc-search-clear {
+  position: absolute;
+  right: 20px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #94a3b8;
+  font-size: 11px;
+  cursor: pointer;
+  padding: 2px 4px;
+  border-radius: 50%;
   display: none;
 }
-.cl-act-dropdown-panel,
-.cl-pipe-dropdown-panel,
-.cl-sort-dropdown-panel {
-  min-width: 240px !important;
+.cl-loc-search-clear:hover { color: #0f172a; background: #e2e8f0; }
+.cl-loc-dropdown-body {
+  max-height: 290px;
+  overflow-y: auto;
+  padding: 6px 0;
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 transparent;
 }
-.cl-loc-dropdown-panel.show,
-.cl-ind-dropdown-panel.show,
-.cl-act-dropdown-panel.show,
-.cl-pipe-dropdown-panel.show,
-.cl-sort-dropdown-panel.show {
-  display: block !important;
+.cl-loc-dropdown-body::-webkit-scrollbar { width: 5px; }
+.cl-loc-dropdown-body::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+.cl-loc-section-hdr {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #94a3b8;
+  padding: 6px 14px 4px 14px;
+}
+.cl-loc-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 7px 14px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #1e293b;
+  cursor: pointer;
+  transition: background 0.12s ease;
+}
+.cl-loc-item:hover { background: #f1f5f9; }
+.cl-loc-item.selected {
+  background: #fffbeb;
+  color: #b45309;
+  font-weight: 600;
+}
+.cl-loc-item-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  flex: 1;
+}
+.cl-loc-item-title {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.cl-loc-badge {
+  font-size: 10.5px;
+  font-weight: 600;
+  padding: 1px 7px;
+  border-radius: 12px;
+  background: #e2e8f0;
+  color: #475569;
+  margin-left: 6px;
+  flex-shrink: 0;
+}
+.cl-loc-item.selected .cl-loc-badge { background: #fde68a; color: #92400e; }
+.cl-loc-expand-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 4px;
+  color: #94a3b8;
+  cursor: pointer;
+  margin-left: 4px;
+  transition: transform 0.15s ease, background 0.15s ease;
+}
+.cl-loc-expand-btn:hover { background: #e2e8f0; color: #334155; }
+.cl-loc-expand-btn.expanded svg { transform: rotate(90deg); }
+.cl-loc-city-list {
+  display: none;
+  background: #f8fafc;
+  border-left: 2px solid #e2e8f0;
+  margin-left: 24px;
+  padding: 2px 0;
+}
+.cl-loc-city-list.show { display: block; }
+.cl-loc-city-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 5px 14px 5px 12px;
+  font-size: 11.5px;
+  font-weight: 500;
+  color: #334155;
+  cursor: pointer;
+  transition: background 0.12s ease;
+}
+.cl-loc-city-item:hover { background: #f1f5f9; }
+.cl-loc-city-item.selected { background: #fef3c7; color: #b45309; font-weight: 600; }
+.cl-loc-divider { height: 1px; background: #f1f5f9; margin: 4px 0; }
+.cl-loc-empty { padding: 18px 14px; text-align: center; font-size: 11.5px; color: #94a3b8; }
+
+/* Industry Popover */
+.cl-ind-dropdown-panel {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  width: 320px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.12), 0 8px 10px -6px rgba(15, 23, 42, 0.06);
+  z-index: 1055;
+  display: none;
+  flex-direction: column;
+  overflow: hidden;
+  animation: clIndFadeIn 0.15s ease-out;
+}
+@keyframes clIndFadeIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.cl-ind-dropdown-panel.show { display: flex; }
+.cl-ind-search-box {
+  padding: 10px 12px;
+  border-bottom: 1px solid #f1f5f9;
+  background: #fafafa;
+  position: relative;
+}
+.cl-ind-search-inp {
+  width: 100%;
+  height: 34px;
+  border: 1px solid #e2e8f0;
+  border-radius: 7px;
+  padding: 0 28px 0 30px;
+  font-size: 12px;
+  font-family: inherit;
+  color: #0f172a;
+  background: #ffffff;
+  outline: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.cl-ind-search-inp:focus {
+  border-color: #009ef7;
+  box-shadow: 0 0 0 2px rgba(0, 158, 247, 0.15);
+}
+.cl-ind-search-icon {
+  position: absolute;
+  left: 20px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #94a3b8;
+  pointer-events: none;
+}
+.cl-ind-search-clear {
+  position: absolute;
+  right: 20px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #94a3b8;
+  font-size: 11px;
+  cursor: pointer;
+  padding: 2px 4px;
+  border-radius: 50%;
+  display: none;
+}
+.cl-ind-search-clear:hover { color: #0f172a; background: #e2e8f0; }
+.cl-ind-dropdown-body {
+  max-height: 300px;
+  overflow-y: auto;
+  padding: 6px 0;
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 transparent;
+}
+.cl-ind-dropdown-body::-webkit-scrollbar { width: 5px; }
+.cl-ind-dropdown-body::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+.cl-ind-quick-chips {
+  padding: 6px 12px 10px 12px;
+  border-bottom: 1px solid #f1f5f9;
+  background: #f8fafc;
+}
+.cl-ind-chips-title {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #64748b;
+  margin-bottom: 6px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.cl-ind-chips-row { display: flex; flex-wrap: wrap; gap: 5px; }
+.cl-ind-chip {
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  padding: 3px 8px;
+  font-size: 11px;
+  font-weight: 500;
+  color: #1e293b;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  user-select: none;
+}
+.cl-ind-chip:hover { border-color: #009ef7; color: #009ef7; background: #f1faff; }
+.cl-ind-chip.active {
+  background: #009ef7 !important;
+  border-color: #009ef7 !important;
+  color: #ffffff !important;
+}
+.cl-ind-section-hdr {
+  font-size: 10.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #64748b;
+  padding: 8px 14px 4px 14px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: #f8fafc;
+  border-top: 1px solid #f1f5f9;
+  border-bottom: 1px solid #f1f5f9;
+  margin-top: 4px;
+}
+.cl-ind-section-hdr:first-child { margin-top: 0; border-top: none; }
+.cl-ind-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 14px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #1e293b;
+  cursor: pointer;
+  transition: background 0.12s ease;
+  user-select: none;
+}
+.cl-ind-item:hover, .cl-ind-item.focused { background: #f1f5f9; }
+.cl-ind-item.selected {
+  background: #f1faff;
+  color: #009ef7;
+  font-weight: 600;
+}
+.cl-ind-item-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  flex: 1;
+}
+.cl-ind-item-title {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.cl-ind-check {
+  color: #009ef7;
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+  margin-left: 8px;
+}
+.cl-ind-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #cbd5e1;
+  flex-shrink: 0;
+  transition: background 0.12s ease;
+}
+.cl-ind-item:hover .cl-ind-dot, .cl-ind-item.focused .cl-ind-dot, .cl-ind-item.selected .cl-ind-dot {
+  background: #009ef7;
+}
+.cl-ind-sec-tag {
+  font-size: 9.5px;
+  font-weight: 500;
+  padding: 1.5px 5px;
+  border-radius: 4px;
+  background: #f1f5f9;
+  color: #64748b;
+  white-space: nowrap;
+}
+.cl-ind-hdr-icon {
+  display: inline-flex;
+  align-items: center;
+  color: #009ef7;
+}
+.cl-ind-empty { padding: 24px 16px; text-align: center; color: #64748b; }
+.cl-ind-empty-icon { margin-bottom: 6px; color: #94a3b8; }
+.cl-ind-empty-title { font-size: 13px; font-weight: 600; color: #1e293b; margin-bottom: 2px; }
+.cl-ind-empty-sub { font-size: 11.5px; color: #64748b; margin-bottom: 8px; }
+
+/* Activity & Pipeline Popovers */
+.cl-act-dropdown-panel, .cl-pipe-dropdown-panel {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  width: 285px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.12), 0 8px 10px -6px rgba(15, 23, 42, 0.06);
+  z-index: 1055;
+  display: none;
+  flex-direction: column;
+  overflow: hidden;
+  padding: 6px 0;
+  animation: clPopoverFadeIn 0.15s ease-out;
+}
+@keyframes clPopoverFadeIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.cl-act-dropdown-panel.show, .cl-pipe-dropdown-panel.show { display: flex; }
+.cl-act-section-hdr, .cl-pipe-section-hdr {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #94a3b8;
+  padding: 6px 14px 4px 14px;
+  user-select: none;
+}
+.cl-act-section-hdr:not(:first-child), .cl-pipe-section-hdr:not(:first-child) {
+  border-top: 1px solid #f1f5f9;
+  margin-top: 4px;
+  padding-top: 8px;
+}
+.cl-act-item, .cl-pipe-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 14px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #1e293b;
+  cursor: pointer;
+  transition: all 0.12s ease;
+  user-select: none;
+  outline: none;
+}
+.cl-act-item:hover, .cl-act-item:focus,
+.cl-pipe-item:hover, .cl-pipe-item:focus {
+  background: #f1f5f9;
+  color: #0f172a;
+}
+.cl-act-item.selected, .cl-pipe-item.selected {
+  background: #eff6ff;
+  color: #009ef7;
+  font-weight: 600;
+}
+.cl-act-item-left, .cl-pipe-item-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  flex: 1;
+}
+.cl-act-item-title, .cl-pipe-item-title {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.cl-act-item-right, .cl-pipe-item-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+.cl-act-badge, .cl-pipe-badge {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 1.5px 6.5px;
+  border-radius: 10px;
+  background: #f1f5f9;
+  color: #64748b;
+}
+.cl-act-item.selected .cl-act-badge, .cl-pipe-item.selected .cl-pipe-badge {
+  background: #dbeafe;
+  color: #0284c7;
+}
+.cl-act-check, .cl-pipe-check {
+  font-size: 11px;
+  font-weight: 700;
+  color: #009ef7;
+  display: inline-flex;
+  align-items: center;
+  width: 14px;
+  justify-content: center;
 }
 
-.cl-act-section-hdr,
-.cl-sort-section-hdr,
-.cl-pipe-section-hdr {
-  font-size: 10px !important;
-  font-weight: 700 !important;
-  color: #94a3b8 !important;
-  text-transform: uppercase !important;
-  padding: 6px 8px 4px !important;
-}
-.cl-act-item,
-.cl-sort-item,
-.cl-pipe-item {
-  display: flex !important;
-  align-items: center !important;
-  justify-content: space-between !important;
-  padding: 6px 8px !important;
-  border-radius: 6px !important;
-  cursor: pointer !important;
-  font-size: 11.5px !important;
-  color: #334155 !important;
-  transition: background 0.12s ease !important;
-}
-.cl-act-item:hover,
-.cl-sort-item:hover,
-.cl-pipe-item:hover {
-  background: #f1f5f9 !important;
-  color: #0f172a !important;
-}
-.cl-act-item.selected,
-.cl-sort-item.selected,
-.cl-pipe-item.selected {
-  background: #eff6ff !important;
-  color: #2563eb !important;
-  font-weight: 600 !important;
-}
+/* Dots */
 .cl-act-dot, .cl-pipe-dot {
   width: 7px;
   height: 7px;
   border-radius: 50%;
   display: inline-block;
-  margin-right: 6px;
+  flex-shrink: 0;
 }
-.cl-dot-all    { background: #94a3b8; }
-.cl-dot-green  { background: #16a34a; }
-.cl-dot-blue   { background: #2563eb; }
+.cl-dot-green  { background: #10b981; }
+.cl-dot-blue   { background: #3b82f6; }
 .cl-dot-amber  { background: #f59e0b; }
-.cl-dot-slate  { background: #64748b; }
-.cl-dot-purple { background: #9333ea; }
-.cl-dot-violet { background: #7c3aed; }
+.cl-dot-slate  { background: #94a3b8; }
+.cl-dot-purple { background: #8b5cf6; }
+.cl-dot-violet { background: #6366f1; }
+.cl-dot-all    { background: #64748b; }
+
+/* Sort Popover */
+.cl-sort-dropdown-panel {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  width: 260px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.12), 0 8px 10px -6px rgba(15, 23, 42, 0.06);
+  z-index: 1055;
+  display: none;
+  flex-direction: column;
+  overflow: hidden;
+  padding: 6px 0;
+  animation: clSortFadeIn 0.15s ease-out;
+}
+@keyframes clSortFadeIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.cl-sort-dropdown-panel.show { display: flex; }
+.cl-sort-section-hdr {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #94a3b8;
+  padding: 6px 14px 4px 14px;
+  user-select: none;
+}
+.cl-sort-section-hdr:not(:first-child) {
+  border-top: 1px solid #f1f5f9;
+  margin-top: 4px;
+  padding-top: 8px;
+}
+.cl-sort-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 14px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #1e293b;
+  cursor: pointer;
+  transition: all 0.12s ease;
+  user-select: none;
+  outline: none;
+}
+.cl-sort-item:hover, .cl-sort-item:focus {
+  background: #f1f5f9;
+  color: #0f172a;
+}
+.cl-sort-item.selected {
+  background: #eff6ff;
+  color: #009ef7;
+  font-weight: 600;
+}
+.cl-sort-item-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  flex: 1;
+}
+.cl-sort-item-icon {
+  color: #64748b;
+  flex-shrink: 0;
+  transition: color 0.12s ease;
+}
+.cl-sort-item:hover .cl-sort-item-icon,
+.cl-sort-item.selected .cl-sort-item-icon {
+  color: #009ef7;
+  stroke: #009ef7;
+}
+.cl-sort-item-title {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.cl-sort-direction-badge {
+  font-size: 10px;
+  font-weight: 600;
+  color: #94a3b8;
+  margin-right: 4px;
+}
+.cl-sort-check {
+  font-size: 11px;
+  font-weight: 700;
+  color: #009ef7;
+  display: inline-flex;
+  align-items: center;
+  width: 14px;
+  justify-content: center;
+}
 
 /* ── Table & Card Stream Container (Rule 20 Modern Card + Sub-Card System) ── */
 .tbl {
@@ -565,28 +1062,7 @@
   position: relative !important;
 }
 .tbl-h {
-  display: grid !important;
-  grid-template-columns: minmax(0, 1.85fr) minmax(0, 0.95fr) minmax(0, 0.8fr) minmax(0, 3.9fr) !important;
-  gap: 8px !important;
-  padding: 8px 14px !important;
-  background: #f8fafc !important;
-  border: 1px solid #e2e8f0 !important;
-  border-radius: 8px !important;
-  margin-bottom: 10px !important;
-}
-.tbl-th-subcard {
-  font-size: 11px !important;
-  font-weight: 700 !important;
-  color: #475569 !important;
-  text-transform: uppercase !important;
-  display: flex !important;
-  align-items: center !important;
-  gap: 5px !important;
-}
-.tbl-th-label {
-  display: flex;
-  align-items: center;
-  gap: 5px;
+  display: none !important;
 }
 
 /* Primary Card (Tier 3) */
@@ -611,7 +1087,7 @@
 /* Sub-Cards Grid */
 .cl-subcards-grid {
   display: grid !important;
-  grid-template-columns: minmax(0, 1.85fr) minmax(0, 0.95fr) minmax(0, 0.8fr) minmax(0, 3.9fr) !important;
+  grid-template-columns: minmax(0, 2.8fr) minmax(0, 1.0fr) minmax(0, 0.85fr) minmax(0, 2.85fr) !important;
   gap: 8px !important;
   margin-bottom: 10px !important;
 }
@@ -711,9 +1187,12 @@
   font-size: 13.5px !important;
   font-weight: 700 !important;
   color: #0f172a !important;
-  line-height: 1.25 !important;
+  line-height: 1.3 !important;
   cursor: pointer !important;
-  white-space: nowrap !important;
+  word-break: break-word !important;
+  display: -webkit-box !important;
+  -webkit-line-clamp: 2 !important;
+  -webkit-box-orient: vertical !important;
   overflow: hidden !important;
   text-overflow: ellipsis !important;
 }
@@ -996,8 +1475,8 @@
     width: 10px !important;
     height: 10px !important;
   }
-  .cl-subcards-grid, .tbl-h {
-    grid-template-columns: minmax(0, 1.75fr) minmax(0, 0.9fr) minmax(0, 0.75fr) minmax(0, 4.0fr) !important;
+  .cl-subcards-grid {
+    grid-template-columns: minmax(0, 2.6fr) minmax(0, 0.95fr) minmax(0, 0.8fr) minmax(0, 2.85fr) !important;
     gap: 8px !important;
   }
 }
@@ -1041,8 +1520,8 @@
     width: 9px !important;
     height: 9px !important;
   }
-  .cl-subcards-grid, .tbl-h {
-    grid-template-columns: minmax(0, 1.7fr) minmax(0, 0.85fr) minmax(0, 0.75fr) minmax(0, 4.1fr) !important;
+  .cl-subcards-grid {
+    grid-template-columns: minmax(0, 2.5fr) minmax(0, 0.9fr) minmax(0, 0.8fr) minmax(0, 2.8fr) !important;
     gap: 6px !important;
   }
   .cl-pipe-label {
@@ -1052,11 +1531,11 @@
 }
 
 @media (max-width: 992px) {
-  .cl-subcards-grid, .tbl-h {
+  .cl-subcards-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
     gap: 8px !important;
   }
-  .cl-subcard-pipeline, .tbl-th-subcard:last-child {
+  .cl-subcard-pipeline {
     grid-column: span 2 !important;
   }
 }
@@ -1083,10 +1562,10 @@
   .cl-card-sub {
     font-size: 7.5px !important;
   }
-  .cl-subcards-grid, .tbl-h {
+  .cl-subcards-grid {
     grid-template-columns: 1fr !important;
   }
-  .cl-subcard-pipeline, .tbl-th-subcard:last-child {
+  .cl-subcard-pipeline {
     grid-column: span 1 !important;
   }
   .cl-header {
@@ -1160,7 +1639,7 @@
 </script>
 
 <!--begin::Content-->
-<div class="content d-flex flex-column flex-column-fluid pt-0" id="kt_content">
+<div class="content d-flex flex-column flex-column-fluid pt-0 kt_content_agency" id="kt_content">
   <!--begin::Post-->
   <div class="post d-flex flex-column-fluid" id="kt_post">
     <!--begin::Container-->
@@ -1418,9 +1897,9 @@
                 <div id="loader_search" class="loader_search hidden_search" style="display:none;position:absolute;right:12px;top:50%;transform:translateY(-50%);"></div>
             </div>
 
-            {{-- Filter 1: Location Combobox Popover --}}
+            {{-- Filter 1: Enterprise Location Combobox Popover --}}
             <div class="cl-loc-dropdown-wrapper" id="clLocDropdownWrapper">
-                <div class="cl-loc-combobox-btn" id="clLocBtn" onclick="toggleLocationDropdown(event)" title="Filter by agency headquarters country or location">
+                <div class="cl-loc-combobox-btn" id="clLocBtn" onclick="toggleLocationDropdown(event)" role="button" tabindex="0" aria-haspopup="listbox" aria-expanded="false" title="Filter by agency headquarters country or location">
                     <div class="cl-pill-icon">
                         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>
@@ -1430,38 +1909,36 @@
                         <span class="cl-pill-lbl">Location</span>
                         <span class="cl-pill-val" id="locationDisplay">All Locations</span>
                     </div>
-                    <div class="cl-pill-clear" id="locationClearBtn" onclick="clearLocationFilter(event)" title="Reset Location to All" style="display:none;">✕</div>
+                    <div class="cl-pill-clear" id="locationClearBtn" onclick="clearLocationFilterFromPill(event)" title="Reset Location to All" style="display:none;">✕</div>
                     <div class="cl-pill-chevron">
                         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
                     </div>
                 </div>
 
                 <div class="cl-loc-dropdown-panel" id="clLocDropdownPanel">
-                    <div class="cl-loc-search-box" style="position: relative;">
-                        <input type="text" class="cl-search-inp" style="height:32px; padding:0 26px 0 10px;" id="clLocSearchInp" placeholder="Search countries..." autocomplete="off" oninput="handleLocationSearchInput(this.value)" />
-                        <span class="cl-pill-clear" id="clLocSearchClear" onclick="$('#clLocSearchInp').val(''); handleLocationSearchInput(''); $(this).hide();" style="position: absolute; right: 14px; top: 50%; transform: translateY(-50%); display:none;">✕</span>
+                    <div class="cl-loc-search-box">
+                        <svg class="cl-loc-search-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                            <circle cx="11" cy="11" r="8"/>
+                            <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                        </svg>
+                        <input type="text" class="cl-loc-search-inp" id="clLocSearchInp" placeholder="Search countries or cities..." autocomplete="off" oninput="handleLocationSearchInput(this.value)" />
+                        <span class="cl-loc-search-clear" id="clLocSearchClear" onclick="clearLocationSearch()">✕</span>
                     </div>
-                    <div class="cl-loc-dropdown-body mt-2" id="clLocDropdownBody" style="max-height: 220px; overflow-y: auto;">
-                        <div class="cl-act-item selected" onclick="selectLocationOption('', 'All Locations', event)" title="Show agencies across all locations">
-                            <span>All Locations</span>
-                            <span class="cl-act-check">✓</span>
-                        </div>
-                        @if (!empty($countries))
-                            @foreach ($countries as $c)
-                                <div class="cl-act-item" onclick="selectLocationOption('{{ $c->id }}', '{{ $c->country_name }}', event)" title="{{ $c->country_name }}">
-                                    <span>{{ $c->country_name }}</span>
-                                    <span class="cl-act-check" style="display:none;">✓</span>
-                                </div>
-                            @endforeach
-                        @endif
+                    <div class="cl-loc-dropdown-body" id="clLocDropdownBody">
+                        {{-- Rendered dynamically from window.initialLocationFacets & window.allCountriesList via User RAM --}}
                     </div>
                 </div>
+
                 <input type="hidden" id="country" name="country" value="" />
+                <input type="hidden" id="country_name" name="country_name" value="" />
+                <input type="hidden" id="city_id" name="city_id" value="" />
+                <input type="hidden" id="city_name" name="city_name" value="" />
+                <input type="hidden" id="unspecified_location" name="unspecified_location" value="0" />
             </div>
 
-            {{-- Filter 2: Industry / Specialization Combobox Popover --}}
+            {{-- Filter 2: Enterprise Industry Combobox Popover --}}
             <div class="cl-ind-dropdown-wrapper" id="clIndDropdownWrapper">
-                <button type="button" class="cl-ind-combobox-btn" id="clIndBtn" onclick="toggleIndustryDropdown(event)" title="Filter by agency industry specialization">
+                <div class="cl-ind-combobox-btn" id="clIndBtn" onclick="toggleIndustryDropdown(event)" role="button" tabindex="0" aria-haspopup="listbox" aria-expanded="false" title="Filter by Industry">
                     <div class="cl-pill-icon">
                         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <rect x="2" y="7" width="20" height="14" rx="2" ry="2"/>
@@ -1472,38 +1949,31 @@
                         <span class="cl-pill-lbl">Industry</span>
                         <span class="cl-pill-val" id="industryDisplay">All Industries</span>
                     </div>
-                    <div class="cl-pill-clear" id="industryClearBtn" onclick="clearIndustryFilter(event)" title="Reset Industry to All" style="display:none;">✕</div>
+                    <div class="cl-pill-clear" id="industryClearBtn" onclick="clearIndustryFilterFromPill(event)" title="Reset to All Industries" style="display:none;">✕</div>
                     <div class="cl-pill-chevron">
                         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
                     </div>
-                </button>
+                </div>
 
-                <div class="cl-ind-dropdown-panel" id="clIndDropdownPanel">
-                    <div class="cl-ind-search-box" style="position: relative;">
-                        <input type="text" class="cl-search-inp" style="height:32px; padding:0 26px 0 10px;" id="clIndSearchInp" placeholder="Search industries..." autocomplete="off" oninput="handleIndustrySearchInput(this.value)" />
-                        <span class="cl-pill-clear" id="clIndSearchClear" onclick="$('#clIndSearchInp').val(''); handleIndustrySearchInput(''); $(this).hide();" style="position: absolute; right: 14px; top: 50%; transform: translateY(-50%); display:none;">✕</span>
+                <div class="cl-ind-dropdown-panel" id="clIndDropdownPanel" role="listbox" aria-label="Industries Filter">
+                    <div class="cl-ind-search-box">
+                        <svg class="cl-ind-search-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                        <input type="text" class="cl-ind-search-inp" id="clIndSearchInp" placeholder="Search 160+ industries or sectors..." autocomplete="off" oninput="handleIndustrySearchInput(this.value)" />
+                        <span class="cl-ind-search-clear" id="clIndSearchClear" onclick="clearIndustrySearch()">✕</span>
                     </div>
-                    <div class="cl-ind-dropdown-body mt-2" id="clIndDropdownBody" style="max-height: 220px; overflow-y: auto;">
-                        <div class="cl-act-item selected" onclick="selectIndustryOption('', 'All Industries', event)" title="Show all recruitment industries">
-                            <span>All Industries</span>
-                            <span class="cl-act-check">✓</span>
-                        </div>
-                        @if (!empty($industries))
-                            @foreach ($industries as $ind)
-                                <div class="cl-act-item" onclick="selectIndustryOption('{{ $ind->ind_id }}', '{{ $ind->ind_name }}', event)" title="{{ $ind->ind_name }}">
-                                    <span>{{ $ind->ind_name }}</span>
-                                    <span class="cl-act-check" style="display:none;">✓</span>
-                                </div>
-                            @endforeach
-                        @endif
+                    <div class="cl-ind-dropdown-body" id="clIndDropdownBody">
+                        {{-- Rendered dynamically from window.initialIndustriesManifest via User RAM --}}
                     </div>
                 </div>
+
                 <input type="hidden" id="industry" name="industry" value="" />
+                <input type="hidden" id="industry_id" name="industry_id" value="" />
+                <input type="hidden" id="sector_id" name="sector_id" value="" />
             </div>
 
-            {{-- Filter 3: Activity Recency Combobox Popover --}}
+            {{-- Filter 3: Enterprise Activity Recency Combobox Popover --}}
             <div class="cl-act-dropdown-wrapper" id="clActDropdownWrapper">
-                <button type="button" class="cl-act-combobox-btn" id="clActBtn" onclick="toggleActivityDropdown(event)" title="Filter by agency recent workflow or submission activity">
+                <button type="button" class="cl-act-combobox-btn" id="clActBtn" onclick="toggleActivityDropdown(event)" aria-haspopup="listbox" aria-expanded="false" aria-controls="clActDropdownPanel" title="Filter by Recency">
                     <div class="cl-pill-icon">
                         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
@@ -1513,85 +1983,141 @@
                         <span class="cl-pill-lbl">Activity</span>
                         <span class="cl-pill-val" id="activityDisplay">All Activity</span>
                     </div>
-                    <div class="cl-pill-clear" id="activityClearBtn" onclick="clearActivityFilter(event)" title="Reset Activity to All" style="display:none;">✕</div>
+                    <div class="cl-pill-clear" id="activityClearBtn" onclick="clearActivityFilter(event)" title="Reset Activity" style="display:none;">✕</div>
                     <div class="cl-pill-chevron">
                         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
                     </div>
                 </button>
 
-                <div class="cl-act-dropdown-panel" id="clActDropdownPanel">
-                    <div class="cl-act-section-hdr">Recency Window</div>
-                    <div class="cl-act-item selected" onclick="selectActivityOption('', 'All Activity', event)" title="All connected agencies regardless of recency">
-                        <span>All Activity</span>
-                        <span class="cl-act-check">✓</span>
+                <div class="cl-act-dropdown-panel" id="clActDropdownPanel" role="listbox" aria-labelledby="clActBtn" tabindex="-1">
+                    {{-- Section 1: Overview / Reset --}}
+                    <div class="cl-act-section-hdr">Activity Overview</div>
+                    <div class="cl-act-item selected" id="act-opt-all" data-act-val="all" onclick="selectActivityOption('all', 'All Activity', event)" role="option" aria-selected="true" tabindex="0">
+                        <div class="cl-act-item-left">
+                            <span class="cl-act-dot cl-dot-all"></span>
+                            <span class="cl-act-item-title">All Activity</span>
+                        </div>
+                        <div class="cl-act-item-right">
+                            <span class="cl-act-badge" id="actCountAll">{{ $agencyRecencyCounts['all'] ?? 0 }}</span>
+                            <span class="cl-act-check">✓</span>
+                        </div>
                     </div>
-                    <div class="cl-act-item" onclick="selectActivityOption('7d', 'Active This Week (0–7d)', event)" title="Agencies with candidate submissions in the last 7 days">
-                        <span>Active This Week (0–7d)</span>
-                        <span class="cl-act-check" style="display:none;">✓</span>
+
+                    {{-- Section 2: Recency (Strictly Mutually Exclusive Buckets) --}}
+                    <div class="cl-act-section-hdr">Recency (Mutually Exclusive)</div>
+                    <div class="cl-act-item" id="act-opt-7d" data-act-val="7d" onclick="selectActivityOption('7d', 'Active This Week', event)" role="option" aria-selected="false" tabindex="0">
+                        <div class="cl-act-item-left">
+                            <span class="cl-act-dot cl-dot-green"></span>
+                            <span class="cl-act-item-title">Active This Week (0–7d)</span>
+                        </div>
+                        <div class="cl-act-item-right">
+                            <span class="cl-act-badge" id="actCount7d">{{ $agencyRecencyCounts['7d'] ?? 0 }}</span>
+                            <span class="cl-act-check" style="display:none;">✓</span>
+                        </div>
                     </div>
-                    <div class="cl-act-item" onclick="selectActivityOption('30d', 'Active This Month (8–30d)', event)" title="Agencies with candidate submissions in the last 30 days">
-                        <span>Active This Month (8–30d)</span>
-                        <span class="cl-act-check" style="display:none;">✓</span>
+                    <div class="cl-act-item" id="act-opt-30d" data-act-val="30d" onclick="selectActivityOption('30d', 'Active This Month', event)" role="option" aria-selected="false" tabindex="0">
+                        <div class="cl-act-item-left">
+                            <span class="cl-act-dot cl-dot-blue"></span>
+                            <span class="cl-act-item-title">Active This Month (8–30d)</span>
+                        </div>
+                        <div class="cl-act-item-right">
+                            <span class="cl-act-badge" id="actCount30d">{{ $agencyRecencyCounts['30d'] ?? 0 }}</span>
+                            <span class="cl-act-check" style="display:none;">✓</span>
+                        </div>
                     </div>
-                    <div class="cl-act-item" onclick="selectActivityOption('inactive', 'No Submissions (>30d)', event)" title="Agencies with no candidate submissions in the last 30 days">
-                        <span>No Recent Activity</span>
-                        <span class="cl-act-check" style="display:none;">✓</span>
+                    <div class="cl-act-item" id="act-opt-90d" data-act-val="90d" onclick="selectActivityOption('90d', 'Needs Outreach', event)" role="option" aria-selected="false" tabindex="0">
+                        <div class="cl-act-item-left">
+                            <span class="cl-act-dot cl-dot-amber"></span>
+                            <span class="cl-act-item-title">Needs Outreach (31–90d)</span>
+                        </div>
+                        <div class="cl-act-item-right">
+                            <span class="cl-act-badge" id="actCount90d">{{ $agencyRecencyCounts['90d'] ?? 0 }}</span>
+                            <span class="cl-act-check" style="display:none;">✓</span>
+                        </div>
+                    </div>
+                    <div class="cl-act-item" id="act-opt-dormant" data-act-val="dormant" onclick="selectActivityOption('dormant', 'Dormant (> 90d)', event)" role="option" aria-selected="false" tabindex="0">
+                        <div class="cl-act-item-left">
+                            <span class="cl-act-dot cl-dot-slate"></span>
+                            <span class="cl-act-item-title">Dormant (> 90d Inactive)</span>
+                        </div>
+                        <div class="cl-act-item-right">
+                            <span class="cl-act-badge" id="actCountDormant">{{ $agencyRecencyCounts['dormant'] ?? 0 }}</span>
+                            <span class="cl-act-check" style="display:none;">✓</span>
+                        </div>
+                    </div>
+                    <div class="cl-act-item" id="act-opt-never" data-act-val="never" onclick="selectActivityOption('never', 'Never Engaged', event)" role="option" aria-selected="false" tabindex="0">
+                        <div class="cl-act-item-left">
+                            <span class="cl-act-dot cl-dot-purple"></span>
+                            <span class="cl-act-item-title">Never Engaged (No Touch)</span>
+                        </div>
+                        <div class="cl-act-item-right">
+                            <span class="cl-act-badge" id="actCountNever">{{ $agencyRecencyCounts['never'] ?? 0 }}</span>
+                            <span class="cl-act-check" style="display:none;">✓</span>
+                        </div>
                     </div>
                 </div>
+
                 <input type="hidden" id="activity" name="activity" value="" />
             </div>
 
-            {{-- Filter 4: Candidate Pipeline Combobox Popover --}}
+            {{-- Filter 4: Enterprise Candidate Pipeline Combobox Popover --}}
             <div class="cl-pipe-dropdown-wrapper" id="clPipeDropdownWrapper">
-                <button type="button" class="cl-pipe-combobox-btn" id="clPipeBtn" onclick="togglePipelineDropdown(event)" title="Filter by candidate pipeline stage presence">
+                <button type="button" class="cl-pipe-combobox-btn" id="clPipeBtn" onclick="togglePipelineDropdown(event)" aria-haspopup="listbox" aria-expanded="false" aria-controls="clPipeDropdownPanel" title="Filter by Candidate Pipeline">
                     <div class="cl-pill-icon">
                         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z"/>
+                            <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>
                         </svg>
                     </div>
                     <div class="cl-pill-texts">
                         <span class="cl-pill-lbl">Pipeline</span>
                         <span class="cl-pill-val" id="pipelineDisplay">All Pipeline</span>
                     </div>
-                    <div class="cl-pill-clear" id="pipelineClearBtn" onclick="clearPipelineFilter(event)" title="Reset Pipeline to All" style="display:none;">✕</div>
+                    <div class="cl-pill-clear" id="pipelineClearBtn" onclick="clearPipelineFilter(event)" title="Reset Pipeline" style="display:none;">✕</div>
                     <div class="cl-pill-chevron">
                         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
                     </div>
                 </button>
 
-                <div class="cl-pipe-dropdown-panel" id="clPipeDropdownPanel">
-                    <div class="cl-pipe-section-hdr">Pipeline Funnel Stage</div>
-                    <div class="cl-pipe-item selected" onclick="selectPipelineOption('', 'All Pipeline', event)" title="All agencies across any stage">
-                        <span>All Pipeline</span>
-                        <span class="cl-act-check">✓</span>
+                <div class="cl-pipe-dropdown-panel" id="clPipeDropdownPanel" role="listbox" aria-labelledby="clPipeBtn" tabindex="-1">
+                    <div class="cl-pipe-section-hdr">Pipeline State</div>
+                    <div class="cl-pipe-item selected" id="pipe-opt-all" data-pipe-val="all" onclick="selectPipelineOption('all', 'All Pipeline', event)" role="option" aria-selected="true" tabindex="0">
+                        <div class="cl-pipe-item-left">
+                            <span class="cl-pipe-dot cl-dot-all"></span>
+                            <span class="cl-pipe-item-title">All Pipeline</span>
+                        </div>
+                        <div class="cl-pipe-item-right">
+                            <span class="cl-pipe-badge" id="pipeCountAll">{{ $agencyPipelineCounts['all'] ?? 0 }}</span>
+                            <span class="cl-pipe-check">✓</span>
+                        </div>
                     </div>
-                    <div class="cl-pipe-item" onclick="selectPipelineOption('sourcing', 'Sourcing Stage', event)" title="Agencies with candidates currently in Sourcing stage">
-                        <span>Sourcing Stage</span>
-                        <span class="cl-act-check" style="display:none;">✓</span>
+                    <div class="cl-pipe-item" id="pipe-opt-active" data-pipe-val="active" onclick="selectPipelineOption('active', 'Pipeline Moving', event)" role="option" aria-selected="false" tabindex="0">
+                        <div class="cl-pipe-item-left">
+                            <span class="cl-pipe-dot cl-dot-violet"></span>
+                            <span class="cl-pipe-item-title">Pipeline Moving (Active)</span>
+                        </div>
+                        <div class="cl-pipe-item-right">
+                            <span class="cl-pipe-badge" id="pipeCountActive">{{ $agencyPipelineCounts['active'] ?? 0 }}</span>
+                            <span class="cl-pipe-check" style="display:none;">✓</span>
+                        </div>
                     </div>
-                    <div class="cl-pipe-item" onclick="selectPipelineOption('screening', 'Screening Stage', event)" title="Agencies with candidates in Screening / Evaluation">
-                        <span>Screening Stage</span>
-                        <span class="cl-act-check" style="display:none;">✓</span>
-                    </div>
-                    <div class="cl-pipe-item" onclick="selectPipelineOption('interview', 'Interview Stage', event)" title="Agencies with active interview candidates">
-                        <span>Interview Stage</span>
-                        <span class="cl-act-check" style="display:none;">✓</span>
-                    </div>
-                    <div class="cl-pipe-item" onclick="selectPipelineOption('offers', 'Offers Stage', event)" title="Agencies with candidate offer letters extended">
-                        <span>Offers Stage</span>
-                        <span class="cl-act-check" style="display:none;">✓</span>
-                    </div>
-                    <div class="cl-pipe-item" onclick="selectPipelineOption('joined', 'Joined Stage', event)" title="Agencies with confirmed joined placements">
-                        <span>Joined Stage</span>
-                        <span class="cl-act-check" style="display:none;">✓</span>
+                    <div class="cl-pipe-item" id="pipe-opt-none" data-pipe-val="none" onclick="selectPipelineOption('none', 'No Active Pipeline', event)" role="option" aria-selected="false" tabindex="0">
+                        <div class="cl-pipe-item-left">
+                            <span class="cl-pipe-dot cl-dot-slate"></span>
+                            <span class="cl-pipe-item-title">No Active Pipeline</span>
+                        </div>
+                        <div class="cl-pipe-item-right">
+                            <span class="cl-pipe-badge" id="pipeCountNone">{{ $agencyPipelineCounts['none'] ?? 0 }}</span>
+                            <span class="cl-pipe-check" style="display:none;">✓</span>
+                        </div>
                     </div>
                 </div>
+
                 <input type="hidden" id="pipeline" name="pipeline" value="" />
             </div>
 
-            {{-- Filter 5: Sort Combobox Popover --}}
+            {{-- Filter 5: Enterprise Sort Combobox Popover --}}
             <div class="cl-sort-dropdown-wrapper" id="clSortDropdownWrapper">
-                <button type="button" class="cl-sort-combobox-btn" id="clSortBtn" onclick="toggleSortDropdown(event)" title="Sort Agency Listing by chronological, alphabetical, or workload criteria">
+                <button type="button" class="cl-sort-combobox-btn" id="clSortBtn" onclick="toggleSortDropdown(event)" aria-haspopup="listbox" aria-expanded="false" aria-controls="clSortDropdownPanel" title="Sort Agency Listing">
                     <div class="cl-pill-icon">
                         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <line x1="7" y1="4" x2="7" y2="20"/><polyline points="3 8 7 4 11 8"/><line x1="17" y1="4" x2="17" y2="20"/><polyline points="13 16 17 20 21 16"/>
@@ -1601,38 +2127,71 @@
                         <span class="cl-pill-lbl">Sort</span>
                         <span class="cl-pill-val" id="sortDisplay">Recently Added</span>
                     </div>
-                    <div class="cl-pill-clear" id="sortClearBtn" onclick="clearSortFilter(event)" title="Reset Sort to Recently Added" style="display:none;">✕</div>
+                    <div class="cl-pill-clear" id="sortClearBtn" onclick="clearSortFilter(event)" title="Reset Sort" style="display:none;">✕</div>
                     <div class="cl-pill-chevron">
                         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
                     </div>
                 </button>
 
-                <div class="cl-sort-dropdown-panel" id="clSortDropdownPanel">
+                <div class="cl-sort-dropdown-panel" id="clSortDropdownPanel" role="listbox" aria-labelledby="clSortBtn" tabindex="-1">
                     <div class="cl-sort-section-hdr">Chronological</div>
-                    <div class="cl-sort-item selected" onclick="selectSortOption('recent', 'Recently Added', event)" title="Sort by newest partnership date">
-                        <span>Recently Added</span>
-                        <span class="cl-act-check">✓</span>
+                    <div class="cl-sort-item selected" id="sort-opt-recent" data-sort-val="recent" onclick="selectSortOption('recent', 'Recently Added', event)" role="option" aria-selected="true" tabindex="0">
+                        <div class="cl-sort-item-left">
+                            <svg class="cl-sort-item-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                            <span class="cl-sort-item-title">Recently Added</span>
+                        </div>
+                        <div class="cl-sort-item-right">
+                            <span class="cl-sort-direction-badge">Newest ↓</span>
+                            <span class="cl-sort-check">✓</span>
+                        </div>
                     </div>
-                    <div class="cl-sort-item" onclick="selectSortOption('oldest', 'Oldest First', event)" title="Sort by oldest partnership date">
-                        <span>Oldest First</span>
-                        <span class="cl-act-check" style="display:none;">✓</span>
+                    <div class="cl-sort-item" id="sort-opt-oldest" data-sort-val="oldest" onclick="selectSortOption('oldest', 'Oldest First', event)" role="option" aria-selected="false" tabindex="0">
+                        <div class="cl-sort-item-left">
+                            <svg class="cl-sort-item-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                            <span class="cl-sort-item-title">Oldest First</span>
+                        </div>
+                        <div class="cl-sort-item-right">
+                            <span class="cl-sort-direction-badge">Oldest ↑</span>
+                            <span class="cl-sort-check" style="display:none;">✓</span>
+                        </div>
                     </div>
+
                     <div class="cl-sort-section-hdr">Alphabetical</div>
-                    <div class="cl-sort-item" onclick="selectSortOption('name_asc', 'Agency Name (A → Z)', event)" title="Sort alphabetically A to Z">
-                        <span>Agency Name (A → Z)</span>
-                        <span class="cl-act-check" style="display:none;">✓</span>
+                    <div class="cl-sort-item" id="sort-opt-name_asc" data-sort-val="name_asc" onclick="selectSortOption('name_asc', 'Agency Name (A → Z)', event)" role="option" aria-selected="false" tabindex="0">
+                        <div class="cl-sort-item-left">
+                            <svg class="cl-sort-item-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+                            <span class="cl-sort-item-title">Agency Name (A → Z)</span>
+                        </div>
+                        <div class="cl-sort-item-right">
+                            <span class="cl-sort-direction-badge">A → Z</span>
+                            <span class="cl-sort-check" style="display:none;">✓</span>
+                        </div>
                     </div>
-                    <div class="cl-sort-item" onclick="selectSortOption('name_desc', 'Agency Name (Z → A)', event)" title="Sort alphabetically Z to A">
-                        <span>Agency Name (Z → A)</span>
-                        <span class="cl-act-check" style="display:none;">✓</span>
+                    <div class="cl-sort-item" id="sort-opt-name_desc" data-sort-val="name_desc" onclick="selectSortOption('name_desc', 'Agency Name (Z → A)', event)" role="option" aria-selected="false" tabindex="0">
+                        <div class="cl-sort-item-left">
+                            <svg class="cl-sort-item-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+                            <span class="cl-sort-item-title">Agency Name (Z → A)</span>
+                        </div>
+                        <div class="cl-sort-item-right">
+                            <span class="cl-sort-direction-badge">Z → A</span>
+                            <span class="cl-sort-check" style="display:none;">✓</span>
+                        </div>
                     </div>
-                    <div class="cl-sort-section-hdr">Workload & Activity</div>
-                    <div class="cl-sort-item" onclick="selectSortOption('jobs_desc', 'Most Shared Jobs', event)" title="Sort by active shared jobs count">
-                        <span>Most Shared Jobs</span>
-                        <span class="cl-act-check" style="display:none;">✓</span>
+
+                    <div class="cl-sort-section-hdr">Workload & Jobs</div>
+                    <div class="cl-sort-item" id="sort-opt-jobs_desc" data-sort-val="jobs_desc" onclick="selectSortOption('jobs_desc', 'Most Shared Jobs', event)" role="option" aria-selected="false" tabindex="0">
+                        <div class="cl-sort-item-left">
+                            <svg class="cl-sort-item-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+                            <span class="cl-sort-item-title">Most Shared Jobs</span>
+                        </div>
+                        <div class="cl-sort-item-right">
+                            <span class="cl-sort-direction-badge">High → Low</span>
+                            <span class="cl-sort-check" style="display:none;">✓</span>
+                        </div>
                     </div>
                 </div>
-                <input type="hidden" id="sortingfilter" name="sortingfilter" value="" />
+
+                <input type="hidden" id="sortingfilter" name="sortingfilter" value="recent" />
             </div>
         </div>
 
@@ -1641,32 +2200,6 @@
         <div class="tbl">
             <div class="tbl-w">
                 <div class="tbl-scroll-container">
-                    <div class="tbl-h" id="agencyTableHead">
-                        <div class="tbl-th-subcard">
-                            <div class="tbl-th-label">
-                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
-                                <span>Agency Identity</span>
-                            </div>
-                        </div>
-                        <div class="tbl-th-subcard">
-                            <div class="tbl-th-label">
-                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 2a8 8 0 0 0-8 8c0 5.25 8 12 8 12s8-6.75 8-12a8 8 0 0 0-8-8z"/><circle cx="12" cy="10" r="3"/></svg>
-                                <span>Location</span>
-                            </div>
-                        </div>
-                        <div class="tbl-th-subcard">
-                            <div class="tbl-th-label">
-                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
-                                <span>Shared Jobs</span>
-                            </div>
-                        </div>
-                        <div class="tbl-th-subcard">
-                            <div class="tbl-th-label">
-                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z"/></svg>
-                                <span>Candidate Pipeline</span>
-                            </div>
-                        </div>
-                    </div>
 
                     <div class="loadingMessage loadingMessagestaffingpartnerajax" style="display:none; position:absolute; left:50%; top:50%; transform:translate(-50%, -50%); z-index:10; background:rgba(255,255,255,0.9); padding:10px 20px; border-radius:8px; box-shadow:0 2px 10px rgba(0,0,0,0.1);">Processing...</div>
                     <div id="staffingpartnerajax">{!! $initialHtml ?? '' !!}</div>
@@ -1739,7 +2272,789 @@
 
 @push('footer-script')
 <script>
-    // ── Global Filter & Action Callbacks (Strict Rule 17 Isolation) ──
+    // ── Agency Listing Facets & Data Payload (User RAM - Client-First) ──
+    window.initialLocationFacets = {!! json_encode($agencyLocationFacets ?? ['total' => 0, 'located_count' => 0, 'unspecified_count' => 0, 'hubs' => []]) !!};
+    window.allCountriesList = {!! json_encode($countries ?? []) !!};
+    window.initialIndustriesManifest = {!! json_encode($industriesManifest ?? App\Services\IndustryTaxonomyService::getGlobalManifest()) !!};
+    window.initialRecencyCounts = {!! json_encode($agencyRecencyCounts ?? ['all' => 0, '7d' => 0, '30d' => 0, '90d' => 0, 'dormant' => 0, 'never' => 0]) !!};
+    window.initialPipelineCounts = {!! json_encode($agencyPipelineCounts ?? ['all' => 0, 'active' => 0, 'none' => 0]) !!};
+
+    // ── Helper Utilities ──
+    function escapeAttr(str) {
+        if (!str) return '';
+        return String(str).replace(/&/g, '&amp;').replace(/'/g, '&#39;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    }
+
+    function highlightText(text, query) {
+        if (!query || !text) return escapeAttr(text);
+        const escaped = escapeAttr(text);
+        const cleanQuery = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const regex = new RegExp(`(${cleanQuery})`, 'gi');
+        return escaped.replace(regex, '<span class="cl-ind-mark">$1</span>');
+    }
+
+    const SECTOR_ICON_MAP = {
+        1: '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>',
+        2: '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>',
+        3: '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>',
+        4: '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 20a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V8l-7 5V8l-7 5V4a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z"/></svg>',
+        5: '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>',
+        6: '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>',
+        7: '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>',
+        8: '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"/></svg>',
+        9: '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>',
+        10: '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm0 18a8 8 0 1 1 8-8 8 8 0 0 1-8 8z"/></svg>'
+    };
+
+    let activeIndSectorFilter = 'all';
+
+    // ── Location Popover Engine ──
+    function toggleLocationDropdown(e) {
+        if (e) { e.stopPropagation(); e.preventDefault(); }
+        const $panel = $('#clLocDropdownPanel');
+        const isVisible = $panel.hasClass('show');
+        if (window.AgencyListingManager) window.AgencyListingManager.closeAllDropdowns();
+        if (!isVisible) {
+            $panel.addClass('show');
+            $('#clLocBtn').addClass('active');
+            renderLocationDropdown($('#clLocSearchInp').val() || '');
+            setTimeout(() => $('#clLocSearchInp').focus(), 50);
+        }
+    }
+
+    function renderLocationDropdown(filterQuery = '') {
+        const q = (filterQuery || '').toLowerCase().trim();
+        const $body = $('#clLocDropdownBody');
+        const facets = window.initialLocationFacets || { total: 0, located_count: 0, unspecified_count: 0, hubs: [] };
+        const hubs = facets.hubs || [];
+        const unspecifiedCount = facets.unspecified_count || 0;
+        const countries = window.allCountriesList || [];
+        const currentCountry = window.AgencyListingManager ? window.AgencyListingManager.countryFilter : '';
+        const currentCity = window.AgencyListingManager ? window.AgencyListingManager.cityFilter : '';
+        const isUnspecified = window.AgencyListingManager ? window.AgencyListingManager.unspecifiedLocation : false;
+
+        let html = '';
+
+        // Option 1: All Locations (Reset)
+        const isAllSelected = !currentCountry && !isUnspecified;
+        if (!q || 'all locations'.includes(q) || 'clear'.includes(q)) {
+            html += `
+                <div class="cl-loc-item ${isAllSelected ? 'selected' : ''}" onclick="resetLocationFilter(true)">
+                    <div class="cl-loc-item-left">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="m2 12 20 0"/></svg>
+                        <span class="cl-loc-item-title">All Locations</span>
+                    </div>
+                    <span class="cl-loc-badge">${facets.total || 0}</span>
+                </div>
+            `;
+        }
+
+        // Active Agency Hubs Section
+        let hubHtml = '';
+        hubs.forEach(function(hub) {
+            const countryMatch = hub.country_name.toLowerCase().includes(q);
+            const matchingCities = (hub.cities || []).filter(c => c.city_name.toLowerCase().includes(q));
+
+            if (!q || countryMatch || matchingCities.length > 0) {
+                const isCountrySelected = (currentCountry == hub.country_id && !currentCity && !isUnspecified);
+                const hasCities = (hub.cities && hub.cities.length > 0);
+                const isExpanded = (q.length > 0) || (currentCountry == hub.country_id);
+
+                hubHtml += `
+                    <div class="cl-loc-item-container" data-country-id="${hub.country_id}">
+                        <div class="cl-loc-item ${isCountrySelected ? 'selected' : ''}" onclick="selectLocationCountry(${hub.country_id}, '${escapeAttr(hub.country_name)}', true)">
+                            <div class="cl-loc-item-left">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                                <span class="cl-loc-item-title">${highlightText(hub.country_name, q)}</span>
+                            </div>
+                            <div class="d-flex align-items-center">
+                                <span class="cl-loc-badge">${hub.count}</span>
+                                ${hasCities ? `
+                                    <span class="cl-loc-expand-btn ${isExpanded ? 'expanded' : ''}" onclick="toggleCityExpand(event, ${hub.country_id})">
+                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+                                    </span>
+                                ` : ''}
+                            </div>
+                        </div>
+                `;
+
+                if (hasCities) {
+                    hubHtml += `<div class="cl-loc-city-list ${isExpanded ? 'show' : ''}" id="clLocCities_${hub.country_id}">`;
+                    hub.cities.forEach(function(city) {
+                        if (!q || countryMatch || city.city_name.toLowerCase().includes(q)) {
+                            const isCitySelected = (currentCountry == hub.country_id && (currentCity == city.city_id || currentCity == city.city_name));
+                            hubHtml += `
+                                <div class="cl-loc-city-item ${isCitySelected ? 'selected' : ''}" onclick="selectLocationCity(${hub.country_id}, '${escapeAttr(hub.country_name)}', '${city.city_id}', '${escapeAttr(city.city_name)}', true)">
+                                    <span>${highlightText(city.city_name, q)}</span>
+                                    <span class="cl-loc-badge" style="font-size:9.5px; padding:0 5px;">${city.count}</span>
+                                </div>
+                            `;
+                        }
+                    });
+                    hubHtml += `</div>`;
+                }
+
+                hubHtml += `</div>`;
+            }
+        });
+
+        if (hubHtml) {
+            html += `<div class="cl-loc-section-hdr">Your Agency Hubs</div>${hubHtml}`;
+        }
+
+        // Unspecified Location option
+        if (unspecifiedCount > 0 && (!q || 'location not specified'.includes(q) || 'unspecified'.includes(q) || 'unknown'.includes(q))) {
+            const isUnspecifiedSelected = (isUnspecified === true || isUnspecified === 1);
+            html += `
+                <div class="cl-loc-item ${isUnspecifiedSelected ? 'selected' : ''}" onclick="selectLocationUnspecified(true)">
+                    <div class="cl-loc-item-left">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
+                        <span class="cl-loc-item-title" style="color:#64748b;">Location Not Specified</span>
+                    </div>
+                    <span class="cl-loc-badge" style="background:#f1f5f9; color:#64748b;">${unspecifiedCount}</span>
+                </div>
+            `;
+        }
+
+        // All 250 Countries Section
+        let globalHtml = '';
+        let globalCount = 0;
+        const maxGlobalToShow = q ? 50 : 15;
+
+        countries.forEach(function(c) {
+            const inHubs = hubs.some(h => h.country_id == c.id || h.country_name.toLowerCase() === c.country_name.toLowerCase());
+            if (inHubs && !q) return;
+
+            if (!q || c.country_name.toLowerCase().includes(q)) {
+                if (globalCount < maxGlobalToShow) {
+                    globalCount++;
+                    const isSelected = (currentCountry == c.id && !currentCity && !isUnspecified);
+                    globalHtml += `
+                        <div class="cl-loc-item ${isSelected ? 'selected' : ''}" onclick="selectLocationCountry(${c.id}, '${escapeAttr(c.country_name)}', true)">
+                            <div class="cl-loc-item-left">
+                                <span style="font-size:13px; line-height:1;">${c.emoji || '🌐'}</span>
+                                <span class="cl-loc-item-title">${highlightText(c.country_name, q)}</span>
+                            </div>
+                        </div>
+                    `;
+                }
+            }
+        });
+
+        if (globalHtml) {
+            html += `
+                <div class="cl-loc-divider"></div>
+                <div class="cl-loc-section-hdr">${q ? 'Global Countries Match' : 'All Countries'}</div>
+                ${globalHtml}
+            `;
+            if (!q && countries.length > maxGlobalToShow) {
+                html += `<div style="padding:4px 14px 8px 14px; font-size:10.5px; color:#94a3b8; font-style:italic;">Type above to search all 250 countries...</div>`;
+            }
+        }
+
+        if (!html) {
+            html = `<div class="cl-loc-empty">No locations matching "${escapeAttr(q)}"</div>`;
+        }
+
+        $body.html(html);
+    }
+
+    function toggleCityExpand(e, countryId) {
+        if (e) { e.stopPropagation(); e.preventDefault(); }
+        const $cities = $(`#clLocCities_${countryId}`);
+        const $btn = $(e.currentTarget);
+        $cities.toggleClass('show');
+        $btn.toggleClass('expanded');
+    }
+
+    function selectLocationCountry(countryId, countryName, triggerFetch = true) {
+        if (window.AgencyListingManager) {
+            window.AgencyListingManager.countryFilter = countryId;
+            window.AgencyListingManager.countryName = countryName;
+            window.AgencyListingManager.cityFilter = '';
+            window.AgencyListingManager.cityName = '';
+            window.AgencyListingManager.unspecifiedLocation = false;
+        }
+        $('#country').val(countryId);
+        $('#country_name').val(countryName);
+        $('#city_id').val('');
+        $('#city_name').val('');
+        $('#unspecified_location').val('0');
+
+        $('#locationDisplay').text(countryName);
+        $('#clLocBtn').addClass('has-filter').removeClass('active');
+        $('#locationClearBtn').show();
+        $('#clLocDropdownPanel').removeClass('show');
+
+        if (triggerFetch && window.AgencyListingManager) {
+            window.AgencyListingManager.loadPage(1);
+        }
+    }
+
+    function selectLocationCity(countryId, countryName, cityId, cityName, triggerFetch = true) {
+        if (window.AgencyListingManager) {
+            window.AgencyListingManager.countryFilter = countryId;
+            window.AgencyListingManager.countryName = countryName;
+            window.AgencyListingManager.cityFilter = cityId || cityName;
+            window.AgencyListingManager.cityName = cityName;
+            window.AgencyListingManager.unspecifiedLocation = false;
+        }
+        $('#country').val(countryId);
+        $('#country_name').val(countryName);
+        $('#city_id').val(cityId);
+        $('#city_name').val(cityName);
+        $('#unspecified_location').val('0');
+
+        const displayLabel = `${countryName}: ${cityName}`;
+        $('#locationDisplay').text(displayLabel);
+        $('#clLocBtn').addClass('has-filter').removeClass('active');
+        $('#locationClearBtn').show();
+        $('#clLocDropdownPanel').removeClass('show');
+
+        if (triggerFetch && window.AgencyListingManager) {
+            window.AgencyListingManager.loadPage(1);
+        }
+    }
+
+    function selectLocationUnspecified(triggerFetch = true) {
+        if (window.AgencyListingManager) {
+            window.AgencyListingManager.countryFilter = '';
+            window.AgencyListingManager.countryName = '';
+            window.AgencyListingManager.cityFilter = '';
+            window.AgencyListingManager.cityName = '';
+            window.AgencyListingManager.unspecifiedLocation = true;
+        }
+        $('#country').val('');
+        $('#country_name').val('');
+        $('#city_id').val('');
+        $('#city_name').val('');
+        $('#unspecified_location').val('1');
+
+        $('#locationDisplay').text('Location Not Specified');
+        $('#clLocBtn').addClass('has-filter').removeClass('active');
+        $('#locationClearBtn').show();
+        $('#clLocDropdownPanel').removeClass('show');
+
+        if (triggerFetch && window.AgencyListingManager) {
+            window.AgencyListingManager.loadPage(1);
+        }
+    }
+
+    function resetLocationFilter(triggerFetch = true) {
+        if (window.AgencyListingManager) {
+            window.AgencyListingManager.countryFilter = '';
+            window.AgencyListingManager.countryName = '';
+            window.AgencyListingManager.cityFilter = '';
+            window.AgencyListingManager.cityName = '';
+            window.AgencyListingManager.unspecifiedLocation = false;
+        }
+        $('#country').val('');
+        $('#country_name').val('');
+        $('#city_id').val('');
+        $('#city_name').val('');
+        $('#unspecified_location').val('0');
+
+        $('#locationDisplay').text('All Locations');
+        $('#clLocBtn').removeClass('has-filter active');
+        $('#locationClearBtn').hide();
+        $('#clLocDropdownPanel').removeClass('show');
+
+        if (triggerFetch && window.AgencyListingManager) {
+            window.AgencyListingManager.loadPage(1);
+        }
+    }
+
+    function clearLocationFilterFromPill(e) {
+        if (e) { e.stopPropagation(); e.preventDefault(); }
+        resetLocationFilter(true);
+    }
+
+    function handleLocationSearchInput(val) {
+        const q = (val || '').trim();
+        if (q.length > 0) {
+            $('#clLocSearchClear').show();
+        } else {
+            $('#clLocSearchClear').hide();
+        }
+        renderLocationDropdown(q);
+    }
+
+    function clearLocationSearch() {
+        $('#clLocSearchInp').val('');
+        $('#clLocSearchClear').hide();
+        renderLocationDropdown('');
+        $('#clLocSearchInp').focus();
+    }
+
+    // ── Industry Popover Engine ──
+    function toggleIndustryDropdown(e) {
+        if (e) { e.stopPropagation(); e.preventDefault(); }
+        const $panel = $('#clIndDropdownPanel');
+        const isVisible = $panel.hasClass('show');
+        if (window.AgencyListingManager) window.AgencyListingManager.closeAllDropdowns();
+        if (!isVisible) {
+            $panel.addClass('show');
+            $('#clIndBtn').addClass('active');
+            renderIndustryDropdown($('#clIndSearchInp').val() || '');
+            setTimeout(() => $('#clIndSearchInp').focus(), 50);
+        }
+    }
+
+    function filterIndustryBySector(sectorId, e) {
+        if (e) { e.stopPropagation(); e.preventDefault(); }
+        activeIndSectorFilter = sectorId;
+        renderIndustryDropdown($('#clIndSearchInp').val() || '');
+    }
+
+    function renderIndustryDropdown(filterQuery = '') {
+        const q = (filterQuery || '').toLowerCase().trim();
+        const $body = $('#clIndDropdownBody');
+        const manifest = window.initialIndustriesManifest || { industries: [], sectors: [] };
+        const allIndustries = manifest.industries || [];
+        const selectedId = window.AgencyListingManager ? String(window.AgencyListingManager.industryFilter || '') : '';
+
+        let html = '';
+
+        // Quick Chips (All, Tech & AI, FinTech, Health, Retail & D2C, Other)
+        if (!q) {
+            html += `
+                <div class="cl-ind-quick-chips">
+                    <div class="cl-ind-chips-title">
+                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#009ef7" stroke-width="2.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                        <span>Quick Sectors</span>
+                    </div>
+                    <div class="cl-ind-chips-row">
+                        <button type="button" class="cl-ind-chip ${activeIndSectorFilter === 'all' ? 'active' : ''}" onclick="filterIndustryBySector('all', event)">All</button>
+                        <button type="button" class="cl-ind-chip ${activeIndSectorFilter === 1 ? 'active' : ''}" onclick="filterIndustryBySector(1, event)">Tech & AI</button>
+                        <button type="button" class="cl-ind-chip ${activeIndSectorFilter === 2 ? 'active' : ''}" onclick="filterIndustryBySector(2, event)">FinTech</button>
+                        <button type="button" class="cl-ind-chip ${activeIndSectorFilter === 3 ? 'active' : ''}" onclick="filterIndustryBySector(3, event)">Healthcare</button>
+                        <button type="button" class="cl-ind-chip ${activeIndSectorFilter === 6 ? 'active' : ''}" onclick="filterIndustryBySector(6, event)">Retail & D2C</button>
+                        <button type="button" class="cl-ind-chip ${activeIndSectorFilter === 'other' ? 'active' : ''}" onclick="filterIndustryBySector('other', event)">Other</button>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Option 1: All Industries (Reset option)
+        const isAllSelected = !selectedId;
+        if (!q || 'all industries'.includes(q) || 'clear'.includes(q) || 'all'.includes(q)) {
+            html += `
+                <div class="cl-ind-item ${isAllSelected ? 'selected' : ''}" data-id="" onclick="clearIndustryFilter(true)">
+                    <div class="cl-ind-item-left">
+                        <span class="cl-ind-dot"></span>
+                        <span class="cl-ind-item-title">All Industries</span>
+                    </div>
+                    ${isAllSelected ? '<span class="cl-ind-check"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg></span>' : ''}
+                </div>
+            `;
+        }
+
+        // Filter industries
+        let matches = allIndustries.filter(function(item) {
+            if (activeIndSectorFilter !== 'all' && !q) {
+                if (activeIndSectorFilter === 'other') {
+                    if (item.id !== 147 && item.sector_id !== 5 && item.sector_id !== 10) return false;
+                } else if (item.sector_id !== activeIndSectorFilter) {
+                    return false;
+                }
+            }
+            if (!q) return true;
+
+            const nameMatch = (item.name || '').toLowerCase().includes(q);
+            const sectorMatch = (item.sector_name || '').toLowerCase().includes(q);
+            const kwMatch = (item.keywords || '').toLowerCase().includes(q);
+            const acronymMatch = (item.acronyms || []).some(a => a.toLowerCase().includes(q));
+            const synMatch = (item.synonyms || []).some(s => s.toLowerCase().includes(q));
+
+            return nameMatch || sectorMatch || kwMatch || acronymMatch || synMatch;
+        });
+
+        if (matches.length === 0) {
+            html += `
+                <div class="cl-ind-empty">
+                    <div class="cl-ind-empty-icon">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+                    </div>
+                    <div class="cl-ind-empty-title">No industry matching "${escapeAttr(q)}"</div>
+                    <div class="cl-ind-empty-sub">Select universal classification:</div>
+                    <button type="button" class="btn btn-sm btn-light-primary" style="font-size:11.5px; font-weight:600; padding:6px 14px; border-radius:6px; display:inline-flex; align-items:center; gap:6px;" onclick="selectIndustryFilter(147, 'Other / Diversified Services', true)">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                        Select "Other / Diversified Services"
+                    </button>
+                </div>
+            `;
+            $body.html(html);
+            return;
+        }
+
+        let currentSecId = null;
+        matches.forEach(function(item, idx) {
+            if (!q && item.sector_id !== currentSecId) {
+                currentSecId = item.sector_id;
+                const secIcon = SECTOR_ICON_MAP[currentSecId] || SECTOR_ICON_MAP[5];
+                html += `
+                    <div class="cl-ind-section-hdr">
+                        <span class="cl-ind-hdr-icon">${secIcon}</span>
+                        <span>${escapeAttr(item.sector_name || 'General')}</span>
+                    </div>
+                `;
+            }
+
+            const isSelected = String(item.id) === selectedId;
+            const displayName = q ? highlightText(item.name, q) : escapeAttr(item.name);
+            const sectorTag = q ? `<span class="cl-ind-sec-tag">${escapeAttr((item.sector_name || '').split(',')[0].split('&')[0].trim())}</span>` : '';
+
+            html += `
+                <div class="cl-ind-item ${isSelected ? 'selected' : ''}" data-idx="${idx}" data-id="${item.id}" onclick="selectIndustryFilter(${item.id}, '${escapeAttr(item.name)}', true)" role="option" aria-selected="${isSelected ? 'true' : 'false'}">
+                    <div class="cl-ind-item-left">
+                        <span class="cl-ind-dot"></span>
+                        <span class="cl-ind-item-title" title="${escapeAttr(item.name)}">${displayName}</span>
+                    </div>
+                    <div class="d-flex align-items-center gap-1">
+                        ${sectorTag}
+                        ${isSelected ? '<span class="cl-ind-check"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg></span>' : ''}
+                    </div>
+                </div>
+            `;
+        });
+
+        $body.html(html);
+    }
+
+    function selectIndustryFilter(id, name, triggerFetch = true) {
+        const val = id ? String(id) : '';
+        if (window.AgencyListingManager) {
+            window.AgencyListingManager.industryFilter = val;
+            window.AgencyListingManager.industryName = name;
+        }
+        $('#industry').val(val);
+        $('#industry_id').val(val);
+
+        $('#industryDisplay').text(name || 'All Industries');
+        if (val) {
+            $('#clIndBtn').addClass('has-filter').removeClass('active');
+            $('#industryClearBtn').show();
+        } else {
+            $('#clIndBtn').removeClass('has-filter active');
+            $('#industryClearBtn').hide();
+        }
+        $('#clIndDropdownPanel').removeClass('show');
+
+        if (triggerFetch && window.AgencyListingManager) {
+            window.AgencyListingManager.loadPage(1);
+        }
+    }
+
+    function clearIndustryFilter(triggerFetch = true) {
+        selectIndustryFilter('', 'All Industries', triggerFetch);
+    }
+
+    function clearIndustryFilterFromPill(e) {
+        if (e) { e.stopPropagation(); e.preventDefault(); }
+        clearIndustryFilter(true);
+    }
+
+    function handleIndustrySearchInput(val) {
+        const q = (val || '').trim();
+        if (q.length > 0) {
+            $('#clIndSearchClear').show();
+        } else {
+            $('#clIndSearchClear').hide();
+        }
+        renderIndustryDropdown(q);
+    }
+
+    function clearIndustrySearch() {
+        $('#clIndSearchInp').val('');
+        $('#clIndSearchClear').hide();
+        renderIndustryDropdown('');
+        $('#clIndSearchInp').focus();
+    }
+
+    // ── Activity Recency Engine ──
+    function toggleActivityDropdown(e) {
+        if (e) { e.stopPropagation(); e.preventDefault(); }
+        const $panel = $('#clActDropdownPanel');
+        const isVisible = $panel.hasClass('show');
+        if (window.AgencyListingManager) window.AgencyListingManager.closeAllDropdowns();
+        if (!isVisible) {
+            $panel.addClass('show');
+            $('#clActBtn').addClass('active');
+        }
+    }
+
+    function selectActivityOption(val, label, e) {
+        if (e) { e.stopPropagation(); e.preventDefault(); }
+        const key = (val === 'all' || !val) ? '' : val;
+        if (window.AgencyListingManager) {
+            window.AgencyListingManager.activityFilter = key;
+            window.AgencyListingManager.activityName = label;
+        }
+        $('#activity').val(key);
+        $('#activityDisplay').text(label || 'All Activity');
+
+        $('#clActDropdownPanel .cl-act-item').removeClass('selected').attr('aria-selected', 'false').find('.cl-act-check').hide();
+        const targetId = key ? `act-opt-${key}` : 'act-opt-all';
+        $(`#${targetId}`).addClass('selected').attr('aria-selected', 'true').find('.cl-act-check').show();
+
+        if (key) {
+            $('#clActBtn').addClass('has-filter').removeClass('active');
+            $('#activityClearBtn').show();
+        } else {
+            $('#clActBtn').removeClass('has-filter active');
+            $('#activityClearBtn').hide();
+        }
+        $('#clActDropdownPanel').removeClass('show');
+
+        if (window.AgencyListingManager) {
+            window.AgencyListingManager.loadPage(1);
+        }
+    }
+
+    function clearActivityFilter(e) {
+        if (e) { e.stopPropagation(); e.preventDefault(); }
+        selectActivityOption('all', 'All Activity', e);
+    }
+
+    // ── Pipeline Engine ──
+    function togglePipelineDropdown(e) {
+        if (e) { e.stopPropagation(); e.preventDefault(); }
+        const $panel = $('#clPipeDropdownPanel');
+        const isVisible = $panel.hasClass('show');
+        if (window.AgencyListingManager) window.AgencyListingManager.closeAllDropdowns();
+        if (!isVisible) {
+            $panel.addClass('show');
+            $('#clPipeBtn').addClass('active');
+        }
+    }
+
+    function selectPipelineOption(val, label, e) {
+        if (e) { e.stopPropagation(); e.preventDefault(); }
+        const key = (val === 'all' || !val) ? '' : val;
+        if (window.AgencyListingManager) {
+            window.AgencyListingManager.pipelineFilter = key;
+            window.AgencyListingManager.pipelineName = label;
+        }
+        $('#pipeline').val(key);
+        $('#pipelineDisplay').text(label || 'All Pipeline');
+
+        $('#clPipeDropdownPanel .cl-pipe-item').removeClass('selected').attr('aria-selected', 'false').find('.cl-pipe-check').hide();
+        const targetId = key ? `pipe-opt-${key}` : 'pipe-opt-all';
+        $(`#${targetId}`).addClass('selected').attr('aria-selected', 'true').find('.cl-pipe-check').show();
+
+        if (key) {
+            $('#clPipeBtn').addClass('has-filter').removeClass('active');
+            $('#pipelineClearBtn').show();
+        } else {
+            $('#clPipeBtn').removeClass('has-filter active');
+            $('#pipelineClearBtn').hide();
+        }
+        $('#clPipeDropdownPanel').removeClass('show');
+
+        if (window.AgencyListingManager) {
+            window.AgencyListingManager.loadPage(1);
+        }
+    }
+
+    function clearPipelineFilter(e) {
+        if (e) { e.stopPropagation(); e.preventDefault(); }
+        selectPipelineOption('all', 'All Pipeline', e);
+    }
+
+    // ── Sort Engine ──
+    function toggleSortDropdown(e) {
+        if (e) { e.stopPropagation(); e.preventDefault(); }
+        const $panel = $('#clSortDropdownPanel');
+        const isVisible = $panel.hasClass('show');
+        if (window.AgencyListingManager) window.AgencyListingManager.closeAllDropdowns();
+        if (!isVisible) {
+            $panel.addClass('show');
+            $('#clSortBtn').addClass('active');
+        }
+    }
+
+    function selectSortOption(val, label, e) {
+        if (e) { e.stopPropagation(); e.preventDefault(); }
+        const sortVal = val || 'recent';
+        if (window.AgencyListingManager) {
+            window.AgencyListingManager.sortFilter = sortVal;
+        }
+        $('#sortingfilter').val(sortVal);
+        $('#sortDisplay').text(label || 'Recently Added');
+
+        $('#clSortDropdownPanel .cl-sort-item').removeClass('selected').attr('aria-selected', 'false').find('.cl-sort-check').hide();
+        const targetId = `sort-opt-${sortVal}`;
+        $(`#${targetId}`).addClass('selected').attr('aria-selected', 'true').find('.cl-sort-check').show();
+
+        if (sortVal !== 'recent') {
+            $('#clSortBtn').addClass('has-filter').removeClass('active');
+            $('#sortClearBtn').show();
+        } else {
+            $('#clSortBtn').removeClass('has-filter active');
+            $('#sortClearBtn').hide();
+        }
+        $('#clSortDropdownPanel').removeClass('show');
+
+        if (window.AgencyListingManager) {
+            window.AgencyListingManager.loadPage(1);
+        }
+    }
+
+    function clearSortFilter(e) {
+        if (e) { e.stopPropagation(); e.preventDefault(); }
+        selectSortOption('recent', 'Recently Added', e);
+    }
+
+    // ── Enterprise In-Browser Agency Exporter (Rule 3 Client-First & CWE-1236 Defense) ──
+    window.AgencyExportManager = {
+        sanitizeCsv: function(val) {
+            if (val === null || val === undefined) return '""';
+            var s = String(val).trim();
+            if (/^[=+\-@\t\r]/.test(s)) s = "'" + s;
+            return '"' + s.replace(/"/g, '""') + '"';
+        },
+
+        exportFilteredCsv: function() {
+            var self = this;
+            var rows = [];
+            var exportId = 'EXP-AGY-' + new Date().toISOString().slice(0, 10).replace(/-/g, '') + '-' + Math.floor(1000 + Math.random() * 9000);
+
+            var manifestLines = [
+                '# ==============================================================================',
+                '# JERO ENTERPRISE ATS AGENCY PORTFOLIO EXPORT MANIFEST (CLIENT-FIRST)',
+                '# Export ID: ' + exportId,
+                '# Exported At: ' + new Date().toISOString(),
+                '# Scope: Filtered Visible Agencies',
+                '# Company ID: ' + {{ (int)auth()->user()->company_id }},
+                '# Exported By: ' + '{{ addslashes(auth()->user()->name ?? "User") }}',
+                '# =============================================================================='
+            ];
+
+            var headers = [
+                'Agency Name', 'Industry', 'Company Size', 'City', 'State', 'Country',
+                'Active Jobs', 'Hold Jobs', 'Closed Jobs',
+                'Sourcing', 'Screening', 'Evaluation', 'Negotiation', 'Offer', 'Joined', 'Rejected',
+                'Status', 'Partnered Date', 'Last Activity'
+            ];
+
+            rows.push(manifestLines.join('\r\n'));
+            rows.push(headers.map(function(h) { return '"' + h + '"'; }).join(','));
+
+            var count = 0;
+            $('#staffingpartnerajax .cl-primary-card').each(function() {
+                var $card = $(this);
+                var name = $card.find('.cl-name').text().trim();
+                var ind = $card.find('.cl-ind').text().trim();
+                var size = $card.find('.cl-size').text().trim();
+
+                var city = $card.find('.cl-loc-city').text().trim();
+                var state = $card.find('.cl-loc-state').text().trim();
+                var country = $card.find('.cl-loc-country').text().trim();
+
+                var activeJobs = $card.find('.cl-jobs-body .cl-job-line:eq(0) .cl-job-num').text().trim() || '0';
+                var holdJobs = $card.find('.cl-jobs-body .cl-job-line:eq(1) .cl-job-num').text().trim() || '0';
+                var closedJobs = $card.find('.cl-jobs-body .cl-job-line:eq(2) .cl-job-num').text().trim() || '0';
+
+                var sourcing = $card.find('.cl-pipe-step:eq(0) .cl-pipe-num').text().trim() || '0';
+                var screening = $card.find('.cl-pipe-step:eq(1) .cl-pipe-num').text().trim() || '0';
+                var evaluation = $card.find('.cl-pipe-step:eq(2) .cl-pipe-num').text().trim() || '0';
+                var negotiation = $card.find('.cl-pipe-step:eq(3) .cl-pipe-num').text().trim() || '0';
+                var offer = $card.find('.cl-pipe-step:eq(4) .cl-pipe-num').text().trim() || '0';
+                var joined = $card.find('.cl-pipe-step:eq(5) .cl-pipe-num').text().trim() || '0';
+                var rejected = $card.find('.cl-pipe-step:eq(6) .cl-pipe-num').text().trim() || '0';
+
+                var status = $card.find('.cl-status-pill').text().trim() || 'Active';
+                var partnerDate = $card.find('.cl-strip-left span:contains("Partnered:")').parent().text().replace('Partnered:', '').trim() || '-';
+                var lastAct = $card.find('.cl-strip-left span:contains("Activity:")').parent().text().replace('Activity:', '').trim() || '-';
+
+                if (name) {
+                    count++;
+                    rows.push([
+                        self.sanitizeCsv(name),
+                        self.sanitizeCsv(ind),
+                        self.sanitizeCsv(size),
+                        self.sanitizeCsv(city),
+                        self.sanitizeCsv(state),
+                        self.sanitizeCsv(country),
+                        activeJobs, holdJobs, closedJobs,
+                        sourcing, screening, evaluation, negotiation, offer, joined, rejected,
+                        self.sanitizeCsv(status),
+                        self.sanitizeCsv(partnerDate),
+                        self.sanitizeCsv(lastAct)
+                    ].join(','));
+                }
+            });
+
+            if (count === 0) {
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire({ icon: 'info', title: 'No Agencies', text: 'No agencies found on the current view to export.' });
+                } else {
+                    alert('No agencies found on the current view to export.');
+                }
+                return;
+            }
+
+            var csvContent = '\uFEFF' + rows.join('\r\n');
+            var blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            var url = URL.createObjectURL(blob);
+            var link = document.createElement('a');
+            var dateStr = new Date().toISOString().slice(0, 10);
+            link.setAttribute('href', url);
+            link.setAttribute('download', 'jero_agencies_filtered_' + dateStr + '.csv');
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+        },
+
+        exportAllCsv: function() {
+            window.location.href = `{{ url('service_company/consultancy/export/0/10000') }}`;
+        },
+
+        exportPdf: function() {
+            window.print();
+        }
+    };
+
+    window.triggerAgencyExport = function(type) {
+        $('.cl-export-dropdown-menu').removeClass('show');
+        $('#clExportDropdownBtn').removeClass('show');
+        if (type === 'filtered_csv') {
+            window.AgencyExportManager.exportFilteredCsv();
+        } else if (type === 'all_csv') {
+            window.AgencyExportManager.exportAllCsv();
+        } else if (type === 'executive_pdf') {
+            window.AgencyExportManager.exportPdf();
+        }
+    };
+
+    // ── Export Dropdown Toggle Listeners ──
+    $(document).on('click', '#clExportDropdownBtn', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        const $menu = $(this).siblings('.cl-export-dropdown-menu');
+        const isShown = $menu.hasClass('show');
+        $('.cl-export-dropdown-menu').removeClass('show');
+        $('#clExportDropdownBtn').removeClass('show');
+        if (!isShown) {
+            $menu.addClass('show');
+            $(this).addClass('show');
+        }
+    });
+
+    $(document).on('click', function(e) {
+        if (!$(e.target).closest('.cl-export-wrapper').length) {
+            $('.cl-export-dropdown-menu').removeClass('show');
+            $('#clExportDropdownBtn').removeClass('show');
+        }
+    });
+
+    $(document).on('click', '.cl-export-dropdown-menu a', function() {
+        $('.cl-export-dropdown-menu').removeClass('show');
+        $('#clExportDropdownBtn').removeClass('show');
+    });
+
+    // ── Tab Management ──
     window.setAgencyTab = function(tabKey, el) {
         $('.cl-stat-grid .cl-card').removeClass('active');
         if (el) {
@@ -1761,281 +3076,11 @@
         }
     };
 
-    // ── Combobox 1: Location ──
-    window.toggleLocationDropdown = function(e) {
-        if (e) e.stopPropagation();
-        const $panel = $('#clLocDropdownPanel');
-        const isShown = $panel.hasClass('show');
-        if (window.AgencyListingManager) window.AgencyListingManager.closeAllDropdowns();
-        if (!isShown) $panel.addClass('show');
-    };
-
-    window.selectLocationOption = function(id, name, e) {
-        if (e) e.stopPropagation();
-        $('#locationDisplay').text(name);
-        $('#country').val(id);
-        $('#clLocDropdownBody .cl-act-item').removeClass('selected').find('.cl-act-check').hide();
-        if (e && e.currentTarget) {
-            $(e.currentTarget).addClass('selected').find('.cl-act-check').show();
-        }
-
-        if (id) {
-            $('#clLocBtn').addClass('has-filter');
-            $('#locationClearBtn').show();
-        } else {
-            $('#clLocBtn').removeClass('has-filter');
-            $('#locationClearBtn').hide();
-        }
-
-        if (window.AgencyListingManager) {
-            window.AgencyListingManager.countryFilter = id;
-            window.AgencyListingManager.closeAllDropdowns();
-            window.AgencyListingManager.loadPage(1);
-        }
-    };
-
-    window.clearLocationFilter = function(e) {
-        if (e) e.stopPropagation();
-        $('#locationDisplay').text('All Locations');
-        $('#country').val('');
-        $('#clLocDropdownBody .cl-act-item').removeClass('selected').find('.cl-act-check').hide();
-        $('#clLocDropdownBody .cl-act-item').first().addClass('selected').find('.cl-act-check').show();
-        $('#clLocBtn').removeClass('has-filter');
-        $('#locationClearBtn').hide();
-        if (window.AgencyListingManager) {
-            window.AgencyListingManager.countryFilter = '';
-            window.AgencyListingManager.closeAllDropdowns();
-            window.AgencyListingManager.loadPage(1);
-        }
-    };
-
-    window.handleLocationSearchInput = function(val) {
-        val = (val || '').toLowerCase().trim();
-        if (val.length > 0) {
-            $('#clLocSearchClear').show();
-        } else {
-            $('#clLocSearchClear').hide();
-        }
-        $('#clLocDropdownBody .cl-act-item').each(function(idx) {
-            if (idx === 0) return;
-            var text = $(this).text().toLowerCase();
-            $(this).toggle(text.indexOf(val) > -1);
-        });
-    };
-
-    // ── Combobox 2: Industry ──
-    window.toggleIndustryDropdown = function(e) {
-        if (e) e.stopPropagation();
-        const $panel = $('#clIndDropdownPanel');
-        const isShown = $panel.hasClass('show');
-        if (window.AgencyListingManager) window.AgencyListingManager.closeAllDropdowns();
-        if (!isShown) $panel.addClass('show');
-    };
-
-    window.selectIndustryOption = function(id, name, e) {
-        if (e) e.stopPropagation();
-        $('#industryDisplay').text(name);
-        $('#industry').val(id);
-        $('#clIndDropdownBody .cl-act-item').removeClass('selected').find('.cl-act-check').hide();
-        if (e && e.currentTarget) {
-            $(e.currentTarget).addClass('selected').find('.cl-act-check').show();
-        }
-
-        if (id) {
-            $('#clIndBtn').addClass('has-filter');
-            $('#industryClearBtn').show();
-        } else {
-            $('#clIndBtn').removeClass('has-filter');
-            $('#industryClearBtn').hide();
-        }
-
-        if (window.AgencyListingManager) {
-            window.AgencyListingManager.industryFilter = id;
-            window.AgencyListingManager.closeAllDropdowns();
-            window.AgencyListingManager.loadPage(1);
-        }
-    };
-
-    window.clearIndustryFilter = function(e) {
-        if (e) e.stopPropagation();
-        $('#industryDisplay').text('All Industries');
-        $('#industry').val('');
-        $('#clIndDropdownBody .cl-act-item').removeClass('selected').find('.cl-act-check').hide();
-        $('#clIndDropdownBody .cl-act-item').first().addClass('selected').find('.cl-act-check').show();
-        $('#clIndBtn').removeClass('has-filter');
-        $('#industryClearBtn').hide();
-        if (window.AgencyListingManager) {
-            window.AgencyListingManager.industryFilter = '';
-            window.AgencyListingManager.closeAllDropdowns();
-            window.AgencyListingManager.loadPage(1);
-        }
-    };
-
-    window.handleIndustrySearchInput = function(val) {
-        val = (val || '').toLowerCase().trim();
-        if (val.length > 0) {
-            $('#clIndSearchClear').show();
-        } else {
-            $('#clIndSearchClear').hide();
-        }
-        $('#clIndDropdownBody .cl-act-item').each(function(idx) {
-            if (idx === 0) return;
-            var text = $(this).text().toLowerCase();
-            $(this).toggle(text.indexOf(val) > -1);
-        });
-    };
-
-    // ── Combobox 3: Activity Recency ──
-    window.toggleActivityDropdown = function(e) {
-        if (e) e.stopPropagation();
-        const $panel = $('#clActDropdownPanel');
-        const isShown = $panel.hasClass('show');
-        if (window.AgencyListingManager) window.AgencyListingManager.closeAllDropdowns();
-        if (!isShown) $panel.addClass('show');
-    };
-
-    window.selectActivityOption = function(val, label, e) {
-        if (e) e.stopPropagation();
-        $('#activityDisplay').text(label);
-        $('#activity').val(val);
-        $('#clActDropdownPanel .cl-act-item').removeClass('selected').find('.cl-act-check').hide();
-        if (e && e.currentTarget) {
-            $(e.currentTarget).addClass('selected').find('.cl-act-check').show();
-        }
-
-        if (val) {
-            $('#clActBtn').addClass('has-filter');
-            $('#activityClearBtn').show();
-        } else {
-            $('#clActBtn').removeClass('has-filter');
-            $('#activityClearBtn').hide();
-        }
-
-        if (window.AgencyListingManager) {
-            window.AgencyListingManager.activityFilter = val;
-            window.AgencyListingManager.closeAllDropdowns();
-            window.AgencyListingManager.loadPage(1);
-        }
-    };
-
-    window.clearActivityFilter = function(e) {
-        if (e) e.stopPropagation();
-        $('#activityDisplay').text('All Activity');
-        $('#activity').val('');
-        $('#clActDropdownPanel .cl-act-item').removeClass('selected').find('.cl-act-check').hide();
-        $('#clActDropdownPanel .cl-act-item').first().addClass('selected').find('.cl-act-check').show();
-        $('#clActBtn').removeClass('has-filter');
-        $('#activityClearBtn').hide();
-        if (window.AgencyListingManager) {
-            window.AgencyListingManager.activityFilter = '';
-            window.AgencyListingManager.closeAllDropdowns();
-            window.AgencyListingManager.loadPage(1);
-        }
-    };
-
-    // ── Combobox 4: Pipeline ──
-    window.togglePipelineDropdown = function(e) {
-        if (e) e.stopPropagation();
-        const $panel = $('#clPipeDropdownPanel');
-        const isShown = $panel.hasClass('show');
-        if (window.AgencyListingManager) window.AgencyListingManager.closeAllDropdowns();
-        if (!isShown) $panel.addClass('show');
-    };
-
-    window.selectPipelineOption = function(val, label, e) {
-        if (e) e.stopPropagation();
-        $('#pipelineDisplay').text(label);
-        $('#pipeline').val(val);
-        $('#clPipeDropdownPanel .cl-pipe-item').removeClass('selected').find('.cl-act-check').hide();
-        if (e && e.currentTarget) {
-            $(e.currentTarget).addClass('selected').find('.cl-act-check').show();
-        }
-
-        if (val) {
-            $('#clPipeBtn').addClass('has-filter');
-            $('#pipelineClearBtn').show();
-        } else {
-            $('#clPipeBtn').removeClass('has-filter');
-            $('#pipelineClearBtn').hide();
-        }
-
-        if (window.AgencyListingManager) {
-            window.AgencyListingManager.pipelineFilter = val;
-            window.AgencyListingManager.closeAllDropdowns();
-            window.AgencyListingManager.loadPage(1);
-        }
-    };
-
-    window.clearPipelineFilter = function(e) {
-        if (e) e.stopPropagation();
-        $('#pipelineDisplay').text('All Pipeline');
-        $('#pipeline').val('');
-        $('#clPipeDropdownPanel .cl-pipe-item').removeClass('selected').find('.cl-act-check').hide();
-        $('#clPipeDropdownPanel .cl-pipe-item').first().addClass('selected').find('.cl-act-check').show();
-        $('#clPipeBtn').removeClass('has-filter');
-        $('#pipelineClearBtn').hide();
-        if (window.AgencyListingManager) {
-            window.AgencyListingManager.pipelineFilter = '';
-            window.AgencyListingManager.closeAllDropdowns();
-            window.AgencyListingManager.loadPage(1);
-        }
-    };
-
-    // ── Combobox 5: Sort ──
-    window.toggleSortDropdown = function(e) {
-        if (e) e.stopPropagation();
-        const $panel = $('#clSortDropdownPanel');
-        const isShown = $panel.hasClass('show');
-        if (window.AgencyListingManager) window.AgencyListingManager.closeAllDropdowns();
-        if (!isShown) $panel.addClass('show');
-    };
-
-    window.selectSortOption = function(val, label, e) {
-        if (e) e.stopPropagation();
-        $('#sortDisplay').text(label);
-        $('#sortingfilter').val(val);
-        $('#clSortDropdownPanel .cl-sort-item').removeClass('selected').find('.cl-act-check').hide();
-        if (e && e.currentTarget) {
-            $(e.currentTarget).addClass('selected').find('.cl-act-check').show();
-        }
-
-        if (val && val !== 'recent') {
-            $('#clSortBtn').addClass('has-filter');
-            $('#sortClearBtn').show();
-        } else {
-            $('#clSortBtn').removeClass('has-filter');
-            $('#sortClearBtn').hide();
-        }
-
-        if (window.AgencyListingManager) {
-            window.AgencyListingManager.sortFilter = val;
-            window.AgencyListingManager.closeAllDropdowns();
-            window.AgencyListingManager.loadPage(1);
-        }
-    };
-
-    window.clearSortFilter = function(e) {
-        if (e) e.stopPropagation();
-        selectSortOption('recent', 'Recently Added', e);
-    };
-
-    // ── Agency Export Options ──
-    window.triggerAgencyExport = function(type) {
-        if (type === 'filtered_csv') {
-            const q = (window.AgencyListingManager && window.AgencyListingManager.searchQuery) ? window.AgencyListingManager.searchQuery : '';
-            window.location.href = `{{ url('service_company/consultancy/export/0/1000') }}?search=${encodeURIComponent(q)}`;
-        } else if (type === 'all_csv') {
-            window.location.href = `{{ url('service_company/consultancy/export/0/10000') }}`;
-        } else if (type === 'executive_pdf') {
-            window.print();
-        }
-    };
-
-    // ── Enterprise Drawer Architecture ──
+    // ── Drawer Architecture ──
     window.openAgencyDrawer = function(id) {
         if (!id) return;
-        $('[data-row-id]').closest('.tbl-r').removeClass('client-selected');
-        $(`[data-row-id="${id}"]`).closest('.tbl-r').addClass('client-selected');
+        $('[data-row-id]').closest('.tbl-r, .cl-primary-card').removeClass('client-selected');
+        $(`[data-row-id="${id}"]`).closest('.tbl-r, .cl-primary-card').addClass('client-selected');
 
         var drawerEl = document.getElementById('kt_activitiesDirectClient');
         if (drawerEl) {
@@ -2127,21 +3172,29 @@
         document.querySelectorAll('.drawer-overlay.agency-drawer-overlay, .drawer-overlay, .custom-cand-drawer-overlay').forEach(function(ov) {
             ov.remove();
         });
-        $('.tbl-r.client-selected').removeClass('client-selected');
+        $('.tbl-r.client-selected, .cl-primary-card.client-selected').removeClass('client-selected');
         document.body.removeAttribute('data-kt-drawer-activities');
         document.body.removeAttribute('data-kt-drawer');
         document.body.style.overflow = '';
     };
 
-    // ── Agency Listing Manager: SWR Cache, URL Sync & Complete Page Isolation ──
+    // ── Agency Listing Manager: SWR Cache, URL Sync & Complete Page Isolation (Rule 17) ──
     const AgencyListingManager = {
         currentPage: 1,
         activeTab: '{{ $initialTab ?? "all" }}',
         searchQuery: '',
         countryFilter: '',
+        countryName: '',
+        cityFilter: '',
+        cityName: '',
+        unspecifiedLocation: false,
         industryFilter: '',
+        industryName: '',
+        sectorFilter: '',
         activityFilter: '',
+        activityName: '',
         pipelineFilter: '',
+        pipelineName: '',
         sortFilter: 'recent',
         searchDebounceTimer: null,
         cache: {},
@@ -2174,69 +3227,40 @@
             if (params.has('country')) {
                 this.countryFilter = params.get('country');
                 $('#country').val(this.countryFilter);
-                const $item = $(`#clLocDropdownBody .cl-act-item[onclick*="'${this.countryFilter}'"]`);
-                if ($item.length) {
-                    const name = $item.find('span').first().text();
-                    $('#locationDisplay').text(name);
-                    $('#clLocBtn').addClass('has-filter');
-                    $('#locationClearBtn').show();
-                    $('#clLocDropdownBody .cl-act-item').removeClass('selected').find('.cl-act-check').hide();
-                    $item.addClass('selected').find('.cl-act-check').show();
-                }
+                $('#clLocBtn').addClass('has-filter');
+                $('#locationClearBtn').show();
             }
             if (params.has('industry')) {
                 this.industryFilter = params.get('industry');
                 $('#industry').val(this.industryFilter);
-                const $item = $(`#clIndDropdownBody .cl-act-item[onclick*="'${this.industryFilter}'"]`);
-                if ($item.length) {
-                    const name = $item.find('span').first().text();
-                    $('#industryDisplay').text(name);
-                    $('#clIndBtn').addClass('has-filter');
-                    $('#industryClearBtn').show();
-                    $('#clIndDropdownBody .cl-act-item').removeClass('selected').find('.cl-act-check').hide();
-                    $item.addClass('selected').find('.cl-act-check').show();
-                }
+                $('#clIndBtn').addClass('has-filter');
+                $('#industryClearBtn').show();
             }
             if (params.has('activity')) {
                 this.activityFilter = params.get('activity');
                 $('#activity').val(this.activityFilter);
-                const $item = $(`#clActDropdownPanel .cl-act-item[onclick*="'${this.activityFilter}'"]`);
-                if ($item.length) {
-                    const name = $item.find('span').first().text();
-                    $('#activityDisplay').text(name);
-                    $('#clActBtn').addClass('has-filter');
-                    $('#activityClearBtn').show();
-                    $('#clActDropdownPanel .cl-act-item').removeClass('selected').find('.cl-act-check').hide();
-                    $item.addClass('selected').find('.cl-act-check').show();
-                }
+                $('#clActBtn').addClass('has-filter');
+                $('#activityClearBtn').show();
+                $('#clActDropdownPanel .cl-act-item').removeClass('selected').attr('aria-selected', 'false').find('.cl-act-check').hide();
+                $(`#act-opt-${this.activityFilter}`).addClass('selected').attr('aria-selected', 'true').find('.cl-act-check').show();
             }
             if (params.has('pipeline')) {
                 this.pipelineFilter = params.get('pipeline');
                 $('#pipeline').val(this.pipelineFilter);
-                const $item = $(`#clPipeDropdownPanel .cl-pipe-item[onclick*="'${this.pipelineFilter}'"]`);
-                if ($item.length) {
-                    const name = $item.find('span').first().text();
-                    $('#pipelineDisplay').text(name);
-                    $('#clPipeBtn').addClass('has-filter');
-                    $('#pipelineClearBtn').show();
-                    $('#clPipeDropdownPanel .cl-pipe-item').removeClass('selected').find('.cl-act-check').hide();
-                    $item.addClass('selected').find('.cl-act-check').show();
-                }
+                $('#clPipeBtn').addClass('has-filter');
+                $('#pipelineClearBtn').show();
+                $('#clPipeDropdownPanel .cl-pipe-item').removeClass('selected').attr('aria-selected', 'false').find('.cl-pipe-check').hide();
+                $(`#pipe-opt-${this.pipelineFilter}`).addClass('selected').attr('aria-selected', 'true').find('.cl-pipe-check').show();
             }
             if (params.has('sort') || params.has('sortingfilter')) {
                 this.sortFilter = params.get('sort') || params.get('sortingfilter') || 'recent';
                 $('#sortingfilter').val(this.sortFilter);
-                const $item = $(`#clSortDropdownPanel .cl-sort-item[onclick*="'${this.sortFilter}'"]`);
-                if ($item.length) {
-                    const name = $item.find('span').first().text();
-                    $('#sortDisplay').text(name);
-                    if (this.sortFilter !== 'recent') {
-                        $('#clSortBtn').addClass('has-filter');
-                        $('#sortClearBtn').show();
-                    }
-                    $('#clSortDropdownPanel .cl-sort-item').removeClass('selected').find('.cl-act-check').hide();
-                    $item.addClass('selected').find('.cl-act-check').show();
+                if (this.sortFilter !== 'recent') {
+                    $('#clSortBtn').addClass('has-filter');
+                    $('#sortClearBtn').show();
                 }
+                $('#clSortDropdownPanel .cl-sort-item').removeClass('selected').attr('aria-selected', 'false').find('.cl-sort-check').hide();
+                $(`#sort-opt-${this.sortFilter}`).addClass('selected').attr('aria-selected', 'true').find('.cl-sort-check').show();
             }
             if (params.has('page')) {
                 const page = parseInt(params.get('page'), 10);
@@ -2245,7 +3269,7 @@
         },
 
         hasCustomInitialFilters: function() {
-            return !!(this.searchQuery || this.countryFilter || this.industryFilter || this.activityFilter || this.pipelineFilter || (this.sortFilter && this.sortFilter !== 'recent') || this.currentPage > 1 || (this.activeTab && this.activeTab !== 'all'));
+            return !!(this.searchQuery || this.countryFilter || this.cityFilter || this.unspecifiedLocation || this.industryFilter || this.activityFilter || this.pipelineFilter || (this.sortFilter && this.sortFilter !== 'recent') || this.currentPage > 1 || (this.activeTab && this.activeTab !== 'all'));
         },
 
         syncUrl: function() {
@@ -2253,6 +3277,8 @@
             if (this.activeTab && this.activeTab !== 'all') params.set('tab', this.activeTab);
             if (this.searchQuery) params.set('search', this.searchQuery);
             if (this.countryFilter) params.set('country', this.countryFilter);
+            if (this.cityFilter) params.set('city', this.cityFilter);
+            if (this.unspecifiedLocation) params.set('unspecified_location', '1');
             if (this.industryFilter) params.set('industry', this.industryFilter);
             if (this.activityFilter) params.set('activity', this.activityFilter);
             if (this.pipelineFilter) params.set('pipeline', this.pipelineFilter);
@@ -2264,6 +3290,8 @@
                 tab: this.activeTab,
                 search: this.searchQuery,
                 country: this.countryFilter,
+                city: this.cityFilter,
+                unspecified_location: this.unspecifiedLocation,
                 industry: this.industryFilter,
                 activity: this.activityFilter,
                 pipeline: this.pipelineFilter,
@@ -2275,7 +3303,6 @@
         setTab: function(tabKey) {
             if (this.activeTab === tabKey) return;
             this.activeTab = tabKey;
-            this.updateTableHeaders(tabKey);
             this.loadPage(1);
         },
 
@@ -2284,31 +3311,18 @@
             this.loadPage(1);
         },
 
-        updateTableHeaders: function(tabKey) {
-            const $headers = $('#agencyTableHead .tbl-th-subcard');
-            if ($headers.length >= 4) {
-                if (tabKey === 'request') {
-                    $headers.eq(2).find('span').text('Invitation Lifecycle');
-                    $headers.eq(3).find('span').text('Dispatch Timeline');
-                } else {
-                    $headers.eq(2).find('span').text('Shared Jobs');
-                    $headers.eq(3).find('span').text('Candidate Pipeline');
-                }
-            }
-        },
-
         closeAllDropdowns: function() {
             $('.cl-loc-dropdown-panel, .cl-ind-dropdown-panel, .cl-act-dropdown-panel, .cl-pipe-dropdown-panel, .cl-sort-dropdown-panel').removeClass('show');
+            $('#clLocBtn, #clIndBtn, #clActBtn, #clPipeBtn, #clSortBtn').removeClass('active');
         },
 
         getCacheKey: function(page) {
-            return `tab:${this.activeTab}|p:${page}|q:${this.searchQuery}|co:${this.countryFilter}|ind:${this.industryFilter}|act:${this.activityFilter}|pip:${this.pipelineFilter}|srt:${this.sortFilter}`;
+            return `tab:${this.activeTab}|p:${page}|q:${this.searchQuery}|co:${this.countryFilter}|ci:${this.cityFilter}|un:${this.unspecifiedLocation}|ind:${this.industryFilter}|act:${this.activityFilter}|pip:${this.pipelineFilter}|srt:${this.sortFilter}`;
         },
 
         loadPage: function(page, bypassCache) {
             this.currentPage = page || 1;
             this.syncUrl();
-            this.updateTableHeaders(this.activeTab);
 
             const cacheKey = this.getCacheKey(this.currentPage);
             const self = this;
@@ -2317,7 +3331,6 @@
             if (!bypassCache && this.cache[cacheKey]) {
                 const cached = this.cache[cacheKey];
                 this.renderResponse(cached);
-                // Background revalidation
                 this.fetchPage(this.currentPage, cacheKey, true);
                 return;
             }
@@ -2343,7 +3356,12 @@
                     search: self.searchQuery,
                     cus_search: self.searchQuery,
                     country: self.countryFilter,
+                    country_id: self.countryFilter,
+                    city: self.cityFilter,
+                    city_id: self.cityFilter,
+                    unspecified_location: self.unspecifiedLocation ? 1 : 0,
                     industry: self.industryFilter,
+                    industry_id: self.industryFilter,
                     activity: self.activityFilter,
                     pipeline: self.pipelineFilter,
                     sortingfilter: self.sortFilter,
@@ -2378,6 +3396,26 @@
             if (response.agencyDataCnt) {
                 window.updateAgencyTabCounters(response.agencyDataCnt);
             }
+
+            // Update reactive facet counters if provided
+            if (response.locationFacets) {
+                window.initialLocationFacets = response.locationFacets;
+            }
+            if (response.recencyCounts) {
+                window.initialRecencyCounts = response.recencyCounts;
+                $('#actCountAll').text(response.recencyCounts.all || 0);
+                $('#actCount7d').text(response.recencyCounts['7d'] || 0);
+                $('#actCount30d').text(response.recencyCounts['30d'] || 0);
+                $('#actCount90d').text(response.recencyCounts['90d'] || 0);
+                $('#actCountDormant').text(response.recencyCounts.dormant || 0);
+                $('#actCountNever').text(response.recencyCounts.never || 0);
+            }
+            if (response.pipelineCounts) {
+                window.initialPipelineCounts = response.pipelineCounts;
+                $('#pipeCountAll').text(response.pipelineCounts.all || 0);
+                $('#pipeCountActive').text(response.pipelineCounts.active || 0);
+                $('#pipeCountNone').text(response.pipelineCounts.none || 0);
+            }
         },
 
         bindEvents: function() {
@@ -2411,7 +3449,7 @@
             });
 
             // Row Click Delegation to Open Drawer (ignoring actions, links, buttons, inputs)
-            $(document).on('click', '.tbl-r, .show-detail-direct', function(e) {
+            $(document).on('click', '.tbl-r, .cl-primary-card, .show-detail-direct', function(e) {
                 if ($(e.target).closest('input, button, a, .tbl-cb, .tbl-cell-check, .dropdown-menu, .resend-agency-invite').length > 0) {
                     return;
                 }
@@ -2435,7 +3473,7 @@
                         window.closeAgencyDrawer();
                         return;
                     }
-                    if (!drawerEl.contains(e.target) && !$(e.target).closest('.tbl-r, .show-detail-direct, #open_add_agency_drawer, .swal2-container, .modal, .select2-container').length) {
+                    if (!drawerEl.contains(e.target) && !$(e.target).closest('.tbl-r, .cl-primary-card, .show-detail-direct, #open_add_agency_drawer, .swal2-container, .modal, .select2-container').length) {
                         window.closeAgencyDrawer();
                     }
                 }
@@ -2572,6 +3610,8 @@
                     self.activeTab = e.state.tab || 'all';
                     self.searchQuery = e.state.search || '';
                     self.countryFilter = e.state.country || '';
+                    self.cityFilter = e.state.city || '';
+                    self.unspecifiedLocation = e.state.unspecified_location || false;
                     self.industryFilter = e.state.industry || '';
                     self.activityFilter = e.state.activity || '';
                     self.pipelineFilter = e.state.pipeline || '';
@@ -2603,7 +3643,10 @@
             const pageMatch = url.match(/page=(\d+)/);
             const page = pageMatch ? parseInt(pageMatch[1], 10) : 1;
             AgencyListingManager.loadPage(page);
-            $('html, body').animate({ scrollTop: $('#agencyTableHead').offset().top - 120 }, 200);
+            const $target = $('#staffingpartnerajax');
+            if ($target.length) {
+                $('html, body').animate({ scrollTop: $target.offset().top - 120 }, 200);
+            }
         }
     });
 

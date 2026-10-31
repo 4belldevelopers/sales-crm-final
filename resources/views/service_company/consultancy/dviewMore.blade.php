@@ -2214,30 +2214,30 @@
             </div>
         </a>
 
-        <!-- KPI 3: Submitted Candidates -->
+        <!-- KPI 3: Candidates Submitted -->
         <a href="#candidate_list" class="cd-kpi-card cd-kpi-nav-trigger" onclick="triggerDrawerTab('candidate_list', event)" title="Total candidate profiles submitted">
             <div class="cd-kpi-icon cd-kpi-icon-purple"><i class="fas fa-users"></i></div>
             <div class="cd-kpi-body">
                 <div class="cd-kpi-num">{{ number_format($kpiSubmitted) }}</div>
-                <div class="cd-kpi-lbl">Submitted Candidates</div>
+                <div class="cd-kpi-lbl">Candidates Submitted</div>
             </div>
         </a>
 
-        <!-- KPI 4: Interview Schedule -->
+        <!-- KPI 4: Interviews Scheduled -->
         <a href="#interview_tracker" class="cd-kpi-card cd-kpi-nav-trigger" onclick="triggerDrawerTab('interview_tracker', event)" title="Interviews conducted for agency candidates">
             <div class="cd-kpi-icon cd-kpi-icon-amber"><i class="fas fa-calendar-check"></i></div>
             <div class="cd-kpi-body">
                 <div class="cd-kpi-num">{{ number_format($kpiInterviews) }}</div>
-                <div class="cd-kpi-lbl">Interview Schedule</div>
+                <div class="cd-kpi-lbl">Interviews Scheduled</div>
             </div>
         </a>
 
-        <!-- KPI 5: Offer Generated -->
+        <!-- KPI 5: Offers Generated -->
         <a href="#candidate_joining" class="cd-kpi-card cd-kpi-nav-trigger" onclick="triggerDrawerTab('candidate_joining', event)" title="Offers extended to agency candidates">
             <div class="cd-kpi-icon cd-kpi-icon-rose"><i class="fas fa-file-signature"></i></div>
             <div class="cd-kpi-body">
                 <div class="cd-kpi-num">{{ number_format($kpiOffers) }}</div>
-                <div class="cd-kpi-lbl">Offer Generated</div>
+                <div class="cd-kpi-lbl">Offers Generated</div>
             </div>
         </a>
 

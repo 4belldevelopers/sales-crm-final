@@ -29,7 +29,6 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
-use Maatwebsite\Excel\Excel as ExcelExcel;
 use Maatwebsite\Excel\Facades\Excel;
 use Yajra\DataTables\Facades\DataTables;
 
@@ -62,6 +61,10 @@ class ServiceCompanyConsultancyController extends ServiceCompanyBaseController
         $this->industries = cache()->remember('static_industries_list', now()->addDays(7), function () {
             return DB::table('td_industries')->where('status', 'Y')->orderBy('ind_name', 'asc')->get();
         });
+        $this->industriesManifest = \App\Services\IndustryTaxonomyService::getGlobalManifest();
+        $this->agencyLocationFacets = $this->agencyListingService->getAgencyLocationFacets($company_id);
+        $this->agencyRecencyCounts = $this->agencyListingService->getAgencyRecencyCounts($company_id);
+        $this->agencyPipelineCounts = $this->agencyListingService->getAgencyPipelineCounts($company_id);
         $this->initialTab = $request->input('tab', 'all');
 
         // ── Phase 1 God-Level Optimization: Bootstrap Page 1 data directly into view ──
@@ -135,6 +138,7 @@ class ServiceCompanyConsultancyController extends ServiceCompanyBaseController
             if (! isset($cached['agencyDataCnt'])) {
                 $cached['agencyDataCnt'] = $this->agencyListingService->getSummaryCounters($company_id);
             }
+
             return response()->json($cached)->header('ETag', $etag);
         }
 
@@ -150,6 +154,7 @@ class ServiceCompanyConsultancyController extends ServiceCompanyBaseController
                     if (! isset($cached['agencyDataCnt'])) {
                         $cached['agencyDataCnt'] = $this->agencyListingService->getSummaryCounters($company_id);
                     }
+
                     return response()->json($cached)->header('ETag', $etag);
                 }
             } else {
@@ -160,6 +165,7 @@ class ServiceCompanyConsultancyController extends ServiceCompanyBaseController
                     if (! isset($cached['agencyDataCnt'])) {
                         $cached['agencyDataCnt'] = $this->agencyListingService->getSummaryCounters($company_id);
                     }
+
                     return response()->json($cached)->header('ETag', $etag);
                 }
             }
@@ -220,9 +226,9 @@ class ServiceCompanyConsultancyController extends ServiceCompanyBaseController
 
             // Sort
             if ($valCheck === 'name_asc') {
-                $invitationsQuery->orderBy(DB::raw("COALESCE(companies.company_name, staffing_company_invitation.to_email)"), 'asc');
+                $invitationsQuery->orderBy(DB::raw('COALESCE(companies.company_name, staffing_company_invitation.to_email)'), 'asc');
             } elseif ($valCheck === 'name_desc') {
-                $invitationsQuery->orderBy(DB::raw("COALESCE(companies.company_name, staffing_company_invitation.to_email)"), 'desc');
+                $invitationsQuery->orderBy(DB::raw('COALESCE(companies.company_name, staffing_company_invitation.to_email)'), 'desc');
             } elseif ($valCheck === 'oldest') {
                 $invitationsQuery->orderBy('staffing_company_invitation.id', 'asc');
             } else {
@@ -257,12 +263,18 @@ class ServiceCompanyConsultancyController extends ServiceCompanyBaseController
                 ])->render(),
                 'total' => $total,
                 'pagination' => view('service_company.ajax_pages.pagination', compact('pagination'))->render(),
+                'agencyLocationFacets' => $this->agencyListingService->getAgencyLocationFacets($company_id),
+                'agencyRecencyCounts' => $this->agencyListingService->getAgencyRecencyCounts($company_id),
+                'agencyPipelineCounts' => $this->agencyListingService->getAgencyPipelineCounts($company_id),
                 'agencyDataCnt' => $agencyDataCnt,
             ];
 
             cache()->put($cacheKeySet, $responseData, now()->addMinutes(ALL_CONSULTANCY_TIME));
             if ($singleFlightLock) {
-                try { $singleFlightLock->release(); } catch (\Throwable $e) {}
+                try {
+                    $singleFlightLock->release();
+                } catch (\Throwable $e) {
+                }
             }
 
             return response()->json($responseData)->header('ETag', $etag);
@@ -317,7 +329,7 @@ class ServiceCompanyConsultancyController extends ServiceCompanyBaseController
                 $companyIds = array_values(array_diff($companyIds, $activeCompanyIds));
             }
 
-            // Activity recency filter
+            // Activity recency filter (Mutually exclusive recency buckets matching Client Tracker UX)
             if ($activityFilter === '7d') {
                 $active7dIds = DB::table('job_applications')
                     ->whereIn('thirdparty_company_id', $companyIds)
@@ -330,10 +342,41 @@ class ServiceCompanyConsultancyController extends ServiceCompanyBaseController
                 $active30dIds = DB::table('job_applications')
                     ->whereIn('thirdparty_company_id', $companyIds)
                     ->where('created_at', '>=', now()->subDays(30))
+                    ->where('created_at', '<', now()->subDays(7))
                     ->distinct()
                     ->pluck('thirdparty_company_id')
                     ->toArray();
                 $companyIds = array_values(array_intersect($active30dIds, $companyIds));
+            } elseif ($activityFilter === '90d') {
+                $active90dIds = DB::table('job_applications')
+                    ->whereIn('thirdparty_company_id', $companyIds)
+                    ->where('created_at', '>=', now()->subDays(90))
+                    ->where('created_at', '<', now()->subDays(30))
+                    ->distinct()
+                    ->pluck('thirdparty_company_id')
+                    ->toArray();
+                $companyIds = array_values(array_intersect($active90dIds, $companyIds));
+            } elseif ($activityFilter === 'dormant') {
+                $recentIds = DB::table('job_applications')
+                    ->whereIn('thirdparty_company_id', $companyIds)
+                    ->where('created_at', '>=', now()->subDays(90))
+                    ->distinct()
+                    ->pluck('thirdparty_company_id')
+                    ->toArray();
+                $allSubmittedIds = DB::table('job_applications')
+                    ->whereIn('thirdparty_company_id', $companyIds)
+                    ->distinct()
+                    ->pluck('thirdparty_company_id')
+                    ->toArray();
+                $dormantIds = array_values(array_diff($allSubmittedIds, $recentIds));
+                $companyIds = array_values(array_intersect($dormantIds, $companyIds));
+            } elseif ($activityFilter === 'never') {
+                $anySubmittedIds = DB::table('job_applications')
+                    ->whereIn('thirdparty_company_id', $companyIds)
+                    ->distinct()
+                    ->pluck('thirdparty_company_id')
+                    ->toArray();
+                $companyIds = array_values(array_diff($companyIds, $anySubmittedIds));
             } elseif ($activityFilter === 'inactive') {
                 $active30dIds = DB::table('job_applications')
                     ->whereIn('thirdparty_company_id', $companyIds)
@@ -344,23 +387,41 @@ class ServiceCompanyConsultancyController extends ServiceCompanyBaseController
                 $companyIds = array_values(array_diff($companyIds, $active30dIds));
             }
 
-            // Pipeline stage filter
+            // Pipeline filter (Support both high-level state: active/none and granular stages)
             if (! empty($pipelineFilter) && $pipelineFilter !== 'all') {
-                $statusMap = [
-                    'sourcing' => [1],
-                    'screening' => [3],
-                    'interview' => [7],
-                    'offers' => [10],
-                    'joined' => [6],
-                ];
-                if (isset($statusMap[$pipelineFilter])) {
-                    $pipelineCompanyIds = DB::table('add_job_wise_condidates')
+                if ($pipelineFilter === 'active') {
+                    $pipelineActiveIds = DB::table('add_job_wise_condidates')
                         ->whereIn('thirdparty_company_id', $companyIds)
-                        ->whereIn('master_status_id', $statusMap[$pipelineFilter])
+                        ->whereIn('master_status_id', [1, 3, 6, 7, 10])
                         ->distinct()
                         ->pluck('thirdparty_company_id')
                         ->toArray();
-                    $companyIds = array_values(array_intersect($pipelineCompanyIds, $companyIds));
+                    $companyIds = array_values(array_intersect($pipelineActiveIds, $companyIds));
+                } elseif ($pipelineFilter === 'none') {
+                    $pipelineActiveIds = DB::table('add_job_wise_condidates')
+                        ->whereIn('thirdparty_company_id', $companyIds)
+                        ->whereIn('master_status_id', [1, 3, 6, 7, 10])
+                        ->distinct()
+                        ->pluck('thirdparty_company_id')
+                        ->toArray();
+                    $companyIds = array_values(array_diff($companyIds, $pipelineActiveIds));
+                } else {
+                    $statusMap = [
+                        'sourcing' => [1],
+                        'screening' => [3],
+                        'interview' => [7],
+                        'offers' => [10],
+                        'joined' => [6],
+                    ];
+                    if (isset($statusMap[$pipelineFilter])) {
+                        $pipelineCompanyIds = DB::table('add_job_wise_condidates')
+                            ->whereIn('thirdparty_company_id', $companyIds)
+                            ->whereIn('master_status_id', $statusMap[$pipelineFilter])
+                            ->distinct()
+                            ->pluck('thirdparty_company_id')
+                            ->toArray();
+                        $companyIds = array_values(array_intersect($pipelineCompanyIds, $companyIds));
+                    }
                 }
             }
         } catch (\Exception $e) {
@@ -392,7 +453,10 @@ class ServiceCompanyConsultancyController extends ServiceCompanyBaseController
 
             cache()->put($cacheKeySet, $responseData, now()->addMinutes(ALL_CONSULTANCY_TIME));
             if ($singleFlightLock) {
-                try { $singleFlightLock->release(); } catch (\Throwable $e) {}
+                try {
+                    $singleFlightLock->release();
+                } catch (\Throwable $e) {
+                }
             }
 
             return response()->json($responseData)->header('ETag', $etag);
@@ -542,12 +606,18 @@ class ServiceCompanyConsultancyController extends ServiceCompanyBaseController
             ])->render(),
             'total' => $total,
             'pagination' => view('service_company.ajax_pages.pagination', compact('pagination'))->render(),
+            'agencyLocationFacets' => $this->agencyListingService->getAgencyLocationFacets($company_id),
+            'agencyRecencyCounts' => $this->agencyListingService->getAgencyRecencyCounts($company_id),
+            'agencyPipelineCounts' => $this->agencyListingService->getAgencyPipelineCounts($company_id),
             'agencyDataCnt' => $agencyDataCnt,
         ];
 
         cache()->put($cacheKeySet, $responseData, now()->addMinutes(ALL_CONSULTANCY_TIME));
         if ($singleFlightLock) {
-            try { $singleFlightLock->release(); } catch (\Throwable $e) {}
+            try {
+                $singleFlightLock->release();
+            } catch (\Throwable $e) {
+            }
         }
 
         return response()->json($responseData)->header('ETag', $etag);
@@ -2426,15 +2496,16 @@ After completing these steps, they will be able to start collaborating with your
      */
     public function export($start, $length)
     {
+        $data = request()->all();
         $filters = [
-            'start' => $start,
-            'length' => $length,
-            'loginUserId' => $this->user->id,
+            'start' => (int) $start,
+            'length' => (int) $length,
+            'loginUserId' => $this->user->id ?? auth()->id(),
             'loginUserRole' => $this->user->role->role_id ?? null,
-            'company_id' => auth()->user()->company_id,
+            'company_id' => (int) (auth()->user()->company_id ?? 0),
         ];
 
-        return Excel::download(new ConsultancyExport($filters, $data), 'ConsultancyExport.xlsx', ExcelExcel::XLSX);
+        return Excel::download(new ConsultancyExport($filters, $data), 'ConsultancyExport.xlsx', \Maatwebsite\Excel\Excel::XLSX);
     }
 
     /**

@@ -342,9 +342,6 @@
                         <div class="cl-subcard-head">
                             <span class="cl-subcard-title" title="Staffing agency verified identity">Agency Identity</span>
                             <div class="cl-subcard-badges">
-                                <span class="cl-scope-pill {{ $scopeClass }} {{ $client_type_css }}" data-row-id="{{ $row->client_id }}" title="Relationship: {{ $scopeLabel }}">
-                                    {{ $scopeLabel }}
-                                </span>
                                 <span class="cl-status-pill {{ $Active > 0 ? 'pill-active' : 'pill-inactive' }}" title="{{ $Active > 0 ? 'Active: Working on ' . $Active . ' live job requirements' : 'Inactive: 0 active job requirements allocated' }}">
                                     <span class="cl-status-pill-dot"></span>
                                     <span>{{ $Active > 0 ? 'Active' : 'Inactive' }}</span>
