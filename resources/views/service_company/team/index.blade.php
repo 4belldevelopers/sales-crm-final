@@ -849,6 +849,20 @@
         }
 
         /* Sub-Card 5: Contact Details Visibility (Marketplace Enquiries) */
+        .tm-subcard-comm {
+            cursor: pointer;
+            transition: border-color 0.18s ease, background 0.18s ease, box-shadow 0.18s ease;
+        }
+        .tm-subcard-comm:hover {
+            border-color: #93c5fd !important;
+            background: #f8fbff !important;
+            box-shadow: 0 2px 8px rgba(0, 158, 247, 0.08);
+        }
+        .tm-subcard-comm:hover .btn-edit-comm-icon {
+            border-color: #009ef7;
+            color: #009ef7;
+            background: #eff6ff;
+        }
         .tm-comm-body {
             display: flex;
             flex-direction: column;
@@ -1655,35 +1669,42 @@
             background: #ffffff;
             border: 1px solid #e2e8f0;
             border-radius: 8px;
-            padding: 8px 10px;
+            padding: 8px 11px;
             display: flex;
             flex-direction: column;
-            gap: 5px;
+            gap: 7px;
             flex-shrink: 0;
         }
         .comm-channels-head {
             display: flex;
+            flex-direction: column;
+            gap: 2px;
+            padding-bottom: 5px;
+            border-bottom: 1px solid #f1f5f9;
+        }
+        .comm-channels-header-top {
+            display: flex;
             align-items: center;
             justify-content: space-between;
-            padding-bottom: 4px;
-            border-bottom: 1px solid #f1f5f9;
+            gap: 8px;
         }
         .comm-channels-title-wrap {
             display: flex;
             align-items: center;
-            gap: 4px;
+            gap: 5px;
             min-width: 0;
         }
         .comm-channels-title {
-            font-size: 11px;
+            font-size: 11.5px;
             font-weight: 700;
             color: #0f172a;
             white-space: nowrap;
         }
         .comm-channels-hint {
             font-size: 9.5px;
-            color: #94a3b8;
-            white-space: nowrap;
+            color: #64748b;
+            line-height: 1.35;
+            white-space: normal;
         }
         .comm-btn-clear {
             background: transparent;
@@ -1695,12 +1716,15 @@
             align-items: center;
             gap: 4px;
             cursor: pointer;
-            padding: 0 4px;
-            transition: color .15s ease;
+            padding: 2px 6px;
+            border-radius: 4px;
+            transition: all .15s ease;
+            flex-shrink: 0;
         }
         .comm-btn-clear:hover {
             color: #0077ba;
-            text-decoration: underline;
+            background: #f1f5f9;
+            text-decoration: none;
         }
 
         .comm-channels-subcards {
@@ -1817,96 +1841,90 @@
             transform: translateX(16px);
         }
 
-        /* CARD 4: Visibility & Privacy Micro-Strip */
-        .comm-info-box {
-            background: #eff6ff;
-            border: 1px solid #bfdbfe;
+        /* CARD 4: Contextual Validation Alert Box (Only shown when action required) */
+        .comm-alert-box {
+            background: #fffbeb;
+            border: 1px solid #fde68a;
             border-radius: 7px;
-            padding: 6px 10px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
+            padding: 8px 11px;
             flex-shrink: 0;
+            transition: all 0.2s ease;
         }
-        .comm-info-icon {
-            width: 18px;
-            height: 18px;
+        .comm-alert-icon {
+            width: 20px;
+            height: 20px;
             border-radius: 50%;
-            background: #009ef7;
-            color: #ffffff;
+            background: #fef3c7;
+            color: #d97706;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 9.5px;
+            font-size: 10px;
+            flex-shrink: 0;
+            margin-top: 1px;
+        }
+        .comm-alert-content {
+            flex: 1;
+            min-width: 0;
+        }
+        .comm-alert-title {
+            font-size: 11px;
+            font-weight: 700;
+            color: #92400e;
+            line-height: 1.25;
+        }
+        .comm-alert-message {
+            font-size: 10px;
+            color: #b45309;
+            line-height: 1.35;
+            margin-top: 2px;
+        }
+        .comm-alert-close {
+            background: transparent;
+            border: none;
+            color: #b45309;
+            font-size: 11px;
+            cursor: pointer;
+            padding: 0 2px;
+            opacity: 0.7;
+            transition: opacity 0.15s ease;
+        }
+        .comm-alert-close:hover {
+            opacity: 1;
+        }
+
+        /* CARD 5: Visibility & Privacy Micro-Strip (Subtle Enterprise Palette) */
+        .comm-info-box {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 7px;
+            padding: 7px 11px;
+            display: flex;
+            align-items: center;
+            gap: 9px;
+            flex-shrink: 0;
+        }
+        .comm-info-icon {
+            width: 22px;
+            height: 22px;
+            border-radius: 6px;
+            background: #f1f5f9;
+            color: #64748b;
+            border: 1px solid #e2e8f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
             flex-shrink: 0;
         }
         .comm-info-text {
             font-size: 9.5px;
-            color: #1e40af;
+            color: #64748b;
             line-height: 1.35;
         }
-
-        .comm-priority-select {
-            font-size: 9.5px;
-            padding: 2px 4px;
-            border: 1px solid #cbd5e1;
-            border-radius: 4px;
-            background: #ffffff;
-            font-weight: 600;
+        .comm-info-text strong {
             color: #334155;
-            cursor: pointer;
-            outline: none;
-            height: 22px;
-        }
-        .comm-priority-select:focus {
-            border-color: #009ef7;
-        }
-        .comm-mandatory-pill {
-            font-size: 8.5px;
-            background: #eff6ff;
-            color: #0284c7;
-            padding: 0.5px 5px;
-            border-radius: 4px;
             font-weight: 700;
-            border: 1px solid #bae6fd;
-            letter-spacing: 0.02em;
-        }
-        .comm-health-badge {
-            font-size: 8.5px;
-            padding: 0.5px 5px;
-            border-radius: 4px;
-            font-weight: 600;
-        }
-        .comm-health-badge.is-healthy {
-            background: #ecfdf5;
-            color: #10b981;
-            border: 1px solid #a7f3d0;
-        }
-        .comm-health-badge.is-at-risk {
-            background: #fffbeb;
-            color: #d97706;
-            border: 1px solid #fde68a;
-        }
-        .comm-fallback-route-card {
-            background: #ffffff;
-            border: 1px solid #e2e8f0;
-            border-radius: 8px;
-            padding: 7px 11px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 8px;
-            flex-shrink: 0;
-        }
-        .comm-alert-danger {
-            background: #fef2f2;
-            border: 1px solid #fecaca;
-            border-radius: 8px;
-            padding: 6px 10px;
-            color: #991b1b;
-            font-size: 10px;
-            line-height: 1.4;
-            flex-shrink: 0;
         }
 
         /* Drawer Footer (Compact Standard) */
@@ -2450,15 +2468,19 @@
                 <!-- CARD 3: Modern Card + Sub-Card Container for Enquiry Channels -->
                 <div class="comm-channels-card">
                     <div class="comm-channels-head">
-                        <div class="comm-channels-title-wrap">
-                            <i class="fa-solid fa-headset text-primary me-1" style="font-size: 11px;"></i>
-                            <span class="comm-channels-title">Inbound Marketplace Channels</span>
-                            <span class="comm-channels-hint">(Direct phone &amp; email shown on Marketplace)</span>
+                        <div class="comm-channels-header-top">
+                            <div class="comm-channels-title-wrap">
+                                <i class="fa-solid fa-headset text-primary me-1" style="font-size: 11px;"></i>
+                                <span class="comm-channels-title">Inbound Marketplace Channels</span>
+                            </div>
+                            <button type="button" class="comm-btn-clear" onclick="clearAllCommDrawerRoles()" title="Disable all enquiry channels">
+                                <i class="fa-solid fa-arrows-rotate"></i>
+                                <span>Clear All</span>
+                            </button>
                         </div>
-                        <button type="button" class="comm-btn-clear" onclick="clearAllCommDrawerRoles()" title="Disable all enquiry channels">
-                            <i class="fa-solid fa-arrows-rotate"></i>
-                            <span>Clear All</span>
-                        </button>
+                        <div class="comm-channels-hint">
+                            Direct phone and email will be shared on Jero Marketplace for active channels.
+                        </div>
                     </div>
 
                     <div class="comm-channels-subcards" id="commDrawerCardsList">
@@ -2469,20 +2491,11 @@
                                     <i class="fa-solid fa-users"></i>
                                 </div>
                                 <div class="comm-card-text">
-                                    <div class="d-flex align-items-center gap-1">
-                                        <span class="comm-card-title">Sales &amp; Client Enquiries</span>
-                                        <span class="comm-mandatory-pill">MANDATORY</span>
-                                        <span class="comm-health-badge is-healthy" id="commHealth_client">Healthy</span>
-                                    </div>
+                                    <span class="comm-card-title">Sales &amp; Client Enquiries</span>
                                     <div class="comm-card-desc">Client hiring requests, project discovery calls &amp; sales inquiries.</div>
                                 </div>
                             </div>
-                            <div class="comm-card-controls gap-2">
-                                <select class="comm-priority-select" data-channel="client" id="commPrio_client" title="Priority Tier">
-                                    <option value="Primary">Primary</option>
-                                    <option value="Secondary" selected>Secondary</option>
-                                    <option value="Backup">Backup</option>
-                                </select>
+                            <div class="comm-card-controls">
                                 <label class="comm-ios-switch" title="Toggle Sales &amp; Client Enquiries">
                                     <input type="checkbox" class="comm-drawer-toggle" data-channel="client" id="commToggle_client">
                                     <span class="comm-ios-slider"></span>
@@ -2497,20 +2510,11 @@
                                     <i class="fa-solid fa-handshake"></i>
                                 </div>
                                 <div class="comm-card-text">
-                                    <div class="d-flex align-items-center gap-1">
-                                        <span class="comm-card-title">Agency Queries</span>
-                                        <span class="comm-mandatory-pill">MANDATORY</span>
-                                        <span class="comm-health-badge is-healthy" id="commHealth_agency">Healthy</span>
-                                    </div>
+                                    <span class="comm-card-title">Agency Queries</span>
                                     <div class="comm-card-desc">Agency partner inquiries, split-fee requests &amp; vendor submissions.</div>
                                 </div>
                             </div>
-                            <div class="comm-card-controls gap-2">
-                                <select class="comm-priority-select" data-channel="agency" id="commPrio_agency" title="Priority Tier">
-                                    <option value="Primary">Primary</option>
-                                    <option value="Secondary" selected>Secondary</option>
-                                    <option value="Backup">Backup</option>
-                                </select>
+                            <div class="comm-card-controls">
                                 <label class="comm-ios-switch" title="Toggle Agency Queries">
                                     <input type="checkbox" class="comm-drawer-toggle" data-channel="agency" id="commToggle_agency">
                                     <span class="comm-ios-slider"></span>
@@ -2525,20 +2529,11 @@
                                     <i class="fa-solid fa-user-tag"></i>
                                 </div>
                                 <div class="comm-card-text">
-                                    <div class="d-flex align-items-center gap-1">
-                                        <span class="comm-card-title">Bench Talent Enquiries</span>
-                                        <span class="comm-mandatory-pill">MANDATORY</span>
-                                        <span class="comm-health-badge is-healthy" id="commHealth_bench">Healthy</span>
-                                    </div>
+                                    <span class="comm-card-title">Bench Talent Enquiries</span>
                                     <div class="comm-card-desc">Inbound talent deployment calls, candidate placements &amp; queries.</div>
                                 </div>
                             </div>
-                            <div class="comm-card-controls gap-2">
-                                <select class="comm-priority-select" data-channel="bench" id="commPrio_bench" title="Priority Tier">
-                                    <option value="Primary">Primary</option>
-                                    <option value="Secondary" selected>Secondary</option>
-                                    <option value="Backup">Backup</option>
-                                </select>
+                            <div class="comm-card-controls">
                                 <label class="comm-ios-switch" title="Toggle Bench Talent Enquiries">
                                     <input type="checkbox" class="comm-drawer-toggle" data-channel="bench" id="commToggle_bench">
                                     <span class="comm-ios-slider"></span>
@@ -2548,25 +2543,23 @@
                     </div>
                 </div>
 
-                <!-- CARD 4: Dynamic Fallback Route Visualizer -->
-                <div class="comm-fallback-route-card" id="commFallbackRouteWrap">
-                    <div class="d-flex align-items-center gap-2">
-                        <i class="fa-solid fa-route text-primary" style="font-size: 11px;"></i>
-                        <div>
-                            <div style="font-size: 10.5px; font-weight: 700; color: #0f172a;">Active Fallback Route Preview</div>
-                            <div style="font-size: 9.5px; color: #64748b;" id="commFallbackRouteText">Member &rarr; Secondary Contact &rarr; Root Admin</div>
+                <!-- CARD 4: Contextual Validation Alert Box (Only shown when action required) -->
+                <div id="commInvariantAlert" class="comm-alert-box" style="display: none;">
+                    <div class="d-flex align-items-start gap-2">
+                        <div class="comm-alert-icon">
+                            <i class="fa-solid fa-triangle-exclamation"></i>
                         </div>
+                        <div class="comm-alert-content">
+                            <div class="comm-alert-title" id="commInvariantAlertTitle">Contact Requirement</div>
+                            <div class="comm-alert-message" id="commInvariantAlertText">At least one contact is required. Please add at least one contact or configure a fallback representative to continue.</div>
+                        </div>
+                        <button type="button" class="comm-alert-close" onclick="$('#commInvariantAlert').slideUp(180);" aria-label="Dismiss">
+                            <i class="fa-solid fa-xmark"></i>
+                        </button>
                     </div>
-                    <span style="font-size: 8.5px; background: #f0fdf4; color: #15803d; border: 1px solid #bbf7d0; padding: 1px 6px; border-radius: 4px; font-weight: 600;">Auto-Promote Active</span>
                 </div>
 
-                <!-- CARD 5: Invariant Alert Box (Hidden by default) -->
-                <div id="commInvariantAlert" class="comm-alert-danger" style="display: none;">
-                    <i class="fa-solid fa-triangle-exclamation me-1" style="color: #dc2626;"></i>
-                    <span id="commInvariantAlertText"><strong>Mandatory Contact Rule:</strong> At least 1 active contact is required.</span>
-                </div>
-
-                <!-- CARD 6: Visibility & Privacy Micro-Strip -->
+                <!-- CARD 5: Visibility & Privacy Micro-Strip -->
                 <div class="comm-info-box">
                     <div class="comm-info-icon">
                         <i class="fa-solid fa-shield-halved"></i>
@@ -4513,6 +4506,8 @@
 				if (typeof trigger === 'object' && trigger !== null) {
 					if (trigger.getAttribute && trigger.getAttribute('data-user')) {
 						try { user = JSON.parse(trigger.getAttribute('data-user')); } catch(e){}
+					} else if (typeof $ !== 'undefined' && $(trigger).closest('[data-user]').length) {
+						try { user = JSON.parse($(trigger).closest('[data-user]').attr('data-user')); } catch(e){}
 					} else if (trigger.id) {
 						user = trigger;
 					}
@@ -4567,7 +4562,6 @@
 
 				// Reset all channel cards, switches, and private state
 				var channels = Array.isArray(user.channels) ? user.channels : [];
-				var userPrios = user.priorities || {};
 				var hasActiveChannel = false;
 				var availableChannels = ['client', 'agency', 'bench'];
 
@@ -4577,11 +4571,8 @@
 
 					var $card = $('#commCard_' + ch);
 					var $toggle = $('#commToggle_' + ch);
-					var $prio = $('#commPrio_' + ch);
 
 					$toggle.prop('checked', isChecked);
-					var currentPrio = userPrios[ch] || userPrios[legacyCh] || 'Secondary';
-					$prio.val(currentPrio);
 
 					if (isChecked) {
 						$card.addClass('is-active');
@@ -4600,11 +4591,8 @@
 					$('#commCard_private').addClass('is-private-active');
 				}
 
-				// Hide any previous invariant alert
+				// Hide any previous validation/invariant alert
 				$('#commInvariantAlert').hide();
-
-				// Update dynamic fallback route text
-				updateCommFallbackRouteText();
 
 				// Slide open drawer
 				$('#commOverlay').addClass('open');
@@ -4618,30 +4606,6 @@
 				$('body').css('overflow', '');
 			}
 
-			function updateCommFallbackRouteText() {
-				var memberName = $('#commDrawerName').text() || 'Member';
-				var isPrivate = $('#commToggle_private').is(':checked');
-				var anyChecked = $('.comm-drawer-toggle:checked').length > 0;
-
-				if (isPrivate || !anyChecked) {
-					$('#commFallbackRouteText').html('<em>Keep Private Active</em> &rarr; Direct enquiries routed to Company Default Rep &rarr; Root Admin');
-				} else {
-					var isPrimaryOnAny = false;
-					$('.comm-drawer-toggle:checked').each(function() {
-						var ch = $(this).data('channel');
-						var p = $('#commPrio_' + ch).val();
-						if (p === 'Primary') {
-							isPrimaryOnAny = true;
-						}
-					});
-					if (isPrimaryOnAny) {
-						$('#commFallbackRouteText').html('<strong>' + memberName + ' (Primary)</strong> &rarr; Secondary Contact &rarr; Root Admin');
-					} else {
-						$('#commFallbackRouteText').html(memberName + ' (Secondary) &rarr; Primary Contact &rarr; Root Admin');
-					}
-				}
-			}
-
 			function clearAllCommDrawerRoles() {
 				var availableChannels = ['client', 'agency', 'bench'];
 				availableChannels.forEach(function(ch) {
@@ -4650,7 +4614,7 @@
 				});
 				$('#commToggle_private').prop('checked', true);
 				$('#commCard_private').addClass('is-private-active');
-				updateCommFallbackRouteText();
+				$('#commInvariantAlert').slideUp(180);
 			}
 
 			// Handle Keep Private toggle switch change
@@ -4666,7 +4630,7 @@
 				} else {
 					$('#commCard_private').removeClass('is-private-active');
 				}
-				updateCommFallbackRouteText();
+				$('#commInvariantAlert').slideUp(180);
 			});
 
 			// Handle channel toggle switch change inside drawer
@@ -4679,7 +4643,6 @@
 					$card.addClass('is-active');
 					$('#commToggle_private').prop('checked', false);
 					$('#commCard_private').removeClass('is-private-active');
-					$('#commInvariantAlert').slideUp(200);
 				} else {
 					$card.removeClass('is-active');
 					var anyChecked = $('.comm-drawer-toggle:checked').length > 0;
@@ -4688,11 +4651,7 @@
 						$('#commCard_private').addClass('is-private-active');
 					}
 				}
-				updateCommFallbackRouteText();
-			});
-
-			$(document).on('change', '.comm-priority-select', function() {
-				updateCommFallbackRouteText();
+				$('#commInvariantAlert').slideUp(180);
 			});
 
 			// Save Contact Details Sharing Preferences
@@ -4708,7 +4667,7 @@
 					$('.comm-drawer-toggle:checked').each(function() {
 						var ch = $(this).data('channel');
 						selectedChannels.push(ch);
-						var prioVal = $('#commPrio_' + ch).val() || 'Secondary';
+						var prioVal = 'Primary';
 						priorities[ch] = prioVal;
 
 						// Compatibility aliases
@@ -4772,8 +4731,9 @@
 
 						var msg = (xhr.responseJSON && xhr.responseJSON.message) ? xhr.responseJSON.message : 'Failed to update contact sharing preferences.';
 						
-						// Show Invariant Alert in Drawer
-						$('#commInvariantAlertText').html('<strong>' + msg + '</strong>');
+						// Show Intelligent Invariant / Validation Alert in Drawer
+						$('#commInvariantAlertTitle').text('Contact Requirement');
+						$('#commInvariantAlertText').html(msg);
 						$('#commInvariantAlert').slideDown(200);
 
 						if (typeof toastr !== 'undefined') {

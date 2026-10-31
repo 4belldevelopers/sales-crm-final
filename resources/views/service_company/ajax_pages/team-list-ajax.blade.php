@@ -295,7 +295,7 @@
                     </div>
 
                     <!-- SUB-CARD 5: Contact Details Visibility (Marketplace Enquiries) -->
-                    <div class="tm-subcard tm-subcard-comm">
+                    <div class="tm-subcard tm-subcard-comm" data-user='@json($userData)' onclick="openAssignCommDrawer(this)" role="button" tabindex="0" title="Click anywhere to manage contact visibility">
                         <div class="tm-subcard-head">
                             <div class="tm-subcard-title-wrap">
                                 <i class="fa-solid fa-address-book text-primary" style="font-size: 11px;"></i>
@@ -306,7 +306,7 @@
                                     <span class="tm-subcard-badge badge-rep" title="{{ $publicCount }} Enquiry Channels Enabled">
                                         <i class="fa-solid fa-circle-check text-success me-1"></i>({{ $publicCount }})
                                     </span>
-                                    <button type="button" class="btn-edit-comm-icon" data-user='@json($userData)' onclick="openAssignCommDrawer(this)" title="Edit contact sharing channels">
+                                    <button type="button" class="btn-edit-comm-icon" data-user='@json($userData)' onclick="event.stopPropagation(); openAssignCommDrawer(this);" title="Edit contact sharing channels">
                                         <i class="fa-solid fa-pen"></i>
                                     </button>
                                 @else
@@ -346,7 +346,7 @@
                                     <span class="text-muted" style="font-size: 10.5px; font-weight: 500;">
                                         <i class="fa-solid fa-lock text-muted me-1"></i> No Details Shared (Keep Private)
                                     </span>
-                                    <button type="button" class="btn-assign-comm-empty" data-user='@json($userData)' onclick="openAssignCommDrawer(this)" title="Share contact details for marketplace enquiries">
+                                    <button type="button" class="btn-assign-comm-empty" data-user='@json($userData)' onclick="event.stopPropagation(); openAssignCommDrawer(this);" title="Share contact details for marketplace enquiries">
                                         <i class="fa-solid fa-plus me-1 text-primary"></i>Share Details
                                     </button>
                                 </div>
