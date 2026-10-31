@@ -192,10 +192,6 @@ class AgencyListingService
 
     /**
      * Resolve company IDs of top performing agencies with verified candidate pipeline placements.
-     *
-     * @param int $companyId
-     * @param array $agencyCompanyIds
-     * @return array
      */
     public function getTopPerformingAgencyIds(int $companyId, array $agencyCompanyIds): array
     {
@@ -219,10 +215,6 @@ class AgencyListingService
 
     /**
      * Resolve company IDs of agencies currently assigned to active jobs.
-     *
-     * @param int $companyId
-     * @param array $agencyCompanyIds
-     * @return array
      */
     public function getActiveAgencyIds(int $companyId, array $agencyCompanyIds): array
     {
@@ -243,10 +235,6 @@ class AgencyListingService
 
     /**
      * Resolve company IDs of newly added agencies within given days.
-     *
-     * @param int $companyId
-     * @param int $days
-     * @return array
      */
     public function getRecentAgencyIds(int $companyId, int $days = 180): array
     {
@@ -456,12 +444,208 @@ class AgencyListingService
     }
 
     /**
-     * Invalidate cached summary counters for a tenant company.
+     * Invalidate cached summary counters and filter facets for a tenant company.
      * INTENT: Ensures cache consistency whenever staffing relations, invitations, or job assignments change.
      */
     public function clearCompanyStatsCache(int $companyId): void
     {
         Cache::forget("ats:spartner_summary_cnt:comp_{$companyId}");
+        Cache::forget("ats:spartner_loc_facets:comp_{$companyId}");
+        Cache::forget("ats:spartner_recency_cnt:comp_{$companyId}");
+        Cache::forget("ats:spartner_pipe_cnt:comp_{$companyId}");
+    }
+
+    /**
+     * Fetch agency location facets for the Location Combobox Popover.
+     * Strictly isolated to Agency Tracker data - 0% Client Tracker dependencies.
+     */
+    public function getAgencyLocationFacets(int $companyId): array
+    {
+        $cacheKey = "ats:spartner_loc_facets:comp_{$companyId}";
+
+        return Cache::remember($cacheKey, now()->addMinutes(10), function () use ($companyId) {
+            $relations = DB::table('staffing_company_relation')
+                ->join('clients', function ($join) {
+                    $join->on('clients.company_id', '=', 'staffing_company_relation.to_company_id')
+                        ->where('clients.self_company', 1);
+                })
+                ->leftJoin('client_location', 'client_location.client_id', '=', 'clients.id')
+                ->leftJoin('countries', 'countries.id', '=', 'client_location.country_id')
+                ->leftJoin('city_list', 'city_list.city_id', '=', 'client_location.city_id')
+                ->where('staffing_company_relation.from_company_id', $companyId)
+                ->where('staffing_company_relation.final_status', 1)
+                ->select(
+                    'client_location.country_id',
+                    'countries.country_name',
+                    'countries.country_code',
+                    'client_location.city_id',
+                    'city_list.city as city_name',
+                    'client_location.city as custom_city'
+                )
+                ->get();
+
+            $total = $relations->count();
+            $unspecifiedCount = 0;
+            $hubsMap = [];
+
+            foreach ($relations as $row) {
+                $countryId = (int) ($row->country_id ?? 0);
+                $countryName = trim((string) ($row->country_name ?? ''));
+                if ($countryId <= 0 || empty($countryName)) {
+                    $unspecifiedCount++;
+
+                    continue;
+                }
+
+                if (! isset($hubsMap[$countryId])) {
+                    $hubsMap[$countryId] = [
+                        'country_id' => $countryId,
+                        'country_name' => $countryName,
+                        'country_code' => $row->country_code ?? '🌐',
+                        'count' => 0,
+                        'cities' => [],
+                    ];
+                }
+                $hubsMap[$countryId]['count']++;
+
+                $cityId = (int) ($row->city_id ?? 0);
+                $cityName = trim((string) ($row->city_name ?: ($row->custom_city ?? '')));
+                if (! empty($cityName)) {
+                    if (! isset($hubsMap[$countryId]['cities'][$cityName])) {
+                        $hubsMap[$countryId]['cities'][$cityName] = [
+                            'city_id' => $cityId,
+                            'city_name' => $cityName,
+                            'count' => 0,
+                        ];
+                    }
+                    $hubsMap[$countryId]['cities'][$cityName]['count']++;
+                }
+            }
+
+            $hubs = array_values(array_map(function ($hub) {
+                $hub['cities'] = array_values($hub['cities']);
+                usort($hub['cities'], fn ($a, $b) => $b['count'] <=> $a['count']);
+
+                return $hub;
+            }, $hubsMap));
+
+            usort($hubs, fn ($a, $b) => $b['count'] <=> $a['count']);
+
+            return [
+                'total' => $total,
+                'located_count' => max(0, $total - $unspecifiedCount),
+                'unspecified_count' => $unspecifiedCount,
+                'hubs' => $hubs,
+            ];
+        });
+    }
+
+    /**
+     * Fetch agency engagement recency counts for the Activity Combobox Popover.
+     * Strictly isolated to Agency Tracker data - 0% Client Tracker dependencies.
+     */
+    public function getAgencyRecencyCounts(int $companyId): array
+    {
+        $cacheKey = "ats:spartner_recency_cnt:comp_{$companyId}";
+
+        return Cache::remember($cacheKey, now()->addMinutes(10), function () use ($companyId) {
+            $connectedIds = DB::table('staffing_company_relation')
+                ->where('from_company_id', $companyId)
+                ->where('final_status', 1)
+                ->whereNotNull('to_company_id')
+                ->distinct()
+                ->pluck('to_company_id')
+                ->toArray();
+
+            $total = count($connectedIds);
+            if ($total === 0) {
+                return ['all' => 0, '7d' => 0, '30d' => 0, '90d' => 0, 'dormant' => 0, 'never' => 0];
+            }
+
+            $latestDates = DB::table('job_applications')
+                ->whereIn('thirdparty_company_id', $connectedIds)
+                ->groupBy('thirdparty_company_id')
+                ->selectRaw('thirdparty_company_id, MAX(created_at) as latest_submission')
+                ->pluck('latest_submission', 'thirdparty_company_id')
+                ->toArray();
+
+            $c7d = 0;
+            $c30d = 0;
+            $c90d = 0;
+            $cDormant = 0;
+            $cNever = 0;
+
+            $sub7 = now()->subDays(7);
+            $sub30 = now()->subDays(30);
+            $sub90 = now()->subDays(90);
+
+            foreach ($connectedIds as $cId) {
+                if (! isset($latestDates[$cId]) || empty($latestDates[$cId])) {
+                    $cNever++;
+
+                    continue;
+                }
+                $date = \Carbon\Carbon::parse($latestDates[$cId]);
+                if ($date >= $sub7) {
+                    $c7d++;
+                } elseif ($date >= $sub30) {
+                    $c30d++;
+                } elseif ($date >= $sub90) {
+                    $c90d++;
+                } else {
+                    $cDormant++;
+                }
+            }
+
+            return [
+                'all' => $total,
+                '7d' => $c7d,
+                '30d' => $c30d,
+                '90d' => $c90d,
+                'dormant' => $cDormant,
+                'never' => $cNever,
+            ];
+        });
+    }
+
+    /**
+     * Fetch agency candidate pipeline state counts for the Pipeline Combobox Popover.
+     * Strictly isolated to Agency Tracker data - 0% Client Tracker dependencies.
+     */
+    public function getAgencyPipelineCounts(int $companyId): array
+    {
+        $cacheKey = "ats:spartner_pipe_cnt:comp_{$companyId}";
+
+        return Cache::remember($cacheKey, now()->addMinutes(10), function () use ($companyId) {
+            $connectedIds = DB::table('staffing_company_relation')
+                ->where('from_company_id', $companyId)
+                ->where('final_status', 1)
+                ->whereNotNull('to_company_id')
+                ->distinct()
+                ->pluck('to_company_id')
+                ->toArray();
+
+            $total = count($connectedIds);
+            if ($total === 0) {
+                return ['all' => 0, 'active' => 0, 'none' => 0];
+            }
+
+            $activeAgencyIds = DB::table('add_job_wise_condidates')
+                ->whereIn('thirdparty_company_id', $connectedIds)
+                ->whereIn('master_status_id', [1, 3, 6, 7, 10])
+                ->distinct()
+                ->pluck('thirdparty_company_id')
+                ->toArray();
+
+            $activeCount = count($activeAgencyIds);
+            $noneCount = max(0, $total - $activeCount);
+
+            return [
+                'all' => $total,
+                'active' => $activeCount,
+                'none' => $noneCount,
+            ];
+        });
     }
 
     /**
