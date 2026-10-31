@@ -286,12 +286,12 @@
                         </div>
                     </div>
 
-                    <!-- SUB-CARD 5: Contact Details Shared (Marketplace Enquiries) -->
+                    <!-- SUB-CARD 5: Contact Details Visibility (Marketplace Enquiries) -->
                     <div class="tm-subcard tm-subcard-comm">
                         <div class="tm-subcard-head">
                             <div class="tm-subcard-title-wrap">
                                 <i class="fa-solid fa-address-book text-primary" style="font-size: 11px;"></i>
-                                <span class="tm-subcard-title">Contact Details Shared</span>
+                                <span class="tm-subcard-title">Contact Details Visibility</span>
                             </div>
                             @if (!empty($channels) && count($channels) > 0)
                                 <span class="tm-subcard-badge badge-rep" title="Publicly listed for {{ count($channels) }} enquiry types">

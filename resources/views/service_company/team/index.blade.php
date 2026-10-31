@@ -839,7 +839,7 @@
             text-decoration: underline;
         }
 
-        /* Sub-Card 5: Contact Details Shared (Marketplace Enquiries) */
+        /* Sub-Card 5: Contact Details Visibility (Marketplace Enquiries) */
         .tm-comm-body {
             display: flex;
             flex-wrap: wrap;
@@ -2729,8 +2729,8 @@
             // Phase 2: Tenant-Scoped IndexedDB Store for Team Listing & Reference Data
             const CURRENT_COMPANY_ID = {{ (int) (auth()->user()->company_id ?? 0) }};
             const CURRENT_USER_ID = {{ (int) (auth()->user()->id ?? 0) }};
-            const TEAM_DB_NAME = 'jero_team_local_store_v6_' + CURRENT_COMPANY_ID;
-            const TEAM_DB_VERSION = 6;
+            const TEAM_DB_NAME = 'jero_team_local_store_v7_' + CURRENT_COMPANY_ID;
+            const TEAM_DB_VERSION = 7;
             const TEAM_CACHE_TTL_MS = 15 * 60 * 1000; // 15 minutes TTL
 
             const JeroTeamLocalStore = (function() {
