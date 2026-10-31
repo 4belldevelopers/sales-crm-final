@@ -2043,8 +2043,10 @@ class ServiceCompanyTeamController extends ServiceCompanyBaseController
 
     public function teamScoreboard(Request $request)
     {
-        $userId = (int) $request->get('user_id');
-        $companyId = $this->user->company_id;
+        $rawUserId = (int) $request->get('user_id');
+        $targetUser = $this->authorizeTeamMemberAccess($rawUserId);
+        $userId = (int) $targetUser->id;
+        $companyId = (int) $this->user->company_id;
 
         $reportMonth = \Carbon\Carbon::now()->startOfMonth()->subMonth();
         $start = $reportMonth->copy()->startOfMonth()->toIso8601String();
@@ -2512,7 +2514,9 @@ class ServiceCompanyTeamController extends ServiceCompanyBaseController
     {
 
         $userId = $mstatus_id = $feedback_status = '';
-        $userId = $request->userId;
+        $rawUserId = (int) $request->userId;
+        $targetUser = $this->authorizeTeamMemberAccess($rawUserId);
+        $userId = (int) $targetUser->id;
 
         $salaryMode = GeneralMethod::salaryMode();
         $currencySymbole = GeneralMethod::currencySymbole();
@@ -3055,7 +3059,9 @@ class ServiceCompanyTeamController extends ServiceCompanyBaseController
     {
 
         $userId = $available_status = $feedback_status = $interview_mode_arr = '';
-        $userId = $request->userId;
+        $rawUserId = (int) $request->userId;
+        $targetUser = $this->authorizeTeamMemberAccess($rawUserId);
+        $userId = (int) $targetUser->id;
 
         $available_status = GeneralMethod::available_status();
         $feedback_status = GeneralMethod::feedback_status();
@@ -3630,7 +3636,9 @@ class ServiceCompanyTeamController extends ServiceCompanyBaseController
         $salaryMode = GeneralMethod::salaryMode();
         $userId = '';
         $job_status = GeneralMethod::job_status();
-        $userId = $request->userId;
+        $rawUserId = (int) $request->userId;
+        $targetUser = $this->authorizeTeamMemberAccess($rawUserId);
+        $userId = (int) $targetUser->id;
         $company_id = auth()->user()->company_id;
 
         $jobApplications = JobApplication::select('job_applications.id', 'job_applications.full_name', 'jobs.title', 'job_applications.current_designation', 'job_applications.ctc',
