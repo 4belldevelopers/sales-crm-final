@@ -47,13 +47,26 @@
                 // Communication Representative & Channel Roles
                 $isClientRep = !empty($row->is_client_rep);
                 $isAgencyRep = !empty($row->is_agency_rep);
-                $channels = (array) ($row->channels ?? []);
-                if ($isClientRep && !in_array('client', $channels, true)) {
+                $rawChannels = (array) ($row->channels ?? []);
+                if ($isClientRep && !in_array('client', $rawChannels, true)) {
+                    $rawChannels[] = 'client';
+                }
+                if ($isAgencyRep && !in_array('vendor', $rawChannels, true) && !in_array('agency', $rawChannels, true)) {
+                    $rawChannels[] = 'agency';
+                }
+
+                // Canonical channels (Client, Agency, Bench - strictly 1 per distinct market enquiry domain)
+                $channels = [];
+                if (in_array('client', $rawChannels, true)) {
                     $channels[] = 'client';
                 }
-                if ($isAgencyRep && !in_array('vendor', $channels, true)) {
-                    $channels[] = 'vendor';
+                if (in_array('agency', $rawChannels, true) || in_array('vendor', $rawChannels, true)) {
+                    $channels[] = 'agency';
                 }
+                if (in_array('bench', $rawChannels, true) || in_array('recruitment', $rawChannels, true)) {
+                    $channels[] = 'bench';
+                }
+                $publicCount = count($channels);
 
                 // Rank medal
                 $medal = match ((int) @$teamRanks->rank) { 1 => '🥇', 2 => '🥈', 3 => '🥉', default => '' };
@@ -218,8 +231,8 @@
                             <div class="tm-wl-row" title="SPOC / Captain on Jobs">
                                 <i class="fa-solid fa-crown text-purple me-1"></i><span><strong>{{ $captainJobs }}</strong> Captain Jobs</span>
                             </div>
-                            <div class="tm-wl-row" title="Bench Talents Managed (Bench Talent RM)">
-                                <i class="fa-solid fa-users text-success me-1"></i><span><strong>{{ $trmTalents }}</strong> Bench Talent RM</span>
+                            <div class="tm-wl-row" title="Bench Talents Managed (Bench Talent Representative)">
+                                <i class="fa-solid fa-users text-success me-1"></i><span><strong>{{ $trmTalents }}</strong> Bench Talent Representative</span>
                             </div>
                         </div>
                     </div>
@@ -293,9 +306,9 @@
                                 <i class="fa-solid fa-address-book text-primary" style="font-size: 11px;"></i>
                                 <span class="tm-subcard-title">Contact Details Visibility</span>
                             </div>
-                            @if (!empty($channels) && count($channels) > 0)
-                                <span class="tm-subcard-badge badge-rep" title="Publicly listed for {{ count($channels) }} enquiry types">
-                                    <i class="fa-solid fa-eye text-success me-1"></i>Public ({{ count($channels) }})
+                            @if ($publicCount > 0)
+                                <span class="tm-subcard-badge badge-rep" title="Publicly listed for {{ $publicCount }} enquiry types">
+                                    <i class="fa-solid fa-eye text-success me-1"></i>Public ({{ $publicCount }})
                                 </span>
                             @else
                                 <span class="tm-subcard-badge badge-role" title="Contact details kept private">
@@ -304,19 +317,19 @@
                             @endif
                         </div>
                         <div class="tm-comm-body">
-                            @if (!empty($channels) && count($channels) > 0)
+                            @if ($publicCount > 0)
                                 <div class="d-flex flex-wrap align-items-center gap-1">
                                     @if (in_array('client', $channels, true))
                                         <span class="tm-comm-chip client" title="Contact details shared for Sales &amp; Client Enquiries">
                                             <i class="fa-solid fa-phone me-1"></i>Sales &amp; Client Enquiries
                                         </span>
                                     @endif
-                                    @if (in_array('vendor', $channels, true) || in_array('agency', $channels, true))
-                                        <span class="tm-comm-chip vendor" title="Contact details shared for Agency Enquiries">
-                                            <i class="fa-solid fa-phone me-1"></i>Agency Enquiries
+                                    @if (in_array('agency', $channels, true))
+                                        <span class="tm-comm-chip vendor" title="Contact details shared for Agency Queries">
+                                            <i class="fa-solid fa-phone me-1"></i>Agency Queries
                                         </span>
                                     @endif
-                                    @if (in_array('recruitment', $channels, true) || in_array('bench', $channels, true))
+                                    @if (in_array('bench', $channels, true))
                                         <span class="tm-comm-chip recruitment" title="Contact details shared for Bench Talent Enquiries">
                                             <i class="fa-solid fa-phone me-1"></i>Bench Talent Enquiries
                                         </span>

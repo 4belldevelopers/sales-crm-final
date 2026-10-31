@@ -118,6 +118,14 @@ class ServiceCompanyTeamController extends ServiceCompanyBaseController
                     $vendorCount = 1;
                 }
 
+                // Bench / Inhouse Talent members
+                $benchCount = 0;
+                foreach ($allRolesMap as $uid => $channels) {
+                    if (in_array('bench', $channels, true) || in_array('recruitment', $channels, true)) {
+                        $benchCount++;
+                    }
+                }
+
                 // Recruitment members: Active recruiters / sourcers (non-root)
                 $recruitmentCount = User::query()
                     ->where('company_id', $companyId)
@@ -125,14 +133,18 @@ class ServiceCompanyTeamController extends ServiceCompanyBaseController
                     ->where('root_user', '!=', 1)
                     ->count();
 
+                $finalBenchCount = $benchCount > 0 ? $benchCount : max($recruitmentCount, 1);
+
                 return [
                     'total' => (int) ($status->total ?? 0),
                     'active' => (int) ($status->active ?? 0),
                     'inactive' => (int) ($status->inactive ?? 0),
                     'invited' => (int) ($status->invited ?? 0),
-                    'recruitment' => (int) max($recruitmentCount, 1),
+                    'recruitment' => (int) $finalBenchCount,
+                    'bench' => (int) $finalBenchCount,
                     'client' => (int) max($clientCount, 1),
                     'vendor' => (int) max($vendorCount, 1),
+                    'agency' => (int) max($vendorCount, 1),
                     'finance' => (int) $financeCount,
                     'suspended' => 0,
                     'captain' => (int) $captain,
@@ -611,12 +623,12 @@ class ServiceCompanyTeamController extends ServiceCompanyBaseController
                 return in_array('finance', $roles, true);
             })->values();
             $total = $allRankedUsers->count();
-        } elseif ($statusTab === 'recruitment') {
+        } elseif ($statusTab === 'recruitment' || $statusTab === 'bench') {
             $allRankedUsers = $allRankedUsers->filter(function ($u) use ($allRolesMap) {
                 $uid = (int) ($u['id'] ?? 0);
                 $roles = $allRolesMap[$uid] ?? [];
 
-                return in_array('recruitment', $roles, true) || (((int) ($u['root_user'] ?? 0) !== 1) && (strtolower($u['status'] ?? '') === 'active'));
+                return in_array('bench', $roles, true) || in_array('recruitment', $roles, true) || (((int) ($u['root_user'] ?? 0) !== 1) && (strtolower($u['status'] ?? '') === 'active'));
             })->values();
             $total = $allRankedUsers->count();
         }
