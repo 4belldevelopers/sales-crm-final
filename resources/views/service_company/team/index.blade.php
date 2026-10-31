@@ -1417,12 +1417,16 @@
             opacity: 1;
             pointer-events: all;
         }
+        /* =========================================================================
+           COMMUNICATION RIGHT DRAWER: MODERN CARD + SUB-CARD ENTERPRISE STANDARD
+           Strictly single page viewport fit (Zero vertical scroller on 15.6" screens)
+           ========================================================================= */
         .comm-drawer {
             position: fixed;
             top: 0;
             right: 0;
             bottom: 0;
-            width: 560px;
+            width: 530px;
             max-width: 100vw;
             background: #ffffff;
             box-shadow: -12px 0 35px -5px rgba(15, 23, 42, 0.15);
@@ -1430,38 +1434,39 @@
             display: flex;
             flex-direction: column;
             transform: translateX(100%);
-            transition: transform .3s cubic-bezier(.4, 0, .2, 1);
+            transition: transform .25s cubic-bezier(.4, 0, .2, 1);
             font-family: 'Poppins', sans-serif;
+            height: 100vh;
         }
         .comm-drawer.open {
             transform: translateX(0);
         }
         .comm-drawer-head {
-            padding: 22px 26px 18px 26px;
+            padding: 12px 18px 10px 18px;
             border-bottom: 1px solid #f1f5f9;
             display: flex;
-            align-items: flex-start;
+            align-items: center;
             justify-content: space-between;
             gap: 12px;
             flex-shrink: 0;
         }
         .comm-drawer-title {
-            font-size: 17px;
+            font-size: 14px;
             font-weight: 700;
             color: #0f172a;
             margin: 0;
-            line-height: 1.3;
+            line-height: 1.25;
         }
         .comm-drawer-subtitle {
-            font-size: 12px;
+            font-size: 10.5px;
             color: #64748b;
-            margin: 4px 0 0 0;
-            line-height: 1.45;
+            margin: 2px 0 0 0;
+            line-height: 1.35;
         }
         .comm-drawer-close {
-            width: 32px;
-            height: 32px;
-            border-radius: 8px;
+            width: 28px;
+            height: 28px;
+            border-radius: 7px;
             border: 1px solid transparent;
             background: #f8fafc;
             color: #64748b;
@@ -1471,7 +1476,7 @@
             cursor: pointer;
             transition: all .15s;
             flex-shrink: 0;
-            font-size: 15px;
+            font-size: 13px;
         }
         .comm-drawer-close:hover {
             background: #e2e8f0;
@@ -1480,13 +1485,13 @@
         .comm-drawer-body {
             flex: 1;
             overflow-y: auto;
-            padding: 22px 26px;
+            padding: 10px 18px;
             display: flex;
             flex-direction: column;
-            gap: 20px;
+            gap: 7px;
         }
         .comm-drawer-body::-webkit-scrollbar {
-            width: 6px;
+            width: 5px;
         }
         .comm-drawer-body::-webkit-scrollbar-thumb {
             background: #cbd5e1;
@@ -1496,32 +1501,32 @@
             background: transparent;
         }
 
-        /* Target Member Profile Card inside Drawer */
+        /* CARD 1: Member Profile Summary Sub-Card */
         .comm-user-card {
             border: 1px solid #e2e8f0;
-            border-radius: 12px;
-            padding: 14px 16px;
+            border-radius: 8px;
+            padding: 7px 11px;
             background: #ffffff;
             display: flex;
             align-items: center;
             justify-content: space-between;
-            gap: 14px;
-            flex-wrap: wrap;
+            gap: 10px;
+            flex-shrink: 0;
         }
         .comm-user-card-left {
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 9px;
             min-width: 0;
         }
         .comm-user-avatar {
-            width: 44px;
-            height: 44px;
-            border-radius: 10px;
+            width: 32px;
+            height: 32px;
+            border-radius: 7px;
             background: #0f172a;
             color: #ffffff;
             font-weight: 700;
-            font-size: 17px;
+            font-size: 13px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -1537,7 +1542,7 @@
             min-width: 0;
         }
         .comm-user-name {
-            font-size: 14.5px;
+            font-size: 12.5px;
             font-weight: 700;
             color: #0f172a;
             white-space: nowrap;
@@ -1547,166 +1552,211 @@
         .comm-role-badge {
             background: #eff6ff;
             color: #009ef7;
-            font-size: 11px;
+            font-size: 9.5px;
             font-weight: 600;
-            padding: 2px 8px;
-            border-radius: 6px;
+            padding: 1px 6px;
+            border-radius: 4px;
             border: 1px solid #dbeafe;
             white-space: nowrap;
         }
         .comm-user-contacts {
             display: flex;
             align-items: center;
-            gap: 14px;
-            margin-top: 4px;
-            font-size: 11.5px;
+            gap: 10px;
+            margin-top: 1px;
+            font-size: 10.5px;
             color: #64748b;
-            flex-wrap: wrap;
+            white-space: nowrap;
         }
         .comm-user-card-right {
             display: flex;
-            align-items: center;
-            gap: 10px;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 2px;
             flex-shrink: 0;
-            flex-wrap: wrap;
         }
         .comm-status-pill {
             background: #ecfdf5;
             color: #10b981;
             border: 1px solid #a7f3d0;
             border-radius: 20px;
-            padding: 3px 10px;
-            font-size: 11px;
+            padding: 1px 7px;
+            font-size: 9.5px;
             font-weight: 600;
             display: inline-flex;
             align-items: center;
-            gap: 5px;
+            gap: 4px;
+            line-height: 1.3;
         }
         .comm-status-dot {
-            width: 6px;
-            height: 6px;
+            width: 5px;
+            height: 5px;
             border-radius: 50%;
             background: #10b981;
         }
         .comm-last-active-text {
-            font-size: 11.5px;
+            font-size: 9.5px;
             color: #94a3b8;
             display: inline-flex;
             align-items: center;
-            gap: 5px;
+            gap: 4px;
+            line-height: 1.2;
         }
         .comm-last-active-dot {
-            width: 5px;
-            height: 5px;
+            width: 4px;
+            height: 4px;
             border-radius: 50%;
             background: #cbd5e1;
         }
 
-        /* Section Head */
-        .comm-section-title {
-            font-size: 14.5px;
-            font-weight: 700;
-            color: #0f172a;
-        }
-        .comm-section-subtitle {
-            font-size: 11.5px;
-            color: #64748b;
-            margin-top: 2px;
-        }
-        .comm-btn-clear {
+        /* CARD 2: Dedicated Keep Private Card */
+        .comm-card-private {
             border: 1px solid #e2e8f0;
-            background: #ffffff;
             border-radius: 8px;
-            padding: 6px 12px;
-            font-size: 12px;
-            font-weight: 600;
-            color: #334155;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            cursor: pointer;
-            transition: all .15s;
-        }
-        .comm-btn-clear:hover {
-            background: #f8fafc;
-            border-color: #cbd5e1;
-            color: #0f172a;
-        }
-
-        /* 4 Channel Cards & Dedicated Keep Private Card */
-        .comm-card {
+            padding: 7px 11px;
             background: #ffffff;
-            border: 1px solid #e2e8f0;
-            border-radius: 10px;
-            padding: 12px 15px;
             display: flex;
             align-items: center;
             justify-content: space-between;
-            gap: 12px;
-            transition: all .2s ease;
+            gap: 10px;
+            transition: all .15s ease;
+            flex-shrink: 0;
+        }
+        .comm-card-private.is-private-active {
+            border-color: #cbd5e1;
+            background: #f8fafc;
+        }
+
+        /* CARD 3: Parent Card for Inbound Channels */
+        .comm-channels-card {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 8px 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            flex-shrink: 0;
+        }
+        .comm-channels-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding-bottom: 4px;
+            border-bottom: 1px solid #f1f5f9;
+        }
+        .comm-channels-title-wrap {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            min-width: 0;
+        }
+        .comm-channels-title {
+            font-size: 11px;
+            font-weight: 700;
+            color: #0f172a;
+            white-space: nowrap;
+        }
+        .comm-channels-hint {
+            font-size: 9.5px;
+            color: #94a3b8;
+            white-space: nowrap;
+        }
+        .comm-btn-clear {
+            background: transparent;
+            border: none;
+            color: #009ef7;
+            font-size: 10px;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            cursor: pointer;
+            padding: 0 4px;
+            transition: color .15s ease;
+        }
+        .comm-btn-clear:hover {
+            color: #0077ba;
+            text-decoration: underline;
+        }
+
+        .comm-channels-subcards {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        /* Sub-Card Base (Discrete Channel Row) */
+        .comm-card {
+            background: #ffffff;
+            border: 1px solid #edf2f7;
+            border-radius: 7px;
+            padding: 6px 10px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            transition: all .15s ease;
         }
         .comm-card.is-active {
             border-color: #93c5fd;
             background: #f8fbff;
         }
-        .comm-card.is-private-active {
-            border-color: #cbd5e1;
-            background: #f8fafc;
-        }
-        .comm-card-private {
-            border: 1px solid #e2e8f0;
-        }
         .comm-card-main {
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 9px;
             min-width: 0;
         }
         .comm-card-icon {
-            width: 38px;
-            height: 38px;
-            border-radius: 9px;
+            width: 28px;
+            height: 28px;
+            border-radius: 6px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 15px;
+            font-size: 11.5px;
             flex-shrink: 0;
         }
-        .comm-card-icon.icon-private { background: #f1f5f9; color: #475569; border: 1px solid #e2e8f0; }
-        .comm-card-icon.icon-client { background: #dcfce7; color: #16a34a; }
-        .comm-card-icon.icon-agency { background: #f3e8ff; color: #9333ea; }
-        .comm-card-icon.icon-recruitment { background: #e0f2fe; color: #0284c7; }
+        .comm-card-icon.icon-private     { background: #f1f5f9; color: #475569; border: 1px solid #e2e8f0; }
+        .comm-card-icon.icon-client      { background: #dcfce7; color: #16a34a; border: 1px solid #bbf7d0; }
+        .comm-card-icon.icon-agency      { background: #f3e8ff; color: #9333ea; border: 1px solid #e9d5ff; }
+        .comm-card-icon.icon-recruitment { background: #e0f2fe; color: #0284c7; border: 1px solid #bae6fd; }
 
         .comm-card-text {
             min-width: 0;
         }
         .comm-card-title {
-            font-size: 13px;
+            font-size: 11px;
             font-weight: 700;
             color: #0f172a;
             line-height: 1.25;
+            white-space: nowrap;
         }
         .comm-card-desc {
-            font-size: 11px;
+            font-size: 9.5px;
             color: #64748b;
-            line-height: 1.35;
-            margin-top: 2px;
+            line-height: 1.3;
+            margin-top: 1px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
         .comm-card-controls {
             display: flex;
             align-items: center;
-            gap: 10px;
             flex-shrink: 0;
         }
 
-        /* iOS Toggle Switch */
+        /* Micro iOS Toggle Switch (Compact 34×18px) */
         .comm-ios-switch {
             position: relative;
             display: inline-block;
-            width: 40px;
-            height: 22px;
+            width: 34px;
+            height: 18px;
             margin: 0;
             cursor: pointer;
+            flex-shrink: 0;
         }
         .comm-ios-switch input {
             opacity: 0;
@@ -1722,68 +1772,66 @@
             right: 0;
             bottom: 0;
             background-color: #cbd5e1;
-            transition: .25s ease;
-            border-radius: 22px;
+            transition: .2s ease;
+            border-radius: 18px;
         }
         .comm-ios-slider:before {
             position: absolute;
             content: "";
-            height: 16px;
-            width: 16px;
-            left: 3px;
-            bottom: 3px;
+            height: 14px;
+            width: 14px;
+            left: 2px;
+            bottom: 2px;
             background-color: white;
-            transition: .25s ease;
+            transition: .2s ease;
             border-radius: 50%;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
         }
         .comm-ios-switch input:checked + .comm-ios-slider {
             background-color: #009ef7;
         }
         .comm-ios-switch input:checked + .comm-ios-slider:before {
-            transform: translateX(18px);
+            transform: translateX(16px);
         }
 
-        /* Info Alert Box */
+        /* CARD 4: Visibility & Privacy Micro-Strip */
         .comm-info-box {
             background: #eff6ff;
             border: 1px solid #bfdbfe;
-            border-radius: 10px;
-            padding: 12px 14px;
+            border-radius: 7px;
+            padding: 6px 10px;
             display: flex;
-            align-items: flex-start;
-            gap: 12px;
+            align-items: center;
+            gap: 8px;
+            flex-shrink: 0;
         }
         .comm-info-icon {
-            width: 20px;
-            height: 20px;
+            width: 18px;
+            height: 18px;
             border-radius: 50%;
             background: #009ef7;
             color: #ffffff;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 11px;
-            font-weight: 700;
+            font-size: 9.5px;
             flex-shrink: 0;
-            margin-top: 1px;
         }
         .comm-info-text {
-            font-size: 12px;
+            font-size: 9.5px;
             color: #1e40af;
-            line-height: 1.45;
-            font-weight: 400;
+            line-height: 1.35;
         }
 
-        /* Drawer Footer */
+        /* Drawer Footer (Compact Standard) */
         .comm-drawer-foot {
-            padding: 16px 26px;
+            padding: 10px 18px;
             border-top: 1px solid #e2e8f0;
             background: #ffffff;
             display: flex;
             align-items: center;
             justify-content: flex-end;
-            gap: 12px;
+            gap: 8px;
             flex-shrink: 0;
         }
         .comm-btn-cancel {
@@ -1791,9 +1839,9 @@
             background: #ffffff;
             color: #475569;
             font-weight: 600;
-            font-size: 13px;
-            padding: 9px 20px;
-            border-radius: 8px;
+            font-size: 11.5px;
+            padding: 6px 14px;
+            border-radius: 6px;
             cursor: pointer;
             transition: all .15s ease;
         }
@@ -1807,15 +1855,15 @@
             border: 1px solid #009ef7;
             color: #ffffff;
             font-weight: 600;
-            font-size: 13px;
-            padding: 9px 22px;
-            border-radius: 8px;
+            font-size: 11.5px;
+            padding: 6px 16px;
+            border-radius: 6px;
             cursor: pointer;
             transition: all .15s ease;
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            gap: 6px;
+            gap: 5px;
             box-shadow: 0 1px 2px rgba(0, 158, 247, 0.2);
         }
         .comm-btn-save:hover {
@@ -1891,7 +1939,7 @@
                             </div>
                         </a>
 
-                        {{-- Card 2: Recruitment Team --}}
+                        {{-- Card 2: Inhouse Talent Representative --}}
                         <a href="javascript:void(0);" onclick="setTeamTab('recruitment', this);" class="tm-stat-card" data-tab="recruitment">
                             <div class="tm-card-top">
                                 <div class="tm-card-icon indigo">
@@ -1899,12 +1947,12 @@
                                 </div>
                                 <div class="tm-card-meta">
                                     <div class="tm-card-num" id="span_teamRecruitment">{{ $teamCounts['recruitment'] ?? 0 }}</div>
-                                    <div class="tm-card-lbl" title="Recruitment Team">Recruitment Team</div>
+                                    <div class="tm-card-lbl" title="Inhouse Talent Representative">Inhouse Talent Representative</div>
                                 </div>
                             </div>
                             <div class="tm-card-sub indigo">
                                 <i class="fa-solid fa-user-check" style="font-size: 8px;"></i>
-                                <span>Active recruiters</span>
+                                <span>Relationship Manager Bench</span>
                             </div>
                         </a>
 
@@ -2252,27 +2300,27 @@
         <!-- ============================================================== -->
         <div class="comm-overlay" id="commOverlay"></div>
         <div class="comm-drawer" id="commDrawer" role="dialog" aria-modal="true" aria-label="Share Contact Details for Marketplace Enquiries">
-            <!-- Drawer Header -->
+            <!-- Drawer Header (Compact Standard) -->
             <div class="comm-drawer-head">
                 <div>
                     <h5 class="comm-drawer-title">Share Contact Details for Marketplace Enquiries</h5>
-                    <p class="comm-drawer-subtitle">Choose which inbound enquiries this team member will receive on Jero.works Marketplace.</p>
+                    <p class="comm-drawer-subtitle">Choose which inbound enquiries this team member receives on Jero Marketplace.</p>
                 </div>
                 <button type="button" class="comm-drawer-close" id="commDrawerClose" onclick="closeAssignCommDrawer()" aria-label="Close">
                     <i class="fa-solid fa-xmark"></i>
                 </button>
             </div>
 
-            <!-- Drawer Body -->
+            <!-- Drawer Body (Card + Sub-Card Enterprise Design, Zero Vertical Scroll) -->
             <div class="comm-drawer-body">
                 <input type="hidden" id="commDrawerUserId" value="" />
 
-                <!-- Member Identity Card -->
+                <!-- CARD 1: Member Identity Compact Bar -->
                 <div class="comm-user-card">
                     <div class="comm-user-card-left">
                         <div class="comm-user-avatar" id="commDrawerAvatar">U</div>
                         <div class="comm-user-info">
-                            <div class="d-flex align-items-center flex-wrap gap-2">
+                            <div class="d-flex align-items-center flex-wrap gap-1">
                                 <span class="comm-user-name" id="commDrawerName">Member Name</span>
                                 <span class="comm-role-badge" id="commDrawerRole">Member</span>
                             </div>
@@ -2289,20 +2337,20 @@
                         </div>
                         <div class="comm-last-active-text" id="commDrawerLastActive">
                             <span class="comm-last-active-dot"></span>
-                            <span id="commDrawerLastActiveText">Last active: Recently</span>
+                            <span id="commDrawerLastActiveText">Active recently</span>
                         </div>
                     </div>
                 </div>
 
-                <!-- Dedicated Option: Keep Private (Default / Exclusive) -->
-                <div class="comm-card comm-card-private" id="commCard_private">
+                <!-- CARD 2: Dedicated Keep Private Master Card -->
+                <div class="comm-card-private" id="commCard_private">
                     <div class="comm-card-main">
                         <div class="comm-card-icon icon-private">
                             <i class="fa-solid fa-user-shield"></i>
                         </div>
                         <div class="comm-card-text">
                             <div class="comm-card-title">Keep Private (Do Not Share Contact Details)</div>
-                            <div class="comm-card-desc">Keep this member's mobile number and email private. They will not be listed on Jero.works Marketplace for incoming enquiries.</div>
+                            <div class="comm-card-desc">Keep mobile &amp; email confidential. No contact details shown on Marketplace.</div>
                         </div>
                     </div>
                     <div class="comm-card-controls">
@@ -2313,91 +2361,92 @@
                     </div>
                 </div>
 
-                <!-- Section Title & Clear All -->
-                <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 pt-1">
-                    <div>
-                        <h6 class="comm-section-title mb-0">Inbound Enquiry Channels</h6>
-                        <p class="comm-section-subtitle mb-0">Select which enquiries this member receives. When enabled, their direct mobile and email will be displayed on Jero.works Marketplace.</p>
+                <!-- CARD 3: Modern Card + Sub-Card Container for Enquiry Channels -->
+                <div class="comm-channels-card">
+                    <div class="comm-channels-head">
+                        <div class="comm-channels-title-wrap">
+                            <i class="fa-solid fa-headset text-primary me-1" style="font-size: 11px;"></i>
+                            <span class="comm-channels-title">Inbound Marketplace Channels</span>
+                            <span class="comm-channels-hint">(Direct phone &amp; email shown on Marketplace)</span>
+                        </div>
+                        <button type="button" class="comm-btn-clear" onclick="clearAllCommDrawerRoles()" title="Disable all enquiry channels">
+                            <i class="fa-solid fa-arrows-rotate"></i>
+                            <span>Clear All</span>
+                        </button>
                     </div>
-                    <button type="button" class="comm-btn-clear" onclick="clearAllCommDrawerRoles()" title="Disable all enquiry channels">
-                        <i class="fa-solid fa-arrows-rotate"></i>
-                        <span>Clear All</span>
-                    </button>
+
+                    <div class="comm-channels-subcards" id="commDrawerCardsList">
+                        <!-- Sub-Card 1: Sales & Client Enquiries -->
+                        <div class="comm-card" id="commCard_client" data-channel="client">
+                            <div class="comm-card-main">
+                                <div class="comm-card-icon icon-client">
+                                    <i class="fa-solid fa-users"></i>
+                                </div>
+                                <div class="comm-card-text">
+                                    <div class="comm-card-title">Sales &amp; Client Enquiries</div>
+                                    <div class="comm-card-desc">Client hiring requests, project discovery calls &amp; sales inquiries.</div>
+                                </div>
+                            </div>
+                            <div class="comm-card-controls">
+                                <label class="comm-ios-switch" title="Toggle Sales &amp; Client Enquiries">
+                                    <input type="checkbox" class="comm-drawer-toggle" data-channel="client" id="commToggle_client">
+                                    <span class="comm-ios-slider"></span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Sub-Card 2: Agency Enquiries -->
+                        <div class="comm-card" id="commCard_agency" data-channel="agency">
+                            <div class="comm-card-main">
+                                <div class="comm-card-icon icon-agency">
+                                    <i class="fa-solid fa-handshake"></i>
+                                </div>
+                                <div class="comm-card-text">
+                                    <div class="comm-card-title">Agency Enquiries</div>
+                                    <div class="comm-card-desc">Agency partner inquiries, split-fee requests &amp; vendor submissions.</div>
+                                </div>
+                            </div>
+                            <div class="comm-card-controls">
+                                <label class="comm-ios-switch" title="Toggle Agency Enquiries">
+                                    <input type="checkbox" class="comm-drawer-toggle" data-channel="agency" id="commToggle_agency">
+                                    <span class="comm-ios-slider"></span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Sub-Card 3: Bench Talent Enquiries -->
+                        <div class="comm-card" id="commCard_recruitment" data-channel="recruitment">
+                            <div class="comm-card-main">
+                                <div class="comm-card-icon icon-recruitment">
+                                    <i class="fa-solid fa-user-tag"></i>
+                                </div>
+                                <div class="comm-card-text">
+                                    <div class="comm-card-title">Bench Talent Enquiries</div>
+                                    <div class="comm-card-desc">Inbound talent deployment calls, candidate placements &amp; queries.</div>
+                                </div>
+                            </div>
+                            <div class="comm-card-controls">
+                                <label class="comm-ios-switch" title="Toggle Bench Talent Enquiries">
+                                    <input type="checkbox" class="comm-drawer-toggle" data-channel="recruitment" id="commToggle_recruitment">
+                                    <span class="comm-ios-slider"></span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
-                <!-- 3 Channel Cards -->
-                <div class="d-flex flex-column gap-3" id="commDrawerCardsList">
-                    <!-- Channel 1: Sales & Client Enquiries -->
-                    <div class="comm-card" id="commCard_client" data-channel="client">
-                        <div class="comm-card-main">
-                            <div class="comm-card-icon icon-client">
-                                <i class="fa-solid fa-users"></i>
-                            </div>
-                            <div class="comm-card-text">
-                                <div class="comm-card-title">Sales &amp; Client Enquiries</div>
-                                <div class="comm-card-desc">Receives incoming client hiring requests, sales inquiries &amp; project discovery calls.</div>
-                            </div>
-                        </div>
-                        <div class="comm-card-controls">
-                            <label class="comm-ios-switch" title="Toggle Sales &amp; Client Enquiries">
-                                <input type="checkbox" class="comm-drawer-toggle" data-channel="client" id="commToggle_client">
-                                <span class="comm-ios-slider"></span>
-                            </label>
-                        </div>
-                    </div>
-
-                    <!-- Channel 2: Agency Enquiries -->
-                    <div class="comm-card" id="commCard_agency" data-channel="agency">
-                        <div class="comm-card-main">
-                            <div class="comm-card-icon icon-agency">
-                                <i class="fa-solid fa-handshake"></i>
-                            </div>
-                            <div class="comm-card-text">
-                                <div class="comm-card-title">Agency Enquiries</div>
-                                <div class="comm-card-desc">Receives agency partner inquiries, split-fee job requests &amp; vendor submissions.</div>
-                            </div>
-                        </div>
-                        <div class="comm-card-controls">
-                            <label class="comm-ios-switch" title="Toggle Agency Enquiries">
-                                <input type="checkbox" class="comm-drawer-toggle" data-channel="agency" id="commToggle_agency">
-                                <span class="comm-ios-slider"></span>
-                            </label>
-                        </div>
-                    </div>
-
-                    <!-- Channel 3: Bench Talent Enquiries -->
-                    <div class="comm-card" id="commCard_recruitment" data-channel="recruitment">
-                        <div class="comm-card-main">
-                            <div class="comm-card-icon icon-recruitment">
-                                <i class="fa-solid fa-user-tag"></i>
-                            </div>
-                            <div class="comm-card-text">
-                                <div class="comm-card-title">Bench Talent Enquiries</div>
-                                <div class="comm-card-desc">Receives inbound talent placement inquiries &amp; bench talent deployment calls.</div>
-                            </div>
-                        </div>
-                        <div class="comm-card-controls">
-                            <label class="comm-ios-switch" title="Toggle Bench Talent Enquiries">
-                                <input type="checkbox" class="comm-drawer-toggle" data-channel="recruitment" id="commToggle_recruitment">
-                                <span class="comm-ios-slider"></span>
-                            </label>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Info Alert Callout -->
+                <!-- CARD 4: Visibility & Privacy Micro-Strip -->
                 <div class="comm-info-box">
                     <div class="comm-info-icon">
                         <i class="fa-solid fa-shield-halved"></i>
                     </div>
                     <div class="comm-info-text">
-                        <div style="font-weight: 600; margin-bottom: 2px;">Marketplace Contact Visibility</div>
-                        <div>When an enquiry channel is enabled, this member's direct phone number and email will be displayed on Jero.works Marketplace so clients and agency partners can call directly. If "Keep Private" is enabled, contact details remain private.</div>
+                        <span><strong>Privacy Guarantee:</strong> Mobile number &amp; email are only published on Jero.works Marketplace for channels enabled above. Turning "Keep Private" ON keeps all contacts 100% confidential.</span>
                     </div>
                 </div>
             </div>
 
-            <!-- Drawer Footer -->
+            <!-- Drawer Footer (Compact Standard) -->
             <div class="comm-drawer-foot">
                 <button type="button" class="comm-btn-cancel" onclick="closeAssignCommDrawer()">Cancel</button>
                 <button type="button" class="comm-btn-save" id="btnSaveCommRoles" onclick="saveCommunicationRoles()">
@@ -2680,8 +2729,8 @@
             // Phase 2: Tenant-Scoped IndexedDB Store for Team Listing & Reference Data
             const CURRENT_COMPANY_ID = {{ (int) (auth()->user()->company_id ?? 0) }};
             const CURRENT_USER_ID = {{ (int) (auth()->user()->id ?? 0) }};
-            const TEAM_DB_NAME = 'jero_team_local_store_v5_' + CURRENT_COMPANY_ID;
-            const TEAM_DB_VERSION = 5;
+            const TEAM_DB_NAME = 'jero_team_local_store_v6_' + CURRENT_COMPANY_ID;
+            const TEAM_DB_VERSION = 6;
             const TEAM_CACHE_TTL_MS = 15 * 60 * 1000; // 15 minutes TTL
 
             const JeroTeamLocalStore = (function() {
