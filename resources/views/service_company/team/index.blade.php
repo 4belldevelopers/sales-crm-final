@@ -512,7 +512,7 @@
             background: #f8fafc !important;
             border: 1px solid #edf2f7 !important;
             border-radius: 8px !important;
-            padding: 10px 11px !important;
+            padding: 8px 10px !important;
             display: flex;
             flex-direction: column;
             justify-content: space-between;
@@ -524,9 +524,9 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
-            margin-bottom: 8px;
+            margin-bottom: 5px;
             min-width: 0;
-            gap: 8px;
+            gap: 6px;
             flex-wrap: nowrap;
         }
         .tm-subcard-title-wrap {
@@ -551,12 +551,13 @@
             text-overflow: ellipsis;
         }
         .tm-subcard-badge {
-            font-size: 9.5px;
+            font-size: 9px;
             font-weight: 700;
-            padding: 2px 7px;
+            padding: 1px 6px;
             border-radius: 4px;
             white-space: nowrap;
             flex-shrink: 0;
+            line-height: 1.25;
         }
         .badge-owner {
             background: #fef3c7;
@@ -866,44 +867,55 @@
         .tm-comm-body {
             display: flex;
             flex-direction: column;
-            gap: 4px;
+            justify-content: center;
+            gap: 2px;
             min-width: 0;
             width: 100%;
+            flex: 1;
         }
         .tm-comm-rows-list {
             display: flex;
             flex-direction: column;
-            gap: 4px;
+            gap: 2px;
             width: 100%;
         }
         .tm-comm-row {
             display: flex;
             align-items: center;
             width: 100%;
+            line-height: 1;
         }
         .tm-comm-chip {
             width: 100%;
             display: inline-flex;
             align-items: center;
-            gap: 6px;
-            font-size: 10px;
+            gap: 5px;
+            font-size: 9.5px;
             font-weight: 600;
-            padding: 3px 8px;
-            border-radius: 5px;
-            line-height: 1.35;
+            padding: 1.5px 6px;
+            border-radius: 4px;
+            line-height: 1.2;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
             box-sizing: border-box;
+            border: 1px solid transparent;
         }
-        .tm-comm-chip.client      { background: #f0fdf4; color: #16a34a; border: 1px solid #bbf7d0; }
-        .tm-comm-chip.vendor      { background: #faf5ff; color: #9333ea; border: 1px solid #e9d5ff; }
-        .tm-comm-chip.agency      { background: #faf5ff; color: #9333ea; border: 1px solid #e9d5ff; }
-        .tm-comm-chip.recruitment { background: #e0f2fe; color: #0284c7; border: 1px solid #bae6fd; }
+        .tm-comm-chip.client      { background: #f0fdf4; color: #16a34a; border-color: #bbf7d0; }
+        .tm-comm-chip.vendor      { background: #faf5ff; color: #9333ea; border-color: #e9d5ff; }
+        .tm-comm-chip.agency      { background: #faf5ff; color: #9333ea; border-color: #e9d5ff; }
+        .tm-comm-chip.recruitment { background: #e0f2fe; color: #0284c7; border-color: #bae6fd; }
+        .tm-comm-chip.bench       { background: #e0f2fe; color: #0284c7; border-color: #bae6fd; }
+        .tm-comm-chip i {
+            font-size: 8.5px;
+            width: 11px;
+            text-align: center;
+            flex-shrink: 0;
+        }
         .btn-edit-comm-icon {
-            width: 22px;
-            height: 22px;
-            border-radius: 5px;
+            width: 20px;
+            height: 20px;
+            border-radius: 4px;
             border: 1px solid #e2e8f0;
             background: #ffffff;
             color: #94a3b8;
@@ -911,7 +923,7 @@
             align-items: center;
             justify-content: center;
             cursor: pointer;
-            font-size: 9.5px;
+            font-size: 9px;
             transition: all 0.15s ease;
             flex-shrink: 0;
         }

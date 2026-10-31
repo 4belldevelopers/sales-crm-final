@@ -313,6 +313,9 @@
                                     <span class="tm-subcard-badge badge-role" title="Contact details kept private">
                                         <i class="fa-solid fa-eye-slash me-1"></i>Private
                                     </span>
+                                    <button type="button" class="btn-edit-comm-icon" data-user='@json($userData)' onclick="event.stopPropagation(); openAssignCommDrawer(this);" title="Edit contact sharing channels">
+                                        <i class="fa-solid fa-pen"></i>
+                                    </button>
                                 @endif
                             </div>
                         </div>
