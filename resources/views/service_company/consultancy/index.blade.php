@@ -3635,14 +3635,17 @@
 
     window.AgencyListingManager = AgencyListingManager;
 
-    // Pagination Click Handler
-    $(document).on('click', '#paginationstaffingpartner a', function(e) {
+    // Pagination Click Handler (Universal: buttons & anchors)
+    $(document).on('click', '#paginationstaffingpartner .pagi-page, #paginationstaffingpartner .pagi-arrow, #paginationstaffingpartner a', function(e) {
         e.preventDefault();
-        const url = $(this).attr('href');
-        if (url) {
-            const pageMatch = url.match(/page=(\d+)/);
-            const page = pageMatch ? parseInt(pageMatch[1], 10) : 1;
-            AgencyListingManager.loadPage(page);
+        if ($(this).hasClass('pagi-disabled') || $(this).hasClass('pagi-active') || $(this).hasClass('pagi-active-disabled')) return;
+        let page = $(this).data('page');
+        if (!page && $(this).attr('href')) {
+            const pageMatch = $(this).attr('href').match(/page=(\d+)/);
+            if (pageMatch) page = parseInt(pageMatch[1], 10);
+        }
+        if (page) {
+            AgencyListingManager.loadPage(parseInt(page, 10));
             const $target = $('#staffingpartnerajax');
             if ($target.length) {
                 $('html, body').animate({ scrollTop: $target.offset().top - 120 }, 200);

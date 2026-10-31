@@ -90,6 +90,8 @@ class ServiceCompanyConsultancyController extends ServiceCompanyBaseController
         $custom_search = $searchTerms;
         $searchQuery = trim((string) $request->input('q', $request->input('search', '')));
         $countryFilter = request('country', request('country_id', ''));
+        $cityFilter = request('city', request('city_id', ''));
+        $unspecifiedLocation = (bool) request('unspecified_location', false);
         $industryFilter = request('industry', request('industry_id', ''));
         $performanceFilter = request('agency_performance', '');
         $activityFilter = request('activity', '');
@@ -108,6 +110,8 @@ class ServiceCompanyConsultancyController extends ServiceCompanyBaseController
             'size' => $size,
             'q' => $searchQuery,
             'country' => $countryFilter,
+            'city' => $cityFilter,
+            'unspecified_location' => $unspecifiedLocation,
             'industry' => $industryFilter,
             'activity' => $activityFilter,
             'pipeline' => $pipelineFilter,
@@ -214,8 +218,20 @@ class ServiceCompanyConsultancyController extends ServiceCompanyBaseController
                 });
             }
 
-            if (! empty($countryFilter)) {
+            if ($unspecifiedLocation) {
+                $invitationsQuery->whereNull('client_location.country_id');
+            } elseif (! empty($countryFilter)) {
                 $invitationsQuery->where('client_location.country_id', (int) $countryFilter);
+                if (! empty($cityFilter)) {
+                    if (is_numeric($cityFilter)) {
+                        $invitationsQuery->where('client_location.city_id', (int) $cityFilter);
+                    } else {
+                        $invitationsQuery->where(function ($q) use ($cityFilter) {
+                            $q->where('city_list.city', 'like', "%{$cityFilter}%")
+                                ->orWhere('client_location.city', 'like', "%{$cityFilter}%");
+                        });
+                    }
+                }
             }
 
             if (! empty($industryFilter)) {
@@ -472,6 +488,10 @@ class ServiceCompanyConsultancyController extends ServiceCompanyBaseController
                 ['company_name.keyword' => ['order' => 'desc', 'unmapped_type' => 'keyword']],
                 ['id' => ['order' => 'desc']],
             ],
+            'jobs_desc' => [
+                ['active_jobs_count' => ['order' => 'desc', 'unmapped_type' => 'long']],
+                ['id' => ['order' => 'desc']],
+            ],
             'oldest' => [
                 ['id' => ['order' => 'asc']],
             ],
@@ -484,13 +504,53 @@ class ServiceCompanyConsultancyController extends ServiceCompanyBaseController
         $must[] = ['term' => ['self_company' => 1]];
         $must[] = ['terms' => ['company_id' => $companyIds]];
 
-        // Country Filter via nested client_location
-        if (! empty($countryFilter)) {
+        // Location Filter (Country, City, or Unspecified)
+        if ($unspecifiedLocation || $countryFilter === 'unspecified') {
+            $must[] = [
+                'bool' => [
+                    'must_not' => [
+                        [
+                            'nested' => [
+                                'path' => 'client_location',
+                                'query' => [
+                                    'exists' => ['field' => 'client_location.country_id'],
+                                ],
+                            ],
+                        ],
+                    ],
+                ],
+            ];
+        } elseif (! empty($countryFilter) && $countryFilter !== 'all') {
+            $locFilter = [];
+            if (is_numeric($countryFilter)) {
+                $locFilter[] = ['term' => ['client_location.country_id' => (int) $countryFilter]];
+            } else {
+                $locFilter[] = ['term' => ['client_location.country_name' => strtolower(trim($countryFilter))]];
+            }
+
+            if (! empty($cityFilter) && $cityFilter !== 'all') {
+                if ($cityFilter === 'unspecified') {
+                    $locFilter[] = [
+                        'bool' => [
+                            'must_not' => [
+                                ['exists' => ['field' => 'client_location.city_id']],
+                            ],
+                        ],
+                    ];
+                } elseif (is_numeric($cityFilter)) {
+                    $locFilter[] = ['term' => ['client_location.city_id' => (int) $cityFilter]];
+                } else {
+                    $locFilter[] = ['term' => ['client_location.city_name' => strtolower(trim($cityFilter))]];
+                }
+            }
+
             $must[] = [
                 'nested' => [
                     'path' => 'client_location',
                     'query' => [
-                        'term' => ['client_location.country_id' => (int) $countryFilter],
+                        'bool' => [
+                            'filter' => $locFilter,
+                        ],
                     ],
                 ],
             ];
