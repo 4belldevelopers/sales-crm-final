@@ -302,21 +302,14 @@
                                 <span class="tm-subcard-title">Contact Details Visibility</span>
                             </div>
                             <div class="d-flex align-items-center gap-1 flex-shrink-0">
-                                @if ($publicCount > 0)
-                                    <span class="tm-subcard-badge badge-rep" title="{{ $publicCount }} Enquiry Channels Enabled">
-                                        <i class="fa-solid fa-circle-check text-success me-1"></i>({{ $publicCount }})
-                                    </span>
-                                    <button type="button" class="btn-edit-comm-icon" data-user='@json($userData)' onclick="event.stopPropagation(); openAssignCommDrawer(this);" title="Edit contact sharing channels">
-                                        <i class="fa-solid fa-pen"></i>
-                                    </button>
-                                @else
+                                @if ($publicCount === 0)
                                     <span class="tm-subcard-badge badge-role" title="Contact details kept private">
                                         <i class="fa-solid fa-eye-slash me-1"></i>Private
                                     </span>
-                                    <button type="button" class="btn-edit-comm-icon" data-user='@json($userData)' onclick="event.stopPropagation(); openAssignCommDrawer(this);" title="Edit contact sharing channels">
-                                        <i class="fa-solid fa-pen"></i>
-                                    </button>
                                 @endif
+                                <button type="button" class="btn-comm-change-action" data-user='@json($userData)' onclick="event.stopPropagation(); openAssignCommDrawer(this);" title="Change contact visibility preferences">
+                                    Change
+                                </button>
                             </div>
                         </div>
                         <div class="tm-comm-body">

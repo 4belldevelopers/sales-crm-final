@@ -360,8 +360,8 @@
         }
         .team-filter-search {
             position: relative;
-            width: 360px;
-            max-width: 100%;
+            flex: 1 1 auto;
+            min-width: 280px;
             display: flex;
             align-items: center;
         }
@@ -412,7 +412,7 @@
             display: flex;
             align-items: center;
             gap: 12px;
-            flex-wrap: wrap;
+            flex-shrink: 0;
         }
         .team-filter-group {
             display: flex;
@@ -911,6 +911,35 @@
             width: 11px;
             text-align: center;
             flex-shrink: 0;
+        }
+        .btn-comm-change-action {
+            font-size: 10px;
+            font-weight: 600;
+            padding: 1.5px 7px;
+            border-radius: 4px;
+            border: 1px solid #cbd5e1;
+            background: #ffffff;
+            color: #009ef7;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.15s ease;
+            white-space: nowrap;
+            line-height: 1.25;
+            font-family: 'Poppins', sans-serif;
+            box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+        }
+        .btn-comm-change-action:hover {
+            background: #eff6ff;
+            border-color: #009ef7;
+            color: #0077ba;
+            box-shadow: 0 1px 3px rgba(0, 158, 247, 0.15);
+        }
+        .tm-subcard-comm:hover .btn-comm-change-action {
+            border-color: #009ef7;
+            background: #eff6ff;
+            color: #009ef7;
         }
         .btn-edit-comm-icon {
             width: 20px;
