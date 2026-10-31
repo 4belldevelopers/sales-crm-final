@@ -175,7 +175,7 @@ class ServiceCompanyTeamController extends ServiceCompanyBaseController
 
     public function teamDelete(Request $request)
     {
-        $company_id = $this->user->company_id;
+        $company_id = (int) ($this->user ? $this->user->company_id : (auth()->user() ? auth()->user()->company_id : 0));
         $arr = (array) $request->arr;
 
         if (count($arr) > 0) {
@@ -193,6 +193,7 @@ class ServiceCompanyTeamController extends ServiceCompanyBaseController
                 mutationCallback: function () use ($company_id, $arr) {
                     DB::table('users')
                         ->where('company_id', $company_id)
+                        ->where('root_user', '!=', 1)
                         ->whereIn('id', $arr)
                         ->update(['status' => 'inactive', 'working_status' => 0]);
 
@@ -1552,7 +1553,12 @@ class ServiceCompanyTeamController extends ServiceCompanyBaseController
         $idempotencyKey = $request->header('X-Idempotency-Key') ?? $request->input('idempotency_key');
 
         // Phase 11 Optimization: Strict tenant scoping validation
-        User::where('id', $userId)->where('company_id', $company_id)->firstOrFail();
+        $targetUser = User::where('id', $userId)->where('company_id', $company_id)->firstOrFail();
+
+        // Root Owner Protection: Root user can never be deactivated or offboarded
+        if ((int) $targetUser->root_user === 1 && ($chkStatus === 'false' || $chkStatus === false || $chkStatus === '0')) {
+            return Reply::dataOnly(['status' => 'error', 'message' => 'The organization owner cannot be deactivated.']);
+        }
 
         if ($chkStatus == 'true') {
             $eventId = 1;
@@ -1614,7 +1620,12 @@ class ServiceCompanyTeamController extends ServiceCompanyBaseController
         $idempotencyKey = $request->header('X-Idempotency-Key') ?? $request->input('idempotency_key');
 
         // Phase 11 Optimization: Strict tenant scoping validation
-        User::where('id', $userId)->where('company_id', $company_id)->firstOrFail();
+        $targetUser = User::where('id', $userId)->where('company_id', $company_id)->firstOrFail();
+
+        // Root Owner Protection: Root user can never be deactivated or offboarded
+        if ((int) $targetUser->root_user === 1 && ($chkStatus === 'false' || $chkStatus === false || $chkStatus === '0')) {
+            return Reply::dataOnly(['status' => 'error', 'message' => 'The organization owner cannot be deactivated.']);
+        }
 
         $statusValue = ($chkStatus == 'true' || $chkStatus === true || $chkStatus === '1') ? 'active' : 'inactive';
 
@@ -2046,7 +2057,13 @@ class ServiceCompanyTeamController extends ServiceCompanyBaseController
         $rawUserId = (int) $request->get('user_id');
         $targetUser = $this->authorizeTeamMemberAccess($rawUserId);
         $userId = (int) $targetUser->id;
-        $companyId = (int) $this->user->company_id;
+        $companyId = (int) ($this->user ? $this->user->company_id : (auth()->user() ? auth()->user()->company_id : 0));
+        $authUser = $this->user ?? auth()->user();
+
+        // ABAC Enforcement: Non-admin team members can only inspect their own scoreboard
+        if ($authUser && (int) ($authUser->root_user ?? 0) !== 1 && (! method_exists($authUser, 'hasRole') || ! $authUser->hasRole('admin')) && $userId !== (int) $authUser->id) {
+            $userId = (int) $authUser->id;
+        }
 
         $reportMonth = \Carbon\Carbon::now()->startOfMonth()->subMonth();
         $start = $reportMonth->copy()->startOfMonth()->toIso8601String();
