@@ -2724,8 +2724,8 @@
             // Phase 2: Tenant-Scoped IndexedDB Store for Team Listing & Reference Data
             const CURRENT_COMPANY_ID = {{ (int) (auth()->user()->company_id ?? 0) }};
             const CURRENT_USER_ID = {{ (int) (auth()->user()->id ?? 0) }};
-            const TEAM_DB_NAME = 'jero_team_local_store_v2_' + CURRENT_COMPANY_ID;
-            const TEAM_DB_VERSION = 2;
+            const TEAM_DB_NAME = 'jero_team_local_store_v3_' + CURRENT_COMPANY_ID;
+            const TEAM_DB_VERSION = 3;
             const TEAM_CACHE_TTL_MS = 15 * 60 * 1000; // 15 minutes TTL
 
             const JeroTeamLocalStore = (function() {
