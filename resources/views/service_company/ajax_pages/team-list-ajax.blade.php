@@ -27,8 +27,16 @@
                 elseif ($ascii >= 117 && $ascii <= 121) { $avatarClass = 'bg-dark text-white'; }
                 else                                    { $avatarClass = 'bg-light-secondary text-dark'; }
 
-                // Designation
-                $designation = !empty($row->designation) ? trim($row->designation) : (!empty($row->display_name) ? trim($row->display_name) : 'Team Member');
+                // Role pill & System Role fallback
+                $roleName = ucwords(strtolower(@$row->display_name ?? (@$row->role_name ?? 'Team Member')));
+                $roleLower = strtolower($roleName);
+                if (str_contains($roleLower, 'admin'))     { $rolePill = 'role-admin'; }
+                elseif (str_contains($roleLower, 'lead'))  { $rolePill = 'role-lead'; }
+                else                                       { $rolePill = 'role-default'; }
+
+                // Designation Priority: 1. User Registration Designation -> 2. System Role fallback
+                $userDesignation = !empty($row->designation) ? trim($row->designation) : '';
+                $designation = !empty($userDesignation) ? $userDesignation : $roleName;
 
                 // Pre-computed metrics
                 $activeJobs   = (int) ($row->pre_active_jobs ?? 0);
@@ -46,13 +54,6 @@
                 if ($isAgencyRep && !in_array('vendor', $channels, true)) {
                     $channels[] = 'vendor';
                 }
-
-                // Role pill
-                $roleName = ucwords(strtolower(@$row->display_name ?? 'Recruiter'));
-                $roleLower = strtolower($roleName);
-                if (str_contains($roleLower, 'admin'))     { $rolePill = 'role-admin'; }
-                elseif (str_contains($roleLower, 'lead'))  { $rolePill = 'role-lead'; }
-                else                                       { $rolePill = 'role-default'; }
 
                 // Rank medal
                 $medal = match ((int) @$teamRanks->rank) { 1 => '🥇', 2 => '🥈', 3 => '🥉', default => '' };
@@ -146,8 +147,8 @@
                                     {{ ucwords(strtolower(mb_substr($rawName, 0, 24))) }}
                                 </span>
 
-                                {{-- 2nd Row: Designation just below user name --}}
-                                <div class="tm-member-designation" title="Designation: {{ $designation }}">
+                                {{-- 2nd Row: Designation just below user name (Priority: Designation -> Role) --}}
+                                <div class="tm-member-designation" title="{{ !empty($userDesignation) ? 'Designation: ' . $userDesignation : 'System Role: ' . $roleName }}">
                                     <i class="fa-solid fa-id-badge text-muted"></i>
                                     <span>{{ ucwords(strtolower(mb_substr($designation, 0, 26))) }}</span>
                                 </div>
@@ -217,13 +218,13 @@
                             <div class="tm-wl-row" title="SPOC / Captain on Jobs">
                                 <i class="fa-solid fa-crown text-purple me-1"></i><span><strong>{{ $captainJobs }}</strong> Captain Jobs</span>
                             </div>
-                            <div class="tm-wl-row" title="Bench Talents Managed (Relationship Manager)">
-                                <i class="fa-solid fa-users text-success me-1"></i><span><strong>{{ $trmTalents }}</strong> Relationship Manager(Bench)</span>
+                            <div class="tm-wl-row" title="Bench Talents Managed (Bench Talent RM)">
+                                <i class="fa-solid fa-users text-success me-1"></i><span><strong>{{ $trmTalents }}</strong> Bench Talent RM</span>
                             </div>
                         </div>
                     </div>
 
-                    <!-- SUB-CARD 4: Dedicated Account Status Card (Swapped Here) -->
+                    <!-- SUB-CARD 4: Dedicated Account Status Card (3 Clear Rows per Rule 20) -->
                     <div class="tm-subcard tm-subcard-status">
                         <div class="tm-subcard-head">
                             <div class="tm-subcard-title-wrap">
@@ -233,13 +234,11 @@
                                 </svg>
                                 <span class="tm-subcard-title">Account Status</span>
                             </div>
-                            <span class="tm-subcard-badge {{ $row->status == 'active' ? 'badge-member' : 'badge-role' }}">
-                                {{ ucfirst($row->status ?? 'Active') }}
-                            </span>
                         </div>
                         <div class="tm-status-body">
                             @if (!empty($row->password))
-                                <div class="tm-status-toggle-wrap">
+                                {{-- Row 1: Toggle / status control icon --}}
+                                <div class="tm-status-row tm-status-row-control">
                                     <label class="ios-switch" title="Toggle active status">
                                         <input type="checkbox" class="chkStatus" id="status_change_{{ $row->id }}" value="active"
                                             {{ $row->status == 'active' ? 'checked' : '' }}
@@ -247,20 +246,38 @@
                                             {{ $row->root_user == 1 ? 'disabled' : '' }}>
                                         <span class="ios-slider"></span>
                                     </label>
-                                    <div class="tm-status-info">
-                                        <span class="tm-status-text status_text {{ $row->status == 'active' ? 'text-success' : 'text-muted' }}">
-                                            {{ ucfirst($row->status) }}
-                                        </span>
-                                        @if ($row->root_user == 1)
-                                            <span class="tm-status-subnote">Owner (Always Active)</span>
-                                        @else
-                                            <span class="tm-status-subnote">Click switch to toggle</span>
-                                        @endif
-                                    </div>
+                                </div>
+                                
+                                {{-- Row 2: Active / Inactive status --}}
+                                <div class="tm-status-row tm-status-row-label">
+                                    <span class="tm-status-text status_text {{ $row->status == 'active' ? 'text-success' : 'text-muted' }}">
+                                        {{ ucfirst($row->status ?? 'Active') }}
+                                    </span>
+                                </div>
+
+                                {{-- Row 3: Supporting status information or text --}}
+                                <div class="tm-status-row tm-status-row-sub">
+                                    @if ($row->root_user == 1)
+                                        <span class="tm-status-subnote">Owner (Always Active)</span>
+                                    @else
+                                        <span class="tm-status-subnote">Click switch to toggle</span>
+                                    @endif
                                 </div>
                             @else
-                                <div class="tm-status-invited-wrap">
+                                {{-- Row 1: Toggle / status control icon --}}
+                                <div class="tm-status-row tm-status-row-control">
+                                    <button type="button" class="btn-resend-invite-icon" onclick="reSendhandleClick(this, {{ $row->id }});" title="Resend invitation email">
+                                        <i class="fa-solid fa-paper-plane text-warning" style="font-size: 11px;"></i>
+                                    </button>
+                                </div>
+
+                                {{-- Row 2: Active / Inactive status --}}
+                                <div class="tm-status-row tm-status-row-label">
                                     <span class="tm-status-text text-warning">Awaiting Signup</span>
+                                </div>
+
+                                {{-- Row 3: Supporting status information or text --}}
+                                <div class="tm-status-row tm-status-row-sub">
                                     <a href="javascript:;" class="btn-resend-invite" onclick="reSendhandleClick(this, {{ $row->id }});" title="Resend invitation email">
                                         <i class="fa-solid fa-arrows-rotate me-1"></i>Resend Invite
                                     </a>
