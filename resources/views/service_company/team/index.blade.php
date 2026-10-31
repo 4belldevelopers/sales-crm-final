@@ -839,21 +839,22 @@
             text-decoration: underline;
         }
 
-        /* Sub-Card 5: Marketplace Communication */
+        /* Sub-Card 5: Contact Details Shared (Marketplace Enquiries) */
         .tm-comm-body {
             display: flex;
             flex-wrap: wrap;
             align-items: center;
             gap: 4px;
             min-width: 0;
+            width: 100%;
         }
         .tm-comm-chip {
             display: inline-flex;
             align-items: center;
             gap: 4px;
-            font-size: 10px;
+            font-size: 9.5px;
             font-weight: 600;
-            padding: 2px 6.5px;
+            padding: 2.5px 6.5px;
             border-radius: 5px;
             line-height: 1.25;
             white-space: nowrap;
@@ -861,13 +862,7 @@
         .tm-comm-chip.client      { background: #f0fdf4; color: #16a34a; border: 1px solid #bbf7d0; }
         .tm-comm-chip.vendor      { background: #faf5ff; color: #9333ea; border: 1px solid #e9d5ff; }
         .tm-comm-chip.agency      { background: #faf5ff; color: #9333ea; border: 1px solid #e9d5ff; }
-        .tm-comm-chip.recruitment { background: #e6fcf5; color: #059669; border: 1px solid #a7f3d0; }
-        .tm-comm-chip .prio-tag {
-            font-size: 8px;
-            opacity: 0.85;
-            text-transform: uppercase;
-            font-weight: 700;
-        }
+        .tm-comm-chip.recruitment { background: #e0f2fe; color: #0284c7; border: 1px solid #bae6fd; }
         .btn-edit-comm-icon {
             width: 22px;
             height: 22px;
@@ -1638,61 +1633,69 @@
             color: #0f172a;
         }
 
-        /* 4 Channel Cards */
+        /* 4 Channel Cards & Dedicated Keep Private Card */
         .comm-card {
             background: #ffffff;
             border: 1px solid #e2e8f0;
-            border-radius: 12px;
-            padding: 13px 16px;
+            border-radius: 10px;
+            padding: 12px 15px;
             display: flex;
             align-items: center;
             justify-content: space-between;
-            gap: 14px;
+            gap: 12px;
             transition: all .2s ease;
         }
         .comm-card.is-active {
             border-color: #93c5fd;
             background: #f8fbff;
         }
+        .comm-card.is-private-active {
+            border-color: #cbd5e1;
+            background: #f8fafc;
+        }
+        .comm-card-private {
+            border: 1px solid #e2e8f0;
+        }
         .comm-card-main {
             display: flex;
             align-items: center;
-            gap: 13px;
+            gap: 12px;
             min-width: 0;
         }
         .comm-card-icon {
-            width: 42px;
-            height: 42px;
-            border-radius: 10px;
+            width: 38px;
+            height: 38px;
+            border-radius: 9px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 18px;
+            font-size: 15px;
             flex-shrink: 0;
         }
+        .comm-card-icon.icon-private { background: #f1f5f9; color: #475569; border: 1px solid #e2e8f0; }
         .comm-card-icon.icon-client { background: #dcfce7; color: #16a34a; }
         .comm-card-icon.icon-agency { background: #f3e8ff; color: #9333ea; }
-        .comm-card-icon.icon-recruitment { background: #e6fcf5; color: #00b96b; }
+        .comm-card-icon.icon-recruitment { background: #e0f2fe; color: #0284c7; }
 
         .comm-card-text {
             min-width: 0;
         }
         .comm-card-title {
-            font-size: 13.5px;
+            font-size: 13px;
             font-weight: 700;
             color: #0f172a;
             line-height: 1.25;
         }
         .comm-card-desc {
-            font-size: 11.5px;
+            font-size: 11px;
             color: #64748b;
             line-height: 1.35;
-            margin-top: 3px;
+            margin-top: 2px;
         }
         .comm-card-controls {
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 10px;
             flex-shrink: 0;
         }
 
@@ -1700,8 +1703,8 @@
         .comm-ios-switch {
             position: relative;
             display: inline-block;
-            width: 44px;
-            height: 24px;
+            width: 40px;
+            height: 22px;
             margin: 0;
             cursor: pointer;
         }
@@ -1720,13 +1723,13 @@
             bottom: 0;
             background-color: #cbd5e1;
             transition: .25s ease;
-            border-radius: 24px;
+            border-radius: 22px;
         }
         .comm-ios-slider:before {
             position: absolute;
             content: "";
-            height: 18px;
-            width: 18px;
+            height: 16px;
+            width: 16px;
             left: 3px;
             bottom: 3px;
             background-color: white;
@@ -1738,39 +1741,7 @@
             background-color: #009ef7;
         }
         .comm-ios-switch input:checked + .comm-ios-slider:before {
-            transform: translateX(20px);
-        }
-
-        /* Priority Dropdown */
-        .comm-prio-select {
-            appearance: none;
-            -webkit-appearance: none;
-            background-color: #ffffff;
-            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='%2364748b'%3E%3Cpath fill-rule='evenodd' d='M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z' clip-rule='evenodd'/%3E%3C/svg%3E");
-            background-repeat: no-repeat;
-            background-position: right 10px center;
-            background-size: 14px 14px;
-            border: 1px solid #e2e8f0;
-            border-radius: 8px;
-            padding: 6px 30px 6px 12px;
-            font-size: 12.5px;
-            font-weight: 500;
-            color: #1e293b;
-            width: 116px;
-            cursor: pointer;
-            transition: all .15s ease;
-        }
-        .comm-prio-select:focus {
-            outline: none;
-            border-color: #009ef7;
-            box-shadow: 0 0 0 3px rgba(0, 158, 247, 0.12);
-        }
-        .comm-prio-select:disabled {
-            background-color: #f8fafc;
-            color: #94a3b8;
-            border-color: #e2e8f0;
-            cursor: not-allowed;
-            opacity: 0.6;
+            transform: translateX(18px);
         }
 
         /* Info Alert Box */
@@ -2280,12 +2251,12 @@
         <!-- ASSIGN COMMUNICATION CONTACTS RIGHT DRAWER (RULE 20 STANDARD)  -->
         <!-- ============================================================== -->
         <div class="comm-overlay" id="commOverlay"></div>
-        <div class="comm-drawer" id="commDrawer" role="dialog" aria-modal="true" aria-label="Assign Communication Contacts">
+        <div class="comm-drawer" id="commDrawer" role="dialog" aria-modal="true" aria-label="Share Contact Details for Marketplace Enquiries">
             <!-- Drawer Header -->
             <div class="comm-drawer-head">
                 <div>
-                    <h5 class="comm-drawer-title">Assign Communication Contacts</h5>
-                    <p class="comm-drawer-subtitle">Select the communication types this member will be responsible for and set the contact priority for each.</p>
+                    <h5 class="comm-drawer-title">Share Contact Details for Marketplace Enquiries</h5>
+                    <p class="comm-drawer-subtitle">Choose which inbound enquiries this team member will receive on Jero.works Marketplace.</p>
                 </div>
                 <button type="button" class="comm-drawer-close" id="commDrawerClose" onclick="closeAssignCommDrawer()" aria-label="Close">
                     <i class="fa-solid fa-xmark"></i>
@@ -2323,89 +2294,93 @@
                     </div>
                 </div>
 
-                <!-- Section Title & Clear All -->
-                <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
-                    <div>
-                        <h6 class="comm-section-title mb-0">Communication Types</h6>
-                        <p class="comm-section-subtitle mb-0">Enable the communication types this member will be responsible for and set the contact priority.</p>
+                <!-- Dedicated Option: Keep Private (Default / Exclusive) -->
+                <div class="comm-card comm-card-private" id="commCard_private">
+                    <div class="comm-card-main">
+                        <div class="comm-card-icon icon-private">
+                            <i class="fa-solid fa-user-shield"></i>
+                        </div>
+                        <div class="comm-card-text">
+                            <div class="comm-card-title">Keep Private (Do Not Share Contact Details)</div>
+                            <div class="comm-card-desc">Keep this member's mobile number and email private. They will not be listed on Jero.works Marketplace for incoming enquiries.</div>
+                        </div>
                     </div>
-                    <button type="button" class="comm-btn-clear" onclick="clearAllCommDrawerRoles()" title="Disable all communication types">
+                    <div class="comm-card-controls">
+                        <label class="comm-ios-switch" title="Toggle Keep Private mode">
+                            <input type="checkbox" id="commToggle_private">
+                            <span class="comm-ios-slider"></span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Section Title & Clear All -->
+                <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 pt-1">
+                    <div>
+                        <h6 class="comm-section-title mb-0">Inbound Enquiry Channels</h6>
+                        <p class="comm-section-subtitle mb-0">Select which enquiries this member receives. When enabled, their direct mobile and email will be displayed on Jero.works Marketplace.</p>
+                    </div>
+                    <button type="button" class="comm-btn-clear" onclick="clearAllCommDrawerRoles()" title="Disable all enquiry channels">
                         <i class="fa-solid fa-arrows-rotate"></i>
                         <span>Clear All</span>
                     </button>
                 </div>
 
-                <!-- 4 Channel Cards -->
+                <!-- 3 Channel Cards -->
                 <div class="d-flex flex-column gap-3" id="commDrawerCardsList">
-                    <!-- Channel 1: Client & Sales -->
+                    <!-- Channel 1: Sales & Client Enquiries -->
                     <div class="comm-card" id="commCard_client" data-channel="client">
                         <div class="comm-card-main">
                             <div class="comm-card-icon icon-client">
                                 <i class="fa-solid fa-users"></i>
                             </div>
                             <div class="comm-card-text">
-                                <div class="comm-card-title">Client &amp; Sales</div>
-                                <div class="comm-card-desc">Client enquiries, sales communication, profile discovery and client job requests.</div>
+                                <div class="comm-card-title">Sales &amp; Client Enquiries</div>
+                                <div class="comm-card-desc">Receives incoming client hiring requests, sales inquiries &amp; project discovery calls.</div>
                             </div>
                         </div>
                         <div class="comm-card-controls">
-                            <label class="comm-ios-switch" title="Toggle Client &amp; Sales representation">
+                            <label class="comm-ios-switch" title="Toggle Sales &amp; Client Enquiries">
                                 <input type="checkbox" class="comm-drawer-toggle" data-channel="client" id="commToggle_client">
                                 <span class="comm-ios-slider"></span>
                             </label>
-                            <select class="comm-prio-select" data-channel="client" id="commPrio_client" disabled title="Contact Priority">
-                                <option value="Primary" selected>Primary</option>
-                                <option value="Secondary">Secondary</option>
-                                <option value="Backup">Backup</option>
-                            </select>
                         </div>
                     </div>
 
-                    <!-- Channel 2: Agency -->
+                    <!-- Channel 2: Agency Enquiries -->
                     <div class="comm-card" id="commCard_agency" data-channel="agency">
                         <div class="comm-card-main">
                             <div class="comm-card-icon icon-agency">
-                                <i class="fa-solid fa-shapes"></i>
+                                <i class="fa-solid fa-handshake"></i>
                             </div>
                             <div class="comm-card-text">
-                                <div class="comm-card-title">Agency</div>
-                                <div class="comm-card-desc">Agency enquiries, job requests, candidate submissions and marketplace communication.</div>
+                                <div class="comm-card-title">Agency Enquiries</div>
+                                <div class="comm-card-desc">Receives agency partner inquiries, split-fee job requests &amp; vendor submissions.</div>
                             </div>
                         </div>
                         <div class="comm-card-controls">
-                            <label class="comm-ios-switch" title="Toggle Agency representation">
+                            <label class="comm-ios-switch" title="Toggle Agency Enquiries">
                                 <input type="checkbox" class="comm-drawer-toggle" data-channel="agency" id="commToggle_agency">
                                 <span class="comm-ios-slider"></span>
                             </label>
-                            <select class="comm-prio-select" data-channel="agency" id="commPrio_agency" disabled title="Contact Priority">
-                                <option value="Primary" selected>Primary</option>
-                                <option value="Secondary">Secondary</option>
-                                <option value="Backup">Backup</option>
-                            </select>
                         </div>
                     </div>
 
-                    <!-- Channel 3: Recruitment / Talent -->
+                    <!-- Channel 3: Bench Talent Enquiries -->
                     <div class="comm-card" id="commCard_recruitment" data-channel="recruitment">
                         <div class="comm-card-main">
                             <div class="comm-card-icon icon-recruitment">
-                                <i class="fa-solid fa-id-card-clip"></i>
+                                <i class="fa-solid fa-user-tag"></i>
                             </div>
                             <div class="comm-card-text">
-                                <div class="comm-card-title">Recruitment / Talent</div>
-                                <div class="comm-card-desc">Candidate coordination, interviews, hiring operations and talent related communication.</div>
+                                <div class="comm-card-title">Bench Talent Enquiries</div>
+                                <div class="comm-card-desc">Receives inbound talent placement inquiries &amp; bench talent deployment calls.</div>
                             </div>
                         </div>
                         <div class="comm-card-controls">
-                            <label class="comm-ios-switch" title="Toggle Recruitment / Talent representation">
+                            <label class="comm-ios-switch" title="Toggle Bench Talent Enquiries">
                                 <input type="checkbox" class="comm-drawer-toggle" data-channel="recruitment" id="commToggle_recruitment">
                                 <span class="comm-ios-slider"></span>
                             </label>
-                            <select class="comm-prio-select" data-channel="recruitment" id="commPrio_recruitment" disabled title="Contact Priority">
-                                <option value="Primary" selected>Primary</option>
-                                <option value="Secondary">Secondary</option>
-                                <option value="Backup">Backup</option>
-                            </select>
                         </div>
                     </div>
                 </div>
@@ -2413,11 +2388,11 @@
                 <!-- Info Alert Callout -->
                 <div class="comm-info-box">
                     <div class="comm-info-icon">
-                        <i class="fa-solid fa-info"></i>
+                        <i class="fa-solid fa-shield-halved"></i>
                     </div>
                     <div class="comm-info-text">
-                        <div>A member can be assigned to multiple communication types.</div>
-                        <div>You can set different priority levels (Primary, Secondary, Backup) for each type.</div>
+                        <div style="font-weight: 600; margin-bottom: 2px;">Marketplace Contact Visibility</div>
+                        <div>When an enquiry channel is enabled, this member's direct phone number and email will be displayed on Jero.works Marketplace so clients and agency partners can call directly. If "Keep Private" is enabled, contact details remain private.</div>
                     </div>
                 </div>
             </div>
@@ -2426,7 +2401,7 @@
             <div class="comm-drawer-foot">
                 <button type="button" class="comm-btn-cancel" onclick="closeAssignCommDrawer()">Cancel</button>
                 <button type="button" class="comm-btn-save" id="btnSaveCommRoles" onclick="saveCommunicationRoles()">
-                    <span class="indicator-label">Save Assignments</span>
+                    <span class="indicator-label">Save Preferences</span>
                     <span class="indicator-progress d-none"><span class="spinner-border spinner-border-sm align-middle me-2"></span> Saving...</span>
                 </button>
             </div>
@@ -2705,8 +2680,8 @@
             // Phase 2: Tenant-Scoped IndexedDB Store for Team Listing & Reference Data
             const CURRENT_COMPANY_ID = {{ (int) (auth()->user()->company_id ?? 0) }};
             const CURRENT_USER_ID = {{ (int) (auth()->user()->id ?? 0) }};
-            const TEAM_DB_NAME = 'jero_team_local_store_v4_' + CURRENT_COMPANY_ID;
-            const TEAM_DB_VERSION = 4;
+            const TEAM_DB_NAME = 'jero_team_local_store_v5_' + CURRENT_COMPANY_ID;
+            const TEAM_DB_VERSION = 5;
             const TEAM_CACHE_TTL_MS = 15 * 60 * 1000; // 15 minutes TTL
 
             const JeroTeamLocalStore = (function() {
@@ -4410,11 +4385,11 @@
 
 				$('#commDrawerLastActiveText').text(user.last_active ? 'Last active: ' + user.last_active : 'Never logged in');
 
-				// Reset all channel cards, switches, and selects
+				// Reset all channel cards, switches, and private state
 				var channels = Array.isArray(user.channels) ? user.channels : [];
-				var prios = (user.priorities && typeof user.priorities === 'object') ? user.priorities : {};
-
+				var hasActiveChannel = false;
 				var availableChannels = ['client', 'agency', 'recruitment'];
+
 				availableChannels.forEach(function(ch) {
 					var isChecked = channels.indexOf(ch) !== -1;
 					if (ch === 'agency' && channels.indexOf('vendor') !== -1) {
@@ -4423,20 +4398,24 @@
 
 					var $card = $('#commCard_' + ch);
 					var $toggle = $('#commToggle_' + ch);
-					var $prio = $('#commPrio_' + ch);
 
 					$toggle.prop('checked', isChecked);
 					if (isChecked) {
 						$card.addClass('is-active');
-						$prio.prop('disabled', false);
-						var userPrio = prios[ch] || (ch === 'agency' ? (prios['vendor'] || 'Primary') : 'Primary');
-						$prio.val(userPrio);
+						hasActiveChannel = true;
 					} else {
 						$card.removeClass('is-active');
-						$prio.prop('disabled', true);
-						$prio.val('Primary');
 					}
 				});
+
+				// Set Keep Private switch state
+				if (hasActiveChannel) {
+					$('#commToggle_private').prop('checked', false);
+					$('#commCard_private').removeClass('is-private-active');
+				} else {
+					$('#commToggle_private').prop('checked', true);
+					$('#commCard_private').addClass('is-private-active');
+				}
 
 				// Slide open drawer
 				$('#commOverlay').addClass('open');
@@ -4455,46 +4434,68 @@
 				availableChannels.forEach(function(ch) {
 					$('#commCard_' + ch).removeClass('is-active');
 					$('#commToggle_' + ch).prop('checked', false);
-					$('#commPrio_' + ch).prop('disabled', true).val('Primary');
 				});
+				$('#commToggle_private').prop('checked', true);
+				$('#commCard_private').addClass('is-private-active');
 			}
 
-			// Handle toggle switch change inside drawer
+			// Handle Keep Private toggle switch change
+			$(document).on('change', '#commToggle_private', function() {
+				var isPrivate = $(this).is(':checked');
+				if (isPrivate) {
+					$('#commCard_private').addClass('is-private-active');
+					var availableChannels = ['client', 'agency', 'recruitment'];
+					availableChannels.forEach(function(ch) {
+						$('#commCard_' + ch).removeClass('is-active');
+						$('#commToggle_' + ch).prop('checked', false);
+					});
+				} else {
+					$('#commCard_private').removeClass('is-private-active');
+				}
+			});
+
+			// Handle channel toggle switch change inside drawer
 			$(document).on('change', '.comm-drawer-toggle', function() {
 				var ch = $(this).data('channel');
 				var isChecked = $(this).is(':checked');
 				var $card = $('#commCard_' + ch);
-				var $prio = $('#commPrio_' + ch);
 
 				if (isChecked) {
 					$card.addClass('is-active');
-					$prio.prop('disabled', false);
+					$('#commToggle_private').prop('checked', false);
+					$('#commCard_private').removeClass('is-private-active');
 				} else {
 					$card.removeClass('is-active');
-					$prio.prop('disabled', true);
+					var anyChecked = $('.comm-drawer-toggle:checked').length > 0;
+					if (!anyChecked) {
+						$('#commToggle_private').prop('checked', true);
+						$('#commCard_private').addClass('is-private-active');
+					}
 				}
 			});
 
-			// Save Assignments
+			// Save Contact Details Sharing Preferences
 			function saveCommunicationRoles() {
 				var userId = $('#commDrawerUserId').val();
 				if (!userId) return;
 
+				var isPrivate = $('#commToggle_private').is(':checked');
 				var selectedChannels = [];
 				var priorities = {};
 
-				$('.comm-drawer-toggle:checked').each(function() {
-					var ch = $(this).data('channel');
-					selectedChannels.push(ch);
-					if (ch === 'agency') {
-						selectedChannels.push('vendor');
-					}
-					var prioVal = $('#commPrio_' + ch).val() || 'Primary';
-					priorities[ch] = prioVal;
-					if (ch === 'agency') {
-						priorities['vendor'] = prioVal;
-					}
-				});
+				if (!isPrivate) {
+					$('.comm-drawer-toggle:checked').each(function() {
+						var ch = $(this).data('channel');
+						selectedChannels.push(ch);
+						if (ch === 'agency') {
+							selectedChannels.push('vendor');
+						}
+						priorities[ch] = 'Primary';
+						if (ch === 'agency') {
+							priorities['vendor'] = 'Primary';
+						}
+					});
+				}
 
 				var $btn = $('#btnSaveCommRoles');
 				$btn.find('.indicator-label').addClass('d-none');
@@ -4536,7 +4537,7 @@
 						fetchTeams(page_no);
 
 						if (typeof toastr !== 'undefined') {
-							toastr.success(response.message || 'Communication roles updated successfully.');
+							toastr.success(response.message || 'Contact sharing preferences updated successfully.');
 						}
 					},
 					error: function(xhr) {
@@ -4544,7 +4545,7 @@
 						$btn.find('.indicator-progress').addClass('d-none');
 						$btn.prop('disabled', false);
 
-						var msg = (xhr.responseJSON && xhr.responseJSON.message) ? xhr.responseJSON.message : 'Failed to update communication roles.';
+						var msg = (xhr.responseJSON && xhr.responseJSON.message) ? xhr.responseJSON.message : 'Failed to update contact sharing preferences.';
 						if (typeof toastr !== 'undefined') {
 							toastr.error(msg);
 						} else {
