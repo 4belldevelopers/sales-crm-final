@@ -1823,6 +1823,69 @@
             line-height: 1.35;
         }
 
+        .comm-priority-select {
+            font-size: 9.5px;
+            padding: 2px 4px;
+            border: 1px solid #cbd5e1;
+            border-radius: 4px;
+            background: #ffffff;
+            font-weight: 600;
+            color: #334155;
+            cursor: pointer;
+            outline: none;
+            height: 22px;
+        }
+        .comm-priority-select:focus {
+            border-color: #009ef7;
+        }
+        .comm-mandatory-pill {
+            font-size: 8.5px;
+            background: #eff6ff;
+            color: #0284c7;
+            padding: 0.5px 5px;
+            border-radius: 4px;
+            font-weight: 700;
+            border: 1px solid #bae6fd;
+            letter-spacing: 0.02em;
+        }
+        .comm-health-badge {
+            font-size: 8.5px;
+            padding: 0.5px 5px;
+            border-radius: 4px;
+            font-weight: 600;
+        }
+        .comm-health-badge.is-healthy {
+            background: #ecfdf5;
+            color: #10b981;
+            border: 1px solid #a7f3d0;
+        }
+        .comm-health-badge.is-at-risk {
+            background: #fffbeb;
+            color: #d97706;
+            border: 1px solid #fde68a;
+        }
+        .comm-fallback-route-card {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 7px 11px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            flex-shrink: 0;
+        }
+        .comm-alert-danger {
+            background: #fef2f2;
+            border: 1px solid #fecaca;
+            border-radius: 8px;
+            padding: 6px 10px;
+            color: #991b1b;
+            font-size: 10px;
+            line-height: 1.4;
+            flex-shrink: 0;
+        }
+
         /* Drawer Footer (Compact Standard) */
         .comm-drawer-foot {
             padding: 10px 18px;
@@ -2383,11 +2446,20 @@
                                     <i class="fa-solid fa-users"></i>
                                 </div>
                                 <div class="comm-card-text">
-                                    <div class="comm-card-title">Sales &amp; Client Enquiries</div>
+                                    <div class="d-flex align-items-center gap-1">
+                                        <span class="comm-card-title">Sales &amp; Client Enquiries</span>
+                                        <span class="comm-mandatory-pill">MANDATORY</span>
+                                        <span class="comm-health-badge is-healthy" id="commHealth_client">Healthy</span>
+                                    </div>
                                     <div class="comm-card-desc">Client hiring requests, project discovery calls &amp; sales inquiries.</div>
                                 </div>
                             </div>
-                            <div class="comm-card-controls">
+                            <div class="comm-card-controls gap-2">
+                                <select class="comm-priority-select" data-channel="client" id="commPrio_client" title="Priority Tier">
+                                    <option value="Primary">Primary</option>
+                                    <option value="Secondary" selected>Secondary</option>
+                                    <option value="Backup">Backup</option>
+                                </select>
                                 <label class="comm-ios-switch" title="Toggle Sales &amp; Client Enquiries">
                                     <input type="checkbox" class="comm-drawer-toggle" data-channel="client" id="commToggle_client">
                                     <span class="comm-ios-slider"></span>
@@ -2402,11 +2474,20 @@
                                     <i class="fa-solid fa-handshake"></i>
                                 </div>
                                 <div class="comm-card-text">
-                                    <div class="comm-card-title">Agency Enquiries</div>
+                                    <div class="d-flex align-items-center gap-1">
+                                        <span class="comm-card-title">Agency Enquiries</span>
+                                        <span class="comm-mandatory-pill">MANDATORY</span>
+                                        <span class="comm-health-badge is-healthy" id="commHealth_agency">Healthy</span>
+                                    </div>
                                     <div class="comm-card-desc">Agency partner inquiries, split-fee requests &amp; vendor submissions.</div>
                                 </div>
                             </div>
-                            <div class="comm-card-controls">
+                            <div class="comm-card-controls gap-2">
+                                <select class="comm-priority-select" data-channel="agency" id="commPrio_agency" title="Priority Tier">
+                                    <option value="Primary">Primary</option>
+                                    <option value="Secondary" selected>Secondary</option>
+                                    <option value="Backup">Backup</option>
+                                </select>
                                 <label class="comm-ios-switch" title="Toggle Agency Enquiries">
                                     <input type="checkbox" class="comm-drawer-toggle" data-channel="agency" id="commToggle_agency">
                                     <span class="comm-ios-slider"></span>
@@ -2415,19 +2496,28 @@
                         </div>
 
                         <!-- Sub-Card 3: Bench Talent Enquiries -->
-                        <div class="comm-card" id="commCard_recruitment" data-channel="recruitment">
+                        <div class="comm-card" id="commCard_bench" data-channel="bench">
                             <div class="comm-card-main">
                                 <div class="comm-card-icon icon-recruitment">
                                     <i class="fa-solid fa-user-tag"></i>
                                 </div>
                                 <div class="comm-card-text">
-                                    <div class="comm-card-title">Bench Talent Enquiries</div>
+                                    <div class="d-flex align-items-center gap-1">
+                                        <span class="comm-card-title">Bench Talent Enquiries</span>
+                                        <span class="comm-mandatory-pill">MANDATORY</span>
+                                        <span class="comm-health-badge is-healthy" id="commHealth_bench">Healthy</span>
+                                    </div>
                                     <div class="comm-card-desc">Inbound talent deployment calls, candidate placements &amp; queries.</div>
                                 </div>
                             </div>
-                            <div class="comm-card-controls">
+                            <div class="comm-card-controls gap-2">
+                                <select class="comm-priority-select" data-channel="bench" id="commPrio_bench" title="Priority Tier">
+                                    <option value="Primary">Primary</option>
+                                    <option value="Secondary" selected>Secondary</option>
+                                    <option value="Backup">Backup</option>
+                                </select>
                                 <label class="comm-ios-switch" title="Toggle Bench Talent Enquiries">
-                                    <input type="checkbox" class="comm-drawer-toggle" data-channel="recruitment" id="commToggle_recruitment">
+                                    <input type="checkbox" class="comm-drawer-toggle" data-channel="bench" id="commToggle_bench">
                                     <span class="comm-ios-slider"></span>
                                 </label>
                             </div>
@@ -2435,7 +2525,25 @@
                     </div>
                 </div>
 
-                <!-- CARD 4: Visibility & Privacy Micro-Strip -->
+                <!-- CARD 4: Dynamic Fallback Route Visualizer -->
+                <div class="comm-fallback-route-card" id="commFallbackRouteWrap">
+                    <div class="d-flex align-items-center gap-2">
+                        <i class="fa-solid fa-route text-primary" style="font-size: 11px;"></i>
+                        <div>
+                            <div style="font-size: 10.5px; font-weight: 700; color: #0f172a;">Active Fallback Route Preview</div>
+                            <div style="font-size: 9.5px; color: #64748b;" id="commFallbackRouteText">Member &rarr; Secondary Contact &rarr; Root Admin</div>
+                        </div>
+                    </div>
+                    <span style="font-size: 8.5px; background: #f0fdf4; color: #15803d; border: 1px solid #bbf7d0; padding: 1px 6px; border-radius: 4px; font-weight: 600;">Auto-Promote Active</span>
+                </div>
+
+                <!-- CARD 5: Invariant Alert Box (Hidden by default) -->
+                <div id="commInvariantAlert" class="comm-alert-danger" style="display: none;">
+                    <i class="fa-solid fa-triangle-exclamation me-1" style="color: #dc2626;"></i>
+                    <span id="commInvariantAlertText"><strong>Mandatory Contact Rule:</strong> At least 1 active contact is required.</span>
+                </div>
+
+                <!-- CARD 6: Visibility & Privacy Micro-Strip -->
                 <div class="comm-info-box">
                     <div class="comm-info-icon">
                         <i class="fa-solid fa-shield-halved"></i>
@@ -2729,7 +2837,7 @@
             // Phase 2: Tenant-Scoped IndexedDB Store for Team Listing & Reference Data
             const CURRENT_COMPANY_ID = {{ (int) (auth()->user()->company_id ?? 0) }};
             const CURRENT_USER_ID = {{ (int) (auth()->user()->id ?? 0) }};
-            const TEAM_DB_NAME = 'jero_team_local_store_v7_' + CURRENT_COMPANY_ID;
+            const TEAM_DB_NAME = 'jero_team_local_store_v8_' + CURRENT_COMPANY_ID;
             const TEAM_DB_VERSION = 7;
             const TEAM_CACHE_TTL_MS = 15 * 60 * 1000; // 15 minutes TTL
 
@@ -4436,19 +4544,22 @@
 
 				// Reset all channel cards, switches, and private state
 				var channels = Array.isArray(user.channels) ? user.channels : [];
+				var userPrios = user.priorities || {};
 				var hasActiveChannel = false;
-				var availableChannels = ['client', 'agency', 'recruitment'];
+				var availableChannels = ['client', 'agency', 'bench'];
 
 				availableChannels.forEach(function(ch) {
-					var isChecked = channels.indexOf(ch) !== -1;
-					if (ch === 'agency' && channels.indexOf('vendor') !== -1) {
-						isChecked = true;
-					}
+					var legacyCh = (ch === 'bench') ? 'recruitment' : ((ch === 'agency') ? 'vendor' : ch);
+					var isChecked = channels.indexOf(ch) !== -1 || channels.indexOf(legacyCh) !== -1;
 
 					var $card = $('#commCard_' + ch);
 					var $toggle = $('#commToggle_' + ch);
+					var $prio = $('#commPrio_' + ch);
 
 					$toggle.prop('checked', isChecked);
+					var currentPrio = userPrios[ch] || userPrios[legacyCh] || 'Secondary';
+					$prio.val(currentPrio);
+
 					if (isChecked) {
 						$card.addClass('is-active');
 						hasActiveChannel = true;
@@ -4466,6 +4577,12 @@
 					$('#commCard_private').addClass('is-private-active');
 				}
 
+				// Hide any previous invariant alert
+				$('#commInvariantAlert').hide();
+
+				// Update dynamic fallback route text
+				updateCommFallbackRouteText();
+
 				// Slide open drawer
 				$('#commOverlay').addClass('open');
 				$('#commDrawer').addClass('open');
@@ -4478,14 +4595,39 @@
 				$('body').css('overflow', '');
 			}
 
+			function updateCommFallbackRouteText() {
+				var memberName = $('#commDrawerName').text() || 'Member';
+				var isPrivate = $('#commToggle_private').is(':checked');
+				var anyChecked = $('.comm-drawer-toggle:checked').length > 0;
+
+				if (isPrivate || !anyChecked) {
+					$('#commFallbackRouteText').html('<em>Keep Private Active</em> &rarr; Direct enquiries routed to Company Default Rep &rarr; Root Admin');
+				} else {
+					var isPrimaryOnAny = false;
+					$('.comm-drawer-toggle:checked').each(function() {
+						var ch = $(this).data('channel');
+						var p = $('#commPrio_' + ch).val();
+						if (p === 'Primary') {
+							isPrimaryOnAny = true;
+						}
+					});
+					if (isPrimaryOnAny) {
+						$('#commFallbackRouteText').html('<strong>' + memberName + ' (Primary)</strong> &rarr; Secondary Contact &rarr; Root Admin');
+					} else {
+						$('#commFallbackRouteText').html(memberName + ' (Secondary) &rarr; Primary Contact &rarr; Root Admin');
+					}
+				}
+			}
+
 			function clearAllCommDrawerRoles() {
-				var availableChannels = ['client', 'agency', 'recruitment'];
+				var availableChannels = ['client', 'agency', 'bench'];
 				availableChannels.forEach(function(ch) {
 					$('#commCard_' + ch).removeClass('is-active');
 					$('#commToggle_' + ch).prop('checked', false);
 				});
 				$('#commToggle_private').prop('checked', true);
 				$('#commCard_private').addClass('is-private-active');
+				updateCommFallbackRouteText();
 			}
 
 			// Handle Keep Private toggle switch change
@@ -4493,7 +4635,7 @@
 				var isPrivate = $(this).is(':checked');
 				if (isPrivate) {
 					$('#commCard_private').addClass('is-private-active');
-					var availableChannels = ['client', 'agency', 'recruitment'];
+					var availableChannels = ['client', 'agency', 'bench'];
 					availableChannels.forEach(function(ch) {
 						$('#commCard_' + ch).removeClass('is-active');
 						$('#commToggle_' + ch).prop('checked', false);
@@ -4501,6 +4643,7 @@
 				} else {
 					$('#commCard_private').removeClass('is-private-active');
 				}
+				updateCommFallbackRouteText();
 			});
 
 			// Handle channel toggle switch change inside drawer
@@ -4513,6 +4656,7 @@
 					$card.addClass('is-active');
 					$('#commToggle_private').prop('checked', false);
 					$('#commCard_private').removeClass('is-private-active');
+					$('#commInvariantAlert').slideUp(200);
 				} else {
 					$card.removeClass('is-active');
 					var anyChecked = $('.comm-drawer-toggle:checked').length > 0;
@@ -4521,6 +4665,11 @@
 						$('#commCard_private').addClass('is-private-active');
 					}
 				}
+				updateCommFallbackRouteText();
+			});
+
+			$(document).on('change', '.comm-priority-select', function() {
+				updateCommFallbackRouteText();
 			});
 
 			// Save Contact Details Sharing Preferences
@@ -4536,12 +4685,16 @@
 					$('.comm-drawer-toggle:checked').each(function() {
 						var ch = $(this).data('channel');
 						selectedChannels.push(ch);
+						var prioVal = $('#commPrio_' + ch).val() || 'Secondary';
+						priorities[ch] = prioVal;
+
+						// Compatibility aliases
 						if (ch === 'agency') {
 							selectedChannels.push('vendor');
-						}
-						priorities[ch] = 'Primary';
-						if (ch === 'agency') {
-							priorities['vendor'] = 'Primary';
+							priorities['vendor'] = prioVal;
+						} else if (ch === 'bench') {
+							selectedChannels.push('recruitment');
+							priorities['recruitment'] = prioVal;
 						}
 					});
 				}
@@ -4595,10 +4748,13 @@
 						$btn.prop('disabled', false);
 
 						var msg = (xhr.responseJSON && xhr.responseJSON.message) ? xhr.responseJSON.message : 'Failed to update contact sharing preferences.';
+						
+						// Show Invariant Alert in Drawer
+						$('#commInvariantAlertText').html('<strong>' + msg + '</strong>');
+						$('#commInvariantAlert').slideDown(200);
+
 						if (typeof toastr !== 'undefined') {
 							toastr.error(msg);
-						} else {
-							alert(msg);
 						}
 					}
 				});

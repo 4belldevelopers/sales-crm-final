@@ -316,7 +316,7 @@
                                             <i class="fa-solid fa-phone me-1"></i>Agency Enquiries
                                         </span>
                                     @endif
-                                    @if (in_array('recruitment', $channels, true))
+                                    @if (in_array('recruitment', $channels, true) || in_array('bench', $channels, true))
                                         <span class="tm-comm-chip recruitment" title="Contact details shared for Bench Talent Enquiries">
                                             <i class="fa-solid fa-phone me-1"></i>Bench Talent Enquiries
                                         </span>
