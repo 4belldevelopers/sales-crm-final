@@ -1217,7 +1217,7 @@ After completing these steps, they will be able to start collaborating with your
 
         $versionKey = 'consultancyviewmore_version_user_'.$userId;
         $version = cache()->get($versionKey, 1);
-        $cacheKeySet = 'consultancyviewmore_v16:'.$userId.':'.$version.':'.md5(json_encode($cachePayload));
+        $cacheKeySet = 'consultancyviewmore_v17:'.$userId.':'.$version.':'.md5(json_encode($cachePayload));
         /* ----------------------------
         ⚡ Check DragonflyDB / Redis first (Quick Win Step 4)
         ----------------------------- */
@@ -1239,10 +1239,11 @@ After completing these steps, they will be able to start collaborating with your
         $this->directClientDetail = DB::table('clients')
             ->select(
                 'companies.id as company_id', 'companies.description as companies_description',
-                'clients.id as client_id', 'clients.name', 'clients.logo_logical_path', 'clients.industry', 'clients.tags', 'clients.website', 'clients.description',
+                'clients.id as client_id', 'clients.name', 'clients.logo_logical_path', 'clients.industry', 'clients.tags', 'clients.website', 'clients.description', 'clients.detail',
                 'companies.id as companies_id', 'companies.logo', 'companies.company_type', 'companies.company_size_from', 'companies.company_size', 'companies.founded',
                 'companies.success_per', 'companies.company_phone', 'companies.calling_code', 'companies.company_email',
-                'staffing_company_relation.created_at as to_created_at', 'staffing_company_relation.from_company_id', 'staffing_company_relation.to_company_id', 'companies.industries_type', 'companies.created_at', 'companies.website', 'companies.industries'
+                'staffing_company_relation.created_at as to_created_at', 'staffing_company_relation.from_company_id', 'staffing_company_relation.to_company_id', 'companies.industries_type', 'companies.created_at', 'companies.website', 'companies.industries',
+                'companies.terms', 'companies.offer_terms', 'companies.contract_offer_terms', 'companies.agency_offer_terms'
             )
             ->join('companies', 'companies.id', '=', 'clients.company_id')
             ->leftJoin('staffing_company_relation', function ($join) use ($company_id) {
@@ -1542,6 +1543,158 @@ After completing these steps, they will be able to start collaborating with your
             ->where('roles.display_name', '=', 'Administrator')
             ->get();
 
+        // ── 4c. Agency Contacts (Rule 20 Sub-Card Engine) ──
+        $contactsMap = [];
+        $dbContacts = DB::table('client_contact_info')->where('client_id', $actualClientId)->get();
+        foreach ($dbContacts as $c) {
+            $cName = trim((string) $c->contact_person_name);
+            $cEmail = trim((string) $c->contact_person_email);
+            $cPhone = trim((string) $c->contact_person_number);
+            $cCode = trim((string) $c->calling_code);
+            $fullPhone = $cPhone ? ($cCode ? $cCode.' '.$cPhone : $cPhone) : null;
+            $cDesig = trim((string) $c->contact_person_designation);
+            $key = $cEmail ?: $cName;
+            if (! empty($key)) {
+                $contactsMap[$key] = [
+                    'name' => $cName ?: 'Agency Representative',
+                    'designation' => $cDesig ?: null,
+                    'phone' => $fullPhone,
+                    'email' => $cEmail ?: null,
+                    'linkedin' => null,
+                ];
+            }
+        }
+
+        $agencyUsers = DB::table('users')
+            ->leftJoin('users_profile', 'users_profile.user_id', '=', 'users.id')
+            ->select('users.id', 'users.name', 'users.email', 'users.calling_code', 'users.mobile', 'users.linkedin', 'users_profile.designation')
+            ->where('users.company_id', $partnerCompanyId)
+            ->where('users.status', 'active')
+            ->orderBy('users.root_user', 'desc')
+            ->get();
+
+        foreach ($agencyUsers as $u) {
+            $uName = trim((string) $u->name);
+            $uEmail = trim((string) $u->email);
+            $uMobile = trim((string) $u->mobile);
+            $uCode = trim((string) $u->calling_code);
+            $fullPhone = $uMobile ? ($uCode ? $uCode.' '.$uMobile : $uMobile) : null;
+            $uLinkedin = trim((string) $u->linkedin);
+            $uDesig = trim((string) $u->designation);
+            $key = $uEmail ?: $uName;
+
+            if (isset($contactsMap[$key])) {
+                if (empty($contactsMap[$key]['phone']) && $fullPhone) {
+                    $contactsMap[$key]['phone'] = $fullPhone;
+                }
+                if (empty($contactsMap[$key]['designation']) && $uDesig) {
+                    $contactsMap[$key]['designation'] = $uDesig;
+                }
+                if (empty($contactsMap[$key]['linkedin']) && $uLinkedin) {
+                    $contactsMap[$key]['linkedin'] = $uLinkedin;
+                }
+            } elseif (! empty($key)) {
+                $contactsMap[$key] = [
+                    'name' => $uName ?: 'Agency Representative',
+                    'designation' => $uDesig ?: null,
+                    'phone' => $fullPhone,
+                    'email' => $uEmail ?: null,
+                    'linkedin' => $uLinkedin ?: null,
+                ];
+            }
+        }
+
+        $this->agencyContacts = collect(array_values($contactsMap))->map(function ($cnt) {
+            $words = preg_split('/\s+/', trim($cnt['name']));
+            $inits = '';
+            foreach ($words as $w) {
+                if (! empty($w)) {
+                    $inits .= mb_strtoupper(mb_substr($w, 0, 1));
+                }
+                if (strlen($inits) >= 2) {
+                    break;
+                }
+            }
+            $cnt['initials'] = $inits ?: 'AG';
+
+            return (object) $cnt;
+        });
+
+        // ── 4d. Agency Locations (Rule 20 Sub-Card Engine) ──
+        $dbLocations = DB::table('client_location')
+            ->where(function ($q) use ($actualClientId, $partnerCompanyId) {
+                $q->where('client_id', $actualClientId);
+                if ($partnerCompanyId > 0) {
+                    $q->orWhere('company_id', $partnerCompanyId);
+                }
+            })
+            ->get();
+
+        $locList = [];
+        foreach ($dbLocations as $loc) {
+            $cName = '';
+            if (! empty($loc->city_id) && $loc->city_id > 0) {
+                $cName = DB::table('city_list')->where('city_id', $loc->city_id)->value('city') ?: '';
+            }
+            if (empty($cName) && ! empty($loc->city)) {
+                $cName = $loc->city;
+            }
+            $sName = '';
+            if (! empty($loc->state) && $loc->state > 0) {
+                $sName = DB::table('state_list')->where('id', $loc->state)->value('state') ?: '';
+            }
+            $cntryName = '';
+            if (! empty($loc->country_id) && $loc->country_id > 0) {
+                $cArr = GeneralMethod::getCountryName($loc->country_id);
+                foreach ($cArr as $cval) {
+                    $cntryName = $cval['name'];
+                }
+            }
+            $addr = trim((string) $loc->address);
+            $pcode = trim((string) $loc->postcode);
+            if ($pcode === '0' || $pcode === '') {
+                $pcode = null;
+            }
+
+            $locList[] = (object) [
+                'address' => $addr ?: null,
+                'city' => $cName ? ucwords(trim($cName)) : null,
+                'state' => $sName ? ucwords(trim($sName)) : null,
+                'country' => $cntryName ? ucwords(trim($cntryName)) : null,
+                'postcode' => $pcode,
+            ];
+        }
+
+        if (empty($locList)) {
+            $billingAddr = DB::table('billing_address_companies')->where('company_id', $partnerCompanyId)->first();
+            if ($billingAddr) {
+                $bAddr = trim(implode(' ', array_filter([$billingAddr->building, $billingAddr->street])));
+                $bCity = '';
+                if (! empty($billingAddr->city)) {
+                    $bCity = DB::table('city_list')->where('city_id', $billingAddr->city)->value('city') ?: '';
+                }
+                $bState = '';
+                if (! empty($billingAddr->state_id)) {
+                    $bState = DB::table('state_list')->where('id', $billingAddr->state_id)->value('state') ?: '';
+                }
+                $bCountry = '';
+                if (! empty($billingAddr->country_id)) {
+                    $cArr = GeneralMethod::getCountryName($billingAddr->country_id);
+                    foreach ($cArr as $cval) {
+                        $bCountry = $cval['name'];
+                    }
+                }
+                $locList[] = (object) [
+                    'address' => $bAddr ?: null,
+                    'city' => $bCity ? ucwords(trim($bCity)) : null,
+                    'state' => $bState ? ucwords(trim($bState)) : null,
+                    'country' => $bCountry ? ucwords(trim($bCountry)) : null,
+                    'postcode' => ! empty($billingAddr->postal_code) ? trim($billingAddr->postal_code) : null,
+                ];
+            }
+        }
+        $this->agencyLocations = collect($locList);
+
         if ($actualClientId && $this->elasticService->indexExists(ELASTIC_CLIENT_LIST)) {
             try {
                 $params = [
@@ -1602,6 +1755,60 @@ After completing these steps, they will be able to start collaborating with your
         // ── 7. Dynamic Commercial Agreement & Placement Fee ──
         $successPer = @$this->directClientDetail->success_per;
         $this->placement_fee = (! empty($successPer) && $successPer > 0) ? ((float) $successPer).'% of Annual CTC' : '8.33% of Annual CTC';
+
+        // ── 7b. Agency Tax ID / GSTN Resolution ──
+        $detailData = [];
+        if (! empty($this->directClientDetail->detail)) {
+            $rawJson = is_array($this->directClientDetail->detail) ? $this->directClientDetail->detail : json_decode($this->directClientDetail->detail, true);
+            $detailData = is_array($rawJson) ? $rawJson : [];
+        }
+        $taxVal = $detailData['tax_id'] ?? ($detailData['gstn'] ?? ($detailData['gst_number'] ?? null));
+        if (empty($taxVal)) {
+            $bRow = DB::table('billing_address_companies')->where('company_id', $partnerCompanyId)->first();
+            if ($bRow) {
+                $taxVal = ! empty($bRow->gstin) ? trim($bRow->gstin) : (! empty($bRow->pan_no) ? trim($bRow->pan_no) : null);
+            }
+        }
+        $this->agency_tax_id = ! empty($taxVal) ? trim((string) $taxVal) : null;
+
+        // ── 7c. Dynamic Commercial Terms by Staffing Model (Rule 20) ──
+        $commRows = DB::table('commericials')
+            ->where('company_id', $partnerCompanyId)
+            ->where('status', 1)
+            ->orderBy('id', 'desc')
+            ->get();
+
+        $contractComm = $commRows->firstWhere('commtype', 1);
+        $permanentComm = $commRows->firstWhere('commtype', 2);
+
+        $this->contractCommercial = $contractComm ? (object) [
+            'id' => $contractComm->id,
+            'rateType' => $contractComm->rateType,
+            'billing_frequency' => $contractComm->billing_frequency,
+            'billing_trigger' => $contractComm->billing_trigger,
+            'replacement_period_days' => $contractComm->replacement_period_days,
+            'replacement_type' => $contractComm->replacement_type,
+            'replacement_eligibility' => $contractComm->replacement_eligibility,
+            'payment_terms_days' => $contractComm->payment_terms_days,
+            'terms_text' => $this->directClientDetail->contract_offer_terms ?? ($this->directClientDetail->terms ?? null),
+        ] : null;
+
+        $this->permanentCommercial = $permanentComm ? (object) [
+            'id' => $permanentComm->id,
+            'rateType' => $permanentComm->rateType,
+            'placement_fee' => $this->placement_fee,
+            'billing_frequency' => $permanentComm->billing_frequency,
+            'billing_trigger' => $permanentComm->billing_trigger,
+            'replacement_period_days' => $permanentComm->replacement_period_days,
+            'replacement_type' => $permanentComm->replacement_type,
+            'replacement_eligibility' => $permanentComm->replacement_eligibility,
+            'payment_terms_days' => $permanentComm->payment_terms_days,
+            'terms_text' => $this->directClientDetail->offer_terms ?? ($this->directClientDetail->agency_offer_terms ?? ($this->directClientDetail->terms ?? null)),
+        ] : null;
+
+        $this->hasContractStaffing = ! empty($this->contractCommercial);
+        $this->hasPermanentStaffing = ! empty($this->permanentCommercial);
+        $this->hasActiveCommercials = ($this->hasContractStaffing || $this->hasPermanentStaffing);
 
         // ── 8. Agency Contact & Communication Meta ──
         $callingCode = @$this->directClientDetail->calling_code ?: '+91';
