@@ -567,6 +567,7 @@ class ServiceCompanyAccountSettingsController extends ServiceCompanyBaseControll
             $this->accountSettingsService->flushAccountCache($company_id);
             // Intent: refresh cached job drawer HTML after Agency Agreement content changes.
             Cache::forever('jobDetails_version_company_'.$company_id, ((int) Cache::get('jobDetails_version_company_'.$company_id, 1)) + 1);
+            Cache::forever('agency_drawer_version_company_'.$company_id, ((int) Cache::get('agency_drawer_version_company_'.$company_id, 1)) + 1);
 
             return Reply::dataOnly(['status' => 'success', 'terms' => $company->terms]);
         } elseif ($request->pageterms == 'termsoffer') {
@@ -584,6 +585,7 @@ class ServiceCompanyAccountSettingsController extends ServiceCompanyBaseControll
             $company->{$templateField} = @$request->description;
             $company->save();
             $this->accountSettingsService->flushAccountCache($company_id);
+            Cache::forever('agency_drawer_version_company_'.$company_id, ((int) Cache::get('agency_drawer_version_company_'.$company_id, 1)) + 1);
 
             return Reply::dataOnly(['status' => 'success', 'terms' => $company->{$templateField}, 'template_field' => $templateField]);
         } elseif ($request->pageterms == 'termsagencyoffer') {
@@ -598,6 +600,7 @@ class ServiceCompanyAccountSettingsController extends ServiceCompanyBaseControll
             $company->agency_offer_terms = @$request->description;
             $company->save();
             $this->accountSettingsService->flushAccountCache($company_id);
+            Cache::forever('agency_drawer_version_company_'.$company_id, ((int) Cache::get('agency_drawer_version_company_'.$company_id, 1)) + 1);
 
             return Reply::dataOnly(['status' => 'success', 'terms' => $company->agency_offer_terms]);
         } elseif ($request->pageterms == 'agency_commercial_terms') {
@@ -681,6 +684,7 @@ class ServiceCompanyAccountSettingsController extends ServiceCompanyBaseControll
 
             app(AgencyCommercialTermsService::class)->upsertForCompany($company_id, $agencyTermsPayload);
             $this->accountSettingsService->flushAccountCache($company_id);
+            Cache::forever("agency_drawer_version_company_{$company_id}", ((int) Cache::get("agency_drawer_version_company_{$company_id}", 1)) + 1);
 
             return Reply::dataOnly(['status' => 'success', 'message' => 'Agency commercial terms saved successfully.']);
         }
@@ -1920,7 +1924,7 @@ class ServiceCompanyAccountSettingsController extends ServiceCompanyBaseControll
                 $parsedHost = parse_url($request->website, PHP_URL_HOST) ?? $request->website;
                 $cleanDomain = preg_replace('/^www\./i', '', strtolower(trim($parsedHost)));
                 $existing = DB::table('companies')->where('domain_key', $cleanDomain)->where('id', '!=', $company_id)->exists();
-                if (!$existing) {
+                if (! $existing) {
                     $company->domain_key = $cleanDomain;
                 }
             }
@@ -1929,8 +1933,8 @@ class ServiceCompanyAccountSettingsController extends ServiceCompanyBaseControll
         if ($request->hasFile('logo')) {
             try {
                 $file = $request->file('logo');
-                $filename = uniqid('JERO_logo_') . '.' . $file->getClientOriginalExtension();
-                $fileUrl = $file->storeAs('Companies/' . $company_id . '/Images', $filename, 'r2');
+                $filename = uniqid('JERO_logo_').'.'.$file->getClientOriginalExtension();
+                $fileUrl = $file->storeAs('Companies/'.$company_id.'/Images', $filename, 'r2');
                 $company->logo = $fileUrl;
             } catch (\Throwable $r2Ex) {
                 $company->logo = \App\Helper\Files::upload($request->logo, 'company-logo');
@@ -1943,7 +1947,7 @@ class ServiceCompanyAccountSettingsController extends ServiceCompanyBaseControll
         try {
             app(\App\Services\ElasticCaompanyIndex::class)->companyIndexElastic($company_id);
         } catch (\Throwable $esEx) {
-            \Log::warning('ES sync in onboardingSave deferred: ' . $esEx->getMessage());
+            \Log::warning('ES sync in onboardingSave deferred: '.$esEx->getMessage());
         }
 
         \App\Services\CurrencyService::invalidateTenantCache($company_id);
@@ -1951,7 +1955,7 @@ class ServiceCompanyAccountSettingsController extends ServiceCompanyBaseControll
         return response()->json([
             'status' => 'success',
             'message' => 'Workspace profile completed successfully!',
-            'redirect_url' => url('service_company/dashboard')
+            'redirect_url' => url('service_company/dashboard'),
         ]);
     }
 }

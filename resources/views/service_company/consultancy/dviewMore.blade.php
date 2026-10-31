@@ -2875,7 +2875,7 @@
 
                     <!-- Commercial Terms Cards (Dynamic Business Logic: Hidden completely if neither model active) -->
                     @if(!empty($hasActiveCommercials))
-                        @if(!empty($hasContractStaffing))
+                        @if(!empty($hasContractStaffing) && !empty($contractCommercial))
                             <!-- Sub-Card: Contract Staffing – Commercial Terms -->
                             <div class="cd-master-subcard" style="border-top: 3px solid #2563eb;">
                                 <div class="cd-subcard-header">
@@ -2888,73 +2888,106 @@
                                     </span>
                                 </div>
                                 <div class="cd-vertical-info-list">
-                                    <!-- 1. Billing Terms -->
+                                    <!-- 1. Commercial / Billing Rate -->
+                                    @if(!empty($contractCommercial->commercial_rate))
                                     <div class="cd-vinfo-row">
                                         <div class="cd-vinfo-key">
                                             <div class="cd-vinfo-icon sky"><i class="fas fa-file-invoice-dollar"></i></div>
                                             <span class="cd-vinfo-label">Commercial / Billing</span>
                                         </div>
                                         <div class="cd-vinfo-val">
-                                            @php
-                                                $cBillFreq = !empty($contractCommercial->billing_frequency) ? ucwords(str_replace('_', ' ', $contractCommercial->billing_frequency)) : 'Monthly Invoicing';
-                                                $cBillTrig = !empty($contractCommercial->billing_trigger) ? ucwords(str_replace('_', ' ', $contractCommercial->billing_trigger)) : 'Timesheet Approval';
-                                            @endphp
-                                            <span class="fw-semibold text-gray-800">{{ $cBillFreq }} ({{ $cBillTrig }})</span>
+                                            <span class="fw-semibold text-gray-800">{{ $contractCommercial->commercial_rate }}</span>
                                         </div>
                                     </div>
+                                    @endif
 
-                                    <!-- 2. Replacement Terms -->
-                                    @if(!empty($contractCommercial->replacement_period_days) || !empty($contractCommercial->replacement_type))
+                                    <!-- 2. Billing Cycle -->
+                                    @if(!empty($contractCommercial->billing_cycle))
+                                    <div class="cd-vinfo-row">
+                                        <div class="cd-vinfo-key">
+                                            <div class="cd-vinfo-icon blue"><i class="fas fa-calendar-check"></i></div>
+                                            <span class="cd-vinfo-label">Billing Cycle</span>
+                                        </div>
+                                        <div class="cd-vinfo-val">
+                                            <span class="fw-semibold text-gray-800">{{ $contractCommercial->billing_cycle }}</span>
+                                        </div>
+                                    </div>
+                                    @endif
+
+                                    <!-- 3. Minimum Contract Duration -->
+                                    @if(!empty($contractCommercial->min_duration))
+                                    <div class="cd-vinfo-row">
+                                        <div class="cd-vinfo-key">
+                                            <div class="cd-vinfo-icon purple"><i class="fas fa-clock"></i></div>
+                                            <span class="cd-vinfo-label">Contract Duration</span>
+                                        </div>
+                                        <div class="cd-vinfo-val">
+                                            <span class="fw-semibold text-gray-800">{{ $contractCommercial->min_duration }}</span>
+                                        </div>
+                                    </div>
+                                    @endif
+
+                                    <!-- 4. Replacement Terms -->
+                                    @if(!empty($contractCommercial->replacement_terms))
                                     <div class="cd-vinfo-row">
                                         <div class="cd-vinfo-key">
                                             <div class="cd-vinfo-icon emerald"><i class="fas fa-shield-halved"></i></div>
                                             <span class="cd-vinfo-label">Replacement Terms</span>
                                         </div>
                                         <div class="cd-vinfo-val">
-                                            @php
-                                                $cReplPeriod = !empty($contractCommercial->replacement_period_days) ? $contractCommercial->replacement_period_days . ' Days' : '';
-                                                $cReplType = !empty($contractCommercial->replacement_type) ? ucwords(str_replace('_', ' ', $contractCommercial->replacement_type)) : 'Free Replacement';
-                                            @endphp
-                                            <span class="fw-semibold text-gray-800">{{ trim($cReplPeriod . ' ' . $cReplType) }}</span>
+                                            <span class="fw-semibold text-gray-800">{{ $contractCommercial->replacement_terms }}</span>
                                         </div>
                                     </div>
                                     @endif
 
-                                    <!-- 3. Payment Terms -->
-                                    @if(!empty($contractCommercial->payment_terms_days))
+                                    <!-- 5. Payment Terms -->
+                                    @if(!empty($contractCommercial->payment_terms))
                                     <div class="cd-vinfo-row">
                                         <div class="cd-vinfo-key">
                                             <div class="cd-vinfo-icon amber"><i class="fas fa-credit-card"></i></div>
                                             <span class="cd-vinfo-label">Payment Terms</span>
                                         </div>
                                         <div class="cd-vinfo-val">
-                                            <span class="fw-semibold text-gray-800">Net {{ $contractCommercial->payment_terms_days }} Days</span>
+                                            <span class="fw-semibold text-gray-800">{{ $contractCommercial->payment_terms }}</span>
                                         </div>
                                     </div>
                                     @endif
 
-                                    <!-- 4. Turnaround SLA -->
+                                    <!-- 6. Notice / Termination -->
+                                    @if(!empty($contractCommercial->early_termination))
                                     <div class="cd-vinfo-row">
                                         <div class="cd-vinfo-key">
-                                            <div class="cd-vinfo-icon orange"><i class="fas fa-bolt"></i></div>
-                                            <span class="cd-vinfo-label">Submission SLA</span>
+                                            <div class="cd-vinfo-icon red"><i class="fas fa-hand-paper"></i></div>
+                                            <span class="cd-vinfo-label">Notice / Termination</span>
                                         </div>
                                         <div class="cd-vinfo-val">
-                                            <span class="badge bg-light-info text-info fw-semibold" style="font-size:10px; padding:3px 7px;">
-                                                <i class="fas fa-clock me-1"></i>48-Hour Profile Turnaround
-                                            </span>
+                                            <span class="fw-semibold text-gray-800">{{ $contractCommercial->early_termination }}</span>
                                         </div>
                                     </div>
+                                    @endif
 
-                                    <!-- 5. Contract Specific Terms -->
-                                    @if(!empty($contractCommercial->terms_text))
+                                    <!-- 7. Overtime Policy -->
+                                    @if(!empty($contractCommercial->overtime_policy))
+                                    <div class="cd-vinfo-row">
+                                        <div class="cd-vinfo-key">
+                                            <div class="cd-vinfo-icon orange"><i class="fas fa-business-time"></i></div>
+                                            <span class="cd-vinfo-label">Overtime Policy</span>
+                                        </div>
+                                        <div class="cd-vinfo-val">
+                                            <span class="fw-semibold text-gray-800">{{ $contractCommercial->overtime_policy }}</span>
+                                        </div>
+                                    </div>
+                                    @endif
+
+                                    <!-- 8. Contract Conditions / Custom Summary -->
+                                    @if(!empty($contractCommercial->custom_terms))
                                     <div class="cd-vinfo-row" style="flex-direction: column; align-items: flex-start; gap: 4px;">
                                         <div class="cd-vinfo-key" style="flex: auto;">
                                             <div class="cd-vinfo-icon purple"><i class="fas fa-file-lines"></i></div>
                                             <span class="cd-vinfo-label">Contract Conditions</span>
                                         </div>
                                         <div style="font-size: 11px; color: #475569; line-height: 1.4; padding-left: 34px;">
-                                            {!! nl2br(e($contractCommercial->terms_text)) !!}
+                                            {!! nl2br(e($contractCommercial->custom_terms)) !!}
                                         </div>
                                     </div>
                                     @endif
@@ -2962,7 +2995,7 @@
                             </div>
                         @endif
 
-                        @if(!empty($hasPermanentStaffing))
+                        @if(!empty($hasPermanentStaffing) && !empty($permanentCommercial))
                             <!-- Sub-Card: Permanent Staffing – Commercial Terms -->
                             <div class="cd-master-subcard" style="border-top: 3px solid #10b981;">
                                 <div class="cd-subcard-header">
@@ -2975,85 +3008,67 @@
                                     </span>
                                 </div>
                                 <div class="cd-vertical-info-list">
-                                    <!-- 1. Hiring Fee / Commercial Terms -->
+                                    <!-- 1. Placement Fee -->
+                                    @if(!empty($permanentCommercial->placement_fee))
                                     <div class="cd-vinfo-row">
                                         <div class="cd-vinfo-key">
                                             <div class="cd-vinfo-icon amber"><i class="fas fa-percent"></i></div>
                                             <span class="cd-vinfo-label">Placement Fee</span>
                                         </div>
                                         <div class="cd-vinfo-val">
-                                            <span class="badge bg-light-warning text-warning fw-bold fs-8" style="padding:4px 8px; border-radius:6px;">{{ $placement_fee ?? '8.33% of Annual CTC' }}</span>
+                                            <span class="badge bg-light-warning text-warning fw-bold fs-8" style="padding:4px 8px; border-radius:6px;">{{ $permanentCommercial->placement_fee }}</span>
                                         </div>
                                     </div>
+                                    @endif
 
                                     <!-- 2. Guarantee Period -->
-                                    @if(!empty($permanentCommercial->replacement_period_days))
+                                    @if(!empty($permanentCommercial->guarantee_period))
                                     <div class="cd-vinfo-row">
                                         <div class="cd-vinfo-key">
                                             <div class="cd-vinfo-icon emerald"><i class="fas fa-shield-halved"></i></div>
                                             <span class="cd-vinfo-label">Guarantee Period</span>
                                         </div>
                                         <div class="cd-vinfo-val">
-                                            <span class="fw-semibold text-gray-800">{{ $permanentCommercial->replacement_period_days }} Days Free Replacement</span>
-                                        </div>
-                                    </div>
-                                    @else
-                                    <div class="cd-vinfo-row">
-                                        <div class="cd-vinfo-key">
-                                            <div class="cd-vinfo-icon emerald"><i class="fas fa-shield-halved"></i></div>
-                                            <span class="cd-vinfo-label">Guarantee Period</span>
-                                        </div>
-                                        <div class="cd-vinfo-val">
-                                            <span class="fw-semibold text-gray-800">90 Days Free Replacement</span>
+                                            <span class="fw-semibold text-gray-800">{{ $permanentCommercial->guarantee_period }}</span>
                                         </div>
                                     </div>
                                     @endif
 
-                                    <!-- 3. Payment Terms -->
-                                    @if(!empty($permanentCommercial->payment_terms_days))
+                                    <!-- 3. Payment Terms / Invoice Terms -->
+                                    @if(!empty($permanentCommercial->payment_terms))
                                     <div class="cd-vinfo-row">
                                         <div class="cd-vinfo-key">
                                             <div class="cd-vinfo-icon sky"><i class="fas fa-file-invoice-dollar"></i></div>
                                             <span class="cd-vinfo-label">Invoice Terms</span>
                                         </div>
                                         <div class="cd-vinfo-val">
-                                            <span class="fw-semibold text-gray-800">Net {{ $permanentCommercial->payment_terms_days }} Days from Joining</span>
-                                        </div>
-                                    </div>
-                                    @else
-                                    <div class="cd-vinfo-row">
-                                        <div class="cd-vinfo-key">
-                                            <div class="cd-vinfo-icon sky"><i class="fas fa-file-invoice-dollar"></i></div>
-                                            <span class="cd-vinfo-label">Invoice Terms</span>
-                                        </div>
-                                        <div class="cd-vinfo-val">
-                                            <span class="fw-semibold text-gray-800">Net 30 Days from Joining</span>
+                                            <span class="fw-semibold text-gray-800">{{ $permanentCommercial->payment_terms }}</span>
                                         </div>
                                     </div>
                                     @endif
 
-                                    <!-- 4. Turnaround SLA -->
+                                    <!-- 4. Billing Trigger -->
+                                    @if(!empty($permanentCommercial->billing_trigger))
                                     <div class="cd-vinfo-row">
                                         <div class="cd-vinfo-key">
                                             <div class="cd-vinfo-icon orange"><i class="fas fa-bolt"></i></div>
-                                            <span class="cd-vinfo-label">Submission SLA</span>
+                                            <span class="cd-vinfo-label">Billing Trigger</span>
                                         </div>
                                         <div class="cd-vinfo-val">
-                                            <span class="badge bg-light-info text-info fw-semibold" style="font-size:10px; padding:3px 7px;">
-                                                <i class="fas fa-clock me-1"></i>48-Hour Profile Turnaround
-                                            </span>
+                                            <span class="fw-semibold text-gray-800">{{ $permanentCommercial->billing_trigger }}</span>
                                         </div>
                                     </div>
+                                    @endif
 
-                                    <!-- 5. Permanent Specific Terms -->
-                                    @if(!empty($permanentCommercial->terms_text))
+                                    <!-- 5. Permanent Specific Conditions -->
+                                    @if(!empty($permanentCommercial->custom_terms))
                                     <div class="cd-vinfo-row" style="flex-direction: column; align-items: flex-start; gap: 4px;">
                                         <div class="cd-vinfo-key" style="flex: auto;">
                                             <div class="cd-vinfo-icon purple"><i class="fas fa-file-lines"></i></div>
                                             <span class="cd-vinfo-label">Permanent Conditions</span>
                                         </div>
                                         <div style="font-size: 11px; color: #475569; line-height: 1.4; padding-left: 34px;">
-                                            {!! nl2br(e($permanentCommercial->terms_text)) !!}
+                                            {!! nl2br(e($permanentCommercial->custom_terms)) !!}
                                         </div>
                                     </div>
                                     @endif
