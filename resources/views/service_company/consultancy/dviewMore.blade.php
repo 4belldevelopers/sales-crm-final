@@ -1199,6 +1199,257 @@
   border-color: #cbd5e1 !important;
 }
 
+/* ── 7b. Overview Tab Enterprise Sub-Cards (Contacts, Locations, Commercials) ── */
+.cd-contact-list-group {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 10px !important;
+  width: 100% !important;
+}
+.cd-contact-subcard {
+  background: #ffffff !important;
+  border: 1px solid #e2e8f0 !important;
+  border-left: 3.5px solid #6366f1 !important;
+  border-radius: 8px !important;
+  padding: 10px 14px !important;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03) !important;
+  transition: all 0.2s ease !important;
+}
+.cd-contact-subcard:hover {
+  border-color: #cbd5e1 !important;
+  box-shadow: 0 3px 6px rgba(15, 23, 42, 0.05) !important;
+}
+.cd-contact-subcard-top {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 10px !important;
+}
+.cd-contact-subcard-person {
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  min-width: 0 !important;
+  flex: 1 1 auto !important;
+}
+.cd-contact-subcard-avatar {
+  width: 34px !important;
+  height: 34px !important;
+  border-radius: 50% !important;
+  background: #eef2ff !important;
+  color: #4f46e5 !important;
+  font-size: 12px !important;
+  font-weight: 700 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  flex-shrink: 0 !important;
+  border: 1px solid #c7d2fe !important;
+}
+.cd-contact-subcard-name {
+  font-size: 13px !important;
+  font-weight: 700 !important;
+  color: #0f172a !important;
+  line-height: 1.25 !important;
+  word-break: break-word !important;
+}
+.cd-contact-subcard-role {
+  font-size: 11px !important;
+  font-weight: 500 !important;
+  color: #64748b !important;
+  line-height: 1.25 !important;
+  margin-top: 1px !important;
+}
+.cd-contact-subcard-linkedin {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 26px !important;
+  height: 26px !important;
+  border-radius: 6px !important;
+  background: #0a66c2 !important;
+  color: #ffffff !important;
+  font-size: 12px !important;
+  flex-shrink: 0 !important;
+  text-decoration: none !important;
+  transition: opacity 0.15s ease !important;
+}
+.cd-contact-subcard-linkedin:hover {
+  opacity: 0.9 !important;
+  color: #ffffff !important;
+}
+.cd-contact-subcard-phone-line {
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  font-size: 11.5px !important;
+  font-weight: 600 !important;
+  color: #0f172a !important;
+  margin-top: 8px !important;
+  padding-top: 8px !important;
+  border-top: 1px dashed #f1f5f9 !important;
+}
+
+/* Enterprise Location Sub-Cards */
+.cd-loc-group {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 10px !important;
+  width: 100% !important;
+}
+.cd-loc-card {
+  background: #ffffff !important;
+  border: 1px solid #e2e8f0 !important;
+  border-left: 3.5px solid #94a3b8 !important;
+  border-radius: 8px !important;
+  padding: 10px 14px !important;
+  text-align: left !important;
+  width: 100% !important;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03) !important;
+  transition: all 0.2s ease !important;
+  box-sizing: border-box !important;
+}
+.cd-loc-card:hover {
+  border-color: #cbd5e1 !important;
+  box-shadow: 0 3px 6px rgba(15, 23, 42, 0.05) !important;
+}
+.cd-loc-card.is-primary,
+.cd-loc-card.hq {
+  background: #ffffff !important;
+  border-color: #dbeafe !important;
+  border-left: 3.5px solid #2563eb !important;
+}
+.cd-loc-card.is-primary:hover,
+.cd-loc-card.hq:hover {
+  border-color: #bfdbfe !important;
+  box-shadow: 0 3px 8px rgba(37, 99, 235, 0.08) !important;
+}
+.cd-loc-header {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 8px !important;
+  margin-bottom: 6px !important;
+}
+.cd-loc-header-left {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  flex-shrink: 0 !important;
+}
+.cd-loc-badge {
+  display: inline-flex !important;
+  align-items: center !important;
+  font-size: 10px !important;
+  font-weight: 700 !important;
+  line-height: 1 !important;
+  white-space: nowrap !important;
+  flex-shrink: 0 !important;
+  padding: 3px 7px !important;
+  border-radius: 4px !important;
+  letter-spacing: 0.2px !important;
+  text-transform: uppercase !important;
+}
+.cd-loc-badge.loc-primary {
+  background: #eff6ff !important;
+  color: #1d4ed8 !important;
+  border: 1px solid #bfdbfe !important;
+}
+.cd-loc-badge.loc-secondary {
+  background: #f1f5f9 !important;
+  color: #334155 !important;
+  border: 1px solid #cbd5e1 !important;
+}
+.cd-loc-hq-tag {
+  display: inline-flex !important;
+  align-items: center !important;
+  font-size: 9px !important;
+  font-weight: 800 !important;
+  line-height: 1 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.4px !important;
+  background: #2563eb !important;
+  color: #ffffff !important;
+  padding: 2.5px 6px !important;
+  border-radius: 4px !important;
+  white-space: nowrap !important;
+  flex-shrink: 0 !important;
+}
+.cd-loc-country-pill {
+  display: inline-flex !important;
+  align-items: center !important;
+  font-size: 10.5px !important;
+  font-weight: 600 !important;
+  line-height: 1 !important;
+  color: #475569 !important;
+  background: #f8fafc !important;
+  border: 1px solid #e2e8f0 !important;
+  padding: 3px 9px !important;
+  border-radius: 12px !important;
+  white-space: nowrap !important;
+  flex-shrink: 0 !important;
+}
+.cd-loc-city-line {
+  display: flex !important;
+  align-items: center !important;
+  gap: 7px !important;
+  font-size: 12.5px !important;
+  line-height: 1.35 !important;
+  margin-bottom: 4px !important;
+  word-break: break-word !important;
+}
+.cd-loc-city-icon {
+  width: 14px !important;
+  height: 14px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-size: 11.5px !important;
+  line-height: 1 !important;
+  flex-shrink: 0 !important;
+}
+.cd-loc-city-name {
+  font-weight: 700 !important;
+  color: #0f172a !important;
+  font-size: 12.5px !important;
+  line-height: 1.35 !important;
+}
+.cd-loc-street-line {
+  display: flex !important;
+  align-items: flex-start !important;
+  gap: 5px !important;
+  font-size: 11.5px !important;
+  color: #64748b !important;
+  line-height: 1.4 !important;
+  word-break: break-word !important;
+  margin-bottom: 3px !important;
+  padding-left: 21px !important;
+}
+.cd-loc-meta-line {
+  display: flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  margin-top: 4px !important;
+  padding-left: 21px !important;
+}
+.cd-loc-meta-chip {
+  display: inline-flex !important;
+  align-items: center !important;
+  background: #f8fafc !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 4px !important;
+  padding: 2px 7px !important;
+  font-size: 10px !important;
+  font-weight: 500 !important;
+  color: #64748b !important;
+  line-height: 1.2 !important;
+}
+.cd-loc-meta-chip strong {
+  color: #0f172a !important;
+  font-weight: 700 !important;
+  margin-left: 3px !important;
+}
+
 /* ── 8. Master Contacts Tab Modern Card + Sub-Card System (Rule 20) ── */
 .cd-contact-toolbar-card {
   background: #ffffff;
@@ -2346,7 +2597,60 @@
                         </div>
                     </div>
 
-                    <!-- Sub-Card 2: Recent Touchpoint Activity Preview -->
+                    <!-- Sub-Card 2: Dedicated Agency Contacts (Sub-Card Layout) -->
+                    <div class="cd-master-subcard">
+                        <div class="cd-subcard-header">
+                            <div class="cd-subcard-header-left">
+                                <div class="cd-subcard-header-icon purple"><i class="fas fa-address-book"></i></div>
+                                <h4 class="cd-subcard-heading">Contacts</h4>
+                            </div>
+                            @if(isset($agencyContacts) && count($agencyContacts) > 0)
+                                <span class="badge bg-light-primary text-primary fw-semibold" style="font-size:10.5px; padding:3px 8px; border-radius:12px;">
+                                    <i class="fas fa-users me-1"></i>{{ count($agencyContacts) }} {{ count($agencyContacts) === 1 ? 'Contact' : 'Contacts' }}
+                                </span>
+                            @endif
+                        </div>
+                        <div class="cd-contact-list-group">
+                            @if(isset($agencyContacts) && count($agencyContacts) > 0)
+                                @foreach($agencyContacts as $contact)
+                                    <div class="cd-contact-subcard">
+                                        <div class="cd-contact-subcard-top">
+                                            <div class="cd-contact-subcard-person">
+                                                <div class="cd-contact-subcard-avatar">{{ $contact->initials ?? 'AG' }}</div>
+                                                <div style="min-width: 0; flex: 1 1 auto;">
+                                                    <div class="cd-contact-subcard-name">{{ $contact->name }}</div>
+                                                    @if(!empty($contact->designation))
+                                                        <div class="cd-contact-subcard-role">{{ $contact->designation }}</div>
+                                                    @endif
+                                                </div>
+                                            </div>
+                                            @if(!empty($contact->linkedin))
+                                                @php
+                                                    $linkedInHref = str_starts_with($contact->linkedin, 'http') ? $contact->linkedin : 'https://'.$contact->linkedin;
+                                                @endphp
+                                                <a href="{{ $linkedInHref }}" target="_blank" class="cd-contact-subcard-linkedin" title="View LinkedIn Profile">
+                                                    <i class="fab fa-linkedin-in"></i>
+                                                </a>
+                                            @endif
+                                        </div>
+                                        @if(!empty($contact->phone))
+                                            <div class="cd-contact-subcard-phone-line">
+                                                <i class="fas fa-phone text-success" style="font-size: 11px;"></i>
+                                                <span class="text-gray-800 fw-semibold fs-8">{{ $contact->phone }}</span>
+                                                <button type="button" class="cd-copy-btn ms-auto" title="Copy Phone" onclick="navigator.clipboard.writeText('{{ $contact->phone }}'); $(this).find('i').removeClass('fa-copy').addClass('fa-check text-success'); setTimeout(() => $(this).find('i').removeClass('fa-check text-success').addClass('fa-copy'), 1500);">
+                                                    <i class="far fa-copy"></i>
+                                                </button>
+                                            </div>
+                                        @endif
+                                    </div>
+                                @endforeach
+                            @else
+                                <div class="text-muted fs-8 py-2 text-center">No additional contact persons registered.</div>
+                            @endif
+                        </div>
+                    </div>
+
+                    <!-- Sub-Card 3: Recent Touchpoint Activity Preview -->
                     <div class="cd-master-subcard">
                         <div class="cd-subcard-header">
                             <div class="cd-subcard-header-left">
@@ -2394,7 +2698,7 @@
 
                 <!-- Right Column -->
                 <div>
-                    <!-- Sub-Card 3: Agency Specifications & Metadata (Enterprise Vertical Info Layout) -->
+                    <!-- Sub-Card 4: Agency Specifications & Metadata (Enterprise Vertical Info Layout) -->
                     <div class="cd-master-subcard">
                         <div class="cd-subcard-header">
                             <div class="cd-subcard-header-left">
@@ -2417,24 +2721,40 @@
                                 </div>
                             </div>
 
-                            <!-- 2. Website -->
+                            <!-- 2. Website (Hidden completely if empty) -->
+                            @if (!empty($webClean) && $webClean !== '-')
                             <div class="cd-vinfo-row">
                                 <div class="cd-vinfo-key">
                                     <div class="cd-vinfo-icon blue"><i class="fas fa-globe"></i></div>
                                     <span class="cd-vinfo-label">Website</span>
                                 </div>
                                 <div class="cd-vinfo-val">
-                                    @if (!empty($webClean))
-                                        <a href="{{ str_starts_with($webClean, 'http') ? $webClean : 'https://'.$webClean }}" target="_blank" class="cd-vinfo-link">
-                                            {{ $webClean }} <i class="fas fa-arrow-up-right-from-square" style="font-size:9px;"></i>
-                                        </a>
-                                    @else
-                                        <span class="text-muted">—</span>
-                                    @endif
+                                    <a href="{{ str_starts_with($webClean, 'http') ? $webClean : 'https://'.$webClean }}" target="_blank" class="cd-vinfo-link">
+                                        {{ $webClean }} <i class="fas fa-arrow-up-right-from-square" style="font-size:9px;"></i>
+                                    </a>
                                 </div>
                             </div>
+                            @endif
 
-                            <!-- 3. Industry Sector -->
+                            <!-- 3. Tax ID / GSTN (Dynamic Visibility: Hidden completely if not available) -->
+                            @if(!empty($agency_tax_id))
+                            <div class="cd-vinfo-row">
+                                <div class="cd-vinfo-key">
+                                    <div class="cd-vinfo-icon amber"><i class="fas fa-receipt"></i></div>
+                                    <span class="cd-vinfo-label">Tax ID / GSTN</span>
+                                </div>
+                                <div class="cd-vinfo-val">
+                                    <div class="cd-tax-wrap">
+                                        <span class="cd-tax-code" style="font-family: monospace; font-weight: 700; color: #1e293b; background: #f8fafc; border: 1px solid #e2e8f0; padding: 2px 7px; border-radius: 4px; font-size: 11px;">{{ $agency_tax_id }}</span>
+                                        <button type="button" class="cd-copy-btn" title="Copy Tax ID" onclick="navigator.clipboard.writeText('{{ $agency_tax_id }}'); $(this).find('i').removeClass('fa-copy').addClass('fa-check text-success'); setTimeout(() => $(this).find('i').removeClass('fa-check text-success').addClass('fa-copy'), 1500);">
+                                            <i class="far fa-copy"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            @endif
+
+                            <!-- 4. Industry Sector -->
                             <div class="cd-vinfo-row">
                                 <div class="cd-vinfo-key">
                                     <div class="cd-vinfo-icon purple"><i class="fas fa-industry"></i></div>
@@ -2445,7 +2765,7 @@
                                 </div>
                             </div>
 
-                            <!-- 4. Company Type -->
+                            <!-- 5. Company Type -->
                             <div class="cd-vinfo-row">
                                 <div class="cd-vinfo-key">
                                     <div class="cd-vinfo-icon sky"><i class="fas fa-landmark"></i></div>
@@ -2456,7 +2776,7 @@
                                 </div>
                             </div>
 
-                            <!-- 5. Workforce Scale -->
+                            <!-- 6. Workforce Scale -->
                             <div class="cd-vinfo-row">
                                 <div class="cd-vinfo-key">
                                     <div class="cd-vinfo-icon emerald"><i class="fas fa-users"></i></div>
@@ -2467,7 +2787,7 @@
                                 </div>
                             </div>
 
-                            <!-- 6. Founded Year & Vintage -->
+                            <!-- 7. Founded Year & Vintage -->
                             <div class="cd-vinfo-row">
                                 <div class="cd-vinfo-key">
                                     <div class="cd-vinfo-icon orange"><i class="fas fa-calendar-alt"></i></div>
@@ -2487,133 +2807,260 @@
                                     </div>
                                 </div>
                             </div>
-
-                            <!-- 7. Corporate Email -->
-                            <div class="cd-vinfo-row">
-                                <div class="cd-vinfo-key">
-                                    <div class="cd-vinfo-icon cyan"><i class="fas fa-envelope"></i></div>
-                                    <span class="cd-vinfo-label">Agency Email</span>
-                                </div>
-                                <div class="cd-vinfo-val">
-                                    <div class="cd-tax-wrap">
-                                        <a href="mailto:{{ $agency_email ?? 'partners@agency.com' }}" class="cd-vinfo-link">{{ $agency_email ?? 'partners@agency.com' }}</a>
-                                        <button type="button" class="cd-copy-btn" title="Copy Email" onclick="navigator.clipboard.writeText('{{ $agency_email ?? 'partners@agency.com' }}'); $(this).find('i').removeClass('fa-copy').addClass('fa-check text-success'); setTimeout(() => $(this).find('i').removeClass('fa-check text-success').addClass('fa-copy'), 1500);">
-                                            <i class="far fa-copy"></i>
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- 8. Corporate Phone -->
-                            <div class="cd-vinfo-row">
-                                <div class="cd-vinfo-key">
-                                    <div class="cd-vinfo-icon green"><i class="fas fa-phone"></i></div>
-                                    <span class="cd-vinfo-label">Contact Phone</span>
-                                </div>
-                                <div class="cd-vinfo-val">
-                                    <div class="cd-tax-wrap">
-                                        <span class="fw-semibold text-gray-800">{{ $agency_phone ?? '+91 98765 43210' }}</span>
-                                        <button type="button" class="cd-copy-btn" title="Copy Phone" onclick="navigator.clipboard.writeText('{{ $agency_phone ?? '+91 98765 43210' }}'); $(this).find('i').removeClass('fa-copy').addClass('fa-check text-success'); setTimeout(() => $(this).find('i').removeClass('fa-check text-success').addClass('fa-copy'), 1500);">
-                                            <i class="far fa-copy"></i>
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- 9. Primary Operating Hub -->
-                            <div class="cd-vinfo-row">
-                                <div class="cd-vinfo-key">
-                                    <div class="cd-vinfo-icon red"><i class="fas fa-location-dot"></i></div>
-                                    <span class="cd-vinfo-label">Operating Hub</span>
-                                </div>
-                                <div class="cd-vinfo-val">
-                                    <span class="fw-semibold text-gray-800">{{ ($cityName ?: '') . ($cityName && $countryName ? ', ' : '') . ($countryName ?: 'Ballia, India') }}</span>
-                                </div>
-                            </div>
                         </div>
                     </div>
 
-                    <!-- Sub-Card 4: Commercial Agreement & SLAs -->
+                    <!-- Sub-Card 5: Dedicated Locations Card (Multi-Location Sub-Card Engine) -->
                     <div class="cd-master-subcard">
                         <div class="cd-subcard-header">
                             <div class="cd-subcard-header-left">
-                                <div class="cd-subcard-header-icon emerald"><i class="fas fa-file-contract"></i></div>
-                                <h4 class="cd-subcard-heading">Commercial Agreement &amp; SLAs</h4>
+                                <div class="cd-subcard-header-icon red"><i class="fas fa-location-dot"></i></div>
+                                <h4 class="cd-subcard-heading">Locations</h4>
                             </div>
-                            <span class="badge bg-light-success text-success fw-bold" style="font-size:10px; padding:3px 7px;">
-                                <i class="fas fa-file-signature me-1"></i>Active &amp; Signed
-                            </span>
+                            @if(isset($agencyLocations) && count($agencyLocations) > 0)
+                                <span class="badge bg-light-primary text-primary fw-semibold" style="font-size:10.5px; padding:3px 8px; border-radius:12px;">
+                                    <i class="fas fa-building me-1"></i>{{ count($agencyLocations) > 1 ? count($agencyLocations) . ' Locations' : (count($agencyLocations) === 1 ? '1 Location' : 'Headquarters') }}
+                                </span>
+                            @endif
                         </div>
-                        <div class="cd-vertical-info-list">
-                            <!-- 1. Engagement Model -->
-                            <div class="cd-vinfo-row">
-                                <div class="cd-vinfo-key">
-                                    <div class="cd-vinfo-icon blue"><i class="fas fa-handshake"></i></div>
-                                    <span class="cd-vinfo-label">Engagement Model</span>
-                                </div>
-                                <div class="cd-vinfo-val">
-                                    <span class="fw-semibold text-gray-800">Contingency Staffing</span>
-                                </div>
-                            </div>
-
-                            <!-- 2. Placement Success Fee -->
-                            <div class="cd-vinfo-row">
-                                <div class="cd-vinfo-key">
-                                    <div class="cd-vinfo-icon amber"><i class="fas fa-percent"></i></div>
-                                    <span class="cd-vinfo-label">Placement Fee</span>
-                                </div>
-                                <div class="cd-vinfo-val">
-                                    <span class="badge bg-light-warning text-warning fw-bold fs-8" style="padding:4px 8px; border-radius:6px;">{{ $placement_fee ?? '8.33% of Annual CTC' }}</span>
-                                </div>
-                            </div>
-
-                            <!-- 3. Guarantee Period -->
-                            <div class="cd-vinfo-row">
-                                <div class="cd-vinfo-key">
-                                    <div class="cd-vinfo-icon emerald"><i class="fas fa-shield-halved"></i></div>
-                                    <span class="cd-vinfo-label">Guarantee Period</span>
-                                </div>
-                                <div class="cd-vinfo-val">
-                                    <span class="fw-semibold text-gray-800">90 Days Free Replacement</span>
-                                </div>
-                            </div>
-
-                            <!-- 4. Payment Terms -->
-                            <div class="cd-vinfo-row">
-                                <div class="cd-vinfo-key">
-                                    <div class="cd-vinfo-icon sky"><i class="fas fa-file-invoice-dollar"></i></div>
-                                    <span class="cd-vinfo-label">Invoice Terms</span>
-                                </div>
-                                <div class="cd-vinfo-val">
-                                    <span class="fw-semibold text-gray-800">Net 30 Days from Joining</span>
-                                </div>
-                            </div>
-
-                            <!-- 5. Assigned Vendor Lead -->
-                            <div class="cd-vinfo-row">
-                                <div class="cd-vinfo-key">
-                                    <div class="cd-vinfo-icon purple"><i class="fas fa-user-tie"></i></div>
-                                    <span class="cd-vinfo-label">Vendor Lead</span>
-                                </div>
-                                <div class="cd-vinfo-val">
-                                    <span class="text-primary fw-bold">{{ auth()->user()->name ?? 'Talent Operations' }}</span>
-                                </div>
-                            </div>
-
-                            <!-- 6. SLA Turnaround Guarantee -->
-                            <div class="cd-vinfo-row">
-                                <div class="cd-vinfo-key">
-                                    <div class="cd-vinfo-icon orange"><i class="fas fa-bolt"></i></div>
-                                    <span class="cd-vinfo-label">Submission SLA</span>
-                                </div>
-                                <div class="cd-vinfo-val">
-                                    <span class="badge bg-light-info text-info fw-semibold" style="font-size:10px; padding:3px 7px;">
-                                        <i class="fas fa-clock me-1"></i>48-Hour Profile Turnaround
-                                    </span>
-                                </div>
-                            </div>
+                        <div class="cd-loc-group">
+                            @if(isset($agencyLocations) && count($agencyLocations) > 0)
+                                @foreach($agencyLocations as $idx => $loc)
+                                    @php
+                                        $isHq = ($idx === 0);
+                                        $cityStateParts = array_filter([$loc->city ? ucwords(trim($loc->city)) : '', $loc->state ? ucwords(trim($loc->state)) : '']);
+                                        $cityStateText = implode(', ', $cityStateParts);
+                                    @endphp
+                                    <div class="cd-loc-card {{ $isHq ? 'is-primary hq' : '' }}">
+                                        <div class="cd-loc-header">
+                                            <div class="cd-loc-header-left">
+                                                <span class="cd-loc-badge {{ $isHq ? 'loc-primary' : 'loc-secondary' }}">
+                                                    <i class="fas fa-map-marker-alt me-1"></i>{{ $isHq ? 'Headquarters' : 'Location ' . ($idx + 1) }}
+                                                </span>
+                                                @if($isHq)
+                                                    <span class="cd-loc-hq-tag">HQ</span>
+                                                @endif
+                                            </div>
+                                            @if(!empty($loc->country))
+                                                <span class="cd-loc-country-pill">
+                                                    <i class="fas fa-globe-americas me-1 text-primary" style="font-size:9.5px;"></i>{{ ucwords(trim($loc->country)) }}
+                                                </span>
+                                            @endif
+                                        </div>
+                                        @if(!empty($cityStateText))
+                                            <div class="cd-loc-city-line">
+                                                <span class="cd-loc-city-icon"><i class="fas fa-location-dot text-danger"></i></span>
+                                                <span class="cd-loc-city-name">{{ $cityStateText }}</span>
+                                            </div>
+                                        @endif
+                                        @if(!empty($loc->address))
+                                            <div class="cd-loc-street-line">
+                                                <span>{{ $loc->address }}</span>
+                                            </div>
+                                        @endif
+                                        @if(!empty($loc->postcode))
+                                            <div class="cd-loc-meta-line">
+                                                <span class="cd-loc-meta-chip">
+                                                    <i class="fas fa-hashtag text-muted me-1" style="font-size: 9.5px;"></i>Postal Code: <strong>{{ $loc->postcode }}</strong>
+                                                </span>
+                                            </div>
+                                        @endif
+                                    </div>
+                                @endforeach
+                            @else
+                                <div class="text-muted fs-8 py-2 text-center">No location details specified.</div>
+                            @endif
                         </div>
                     </div>
+
+                    <!-- Commercial Terms Cards (Dynamic Business Logic: Hidden completely if neither model active) -->
+                    @if(!empty($hasActiveCommercials))
+                        @if(!empty($hasContractStaffing))
+                            <!-- Sub-Card: Contract Staffing – Commercial Terms -->
+                            <div class="cd-master-subcard" style="border-top: 3px solid #2563eb;">
+                                <div class="cd-subcard-header">
+                                    <div class="cd-subcard-header-left">
+                                        <div class="cd-subcard-header-icon blue"><i class="fas fa-file-contract"></i></div>
+                                        <h4 class="cd-subcard-heading">Contract Staffing – Commercial Terms</h4>
+                                    </div>
+                                    <span class="badge bg-light-primary text-primary fw-bold" style="font-size:10px; padding:3px 7px;">
+                                        <i class="fas fa-check-circle me-1"></i>Active Model
+                                    </span>
+                                </div>
+                                <div class="cd-vertical-info-list">
+                                    <!-- 1. Billing Terms -->
+                                    <div class="cd-vinfo-row">
+                                        <div class="cd-vinfo-key">
+                                            <div class="cd-vinfo-icon sky"><i class="fas fa-file-invoice-dollar"></i></div>
+                                            <span class="cd-vinfo-label">Commercial / Billing</span>
+                                        </div>
+                                        <div class="cd-vinfo-val">
+                                            @php
+                                                $cBillFreq = !empty($contractCommercial->billing_frequency) ? ucwords(str_replace('_', ' ', $contractCommercial->billing_frequency)) : 'Monthly Invoicing';
+                                                $cBillTrig = !empty($contractCommercial->billing_trigger) ? ucwords(str_replace('_', ' ', $contractCommercial->billing_trigger)) : 'Timesheet Approval';
+                                            @endphp
+                                            <span class="fw-semibold text-gray-800">{{ $cBillFreq }} ({{ $cBillTrig }})</span>
+                                        </div>
+                                    </div>
+
+                                    <!-- 2. Replacement Terms -->
+                                    @if(!empty($contractCommercial->replacement_period_days) || !empty($contractCommercial->replacement_type))
+                                    <div class="cd-vinfo-row">
+                                        <div class="cd-vinfo-key">
+                                            <div class="cd-vinfo-icon emerald"><i class="fas fa-shield-halved"></i></div>
+                                            <span class="cd-vinfo-label">Replacement Terms</span>
+                                        </div>
+                                        <div class="cd-vinfo-val">
+                                            @php
+                                                $cReplPeriod = !empty($contractCommercial->replacement_period_days) ? $contractCommercial->replacement_period_days . ' Days' : '';
+                                                $cReplType = !empty($contractCommercial->replacement_type) ? ucwords(str_replace('_', ' ', $contractCommercial->replacement_type)) : 'Free Replacement';
+                                            @endphp
+                                            <span class="fw-semibold text-gray-800">{{ trim($cReplPeriod . ' ' . $cReplType) }}</span>
+                                        </div>
+                                    </div>
+                                    @endif
+
+                                    <!-- 3. Payment Terms -->
+                                    @if(!empty($contractCommercial->payment_terms_days))
+                                    <div class="cd-vinfo-row">
+                                        <div class="cd-vinfo-key">
+                                            <div class="cd-vinfo-icon amber"><i class="fas fa-credit-card"></i></div>
+                                            <span class="cd-vinfo-label">Payment Terms</span>
+                                        </div>
+                                        <div class="cd-vinfo-val">
+                                            <span class="fw-semibold text-gray-800">Net {{ $contractCommercial->payment_terms_days }} Days</span>
+                                        </div>
+                                    </div>
+                                    @endif
+
+                                    <!-- 4. Turnaround SLA -->
+                                    <div class="cd-vinfo-row">
+                                        <div class="cd-vinfo-key">
+                                            <div class="cd-vinfo-icon orange"><i class="fas fa-bolt"></i></div>
+                                            <span class="cd-vinfo-label">Submission SLA</span>
+                                        </div>
+                                        <div class="cd-vinfo-val">
+                                            <span class="badge bg-light-info text-info fw-semibold" style="font-size:10px; padding:3px 7px;">
+                                                <i class="fas fa-clock me-1"></i>48-Hour Profile Turnaround
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                    <!-- 5. Contract Specific Terms -->
+                                    @if(!empty($contractCommercial->terms_text))
+                                    <div class="cd-vinfo-row" style="flex-direction: column; align-items: flex-start; gap: 4px;">
+                                        <div class="cd-vinfo-key" style="flex: auto;">
+                                            <div class="cd-vinfo-icon purple"><i class="fas fa-file-lines"></i></div>
+                                            <span class="cd-vinfo-label">Contract Conditions</span>
+                                        </div>
+                                        <div style="font-size: 11px; color: #475569; line-height: 1.4; padding-left: 34px;">
+                                            {!! nl2br(e($contractCommercial->terms_text)) !!}
+                                        </div>
+                                    </div>
+                                    @endif
+                                </div>
+                            </div>
+                        @endif
+
+                        @if(!empty($hasPermanentStaffing))
+                            <!-- Sub-Card: Permanent Staffing – Commercial Terms -->
+                            <div class="cd-master-subcard" style="border-top: 3px solid #10b981;">
+                                <div class="cd-subcard-header">
+                                    <div class="cd-subcard-header-left">
+                                        <div class="cd-subcard-header-icon emerald"><i class="fas fa-handshake"></i></div>
+                                        <h4 class="cd-subcard-heading">Permanent Staffing – Commercial Terms</h4>
+                                    </div>
+                                    <span class="badge bg-light-success text-success fw-bold" style="font-size:10px; padding:3px 7px;">
+                                        <i class="fas fa-check-circle me-1"></i>Active Model
+                                    </span>
+                                </div>
+                                <div class="cd-vertical-info-list">
+                                    <!-- 1. Hiring Fee / Commercial Terms -->
+                                    <div class="cd-vinfo-row">
+                                        <div class="cd-vinfo-key">
+                                            <div class="cd-vinfo-icon amber"><i class="fas fa-percent"></i></div>
+                                            <span class="cd-vinfo-label">Placement Fee</span>
+                                        </div>
+                                        <div class="cd-vinfo-val">
+                                            <span class="badge bg-light-warning text-warning fw-bold fs-8" style="padding:4px 8px; border-radius:6px;">{{ $placement_fee ?? '8.33% of Annual CTC' }}</span>
+                                        </div>
+                                    </div>
+
+                                    <!-- 2. Guarantee Period -->
+                                    @if(!empty($permanentCommercial->replacement_period_days))
+                                    <div class="cd-vinfo-row">
+                                        <div class="cd-vinfo-key">
+                                            <div class="cd-vinfo-icon emerald"><i class="fas fa-shield-halved"></i></div>
+                                            <span class="cd-vinfo-label">Guarantee Period</span>
+                                        </div>
+                                        <div class="cd-vinfo-val">
+                                            <span class="fw-semibold text-gray-800">{{ $permanentCommercial->replacement_period_days }} Days Free Replacement</span>
+                                        </div>
+                                    </div>
+                                    @else
+                                    <div class="cd-vinfo-row">
+                                        <div class="cd-vinfo-key">
+                                            <div class="cd-vinfo-icon emerald"><i class="fas fa-shield-halved"></i></div>
+                                            <span class="cd-vinfo-label">Guarantee Period</span>
+                                        </div>
+                                        <div class="cd-vinfo-val">
+                                            <span class="fw-semibold text-gray-800">90 Days Free Replacement</span>
+                                        </div>
+                                    </div>
+                                    @endif
+
+                                    <!-- 3. Payment Terms -->
+                                    @if(!empty($permanentCommercial->payment_terms_days))
+                                    <div class="cd-vinfo-row">
+                                        <div class="cd-vinfo-key">
+                                            <div class="cd-vinfo-icon sky"><i class="fas fa-file-invoice-dollar"></i></div>
+                                            <span class="cd-vinfo-label">Invoice Terms</span>
+                                        </div>
+                                        <div class="cd-vinfo-val">
+                                            <span class="fw-semibold text-gray-800">Net {{ $permanentCommercial->payment_terms_days }} Days from Joining</span>
+                                        </div>
+                                    </div>
+                                    @else
+                                    <div class="cd-vinfo-row">
+                                        <div class="cd-vinfo-key">
+                                            <div class="cd-vinfo-icon sky"><i class="fas fa-file-invoice-dollar"></i></div>
+                                            <span class="cd-vinfo-label">Invoice Terms</span>
+                                        </div>
+                                        <div class="cd-vinfo-val">
+                                            <span class="fw-semibold text-gray-800">Net 30 Days from Joining</span>
+                                        </div>
+                                    </div>
+                                    @endif
+
+                                    <!-- 4. Turnaround SLA -->
+                                    <div class="cd-vinfo-row">
+                                        <div class="cd-vinfo-key">
+                                            <div class="cd-vinfo-icon orange"><i class="fas fa-bolt"></i></div>
+                                            <span class="cd-vinfo-label">Submission SLA</span>
+                                        </div>
+                                        <div class="cd-vinfo-val">
+                                            <span class="badge bg-light-info text-info fw-semibold" style="font-size:10px; padding:3px 7px;">
+                                                <i class="fas fa-clock me-1"></i>48-Hour Profile Turnaround
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                    <!-- 5. Permanent Specific Terms -->
+                                    @if(!empty($permanentCommercial->terms_text))
+                                    <div class="cd-vinfo-row" style="flex-direction: column; align-items: flex-start; gap: 4px;">
+                                        <div class="cd-vinfo-key" style="flex: auto;">
+                                            <div class="cd-vinfo-icon purple"><i class="fas fa-file-lines"></i></div>
+                                            <span class="cd-vinfo-label">Permanent Conditions</span>
+                                        </div>
+                                        <div style="font-size: 11px; color: #475569; line-height: 1.4; padding-left: 34px;">
+                                            {!! nl2br(e($permanentCommercial->terms_text)) !!}
+                                        </div>
+                                    </div>
+                                    @endif
+                                </div>
+                            </div>
+                        @endif
+                    @endif
                 </div>
             </div>
         </div>
