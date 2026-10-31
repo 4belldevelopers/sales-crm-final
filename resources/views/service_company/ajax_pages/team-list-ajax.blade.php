@@ -286,51 +286,54 @@
                         </div>
                     </div>
 
-                    <!-- SUB-CARD 5: Marketplace Communication Roles -->
+                    <!-- SUB-CARD 5: Contact Details Shared (Marketplace Enquiries) -->
                     <div class="tm-subcard tm-subcard-comm">
                         <div class="tm-subcard-head">
                             <div class="tm-subcard-title-wrap">
-                                <svg class="tm-subcard-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                                    <path d="m3 11 18-5v12L3 14v-3z"/>
-                                    <path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/>
-                                </svg>
-                                <span class="tm-subcard-title">Marketplace Roles</span>
+                                <i class="fa-solid fa-address-book text-primary" style="font-size: 11px;"></i>
+                                <span class="tm-subcard-title">Contact Details Shared</span>
                             </div>
                             @if (!empty($channels) && count($channels) > 0)
-                                <span class="tm-subcard-badge badge-rep">{{ count($channels) }} Channels</span>
+                                <span class="tm-subcard-badge badge-rep" title="Publicly listed for {{ count($channels) }} enquiry types">
+                                    <i class="fa-solid fa-eye text-success me-1"></i>Public ({{ count($channels) }})
+                                </span>
                             @else
-                                <span class="tm-subcard-badge badge-role">Unassigned</span>
+                                <span class="tm-subcard-badge badge-role" title="Contact details kept private">
+                                    <i class="fa-solid fa-eye-slash me-1"></i>Private
+                                </span>
                             @endif
                         </div>
                         <div class="tm-comm-body">
                             @if (!empty($channels) && count($channels) > 0)
                                 <div class="d-flex flex-wrap align-items-center gap-1">
                                     @if (in_array('client', $channels, true))
-                                        @php $p = $priorities['client'] ?? 'Primary'; @endphp
-                                        <span class="tm-comm-chip client" title="{{ $p }} contact for Client &amp; Sales">
-                                            <i class="fa-solid fa-users me-1"></i>Client &amp; Sales <span class="prio-tag">• {{ $p }}</span>
+                                        <span class="tm-comm-chip client" title="Contact details shared for Sales &amp; Client Enquiries">
+                                            <i class="fa-solid fa-phone me-1"></i>Sales &amp; Client Enquiries
                                         </span>
                                     @endif
                                     @if (in_array('vendor', $channels, true) || in_array('agency', $channels, true))
-                                        @php $p = $priorities['agency'] ?? ($priorities['vendor'] ?? 'Primary'); @endphp
-                                        <span class="tm-comm-chip vendor" title="{{ $p }} contact for Agency">
-                                            <i class="fa-solid fa-shapes me-1"></i>Agency <span class="prio-tag">• {{ $p }}</span>
+                                        <span class="tm-comm-chip vendor" title="Contact details shared for Agency Enquiries">
+                                            <i class="fa-solid fa-phone me-1"></i>Agency Enquiries
                                         </span>
                                     @endif
                                     @if (in_array('recruitment', $channels, true))
-                                        @php $p = $priorities['recruitment'] ?? 'Primary'; @endphp
-                                        <span class="tm-comm-chip recruitment" title="{{ $p }} contact for Recruitment / Talent">
-                                            <i class="fa-solid fa-id-card-clip me-1"></i>Recruitment <span class="prio-tag">• {{ $p }}</span>
+                                        <span class="tm-comm-chip recruitment" title="Contact details shared for Bench Talent Enquiries">
+                                            <i class="fa-solid fa-phone me-1"></i>Bench Talent Enquiries
                                         </span>
                                     @endif
-                                    <button type="button" class="btn-edit-comm-icon" data-user='@json($userData)' onclick="openAssignCommDrawer(this)" title="Edit communication channels &amp; priorities">
+                                    <button type="button" class="btn-edit-comm-icon" data-user='@json($userData)' onclick="openAssignCommDrawer(this)" title="Edit contact sharing channels">
                                         <i class="fa-solid fa-pen"></i>
                                     </button>
                                 </div>
                             @else
-                                <button type="button" class="btn-assign-comm-empty" data-user='@json($userData)' onclick="openAssignCommDrawer(this)" title="Assign corporate communication channels to this member">
-                                    <i class="fa-solid fa-plus me-1 text-primary"></i>Assign Purpose
-                                </button>
+                                <div class="d-flex align-items-center justify-content-between w-100 gap-1 flex-wrap">
+                                    <span class="text-muted" style="font-size: 10.5px; font-weight: 500;">
+                                        <i class="fa-solid fa-lock text-muted me-1"></i> No Details Shared (Keep Private)
+                                    </span>
+                                    <button type="button" class="btn-assign-comm-empty" data-user='@json($userData)' onclick="openAssignCommDrawer(this)" title="Share contact details for marketplace enquiries">
+                                        <i class="fa-solid fa-plus me-1 text-primary"></i>Share Details
+                                    </button>
+                                </div>
                             @endif
                         </div>
                     </div>
