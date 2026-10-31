@@ -88,7 +88,7 @@ class ServiceCompanyTeamController extends ServiceCompanyBaseController
                     ->where('from_user_id', '>', 0)
                     ->distinct()
                     ->pluck('from_user_id')
-                    ->map(fn($id) => (int) $id)
+                    ->map(fn ($id) => (int) $id)
                     ->toArray();
 
                 $allRepIds = array_unique(array_merge($repUserIds, $agencySharerIds));
@@ -99,14 +99,24 @@ class ServiceCompanyTeamController extends ServiceCompanyBaseController
                 $financeCount = 0;
 
                 foreach ($allRolesMap as $uid => $channels) {
-                    if (in_array('client', $channels, true)) $clientCount++;
-                    if (in_array('vendor', $channels, true)) $vendorCount++;
-                    if (in_array('finance', $channels, true)) $financeCount++;
+                    if (in_array('client', $channels, true)) {
+                        $clientCount++;
+                    }
+                    if (in_array('vendor', $channels, true)) {
+                        $vendorCount++;
+                    }
+                    if (in_array('finance', $channels, true)) {
+                        $financeCount++;
+                    }
                 }
 
                 // If default reps not explicitly in tags, ensure at least 1 count
-                if ($clientCount === 0 && !empty($defaults['client_rep_id'])) $clientCount = 1;
-                if ($vendorCount === 0 && !empty($defaults['agency_rep_id'])) $vendorCount = 1;
+                if ($clientCount === 0 && ! empty($defaults['client_rep_id'])) {
+                    $clientCount = 1;
+                }
+                if ($vendorCount === 0 && ! empty($defaults['agency_rep_id'])) {
+                    $vendorCount = 1;
+                }
 
                 // Recruitment members: Active recruiters / sourcers (non-root)
                 $recruitmentCount = User::query()
@@ -260,7 +270,7 @@ class ServiceCompanyTeamController extends ServiceCompanyBaseController
         // V7: Tenant-scoped version key so all company team members see fresh updates instantly
         $versionKey = 'ats:teamversion:company_'.$company_id;
         $version = cache()->get($versionKey, 1);
-        $cacheKeySet = 'ats:allteam_v7:company:'.$company_id.':'.$version.':'.md5(json_encode($cachePayload));
+        $cacheKeySet = 'ats:allteam_v8:company:'.$company_id.':'.$version.':'.md5(json_encode($cachePayload));
         /* ----------------------------
         ⚡ Check DragonflyDB first
         ----------------------------- */
@@ -565,7 +575,7 @@ class ServiceCompanyTeamController extends ServiceCompanyBaseController
             ->where('from_user_id', '>', 0)
             ->distinct()
             ->pluck('from_user_id')
-            ->map(fn($id) => (int) $id)
+            ->map(fn ($id) => (int) $id)
             ->toArray();
 
         $allRepUserIds = array_unique(array_filter(array_merge([$defaultClientRepId, $defaultAgencyRepId], $allAgencySharerIds)));
@@ -581,6 +591,7 @@ class ServiceCompanyTeamController extends ServiceCompanyBaseController
             $allRankedUsers = $allRankedUsers->filter(function ($u) use ($allRolesMap, $defaultClientRepId) {
                 $uid = (int) ($u['id'] ?? 0);
                 $roles = $allRolesMap[$uid] ?? [];
+
                 return in_array('client', $roles, true) || $uid === $defaultClientRepId;
             })->values();
             $total = $allRankedUsers->count();
@@ -588,6 +599,7 @@ class ServiceCompanyTeamController extends ServiceCompanyBaseController
             $allRankedUsers = $allRankedUsers->filter(function ($u) use ($allRolesMap, $defaultAgencyRepId, $allAgencySharerIds) {
                 $uid = (int) ($u['id'] ?? 0);
                 $roles = $allRolesMap[$uid] ?? [];
+
                 return in_array('vendor', $roles, true) || in_array('agency', $roles, true) || $uid === $defaultAgencyRepId || in_array($uid, $allAgencySharerIds, true);
             })->values();
             $total = $allRankedUsers->count();
@@ -595,6 +607,7 @@ class ServiceCompanyTeamController extends ServiceCompanyBaseController
             $allRankedUsers = $allRankedUsers->filter(function ($u) use ($allRolesMap) {
                 $uid = (int) ($u['id'] ?? 0);
                 $roles = $allRolesMap[$uid] ?? [];
+
                 return in_array('finance', $roles, true);
             })->values();
             $total = $allRankedUsers->count();
@@ -602,6 +615,7 @@ class ServiceCompanyTeamController extends ServiceCompanyBaseController
             $allRankedUsers = $allRankedUsers->filter(function ($u) use ($allRolesMap) {
                 $uid = (int) ($u['id'] ?? 0);
                 $roles = $allRolesMap[$uid] ?? [];
+
                 return in_array('recruitment', $roles, true) || (((int) ($u['root_user'] ?? 0) !== 1) && (strtolower($u['status'] ?? '') === 'active'));
             })->values();
             $total = $allRankedUsers->count();
@@ -660,10 +674,10 @@ class ServiceCompanyTeamController extends ServiceCompanyBaseController
             $item['pre_agency_shares'] = (int) ($agencySharesMap[$uid] ?? 0);
 
             $userRoles = $allRolesMap[$uid] ?? [];
-            if ($item['is_client_rep'] && !in_array('client', $userRoles, true)) {
+            if ($item['is_client_rep'] && ! in_array('client', $userRoles, true)) {
                 $userRoles[] = 'client';
             }
-            if ($item['is_agency_rep'] && !in_array('vendor', $userRoles, true) && !in_array('agency', $userRoles, true)) {
+            if ($item['is_agency_rep'] && ! in_array('vendor', $userRoles, true) && ! in_array('agency', $userRoles, true)) {
                 $userRoles[] = 'vendor';
             }
             $item['channels'] = array_values(array_unique($userRoles));
@@ -751,6 +765,28 @@ class ServiceCompanyTeamController extends ServiceCompanyBaseController
         }
 
         $repService = app(CompanyRepresentativeService::class);
+        $visService = app(\App\Services\MarketplaceContactVisibilityService::class);
+
+        // Enforce Invariant M-1: Validate that removing a mandatory channel does not leave 0 active contacts
+        $currentRoles = $repService->getAllCompanyCommunicationRoles($companyId);
+        $userCurrentRoles = $currentRoles[$userId] ?? [];
+
+        foreach (\App\Services\MarketplaceContactVisibilityService::MANDATORY_CHANNELS as $mandatoryCh) {
+            $legacyKey = ($mandatoryCh === 'agency') ? 'vendor' : ($mandatoryCh === 'bench' ? 'recruitment' : $mandatoryCh);
+            $hadRole = in_array($mandatoryCh, $userCurrentRoles, true) || in_array($legacyKey, $userCurrentRoles, true);
+            $hasRoleNow = in_array($mandatoryCh, $channels, true) || in_array($legacyKey, $channels, true);
+
+            if ($hadRole && ! $hasRoleNow) {
+                $check = $visService->validateMandatoryChannelInvariant($companyId, $mandatoryCh, $userId);
+                if (! ($check['allowed'] ?? true)) {
+                    return response()->json([
+                        'status' => 'error',
+                        'message' => $check['message'],
+                    ], 422);
+                }
+            }
+        }
+
         $result = $repService->setUserCommunicationRoles($companyId, $userId, $channels, $priorities);
 
         if (($result['status'] ?? '') === 'success') {
@@ -813,9 +849,9 @@ class ServiceCompanyTeamController extends ServiceCompanyBaseController
             'jobs.title as job_title',
             'jobs.user_id as job_creator_id',
         ])
-        ->orderByDesc('recommendation_relation.created_at')
-        ->limit(50)
-        ->get();
+            ->orderByDesc('recommendation_relation.created_at')
+            ->limit(50)
+            ->get();
 
         $repService = app(CompanyRepresentativeService::class);
         $mapped = $records->map(function ($rel) use ($repService, $companyId) {
@@ -827,7 +863,7 @@ class ServiceCompanyTeamController extends ServiceCompanyBaseController
             return [
                 'relation_id' => $rel->relation_id,
                 'job_id' => $rel->job_id,
-                'job_title' => $rel->job_title ?: ('Job #' . $rel->job_id),
+                'job_title' => $rel->job_title ?: ('Job #'.$rel->job_id),
                 'job_creator' => $creatorUser,
                 'agency_id' => $rel->agency_id,
                 'agency_name' => $rel->agency_name,

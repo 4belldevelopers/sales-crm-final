@@ -50,29 +50,49 @@ class CompanyRepresentativeService
             Log::warning("CompanyRepresentativeService: cache read error for {$companyId}: ".$e->getMessage());
         }
 
-        // 1. Check persistent tags in company_tags
-        $tags = DB::table('company_tags')
-            ->where('company_id', $companyId)
-            ->where(function ($q) {
-                $q->where('tag_name', 'like', 'rep:client:%')
-                    ->orWhere('tag_name', 'like', 'rep:agency:%');
-            })
-            ->pluck('tag_name')
-            ->toArray();
-
+        // 1. Check authoritative assignments in company_marketplace_contact_assignments first (Phase 1 bridge)
         $clientRepUserId = null;
         $agencyRepUserId = null;
 
-        foreach ($tags as $tag) {
-            if (str_starts_with($tag, 'rep:client:')) {
-                $uid = (int) str_replace('rep:client:', '', $tag);
-                if ($uid > 0) {
-                    $clientRepUserId = $uid;
-                }
-            } elseif (str_starts_with($tag, 'rep:agency:')) {
-                $uid = (int) str_replace('rep:agency:', '', $tag);
-                if ($uid > 0) {
-                    $agencyRepUserId = $uid;
+        try {
+            $clientRepUserId = DB::table('company_marketplace_contact_assignments')
+                ->where('company_id', $companyId)
+                ->where('channel', 'client')
+                ->where('priority', 'primary')
+                ->where('is_active', 1)
+                ->value('user_id');
+
+            $agencyRepUserId = DB::table('company_marketplace_contact_assignments')
+                ->where('company_id', $companyId)
+                ->where('channel', 'agency')
+                ->where('priority', 'primary')
+                ->where('is_active', 1)
+                ->value('user_id');
+        } catch (\Throwable $e) {
+        }
+
+        // 2. Fallback to persistent tags in company_tags if not set in assignments
+        if (! $clientRepUserId || ! $agencyRepUserId) {
+            $tags = DB::table('company_tags')
+                ->where('company_id', $companyId)
+                ->where(function ($q) {
+                    $q->where('tag_name', 'like', 'rep:client:%')
+                        ->orWhere('tag_name', 'like', 'rep:agency:%');
+                })
+                ->pluck('tag_name')
+                ->toArray();
+
+            foreach ($tags as $tag) {
+                if (! $clientRepUserId && str_starts_with($tag, 'rep:client:')) {
+                    $uid = (int) str_replace('rep:client:', '', $tag);
+                    if ($uid > 0) {
+                        $clientRepUserId = $uid;
+                    }
+                } elseif (! $agencyRepUserId && str_starts_with($tag, 'rep:agency:')) {
+                    $uid = (int) str_replace('rep:agency:', '', $tag);
+                    if ($uid > 0) {
+                        $agencyRepUserId = $uid;
+                    }
                 }
             }
         }
@@ -159,6 +179,13 @@ class CompanyRepresentativeService
                 'updated_at' => now(),
             ]);
         });
+
+        // Phase 1 Dual-Write: Mirror to company_marketplace_contact_assignments
+        try {
+            app(MarketplaceContactVisibilityService::class)->assignChannel($companyId, $userId, $type, 'public', 'primary', true);
+        } catch (\Throwable $e) {
+            Log::warning('CompanyRepresentativeService: setDefaultRepresentative dual-write error: '.$e->getMessage());
+        }
 
         // Invalidate Cache
         $this->invalidateTenantRepresentativeCache($companyId);
@@ -659,6 +686,27 @@ class CompanyRepresentativeService
 
             if (! empty($inserts)) {
                 DB::table('company_tags')->insert($inserts);
+            }
+
+            // Phase 1 Dual-Write: Mirror to company_marketplace_contact_assignments
+            try {
+                $visService = app(\App\Services\MarketplaceContactVisibilityService::class);
+                foreach (['client', 'agency', 'bench'] as $mCh) {
+                    $legacyKey = ($mCh === 'agency') ? 'vendor' : ($mCh === 'bench' ? 'recruitment' : $mCh);
+                    if (in_array($mCh, $cleanChannels, true) || in_array($legacyKey, $cleanChannels, true)) {
+                        $prioRaw = $priorities[$mCh] ?? ($priorities[$legacyKey] ?? 'Primary');
+                        $visService->assignChannel($companyId, $userId, $mCh, 'public', $prioRaw, true);
+                    } else {
+                        // Channel is not selected for this user; delete assignment if exists
+                        DB::table('company_marketplace_contact_assignments')
+                            ->where('company_id', $companyId)
+                            ->where('user_id', $userId)
+                            ->where('channel', $mCh)
+                            ->delete();
+                    }
+                }
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::warning('CompanyRepresentativeService: dual-write error: '.$e->getMessage());
             }
         });
 
