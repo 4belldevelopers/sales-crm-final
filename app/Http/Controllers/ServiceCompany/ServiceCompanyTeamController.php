@@ -59,8 +59,8 @@ class ServiceCompanyTeamController extends ServiceCompanyBaseController
             function () use ($companyId) {
                 $status = User::query()->where('company_id', $companyId)
                     ->selectRaw('COUNT(*) as total')
-                    ->selectRaw("SUM(status = 'active' AND (email_verification_code IS NULL OR email_verification_code = '')) as active")
-                    ->selectRaw("SUM(status = 'inactive' AND (email_verification_code IS NULL OR email_verification_code = '')) as inactive")
+                    ->selectRaw("SUM(status = 'active' AND (password IS NOT NULL AND password != '') AND (email_verification_code IS NULL OR email_verification_code = '')) as active")
+                    ->selectRaw("SUM(status = 'inactive' AND (password IS NOT NULL AND password != '') AND (email_verification_code IS NULL OR email_verification_code = '')) as inactive")
                     ->selectRaw("SUM((email_verification_code IS NOT NULL AND email_verification_code != '') OR (password = '' OR password IS NULL)) as invited")
                     ->first();
 
@@ -102,7 +102,7 @@ class ServiceCompanyTeamController extends ServiceCompanyBaseController
                     if (in_array('client', $channels, true)) {
                         $clientCount++;
                     }
-                    if (in_array('vendor', $channels, true)) {
+                    if (in_array('vendor', $channels, true) || in_array('agency', $channels, true)) {
                         $vendorCount++;
                     }
                     if (in_array('finance', $channels, true)) {
@@ -126,25 +126,31 @@ class ServiceCompanyTeamController extends ServiceCompanyBaseController
                     }
                 }
 
-                // Recruitment members: Active recruiters / sourcers (non-root)
+                // Recruitment members: Active recruiters / sourcers (non-root with password set)
                 $recruitmentCount = User::query()
                     ->where('company_id', $companyId)
                     ->where('status', 'active')
                     ->where('root_user', '!=', 1)
+                    ->whereNotNull('password')
+                    ->where('password', '!=', '')
+                    ->where(function ($q) {
+                        $q->whereNull('email_verification_code')->orWhere('email_verification_code', '');
+                    })
                     ->count();
 
-                $finalBenchCount = $benchCount > 0 ? $benchCount : max($recruitmentCount, 1);
+                $totalUsers = (int) ($status->total ?? 0);
+                $finalBenchCount = $benchCount > 0 ? $benchCount : ($recruitmentCount > 0 ? $recruitmentCount : ($totalUsers > 0 ? 1 : 0));
 
                 return [
-                    'total' => (int) ($status->total ?? 0),
+                    'total' => $totalUsers,
                     'active' => (int) ($status->active ?? 0),
                     'inactive' => (int) ($status->inactive ?? 0),
                     'invited' => (int) ($status->invited ?? 0),
                     'recruitment' => (int) $finalBenchCount,
                     'bench' => (int) $finalBenchCount,
-                    'client' => (int) max($clientCount, 1),
-                    'vendor' => (int) max($vendorCount, 1),
-                    'agency' => (int) max($vendorCount, 1),
+                    'client' => (int) ($clientCount > 0 ? $clientCount : ($totalUsers > 0 ? 1 : 0)),
+                    'vendor' => (int) ($vendorCount > 0 ? $vendorCount : ($totalUsers > 0 ? 1 : 0)),
+                    'agency' => (int) ($vendorCount > 0 ? $vendorCount : ($totalUsers > 0 ? 1 : 0)),
                     'finance' => (int) $financeCount,
                     'suspended' => 0,
                     'captain' => (int) $captain,
@@ -253,10 +259,10 @@ class ServiceCompanyTeamController extends ServiceCompanyBaseController
         abort_if(Gate::denies('view_team'), 403);
         $currentUser = $this->user ?? auth()->user();
         $company_id = (int) ($currentUser ? $currentUser->company_id : 0);
-        $searchTerms = request('cus_search');
+        $searchTerms = $request->input('cus_search', request('cus_search'));
         $custom_search = $searchTerms; // json_decode($searchTerms, true);
         // Status tab on the redesigned list: all|active|inactive|invited|suspended
-        $statusTab = request('statusTab');
+        $statusTab = (string) $request->input('statusTab', request('statusTab', 'all'));
 
         $reportMonth = Carbon::now()->startOfMonth()->subMonth();
         $rankstartOfMonthForReport = $reportMonth->copy()->startOfMonth()->toDateTimeString();      // 2025-06-01
@@ -626,11 +632,22 @@ class ServiceCompanyTeamController extends ServiceCompanyBaseController
             })->values();
             $total = $allRankedUsers->count();
         } elseif ($statusTab === 'recruitment' || $statusTab === 'bench') {
-            $allRankedUsers = $allRankedUsers->filter(function ($u) use ($allRolesMap) {
+            $hasAnyBenchRep = false;
+            foreach ($allRolesMap as $roles) {
+                if (in_array('bench', $roles, true) || in_array('recruitment', $roles, true)) {
+                    $hasAnyBenchRep = true;
+                    break;
+                }
+            }
+            $allRankedUsers = $allRankedUsers->filter(function ($u) use ($allRolesMap, $hasAnyBenchRep) {
                 $uid = (int) ($u['id'] ?? 0);
                 $roles = $allRolesMap[$uid] ?? [];
+                $isInvited = ! empty($u['email_verification_code']) || empty($u['password']);
+                $hasBenchRole = in_array('bench', $roles, true) || in_array('recruitment', $roles, true);
+                $isActiveNonRootRecruiter = ((int) ($u['root_user'] ?? 0) !== 1) && (strtolower($u['status'] ?? '') === 'active') && ! $isInvited;
+                $isFallbackRoot = (! $hasAnyBenchRep && (int) ($u['root_user'] ?? 0) === 1);
 
-                return in_array('bench', $roles, true) || in_array('recruitment', $roles, true) || (((int) ($u['root_user'] ?? 0) !== 1) && (strtolower($u['status'] ?? '') === 'active'));
+                return $hasBenchRole || $isActiveNonRootRecruiter || $isFallbackRoot;
             })->values();
             $total = $allRankedUsers->count();
         }
@@ -694,6 +711,18 @@ class ServiceCompanyTeamController extends ServiceCompanyBaseController
                 }
                 if ($item['is_agency_rep'] && ! in_array('vendor', $userRoles, true) && ! in_array('agency', $userRoles, true)) {
                     $userRoles[] = 'vendor';
+                }
+                $hasExplicitBench = false;
+                foreach ($allRolesMap as $rRoles) {
+                    if (in_array('bench', $rRoles, true) || in_array('recruitment', $rRoles, true)) {
+                        $hasExplicitBench = true;
+                        break;
+                    }
+                }
+                if (! $hasExplicitBench && (int) ($item['root_user'] ?? 0) === 1) {
+                    if (! in_array('bench', $userRoles, true) && ! in_array('recruitment', $userRoles, true)) {
+                        $userRoles[] = 'bench';
+                    }
                 }
                 $item['channels'] = array_values(array_unique($userRoles));
                 $item['priorities'] = $allPriosMap[$uid] ?? [];
@@ -761,6 +790,18 @@ class ServiceCompanyTeamController extends ServiceCompanyBaseController
                 }
                 if ($item['is_agency_rep'] && ! in_array('vendor', $userRoles, true) && ! in_array('agency', $userRoles, true)) {
                     $userRoles[] = 'vendor';
+                }
+                $hasExplicitBench = false;
+                foreach ($allRolesMap as $rRoles) {
+                    if (in_array('bench', $rRoles, true) || in_array('recruitment', $rRoles, true)) {
+                        $hasExplicitBench = true;
+                        break;
+                    }
+                }
+                if (! $hasExplicitBench && (int) ($item['root_user'] ?? 0) === 1) {
+                    if (! in_array('bench', $userRoles, true) && ! in_array('recruitment', $userRoles, true)) {
+                        $userRoles[] = 'bench';
+                    }
                 }
                 $item['channels'] = array_values(array_unique($userRoles));
                 $item['priorities'] = $allPriosMap[$uid] ?? [];
@@ -1755,7 +1796,12 @@ class ServiceCompanyTeamController extends ServiceCompanyBaseController
         $user = DB::table('users')
             ->where('id', $userId)
             ->where('company_id', $company_id)
-            ->where('status', 'inactive')
+            ->where(function ($q) {
+                $q->where('status', 'inactive')
+                    ->orWhereNull('password')
+                    ->orWhere('password', '')
+                    ->orWhereNotNull('email_verification_code');
+            })
             ->first();
 
         if (! $user) {

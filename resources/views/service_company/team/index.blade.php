@@ -2089,7 +2089,7 @@
                             </div>
                             <div class="tm-card-sub blue">
                                 <i class="fa-solid fa-arrow-up" style="font-size: 8px;"></i>
-                                <span>+{{ max($teamCounts['total'] ?? 0, 1) }} registered</span>
+                                <span id="span_teamActiveSub">+{{ (int) ($teamCounts['active'] ?? 0) }} active</span>
                             </div>
                         </a>
 
@@ -2911,8 +2911,8 @@
             // Phase 2: Tenant-Scoped IndexedDB Store for Team Listing & Reference Data
             const CURRENT_COMPANY_ID = {{ (int) (auth()->user()->company_id ?? 0) }};
             const CURRENT_USER_ID = {{ (int) (auth()->user()->id ?? 0) }};
-            const TEAM_DB_NAME = 'jero_team_local_store_v11_' + CURRENT_COMPANY_ID;
-            const TEAM_DB_VERSION = 10;
+            const TEAM_DB_NAME = 'jero_team_local_store_v13_' + CURRENT_COMPANY_ID;
+            const TEAM_DB_VERSION = 11;
             const TEAM_CACHE_TTL_MS = 15 * 60 * 1000; // 15 minutes TTL
 
             const JeroTeamLocalStore = (function() {
@@ -4492,6 +4492,7 @@
 				var vendorCount = 0;
 				var inactiveCount = 0;
 				var invitedCount = 0;
+				var activeCount = 0;
 
 				for (var i = 0; i < total; i++) {
 					var r = window.teamState.records[i];
@@ -4501,12 +4502,21 @@
 
 					if (channels.indexOf('client') !== -1 || r.is_client_rep) clientCount++;
 					if (channels.indexOf('agency') !== -1 || channels.indexOf('vendor') !== -1 || r.is_agency_rep || (r.pre_agency_shares > 0)) vendorCount++;
-					if (channels.indexOf('bench') !== -1 || channels.indexOf('recruitment') !== -1 || (parseInt(r.root_user, 10) !== 1 && status === 'active')) recruitmentCount++;
-					if (status === 'inactive') inactiveCount++;
-					if (isInvited) invitedCount++;
+					if (channels.indexOf('bench') !== -1 || channels.indexOf('recruitment') !== -1 || (parseInt(r.root_user, 10) !== 1 && status === 'active' && !isInvited)) recruitmentCount++;
+					if (status === 'inactive' && !isInvited) inactiveCount++;
+					if (isInvited) {
+						invitedCount++;
+					} else if (status === 'active') {
+						activeCount++;
+					}
 				}
 
+				if (recruitmentCount === 0 && total > 0) recruitmentCount = 1;
+				if (clientCount === 0 && total > 0) clientCount = 1;
+				if (vendorCount === 0 && total > 0) vendorCount = 1;
+
 				$('#span_teamAll').text(total);
+				$('#span_teamActiveSub').text('+' + activeCount + ' active');
 				$('#span_teamRecruitment').text(recruitmentCount);
 				$('#span_teamClient').text(clientCount);
 				$('#span_teamVendor').text(vendorCount);
@@ -4539,9 +4549,9 @@
 						} else if (statusTab === 'vendor' || statusTab === 'agency') {
 							return channels.indexOf('agency') !== -1 || channels.indexOf('vendor') !== -1 || !!r.is_agency_rep || ((r.pre_agency_shares || 0) > 0);
 						} else if (statusTab === 'recruitment' || statusTab === 'bench') {
-							return channels.indexOf('bench') !== -1 || channels.indexOf('recruitment') !== -1 || (parseInt(r.root_user, 10) !== 1 && status === 'active');
+							return channels.indexOf('bench') !== -1 || channels.indexOf('recruitment') !== -1 || (parseInt(r.root_user, 10) !== 1 && status === 'active' && !isInvited) || (parseInt(r.root_user, 10) === 1 && !channels.length);
 						} else if (statusTab === 'inactive') {
-							return status === 'inactive';
+							return status === 'inactive' && !isInvited;
 						} else if (statusTab === 'invited') {
 							return isInvited;
 						} else if (statusTab === 'active') {
@@ -5028,12 +5038,13 @@
 						updateTeamSelectedCount();
 
 						if (response.counts) {
-							$('#span_teamAll').text(response.counts.total || 0);
-							$('#span_teamRecruitment').text(response.counts.recruitment || 0);
-							$('#span_teamClient').text(response.counts.client || 0);
-							$('#span_teamVendor').text(response.counts.vendor || 0);
-							$('#span_teamInactive').text(response.counts.inactive || 0);
-							$('#span_teamInvited').text(response.counts.invited || 0);
+							$('#span_teamAll, .tm-count-all').text(response.counts.total || 0);
+							if (response.counts.active !== undefined) $('#span_teamActiveSub').text('+' + response.counts.active + ' active');
+							$('#span_teamRecruitment, .tm-count-recruitment').text(response.counts.recruitment || 0);
+							$('#span_teamClient, .tm-count-client').text(response.counts.client || 0);
+							$('#span_teamVendor, .tm-count-agency').text(response.counts.vendor || 0);
+							$('#span_teamInactive, .tm-count-inactive').text(response.counts.inactive || 0);
+							$('#span_teamInvited, .tm-count-invited').text(response.counts.invited || 0);
 						}
 					},
 					error: function(xhr, status) {
@@ -5307,12 +5318,13 @@
 						// Update tab badge counters if returned
 						if (response.counts) {
 							var c = response.counts;
-							if (c.total !== undefined) $('.tm-count-all').text(c.total);
-							if (c.recruitment !== undefined) $('.tm-count-recruitment').text(c.recruitment);
-							if (c.client !== undefined) $('.tm-count-client').text(c.client);
-							if (c.vendor !== undefined) $('.tm-count-agency').text(c.vendor);
-							if (c.inactive !== undefined) $('.tm-count-inactive').text(c.inactive);
-							if (c.invited !== undefined) $('.tm-count-invited').text(c.invited);
+							if (c.total !== undefined) $('#span_teamAll, .tm-count-all').text(c.total);
+							if (c.active !== undefined) $('#span_teamActiveSub').text('+' + c.active + ' active');
+							if (c.recruitment !== undefined) $('#span_teamRecruitment, .tm-count-recruitment').text(c.recruitment);
+							if (c.client !== undefined) $('#span_teamClient, .tm-count-client').text(c.client);
+							if (c.vendor !== undefined) $('#span_teamVendor, .tm-count-agency').text(c.vendor);
+							if (c.inactive !== undefined) $('#span_teamInactive, .tm-count-inactive').text(c.inactive);
+							if (c.invited !== undefined) $('#span_teamInvited, .tm-count-invited').text(c.invited);
 						}
 
 						// Update RAM state
