@@ -10,6 +10,8 @@ Date			:	05-April-2021
 
 namespace App\Http\Controllers\ServiceCompany;
 
+use App\DTO\ServiceCompany\ClientAccessContext;
+use App\DTO\ServiceCompany\ClientJobsQuery;
 use App\Helper\GeneralMethod;
 use App\Helper\Reply;
 use App\Http\Requests\StoreJob;
@@ -26,8 +28,6 @@ use App\Models\JobCategory;
 use App\Models\JobStatusLog;
 use App\Models\Skill;
 use App\Models\User;
-use App\DTO\ServiceCompany\ClientAccessContext;
-use App\DTO\ServiceCompany\ClientJobsQuery;
 use App\Services\ElasticService;
 use App\Services\JobIdempotencyService;
 use App\Services\JobService;
@@ -98,6 +98,7 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
         $user = $this->user ?? auth()->user();
         if (! $user) {
             $this->userPermissions = [];
+
             return [];
         }
         $this->user = $user;
@@ -1660,29 +1661,29 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
         $custom = $query->clientType === 'internal' ? 'true' : 'false';
 
         \Log::info('CLIENT_DETAILS_APM: client_job_data_ajax completed', [
-            'client_id'   => $query->clientId,
-            'company_id'  => $query->serviceCompanyId,
+            'client_id' => $query->clientId,
+            'company_id' => $query->serviceCompanyId,
             'client_type' => $query->clientType,
-            'page'        => $query->page,
-            'item_count'  => count($viewModel->jobs),
-            'total'       => $viewModel->totalCount,
-            'filtered'    => $viewModel->filteredCount,
-            'latency_ms'  => round((microtime(true) - $startTime) * 1000, 2),
+            'page' => $query->page,
+            'item_count' => count($viewModel->jobs),
+            'total' => $viewModel->totalCount,
+            'filtered' => $viewModel->filteredCount,
+            'latency_ms' => round((microtime(true) - $startTime) * 1000, 2),
         ]);
 
         return response()->json([
-            'html'             => view('service_company.ajax_pages.client_jobs_side_bar_ajax', compact('viewModel', 'userPermissions', 'company_id', 'custom'))->render(),
-            'total'            => $viewModel->filteredCount,
-            'kpi'              => [
-                'total'    => $viewModel->totalCount,
-                'hiring'   => $viewModel->hiringCount,
-                'hold'     => $viewModel->holdCount,
-                'closed'   => $viewModel->closedCount,
+            'html' => view('service_company.ajax_pages.client_jobs_side_bar_ajax', compact('viewModel', 'userPermissions', 'company_id', 'custom'))->render(),
+            'total' => $viewModel->filteredCount,
+            'kpi' => [
+                'total' => $viewModel->totalCount,
+                'hiring' => $viewModel->hiringCount,
+                'hold' => $viewModel->holdCount,
+                'closed' => $viewModel->closedCount,
                 'inactive' => $viewModel->inactiveCount,
             ],
-            'tabs'             => $viewModel->tabs,
+            'tabs' => $viewModel->tabs,
             'pipelineStageMap' => $viewModel->pipelineStageMap,
-            'pagination'       => view('service_company.ajax_pages.pagination', ['pagination' => array_merge(['listType' => 'client_jobs'], $viewModel->pagination)])->render(),
+            'pagination' => view('service_company.ajax_pages.pagination', ['pagination' => array_merge(['listType' => 'client_jobs'], $viewModel->pagination)])->render(),
         ]);
     }
 
@@ -3234,7 +3235,7 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
                 // Sane Payload Guardrail: Cap at 50 work locations per job to protect client RAM & DOM
                 $MAX_WORK_LOCATIONS = 50;
                 if (count($workLocations) > $MAX_WORK_LOCATIONS) {
-                    \Illuminate\Support\Facades\Log::warning("Job {$row->id} exceeded maximum work location limit of {$MAX_WORK_LOCATIONS}: " . count($workLocations));
+                    \Illuminate\Support\Facades\Log::warning("Job {$row->id} exceeded maximum work location limit of {$MAX_WORK_LOCATIONS}: ".count($workLocations));
                     $workLocations = array_slice($workLocations, 0, $MAX_WORK_LOCATIONS);
                     $allCities = array_slice($allCities, 0, $MAX_WORK_LOCATIONS);
                 }
@@ -5578,14 +5579,14 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
         }
 
         // ── Canonical Architecture: Batch Pre-hydration to eliminate in-Blade queries ──
-        $jobIds = array_filter(array_map(fn($item) => (int)($item['job_id'] ?? ($item['id'] ?? 0)), $data));
-        $categoriesMap = cache()->remember('global_job_categories_id_name_map', 86400, function() {
+        $jobIds = array_filter(array_map(fn ($item) => (int) ($item['job_id'] ?? ($item['id'] ?? 0)), $data));
+        $categoriesMap = cache()->remember('global_job_categories_id_name_map', 86400, function () {
             return DB::table('job_categories')->pluck('name', 'id')->toArray();
         });
 
         $locationsMap = [];
         $captainsMap = [];
-        if (!empty($jobIds)) {
+        if (! empty($jobIds)) {
             $locationsMap = DB::table('client_city_jobs')
                 ->leftJoin('city_list', 'city_list.city_id', '=', 'client_city_jobs.city_id')
                 ->leftJoin('state_list', 'state_list.id', '=', 'city_list.state_id')
@@ -16450,6 +16451,9 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
         // Intent: prevent the account Commercials tab from serving pre-save rates, countries, or status from its tenant cache.
         Cache::forget("account_settings:company:{$company_id}");
 
+        // Intent: atomically invalidate agency drawer cache for all tenants viewing this company per Rule 6
+        Cache::forever("agency_drawer_version_company_{$company_id}", ((int) Cache::get("agency_drawer_version_company_{$company_id}", 1)) + 1);
+
         // Intent: asynchronously refresh only this company's ES document after its MySQL commercial countries are replaced.
         ElasticCompanyIndex::dispatch($company_id);
 
@@ -16486,6 +16490,9 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
 
         // Intent: invalidate the tenant-only account payload so refreshes always read the persisted service status.
         Cache::forget("account_settings:company:{$company_id}");
+
+        // Intent: atomically invalidate agency drawer cache for all tenants viewing this company per Rule 6
+        Cache::forever("agency_drawer_version_company_{$company_id}", ((int) Cache::get("agency_drawer_version_company_{$company_id}", 1)) + 1);
 
         // Intent: keep agency search/recommendation data synchronized without delaying this status-toggle response.
         ElasticCompanyIndex::dispatch($company_id);
