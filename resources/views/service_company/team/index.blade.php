@@ -348,7 +348,7 @@
             background: #ffffff;
             border: 1px solid #e2e8f0;
             border-radius: 10px;
-            padding: 8px 14px;
+            padding: 10px 14px;
             display: flex;
             align-items: center;
             justify-content: space-between;
@@ -356,34 +356,35 @@
             box-shadow: 0 1px 3px rgba(15, 23, 42, 0.02);
             flex-wrap: wrap;
             margin-bottom: 12px;
+            box-sizing: border-box;
         }
         .team-filter-search {
             position: relative;
-            flex: 1;
-            min-width: 260px;
-            max-width: 460px;
+            width: 360px;
+            max-width: 100%;
             display: flex;
             align-items: center;
         }
         .team-filter-search i.fa-magnifying-glass {
             position: absolute;
-            left: 10px;
+            left: 12px;
             font-size: 13px;
             color: #94a3b8;
             pointer-events: none;
         }
         .team-filter-search .team-search-input {
             width: 100%;
-            height: 34px;
-            padding: 0 32px 0 32px;
-            border: 1px solid transparent;
-            border-radius: 6px;
+            height: 36px;
+            padding: 0 32px 0 36px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
             font-size: 12.5px;
             font-family: 'Poppins', sans-serif;
             color: #0f172a;
             outline: none;
-            transition: all .15s;
-            background: #f8fafc;
+            transition: all .15s ease;
+            background: #ffffff;
+            box-sizing: border-box;
         }
         .team-filter-search .team-search-input:focus {
             background: #ffffff;
@@ -410,13 +411,13 @@
         .team-filter-controls {
             display: flex;
             align-items: center;
-            gap: 14px;
+            gap: 12px;
             flex-wrap: wrap;
         }
         .team-filter-group {
             display: flex;
             align-items: center;
-            gap: 6px;
+            gap: 8px;
         }
         .team-filter-label {
             font-size: 12px;
@@ -428,21 +429,23 @@
             gap: 4px;
         }
         .team-select-control {
-            height: 34px;
+            height: 36px;
             border: 1px solid #e2e8f0;
-            border-radius: 7px;
+            border-radius: 8px;
             background: #ffffff;
             font-size: 12px;
             font-weight: 600;
             font-family: 'Poppins', sans-serif;
             color: #1e293b;
-            padding: 0 10px;
+            padding: 0 12px;
             outline: none;
             cursor: pointer;
-            transition: all .15s;
+            transition: all .15s ease;
+            box-sizing: border-box;
         }
         .team-select-control:focus {
             border-color: #009ef7;
+            box-shadow: 0 0 0 2px rgba(0, 158, 247, 0.12);
         }
 
         /* =========================================================================
@@ -472,7 +475,7 @@
         /* 5-Column Grid Definition for Sub-Cards (Zero Overflow on 15.6" screens) */
         .tm-subcards-grid {
             display: grid !important;
-            grid-template-columns: minmax(0, 1.7fr) minmax(0, 1.0fr) minmax(0, 1.1fr) minmax(0, 0.9fr) minmax(0, 2.3fr) !important;
+            grid-template-columns: minmax(0, 1.65fr) minmax(0, 1.15fr) minmax(0, 1.25fr) minmax(0, 1.15fr) minmax(0, 1.8fr) !important;
             gap: 8px !important;
             align-items: stretch !important;
             box-sizing: border-box !important;
@@ -848,22 +851,36 @@
         /* Sub-Card 5: Contact Details Visibility (Marketplace Enquiries) */
         .tm-comm-body {
             display: flex;
-            flex-wrap: wrap;
-            align-items: center;
+            flex-direction: column;
             gap: 4px;
             min-width: 0;
             width: 100%;
         }
+        .tm-comm-rows-list {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            width: 100%;
+        }
+        .tm-comm-row {
+            display: flex;
+            align-items: center;
+            width: 100%;
+        }
         .tm-comm-chip {
+            width: 100%;
             display: inline-flex;
             align-items: center;
-            gap: 4px;
-            font-size: 9.5px;
+            gap: 6px;
+            font-size: 10px;
             font-weight: 600;
-            padding: 2.5px 6.5px;
+            padding: 3px 8px;
             border-radius: 5px;
-            line-height: 1.25;
+            line-height: 1.35;
             white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            box-sizing: border-box;
         }
         .tm-comm-chip.client      { background: #f0fdf4; color: #16a34a; border: 1px solid #bbf7d0; }
         .tm-comm-chip.vendor      { background: #faf5ff; color: #9333ea; border: 1px solid #e9d5ff; }
@@ -1173,7 +1190,7 @@
                 font-size: 8.5px !important;
             }
             .tm-subcards-grid {
-                grid-template-columns: minmax(0, 1.65fr) minmax(0, 0.95fr) minmax(0, 1.05fr) minmax(0, 0.85fr) minmax(0, 2.25fr) !important;
+                grid-template-columns: minmax(0, 1.6fr) minmax(0, 1.1fr) minmax(0, 1.2fr) minmax(0, 1.1fr) minmax(0, 1.8fr) !important;
                 gap: 6px !important;
             }
         }
@@ -2843,8 +2860,8 @@
             // Phase 2: Tenant-Scoped IndexedDB Store for Team Listing & Reference Data
             const CURRENT_COMPANY_ID = {{ (int) (auth()->user()->company_id ?? 0) }};
             const CURRENT_USER_ID = {{ (int) (auth()->user()->id ?? 0) }};
-            const TEAM_DB_NAME = 'jero_team_local_store_v9_' + CURRENT_COMPANY_ID;
-            const TEAM_DB_VERSION = 8;
+            const TEAM_DB_NAME = 'jero_team_local_store_v10_' + CURRENT_COMPANY_ID;
+            const TEAM_DB_VERSION = 9;
             const TEAM_CACHE_TTL_MS = 15 * 60 * 1000; // 15 minutes TTL
 
             const JeroTeamLocalStore = (function() {
