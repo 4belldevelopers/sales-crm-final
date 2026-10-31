@@ -257,10 +257,10 @@ class ServiceCompanyTeamController extends ServiceCompanyBaseController
             'statusTab' => $statusTab,
         ];
 
-        // V5: Tenant-scoped version key so all company team members see fresh updates instantly
+        // V6: Tenant-scoped version key so all company team members see fresh updates instantly
         $versionKey = 'ats:teamversion:company_'.$company_id;
         $version = cache()->get($versionKey, 1);
-        $cacheKeySet = 'ats:allteam_v5:company:'.$company_id.':'.$version.':'.md5(json_encode($cachePayload));
+        $cacheKeySet = 'ats:allteam_v6:company:'.$company_id.':'.$version.':'.md5(json_encode($cachePayload));
         /* ----------------------------
         ⚡ Check DragonflyDB first
         ----------------------------- */
