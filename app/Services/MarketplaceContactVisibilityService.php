@@ -32,7 +32,7 @@ class MarketplaceContactVisibilityService
 
     public const CHANNEL_LABELS = [
         'client' => 'Sales & Client Enquiries',
-        'agency' => 'Agency Enquiries',
+        'agency' => 'Agency Queries',
         'bench' => 'Bench Talent Enquiries',
     ];
 

@@ -472,7 +472,7 @@
         /* 5-Column Grid Definition for Sub-Cards (Zero Overflow on 15.6" screens) */
         .tm-subcards-grid {
             display: grid !important;
-            grid-template-columns: minmax(0, 1.8fr) minmax(0, 1.15fr) minmax(0, 1.25fr) minmax(0, 1.05fr) minmax(0, 1.65fr) !important;
+            grid-template-columns: minmax(0, 1.7fr) minmax(0, 1.0fr) minmax(0, 1.1fr) minmax(0, 0.9fr) minmax(0, 2.3fr) !important;
             gap: 8px !important;
             align-items: stretch !important;
             box-sizing: border-box !important;
@@ -523,13 +523,16 @@
             justify-content: space-between;
             margin-bottom: 8px;
             min-width: 0;
-            gap: 6px;
+            gap: 8px;
+            flex-wrap: nowrap;
         }
         .tm-subcard-title-wrap {
             display: flex;
             align-items: center;
             gap: 5px;
             min-width: 0;
+            flex: 1 1 auto;
+            overflow: hidden;
         }
         .tm-subcard-icon {
             flex-shrink: 0;
@@ -541,13 +544,16 @@
             text-transform: uppercase;
             letter-spacing: 0.03em;
             white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
         .tm-subcard-badge {
             font-size: 9.5px;
             font-weight: 700;
-            padding: 1.5px 6px;
+            padding: 2px 7px;
             border-radius: 4px;
             white-space: nowrap;
+            flex-shrink: 0;
         }
         .badge-owner {
             background: #fef3c7;
@@ -1167,7 +1173,7 @@
                 font-size: 8.5px !important;
             }
             .tm-subcards-grid {
-                grid-template-columns: minmax(0, 1.75fr) minmax(0, 1.15fr) minmax(0, 1.25fr) minmax(0, 1.05fr) minmax(0, 1.6fr) !important;
+                grid-template-columns: minmax(0, 1.65fr) minmax(0, 0.95fr) minmax(0, 1.05fr) minmax(0, 0.85fr) minmax(0, 2.25fr) !important;
                 gap: 6px !important;
             }
         }
@@ -2002,7 +2008,7 @@
                             </div>
                         </a>
 
-                        {{-- Card 2: Inhouse Talent Representative --}}
+                        {{-- Card 2: Bench Talent Enquiries --}}
                         <a href="javascript:void(0);" onclick="setTeamTab('recruitment', this);" class="tm-stat-card" data-tab="recruitment">
                             <div class="tm-card-top">
                                 <div class="tm-card-icon indigo">
@@ -2010,16 +2016,16 @@
                                 </div>
                                 <div class="tm-card-meta">
                                     <div class="tm-card-num" id="span_teamRecruitment">{{ $teamCounts['recruitment'] ?? 0 }}</div>
-                                    <div class="tm-card-lbl" title="Inhouse Talent Representative">Inhouse Talent Representative</div>
+                                    <div class="tm-card-lbl" title="Bench Talent Enquiries">Bench Talent Enquiries</div>
                                 </div>
                             </div>
                             <div class="tm-card-sub indigo">
                                 <i class="fa-solid fa-user-check" style="font-size: 8px;"></i>
-                                <span>Relationship Manager Bench</span>
+                                <span>Bench Talent Representative</span>
                             </div>
                         </a>
 
-                        {{-- Card 3: Client & Sales --}}
+                        {{-- Card 3: Client & Sales Enquiries --}}
                         <a href="javascript:void(0);" onclick="setTeamTab('client', this);" class="tm-stat-card" data-tab="client">
                             <div class="tm-card-top">
                                 <div class="tm-card-icon green">
@@ -2027,7 +2033,7 @@
                                 </div>
                                 <div class="tm-card-meta">
                                     <div class="tm-card-num" id="span_teamClient">{{ $teamCounts['client'] ?? 0 }}</div>
-                                    <div class="tm-card-lbl" title="Client & Sales">Client &amp; Sales</div>
+                                    <div class="tm-card-lbl" title="Client & Sales Enquiries">Client &amp; Sales Enquiries</div>
                                 </div>
                             </div>
                             <div class="tm-card-sub green">
@@ -2036,7 +2042,7 @@
                             </div>
                         </a>
 
-                        {{-- Card 4: Vendor & Agency --}}
+                        {{-- Card 4: Agency Queries --}}
                         <a href="javascript:void(0);" onclick="setTeamTab('vendor', this);" class="tm-stat-card" data-tab="vendor">
                             <div class="tm-card-top">
                                 <div class="tm-card-icon purple">
@@ -2044,7 +2050,7 @@
                                 </div>
                                 <div class="tm-card-meta">
                                     <div class="tm-card-num" id="span_teamVendor">{{ $teamCounts['vendor'] ?? 0 }}</div>
-                                    <div class="tm-card-lbl" title="Vendor & Agency">Vendor &amp; Agency</div>
+                                    <div class="tm-card-lbl" title="Agency Queries">Agency Queries</div>
                                 </div>
                             </div>
                             <div class="tm-card-sub purple">
@@ -2467,7 +2473,7 @@
                             </div>
                         </div>
 
-                        <!-- Sub-Card 2: Agency Enquiries -->
+                        <!-- Sub-Card 2: Agency Queries -->
                         <div class="comm-card" id="commCard_agency" data-channel="agency">
                             <div class="comm-card-main">
                                 <div class="comm-card-icon icon-agency">
@@ -2475,7 +2481,7 @@
                                 </div>
                                 <div class="comm-card-text">
                                     <div class="d-flex align-items-center gap-1">
-                                        <span class="comm-card-title">Agency Enquiries</span>
+                                        <span class="comm-card-title">Agency Queries</span>
                                         <span class="comm-mandatory-pill">MANDATORY</span>
                                         <span class="comm-health-badge is-healthy" id="commHealth_agency">Healthy</span>
                                     </div>
@@ -2488,7 +2494,7 @@
                                     <option value="Secondary" selected>Secondary</option>
                                     <option value="Backup">Backup</option>
                                 </select>
-                                <label class="comm-ios-switch" title="Toggle Agency Enquiries">
+                                <label class="comm-ios-switch" title="Toggle Agency Queries">
                                     <input type="checkbox" class="comm-drawer-toggle" data-channel="agency" id="commToggle_agency">
                                     <span class="comm-ios-slider"></span>
                                 </label>
@@ -2837,8 +2843,8 @@
             // Phase 2: Tenant-Scoped IndexedDB Store for Team Listing & Reference Data
             const CURRENT_COMPANY_ID = {{ (int) (auth()->user()->company_id ?? 0) }};
             const CURRENT_USER_ID = {{ (int) (auth()->user()->id ?? 0) }};
-            const TEAM_DB_NAME = 'jero_team_local_store_v8_' + CURRENT_COMPANY_ID;
-            const TEAM_DB_VERSION = 7;
+            const TEAM_DB_NAME = 'jero_team_local_store_v9_' + CURRENT_COMPANY_ID;
+            const TEAM_DB_VERSION = 8;
             const TEAM_CACHE_TTL_MS = 15 * 60 * 1000; // 15 minutes TTL
 
             const JeroTeamLocalStore = (function() {
@@ -4722,7 +4728,7 @@
 
 						// Invalidate IndexedDB cache so fresh state displays instantly
 						if (window.JeroTeamLocalStore) {
-							try { window.JeroTeamLocalStore.clear(); } catch(e){}
+							try { window.JeroTeamLocalStore.purge(); } catch(e){}
 						}
 
 						// Update tab badge counters if returned
