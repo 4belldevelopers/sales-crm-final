@@ -354,14 +354,15 @@
             justify-content: space-between;
             gap: 16px;
             box-shadow: 0 1px 3px rgba(15, 23, 42, 0.02);
-            flex-wrap: wrap;
+            flex-wrap: nowrap;
             margin-bottom: 12px;
             box-sizing: border-box;
+            width: 100%;
         }
         .team-filter-search {
             position: relative;
             flex: 1 1 auto;
-            min-width: 280px;
+            min-width: 260px;
             display: flex;
             align-items: center;
         }
@@ -371,10 +372,11 @@
             font-size: 13px;
             color: #94a3b8;
             pointer-events: none;
+            z-index: 2;
         }
         .team-filter-search .team-search-input {
             width: 100%;
-            height: 36px;
+            height: 38px;
             padding: 0 32px 0 36px;
             border: 1px solid #e2e8f0;
             border-radius: 8px;
@@ -383,7 +385,7 @@
             color: #0f172a;
             outline: none;
             transition: all .15s ease;
-            background: #ffffff;
+            background: #f8fafc;
             box-sizing: border-box;
         }
         .team-filter-search .team-search-input:focus {
@@ -394,8 +396,8 @@
         .team-search-clear {
             position: absolute;
             right: 8px;
-            width: 20px;
-            height: 20px;
+            width: 22px;
+            height: 22px;
             border: none;
             background: transparent;
             color: #94a3b8;
@@ -405,13 +407,15 @@
             align-items: center;
             justify-content: center;
             border-radius: 50%;
+            z-index: 2;
+            transition: all .15s ease;
         }
         .team-search-clear:hover { background: #e2e8f0; color: #0f172a; }
 
         .team-filter-controls {
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 10px;
             flex-shrink: 0;
         }
         .team-filter-group {
@@ -429,7 +433,7 @@
             gap: 4px;
         }
         .team-select-control {
-            height: 36px;
+            height: 38px;
             border: 1px solid #e2e8f0;
             border-radius: 8px;
             background: #ffffff;
@@ -442,6 +446,7 @@
             cursor: pointer;
             transition: all .15s ease;
             box-sizing: border-box;
+            min-width: 200px;
         }
         .team-select-control:focus {
             border-color: #009ef7;
@@ -2182,7 +2187,7 @@
                     <div class="team-filter-search">
                         <i class="fa-solid fa-magnifying-glass"></i>
                         <input type="text" id="kt_tagify_2" class="team-search-input" placeholder="Search by name, email or phone..." autocomplete="off" />
-                        <button type="button" class="team-search-clear" onclick="clearTeamFilters()" title="Clear Search">✕</button>
+                        <button type="button" class="team-search-clear" id="teamSearchClearBtn" onclick="clearTeamFilters()" title="Clear Search">✕</button>
                     </div>
 
                     <div class="team-filter-controls">
@@ -2191,10 +2196,18 @@
 
                         <div class="team-filter-group">
                             <span class="team-filter-label"><i class="fa-solid fa-arrow-down-short-wide me-1 text-muted"></i>Sort by:</span>
-                            <select class="team-select-control" id="sortingfilter" onchange="fetchTeams(1)">
+                            <select class="team-select-control" id="sortingfilter" onchange="onTeamSortChange(this.value)">
                                 <option value="">Last Active</option>
-                                <option value="1">Newest to Oldest</option>
-                                <option value="2">Oldest to Newest</option>
+                                <option value="1">Joined: Newest to Oldest</option>
+                                <option value="2">Joined: Oldest to Newest</option>
+                                <option value="name_asc">Name: A to Z</option>
+                                <option value="name_desc">Name: Z to A</option>
+                                <option value="designation_asc">Designation: A to Z</option>
+                                <option value="role_asc">System Role: A to Z</option>
+                                <option value="active_jobs_desc">Workload: Active Jobs (High to Low)</option>
+                                <option value="bench_talents_desc">Workload: Bench Talent Rep (High to Low)</option>
+                                <option value="score_desc">Performance Score (High to Low)</option>
+                                <option value="status_active">Account Status: Active First</option>
                             </select>
                         </div>
                     </div>
@@ -3005,10 +3018,13 @@
             })();
             window.JeroTeamLocalStore = JeroTeamLocalStore;
 
-            // Phase 1 Optimization: Unified Client RAM state container
+            // Phase 1 & 2 Optimization: Unified Client RAM State Container (Canonical Server Dataset)
             window.teamState = {
-                records: [],
+                records: [],            // Canonical server dataset (NEVER mutate directly!)
+                isFullDataset: false,   // True if company <= 2000 members and full dataset loaded
                 statusTab: 'all',
+                searchQuery: '',
+                sortVal: '',
                 pageSize: parseInt(localStorage.getItem('teamPageSize')) || 10,
                 currentPage: parseInt(localStorage.getItem('currentPageTeam')) || 1,
                 totalCount: 0,
@@ -3115,17 +3131,7 @@
                 }
             });
 
-            // Phase 1 Optimization: 250ms debounced search to eliminate request storms
-            $('#kt_tagify_2').on('input', function() {
-                clearTimeout(window.teamState.searchDebounceTimer);
-                window.teamState.searchDebounceTimer = setTimeout(function() {
-                    filtersdataget();
-                }, 250);
-            });
-
-            function filtersdataget() {
-                fetchTeams(1);
-            }
+            // Reverb updates and real-time delta synchronization handled via window.teamState
 
             $(document).on('click', '.teamViewScore', function() {
                 var userId = $(this).data('user-id');
@@ -3376,6 +3382,9 @@
                                 if (rec) {
                                     rec.status = chkStatus ? 'active' : 'inactive';
                                 }
+                            }
+                            if (typeof updateLocalStatTabCounts === 'function') {
+                                updateLocalStatTabCounts();
                             }
                         } else {
                             // Revert on server business failure
@@ -4414,10 +4423,541 @@
 			// Active status tab + rows-per-page for the redesigned list.
 			var teamStatusTab = 'all';
 			var teamPageSize = parseInt(localStorage.getItem('teamPageSize')) || 10;
-
 			var currentTeamFetchXhr = null;
 
-			async function fetchTeams(page = page_no, search = '') {
+			// =========================================================================
+			// PHASE 2: CLIENT-FIRST INTERACTION LAYER (RAM Engine, 0% Server Strain)
+			// =========================================================================
+
+			function escapeHtml(str) {
+				if (str === null || str === undefined) return '';
+				return String(str)
+					.replace(/&/g, '&amp;')
+					.replace(/</g, '&lt;')
+					.replace(/>/g, '&gt;')
+					.replace(/"/g, '&quot;')
+					.replace(/'/g, '&#039;');
+			}
+
+			function getAvatarClass(name) {
+				var raw = (name || 'User').trim();
+				var first = (raw[0] || 'u').toLowerCase();
+				var code = first.charCodeAt(0);
+				if (code >= 97 && code <= 101) return 'bg-light-danger text-danger';
+				if (code >= 102 && code <= 106) return 'bg-light-warning text-warning';
+				if (code >= 107 && code <= 111) return 'bg-light-primary text-primary';
+				if (code >= 112 && code <= 116) return 'bg-light-success text-success';
+				if (code >= 117 && code <= 121) return 'bg-dark text-white';
+				return 'bg-light-secondary text-dark';
+			}
+
+			function getRolePill(roleName) {
+				var lower = (roleName || '').toLowerCase();
+				if (lower.indexOf('admin') !== -1) return 'role-admin';
+				if (lower.indexOf('lead') !== -1) return 'role-lead';
+				return 'role-default';
+			}
+
+			function formatRelativeTime(dateStr) {
+				if (!dateStr) return { text: 'Never logged in', dotClass: 'dot-gray' };
+				var d = new Date(dateStr);
+				if (isNaN(d.getTime())) return { text: 'Never logged in', dotClass: 'dot-gray' };
+				var now = new Date();
+				var diffSec = Math.floor((now - d) / 1000);
+				var mins = Math.floor(diffSec / 60);
+				var dotClass = mins <= 60 ? 'dot-green' : (mins <= 1440 ? 'dot-amber' : 'dot-gray');
+				if (diffSec < 60) return { text: 'Just now', dotClass: dotClass };
+				if (diffSec < 3600) return { text: Math.floor(diffSec / 60) + ' minutes ago', dotClass: dotClass };
+				if (diffSec < 86400) return { text: Math.floor(diffSec / 3600) + ' hours ago', dotClass: dotClass };
+				if (diffSec < 2592000) return { text: Math.floor(diffSec / 86400) + ' days ago', dotClass: dotClass };
+				return { text: Math.floor(diffSec / 2592000) + ' months ago', dotClass: dotClass };
+			}
+
+			function formatJoinedDate(dateStr) {
+				if (!dateStr) return 'Recently';
+				var d = new Date(dateStr);
+				if (isNaN(d.getTime())) return 'Recently';
+				var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+				var day = String(d.getDate()).padStart(2, '0');
+				var month = months[d.getMonth()];
+				var year = d.getFullYear();
+				return day + ' ' + month + ', ' + year;
+			}
+
+			function updateLocalStatTabCounts() {
+				if (!window.teamState || !Array.isArray(window.teamState.records)) return;
+				var total = window.teamState.records.length;
+				var recruitmentCount = 0;
+				var clientCount = 0;
+				var vendorCount = 0;
+				var inactiveCount = 0;
+				var invitedCount = 0;
+
+				for (var i = 0; i < total; i++) {
+					var r = window.teamState.records[i];
+					var status = (r.status || '').toLowerCase();
+					var channels = Array.isArray(r.channels) ? r.channels : [];
+					var isInvited = !r.password || status === 'invited';
+
+					if (channels.indexOf('client') !== -1 || r.is_client_rep) clientCount++;
+					if (channels.indexOf('agency') !== -1 || channels.indexOf('vendor') !== -1 || r.is_agency_rep || (r.pre_agency_shares > 0)) vendorCount++;
+					if (channels.indexOf('bench') !== -1 || channels.indexOf('recruitment') !== -1 || (parseInt(r.root_user, 10) !== 1 && status === 'active')) recruitmentCount++;
+					if (status === 'inactive') inactiveCount++;
+					if (isInvited) invitedCount++;
+				}
+
+				$('#span_teamAll').text(total);
+				$('#span_teamRecruitment').text(recruitmentCount);
+				$('#span_teamClient').text(clientCount);
+				$('#span_teamVendor').text(vendorCount);
+				$('#span_teamInactive').text(inactiveCount);
+				$('#span_teamInvited').text(invitedCount);
+			}
+
+			function getDerivedRecords() {
+				if (!window.teamState || !Array.isArray(window.teamState.records)) {
+					return [];
+				}
+				var statusTab = window.teamState.statusTab || teamStatusTab || 'all';
+				var query = (window.teamState.searchQuery || $('#kt_tagify_2').val() || '').trim().toLowerCase();
+				var sortVal = window.teamState.sortVal || $('#sortingfilter').val() || '';
+
+				// 1. SHALLOW CLONE TO GUARANTEE IMMUTABILITY
+				var list = window.teamState.records.map(function(item) {
+					return Object.assign({}, item);
+				});
+
+				// 2. STATUS TAB FILTERING
+				if (statusTab && statusTab !== 'all') {
+					list = list.filter(function(r) {
+						var channels = Array.isArray(r.channels) ? r.channels : [];
+						var status = (r.status || '').toLowerCase();
+						var isInvited = !r.password || status === 'invited';
+
+						if (statusTab === 'client') {
+							return channels.indexOf('client') !== -1 || !!r.is_client_rep;
+						} else if (statusTab === 'vendor' || statusTab === 'agency') {
+							return channels.indexOf('agency') !== -1 || channels.indexOf('vendor') !== -1 || !!r.is_agency_rep || ((r.pre_agency_shares || 0) > 0);
+						} else if (statusTab === 'recruitment' || statusTab === 'bench') {
+							return channels.indexOf('bench') !== -1 || channels.indexOf('recruitment') !== -1 || (parseInt(r.root_user, 10) !== 1 && status === 'active');
+						} else if (statusTab === 'inactive') {
+							return status === 'inactive';
+						} else if (statusTab === 'invited') {
+							return isInvited;
+						} else if (statusTab === 'active') {
+							return status === 'active' && !isInvited;
+						}
+						return true;
+					});
+				}
+
+				// 3. FULL-TEXT SEARCH FILTERING
+				if (query) {
+					list = list.filter(function(r) {
+						var name = (r.name || '').toLowerCase();
+						var email = (r.email || '').toLowerCase();
+						var phone = (r.phone || r.mobile || '').toLowerCase();
+						var designation = (r.designation || '').toLowerCase();
+						var role = (r.display_name || r.role_name || '').toLowerCase();
+						return name.indexOf(query) !== -1 ||
+							   email.indexOf(query) !== -1 ||
+							   phone.indexOf(query) !== -1 ||
+							   designation.indexOf(query) !== -1 ||
+							   role.indexOf(query) !== -1;
+					});
+				}
+
+				// 4. MULTI-DIMENSIONAL IN-MEMORY SORTING
+				list.sort(function(a, b) {
+					switch (sortVal) {
+						case '1': // Joined: Newest to Oldest
+							var tA1 = a.created_at ? new Date(a.created_at).getTime() : 0;
+							var tB1 = b.created_at ? new Date(b.created_at).getTime() : 0;
+							if (tA1 !== tB1) return tB1 - tA1;
+							return (b.id || 0) - (a.id || 0);
+
+						case '2': // Joined: Oldest to Newest
+							var tA2 = a.created_at ? new Date(a.created_at).getTime() : 0;
+							var tB2 = b.created_at ? new Date(b.created_at).getTime() : 0;
+							if (tA2 !== tB2) return tA2 - tB2;
+							return (a.id || 0) - (b.id || 0);
+
+						case 'name_asc': // Name: A to Z
+							return (a.name || '').localeCompare(b.name || '');
+
+						case 'name_desc': // Name: Z to A
+							return (b.name || '').localeCompare(a.name || '');
+
+						case 'designation_asc': // Designation: A to Z
+							var desA = a.designation || a.role_name || '';
+							var desB = b.designation || b.role_name || '';
+							return desA.localeCompare(desB);
+
+						case 'role_asc': // System Role: A to Z
+							var rA = a.display_name || a.role_name || '';
+							var rB = b.display_name || b.role_name || '';
+							return rA.localeCompare(rB);
+
+						case 'active_jobs_desc': // Workload: Active Jobs High to Low
+							var ajDiff = (b.pre_active_jobs || 0) - (a.pre_active_jobs || 0);
+							if (ajDiff !== 0) return ajDiff;
+							return (b.id || 0) - (a.id || 0);
+
+						case 'bench_talents_desc': // Workload: Bench Talent Rep High to Low
+							var btDiff = (b.pre_trm_talents || 0) - (a.pre_trm_talents || 0);
+							if (btDiff !== 0) return btDiff;
+							return (b.id || 0) - (a.id || 0);
+
+						case 'score_desc': // Performance Score High to Low
+							var scDiff = (b.pre_score || b.score || 0) - (a.pre_score || a.score || 0);
+							if (scDiff !== 0) return scDiff;
+							return (b.id || 0) - (a.id || 0);
+
+						case 'status_active': // Account Status: Active First
+							var aAct = (a.status === 'active') ? 1 : 0;
+							var bAct = (b.status === 'active') ? 1 : 0;
+							if (aAct !== bAct) return bAct - aAct;
+							return (b.id || 0) - (a.id || 0);
+
+						case 'last_active':
+						default: // Last Active (Most Recent First)
+							var aTime = a.last_login ? new Date(a.last_login).getTime() : 0;
+							var bTime = b.last_login ? new Date(b.last_login).getTime() : 0;
+							if (aTime !== bTime) return bTime - aTime;
+							return (b.id || 0) - (a.id || 0);
+					}
+				});
+
+				return list;
+			}
+
+			function buildTeamMemberCardHtml(row) {
+				var rawName = (row.name || 'User').trim();
+				var strVal = (rawName[0] || 'U').toLowerCase();
+				var avatarClass = getAvatarClass(rawName);
+
+				var roleName = row.display_name || row.role_name || 'Team Member';
+				var rolePill = getRolePill(roleName);
+				var userDesignation = (row.designation && row.designation.trim()) ? row.designation.trim() : '';
+				var designation = userDesignation ? userDesignation : roleName;
+
+				var activeJobs = parseInt(row.pre_active_jobs, 10) || 0;
+				var captainJobs = parseInt(row.pre_captain_jobs, 10) || 0;
+				var trmTalents = parseInt(row.pre_trm_talents, 10) || 0;
+				var totalOps = activeJobs + captainJobs + trmTalents;
+
+				var channels = Array.isArray(row.channels) ? row.channels : [];
+				var publicCount = channels.length;
+
+				var isInvited = !row.password || row.status === 'invited';
+				var isActive = (row.status === 'active');
+
+				var cardAccent = '#cbd5e1';
+				if (isActive) {
+					cardAccent = (row.is_client_rep || row.is_agency_rep) ? '#009ef7' : '#10b981';
+				} else if (isInvited) {
+					cardAccent = '#f59e0b';
+				}
+
+				var relTime = formatRelativeTime(row.last_login);
+				var joinedDate = formatJoinedDate(row.created_at);
+
+				var phone = row.phone || '';
+				if (!phone && row.mobile) {
+					phone = (row.calling_code ? '+' + row.calling_code.replace(/^\+/, '') + ' ' : '') + row.mobile;
+				}
+
+				var isRanked = !isInvited && typeof row.pre_rank === 'number' && row.pre_rank > 0 && isActive;
+				var rankDisplay = isRanked ? '#' + row.pre_rank : 'N/A';
+				var rankMonthDisplay = (isRanked && row.pre_rank_month) ? '(' + row.pre_rank_month + ')' : '';
+				var scoreVal = isRanked ? (parseInt(row.pre_score || row.score, 10) || 0) : 0;
+				var medal = (isRanked && row.pre_rank === 1) ? '🥇' : ((isRanked && row.pre_rank === 2) ? '🥈' : ((isRanked && row.pre_rank === 3) ? '🥉' : ''));
+
+				var userDataObj = {
+					id: row.id,
+					name: rawName,
+					email: row.email || '',
+					phone: phone,
+					image: row.image || '',
+					initial: strVal.toUpperCase(),
+					avatar_class: avatarClass,
+					role: roleName,
+					designation: designation,
+					status: (row.status || 'active').toLowerCase(),
+					last_active: relTime.text,
+					channels: channels,
+					priorities: row.priorities || []
+				};
+				var userDataAttr = escapeHtml(JSON.stringify(userDataObj));
+
+				var html = '<div class="tm-primary-card js-team-card" data-user-id="' + row.id + '" data-is-client-rep="' + (row.is_client_rep ? '1' : '0') + '" data-is-agency-rep="' + (row.is_agency_rep ? '1' : '0') + '" style="border-left: 3.5px solid ' + cardAccent + ';">';
+				html += '<div class="tm-subcards-grid">';
+
+				// Subcard 1: Member Identity
+				html += '<div class="tm-subcard tm-subcard-identity">';
+				html += '<div class="tm-subcard-head">';
+				html += '<div class="tm-subcard-title-wrap">';
+				html += '<svg class="tm-subcard-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>';
+				html += '<span class="tm-subcard-title">Member Identity</span>';
+				html += '</div>';
+				if (parseInt(row.root_user, 10) === 1) {
+					html += '<span class="tm-subcard-badge badge-owner" title="Organization Owner"><i class="fa-solid fa-crown text-warning me-1"></i>Owner</span>';
+				} else {
+					html += '<span class="tm-subcard-badge badge-member">• Member</span>';
+				}
+				html += '</div>';
+				html += '<div class="tm-identity-body">';
+				html += '<div class="tm-avatar ' + avatarClass + ' show-detail-team" data-row-id="' + row.id + '" role="button" tabindex="0" title="View ' + escapeHtml(rawName) + ' Profile" style="cursor: pointer;">';
+				if (row.image) {
+					html += '<img src="' + escapeHtml(row.image) + '" alt="' + escapeHtml(rawName) + '">';
+				} else {
+					html += strVal.toUpperCase();
+				}
+				html += '</div>';
+				html += '<div class="tm-identity-details">';
+				html += '<span class="tm-member-name show-detail-team" data-row-id="' + row.id + '" role="button" tabindex="0" title="View ' + escapeHtml(rawName) + ' Profile">' + escapeHtml(rawName.substring(0, 24)) + '</span>';
+				html += '<div class="tm-member-designation" title="' + (userDesignation ? 'Designation: ' + escapeHtml(userDesignation) : 'System Role: ' + escapeHtml(roleName)) + '">';
+				html += '<i class="fa-solid fa-id-badge text-muted"></i>';
+				html += '<span>' + escapeHtml(designation.substring(0, 26)) + '</span>';
+				html += '</div>';
+				html += '<div class="tm-member-email-wrap">';
+				html += '<i class="fa-regular fa-envelope text-muted"></i>';
+				html += '<a href="mailto:' + escapeHtml(row.email || '') + '" class="tm-member-email-link" title="' + escapeHtml(row.email || '') + '">' + escapeHtml((row.email || '').substring(0, 26)) + '</a>';
+				html += '</div>';
+				html += '</div></div></div>';
+
+				// Subcard 2: System Role
+				html += '<div class="tm-subcard tm-subcard-role">';
+				html += '<div class="tm-subcard-head">';
+				html += '<div class="tm-subcard-title-wrap">';
+				html += '<svg class="tm-subcard-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>';
+				html += '<span class="tm-subcard-title">System Role</span>';
+				html += '</div></div>';
+				html += '<div class="tm-role-body">';
+				html += '<div class="tm-role-badge-row">';
+				html += '<span class="tm-role-badge team-role-pill ' + rolePill + '" title="Assigned system role"><i class="fa-solid fa-shield-halved me-1"></i>' + escapeHtml(roleName) + '</span>';
+				html += '</div>';
+				html += '<div class="tm-role-action-row">';
+				if (parseInt(row.root_user, 10) !== 1) {
+					html += '<button type="button" class="btn-change-role update-user-role" data-row-id="' + row.id + '" title="Change role and permissions directly from here"><i class="fa-solid fa-user-gear me-1 text-primary"></i>Change Role</button>';
+				} else {
+					html += '<span class="tm-role-locked-note" title="Primary owner role is authoritative and cannot be changed"><i class="fa-solid fa-lock text-muted"></i>Owner Role</span>';
+				}
+				html += '</div></div></div>';
+
+				// Subcard 3: Workload
+				html += '<div class="tm-subcard tm-subcard-workload">';
+				html += '<div class="tm-subcard-head">';
+				html += '<div class="tm-subcard-title-wrap">';
+				html += '<svg class="tm-subcard-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>';
+				html += '<span class="tm-subcard-title">Workload</span>';
+				html += '</div>';
+				html += '<span class="tm-subcard-badge badge-count">' + totalOps + ' Ops</span>';
+				html += '</div>';
+				html += '<div class="tm-workload-body">';
+				html += '<div class="tm-wl-row" title="Active Jobs Assigned"><i class="fa-solid fa-briefcase text-primary me-1"></i><span><strong>' + activeJobs + '</strong> Active Jobs</span></div>';
+				html += '<div class="tm-wl-row" title="SPOC / Captain on Jobs"><i class="fa-solid fa-crown text-purple me-1"></i><span><strong>' + captainJobs + '</strong> Captain Jobs</span></div>';
+				html += '<div class="tm-wl-row" title="Bench Talents Managed (Bench Talent Representative)"><i class="fa-solid fa-users text-success me-1"></i><span title="Bench Talents Managed (Bench Talent Representative)"><strong>' + trmTalents + '</strong> Bench Talent Rep</span></div>';
+				html += '</div></div>';
+
+				// Subcard 4: Account Status
+				html += '<div class="tm-subcard tm-subcard-status">';
+				html += '<div class="tm-subcard-head">';
+				html += '<div class="tm-subcard-title-wrap">';
+				html += '<svg class="tm-subcard-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18.36 6.64a9 9 0 1 1-12.73 0"/><line x1="12" y1="2" x2="12" y2="12"/></svg>';
+				html += '<span class="tm-subcard-title">Account Status</span>';
+				html += '</div></div>';
+				html += '<div class="tm-status-body">';
+				if (row.password) {
+					html += '<div class="tm-status-row tm-status-row-control">';
+					html += '<label class="ios-switch" title="Toggle active status">';
+					html += '<input type="checkbox" class="chkStatus" id="status_change_' + row.id + '" value="active" ' + (isActive ? 'checked' : '') + ' onclick="handleClick(this, ' + row.id + ');" ' + (parseInt(row.root_user, 10) === 1 ? 'disabled' : '') + '>';
+					html += '<span class="ios-slider"></span>';
+					html += '</label></div>';
+					html += '<div class="tm-status-row tm-status-row-label">';
+					html += '<span class="tm-status-text status_text ' + (isActive ? 'text-success' : 'text-muted') + '">' + (isActive ? 'Active' : 'Inactive') + '</span>';
+					html += '</div>';
+					html += '<div class="tm-status-row tm-status-row-sub">';
+					if (parseInt(row.root_user, 10) === 1) {
+						html += '<span class="tm-status-subnote">Owner (Always Active)</span>';
+					} else {
+						html += '<span class="tm-status-subnote">Click switch to toggle</span>';
+					}
+					html += '</div>';
+				} else {
+					html += '<div class="tm-status-row tm-status-row-control">';
+					html += '<button type="button" class="btn-resend-invite-icon" onclick="reSendhandleClick(this, ' + row.id + ');" title="Resend invitation email">';
+					html += '<i class="fa-solid fa-paper-plane text-warning" style="font-size: 11px;"></i>';
+					html += '</button></div>';
+					html += '<div class="tm-status-row tm-status-row-label"><span class="tm-status-text text-warning">Awaiting Signup</span></div>';
+					html += '<div class="tm-status-row tm-status-row-sub">';
+					html += '<a href="javascript:;" class="btn-resend-invite" onclick="reSendhandleClick(this, ' + row.id + ');" title="Resend invitation email"><i class="fa-solid fa-arrows-rotate me-1"></i>Resend Invite</a>';
+					html += '</div>';
+				}
+				html += '</div></div>';
+
+				// Subcard 5: Contact Details Visibility
+				html += '<div class="tm-subcard tm-subcard-comm" data-user=\'' + userDataAttr + '\' onclick="openAssignCommDrawer(this)" role="button" tabindex="0" title="Click anywhere to manage contact visibility">';
+				html += '<div class="tm-subcard-head">';
+				html += '<div class="tm-subcard-title-wrap">';
+				html += '<i class="fa-solid fa-address-book text-primary" style="font-size: 11px;"></i>';
+				html += '<span class="tm-subcard-title">Contact Details Visibility</span>';
+				html += '</div>';
+				html += '<div class="d-flex align-items-center gap-1 flex-shrink-0">';
+				if (publicCount === 0) {
+					html += '<span class="tm-subcard-badge badge-role" title="Contact details kept private"><i class="fa-solid fa-eye-slash me-1"></i>Private</span>';
+				}
+				html += '<button type="button" class="btn-comm-change-action" data-user=\'' + userDataAttr + '\' onclick="event.stopPropagation(); openAssignCommDrawer(this);" title="Change contact visibility preferences">Change</button>';
+				html += '</div></div>';
+				html += '<div class="tm-comm-body">';
+				if (publicCount > 0) {
+					html += '<div class="tm-comm-rows-list">';
+					if (channels.indexOf('client') !== -1) {
+						html += '<div class="tm-comm-row"><span class="tm-comm-chip client" title="Sales &amp; Client Enquiries"><i class="fa-solid fa-phone me-1"></i>Sales &amp; Client Enquiries</span></div>';
+					}
+					if (channels.indexOf('agency') !== -1 || channels.indexOf('vendor') !== -1) {
+						html += '<div class="tm-comm-row"><span class="tm-comm-chip vendor" title="Agency Queries"><i class="fa-solid fa-phone me-1"></i>Agency Queries</span></div>';
+					}
+					if (channels.indexOf('bench') !== -1 || channels.indexOf('recruitment') !== -1) {
+						html += '<div class="tm-comm-row"><span class="tm-comm-chip recruitment" title="Bench Talent Enquiries"><i class="fa-solid fa-phone me-1"></i>Bench Talent Enquiries</span></div>';
+					}
+					html += '</div>';
+				} else {
+					html += '<div class="d-flex align-items-center justify-content-between w-100 gap-1 flex-wrap">';
+					html += '<span class="text-muted" style="font-size: 10.5px; font-weight: 500;"><i class="fa-solid fa-lock text-muted me-1"></i> No Details Shared (Keep Private)</span>';
+					html += '<button type="button" class="btn-assign-comm-empty" data-user=\'' + userDataAttr + '\' onclick="event.stopPropagation(); openAssignCommDrawer(this);" title="Share contact details for marketplace enquiries"><i class="fa-solid fa-plus me-1 text-primary"></i>Share Details</button>';
+					html += '</div>';
+				}
+				html += '</div></div>';
+
+				html += '</div>'; // End tm-subcards-grid
+
+				// Subcard 6: Bottom Activity Strip
+				html += '<div class="tm-card-bottom-strip">';
+				html += '<div class="tm-bottom-left-meta">';
+				html += '<span class="tm-meta-item" title="Registration Date">';
+				html += '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>';
+				html += '<span>Joined: <strong>' + joinedDate + '</strong></span>';
+				html += '</span>';
+				html += '<span class="tm-meta-dot">•</span>';
+				html += '<span class="tm-meta-item" title="Last Login Freshness">';
+				html += '<span class="dot-pulse ' + relTime.dotClass + '"></span>';
+				html += '<span>Last active: <strong>' + escapeHtml(relTime.text) + '</strong></span>';
+				html += '</span>';
+				if (phone) {
+					html += '<span class="tm-meta-dot">•</span>';
+					html += '<span class="tm-meta-item" title="Direct Phone">';
+					html += '<i class="fa-solid fa-phone" style="font-size: 10px;"></i>';
+					html += '<span>' + escapeHtml(phone) + '</span>';
+					html += '</span>';
+				}
+				html += '</div>';
+
+				html += '<div class="tm-bottom-right-group">';
+				html += '<div class="tm-perf-strip-box">';
+				html += '<span class="tm-perf-rank" title="Performance Rank">';
+				html += medal + ' <strong>' + rankDisplay + '</strong>';
+				if (rankMonthDisplay) {
+					html += '<span class="tm-perf-month">' + escapeHtml(rankMonthDisplay) + '</span>';
+				}
+				html += '</span>';
+				if (isRanked) {
+					html += '<span class="tm-meta-dot">•</span>';
+					html += '<span class="tm-perf-score" title="Score Points">Score: <strong>' + scoreVal + ' pts</strong></span>';
+				}
+				html += '<button type="button" class="btn-view-score teamViewScore" data-user-id="' + row.id + '" title="Click to view detailed performance scoreboard"><i class="fa-solid fa-chart-line me-1"></i>View Score</button>';
+				html += '</div>';
+
+				html += '<button type="button" class="btn-view-profile show-detail-team" data-row-id="' + row.id + '" title="View Full Profile"><span>View Profile</span><i class="fa-solid fa-arrow-right" style="font-size: 9px;"></i></button>';
+				html += '</div>';
+
+				html += '</div>'; // End tm-card-bottom-strip
+				html += '</div>'; // End tm-primary-card
+
+				return html;
+			}
+
+			function buildTeamPaginationHtml(total, currentPage, perPage) {
+				if (total <= 0) return '';
+				perPage = perPage || teamPageSize || 10;
+				currentPage = parseInt(currentPage, 10) || 1;
+				var totalPages = Math.ceil(total / perPage) || 1;
+				var from = (currentPage - 1) * perPage + 1;
+				var to = Math.min(currentPage * perPage, total);
+
+				var html = '<div class="team-pagination-bar">';
+				html += '<div class="team-pagination-info">Showing ' + from + ' to ' + to + ' of ' + total + ' members</div>';
+				html += '<div class="team-pagination-pages">';
+
+				// Previous button
+				var prevDisabled = currentPage > 1 ? '' : 'is-disabled';
+				html += '<button type="button" class="team-page-link team-page-arrow ' + prevDisabled + '" data-page="' + (currentPage - 1) + '" data-listType="allcandidate" aria-label="Previous"><i class="fa-solid fa-chevron-left"></i></button>';
+
+				// Page numbers with ellipsis
+				for (var i = 1; i <= totalPages; i++) {
+					if (i === 1 || i === totalPages || (i >= currentPage - 1 && i <= currentPage + 1)) {
+						var activeClass = (i === currentPage) ? 'is-active' : '';
+						html += '<button type="button" class="team-page-link ' + activeClass + '" data-page="' + i + '" data-listType="allcandidate">' + i + '</button>';
+					} else if (i === currentPage - 2 || i === currentPage + 2) {
+						html += '<span class="team-page-dots">…</span>';
+					}
+				}
+
+				// Next button
+				var nextDisabled = currentPage < totalPages ? '' : 'is-disabled';
+				html += '<button type="button" class="team-page-link team-page-arrow ' + nextDisabled + '" data-page="' + (currentPage + 1) + '" data-listType="allcandidate" aria-label="Next"><i class="fa-solid fa-chevron-right"></i></button>';
+
+				html += '</div></div>';
+				return html;
+			}
+
+			function renderDerivedTeamStream(targetPage) {
+				if (!window.teamState || !window.teamState.isFullDataset) {
+					return fetchTeamsServer(targetPage || 1);
+				}
+
+				var derived = getDerivedRecords();
+				var total = derived.length;
+				var pageSize = window.teamState.pageSize || teamPageSize || 10;
+				var totalPages = Math.ceil(total / pageSize) || 1;
+				var page = Math.max(1, Math.min(parseInt(targetPage, 10) || 1, totalPages));
+
+				window.teamState.currentPage = page;
+				localStorage.setItem('currentPageTeam', page);
+
+				var fromIdx = (page - 1) * pageSize;
+				var pagedItems = derived.slice(fromIdx, fromIdx + pageSize);
+
+				var cardsHtml = '';
+				if (pagedItems.length > 0) {
+					cardsHtml = '<div class="team-cards-container">';
+					for (var i = 0; i < pagedItems.length; i++) {
+						cardsHtml += buildTeamMemberCardHtml(pagedItems[i]);
+					}
+					cardsHtml += '</div>';
+				} else {
+					cardsHtml = '<div class="team-empty-card">' +
+						'<i class="fa-solid fa-user-group fa-3x mb-3 text-muted"></i>' +
+						'<div class="fw-bold fs-6 text-gray-800 mb-1">No Team Members Found</div>' +
+						'<div class="text-muted fs-7">No team members match the selected filter criteria.</div>' +
+						'</div>';
+				}
+
+				var paginationHtml = buildTeamPaginationHtml(total, page, pageSize);
+
+				$('#teamsListajax').html(cardsHtml);
+				$('#paginationTeams').html(paginationHtml);
+				updateTeamSelectedCount();
+
+				// Update stat tabs count dynamically when viewing all members without search
+				if (window.teamState.statusTab === 'all' && !(window.teamState.searchQuery || '').trim()) {
+					updateLocalStatTabCounts();
+				}
+
+				return Promise.resolve({ total: total, page: page });
+			}
+
+			async function fetchTeamsServer(page = page_no, search = '') {
 				if (currentTeamFetchXhr && currentTeamFetchXhr.readyState !== 4) {
 					currentTeamFetchXhr.abort();
 				}
@@ -4426,7 +4966,7 @@
 				var sortFilter = $('#sortingfilter').val() || '';
 				var cacheKey = 'team_' + teamStatusTab + '_p' + page + '_s' + teamPageSize + '_q' + customSearch + '_sort' + sortFilter;
 
-				// Phase 2: Check IndexedDB L2 Persistent Cache first (0ms, 0 HTTP requests)
+				// Check IndexedDB L2 Cache first
 				if (window.JeroTeamLocalStore) {
 					try {
 						var cached = await window.JeroTeamLocalStore.get(cacheKey);
@@ -4438,6 +4978,7 @@
 								window.teamState.currentPage = page;
 								window.teamState.totalCount = cached.total || 0;
 								window.teamState.statusTab = teamStatusTab;
+								window.teamState.isFullDataset = !!cached.is_full_dataset;
 								if (cached.raw_data && Array.isArray(cached.raw_data)) {
 									window.teamState.records = cached.raw_data;
 								}
@@ -4448,9 +4989,7 @@
 							updateTeamSelectedCount();
 							return Promise.resolve(cached);
 						}
-					} catch(e) {
-						// Fall through to server fetch on any cache read exception
-					}
+					} catch(e) {}
 				}
 
 				$('.loadingMessageteamsListajax').css({ display: 'block' });
@@ -4470,17 +5009,16 @@
 						$('.loadingMessageteamsListajax').css({ display: 'none' });
 						localStorage.setItem('currentPageTeam', page);
 
-						// Phase 1 Optimization: Cache raw records in RAM
 						if (window.teamState) {
 							window.teamState.currentPage = page;
 							window.teamState.totalCount = response.total || 0;
 							window.teamState.statusTab = teamStatusTab;
+							window.teamState.isFullDataset = !!response.is_full_dataset;
 							if (response.raw_data && Array.isArray(response.raw_data)) {
 								window.teamState.records = response.raw_data;
 							}
 						}
 
-						// Phase 2 Optimization: Store in IndexedDB
 						if (window.JeroTeamLocalStore && response && response.html) {
 							window.JeroTeamLocalStore.set(cacheKey, response);
 						}
@@ -4496,27 +5034,6 @@
 							$('#span_teamVendor').text(response.counts.vendor || 0);
 							$('#span_teamInactive').text(response.counts.inactive || 0);
 							$('#span_teamInvited').text(response.counts.invited || 0);
-
-							$('#stat-total-members').text(response.counts.total);
-							$('#stat-active-members').text(response.counts.active);
-							$('#stat-inactive-members').text(response.counts.inactive);
-							if ($('#stat-captain-trm').length) {
-								$('#stat-captain-trm').text((response.counts.captain || 0) + (response.counts.trm || 0));
-							}
-							if ($('#stat-captain-sub').length) {
-								$('#stat-captain-sub').text(response.counts.captain || 0);
-							}
-							if ($('#stat-trm-sub').length) {
-								$('#stat-trm-sub').text(response.counts.trm || 0);
-							}
-							$('#tab-count-all').text('(' + (response.counts.total || 0) + ')');
-							$('#tab-count-all-badge').text((response.counts.total || 0) + ' Members');
-							$('#tab-count-active').text('(' + (response.counts.active || 0) + ')');
-							$('#tab-count-inactive').text('(' + (response.counts.inactive || 0) + ')');
-							$('#tab-count-invited').text('(' + (response.counts.invited || 0) + ')');
-							if (response.counts.representatives !== undefined) {
-								$('#tab-count-reps').text(response.counts.representatives);
-							}
 						}
 					},
 					error: function(xhr, status) {
@@ -4528,19 +5045,54 @@
 				return currentTeamFetchXhr;
 			}
 
+			function fetchTeams(page = page_no, search = '') {
+				// 0-Network client-first rendering if full dataset is in RAM
+				if (window.teamState && window.teamState.isFullDataset && Array.isArray(window.teamState.records) && window.teamState.records.length > 0) {
+					return renderDerivedTeamStream(page);
+				}
+				return fetchTeamsServer(page, search);
+			}
+
 			function setTeamTab(tab, el) {
 				teamStatusTab = tab;
+				if (window.teamState) {
+					window.teamState.statusTab = tab;
+				}
 				$('.tm-stat-grid .tm-stat-card').removeClass('active');
 				$(el).addClass('active');
 				$('#teamStatusFilterDropdown').val(tab);
-				fetchTeams(1);
+
+				if (window.teamState && window.teamState.isFullDataset) {
+					renderDerivedTeamStream(1);
+				} else {
+					fetchTeamsServer(1);
+				}
 			}
 
 			function changeStatusDropdown(val) {
 				teamStatusTab = val;
+				if (window.teamState) {
+					window.teamState.statusTab = val;
+				}
 				$('.tm-stat-grid .tm-stat-card').removeClass('active');
 				$('.tm-stat-grid .tm-stat-card[data-tab="' + val + '"]').addClass('active');
-				fetchTeams(1);
+
+				if (window.teamState && window.teamState.isFullDataset) {
+					renderDerivedTeamStream(1);
+				} else {
+					fetchTeamsServer(1);
+				}
+			}
+
+			function onTeamSortChange(sortVal) {
+				if (window.teamState) {
+					window.teamState.sortVal = sortVal;
+				}
+				if (window.teamState && window.teamState.isFullDataset) {
+					renderDerivedTeamStream(1);
+				} else {
+					fetchTeamsServer(1);
+				}
 			}
 
 			// =========================================================
@@ -4763,7 +5315,20 @@
 							if (c.invited !== undefined) $('.tm-count-invited').text(c.invited);
 						}
 
-						fetchTeams(page_no);
+						// Update RAM state
+						if (window.teamState && Array.isArray(window.teamState.records)) {
+							var rec = window.teamState.records.find(function(r) { return parseInt(r.id, 10) === parseInt(userId, 10); });
+							if (rec) {
+								rec.channels = selectedChannels;
+								rec.priorities = priorities;
+							}
+						}
+
+						if (window.teamState && window.teamState.isFullDataset) {
+							renderDerivedTeamStream(window.teamState.currentPage || 1);
+						} else {
+							fetchTeamsServer(window.teamState.currentPage || 1);
+						}
 
 						if (typeof toastr !== 'undefined') {
 							toastr.success(response.message || 'Contact sharing preferences updated successfully.');
