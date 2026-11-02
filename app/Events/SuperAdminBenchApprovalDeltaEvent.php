@@ -47,6 +47,7 @@ class SuperAdminBenchApprovalDeltaEvent implements ShouldBroadcast
         public readonly array $counts = [],
         public readonly ?string $updatedBy = null,
         public readonly int $entityVersion = 1,
+        public readonly ?int $sequenceId = null,
         public readonly array $extra = []
     ) {}
 
@@ -81,6 +82,7 @@ class SuperAdminBenchApprovalDeltaEvent implements ShouldBroadcast
             'counts' => $this->counts,
             'updated_by' => $this->updatedBy,
             'entity_version' => $this->entityVersion,
+            'sequence_id' => $this->sequenceId ?? ($this->extra['sequence_id'] ?? $this->entityVersion),
             'timestamp' => now()->toIso8601String(),
             'extra' => $this->extra,
         ];

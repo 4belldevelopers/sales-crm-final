@@ -16,7 +16,6 @@ use App\Http\Requests\SuperAdmin\DeleteSkillRequest;
 use App\Http\Requests\SuperAdmin\StoreOrUpdateSkillRequest;
 use App\Http\Requests\SuperAdmin\ToggleNotificationStatusRequest;
 use App\Http\Requests\SuperAdmin\UpdateEmailNotificationRequest;
-use App\Models\MeetingComment;
 use App\Models\AddJobWiseCondidate;
 use App\Models\ApplicationStatus;
 use App\Models\Client;
@@ -36,6 +35,7 @@ use App\Models\TicketStatus;
 use App\Models\User;
 use App\Services\AgencyCommercialTermsService;
 use App\Services\CompanyMutationService;
+use App\Services\ElasticsearchCircuitBreaker;
 use App\Services\ElasticService;
 use App\Services\GoogleSheetServiceCandidate;
 use App\Services\GoogleSheetsServiceGet;
@@ -43,14 +43,14 @@ use App\Services\MailService;
 use App\Services\MarketplaceModerationService;
 use App\Services\Notification\NotificationHtmlSanitizer;
 use App\Services\Notification\NotificationTokenRegistry;
-use App\Services\ElasticsearchCircuitBreaker;
-use App\Services\SuperAdminCandidateListsCacheManager;
 use App\Services\SuperAdmin\SuperAdminBenchMutationService;
 use App\Services\SuperAdmin\SuperAdminCandidateMutationService;
 use App\Services\SuperAdmin\SuperAdminJdMutationService;
-use App\Services\SuperAdminMeetingScheduleCacheManager;
 use App\Services\SuperAdmin\SuperAdminMeetingMutationService;
 use App\Services\SuperAdmin\SuperAdminNotificationMutationService;
+use App\Services\SuperAdminBenchCandidatesCacheManager;
+use App\Services\SuperAdminCandidateListsCacheManager;
+use App\Services\SuperAdminMeetingScheduleCacheManager;
 use Carbon\Carbon;
 use Crypt;
 use Illuminate\Http\Request;
@@ -6686,10 +6686,10 @@ class SuperAdminCompanyController extends SuperAdminBaseController
      */
     public function bernchNewCandidates(Request $request)
     {
-        $statusType = $request->status ?: 'approve';
+        $statusType = $request->status ?: 'pending';
         $this->statusType = $statusType;
 
-        $this->bench_status = DB::table('global_settings')->select('bench_status', 'id')->first();
+        $this->bench_status = SuperAdminBenchCandidatesCacheManager::getGlobalSettings();
 
         $this->reject = true;
         $this->showAction = true;
@@ -6711,48 +6711,11 @@ class SuperAdminCompanyController extends SuperAdminBaseController
             $this->status = 'All Market Bench';
         }
 
-        // Authoritative platform counts cached in Redis/Dragonfly for 10K concurrency
-        $this->counts = Cache::remember('superadmin:bench:counts:v1', 120, function () {
-            $indexName = defined('ELASTIC_CANDIDATES_BENCH') ? ELASTIC_CANDIDATES_BENCH : config('constants.ELASTIC_CANDIDATES_BENCH', 'elastic_candidates_bench');
-            $counts = [
-                'pending' => 0,
-                'approve' => 0,
-                'reject' => 0,
-                'place' => 0,
-                'pool' => 0,
-            ];
-
-            if ($this->elasticService->indexExists($indexName)) {
-                $client = $this->elasticService->getClient();
-                try {
-                    $counts['pending'] = $client->count(['index' => $indexName, 'body' => ['query' => ['bool' => ['filter' => [
-                        ['term' => ['superadminstatus' => 0]],
-                        ['term' => ['status' => 1]],
-                    ]]]]])['count'] ?? 0;
-
-                    $counts['approve'] = $client->count(['index' => $indexName, 'body' => ['query' => ['bool' => ['filter' => [
-                        ['term' => ['superadminstatus' => 1]],
-                        ['term' => ['status' => 2]],
-                    ]]]]])['count'] ?? 0;
-
-                    $counts['reject'] = $client->count(['index' => $indexName, 'body' => ['query' => ['bool' => ['filter' => [
-                        ['term' => ['superadminstatus' => 2]],
-                        ['term' => ['status' => 2]],
-                    ]]]]])['count'] ?? 0;
-
-                    $counts['place'] = $client->count(['index' => $indexName, 'body' => ['query' => ['bool' => ['filter' => [
-                        ['term' => ['status' => 3]],
-                    ]]]]])['count'] ?? 0;
-
-                    $counts['pool'] = $client->count(['index' => $indexName, 'body' => ['query' => ['bool' => ['filter' => [
-                        ['term' => ['status' => 1]],
-                    ]]]]])['count'] ?? 0;
-                } catch (\Throwable $e) {
-                }
-            }
-
-            return $counts;
-        });
+        // Authoritative platform counts cached in Redis/Dragonfly with stampede protection & circuit breaker
+        $this->counts = SuperAdminBenchCandidatesCacheManager::getAuthoritativeCounts(
+            $this->elasticService,
+            app(ElasticsearchCircuitBreaker::class)
+        );
 
         $this->total = $this->counts[$statusType] ?? 0;
 
@@ -6766,14 +6729,14 @@ class SuperAdminCompanyController extends SuperAdminBaseController
      */
     public function ajaxbenchNewCandidates(Request $request)
     {
-        $statusType = $request->input('status') ?: 'approve';
+        $statusType = $request->input('status') ?: 'pending';
         $valCheck = $request->input('sortingfilter');
         $searchTerms = $request->input('custom_search') ?: $request->input('search') ?: $request->input('q');
         $page = max((int) $request->input('page', 1), 1);
         $size = (int) ($request->input('per_page') ?: $request->input('size') ?: 10);
         $from = ($page - 1) * $size;
 
-        // Dragonfly Cache Layer
+        $cacheVersion = SuperAdminBenchCandidatesCacheManager::getVersion();
         $cachePayload = [
             'status' => $statusType,
             'page' => $page,
@@ -6781,152 +6744,188 @@ class SuperAdminCompanyController extends SuperAdminBaseController
             'q' => $searchTerms,
             'sort' => $valCheck,
         ];
-        $cacheVersion = Cache::get('superadmin:bench:cache_version', 1);
-        $cacheKey = 'ats:superadmin:bench:'.$cacheVersion.':'.md5(json_encode($cachePayload));
+        $cacheKey = SuperAdminBenchCandidatesCacheManager::listKey($cacheVersion, $cachePayload);
 
-        if (Cache::has($cacheKey)) {
-            return response()->json(Cache::get($cacheKey));
-        }
+        $circuitBreaker = app(ElasticsearchCircuitBreaker::class);
 
-        $sort = [];
-        // 1. Sort: ads_switch 'Yes' on top
-        $sort[] = [
-            '_script' => [
-                'type' => 'number',
-                'script' => [
-                    'lang' => 'painless',
-                    'source' => "
-                        if (!doc.containsKey('ads_switch') || doc['ads_switch'].size() == 0) {
-                            return 1;
-                        }
-                        return doc['ads_switch'].value.toLowerCase() == 'yes' ? 0 : 1;
-                    ",
-                ],
-                'order' => 'asc',
-            ],
-        ];
+        // Stampede-protected caching with circuit breaker resilience
+        $responseData = SuperAdminBenchCandidatesCacheManager::rememberWithStampedeProtection(
+            $cacheKey,
+            SuperAdminBenchCandidatesCacheManager::DEFAULT_LIST_TTL,
+            function () use ($request, $statusType, $valCheck, $searchTerms, $page, $size, $from, $cacheVersion, $circuitBreaker) {
+                // If circuit breaker is OPEN, serve degraded snapshot immediately
+                if ($circuitBreaker->getState() === ElasticsearchCircuitBreaker::STATE_OPEN) {
+                    $snapshot = SuperAdminBenchCandidatesCacheManager::getLatestSnapshot();
+                    if ($snapshot) {
+                        return array_merge($snapshot, ['is_degraded' => true]);
+                    }
+                }
 
-        // 2. Sort by selected value
-        switch ($valCheck) {
-            case 1:
-                $sort[] = ['updated_at' => ['order' => 'desc']];
-                break;
-            case 2:
-                $sort[] = ['updated_at' => ['order' => 'asc']];
-                break;
-            case 3:
-                $sort[] = ['ctc' => ['order' => 'asc', 'unmapped_type' => 'float']];
-                break;
-            case 4:
-                $sort[] = ['ctc' => ['order' => 'desc', 'unmapped_type' => 'float']];
-                break;
-            case 5:
-                $sort[] = ['np_days' => ['order' => 'asc', 'unmapped_type' => 'integer']];
-                break;
-            case 6:
-                $sort[] = ['np_days' => ['order' => 'desc', 'unmapped_type' => 'integer']];
-                break;
-            case 7:
-                $sort[] = ['total_exp' => ['order' => 'desc', 'unmapped_type' => 'float']];
-                break;
-            case 8:
-                $sort[] = ['total_exp' => ['order' => 'asc', 'unmapped_type' => 'float']];
-                break;
-            case 9:
+                $sort = [];
+                // 1. Sort: ads_switch 'Yes' on top
                 $sort[] = [
                     '_script' => [
                         'type' => 'number',
                         'script' => [
                             'lang' => 'painless',
-                            'source' => "params['_source']['immediate_join'] == 'Immediate' ? 0 : 1",
+                            'source' => "
+                                if (!doc.containsKey('ads_switch') || doc['ads_switch'].size() == 0) {
+                                    return 1;
+                                }
+                                return doc['ads_switch'].value.toLowerCase() == 'yes' ? 0 : 1;
+                            ",
                         ],
                         'order' => 'asc',
                     ],
                 ];
-                break;
-            default:
-                $sort[] = ['id' => ['order' => 'desc', 'unmapped_type' => 'long']];
-                break;
-        }
 
-        $status = 2;
-        $statusFilter = [];
+                // 2. Sort by selected value
+                switch ($valCheck) {
+                    case 1:
+                        $sort[] = ['updated_at' => ['order' => 'desc']];
+                        break;
+                    case 2:
+                        $sort[] = ['updated_at' => ['order' => 'asc']];
+                        break;
+                    case 3:
+                        $sort[] = ['ctc' => ['order' => 'asc', 'unmapped_type' => 'float']];
+                        break;
+                    case 4:
+                        $sort[] = ['ctc' => ['order' => 'desc', 'unmapped_type' => 'float']];
+                        break;
+                    case 5:
+                        $sort[] = ['np_days' => ['order' => 'asc', 'unmapped_type' => 'integer']];
+                        break;
+                    case 6:
+                        $sort[] = ['np_days' => ['order' => 'desc', 'unmapped_type' => 'integer']];
+                        break;
+                    case 7:
+                        $sort[] = ['total_exp' => ['order' => 'desc', 'unmapped_type' => 'float']];
+                        break;
+                    case 8:
+                        $sort[] = ['total_exp' => ['order' => 'asc', 'unmapped_type' => 'float']];
+                        break;
+                    case 9:
+                        $sort[] = [
+                            '_script' => [
+                                'type' => 'number',
+                                'script' => [
+                                    'lang' => 'painless',
+                                    'source' => "params['_source']['immediate_join'] == 'Immediate' ? 0 : 1",
+                                ],
+                                'order' => 'asc',
+                            ],
+                        ];
+                        break;
+                    default:
+                        $sort[] = ['id' => ['order' => 'desc', 'unmapped_type' => 'long']];
+                        break;
+                }
 
-        if ($statusType === 'pending') {
-            $status = 1;
-            $statusFilter[] = ['term' => ['superadminstatus' => 0]];
-        } elseif ($statusType === 'approve') {
-            $status = 2;
-            $statusFilter[] = ['term' => ['superadminstatus' => 1]];
-        } elseif ($statusType === 'reject') {
-            $status = 2;
-            $statusFilter[] = ['term' => ['superadminstatus' => 2]];
-        } elseif ($statusType === 'place') {
-            $status = 3;
-        } elseif ($statusType === 'pool') {
-            $status = 1;
-        }
+                $status = 2;
+                $statusFilter = [];
 
-        $statusFilter[] = ['term' => ['status' => $status]];
+                if ($statusType === 'pending') {
+                    $status = 1;
+                    $statusFilter[] = ['term' => ['superadminstatus' => 0]];
+                } elseif ($statusType === 'approve') {
+                    $status = 2;
+                    $statusFilter[] = ['term' => ['superadminstatus' => 1]];
+                } elseif ($statusType === 'reject') {
+                    $status = 2;
+                    $statusFilter[] = ['term' => ['superadminstatus' => 2]];
+                } elseif ($statusType === 'place') {
+                    $status = 3;
+                } elseif ($statusType === 'pool') {
+                    $status = 1;
+                }
 
-        $boolQuery = [
-            'bool' => [
-                'filter' => $statusFilter,
-            ],
-        ];
+                $statusFilter[] = ['term' => ['status' => $status]];
 
-        // Search conditions across name, skills, role, email, phone, location, vendor company
-        if (! empty($searchTerms)) {
-            $searchConds = $this->getBenchSearchConditions($searchTerms);
-            if (! empty($searchConds)) {
-                $boolQuery['bool']['must'] = $searchConds;
+                $boolQuery = [
+                    'bool' => [
+                        'filter' => $statusFilter,
+                    ],
+                ];
+
+                // Search conditions across name, skills, role, email, phone, location, vendor company
+                if (! empty($searchTerms)) {
+                    $searchConds = $this->getBenchSearchConditions($searchTerms);
+                    if (! empty($searchConds)) {
+                        $boolQuery['bool']['must'] = $searchConds;
+                    }
+                }
+
+                $indexName = defined('ELASTIC_CANDIDATES_BENCH') ? ELASTIC_CANDIDATES_BENCH : config('constants.ELASTIC_CANDIDATES_BENCH', 'elastic_candidates_bench');
+
+                $params = [
+                    'index' => $indexName,
+                    'request_cache' => true,
+                    'body' => [
+                        'from' => $from,
+                        'size' => $size,
+                        'sort' => $sort,
+                        'query' => $boolQuery,
+                    ],
+                ];
+
+                $total = 0;
+                $data = [];
+
+                if ($this->elasticService->indexExists($params['index'])) {
+                    $response = $circuitBreaker->execute(function () use ($params) {
+                        return $this->elasticService->getClient()->search($params);
+                    }, function () {
+                        return null;
+                    });
+
+                    if ($response && isset($response['hits'])) {
+                        $total = $response['hits']['total']['value'] ?? 0;
+                        $data = array_map(function ($hit) {
+                            // Overlay in-memory mutation delta for immediate consistency
+                            return SuperAdminBenchCandidatesCacheManager::overlayMutationDelta($hit['_source']);
+                        }, $response['hits']['hits'] ?? []);
+                    } else {
+                        // Degraded fallback snapshot if circuit tripped during execution
+                        $snapshot = SuperAdminBenchCandidatesCacheManager::getLatestSnapshot();
+                        if ($snapshot) {
+                            return array_merge($snapshot, ['is_degraded' => true]);
+                        }
+                    }
+                }
+
+                $pagination = [
+                    'total' => $total,
+                    'current_page' => $page,
+                    'last_page' => ceil($total / $size),
+                    'listType' => 'allcandidate',
+                    'per_page' => $size,
+                ];
+
+                $counts = SuperAdminBenchCandidatesCacheManager::getAuthoritativeCounts($this->elasticService, $circuitBreaker);
+                $userPermissions = [];
+
+                $computedResponse = [
+                    'html' => view('super-admin.ajax_pages.bench_candidates_ajax', compact('data', 'userPermissions'))->render(),
+                    'total' => $total,
+                    'counts' => $counts,
+                    'pagination' => view('super-admin.ajax_pages.pagination', compact('pagination'))->render(),
+                    'cache_version' => $cacheVersion,
+                ];
+
+                // Cache latest healthy snapshot
+                SuperAdminBenchCandidatesCacheManager::storeLatestSnapshot($computedResponse);
+
+                return $computedResponse;
             }
+        );
+
+        $httpHeaders = [];
+        if (! empty($responseData['is_degraded'])) {
+            $httpHeaders['X-Circuit-Breaker'] = 'OPEN-DEGRADED';
         }
 
-        $params = [
-            'index' => defined('ELASTIC_CANDIDATES_BENCH') ? ELASTIC_CANDIDATES_BENCH : 'elastic_candidates_bench',
-            'request_cache' => true,
-            'body' => [
-                'from' => $from,
-                'size' => $size,
-                'sort' => $sort,
-                'query' => $boolQuery,
-            ],
-        ];
-
-        if (! $this->elasticService->indexExists($params['index'])) {
-            $total = 0;
-            $data = [];
-        } else {
-            $response = $this->elasticService->getClient()->search($params);
-            $total = $response['hits']['total']['value'] ?? 0;
-            $data = array_map(function ($hit) {
-                return $hit['_source'];
-            }, $response['hits']['hits'] ?? []);
-        }
-
-        $pagination = [
-            'total' => $total,
-            'current_page' => $page,
-            'last_page' => ceil($total / $size),
-            'listType' => 'allcandidate',
-            'per_page' => $size,
-        ];
-
-        $counts = Cache::get('superadmin:bench:counts:v1', []);
-        $userPermissions = [];
-
-        $responseData = [
-            'html' => view('super-admin.ajax_pages.bench_candidates_ajax', compact('data', 'userPermissions'))->render(),
-            'total' => $total,
-            'counts' => $counts,
-            'pagination' => view('super-admin.ajax_pages.pagination', compact('pagination'))->render(),
-            'cache_version' => $cacheVersion,
-        ];
-
-        Cache::put($cacheKey, $responseData, 60);
-
-        return response()->json($responseData);
+        return response()->json($responseData, 200, $httpHeaders);
     }
 
     /**
@@ -6962,19 +6961,22 @@ class SuperAdminCompanyController extends SuperAdminBaseController
     public function candidateApproval(Request $request, SuperAdminBenchMutationService $mutationService)
     {
         $idempotencyKey = $request->header('X-Idempotency-Key', $request->input('idempotency_key'));
-        $candidateIds = (array) $request->input('candidate_id', []);
+        $candidateIds = (array) ($request->input('candidate_id') ?: $request->input('id', []));
+        $datatype = $request->input('datatype') ?: $request->input('type', 'approve');
         $adminId = auth()->id();
         $adminName = auth()->user()->name ?? 'Super Admin';
 
-        if ($request->datatype === 'approve') {
+        if ($datatype === 'approve') {
             $response = $mutationService->approveCandidates($candidateIds, $idempotencyKey, $adminId, $adminName);
+            $statusCode = ($response['status'] ?? '') === 'error' ? ($response['http_status'] ?? 400) : 200;
 
-            return response()->json($response);
+            return response()->json($response, $statusCode);
         }
 
         $response = $mutationService->rejectCandidates($candidateIds, $idempotencyKey, $adminId, $adminName);
+        $statusCode = ($response['status'] ?? '') === 'error' ? ($response['http_status'] ?? 400) : 200;
 
-        return response()->json($response);
+        return response()->json($response, $statusCode);
     }
 
     public function autoApproval(Request $request, SuperAdminBenchMutationService $mutationService)
@@ -6984,8 +6986,9 @@ class SuperAdminCompanyController extends SuperAdminBaseController
         $adminId = auth()->id();
 
         $response = $mutationService->toggleAutoApproval($settingId, $idempotencyKey, $adminId);
+        $statusCode = ($response['status'] ?? '') === 'error' ? ($response['http_status'] ?? 400) : 200;
 
-        return response()->json($response);
+        return response()->json($response, $statusCode);
     }
 
     public function reject_mail(Request $request)
@@ -7406,230 +7409,37 @@ class SuperAdminCompanyController extends SuperAdminBaseController
 
     }
 
-    public function reject_mail_send(Request $request)
+    public function reject_mail_send(Request $request, SuperAdminBenchMutationService $mutationService)
     {
-
-        // dd($request->all());
-        $salaryMode = GeneralMethod::salaryMode();
-        $currencySymbole = GeneralMethod::currencySymbole();
-        $selectedApplicantListing = $applicationDataCount = $applicationData = '';
         $selectedApplicantListing = $request->selectedApplicantListing;
-
-        $template = $from = $to = $cc = $subject = $attached_cv = $message = $arr = '';
-        $this->status = false;
+        $candidateIds = array_values(array_filter(array_map('intval', (array) ($request->arr ?: $selectedApplicantListing ?: []))));
 
         $template = $request->template;
         $from = $request->from_email;
         $to = $request->to_email;
         $cc = $request->cc_email;
+        $subject = $request->subject ?: 'Application Update';
+        $message = $request->editor1 ?: '';
+        $idempotencyKey = $request->header('X-Idempotency-Key', $request->input('idempotency_key'));
+        $adminId = auth()->id();
+        $adminName = auth()->user()->name ?? 'Super Admin';
 
-        $subject = $request->subject;
-        $attached_cv = $request->attached_cv;
-        $message = $request->editor1;
-        $arr = $request->arr;
+        if (! empty($candidateIds)) {
+            $emailPayload = [
+                'template' => $template,
+                'from_email' => $from,
+                'to_email' => $to,
+                'cc_email' => $cc,
+                'subject' => $subject,
+                'message' => $message,
+            ];
 
-        $from = json_decode($from, true);
-        $from = array_column($from, 'value');
-        $from = implode(',', $from);
-
-        $to = json_decode($to, true);
-        $to = array_column($to, 'value');
-        $to = implode(',', $to);
-
-        if (! empty($cc)) {
-            // $cc = json_decode($cc, true);
-            // $cc = array_column($cc, 'value');
-            $cc = $request->cc_email; // implode(',', $cc);
-        }
-        // dd($cc);
-        $attachments = [];
-
-        // dd( $request->arr);
-
-        $mailto = $request->arr; // explode(",",$to);
-
-        // dd($mailto);
-
-        $company_id = auth()->user()->company_id;
-        $company_name = DB::table('companies')->select('companies.company_name')->where('id', '=', $company_id)->first();
-
-        // dd("dd",$mailto);
-        $senderName = auth()->user()->name;
-
-        if (count($mailto) > 0) {
-            for ($k = 0; $k < count($mailto); $k++) {
-                $cnt = 1;
-                $condi = JobApplication::leftjoin('qualification_master', 'qualification_master.id', 'job_applications.qualification')->select('job_applications.*', 'qualification_master.name as qualification_name')->where('job_applications.id', '=', $mailto[$k])->first();
-
-                $tracker_html = '';
-                $tracker_html = '<table class="table align-middle table-row-dashed fs-6 gy-5 dataTable no-footer dtr-inline" id="myTable" role="grid" aria-describedby="myTable_info" style="width: 1272px;">
-                        <thead>
-				<tr style="mso-yfti-irow:0;mso-yfti-firstrow:yes;height:15.75pt"> 
-
-				<td valign="bottom" style="border:solid windowtext 1.0pt;border-left:none; background:#BDD7EE;padding:1.5pt 2.25pt 1.5pt 2.25pt;height:15.75pt; overflow:hidden"> <p class="MsoNormal"><b><span style="font-size:11.0pt;font-family:&quot;Calibri&quot;,sans-serif">Name of the candidate<o:p></o:p></span></b></p></td>
-                <td valign="bottom" style="border:solid windowtext 1.0pt;border-left:none; background:#BDD7EE;padding:1.5pt 2.25pt 1.5pt 2.25pt;height:15.75pt; overflow:hidden"> <p class="MsoNormal"><b><span style="font-size:11.0pt;font-family:&quot;Calibri&quot;,sans-serif">Current Position<o:p></o:p></span></b></p></td>
-                <td valign="bottom" style="border:solid windowtext 1.0pt;border-left:none; background:#BDD7EE;padding:1.5pt 2.25pt 1.5pt 2.25pt;height:15.75pt; overflow:hidden"> <p class="MsoNormal"><b><span style="font-size:11.0pt;font-family:&quot;Calibri&quot;,sans-serif">Total Exp<o:p></o:p></span></b></p></td>
-                <td valign="bottom" style="border:solid windowtext 1.0pt;border-left:none; background:#BDD7EE;padding:1.5pt 2.25pt 1.5pt 2.25pt;height:15.75pt; overflow:hidden"> <p class="MsoNormal"><b><span style="font-size:11.0pt;font-family:&quot;Calibri&quot;,sans-serif">Rel Exp<o:p></o:p></span></b></p></td>
-                <td valign="bottom" style="border:solid windowtext 1.0pt;border-left:none; background:#BDD7EE;padding:1.5pt 2.25pt 1.5pt 2.25pt;height:15.75pt; overflow:hidden"> <p class="MsoNormal"><b><span style="font-size:11.0pt;font-family:&quot;Calibri&quot;,sans-serif">Salary<o:p></o:p></span></b></p></td>
-                <td valign="bottom" style="border:solid windowtext 1.0pt;border-left:none; background:#BDD7EE;padding:1.5pt 2.25pt 1.5pt 2.25pt;height:15.75pt; overflow:hidden"> <p class="MsoNormal"><b><span style="font-size:11.0pt;font-family:&quot;Calibri&quot;,sans-serif">Availability<o:p></o:p></span></b></p></td>
-                <td valign="bottom" style="border:solid windowtext 1.0pt;border-left:none; background:#BDD7EE;padding:1.5pt 2.25pt 1.5pt 2.25pt;height:15.75pt; overflow:hidden"> <p class="MsoNormal"><b><span style="font-size:11.0pt;font-family:&quot;Calibri&quot;,sans-serif">Qualification<o:p></o:p></span></b></p></td>
-                <td valign="bottom" style="border:solid windowtext 1.0pt;border-left:none; background:#BDD7EE;padding:1.5pt 2.25pt 1.5pt 2.25pt;height:15.75pt; overflow:hidden"> <p class="MsoNormal"><b><span style="font-size:11.0pt;font-family:&quot;Calibri&quot;,sans-serif">Location<o:p></o:p></span></b></p></td>
-                 <td valign="bottom" style="border:solid windowtext 1.0pt;background:#BDD7EE; padding:1.5pt 2.25pt 1.5pt 2.25pt;height:15.75pt"> <p class="MsoNormal"><b><span style="font-size:11.0pt;font-family:&quot;Calibri&quot;,sans-serif">Upload Date</span></b><b><span style="font-size:11.0pt;font-family:&quot;Calibri&quot;,sans-serif;mso-fareast-language: EN-IN"><o:p></o:p></span></b></p></td>
-                <td valign="bottom" style="border:solid windowtext 1.0pt;border-left:none; background:#BDD7EE;padding:1.5pt 2.25pt 1.5pt 2.25pt;height:15.75pt; overflow:hidden"> <p class="MsoNormal"><b><span style="font-size:11.0pt;font-family:&quot;Calibri&quot;,sans-serif">Status<o:p></o:p></span></b></p></td>
-               
-				
-				
-				
-				</tr>			   
-				</thead>';
-
-                if ($condi) {
-                    $appData = $condi;
-
-                    $bgTextDecore = $strVal = '';
-                    $str = trim(@$appData->full_name);
-                    $str = $strVal = strtolower($str[0]);
-                    $str = ord($str);
-
-                    if ($str >= 97 && $str <= 101) {
-                        $bgTextDecore = 'fs-3 bg-light-danger text-danger';
-                    } elseif ($str >= 102 && $str <= 106) {
-                        $bgTextDecore = 'fs-3 bg-light-warning text-warning';
-                    } elseif ($str >= 107 && $str <= 111) {
-                        $bgTextDecore = 'fs-3 bg-light-primary text-primary';
-                    } elseif ($str >= 112 && $str <= 116) {
-                        $bgTextDecore = 'fs-3 bg-light-success text-success';
-                    } elseif ($str >= 117 && $str <= 121) {
-                        $bgTextDecore = 'fs-3 bg-dark text-secondary';
-                    } else {
-                        $bgTextDecore = 'fs-3 bg-light-secondary text-dark';
-                    }
-
-                    $current_ctc_cur = $current_ectc_cur = $ctc = $ectc = '';
-                    $current_ctc_cur = $currencySymbole[@$appData->pay_rate_currency];
-                    $current_ectc_cur = $currencySymbole[@$appData->bill_rate_currency];
-                    $ctc = GeneralMethod::thousandsCurrencyFormat($appData->pay_rate_amount);
-                    $ectc = GeneralMethod::thousandsCurrencyFormat($appData->bill_rate_amount);
-
-                    $np = $appData->np_id;
-                    if (empty($np)) {
-                        $np = 'N/A';
-                    }
-                    if ($appData->serving_notice_period_mode == 0) {
-                        if (! empty($appData->np_id)) {
-                            $np = $appData->np_id.'  Days';
-                        }
-                    } else {
-                        $np = $appData->np_id;
-                    }
-
-                    $country = '';
-                    $row_country_name = '';
-
-                    if (empty($appData->country)) {
-                        $row_country_name = '----';
-                    } else {
-                        if (! empty(@$appData->country)) {
-                            if (is_numeric(@$appData->country)) {
-                                $country_name_Arr = GeneralMethod::getCountryName(@$appData->country);
-                                foreach ($country_name_Arr as $cval) {
-                                    $row_country_name = ucwords($cval['name']);
-                                }
-                            }
-                        }
-                    }
-
-                    $state = '';
-                    $row_state_name = '';
-                    if (empty($appData->state)) {
-                        $row_state_name = '----';
-                    } else {
-                        if (@$appData->country != 101) {
-                            $row_state_name = @$appData->state_name;
-                        } else {
-                            $state = @$appData->state;
-                            // dd($state);
-                            if (is_numeric(@$appData->country) && is_numeric($state)) {
-                                if ($state > 0) {
-                                    $state_name_Arr = GeneralMethod::getStateName(@$appData->country, $state);
-                                    // dd($state_name_Arr);
-                                    foreach ($state_name_Arr as $sval) {
-                                        $row_state_name = ucwords($sval['name']);
-                                    }
-                                }
-                            }
-
-                        }
-
-                    }
-
-                    $city = '';
-                    $row_city_name = '';
-
-                    if (@$appData->country == 101) {
-                        $row_city = DB::table('city_list')->select('*')->where('city_id', @$appData->city_id)->first();
-                        // dd(@$appData->city_id,$row_city);
-                        $row_city_name = @$row_city->city;
-                    } else {
-                        $row_city_name = @$appData->city;
-                    }
-
-                    $tracker_html .= '
-				<tr style="mso-yfti-irow:1;mso-yfti-lastrow:yes;height:15.75pt"> 
-				
-				<td valign="bottom" style="border-top:none;border-left:none;border-bottom:solid windowtext 1.0pt; border-right:solid windowtext 1.0pt;background:white;padding:1.5pt 2.25pt 1.5pt 2.25pt; height:15.75pt;overflow:hidden"> <p class="MsoNormal"><span style="font-size:11.0pt;font-family:&quot;Calibri&quot;,sans-serif">'.ucwords(@$appData->full_name).'<o:p></o:p></span></p></td>
-                <td valign="bottom" style="border-top:none;border-left:none;border-bottom:solid windowtext 1.0pt; border-right:solid windowtext 1.0pt;background:white;padding:1.5pt 2.25pt 1.5pt 2.25pt; height:15.75pt;overflow:hidden"> <p class="MsoNormal"><span style="font-size:11.0pt;font-family:&quot;Calibri&quot;,sans-serif">'.ucwords(@$appData->current_designation).'<o:p></o:p></span></p></td>
-                <td valign="bottom" style="border-top:none;border-left:none;border-bottom:solid windowtext 1.0pt; border-right:solid windowtext 1.0pt;background:white;padding:1.5pt 2.25pt 1.5pt 2.25pt; height:15.75pt;overflow:hidden"> <p class="MsoNormal"><span style="font-size:11.0pt;font-family:&quot;Calibri&quot;,sans-serif">'.@$appData->total_exp.'+<o:p></o:p></span></p></td>
-				<td valign="bottom" style="border-top:none;border-left:none;border-bottom:solid windowtext 1.0pt; border-right:solid windowtext 1.0pt;background:white;padding:1.5pt 2.25pt 1.5pt 2.25pt; height:15.75pt;overflow:hidden"> <p class="MsoNormal"><span style="font-size:11.0pt;font-family:&quot;Calibri&quot;,sans-serif">'.@$appData->rel_exp.'+<o:p></o:p></span></p></td>
-				
-				<td valign="bottom" style="border-top:none;border-left:none;border-bottom:solid windowtext 1.0pt; border-right:solid windowtext 1.0pt;background:white;padding:1.5pt 2.25pt 1.5pt 2.25pt; height:15.75pt;overflow:hidden"> <p class="MsoNormal"><span style="font-size:11.0pt;font-family:&quot;Calibri&quot;,sans-serif">'.$current_ectc_cur.@$ectc.'<o:p></o:p></span></p></td>
-				<td valign="bottom" style="border-top:none;border-left:none;border-bottom:solid windowtext 1.0pt; border-right:solid windowtext 1.0pt;background:white;padding:1.5pt 2.25pt 1.5pt 2.25pt; height:15.75pt;overflow:hidden"> <p class="MsoNormal"><span style="font-size:11.0pt;font-family:&quot;Calibri&quot;,sans-serif">'.$np.'<o:p></o:p></span></p></td>
-				<td valign="bottom" style="border-top:none;border-left:none;border-bottom:solid windowtext 1.0pt; border-right:solid windowtext 1.0pt;background:white;padding:1.5pt 2.25pt 1.5pt 2.25pt; height:15.75pt;overflow:hidden"> <p class="MsoNormal"><span style="font-size:11.0pt;font-family:&quot;Calibri&quot;,sans-serif">'.ucwords(substr(@$appData->qualification_name, 0, 10)).'<o:p></o:p></span></p></td>
-				<td valign="bottom" style="border-top:none;border-left:none;border-bottom:solid windowtext 1.0pt; border-right:solid windowtext 1.0pt;background:white;padding:1.5pt 2.25pt 1.5pt 2.25pt; height:15.75pt;overflow:hidden"> <p class="MsoNormal"><span style="font-size:11.0pt;font-family:&quot;Calibri&quot;,sans-serif"><a href="javascript:void(0);" class="text-dark fw-bolder text-hover-primary fs-6" data-toggle="tooltip" title="'.ucwords($row_city_name).'">'.ucwords(substr($row_city_name, 0, 10)).'</a>
-				<span class="text-muted fw-bold d-block fs-7" data-toggle="tooltip" title="'.ucwords($row_state_name).' | '.strtoupper($row_country_name).'">'.ucfirst(substr($row_state_name, 0, 5)).' | '.strtoupper(substr($row_country_name, 0, 2)).'</span><o:p></o:p></span></p></td>
-                <td valign="bottom" style="border:solid windowtext 1.0pt;border-top:none; background:white;padding:1.5pt 2.25pt 1.5pt 2.25pt;height:15.75pt;overflow: hidden"> <p class="MsoNormal"><span style="font-size:11.0pt;font-family:&quot;Calibri&quot;,sans-serif">'.date('d-M-Y').'<o:p></o:p></span></p></td>
-                <td valign="bottom" style="border-top:none;border-left:none;border-bottom:solid windowtext 1.0pt; border-right:solid windowtext 1.0pt;background:white;padding:1.5pt 2.25pt 1.5pt 2.25pt; height:15.75pt;overflow:hidden"> <p class="MsoNormal"><span style="font-size:11.0pt;font-family:&quot;Calibri&quot;,sans-serif">Reject<o:p></o:p></span></p></td>
-                
-				</tr>';
-
-                    $cnt = $cnt + 1;
-
-                }
-
-                $name = ($condi) ? $condi->full_name : '';
-                // $template_description = $message;
-                $template_description = str_replace(['[{CANDIDATE_TRACKER}]'], [$tracker_html], $message);
-
-                // dd($message);
-
-                $data = ['message' => $template_description, 'subject' => $subject, 'company_name' => '', 'consultant_name' => '4Bell Technology', 'position' => 'PHP', 'condidate_name' => $name];
-
-                $basecompany = GeneralMethod::baseCompany();
-                $senderName = ($basecompany->companyName) ? $basecompany->companyName : '';
-                $fromAddress = ($basecompany->companyEmail) ? $basecompany->companyEmail : '';
-
-                $commonCcArr = DB::table('bench_assign')->join('users', 'users.id', '=', 'bench_assign.user_id')->where('bench_assign.bench_applications_id', $mailto[$k])->pluck('users.email')->toArray();
-                // dd($commonCcArr);
-
-                $cc = [];
-                $checkMailPermision = GeneralMethod::mailPermission(16);
-                if ($checkMailPermision) {
-                    foreach ($commonCcArr as $tomail) {
-                        $result = $this->mailService->sendEmail($tomail, $subject, 'email.notification', $data, $attachments, $fromAddress, $senderName, $cc);
-                    }
-
-                    // dd($result);
-                }
-
-                DB::table('job_applications')->where('id', $mailto[$k])->update(['superadminstatus' => 2]);
-
-            }
+            $mutationService->rejectCandidatesWithEmail($candidateIds, $emailPayload, $idempotencyKey, $adminId, $adminName);
         }
 
         $view = view('service_company.cvtracker.fwd_resume_message', $this->data)->render();
 
         return Reply::dataOnly(['status' => 'success', 'view' => $view]);
-
     }
 
     public function bernchDetailsCandidates(Request $request, $id = null)
@@ -7639,110 +7449,121 @@ class SuperAdminCompanyController extends SuperAdminBaseController
             return Reply::error('Invalid candidate specified.');
         }
 
-        $company_id = auth()->user()->company_id;
+        $version = SuperAdminBenchCandidatesCacheManager::getVersion();
+        $drawerKey = SuperAdminBenchCandidatesCacheManager::drawerKey($version, $id);
 
-        $this->currency = GeneralMethod::currency();
-        $this->salaryMode = GeneralMethod::salaryMode();
-        $this->benchApplication = JobApplication::select(
-            'job_applications.id',
-            'job_applications.company_id',
-            'job_applications.submitted_by',
-            'job_applications.submitted_by as editAllow',
-            'job_applications.full_name',
-            'job_applications.current_designation',
-            'job_applications.outsourcing_type',
-            'job_applications.phone',
-            'job_applications.phone_code',
-            'job_applications.secondary_mobile',
-            'job_applications.dob',
-            'job_applications.email',
-            'job_applications.secondrary_email',
-            'job_applications.qualification',
-            'job_applications.total_exp',
-            'job_applications.rel_exp',
-            'job_applications.serving_notice_period_mode',
-            'job_applications.np_id',
-            'job_applications.pay_rate_currency',
-            'job_applications.pay_rate_amount',
-            'job_applications.pay_rate_mode',
-            'job_applications.bill_rate_currency',
-            'job_applications.bill_rate_amount',
-            'job_applications.bill_rate_mode',
-            'job_applications.comission_type',
-            'job_applications.country',
-            'job_applications.state',
-            'job_applications.city',
-            'job_applications.city_id',
-            'job_applications.pincode',
-            'job_applications.skills',
-            'job_applications.photo',
-            'job_applications.resume',
-            'job_applications.status',
-            'job_applications.superadminstatus',
-            'job_applications.gender',
-            'job_applications.nationality',
-            'job_applications.wm',
-            'job_applications.visastatu',
-            'job_applications.careersummary',
-            'job_applications.employmentType',
-            'job_applications.linkedin',
-            'job_applications.github',
-            'job_applications.recruiter_note',
-            'job_applications.status_type',
-            'job_applications.offer_amount',
-            'job_applications.joined_date',
-            'job_applications.created_at',
-            'job_applications.updated_at',
-            'job_applications.employee_number',
-            'qualification_master.name as qualification_name',
-            'bench_master_status.name as master_status_name',
-            'state_list.state as state_name',
-            'city_list.city as city_name',
-            'users.name as posted_by',
-            'companies.company_name',
-            'companies.logo as company_logo',
-            'users.image as posted_by_image'
-        )
-            ->leftjoin('users', 'users.id', 'job_applications.submitted_by')
-            ->leftjoin('qualification_master', 'qualification_master.id', 'job_applications.qualification')
-            ->leftJoin('bench_master_status', 'bench_master_status.id', '=', 'job_applications.status')
-            ->leftJoin('city_list', 'city_list.city_id', '=', 'job_applications.city_id')
-            ->leftJoin('state_list', 'state_list.id', '=', DB::raw('COALESCE(city_list.state_id, job_applications.state)'))
-            ->leftjoin('companies', 'companies.id', '=', 'job_applications.company_id')
-            ->where('job_applications.id', $id)
-            ->first();
+        $view = SuperAdminBenchCandidatesCacheManager::rememberWithStampedeProtection(
+            $drawerKey,
+            SuperAdminBenchCandidatesCacheManager::DEFAULT_DRAWER_TTL,
+            function () use ($id) {
+                $this->currency = GeneralMethod::currency();
+                $this->salaryMode = GeneralMethod::salaryMode();
+                $this->benchApplication = JobApplication::select(
+                    'job_applications.id',
+                    'job_applications.company_id',
+                    'job_applications.submitted_by',
+                    'job_applications.submitted_by as editAllow',
+                    'job_applications.full_name',
+                    'job_applications.current_designation',
+                    'job_applications.outsourcing_type',
+                    'job_applications.phone',
+                    'job_applications.phone_code',
+                    'job_applications.secondary_mobile',
+                    'job_applications.dob',
+                    'job_applications.email',
+                    'job_applications.secondrary_email',
+                    'job_applications.qualification',
+                    'job_applications.total_exp',
+                    'job_applications.rel_exp',
+                    'job_applications.serving_notice_period_mode',
+                    'job_applications.np_id',
+                    'job_applications.pay_rate_currency',
+                    'job_applications.pay_rate_amount',
+                    'job_applications.pay_rate_mode',
+                    'job_applications.bill_rate_currency',
+                    'job_applications.bill_rate_amount',
+                    'job_applications.bill_rate_mode',
+                    'job_applications.comission_type',
+                    'job_applications.country',
+                    'job_applications.state',
+                    'job_applications.city',
+                    'job_applications.city_id',
+                    'job_applications.pincode',
+                    'job_applications.skills',
+                    'job_applications.photo',
+                    'job_applications.resume',
+                    'job_applications.status',
+                    'job_applications.superadminstatus',
+                    'job_applications.gender',
+                    'job_applications.nationality',
+                    'job_applications.wm',
+                    'job_applications.visastatu',
+                    'job_applications.careersummary',
+                    'job_applications.employmentType',
+                    'job_applications.linkedin',
+                    'job_applications.github',
+                    'job_applications.recruiter_note',
+                    'job_applications.status_type',
+                    'job_applications.offer_amount',
+                    'job_applications.joined_date',
+                    'job_applications.created_at',
+                    'job_applications.updated_at',
+                    'job_applications.employee_number',
+                    'qualification_master.name as qualification_name',
+                    'bench_master_status.name as master_status_name',
+                    'state_list.state as state_name',
+                    'city_list.city as city_name',
+                    'users.name as posted_by',
+                    'companies.company_name',
+                    'companies.logo as company_logo',
+                    'users.image as posted_by_image'
+                )
+                    ->leftjoin('users', 'users.id', 'job_applications.submitted_by')
+                    ->leftjoin('qualification_master', 'qualification_master.id', 'job_applications.qualification')
+                    ->leftJoin('bench_master_status', 'bench_master_status.id', '=', 'job_applications.status')
+                    ->leftJoin('city_list', 'city_list.city_id', '=', 'job_applications.city_id')
+                    ->leftJoin('state_list', 'state_list.id', '=', DB::raw('COALESCE(city_list.state_id, job_applications.state)'))
+                    ->leftjoin('companies', 'companies.id', '=', 'job_applications.company_id')
+                    ->where('job_applications.id', $id)
+                    ->first();
 
-        if (! $this->benchApplication) {
+                if (! $this->benchApplication) {
+                    return null;
+                }
+
+                $this->job_additional_detail = DB::table('bench_additional_detail')
+                    ->select('*')
+                    ->where('bench_additional_detail.bench_id', '=', $this->benchApplication->id)
+                    ->orderBy('bench_additional_detail.id', 'ASC')
+                    ->get();
+
+                $rmCommentRow = DB::table('bench_candidate_rm_comments')
+                    ->where('candidate_id', $this->benchApplication->id)
+                    ->first();
+                $this->benchApplication->rm_comments = $rmCommentRow ? $rmCommentRow->comments : null;
+
+                $this->bench_assign_row = DB::table('bench_assign')
+                    ->select('users.id', 'users.name', 'users.email', 'users.mobile', 'users.calling_code')
+                    ->leftjoin('users', 'users.id', '=', 'bench_assign.user_id')
+                    ->where('bench_assign.bench_applications_id', '=', $this->benchApplication->id)
+                    ->orderBy('bench_assign.id', 'ASC')
+                    ->get();
+                $this->bench_assign_count = $this->bench_assign_row->count();
+
+                $this->skillExperiences = DB::table('bench_candidate_skill_experience')
+                    ->where('candidate_id', $this->benchApplication->id)
+                    ->get();
+                $this->skillExperiencesCount = $this->skillExperiences->count();
+
+                $this->bench_assign = $this->bench_assign_row;
+
+                return view('super-admin.bench-lists.showdetail', $this->data)->render();
+            }
+        );
+
+        if (! $view) {
             return Reply::error('Candidate details not found.');
         }
-
-        $this->job_additional_detail = DB::table('bench_additional_detail')
-            ->select('*')
-            ->where('bench_additional_detail.bench_id', '=', $this->benchApplication->id)
-            ->orderBy('bench_additional_detail.id', 'ASC')
-            ->get();
-
-        $rmCommentRow = DB::table('bench_candidate_rm_comments')
-            ->where('candidate_id', $this->benchApplication->id)
-            ->first();
-        $this->benchApplication->rm_comments = $rmCommentRow ? $rmCommentRow->comments : null;
-
-        $this->bench_assign_row = DB::table('bench_assign')
-            ->select('users.id', 'users.name', 'users.email', 'users.mobile', 'users.calling_code')
-            ->leftjoin('users', 'users.id', '=', 'bench_assign.user_id')
-            ->where('bench_assign.bench_applications_id', '=', $this->benchApplication->id)
-            ->orderBy('bench_assign.id', 'ASC')
-            ->get();
-        $this->bench_assign_count = $this->bench_assign_row->count();
-
-        $this->skillExperiences = DB::table('bench_candidate_skill_experience')
-            ->where('candidate_id', $this->benchApplication->id)
-            ->get();
-        $this->skillExperiencesCount = $this->skillExperiences->count();
-
-        $this->bench_assign = $this->bench_assign_row;
-
-        $view = view('super-admin.bench-lists.showdetail', $this->data)->render();
 
         return Reply::dataOnly(['status' => 'success', 'view' => $view]);
     }
@@ -13844,426 +13665,426 @@ class SuperAdminCompanyController extends SuperAdminBaseController
             function () use ($id) {
                 $company_id = auth()->user()->company_id ?? 0;
 
-        $this->currency = GeneralMethod::currency();
-        $this->salaryMode = GeneralMethod::salaryMode();
-        $AddJobWiseCondidate = AddJobWiseCondidate::withoutGlobalScopes()->find($id);
-        $jobId = @$AddJobWiseCondidate->job_id;
-        // dd($id,$jobId,$AddJobWiseCondidate);
-        $this->intModeArr = GeneralMethod::interview_mode();
-        $this->application = JobApplication::select(
-            'job_applications.id',
-            'add_job_wise_condidates.submitted_by',
-            'job_applications.submitted_by as editAllow',
-            'add_job_wise_condidates.company_id',
-            'job_applications.np_id',
-            'job_applications.serving_notice_period_mode',
-            'job_applications.full_name',
-            'job_applications.email',
-            'job_applications.phone',
-            'job_applications.secondary_mobile',
-            'job_applications.photo',
-            'job_applications.resume',
-            'job_applications.rating',
-            'job_applications.skype_id',
-            'job_applications.cover_letter',
-            'add_job_wise_condidates.job_id',
-            'job_applications.status_id',
-            'job_applications.is_viewed',
-            'job_applications.column_priority',
-            'job_applications.created_at',
-            'job_applications.updated_at',
-            'job_applications.deleted_at',
-            'job_applications.total_exp',
-            'job_applications.rel_exp',
-            'job_applications.passport',
-            'job_applications.current_location',
-            'job_applications.current_designation',
-            'job_applications.current_company',
-            'job_applications.process_id',
-            'job_applications.qualification',
-            'add_job_wise_condidates.master_status_id',
-            'add_job_wise_condidates.child_status_id',
-            'job_applications.secondrary_email',
-            'job_applications.secondary_mobile',
-            'job_applications.skills',
-            'job_applications.city',
-            'job_applications.country',
-            'job_applications.pincode',
-            'job_applications.state',
+                $this->currency = GeneralMethod::currency();
+                $this->salaryMode = GeneralMethod::salaryMode();
+                $AddJobWiseCondidate = AddJobWiseCondidate::withoutGlobalScopes()->find($id);
+                $jobId = @$AddJobWiseCondidate->job_id;
+                // dd($id,$jobId,$AddJobWiseCondidate);
+                $this->intModeArr = GeneralMethod::interview_mode();
+                $this->application = JobApplication::select(
+                    'job_applications.id',
+                    'add_job_wise_condidates.submitted_by',
+                    'job_applications.submitted_by as editAllow',
+                    'add_job_wise_condidates.company_id',
+                    'job_applications.np_id',
+                    'job_applications.serving_notice_period_mode',
+                    'job_applications.full_name',
+                    'job_applications.email',
+                    'job_applications.phone',
+                    'job_applications.secondary_mobile',
+                    'job_applications.photo',
+                    'job_applications.resume',
+                    'job_applications.rating',
+                    'job_applications.skype_id',
+                    'job_applications.cover_letter',
+                    'add_job_wise_condidates.job_id',
+                    'job_applications.status_id',
+                    'job_applications.is_viewed',
+                    'job_applications.column_priority',
+                    'job_applications.created_at',
+                    'job_applications.updated_at',
+                    'job_applications.deleted_at',
+                    'job_applications.total_exp',
+                    'job_applications.rel_exp',
+                    'job_applications.passport',
+                    'job_applications.current_location',
+                    'job_applications.current_designation',
+                    'job_applications.current_company',
+                    'job_applications.process_id',
+                    'job_applications.qualification',
+                    'add_job_wise_condidates.master_status_id',
+                    'add_job_wise_condidates.child_status_id',
+                    'job_applications.secondrary_email',
+                    'job_applications.secondary_mobile',
+                    'job_applications.skills',
+                    'job_applications.city',
+                    'job_applications.country',
+                    'job_applications.pincode',
+                    'job_applications.state',
 
-            'job_applications.current_ctc_cur',
-            'job_applications.ctc',
-            'job_applications.current_ctc_mode',
-            'job_applications.current_ectc_cur',
-            'job_applications.bill_rate_currency',
-            'job_applications.bill_rate_amount',
-            'job_applications.bill_rate_mode',
-            'job_applications.pay_rate_currency',
-            'job_applications.pay_rate_amount',
-            'job_applications.pay_rate_mode',
-            'job_applications.ectc',
-            'job_applications.current_ectc_mode',
-            'job_applications.percentage_hike',
-            'job_applications.comment',
-            'job_applications.dob',
-            'job_applications.created_at',
-            'job_applications.company_id as other_company',
-            'job_applications.condidate_type',
-            'clients.name as client_name',
-            'jobs.title',
-            'users.name as posted_by',
-            'users.image as posted_by_image',
-            // 'notice_periods.np_title',
-            'master_status.name as master_status_name',
-            'offer_job_applications.proposed_ctc',
-            'offer_job_applications.any_offer',
-            'offer_job_applications.document',
-            'offer_job_applications.sub_for_approval',
-            'offer_job_applications.offer_approved',
-            'offer_job_applications.offer_release',
-            'offer_job_applications.offer_acceptance',
-            'offer_job_applications.joined',
-            'offer_job_applications.joined_date',
-            'offer_job_applications.offer_amount',
-            'master_status.css_style',
-            'jobs.company_id as ClientComID',
-            'job_applications.linkedin',
-            'job_applications.last_working_date',
-            'job_applications.gender',
-            'job_applications.nationality',
-            'job_applications.wm',
-            'job_applications.recruiter_note',
-            'job_applications.careersummary',
-            'job_applications.visastatu',
-            'job_applications.oh',
-            'qualification_master.name as qualification_name',
-            'companies.company_name',
-            'owncom.company_name as own_company_name',
-            'state_list.state as state_name',
-            'city_list.city as city_name',
-            'recommendation_relation.job_id as rjobid',
-            'recommendation_relation.from_company_id',
-            'add_job_wise_condidates.id as wiseId',
-            'documents.hashname'
-        )
-            ->join('add_job_wise_condidates', 'add_job_wise_condidates.job_application_id', 'job_applications.id')
-            ->join('master_status', function ($join) {
-                $join->on('master_status.id', 'add_job_wise_condidates.master_status_id');
-            })
-            ->leftJoin('jobs', function ($join) {
-                $join->on('jobs.id', 'add_job_wise_condidates.job_id');
-            })
-            ->leftJoin('recommendation_relation', function ($join) {
-                $join->on('recommendation_relation.job_id', 'jobs.id');
-            })
-            // ->leftJoin('recommendation_relation', 'recommendation_relation.job_id', '=', 'jobs.id')
-            ->leftJoin('companies', function ($join) {
-                $join->on('companies.id', 'add_job_wise_condidates.company_id');
-            })
-            ->leftJoin('companies as owncom', function ($join) {
-                $join->on('owncom.id', 'job_applications.company_id');
-            })
-            ->leftJoin('offer_job_applications', function ($join) use ($jobId) {
-                $join->on('offer_job_applications.application_id', 'job_applications.id');
-                $join->where('offer_job_applications.job_id', $jobId);
-                // $join->where('offer_job_applications.company_id', $company_id);
-            })
-            // ->leftJoin('jobs', 'jobs.id', '=', 'job_applications.job_id')
-            ->leftjoin('clients', 'clients.id', 'jobs.client_id')
-            // ->leftjoin('notice_periods', 'notice_periods.np_id', 'job_applications.np_id')
-            ->leftjoin('job_locations', 'job_locations.id', 'jobs.location_id')
-            ->leftjoin('users', 'users.id', 'add_job_wise_condidates.submitted_by')
-            ->leftjoin('documents', 'documents.documentable_id', 'job_applications.id')
-            ->leftjoin('qualification_master', 'qualification_master.id', 'job_applications.qualification')
-            // ->leftJoin('master_status', 'master_status.id', '=', 'job_applications.master_status_id')
-            ->leftJoin('state_list', 'state_list.id', '=', 'job_applications.state')
-            ->leftJoin('city_list', 'city_list.city_id', '=', 'job_applications.city_id');
-        if ($AddJobWiseCondidate) {
-            $this->application = $this->application->where('add_job_wise_condidates.id', $id);
-        } else {
-            $this->application = $this->application->where('job_applications.id', $id);
-        }
-
-        // $this->application = $this->application->where('add_job_wise_condidates.company_id', $company_id);
-        $this->application = $this->application->first();
-
-        //  dd($this->application);
-
-        $this->client_contuser_arr = DB::table('client_contact_info_jobs')->join('client_contact_info', 'client_contact_info.id', '=', 'client_contact_info_jobs.client_contact_info_id')->join('clients', 'clients.id', '=', 'client_contact_info.client_id')->select('client_contact_info.contact_person_name', 'client_contact_info.contact_person_email', 'client_contact_info.contact_person_number', 'client_contact_info.contact_person_designation', 'clients.name')->where('client_contact_info_jobs.job_id', @$jobId)->get();
-
-        $this->job_additional_detail = '';
-        $this->job_additional_detail = DB::table('job_additional_detail')
-            ->select('*')
-            // ->where('job_additional_detail.company_id', '=', $company_id)
-            ->where('job_additional_detail.job_id', '=', @$jobId)
-            ->orderBy('job_additional_detail.id', 'ASC')
-            ->get();
-
-        $this->application_additional_detail = DB::table('application_additional_detail')
-            ->select('*')
-            ->where('application_additional_detail.application_id', '=', @$this->application->id)
-            ->where('application_additional_detail.job_id', '=', @$jobId)
-            ->orderBy('application_additional_detail.id', 'ASC')
-            ->get();
-
-        $this->bench_additional_detail = DB::table('bench_additional_detail')
-            ->select('*')
-            ->where('bench_additional_detail.bench_id', '=', $this->application->id)
-            ->orderBy('bench_additional_detail.id', 'ASC')
-            ->get();
-
-        // echo '<pre>'; print_r($this->application); exit;
-        if (! empty($this->application->qualification) && $this->application->qualification > 0) {
-            $this->qualification = DB::table('qualification_master')->select('name')->where('id', $this->application->qualification)->first();
-        }
-        $this->answers = JobApplicationAnswer::with(['question'])->where('job_id', $jobId)->where('job_application_id', $this->application->id)->get();
-
-        $this->notesArr = DB::table('applicant_notes')
-            ->select(
-                'applicant_notes.id',
-                'applicant_notes.note_text',
-                'applicant_notes.created_at',
-                'applicant_notes.updated_at',
-                'users.name',
-                'users.image as posted_by_image'
-            )
-            ->join('job_applications', 'job_applications.id', 'applicant_notes.job_application_id')
-            ->join('add_job_wise_condidates', 'add_job_wise_condidates.job_application_id', 'job_applications.id')
-            // ->where('company_id', user()->company_id)
-            ->join('users', 'users.id', '=', 'applicant_notes.user_id')
-            ->where('add_job_wise_condidates.id', $id)
-            ->where('applicant_notes.job_application_id', $this->application->id)
-            ->where('applicant_notes.user_id', auth()->user()->id)
-            ->orderBy('id', 'ASC')
-            ->get();
-
-        $this->schedule = DB::table('interview_schedules')->select('interview_schedules.id', 'interview_schedules.company_id', 'interview_schedules.job_application_id', 'interview_schedules.schedule_date', 'interview_schedules.status', 'interview_schedules.user_accept_status', 'interview_schedules.created_at', 'interview_schedules.updated_at', 'interview_schedules.available_status', 'interview_schedules.reschedule', 'interview_schedules.feedback')
-            ->join('job_applications', 'job_applications.id', 'interview_schedules.job_application_id')
-            ->join('add_job_wise_condidates', 'add_job_wise_condidates.job_application_id', 'job_applications.id')
-            // ->where('interview_schedules.company_id', user()->company_id)
-            // ->join('users', 'users.id', '=', 'applicant_notes.user_id')
-            ->where('add_job_wise_condidates.id', $id)
-            ->where('interview_schedules.job_application_id', $this->application->id)
-            ->orderBy('id', 'DESC')
-            ->get();
-
-        // dd($this->schedule);
-
-        $application_email = $this->application->email;
-        $this->application_email = $application_email;
-        $application_id = $this->application->id;
-        $this->application_id = $application_id;
-        $job_id = $jobId;
-        $this->job_id = $job_id;
-
-        $this->created_at = GeneralMethod::ymdTodmy($this->application->created_at);
-
-        // UPDATE TIMELINE
-        $this->updateTimeLine = DB::table('updatetimeline');
-        $this->updateTimeLine = $this->updateTimeLine->select(
-            'updatetimeline.id',
-            'updatetimeline.event_id',
-            'updatetimeline.event_by_company_id',
-            'updatetimeline.event_by_user_id',
-            'updatetimeline.master_process_name',
-            'updatetimeline.child_process_name',
-            'updatetimeline.application_id',
-            'updatetimeline.application_email',
-            'updatetimeline.job_id',
-            'updatetimeline.note',
-            'updatetimeline.create_at',
-            'updatetimeline.update_at',
-            'updatetimeline.prev_process_name',
-            'updatetimeline.note',
-            'updatetimeline.prev_process_child_name',
-            'updatetimeline.interview_schedule_date',
-            'updatetimeline.interview_mode',
-            'updatetimeline.interview_mention_link',
-            'updatetimeline.interview_mode_child_level',
-            'updatetimeline.interviewers',
-            'updatetimeline.average_star_rating',
-            'updatetimeline.interview_message',
-            'updatetimeline.interview_schedules_id',
-            'updatetimeline.offer_currency',
-            'updatetimeline.offer_mode',
-            'updatetimeline.offer_amount',
-            'updatetimeline.joined_date',
-            'updatetimeline.candidate_status',
-            'updatetimeline.management_status',
-            'updatetimeline.accept_date_time',
-            'updatetimeline.approved_date_time',
-            'updatetimeline.email_id_hr',
-            'updatetimeline.name_hr',
-            'updatetimeline.yearly_gross',
-            'updatetimeline.yearly_final_gross',
-            'updatetimeline.mtypeSection',
-            'updatetimeline.designation_offer',
-            'application_event.event_name',
-            'jobs.id as job_id',
-            'jobs.title',
-            'jobs.employment_type',
-            'users.name',
-            'users.image',
-            'clients.name as client_name',
-            'interview_schedules.available_status',
-            'interview_schedules.reschedule',
-            'interview_schedules.feedback',
-            'interview_schedules.stage',
-            'master_status.name as status_name',
-            'companies.company_name as cur_companyname',
-            'master_status.css_style'
-        );
-        $this->updateTimeLine = $this->updateTimeLine->leftjoin('application_event', 'application_event.id', '=', 'updatetimeline.event_id');
-        $this->updateTimeLine = $this->updateTimeLine->join('job_applications', 'job_applications.id', '=', 'updatetimeline.application_id');
-        $this->updateTimeLine = $this->updateTimeLine->leftjoin('interview_schedules', 'interview_schedules.id', 'updatetimeline.interview_schedules_id');
-        $this->updateTimeLine = $this->updateTimeLine->leftjoin('master_status', 'master_status.id', 'interview_schedules.stage');
-        $this->updateTimeLine = $this->updateTimeLine->join('users', 'users.id', '=', 'updatetimeline.event_by_user_id');
-        $this->updateTimeLine = $this->updateTimeLine->leftjoin('companies', 'companies.id', 'users.company_id');
-        $this->updateTimeLine = $this->updateTimeLine->join('jobs', 'jobs.id', '=', 'updatetimeline.job_id');
-        $this->updateTimeLine = $this->updateTimeLine->join('clients', 'clients.id', '=', 'jobs.client_id');
-
-        $this->updateTimeLine = $this->updateTimeLine->where('updatetimeline.application_id', '=', $application_id);
-        // $this->updateTimeLine = $this->updateTimeLine->where('updatetimeline.event_by_company_id', '=', auth()->user()->company_id);
-        $this->updateTimeLine = $this->updateTimeLine->where('updatetimeline.job_id', '=', @$jobId);
-        // $this->updateTimeLine = $this->updateTimeLine->orWhere(function ($query) use ($company_id, $id) {
-        // 	return
-        // 		$query->where('job_applications.thirdparty_company_id', '=', $company_id)
-        // 			->where('job_applications.id', '=', $id);
-        // 	//->where('staffing_company_relation.final_status', '=', 1);
-        // });
-        $this->updateTimeLine = $this->updateTimeLine->orderBy('updatetimeline.id', 'DESC');
-        $this->updateTimeLine = $this->updateTimeLine->get();
-
-        // dd(	$this->updateTimeLine);
-
-        $sel_app_id = $id;
-        $sel_job_id = $job_id;
-        $this->benchStatusCnt = DB::table('rec_candidate_assign')->where('source_application_id', '=', $sel_app_id)->where('source_jobid', '=', $sel_job_id)->where('source_from_type', '!=', 0)->count();
-        if ($this->benchStatusCnt > 0) {
-            $benchAssignRow = DB::table('rec_candidate_assign')->select('rec_candidate_assign.*')->where('source_application_id', '=', $sel_app_id)->first();
-
-            $source_from_company_id = @$benchAssignRow->source_from_company_id;
-            $source_from_user_id = @$benchAssignRow->source_from_user_id;
-            $source_from_id = @$benchAssignRow->source_from_id;
-            $source_from_type = @$benchAssignRow->source_from_type;
-            $source_company_id = @$benchAssignRow->source_company_id;
-
-            $source_user_id = @$benchAssignRow->source_user_id;
-            $source_application_id = @$benchAssignRow->source_application_id;
-            $source_jobid = @$benchAssignRow->source_jobid;
-
-            // dd($this->userPermissions);
-
-            if ($company_id != $this->application->other_company && $source_from_type == 2) {
-                $this->application->phone = '2xxx-xxx-xxxx';
-                $this->application->secondary_mobile = '2xxx-xxx-xxxx';
-                $this->application->email = '2xxx-xxx-xxxx';
-                $this->application->secondrary_email = '2xxx-xxx-xxxx';
-            }
-
-            // if ($source_from_type == 2) {
-
-            // }
-
-            $this->bench_assign_row = DB::table('bench_assign')->select('users.id', 'users.name', 'users.email', 'users.mobile', 'users_profile.designation')
-                ->join('users', 'users.id', '=', 'bench_assign.user_id')
-                ->leftjoin('users_profile', 'users_profile.user_id', 'users.id')
-                ->where('bench_assign.bench_applications_id', '=', $benchAssignRow->source_from_id)->get();
-            $this->bench_additional_detail = DB::table('bench_additional_detail')
-                ->select('bench_additional_detail.id', 'bench_additional_detail.custom_keys', 'bench_additional_detail.custom_keys_value')
-                ->where('bench_additional_detail.bench_id', '=', $benchAssignRow->source_from_id)->get();
-
-        }
-
-        $this->userPermissions = [
-            'view_job_applications',
-            'edit_job_applications',
-            'add_schedule',
-            'add_notes',
-            'view_notes',
-            'edit_notes',
-            'delete_notes',
-        ];
-        $this->CaptainCompanyid = auth()->user()->company_id ?? 0;
-        $this->editprofile = true;
-        $this->currentPage = 1;
-        $this->currentSlug = 'candidate-lists';
-        $this->notVisiableBench = true;
-        $this->editComman = true;
-        $this->skillAndQuestions = true;
-        $this->resumeAwsPath = ! empty($this->application->resume);
-        $this->interview_mode = DB::table('interview_mode')->select('*')->orderBy('interview_mode.id', 'ASC')->get();
-
-        $effectiveJobId = $this->application->jobId ?? $this->application->job_id ?? $jobId;
-        $this->jobData = ! empty($effectiveJobId) ? DB::table('jobs')->select('max_sal_mode as jobMode', 'max_salary_currency as jobCurrency')->where('id', '=', $effectiveJobId)->first() : null;
-        $this->job = ! empty($effectiveJobId) ? Job::withoutGlobalScopes()->find($effectiveJobId) : null;
-
-        $this->jobSkill = DB::table('job_metronics_skills')
-            ->leftJoin('candidate_job_skill_exp', function ($join) {
-                $join->on('candidate_job_skill_exp.job_skill_id', '=', 'job_metronics_skills.id')
-                    ->where('candidate_job_skill_exp.candidate_id', '=', $this->application->id);
-            })
-            ->select(
-                DB::raw('MIN(job_metronics_skills.id) as job_skill_id'),
-                DB::raw('MIN(job_metronics_skills.id) as id'),
-                'job_metronics_skills.skill_name',
-                DB::raw('MAX(candidate_job_skill_exp.skill_value) as skill_value'),
-                DB::raw('MAX(candidate_job_skill_exp.rating) as rating')
-            )
-            ->where('job_metronics_skills.job_id', '=', $effectiveJobId)
-            ->whereNotNull('job_metronics_skills.skill_name')
-            ->whereRaw("TRIM(job_metronics_skills.skill_name) != ''")
-            ->groupBy('job_metronics_skills.skill_name')
-            ->get();
-
-        if ($this->jobSkill) {
-            foreach ($this->jobSkill as $sk) {
-                if ($sk->rating === null) {
-                    $sk->rating = 0;
+                    'job_applications.current_ctc_cur',
+                    'job_applications.ctc',
+                    'job_applications.current_ctc_mode',
+                    'job_applications.current_ectc_cur',
+                    'job_applications.bill_rate_currency',
+                    'job_applications.bill_rate_amount',
+                    'job_applications.bill_rate_mode',
+                    'job_applications.pay_rate_currency',
+                    'job_applications.pay_rate_amount',
+                    'job_applications.pay_rate_mode',
+                    'job_applications.ectc',
+                    'job_applications.current_ectc_mode',
+                    'job_applications.percentage_hike',
+                    'job_applications.comment',
+                    'job_applications.dob',
+                    'job_applications.created_at',
+                    'job_applications.company_id as other_company',
+                    'job_applications.condidate_type',
+                    'clients.name as client_name',
+                    'jobs.title',
+                    'users.name as posted_by',
+                    'users.image as posted_by_image',
+                    // 'notice_periods.np_title',
+                    'master_status.name as master_status_name',
+                    'offer_job_applications.proposed_ctc',
+                    'offer_job_applications.any_offer',
+                    'offer_job_applications.document',
+                    'offer_job_applications.sub_for_approval',
+                    'offer_job_applications.offer_approved',
+                    'offer_job_applications.offer_release',
+                    'offer_job_applications.offer_acceptance',
+                    'offer_job_applications.joined',
+                    'offer_job_applications.joined_date',
+                    'offer_job_applications.offer_amount',
+                    'master_status.css_style',
+                    'jobs.company_id as ClientComID',
+                    'job_applications.linkedin',
+                    'job_applications.last_working_date',
+                    'job_applications.gender',
+                    'job_applications.nationality',
+                    'job_applications.wm',
+                    'job_applications.recruiter_note',
+                    'job_applications.careersummary',
+                    'job_applications.visastatu',
+                    'job_applications.oh',
+                    'qualification_master.name as qualification_name',
+                    'companies.company_name',
+                    'owncom.company_name as own_company_name',
+                    'state_list.state as state_name',
+                    'city_list.city as city_name',
+                    'recommendation_relation.job_id as rjobid',
+                    'recommendation_relation.from_company_id',
+                    'add_job_wise_condidates.id as wiseId',
+                    'documents.hashname'
+                )
+                    ->join('add_job_wise_condidates', 'add_job_wise_condidates.job_application_id', 'job_applications.id')
+                    ->join('master_status', function ($join) {
+                        $join->on('master_status.id', 'add_job_wise_condidates.master_status_id');
+                    })
+                    ->leftJoin('jobs', function ($join) {
+                        $join->on('jobs.id', 'add_job_wise_condidates.job_id');
+                    })
+                    ->leftJoin('recommendation_relation', function ($join) {
+                        $join->on('recommendation_relation.job_id', 'jobs.id');
+                    })
+                    // ->leftJoin('recommendation_relation', 'recommendation_relation.job_id', '=', 'jobs.id')
+                    ->leftJoin('companies', function ($join) {
+                        $join->on('companies.id', 'add_job_wise_condidates.company_id');
+                    })
+                    ->leftJoin('companies as owncom', function ($join) {
+                        $join->on('owncom.id', 'job_applications.company_id');
+                    })
+                    ->leftJoin('offer_job_applications', function ($join) use ($jobId) {
+                        $join->on('offer_job_applications.application_id', 'job_applications.id');
+                        $join->where('offer_job_applications.job_id', $jobId);
+                        // $join->where('offer_job_applications.company_id', $company_id);
+                    })
+                    // ->leftJoin('jobs', 'jobs.id', '=', 'job_applications.job_id')
+                    ->leftjoin('clients', 'clients.id', 'jobs.client_id')
+                    // ->leftjoin('notice_periods', 'notice_periods.np_id', 'job_applications.np_id')
+                    ->leftjoin('job_locations', 'job_locations.id', 'jobs.location_id')
+                    ->leftjoin('users', 'users.id', 'add_job_wise_condidates.submitted_by')
+                    ->leftjoin('documents', 'documents.documentable_id', 'job_applications.id')
+                    ->leftjoin('qualification_master', 'qualification_master.id', 'job_applications.qualification')
+                    // ->leftJoin('master_status', 'master_status.id', '=', 'job_applications.master_status_id')
+                    ->leftJoin('state_list', 'state_list.id', '=', 'job_applications.state')
+                    ->leftJoin('city_list', 'city_list.city_id', '=', 'job_applications.city_id');
+                if ($AddJobWiseCondidate) {
+                    $this->application = $this->application->where('add_job_wise_condidates.id', $id);
+                } else {
+                    $this->application = $this->application->where('job_applications.id', $id);
                 }
-            }
-        }
-        $this->skillShow = (! empty($this->jobSkill) && count($this->jobSkill) > 0);
 
-        $this->child_status_name = 'N/A';
-        if ($this->application->child_status_id > 0) {
-            $childStatus = DB::table('candidate_status')->select('*')->where('id', $this->application->child_status_id)->first();
-            if (! empty($childStatus)) {
-                $this->child_status_name = @$childStatus->name;
-            }
-        }
-        $this->company_id = $this->user->company_id;
-        $this->additional_skills_arr = DB::table('skills')->join('candidate_skills_value', 'skills.id', '=', 'candidate_skills_value.skill_id')
-            // ->join('clients', 'clients.id', '=', 'client_contact_info.client_id')
-            ->select('skills.name', 'candidate_skills_value.skill_value')->where('candidate_skills_value.job_id', $jobId)->where('candidate_skills_value.candidate_id', $this->application->id)->where('skills.company_id', $this->user->company_id)->get();
-        $this->application_add_detail_cnt = DB::table('application_additional_detail')->select('*')->where('application_id', $this->application->id)->where('job_id', $jobId)->orderBy('application_additional_detail.id', 'ASC')->count();
-        $this->application_add_detail = DB::table('application_additional_detail')->select('*')->where('application_id', $this->application->id)->where('job_id', $jobId)->orderBy('application_additional_detail.id', 'ASC')->get();
-        $this->offer_job_applications_count = DB::table('offer_job_applications')->select('offer_job_applications.id')->join('jobs', 'jobs.id', '=', 'offer_job_applications.job_id')->join('clients', 'clients.id', '=', 'jobs.client_id')
-            // ->leftjoin('countries', 'countries.id', 'job_applications.master_status_id')
-            ->where('offer_job_applications.email', '=', $this->application->email)->where('offer_job_applications.company_id', '=', auth()->user()->company_id)->orderBy('offer_job_applications.id', 'DESC')->count();
-        $this->offer_job_applications = DB::table('offer_job_applications')->select('offer_job_applications.id', 'offer_job_applications.application_id', 'offer_job_applications.submitted_by', 'offer_job_applications.company_id', 'offer_job_applications.np_id', 'offer_job_applications.full_name', 'offer_job_applications.email', 'offer_job_applications.phone', 'offer_job_applications.gender', 'offer_job_applications.dob', 'offer_job_applications.country', 'offer_job_applications.state', 'offer_job_applications.city', 'offer_job_applications.secondrary_email', 'offer_job_applications.secondary_mobile', 'offer_job_applications.skills', 'offer_job_applications.photo', 'offer_job_applications.resume', 'offer_job_applications.rating', 'offer_job_applications.skype_id', 'offer_job_applications.cover_letter', 'offer_job_applications.job_id', 'offer_job_applications.status_id', 'offer_job_applications.is_viewed', 'offer_job_applications.column_priority', 'offer_job_applications.created_at', 'offer_job_applications.updated_at', 'offer_job_applications.total_exp', 'offer_job_applications.rel_exp', 'offer_job_applications.passport', 'offer_job_applications.ctc', 'offer_job_applications.ectc', 'offer_job_applications.current_location', 'offer_job_applications.current_designation', 'offer_job_applications.current_company', 'offer_job_applications.process_id', 'offer_job_applications.qualification', 'offer_job_applications.master_status_id', 'offer_job_applications.child_status_id', 'offer_job_applications.serving_notice_period_mode', 'offer_job_applications.proposed_ctc', 'offer_job_applications.any_offer', 'offer_job_applications.document', 'offer_job_applications.sub_for_approval', 'offer_job_applications.offer_approved', 'offer_job_applications.offer_release', 'offer_job_applications.offer_acceptance', 'offer_job_applications.joined', 'offer_job_applications.joined_date', 'offer_job_applications.duplicate', 'jobs.title', 'clients.name as client_name')->join('jobs', 'jobs.id', '=', 'offer_job_applications.job_id')->join('clients', 'clients.id', '=', 'jobs.client_id')
-            // ->leftjoin('countries', 'countries.id', 'job_applications.master_status_id')
-            ->where('offer_job_applications.email', '=', $this->application->email)->where('offer_job_applications.company_id', '=', auth()->user()->company_id)
-            // ->where('job_id', $this->application->job_id)
-            ->orderBy('offer_job_applications.id', 'DESC')->get();
-        // echo '<pre>'; print_r($this->offer_job_applications); exit;
+                // $this->application = $this->application->where('add_job_wise_condidates.company_id', $company_id);
+                $this->application = $this->application->first();
 
-        $resume = '';
-        $resumeData = DB::table('documents')->select('*')->where('documentable_id', $this->application->id)->where('name', '=', 'Resume')->first();
-        $this->resume = @$resumeData->hashname;
+                //  dd($this->application);
 
-        $this->bench_assign_count = DB::table('bench_assign')->select('users.id', 'users.name', 'users.email', 'users.mobile', 'users_profile.designation', 'users.working_status')->join('users', 'users.id', '=', 'bench_assign.user_id')->leftJoin('users_profile', 'users_profile.user_id', '=', 'users.id')->where('bench_assign.bench_applications_id', '=', @$this->application->id)->count();
+                $this->client_contuser_arr = DB::table('client_contact_info_jobs')->join('client_contact_info', 'client_contact_info.id', '=', 'client_contact_info_jobs.client_contact_info_id')->join('clients', 'clients.id', '=', 'client_contact_info.client_id')->select('client_contact_info.contact_person_name', 'client_contact_info.contact_person_email', 'client_contact_info.contact_person_number', 'client_contact_info.contact_person_designation', 'clients.name')->where('client_contact_info_jobs.job_id', @$jobId)->get();
 
-        $this->bench_assign_row = DB::table('bench_assign')->select('users.id', 'users.name', 'users.email', 'users.mobile', 'users_profile.designation')->join('users', 'users.id', '=', 'bench_assign.user_id')
-            ->leftjoin('users_profile', 'users_profile.user_id', 'users.id')->where('bench_assign.bench_applications_id', '=', @$this->application->id)->get();
+                $this->job_additional_detail = '';
+                $this->job_additional_detail = DB::table('job_additional_detail')
+                    ->select('*')
+                    // ->where('job_additional_detail.company_id', '=', $company_id)
+                    ->where('job_additional_detail.job_id', '=', @$jobId)
+                    ->orderBy('job_additional_detail.id', 'ASC')
+                    ->get();
 
-        $this->jobWiseCanId = $id;
+                $this->application_additional_detail = DB::table('application_additional_detail')
+                    ->select('*')
+                    ->where('application_additional_detail.application_id', '=', @$this->application->id)
+                    ->where('application_additional_detail.job_id', '=', @$jobId)
+                    ->orderBy('application_additional_detail.id', 'ASC')
+                    ->get();
 
-        return view('super-admin.candidates.showdetail', $this->data)->render();
-    });
+                $this->bench_additional_detail = DB::table('bench_additional_detail')
+                    ->select('*')
+                    ->where('bench_additional_detail.bench_id', '=', $this->application->id)
+                    ->orderBy('bench_additional_detail.id', 'ASC')
+                    ->get();
 
-    return Reply::dataOnly(['status' => 'success', 'view' => $view]);
-}
+                // echo '<pre>'; print_r($this->application); exit;
+                if (! empty($this->application->qualification) && $this->application->qualification > 0) {
+                    $this->qualification = DB::table('qualification_master')->select('name')->where('id', $this->application->qualification)->first();
+                }
+                $this->answers = JobApplicationAnswer::with(['question'])->where('job_id', $jobId)->where('job_application_id', $this->application->id)->get();
+
+                $this->notesArr = DB::table('applicant_notes')
+                    ->select(
+                        'applicant_notes.id',
+                        'applicant_notes.note_text',
+                        'applicant_notes.created_at',
+                        'applicant_notes.updated_at',
+                        'users.name',
+                        'users.image as posted_by_image'
+                    )
+                    ->join('job_applications', 'job_applications.id', 'applicant_notes.job_application_id')
+                    ->join('add_job_wise_condidates', 'add_job_wise_condidates.job_application_id', 'job_applications.id')
+                    // ->where('company_id', user()->company_id)
+                    ->join('users', 'users.id', '=', 'applicant_notes.user_id')
+                    ->where('add_job_wise_condidates.id', $id)
+                    ->where('applicant_notes.job_application_id', $this->application->id)
+                    ->where('applicant_notes.user_id', auth()->user()->id)
+                    ->orderBy('id', 'ASC')
+                    ->get();
+
+                $this->schedule = DB::table('interview_schedules')->select('interview_schedules.id', 'interview_schedules.company_id', 'interview_schedules.job_application_id', 'interview_schedules.schedule_date', 'interview_schedules.status', 'interview_schedules.user_accept_status', 'interview_schedules.created_at', 'interview_schedules.updated_at', 'interview_schedules.available_status', 'interview_schedules.reschedule', 'interview_schedules.feedback')
+                    ->join('job_applications', 'job_applications.id', 'interview_schedules.job_application_id')
+                    ->join('add_job_wise_condidates', 'add_job_wise_condidates.job_application_id', 'job_applications.id')
+                    // ->where('interview_schedules.company_id', user()->company_id)
+                    // ->join('users', 'users.id', '=', 'applicant_notes.user_id')
+                    ->where('add_job_wise_condidates.id', $id)
+                    ->where('interview_schedules.job_application_id', $this->application->id)
+                    ->orderBy('id', 'DESC')
+                    ->get();
+
+                // dd($this->schedule);
+
+                $application_email = $this->application->email;
+                $this->application_email = $application_email;
+                $application_id = $this->application->id;
+                $this->application_id = $application_id;
+                $job_id = $jobId;
+                $this->job_id = $job_id;
+
+                $this->created_at = GeneralMethod::ymdTodmy($this->application->created_at);
+
+                // UPDATE TIMELINE
+                $this->updateTimeLine = DB::table('updatetimeline');
+                $this->updateTimeLine = $this->updateTimeLine->select(
+                    'updatetimeline.id',
+                    'updatetimeline.event_id',
+                    'updatetimeline.event_by_company_id',
+                    'updatetimeline.event_by_user_id',
+                    'updatetimeline.master_process_name',
+                    'updatetimeline.child_process_name',
+                    'updatetimeline.application_id',
+                    'updatetimeline.application_email',
+                    'updatetimeline.job_id',
+                    'updatetimeline.note',
+                    'updatetimeline.create_at',
+                    'updatetimeline.update_at',
+                    'updatetimeline.prev_process_name',
+                    'updatetimeline.note',
+                    'updatetimeline.prev_process_child_name',
+                    'updatetimeline.interview_schedule_date',
+                    'updatetimeline.interview_mode',
+                    'updatetimeline.interview_mention_link',
+                    'updatetimeline.interview_mode_child_level',
+                    'updatetimeline.interviewers',
+                    'updatetimeline.average_star_rating',
+                    'updatetimeline.interview_message',
+                    'updatetimeline.interview_schedules_id',
+                    'updatetimeline.offer_currency',
+                    'updatetimeline.offer_mode',
+                    'updatetimeline.offer_amount',
+                    'updatetimeline.joined_date',
+                    'updatetimeline.candidate_status',
+                    'updatetimeline.management_status',
+                    'updatetimeline.accept_date_time',
+                    'updatetimeline.approved_date_time',
+                    'updatetimeline.email_id_hr',
+                    'updatetimeline.name_hr',
+                    'updatetimeline.yearly_gross',
+                    'updatetimeline.yearly_final_gross',
+                    'updatetimeline.mtypeSection',
+                    'updatetimeline.designation_offer',
+                    'application_event.event_name',
+                    'jobs.id as job_id',
+                    'jobs.title',
+                    'jobs.employment_type',
+                    'users.name',
+                    'users.image',
+                    'clients.name as client_name',
+                    'interview_schedules.available_status',
+                    'interview_schedules.reschedule',
+                    'interview_schedules.feedback',
+                    'interview_schedules.stage',
+                    'master_status.name as status_name',
+                    'companies.company_name as cur_companyname',
+                    'master_status.css_style'
+                );
+                $this->updateTimeLine = $this->updateTimeLine->leftjoin('application_event', 'application_event.id', '=', 'updatetimeline.event_id');
+                $this->updateTimeLine = $this->updateTimeLine->join('job_applications', 'job_applications.id', '=', 'updatetimeline.application_id');
+                $this->updateTimeLine = $this->updateTimeLine->leftjoin('interview_schedules', 'interview_schedules.id', 'updatetimeline.interview_schedules_id');
+                $this->updateTimeLine = $this->updateTimeLine->leftjoin('master_status', 'master_status.id', 'interview_schedules.stage');
+                $this->updateTimeLine = $this->updateTimeLine->join('users', 'users.id', '=', 'updatetimeline.event_by_user_id');
+                $this->updateTimeLine = $this->updateTimeLine->leftjoin('companies', 'companies.id', 'users.company_id');
+                $this->updateTimeLine = $this->updateTimeLine->join('jobs', 'jobs.id', '=', 'updatetimeline.job_id');
+                $this->updateTimeLine = $this->updateTimeLine->join('clients', 'clients.id', '=', 'jobs.client_id');
+
+                $this->updateTimeLine = $this->updateTimeLine->where('updatetimeline.application_id', '=', $application_id);
+                // $this->updateTimeLine = $this->updateTimeLine->where('updatetimeline.event_by_company_id', '=', auth()->user()->company_id);
+                $this->updateTimeLine = $this->updateTimeLine->where('updatetimeline.job_id', '=', @$jobId);
+                // $this->updateTimeLine = $this->updateTimeLine->orWhere(function ($query) use ($company_id, $id) {
+                // 	return
+                // 		$query->where('job_applications.thirdparty_company_id', '=', $company_id)
+                // 			->where('job_applications.id', '=', $id);
+                // 	//->where('staffing_company_relation.final_status', '=', 1);
+                // });
+                $this->updateTimeLine = $this->updateTimeLine->orderBy('updatetimeline.id', 'DESC');
+                $this->updateTimeLine = $this->updateTimeLine->get();
+
+                // dd(	$this->updateTimeLine);
+
+                $sel_app_id = $id;
+                $sel_job_id = $job_id;
+                $this->benchStatusCnt = DB::table('rec_candidate_assign')->where('source_application_id', '=', $sel_app_id)->where('source_jobid', '=', $sel_job_id)->where('source_from_type', '!=', 0)->count();
+                if ($this->benchStatusCnt > 0) {
+                    $benchAssignRow = DB::table('rec_candidate_assign')->select('rec_candidate_assign.*')->where('source_application_id', '=', $sel_app_id)->first();
+
+                    $source_from_company_id = @$benchAssignRow->source_from_company_id;
+                    $source_from_user_id = @$benchAssignRow->source_from_user_id;
+                    $source_from_id = @$benchAssignRow->source_from_id;
+                    $source_from_type = @$benchAssignRow->source_from_type;
+                    $source_company_id = @$benchAssignRow->source_company_id;
+
+                    $source_user_id = @$benchAssignRow->source_user_id;
+                    $source_application_id = @$benchAssignRow->source_application_id;
+                    $source_jobid = @$benchAssignRow->source_jobid;
+
+                    // dd($this->userPermissions);
+
+                    if ($company_id != $this->application->other_company && $source_from_type == 2) {
+                        $this->application->phone = '2xxx-xxx-xxxx';
+                        $this->application->secondary_mobile = '2xxx-xxx-xxxx';
+                        $this->application->email = '2xxx-xxx-xxxx';
+                        $this->application->secondrary_email = '2xxx-xxx-xxxx';
+                    }
+
+                    // if ($source_from_type == 2) {
+
+                    // }
+
+                    $this->bench_assign_row = DB::table('bench_assign')->select('users.id', 'users.name', 'users.email', 'users.mobile', 'users_profile.designation')
+                        ->join('users', 'users.id', '=', 'bench_assign.user_id')
+                        ->leftjoin('users_profile', 'users_profile.user_id', 'users.id')
+                        ->where('bench_assign.bench_applications_id', '=', $benchAssignRow->source_from_id)->get();
+                    $this->bench_additional_detail = DB::table('bench_additional_detail')
+                        ->select('bench_additional_detail.id', 'bench_additional_detail.custom_keys', 'bench_additional_detail.custom_keys_value')
+                        ->where('bench_additional_detail.bench_id', '=', $benchAssignRow->source_from_id)->get();
+
+                }
+
+                $this->userPermissions = [
+                    'view_job_applications',
+                    'edit_job_applications',
+                    'add_schedule',
+                    'add_notes',
+                    'view_notes',
+                    'edit_notes',
+                    'delete_notes',
+                ];
+                $this->CaptainCompanyid = auth()->user()->company_id ?? 0;
+                $this->editprofile = true;
+                $this->currentPage = 1;
+                $this->currentSlug = 'candidate-lists';
+                $this->notVisiableBench = true;
+                $this->editComman = true;
+                $this->skillAndQuestions = true;
+                $this->resumeAwsPath = ! empty($this->application->resume);
+                $this->interview_mode = DB::table('interview_mode')->select('*')->orderBy('interview_mode.id', 'ASC')->get();
+
+                $effectiveJobId = $this->application->jobId ?? $this->application->job_id ?? $jobId;
+                $this->jobData = ! empty($effectiveJobId) ? DB::table('jobs')->select('max_sal_mode as jobMode', 'max_salary_currency as jobCurrency')->where('id', '=', $effectiveJobId)->first() : null;
+                $this->job = ! empty($effectiveJobId) ? Job::withoutGlobalScopes()->find($effectiveJobId) : null;
+
+                $this->jobSkill = DB::table('job_metronics_skills')
+                    ->leftJoin('candidate_job_skill_exp', function ($join) {
+                        $join->on('candidate_job_skill_exp.job_skill_id', '=', 'job_metronics_skills.id')
+                            ->where('candidate_job_skill_exp.candidate_id', '=', $this->application->id);
+                    })
+                    ->select(
+                        DB::raw('MIN(job_metronics_skills.id) as job_skill_id'),
+                        DB::raw('MIN(job_metronics_skills.id) as id'),
+                        'job_metronics_skills.skill_name',
+                        DB::raw('MAX(candidate_job_skill_exp.skill_value) as skill_value'),
+                        DB::raw('MAX(candidate_job_skill_exp.rating) as rating')
+                    )
+                    ->where('job_metronics_skills.job_id', '=', $effectiveJobId)
+                    ->whereNotNull('job_metronics_skills.skill_name')
+                    ->whereRaw("TRIM(job_metronics_skills.skill_name) != ''")
+                    ->groupBy('job_metronics_skills.skill_name')
+                    ->get();
+
+                if ($this->jobSkill) {
+                    foreach ($this->jobSkill as $sk) {
+                        if ($sk->rating === null) {
+                            $sk->rating = 0;
+                        }
+                    }
+                }
+                $this->skillShow = (! empty($this->jobSkill) && count($this->jobSkill) > 0);
+
+                $this->child_status_name = 'N/A';
+                if ($this->application->child_status_id > 0) {
+                    $childStatus = DB::table('candidate_status')->select('*')->where('id', $this->application->child_status_id)->first();
+                    if (! empty($childStatus)) {
+                        $this->child_status_name = @$childStatus->name;
+                    }
+                }
+                $this->company_id = $this->user->company_id;
+                $this->additional_skills_arr = DB::table('skills')->join('candidate_skills_value', 'skills.id', '=', 'candidate_skills_value.skill_id')
+                    // ->join('clients', 'clients.id', '=', 'client_contact_info.client_id')
+                    ->select('skills.name', 'candidate_skills_value.skill_value')->where('candidate_skills_value.job_id', $jobId)->where('candidate_skills_value.candidate_id', $this->application->id)->where('skills.company_id', $this->user->company_id)->get();
+                $this->application_add_detail_cnt = DB::table('application_additional_detail')->select('*')->where('application_id', $this->application->id)->where('job_id', $jobId)->orderBy('application_additional_detail.id', 'ASC')->count();
+                $this->application_add_detail = DB::table('application_additional_detail')->select('*')->where('application_id', $this->application->id)->where('job_id', $jobId)->orderBy('application_additional_detail.id', 'ASC')->get();
+                $this->offer_job_applications_count = DB::table('offer_job_applications')->select('offer_job_applications.id')->join('jobs', 'jobs.id', '=', 'offer_job_applications.job_id')->join('clients', 'clients.id', '=', 'jobs.client_id')
+                    // ->leftjoin('countries', 'countries.id', 'job_applications.master_status_id')
+                    ->where('offer_job_applications.email', '=', $this->application->email)->where('offer_job_applications.company_id', '=', auth()->user()->company_id)->orderBy('offer_job_applications.id', 'DESC')->count();
+                $this->offer_job_applications = DB::table('offer_job_applications')->select('offer_job_applications.id', 'offer_job_applications.application_id', 'offer_job_applications.submitted_by', 'offer_job_applications.company_id', 'offer_job_applications.np_id', 'offer_job_applications.full_name', 'offer_job_applications.email', 'offer_job_applications.phone', 'offer_job_applications.gender', 'offer_job_applications.dob', 'offer_job_applications.country', 'offer_job_applications.state', 'offer_job_applications.city', 'offer_job_applications.secondrary_email', 'offer_job_applications.secondary_mobile', 'offer_job_applications.skills', 'offer_job_applications.photo', 'offer_job_applications.resume', 'offer_job_applications.rating', 'offer_job_applications.skype_id', 'offer_job_applications.cover_letter', 'offer_job_applications.job_id', 'offer_job_applications.status_id', 'offer_job_applications.is_viewed', 'offer_job_applications.column_priority', 'offer_job_applications.created_at', 'offer_job_applications.updated_at', 'offer_job_applications.total_exp', 'offer_job_applications.rel_exp', 'offer_job_applications.passport', 'offer_job_applications.ctc', 'offer_job_applications.ectc', 'offer_job_applications.current_location', 'offer_job_applications.current_designation', 'offer_job_applications.current_company', 'offer_job_applications.process_id', 'offer_job_applications.qualification', 'offer_job_applications.master_status_id', 'offer_job_applications.child_status_id', 'offer_job_applications.serving_notice_period_mode', 'offer_job_applications.proposed_ctc', 'offer_job_applications.any_offer', 'offer_job_applications.document', 'offer_job_applications.sub_for_approval', 'offer_job_applications.offer_approved', 'offer_job_applications.offer_release', 'offer_job_applications.offer_acceptance', 'offer_job_applications.joined', 'offer_job_applications.joined_date', 'offer_job_applications.duplicate', 'jobs.title', 'clients.name as client_name')->join('jobs', 'jobs.id', '=', 'offer_job_applications.job_id')->join('clients', 'clients.id', '=', 'jobs.client_id')
+                    // ->leftjoin('countries', 'countries.id', 'job_applications.master_status_id')
+                    ->where('offer_job_applications.email', '=', $this->application->email)->where('offer_job_applications.company_id', '=', auth()->user()->company_id)
+                    // ->where('job_id', $this->application->job_id)
+                    ->orderBy('offer_job_applications.id', 'DESC')->get();
+                // echo '<pre>'; print_r($this->offer_job_applications); exit;
+
+                $resume = '';
+                $resumeData = DB::table('documents')->select('*')->where('documentable_id', $this->application->id)->where('name', '=', 'Resume')->first();
+                $this->resume = @$resumeData->hashname;
+
+                $this->bench_assign_count = DB::table('bench_assign')->select('users.id', 'users.name', 'users.email', 'users.mobile', 'users_profile.designation', 'users.working_status')->join('users', 'users.id', '=', 'bench_assign.user_id')->leftJoin('users_profile', 'users_profile.user_id', '=', 'users.id')->where('bench_assign.bench_applications_id', '=', @$this->application->id)->count();
+
+                $this->bench_assign_row = DB::table('bench_assign')->select('users.id', 'users.name', 'users.email', 'users.mobile', 'users_profile.designation')->join('users', 'users.id', '=', 'bench_assign.user_id')
+                    ->leftjoin('users_profile', 'users_profile.user_id', 'users.id')->where('bench_assign.bench_applications_id', '=', @$this->application->id)->get();
+
+                $this->jobWiseCanId = $id;
+
+                return view('super-admin.candidates.showdetail', $this->data)->render();
+            });
+
+        return Reply::dataOnly(['status' => 'success', 'view' => $view]);
+    }
 
     /**
      * Intent: Super Admin Candidate Stage Mutation endpoint with two-tier idempotency and transactional outbox.

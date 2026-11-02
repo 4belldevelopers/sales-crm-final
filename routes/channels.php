@@ -72,4 +72,9 @@ Broadcast::channel('superadmin.meetings', function ($user) {
     return (bool) ($user && (! empty($user->is_superadmin) || (int) ($user->role_id ?? 0) === 1 || ! empty($user->root_user)));
 });
 
+// Super Admin private channel for Marketplace Operations & Job Public Market delta synchronization
+Broadcast::channel('superadmin.marketplace', function ($user) {
+    return (bool) ($user && (! empty($user->is_superadmin) || (int) ($user->role_id ?? 0) === 1 || ! empty($user->root_user)));
+});
+
 
