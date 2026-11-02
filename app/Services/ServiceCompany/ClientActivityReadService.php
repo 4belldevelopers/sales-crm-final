@@ -267,7 +267,7 @@ class ClientActivityReadService
                     if ($viewerType === 'agency') {
                         $dirFilter = [
                             ['term' => ['recommendation_relation.from_company_id' => $companyId]],
-                            ['terms' => ['recommendation_relation.final_status' => [1, 2]]],
+                            ['term' => ['recommendation_relation.final_status' => 1]],
                         ];
                         if ($targetPartnerId > 0) {
                             $dirFilter[] = ['term' => ['recommendation_relation.to_company_id' => $targetPartnerId]];
@@ -275,7 +275,7 @@ class ClientActivityReadService
                     } else {
                         $dirFilter = [
                             ['term' => ['recommendation_relation.to_company_id' => $companyId]],
-                            ['terms' => ['recommendation_relation.final_status' => [1, 2]]],
+                            ['term' => ['recommendation_relation.final_status' => 1]],
                         ];
                         if ($targetPartnerId > 0) {
                             $dirFilter[] = ['term' => ['recommendation_relation.from_company_id' => $targetPartnerId]];
@@ -363,10 +363,11 @@ class ClientActivityReadService
         }
 
         $candIds = [];
-        $indices = 'ats_candidates_elastic,local_candidates_elastic';
+        $candIndex = defined('ELASTIC_CANDIDATES') ? ELASTIC_CANDIDATES : config('constants.ELASTIC_CANDIDATES', 'ats_candidates_elastic');
+        $indices = $this->elasticService->indexExists($candIndex) ? $candIndex : ($this->elasticService->indexExists('ats_candidates_elastic') ? 'ats_candidates_elastic' : 'local_candidates_elastic');
 
         try {
-            if ($this->elasticService->indexExists('ats_candidates_elastic') || $this->elasticService->indexExists('local_candidates_elastic')) {
+            if ($this->elasticService->indexExists($indices)) {
                 $must = [
                     ['terms' => ['job_id' => $clientJobIds]],
                 ];
@@ -474,18 +475,23 @@ class ClientActivityReadService
             'note_events' => 0,
         ];
 
-        // Read counts across indices
-        $timelineExisting = [];
-        foreach (['ats_candidate_timeline', 'local_candidate_timeline'] as $candidateTimelineIndex) {
-            if ($this->elasticService->indexExists($candidateTimelineIndex)) {
-                $timelineExisting[] = $candidateTimelineIndex;
-            }
+        // Authoritative Timeline Index (prefer ats_candidate_timeline, never mix with stale local_candidate_timeline)
+        $indexTimeline = $this->elasticService->indexExists('ats_candidate_timeline')
+            ? 'ats_candidate_timeline'
+            : ($this->elasticService->indexExists('local_candidate_timeline') ? 'local_candidate_timeline' : 'ats_candidate_timeline');
+        $hasTimeline = $this->elasticService->indexExists($indexTimeline);
+
+        $indexInterviews = defined('ELASTIC_INERTVIEW_TRACKER') ? ELASTIC_INERTVIEW_TRACKER : config('constants.ELASTIC_INERTVIEW_TRACKER', 'ats_interview_tracker_elastic');
+        if (! $this->elasticService->indexExists($indexInterviews) && $this->elasticService->indexExists('local_interview_tracker_elastic')) {
+            $indexInterviews = 'local_interview_tracker_elastic';
         }
-        $indexTimeline = ! empty($timelineExisting) ? implode(',', $timelineExisting) : 'ats_candidate_timeline';
-        $hasTimeline = ! empty($timelineExisting);
-        $indexInterviews = defined('ELASTIC_INERTVIEW_TRACKER') ? ELASTIC_INERTVIEW_TRACKER : config('constants.ELASTIC_INERTVIEW_TRACKER', 'local_interview_tracker_elastic');
+
         $indexJobs = defined('ELASTIC_JOBS') ? ELASTIC_JOBS : config('constants.ELASTIC_JOBS', 'ats_jobs_elastic');
-        $indexNotes = defined('ELASTIC_APPLICANT_NOTES') ? ELASTIC_APPLICANT_NOTES : config('constants.ELASTIC_APPLICANT_NOTES', 'local_applicant_notes');
+        if (! $this->elasticService->indexExists($indexJobs) && $this->elasticService->indexExists('local_jobs_elastic')) {
+            $indexJobs = 'local_jobs_elastic';
+        }
+
+        $indexNotes = defined('ELASTIC_APPLICANT_NOTES') ? ELASTIC_APPLICANT_NOTES : config('constants.ELASTIC_APPLICANT_NOTES', 'ats_applicant_notes');
 
         $timeRange = $this->getTimeRangeFilter($query->timeframe);
         $isRelationship = ($query->clientType === 'direct' || $query->clientType === 'agency' || $query->viewerType === 'agency');
@@ -651,17 +657,23 @@ class ClientActivityReadService
      */
     protected function fetchMultiIndexEvents(ClientActivityQuery $query, array $clientJobIds, array $agencyCandidateAppIds = []): array
     {
-        $timelineExisting = [];
-        foreach (['ats_candidate_timeline', 'local_candidate_timeline'] as $candidateTimelineIndex) {
-            if ($this->elasticService->indexExists($candidateTimelineIndex)) {
-                $timelineExisting[] = $candidateTimelineIndex;
-            }
+        // Authoritative Timeline Index (prefer ats_candidate_timeline, never mix with stale local_candidate_timeline)
+        $indexTimeline = $this->elasticService->indexExists('ats_candidate_timeline')
+            ? 'ats_candidate_timeline'
+            : ($this->elasticService->indexExists('local_candidate_timeline') ? 'local_candidate_timeline' : 'ats_candidate_timeline');
+        $hasTimeline = $this->elasticService->indexExists($indexTimeline);
+
+        $indexInterviews = defined('ELASTIC_INERTVIEW_TRACKER') ? ELASTIC_INERTVIEW_TRACKER : config('constants.ELASTIC_INERTVIEW_TRACKER', 'ats_interview_tracker_elastic');
+        if (! $this->elasticService->indexExists($indexInterviews) && $this->elasticService->indexExists('local_interview_tracker_elastic')) {
+            $indexInterviews = 'local_interview_tracker_elastic';
         }
-        $indexTimeline = ! empty($timelineExisting) ? implode(',', $timelineExisting) : 'ats_candidate_timeline';
-        $hasTimeline = ! empty($timelineExisting);
-        $indexInterviews = defined('ELASTIC_INERTVIEW_TRACKER') ? ELASTIC_INERTVIEW_TRACKER : config('constants.ELASTIC_INERTVIEW_TRACKER', 'local_interview_tracker_elastic');
+
         $indexJobs = defined('ELASTIC_JOBS') ? ELASTIC_JOBS : config('constants.ELASTIC_JOBS', 'ats_jobs_elastic');
-        $indexNotes = defined('ELASTIC_APPLICANT_NOTES') ? ELASTIC_APPLICANT_NOTES : config('constants.ELASTIC_APPLICANT_NOTES', 'local_applicant_notes');
+        if (! $this->elasticService->indexExists($indexJobs) && $this->elasticService->indexExists('local_jobs_elastic')) {
+            $indexJobs = 'local_jobs_elastic';
+        }
+
+        $indexNotes = defined('ELASTIC_APPLICANT_NOTES') ? ELASTIC_APPLICANT_NOTES : config('constants.ELASTIC_APPLICANT_NOTES', 'ats_applicant_notes');
 
         $timeRange = $this->getTimeRangeFilter($query->timeframe);
         $searchQuery = $query->search;
@@ -982,7 +994,8 @@ class ClientActivityReadService
                     $should[] = ['terms' => ['email.keyword' => $cleanEmails]];
                 }
 
-                $indices = 'ats_candidates_elastic,local_candidates_elastic';
+                $candIndex = defined('ELASTIC_CANDIDATES') ? ELASTIC_CANDIDATES : config('constants.ELASTIC_CANDIDATES', 'ats_candidates_elastic');
+                $indices = $this->elasticService->indexExists($candIndex) ? $candIndex : ($this->elasticService->indexExists('ats_candidates_elastic') ? 'ats_candidates_elastic' : 'local_candidates_elastic');
                 $params = [
                     'index' => $indices,
                     'size' => max((count($unresolvedIds) + count($unresolvedEmails)) * 2, 20),
@@ -1198,8 +1211,8 @@ class ClientActivityReadService
         if ($jobProfile && ! empty($jobProfile['recommendation_relation']) && is_array($jobProfile['recommendation_relation'])) {
             foreach ($jobProfile['recommendation_relation'] as $rec) {
                 $toComp = (int) ($rec['to_company_id'] ?? 0);
-                if ($toComp === $agencyCompanyId && in_array((int) ($rec['final_status'] ?? 0), [1, 2], true)) {
-                    $repUserId = (int) ($rec['from_user_id'] ?? 0);
+                if ($toComp === $agencyCompanyId && (int) ($rec['final_status'] ?? 0) === 1) {
+                    $repUserId = (int) ($rec['to_user_id'] ?? 0);
                     break;
                 }
             }
@@ -1261,7 +1274,8 @@ class ClientActivityReadService
         if (! empty($unresolved)) {
             try {
                 $cleanJids = array_values(array_unique(array_filter($unresolved)));
-                $indices = 'ats_jobs_elastic,local_jobs_elastic';
+                $jobIndex = defined('ELASTIC_JOBS') ? ELASTIC_JOBS : config('constants.ELASTIC_JOBS', 'ats_jobs_elastic');
+                $indices = $this->elasticService->indexExists($jobIndex) ? $jobIndex : ($this->elasticService->indexExists('ats_jobs_elastic') ? 'ats_jobs_elastic' : 'local_jobs_elastic');
                 $params = [
                     'index' => $indices,
                     'size' => max(count($cleanJids), 10),
@@ -1625,11 +1639,13 @@ class ClientActivityReadService
                 // Job Company Context (Role-aware & Privacy-controlled):
                 // Direct Client View -> Show internal client/company context where permitted (e.g. Mahindra). If no internal client, show Direct Client.
                 // Agency View -> ALWAYS show external Direct Client identity (Cognizant). NEVER expose internal client (Mahindra) name or logo!
-                if ($isAgencyViewer) {
+                if ($query->viewerType === 'client') {
+                    // Agency Viewer in Client Drawer: ALWAYS mask internal client, show external Direct Client identity
                     $displayJobCompanyName = $jobProfile['direct_client_company'] ?? ($jobProfile['creator_company'] ?? 'Direct Client');
                     $displayJobCompanyLogo = $jobProfile['direct_client_logo'] ?? null;
                     $isInternalClientContext = false;
                 } else {
+                    // Direct Client Viewer in Agency Drawer: Full internal client context allowed
                     if (! empty($jobProfile['has_internal_client']) && ! empty($jobProfile['internal_client_name'])) {
                         $displayJobCompanyName = $jobProfile['internal_client_name'];
                         $displayJobCompanyLogo = $jobProfile['internal_client_logo'] ?: ($jobProfile['direct_client_logo'] ?? null);
@@ -1675,16 +1691,21 @@ class ClientActivityReadService
                 $isSubmission = ($eventType === 'candidate.uploaded' || ($eventId === 1 && $toStageLower === 'sourcing') || ($fromStageLower === 'inreview' && $toStageLower === 'sourcing'));
 
                 if ($isSubmission) {
-                    // Agency Candidate Submission: Display the Assigned Agency Captain on that job
+                    // Agency Candidate Submission: Display the Assigned Agency Captain or Actual Submitter from agency
                     $agencyCaptain = $this->resolveAgencyCaptain($jobId, $targetAgencyId, $jobProfile);
                     $rawCapName = (! empty($agencyCaptain['name']) && $agencyCaptain['name'] !== 'Agency Captain')
                         ? $agencyCaptain['name']
-                        : ($uploaderName ?: 'Agency Representative');
+                        : ($uploaderName ?: (! empty($performerRawName) ? $performerRawName : 'Agency Representative'));
 
-                    // Requirement 2: Remove "Agency Captain" text everywhere. Display only the actual Captain's name.
-                    $cleanCapName = preg_replace('/^agency\s+captain\s*:?\s*/i', '', trim($rawCapName));
+                    // Prefer actual submitter name if event was performed by agency staff
+                    if (! empty($performerRawName) && (! empty($src['cur_companyname']) && strtolower((string) $src['cur_companyname']) === strtolower($agencyCompanyName))) {
+                        $rawCapName = $performerRawName;
+                    }
+
+                    // Remove "Agency Captain" label text everywhere. Display only the actual Captain's name.
+                    $cleanCapName = preg_replace('/^agency\s+(captain|representative)\s*:?\s*/i', '', trim($rawCapName));
                     $displayActorName = ucwords($cleanCapName);
-                    $actorRole = 'Agency Captain';
+                    $actorRole = 'Agency Representative';
                     $actorCompany = $agencyCompanyName;
                     $attributionLabel = 'Submitted by';
                     $isClientActor = false;
@@ -1823,11 +1844,13 @@ class ClientActivityReadService
                 $resolvedDesignation = $intProfile['designation'] ?? (! empty($src['current_designation']) ? ucwords(trim($src['current_designation'])) : $resolvedJobTitle);
 
                 // Job Company Context
-                if ($isAgencyViewer) {
+                if ($query->viewerType === 'client') {
+                    // Agency Viewer in Client Drawer: ALWAYS mask internal client, show external Direct Client identity
                     $displayJobCompanyName = $jobProfile['direct_client_company'] ?? ($jobProfile['creator_company'] ?? 'Direct Client');
                     $displayJobCompanyLogo = $jobProfile['direct_client_logo'] ?? null;
                     $isInternalClientContext = false;
                 } else {
+                    // Direct Client Viewer in Agency Drawer: Full internal client context allowed
                     if (! empty($jobProfile['has_internal_client']) && ! empty($jobProfile['internal_client_name'])) {
                         $displayJobCompanyName = $jobProfile['internal_client_name'];
                         $displayJobCompanyLogo = $jobProfile['internal_client_logo'] ?: ($jobProfile['direct_client_logo'] ?? null);
@@ -1941,11 +1964,13 @@ class ClientActivityReadService
                 $totalPositions = (int) ($src['total_positions'] ?? ($jobProfile['total_positions'] ?? 1));
 
                 // Job Company Context
-                if ($isAgencyViewer) {
+                if ($query->viewerType === 'client') {
+                    // Agency Viewer in Client Drawer: ALWAYS mask internal client, show external Direct Client identity
                     $displayJobCompanyName = $jobProfile['direct_client_company'] ?? ($jobProfile['creator_company'] ?? 'Direct Client');
                     $displayJobCompanyLogo = $jobProfile['direct_client_logo'] ?? null;
                     $isInternalClientContext = false;
                 } else {
+                    // Direct Client Viewer in Agency Drawer: Full internal client context allowed
                     if (! empty($jobProfile['has_internal_client']) && ! empty($jobProfile['internal_client_name'])) {
                         $displayJobCompanyName = $jobProfile['internal_client_name'];
                         $displayJobCompanyLogo = $jobProfile['internal_client_logo'] ?: ($jobProfile['direct_client_logo'] ?? null);
@@ -1970,7 +1995,15 @@ class ClientActivityReadService
                 $cleanSharer = preg_replace('/^(direct\s+client\s+representative|client\s+partner)\s*:?\s*/i', '', trim($sharerName));
                 $sharedByName = ucwords($cleanSharer);
                 $sharedByCompany = $jobProfile['direct_client_company'] ?? ($jobProfile['creator_company'] ?? 'Direct Client');
-                $sharedWithAgency = $isAgencyViewer ? 'Your Agency' : ($jobProfile['agency_name'] ?? $this->resolveTenantCompanyName($query->serviceCompanyId));
+                if ($query->viewerType === 'agency') {
+                    // Agency Drawer: Viewer is Direct Client, Target is Agency. Badge: "Shared with [Target Agency Name]"
+                    $targetPartnerName = $jobProfile['agency_name'] ?? $this->resolveTenantCompanyName($query->clientId ?: ($query->partnerCompanyId ?? 0));
+                    $sharedWithAgency = ! empty($targetPartnerName) ? $targetPartnerName : 'Agency Partner';
+                } else {
+                    // Client Drawer: Viewer is Agency, Target is Direct Client. Badge: "Shared with [Viewer Agency Name]"
+                    $operatingAgencyName = $this->resolveTenantCompanyName($query->serviceCompanyId ?: $query->tenantId);
+                    $sharedWithAgency = ! empty($operatingAgencyName) ? $operatingAgencyName : '4Bell Technology';
+                }
                 $actorRole = 'Direct Client Representative';
                 $attributionLabel = $isDirectShared ? 'Shared by' : 'Created by';
                 $transitionText = $isDirectShared ? ('Shared with '.$sharedWithAgency) : ($statusLabel.' Requisition');
