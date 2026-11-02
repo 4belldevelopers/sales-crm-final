@@ -174,8 +174,19 @@ class Kernel extends ConsoleKernel
             ->withoutOverlapping(5)
             ->runInBackground();
 
-        $schedule->command('superadmin:meetings:outbox-prune --days=14')
-            ->dailyAt('03:55')
+        // Super Admin Bench Candidates Transactional Outbox Sweeper & Maintenance
+        $schedule->command('superadmin:bench:drift --heal --limit=200')
+            ->dailyAt('02:45')
+            ->withoutOverlapping(20)
+            ->runInBackground();
+
+        $schedule->command('superadmin:bench:dlq --retry')
+            ->everyFifteenMinutes()
+            ->withoutOverlapping(5)
+            ->runInBackground();
+
+        $schedule->command('superadmin:bench:outbox-prune --days=14')
+            ->dailyAt('03:45')
             ->withoutOverlapping(10)
             ->runInBackground();
     }

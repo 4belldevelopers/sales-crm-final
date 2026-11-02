@@ -3,6 +3,7 @@
 namespace App\Services\SuperAdmin;
 
 use App\Jobs\ProcessBenchCandidateOutboxJob;
+use App\Services\SuperAdminBenchCandidatesCacheManager;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -21,8 +22,7 @@ use Illuminate\Support\Facades\Log;
  * Operates across tenant boundaries under Super Admin authority. Coordination in sys_idempotency_keys
  * and sys_outbox_events is registered with tenant_id = 0.
  *
- * Author: Antigravity AI — Phase 1 Outbox & Idempotency Architecture
- * Date: October 26, 2026
+ * Author: Antigravity AI — Super Admin Backend Architecture
  * Complies with docs/CODE_DOCUMENTATION_STANDARD.md.
  */
 class SuperAdminBenchMutationService
@@ -77,6 +77,7 @@ class SuperAdminBenchMutationService
             'admin_id' => $adminId,
         ];
         $canonicalHash = sha1(json_encode($canonicalPayload));
+        $fencingExpiry = Carbon::now()->addSeconds(30);
 
         // 1. Atomic Idempotency Claim Check
         $inserted = DB::table('sys_idempotency_keys')->insertOrIgnore([
@@ -84,6 +85,7 @@ class SuperAdminBenchMutationService
             'idempotency_key' => $idempotencyKey,
             'request_hash' => $canonicalHash,
             'status' => 'PROCESSING',
+            'processing_until' => $fencingExpiry,
             'expires_at' => Carbon::now()->addHours(24),
             'created_at' => Carbon::now(),
             'updated_at' => Carbon::now(),
@@ -96,20 +98,58 @@ class SuperAdminBenchMutationService
                 ->first();
 
             if ($existing) {
+                // Strict Payload Hash Validation: Reject key reuse with conflicting parameters
+                if ($existing->request_hash !== $canonicalHash) {
+                    return [
+                        'status' => 'error',
+                        'message' => "Idempotency conflict: request payload does not match original request for key '{$idempotencyKey}'.",
+                        'http_status' => 422,
+                    ];
+                }
+
                 if ($existing->status === 'COMPLETED') {
-                    $cachedBody = json_decode($existing->response_body, true);
+                    $cachedBody = json_decode((string) $existing->response_body, true);
 
                     return is_array($cachedBody)
-                        ? array_merge($cachedBody, ['replayed' => true])
-                        : ['status' => 'success', 'message' => 'Selected Applicant Approved.', 'replayed' => true];
+                        ? array_merge($cachedBody, ['is_replayed' => true])
+                        : ['status' => 'success', 'message' => 'Selected Applicant Approved.', 'is_replayed' => true];
                 }
 
                 if ($existing->status === 'PROCESSING') {
-                    abort(409, 'Candidate approval is already currently processing under this idempotency key.');
+                    $maxWaitMs = 1500;
+                    $stepMs = 50;
+                    $elapsedMs = 0;
+
+                    while ($elapsedMs < $maxWaitMs) {
+                        usleep($stepMs * 1000);
+                        $elapsedMs += $stepMs;
+
+                        $poll = DB::table('sys_idempotency_keys')
+                            ->where('tenant_id', 0)
+                            ->where('idempotency_key', $idempotencyKey)
+                            ->first();
+
+                        if ($poll && $poll->status === 'COMPLETED' && $poll->response_body) {
+                            $payload = json_decode((string) $poll->response_body, true);
+                            if (is_array($payload)) {
+                                $payload['is_replayed'] = true;
+
+                                return $payload;
+                            }
+                        }
+
+                        if ($poll && $poll->status === 'FAILED_FINAL') {
+                            $payload = json_decode((string) $poll->response_body, true);
+
+                            return is_array($payload)
+                                ? $payload
+                                : ['status' => 'error', 'message' => $poll->last_error ?: 'Previous approval attempt failed.'];
+                        }
+                    }
                 }
 
                 if ($existing->status === 'FAILED_FINAL') {
-                    $cachedBody = json_decode($existing->response_body, true);
+                    $cachedBody = json_decode((string) $existing->response_body, true);
 
                     return is_array($cachedBody)
                         ? $cachedBody
@@ -121,12 +161,19 @@ class SuperAdminBenchMutationService
         // 2. Authoritative Database Transaction + Outbox Insertion
         DB::beginTransaction();
         try {
+            // Lock rows for update
+            DB::table('job_applications')
+                ->whereIn('id', $candidateIds)
+                ->lockForUpdate()
+                ->get();
+
             // Update job_applications superadminstatus to 1 (Approved) and status to 2 (Bench)
             DB::table('job_applications')
                 ->whereIn('id', $candidateIds)
                 ->update([
                     'superadminstatus' => 1,
                     'status' => 2,
+                    'aggregate_version' => DB::raw('aggregate_version + 1'),
                     'updated_at' => Carbon::now(),
                 ]);
 
@@ -172,9 +219,20 @@ class SuperAdminBenchMutationService
                     'updated_at' => Carbon::now(),
                 ]);
 
+            // 4. In-Memory Mutation Delta for 0ms Read-After-Write Consistency
+            foreach ($candidateIds as $cid) {
+                SuperAdminBenchCandidatesCacheManager::setMutationDelta($cid, [
+                    'superadminstatus' => 1,
+                    'status' => 2,
+                ]);
+            }
+
+            // Invalidate Redis caches
+            SuperAdminBenchCandidatesCacheManager::invalidateAll();
+
             DB::commit();
 
-            // 4. Dispatch Asynchronous Outbox Worker
+            // 5. Dispatch Asynchronous Outbox Worker
             ProcessBenchCandidateOutboxJob::dispatch($outboxId)->afterCommit();
 
             return $response;
@@ -230,6 +288,7 @@ class SuperAdminBenchMutationService
             'admin_id' => $adminId,
         ];
         $canonicalHash = sha1(json_encode($canonicalPayload));
+        $fencingExpiry = Carbon::now()->addSeconds(30);
 
         // 1. Atomic Idempotency Claim Check
         $inserted = DB::table('sys_idempotency_keys')->insertOrIgnore([
@@ -237,6 +296,7 @@ class SuperAdminBenchMutationService
             'idempotency_key' => $idempotencyKey,
             'request_hash' => $canonicalHash,
             'status' => 'PROCESSING',
+            'processing_until' => $fencingExpiry,
             'expires_at' => Carbon::now()->addHours(24),
             'created_at' => Carbon::now(),
             'updated_at' => Carbon::now(),
@@ -249,16 +309,62 @@ class SuperAdminBenchMutationService
                 ->first();
 
             if ($existing) {
+                // Strict Payload Hash Validation: Reject key reuse with conflicting parameters
+                if ($existing->request_hash !== $canonicalHash) {
+                    return [
+                        'status' => 'error',
+                        'message' => "Idempotency conflict: request payload does not match original request for key '{$idempotencyKey}'.",
+                        'http_status' => 422,
+                    ];
+                }
+
                 if ($existing->status === 'COMPLETED') {
-                    $cachedBody = json_decode($existing->response_body, true);
+                    $cachedBody = json_decode((string) $existing->response_body, true);
 
                     return is_array($cachedBody)
-                        ? array_merge($cachedBody, ['replayed' => true])
-                        : ['status' => 'success', 'message' => 'Selected Applicant Rejected.', 'replayed' => true];
+                        ? array_merge($cachedBody, ['is_replayed' => true])
+                        : ['status' => 'success', 'message' => 'Selected Applicant Rejected.', 'is_replayed' => true];
                 }
 
                 if ($existing->status === 'PROCESSING') {
-                    abort(409, 'Candidate rejection is already processing.');
+                    $maxWaitMs = 1500;
+                    $stepMs = 50;
+                    $elapsedMs = 0;
+
+                    while ($elapsedMs < $maxWaitMs) {
+                        usleep($stepMs * 1000);
+                        $elapsedMs += $stepMs;
+
+                        $poll = DB::table('sys_idempotency_keys')
+                            ->where('tenant_id', 0)
+                            ->where('idempotency_key', $idempotencyKey)
+                            ->first();
+
+                        if ($poll && $poll->status === 'COMPLETED' && $poll->response_body) {
+                            $payload = json_decode((string) $poll->response_body, true);
+                            if (is_array($payload)) {
+                                $payload['is_replayed'] = true;
+
+                                return $payload;
+                            }
+                        }
+
+                        if ($poll && $poll->status === 'FAILED_FINAL') {
+                            $payload = json_decode((string) $poll->response_body, true);
+
+                            return is_array($payload)
+                                ? $payload
+                                : ['status' => 'error', 'message' => $poll->last_error ?: 'Previous rejection attempt failed.'];
+                        }
+                    }
+                }
+
+                if ($existing->status === 'FAILED_FINAL') {
+                    $cachedBody = json_decode((string) $existing->response_body, true);
+
+                    return is_array($cachedBody)
+                        ? $cachedBody
+                        : ['status' => 'error', 'message' => $existing->last_error ?: 'Previous rejection attempt failed.'];
                 }
             }
         }
@@ -267,8 +373,14 @@ class SuperAdminBenchMutationService
         try {
             DB::table('job_applications')
                 ->whereIn('id', $candidateIds)
+                ->lockForUpdate()
+                ->get();
+
+            DB::table('job_applications')
+                ->whereIn('id', $candidateIds)
                 ->update([
                     'superadminstatus' => 2,
+                    'aggregate_version' => DB::raw('aggregate_version + 1'),
                     'updated_at' => Carbon::now(),
                 ]);
 
@@ -313,6 +425,15 @@ class SuperAdminBenchMutationService
                     'updated_at' => Carbon::now(),
                 ]);
 
+            // In-Memory Mutation Delta for 0ms Read-After-Write Consistency
+            foreach ($candidateIds as $cid) {
+                SuperAdminBenchCandidatesCacheManager::setMutationDelta($cid, [
+                    'superadminstatus' => 2,
+                ]);
+            }
+
+            SuperAdminBenchCandidatesCacheManager::invalidateAll();
+
             DB::commit();
 
             ProcessBenchCandidateOutboxJob::dispatch($outboxId)->afterCommit();
@@ -323,6 +444,204 @@ class SuperAdminBenchMutationService
             DB::rollBack();
 
             Log::error('[BENCH_MUTATION] Rejection failed: '.$e->getMessage(), [
+                'candidate_ids' => $candidateIds,
+                'idempotency_key' => $idempotencyKey,
+            ]);
+
+            DB::table('sys_idempotency_keys')
+                ->where('tenant_id', 0)
+                ->where('idempotency_key', $idempotencyKey)
+                ->update([
+                    'status' => 'FAILED_FINAL',
+                    'response_status' => 500,
+                    'last_error' => substr($e->getMessage(), 0, 1000),
+                    'updated_at' => Carbon::now(),
+                ]);
+
+            throw $e;
+        }
+    }
+
+    /**
+     * Authoritatively reject one or more bench candidates with asynchronous email notification.
+     * Decouples the slow synchronous mail loop into the Transactional Outbox worker.
+     *
+     * @param  array<int>  $candidateIds
+     * @param  array<string, mixed>  $emailPayload
+     * @return array<string, mixed>
+     */
+    public function rejectCandidatesWithEmail(
+        array $candidateIds,
+        array $emailPayload,
+        ?string $idempotencyKey = null,
+        ?int $adminId = null,
+        ?string $adminName = null
+    ): array {
+        $candidateIds = array_values(array_filter(array_map('intval', $candidateIds)));
+
+        if (empty($candidateIds)) {
+            return [
+                'status' => 'info',
+                'message' => 'No valid candidate selected for rejection.',
+            ];
+        }
+
+        $idempotencyKey = $this->formatIdempotencyKey('reject_mail', $candidateIds, $idempotencyKey);
+        $canonicalPayload = [
+            'action' => 'reject_mail',
+            'candidate_ids' => $candidateIds,
+            'admin_id' => $adminId,
+            'subject' => $emailPayload['subject'] ?? '',
+        ];
+        $canonicalHash = sha1(json_encode($canonicalPayload));
+        $fencingExpiry = Carbon::now()->addSeconds(30);
+
+        // 1. Atomic Idempotency Claim Check
+        $inserted = DB::table('sys_idempotency_keys')->insertOrIgnore([
+            'tenant_id' => 0,
+            'idempotency_key' => $idempotencyKey,
+            'request_hash' => $canonicalHash,
+            'status' => 'PROCESSING',
+            'processing_until' => $fencingExpiry,
+            'expires_at' => Carbon::now()->addHours(24),
+            'created_at' => Carbon::now(),
+            'updated_at' => Carbon::now(),
+        ]);
+
+        if (! $inserted) {
+            $existing = DB::table('sys_idempotency_keys')
+                ->where('tenant_id', 0)
+                ->where('idempotency_key', $idempotencyKey)
+                ->first();
+
+            if ($existing) {
+                if ($existing->request_hash !== $canonicalHash) {
+                    return [
+                        'status' => 'error',
+                        'message' => "Idempotency conflict: request payload does not match original request for key '{$idempotencyKey}'.",
+                        'http_status' => 422,
+                    ];
+                }
+
+                if ($existing->status === 'COMPLETED') {
+                    $cachedBody = json_decode((string) $existing->response_body, true);
+
+                    return is_array($cachedBody)
+                        ? array_merge($cachedBody, ['is_replayed' => true])
+                        : ['status' => 'success', 'message' => 'Rejection notice dispatched.', 'is_replayed' => true];
+                }
+
+                if ($existing->status === 'PROCESSING') {
+                    $maxWaitMs = 1500;
+                    $stepMs = 50;
+                    $elapsedMs = 0;
+
+                    while ($elapsedMs < $maxWaitMs) {
+                        usleep($stepMs * 1000);
+                        $elapsedMs += $stepMs;
+
+                        $poll = DB::table('sys_idempotency_keys')
+                            ->where('tenant_id', 0)
+                            ->where('idempotency_key', $idempotencyKey)
+                            ->first();
+
+                        if ($poll && $poll->status === 'COMPLETED' && $poll->response_body) {
+                            $payload = json_decode((string) $poll->response_body, true);
+                            if (is_array($payload)) {
+                                $payload['is_replayed'] = true;
+
+                                return $payload;
+                            }
+                        }
+
+                        if ($poll && $poll->status === 'FAILED_FINAL') {
+                            $payload = json_decode((string) $poll->response_body, true);
+
+                            return is_array($payload)
+                                ? $payload
+                                : ['status' => 'error', 'message' => $poll->last_error ?: 'Previous rejection attempt failed.'];
+                        }
+                    }
+                }
+            }
+        }
+
+        DB::beginTransaction();
+        try {
+            DB::table('job_applications')
+                ->whereIn('id', $candidateIds)
+                ->lockForUpdate()
+                ->get();
+
+            DB::table('job_applications')
+                ->whereIn('id', $candidateIds)
+                ->update([
+                    'superadminstatus' => 2,
+                    'aggregate_version' => DB::raw('aggregate_version + 1'),
+                    'updated_at' => Carbon::now(),
+                ]);
+
+            $outboxPayload = [
+                'candidate_ids' => $candidateIds,
+                'superadmin_status' => 2,
+                'admin_id' => $adminId,
+                'admin_name' => $adminName ?: 'Super Admin',
+                'email_payload' => $emailPayload,
+                'timestamp' => Carbon::now()->toIso8601String(),
+            ];
+
+            $outboxId = DB::table('sys_outbox_events')->insertGetId([
+                'tenant_id' => 0,
+                'idempotency_key' => $idempotencyKey,
+                'aggregate_type' => 'BenchCandidate',
+                'aggregate_id' => $candidateIds[0],
+                'aggregate_version' => 1,
+                'event_type' => 'CANDIDATE_SUPERADMIN_REJECTED_WITH_MAIL',
+                'payload' => json_encode($outboxPayload),
+                'status' => 'PENDING',
+                'attempts' => 0,
+                'available_at' => Carbon::now(),
+                'created_at' => Carbon::now(),
+            ]);
+
+            $response = [
+                'status' => 'success',
+                'message' => 'Candidate rejection registered and notification emails queued.',
+                'candidate_ids' => $candidateIds,
+                'datatype' => 'reject',
+                'outbox_id' => $outboxId,
+            ];
+
+            DB::table('sys_idempotency_keys')
+                ->where('tenant_id', 0)
+                ->where('idempotency_key', $idempotencyKey)
+                ->update([
+                    'status' => 'COMPLETED',
+                    'response_status' => 200,
+                    'response_body' => json_encode($response),
+                    'completed_at' => Carbon::now(),
+                    'updated_at' => Carbon::now(),
+                ]);
+
+            // In-Memory Mutation Delta for 0ms Read-After-Write Consistency
+            foreach ($candidateIds as $cid) {
+                SuperAdminBenchCandidatesCacheManager::setMutationDelta($cid, [
+                    'superadminstatus' => 2,
+                ]);
+            }
+
+            SuperAdminBenchCandidatesCacheManager::invalidateAll();
+
+            DB::commit();
+
+            ProcessBenchCandidateOutboxJob::dispatch($outboxId)->afterCommit();
+
+            return $response;
+
+        } catch (\Throwable $e) {
+            DB::rollBack();
+
+            Log::error('[BENCH_MUTATION] Rejection with mail failed: '.$e->getMessage(), [
                 'candidate_ids' => $candidateIds,
                 'idempotency_key' => $idempotencyKey,
             ]);
@@ -355,6 +674,7 @@ class SuperAdminBenchMutationService
             'admin_id' => $adminId,
         ];
         $canonicalHash = sha1(json_encode($canonicalPayload));
+        $fencingExpiry = Carbon::now()->addSeconds(30);
 
         // 1. Atomic Idempotency Claim Check
         $inserted = DB::table('sys_idempotency_keys')->insertOrIgnore([
@@ -362,6 +682,7 @@ class SuperAdminBenchMutationService
             'idempotency_key' => $idempotencyKey,
             'request_hash' => $canonicalHash,
             'status' => 'PROCESSING',
+            'processing_until' => $fencingExpiry,
             'expires_at' => Carbon::now()->addHours(24),
             'created_at' => Carbon::now(),
             'updated_at' => Carbon::now(),
@@ -374,20 +695,57 @@ class SuperAdminBenchMutationService
                 ->first();
 
             if ($existing) {
+                if ($existing->request_hash !== $canonicalHash) {
+                    return [
+                        'status' => 'error',
+                        'message' => "Idempotency conflict: request payload does not match original request for key '{$idempotencyKey}'.",
+                        'http_status' => 422,
+                    ];
+                }
+
                 if ($existing->status === 'COMPLETED') {
-                    $cachedBody = json_decode($existing->response_body, true);
+                    $cachedBody = json_decode((string) $existing->response_body, true);
 
                     return is_array($cachedBody)
-                        ? array_merge($cachedBody, ['replayed' => true])
-                        : ['status' => 'success', 'message' => 'Changed setting auto approval.', 'replayed' => true];
+                        ? array_merge($cachedBody, ['is_replayed' => true])
+                        : ['status' => 'success', 'message' => 'Changed setting auto approval.', 'is_replayed' => true];
                 }
 
                 if ($existing->status === 'PROCESSING') {
-                    abort(409, 'Auto-approval toggle is already in-progress under this idempotency key.');
+                    $maxWaitMs = 1500;
+                    $stepMs = 50;
+                    $elapsedMs = 0;
+
+                    while ($elapsedMs < $maxWaitMs) {
+                        usleep($stepMs * 1000);
+                        $elapsedMs += $stepMs;
+
+                        $poll = DB::table('sys_idempotency_keys')
+                            ->where('tenant_id', 0)
+                            ->where('idempotency_key', $idempotencyKey)
+                            ->first();
+
+                        if ($poll && $poll->status === 'COMPLETED' && $poll->response_body) {
+                            $payload = json_decode((string) $poll->response_body, true);
+                            if (is_array($payload)) {
+                                $payload['is_replayed'] = true;
+
+                                return $payload;
+                            }
+                        }
+
+                        if ($poll && $poll->status === 'FAILED_FINAL') {
+                            $payload = json_decode((string) $poll->response_body, true);
+
+                            return is_array($payload)
+                                ? $payload
+                                : ['status' => 'error', 'message' => $poll->last_error ?: 'Previous toggle attempt failed.'];
+                        }
+                    }
                 }
 
                 if ($existing->status === 'FAILED_FINAL') {
-                    $cachedBody = json_decode($existing->response_body, true);
+                    $cachedBody = json_decode((string) $existing->response_body, true);
 
                     return is_array($cachedBody)
                         ? $cachedBody
@@ -453,6 +811,8 @@ class SuperAdminBenchMutationService
                     'completed_at' => Carbon::now(),
                     'updated_at' => Carbon::now(),
                 ]);
+
+            SuperAdminBenchCandidatesCacheManager::invalidateAll();
 
             DB::commit();
 

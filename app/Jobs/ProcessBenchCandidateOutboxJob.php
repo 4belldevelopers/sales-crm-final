@@ -6,6 +6,7 @@ use App\Events\SuperAdminBenchApprovalDeltaEvent;
 use App\Helper\GeneralMethod;
 use App\Services\ElasticService;
 use App\Services\MailService;
+use App\Services\SuperAdminBenchCandidatesCacheManager;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -133,9 +134,11 @@ class ProcessBenchCandidateOutboxJob implements ShouldQueue
             // 2. Invalidate Redis / Dragonfly Caches
             $this->invalidateCaches($candidateIds);
 
-            // 3. Process Asynchronous Notification Emails (if approving candidates)
+            // 3. Process Asynchronous Notification Emails (if approving or rejecting candidates)
             if ($eventType === 'CANDIDATE_SUPERADMIN_APPROVED' && ! empty($candidateIds)) {
                 $this->dispatchApprovalEmails($candidateIds);
+            } elseif ($eventType === 'CANDIDATE_SUPERADMIN_REJECTED_WITH_MAIL' && ! empty($candidateIds)) {
+                $this->dispatchRejectionEmails($candidateIds, $payload['email_payload'] ?? []);
             }
 
             // 4. Fetch fresh authoritative platform counts
@@ -152,6 +155,7 @@ class ProcessBenchCandidateOutboxJob implements ShouldQueue
                     counts: $counts,
                     updatedBy: $adminName,
                     entityVersion: (int) ($event->aggregate_version ?? 1),
+                    sequenceId: SuperAdminBenchCandidatesCacheManager::nextSequenceId(),
                     extra: [
                         'idempotency_key' => $event->idempotency_key,
                         'event_id' => $event->id,
@@ -253,6 +257,7 @@ class ProcessBenchCandidateOutboxJob implements ShouldQueue
      */
     protected function invalidateCaches(array $candidateIds): void
     {
+        SuperAdminBenchCandidatesCacheManager::invalidateAll();
         Cache::forget('superadmin:bench:counts:v1');
 
         if (! empty($candidateIds)) {
@@ -266,6 +271,63 @@ class ProcessBenchCandidateOutboxJob implements ShouldQueue
                 Cache::increment('allbenchcandidates_version_company_'.$companyId);
                 Cache::forget('team:workload:v1:'.$companyId);
             }
+        }
+    }
+
+    /**
+     * Dispatch candidate rejection notification emails asynchronously in background worker.
+     *
+     * @param  array<int>  $candidateIds
+     * @param  array<string, mixed>  $emailPayload
+     */
+    protected function dispatchRejectionEmails(array $candidateIds, array $emailPayload): void
+    {
+        try {
+            $mailService = app(MailService::class);
+            $basecompany = GeneralMethod::baseCompany();
+            $senderName = $basecompany->companyName ?: '';
+            $fromAddress = $basecompany->companyEmail ?: '';
+            $subject = $emailPayload['subject'] ?? 'Application Update';
+            $message = $emailPayload['message'] ?? '';
+            $attachments = [];
+            $cc = [];
+
+            $checkMailPermission = GeneralMethod::mailPermission(16);
+            if (! $checkMailPermission) {
+                return;
+            }
+
+            foreach ($candidateIds as $candidateId) {
+                $condi = DB::table('job_applications')
+                    ->leftJoin('qualification_master', 'qualification_master.id', '=', 'job_applications.qualification')
+                    ->select('job_applications.*', 'qualification_master.name as qualification_name')
+                    ->where('job_applications.id', $candidateId)
+                    ->first();
+
+                $name = $condi ? $condi->full_name : '';
+                $data = [
+                    'message' => $message,
+                    'subject' => $subject,
+                    'company_name' => '',
+                    'consultant_name' => '4Bell Technology',
+                    'position' => 'Candidate',
+                    'condidate_name' => $name,
+                ];
+
+                $commonCcArr = DB::table('bench_assign')
+                    ->join('users', 'users.id', '=', 'bench_assign.user_id')
+                    ->where('bench_assign.bench_applications_id', $candidateId)
+                    ->pluck('users.email')
+                    ->toArray();
+
+                foreach ($commonCcArr as $tomail) {
+                    if (! empty($tomail)) {
+                        $mailService->sendEmail($tomail, $subject, 'email.notification', $data, $attachments, $fromAddress, $senderName, $cc);
+                    }
+                }
+            }
+        } catch (\Throwable $mailEx) {
+            Log::warning('[BENCH_OUTBOX] Rejection email dispatch warning: '.$mailEx->getMessage());
         }
     }
 

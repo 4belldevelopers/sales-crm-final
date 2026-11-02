@@ -92,6 +92,7 @@ class ProcessMarketJobOutboxEventJob implements ShouldQueue
                     'status' => 'COMPLETED',
                     'processed_at' => now(),
                 ]);
+
                 return;
             }
 
@@ -105,56 +106,61 @@ class ProcessMarketJobOutboxEventJob implements ShouldQueue
                 $isUnpublish = ($eventType === 'MarketJobUnpublished' || ! empty($payload['is_cancel']));
                 $isPublish = ($eventType === 'MarketJobPublished' || (! $isUnpublish && isset($payload['public_market_status'])));
 
-                if ($isUnpublish) {
-                    event(new MarketJobDeltaUpdated(
-                        companyId: $tenantId,
-                        jobId: $jobId,
-                        eventType: 'unpublished',
-                        entityVersion: (int) ($event->aggregate_version ?? 1),
-                        actionType: 'unpublish',
-                        statusLabel: 'UNPUBLISHED'
-                    ));
-                    \App\Services\MarketJobV2Service::invalidateGlobalCache();
-                } elseif ($isPublish) {
-                    event(new MarketJobDeltaUpdated(
-                        companyId: $tenantId,
-                        jobId: $jobId,
-                        eventType: 'published',
-                        entityVersion: (int) ($event->aggregate_version ?? 1),
-                        actionType: 'publish',
-                        statusLabel: 'LIVE'
-                    ));
-                    \App\Services\MarketJobV2Service::invalidateGlobalCache();
-                } else {
-                    event(new MarketJobDeltaUpdated(
-                        companyId: $tenantId,
-                        jobId: $jobId,
-                        eventType: 'claimed',
-                        entityVersion: (int) ($event->aggregate_version ?? 1),
-                        actionType: 'under_review',
-                        statusLabel: 'HOLD'
-                    ));
-
-                    $fromCompanyId = (int) ($payload['from_company_id'] ?? 0);
-                    if ($fromCompanyId > 0 && $fromCompanyId !== $tenantId) {
+                try {
+                    if ($isUnpublish) {
                         event(new MarketJobDeltaUpdated(
-                            companyId: $fromCompanyId,
+                            companyId: $tenantId,
                             jobId: $jobId,
-                            eventType: 'vendor_claimed',
+                            eventType: 'unpublished',
                             entityVersion: (int) ($event->aggregate_version ?? 1),
-                            actionType: 'vendor_fulfilled',
+                            actionType: 'unpublish',
+                            statusLabel: 'UNPUBLISHED'
+                        ));
+                        \App\Services\MarketJobV2Service::invalidateGlobalCache();
+                    } elseif ($isPublish) {
+                        event(new MarketJobDeltaUpdated(
+                            companyId: $tenantId,
+                            jobId: $jobId,
+                            eventType: 'published',
+                            entityVersion: (int) ($event->aggregate_version ?? 1),
+                            actionType: 'publish',
+                            statusLabel: 'LIVE'
+                        ));
+                        \App\Services\MarketJobV2Service::invalidateGlobalCache();
+                    } else {
+                        event(new MarketJobDeltaUpdated(
+                            companyId: $tenantId,
+                            jobId: $jobId,
+                            eventType: 'claimed',
+                            entityVersion: (int) ($event->aggregate_version ?? 1),
+                            actionType: 'under_review',
                             statusLabel: 'HOLD'
                         ));
-                        \App\Services\MarketJobV2Service::invalidateCacheForCompany($fromCompanyId);
-                    }
-                }
 
-                \App\Services\MarketJobV2Service::invalidateCacheForCompany($tenantId);
+                        $fromCompanyId = (int) ($payload['from_company_id'] ?? 0);
+                        if ($fromCompanyId > 0 && $fromCompanyId !== $tenantId) {
+                            event(new MarketJobDeltaUpdated(
+                                companyId: $fromCompanyId,
+                                jobId: $jobId,
+                                eventType: 'vendor_claimed',
+                                entityVersion: (int) ($event->aggregate_version ?? 1),
+                                actionType: 'vendor_fulfilled',
+                                statusLabel: 'HOLD'
+                            ));
+                            \App\Services\MarketJobV2Service::invalidateCacheForCompany($fromCompanyId);
+                        }
+                    }
+
+                    \App\Services\MarketJobV2Service::invalidateCacheForCompany($tenantId);
+                } catch (\Throwable $broadcastEx) {
+                    Log::warning("[ProcessMarketJobOutboxEventJob] Real-time broadcast notice for event #{$eventId}: ".$broadcastEx->getMessage());
+                }
             }
 
             // 2. Keep Elasticsearch index in sync
             if ($jobId > 0) {
                 GeneralMethod::elasticJobsAddEditUpdateIndex($jobId);
+                \App\Services\SuperAdmin\SuperAdminMarketplaceCacheManager::invalidateAll();
             }
 
             // 3. Mark outbox event as COMPLETED
@@ -173,7 +179,8 @@ class ProcessMarketJobOutboxEventJob implements ShouldQueue
                     'consumer_group' => 'market_job_worker',
                     'processed_at' => now(),
                 ]);
-            } catch (\Throwable $e) {}
+            } catch (\Throwable $e) {
+            }
 
         } catch (\Throwable $e) {
             Log::error('[ProcessMarketJobOutboxEventJob] Event processing failed for #'.$eventId.': '.$e->getMessage(), [

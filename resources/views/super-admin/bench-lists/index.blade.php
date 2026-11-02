@@ -660,7 +660,7 @@
 
         return {
             getKey: function(status, page, search, sort) {
-                return `${status || 'approve'}_p${page || 1}_s${search || ''}_srt${sort || ''}`;
+                return `${status || 'pending'}_p${page || 1}_s${search || ''}_srt${sort || ''}`;
             },
             get: function(key) {
                 const item = _cache.get(key);
@@ -692,6 +692,8 @@
      * Provides persistent local caching and offline resilience for cold visits
      * using the stale-while-revalidate pattern without blocking the main thread.
      */
+    const CURRENT_USER_ID = {{ auth()->id() ?? 0 }};
+
     const SuperAdminBenchIdb = (function() {
         const DB_NAME = 'JERO_BENCH_STORAGE';
         const DB_VERSION = 1;
@@ -737,6 +739,11 @@
                                     resolve(null);
                                     return;
                                 }
+                                // Multi-tenant user isolation: ignore snapshots from other user accounts
+                                if (result.user_id && result.user_id !== CURRENT_USER_ID) {
+                                    resolve(null);
+                                    return;
+                                }
                                 // 10-minute snapshot TTL
                                 if (Date.now() - result.time > 600000) {
                                     resolve(null);
@@ -755,7 +762,7 @@
                     try {
                         const tx = db.transaction(STORE_NAME, 'readwrite');
                         const store = tx.objectStore(STORE_NAME);
-                        store.put({ key: key, data: data, time: Date.now() });
+                        store.put({ key: key, data: data, user_id: CURRENT_USER_ID, time: Date.now() });
                     } catch(e) {}
                 });
             },
@@ -911,12 +918,16 @@
         });
 
         // 8. Auto Approval Switch Change (Optimistic UI with Rollback)
+        let _isSubmittingAutoApproval = false;
         $('.chkStatus').on('change', function() {
+            if (_isSubmittingAutoApproval) return;
             const $chk = $(this);
+            _isSubmittingAutoApproval = true;
+            $chk.prop('disabled', true);
             const previousState = !$chk.is(':checked');
             const id = $chk.val();
             const token = "{{ csrf_token() }}";
-            const idempotencyKey = 'autoapp_' + Date.now() + '_' + Math.random().toString(36).substring(2, 9);
+            const idempotencyKey = 'autoapp_' + id + '_' + Date.now() + '_' + Math.random().toString(36).substring(2, 9);
 
             $.ajax({
                 type: 'POST',
@@ -924,6 +935,8 @@
                 data: { '_token': token, 'id': id, 'idempotency_key': idempotencyKey },
                 headers: { 'X-Idempotency-Key': idempotencyKey },
                 success: function(response) {
+                    _isSubmittingAutoApproval = false;
+                    $chk.prop('disabled', false);
                     if (response.status === 'success') {
                         swalButtons.fire('Updated!', response.message, 'success');
                         SuperAdminBenchRamStore.clear();
@@ -936,6 +949,8 @@
                     }
                 },
                 error: function() {
+                    _isSubmittingAutoApproval = false;
+                    $chk.prop('disabled', false);
                     // Rollback optimistic toggle state
                     $chk.prop('checked', previousState);
                     swalButtons.fire('Error', 'Failed to update auto-approval status.', 'error');
@@ -944,7 +959,9 @@
         });
 
         // 9. Bulk & Single Approve (Client-First Optimistic Execution)
+        let _isSubmittingApproval = false;
         $(document).on('click', '.clickbtn.approve, .row-quick-approve', function() {
+            if (_isSubmittingApproval) return;
             let candidateIds = [];
             const isRowClick = $(this).hasClass('row-quick-approve');
 
@@ -971,6 +988,9 @@
                 reverseButtons: true
             }).then((result) => {
                 if (result.isConfirmed) {
+                    if (_isSubmittingApproval) return;
+                    _isSubmittingApproval = true;
+
                     // Step 1: Apply Optimistic DOM & Counter Updates (0ms latency)
                     const rollbackApproval = applyOptimisticApproval(candidateIds);
 
@@ -984,11 +1004,14 @@
                         data: {
                             '_token': token,
                             'candidate_id': candidateIds,
+                            'id': candidateIds[0] || null,
                             'datatype': 'approve',
+                            'type': 'approve',
                             'idempotency_key': idempotencyKey
                         },
                         headers: { 'X-Idempotency-Key': idempotencyKey },
                         success: function(response) {
+                            _isSubmittingApproval = false;
                             if (response.status === 'success') {
                                 swalButtons.fire('Approved!', response.message, 'success');
                                 SuperAdminBenchRamStore.clear();
@@ -1002,6 +1025,7 @@
                             }
                         },
                         error: function(xhr) {
+                            _isSubmittingApproval = false;
                             rollbackApproval();
                             swalButtons.fire('Error', xhr.responseJSON?.message || 'Server error occurred.', 'error');
                         }
@@ -1100,15 +1124,17 @@
         });
 
         // Global Drawer Approve Action (Outbox Idempotent Mutation)
+        let _isDrawerApproving = false;
         window.approveCandidateFromDrawer = function(candidateId) {
-            if (!candidateId) return;
+            if (!candidateId || _isDrawerApproving) return;
+            _isDrawerApproving = true;
 
             var $btn = $('#btnDrawerApproveCandidate');
             if ($btn.length) {
                 $btn.prop('disabled', true).html('<i class="fa fa-spinner fa-spin me-1"></i> Approving...');
             }
 
-            applyOptimisticApproval([candidateId]);
+            var rollbackOptimistic = applyOptimisticApproval([candidateId]);
 
             var idempotencyKey = 'approve_' + candidateId + '_' + Date.now();
             $.ajax({
@@ -1116,13 +1142,22 @@
                 url: "{{ route('superadmin.company.candidate-approval') }}",
                 data: {
                     _token: "{{ csrf_token() }}",
+                    candidate_id: [candidateId],
                     id: candidateId,
+                    datatype: 'approve',
                     type: 'approve',
                     idempotency_key: idempotencyKey
                 },
+                headers: { 'X-Idempotency-Key': idempotencyKey },
                 success: function(response) {
+                    _isDrawerApproving = false;
                     if (typeof toastr !== 'undefined') {
                         toastr.success('Candidate approved for marketplace clearance!', 'Clearance Updated');
+                    }
+                    SuperAdminBenchRamStore.clear();
+                    SuperAdminBenchIdb.clear();
+                    if (benchBroadcastChannel) {
+                        benchBroadcastChannel.postMessage({ action: 'mutation' });
                     }
                     var detailUrl = "{{ route('superadmin.company.showdetails-bench-candidates', ':id') }}".replace(':id', candidateId);
                     $.get(detailUrl, function(res) {
@@ -1131,10 +1166,13 @@
                         }
                     });
                 },
-                error: function() {
-                    rollbackOptimisticApproval([candidateId]);
+                error: function(xhr) {
+                    _isDrawerApproving = false;
+                    if (typeof rollbackOptimistic === 'function') {
+                        rollbackOptimistic();
+                    }
                     if (typeof toastr !== 'undefined') {
-                        toastr.error('Failed to approve candidate. Please try again.', 'Error');
+                        toastr.error(xhr.responseJSON?.message || 'Failed to approve candidate. Please try again.', 'Error');
                     }
                     if ($btn.length) {
                         $btn.prop('disabled', false).html('<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;"><polyline points="20 6 9 17 4 12"/></svg> Approve Clearance');
@@ -1177,7 +1215,7 @@
      */
     function applyOptimisticApproval(candidateIds) {
         const originalRows = [];
-        const currentStatus = $('#current_status_type').val() || 'approve';
+        const currentStatus = $('#current_status_type').val() || 'pending';
 
         // 1. Capture snapshot of affected rows
         candidateIds.forEach(function(id) {
@@ -1281,7 +1319,7 @@
      */
     function fetchallBenchCandidatesAjax(page = 1, forceRefresh = false) {
         currentPage = page;
-        const statusType = $('#current_status_type').val() || 'approve';
+        const statusType = $('#current_status_type').val() || 'pending';
         const searchVal = $('#kt_tagify_2').val() || '';
         const sortVal = $('#sortingfilter').val() || '';
         const cacheKey = SuperAdminBenchRamStore.getKey(statusType, page, searchVal, sortVal);
@@ -1390,11 +1428,20 @@
 
     // Phase 5: Production-Grade Real-Time Reverb WebSocket Synchronization
     let lastProcessedVersion = 0;
+    let _lastCandidateSequenceId = 0;
 
     function handleRealtimeApprovalDelta(e) {
         if (!e) return;
 
         // Sequence / Out-of-Order Event Protection (Area 7: Concurrency & Race Conditions)
+        if (e.sequence_id && e.sequence_id <= _lastCandidateSequenceId) {
+            console.warn('[Reverb Delta] Discarded stale or out-of-order sequence event. Sequence:', e.sequence_id, 'Current:', _lastCandidateSequenceId);
+            return;
+        }
+        if (e.sequence_id) {
+            _lastCandidateSequenceId = e.sequence_id;
+        }
+
         if (e.entity_version && e.entity_version <= lastProcessedVersion) {
             console.warn('[Reverb Delta] Discarded out-of-order event. Version:', e.entity_version, 'Current:', lastProcessedVersion);
             return;
@@ -1414,7 +1461,7 @@
 
         // 3. In-Place DOM Patching for visible candidates
         if (e.candidate_ids && Array.isArray(e.candidate_ids)) {
-            const currentTab = $('#current_status_type').val() || 'approve';
+            const currentTab = $('#current_status_type').val() || 'pending';
             let rowsModified = 0;
 
             e.candidate_ids.forEach(function(candId) {
