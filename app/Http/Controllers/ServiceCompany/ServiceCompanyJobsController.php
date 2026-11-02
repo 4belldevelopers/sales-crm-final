@@ -16369,13 +16369,30 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
 
     public function jobServicesAddUpdate(Request $request)
     {
+        // 1. Authorization check: prevent unauthorized write requests
+        abort_if(Gate::denies('view_jobs'), 403);
 
-        $company_id = auth()->user()->company_id;
+        $company_id = (int) auth()->user()->company_id;
+        $commType = (int) $request->commType;
         $rateType = $request->rateTypeClass;
-        //  dd($rateType);
-        $commType = $request->commType;
-        $sal_mode = $request->sal_mode;
+        $sal_mode = (int) $request->sal_mode;
         $main_status = ($request->main_status) ? $request->main_status : 0;
+
+        // Intent: Concurrency check against the row being edited to prevent silent concurrent overwrites
+        if ($request->filled('updateId') && ! empty($request->updateId)) {
+            $existingCommercial = DB::table('commericials')
+                ->where('company_id', $company_id)
+                ->where('commtype', $commType)
+                ->first(['id']);
+
+            if ($existingCommercial && (int) $existingCommercial->id !== (int) $request->updateId) {
+                return response()->json([
+                    'status' => 'conflict',
+                    'message' => 'Commercial terms were updated by another administrator. Please refresh before saving.',
+                ], 409);
+            }
+        }
+
         // Intent: Resolve canonical integer key for MySQL INT(11) persistence per CURRENCY_MANAGEMENT_AND_SYNCHRONIZATION_STANDARD Step 3
         $salary_currency = \App\Services\CurrencyService::resolveCurrencyKey($request->salary_currency);
 
@@ -16386,33 +16403,51 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
         $billingFrequency = array_key_exists((string) $request->billing_frequency, self::COMMERCIAL_BILLING_FREQUENCIES) ? (string) $request->billing_frequency : 'one_time';
         $billingTrigger = array_key_exists((string) $request->billing_trigger, self::COMMERCIAL_BILLING_TRIGGERS) ? (string) $request->billing_trigger : 'candidate_joined';
         $paymentTermsDays = array_key_exists((int) $request->payment_terms_days, self::COMMERCIAL_PAYMENT_TERMS) ? (int) $request->payment_terms_days : 30;
-        $policyFields = ['replacement_period_days' => $replacementPeriod, 'replacement_type' => $replacementType, 'replacement_eligibility' => $replacementEligibility, 'billing_frequency' => $billingFrequency, 'billing_trigger' => $billingTrigger, 'payment_terms_days' => $paymentTermsDays];
+        $policyFields = [
+            'replacement_period_days' => $replacementPeriod,
+            'replacement_type' => $replacementType,
+            'replacement_eligibility' => $replacementEligibility,
+            'billing_frequency' => $billingFrequency,
+            'billing_trigger' => $billingTrigger,
+            'payment_terms_days' => $paymentTermsDays,
+        ];
 
         $company = Company::withoutGlobalScope('company')->findOrFail($company_id);
 
         if ($commType == 1) {
             $status = 0;
-            if ($company->company_type == 1) {
+            if ($company->company_type == 1 || $company->company_type == 2) {
                 $status = 1;
-            } elseif ($company->company_type == 2) {
-                $status = 1; // IT Service Company
             } else {
-                $status = 0; // Product Company
+                $status = 0;
             }
 
-            $value = array_merge(['company_id' => $company_id, 'rateType' => $rateType, 'commtype' => $commType, 'sal_mode' => $sal_mode, 'salary_currency' => $salary_currency, 'status' => $status], $policyFields);
+            $value = array_merge([
+                'company_id' => $company_id,
+                'rateType' => $rateType,
+                'commtype' => $commType,
+                'sal_mode' => $sal_mode,
+                'salary_currency' => $salary_currency,
+                'status' => $status,
+            ], $policyFields);
         } else {
             $status = 0;
-            if ($company->company_type == 1) {
-                $status = 1;   // Staffing Company
-            } elseif ($company->company_type == 2) {
-                $status = 1; // IT Service Company
+            if ($company->company_type == 1 || $company->company_type == 2) {
+                $status = 1;
             } else {
-                $status = 0; // Product Company
+                $status = 0;
             }
 
-            $value = array_merge(['company_id' => $company_id, 'rateType' => $rateType, 'commtype' => $commType, 'sal_mode' => $sal_mode, 'salary_currency' => $salary_currency, 'status' => $status], $policyFields);
+            $value = array_merge([
+                'company_id' => $company_id,
+                'rateType' => $rateType,
+                'commtype' => $commType,
+                'sal_mode' => $sal_mode,
+                'salary_currency' => $salary_currency,
+                'status' => $status,
+            ], $policyFields);
         }
+
         // Intent: persist rates against the active global range-master indexes so agency rate cards and this editor share one definition.
         $experienceIndexes = Cache::remember('commercial_experience_bands:v1', 3600, function () {
             return DB::table('commercial_experience_bands')
@@ -16423,42 +16458,123 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
             return range((int) $band->min_experience, (int) $band->max_experience);
         })->unique()->values()->all();
 
-        DB::table('commericials')->where('company_id', $company_id)->where('commtype', $commType)->delete();
-        $commericialId = DB::table('commericials')->insertGetId($value);
-        if (count($request->rate_val) > 0 && count($experienceIndexes) > 0) {
-            DB::table('commericial_details')->where('company_id', $company_id)->where('commtype', $commType)->delete();
-            foreach ($experienceIndexes as $position => $experienceIndex) {
-                if (! array_key_exists($position, $request->rate_val)) {
-                    continue;
+        // Guard against PHP 8 TypeError on null or non-array rate_val
+        $rateVals = is_array($request->rate_val) ? $request->rate_val : [];
+        $countryIds = is_array($request->input('arrCountry')) ? $request->input('arrCountry') : [];
+
+        $newVersion = ((int) Cache::get("company:{$company_id}:commercials:version", 1)) + 1;
+
+        DB::beginTransaction();
+        try {
+            DB::table('commericials')->where('company_id', $company_id)->where('commtype', $commType)->delete();
+            $commericialId = DB::table('commericials')->insertGetId($value);
+
+            if (count($rateVals) > 0 && count($experienceIndexes) > 0) {
+                DB::table('commericial_details')->where('company_id', $company_id)->where('commtype', $commType)->delete();
+                foreach ($experienceIndexes as $position => $experienceIndex) {
+                    if (! array_key_exists($position, $rateVals)) {
+                        continue;
+                    }
+
+                    $detailValue = [
+                        'company_id' => $company_id,
+                        'commericial_id' => $commericialId,
+                        'commtype' => $commType,
+                        'exp' => $experienceIndex,
+                        'rate' => $rateVals[$position],
+                    ];
+                    DB::table('commericial_details')->insertGetId($detailValue);
                 }
-
-                $value = ['company_id' => $company_id, 'commericial_id' => $commericialId, 'commtype' => $commType, 'exp' => $experienceIndex, 'rate' => $request->rate_val[$position]];
-                DB::table('commericial_details')->insertGetId($value);
             }
+
+            // Intent: replace this tenant's complete country selection, including a valid empty selection.
+            DB::table('commericial_countries')->where('company_id', $company_id)->where('commtype', $commType)->delete();
+            if (count($countryIds) > 0) {
+                for ($i = 0; $i < count($countryIds); $i++) {
+                    $countryValue = [
+                        'company_id' => $company_id,
+                        'commericial_id' => $commericialId,
+                        'commtype' => $commType,
+                        'country_id' => $countryIds[$i],
+                    ];
+                    DB::table('commericial_countries')->insertGetId($countryValue);
+                }
+            }
+
+            // Intent: insert durable domain outbox event within the same ACID transaction
+            $idempotencyKey = $request->header('Idempotency-Key') ?? ('comm_'.$commericialId.'_'.time());
+            DB::table('sys_outbox_events')->insertOrIgnore([
+                'tenant_id' => $company_id,
+                'idempotency_key' => $idempotencyKey,
+                'aggregate_type' => 'commercials',
+                'aggregate_id' => $commericialId,
+                'aggregate_version' => $newVersion,
+                'event_type' => 'CommercialsUpdated',
+                'payload' => json_encode([
+                    'company_id' => $company_id,
+                    'service_type' => ($commType === 2) ? 'fulltime' : 'contract',
+                    'version' => $newVersion,
+                    'changed_by' => auth()->id(),
+                    'created_at' => now()->toIso8601String(),
+                ]),
+                'status' => 'COMPLETED',
+                'created_at' => now(),
+                'available_at' => now(),
+                'processed_at' => now(),
+            ]);
+
+            DB::commit();
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            Log::error('Commercials save transaction failed: '.$e->getMessage(), ['exception' => $e]);
+
+            return response()->json(['status' => 'error', 'message' => 'Failed to save commercials. Please try again.'], 500);
         }
 
-        $countryIds = $request->input('arrCountry', []);
-
-        // Intent: replace this tenant's complete country selection, including a valid empty selection.
-        DB::table('commericial_countries')->where('company_id', $company_id)->where('commtype', $commType)->delete();
-        if (count($countryIds) > 0) {
-            for ($i = 0; $i < count($countryIds); $i++) {
-                $value = ['company_id' => $company_id, 'commericial_id' => $commericialId, 'commtype' => $commType, 'country_id' => $countryIds[$i]];
-                DB::table('commericial_countries')->insertGetId($value);
-            }
-        }
-
-        // Intent: prevent the account Commercials tab from serving pre-save rates, countries, or status from its tenant cache.
+        // Cache Invalidation after transaction commit
+        Cache::forever("company:{$company_id}:commercials:version", $newVersion);
         Cache::forget("account_settings:company:{$company_id}");
-
-        // Intent: atomically invalidate agency drawer cache for all tenants viewing this company per Rule 6
         Cache::forever("agency_drawer_version_company_{$company_id}", ((int) Cache::get("agency_drawer_version_company_{$company_id}", 1)) + 1);
 
-        // Intent: asynchronously refresh only this company's ES document after its MySQL commercial countries are replaced.
+        // Async ES index refresh
         ElasticCompanyIndex::dispatch($company_id);
 
-        // dd( $commericialId);
-        return response()->json(['status' => 'success']);
+        // Canonical state payload for client-first reactive DOM rehydration
+        $countryNames = ! empty($countryIds) ? DB::table('countries')->whereIn('id', $countryIds)->pluck('country_name')->toArray() : [];
+        $currencyCode = \App\Services\CurrencyService::resolveCurrencyCode($salary_currency) ?: 'INR';
+
+        $commercialState = [
+            'commtype' => $commType,
+            'service_type' => ($commType === 2) ? 'fulltime' : 'contract',
+            'status' => $status,
+            'rateType' => (int) $rateType,
+            'rate_type_label' => ($commType === 2)
+                ? (((int) $rateType === 2) ? 'Percentage of CTC' : (((int) $rateType === 1) ? 'Fixed Commercial Rate' : 'Free / No Fee'))
+                : (((int) $rateType === 1) ? 'Markup on Bill Rate' : 'Contract Commercial Rate'),
+            'sal_mode' => $sal_mode,
+            'sal_mode_label' => ($sal_mode === 0) ? 'Annual Staffing' : (($sal_mode === 1) ? 'Monthly Staffing' : 'Hourly Staffing'),
+            'salary_currency' => $salary_currency,
+            'currency_code' => $currencyCode,
+            'replacement_period_days' => $replacementPeriod,
+            'replacement_type' => $replacementType,
+            'replacement_type_label' => ucwords(str_replace('_', ' ', $replacementType)),
+            'replacement_eligibility' => $replacementEligibility,
+            'replacement_eligibility_label' => ucwords(str_replace('_', ' ', $replacementEligibility)),
+            'billing_frequency' => $billingFrequency,
+            'billing_frequency_label' => ucwords(str_replace('_', ' ', $billingFrequency)),
+            'billing_trigger' => $billingTrigger,
+            'billing_trigger_label' => ucwords(str_replace('_', ' ', $billingTrigger)),
+            'payment_terms_days' => $paymentTermsDays,
+            'country_count' => count($countryIds),
+            'countries' => $countryNames,
+        ];
+
+        return response()->json([
+            'status' => 'success',
+            'version' => $newVersion,
+            'service_type' => ($commType === 2) ? 'fulltime' : 'contract',
+            'commercial_state' => $commercialState,
+        ]);
     }
 
     public function updateserviceviewmore(Request $request)

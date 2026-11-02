@@ -5763,14 +5763,34 @@ $(document).ready(function(){
                         if (String(commType) === '1') {
                             $('#contractCount').text(countryCount);
                         }
-                        $editor.get(0).dispatchEvent(new CustomEvent('commercial:saved'));
+
+                        // Dispatch canonical state to window so ServicesTabEngine and any other open listeners re-hydrate
+                        var serviceType = response.service_type || (String(commType) === '2' ? 'fulltime' : 'contract');
+                        var eventDetail = {
+                            version: response.version || 1,
+                            service_type: serviceType,
+                            state: response.commercial_state || {}
+                        };
+
+                        window.dispatchEvent(new CustomEvent('commercial:saved', { detail: eventDetail }));
+                        $editor.get(0).dispatchEvent(new CustomEvent('commercial:saved', { detail: eventDetail }));
+
                         Swal.fire({toast: true, position: 'top-end', icon: 'success', title: 'Services saved successfully.', showConfirmButton: false, timer: 2200, timerProgressBar: true});
                         return;
                     }
 
                     Swal.fire({toast: true, position: 'top-end', icon: 'error', title: response.message || 'Services could not be saved.', showConfirmButton: false, timer: 3200});
                 },
-                error: function () {
+                error: function (xhr) {
+                    if (xhr && xhr.status === 409) {
+                        var msg = (xhr.responseJSON && xhr.responseJSON.message) ? xhr.responseJSON.message : 'Commercial terms were updated by another administrator. Please refresh before saving.';
+                        Swal.fire({toast: true, position: 'top-end', icon: 'warning', title: msg, showConfirmButton: false, timer: 4000});
+                        return;
+                    }
+                    if (xhr && xhr.status === 403) {
+                        Swal.fire({toast: true, position: 'top-end', icon: 'error', title: 'You are not authorized to update commercial terms.', showConfirmButton: false, timer: 3500});
+                        return;
+                    }
                     Swal.fire({toast: true, position: 'top-end', icon: 'error', title: 'Services could not be saved. Please try again.', showConfirmButton: false, timer: 3200});
                 },
                 complete: function () {

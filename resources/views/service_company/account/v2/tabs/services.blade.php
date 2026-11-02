@@ -1082,7 +1082,7 @@
                         <span class="cd-num-badge">5 Tiers</span>
                     </div>
                     <div class="cd-subcard-val rate-highlight">
-                        <span>{{ (@$fullTimeStatus->rateType == 2) ? 'Percentage of CTC' : 'Fixed Placement Fee' }}</span>
+                        <span id="ft-model-val">{{ (@$fullTimeStatus->rateType == 2) ? 'Percentage of CTC' : 'Fixed Placement Fee' }}</span>
                     </div>
                     <div class="cd-subcard-meta">
                         <svg class="text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1094,7 +1094,7 @@
                         <svg class="text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
                         </svg>
-                        <span>Default Currency: <b>{{ $cv2FulltimeCurrencyCode }}</b></span>
+                        <span>Default Currency: <b id="ft-currency-val">{{ $cv2FulltimeCurrencyCode }}</b></span>
                     </div>
                 </div>
 
@@ -1109,20 +1109,20 @@
                         </div>
                     </div>
                     <div class="cd-subcard-val">
-                        <span>{{ @$fullTimeStatus->replacement_period_days ?: 90 }} Days</span>
+                        <span id="ft-replacement-days">{{ @$fullTimeStatus->replacement_period_days ?: 90 }} Days</span>
                         <span class="val-sub">Replacement</span>
                     </div>
                     <div class="cd-subcard-meta">
                         <svg class="text-success" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
                         </svg>
-                        <span>{{ ucwords(str_replace('_', ' ', @$fullTimeStatus->replacement_type ?: 'free_replacement')) }}</span>
+                        <span id="ft-replacement-type">{{ ucwords(str_replace('_', ' ', @$fullTimeStatus->replacement_type ?: 'free_replacement')) }}</span>
                     </div>
                     <div class="cd-subcard-meta">
                         <svg class="text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
                         </svg>
-                        <span>Clause: {{ ucwords(str_replace('_', ' ', @$fullTimeStatus->replacement_eligibility ?: 'early_exit')) }}</span>
+                        <span id="ft-replacement-clause">Clause: {{ ucwords(str_replace('_', ' ', @$fullTimeStatus->replacement_eligibility ?: 'early_exit')) }}</span>
                     </div>
                 </div>
 
@@ -1137,20 +1137,20 @@
                         </div>
                     </div>
                     <div class="cd-subcard-val">
-                        <span>Net {{ @$fullTimeStatus->payment_terms_days ?: 30 }} Days</span>
+                        <span id="ft-payment-terms-days">Net {{ @$fullTimeStatus->payment_terms_days ?: 30 }} Days</span>
                         <span class="val-sub">Payment</span>
                     </div>
                     <div class="cd-subcard-meta">
                         <svg class="text-info" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
                         </svg>
-                        <span>Invoicing: {{ ucwords(str_replace('_', ' ', @$fullTimeStatus->billing_frequency ?: 'one_time')) }}</span>
+                        <span id="ft-billing-frequency">Invoicing: {{ ucwords(str_replace('_', ' ', @$fullTimeStatus->billing_frequency ?: 'one_time')) }}</span>
                     </div>
                     <div class="cd-subcard-meta">
                         <svg class="text-warning" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
                         </svg>
-                        <span>Trigger: {{ ucwords(str_replace('_', ' ', @$fullTimeStatus->billing_trigger ?: 'candidate_joined')) }}</span>
+                        <span id="ft-billing-trigger">Trigger: {{ ucwords(str_replace('_', ' ', @$fullTimeStatus->billing_trigger ?: 'candidate_joined')) }}</span>
                     </div>
                 </div>
 
@@ -1166,7 +1166,7 @@
                         <span id="fullTimeCount" class="cd-num-badge">{{ $fulltimeCountryCount }}</span>
                     </div>
                     <div class="cd-subcard-val">
-                        <div class="cd-country-pills-row">
+                        <div class="cd-country-pills-row" id="ft-country-pills">
                             @if(!empty($ftCountries))
                                 @foreach(array_slice($ftCountries, 0, 2) as $cName)
                                     <span class="cd-country-chip" title="{{ $cName }}">
@@ -1212,7 +1212,11 @@
                     <span>Fulltime placement commercial terms bind automatically to client agreements, job requisitions, and candidate submissions.</span>
                 </div>
                 <div class="cd-srv-bottom-right">
-                    <span class="cd-srv-bottom-chip">{{ $cv2FulltimeCurrencyCode }} · Default</span>
+                    <span class="cd-srv-bottom-chip" id="ft-bottom-currency">{{ $cv2FulltimeCurrencyCode }} · Default</span>
+                    <span class="cd-srv-bottom-chip">One-time Placement Fee</span>
+                    <span>Last synced: Today</span>
+                </div>
+            </div>
                     <span class="cd-srv-bottom-chip">One-time Placement Fee</span>
                     <span>Last synced: Today</span>
                 </div>
@@ -1294,19 +1298,19 @@
                         <span class="cd-num-badge" style="color: #8b5cf6; background: #f5f3ff; border-color: #ddd6fe;">Fixed Rate</span>
                     </div>
                     <div class="cd-subcard-val" style="color: #7c3aed;">
-                        <span>{{ (@$contractStatus->rateType == 1) ? 'Markup on Bill Rate' : 'Contract Commercial Rate' }}</span>
+                        <span id="ct-model-val">{{ (@$contractStatus->rateType == 1) ? 'Markup on Bill Rate' : 'Contract Commercial Rate' }}</span>
                     </div>
                     <div class="cd-subcard-meta">
                         <svg class="text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
                         </svg>
-                        <span>Mode: <b>{{ [0 => 'Annual Staffing', 1 => 'Monthly Staffing', 2 => 'Hourly Staffing'][@$contractStatus->sal_mode] ?? 'Configured' }}</b></span>
+                        <span>Mode: <b id="ct-sal-mode">{{ [0 => 'Annual Staffing', 1 => 'Monthly Staffing', 2 => 'Hourly Staffing'][@$contractStatus->sal_mode] ?? 'Configured' }}</b></span>
                     </div>
                     <div class="cd-subcard-meta">
                         <svg class="text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
                         </svg>
-                        <span>Default Currency: <b>{{ $cv2ContractCurrencyCode }}</b></span>
+                        <span>Default Currency: <b id="ct-currency-val">{{ $cv2ContractCurrencyCode }}</b></span>
                     </div>
                 </div>
 
@@ -1321,20 +1325,20 @@
                         </div>
                     </div>
                     <div class="cd-subcard-val">
-                        <span>{{ @$contractStatus->replacement_period_days ?: 30 }} Days</span>
+                        <span id="ct-replacement-days">{{ @$contractStatus->replacement_period_days ?: 30 }} Days</span>
                         <span class="val-sub">Notice Period</span>
                     </div>
                     <div class="cd-subcard-meta">
                         <svg class="text-success" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
                         </svg>
-                        <span>{{ ucwords(str_replace('_', ' ', @$contractStatus->replacement_type ?: 'free_replacement')) }}</span>
+                        <span id="ct-replacement-type">{{ ucwords(str_replace('_', ' ', @$contractStatus->replacement_type ?: 'free_replacement')) }}</span>
                     </div>
                     <div class="cd-subcard-meta">
                         <svg class="text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
                         </svg>
-                        <span>Clause: {{ ucwords(str_replace('_', ' ', @$contractStatus->replacement_eligibility ?: 'early_exit')) }}</span>
+                        <span id="ct-replacement-clause">Clause: {{ ucwords(str_replace('_', ' ', @$contractStatus->replacement_eligibility ?: 'early_exit')) }}</span>
                     </div>
                 </div>
 
@@ -1349,20 +1353,20 @@
                         </div>
                     </div>
                     <div class="cd-subcard-val">
-                        <span>Net {{ @$contractStatus->payment_terms_days ?: 30 }} Days</span>
+                        <span id="ct-payment-terms-days">Net {{ @$contractStatus->payment_terms_days ?: 30 }} Days</span>
                         <span class="val-sub">Payment</span>
                     </div>
                     <div class="cd-subcard-meta">
                         <svg class="text-info" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
                         </svg>
-                        <span>Cycle: {{ ucwords(str_replace('_', ' ', @$contractStatus->billing_frequency ?: 'monthly')) }}</span>
+                        <span id="ct-billing-frequency">Cycle: {{ ucwords(str_replace('_', ' ', @$contractStatus->billing_frequency ?: 'monthly')) }}</span>
                     </div>
                     <div class="cd-subcard-meta">
                         <svg class="text-warning" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
                         </svg>
-                        <span>Trigger: {{ ucwords(str_replace('_', ' ', @$contractStatus->billing_trigger ?: 'approved_timesheet')) }}</span>
+                        <span id="ct-billing-trigger">Trigger: {{ ucwords(str_replace('_', ' ', @$contractStatus->billing_trigger ?: 'approved_timesheet')) }}</span>
                     </div>
                 </div>
 
@@ -1378,7 +1382,7 @@
                         <span id="contractCount" class="cd-num-badge">{{ $contractCountryCount }}</span>
                     </div>
                     <div class="cd-subcard-val">
-                        <div class="cd-country-pills-row">
+                        <div class="cd-country-pills-row" id="ct-country-pills">
                             @if(!empty($ctCountries))
                                 @foreach(array_slice($ctCountries, 0, 2) as $cName)
                                     <span class="cd-country-chip" title="{{ $cName }}">
@@ -1595,6 +1599,85 @@
 
             updateTabCounters();
             filterServices();
+        });
+
+        // ==================================================================
+        // CANONICAL REACTIVE COMMERCIALS RE-HYDRATION ENGINE
+        // Eliminates Deficiency A: zero stale data without page reload (Rule 5)
+        // ==================================================================
+        window.ServicesTabEngine = {
+            rehydrateServiceCard: function(serviceType, state) {
+                if (!state) return;
+                var isFT = (serviceType === 'fulltime' || String(state.commtype) === '2');
+                var prefix = isFT ? 'ft' : 'ct';
+
+                // 1. Model & Currency
+                if (state.rate_type_label) {
+                    $('#' + prefix + '-model-val').text(state.rate_type_label);
+                }
+                if (state.currency_code) {
+                    $('#' + prefix + '-currency-val').text(state.currency_code);
+                    $('#' + prefix + '-bottom-currency').text(state.currency_code + ' · Default');
+                }
+                if (!isFT && state.sal_mode_label) {
+                    $('#ct-sal-mode').text(state.sal_mode_label);
+                }
+
+                // 2. Replacement Policy
+                if (state.replacement_period_days) {
+                    $('#' + prefix + '-replacement-days').text(state.replacement_period_days + ' Days');
+                }
+                if (state.replacement_type_label) {
+                    $('#' + prefix + '-replacement-type').text(state.replacement_type_label);
+                }
+                if (state.replacement_eligibility_label) {
+                    $('#' + prefix + '-replacement-clause').text('Clause: ' + state.replacement_eligibility_label);
+                }
+
+                // 3. Billing & Invoicing Terms
+                if (state.payment_terms_days) {
+                    $('#' + prefix + '-payment-terms-days').text('Net ' + state.payment_terms_days + ' Days');
+                }
+                if (state.billing_frequency_label) {
+                    var freqPrefix = isFT ? 'Invoicing: ' : 'Cycle: ';
+                    $('#' + prefix + '-billing-frequency').text(freqPrefix + state.billing_frequency_label);
+                }
+                if (state.billing_trigger_label) {
+                    $('#' + prefix + '-billing-trigger').text('Trigger: ' + state.billing_trigger_label);
+                }
+
+                // 4. Country scope & pills
+                var count = (typeof state.country_count !== 'undefined') ? state.country_count : (state.countries ? state.countries.length : 0);
+                if (isFT) {
+                    $('#fullTimeCount').text(count);
+                } else {
+                    $('#contractCount').text(count);
+                }
+
+                var countries = state.countries || [];
+                var $pillsRow = $('#' + prefix + '-country-pills');
+                if ($pillsRow.length) {
+                    $pillsRow.empty();
+                    if (countries.length > 0) {
+                        countries.slice(0, 2).forEach(function(cName) {
+                            $pillsRow.append('<span class="cd-country-chip" title="' + cName + '"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>' + cName + '</span>');
+                        });
+                        if (countries.length > 2) {
+                            $pillsRow.append('<span class="cd-country-chip more-chip" title="' + countries.slice(2).join(', ') + '">+' + (countries.length - 2) + '</span>');
+                        }
+                    } else {
+                        $pillsRow.append('<span class="val-sub">Available Globally</span>');
+                    }
+                }
+            }
+        };
+
+        // Window Event Listener for Local Save & Real-Time Updates
+        $(window).off('commercial:saved.srvEngine').on('commercial:saved.srvEngine', function(e) {
+            var detail = e.originalEvent ? e.originalEvent.detail : e.detail;
+            if (detail && detail.state) {
+                window.ServicesTabEngine.rehydrateServiceCard(detail.service_type, detail.state);
+            }
         });
 
         updateTabCounters();

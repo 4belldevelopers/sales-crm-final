@@ -91,10 +91,23 @@
     padding: 0 !important;
 }
 
-.commercial-editor-v3,
-.commercial-editor-v3 * {
+.commercial-editor-v3 {
     box-sizing: border-box;
     font-family: 'Poppins', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+}
+
+.commercial-editor-v3 *,
+.commercial-editor-v3 *::before,
+.commercial-editor-v3 *::after {
+    box-sizing: border-box;
+}
+
+.cd-svg-icon {
+    width: 14px;
+    height: 14px;
+    display: inline-block;
+    vertical-align: -2px;
+    flex-shrink: 0;
 }
 
 .commercial-editor-v3 {
@@ -1117,7 +1130,7 @@
                     <h3 class="cd-drw-title">Edit {{ $isFulltime ? 'Fulltime' : 'Contract' }} Hiring Services</h3>
                     <span class="cd-drw-code-chip">#SRV-{{ $isFulltime ? 'FT01' : 'CT02' }}</span>
                     <span class="cd-drw-scope-pill">
-                        <i class="fas fa-handshake"></i> Direct Client Commercials
+                        <svg class="cd-svg-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg> Direct Client Commercials
                     </span>
                     <span class="cd-drw-status-badge {{ !empty($commercial['status']) ? '' : 'is-inactive' }}">
                         {{ !empty($commercial['status']) ? 'Active' : 'Inactive' }}
@@ -1130,13 +1143,13 @@
         </div>
         <div class="cd-drw-header-right">
             <button type="button" class="cd-drw-head-btn" data-commercial-reset title="Reset all fields to saved values">
-                <i class="fas fa-undo"></i> Reset
+                <svg class="cd-svg-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg> Reset
             </button>
             <button type="button"
                     class="cd-drw-close-btn"
                     aria-label="Close drawer"
                     title="Close drawer"
-                    onclick="$('#kt_activitiesJob > .card > #kt_activities_header #kt_activitiesJob_close').trigger('click');">
+                    onclick="if (window.KTDrawer && KTDrawer.getInstance(document.getElementById('kt_activitiesJob'))) { KTDrawer.getInstance(document.getElementById('kt_activitiesJob')).hide(); } else { $('#kt_activitiesJob > .card > #kt_activities_header #kt_activitiesJob_close').trigger('click'); }">
                 ✕
             </button>
         </div>
@@ -1148,23 +1161,23 @@
     <div class="cd-drw-tabs-card">
         <div class="cd-drw-tabs-group">
             <button type="button" class="cd-drw-tab-btn active" data-drawer-tab="all">
-                <i class="fas fa-th-large"></i>
+                <svg class="cd-svg-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>
                 <span>All Settings</span>
             </button>
             <button type="button" class="cd-drw-tab-btn" data-drawer-tab="model">
-                <i class="fas fa-coins"></i>
+                <svg class="cd-svg-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                 <span>Commercial Model & Rates</span>
             </button>
             <button type="button" class="cd-drw-tab-btn" data-drawer-tab="experience">
-                <i class="fas fa-layer-group"></i>
+                <svg class="cd-svg-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
                 <span>Experience Matrix</span>
             </button>
             <button type="button" class="cd-drw-tab-btn" data-drawer-tab="policy">
-                <i class="fas fa-shield-alt"></i>
+                <svg class="cd-svg-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
                 <span>Replacement & Terms</span>
             </button>
             <button type="button" class="cd-drw-tab-btn" data-drawer-tab="countries">
-                <i class="fas fa-globe-americas"></i>
+                <svg class="cd-svg-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                 <span>Country Coverage</span>
                 <span class="cd-drw-tab-badge" id="drwCountryCountBadge">{{ $activeCountryCount }}</span>
             </button>
@@ -1238,7 +1251,7 @@
             </div>
 
             <div class="cd-info-banner">
-                <i class="fas fa-info-circle"></i>
+                <svg class="cd-svg-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                 <span data-commercial-model-copy>
                     {{ $selectedCommercialModel === 0 ? 'No commercial placement fee will be charged for the selected countries.' : ($selectedCommercialModel === 2 ? "Placement fees are calculated as a percentage of the candidate's Cost to Company (CTC)." : 'Billing is calculated from the configured fixed rate for each experience range.') }}
                 </span>
@@ -1353,7 +1366,7 @@
 
                 <!-- Free/No Fee Banner -->
                 <div class="cd-free-fee-banner">
-                    <i class="fas fa-check-circle text-success fs-3"></i>
+                    <svg class="cd-svg-icon text-success" style="width:24px;height:24px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                     <div>
                         <strong class="d-block text-dark fs-6">Zero Commercial Fee Agreement</strong>
                         <span class="text-muted fs-8">This service agreement is configured as Free / No Fee. No candidate placement charges will apply.</span>
@@ -1396,7 +1409,7 @@
                     @endphp
                     <div class="cd-range-row" data-experience-range>
                         <div class="cd-tier-badge">
-                            <i class="fas fa-clock"></i>
+                            <svg class="cd-svg-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                             <span>{{ $range['label'] }}</span>
                         </div>
 
@@ -1469,7 +1482,7 @@
             </div>
 
             <div class="cd-info-banner blue mt-3">
-                <i class="fas fa-check-circle"></i>
+                <svg class="cd-svg-icon text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                 <span data-experience-info>
                     Each experience band is saved through the existing data structure. Currency and applied billing period remain consistent across the commercial tier.
                 </span>
@@ -1529,7 +1542,7 @@
                 </div>
 
                 <div class="cd-policy-alert">
-                    <i class="fas fa-shield-alt text-primary fs-5"></i>
+                    <svg class="cd-svg-icon text-primary" style="width:20px;height:20px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
                     <div>
                         A <b data-replacement-summary>{{ strtolower($replacementTypes[$selectedReplacementType] ?? 'free replacement') }}</b> guarantee applies when an eligible candidate exit occurs within <b data-replacement-days>{{ $selectedReplacementPeriod }}</b> days of joining.
                     </div>
@@ -1604,7 +1617,7 @@
                     </div>
                 </div>
                 <div class="cd-drw-scope-pill">
-                    <i class="fas fa-globe"></i>
+                    <svg class="cd-svg-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                     <span id="countrySelectedHeaderBadge">{{ $activeCountryCount }} Countries Active</span>
                 </div>
             </div>
@@ -1612,7 +1625,7 @@
             <!-- Toolbar Sub-Card -->
             <div class="cd-country-toolbar">
                 <div class="cd-country-search-box">
-                    <i class="fas fa-search"></i>
+                    <svg class="cd-svg-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
                     <input type="search"
                            class="cd-country-search-input"
                            placeholder="Search country by name or code..."
@@ -1620,13 +1633,13 @@
                 </div>
                 <div class="cd-country-btn-group">
                     <button type="button" class="cd-country-btn" data-country-top title="Quick select top global hiring hubs">
-                        <i class="fas fa-star text-warning me-1"></i> Top Hiring Hubs
+                        <svg class="cd-svg-icon text-warning me-1" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg> Top Hiring Hubs
                     </button>
                     <button type="button" class="cd-country-btn" data-country-select-all>
-                        <i class="fas fa-check-double me-1"></i> Select All
+                        <svg class="cd-svg-icon me-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7m-14 6l4 4L19 7"/></svg> Select All
                     </button>
                     <button type="button" class="cd-country-btn" data-country-clear>
-                        <i class="fas fa-times me-1"></i> Clear All
+                        <svg class="cd-svg-icon me-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg> Clear All
                     </button>
                 </div>
             </div>
@@ -1681,10 +1694,10 @@
     <footer class="cd-drw-footer">
         <div class="cd-drw-footer-left">
             <button type="button" class="cd-drw-btn" data-commercial-cancel>
-                <i class="fas fa-times"></i> Cancel
+                <svg class="cd-svg-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg> Cancel
             </button>
             <button type="button" class="cd-drw-btn" data-commercial-reset>
-                <i class="fas fa-undo"></i> Reset to Saved Values
+                <svg class="cd-svg-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg> Reset to Saved Values
             </button>
         </div>
         <div class="cd-drw-footer-right">
@@ -1693,7 +1706,7 @@
                     class="btn btn-primary fw-bold copy_current_selected_applicant cd-drw-btn btn-primary"
                     aria-live="polite">
                 <span class="indicator-label">
-                    <i class="fas fa-check me-1"></i> Save Commercials
+                    <svg class="cd-svg-icon me-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> Save Commercials
                 </span>
                 <span class="indicator-progress">
                     <span class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>
@@ -1971,7 +1984,7 @@
         if (!selected.length) {
             var empty = document.createElement('span');
             empty.className = 'text-muted fs-8';
-            empty.innerHTML = '<i class="fas fa-info-circle me-1"></i> No countries selected yet';
+            empty.innerHTML = '<svg class="cd-svg-icon me-1" style="width:13px;height:13px;display:inline-block;vertical-align:-2px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg> No countries selected yet';
             selectedHost.appendChild(empty);
         }
 
