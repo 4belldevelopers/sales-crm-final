@@ -66,10 +66,10 @@
                 $clientTypeLabel = $isInternal ? 'Internal Client' : 'Direct Client';
                 $clientTypeCls   = $isInternal ? 'type-internal' : 'type-direct';
 
-                // 5. Job Requisition Information
+                // 5. Job Requisition Information (Direct Client internal client confidentiality enforced)
                 $rawJobTitle = trim((string) (@$row->title ?? 'Untitled Job'));
                 $jobId = @$row->jobId ?: (@$row->job_id ?: '—');
-                $clientDisplayName = trim((string) (@$row->client_name ?: (@$row->clients_name ?: 'Client Account')));
+                $clientDisplayName = trim((string) (@$row->company_name ?: (@$row->uc_company_name ?: (@$row->client_company_name ?: (@$row->client_name ?: 'Client Account')))));
                 $jobStatus = !empty($row->job_status) ? ucwords(trim($row->job_status)) : 'Hiring';
                 $employmentType = !empty($row->employmentType) ? ucwords($row->employmentType) : ((@$row->employment_type == 1) ? 'Contract' : 'Full-Time');
 

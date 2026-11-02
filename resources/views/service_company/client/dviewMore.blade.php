@@ -8470,7 +8470,7 @@
             // 4. Sub-Card 4: Target Job Requisition
             var jobTitle = row.title || row.job_title || ('Job #' + jobId);
             var jobTitleFormatted = formatWithAcronyms(limitWords(jobTitle, 15));
-            var companyName = row.cur_company_name || row.client_name || '{{ addslashes($detailName ?? "Client") }}';
+            var companyName = (this.clientType === 'direct') ? '{{ addslashes($detailName ?? "Direct Client") }}' : (row.cur_company_name || row.client_name || '{{ addslashes($detailName ?? "Client") }}');
             var companyNameFormatted = formatWithAcronyms(limitWords(companyName, 12));
             var jobUrl = jobId ? `{{ url('service_company/jobs') }}/${jobId}` : 'javascript:void(0);';
 
@@ -8499,8 +8499,8 @@
                 statusChipClass = 'status-closed';
             }
 
-            // Target Requirement Company Branding Logo
-            var companyLogo = row.client_logo || row.company_logo || row.logo_logical_path || row.logo || '{{ $detailLogo ?? "" }}';
+            // Target Requirement Company Branding Logo (Direct Client Scope Masking)
+            var companyLogo = (this.clientType === 'direct') ? '{{ $detailLogo ?? "" }}' : (row.client_logo || row.company_logo || row.logo_logical_path || row.logo || '{{ $detailLogo ?? "" }}');
             var companyInitial = (companyName && companyName.length > 0) ? companyName.charAt(0).toUpperCase() : 'C';
             var logoHtml = '';
             if (companyLogo && companyLogo.length > 5) {

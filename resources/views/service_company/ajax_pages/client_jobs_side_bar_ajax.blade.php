@@ -59,15 +59,21 @@
 
                 // Department & Client name resolved dynamically (Strictly 0% MySQL Reads)
                 $deptName = $job->department_name ?? ($job->category_name ?? 'Information Technology');
-                $resolvedClient = trim((string) (
-                    $job->client_name 
-                    ?? $job->clients_name 
-                    ?? ($viewModel->clientName ?? '')
-                    ?? $job->client_company 
-                    ?? ''
-                ));
-                if (empty($resolvedClient) && !empty($viewModel->clientName)) {
+                $isDirectClientView = ($custom === 'false') || (isset($viewModel) && $viewModel->clientType === 'direct');
+                if ($isDirectClientView && !empty($viewModel->clientName)) {
+                    // Requirement 2: Strict internal client confidentiality for Agency viewers
                     $resolvedClient = $viewModel->clientName;
+                } else {
+                    $resolvedClient = trim((string) (
+                        $job->client_name 
+                        ?? $job->clients_name 
+                        ?? ($viewModel->clientName ?? '')
+                        ?? $job->client_company 
+                        ?? ''
+                    ));
+                    if (empty($resolvedClient) && !empty($viewModel->clientName)) {
+                        $resolvedClient = $viewModel->clientName;
+                    }
                 }
                 $clientDisplayName = !empty($resolvedClient) ? strtoupper($resolvedClient) : 'CLIENT';
 
