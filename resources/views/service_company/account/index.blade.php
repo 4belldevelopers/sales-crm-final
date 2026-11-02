@@ -5732,6 +5732,10 @@ $(document).ready(function(){
                 }).get();
             }
 
+            if (String(rateTypeClass) === '0') {
+                rateVal = rateVal.map(function() { return '0'; });
+            }
+
             $saveButton.prop('disabled', true).addClass('is-saving').attr('aria-busy', 'true');
 
             $.ajax({
@@ -5775,7 +5779,22 @@ $(document).ready(function(){
                         window.dispatchEvent(new CustomEvent('commercial:saved', { detail: eventDetail }));
                         $editor.get(0).dispatchEvent(new CustomEvent('commercial:saved', { detail: eventDetail }));
 
-                        Swal.fire({toast: true, position: 'top-end', icon: 'success', title: 'Services saved successfully.', showConfirmButton: false, timer: 2200, timerProgressBar: true});
+                        // 1. Direct instantaneous re-hydration of listing page
+                        if (window.ServicesTabEngine && typeof window.ServicesTabEngine.rehydrateServiceCard === 'function') {
+                            window.ServicesTabEngine.rehydrateServiceCard(serviceType, response.commercial_state);
+                        }
+
+                        // 2. Automatically close sliding drawer (#kt_activitiesJob) and return to listing page
+                        if (window.KTDrawer && KTDrawer.getInstance(document.getElementById('kt_activitiesJob'))) {
+                            KTDrawer.getInstance(document.getElementById('kt_activitiesJob')).hide();
+                        }
+                        $('#kt_activitiesJob_close').trigger('click');
+                        $('.cd-drw-close-btn').trigger('click');
+                        $('#kt_activitiesJob').removeClass('drawer-on');
+                        $('.drawer-overlay').remove();
+                        $('body').removeAttr('data-kt-drawer');
+
+                        Swal.fire({toast: true, position: 'top-end', icon: 'success', title: 'Commercial terms saved successfully.', showConfirmButton: false, timer: 2200, timerProgressBar: true});
                         return;
                     }
 

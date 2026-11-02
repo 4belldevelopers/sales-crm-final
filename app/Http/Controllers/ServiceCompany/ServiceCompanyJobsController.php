@@ -16652,18 +16652,30 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
         $countryNames = array_values(array_filter(array_map(fn ($cid) => $countryMap[$cid] ?? null, $countryIds)));
         $currencyCode = \App\Services\CurrencyService::resolveCurrencyCode($salary_currency) ?: 'INR';
 
+        $savedRates = [];
+        if (count($rateVals) > 0 && count($experienceIndexes) > 0) {
+            foreach ($experienceIndexes as $position => $experienceIndex) {
+                if (array_key_exists($position, $rateVals)) {
+                    $savedRates[] = [
+                        'exp' => $experienceIndex,
+                        'rate' => (float) $rateVals[$position],
+                    ];
+                }
+            }
+        }
+
         $commercialState = [
             'commtype' => $commType,
             'service_type' => ($commType === 2) ? 'fulltime' : 'contract',
             'status' => $status,
             'rateType' => (int) $rateType,
             'rate_type_label' => ($commType === 2)
-                ? (((int) $rateType === 2) ? 'Percentage of CTC' : (((int) $rateType === 1) ? 'Fixed Placement Fee' : 'Free / No Placement Fee'))
-                : (((int) $rateType === 2) ? 'Markup on Pay Rate' : (((int) $rateType === 1) ? 'Contract Bill Rate' : 'Pass-Through / Zero Margin')),
+                ? (((int) $rateType === 2) ? 'Percentage of CTC' : (((int) $rateType === 1) ? 'Fixed Placement Fee' : 'No Fee Applicable (Free Placement)'))
+                : (((int) $rateType === 2) ? 'Markup on Pay Rate' : (((int) $rateType === 1) ? 'Contract Bill Rate' : 'Zero Margin (Pass-Through)')),
             'sal_mode' => $sal_mode,
             'sal_mode_label' => ($commType === 2)
-                ? (((int) $rateType === 1 || $sal_mode === 3) ? 'Per Hire' : (((int) $rateType === 0) ? 'Not Applicable' : 'Annual CTC'))
-                : (((int) $sal_mode === 2) ? 'Hourly Staffing' : 'Monthly Staffing'),
+                ? (((int) $rateType === 1 || $sal_mode === 3) ? 'Per Hire' : (((int) $rateType === 0) ? 'Zero Placement Charges' : 'Annual CTC'))
+                : (((int) $rateType === 0) ? 'At-Cost Wage Pass-Through' : (((int) $sal_mode === 2) ? 'Hourly Staffing' : 'Monthly Staffing')),
             'salary_currency' => $salary_currency,
             'currency_code' => $currencyCode,
             'replacement_period_days' => $replacementPeriod,
@@ -16703,6 +16715,7 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
             'payment_terms_days' => $paymentTermsDays,
             'country_count' => count($countryIds),
             'countries' => $countryNames,
+            'rates' => $savedRates,
         ];
 
         return response()->json([
