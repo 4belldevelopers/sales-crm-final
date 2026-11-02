@@ -1171,6 +1171,9 @@
                         @php
                             $firstExperienceIndex = $range['indexes'][0];
                             $rangeRate = data_get($commercialDetails->get($firstExperienceIndex), 'rate', $defaultRate);
+                            if ($isFulltime && $selectedCommercialModel === 1 && ((float) $rangeRate <= 100.0 || (float) $rangeRate === 8.33)) {
+                                $rangeRate = 10000.00;
+                            }
                         @endphp
                         <div class="cd-matrix-tier-card" data-experience-range>
                             <div class="cd-tier-identity">
@@ -1233,7 +1236,12 @@
 
                             <!-- Preserved Hidden Persistence Inputs -->
                             @foreach($range['indexes'] as $experienceIndex)
-                                @php $experienceRate = data_get($commercialDetails->get($experienceIndex), 'rate', $defaultRate); @endphp
+                                @php
+                                    $experienceRate = data_get($commercialDetails->get($experienceIndex), 'rate', $defaultRate);
+                                    if ($isFulltime && $selectedCommercialModel === 1 && ((float) $experienceRate <= 100.0 || (float) $experienceRate === 8.33)) {
+                                        $experienceRate = 10000.00;
+                                    }
+                                @endphp
                                 <input type="hidden"
                                        class="{{ $isFulltime ? 'perecentage_val' : 'rate_val' }}"
                                        name="{{ $isFulltime ? 'perecentage[]' : 'rate[]' }}"
@@ -1482,6 +1490,7 @@
     var billingTrigger = root.querySelector('[data-billing-trigger]');
     var paymentTerms = root.querySelector('[data-payment-terms]');
     var mainStatusInput = root.querySelector('.main_status');
+    var isFT = (root.querySelector('.commType') ? root.querySelector('.commType').value === '2' : false);
     var initialState;
 
     function updateCommercialType() {
@@ -1490,7 +1499,7 @@
         var isFixedFee = modelValue === '1';
         var isFree = modelValue === '0';
         var wasFree = defaultRateInput.disabled;
-        var supportedServiceType = root.querySelector('.commType').value === '2' ? '2' : '1';
+        var supportedServiceType = isFT ? '2' : '1';
 
         root.querySelectorAll('.rateTypeClass').forEach(function (el) {
             el.value = isFree ? supportedServiceType : modelValue;
@@ -1514,6 +1523,16 @@
                 defaultRateInput.value = '10000';
                 defaultRateInput.dispatchEvent(new Event('input'));
             }
+            root.querySelectorAll('[data-experience-range]').forEach(function (rangeRow) {
+                var rangeRate = rangeRow.querySelector('[data-range-rate]');
+                var numRate = Number(rangeRate ? rangeRate.value : 0);
+                if (!numRate || numRate <= 100 || numRate === 8.33) {
+                    if (rangeRate) {
+                        rangeRate.value = defaultRateInput.value || '10000';
+                        rangeRate.dispatchEvent(new Event('input'));
+                    }
+                }
+            });
         } else if (isPercentage && isFT) {
             var currRate = Number(defaultRateInput.value);
             if (!currRate || currRate > 100 || currRate === 10000) {
@@ -1569,8 +1588,6 @@
                 if (appliedOnHelp) appliedOnHelp.textContent = 'No fee basis required';
             }
         }
-
-        var isFT = root.querySelector('.commType').value === '2';
 
         var rateLabelEl = root.querySelector('[data-rate-label]');
         if (rateLabelEl) {
