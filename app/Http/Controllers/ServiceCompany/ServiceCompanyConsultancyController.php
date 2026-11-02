@@ -1312,7 +1312,7 @@ After completing these steps, they will be able to start collaborating with your
         $sharedJobIds = DB::table('recommendation_relation')
             ->where('from_company_id', $company_id)
             ->where('to_company_id', $partnerCompanyId)
-            ->whereIn('final_status', [1, 2])
+            ->where('final_status', 1)
             ->pluck('job_id')
             ->unique()
             ->toArray();
@@ -1335,7 +1335,7 @@ After completing these steps, they will be able to start collaborating with your
             )
             ->where('recommendation_relation.from_company_id', '=', $company_id)
             ->where('recommendation_relation.to_company_id', '=', $partnerCompanyId)
-            ->whereIn('recommendation_relation.final_status', [1, 2])
+            ->where('recommendation_relation.final_status', 1)
             ->orderBy('recommendation_relation.id', 'desc')
             ->limit(50)
             ->get();
