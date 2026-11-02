@@ -93,7 +93,15 @@ class AgencyActivityReadService
 
         // Category Filter
         if ($query->category !== 'all') {
-            $must[] = ['term' => ['category' => strtoupper($query->category)]];
+            if ($query->category === 'pipeline') {
+                $must[] = ['terms' => ['category' => ['CANDIDATES', 'PIPELINE']]];
+            } elseif ($query->category === 'offers') {
+                $must[] = ['terms' => ['category' => ['OFFERS', 'JOINING']]];
+            } elseif ($query->category === 'crm') {
+                $must[] = ['terms' => ['category' => ['CRM', 'ACCOUNT', 'TEAM', 'SERVICES', 'COMMUNICATION', 'CLIENT', 'MARKETPLACE', 'PERFORMANCE', 'COMPLIANCE', 'RELATIONSHIP', 'SYSTEM']]];
+            } else {
+                $must[] = ['term' => ['category' => strtoupper($query->category)]];
+            }
         }
 
         // Timeframe Filter
@@ -232,11 +240,75 @@ class AgencyActivityReadService
         // Icon & Color Resolution per Category
         $uiMeta = $this->resolveCategoryUiMeta($category, $eventType);
 
+        $rawCategoryLower = strtolower($category);
+        $normalizedCategory = match ($rawCategoryLower) {
+            'candidates', 'candidate', 'pipeline' => 'pipeline',
+            'interviews', 'interview' => 'interviews',
+            'offers', 'offer', 'joining' => 'offers',
+            'jobs', 'job' => 'jobs',
+            default => 'crm',
+        };
+
+        $candidate = null;
+        if (! empty($src['related_candidate_id']) || ! empty($src['related_candidate_name'])) {
+            $candidate = [
+                'id' => $src['related_candidate_id'] ?? null,
+                'wise_id' => $src['related_candidate_id'] ?? null,
+                'name' => $src['related_candidate_name'] ?? 'Candidate',
+                'designation' => $src['metadata']['designation'] ?? ($src['new_value']['designation'] ?? ($src['related_job_title'] ?? 'Candidate')),
+            ];
+        }
+
+        $job = null;
+        if (! empty($src['related_job_id']) || ! empty($src['related_job_title'])) {
+            $job = [
+                'id' => $src['related_job_id'] ?? null,
+                'title' => $src['related_job_title'] ?? 'Requisition',
+                'code' => ! empty($src['related_job_id']) ? ('#' . $src['related_job_id']) : '',
+                'status' => $src['metadata']['job_status'] ?? ($src['new_value']['status'] ?? 'active'),
+                'status_label' => $src['metadata']['job_status_label'] ?? ucfirst($src['metadata']['job_status'] ?? ($src['new_value']['status'] ?? 'active')),
+                'total_positions' => (int) ($src['metadata']['total_positions'] ?? 1),
+                'shared_with_agency' => $src['metadata']['shared_with_agency'] ?? ($src['related_agency_name'] ?? null),
+                'shared_by_name' => $src['metadata']['shared_by_name'] ?? null,
+                'shared_by_company' => $src['metadata']['shared_by_company'] ?? null,
+            ];
+        }
+
+        $companyName = $src['metadata']['company_name'] ?? ($src['actor_company_name'] ?? '4Bell Technology');
+        $actor = [
+            'id' => $src['actor_id'] ?? null,
+            'name' => $actorName,
+            'role' => ucwords(str_replace('_', ' ', $actorRole)),
+            'company_name' => $companyName,
+        ];
+
+        $attribution = [
+            'label' => $uiMeta['attribution_label'] ?? ($normalizedCategory === 'jobs' ? 'Created by' : ($normalizedCategory === 'crm' ? 'Logged by' : 'Submitted by')),
+            'name' => $actorName,
+            'company_name' => $companyName,
+        ];
+
+        $transition = [
+            'status' => $src['metadata']['transition_status'] ?? ($src['new_value']['status'] ?? ($normalizedCategory === 'offers' ? 'active' : 'pipeline')),
+            'from_stage_name' => $src['previous_value']['stage'] ?? ($src['previous_value']['status'] ?? ''),
+            'to_stage_name' => $src['new_value']['stage'] ?? ($src['new_value']['status'] ?? ($uiMeta['stage_label'] ?? 'Screening')),
+        ];
+
+        $details = [
+            'compensation' => $src['metadata']['compensation'] ?? ($src['new_value']['compensation'] ?? null),
+            'interview_mode' => $src['metadata']['interview_mode'] ?? ($src['new_value']['interview_mode'] ?? 'Video Call'),
+            'scheduled_time' => $src['metadata']['scheduled_time'] ?? ($src['new_value']['scheduled_time'] ?? null),
+            'feedback' => $src['metadata']['feedback'] ?? ($src['new_value']['feedback'] ?? null),
+            'note_excerpt' => $src['event_description'] ?? ($src['metadata']['note'] ?? null),
+        ];
+
         return [
+            'event_id' => $src['event_uuid'] ?? '',
             'event_uuid' => $src['event_uuid'] ?? '',
             'agency_company_id' => (int) ($src['agency_company_id'] ?? 0),
             'service_company_id' => (int) ($src['service_company_id'] ?? 0),
-            'category' => strtolower($category),
+            'category' => $normalizedCategory,
+            'raw_category' => $rawCategoryLower,
             'category_badge' => $uiMeta['badge_label'],
             'category_color' => $uiMeta['color'],
             'icon_class' => $uiMeta['icon'],
@@ -260,6 +332,14 @@ class AgencyActivityReadService
             'metadata' => $src['metadata'] ?? null,
             'has_diff' => ! empty($src['previous_value']) || ! empty($src['new_value']),
             'agency_activity_sequence' => $src['agency_activity_sequence'] ?? 0,
+            'client_activity_sequence' => (int) ($src['agency_activity_sequence'] ?? 0),
+            'occurred_at' => $createdAt->toIso8601String(),
+            'candidate' => $candidate,
+            'job' => $job,
+            'actor' => $actor,
+            'attribution' => $attribution,
+            'transition' => $transition,
+            'details' => $details,
             'date_formatted' => $dateFormatted,
             'time_formatted' => $timeFormatted,
             'relative_time' => $relativeTime,
@@ -337,6 +417,14 @@ class AgencyActivityReadService
         } catch (\Throwable $e) {
             Log::warning('AgencyActivityReadService: Aggregations failed', ['error' => $e->getMessage()]);
         }
+
+        // Aggregate 6-category UI subtabs matching the Client Drawer architecture
+        $kpis['pipeline'] = $kpis['candidates'] ?? 0;
+        $kpis['offers'] = ($kpis['offers'] ?? 0) + ($kpis['joining'] ?? 0);
+        $kpis['crm'] = ($kpis['account'] ?? 0) + ($kpis['team'] ?? 0) + ($kpis['services'] ?? 0)
+            + ($kpis['communication'] ?? 0) + ($kpis['client'] ?? 0) + ($kpis['marketplace'] ?? 0)
+            + ($kpis['performance'] ?? 0) + ($kpis['compliance'] ?? 0) + ($kpis['relationship'] ?? 0)
+            + ($kpis['system'] ?? 0);
 
         return $kpis;
     }

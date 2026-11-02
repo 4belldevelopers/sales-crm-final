@@ -6,16 +6,14 @@ use App\DTO\ServiceCompany\AgencyAccessContext;
 use App\DTO\ServiceCompany\AgencyActivityQuery;
 use App\Services\AgencyActivityLoggerService;
 use App\Services\ServiceCompany\AgencyActivityReadService;
+use App\Http\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
-class ServiceCompanyAgencyActivityController extends ServiceCompanyBaseController
+class ServiceCompanyAgencyActivityController extends Controller
 {
-    public function __construct()
-    {
-        parent::__construct();
-    }
+    public function __construct() {}
 
     /**
      * CQRS Read Endpoint: Fetch Agency Activity stream, KPIs, and pre-rendered cards HTML
@@ -35,11 +33,14 @@ class ServiceCompanyAgencyActivityController extends ServiceCompanyBaseControlle
             $query = AgencyActivityQuery::fromAuthorizedContext($context, $request);
             $viewModel = $readService->getActivityStream($query, $context);
 
+            $companyTimezone = \App\Helper\GeneralMethod::defaultTimeZone($context->serviceCompanyId);
+
             $html = view('service_company.ajax_pages.agency_activity_cards_ajax', [
                 'viewModel' => $viewModel,
                 'items' => $viewModel->items,
                 'groupedItems' => $viewModel->groupedItems,
                 'cursorSequence' => $query->cursorSequence,
+                'companyTimezone' => $companyTimezone,
             ])->render();
 
             return response()->json([
