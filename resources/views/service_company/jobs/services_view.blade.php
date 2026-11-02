@@ -133,8 +133,8 @@
     display: flex !important;
     align-items: center !important;
     justify-content: space-between !important;
-    gap: 14px !important;
-    flex-wrap: wrap;
+    gap: 16px !important;
+    flex-wrap: nowrap;
 }
 
 .cd-drw-header-left {
@@ -146,13 +146,13 @@
 }
 
 .cd-drw-symbol {
-    width: 42px;
-    height: 42px;
+    width: 40px;
+    height: 40px;
     border-radius: 10px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 14px;
+    font-size: 13.5px;
     font-weight: 700;
     flex-shrink: 0;
     border: 1px solid;
@@ -190,17 +190,6 @@
     margin: 0 !important;
 }
 
-.cd-drw-code-chip {
-    font-size: 10.5px;
-    font-weight: 700;
-    color: #2563eb;
-    background: #eff6ff;
-    border: 1px solid #dbeafe;
-    padding: 1px 7px;
-    border-radius: 6px;
-    font-variant-numeric: tabular-nums;
-}
-
 .cd-drw-scope-pill {
     display: inline-flex;
     align-items: center;
@@ -223,7 +212,7 @@
 .cd-drw-header-right {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 8px;
     flex-shrink: 0;
 }
 
@@ -261,73 +250,9 @@
     color: #94a3b8;
 }
 
-/* Fast Header Status Toggle Box */
-.cd-drw-toggle-box {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    background: #f8fafc;
-    border: 1px solid #e2e8f0;
-    padding: 4px 10px;
-    border-radius: 8px;
-}
-
-.cd-drw-toggle-label {
-    font-size: 10.5px;
-    font-weight: 700;
-    color: {{ $isServiceActive ? '#10b981' : '#64748b' }};
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-    min-width: 48px;
-}
-
-.cd-drw-switch {
-    position: relative;
-    display: inline-block;
-    width: 36px;
-    height: 20px;
-    margin: 0;
-}
-
-.cd-drw-switch input {
-    opacity: 0;
-    width: 0;
-    height: 0;
-}
-
-.cd-drw-switch-slider {
-    position: absolute;
-    cursor: pointer;
-    top: 0; left: 0; right: 0; bottom: 0;
-    background-color: #cbd5e1;
-    transition: .2s;
-    border-radius: 20px;
-}
-
-.cd-drw-switch-slider:before {
-    position: absolute;
-    content: "";
-    height: 14px;
-    width: 14px;
-    left: 3px;
-    bottom: 3px;
-    background-color: white;
-    transition: .2s;
-    border-radius: 50%;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
-}
-
-.cd-drw-switch input:checked + .cd-drw-switch-slider {
-    background-color: #10b981;
-}
-
-.cd-drw-switch input:checked + .cd-drw-switch-slider:before {
-    transform: translateX(16px);
-}
-
 .cd-drw-close-btn {
-    width: 34px;
-    height: 34px;
+    width: 36px;
+    height: 36px;
     border-radius: 8px;
     border: 1px solid #e2e8f0;
     background: #ffffff;
@@ -338,6 +263,7 @@
     cursor: pointer;
     font-size: 14px;
     transition: all 0.15s ease;
+    flex-shrink: 0;
 }
 
 .cd-drw-close-btn:hover {
@@ -347,87 +273,13 @@
 }
 
 /* --------------------------------------------------------------------------
-   TIER 2: DEDICATED SUB-TABS CARD (In-Memory 0ms Tab Switching)
-   -------------------------------------------------------------------------- */
-.cd-drw-tabs-card {
-    background: #ffffff !important;
-    border: 1px solid #e2e8f0 !important;
-    border-radius: 10px !important;
-    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03) !important;
-    padding: 8px 12px !important;
-    margin: 14px 18px 0 18px !important;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-}
-
-.cd-drw-tabs-group {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    flex-wrap: wrap;
-}
-
-.cd-drw-tab-btn {
-    background: #ffffff !important;
-    border: 1px solid #e2e8f0 !important;
-    border-radius: 8px !important;
-    padding: 6px 14px !important;
-    font-size: 11.5px !important;
-    font-weight: 600 !important;
-    color: #475569 !important;
-    display: inline-flex !important;
-    align-items: center !important;
-    gap: 6px !important;
-    cursor: pointer !important;
-    transition: all 0.15s ease !important;
-    min-height: 34px !important;
-}
-
-.cd-drw-tab-btn:hover {
-    background: #f8fafc !important;
-    border-color: #cbd5e1 !important;
-    color: #0f172a !important;
-}
-
-/* Mandatory Single Active Highlight: Metronic Primary Blue (#009ef7) */
-.cd-drw-tab-btn.active {
-    background: #009ef7 !important;
-    border-color: #009ef7 !important;
-    color: #ffffff !important;
-    box-shadow: 0 2px 6px rgba(0, 158, 247, 0.25) !important;
-}
-
-.cd-drw-tab-badge {
-    min-width: 20px;
-    height: 18px;
-    padding: 0 6px;
-    border-radius: 10px;
-    font-size: 10.5px;
-    font-weight: 700;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    font-variant-numeric: tabular-nums;
-    background: #eff6ff;
-    color: #009ef7;
-    transition: all 0.15s ease;
-}
-
-.cd-drw-tab-btn.active .cd-drw-tab-badge {
-    background: rgba(255, 255, 255, 0.28) !important;
-    color: #ffffff !important;
-}
-
-/* --------------------------------------------------------------------------
-   TIER 3: PRIMARY CARD STREAM & DISCRETE SUB-CARDS
+   PRIMARY CARD STREAM & DISCRETE SUB-CARDS
    -------------------------------------------------------------------------- */
 .cd-drw-stream {
     display: flex;
     flex-direction: column;
     gap: 14px;
-    padding: 14px 18px 80px 18px;
+    padding: 16px 20px 24px 20px;
     width: 100%;
 }
 
@@ -857,39 +709,10 @@
     accent-color: #009ef7;
 }
 
-/* --------------------------------------------------------------------------
-   STICKY BOTTOM FOOTER ACTION STRIP
-   -------------------------------------------------------------------------- */
-.cd-drw-footer {
-    position: sticky;
-    bottom: 0;
-    z-index: 40;
-    background: rgba(255, 255, 255, 0.98) !important;
-    backdrop-filter: blur(8px) !important;
-    border-top: 1px solid #e2e8f0 !important;
-    box-shadow: 0 -2px 10px rgba(15, 23, 42, 0.05) !important;
-    padding: 12px 20px !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: space-between !important;
-    gap: 12px !important;
-}
-
-.cd-drw-footer-left {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.cd-drw-footer-right {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-
+/* Action Buttons */
 .cd-drw-btn {
-    height: 38px;
-    padding: 0 16px;
+    height: 36px;
+    padding: 0 14px;
     border-radius: 8px;
     font-size: 12px;
     font-weight: 600;
@@ -902,6 +725,7 @@
     background: #ffffff;
     color: #334155;
     font-family: inherit;
+    white-space: nowrap;
 }
 
 .cd-drw-btn:hover {
@@ -990,7 +814,6 @@
             <div class="cd-drw-title-meta">
                 <div class="cd-drw-title-row">
                     <h3 class="cd-drw-title">Edit {{ $isFulltime ? 'Fulltime' : 'Contract' }} Hiring Services</h3>
-                    <span class="cd-drw-code-chip">#SRV-{{ $isFulltime ? 'FT01' : 'CT02' }}</span>
                     <span class="cd-drw-scope-pill">
                         <svg class="cd-svg-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg> Direct Client Scope
                     </span>
@@ -1002,63 +825,41 @@
         </div>
 
         <div class="cd-drw-header-right">
-            <!-- Dynamic Search Sub-Card -->
-            <div class="cd-drw-search-subcard">
-                <svg class="cd-svg-icon text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
-                <input type="search" class="cd-drw-search-input" id="drwGlobalSearch" placeholder="Quick find field, rate, or tier..." />
-            </div>
-
-            <!-- Fast Status Toggle Sub-Card -->
-            <div class="cd-drw-toggle-box">
-                <span class="cd-drw-toggle-label" id="toggleStatusText">{{ $isServiceActive ? 'ACTIVE' : 'INACTIVE' }}</span>
-                <label class="cd-drw-switch">
-                    <input type="checkbox" id="headerStatusToggle" {{ $isServiceActive ? 'checked' : '' }}>
-                    <span class="cd-drw-switch-slider"></span>
-                </label>
-            </div>
-
+            <button type="button" class="cd-drw-btn" data-commercial-cancel>
+                Cancel
+            </button>
+            <button type="button" class="cd-drw-btn" data-commercial-reset title="Reset to saved values">
+                <svg class="cd-svg-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                Reset
+            </button>
+            <button type="button"
+                    id="form-submit"
+                    class="btn btn-primary fw-bold copy_current_selected_applicant cd-drw-btn btn-primary"
+                    aria-live="polite">
+                <span class="indicator-label">
+                    <svg class="cd-svg-icon me-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                    Save Commercial Terms
+                </span>
+                <span class="indicator-progress">
+                    <span class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>
+                    Saving Commercials...
+                </span>
+            </button>
             <button type="button"
                     class="cd-drw-close-btn"
                     aria-label="Close drawer"
                     title="Close drawer"
                     onclick="if (window.KTDrawer && KTDrawer.getInstance(document.getElementById('kt_activitiesJob'))) { KTDrawer.getInstance(document.getElementById('kt_activitiesJob')).hide(); } else { $('#kt_activitiesJob > .card > #kt_activities_header #kt_activitiesJob_close').trigger('click'); }">
-                ✕
+                <svg class="cd-svg-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
             </button>
         </div>
     </header>
 
-    <!-- ====================================================================
-         TIER 2: DEDICATED SUB-TABS CARD (In-Memory 0ms Tab Switching)
-         ==================================================================== -->
-    <div class="cd-drw-tabs-card">
-        <div class="cd-drw-tabs-group">
-            <button type="button" class="cd-drw-tab-btn active" data-drawer-tab="all">
-                <svg class="cd-svg-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>
-                <span>All Sections</span>
-            </button>
-            <button type="button" class="cd-drw-tab-btn" data-drawer-tab="model">
-                <svg class="cd-svg-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                <span>Commercial Model & Rates</span>
-            </button>
-            <button type="button" class="cd-drw-tab-btn" data-drawer-tab="experience">
-                <svg class="cd-svg-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
-                <span>Experience Matrix</span>
-            </button>
-            <button type="button" class="cd-drw-tab-btn" data-drawer-tab="policy">
-                <svg class="cd-svg-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
-                <span>Replacement & Terms</span>
-            </button>
-            <button type="button" class="cd-drw-tab-btn" data-drawer-tab="countries">
-                <svg class="cd-svg-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                <span>Country Coverage</span>
-                <span class="cd-drw-tab-badge" id="drwCountryCountBadge">{{ $activeCountryCount }}</span>
-            </button>
-        </div>
-    </div>
-
     <!-- Hidden State Inputs for Controller Action Binding -->
     <input class="main_status" type="hidden" value="{{ $isServiceActive ? 1 : 0 }}">
+    <input class="main_status" type="checkbox" checked style="display:none;" value="{{ $isServiceActive ? 1 : 0 }}">
     <input class="rateTypeClass" type="hidden" value="{{ $rateType }}">
+    <input class="rateTypeClass" type="radio" checked style="display:none;" value="{{ $rateType }}">
     <input class="updateId" type="hidden" value="{{ $commercial['id'] ?? '' }}">
     <input class="commType" type="hidden" value="{{ $sectionCheck }}">
 
@@ -1491,36 +1292,6 @@
 
     </main>
 
-    <!-- ====================================================================
-         STICKY FOOTER ACTION STRIP
-         ==================================================================== -->
-    <footer class="cd-drw-footer">
-        <div class="cd-drw-footer-left">
-            <button type="button" class="cd-drw-btn" data-commercial-cancel>
-                Cancel
-            </button>
-            <button type="button" class="cd-drw-btn" data-commercial-reset>
-                <svg class="cd-svg-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
-                Reset to Saved Values
-            </button>
-        </div>
-        <div class="cd-drw-footer-right">
-            <button type="button"
-                    id="form-submit"
-                    class="btn btn-primary fw-bold copy_current_selected_applicant cd-drw-btn btn-primary"
-                    aria-live="polite">
-                <span class="indicator-label">
-                    <svg class="cd-svg-icon me-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-                    Save Commercial Terms
-                </span>
-                <span class="indicator-progress">
-                    <span class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>
-                    Saving Commercials...
-                </span>
-            </button>
-        </div>
-    </footer>
-
 </div>
 
 <!-- ========================================================================
@@ -1550,22 +1321,7 @@
     var fixedFeeFrequency = root.querySelector('[data-fixed-fee-frequency]');
     var paymentTerms = root.querySelector('[data-payment-terms]');
     var mainStatusInput = root.querySelector('.main_status');
-    var headerStatusToggle = root.querySelector('#headerStatusToggle');
-    var toggleStatusText = root.querySelector('#toggleStatusText');
-    var globalSearch = root.querySelector('#drwGlobalSearch');
     var initialState;
-
-    // Fast Header Status Toggle Synchronization
-    if (headerStatusToggle) {
-        headerStatusToggle.addEventListener('change', function () {
-            var isChecked = headerStatusToggle.checked;
-            if (mainStatusInput) mainStatusInput.value = isChecked ? 1 : 0;
-            if (toggleStatusText) {
-                toggleStatusText.textContent = isChecked ? 'ACTIVE' : 'INACTIVE';
-                toggleStatusText.style.color = isChecked ? '#10b981' : '#64748b';
-            }
-        });
-    }
 
     function updateCommercialType() {
         var modelValue = commercialType.value;
@@ -1575,7 +1331,9 @@
         var wasFree = defaultRateInput.disabled;
         var supportedServiceType = root.querySelector('.commType').value === '2' ? '2' : '1';
 
-        root.querySelector('.rateTypeClass').value = isFree ? supportedServiceType : modelValue;
+        root.querySelectorAll('.rateTypeClass').forEach(function (el) {
+            el.value = isFree ? supportedServiceType : modelValue;
+        });
 
         root.querySelectorAll('[data-commercial-model]').forEach(function (option) {
             var active = option.dataset.commercialModel === modelValue;
@@ -1675,12 +1433,13 @@
 
         if (mainStatusInput) {
             mainStatusInput.value = initialState.mainStatus;
-            var isChk = String(initialState.mainStatus) === '1';
-            if (headerStatusToggle) headerStatusToggle.checked = isChk;
-            if (toggleStatusText) {
-                toggleStatusText.textContent = isChk ? 'ACTIVE' : 'INACTIVE';
-                toggleStatusText.style.color = isChk ? '#10b981' : '#64748b';
-            }
+            root.querySelectorAll('.main_status').forEach(function (el) {
+                if (el.type === 'checkbox') {
+                    el.checked = String(initialState.mainStatus) === '1';
+                } else {
+                    el.value = initialState.mainStatus;
+                }
+            });
         }
 
         root.querySelectorAll('.rate_val,.perecentage_val').forEach(function (rate, index) {
@@ -1920,48 +1679,6 @@
         });
     }
 
-    // Tier 1 Global Field Search
-    if (globalSearch) {
-        var searchDebounce;
-        globalSearch.addEventListener('input', function () {
-            clearTimeout(searchDebounce);
-            searchDebounce = setTimeout(function () {
-                var query = globalSearch.value.trim().toLowerCase();
-                if (!query) {
-                    root.querySelectorAll('.cd-drw-card').forEach(function (c) { c.style.display = 'block'; });
-                    return;
-                }
-                root.querySelectorAll('.cd-drw-card').forEach(function (card) {
-                    var cardText = card.textContent.toLowerCase();
-                    card.style.display = (cardText.indexOf(query) !== -1) ? 'block' : 'none';
-                });
-            }, 250);
-        });
-    }
-
-    // Tier 2 In-Memory Sub-Tab Switching (0ms RAM Switching)
-    root.querySelectorAll('.cd-drw-tab-btn').forEach(function (tabBtn) {
-        tabBtn.addEventListener('click', function () {
-            root.querySelectorAll('.cd-drw-tab-btn').forEach(function (btn) { btn.classList.remove('active'); });
-            tabBtn.classList.add('active');
-
-            var target = tabBtn.dataset.drawerTab;
-            var allSections = root.querySelectorAll('.cd-drw-card');
-
-            if (target === 'all') {
-                allSections.forEach(function (sec) { sec.style.display = 'block'; });
-            } else {
-                allSections.forEach(function (sec) {
-                    var matches = (sec.dataset.sectionCategory === target);
-                    sec.style.display = matches ? 'block' : 'none';
-                });
-            }
-
-            var stream = root.querySelector('.cd-drw-stream');
-            if (stream) stream.scrollTop = 0;
-        });
-    });
-
     root.querySelectorAll('[data-commercial-reset]').forEach(function (button) {
         button.addEventListener('click', restoreInitialState);
     });
@@ -1969,8 +1686,16 @@
     var cancelBtn = root.querySelector('[data-commercial-cancel]');
     if (cancelBtn) {
         cancelBtn.addEventListener('click', function () {
-            var closeBtn = root.querySelector('.cd-drw-close-btn');
-            if (closeBtn) closeBtn.click();
+            if (window.KTDrawer && KTDrawer.getInstance(document.getElementById('kt_activitiesJob'))) {
+                KTDrawer.getInstance(document.getElementById('kt_activitiesJob')).hide();
+            } else {
+                var closeBtn = root.querySelector('.cd-drw-close-btn');
+                if (closeBtn) {
+                    closeBtn.click();
+                } else {
+                    $('#kt_activitiesJob_close').trigger('click');
+                }
+            }
         });
     }
 

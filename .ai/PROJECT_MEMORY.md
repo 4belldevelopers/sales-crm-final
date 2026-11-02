@@ -86,6 +86,19 @@ Last updated: 2026-10-22 (Super Admin Companies Page UI Redesign, 100% CQRS Read
     - `scratch/test_phase2_cqrs_verification.php` verified 7/7 tests passed (0 failures).
     - Pint code linter passed (100% clean).
 
+- *2026-11-02* — **Commercials Services Drawer UX & Header Streamlining (100% COMPLETED & VERIFIED)**:
+  - **Module & Scope**: Service Company Hiring Services Drawer (`resources/views/service_company/jobs/services_view.blade.php`, `resources/views/service_company/jobs/services.blade.php`, `resources/views/service_company/account/index.blade.php`).
+  - **UX Streamlining & Layout Fixes**:
+    - **Removed Tier 2 Sub-Tabs Card**: Completely removed `.cd-drw-tabs-card` (containing "All Sections", "Commercial Model & Rates", "Experience Matrix", "Replacement & Terms", and "Country Coverage" tab buttons) so that all 4 commercial cards stream sequentially without redundant tab bars.
+    - **Removed Header Search Bar**: Eliminated `#drwGlobalSearch` and `.cd-drw-search-subcard` from the drawer header. The in-card Country Coverage search bar remains dedicated to country filtering.
+    - **Removed Code Chip**: Removed `#SRV-CT02` / `#SRV-FT01` chip (`.cd-drw-code-chip`) from the drawer title row.
+    - **Removed Header Active Toggle**: Removed visual `ACTIVE` switch and toggle box (`.cd-drw-toggle-box`) from the drawer header. Active/inactive state is authoritatively held by `<input class="main_status">` and controlled from the parent page card switch (`#switch_fulltime` / `#switch_contract`).
+    - **Header Action Strip**: Moved `Cancel`, `Reset` (`data-commercial-reset`), and `Save Commercial Terms` (`#form-submit`, `.copy_current_selected_applicant`, `.cd-drw-btn.btn-primary`) directly into the top sticky header (`.cd-drw-header-right`) next to the close button (`✕`), eliminating the need to scroll to the bottom on 15.6" screens (`1366×768` and `1920×1080`).
+    - **Eliminated Bottom Sticky Footer**: Completely removed the redundant bottom footer strip (`.cd-drw-footer`), adjusting `.cd-drw-stream` bottom padding from 80px to 24px.
+    - **Backward-Compatible State Bindings**: Added fallback checkbox/radio hidden inputs (`main_status`, `rateTypeClass`) so legacy jQuery `:checked` selectors in `services.blade.php` continue to resolve cleanly while preserving CQRS state.
+    - **Real-Time Cross-Page Sync**: `services.blade.php` and `account/index.blade.php` dispatch canonical `commercial:saved` event on successful save and cleanly dismiss the Metronic drawer via `KTDrawer.getInstance().hide()` / `$('#kt_activitiesJob_close').trigger('click')`.
+  - **Verification**: `php -l` passed on all blade files, 10/10 PASS on specialized recruitment sync, 10/10 PASS on Phase 1 verification, 7/7 PASS on Phase 2 CQRS verification.
+
 - *2026-11-02* — **God-Level Commercials Engine & Multi-Page Real-Time Sync (Phase 1 COMPLETED & VERIFIED)**:
   - **Module & Scope**: Service Company Hiring Services & Commercials Drawer (`resources/views/service_company/jobs/services_view.blade.php`), Parent Services Tab (`resources/views/service_company/account/v2/tabs/services.blade.php`), Account Save Handler (`resources/views/service_company/account/index.blade.php`), and Write Controller (`app/Http/Controllers/ServiceCompany/ServiceCompanyJobsController.php`).
   - **Visual & UI/UX Integrity**:
