@@ -50,29 +50,49 @@ class CompanyRepresentativeService
             Log::warning("CompanyRepresentativeService: cache read error for {$companyId}: ".$e->getMessage());
         }
 
-        // 1. Check persistent tags in company_tags
-        $tags = DB::table('company_tags')
-            ->where('company_id', $companyId)
-            ->where(function ($q) {
-                $q->where('tag_name', 'like', 'rep:client:%')
-                    ->orWhere('tag_name', 'like', 'rep:agency:%');
-            })
-            ->pluck('tag_name')
-            ->toArray();
-
+        // 1. Check authoritative assignments in company_marketplace_contact_assignments first (Phase 1 bridge)
         $clientRepUserId = null;
         $agencyRepUserId = null;
 
-        foreach ($tags as $tag) {
-            if (str_starts_with($tag, 'rep:client:')) {
-                $uid = (int) str_replace('rep:client:', '', $tag);
-                if ($uid > 0) {
-                    $clientRepUserId = $uid;
-                }
-            } elseif (str_starts_with($tag, 'rep:agency:')) {
-                $uid = (int) str_replace('rep:agency:', '', $tag);
-                if ($uid > 0) {
-                    $agencyRepUserId = $uid;
+        try {
+            $clientRepUserId = DB::table('company_marketplace_contact_assignments')
+                ->where('company_id', $companyId)
+                ->where('channel', 'client')
+                ->where('priority', 'primary')
+                ->where('is_active', 1)
+                ->value('user_id');
+
+            $agencyRepUserId = DB::table('company_marketplace_contact_assignments')
+                ->where('company_id', $companyId)
+                ->where('channel', 'agency')
+                ->where('priority', 'primary')
+                ->where('is_active', 1)
+                ->value('user_id');
+        } catch (\Throwable $e) {
+        }
+
+        // 2. Fallback to persistent tags in company_tags if not set in assignments
+        if (! $clientRepUserId || ! $agencyRepUserId) {
+            $tags = DB::table('company_tags')
+                ->where('company_id', $companyId)
+                ->where(function ($q) {
+                    $q->where('tag_name', 'like', 'rep:client:%')
+                        ->orWhere('tag_name', 'like', 'rep:agency:%');
+                })
+                ->pluck('tag_name')
+                ->toArray();
+
+            foreach ($tags as $tag) {
+                if (! $clientRepUserId && str_starts_with($tag, 'rep:client:')) {
+                    $uid = (int) str_replace('rep:client:', '', $tag);
+                    if ($uid > 0) {
+                        $clientRepUserId = $uid;
+                    }
+                } elseif (! $agencyRepUserId && str_starts_with($tag, 'rep:agency:')) {
+                    $uid = (int) str_replace('rep:agency:', '', $tag);
+                    if ($uid > 0) {
+                        $agencyRepUserId = $uid;
+                    }
                 }
             }
         }
@@ -159,6 +179,13 @@ class CompanyRepresentativeService
                 'updated_at' => now(),
             ]);
         });
+
+        // Phase 1 Dual-Write: Mirror to company_marketplace_contact_assignments
+        try {
+            app(MarketplaceContactVisibilityService::class)->assignChannel($companyId, $userId, $type, 'public', 'primary', true);
+        } catch (\Throwable $e) {
+            Log::warning('CompanyRepresentativeService: setDefaultRepresentative dual-write error: '.$e->getMessage());
+        }
 
         // Invalidate Cache
         $this->invalidateTenantRepresentativeCache($companyId);
@@ -461,26 +488,58 @@ class CompanyRepresentativeService
         } catch (\Throwable $e) {
         }
 
+        $rolesMap = [];
+
+        // 1. Read authoritative assignments from company_marketplace_contact_assignments
+        try {
+            $assignments = DB::table('company_marketplace_contact_assignments')
+                ->where('company_id', $companyId)
+                ->where('is_active', 1)
+                ->get(['user_id', 'channel']);
+
+            foreach ($assignments as $a) {
+                $uid = (int) $a->user_id;
+                $ch = strtolower(trim((string) $a->channel));
+                if ($uid > 0 && ! empty($ch)) {
+                    if (! isset($rolesMap[$uid])) {
+                        $rolesMap[$uid] = [];
+                    }
+                    if (! in_array($ch, $rolesMap[$uid], true)) {
+                        $rolesMap[$uid][] = $ch;
+                    }
+                    // Bidirectional canonical & legacy synonyms
+                    if ($ch === 'bench' && ! in_array('recruitment', $rolesMap[$uid], true)) {
+                        $rolesMap[$uid][] = 'recruitment';
+                    } elseif ($ch === 'recruitment' && ! in_array('bench', $rolesMap[$uid], true)) {
+                        $rolesMap[$uid][] = 'bench';
+                    } elseif ($ch === 'agency' && ! in_array('vendor', $rolesMap[$uid], true)) {
+                        $rolesMap[$uid][] = 'vendor';
+                    } elseif ($ch === 'vendor' && ! in_array('agency', $rolesMap[$uid], true)) {
+                        $rolesMap[$uid][] = 'agency';
+                    }
+                }
+            }
+        } catch (\Throwable $e) {
+        }
+
+        // 2. Read fallback tags from company_tags
         $tags = DB::table('company_tags')
             ->where('company_id', $companyId)
             ->where(function ($q) {
                 $q->where('tag_name', 'like', 'rep:client:%')
                     ->orWhere('tag_name', 'like', 'rep:vendor:%')
                     ->orWhere('tag_name', 'like', 'rep:agency:%')
+                    ->orWhere('tag_name', 'like', 'rep:bench:%')
                     ->orWhere('tag_name', 'like', 'rep:recruitment:%')
                     ->orWhere('tag_name', 'like', 'rep:finance:%');
             })
             ->pluck('tag_name')
             ->toArray();
 
-        $rolesMap = [];
         foreach ($tags as $tag) {
             $parts = explode(':', $tag);
             if (count($parts) === 3 && $parts[0] === 'rep') {
-                $type = $parts[1];
-                if ($type === 'agency') {
-                    $type = 'vendor';
-                }
+                $type = strtolower(trim($parts[1]));
                 $uid = (int) $parts[2];
                 if ($uid > 0) {
                     if (! isset($rolesMap[$uid])) {
@@ -488,6 +547,16 @@ class CompanyRepresentativeService
                     }
                     if (! in_array($type, $rolesMap[$uid], true)) {
                         $rolesMap[$uid][] = $type;
+                    }
+                    // Bidirectional synonyms
+                    if ($type === 'bench' && ! in_array('recruitment', $rolesMap[$uid], true)) {
+                        $rolesMap[$uid][] = 'recruitment';
+                    } elseif ($type === 'recruitment' && ! in_array('bench', $rolesMap[$uid], true)) {
+                        $rolesMap[$uid][] = 'bench';
+                    } elseif ($type === 'agency' && ! in_array('vendor', $rolesMap[$uid], true)) {
+                        $rolesMap[$uid][] = 'vendor';
+                    } elseif ($type === 'vendor' && ! in_array('agency', $rolesMap[$uid], true)) {
+                        $rolesMap[$uid][] = 'agency';
                     }
                 }
             }
@@ -511,6 +580,9 @@ class CompanyRepresentativeService
             }
             if (! in_array('vendor', $rolesMap[$aId], true)) {
                 $rolesMap[$aId][] = 'vendor';
+            }
+            if (! in_array('agency', $rolesMap[$aId], true)) {
+                $rolesMap[$aId][] = 'agency';
             }
         }
 
@@ -541,21 +613,50 @@ class CompanyRepresentativeService
         } catch (\Throwable $e) {
         }
 
+        $prioMap = [];
+
+        // 1. Read authoritative assignments from company_marketplace_contact_assignments
+        try {
+            $assignments = DB::table('company_marketplace_contact_assignments')
+                ->where('company_id', $companyId)
+                ->where('is_active', 1)
+                ->get(['user_id', 'channel', 'priority']);
+
+            foreach ($assignments as $a) {
+                $uid = (int) $a->user_id;
+                $ch = strtolower(trim((string) $a->channel));
+                $prio = ucfirst(strtolower(trim((string) ($a->priority ?? 'Secondary'))));
+                if ($uid > 0 && ! empty($ch)) {
+                    if (! isset($prioMap[$uid])) {
+                        $prioMap[$uid] = [];
+                    }
+                    $prioMap[$uid][$ch] = $prio;
+                    if ($ch === 'bench') {
+                        $prioMap[$uid]['recruitment'] = $prio;
+                    } elseif ($ch === 'recruitment') {
+                        $prioMap[$uid]['bench'] = $prio;
+                    } elseif ($ch === 'agency') {
+                        $prioMap[$uid]['vendor'] = $prio;
+                    } elseif ($ch === 'vendor') {
+                        $prioMap[$uid]['agency'] = $prio;
+                    }
+                }
+            }
+        } catch (\Throwable $e) {
+        }
+
+        // 2. Read fallback tags from company_tags
         $tags = DB::table('company_tags')
             ->where('company_id', $companyId)
             ->where('tag_name', 'like', 'rep_prio:%')
             ->pluck('tag_name')
             ->toArray();
 
-        $prioMap = [];
         foreach ($tags as $tag) {
             $parts = explode(':', $tag);
             // rep_prio:{channel}:{uid}:{priority}
             if (count($parts) === 4 && $parts[0] === 'rep_prio') {
-                $ch = $parts[1];
-                if ($ch === 'vendor') {
-                    $ch = 'agency';
-                }
+                $ch = strtolower(trim($parts[1]));
                 $uid = (int) $parts[2];
                 $prio = ucfirst(strtolower($parts[3]));
                 if ($uid > 0) {
@@ -565,6 +666,12 @@ class CompanyRepresentativeService
                     $prioMap[$uid][$ch] = $prio;
                     if ($ch === 'agency') {
                         $prioMap[$uid]['vendor'] = $prio;
+                    } elseif ($ch === 'vendor') {
+                        $prioMap[$uid]['agency'] = $prio;
+                    } elseif ($ch === 'bench') {
+                        $prioMap[$uid]['recruitment'] = $prio;
+                    } elseif ($ch === 'recruitment') {
+                        $prioMap[$uid]['bench'] = $prio;
                     }
                 }
             }
@@ -580,7 +687,7 @@ class CompanyRepresentativeService
 
     /**
      * Set / update communication channel roles & priorities for a specific user.
-     * Channels can be any combination of: ['client', 'agency', 'vendor', 'recruitment', 'finance']
+     * Channels can be any combination of: ['client', 'agency', 'vendor', 'bench', 'recruitment', 'finance']
      * Priorities: [ 'client' => 'Primary', 'agency' => 'Secondary', ... ]
      */
     public function setUserCommunicationRoles(int $companyId, int $userId, array $channels, array $priorities = []): array
@@ -589,8 +696,20 @@ class CompanyRepresentativeService
             return ['status' => 'error', 'message' => 'Invalid company or user ID.'];
         }
 
-        $validChannels = ['client', 'agency', 'vendor', 'recruitment', 'finance'];
+        $validChannels = ['client', 'agency', 'vendor', 'bench', 'recruitment', 'finance'];
         $cleanChannels = array_values(array_intersect($validChannels, array_map('strtolower', array_map('trim', $channels))));
+
+        // Normalize synonyms bidirectionally
+        if (in_array('bench', $cleanChannels, true) && ! in_array('recruitment', $cleanChannels, true)) {
+            $cleanChannels[] = 'recruitment';
+        } elseif (in_array('recruitment', $cleanChannels, true) && ! in_array('bench', $cleanChannels, true)) {
+            $cleanChannels[] = 'bench';
+        }
+        if (in_array('agency', $cleanChannels, true) && ! in_array('vendor', $cleanChannels, true)) {
+            $cleanChannels[] = 'vendor';
+        } elseif (in_array('vendor', $cleanChannels, true) && ! in_array('agency', $cleanChannels, true)) {
+            $cleanChannels[] = 'agency';
+        }
 
         // Validate user belongs to company and is active
         $user = DB::table('users')
@@ -611,6 +730,7 @@ class CompanyRepresentativeService
                     $q->where('tag_name', 'rep:client:'.$userId)
                         ->orWhere('tag_name', 'rep:vendor:'.$userId)
                         ->orWhere('tag_name', 'rep:agency:'.$userId)
+                        ->orWhere('tag_name', 'rep:bench:'.$userId)
                         ->orWhere('tag_name', 'rep:recruitment:'.$userId)
                         ->orWhere('tag_name', 'rep:finance:'.$userId)
                         ->orWhere('tag_name', 'like', 'rep_prio:%:'.$userId.':%');
@@ -628,7 +748,7 @@ class CompanyRepresentativeService
                     'updated_at' => $now,
                 ];
 
-                $prioRaw = $priorities[$ch] ?? ($priorities['agency'] ?? ($priorities['vendor'] ?? 'Primary'));
+                $prioRaw = $priorities[$ch] ?? ($priorities['agency'] ?? ($priorities['vendor'] ?? ($priorities['bench'] ?? ($priorities['recruitment'] ?? 'Primary'))));
                 $prio = ucfirst(strtolower(trim((string) $prioRaw)));
                 if (! in_array($prio, ['Primary', 'Secondary', 'Backup'], true)) {
                     $prio = 'Primary';
@@ -640,25 +760,31 @@ class CompanyRepresentativeService
                     'created_at' => $now,
                     'updated_at' => $now,
                 ];
-
-                if (($ch === 'agency' || $ch === 'vendor') && ! in_array('vendor', $cleanChannels, true)) {
-                    $inserts[] = [
-                        'company_id' => $companyId,
-                        'tag_name' => "rep:vendor:{$userId}",
-                        'created_at' => $now,
-                        'updated_at' => $now,
-                    ];
-                    $inserts[] = [
-                        'company_id' => $companyId,
-                        'tag_name' => "rep_prio:vendor:{$userId}:{$prio}",
-                        'created_at' => $now,
-                        'updated_at' => $now,
-                    ];
-                }
             }
 
             if (! empty($inserts)) {
                 DB::table('company_tags')->insert($inserts);
+            }
+
+            // Phase 1 Dual-Write: Mirror to company_marketplace_contact_assignments
+            try {
+                $visService = app(\App\Services\MarketplaceContactVisibilityService::class);
+                foreach (['client', 'agency', 'bench'] as $mCh) {
+                    $legacyKey = ($mCh === 'agency') ? 'vendor' : ($mCh === 'bench' ? 'recruitment' : $mCh);
+                    if (in_array($mCh, $cleanChannels, true) || in_array($legacyKey, $cleanChannels, true)) {
+                        $prioRaw = $priorities[$mCh] ?? ($priorities[$legacyKey] ?? 'Primary');
+                        $visService->assignChannel($companyId, $userId, $mCh, 'public', $prioRaw, true);
+                    } else {
+                        // Channel is not selected for this user; delete assignment if exists
+                        DB::table('company_marketplace_contact_assignments')
+                            ->where('company_id', $companyId)
+                            ->where('user_id', $userId)
+                            ->where('channel', $mCh)
+                            ->delete();
+                    }
+                }
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::warning('CompanyRepresentativeService: dual-write error: '.$e->getMessage());
             }
         });
 

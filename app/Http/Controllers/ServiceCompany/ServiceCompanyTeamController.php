@@ -59,8 +59,8 @@ class ServiceCompanyTeamController extends ServiceCompanyBaseController
             function () use ($companyId) {
                 $status = User::query()->where('company_id', $companyId)
                     ->selectRaw('COUNT(*) as total')
-                    ->selectRaw("SUM(status = 'active' AND (email_verification_code IS NULL OR email_verification_code = '')) as active")
-                    ->selectRaw("SUM(status = 'inactive' AND (email_verification_code IS NULL OR email_verification_code = '')) as inactive")
+                    ->selectRaw("SUM(status = 'active' AND (password IS NOT NULL AND password != '') AND (email_verification_code IS NULL OR email_verification_code = '')) as active")
+                    ->selectRaw("SUM(status = 'inactive' AND (password IS NOT NULL AND password != '') AND (email_verification_code IS NULL OR email_verification_code = '')) as inactive")
                     ->selectRaw("SUM((email_verification_code IS NOT NULL AND email_verification_code != '') OR (password = '' OR password IS NULL)) as invited")
                     ->first();
 
@@ -88,7 +88,7 @@ class ServiceCompanyTeamController extends ServiceCompanyBaseController
                     ->where('from_user_id', '>', 0)
                     ->distinct()
                     ->pluck('from_user_id')
-                    ->map(fn($id) => (int) $id)
+                    ->map(fn ($id) => (int) $id)
                     ->toArray();
 
                 $allRepIds = array_unique(array_merge($repUserIds, $agencySharerIds));
@@ -99,30 +99,58 @@ class ServiceCompanyTeamController extends ServiceCompanyBaseController
                 $financeCount = 0;
 
                 foreach ($allRolesMap as $uid => $channels) {
-                    if (in_array('client', $channels, true)) $clientCount++;
-                    if (in_array('vendor', $channels, true)) $vendorCount++;
-                    if (in_array('finance', $channels, true)) $financeCount++;
+                    if (in_array('client', $channels, true)) {
+                        $clientCount++;
+                    }
+                    if (in_array('vendor', $channels, true) || in_array('agency', $channels, true)) {
+                        $vendorCount++;
+                    }
+                    if (in_array('finance', $channels, true)) {
+                        $financeCount++;
+                    }
                 }
 
                 // If default reps not explicitly in tags, ensure at least 1 count
-                if ($clientCount === 0 && !empty($defaults['client_rep_id'])) $clientCount = 1;
-                if ($vendorCount === 0 && !empty($defaults['agency_rep_id'])) $vendorCount = 1;
+                if ($clientCount === 0 && ! empty($defaults['client_rep_id'])) {
+                    $clientCount = 1;
+                }
+                if ($vendorCount === 0 && ! empty($defaults['agency_rep_id'])) {
+                    $vendorCount = 1;
+                }
 
-                // Recruitment members: Active recruiters / sourcers (non-root)
+                // Bench / Inhouse Talent members
+                $benchCount = 0;
+                foreach ($allRolesMap as $uid => $channels) {
+                    if (in_array('bench', $channels, true) || in_array('recruitment', $channels, true)) {
+                        $benchCount++;
+                    }
+                }
+
+                // Recruitment members: Active recruiters / sourcers (non-root with password set)
                 $recruitmentCount = User::query()
                     ->where('company_id', $companyId)
                     ->where('status', 'active')
                     ->where('root_user', '!=', 1)
+                    ->whereNotNull('password')
+                    ->where('password', '!=', '')
+                    ->where(function ($q) {
+                        $q->whereNull('email_verification_code')->orWhere('email_verification_code', '');
+                    })
                     ->count();
 
+                $totalUsers = (int) ($status->total ?? 0);
+                $finalBenchCount = $benchCount > 0 ? $benchCount : ($recruitmentCount > 0 ? $recruitmentCount : ($totalUsers > 0 ? 1 : 0));
+
                 return [
-                    'total' => (int) ($status->total ?? 0),
+                    'total' => $totalUsers,
                     'active' => (int) ($status->active ?? 0),
                     'inactive' => (int) ($status->inactive ?? 0),
                     'invited' => (int) ($status->invited ?? 0),
-                    'recruitment' => (int) max($recruitmentCount, 1),
-                    'client' => (int) max($clientCount, 1),
-                    'vendor' => (int) max($vendorCount, 1),
+                    'recruitment' => (int) $finalBenchCount,
+                    'bench' => (int) $finalBenchCount,
+                    'client' => (int) ($clientCount > 0 ? $clientCount : ($totalUsers > 0 ? 1 : 0)),
+                    'vendor' => (int) ($vendorCount > 0 ? $vendorCount : ($totalUsers > 0 ? 1 : 0)),
+                    'agency' => (int) ($vendorCount > 0 ? $vendorCount : ($totalUsers > 0 ? 1 : 0)),
                     'finance' => (int) $financeCount,
                     'suspended' => 0,
                     'captain' => (int) $captain,
@@ -153,7 +181,7 @@ class ServiceCompanyTeamController extends ServiceCompanyBaseController
 
     public function teamDelete(Request $request)
     {
-        $company_id = $this->user->company_id;
+        $company_id = (int) ($this->user ? $this->user->company_id : (auth()->user() ? auth()->user()->company_id : 0));
         $arr = (array) $request->arr;
 
         if (count($arr) > 0) {
@@ -171,6 +199,7 @@ class ServiceCompanyTeamController extends ServiceCompanyBaseController
                 mutationCallback: function () use ($company_id, $arr) {
                     DB::table('users')
                         ->where('company_id', $company_id)
+                        ->where('root_user', '!=', 1)
                         ->whereIn('id', $arr)
                         ->update(['status' => 'inactive', 'working_status' => 0]);
 
@@ -228,11 +257,12 @@ class ServiceCompanyTeamController extends ServiceCompanyBaseController
 
         // abort_if(Gate::denies('view_team'), 403);
         abort_if(Gate::denies('view_team'), 403);
-        $company_id = $this->user->company_id;
-        $searchTerms = request('cus_search');
+        $currentUser = $this->user ?? auth()->user();
+        $company_id = (int) ($currentUser ? $currentUser->company_id : 0);
+        $searchTerms = $request->input('cus_search', request('cus_search'));
         $custom_search = $searchTerms; // json_decode($searchTerms, true);
         // Status tab on the redesigned list: all|active|inactive|invited|suspended
-        $statusTab = request('statusTab');
+        $statusTab = (string) $request->input('statusTab', request('statusTab', 'all'));
 
         $reportMonth = Carbon::now()->startOfMonth()->subMonth();
         $rankstartOfMonthForReport = $reportMonth->copy()->startOfMonth()->toDateTimeString();      // 2025-06-01
@@ -252,15 +282,15 @@ class ServiceCompanyTeamController extends ServiceCompanyBaseController
             'q' => $searchQuery,
             'company' => $company_id,
             'custom_search' => $custom_search,
-            'user_id' => $this->user->id,
+            'user_id' => $currentUser ? $currentUser->id : 0,
             'sortingfilter' => request('sortingfilter'),
             'statusTab' => $statusTab,
         ];
 
-        // V2 Phase 4: Tenant-scoped version key so all company team members see fresh updates instantly
+        // V7: Tenant-scoped version key so all company team members see fresh updates instantly
         $versionKey = 'ats:teamversion:company_'.$company_id;
         $version = cache()->get($versionKey, 1);
-        $cacheKeySet = 'ats:allteam_v2:company:'.$company_id.':'.$version.':'.md5(json_encode($cachePayload));
+        $cacheKeySet = 'ats:allteam_v9:company:'.$company_id.':'.$version.':'.md5(json_encode($cachePayload));
         /* ----------------------------
         ⚡ Check DragonflyDB first
         ----------------------------- */
@@ -565,7 +595,7 @@ class ServiceCompanyTeamController extends ServiceCompanyBaseController
             ->where('from_user_id', '>', 0)
             ->distinct()
             ->pluck('from_user_id')
-            ->map(fn($id) => (int) $id)
+            ->map(fn ($id) => (int) $id)
             ->toArray();
 
         $allRepUserIds = array_unique(array_filter(array_merge([$defaultClientRepId, $defaultAgencyRepId], $allAgencySharerIds)));
@@ -581,6 +611,7 @@ class ServiceCompanyTeamController extends ServiceCompanyBaseController
             $allRankedUsers = $allRankedUsers->filter(function ($u) use ($allRolesMap, $defaultClientRepId) {
                 $uid = (int) ($u['id'] ?? 0);
                 $roles = $allRolesMap[$uid] ?? [];
+
                 return in_array('client', $roles, true) || $uid === $defaultClientRepId;
             })->values();
             $total = $allRankedUsers->count();
@@ -588,6 +619,7 @@ class ServiceCompanyTeamController extends ServiceCompanyBaseController
             $allRankedUsers = $allRankedUsers->filter(function ($u) use ($allRolesMap, $defaultAgencyRepId, $allAgencySharerIds) {
                 $uid = (int) ($u['id'] ?? 0);
                 $roles = $allRolesMap[$uid] ?? [];
+
                 return in_array('vendor', $roles, true) || in_array('agency', $roles, true) || $uid === $defaultAgencyRepId || in_array($uid, $allAgencySharerIds, true);
             })->values();
             $total = $allRankedUsers->count();
@@ -595,14 +627,27 @@ class ServiceCompanyTeamController extends ServiceCompanyBaseController
             $allRankedUsers = $allRankedUsers->filter(function ($u) use ($allRolesMap) {
                 $uid = (int) ($u['id'] ?? 0);
                 $roles = $allRolesMap[$uid] ?? [];
+
                 return in_array('finance', $roles, true);
             })->values();
             $total = $allRankedUsers->count();
-        } elseif ($statusTab === 'recruitment') {
-            $allRankedUsers = $allRankedUsers->filter(function ($u) use ($allRolesMap) {
+        } elseif ($statusTab === 'recruitment' || $statusTab === 'bench') {
+            $hasAnyBenchRep = false;
+            foreach ($allRolesMap as $roles) {
+                if (in_array('bench', $roles, true) || in_array('recruitment', $roles, true)) {
+                    $hasAnyBenchRep = true;
+                    break;
+                }
+            }
+            $allRankedUsers = $allRankedUsers->filter(function ($u) use ($allRolesMap, $hasAnyBenchRep) {
                 $uid = (int) ($u['id'] ?? 0);
                 $roles = $allRolesMap[$uid] ?? [];
-                return in_array('recruitment', $roles, true) || (((int) ($u['root_user'] ?? 0) !== 1) && (strtolower($u['status'] ?? '') === 'active'));
+                $isInvited = ! empty($u['email_verification_code']) || empty($u['password']);
+                $hasBenchRole = in_array('bench', $roles, true) || in_array('recruitment', $roles, true);
+                $isActiveNonRootRecruiter = ((int) ($u['root_user'] ?? 0) !== 1) && (strtolower($u['status'] ?? '') === 'active') && ! $isInvited;
+                $isFallbackRoot = (! $hasAnyBenchRep && (int) ($u['root_user'] ?? 0) === 1);
+
+                return $hasBenchRole || $isActiveNonRootRecruiter || $isFallbackRoot;
             })->values();
             $total = $allRankedUsers->count();
         }
@@ -611,66 +656,165 @@ class ServiceCompanyTeamController extends ServiceCompanyBaseController
         // 5. Paginate
         // -------------------------
 
-        $data = $allRankedUsers->slice($from, $size)->values();
-
-        // V2 Phase 2: Batch pre-fetch workload and rank metrics for sliced page IDs
-        // to eliminate N+1 queries inside Blade view rendering.
-        $userIds = $data->pluck('id')->filter()->all();
+        // -------------------------
+        // 5. Paginate & Workload Metrics (Client-First RAM Engine for <= 2000 Members)
+        // -------------------------
+        $isFullDataset = ($total <= 2000);
         $rankMonth = Carbon::now()->startOfMonth()->subMonth()->format('M Y');
 
-        $activeJobsMap = ! empty($userIds) ? DB::table('job_assign')
-            ->join('jobs', 'jobs.id', '=', 'job_assign.job_id')
-            ->where('job_assign.company_id', $company_id)
-            ->whereIn('job_assign.user_id', $userIds)
-            ->where('jobs.status', 'active')
-            ->select('job_assign.user_id', DB::raw('COUNT(DISTINCT job_assign.job_id) as total'))
-            ->groupBy('job_assign.user_id')
-            ->pluck('total', 'job_assign.user_id') : collect();
+        if ($isFullDataset) {
+            // Pre-calculate company-wide metrics in 4 indexed bulk queries (0 N+1)
+            $activeJobsMap = DB::table('job_assign')
+                ->join('jobs', 'jobs.id', '=', 'job_assign.job_id')
+                ->where('job_assign.company_id', $company_id)
+                ->where('jobs.status', 'active')
+                ->select('job_assign.user_id', DB::raw('COUNT(DISTINCT job_assign.job_id) as total'))
+                ->groupBy('job_assign.user_id')
+                ->pluck('total', 'job_assign.user_id');
 
-        $captainJobsMap = ! empty($userIds) ? DB::table('job_assign')
-            ->where('company_id', $company_id)
-            ->whereIn('spok_user_id', $userIds)
-            ->select('spok_user_id', DB::raw('COUNT(DISTINCT job_id) as total'))
-            ->groupBy('spok_user_id')
-            ->pluck('total', 'spok_user_id') : collect();
+            $captainJobsMap = DB::table('job_assign')
+                ->where('company_id', $company_id)
+                ->where('spok_user_id', '>', 0)
+                ->select('spok_user_id', DB::raw('COUNT(DISTINCT job_id) as total'))
+                ->groupBy('spok_user_id')
+                ->pluck('total', 'spok_user_id');
 
-        $trmTalentsMap = ! empty($userIds) ? DB::table('bench_assign')
-            ->whereIn('user_id', $userIds)
-            ->select('user_id', DB::raw('COUNT(*) as total'))
-            ->groupBy('user_id')
-            ->pluck('total', 'user_id') : collect();
+            $trmTalentsMap = DB::table('bench_assign')
+                ->where('company_id', $company_id)
+                ->where('user_id', '>', 0)
+                ->select('user_id', DB::raw('COUNT(*) as total'))
+                ->groupBy('user_id')
+                ->pluck('total', 'user_id');
 
-        $agencySharesMap = ! empty($userIds) ? DB::table('recommendation_relation')
-            ->where('from_company_id', $company_id)
-            ->whereIn('from_user_id', $userIds)
-            ->select('from_user_id', DB::raw('COUNT(*) as total'))
-            ->groupBy('from_user_id')
-            ->pluck('total', 'from_user_id') : collect();
+            $agencySharesMap = DB::table('recommendation_relation')
+                ->where('from_company_id', $company_id)
+                ->where('from_user_id', '>', 0)
+                ->select('from_user_id', DB::raw('COUNT(*) as total'))
+                ->groupBy('from_user_id')
+                ->pluck('total', 'from_user_id');
 
-        $data = $data->map(function ($item) use ($activeJobsMap, $captainJobsMap, $trmTalentsMap, $rankMonth, $defaultClientRepId, $defaultAgencyRepId, $agencySharesMap, $allRolesMap, $allPriosMap) {
-            $uid = (int) $item['id'];
-            $item['pre_active_jobs'] = (int) ($activeJobsMap[$uid] ?? 0);
-            $item['pre_captain_jobs'] = (int) ($captainJobsMap[$uid] ?? 0);
-            $item['pre_trm_talents'] = (int) ($trmTalentsMap[$uid] ?? 0);
-            $item['pre_rank'] = is_numeric($item['rank'] ?? null) ? (int) $item['rank'] : 'N/A';
-            $item['pre_score'] = (int) ($item['score'] ?? 0);
-            $item['pre_rank_month'] = is_numeric($item['rank'] ?? null) ? $rankMonth : '';
-            $item['is_client_rep'] = ($uid === $defaultClientRepId);
-            $item['is_agency_rep'] = ($uid === $defaultAgencyRepId);
-            $item['pre_agency_shares'] = (int) ($agencySharesMap[$uid] ?? 0);
+            $allRankedUsers = $allRankedUsers->map(function ($item) use ($activeJobsMap, $captainJobsMap, $trmTalentsMap, $rankMonth, $defaultClientRepId, $defaultAgencyRepId, $agencySharesMap, $allRolesMap, $allPriosMap) {
+                $uid = (int) $item['id'];
+                $item['pre_active_jobs'] = (int) ($activeJobsMap[$uid] ?? 0);
+                $item['pre_captain_jobs'] = (int) ($captainJobsMap[$uid] ?? 0);
+                $item['pre_trm_talents'] = (int) ($trmTalentsMap[$uid] ?? 0);
+                $item['pre_rank'] = is_numeric($item['rank'] ?? null) ? (int) $item['rank'] : 'N/A';
+                $item['pre_score'] = (int) ($item['score'] ?? 0);
+                $item['pre_rank_month'] = is_numeric($item['rank'] ?? null) ? $rankMonth : '';
+                $item['is_client_rep'] = ($uid === $defaultClientRepId);
+                $item['is_agency_rep'] = ($uid === $defaultAgencyRepId);
+                $item['pre_agency_shares'] = (int) ($agencySharesMap[$uid] ?? 0);
 
-            $userRoles = $allRolesMap[$uid] ?? [];
-            if ($item['is_client_rep'] && !in_array('client', $userRoles, true)) {
-                $userRoles[] = 'client';
-            }
-            if ($item['is_agency_rep'] && !in_array('vendor', $userRoles, true) && !in_array('agency', $userRoles, true)) {
-                $userRoles[] = 'vendor';
-            }
-            $item['channels'] = array_values(array_unique($userRoles));
-            $item['priorities'] = $allPriosMap[$uid] ?? [];
+                $userRoles = $allRolesMap[$uid] ?? [];
+                if ($item['is_client_rep'] && ! in_array('client', $userRoles, true)) {
+                    $userRoles[] = 'client';
+                }
+                if ($item['is_agency_rep'] && ! in_array('vendor', $userRoles, true) && ! in_array('agency', $userRoles, true)) {
+                    $userRoles[] = 'vendor';
+                }
+                $hasExplicitBench = false;
+                foreach ($allRolesMap as $rRoles) {
+                    if (in_array('bench', $rRoles, true) || in_array('recruitment', $rRoles, true)) {
+                        $hasExplicitBench = true;
+                        break;
+                    }
+                }
+                if (! $hasExplicitBench && (int) ($item['root_user'] ?? 0) === 1) {
+                    if (! in_array('bench', $userRoles, true) && ! in_array('recruitment', $userRoles, true)) {
+                        $userRoles[] = 'bench';
+                    }
+                }
+                $item['channels'] = array_values(array_unique($userRoles));
+                $item['priorities'] = $allPriosMap[$uid] ?? [];
 
-            return $item;
-        });
+                // Format phone string for client
+                $item['phone'] = ! empty($item['mobile'])
+                    ? (! empty($item['calling_code']) ? '+'.ltrim($item['calling_code'], '+').' ' : '').$item['mobile']
+                    : '';
+
+                return $item;
+            });
+
+            $data = $allRankedUsers->slice($from, $size)->values();
+            $rawData = $allRankedUsers->values();
+        } else {
+            // Fallback for massive datasets (> 2000 users): slice first, compute metrics for page only
+            $data = $allRankedUsers->slice($from, $size)->values();
+            $userIds = $data->pluck('id')->filter()->all();
+
+            $activeJobsMap = ! empty($userIds) ? DB::table('job_assign')
+                ->join('jobs', 'jobs.id', '=', 'job_assign.job_id')
+                ->where('job_assign.company_id', $company_id)
+                ->whereIn('job_assign.user_id', $userIds)
+                ->where('jobs.status', 'active')
+                ->select('job_assign.user_id', DB::raw('COUNT(DISTINCT job_assign.job_id) as total'))
+                ->groupBy('job_assign.user_id')
+                ->pluck('total', 'job_assign.user_id') : collect();
+
+            $captainJobsMap = ! empty($userIds) ? DB::table('job_assign')
+                ->where('company_id', $company_id)
+                ->whereIn('spok_user_id', $userIds)
+                ->select('spok_user_id', DB::raw('COUNT(DISTINCT job_id) as total'))
+                ->groupBy('spok_user_id')
+                ->pluck('total', 'spok_user_id') : collect();
+
+            $trmTalentsMap = ! empty($userIds) ? DB::table('bench_assign')
+                ->where('company_id', $company_id)
+                ->whereIn('user_id', $userIds)
+                ->select('user_id', DB::raw('COUNT(*) as total'))
+                ->groupBy('user_id')
+                ->pluck('total', 'user_id') : collect();
+
+            $agencySharesMap = ! empty($userIds) ? DB::table('recommendation_relation')
+                ->where('from_company_id', $company_id)
+                ->whereIn('from_user_id', $userIds)
+                ->select('from_user_id', DB::raw('COUNT(*) as total'))
+                ->groupBy('from_user_id')
+                ->pluck('total', 'from_user_id') : collect();
+
+            $data = $data->map(function ($item) use ($activeJobsMap, $captainJobsMap, $trmTalentsMap, $rankMonth, $defaultClientRepId, $defaultAgencyRepId, $agencySharesMap, $allRolesMap, $allPriosMap) {
+                $uid = (int) $item['id'];
+                $item['pre_active_jobs'] = (int) ($activeJobsMap[$uid] ?? 0);
+                $item['pre_captain_jobs'] = (int) ($captainJobsMap[$uid] ?? 0);
+                $item['pre_trm_talents'] = (int) ($trmTalentsMap[$uid] ?? 0);
+                $item['pre_rank'] = is_numeric($item['rank'] ?? null) ? (int) $item['rank'] : 'N/A';
+                $item['pre_score'] = (int) ($item['score'] ?? 0);
+                $item['pre_rank_month'] = is_numeric($item['rank'] ?? null) ? $rankMonth : '';
+                $item['is_client_rep'] = ($uid === $defaultClientRepId);
+                $item['is_agency_rep'] = ($uid === $defaultAgencyRepId);
+                $item['pre_agency_shares'] = (int) ($agencySharesMap[$uid] ?? 0);
+
+                $userRoles = $allRolesMap[$uid] ?? [];
+                if ($item['is_client_rep'] && ! in_array('client', $userRoles, true)) {
+                    $userRoles[] = 'client';
+                }
+                if ($item['is_agency_rep'] && ! in_array('vendor', $userRoles, true) && ! in_array('agency', $userRoles, true)) {
+                    $userRoles[] = 'vendor';
+                }
+                $hasExplicitBench = false;
+                foreach ($allRolesMap as $rRoles) {
+                    if (in_array('bench', $rRoles, true) || in_array('recruitment', $rRoles, true)) {
+                        $hasExplicitBench = true;
+                        break;
+                    }
+                }
+                if (! $hasExplicitBench && (int) ($item['root_user'] ?? 0) === 1) {
+                    if (! in_array('bench', $userRoles, true) && ! in_array('recruitment', $userRoles, true)) {
+                        $userRoles[] = 'bench';
+                    }
+                }
+                $item['channels'] = array_values(array_unique($userRoles));
+                $item['priorities'] = $allPriosMap[$uid] ?? [];
+
+                $item['phone'] = ! empty($item['mobile'])
+                    ? (! empty($item['calling_code']) ? '+'.ltrim($item['calling_code'], '+').' ' : '').$item['mobile']
+                    : '';
+
+                return $item;
+            });
+
+            $rawData = $data;
+        }
 
         $pagination = [
             'total' => $total,
@@ -685,7 +829,8 @@ class ServiceCompanyTeamController extends ServiceCompanyBaseController
             'html' => view('service_company.ajax_pages.team-list-ajax', compact('data', 'userPermissions', 'company_id'))->render(),
             'total' => $total,
             'pagination' => view('service_company.ajax_pages.team-pagination', compact('pagination'))->render(),
-            'raw_data' => $data,
+            'raw_data' => $rawData,
+            'is_full_dataset' => $isFullDataset,
             'version' => $version,
             'counts' => $this->getTeamCounts((int) $company_id),
         ];
@@ -751,6 +896,28 @@ class ServiceCompanyTeamController extends ServiceCompanyBaseController
         }
 
         $repService = app(CompanyRepresentativeService::class);
+        $visService = app(\App\Services\MarketplaceContactVisibilityService::class);
+
+        // Enforce Invariant M-1: Validate that removing a mandatory channel does not leave 0 active contacts
+        $currentRoles = $repService->getAllCompanyCommunicationRoles($companyId);
+        $userCurrentRoles = $currentRoles[$userId] ?? [];
+
+        foreach (\App\Services\MarketplaceContactVisibilityService::MANDATORY_CHANNELS as $mandatoryCh) {
+            $legacyKey = ($mandatoryCh === 'agency') ? 'vendor' : ($mandatoryCh === 'bench' ? 'recruitment' : $mandatoryCh);
+            $hadRole = in_array($mandatoryCh, $userCurrentRoles, true) || in_array($legacyKey, $userCurrentRoles, true);
+            $hasRoleNow = in_array($mandatoryCh, $channels, true) || in_array($legacyKey, $channels, true);
+
+            if ($hadRole && ! $hasRoleNow) {
+                $check = $visService->validateMandatoryChannelInvariant($companyId, $mandatoryCh, $userId);
+                if (! ($check['allowed'] ?? true)) {
+                    return response()->json([
+                        'status' => 'error',
+                        'message' => $check['message'],
+                    ], 422);
+                }
+            }
+        }
+
         $result = $repService->setUserCommunicationRoles($companyId, $userId, $channels, $priorities);
 
         if (($result['status'] ?? '') === 'success') {
@@ -813,9 +980,9 @@ class ServiceCompanyTeamController extends ServiceCompanyBaseController
             'jobs.title as job_title',
             'jobs.user_id as job_creator_id',
         ])
-        ->orderByDesc('recommendation_relation.created_at')
-        ->limit(50)
-        ->get();
+            ->orderByDesc('recommendation_relation.created_at')
+            ->limit(50)
+            ->get();
 
         $repService = app(CompanyRepresentativeService::class);
         $mapped = $records->map(function ($rel) use ($repService, $companyId) {
@@ -827,7 +994,7 @@ class ServiceCompanyTeamController extends ServiceCompanyBaseController
             return [
                 'relation_id' => $rel->relation_id,
                 'job_id' => $rel->job_id,
-                'job_title' => $rel->job_title ?: ('Job #' . $rel->job_id),
+                'job_title' => $rel->job_title ?: ('Job #'.$rel->job_id),
                 'job_creator' => $creatorUser,
                 'agency_id' => $rel->agency_id,
                 'agency_name' => $rel->agency_name,
@@ -859,7 +1026,7 @@ class ServiceCompanyTeamController extends ServiceCompanyBaseController
 
         $cachePayload = [
             'team_id' => $id,
-            'user_id' => $this->user->id,
+            'user_id' => $currentUser ? $currentUser->id : 0,
         ];
 
         $versionKey = 'teamviewmore_version_user_'.$this->user->id;
@@ -993,7 +1160,7 @@ class ServiceCompanyTeamController extends ServiceCompanyBaseController
         $durMs = round((microtime(true) - $startTime) * 1000, 2);
         \Log::info('TEAM_VIEWMORE_SHELL_APM: viewMore lightweight shell load completed', [
             'team_id' => $id,
-            'user_id' => $this->user->id,
+            'user_id' => $currentUser ? $currentUser->id : 0,
             'dur_ms' => $durMs,
         ]);
 
@@ -1503,7 +1670,12 @@ class ServiceCompanyTeamController extends ServiceCompanyBaseController
         $idempotencyKey = $request->header('X-Idempotency-Key') ?? $request->input('idempotency_key');
 
         // Phase 11 Optimization: Strict tenant scoping validation
-        User::where('id', $userId)->where('company_id', $company_id)->firstOrFail();
+        $targetUser = User::where('id', $userId)->where('company_id', $company_id)->firstOrFail();
+
+        // Root Owner Protection: Root user can never be deactivated or offboarded
+        if ((int) $targetUser->root_user === 1 && ($chkStatus === 'false' || $chkStatus === false || $chkStatus === '0')) {
+            return Reply::dataOnly(['status' => 'error', 'message' => 'The organization owner cannot be deactivated.']);
+        }
 
         if ($chkStatus == 'true') {
             $eventId = 1;
@@ -1565,7 +1737,12 @@ class ServiceCompanyTeamController extends ServiceCompanyBaseController
         $idempotencyKey = $request->header('X-Idempotency-Key') ?? $request->input('idempotency_key');
 
         // Phase 11 Optimization: Strict tenant scoping validation
-        User::where('id', $userId)->where('company_id', $company_id)->firstOrFail();
+        $targetUser = User::where('id', $userId)->where('company_id', $company_id)->firstOrFail();
+
+        // Root Owner Protection: Root user can never be deactivated or offboarded
+        if ((int) $targetUser->root_user === 1 && ($chkStatus === 'false' || $chkStatus === false || $chkStatus === '0')) {
+            return Reply::dataOnly(['status' => 'error', 'message' => 'The organization owner cannot be deactivated.']);
+        }
 
         $statusValue = ($chkStatus == 'true' || $chkStatus === true || $chkStatus === '1') ? 'active' : 'inactive';
 
@@ -1619,7 +1796,12 @@ class ServiceCompanyTeamController extends ServiceCompanyBaseController
         $user = DB::table('users')
             ->where('id', $userId)
             ->where('company_id', $company_id)
-            ->where('status', 'inactive')
+            ->where(function ($q) {
+                $q->where('status', 'inactive')
+                    ->orWhereNull('password')
+                    ->orWhere('password', '')
+                    ->orWhereNotNull('email_verification_code');
+            })
             ->first();
 
         if (! $user) {
@@ -1994,8 +2176,16 @@ class ServiceCompanyTeamController extends ServiceCompanyBaseController
 
     public function teamScoreboard(Request $request)
     {
-        $userId = (int) $request->get('user_id');
-        $companyId = $this->user->company_id;
+        $rawUserId = (int) $request->get('user_id');
+        $targetUser = $this->authorizeTeamMemberAccess($rawUserId);
+        $userId = (int) $targetUser->id;
+        $companyId = (int) ($this->user ? $this->user->company_id : (auth()->user() ? auth()->user()->company_id : 0));
+        $authUser = $this->user ?? auth()->user();
+
+        // ABAC Enforcement: Non-admin team members can only inspect their own scoreboard
+        if ($authUser && (int) ($authUser->root_user ?? 0) !== 1 && (! method_exists($authUser, 'hasRole') || ! $authUser->hasRole('admin')) && $userId !== (int) $authUser->id) {
+            $userId = (int) $authUser->id;
+        }
 
         $reportMonth = \Carbon\Carbon::now()->startOfMonth()->subMonth();
         $start = $reportMonth->copy()->startOfMonth()->toIso8601String();
@@ -2463,7 +2653,9 @@ class ServiceCompanyTeamController extends ServiceCompanyBaseController
     {
 
         $userId = $mstatus_id = $feedback_status = '';
-        $userId = $request->userId;
+        $rawUserId = (int) $request->userId;
+        $targetUser = $this->authorizeTeamMemberAccess($rawUserId);
+        $userId = (int) $targetUser->id;
 
         $salaryMode = GeneralMethod::salaryMode();
         $currencySymbole = GeneralMethod::currencySymbole();
@@ -2989,7 +3181,8 @@ class ServiceCompanyTeamController extends ServiceCompanyBaseController
         // dd($pagination);
 
         $userPermissions = $this->userPermissions;
-        $company_id = $this->user->company_id;
+        $currentUser = $this->user ?? auth()->user();
+        $company_id = (int) ($currentUser ? $currentUser->company_id : 0);
         $chkAdminRole = $this->user->hasRole('admin');
 
         $durMs = round((microtime(true) - $startTime) * 1000, 2);
@@ -3006,7 +3199,9 @@ class ServiceCompanyTeamController extends ServiceCompanyBaseController
     {
 
         $userId = $available_status = $feedback_status = $interview_mode_arr = '';
-        $userId = $request->userId;
+        $rawUserId = (int) $request->userId;
+        $targetUser = $this->authorizeTeamMemberAccess($rawUserId);
+        $userId = (int) $targetUser->id;
 
         $available_status = GeneralMethod::available_status();
         $feedback_status = GeneralMethod::feedback_status();
@@ -3581,7 +3776,9 @@ class ServiceCompanyTeamController extends ServiceCompanyBaseController
         $salaryMode = GeneralMethod::salaryMode();
         $userId = '';
         $job_status = GeneralMethod::job_status();
-        $userId = $request->userId;
+        $rawUserId = (int) $request->userId;
+        $targetUser = $this->authorizeTeamMemberAccess($rawUserId);
+        $userId = (int) $targetUser->id;
         $company_id = auth()->user()->company_id;
 
         $jobApplications = JobApplication::select('job_applications.id', 'job_applications.full_name', 'jobs.title', 'job_applications.current_designation', 'job_applications.ctc',

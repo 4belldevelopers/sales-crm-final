@@ -1306,13 +1306,29 @@ $end_date   =	date('d-M-Y', $date);
                 $hiringManager = ucfirst($jobAssignListCaptain[0]['user_name']);
                 $companyId = $jobAssignListCaptain[0]['company_id'];
                 $spok_user_id = $jobAssignListCaptain[0]['spok_user_id'];
-                $hiringManagerCompany = DB::table('companies')->where('id',$companyId)->first()->company_name;
-                $users = DB::table('users')->select('users_profile.designation','users.email','users.mobile')
-                ->leftJoin('users_profile','users_profile.user_id','=','users.id')
-                ->where('users.id',$spok_user_id)->first();
-                $hiringManagerdesignation = @$users->designation ?? '';
-                $contact_person_number = @$users->mobile ?? '';
-                $contact_person_email = @$users->email ?? '';
+                $hiringManagerCompany = DB::table('companies')->where('id',$companyId)->first()->company_name ?? '';
+
+                // Route through MarketplaceContactVisibilityService for PII authorization
+                if (class_exists(\App\Services\MarketplaceContactVisibilityService::class)) {
+                    $repDTO = app(\App\Services\MarketplaceContactVisibilityService::class)->resolveRepresentativeForViewer(
+                        (int)$companyId,
+                        'agency',
+                        auth()->user()
+                    );
+                    if (!empty($repDTO['name'])) {
+                        $hiringManager = $repDTO['name'];
+                        $hiringManagerdesignation = $repDTO['designation'] ?? '';
+                    }
+                    $contact_person_number = !empty($repDTO['mobile']) ? $repDTO['mobile'] : '';
+                    $contact_person_email = !empty($repDTO['email']) ? $repDTO['email'] : '';
+                } else {
+                    $users = DB::table('users')->select('users_profile.designation','users.email','users.mobile')
+                    ->leftJoin('users_profile','users_profile.user_id','=','users.id')
+                    ->where('users.id',$spok_user_id)->first();
+                    $hiringManagerdesignation = @$users->designation ?? '';
+                    $contact_person_number = @$users->mobile ?? '';
+                    $contact_person_email = @$users->email ?? '';
+                }
             }
 
         }
@@ -1524,16 +1540,25 @@ $end_date   =	date('d-M-Y', $date);
                                             <span class="personnel-dept-inline">{{ $hiringManagerdesignation }}</span>
                                         </div>
                                         <div class="personnel-actions-inline">
-                                            <a href="mailto:{{ $contact_person_email }}">
-                                                <button class="personnel-icon-btn-inline tooltip" data-tooltip="Send Email">
-                                                    <i class="fas fa-envelope"></i>
+                                            @if(!empty($contact_person_email) && $contact_person_email !== '--------')
+                                                <a href="mailto:{{ $contact_person_email }}">
+                                                    <button class="personnel-icon-btn-inline tooltip" data-tooltip="Send Email">
+                                                        <i class="fas fa-envelope"></i>
+                                                    </button>
+                                                </a>
+                                            @endif
+                                            @if(!empty($contact_person_number) && $contact_person_number !== '--------')
+                                                <a href="tel:{{ $contact_person_number }}">
+                                                    <button class="personnel-icon-btn-inline tooltip" data-tooltip="Call Phone">
+                                                        <i class="fas fa-phone"></i>
+                                                    </button>
+                                                </a>
+                                            @endif
+                                            @if(empty($contact_person_email) || $contact_person_email === '--------')
+                                                <button class="personnel-icon-btn-inline tooltip" data-tooltip="Contact via JERO Message" style="color: #009ef7; background: #eff6ff;">
+                                                    <i class="fas fa-comment-dots"></i>
                                                 </button>
-                                            </a>
-                                            <a href="tel:{{ $contact_person_number }}">
-                                                <button class="personnel-icon-btn-inline tooltip" data-tooltip="Call Phone">
-                                                    <i class="fas fa-phone"></i>
-                                                </button>
-                                            </a>
+                                            @endif
                                         </div>
                                     </div>
                                     <div class="personnel-card-inline" onclick="showPersonnelDetails('recruiter')">

@@ -2715,179 +2715,10 @@ input[type="radio"]:checked {
 
 
 
-{{-- Legacy commercial cards are retained in source below for reference while the redesigned presentation is rendered first. --}}
+{{-- Services & Commercials Management Tab — God-Level Modern Card + Sub-Card Enterprise Design System (Rule 20) --}}
 <div class="tab-pane {{$services_tab}}" id="services" role="tabpanel">
-  @php
-    // Presentation-only values sourced from AccountSettingsService's existing cached account payload.
-    $cv2FulltimeActive = (bool) (@$fullTimeStatus->status);
-    $cv2ContractActive = (bool) (@$contractStatus->status);
-    $tenantDefaultCurrencyCode = \App\Services\CurrencyService::getTenantCurrency(@$account->id ?? auth()->user()->company_id ?? null);
-    $tenantDefaultCurrencyKey = \App\Services\CurrencyService::getTenantCurrencyKey(@$account->id ?? auth()->user()->company_id ?? null);
-    $cv2Currency = optional($currencyArr->firstWhere('id', @$account->currency));
-    $cv2CurrencyCode = $cv2Currency->code ?: $tenantDefaultCurrencyCode;
-    $systemCurrencies = \App\Helper\GeneralMethod::currency();
-
-    $fulltimeSalaryCurrency = isset($fullTimeStatus->salary_currency) ? (int) $fullTimeStatus->salary_currency : null;
-    if ($fulltimeSalaryCurrency === null || ($fulltimeSalaryCurrency === 4 && $tenantDefaultCurrencyKey !== 4)) {
-        $fulltimeSalaryCurrency = $tenantDefaultCurrencyKey;
-    }
-    $contractSalaryCurrency = isset($contractStatus->salary_currency) ? (int) $contractStatus->salary_currency : null;
-    if ($contractSalaryCurrency === null || ($contractSalaryCurrency === 4 && $tenantDefaultCurrencyKey !== 4)) {
-        $contractSalaryCurrency = $tenantDefaultCurrencyKey;
-    }
-
-    $cv2FulltimeCurrencyCode = $systemCurrencies[$fulltimeSalaryCurrency] ?? $cv2CurrencyCode;
-    $cv2ContractCurrencyCode = $systemCurrencies[$contractSalaryCurrency] ?? $cv2CurrencyCode;
-  @endphp
-  <div class="commercials-v2">
-    <h4 class="cv2-section-title">Your Services</h4>
-    <p class="cv2-section-sub">Manage services for each hiring type and the countries you operate in.</p>
-    <div class="cv2-services">
-      <section class="cv2-service">
-        <div class="cv2-service-top"><div class="cv2-service-name"><span class="cv2-service-icon blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="7" r="4"/><path d="M4 21v-2a8 8 0 0 1 16 0v2"/></svg></span><div><h4>Fulltime Hiring Services <span id="f_status_badge" class="cv2-badge {{ $cv2FulltimeActive ? '' : 'is-off' }}">{{ $cv2FulltimeActive ? 'Active' : 'Inactive' }}</span></h4><p class="cv2-service-desc">Permanent staffing solutions for your clients</p></div></div><div class="cv2-switch"><label class="form-check form-switch form-check-custom form-check-solid"><input class="form-check-input update_main_status_fulltime" data-row_id="{{ encrypt((@$fullTimeStatus->id)) }}" type="checkbox" value="{{ @$fullTimeStatus->status }}" {{ $cv2FulltimeActive ? 'checked' : '' }} /></label><span id="f_text" class="cv2-switch-text">{{ $cv2FulltimeActive ? 'ON' : 'OFF' }}</span></div></div>
-        <div class="cv2-service-main class_change_fulltime {{ $cv2FulltimeActive ? '' : 'cv2-disabled' }}"><div class="cv2-facts"><div class="cv2-fact"><div class="cv2-fact-label">Commercial Model</div><div class="cv2-fact-value">{{ (@$fullTimeStatus->rateType == 2) ? 'Percentage of CTC' : 'Fixed commercial rate' }}</div></div><div class="cv2-fact"><div class="cv2-fact-label">Default Rate</div><div class="cv2-fact-value rate">Configured</div></div><div class="cv2-fact"><div class="cv2-fact-label">Rate Basis</div><div class="cv2-fact-value">One-time (upon joining)</div></div><div class="cv2-fact"><div class="cv2-fact-label">Currency</div><div class="cv2-fact-value">{{ $cv2FulltimeCurrencyCode }}</div></div></div><div class="cv2-side"><div class="cv2-side-row"><span>Countries Served</span><b>{{ (int) @$fullTimeCount }}</b></div><div class="cv2-side-row"><span>Service Status</span><b>{{ $cv2FulltimeActive ? 'Active' : 'Inactive' }}</b></div></div></div>
-        <div class="cv2-bottom"><div><p class="cv2-country-label">Country-wise Services</p><span class="cv2-country-chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 5h18v14H3z"/><path d="M7 9h10M7 13h6"/></svg><b>{{ (int) @$fullTimeCount }}</b> configured countries</span></div><a href="javascript:;" class="btn ser_show-detail cv2-edit" data-type="2">Edit Services <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg></a></div>
-      </section>
-      <section class="cv2-service">
-        <div class="cv2-service-top"><div class="cv2-service-name"><span class="cv2-service-icon green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M8 3v4M16 3v4M8 11h8M8 15h5"/></svg></span><div><h4>Contract Hiring Services <span id="c_status_badge" class="cv2-badge {{ $cv2ContractActive ? '' : 'is-off' }}">{{ $cv2ContractActive ? 'Active' : 'Inactive' }}</span></h4><p class="cv2-service-desc">Contract staffing solutions for your clients</p></div></div><div class="cv2-switch"><label class="form-check form-switch form-check-custom form-check-solid"><input class="form-check-input contract_main_status_fulltime" data-row_id="{{ encrypt((@$contractStatus->id)) }}" type="checkbox" value="{{ @$contractStatus->status }}" {{ $cv2ContractActive ? 'checked' : '' }} /></label><span id="c_text" class="cv2-switch-text">{{ $cv2ContractActive ? 'ON' : 'OFF' }}</span></div></div>
-        <div class="cv2-service-main class_change_contract {{ $cv2ContractActive ? '' : 'cv2-disabled' }}"><div class="cv2-facts"><div class="cv2-fact"><div class="cv2-fact-label">Commercial Model</div><div class="cv2-fact-value">{{ (@$contractStatus->rateType == 1) ? 'Markup on Bill Rate' : 'Contract commercial rate' }}</div></div><div class="cv2-fact"><div class="cv2-fact-label">Default Rate</div><div class="cv2-fact-value rate">Configured</div></div><div class="cv2-fact"><div class="cv2-fact-label">Billing</div><div class="cv2-fact-value">{{ [0 => 'Annual', 1 => 'Monthly', 2 => 'Hourly'][@$contractStatus->sal_mode] ?? 'Configured' }}</div></div><div class="cv2-fact"><div class="cv2-fact-label">Currency</div><div class="cv2-fact-value">{{ $cv2ContractCurrencyCode }}</div></div></div><div class="cv2-side"><div class="cv2-side-row"><span>Countries Served</span><b>{{ (int) @$contractCount }}</b></div><div class="cv2-side-row"><span>Service Status</span><b>{{ $cv2ContractActive ? 'Active' : 'Inactive' }}</b></div></div></div>
-        <div class="cv2-bottom"><div><p class="cv2-country-label">Country-wise Services</p><span class="cv2-country-chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 5h18v14H3z"/><path d="M7 9h10M7 13h6"/></svg><b>{{ (int) @$contractCount }}</b> configured countries</span></div><a href="javascript:;" class="btn ser_show-detail cv2-edit" data-type="1">Edit Services <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg></a></div>
-      </section>
-    </div>
-    <div class="cv2-note"><span class="cv2-note-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 10v6M12 7h.01"/></svg></span><p><b>Service recommendations:</b> Keep service rates and country coverage current so clients see accurate service terms when engaging your company.</p></div>
-  </div>
+  @include('service_company.account.v2.tabs.services')
 </div>
-
-{{-- Legacy markup kept only until the next deployment removes this inactive fallback. --}}
-{{-- <!--begin::Services Content-->
-<div class="tab-pane" id="services" role="tabpanel">
-  <!--begin::Overview header-->
-  <div class="card-header cursor-pointer px-0 border-0 mb-2">
-    <!--begin::Card title-->
-    <div class="card-title m-0">
-      <h3 class="fw-bolder m-0 text-dark fs-3">Services</h3>
-    </div>
-    <!--end::Card title-->
-  </div>
-  <!--end::Services header-->
-  <div class="card-body px-0 py-2"> 
-    <!--begin::Services Grid-->
-    <div class="row g-6">
-
-      <!-- Fulltime Hiring Services Card -->
-      <div class="col-md-6 col-xl-6 mb-4">
-        <div class="card card-dashed h-100 p-6" style="border: 1px dashed #E2E8F0; border-radius: 12px; background: #ffffff;">
-          <!-- Header -->
-          <div class="d-flex align-items-center justify-content-between mb-4">
-            <div class="d-flex align-items-center">
-              <div class="symbol me-4" style="width: 44px; height: 44px; border-radius: 10px; background: #E8F3FF; color: #0085FF; font-weight: 700; font-size: 15px; display: flex; align-items: center; justify-content: center;">
-                FT
-              </div>
-              <div>
-                <h4 class="text-dark fw-bolder fs-5 mb-1" style="color: #1E293B !important;">Fulltime Hiring Services</h4>
-                <span class="text-muted fw-normal fs-7" style="color: #94A3B8 !important;">One Time Placement Fee</span>
-              </div>
-            </div>
-            <div class="d-flex align-items-center">
-              <label class="form-check form-switch form-check-custom form-check-solid me-2">
-                <input class="form-check-input update_main_status_fulltime" data-row_id="{{ encrypt((@$fullTimeStatus->id))}}" type="checkbox" value="{{ @$fullTimeStatus->status }}" {{ (@$fullTimeStatus->status) ? 'checked' : '' }} style="width: 40px; height: 22px; cursor: pointer;" />
-              </label>
-              <span id="f_text" class="fw-bold fs-7 ms-1" style="color: #1E293B;">{{ (@$fullTimeStatus->status) ? 'ON' : 'OFF' }}</span>
-            </div>
-          </div>
-
-          <!-- Divider -->
-          <div class="separator separator-dashed my-4" style="border-top: 1px dashed #E2E8F0;"></div>
-
-          <!-- Details List -->
-          <div class="py-2 class_change_fulltime" style="{{ @$fullTimeStatus->status ? '' : 'opacity: 0.4 !important;' }}">
-            <div class="d-flex align-items-center mb-3">
-              <span style="width: 12px; height: 4px; border-radius: 2px; background: #0085FF; display: inline-block; margin-right: 10px;"></span>
-              <span class="fw-semibold fs-6" style="color: #475569;">One Time Payment for Service</span>
-            </div>
-            <div class="d-flex align-items-center mb-3">
-              <span style="width: 12px; height: 4px; border-radius: 2px; background: #0085FF; display: inline-block; margin-right: 10px;"></span>
-              <span class="fw-semibold fs-6" style="color: #475569;">Services Configured</span>
-            </div>
-            <div class="d-flex align-items-center mb-2">
-              <span style="width: 12px; height: 4px; border-radius: 2px; background: #0085FF; display: inline-block; margin-right: 10px;"></span>
-              <span class="fw-semibold fs-6" style="color: #475569;"><span id="fullTimeCount">{{ @$fullTimeCount }}</span> Countries Selected</span>
-            </div>
-          </div>
-
-          <!-- Footer -->
-          <div class="d-flex align-items-center justify-content-between pt-4 mt-auto">
-            <span class="badge py-2 px-3 fw-bold fs-7" style="background: #ECFDF5; color: #10B981; border-radius: 6px;">
-              {{ (@$fullTimeStatus->status) ? 'Active' : 'Inactive' }}
-            </span>
-            <a href="javascript:;" class="btn btn-sm fw-bold ser_show-detail" data-type="2" style="background: #EBF5FF; color: #0085FF; border: none; padding: 7px 14px; border-radius: 8px; font-size: 13px; display: inline-flex; align-items: center; gap: 6px;">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
-              View/Edit
-            </a>
-          </div>
-        </div>
-      </div>
-
-      <!-- Contract Hiring Services Card -->
-      <div class="col-md-6 col-xl-6 mb-4">
-        <div class="card card-dashed h-100 p-6" style="border: 1px dashed #E2E8F0; border-radius: 12px; background: #ffffff;">
-          <!-- Header -->
-          <div class="d-flex align-items-center justify-content-between mb-4">
-            <div class="d-flex align-items-center">
-              <div class="symbol me-4" style="width: 44px; height: 44px; border-radius: 10px; background: #F5EEFF; color: #A855F7; font-weight: 700; font-size: 15px; display: flex; align-items: center; justify-content: center;">
-                CT
-              </div>
-              <div>
-                <h4 class="text-dark fw-bolder fs-5 mb-1" style="color: #1E293B !important;">Contract Hiring Services</h4>
-                <span class="text-muted fw-normal fs-7" style="color: #94A3B8 !important;">Hourly / Monthly Staffing</span>
-              </div>
-            </div>
-            <div class="d-flex align-items-center">
-              <label class="form-check form-switch form-check-custom form-check-solid me-2">
-                <input class="form-check-input contract_main_status_fulltime" data-row_id="{{ encrypt((@$contractStatus->id))}}" type="checkbox" value="{{ @$contractStatus->status }}" {{ (@$contractStatus->status) ? 'checked' : '' }} style="width: 40px; height: 22px; cursor: pointer;" />
-              </label>
-              <span id="c_text" class="fw-bold fs-7 ms-1" style="color: #94A3B8;">{{ (@$contractStatus->status) ? 'ON' : 'OFF' }}</span>
-            </div>
-          </div>
-
-          <!-- Divider -->
-          <div class="separator separator-dashed my-4" style="border-top: 1px dashed #E2E8F0;"></div>
-
-          <!-- Details List -->
-          <div class="py-2 class_change_contract" style="{{ @$contractStatus->status ? '' : 'opacity: 0.4 !important;' }}">
-            <div class="d-flex align-items-center mb-3">
-              <span style="width: 12px; height: 4px; border-radius: 2px; background: {{ @$contractStatus->status ? '#A855F7' : '#CBD5E1' }}; display: inline-block; margin-right: 10px;"></span>
-              <span class="fw-semibold fs-6" style="color: {{ @$contractStatus->status ? '#475569' : '#94A3B8' }};">Hourly / Monthly Payment for Services</span>
-            </div>
-            <div class="d-flex align-items-center mb-3">
-              <span style="width: 12px; height: 4px; border-radius: 2px; background: {{ @$contractStatus->status ? '#A855F7' : '#CBD5E1' }}; display: inline-block; margin-right: 10px;"></span>
-              <span class="fw-semibold fs-6" style="color: {{ @$contractStatus->status ? '#475569' : '#94A3B8' }};">Services Configured</span>
-            </div>
-            <div class="d-flex align-items-center mb-2">
-              <span style="width: 12px; height: 4px; border-radius: 2px; background: {{ @$contractStatus->status ? '#A855F7' : '#CBD5E1' }}; display: inline-block; margin-right: 10px;"></span>
-              <span class="fw-semibold fs-6" style="color: {{ @$contractStatus->status ? '#475569' : '#94A3B8' }};"><span id="contractCount">{{ @$contractCount }}</span> Countries Selected</span>
-            </div>
-          </div>
-
-          <!-- Footer -->
-          <div class="d-flex align-items-center justify-content-between pt-4 mt-auto">
-            <span class="badge py-2 px-3 fw-bold fs-7" style="background: {{ (@$contractStatus->status) ? '#ECFDF5' : '#FEF2F2' }}; color: {{ (@$contractStatus->status) ? '#10B981' : '#EF4444' }}; border-radius: 6px;">
-              {{ (@$contractStatus->status) ? 'Active' : 'Inactive' }}
-            </span>
-            <a href="javascript:;" class="btn btn-sm fw-bold ser_show-detail" data-type="1" style="background: #FAF5FF; color: #A855F7; border: none; padding: 7px 14px; border-radius: 8px; font-size: 13px; display: inline-flex; align-items: center; gap: 6px;">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
-              View/Edit
-            </a>
-          </div>
-        </div>
-      </div>
-
-    </div>
-    
-  </div>
-</div>
-<!--end::Services Content-->
---}}
 
 
         <!--begin::boost keyword Content-->
@@ -5932,14 +5763,34 @@ $(document).ready(function(){
                         if (String(commType) === '1') {
                             $('#contractCount').text(countryCount);
                         }
-                        $editor.get(0).dispatchEvent(new CustomEvent('commercial:saved'));
+
+                        // Dispatch canonical state to window so ServicesTabEngine and any other open listeners re-hydrate
+                        var serviceType = response.service_type || (String(commType) === '2' ? 'fulltime' : 'contract');
+                        var eventDetail = {
+                            version: response.version || 1,
+                            service_type: serviceType,
+                            state: response.commercial_state || {}
+                        };
+
+                        window.dispatchEvent(new CustomEvent('commercial:saved', { detail: eventDetail }));
+                        $editor.get(0).dispatchEvent(new CustomEvent('commercial:saved', { detail: eventDetail }));
+
                         Swal.fire({toast: true, position: 'top-end', icon: 'success', title: 'Services saved successfully.', showConfirmButton: false, timer: 2200, timerProgressBar: true});
                         return;
                     }
 
                     Swal.fire({toast: true, position: 'top-end', icon: 'error', title: response.message || 'Services could not be saved.', showConfirmButton: false, timer: 3200});
                 },
-                error: function () {
+                error: function (xhr) {
+                    if (xhr && xhr.status === 409) {
+                        var msg = (xhr.responseJSON && xhr.responseJSON.message) ? xhr.responseJSON.message : 'Commercial terms were updated by another administrator. Please refresh before saving.';
+                        Swal.fire({toast: true, position: 'top-end', icon: 'warning', title: msg, showConfirmButton: false, timer: 4000});
+                        return;
+                    }
+                    if (xhr && xhr.status === 403) {
+                        Swal.fire({toast: true, position: 'top-end', icon: 'error', title: 'You are not authorized to update commercial terms.', showConfirmButton: false, timer: 3500});
+                        return;
+                    }
                     Swal.fire({toast: true, position: 'top-end', icon: 'error', title: 'Services could not be saved. Please try again.', showConfirmButton: false, timer: 3200});
                 },
                 complete: function () {

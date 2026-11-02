@@ -95,7 +95,7 @@
                 $experience = trim((string) (@$row->total_exp ?? '0'));
                 $formattedExperience = ($experience !== '' && $experience !== '0.') ? $experience : '0';
 
-                // 7. Compensation Resolution (Strictly separate Offer CTC from Candidate Current CTC)
+                // 7. Compensation Resolution (Rule 8: Global Compact K/M Formatting, strictly 0% Lakhs/Lacs/Crores)
                 $offerAmount = !empty($meta->offer_amount) ? $meta->offer_amount : (!empty($meta->tds_salary_ctc) ? $meta->tds_salary_ctc : (!empty($row->of_offer_amount) ? $row->of_offer_amount : null));
                 $hasOfferAmount = !empty($offerAmount) && (float)$offerAmount > 0;
 
@@ -106,33 +106,46 @@
                 $modeKey = isset($meta->offer_mode) ? (int)$meta->offer_mode : (isset($row->of_salary_mode) ? (int)$row->of_salary_mode : (isset($row->current_ctc_mode) ? (int)$row->current_ctc_mode : 0));
                 $salaryModeLabel = $salaryMode[$modeKey] ?? 'Annual';
                 $modeSuffix = match($salaryModeLabel) {
-                    'Monthly' => '/ Mo',
-                    'Hourly' => '/ Hr',
-                    'Weekly' => '/ Wk',
-                    'Daily' => '/ Day',
-                    default => '/ Yr',
+                    'Monthly' => ' / mo',
+                    'Hourly' => ' / hr',
+                    'Weekly' => ' / wk',
+                    'Daily' => ' / day',
+                    default => ' / yr',
+                };
+
+                $fmtCompactComp = function($num) {
+                    if (empty($num) || !is_numeric($num)) return null;
+                    $val = (float) $num;
+                    if ($val <= 0) return null;
+                    if ($val < 100) {
+                        $val = $val * 100000;
+                    }
+                    if ($val >= 1000000) {
+                        $m = round($val / 1000000, 1);
+                        return ($m == (int)$m ? (int)$m : $m) . 'M';
+                    }
+                    if ($val >= 1000) {
+                        $k = round($val / 1000);
+                        return $k . 'K';
+                    }
+                    return number_format($val);
                 };
 
                 if ($hasOfferAmount) {
-                    $compVal = (float) $offerAmount;
-                    if ($compVal < 100) {
-                        $formattedComp = number_format($compVal, 2) . ' L';
-                    } else {
-                        $formattedComp = number_format($compVal);
-                    }
+                    $formattedComp = $fmtCompactComp($offerAmount);
                 } else {
                     $formattedComp = null;
                 }
 
-                // Reference CTC when offer is pending
+                // Reference CTC when offer is pending (Global Compact Formatter)
                 $curCtc = !empty($row->ctc) ? (float)$row->ctc : 0;
                 $expCtc = !empty($row->ectc) ? (float)$row->ectc : 0;
                 $refCtcParts = [];
                 if ($expCtc > 0) {
-                    $refCtcParts[] = 'Exp: ' . ($expCtc < 100 ? ('₹' . $expCtc . ' L') : ('₹' . number_format($expCtc)));
+                    $refCtcParts[] = 'Exp: ' . $currSym . $fmtCompactComp($expCtc);
                 }
                 if ($curCtc > 0) {
-                    $refCtcParts[] = 'Cur: ' . ($curCtc < 100 ? ('₹' . $curCtc . ' L') : ('₹' . number_format($curCtc)));
+                    $refCtcParts[] = 'Cur: ' . $currSym . $fmtCompactComp($curCtc);
                 }
                 $refCtcStr = implode(' • ', $refCtcParts);
 
@@ -350,7 +363,7 @@
                         <div>
                             @if ($hasOfferAmount)
                                 <div class="cd-val-salary">
-                                    <strong>{{ $currSym }}{{ $formattedComp }} {{ $modeSuffix }}</strong>
+                                    <strong>{{ $currSym }}{{ $formattedComp }}{{ $modeSuffix }}</strong>
                                 </div>
                                 <div class="cd-val-sub">
                                     <i class="far fa-clock text-muted me-1"></i>{{ $employmentType }} &bull; {{ $salaryModeLabel }}

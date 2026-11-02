@@ -187,7 +187,7 @@ use Carbon\Carbon;
     @endphp
     <div class="scp px-2 pt-2">
       <div class="scp-hero">
-        <button type="button" class="scp-hero-close" id="kt_activitiesClientTeam_close" title="Close">
+        <button type="button" class="scp-hero-close" id="kt_activitiesClientTeam_close" onclick="closeTeamMemberDrawer()" title="Close">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
         </button>
         <div class="scp-hero-avatar">
@@ -240,14 +240,14 @@ use Carbon\Carbon;
     <div class="card-header card-header-tabs-line">
   <div class="card-toolbar">
         <ul class="nav nav-tabs nav-tabs-space-lg nav-tabs-line nav-tabs-bold nav-tabs-line-3x" role="tablist">
-      <li class="nav-item me-3"> <a class="nav-link active show" data-toggle="tab" href="#user_overview"> <span class="nav-text font-weight-bold">Overview</span> </a> </li>
-      <li class="nav-item me-3"> <a class="nav-link" data-toggle="tab" href="#user_requisitions"> <span class="nav-text font-weight-bold">Jobs</span> </a> </li>
-      <li class="nav-item me-3"> <a class="nav-link" data-toggle="tab" href="#user_candidate"> <span class="nav-text font-weight-bold">Candidate</span> </a> </li>
-      <li class="nav-item me-3"> <a class="nav-link" data-toggle="tab" href="#user_interview_tracker"> <span class="nav-text font-weight-bold">Interview Tracker</span> </a> </li>
-      <li class="nav-item me-3"> <a class="nav-link" data-toggle="tab" href="#user_joining"> <span class="nav-text font-weight-bold">Joinings</span> </a> </li>
-      <li class="nav-item me-3"> <a class="nav-link" data-toggle="tab" href="#myRank"> <span class="nav-text font-weight-bold">My Rank</span> </a> </li>
-       <li class="nav-item me-3"> <a class="nav-link" data-toggle="tab" href="#candidateDashboard"> <span class="nav-text font-weight-bold">My Dashboard</span> </a> </li>
-      <li class="nav-item me-3 d-none"> <a class="nav-link" data-toggle="tab" href="#user_settings"> <span class="nav-text font-weight-bold">Settings</span> </a> </li>
+      <li class="nav-item me-3"> <a class="nav-link active show" data-bs-toggle="tab" data-toggle="tab" href="#user_overview"> <span class="nav-text font-weight-bold">Overview</span> </a> </li>
+      <li class="nav-item me-3"> <a class="nav-link" data-bs-toggle="tab" data-toggle="tab" href="#user_requisitions"> <span class="nav-text font-weight-bold">Jobs</span> </a> </li>
+      <li class="nav-item me-3"> <a class="nav-link" data-bs-toggle="tab" data-toggle="tab" href="#user_candidate"> <span class="nav-text font-weight-bold">Candidate</span> </a> </li>
+      <li class="nav-item me-3"> <a class="nav-link" data-bs-toggle="tab" data-toggle="tab" href="#user_interview_tracker"> <span class="nav-text font-weight-bold">Interview Tracker</span> </a> </li>
+      <li class="nav-item me-3"> <a class="nav-link" data-bs-toggle="tab" data-toggle="tab" href="#user_joining"> <span class="nav-text font-weight-bold">Joinings</span> </a> </li>
+      <li class="nav-item me-3"> <a class="nav-link" data-bs-toggle="tab" data-toggle="tab" href="#myRank"> <span class="nav-text font-weight-bold">My Rank</span> </a> </li>
+       <li class="nav-item me-3"> <a class="nav-link" data-bs-toggle="tab" data-toggle="tab" href="#candidateDashboard"> <span class="nav-text font-weight-bold">My Dashboard</span> </a> </li>
+      <li class="nav-item me-3 d-none"> <a class="nav-link" data-bs-toggle="tab" data-toggle="tab" href="#user_settings"> <span class="nav-text font-weight-bold">Settings</span> </a> </li>
     </ul>
       </div>
 </div>
@@ -780,412 +780,18 @@ use Carbon\Carbon;
 
 
     <script>
-      
-            var myChartId = "<?php echo @$users->id; ?>";
-
-            var showDataLabels = {
-                          id: 'showDataLabels',
-                          afterDatasetsDraw(chart) {
-                              const { ctx } = chart;
-                              chart.data.datasets.forEach((dataset, i) => {
-                                  const meta = chart.getDatasetMeta(i);
-                                  meta.data.forEach((bar, index) => {
-                                      const value = dataset.data[index];
-                                      ctx.save();
-                                      ctx.fillStyle = 'black';
-                                      ctx.font = 'bold 12px sans-serif';
-                                      ctx.textAlign = 'center';
-                                      ctx.fillText(value, bar.x, bar.y - 1.5);
-                                      ctx.restore();
-                                  });
-                              });
-                          }
-            };
-
-            var showDataLabelsvertical = {
-                id: 'showDataLabelsvertical',
-                afterDatasetsDraw(chart) {
-                    var { ctx } = chart;
-                    chart.data.datasets.forEach((dataset, i) => {
-                        var meta = chart.getDatasetMeta(i);
-                        meta.data.forEach((bar, index) => {
-                            var value = dataset.data[index];
-                            ctx.save();
-                            ctx.fillStyle = 'black';
-                            ctx.font = 'bold 12px sans-serif';
-                            ctx.textAlign = 'left';  // align left for horizontal bars
-                            ctx.textBaseline = 'middle';
-
-                            // place text at the end of bar (right side)
-                            ctx.fillText(value, bar.x + 1, bar.y);
-                            ctx.restore();
-                        });
-                    });
-                }
-            };
-
-            function loadCountryChart() {
-
-            var ctx = document.getElementById(`myChart_${myChartId}`).getContext('2d');
-
-            var countryChart = new Chart(ctx, {
-              type: 'bar',
-              data: {
-                  labels: ['In Review','Sourcing', 'Screening', 'Evaluation', 'Negotiation', 'Offer','Joined','Rejected'],
-                  datasets: [{
-                      label: 'Users',
-                      data: ["{{$inreview_count}}", "{{$sourcing_count}}", "{{$screening_count}}", "{{$evaluation_count}}", "{{$negotiation_count}}", "{{$offer_count}}", "{{$joined_count}}","{{$Rejected_count}}"],
-                      backgroundColor: [
-                          '#bdbd26', // inreview_count
-                          '#000000', // sourcing_count
-                          '#c000ff', // screening_count
-                          '#2896ff', // evaluation_count
-                          '#ff4098', // negotiation_count
-                          '#ffab00', // offer_count
-                          '#06c732',
-                          '#ff0202' // joined_count // joined_count
-                      ],
-                      borderRadius: 10,
-                      barThickness: 30
-                  }]
-              },
-              options: {
-                  indexAxis: 'y', // makes it horizontal
-                  plugins: {
-                      legend: { display: false },
-                      tooltip: {
-                          callbacks: {
-                              label: ctx => ctx.parsed.x.toLocaleString()
-                          }
-                      }
-                  },
-                  scales: {
-                      x: {
-                          beginAtZero: true,
-                          ticks: {
-                              callback: function (value) {
-                                  if (value <= 10) return value;
-                                  else if (value % 100 === 0) return value.toLocaleString();
-                                  else return '';
-                              }
-                          }
-                      },
-                      y: {
-                          ticks: {
-                              font: {
-                                  weight: 'bold'
-                              }
-                          }
-                      }
-                  }
-              },
-              plugins: [showDataLabelsvertical] // ✅ custom labels plugin
-          });
-            }
-
-            setTimeout(() => {
-                  loadCountryChart();
-            }, 300); 
-
-
-             // Get the canvas element
-        
-            var ctx_job_div = document.getElementById(`allJobGrapg_${myChartId}`).getContext('2d');
-              // Create the donut chart
-            var allJobGrapg = new Chart(ctx_job_div, {
-                type: 'doughnut',
-                data: {
-                    labels: ['Active Jobs', 'Hold Jobs', 'Closed Jobs'], // Labels for the chart
-                    datasets: [{
-                        label: 'Total',
-                        data: ['{{ $active_count ?? 0 }}', '{{ $hold_count ?? 0 }}', '{{ $inactive_count ?? 0 }}'], // Values for the chart
-
-                        backgroundColor: [
-                            '#22c55e', // Green for 'Active Jobs'
-                            '#ffab00', // Blue for 'Hold Jobs'
-                            '#ff0202'  // Gray for 'Closed Jobs'
-                        ],
-                        hoverOffset: 4 // Highlight on hover
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            display: false // Hide the legend in the chart area
-                        }
-                    },
-                    cutout: '70%' // To create the donut hole
-                }
-            });
-
-
-            
-            var candidates_left_chart = document.getElementById(`candidates_left_chart_${myChartId}`).getContext('2d');
-
-            var allJobGraphBar = new Chart(candidates_left_chart, {
-                type: 'bar',
-                data: {
-                    labels: {!! json_encode($labels) !!},
-                    datasets: [{
-                        label: 'Total Candidates',
-                        data: {!! json_encode($candidateValues) !!},
-                        backgroundColor: [
-                            '#2196f3', // Blue 
-                            '#2196f3', // Blue 
-                            '#2196f3', // Blue 
-                            '#2196f3', // Blue 
-                            '#2196f3', // Blue 
-                            '#2196f3', // Blue 
-                            '#2196f3'  // Blue 
-                        ],
-                        borderRadius: 5,
-                        borderSkipped: false,
-                        barThickness: 30
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            display: false
-                        }
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            ticks: {
-                                precision: 0 // show integer values only
-                            }
-                        }
-                    }
-                },
-                plugins: [showDataLabels] // ✅ custom labels plugin
-            });
-
-
-            
-            var candidates_offer_chart = document.getElementById(`candidates_offer_chart_${myChartId}`).getContext('2d');
-
-            var allofferGraphBar = new Chart(candidates_offer_chart, {
-                type: 'bar',
-                data: {
-                    labels: {!! json_encode($labelsCommoffer) !!},
-                    datasets: [{
-                        label: 'Total Candidates',
-                        data: {!! json_encode($candidateValuesCommoffer) !!},
-                        backgroundColor: [
-                            '#ffab00', 
-                            '#ffab00', 
-                            '#ffab00', 
-                            '#ffab00', 
-                            '#ffab00', 
-                            '#ffab00' 
-                        ],
-                        borderRadius: 5,
-                        borderSkipped: false,
-                        barThickness: 30
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            display: false
-                        }
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            ticks: {
-                                precision: 0 // show integer values only
-                            }
-                        }
-                    }
-                },
-                plugins: [showDataLabels] // ✅ custom labels plugin
-            });
-
-            
-            var candidates_join_chart = document.getElementById(`candidates_join_chart_${myChartId}`).getContext('2d');
-
-            var alljoinGraphBar = new Chart(candidates_join_chart, {
-                type: 'bar',
-                data: {
-                    labels: {!! json_encode($labelsCommjoin) !!},
-                    datasets: [{
-                        label: 'Total Candidates',
-                        data: {!! json_encode($candidateValuesCommjoin) !!},
-                        backgroundColor: [
-                            '#06c732',  
-                            '#06c732',  
-                            '#06c732',  
-                            '#06c732',  
-                            '#06c732',  
-                            '#06c732'  
-                        ],
-                        borderRadius: 5,
-                        borderSkipped: false,
-                        barThickness: 30
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            display: false
-                        }
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            ticks: {
-                                precision: 0 // show integer values only
-                            }
-                        }
-                    }
-                },
-                plugins: [showDataLabels] // ✅ custom labels plugin
-            });
-
-            var inetview_recent_chart_month = document.getElementById(`inetview_recent_chart_month_${myChartId}`).getContext('2d');
-
-            var netview_recentGraphBarMonth = new Chart(inetview_recent_chart_month, {
-                type: 'bar',
-                data: {
-                    labels: {!! json_encode($interviewlabelsMonth) !!},
-                    datasets: [{
-                        label: 'Total Interviews',
-                        data: {!! json_encode($interviewValuesMonth) !!},
-                        backgroundColor: [
-                            '#2196f3', // Blue 
-                            '#2196f3', // Blue 
-                            '#2196f3', // Blue 
-                            '#2196f3', // Blue 
-                            '#2196f3', // Blue 
-                            '#2196f3', // Blue 
-                            '#2196f3'  // Blue 
-                        ],
-                        borderRadius: 5,
-                        borderSkipped: false,
-                        barThickness: 30
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            display: false
-                        }
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            ticks: {
-                                precision: 0 // show integer values only
-                            }
-                        }
-                    }
-                },
-                plugins: [showDataLabels] // ✅ custom labels plugin
-            });
-
-            var inetview_recent_chart = document.getElementById(`inetview_recent_chart_${myChartId}`).getContext('2d');
-
-            var netview_recentGraphBar = new Chart(inetview_recent_chart, {
-                type: 'bar',
-                data: {
-                    labels: {!! json_encode($interviewlabels) !!},
-                    datasets: [{
-                        label: 'Total Interviews',
-                        data: {!! json_encode($interviewValues) !!},
-                        backgroundColor: [
-                            '#2196f3', // Blue 
-                            '#2196f3', // Blue 
-                            '#2196f3', // Blue 
-                            '#2196f3', // Blue 
-                            '#2196f3', // Blue 
-                            '#2196f3', // Blue 
-                            '#2196f3'  // Blue 
-                        ],
-                        borderRadius: 5,
-                        borderSkipped: false,
-                        barThickness: 30
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            display: false
-                        }
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            ticks: {
-                                precision: 0 // show integer values only
-                            }
-                        }
-                    }
-                },
-                plugins: [showDataLabels] // ✅ custom labels plugin
-            });
-
-
-            function filtersdatagetmonth(valSelected){
-                if(valSelected==1){
-                      $(`.inetview_recent_chart_month_${myChartId}`).removeClass('d-none');
-                      $(`.inetview_recent_chart_${myChartId}`).addClass('d-none');
-                }else{
-                      $(`.inetview_recent_chart_month_${myChartId}`).addClass('d-none');
-                      $(`.inetview_recent_chart_${myChartId}`).removeClass('d-none');
-                }
-
-            }
-
-            
-    </script>
-
-
-    
-<script>
-
-
-      $('#myTable_jmyRank').DataTable({
-              pageLength: 10,          // Default number of rows per page
-              lengthChange: false,     // 🔒 disables the lengthMenu dropdown
-              ordering: false,
-              paging: true,
-              searching: false,
-              autoWidth: false, // 👈 Disable auto column width calculation
-        });
-      
-
     $(document).ready(function() {
-      const firstSavedCountryCode = "{{ @$users->calling_code }}"; // Example country code (lowercase)
-      const firstPhoneDisplayDiv = document.getElementById("firstPhoneDisplay");
-
-      const flagDiv = document.createElement("div");
-      flagDiv.className = `iti__flag iti__${firstSavedCountryCode}`;
-
-       // Get the dial code for the selected country code
-      const dialCode = countryDialCodes[firstSavedCountryCode] || ""; 
-
-      // Create a span to display the dial code
-      const dialCodeSpan = document.createElement("span");
-      dialCodeSpan.textContent = dialCode;
-
-       // Append the flag and the dial code to the display div
-       firstPhoneDisplayDiv.appendChild(flagDiv);
-       firstPhoneDisplayDiv.appendChild(dialCodeSpan);
-
+        var firstSavedCountryCode = "{{ @$users->calling_code }}";
+        var firstPhoneDisplayDiv = document.getElementById("firstPhoneDisplay");
+        if (firstPhoneDisplayDiv && firstSavedCountryCode) {
+            var flagDiv = document.createElement("div");
+            flagDiv.className = "iti__flag iti__" + firstSavedCountryCode;
+            var dialCode = (typeof countryDialCodes !== 'undefined' && countryDialCodes[firstSavedCountryCode]) ? countryDialCodes[firstSavedCountryCode] : "";
+            var dialCodeSpan = document.createElement("span");
+            dialCodeSpan.textContent = dialCode;
+            firstPhoneDisplayDiv.appendChild(flagDiv);
+            firstPhoneDisplayDiv.appendChild(dialCodeSpan);
+        }
     });
 
 
@@ -1245,12 +851,27 @@ window.TeamViewMoreTabManager = {
     },
     init: function() {
         var self = this;
-        $(document).on('shown.bs.tab', 'a[data-toggle="tab"], a[data-bs-toggle="tab"]', function(e) {
+        // Direct click fallback ensuring immediate UI switch and data fetch even in dynamic AJAX drawers
+        $(document).off('click.teamTabNav', '#kt_activitiesClientTeam .nav-tabs a').on('click.teamTabNav', '#kt_activitiesClientTeam .nav-tabs a', function(e) {
+            e.preventDefault();
             var href = $(this).attr('href');
             if (!href) return;
+            $('#kt_activitiesClientTeam .nav-tabs .nav-link').removeClass('active show');
+            $(this).addClass('active show');
+            $('#kt_activitiesClientTeam .tab-content .tab-pane').removeClass('active show');
+            $(href).addClass('active show');
             var target = href.replace('#', '');
             self.loadTabIfNeeded(target);
         });
+
+        // Bootstrap tab event listener
+        $(document).off('shown.bs.tab.teamTabNav', '#kt_activitiesClientTeam a[data-toggle="tab"], #kt_activitiesClientTeam a[data-bs-toggle="tab"]')
+            .on('shown.bs.tab.teamTabNav', '#kt_activitiesClientTeam a[data-toggle="tab"], #kt_activitiesClientTeam a[data-bs-toggle="tab"]', function(e) {
+                var href = $(this).attr('href');
+                if (!href) return;
+                var target = href.replace('#', '');
+                self.loadTabIfNeeded(target);
+            });
     },
 
     loadTabIfNeeded: function(tabKey) {

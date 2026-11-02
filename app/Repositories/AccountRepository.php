@@ -139,6 +139,17 @@ class AccountRepository
             $fullTimeCount = $commCountries->get(2, 0);
             $contractCount = $commCountries->get(1, 0);
 
+            $commCountryNames = DB::table('commericial_countries')
+                ->join('countries', 'countries.id', '=', 'commericial_countries.country_id')
+                ->where('commericial_countries.company_id', $companyId)
+                ->whereIn('commericial_countries.commtype', [1, 2])
+                ->select('commericial_countries.commtype', 'countries.country_name', 'countries.country_code')
+                ->get()
+                ->groupBy('commtype');
+
+            $fullTimeCountries = $commCountryNames->get(2, collect())->pluck('country_name')->toArray();
+            $contractCountries = $commCountryNames->get(1, collect())->pluck('country_name')->toArray();
+
             $commericials = DB::table('commericials')
                 ->where('company_id', $companyId)
                 ->whereIn('commtype', [1, 2])
@@ -255,6 +266,8 @@ class AccountRepository
                 'contractCount' => $contractCount,
                 'fullTimeStatus' => $fullTimeStatus,
                 'contractStatus' => $contractStatus,
+                'fullTimeCountries' => $fullTimeCountries,
+                'contractCountries' => $contractCountries,
                 'offer_points' => $offerPoints,
                 'offer_point_other' => $offerPointOther,
                 'offer_point_hourly' => $offerPointHourly,

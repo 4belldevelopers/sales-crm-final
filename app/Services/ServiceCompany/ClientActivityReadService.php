@@ -1286,15 +1286,21 @@ class ClientActivityReadService
 
                     if ($clientType === 'direct') {
                         $isShared = true;
-                        $sharerCompanyId = $tenantId;
+                        $sharerCompanyId = 0;
+                        $targetCompanyId = 0;
 
                         if (! empty($s['recommendation_relation']) && is_array($s['recommendation_relation'])) {
                             foreach ($s['recommendation_relation'] as $rec) {
                                 $toComp = (int) ($rec['to_company_id'] ?? 0);
                                 $fromComp = (int) ($rec['from_company_id'] ?? 0);
                                 $fStatus = (int) ($rec['final_status'] ?? 0);
-                                if ($fromComp === $tenantId && ($toComp === $serviceCompanyId || $toComp > 0) && in_array($fStatus, [1, 2], true)) {
+                                if (in_array($fStatus, [1, 2], true) &&
+                                    (($fromComp === $tenantId && ($toComp === $serviceCompanyId || $toComp > 0)) ||
+                                     ($fromComp === $serviceCompanyId && ($toComp === $tenantId || $toComp > 0)))
+                                ) {
                                     $sharerUserId = (int) ($rec['from_user_id'] ?? 0);
+                                    $sharerCompanyId = $fromComp;
+                                    $targetCompanyId = $toComp;
                                     $fromCreated = $rec['from_created_at'] ?? '';
                                     if (! empty($rec['created_at']) && (empty($fromCreated) || str_contains($fromCreated, '00:00:00'))) {
                                         $sharedAt = $rec['created_at'];
@@ -1311,19 +1317,36 @@ class ClientActivityReadService
                             try {
                                 $dbRec = DB::table('recommendation_relation')
                                     ->where('job_id', $jid)
-                                    ->where('from_company_id', $tenantId)
-                                    ->where(function ($q) use ($serviceCompanyId) {
-                                        $q->where('to_company_id', $serviceCompanyId)->orWhere('to_company_id', '>', 0);
+                                    ->where(function ($q) use ($tenantId, $serviceCompanyId) {
+                                        $q->where(function ($q1) use ($tenantId, $serviceCompanyId) {
+                                            $q1->where('from_company_id', $tenantId)
+                                                ->where('to_company_id', $serviceCompanyId);
+                                        })->orWhere(function ($q2) use ($tenantId, $serviceCompanyId) {
+                                            $q2->where('from_company_id', $serviceCompanyId)
+                                                ->where('to_company_id', $tenantId);
+                                        });
                                     })
                                     ->whereIn('final_status', [1, 2])
                                     ->first();
                                 if ($dbRec) {
                                     $sharerUserId = (int) $dbRec->from_user_id;
+                                    $sharerCompanyId = (int) $dbRec->from_company_id;
+                                    $targetCompanyId = (int) $dbRec->to_company_id;
                                     $sharedAt = ! empty($dbRec->created_at) ? $dbRec->created_at : ($dbRec->from_created_at ?? $sharedAt);
                                 }
                             } catch (\Throwable) {
                             }
                         }
+
+                        if ($sharerCompanyId <= 0) {
+                            $sharerCompanyId = $tenantId;
+                        }
+                        if ($targetCompanyId <= 0) {
+                            $targetCompanyId = ($sharerCompanyId === $tenantId) ? $serviceCompanyId : $tenantId;
+                        }
+
+                        $sharerCompany = $this->resolveTenantCompanyName($sharerCompanyId);
+                        $agencyName = $this->resolveTenantCompanyName($targetCompanyId);
 
                         // Resolve Direct Client User Name
                         if ($sharerUserId > 0) {
@@ -1334,7 +1357,7 @@ class ClientActivityReadService
                         // Direct Client Company User fallback if sharer user profile is generic or empty
                         if (empty($sharerName) || strtolower($sharerName) === 'account lead') {
                             try {
-                                $clientUser = DB::table('users')->where('company_id', $tenantId)->first();
+                                $clientUser = DB::table('users')->where('company_id', $sharerCompanyId)->first();
                                 if ($clientUser) {
                                     $sharerName = $clientUser->name ?? trim($clientUser->first_name.' '.$clientUser->last_name);
                                 }
@@ -1343,9 +1366,8 @@ class ClientActivityReadService
                         }
 
                         if (empty($sharerName) || strtolower($sharerName) === 'account lead') {
-                            $sharerName = $creatorName;
+                            $sharerName = $creatorName ?: ($sharerCompany ?: 'Account Lead');
                         }
-                        $sharerCompany = $this->resolveTenantCompanyName($tenantId);
                     }
 
                     // Avoid overwriting a valid Direct Client profile with an unrelated agency hit

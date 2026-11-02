@@ -216,7 +216,7 @@
         .team-btn-light:hover { background: #f8fafc; color: #0f172a; border-color: #cbd5e1; }
 
         /* =========================================================================
-           TIER 2: 7 STAT CARDS ROW (Card-Based Tabs — Strictly 1 Single Horizontal Row)
+           TIER 2: 6 STAT CARDS ROW (Card-Based Tabs — Perfectly Balanced Enterprise Standard)
            ========================================================================= */
         .tm-stat-grid-wrap {
             width: 100% !important;
@@ -231,59 +231,67 @@
         }
         .tm-stat-grid {
             display: grid !important;
-            grid-template-columns: repeat(7, minmax(0, 1fr)) !important;
-            gap: 7px !important;
+            grid-template-columns: repeat(6, minmax(0, 1fr)) !important;
+            gap: 10px !important;
             width: 100% !important;
-            min-width: 900px !important;
+            min-width: 820px !important;
             box-sizing: border-box !important;
         }
         .tm-stat-card {
             background: #ffffff !important;
             border: 1px solid #e2e8f0 !important;
             border-radius: 10px !important;
-            padding: 9px 8px !important;
+            padding: 10px 12px 9px !important;
             display: flex !important;
             flex-direction: column !important;
             justify-content: space-between !important;
             text-decoration: none !important;
             color: inherit !important;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02) !important;
-            transition: all 0.15s ease !important;
+            box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03) !important;
+            transition: all 0.18s cubic-bezier(.4, 0, .2, 1) !important;
             cursor: pointer !important;
             min-width: 0 !important;
             overflow: hidden !important;
+            position: relative !important;
         }
         .tm-stat-card:hover {
             transform: translateY(-2px) !important;
             border-color: #cbd5e1 !important;
-            box-shadow: 0 4px 12px rgba(15, 23, 42, 0.06) !important;
+            box-shadow: 0 4px 12px rgba(15, 23, 42, 0.07) !important;
         }
         .tm-stat-card.active {
             border-color: #009ef7 !important;
-            box-shadow: 0 0 0 2px rgba(0, 158, 247, 0.15), 0 2px 6px rgba(0, 158, 247, 0.1) !important;
+            box-shadow: 0 0 0 2px rgba(0, 158, 247, 0.18), 0 3px 8px rgba(0, 158, 247, 0.12) !important;
+            background: #ffffff !important;
+        }
+        .tm-stat-card.active .tm-card-num {
+            color: #009ef7 !important;
         }
         .tm-card-top {
             display: flex !important;
             align-items: center !important;
-            gap: 7px !important;
+            gap: 10px !important;
             min-width: 0 !important;
         }
         .tm-card-icon {
-            width: 28px !important;
-            height: 28px !important;
-            min-width: 28px !important;
-            border-radius: 7px !important;
+            width: 32px !important;
+            height: 32px !important;
+            min-width: 32px !important;
+            border-radius: 8px !important;
             display: flex !important;
             align-items: center !important;
             justify-content: center !important;
             flex-shrink: 0 !important;
-            font-size: 12px !important;
+            font-size: 13.5px !important;
+            transition: transform 0.15s ease !important;
         }
-        .tm-card-icon.blue   { background: #eff6ff; color: #2563eb; }
+        .tm-stat-card:hover .tm-card-icon {
+            transform: scale(1.06);
+        }
+        .tm-card-icon.blue   { background: #eff6ff; color: #009ef7; }
         .tm-card-icon.indigo { background: #eef2ff; color: #4f46e5; }
         .tm-card-icon.green  { background: #f0fdf4; color: #16a34a; }
         .tm-card-icon.purple { background: #faf5ff; color: #9333ea; }
-        .tm-card-icon.amber  { background: #fffbeb; color: #d97706; }
         .tm-card-icon.pink   { background: #fff1f2; color: #e11d48; }
         .tm-card-icon.cyan   { background: #ecfeff; color: #0891b2; }
 
@@ -295,18 +303,19 @@
             overflow: hidden !important;
         }
         .tm-card-num {
-            font-size: 15px !important;
+            font-size: 16px !important;
             font-weight: 700 !important;
             color: #0f172a !important;
-            line-height: 1.15 !important;
+            line-height: 1.2 !important;
             font-variant-numeric: tabular-nums !important;
             font-family: 'Poppins', sans-serif !important;
+            transition: color 0.15s ease !important;
         }
         .tm-card-lbl {
-            font-size: 10.5px !important;
+            font-size: 11px !important;
             font-weight: 600 !important;
-            color: #64748b !important;
-            line-height: 1.2 !important;
+            color: #475569 !important;
+            line-height: 1.25 !important;
             margin-top: 1px !important;
             white-space: nowrap !important;
             overflow: hidden !important;
@@ -315,21 +324,20 @@
         .tm-card-sub {
             display: flex !important;
             align-items: center !important;
-            gap: 3px !important;
-            font-size: 8.5px !important;
+            gap: 4px !important;
+            font-size: 9.5px !important;
             font-weight: 600 !important;
-            margin-top: 5px !important;
-            padding-top: 3px !important;
+            margin-top: 6px !important;
+            padding-top: 5px !important;
             border-top: 1px dashed #f1f5f9 !important;
             white-space: nowrap !important;
             overflow: hidden !important;
             text-overflow: ellipsis !important;
         }
-        .tm-card-sub.blue   { color: #2563eb; }
+        .tm-card-sub.blue   { color: #009ef7; }
         .tm-card-sub.indigo { color: #4f46e5; }
         .tm-card-sub.green  { color: #16a34a; }
         .tm-card-sub.purple { color: #9333ea; }
-        .tm-card-sub.amber  { color: #d97706; }
         .tm-card-sub.pink   { color: #e11d48; }
         .tm-card-sub.cyan   { color: #0891b2; }
 
@@ -340,42 +348,45 @@
             background: #ffffff;
             border: 1px solid #e2e8f0;
             border-radius: 10px;
-            padding: 8px 14px;
+            padding: 10px 14px;
             display: flex;
             align-items: center;
             justify-content: space-between;
             gap: 16px;
             box-shadow: 0 1px 3px rgba(15, 23, 42, 0.02);
-            flex-wrap: wrap;
+            flex-wrap: nowrap;
             margin-bottom: 12px;
+            box-sizing: border-box;
+            width: 100%;
         }
         .team-filter-search {
             position: relative;
-            flex: 1;
+            flex: 1 1 auto;
             min-width: 260px;
-            max-width: 460px;
             display: flex;
             align-items: center;
         }
         .team-filter-search i.fa-magnifying-glass {
             position: absolute;
-            left: 10px;
+            left: 12px;
             font-size: 13px;
             color: #94a3b8;
             pointer-events: none;
+            z-index: 2;
         }
         .team-filter-search .team-search-input {
             width: 100%;
-            height: 34px;
-            padding: 0 32px 0 32px;
-            border: 1px solid transparent;
-            border-radius: 6px;
+            height: 38px;
+            padding: 0 32px 0 36px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
             font-size: 12.5px;
             font-family: 'Poppins', sans-serif;
             color: #0f172a;
             outline: none;
-            transition: all .15s;
+            transition: all .15s ease;
             background: #f8fafc;
+            box-sizing: border-box;
         }
         .team-filter-search .team-search-input:focus {
             background: #ffffff;
@@ -385,8 +396,8 @@
         .team-search-clear {
             position: absolute;
             right: 8px;
-            width: 20px;
-            height: 20px;
+            width: 22px;
+            height: 22px;
             border: none;
             background: transparent;
             color: #94a3b8;
@@ -396,19 +407,21 @@
             align-items: center;
             justify-content: center;
             border-radius: 50%;
+            z-index: 2;
+            transition: all .15s ease;
         }
         .team-search-clear:hover { background: #e2e8f0; color: #0f172a; }
 
         .team-filter-controls {
             display: flex;
             align-items: center;
-            gap: 14px;
-            flex-wrap: wrap;
+            gap: 10px;
+            flex-shrink: 0;
         }
         .team-filter-group {
             display: flex;
             align-items: center;
-            gap: 6px;
+            gap: 8px;
         }
         .team-filter-label {
             font-size: 12px;
@@ -420,21 +433,24 @@
             gap: 4px;
         }
         .team-select-control {
-            height: 34px;
+            height: 38px;
             border: 1px solid #e2e8f0;
-            border-radius: 7px;
+            border-radius: 8px;
             background: #ffffff;
             font-size: 12px;
             font-weight: 600;
             font-family: 'Poppins', sans-serif;
             color: #1e293b;
-            padding: 0 10px;
+            padding: 0 12px;
             outline: none;
             cursor: pointer;
-            transition: all .15s;
+            transition: all .15s ease;
+            box-sizing: border-box;
+            min-width: 200px;
         }
         .team-select-control:focus {
             border-color: #009ef7;
+            box-shadow: 0 0 0 2px rgba(0, 158, 247, 0.12);
         }
 
         /* =========================================================================
@@ -449,162 +465,292 @@
             min-width: 1020px;
         }
 
-        /* Mathematical 7-Column Grid Definition (Shared by Legend & Cards) */
-        .team-roster-legend,
-        .team-card-grid {
+        /* =========================================================================
+           TIER 3: CARD + SUB-CARD STREAM & 5-COLUMN LEGEND (Rule 20 Enterprise Standard)
+           ========================================================================= */
+        .team-roster-wrap {
+            width: 100%;
+            overflow-x: auto;
+            padding-bottom: 10px;
+        }
+        .team-roster-inner {
+            min-width: 1020px;
+        }
+
+        /* 5-Column Grid Definition for Sub-Cards (Zero Overflow on 15.6" screens) */
+        .tm-subcards-grid {
             display: grid !important;
-            grid-template-columns: minmax(210px, 2.2fr) minmax(85px, 0.9fr) minmax(185px, 1.8fr) minmax(115px, 1.1fr) minmax(220px, 2.2fr) minmax(95px, 1fr) minmax(105px, 1fr) !important;
-            gap: 12px !important;
-            align-items: center !important;
+            grid-template-columns: minmax(0, 1.65fr) minmax(0, 1.15fr) minmax(0, 1.25fr) minmax(0, 1.15fr) minmax(0, 1.8fr) !important;
+            gap: 8px !important;
+            align-items: stretch !important;
             box-sizing: border-box !important;
-        }
-
-        .team-roster-legend {
-            border: 1px solid transparent;
-            padding: 6px 18px !important;
-            margin-bottom: 8px !important;
-            font-size: 11px;
-            font-weight: 700;
-            color: #64748b;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        .tm-owner-tag {
-            display: inline-flex;
-            align-items: center;
-            font-size: 11px;
-            font-weight: 600;
-            color: #b45309;
-            margin: 1px 0;
-            line-height: 1.2;
-            white-space: nowrap;
+            width: 100% !important;
         }
 
         .team-cards-container {
             display: flex;
             flex-direction: column;
-            gap: 8px;
+            gap: 10px;
         }
-        .team-card {
+
+        /* Master Primary Card */
+        .tm-primary-card {
             background: #ffffff !important;
             border: 1px solid #e2e8f0 !important;
-            border-radius: 10px !important;
+            border-radius: 12px !important;
+            padding: 10px !important;
             box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03) !important;
-            transition: all .2s cubic-bezier(.4, 0, .2, 1);
-            overflow: hidden;
+            transition: all 0.2s cubic-bezier(.4, 0, .2, 1);
+            display: flex;
+            flex-direction: column;
+            position: relative;
             box-sizing: border-box;
         }
-        .team-card:hover {
+        .tm-primary-card:hover {
             border-color: #cbd5e1 !important;
-            box-shadow: 0 4px 12px rgba(15, 23, 42, 0.06) !important;
-        }
-        .team-card-grid {
-            padding: 12px 18px !important;
-            min-height: 64px;
+            box-shadow: 0 4px 14px rgba(15, 23, 42, 0.07) !important;
+            transform: translateY(-1px);
         }
 
-        /* Discrete Cell Elements */
-        .tm-cell {
+        /* Discrete Sub-Card Base Container */
+        .tm-subcard {
+            background: #f8fafc !important;
+            border: 1px solid #edf2f7 !important;
+            border-radius: 8px !important;
+            padding: 8px 10px !important;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
             min-width: 0;
-            overflow: hidden;
+            position: relative;
+            box-sizing: border-box;
         }
-
-        /* Col 1: Member Identity */
-        .tm-cell-member {
+        .tm-subcard-head {
             display: flex;
             align-items: center;
-            gap: 12px;
+            justify-content: space-between;
+            margin-bottom: 5px;
+            min-width: 0;
+            gap: 6px;
+            flex-wrap: nowrap;
+        }
+        .tm-subcard-title-wrap {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            min-width: 0;
+            flex: 1 1 auto;
+            overflow: hidden;
+        }
+        .tm-subcard-icon {
+            flex-shrink: 0;
+        }
+        .tm-subcard-title {
+            font-size: 10px;
+            font-weight: 700;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .tm-subcard-badge {
+            font-size: 9px;
+            font-weight: 700;
+            padding: 1px 6px;
+            border-radius: 4px;
+            white-space: nowrap;
+            flex-shrink: 0;
+            line-height: 1.25;
+        }
+        .badge-owner {
+            background: #fef3c7;
+            color: #d97706;
+            border: 1px solid #fde68a;
+        }
+        .badge-rep {
+            background: #eff6ff;
+            color: #009ef7;
+            border: 1px solid #bfdbfe;
+        }
+        .badge-count {
+            background: #e2e8f0;
+            color: #475569;
+        }
+        .badge-role {
+            background: #f1f5f9;
+            color: #475569;
+        }
+        .badge-month {
+            background: #eef2ff;
+            color: #4f46e5;
+        }
+        .badge-member {
+            background: #f0fdf4;
+            color: #16a34a;
+            border: 1px solid #bbf7d0;
+        }
+
+        /* Sub-Card 1: Member Identity */
+        .tm-identity-body {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            min-width: 0;
         }
         .tm-avatar {
-            width: 38px;
-            height: 38px;
-            border-radius: 8px;
+            width: 44px;
+            height: 44px;
+            border-radius: 10px;
             display: flex;
             align-items: center;
             justify-content: center;
             font-weight: 700;
-            font-size: 14px;
+            font-size: 16px;
             flex-shrink: 0;
             overflow: hidden;
+            cursor: pointer;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+            transition: transform 0.15s ease, box-shadow 0.15s ease;
+            margin-top: 1px;
+        }
+        .tm-avatar:hover {
+            transform: scale(1.04);
+            box-shadow: 0 2px 6px rgba(0, 158, 247, 0.2);
         }
         .tm-avatar img { width: 100%; height: 100%; object-fit: cover; }
+        .tm-identity-details {
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+            flex: 1 1 0%;
+            overflow: hidden;
+        }
         .tm-member-name {
             font-size: 13.5px;
             font-weight: 700;
             color: #0f172a;
             line-height: 1.25;
-            text-decoration: none;
+            cursor: pointer;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
             display: block;
+            transition: color 0.15s ease;
         }
         .tm-member-name:hover { color: #009ef7; }
-        .tm-member-email {
+        .tm-member-designation {
             font-size: 11px;
-            color: #64748b;
-            margin-top: 1px;
+            font-weight: 600;
+            color: #475569;
+            margin-top: 2px;
+            line-height: 1.3;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
-            display: block;
-        }
-
-        /* Col 2: Rank & Score */
-        .tm-cell-rank {
-            display: flex;
-            flex-direction: column;
-            align-items: flex-start;
-            justify-content: center;
-        }
-        .tm-rank-val {
-            font-size: 13px;
-            font-weight: 700;
-            color: #0f172a;
-            line-height: 1.2;
             display: flex;
             align-items: center;
+            gap: 4px;
         }
-        .tm-rank-month {
+        .tm-member-email-wrap {
             font-size: 10.5px;
             color: #64748b;
-            font-weight: 500;
-            margin-left: 3px;
-        }
-        .tm-btn-view-score {
-            background: #d1fae5;
-            color: #065f46;
-            border: none;
-            border-radius: 12px;
-            padding: 2px 8px;
-            font-size: 10.5px;
-            font-weight: 700;
-            cursor: pointer;
-            transition: all .15s;
-            line-height: 1.35;
-            display: inline-flex;
-            align-items: center;
             margin-top: 3px;
+            line-height: 1.3;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: flex;
+            align-items: center;
+            gap: 4px;
         }
-        .tm-btn-view-score:hover {
-            background: #a7f3d0;
-            color: #047857;
+        .tm-member-email-link {
+            color: inherit;
+            text-decoration: none;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
         }
+        .tm-member-email-link:hover { color: #009ef7; }
 
-        /* Col 3: Workload */
-        .tm-cell-workload {
+        /* Sub-Card 2: Dedicated System Role & Permissions */
+        .tm-role-body {
             display: flex;
             flex-direction: column;
             justify-content: center;
-            gap: 3px;
+            min-width: 0;
+            gap: 6px;
+        }
+        .tm-role-badge-row {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .tm-role-badge {
+            font-size: 11px;
+            font-weight: 700;
+            padding: 3px 8px;
+            border-radius: 5px;
+            white-space: nowrap;
+            display: inline-flex;
+            align-items: center;
+        }
+        .role-admin   { background: #ede9fe; color: #6d28d9; border: 1px solid #ddd6fe; }
+        .role-lead    { background: #e0f2fe; color: #0284c7; border: 1px solid #bae6fd; }
+        .role-default { background: #fef3c7; color: #b45309; border: 1px solid #fde68a; }
+
+        .tm-role-action-row {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .btn-change-role {
+            font-size: 11px;
+            font-weight: 600;
+            padding: 3.5px 8px;
+            border-radius: 6px;
+            border: 1px solid #cbd5e1;
+            background: #ffffff;
+            color: #334155;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            transition: all 0.15s ease;
+            white-space: nowrap;
+            box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+        }
+        .btn-change-role:hover {
+            background: #eff6ff;
+            border-color: #009ef7;
+            color: #009ef7;
+        }
+        .tm-role-locked-note {
+            font-size: 10px;
+            font-weight: 600;
+            color: #94a3b8;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        /* Sub-Card 3: Workload & Ops */
+        .tm-workload-body {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            min-width: 0;
         }
         .tm-wl-row {
+            display: flex;
+            align-items: center;
+            gap: 5px;
             font-size: 11px;
             color: #475569;
             white-space: nowrap;
-            display: flex;
-            align-items: center;
+            overflow: hidden;
+            text-overflow: ellipsis;
             line-height: 1.35;
         }
         .tm-wl-row i {
@@ -614,73 +760,193 @@
             flex-shrink: 0;
         }
         .tm-wl-row strong {
-            color: #0f172a;
             font-weight: 700;
+            color: #0f172a;
             font-variant-numeric: tabular-nums;
-            margin-right: 2px;
         }
 
-        /* Col 4: Role & Permissions */
-        .tm-cell-role {
+        /* Sub-Card 4: Dedicated Account Status (3 Clear Rows per Rule 20) */
+        .tm-status-body {
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            min-width: 0;
+            gap: 2.5px;
+        }
+        .tm-status-row {
             display: flex;
             align-items: center;
-            gap: 5px;
+            min-width: 0;
+            line-height: 1.25;
         }
-        .tm-role-badge {
-            font-size: 11px;
+        .tm-status-row-control {
+            margin-bottom: 1px;
+        }
+        .ios-switch {
+            position: relative;
+            display: inline-block;
+            width: 34px;
+            height: 19px;
+            flex-shrink: 0;
+            margin: 0;
+        }
+        .ios-switch input { opacity: 0; width: 0; height: 0; }
+        .ios-slider {
+            position: absolute;
+            cursor: pointer;
+            inset: 0;
+            background-color: #cbd5e1;
+            transition: .2s;
+            border-radius: 19px;
+        }
+        .ios-slider:before {
+            position: absolute;
+            content: "";
+            height: 13px;
+            width: 13px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: .2s;
+            border-radius: 50%;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+        }
+        .ios-switch input:checked + .ios-slider { background-color: #009ef7; }
+        .ios-switch input:checked + .ios-slider:before { transform: translateX(15px); }
+        .ios-switch input:disabled + .ios-slider { opacity: .6; cursor: not-allowed; }
+        .tm-status-row-label .tm-status-text {
+            font-size: 12px;
             font-weight: 700;
-            padding: 3.5px 9px;
-            border-radius: 6px;
-            display: inline-flex;
-            align-items: center;
+            line-height: 1.2;
+        }
+        .tm-status-row-sub .tm-status-subnote {
+            font-size: 10px;
+            color: #94a3b8;
+            line-height: 1.2;
             white-space: nowrap;
         }
-        .role-admin   { background: #ede9fe; color: #6d28d9; }
-        .role-lead    { background: #e0f2fe; color: #0284c7; }
-        .role-default { background: #fef3c7; color: #b45309; }
-        .tm-btn-role-edit {
-            width: 22px;
-            height: 22px;
-            border-radius: 5px;
-            border: 1px solid #e2e8f0;
-            background: #ffffff;
-            color: #94a3b8;
+        .btn-resend-invite-icon {
+            width: 26px;
+            height: 26px;
+            border-radius: 6px;
+            border: 1px solid #fde68a;
+            background: #fffbeb;
             display: inline-flex;
             align-items: center;
             justify-content: center;
             cursor: pointer;
-            font-size: 10px;
             transition: all .15s;
         }
-        .tm-btn-role-edit:hover {
-            background: #eff6ff;
+        .btn-resend-invite-icon:hover {
+            background: #fef3c7;
+            border-color: #f59e0b;
+        }
+        .btn-resend-invite {
+            font-size: 10.5px;
+            font-weight: 600;
             color: #009ef7;
-            border-color: #009ef7;
-        }
-
-        /* Col 5: Corporate Communication Purpose */
-        .tm-cell-communication {
-            display: flex;
-            align-items: center;
-            min-width: 0;
-        }
-        .tm-comm-chip {
+            text-decoration: none;
             display: inline-flex;
             align-items: center;
+            gap: 4px;
+        }
+        .btn-resend-invite:hover {
+            text-decoration: underline;
+        }
+
+        /* Sub-Card 5: Contact Details Visibility (Marketplace Enquiries) */
+        .tm-subcard-comm {
+            cursor: pointer;
+            transition: border-color 0.18s ease, background 0.18s ease, box-shadow 0.18s ease;
+        }
+        .tm-subcard-comm:hover {
+            border-color: #93c5fd !important;
+            background: #f8fbff !important;
+            box-shadow: 0 2px 8px rgba(0, 158, 247, 0.08);
+        }
+        .tm-subcard-comm:hover .btn-edit-comm-icon {
+            border-color: #009ef7;
+            color: #009ef7;
+            background: #eff6ff;
+        }
+        .tm-comm-body {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            gap: 2px;
+            min-width: 0;
+            width: 100%;
+            flex: 1;
+        }
+        .tm-comm-rows-list {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            width: 100%;
+        }
+        .tm-comm-row {
+            display: flex;
+            align-items: center;
+            width: 100%;
+            line-height: 1;
+        }
+        .tm-comm-chip {
+            width: 100%;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 9.5px;
+            font-weight: 600;
+            padding: 1.5px 6px;
+            border-radius: 4px;
+            line-height: 1.2;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            box-sizing: border-box;
+            border: 1px solid transparent;
+        }
+        .tm-comm-chip.client      { background: #f0fdf4; color: #16a34a; border-color: #bbf7d0; }
+        .tm-comm-chip.vendor      { background: #faf5ff; color: #9333ea; border-color: #e9d5ff; }
+        .tm-comm-chip.agency      { background: #faf5ff; color: #9333ea; border-color: #e9d5ff; }
+        .tm-comm-chip.recruitment { background: #e0f2fe; color: #0284c7; border-color: #bae6fd; }
+        .tm-comm-chip.bench       { background: #e0f2fe; color: #0284c7; border-color: #bae6fd; }
+        .tm-comm-chip i {
+            font-size: 8.5px;
+            width: 11px;
+            text-align: center;
+            flex-shrink: 0;
+        }
+        .btn-comm-change-action {
             font-size: 10px;
             font-weight: 600;
-            padding: 2.5px 6.5px;
-            border-radius: 5px;
-            line-height: 1.25;
+            padding: 1.5px 7px;
+            border-radius: 4px;
+            border: 1px solid #cbd5e1;
+            background: #ffffff;
+            color: #009ef7;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.15s ease;
             white-space: nowrap;
+            line-height: 1.25;
+            font-family: 'Poppins', sans-serif;
+            box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
         }
-        .tm-comm-chip.client      { background: #f0fdf4; color: #16a34a; border: 1px solid #bbf7d0; }
-        .tm-comm-chip.vendor      { background: #faf5ff; color: #9333ea; border: 1px solid #e9d5ff; }
-        .tm-comm-chip.agency      { background: #faf5ff; color: #9333ea; border: 1px solid #e9d5ff; }
-        .tm-comm-chip.recruitment { background: #e6fcf5; color: #059669; border: 1px solid #a7f3d0; }
-        .tm-comm-chip.finance     { background: #fffbeb; color: #d97706; border: 1px solid #fde68a; }
-
-        .tm-btn-edit-comm {
+        .btn-comm-change-action:hover {
+            background: #eff6ff;
+            border-color: #009ef7;
+            color: #0077ba;
+            box-shadow: 0 1px 3px rgba(0, 158, 247, 0.15);
+        }
+        .tm-subcard-comm:hover .btn-comm-change-action {
+            border-color: #009ef7;
+            background: #eff6ff;
+            color: #009ef7;
+        }
+        .btn-edit-comm-icon {
             width: 20px;
             height: 20px;
             border-radius: 4px;
@@ -692,106 +958,152 @@
             justify-content: center;
             cursor: pointer;
             font-size: 9px;
-            transition: all .15s;
-            padding: 0;
+            transition: all 0.15s ease;
             flex-shrink: 0;
         }
-        .tm-btn-edit-comm:hover {
+        .btn-edit-comm-icon:hover {
             background: #eff6ff;
             color: #009ef7;
             border-color: #009ef7;
         }
-
-        .tm-btn-add-comm {
-            font-size: 10.5px;
+        .btn-assign-comm-empty {
+            font-size: 11px;
             font-weight: 600;
-            padding: 3px 9px;
+            padding: 3.5px 9px;
             border-radius: 6px;
             border: 1px dashed #cbd5e1;
             background: #ffffff;
             color: #64748b;
+            cursor: pointer;
             display: inline-flex;
             align-items: center;
-            cursor: pointer;
+            gap: 5px;
+            transition: all 0.15s ease;
             white-space: nowrap;
-            transition: all .15s;
-            font-family: inherit;
         }
-        .tm-btn-add-comm:hover {
-            background: #eff6ff;
-            color: #009ef7;
+        .btn-assign-comm-empty:hover {
             border-color: #009ef7;
             border-style: solid;
+            background: #eff6ff;
+            color: #009ef7;
         }
 
-        .comm-channel-opt:hover {
-            border-color: #009ef7 !important;
-            background: #f8fafc !important;
-        }
-
-        /* Col 6: Status Toggle */
-        .tm-cell-status {
+        /* Sub-Card 6: Bottom Activity & Performance Strip (Swapped to Bottom Strip) */
+        .tm-card-bottom-strip {
+            background: #f8fafc;
+            border: 1px solid #eef2f6;
+            border-radius: 6px;
+            padding: 5px 12px;
             display: flex;
             align-items: center;
-            gap: 8px;
+            justify-content: space-between;
+            font-size: 11px;
+            color: #64748b;
+            margin-top: 2px;
+            gap: 12px;
         }
-        .tm-switch {
-            position: relative;
-            display: inline-block;
-            width: 34px;
-            height: 18px;
-            flex-shrink: 0;
-            margin: 0;
-        }
-        .tm-switch input { opacity: 0; width: 0; height: 0; }
-        .tm-slider {
-            position: absolute;
-            cursor: pointer;
-            inset: 0;
-            background: #cbd5e1;
-            border-radius: 20px;
-            transition: .2s;
-        }
-        .tm-slider:before {
-            content: "";
-            position: absolute;
-            height: 12px;
-            width: 12px;
-            left: 3px;
-            bottom: 3px;
-            background: #fff;
-            border-radius: 50%;
-            transition: .2s;
-        }
-        .tm-switch input:checked + .tm-slider { background: #2563eb; }
-        .tm-switch input:checked + .tm-slider:before { transform: translateX(16px); }
-        .tm-switch input:disabled + .tm-slider { opacity: .6; cursor: not-allowed; }
-        .tm-status-text {
-            font-size: 11.5px;
-            font-weight: 700;
-        }
-
-        /* Col 7: Last Active */
-        .tm-cell-lastactive {
+        .tm-bottom-left-meta {
             display: flex;
             align-items: center;
-            gap: 6px;
-            font-size: 11.5px;
-            color: #475569;
-            font-weight: 500;
+            gap: 10px;
+            flex-wrap: nowrap;
+            min-width: 0;
+        }
+        .tm-meta-item {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
             white-space: nowrap;
         }
-        .tm-dot { width: 7px; height: 7px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
+        .tm-meta-dot {
+            color: #cbd5e1;
+        }
+        .dot-pulse {
+            width: 6.5px;
+            height: 6.5px;
+            border-radius: 50%;
+            display: inline-block;
+            flex-shrink: 0;
+        }
         .dot-green { background: #10b981; }
         .dot-amber { background: #f59e0b; }
         .dot-gray  { background: #94a3b8; }
 
-        /* Col 8: Row Actions */
-        .tm-cell-actions {
+        .tm-bottom-right-group {
             display: flex;
             align-items: center;
-            justify-content: center;
+            gap: 12px;
+            flex-shrink: 0;
         }
+        .tm-perf-strip-box {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            padding: 2.5px 8px;
+            background: #f0fdf4;
+            border: 1px solid #bbf7d0;
+            border-radius: 6px;
+            font-size: 11px;
+            color: #166534;
+        }
+        .tm-perf-rank {
+            font-weight: 700;
+            display: inline-flex;
+            align-items: center;
+            gap: 3px;
+        }
+        .tm-perf-month {
+            font-size: 9.5px;
+            color: #4b5563;
+            font-weight: 500;
+        }
+        .tm-perf-score {
+            font-size: 10.5px;
+            font-weight: 600;
+        }
+        .btn-view-score {
+            font-size: 10px;
+            font-weight: 700;
+            color: #065f46;
+            background: #d1fae5;
+            border: 1px solid #6ee7b7;
+            border-radius: 4px;
+            padding: 1.5px 7px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            text-decoration: none;
+            transition: all 0.15s ease;
+            white-space: nowrap;
+        }
+        .btn-view-score:hover {
+            background: #a7f3d0;
+            color: #047857;
+        }
+
+        .btn-view-profile {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 3.5px 9px;
+            border-radius: 6px;
+            background: #eff6ff;
+            color: #009ef7;
+            font-size: 11px;
+            font-weight: 600;
+            border: 1px solid #bfdbfe;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.15s ease;
+            white-space: nowrap;
+        }
+        .btn-view-profile:hover {
+            background: #009ef7;
+            color: #ffffff;
+            border-color: #009ef7;
+        }
+
         /* Empty State */
         .team-empty-card {
             background: #fff;
@@ -811,6 +1123,10 @@
             color: #64748b;
             flex-wrap: wrap;
             gap: 12px;
+        }
+        /* Guard against any duplicate pagination inside stream container */
+        #teamsListajax .team-pagination-bar {
+            display: none !important;
         }
         .team-pagination-info {
             font-size: 12px;
@@ -910,38 +1226,42 @@
             color: #64748b;
         }
 
-        /* Responsive Breakpoints & 15.6" Screen Optimization (Strictly 7 Cards on 1 Row) */
+        /* Responsive Breakpoints & 15.6" Screen Optimization (Strictly 6 Cards on 1 Row) */
         @media (max-width: 1440px) {
             .tm-stat-grid {
-                grid-template-columns: repeat(7, minmax(0, 1fr)) !important;
-                gap: 5px !important;
+                grid-template-columns: repeat(6, minmax(0, 1fr)) !important;
+                gap: 6px !important;
             }
             .tm-stat-card {
-                padding: 7px 5px !important;
+                padding: 8px 6px !important;
             }
             .tm-card-top {
-                gap: 5px !important;
+                gap: 6px !important;
             }
             .tm-card-icon {
-                width: 26px !important;
-                height: 26px !important;
-                min-width: 26px !important;
-                font-size: 11px !important;
+                width: 28px !important;
+                height: 28px !important;
+                min-width: 28px !important;
+                font-size: 12px !important;
             }
             .tm-card-num {
-                font-size: 14px !important;
+                font-size: 15px !important;
             }
             .tm-card-lbl {
-                font-size: 9.5px !important;
+                font-size: 10px !important;
             }
             .tm-card-sub {
-                font-size: 8px !important;
+                font-size: 8.5px !important;
+            }
+            .tm-subcards-grid {
+                grid-template-columns: minmax(0, 1.6fr) minmax(0, 1.1fr) minmax(0, 1.2fr) minmax(0, 1.1fr) minmax(0, 1.8fr) !important;
+                gap: 6px !important;
             }
         }
         @media (max-width: 1150px) {
             .tm-stat-grid {
-                grid-template-columns: repeat(7, minmax(0, 1fr)) !important;
-                gap: 4px !important;
+                grid-template-columns: repeat(6, minmax(0, 1fr)) !important;
+                gap: 5px !important;
             }
             .tm-stat-card {
                 padding: 6px 4px !important;
@@ -960,6 +1280,23 @@
             }
             .tm-card-sub {
                 font-size: 7.5px !important;
+            }
+            .tm-subcards-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+                gap: 8px !important;
+            }
+        }
+        @media (max-width: 640px) {
+            .tm-subcards-grid {
+                grid-template-columns: 1fr !important;
+            }
+            .tm-stat-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+            }
+            .tm-card-bottom-strip {
+                flex-direction: column !important;
+                align-items: flex-start !important;
+                gap: 8px !important;
             }
         }
 
@@ -1167,12 +1504,16 @@
             opacity: 1;
             pointer-events: all;
         }
+        /* =========================================================================
+           COMMUNICATION RIGHT DRAWER: MODERN CARD + SUB-CARD ENTERPRISE STANDARD
+           Strictly single page viewport fit (Zero vertical scroller on 15.6" screens)
+           ========================================================================= */
         .comm-drawer {
             position: fixed;
             top: 0;
             right: 0;
             bottom: 0;
-            width: 560px;
+            width: 530px;
             max-width: 100vw;
             background: #ffffff;
             box-shadow: -12px 0 35px -5px rgba(15, 23, 42, 0.15);
@@ -1180,38 +1521,39 @@
             display: flex;
             flex-direction: column;
             transform: translateX(100%);
-            transition: transform .3s cubic-bezier(.4, 0, .2, 1);
+            transition: transform .25s cubic-bezier(.4, 0, .2, 1);
             font-family: 'Poppins', sans-serif;
+            height: 100vh;
         }
         .comm-drawer.open {
             transform: translateX(0);
         }
         .comm-drawer-head {
-            padding: 22px 26px 18px 26px;
+            padding: 12px 18px 10px 18px;
             border-bottom: 1px solid #f1f5f9;
             display: flex;
-            align-items: flex-start;
+            align-items: center;
             justify-content: space-between;
             gap: 12px;
             flex-shrink: 0;
         }
         .comm-drawer-title {
-            font-size: 17px;
+            font-size: 14px;
             font-weight: 700;
             color: #0f172a;
             margin: 0;
-            line-height: 1.3;
+            line-height: 1.25;
         }
         .comm-drawer-subtitle {
-            font-size: 12px;
+            font-size: 10.5px;
             color: #64748b;
-            margin: 4px 0 0 0;
-            line-height: 1.45;
+            margin: 2px 0 0 0;
+            line-height: 1.35;
         }
         .comm-drawer-close {
-            width: 32px;
-            height: 32px;
-            border-radius: 8px;
+            width: 28px;
+            height: 28px;
+            border-radius: 7px;
             border: 1px solid transparent;
             background: #f8fafc;
             color: #64748b;
@@ -1221,7 +1563,7 @@
             cursor: pointer;
             transition: all .15s;
             flex-shrink: 0;
-            font-size: 15px;
+            font-size: 13px;
         }
         .comm-drawer-close:hover {
             background: #e2e8f0;
@@ -1230,13 +1572,13 @@
         .comm-drawer-body {
             flex: 1;
             overflow-y: auto;
-            padding: 22px 26px;
+            padding: 10px 18px;
             display: flex;
             flex-direction: column;
-            gap: 20px;
+            gap: 7px;
         }
         .comm-drawer-body::-webkit-scrollbar {
-            width: 6px;
+            width: 5px;
         }
         .comm-drawer-body::-webkit-scrollbar-thumb {
             background: #cbd5e1;
@@ -1246,32 +1588,32 @@
             background: transparent;
         }
 
-        /* Target Member Profile Card inside Drawer */
+        /* CARD 1: Member Profile Summary Sub-Card */
         .comm-user-card {
             border: 1px solid #e2e8f0;
-            border-radius: 12px;
-            padding: 14px 16px;
+            border-radius: 8px;
+            padding: 7px 11px;
             background: #ffffff;
             display: flex;
             align-items: center;
             justify-content: space-between;
-            gap: 14px;
-            flex-wrap: wrap;
+            gap: 10px;
+            flex-shrink: 0;
         }
         .comm-user-card-left {
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 9px;
             min-width: 0;
         }
         .comm-user-avatar {
-            width: 44px;
-            height: 44px;
-            border-radius: 10px;
+            width: 32px;
+            height: 32px;
+            border-radius: 7px;
             background: #0f172a;
             color: #ffffff;
             font-weight: 700;
-            font-size: 17px;
+            font-size: 13px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -1287,7 +1629,7 @@
             min-width: 0;
         }
         .comm-user-name {
-            font-size: 14.5px;
+            font-size: 12.5px;
             font-weight: 700;
             color: #0f172a;
             white-space: nowrap;
@@ -1297,103 +1639,161 @@
         .comm-role-badge {
             background: #eff6ff;
             color: #009ef7;
-            font-size: 11px;
+            font-size: 9.5px;
             font-weight: 600;
-            padding: 2px 8px;
-            border-radius: 6px;
+            padding: 1px 6px;
+            border-radius: 4px;
             border: 1px solid #dbeafe;
             white-space: nowrap;
         }
         .comm-user-contacts {
             display: flex;
             align-items: center;
-            gap: 14px;
-            margin-top: 4px;
-            font-size: 11.5px;
+            gap: 10px;
+            margin-top: 1px;
+            font-size: 10.5px;
             color: #64748b;
-            flex-wrap: wrap;
+            white-space: nowrap;
         }
         .comm-user-card-right {
             display: flex;
-            align-items: center;
-            gap: 10px;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 2px;
             flex-shrink: 0;
-            flex-wrap: wrap;
         }
         .comm-status-pill {
             background: #ecfdf5;
             color: #10b981;
             border: 1px solid #a7f3d0;
             border-radius: 20px;
-            padding: 3px 10px;
-            font-size: 11px;
+            padding: 1px 7px;
+            font-size: 9.5px;
             font-weight: 600;
             display: inline-flex;
             align-items: center;
-            gap: 5px;
+            gap: 4px;
+            line-height: 1.3;
         }
         .comm-status-dot {
-            width: 6px;
-            height: 6px;
+            width: 5px;
+            height: 5px;
             border-radius: 50%;
             background: #10b981;
         }
         .comm-last-active-text {
-            font-size: 11.5px;
+            font-size: 9.5px;
             color: #94a3b8;
             display: inline-flex;
             align-items: center;
-            gap: 5px;
+            gap: 4px;
+            line-height: 1.2;
         }
         .comm-last-active-dot {
-            width: 5px;
-            height: 5px;
+            width: 4px;
+            height: 4px;
             border-radius: 50%;
             background: #cbd5e1;
         }
 
-        /* Section Head */
-        .comm-section-title {
-            font-size: 14.5px;
-            font-weight: 700;
-            color: #0f172a;
-        }
-        .comm-section-subtitle {
-            font-size: 11.5px;
-            color: #64748b;
-            margin-top: 2px;
-        }
-        .comm-btn-clear {
+        /* CARD 2: Dedicated Keep Private Card */
+        .comm-card-private {
             border: 1px solid #e2e8f0;
-            background: #ffffff;
             border-radius: 8px;
-            padding: 6px 12px;
-            font-size: 12px;
-            font-weight: 600;
-            color: #334155;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            cursor: pointer;
-            transition: all .15s;
-        }
-        .comm-btn-clear:hover {
-            background: #f8fafc;
-            border-color: #cbd5e1;
-            color: #0f172a;
-        }
-
-        /* 4 Channel Cards */
-        .comm-card {
+            padding: 7px 11px;
             background: #ffffff;
-            border: 1px solid #e2e8f0;
-            border-radius: 12px;
-            padding: 13px 16px;
             display: flex;
             align-items: center;
             justify-content: space-between;
-            gap: 14px;
-            transition: all .2s ease;
+            gap: 10px;
+            transition: all .15s ease;
+            flex-shrink: 0;
+        }
+        .comm-card-private.is-private-active {
+            border-color: #cbd5e1;
+            background: #f8fafc;
+        }
+
+        /* CARD 3: Parent Card for Inbound Channels */
+        .comm-channels-card {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 8px 11px;
+            display: flex;
+            flex-direction: column;
+            gap: 7px;
+            flex-shrink: 0;
+        }
+        .comm-channels-head {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            padding-bottom: 5px;
+            border-bottom: 1px solid #f1f5f9;
+        }
+        .comm-channels-header-top {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+        }
+        .comm-channels-title-wrap {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            min-width: 0;
+        }
+        .comm-channels-title {
+            font-size: 11.5px;
+            font-weight: 700;
+            color: #0f172a;
+            white-space: nowrap;
+        }
+        .comm-channels-hint {
+            font-size: 9.5px;
+            color: #64748b;
+            line-height: 1.35;
+            white-space: normal;
+        }
+        .comm-btn-clear {
+            background: transparent;
+            border: none;
+            color: #009ef7;
+            font-size: 10px;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            cursor: pointer;
+            padding: 2px 6px;
+            border-radius: 4px;
+            transition: all .15s ease;
+            flex-shrink: 0;
+        }
+        .comm-btn-clear:hover {
+            color: #0077ba;
+            background: #f1f5f9;
+            text-decoration: none;
+        }
+
+        .comm-channels-subcards {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        /* Sub-Card Base (Discrete Channel Row) */
+        .comm-card {
+            background: #ffffff;
+            border: 1px solid #edf2f7;
+            border-radius: 7px;
+            padding: 6px 10px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            transition: all .15s ease;
         }
         .comm-card.is-active {
             border-color: #93c5fd;
@@ -1402,54 +1802,58 @@
         .comm-card-main {
             display: flex;
             align-items: center;
-            gap: 13px;
+            gap: 9px;
             min-width: 0;
         }
         .comm-card-icon {
-            width: 42px;
-            height: 42px;
-            border-radius: 10px;
+            width: 28px;
+            height: 28px;
+            border-radius: 6px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 18px;
+            font-size: 11.5px;
             flex-shrink: 0;
         }
-        .comm-card-icon.icon-client { background: #dcfce7; color: #16a34a; }
-        .comm-card-icon.icon-agency { background: #f3e8ff; color: #9333ea; }
-        .comm-card-icon.icon-recruitment { background: #e6fcf5; color: #00b96b; }
-        .comm-card-icon.icon-finance { background: #fff4e6; color: #f59e0b; }
+        .comm-card-icon.icon-private     { background: #f1f5f9; color: #475569; border: 1px solid #e2e8f0; }
+        .comm-card-icon.icon-client      { background: #dcfce7; color: #16a34a; border: 1px solid #bbf7d0; }
+        .comm-card-icon.icon-agency      { background: #f3e8ff; color: #9333ea; border: 1px solid #e9d5ff; }
+        .comm-card-icon.icon-recruitment { background: #e0f2fe; color: #0284c7; border: 1px solid #bae6fd; }
 
         .comm-card-text {
             min-width: 0;
         }
         .comm-card-title {
-            font-size: 13.5px;
+            font-size: 11px;
             font-weight: 700;
             color: #0f172a;
             line-height: 1.25;
+            white-space: nowrap;
         }
         .comm-card-desc {
-            font-size: 11.5px;
+            font-size: 9.5px;
             color: #64748b;
-            line-height: 1.35;
-            margin-top: 3px;
+            line-height: 1.3;
+            margin-top: 1px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
         .comm-card-controls {
             display: flex;
             align-items: center;
-            gap: 12px;
             flex-shrink: 0;
         }
 
-        /* iOS Toggle Switch */
+        /* Micro iOS Toggle Switch (Compact 34×18px) */
         .comm-ios-switch {
             position: relative;
             display: inline-block;
-            width: 44px;
-            height: 24px;
+            width: 34px;
+            height: 18px;
             margin: 0;
             cursor: pointer;
+            flex-shrink: 0;
         }
         .comm-ios-switch input {
             opacity: 0;
@@ -1465,100 +1869,123 @@
             right: 0;
             bottom: 0;
             background-color: #cbd5e1;
-            transition: .25s ease;
-            border-radius: 24px;
+            transition: .2s ease;
+            border-radius: 18px;
         }
         .comm-ios-slider:before {
             position: absolute;
             content: "";
-            height: 18px;
-            width: 18px;
-            left: 3px;
-            bottom: 3px;
+            height: 14px;
+            width: 14px;
+            left: 2px;
+            bottom: 2px;
             background-color: white;
-            transition: .25s ease;
+            transition: .2s ease;
             border-radius: 50%;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
         }
         .comm-ios-switch input:checked + .comm-ios-slider {
             background-color: #009ef7;
         }
         .comm-ios-switch input:checked + .comm-ios-slider:before {
-            transform: translateX(20px);
+            transform: translateX(16px);
         }
 
-        /* Priority Dropdown */
-        .comm-prio-select {
-            appearance: none;
-            -webkit-appearance: none;
-            background-color: #ffffff;
-            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='%2364748b'%3E%3Cpath fill-rule='evenodd' d='M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z' clip-rule='evenodd'/%3E%3C/svg%3E");
-            background-repeat: no-repeat;
-            background-position: right 10px center;
-            background-size: 14px 14px;
-            border: 1px solid #e2e8f0;
-            border-radius: 8px;
-            padding: 6px 30px 6px 12px;
-            font-size: 12.5px;
-            font-weight: 500;
-            color: #1e293b;
-            width: 116px;
-            cursor: pointer;
-            transition: all .15s ease;
+        /* CARD 4: Contextual Validation Alert Box (Only shown when action required) */
+        .comm-alert-box {
+            background: #fffbeb;
+            border: 1px solid #fde68a;
+            border-radius: 7px;
+            padding: 8px 11px;
+            flex-shrink: 0;
+            transition: all 0.2s ease;
         }
-        .comm-prio-select:focus {
-            outline: none;
-            border-color: #009ef7;
-            box-shadow: 0 0 0 3px rgba(0, 158, 247, 0.12);
-        }
-        .comm-prio-select:disabled {
-            background-color: #f8fafc;
-            color: #94a3b8;
-            border-color: #e2e8f0;
-            cursor: not-allowed;
-            opacity: 0.6;
-        }
-
-        /* Info Alert Box */
-        .comm-info-box {
-            background: #eff6ff;
-            border: 1px solid #bfdbfe;
-            border-radius: 10px;
-            padding: 12px 14px;
-            display: flex;
-            align-items: flex-start;
-            gap: 12px;
-        }
-        .comm-info-icon {
+        .comm-alert-icon {
             width: 20px;
             height: 20px;
             border-radius: 50%;
-            background: #009ef7;
-            color: #ffffff;
+            background: #fef3c7;
+            color: #d97706;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            flex-shrink: 0;
+            margin-top: 1px;
+        }
+        .comm-alert-content {
+            flex: 1;
+            min-width: 0;
+        }
+        .comm-alert-title {
+            font-size: 11px;
+            font-weight: 700;
+            color: #92400e;
+            line-height: 1.25;
+        }
+        .comm-alert-message {
+            font-size: 10px;
+            color: #b45309;
+            line-height: 1.35;
+            margin-top: 2px;
+        }
+        .comm-alert-close {
+            background: transparent;
+            border: none;
+            color: #b45309;
+            font-size: 11px;
+            cursor: pointer;
+            padding: 0 2px;
+            opacity: 0.7;
+            transition: opacity 0.15s ease;
+        }
+        .comm-alert-close:hover {
+            opacity: 1;
+        }
+
+        /* CARD 5: Visibility & Privacy Micro-Strip (Subtle Enterprise Palette) */
+        .comm-info-box {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 7px;
+            padding: 7px 11px;
+            display: flex;
+            align-items: center;
+            gap: 9px;
+            flex-shrink: 0;
+        }
+        .comm-info-icon {
+            width: 22px;
+            height: 22px;
+            border-radius: 6px;
+            background: #f1f5f9;
+            color: #64748b;
+            border: 1px solid #e2e8f0;
             display: flex;
             align-items: center;
             justify-content: center;
             font-size: 11px;
-            font-weight: 700;
             flex-shrink: 0;
-            margin-top: 1px;
         }
         .comm-info-text {
-            font-size: 12px;
-            color: #1e40af;
-            line-height: 1.45;
-            font-weight: 400;
+            font-size: 9.5px;
+            color: #64748b;
+            line-height: 1.35;
+        }
+        .comm-info-text strong {
+            color: #334155;
+            font-weight: 700;
         }
 
-        /* Drawer Footer */
+        /* Drawer Footer (Compact Standard) */
         .comm-drawer-foot {
-            padding: 16px 26px;
+            padding: 10px 18px;
             border-top: 1px solid #e2e8f0;
             background: #ffffff;
             display: flex;
             align-items: center;
             justify-content: flex-end;
-            gap: 12px;
+            gap: 8px;
             flex-shrink: 0;
         }
         .comm-btn-cancel {
@@ -1566,9 +1993,9 @@
             background: #ffffff;
             color: #475569;
             font-weight: 600;
-            font-size: 13px;
-            padding: 9px 20px;
-            border-radius: 8px;
+            font-size: 11.5px;
+            padding: 6px 14px;
+            border-radius: 6px;
             cursor: pointer;
             transition: all .15s ease;
         }
@@ -1582,15 +2009,15 @@
             border: 1px solid #009ef7;
             color: #ffffff;
             font-weight: 600;
-            font-size: 13px;
-            padding: 9px 22px;
-            border-radius: 8px;
+            font-size: 11.5px;
+            padding: 6px 16px;
+            border-radius: 6px;
             cursor: pointer;
             transition: all .15s ease;
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            gap: 6px;
+            gap: 5px;
             box-shadow: 0 1px 2px rgba(0, 158, 247, 0.2);
         }
         .comm-btn-save:hover {
@@ -1636,16 +2063,16 @@
                     </div>
 
                     <div class="team-toolbar-right">
-                        <!-- Action Button: Invite Member -->
+                        <!-- Action Button: Add/Invite Members -->
                         <button type="button" class="team-btn-primary" id="openInviteDrawer">
-                            <i class="fa-solid fa-plus me-1"></i>
-                            <span>Invite Member</span>
+                            <i class="fa-solid fa-plus text-white" style="font-size: 11px;"></i>
+                            <span>Add/Invite Members</span>
                         </button>
                     </div>
                 </div>
 
                 <!-- ============================================================== -->
-                <!-- TIER 2: 7 STAT CARDS ROW (Card-Based Tabs — Locked in 1 Row)   -->
+                <!-- TIER 2: 6 STAT CARDS ROW (Card-Based Tabs — Enterprise Grid)   -->
                 <!-- ============================================================== -->
                 <div class="tm-stat-grid-wrap mb-3">
                     <div class="tm-stat-grid">
@@ -1662,11 +2089,11 @@
                             </div>
                             <div class="tm-card-sub blue">
                                 <i class="fa-solid fa-arrow-up" style="font-size: 8px;"></i>
-                                <span>+{{ max($teamCounts['total'] ?? 0, 1) }} registered</span>
+                                <span id="span_teamActiveSub">+{{ (int) ($teamCounts['active'] ?? 0) }} active</span>
                             </div>
                         </a>
 
-                        {{-- Card 2: Recruitment Team --}}
+                        {{-- Card 2: Bench Talent Enquiries --}}
                         <a href="javascript:void(0);" onclick="setTeamTab('recruitment', this);" class="tm-stat-card" data-tab="recruitment">
                             <div class="tm-card-top">
                                 <div class="tm-card-icon indigo">
@@ -1674,16 +2101,16 @@
                                 </div>
                                 <div class="tm-card-meta">
                                     <div class="tm-card-num" id="span_teamRecruitment">{{ $teamCounts['recruitment'] ?? 0 }}</div>
-                                    <div class="tm-card-lbl" title="Recruitment Team">Recruitment Team</div>
+                                    <div class="tm-card-lbl" title="Bench Talent Enquiries">Bench Talent Enquiries</div>
                                 </div>
                             </div>
                             <div class="tm-card-sub indigo">
                                 <i class="fa-solid fa-user-check" style="font-size: 8px;"></i>
-                                <span>Active recruiters</span>
+                                <span>Bench Talent Representative</span>
                             </div>
                         </a>
 
-                        {{-- Card 3: Client & Sales --}}
+                        {{-- Card 3: Client & Sales Enquiries --}}
                         <a href="javascript:void(0);" onclick="setTeamTab('client', this);" class="tm-stat-card" data-tab="client">
                             <div class="tm-card-top">
                                 <div class="tm-card-icon green">
@@ -1691,16 +2118,16 @@
                                 </div>
                                 <div class="tm-card-meta">
                                     <div class="tm-card-num" id="span_teamClient">{{ $teamCounts['client'] ?? 0 }}</div>
-                                    <div class="tm-card-lbl" title="Client & Sales">Client &amp; Sales</div>
+                                    <div class="tm-card-lbl" title="Client & Sales Enquiries">Client &amp; Sales Enquiries</div>
                                 </div>
                             </div>
                             <div class="tm-card-sub green">
                                 <i class="fa-solid fa-handshake" style="font-size: 8px;"></i>
-                                <span>Client contacts</span>
+                                <span>Client Representative</span>
                             </div>
                         </a>
 
-                        {{-- Card 4: Vendor & Agency --}}
+                        {{-- Card 4: Agency Queries --}}
                         <a href="javascript:void(0);" onclick="setTeamTab('vendor', this);" class="tm-stat-card" data-tab="vendor">
                             <div class="tm-card-top">
                                 <div class="tm-card-icon purple">
@@ -1708,33 +2135,16 @@
                                 </div>
                                 <div class="tm-card-meta">
                                     <div class="tm-card-num" id="span_teamVendor">{{ $teamCounts['vendor'] ?? 0 }}</div>
-                                    <div class="tm-card-lbl" title="Vendor & Agency">Vendor &amp; Agency</div>
+                                    <div class="tm-card-lbl" title="Agency Queries">Agency Queries</div>
                                 </div>
                             </div>
                             <div class="tm-card-sub purple">
                                 <i class="fa-solid fa-store" style="font-size: 8px;"></i>
-                                <span>Agency partners</span>
+                                <span>Agency Representative</span>
                             </div>
                         </a>
 
-                        {{-- Card 5: Finance & Billing --}}
-                        <a href="javascript:void(0);" onclick="setTeamTab('finance', this);" class="tm-stat-card" data-tab="finance">
-                            <div class="tm-card-top">
-                                <div class="tm-card-icon amber">
-                                    <i class="fa-solid fa-credit-card"></i>
-                                </div>
-                                <div class="tm-card-meta">
-                                    <div class="tm-card-num" id="span_teamFinance">{{ $teamCounts['finance'] ?? 0 }}</div>
-                                    <div class="tm-card-lbl" title="Finance & Billing">Finance &amp; Billing</div>
-                                </div>
-                            </div>
-                            <div class="tm-card-sub amber">
-                                <i class="fa-solid fa-receipt" style="font-size: 8px;"></i>
-                                <span>Invoices &amp; billing</span>
-                            </div>
-                        </a>
-
-                        {{-- Card 6: Inactive Members --}}
+                        {{-- Card 5: Inactive Members --}}
                         <a href="javascript:void(0);" onclick="setTeamTab('inactive', this);" class="tm-stat-card" data-tab="inactive">
                             <div class="tm-card-top">
                                 <div class="tm-card-icon pink">
@@ -1751,7 +2161,7 @@
                             </div>
                         </a>
 
-                        {{-- Card 7: Pending Invites --}}
+                        {{-- Card 6: Pending Invites --}}
                         <a href="javascript:void(0);" onclick="setTeamTab('invited', this);" class="tm-stat-card" data-tab="invited">
                             <div class="tm-card-top">
                                 <div class="tm-card-icon cyan">
@@ -1777,7 +2187,7 @@
                     <div class="team-filter-search">
                         <i class="fa-solid fa-magnifying-glass"></i>
                         <input type="text" id="kt_tagify_2" class="team-search-input" placeholder="Search by name, email or phone..." autocomplete="off" />
-                        <button type="button" class="team-search-clear" onclick="clearTeamFilters()" title="Clear Search">✕</button>
+                        <button type="button" class="team-search-clear" id="teamSearchClearBtn" onclick="clearTeamFilters()" title="Clear Search">✕</button>
                     </div>
 
                     <div class="team-filter-controls">
@@ -1786,30 +2196,28 @@
 
                         <div class="team-filter-group">
                             <span class="team-filter-label"><i class="fa-solid fa-arrow-down-short-wide me-1 text-muted"></i>Sort by:</span>
-                            <select class="team-select-control" id="sortingfilter" onchange="fetchTeams(1)">
+                            <select class="team-select-control" id="sortingfilter" onchange="onTeamSortChange(this.value)">
                                 <option value="">Last Active</option>
-                                <option value="1">Newest to Oldest</option>
-                                <option value="2">Oldest to Newest</option>
+                                <option value="1">Joined: Newest to Oldest</option>
+                                <option value="2">Joined: Oldest to Newest</option>
+                                <option value="name_asc">Name: A to Z</option>
+                                <option value="name_desc">Name: Z to A</option>
+                                <option value="designation_asc">Designation: A to Z</option>
+                                <option value="role_asc">System Role: A to Z</option>
+                                <option value="active_jobs_desc">Workload: Active Jobs (High to Low)</option>
+                                <option value="bench_talents_desc">Workload: Bench Talent Rep (High to Low)</option>
+                                <option value="score_desc">Performance Score (High to Low)</option>
+                                <option value="status_active">Account Status: Active First</option>
                             </select>
                         </div>
                     </div>
                 </div>
 
                 <!-- ============================================================== -->
-                <!-- TIER 3: ROSTER COLUMN LEGEND & CARD STREAM (7 Columns Aligned) -->
+                <!-- TIER 3: CARD-DRIVEN MEMBER STREAM (Direct Card Flow)           -->
                 <!-- ============================================================== -->
                 <div class="team-roster-wrap">
                     <div class="team-roster-inner">
-                        <div class="team-roster-legend">
-                            <div>Member</div>
-                            <div>Rank</div>
-                            <div>Workload</div>
-                            <div>Role</div>
-                            <div>Communication Purpose</div>
-                            <div>Status</div>
-                            <div>Last Active</div>
-                        </div>
-
                         <div class="position-relative">
                             <div class="loadingMessage loadingMessageteamsListajax" style="display: none; position: absolute; z-index: 20; background: rgba(255,255,255,0.85); inset: 0; padding: 40px; text-align: center; font-weight: 600; color: #009ef7; border-radius: 10px;">
                                 <span class="spinner-border spinner-border-sm me-2"></span> Loading team members...
@@ -2053,28 +2461,28 @@
         <!-- ASSIGN COMMUNICATION CONTACTS RIGHT DRAWER (RULE 20 STANDARD)  -->
         <!-- ============================================================== -->
         <div class="comm-overlay" id="commOverlay"></div>
-        <div class="comm-drawer" id="commDrawer" role="dialog" aria-modal="true" aria-label="Assign Communication Contacts">
-            <!-- Drawer Header -->
+        <div class="comm-drawer" id="commDrawer" role="dialog" aria-modal="true" aria-label="Share Contact Details for Marketplace Enquiries">
+            <!-- Drawer Header (Compact Standard) -->
             <div class="comm-drawer-head">
                 <div>
-                    <h5 class="comm-drawer-title">Assign Communication Contacts</h5>
-                    <p class="comm-drawer-subtitle">Select the communication types this member will be responsible for and set the contact priority for each.</p>
+                    <h5 class="comm-drawer-title">Share Contact Details for Marketplace Enquiries</h5>
+                    <p class="comm-drawer-subtitle">Choose which inbound enquiries this team member receives on Jero Marketplace.</p>
                 </div>
                 <button type="button" class="comm-drawer-close" id="commDrawerClose" onclick="closeAssignCommDrawer()" aria-label="Close">
                     <i class="fa-solid fa-xmark"></i>
                 </button>
             </div>
 
-            <!-- Drawer Body -->
+            <!-- Drawer Body (Card + Sub-Card Enterprise Design, Zero Vertical Scroll) -->
             <div class="comm-drawer-body">
                 <input type="hidden" id="commDrawerUserId" value="" />
 
-                <!-- Member Identity Card -->
+                <!-- CARD 1: Member Identity Compact Bar -->
                 <div class="comm-user-card">
                     <div class="comm-user-card-left">
                         <div class="comm-user-avatar" id="commDrawerAvatar">U</div>
                         <div class="comm-user-info">
-                            <div class="d-flex align-items-center flex-wrap gap-2">
+                            <div class="d-flex align-items-center flex-wrap gap-1">
                                 <span class="comm-user-name" id="commDrawerName">Member Name</span>
                                 <span class="comm-role-badge" id="commDrawerRole">Member</span>
                             </div>
@@ -2091,139 +2499,140 @@
                         </div>
                         <div class="comm-last-active-text" id="commDrawerLastActive">
                             <span class="comm-last-active-dot"></span>
-                            <span id="commDrawerLastActiveText">Last active: Recently</span>
+                            <span id="commDrawerLastActiveText">Active recently</span>
                         </div>
                     </div>
                 </div>
 
-                <!-- Section Title & Clear All -->
-                <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
-                    <div>
-                        <h6 class="comm-section-title mb-0">Communication Types</h6>
-                        <p class="comm-section-subtitle mb-0">Enable the communication types this member will be responsible for and set the contact priority.</p>
+                <!-- CARD 2: Dedicated Keep Private Master Card -->
+                <div class="comm-card-private" id="commCard_private">
+                    <div class="comm-card-main">
+                        <div class="comm-card-icon icon-private">
+                            <i class="fa-solid fa-user-shield"></i>
+                        </div>
+                        <div class="comm-card-text">
+                            <div class="comm-card-title">Keep Private (Do Not Share Contact Details)</div>
+                            <div class="comm-card-desc">Keep mobile &amp; email confidential. No contact details shown on Marketplace.</div>
+                        </div>
                     </div>
-                    <button type="button" class="comm-btn-clear" onclick="clearAllCommDrawerRoles()" title="Disable all communication types">
-                        <i class="fa-solid fa-arrows-rotate"></i>
-                        <span>Clear All</span>
-                    </button>
+                    <div class="comm-card-controls">
+                        <label class="comm-ios-switch" title="Toggle Keep Private mode">
+                            <input type="checkbox" id="commToggle_private">
+                            <span class="comm-ios-slider"></span>
+                        </label>
+                    </div>
                 </div>
 
-                <!-- 4 Channel Cards -->
-                <div class="d-flex flex-column gap-3" id="commDrawerCardsList">
-                    <!-- Channel 1: Client & Sales -->
-                    <div class="comm-card" id="commCard_client" data-channel="client">
-                        <div class="comm-card-main">
-                            <div class="comm-card-icon icon-client">
-                                <i class="fa-solid fa-users"></i>
+                <!-- CARD 3: Modern Card + Sub-Card Container for Enquiry Channels -->
+                <div class="comm-channels-card">
+                    <div class="comm-channels-head">
+                        <div class="comm-channels-header-top">
+                            <div class="comm-channels-title-wrap">
+                                <i class="fa-solid fa-headset text-primary me-1" style="font-size: 11px;"></i>
+                                <span class="comm-channels-title">Inbound Marketplace Channels</span>
                             </div>
-                            <div class="comm-card-text">
-                                <div class="comm-card-title">Client &amp; Sales</div>
-                                <div class="comm-card-desc">Client enquiries, sales communication, profile discovery and client job requests.</div>
-                            </div>
+                            <button type="button" class="comm-btn-clear" onclick="clearAllCommDrawerRoles()" title="Disable all enquiry channels">
+                                <i class="fa-solid fa-arrows-rotate"></i>
+                                <span>Clear All</span>
+                            </button>
                         </div>
-                        <div class="comm-card-controls">
-                            <label class="comm-ios-switch" title="Toggle Client &amp; Sales representation">
-                                <input type="checkbox" class="comm-drawer-toggle" data-channel="client" id="commToggle_client">
-                                <span class="comm-ios-slider"></span>
-                            </label>
-                            <select class="comm-prio-select" data-channel="client" id="commPrio_client" disabled title="Contact Priority">
-                                <option value="Primary" selected>Primary</option>
-                                <option value="Secondary">Secondary</option>
-                                <option value="Backup">Backup</option>
-                            </select>
+                        <div class="comm-channels-hint">
+                            Direct phone and email will be shared on Jero Marketplace for active channels.
                         </div>
                     </div>
 
-                    <!-- Channel 2: Agency -->
-                    <div class="comm-card" id="commCard_agency" data-channel="agency">
-                        <div class="comm-card-main">
-                            <div class="comm-card-icon icon-agency">
-                                <i class="fa-solid fa-shapes"></i>
+                    <div class="comm-channels-subcards" id="commDrawerCardsList">
+                        <!-- Sub-Card 1: Sales & Client Enquiries -->
+                        <div class="comm-card" id="commCard_client" data-channel="client">
+                            <div class="comm-card-main">
+                                <div class="comm-card-icon icon-client">
+                                    <i class="fa-solid fa-users"></i>
+                                </div>
+                                <div class="comm-card-text">
+                                    <span class="comm-card-title">Sales &amp; Client Enquiries</span>
+                                    <div class="comm-card-desc">Client hiring requests, project discovery calls &amp; sales inquiries.</div>
+                                </div>
                             </div>
-                            <div class="comm-card-text">
-                                <div class="comm-card-title">Agency</div>
-                                <div class="comm-card-desc">Agency enquiries, job requests, candidate submissions and marketplace communication.</div>
+                            <div class="comm-card-controls">
+                                <label class="comm-ios-switch" title="Toggle Sales &amp; Client Enquiries">
+                                    <input type="checkbox" class="comm-drawer-toggle" data-channel="client" id="commToggle_client">
+                                    <span class="comm-ios-slider"></span>
+                                </label>
                             </div>
                         </div>
-                        <div class="comm-card-controls">
-                            <label class="comm-ios-switch" title="Toggle Agency representation">
-                                <input type="checkbox" class="comm-drawer-toggle" data-channel="agency" id="commToggle_agency">
-                                <span class="comm-ios-slider"></span>
-                            </label>
-                            <select class="comm-prio-select" data-channel="agency" id="commPrio_agency" disabled title="Contact Priority">
-                                <option value="Primary" selected>Primary</option>
-                                <option value="Secondary">Secondary</option>
-                                <option value="Backup">Backup</option>
-                            </select>
-                        </div>
-                    </div>
 
-                    <!-- Channel 3: Recruitment / Talent -->
-                    <div class="comm-card" id="commCard_recruitment" data-channel="recruitment">
-                        <div class="comm-card-main">
-                            <div class="comm-card-icon icon-recruitment">
-                                <i class="fa-solid fa-id-card-clip"></i>
+                        <!-- Sub-Card 2: Agency Queries -->
+                        <div class="comm-card" id="commCard_agency" data-channel="agency">
+                            <div class="comm-card-main">
+                                <div class="comm-card-icon icon-agency">
+                                    <i class="fa-solid fa-handshake"></i>
+                                </div>
+                                <div class="comm-card-text">
+                                    <span class="comm-card-title">Agency Queries</span>
+                                    <div class="comm-card-desc">Agency partner inquiries, split-fee requests &amp; vendor submissions.</div>
+                                </div>
                             </div>
-                            <div class="comm-card-text">
-                                <div class="comm-card-title">Recruitment / Talent</div>
-                                <div class="comm-card-desc">Candidate coordination, interviews, hiring operations and talent related communication.</div>
+                            <div class="comm-card-controls">
+                                <label class="comm-ios-switch" title="Toggle Agency Queries">
+                                    <input type="checkbox" class="comm-drawer-toggle" data-channel="agency" id="commToggle_agency">
+                                    <span class="comm-ios-slider"></span>
+                                </label>
                             </div>
                         </div>
-                        <div class="comm-card-controls">
-                            <label class="comm-ios-switch" title="Toggle Recruitment / Talent representation">
-                                <input type="checkbox" class="comm-drawer-toggle" data-channel="recruitment" id="commToggle_recruitment">
-                                <span class="comm-ios-slider"></span>
-                            </label>
-                            <select class="comm-prio-select" data-channel="recruitment" id="commPrio_recruitment" disabled title="Contact Priority">
-                                <option value="Primary" selected>Primary</option>
-                                <option value="Secondary">Secondary</option>
-                                <option value="Backup">Backup</option>
-                            </select>
-                        </div>
-                    </div>
 
-                    <!-- Channel 4: Billing & Invoicing -->
-                    <div class="comm-card" id="commCard_finance" data-channel="finance">
-                        <div class="comm-card-main">
-                            <div class="comm-card-icon icon-finance">
-                                <i class="fa-solid fa-file-invoice-dollar"></i>
+                        <!-- Sub-Card 3: Bench Talent Enquiries -->
+                        <div class="comm-card" id="commCard_bench" data-channel="bench">
+                            <div class="comm-card-main">
+                                <div class="comm-card-icon icon-recruitment">
+                                    <i class="fa-solid fa-user-tag"></i>
+                                </div>
+                                <div class="comm-card-text">
+                                    <span class="comm-card-title">Bench Talent Enquiries</span>
+                                    <div class="comm-card-desc">Inbound talent deployment calls, candidate placements &amp; queries.</div>
+                                </div>
                             </div>
-                            <div class="comm-card-text">
-                                <div class="comm-card-title">Billing &amp; Invoicing</div>
-                                <div class="comm-card-desc">Invoices, billing, payment queries and financial transactions.</div>
+                            <div class="comm-card-controls">
+                                <label class="comm-ios-switch" title="Toggle Bench Talent Enquiries">
+                                    <input type="checkbox" class="comm-drawer-toggle" data-channel="bench" id="commToggle_bench">
+                                    <span class="comm-ios-slider"></span>
+                                </label>
                             </div>
-                        </div>
-                        <div class="comm-card-controls">
-                            <label class="comm-ios-switch" title="Toggle Billing &amp; Invoicing representation">
-                                <input type="checkbox" class="comm-drawer-toggle" data-channel="finance" id="commToggle_finance">
-                                <span class="comm-ios-slider"></span>
-                            </label>
-                            <select class="comm-prio-select" data-channel="finance" id="commPrio_finance" disabled title="Contact Priority">
-                                <option value="Primary" selected>Primary</option>
-                                <option value="Secondary">Secondary</option>
-                                <option value="Backup">Backup</option>
-                            </select>
                         </div>
                     </div>
                 </div>
 
-                <!-- Info Alert Callout -->
+                <!-- CARD 4: Contextual Validation Alert Box (Only shown when action required) -->
+                <div id="commInvariantAlert" class="comm-alert-box" style="display: none;">
+                    <div class="d-flex align-items-start gap-2">
+                        <div class="comm-alert-icon">
+                            <i class="fa-solid fa-triangle-exclamation"></i>
+                        </div>
+                        <div class="comm-alert-content">
+                            <div class="comm-alert-title" id="commInvariantAlertTitle">Contact Requirement</div>
+                            <div class="comm-alert-message" id="commInvariantAlertText">At least one contact is required. Please add at least one contact or configure a fallback representative to continue.</div>
+                        </div>
+                        <button type="button" class="comm-alert-close" onclick="$('#commInvariantAlert').slideUp(180);" aria-label="Dismiss">
+                            <i class="fa-solid fa-xmark"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- CARD 5: Visibility & Privacy Micro-Strip -->
                 <div class="comm-info-box">
                     <div class="comm-info-icon">
-                        <i class="fa-solid fa-info"></i>
+                        <i class="fa-solid fa-shield-halved"></i>
                     </div>
                     <div class="comm-info-text">
-                        <div>A member can be assigned to multiple communication types.</div>
-                        <div>You can set different priority levels (Primary, Secondary, Backup) for each type.</div>
+                        <span><strong>Privacy Guarantee:</strong> Mobile number &amp; email are only published on Jero.works Marketplace for channels enabled above. Turning "Keep Private" ON keeps all contacts 100% confidential.</span>
                     </div>
                 </div>
             </div>
 
-            <!-- Drawer Footer -->
+            <!-- Drawer Footer (Compact Standard) -->
             <div class="comm-drawer-foot">
                 <button type="button" class="comm-btn-cancel" onclick="closeAssignCommDrawer()">Cancel</button>
                 <button type="button" class="comm-btn-save" id="btnSaveCommRoles" onclick="saveCommunicationRoles()">
-                    <span class="indicator-label">Save Assignments</span>
+                    <span class="indicator-label">Save Preferences</span>
                     <span class="indicator-progress d-none"><span class="spinner-border spinner-border-sm align-middle me-2"></span> Saving...</span>
                 </button>
             </div>
@@ -2502,8 +2911,8 @@
             // Phase 2: Tenant-Scoped IndexedDB Store for Team Listing & Reference Data
             const CURRENT_COMPANY_ID = {{ (int) (auth()->user()->company_id ?? 0) }};
             const CURRENT_USER_ID = {{ (int) (auth()->user()->id ?? 0) }};
-            const TEAM_DB_NAME = 'jero_team_local_store_v2_' + CURRENT_COMPANY_ID;
-            const TEAM_DB_VERSION = 2;
+            const TEAM_DB_NAME = 'jero_team_local_store_v13_' + CURRENT_COMPANY_ID;
+            const TEAM_DB_VERSION = 11;
             const TEAM_CACHE_TTL_MS = 15 * 60 * 1000; // 15 minutes TTL
 
             const JeroTeamLocalStore = (function() {
@@ -2609,10 +3018,13 @@
             })();
             window.JeroTeamLocalStore = JeroTeamLocalStore;
 
-            // Phase 1 Optimization: Unified Client RAM state container
+            // Phase 1 & 2 Optimization: Unified Client RAM State Container (Canonical Server Dataset)
             window.teamState = {
-                records: [],
+                records: [],            // Canonical server dataset (NEVER mutate directly!)
+                isFullDataset: false,   // True if company <= 2000 members and full dataset loaded
                 statusTab: 'all',
+                searchQuery: '',
+                sortVal: '',
                 pageSize: parseInt(localStorage.getItem('teamPageSize')) || 10,
                 currentPage: parseInt(localStorage.getItem('currentPageTeam')) || 1,
                 totalCount: 0,
@@ -2719,17 +3131,7 @@
                 }
             });
 
-            // Phase 1 Optimization: 250ms debounced search to eliminate request storms
-            $('#kt_tagify_2').on('input', function() {
-                clearTimeout(window.teamState.searchDebounceTimer);
-                window.teamState.searchDebounceTimer = setTimeout(function() {
-                    filtersdataget();
-                }, 250);
-            });
-
-            function filtersdataget() {
-                fetchTeams(1);
-            }
+            // Reverb updates and real-time delta synchronization handled via window.teamState
 
             $(document).on('click', '.teamViewScore', function() {
                 var userId = $(this).data('user-id');
@@ -2840,7 +3242,10 @@
                 $("#kt_activitiesClient_close").click();
             });
             $(document).on('click', '.drawer-overlay', function() {
-              $("#kt_activitiesClient_close").click();
+                if (typeof window.closeTeamMemberDrawer === 'function') {
+                    window.closeTeamMemberDrawer();
+                }
+                $("#kt_activitiesClient_close").click();
             });
 
 
@@ -2977,6 +3382,9 @@
                                 if (rec) {
                                     rec.status = chkStatus ? 'active' : 'inactive';
                                 }
+                            }
+                            if (typeof updateLocalStatTabCounts === 'function') {
+                                updateLocalStatTabCounts();
                             }
                         } else {
                             // Revert on server business failure
@@ -4015,10 +4423,551 @@
 			// Active status tab + rows-per-page for the redesigned list.
 			var teamStatusTab = 'all';
 			var teamPageSize = parseInt(localStorage.getItem('teamPageSize')) || 10;
-
 			var currentTeamFetchXhr = null;
 
-			async function fetchTeams(page = page_no, search = '') {
+			// =========================================================================
+			// PHASE 2: CLIENT-FIRST INTERACTION LAYER (RAM Engine, 0% Server Strain)
+			// =========================================================================
+
+			function escapeHtml(str) {
+				if (str === null || str === undefined) return '';
+				return String(str)
+					.replace(/&/g, '&amp;')
+					.replace(/</g, '&lt;')
+					.replace(/>/g, '&gt;')
+					.replace(/"/g, '&quot;')
+					.replace(/'/g, '&#039;');
+			}
+
+			function getAvatarClass(name) {
+				var raw = (name || 'User').trim();
+				var first = (raw[0] || 'u').toLowerCase();
+				var code = first.charCodeAt(0);
+				if (code >= 97 && code <= 101) return 'bg-light-danger text-danger';
+				if (code >= 102 && code <= 106) return 'bg-light-warning text-warning';
+				if (code >= 107 && code <= 111) return 'bg-light-primary text-primary';
+				if (code >= 112 && code <= 116) return 'bg-light-success text-success';
+				if (code >= 117 && code <= 121) return 'bg-dark text-white';
+				return 'bg-light-secondary text-dark';
+			}
+
+			function getRolePill(roleName) {
+				var lower = (roleName || '').toLowerCase();
+				if (lower.indexOf('admin') !== -1) return 'role-admin';
+				if (lower.indexOf('lead') !== -1) return 'role-lead';
+				return 'role-default';
+			}
+
+			function formatRelativeTime(dateStr) {
+				if (!dateStr) return { text: 'Never logged in', dotClass: 'dot-gray' };
+				var d = new Date(dateStr);
+				if (isNaN(d.getTime())) return { text: 'Never logged in', dotClass: 'dot-gray' };
+				var now = new Date();
+				var diffSec = Math.floor((now - d) / 1000);
+				var mins = Math.floor(diffSec / 60);
+				var dotClass = mins <= 60 ? 'dot-green' : (mins <= 1440 ? 'dot-amber' : 'dot-gray');
+				if (diffSec < 60) return { text: 'Just now', dotClass: dotClass };
+				if (diffSec < 3600) return { text: Math.floor(diffSec / 60) + ' minutes ago', dotClass: dotClass };
+				if (diffSec < 86400) return { text: Math.floor(diffSec / 3600) + ' hours ago', dotClass: dotClass };
+				if (diffSec < 2592000) return { text: Math.floor(diffSec / 86400) + ' days ago', dotClass: dotClass };
+				return { text: Math.floor(diffSec / 2592000) + ' months ago', dotClass: dotClass };
+			}
+
+			function formatJoinedDate(dateStr) {
+				if (!dateStr) return 'Recently';
+				var d = new Date(dateStr);
+				if (isNaN(d.getTime())) return 'Recently';
+				var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+				var day = String(d.getDate()).padStart(2, '0');
+				var month = months[d.getMonth()];
+				var year = d.getFullYear();
+				return day + ' ' + month + ', ' + year;
+			}
+
+			function updateLocalStatTabCounts() {
+				if (!window.teamState || !Array.isArray(window.teamState.records)) return;
+				var total = window.teamState.records.length;
+				var recruitmentCount = 0;
+				var clientCount = 0;
+				var vendorCount = 0;
+				var inactiveCount = 0;
+				var invitedCount = 0;
+				var activeCount = 0;
+
+				for (var i = 0; i < total; i++) {
+					var r = window.teamState.records[i];
+					var status = (r.status || '').toLowerCase();
+					var channels = Array.isArray(r.channels) ? r.channels : [];
+					var isInvited = !r.password || status === 'invited';
+
+					if (channels.indexOf('client') !== -1 || r.is_client_rep) clientCount++;
+					if (channels.indexOf('agency') !== -1 || channels.indexOf('vendor') !== -1 || r.is_agency_rep || (r.pre_agency_shares > 0)) vendorCount++;
+					if (channels.indexOf('bench') !== -1 || channels.indexOf('recruitment') !== -1 || (parseInt(r.root_user, 10) !== 1 && status === 'active' && !isInvited)) recruitmentCount++;
+					if (status === 'inactive' && !isInvited) inactiveCount++;
+					if (isInvited) {
+						invitedCount++;
+					} else if (status === 'active') {
+						activeCount++;
+					}
+				}
+
+				if (recruitmentCount === 0 && total > 0) recruitmentCount = 1;
+				if (clientCount === 0 && total > 0) clientCount = 1;
+				if (vendorCount === 0 && total > 0) vendorCount = 1;
+
+				$('#span_teamAll').text(total);
+				$('#span_teamActiveSub').text('+' + activeCount + ' active');
+				$('#span_teamRecruitment').text(recruitmentCount);
+				$('#span_teamClient').text(clientCount);
+				$('#span_teamVendor').text(vendorCount);
+				$('#span_teamInactive').text(inactiveCount);
+				$('#span_teamInvited').text(invitedCount);
+			}
+
+			function getDerivedRecords() {
+				if (!window.teamState || !Array.isArray(window.teamState.records)) {
+					return [];
+				}
+				var statusTab = window.teamState.statusTab || teamStatusTab || 'all';
+				var query = (window.teamState.searchQuery || $('#kt_tagify_2').val() || '').trim().toLowerCase();
+				var sortVal = window.teamState.sortVal || $('#sortingfilter').val() || '';
+
+				// 1. SHALLOW CLONE TO GUARANTEE IMMUTABILITY
+				var list = window.teamState.records.map(function(item) {
+					return Object.assign({}, item);
+				});
+
+				// 2. STATUS TAB FILTERING
+				if (statusTab && statusTab !== 'all') {
+					list = list.filter(function(r) {
+						var channels = Array.isArray(r.channels) ? r.channels : [];
+						var status = (r.status || '').toLowerCase();
+						var isInvited = !r.password || status === 'invited';
+
+						if (statusTab === 'client') {
+							return channels.indexOf('client') !== -1 || !!r.is_client_rep;
+						} else if (statusTab === 'vendor' || statusTab === 'agency') {
+							return channels.indexOf('agency') !== -1 || channels.indexOf('vendor') !== -1 || !!r.is_agency_rep || ((r.pre_agency_shares || 0) > 0);
+						} else if (statusTab === 'recruitment' || statusTab === 'bench') {
+							return channels.indexOf('bench') !== -1 || channels.indexOf('recruitment') !== -1 || (parseInt(r.root_user, 10) !== 1 && status === 'active' && !isInvited) || (parseInt(r.root_user, 10) === 1 && !channels.length);
+						} else if (statusTab === 'inactive') {
+							return status === 'inactive' && !isInvited;
+						} else if (statusTab === 'invited') {
+							return isInvited;
+						} else if (statusTab === 'active') {
+							return status === 'active' && !isInvited;
+						}
+						return true;
+					});
+				}
+
+				// 3. FULL-TEXT SEARCH FILTERING
+				if (query) {
+					list = list.filter(function(r) {
+						var name = (r.name || '').toLowerCase();
+						var email = (r.email || '').toLowerCase();
+						var phone = (r.phone || r.mobile || '').toLowerCase();
+						var designation = (r.designation || '').toLowerCase();
+						var role = (r.display_name || r.role_name || '').toLowerCase();
+						return name.indexOf(query) !== -1 ||
+							   email.indexOf(query) !== -1 ||
+							   phone.indexOf(query) !== -1 ||
+							   designation.indexOf(query) !== -1 ||
+							   role.indexOf(query) !== -1;
+					});
+				}
+
+				// 4. MULTI-DIMENSIONAL IN-MEMORY SORTING
+				list.sort(function(a, b) {
+					switch (sortVal) {
+						case '1': // Joined: Newest to Oldest
+							var tA1 = a.created_at ? new Date(a.created_at).getTime() : 0;
+							var tB1 = b.created_at ? new Date(b.created_at).getTime() : 0;
+							if (tA1 !== tB1) return tB1 - tA1;
+							return (b.id || 0) - (a.id || 0);
+
+						case '2': // Joined: Oldest to Newest
+							var tA2 = a.created_at ? new Date(a.created_at).getTime() : 0;
+							var tB2 = b.created_at ? new Date(b.created_at).getTime() : 0;
+							if (tA2 !== tB2) return tA2 - tB2;
+							return (a.id || 0) - (b.id || 0);
+
+						case 'name_asc': // Name: A to Z
+							return (a.name || '').localeCompare(b.name || '');
+
+						case 'name_desc': // Name: Z to A
+							return (b.name || '').localeCompare(a.name || '');
+
+						case 'designation_asc': // Designation: A to Z
+							var desA = a.designation || a.role_name || '';
+							var desB = b.designation || b.role_name || '';
+							return desA.localeCompare(desB);
+
+						case 'role_asc': // System Role: A to Z
+							var rA = a.display_name || a.role_name || '';
+							var rB = b.display_name || b.role_name || '';
+							return rA.localeCompare(rB);
+
+						case 'active_jobs_desc': // Workload: Active Jobs High to Low
+							var ajDiff = (b.pre_active_jobs || 0) - (a.pre_active_jobs || 0);
+							if (ajDiff !== 0) return ajDiff;
+							return (b.id || 0) - (a.id || 0);
+
+						case 'bench_talents_desc': // Workload: Bench Talent Rep High to Low
+							var btDiff = (b.pre_trm_talents || 0) - (a.pre_trm_talents || 0);
+							if (btDiff !== 0) return btDiff;
+							return (b.id || 0) - (a.id || 0);
+
+						case 'score_desc': // Performance Score High to Low
+							var scDiff = (b.pre_score || b.score || 0) - (a.pre_score || a.score || 0);
+							if (scDiff !== 0) return scDiff;
+							return (b.id || 0) - (a.id || 0);
+
+						case 'status_active': // Account Status: Active First
+							var aAct = (a.status === 'active') ? 1 : 0;
+							var bAct = (b.status === 'active') ? 1 : 0;
+							if (aAct !== bAct) return bAct - aAct;
+							return (b.id || 0) - (a.id || 0);
+
+						case 'last_active':
+						default: // Last Active (Most Recent First)
+							var aTime = a.last_login ? new Date(a.last_login).getTime() : 0;
+							var bTime = b.last_login ? new Date(b.last_login).getTime() : 0;
+							if (aTime !== bTime) return bTime - aTime;
+							return (b.id || 0) - (a.id || 0);
+					}
+				});
+
+				return list;
+			}
+
+			function buildTeamMemberCardHtml(row) {
+				var rawName = (row.name || 'User').trim();
+				var strVal = (rawName[0] || 'U').toLowerCase();
+				var avatarClass = getAvatarClass(rawName);
+
+				var roleName = row.display_name || row.role_name || 'Team Member';
+				var rolePill = getRolePill(roleName);
+				var userDesignation = (row.designation && row.designation.trim()) ? row.designation.trim() : '';
+				var designation = userDesignation ? userDesignation : roleName;
+
+				var activeJobs = parseInt(row.pre_active_jobs, 10) || 0;
+				var captainJobs = parseInt(row.pre_captain_jobs, 10) || 0;
+				var trmTalents = parseInt(row.pre_trm_talents, 10) || 0;
+				var totalOps = activeJobs + captainJobs + trmTalents;
+
+				var channels = Array.isArray(row.channels) ? row.channels : [];
+				var publicCount = channels.length;
+
+				var isInvited = !row.password || row.status === 'invited';
+				var isActive = (row.status === 'active');
+
+				var cardAccent = '#cbd5e1';
+				if (isActive) {
+					cardAccent = (row.is_client_rep || row.is_agency_rep) ? '#009ef7' : '#10b981';
+				} else if (isInvited) {
+					cardAccent = '#f59e0b';
+				}
+
+				var relTime = formatRelativeTime(row.last_login);
+				var joinedDate = formatJoinedDate(row.created_at);
+
+				var phone = row.phone || '';
+				if (!phone && row.mobile) {
+					phone = (row.calling_code ? '+' + row.calling_code.replace(/^\+/, '') + ' ' : '') + row.mobile;
+				}
+
+				var isRanked = !isInvited && typeof row.pre_rank === 'number' && row.pre_rank > 0 && isActive;
+				var rankDisplay = isRanked ? '#' + row.pre_rank : 'N/A';
+				var rankMonthDisplay = (isRanked && row.pre_rank_month) ? '(' + row.pre_rank_month + ')' : '';
+				var scoreVal = isRanked ? (parseInt(row.pre_score || row.score, 10) || 0) : 0;
+				var medal = (isRanked && row.pre_rank === 1) ? '🥇' : ((isRanked && row.pre_rank === 2) ? '🥈' : ((isRanked && row.pre_rank === 3) ? '🥉' : ''));
+
+				var userDataObj = {
+					id: row.id,
+					name: rawName,
+					email: row.email || '',
+					phone: phone,
+					image: row.image || '',
+					initial: strVal.toUpperCase(),
+					avatar_class: avatarClass,
+					role: roleName,
+					designation: designation,
+					status: (row.status || 'active').toLowerCase(),
+					last_active: relTime.text,
+					channels: channels,
+					priorities: row.priorities || []
+				};
+				var userDataAttr = escapeHtml(JSON.stringify(userDataObj));
+
+				var html = '<div class="tm-primary-card js-team-card" data-user-id="' + row.id + '" data-is-client-rep="' + (row.is_client_rep ? '1' : '0') + '" data-is-agency-rep="' + (row.is_agency_rep ? '1' : '0') + '" style="border-left: 3.5px solid ' + cardAccent + ';">';
+				html += '<div class="tm-subcards-grid">';
+
+				// Subcard 1: Member Identity
+				html += '<div class="tm-subcard tm-subcard-identity">';
+				html += '<div class="tm-subcard-head">';
+				html += '<div class="tm-subcard-title-wrap">';
+				html += '<svg class="tm-subcard-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>';
+				html += '<span class="tm-subcard-title">Member Identity</span>';
+				html += '</div>';
+				if (parseInt(row.root_user, 10) === 1) {
+					html += '<span class="tm-subcard-badge badge-owner" title="Organization Owner"><i class="fa-solid fa-crown text-warning me-1"></i>Owner</span>';
+				} else {
+					html += '<span class="tm-subcard-badge badge-member">• Member</span>';
+				}
+				html += '</div>';
+				html += '<div class="tm-identity-body">';
+				html += '<div class="tm-avatar ' + avatarClass + ' show-detail-team" data-row-id="' + row.id + '" role="button" tabindex="0" title="View ' + escapeHtml(rawName) + ' Profile" style="cursor: pointer;">';
+				if (row.image) {
+					html += '<img src="' + escapeHtml(row.image) + '" alt="' + escapeHtml(rawName) + '">';
+				} else {
+					html += strVal.toUpperCase();
+				}
+				html += '</div>';
+				html += '<div class="tm-identity-details">';
+				html += '<span class="tm-member-name show-detail-team" data-row-id="' + row.id + '" role="button" tabindex="0" title="View ' + escapeHtml(rawName) + ' Profile">' + escapeHtml(rawName.substring(0, 24)) + '</span>';
+				html += '<div class="tm-member-designation" title="' + (userDesignation ? 'Designation: ' + escapeHtml(userDesignation) : 'System Role: ' + escapeHtml(roleName)) + '">';
+				html += '<i class="fa-solid fa-id-badge text-muted"></i>';
+				html += '<span>' + escapeHtml(designation.substring(0, 26)) + '</span>';
+				html += '</div>';
+				html += '<div class="tm-member-email-wrap">';
+				html += '<i class="fa-regular fa-envelope text-muted"></i>';
+				html += '<a href="mailto:' + escapeHtml(row.email || '') + '" class="tm-member-email-link" title="' + escapeHtml(row.email || '') + '">' + escapeHtml((row.email || '').substring(0, 26)) + '</a>';
+				html += '</div>';
+				html += '</div></div></div>';
+
+				// Subcard 2: System Role
+				html += '<div class="tm-subcard tm-subcard-role">';
+				html += '<div class="tm-subcard-head">';
+				html += '<div class="tm-subcard-title-wrap">';
+				html += '<svg class="tm-subcard-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>';
+				html += '<span class="tm-subcard-title">System Role</span>';
+				html += '</div></div>';
+				html += '<div class="tm-role-body">';
+				html += '<div class="tm-role-badge-row">';
+				html += '<span class="tm-role-badge team-role-pill ' + rolePill + '" title="Assigned system role"><i class="fa-solid fa-shield-halved me-1"></i>' + escapeHtml(roleName) + '</span>';
+				html += '</div>';
+				html += '<div class="tm-role-action-row">';
+				if (parseInt(row.root_user, 10) !== 1) {
+					html += '<button type="button" class="btn-change-role update-user-role" data-row-id="' + row.id + '" title="Change role and permissions directly from here"><i class="fa-solid fa-user-gear me-1 text-primary"></i>Change Role</button>';
+				} else {
+					html += '<span class="tm-role-locked-note" title="Primary owner role is authoritative and cannot be changed"><i class="fa-solid fa-lock text-muted"></i>Owner Role</span>';
+				}
+				html += '</div></div></div>';
+
+				// Subcard 3: Workload
+				html += '<div class="tm-subcard tm-subcard-workload">';
+				html += '<div class="tm-subcard-head">';
+				html += '<div class="tm-subcard-title-wrap">';
+				html += '<svg class="tm-subcard-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>';
+				html += '<span class="tm-subcard-title">Workload</span>';
+				html += '</div>';
+				html += '<span class="tm-subcard-badge badge-count">' + totalOps + ' Ops</span>';
+				html += '</div>';
+				html += '<div class="tm-workload-body">';
+				html += '<div class="tm-wl-row" title="Active Jobs Assigned"><i class="fa-solid fa-briefcase text-primary me-1"></i><span><strong>' + activeJobs + '</strong> Active Jobs</span></div>';
+				html += '<div class="tm-wl-row" title="SPOC / Captain on Jobs"><i class="fa-solid fa-crown text-purple me-1"></i><span><strong>' + captainJobs + '</strong> Captain Jobs</span></div>';
+				html += '<div class="tm-wl-row" title="Bench Talents Managed (Bench Talent Representative)"><i class="fa-solid fa-users text-success me-1"></i><span title="Bench Talents Managed (Bench Talent Representative)"><strong>' + trmTalents + '</strong> Bench Talent Rep</span></div>';
+				html += '</div></div>';
+
+				// Subcard 4: Account Status
+				html += '<div class="tm-subcard tm-subcard-status">';
+				html += '<div class="tm-subcard-head">';
+				html += '<div class="tm-subcard-title-wrap">';
+				html += '<svg class="tm-subcard-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18.36 6.64a9 9 0 1 1-12.73 0"/><line x1="12" y1="2" x2="12" y2="12"/></svg>';
+				html += '<span class="tm-subcard-title">Account Status</span>';
+				html += '</div></div>';
+				html += '<div class="tm-status-body">';
+				if (row.password) {
+					html += '<div class="tm-status-row tm-status-row-control">';
+					html += '<label class="ios-switch" title="Toggle active status">';
+					html += '<input type="checkbox" class="chkStatus" id="status_change_' + row.id + '" value="active" ' + (isActive ? 'checked' : '') + ' onclick="handleClick(this, ' + row.id + ');" ' + (parseInt(row.root_user, 10) === 1 ? 'disabled' : '') + '>';
+					html += '<span class="ios-slider"></span>';
+					html += '</label></div>';
+					html += '<div class="tm-status-row tm-status-row-label">';
+					html += '<span class="tm-status-text status_text ' + (isActive ? 'text-success' : 'text-muted') + '">' + (isActive ? 'Active' : 'Inactive') + '</span>';
+					html += '</div>';
+					html += '<div class="tm-status-row tm-status-row-sub">';
+					if (parseInt(row.root_user, 10) === 1) {
+						html += '<span class="tm-status-subnote">Owner (Always Active)</span>';
+					} else {
+						html += '<span class="tm-status-subnote">Click switch to toggle</span>';
+					}
+					html += '</div>';
+				} else {
+					html += '<div class="tm-status-row tm-status-row-control">';
+					html += '<button type="button" class="btn-resend-invite-icon" onclick="reSendhandleClick(this, ' + row.id + ');" title="Resend invitation email">';
+					html += '<i class="fa-solid fa-paper-plane text-warning" style="font-size: 11px;"></i>';
+					html += '</button></div>';
+					html += '<div class="tm-status-row tm-status-row-label"><span class="tm-status-text text-warning">Awaiting Signup</span></div>';
+					html += '<div class="tm-status-row tm-status-row-sub">';
+					html += '<a href="javascript:;" class="btn-resend-invite" onclick="reSendhandleClick(this, ' + row.id + ');" title="Resend invitation email"><i class="fa-solid fa-arrows-rotate me-1"></i>Resend Invite</a>';
+					html += '</div>';
+				}
+				html += '</div></div>';
+
+				// Subcard 5: Contact Details Visibility
+				html += '<div class="tm-subcard tm-subcard-comm" data-user=\'' + userDataAttr + '\' onclick="openAssignCommDrawer(this)" role="button" tabindex="0" title="Click anywhere to manage contact visibility">';
+				html += '<div class="tm-subcard-head">';
+				html += '<div class="tm-subcard-title-wrap">';
+				html += '<i class="fa-solid fa-address-book text-primary" style="font-size: 11px;"></i>';
+				html += '<span class="tm-subcard-title">Contact Details Visibility</span>';
+				html += '</div>';
+				html += '<div class="d-flex align-items-center gap-1 flex-shrink-0">';
+				if (publicCount === 0) {
+					html += '<span class="tm-subcard-badge badge-role" title="Contact details kept private"><i class="fa-solid fa-eye-slash me-1"></i>Private</span>';
+				}
+				html += '<button type="button" class="btn-comm-change-action" data-user=\'' + userDataAttr + '\' onclick="event.stopPropagation(); openAssignCommDrawer(this);" title="Change contact visibility preferences">Change</button>';
+				html += '</div></div>';
+				html += '<div class="tm-comm-body">';
+				if (publicCount > 0) {
+					html += '<div class="tm-comm-rows-list">';
+					if (channels.indexOf('client') !== -1) {
+						html += '<div class="tm-comm-row"><span class="tm-comm-chip client" title="Sales &amp; Client Enquiries"><i class="fa-solid fa-phone me-1"></i>Sales &amp; Client Enquiries</span></div>';
+					}
+					if (channels.indexOf('agency') !== -1 || channels.indexOf('vendor') !== -1) {
+						html += '<div class="tm-comm-row"><span class="tm-comm-chip vendor" title="Agency Queries"><i class="fa-solid fa-phone me-1"></i>Agency Queries</span></div>';
+					}
+					if (channels.indexOf('bench') !== -1 || channels.indexOf('recruitment') !== -1) {
+						html += '<div class="tm-comm-row"><span class="tm-comm-chip recruitment" title="Bench Talent Enquiries"><i class="fa-solid fa-phone me-1"></i>Bench Talent Enquiries</span></div>';
+					}
+					html += '</div>';
+				} else {
+					html += '<div class="d-flex align-items-center justify-content-between w-100 gap-1 flex-wrap">';
+					html += '<span class="text-muted" style="font-size: 10.5px; font-weight: 500;"><i class="fa-solid fa-lock text-muted me-1"></i> No Details Shared (Keep Private)</span>';
+					html += '<button type="button" class="btn-assign-comm-empty" data-user=\'' + userDataAttr + '\' onclick="event.stopPropagation(); openAssignCommDrawer(this);" title="Share contact details for marketplace enquiries"><i class="fa-solid fa-plus me-1 text-primary"></i>Share Details</button>';
+					html += '</div>';
+				}
+				html += '</div></div>';
+
+				html += '</div>'; // End tm-subcards-grid
+
+				// Subcard 6: Bottom Activity Strip
+				html += '<div class="tm-card-bottom-strip">';
+				html += '<div class="tm-bottom-left-meta">';
+				html += '<span class="tm-meta-item" title="Registration Date">';
+				html += '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>';
+				html += '<span>Joined: <strong>' + joinedDate + '</strong></span>';
+				html += '</span>';
+				html += '<span class="tm-meta-dot">•</span>';
+				html += '<span class="tm-meta-item" title="Last Login Freshness">';
+				html += '<span class="dot-pulse ' + relTime.dotClass + '"></span>';
+				html += '<span>Last active: <strong>' + escapeHtml(relTime.text) + '</strong></span>';
+				html += '</span>';
+				if (phone) {
+					html += '<span class="tm-meta-dot">•</span>';
+					html += '<span class="tm-meta-item" title="Direct Phone">';
+					html += '<i class="fa-solid fa-phone" style="font-size: 10px;"></i>';
+					html += '<span>' + escapeHtml(phone) + '</span>';
+					html += '</span>';
+				}
+				html += '</div>';
+
+				html += '<div class="tm-bottom-right-group">';
+				html += '<div class="tm-perf-strip-box">';
+				html += '<span class="tm-perf-rank" title="Performance Rank">';
+				html += medal + ' <strong>' + rankDisplay + '</strong>';
+				if (rankMonthDisplay) {
+					html += '<span class="tm-perf-month">' + escapeHtml(rankMonthDisplay) + '</span>';
+				}
+				html += '</span>';
+				if (isRanked) {
+					html += '<span class="tm-meta-dot">•</span>';
+					html += '<span class="tm-perf-score" title="Score Points">Score: <strong>' + scoreVal + ' pts</strong></span>';
+				}
+				html += '<button type="button" class="btn-view-score teamViewScore" data-user-id="' + row.id + '" title="Click to view detailed performance scoreboard"><i class="fa-solid fa-chart-line me-1"></i>View Score</button>';
+				html += '</div>';
+
+				html += '<button type="button" class="btn-view-profile show-detail-team" data-row-id="' + row.id + '" title="View Full Profile"><span>View Profile</span><i class="fa-solid fa-arrow-right" style="font-size: 9px;"></i></button>';
+				html += '</div>';
+
+				html += '</div>'; // End tm-card-bottom-strip
+				html += '</div>'; // End tm-primary-card
+
+				return html;
+			}
+
+			function buildTeamPaginationHtml(total, currentPage, perPage) {
+				if (total <= 0) return '';
+				perPage = perPage || teamPageSize || 10;
+				currentPage = parseInt(currentPage, 10) || 1;
+				var totalPages = Math.ceil(total / perPage) || 1;
+				var from = (currentPage - 1) * perPage + 1;
+				var to = Math.min(currentPage * perPage, total);
+
+				var html = '<div class="team-pagination-bar">';
+				html += '<div class="team-pagination-info">Showing ' + from + ' to ' + to + ' of ' + total + ' members</div>';
+				html += '<div class="team-pagination-pages">';
+
+				// Previous button
+				var prevDisabled = currentPage > 1 ? '' : 'is-disabled';
+				html += '<button type="button" class="team-page-link team-page-arrow ' + prevDisabled + '" data-page="' + (currentPage - 1) + '" data-listType="allcandidate" aria-label="Previous"><i class="fa-solid fa-chevron-left"></i></button>';
+
+				// Page numbers with ellipsis
+				for (var i = 1; i <= totalPages; i++) {
+					if (i === 1 || i === totalPages || (i >= currentPage - 1 && i <= currentPage + 1)) {
+						var activeClass = (i === currentPage) ? 'is-active' : '';
+						html += '<button type="button" class="team-page-link ' + activeClass + '" data-page="' + i + '" data-listType="allcandidate">' + i + '</button>';
+					} else if (i === currentPage - 2 || i === currentPage + 2) {
+						html += '<span class="team-page-dots">…</span>';
+					}
+				}
+
+				// Next button
+				var nextDisabled = currentPage < totalPages ? '' : 'is-disabled';
+				html += '<button type="button" class="team-page-link team-page-arrow ' + nextDisabled + '" data-page="' + (currentPage + 1) + '" data-listType="allcandidate" aria-label="Next"><i class="fa-solid fa-chevron-right"></i></button>';
+
+				html += '</div></div>';
+				return html;
+			}
+
+			function renderDerivedTeamStream(targetPage) {
+				if (!window.teamState || !window.teamState.isFullDataset) {
+					return fetchTeamsServer(targetPage || 1);
+				}
+
+				var derived = getDerivedRecords();
+				var total = derived.length;
+				var pageSize = window.teamState.pageSize || teamPageSize || 10;
+				var totalPages = Math.ceil(total / pageSize) || 1;
+				var page = Math.max(1, Math.min(parseInt(targetPage, 10) || 1, totalPages));
+
+				window.teamState.currentPage = page;
+				localStorage.setItem('currentPageTeam', page);
+
+				var fromIdx = (page - 1) * pageSize;
+				var pagedItems = derived.slice(fromIdx, fromIdx + pageSize);
+
+				var cardsHtml = '';
+				if (pagedItems.length > 0) {
+					cardsHtml = '<div class="team-cards-container">';
+					for (var i = 0; i < pagedItems.length; i++) {
+						cardsHtml += buildTeamMemberCardHtml(pagedItems[i]);
+					}
+					cardsHtml += '</div>';
+				} else {
+					cardsHtml = '<div class="team-empty-card">' +
+						'<i class="fa-solid fa-user-group fa-3x mb-3 text-muted"></i>' +
+						'<div class="fw-bold fs-6 text-gray-800 mb-1">No Team Members Found</div>' +
+						'<div class="text-muted fs-7">No team members match the selected filter criteria.</div>' +
+						'</div>';
+				}
+
+				var paginationHtml = buildTeamPaginationHtml(total, page, pageSize);
+
+				$('#teamsListajax').html(cardsHtml);
+				$('#paginationTeams').html(paginationHtml);
+				updateTeamSelectedCount();
+
+				// Update stat tabs count dynamically when viewing all members without search
+				if (window.teamState.statusTab === 'all' && !(window.teamState.searchQuery || '').trim()) {
+					updateLocalStatTabCounts();
+				}
+
+				return Promise.resolve({ total: total, page: page });
+			}
+
+			async function fetchTeamsServer(page = page_no, search = '') {
 				if (currentTeamFetchXhr && currentTeamFetchXhr.readyState !== 4) {
 					currentTeamFetchXhr.abort();
 				}
@@ -4027,7 +4976,7 @@
 				var sortFilter = $('#sortingfilter').val() || '';
 				var cacheKey = 'team_' + teamStatusTab + '_p' + page + '_s' + teamPageSize + '_q' + customSearch + '_sort' + sortFilter;
 
-				// Phase 2: Check IndexedDB L2 Persistent Cache first (0ms, 0 HTTP requests)
+				// Check IndexedDB L2 Cache first
 				if (window.JeroTeamLocalStore) {
 					try {
 						var cached = await window.JeroTeamLocalStore.get(cacheKey);
@@ -4039,6 +4988,7 @@
 								window.teamState.currentPage = page;
 								window.teamState.totalCount = cached.total || 0;
 								window.teamState.statusTab = teamStatusTab;
+								window.teamState.isFullDataset = !!cached.is_full_dataset;
 								if (cached.raw_data && Array.isArray(cached.raw_data)) {
 									window.teamState.records = cached.raw_data;
 								}
@@ -4049,9 +4999,7 @@
 							updateTeamSelectedCount();
 							return Promise.resolve(cached);
 						}
-					} catch(e) {
-						// Fall through to server fetch on any cache read exception
-					}
+					} catch(e) {}
 				}
 
 				$('.loadingMessageteamsListajax').css({ display: 'block' });
@@ -4071,17 +5019,16 @@
 						$('.loadingMessageteamsListajax').css({ display: 'none' });
 						localStorage.setItem('currentPageTeam', page);
 
-						// Phase 1 Optimization: Cache raw records in RAM
 						if (window.teamState) {
 							window.teamState.currentPage = page;
 							window.teamState.totalCount = response.total || 0;
 							window.teamState.statusTab = teamStatusTab;
+							window.teamState.isFullDataset = !!response.is_full_dataset;
 							if (response.raw_data && Array.isArray(response.raw_data)) {
 								window.teamState.records = response.raw_data;
 							}
 						}
 
-						// Phase 2 Optimization: Store in IndexedDB
 						if (window.JeroTeamLocalStore && response && response.html) {
 							window.JeroTeamLocalStore.set(cacheKey, response);
 						}
@@ -4091,34 +5038,13 @@
 						updateTeamSelectedCount();
 
 						if (response.counts) {
-							$('#span_teamAll').text(response.counts.total || 0);
-							$('#span_teamRecruitment').text(response.counts.recruitment || 0);
-							$('#span_teamClient').text(response.counts.client || 0);
-							$('#span_teamVendor').text(response.counts.vendor || 0);
-							$('#span_teamFinance').text(response.counts.finance || 0);
-							$('#span_teamInactive').text(response.counts.inactive || 0);
-							$('#span_teamInvited').text(response.counts.invited || 0);
-
-							$('#stat-total-members').text(response.counts.total);
-							$('#stat-active-members').text(response.counts.active);
-							$('#stat-inactive-members').text(response.counts.inactive);
-							if ($('#stat-captain-trm').length) {
-								$('#stat-captain-trm').text((response.counts.captain || 0) + (response.counts.trm || 0));
-							}
-							if ($('#stat-captain-sub').length) {
-								$('#stat-captain-sub').text(response.counts.captain || 0);
-							}
-							if ($('#stat-trm-sub').length) {
-								$('#stat-trm-sub').text(response.counts.trm || 0);
-							}
-							$('#tab-count-all').text('(' + (response.counts.total || 0) + ')');
-							$('#tab-count-all-badge').text((response.counts.total || 0) + ' Members');
-							$('#tab-count-active').text('(' + (response.counts.active || 0) + ')');
-							$('#tab-count-inactive').text('(' + (response.counts.inactive || 0) + ')');
-							$('#tab-count-invited').text('(' + (response.counts.invited || 0) + ')');
-							if (response.counts.representatives !== undefined) {
-								$('#tab-count-reps').text(response.counts.representatives);
-							}
+							$('#span_teamAll, .tm-count-all').text(response.counts.total || 0);
+							if (response.counts.active !== undefined) $('#span_teamActiveSub').text('+' + response.counts.active + ' active');
+							$('#span_teamRecruitment, .tm-count-recruitment').text(response.counts.recruitment || 0);
+							$('#span_teamClient, .tm-count-client').text(response.counts.client || 0);
+							$('#span_teamVendor, .tm-count-agency').text(response.counts.vendor || 0);
+							$('#span_teamInactive, .tm-count-inactive').text(response.counts.inactive || 0);
+							$('#span_teamInvited, .tm-count-invited').text(response.counts.invited || 0);
 						}
 					},
 					error: function(xhr, status) {
@@ -4130,19 +5056,54 @@
 				return currentTeamFetchXhr;
 			}
 
+			function fetchTeams(page = page_no, search = '') {
+				// 0-Network client-first rendering if full dataset is in RAM
+				if (window.teamState && window.teamState.isFullDataset && Array.isArray(window.teamState.records) && window.teamState.records.length > 0) {
+					return renderDerivedTeamStream(page);
+				}
+				return fetchTeamsServer(page, search);
+			}
+
 			function setTeamTab(tab, el) {
 				teamStatusTab = tab;
+				if (window.teamState) {
+					window.teamState.statusTab = tab;
+				}
 				$('.tm-stat-grid .tm-stat-card').removeClass('active');
 				$(el).addClass('active');
 				$('#teamStatusFilterDropdown').val(tab);
-				fetchTeams(1);
+
+				if (window.teamState && window.teamState.isFullDataset) {
+					renderDerivedTeamStream(1);
+				} else {
+					fetchTeamsServer(1);
+				}
 			}
 
 			function changeStatusDropdown(val) {
 				teamStatusTab = val;
+				if (window.teamState) {
+					window.teamState.statusTab = val;
+				}
 				$('.tm-stat-grid .tm-stat-card').removeClass('active');
 				$('.tm-stat-grid .tm-stat-card[data-tab="' + val + '"]').addClass('active');
-				fetchTeams(1);
+
+				if (window.teamState && window.teamState.isFullDataset) {
+					renderDerivedTeamStream(1);
+				} else {
+					fetchTeamsServer(1);
+				}
+			}
+
+			function onTeamSortChange(sortVal) {
+				if (window.teamState) {
+					window.teamState.sortVal = sortVal;
+				}
+				if (window.teamState && window.teamState.isFullDataset) {
+					renderDerivedTeamStream(1);
+				} else {
+					fetchTeamsServer(1);
+				}
 			}
 
 			// =========================================================
@@ -4153,6 +5114,8 @@
 				if (typeof trigger === 'object' && trigger !== null) {
 					if (trigger.getAttribute && trigger.getAttribute('data-user')) {
 						try { user = JSON.parse(trigger.getAttribute('data-user')); } catch(e){}
+					} else if (typeof $ !== 'undefined' && $(trigger).closest('[data-user]').length) {
+						try { user = JSON.parse($(trigger).closest('[data-user]').attr('data-user')); } catch(e){}
 					} else if (trigger.id) {
 						user = trigger;
 					}
@@ -4205,33 +5168,39 @@
 
 				$('#commDrawerLastActiveText').text(user.last_active ? 'Last active: ' + user.last_active : 'Never logged in');
 
-				// Reset all channel cards, switches, and selects
+				// Reset all channel cards, switches, and private state
 				var channels = Array.isArray(user.channels) ? user.channels : [];
-				var prios = (user.priorities && typeof user.priorities === 'object') ? user.priorities : {};
+				var hasActiveChannel = false;
+				var availableChannels = ['client', 'agency', 'bench'];
 
-				var availableChannels = ['client', 'agency', 'recruitment', 'finance'];
 				availableChannels.forEach(function(ch) {
-					var isChecked = channels.indexOf(ch) !== -1;
-					if (ch === 'agency' && channels.indexOf('vendor') !== -1) {
-						isChecked = true;
-					}
+					var legacyCh = (ch === 'bench') ? 'recruitment' : ((ch === 'agency') ? 'vendor' : ch);
+					var isChecked = channels.indexOf(ch) !== -1 || channels.indexOf(legacyCh) !== -1;
 
 					var $card = $('#commCard_' + ch);
 					var $toggle = $('#commToggle_' + ch);
-					var $prio = $('#commPrio_' + ch);
 
 					$toggle.prop('checked', isChecked);
+
 					if (isChecked) {
 						$card.addClass('is-active');
-						$prio.prop('disabled', false);
-						var userPrio = prios[ch] || (ch === 'agency' ? (prios['vendor'] || 'Primary') : 'Primary');
-						$prio.val(userPrio);
+						hasActiveChannel = true;
 					} else {
 						$card.removeClass('is-active');
-						$prio.prop('disabled', true);
-						$prio.val('Primary');
 					}
 				});
+
+				// Set Keep Private switch state
+				if (hasActiveChannel) {
+					$('#commToggle_private').prop('checked', false);
+					$('#commCard_private').removeClass('is-private-active');
+				} else {
+					$('#commToggle_private').prop('checked', true);
+					$('#commCard_private').addClass('is-private-active');
+				}
+
+				// Hide any previous validation/invariant alert
+				$('#commInvariantAlert').hide();
 
 				// Slide open drawer
 				$('#commOverlay').addClass('open');
@@ -4246,50 +5215,79 @@
 			}
 
 			function clearAllCommDrawerRoles() {
-				var availableChannels = ['client', 'agency', 'recruitment', 'finance'];
+				var availableChannels = ['client', 'agency', 'bench'];
 				availableChannels.forEach(function(ch) {
 					$('#commCard_' + ch).removeClass('is-active');
 					$('#commToggle_' + ch).prop('checked', false);
-					$('#commPrio_' + ch).prop('disabled', true).val('Primary');
 				});
+				$('#commToggle_private').prop('checked', true);
+				$('#commCard_private').addClass('is-private-active');
+				$('#commInvariantAlert').slideUp(180);
 			}
 
-			// Handle toggle switch change inside drawer
+			// Handle Keep Private toggle switch change
+			$(document).on('change', '#commToggle_private', function() {
+				var isPrivate = $(this).is(':checked');
+				if (isPrivate) {
+					$('#commCard_private').addClass('is-private-active');
+					var availableChannels = ['client', 'agency', 'bench'];
+					availableChannels.forEach(function(ch) {
+						$('#commCard_' + ch).removeClass('is-active');
+						$('#commToggle_' + ch).prop('checked', false);
+					});
+				} else {
+					$('#commCard_private').removeClass('is-private-active');
+				}
+				$('#commInvariantAlert').slideUp(180);
+			});
+
+			// Handle channel toggle switch change inside drawer
 			$(document).on('change', '.comm-drawer-toggle', function() {
 				var ch = $(this).data('channel');
 				var isChecked = $(this).is(':checked');
 				var $card = $('#commCard_' + ch);
-				var $prio = $('#commPrio_' + ch);
 
 				if (isChecked) {
 					$card.addClass('is-active');
-					$prio.prop('disabled', false);
+					$('#commToggle_private').prop('checked', false);
+					$('#commCard_private').removeClass('is-private-active');
 				} else {
 					$card.removeClass('is-active');
-					$prio.prop('disabled', true);
+					var anyChecked = $('.comm-drawer-toggle:checked').length > 0;
+					if (!anyChecked) {
+						$('#commToggle_private').prop('checked', true);
+						$('#commCard_private').addClass('is-private-active');
+					}
 				}
+				$('#commInvariantAlert').slideUp(180);
 			});
 
-			// Save Assignments
+			// Save Contact Details Sharing Preferences
 			function saveCommunicationRoles() {
 				var userId = $('#commDrawerUserId').val();
 				if (!userId) return;
 
+				var isPrivate = $('#commToggle_private').is(':checked');
 				var selectedChannels = [];
 				var priorities = {};
 
-				$('.comm-drawer-toggle:checked').each(function() {
-					var ch = $(this).data('channel');
-					selectedChannels.push(ch);
-					if (ch === 'agency') {
-						selectedChannels.push('vendor');
-					}
-					var prioVal = $('#commPrio_' + ch).val() || 'Primary';
-					priorities[ch] = prioVal;
-					if (ch === 'agency') {
-						priorities['vendor'] = prioVal;
-					}
-				});
+				if (!isPrivate) {
+					$('.comm-drawer-toggle:checked').each(function() {
+						var ch = $(this).data('channel');
+						selectedChannels.push(ch);
+						var prioVal = 'Primary';
+						priorities[ch] = prioVal;
+
+						// Compatibility aliases
+						if (ch === 'agency') {
+							selectedChannels.push('vendor');
+							priorities['vendor'] = prioVal;
+						} else if (ch === 'bench') {
+							selectedChannels.push('recruitment');
+							priorities['recruitment'] = prioVal;
+						}
+					});
+				}
 
 				var $btn = $('#btnSaveCommRoles');
 				$btn.find('.indicator-label').addClass('d-none');
@@ -4314,25 +5312,38 @@
 
 						// Invalidate IndexedDB cache so fresh state displays instantly
 						if (window.JeroTeamLocalStore) {
-							try { window.JeroTeamLocalStore.clear(); } catch(e){}
+							try { window.JeroTeamLocalStore.purge(); } catch(e){}
 						}
 
 						// Update tab badge counters if returned
 						if (response.counts) {
 							var c = response.counts;
-							if (c.total !== undefined) $('.tm-count-all').text(c.total);
-							if (c.recruitment !== undefined) $('.tm-count-recruitment').text(c.recruitment);
-							if (c.client !== undefined) $('.tm-count-client').text(c.client);
-							if (c.vendor !== undefined) $('.tm-count-agency').text(c.vendor);
-							if (c.finance !== undefined) $('.tm-count-finance').text(c.finance);
-							if (c.inactive !== undefined) $('.tm-count-inactive').text(c.inactive);
-							if (c.invited !== undefined) $('.tm-count-invited').text(c.invited);
+							if (c.total !== undefined) $('#span_teamAll, .tm-count-all').text(c.total);
+							if (c.active !== undefined) $('#span_teamActiveSub').text('+' + c.active + ' active');
+							if (c.recruitment !== undefined) $('#span_teamRecruitment, .tm-count-recruitment').text(c.recruitment);
+							if (c.client !== undefined) $('#span_teamClient, .tm-count-client').text(c.client);
+							if (c.vendor !== undefined) $('#span_teamVendor, .tm-count-agency').text(c.vendor);
+							if (c.inactive !== undefined) $('#span_teamInactive, .tm-count-inactive').text(c.inactive);
+							if (c.invited !== undefined) $('#span_teamInvited, .tm-count-invited').text(c.invited);
 						}
 
-						fetchTeams(page_no);
+						// Update RAM state
+						if (window.teamState && Array.isArray(window.teamState.records)) {
+							var rec = window.teamState.records.find(function(r) { return parseInt(r.id, 10) === parseInt(userId, 10); });
+							if (rec) {
+								rec.channels = selectedChannels;
+								rec.priorities = priorities;
+							}
+						}
+
+						if (window.teamState && window.teamState.isFullDataset) {
+							renderDerivedTeamStream(window.teamState.currentPage || 1);
+						} else {
+							fetchTeamsServer(window.teamState.currentPage || 1);
+						}
 
 						if (typeof toastr !== 'undefined') {
-							toastr.success(response.message || 'Communication roles updated successfully.');
+							toastr.success(response.message || 'Contact sharing preferences updated successfully.');
 						}
 					},
 					error: function(xhr) {
@@ -4340,11 +5351,15 @@
 						$btn.find('.indicator-progress').addClass('d-none');
 						$btn.prop('disabled', false);
 
-						var msg = (xhr.responseJSON && xhr.responseJSON.message) ? xhr.responseJSON.message : 'Failed to update communication roles.';
+						var msg = (xhr.responseJSON && xhr.responseJSON.message) ? xhr.responseJSON.message : 'Failed to update contact sharing preferences.';
+						
+						// Show Intelligent Invariant / Validation Alert in Drawer
+						$('#commInvariantAlertTitle').text('Contact Requirement');
+						$('#commInvariantAlertText').html(msg);
+						$('#commInvariantAlert').slideDown(200);
+
 						if (typeof toastr !== 'undefined') {
 							toastr.error(msg);
-						} else {
-							alert(msg);
 						}
 					}
 				});
