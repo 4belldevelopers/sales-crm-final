@@ -2322,6 +2322,203 @@
   .cd-subcards-grid { grid-template-columns: 1fr !important; }
   .cd-subcard { border-right: none !important; border-bottom: 1px solid #f1f5f9 !important; }
 }
+
+/* ── 11. Agency 360° Activity Stream Master Modern Card + Sub-Card Design ── */
+.cd-activity-wrapper {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 10px !important;
+  width: 100% !important;
+}
+.cd-activity-header-card {
+  background: #ffffff !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 10px !important;
+  padding: 10px 14px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 12px !important;
+  flex-wrap: wrap !important;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03) !important;
+}
+.cd-activity-header-left {
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  min-width: 0 !important;
+}
+.cd-activity-header-icon {
+  width: 36px !important;
+  height: 36px !important;
+  border-radius: 8px !important;
+  background: #eff6ff !important;
+  color: #2563eb !important;
+  border: 1px solid #bfdbfe !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-size: 15px !important;
+  flex-shrink: 0 !important;
+}
+.cd-activity-header-title {
+  font-size: 13.5px !important;
+  font-weight: 700 !important;
+  color: #0f172a !important;
+  letter-spacing: -0.2px !important;
+}
+.cd-activity-header-sub {
+  font-size: 11px !important;
+  color: #64748b !important;
+  margin-top: 1px !important;
+}
+.cd-activity-health-pill {
+  border-radius: 20px !important;
+  padding: 2px 8px !important;
+  font-size: 10.5px !important;
+  font-weight: 600 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 5px !important;
+}
+.cd-activity-health-pill.health-active {
+  background: #ecfdf5 !important;
+  color: #059669 !important;
+  border: 1px solid #a7f3d0 !important;
+}
+.cd-activity-health-pill.health-dormant {
+  background: #fffbeb !important;
+  color: #d97706 !important;
+  border: 1px solid #fde68a !important;
+}
+.cd-activity-health-pill.health-inactive {
+  background: #f1f5f9 !important;
+  color: #64748b !important;
+  border: 1px solid #cbd5e1 !important;
+}
+.cd-activity-pulse-dot {
+  width: 6px !important;
+  height: 6px !important;
+  border-radius: 50% !important;
+  background-color: currentColor !important;
+  display: inline-block !important;
+  animation: actPulse 2s infinite !important;
+}
+@keyframes actPulse {
+  0% { transform: scale(0.95); opacity: 0.8; }
+  50% { transform: scale(1.25); opacity: 1; }
+  100% { transform: scale(0.95); opacity: 0.8; }
+}
+.cd-activity-header-right {
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  flex-wrap: wrap !important;
+}
+.cd-activity-search-subcard {
+  position: relative !important;
+  display: flex !important;
+  align-items: center !important;
+  background: #ffffff !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 8px !important;
+  padding: 0 8px !important;
+  height: 34px !important;
+}
+.cd-activity-search-subcard input {
+  border: none !important;
+  outline: none !important;
+  font-size: 11.5px !important;
+  width: 200px !important;
+  padding-left: 6px !important;
+  color: #0f172a !important;
+  background: transparent !important;
+}
+.cd-activity-search-clear {
+  background: none !important;
+  border: none !important;
+  color: #94a3b8 !important;
+  cursor: pointer !important;
+  font-size: 11px !important;
+  padding: 0 4px !important;
+}
+.cd-activity-btn-refresh {
+  width: 34px !important;
+  height: 34px !important;
+  border-radius: 8px !important;
+  border: 1px solid #e2e8f0 !important;
+  background: #ffffff !important;
+  color: #64748b !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease !important;
+}
+.cd-activity-btn-refresh:hover {
+  background: #f8fafc !important;
+  color: #0f172a !important;
+  border-color: #cbd5e1 !important;
+}
+.cd-activity-tabs-card {
+  background: #ffffff !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 10px !important;
+  padding: 6px 8px !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 4px !important;
+  overflow-x: auto !important;
+  scrollbar-width: thin !important;
+}
+.cd-activity-tab-btn {
+  border: none !important;
+  background: transparent !important;
+  padding: 5px 10px !important;
+  border-radius: 6px !important;
+  font-size: 11px !important;
+  font-weight: 500 !important;
+  color: #64748b !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 5px !important;
+  cursor: pointer !important;
+  transition: all 0.15s ease !important;
+  white-space: nowrap !important;
+}
+.cd-activity-tab-btn:hover {
+  background: #f1f5f9 !important;
+  color: #0f172a !important;
+}
+.cd-activity-tab-btn.active {
+  background: #2563eb !important;
+  color: #ffffff !important;
+  font-weight: 600 !important;
+}
+.cd-activity-tab-btn.active .cd-activity-tab-badge {
+  background: #ffffff !important;
+  color: #2563eb !important;
+}
+.cd-activity-tab-badge {
+  background: #f1f5f9 !important;
+  color: #64748b !important;
+  font-size: 10px !important;
+  font-weight: 700 !important;
+  padding: 1px 6px !important;
+  border-radius: 10px !important;
+  line-height: 1.3 !important;
+}
+.cd-hero-strip {
+  background: #ffffff !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 10px !important;
+  padding: 8px 14px !important;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.02) !important;
+}
+.agency-activity-card:hover {
+  border-color: #cbd5e1 !important;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.05) !important;
+}
 </style>
 
 <div class="cd-scope">
@@ -3081,7 +3278,7 @@
         </div>
 
                 <!-- ══════════════════════════════════════════════════════════════════════
-             TAB 2: ACTIVITY TIMELINE (Master Modern Card + Sub-Card System)
+             TAB 2: ACTIVITY TIMELINE (Master Modern Card + Sub-Card CQRS Dual-Store)
              ══════════════════════════════════════════════════════════════════════ -->
         <div class="tab-pane" id="recent_activity" role="tabpanel">
             <div class="cd-activity-wrapper">
@@ -3092,23 +3289,28 @@
                             <i class="fas fa-clock-rotate-left"></i>
                         </div>
                         <div>
-                            <div class="d-flex align-items-center gap-2">
-                                <span class="cd-activity-header-title">Agency Activity &amp; Audit Feed</span>
-                                <span class="cd-activity-health-pill health-active">
+                            <div class="d-flex align-items-center gap-2 flex-wrap">
+                                <span class="cd-activity-header-title">Agency 360° Activity Stream</span>
+                                <span class="cd-activity-health-pill health-active" id="agencyActHealthPill">
                                     <span class="cd-activity-pulse-dot"></span>
-                                    <span>Active</span>
+                                    <span id="agencyActHealthLabel">Active</span>
                                 </span>
-                                <span class="badge badge-light-success text-success fw-bold" style="font-size: 10px; padding: 2px 7px;">
+                                <span class="badge bg-light-success text-success border font-10 px-2 py-0.5" id="agencyActIntegrityBadge" style="border-radius: 12px; border-color: #bbf7d0 !important;">
+                                    <i class="fas fa-shield-halved text-success me-1"></i>
+                                    <span id="agencyActIntegrityText">Audit Trail Verified</span>
+                                    <span class="text-muted ms-1 font-9" style="font-weight: 400;" id="agencyActLastSyncTime">&bull; Synced {{ date('h:i A') }}</span>
+                                </span>
+                                <span class="badge badge-light-success text-success fw-bold" id="agencyActLiveBadge" style="font-size: 10px; padding: 2px 7px;">
                                     <i class="fas fa-wifi me-1"></i> Live
                                 </span>
                             </div>
-                            <div class="cd-activity-header-sub">Live recruitment timeline &amp; candidate activity for {{ $detailName }}</div>
+                            <div class="cd-activity-header-sub">Unified chronological audit trail &amp; recruitment engagement for {{ $detailName }}</div>
                         </div>
                     </div>
                     <div class="cd-activity-header-right">
                         <div class="cd-activity-search-subcard">
                             <i class="fas fa-search"></i>
-                            <input type="text" id="agencyActSearchInput" placeholder="Search activity, candidates, jobs..." autocomplete="off">
+                            <input type="text" id="agencyActSearchInput" placeholder="Search activity, candidates, jobs, actors..." autocomplete="off">
                             <button type="button" class="cd-activity-search-clear" id="agencyActSearchClear" style="display:none;" title="Clear search">
                                 <i class="fas fa-times"></i>
                             </button>
@@ -3118,255 +3320,189 @@
                             <option value="today">Today</option>
                             <option value="7d">Last 7 Days</option>
                             <option value="30d">Last 30 Days</option>
+                            <option value="90d">Last 90 Days</option>
                         </select>
-                        <button type="button" class="cd-activity-btn-refresh" id="agencyActRefreshBtn" title="Refresh Activity Feed">
+                        <button type="button" class="cd-activity-btn-refresh" id="agencyActRefreshBtn" title="Force Refresh Feed">
                             <i class="fas fa-sync-alt"></i>
                         </button>
-                        <button type="button" class="btn btn-sm btn-primary fw-bold" onclick="$('#agencyQuickNoteCard').slideToggle(150); $('#agencyQuickNoteInput').focus();" style="border-radius:8px; height:34px; font-size:11.5px;">
+                        <button type="button" class="btn btn-sm btn-primary fw-bold" onclick="window.AgencyActivityManager.openNoteModal();" style="border-radius:8px; height:34px; font-size:11.5px;">
                             <i class="fas fa-plus me-1"></i> Add Interaction Note
                         </button>
                     </div>
                 </div>
 
-                <!-- Quick Note Card (Collapsible) -->
-                <div class="cd-master-subcard" id="agencyQuickNoteCard" style="display:none; margin-bottom: 12px; background: #ffffff;">
-                    <div class="d-flex align-items-center justify-content-between mb-2">
-                        <span class="fw-bold text-dark fs-7"><i class="fas fa-pen-to-square text-primary me-1"></i> Log Agency Interaction Note</span>
-                        <button type="button" class="btn btn-sm btn-icon btn-light" onclick="$('#agencyQuickNoteCard').slideUp(150);"><i class="fas fa-times fs-8"></i></button>
+                <!-- Hero Metrics Strip -->
+                <div class="cd-hero-strip mb-2 p-2.5 bg-white rounded-3 border d-flex align-items-center justify-content-between flex-wrap gap-2" style="border-color: #e2e8f0;">
+                    <div class="d-flex align-items-center gap-3 flex-wrap">
+                        <div class="hero-item d-flex align-items-center gap-1.5">
+                            <span class="text-muted font-11 fw-semibold text-uppercase">Total Activities:</span>
+                            <span class="badge bg-light text-dark border font-12 fw-bold" id="heroTotalActs">0</span>
+                        </div>
+                        <div class="border-start ps-3 hero-item d-flex align-items-center gap-1.5">
+                            <span class="text-muted font-11 fw-semibold text-uppercase">Requisitions:</span>
+                            <span class="badge bg-light text-primary border font-12 fw-bold" id="heroTotalJobs">0</span>
+                        </div>
+                        <div class="border-start ps-3 hero-item d-flex align-items-center gap-1.5">
+                            <span class="text-muted font-11 fw-semibold text-uppercase">Candidates:</span>
+                            <span class="badge bg-light text-purple border font-12 fw-bold" style="color: #8b5cf6;" id="heroTotalCands">0</span>
+                        </div>
+                        <div class="border-start ps-3 hero-item d-flex align-items-center gap-1.5">
+                            <span class="text-muted font-11 fw-semibold text-uppercase">Interviews:</span>
+                            <span class="badge bg-light text-warning border font-12 fw-bold" id="heroTotalInterviews">0</span>
+                        </div>
+                        <div class="border-start ps-3 hero-item d-flex align-items-center gap-1.5">
+                            <span class="text-muted font-11 fw-semibold text-uppercase">Offers:</span>
+                            <span class="badge bg-light text-info border font-12 fw-bold" id="heroTotalOffers">0</span>
+                        </div>
+                        <div class="border-start ps-3 hero-item d-flex align-items-center gap-1.5">
+                            <span class="text-muted font-11 fw-semibold text-uppercase">Placed:</span>
+                            <span class="badge bg-light-success text-success border font-12 fw-bold" id="heroTotalJoined">0</span>
+                        </div>
                     </div>
-                    <textarea id="agencyQuickNoteInput" class="form-control form-control-solid fs-7 mb-2" rows="3" placeholder="Enter details of candidate submissions, client feedback, or recruiter follow-up..."></textarea>
-                    <div class="d-flex justify-content-end gap-2">
-                        <button type="button" class="btn btn-sm btn-light" onclick="$('#agencyQuickNoteCard').slideUp(150);">Cancel</button>
-                        <button type="button" class="btn btn-sm btn-primary fw-bold" onclick="saveAgencyQuickNote()">Save Note</button>
+                    <div class="d-flex align-items-center gap-1.5 font-11 text-muted">
+                        <i class="fa fa-history text-primary"></i>
+                        <span>Last Active:</span>
+                        <strong class="text-dark" id="heroLastActiveTime">Checking...</strong>
+                        <span class="text-muted" id="heroLastActiveActor"></span>
                     </div>
                 </div>
 
-                <!-- Tier 2: Filter Sub-Tabs Card -->
-                @php
-                    $actPipelineCount = count($candsList);
-                    $actInterviewsCount = count($interviewsScheduleList);
-                    $actOffersCount = ($kpiOffers + $kpiJoins);
-                    $actJobsCount = count($jobsList);
-                    $actCrmCount = 2;
-                    $actTotalCount = $actPipelineCount + $actInterviewsCount + $actOffersCount + $actJobsCount + $actCrmCount;
-                @endphp
-                <div class="cd-activity-tabs-card" id="agencyActivityFilterTabs">
+                <!-- Quick Note Card (Collapsible) -->
+                <div class="cd-master-subcard" id="agencyQuickNoteCard" style="display:none; margin-bottom: 12px; background: #ffffff; border: 1px solid #cbd5e1; border-radius: 8px; padding: 12px;">
+                    <div class="d-flex align-items-center justify-content-between mb-2">
+                        <span class="fw-bold text-dark font-13"><i class="fas fa-pen-to-square text-primary me-1"></i> Log Agency Interaction Note</span>
+                        <button type="button" class="btn btn-sm btn-icon btn-light" onclick="$('#agencyQuickNoteCard').slideUp(150);"><i class="fas fa-times fs-8"></i></button>
+                    </div>
+                    <textarea id="agencyQuickNoteInput" class="form-control font-12 mb-2" rows="3" placeholder="Enter interaction note, phone discussion summary, recruitment updates, client feedback..." style="border: 1px solid #e2e8f0; border-radius: 6px;"></textarea>
+                    <div class="d-flex align-items-center justify-content-between">
+                        <span class="text-muted font-11" id="agencyQuickNoteCharCount">Max 2,000 characters</span>
+                        <div class="d-flex gap-2">
+                            <button type="button" class="btn btn-sm btn-light font-12" onclick="$('#agencyQuickNoteCard').slideUp(150);">Cancel</button>
+                            <button type="button" class="btn btn-sm btn-primary font-12 fw-bold" id="btnSaveAgencyQuickNote" onclick="window.AgencyActivityManager.saveNote()">
+                                <i class="fa fa-paper-plane me-1"></i> Save Note
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tier 2: Filter Sub-Tabs Card (16 Categories) -->
+                <div class="cd-activity-tabs-card" id="agencyActivityFilterTabs" style="overflow-x: auto; white-space: nowrap; padding-bottom: 4px;">
                     <button type="button" class="cd-activity-tab-btn active js-act-filter-btn" data-category="all">
+                        <i class="fa fa-list-ul me-1"></i>
                         <span>All Events</span>
-                        <span class="cd-activity-tab-badge" id="agencyActCountAll">{{ $actTotalCount }}</span>
+                        <span class="cd-activity-tab-badge" id="agencyActCount-all">0</span>
                     </button>
-                    <button type="button" class="cd-activity-tab-btn js-act-filter-btn" data-category="pipeline">
-                        <span>Pipeline</span>
-                        <span class="cd-activity-tab-badge" id="agencyActCountPipeline">{{ $actPipelineCount }}</span>
+                    <button type="button" class="cd-activity-tab-btn js-act-filter-btn" data-category="account">
+                        <i class="fa fa-building-circle-check me-1"></i>
+                        <span>Account</span>
+                        <span class="cd-activity-tab-badge" id="agencyActCount-account">0</span>
                     </button>
-                    <button type="button" class="cd-activity-tab-btn js-act-filter-btn" data-category="interviews">
-                        <span>Interviews</span>
-                        <span class="cd-activity-tab-badge" id="agencyActCountInterviews">{{ $actInterviewsCount }}</span>
+                    <button type="button" class="cd-activity-tab-btn js-act-filter-btn" data-category="team">
+                        <i class="fa fa-users me-1"></i>
+                        <span>Team</span>
+                        <span class="cd-activity-tab-badge" id="agencyActCount-team">0</span>
                     </button>
-                    <button type="button" class="cd-activity-tab-btn js-act-filter-btn" data-category="offers">
-                        <span>Offers &amp; Joining</span>
-                        <span class="cd-activity-tab-badge" id="agencyActCountOffers">{{ $actOffersCount }}</span>
+                    <button type="button" class="cd-activity-tab-btn js-act-filter-btn" data-category="services">
+                        <i class="fa fa-file-invoice-dollar me-1"></i>
+                        <span>Commercials</span>
+                        <span class="cd-activity-tab-badge" id="agencyActCount-services">0</span>
                     </button>
                     <button type="button" class="cd-activity-tab-btn js-act-filter-btn" data-category="jobs">
-                        <span>Jobs</span>
-                        <span class="cd-activity-tab-badge" id="agencyActCountJobs">{{ $actJobsCount }}</span>
+                        <i class="fa fa-briefcase me-1"></i>
+                        <span>Requisitions</span>
+                        <span class="cd-activity-tab-badge" id="agencyActCount-jobs">0</span>
                     </button>
-                    <button type="button" class="cd-activity-tab-btn js-act-filter-btn" data-category="crm">
-                        <span>CRM &amp; Notes</span>
-                        <span class="cd-activity-tab-badge" id="agencyActCountCrm">{{ $actCrmCount }}</span>
+                    <button type="button" class="cd-activity-tab-btn js-act-filter-btn" data-category="candidates">
+                        <i class="fa fa-user-check me-1"></i>
+                        <span>Candidates</span>
+                        <span class="cd-activity-tab-badge" id="agencyActCount-candidates">0</span>
+                    </button>
+                    <button type="button" class="cd-activity-tab-btn js-act-filter-btn" data-category="interviews">
+                        <i class="fa fa-calendar-check me-1"></i>
+                        <span>Interviews</span>
+                        <span class="cd-activity-tab-badge" id="agencyActCount-interviews">0</span>
+                    </button>
+                    <button type="button" class="cd-activity-tab-btn js-act-filter-btn" data-category="offers">
+                        <i class="fa fa-file-signature me-1"></i>
+                        <span>Offers</span>
+                        <span class="cd-activity-tab-badge" id="agencyActCount-offers">0</span>
+                    </button>
+                    <button type="button" class="cd-activity-tab-btn js-act-filter-btn" data-category="joining">
+                        <i class="fa fa-champagne-glasses me-1"></i>
+                        <span>Placed</span>
+                        <span class="cd-activity-tab-badge" id="agencyActCount-joining">0</span>
+                    </button>
+                    <button type="button" class="cd-activity-tab-btn js-act-filter-btn" data-category="communication">
+                        <i class="fa fa-comment-dots me-1"></i>
+                        <span>Communication</span>
+                        <span class="cd-activity-tab-badge" id="agencyActCount-communication">0</span>
+                    </button>
+                    <button type="button" class="cd-activity-tab-btn js-act-filter-btn" data-category="client">
+                        <i class="fa fa-handshake me-1"></i>
+                        <span>Client</span>
+                        <span class="cd-activity-tab-badge" id="agencyActCount-client">0</span>
+                    </button>
+                    <button type="button" class="cd-activity-tab-btn js-act-filter-btn" data-category="marketplace">
+                        <i class="fa fa-store me-1"></i>
+                        <span>Marketplace</span>
+                        <span class="cd-activity-tab-badge" id="agencyActCount-marketplace">0</span>
+                    </button>
+                    <button type="button" class="cd-activity-tab-btn js-act-filter-btn" data-category="performance">
+                        <i class="fa fa-chart-line me-1"></i>
+                        <span>Performance</span>
+                        <span class="cd-activity-tab-badge" id="agencyActCount-performance">0</span>
+                    </button>
+                    <button type="button" class="cd-activity-tab-btn js-act-filter-btn" data-category="compliance">
+                        <i class="fa fa-shield-halved me-1"></i>
+                        <span>Compliance</span>
+                        <span class="cd-activity-tab-badge" id="agencyActCount-compliance">0</span>
+                    </button>
+                    <button type="button" class="cd-activity-tab-btn js-act-filter-btn" data-category="relationship">
+                        <i class="fa fa-user-tie me-1"></i>
+                        <span>Relationship</span>
+                        <span class="cd-activity-tab-badge" id="agencyActCount-relationship">0</span>
+                    </button>
+                    <button type="button" class="cd-activity-tab-btn js-act-filter-btn" data-category="system">
+                        <i class="fa fa-gear me-1"></i>
+                        <span>System</span>
+                        <span class="cd-activity-tab-badge" id="agencyActCount-system">0</span>
                     </button>
                 </div>
 
                 <!-- Tier 3: Activity Stream Container -->
                 <div class="cd-activity-stream" id="agencyActivityStream">
-                    <!-- Event 1: ATS System Audit (CRM) -->
-                    <div class="cd-act-card js-agency-act-item" data-category="crm" data-time="today">
-                        <div class="cd-act-avatar" style="background:#eff6ff; color:#2563eb; border:1px solid #bfdbfe;">
-                            <i class="fas fa-shield-halved"></i>
+                    <div class="p-4 text-center bg-white rounded-3 border" style="border-color: #e2e8f0;" id="agencyActInitialLoader">
+                        <div class="spinner-border text-primary spinner-border-sm mb-2" role="status">
+                            <span class="visually-hidden">Loading...</span>
                         </div>
-                        <div style="min-width:0; flex:1;">
-                            <div class="d-flex align-items-center justify-content-between mb-1 flex-wrap gap-1">
-                                <div class="d-flex align-items-center gap-2">
-                                    <span class="badge badge-light-primary fw-bold fs-9 text-uppercase">CRM AUDIT</span>
-                                    <span class="fw-bold text-dark fs-7">Agency Security &amp; SLA Compliance Verified</span>
-                                </div>
-                                <div class="text-end">
-                                    <div class="fw-bold text-dark fs-8">{{ date('M d, Y') }}</div>
-                                    <div class="text-muted fs-9">{{ date('h:i A') }} IST</div>
-                                </div>
-                            </div>
-                            <div class="d-flex align-items-center justify-content-between mt-2 pt-2 border-top border-light flex-wrap gap-2">
-                                <div class="fs-8 text-muted">
-                                    <span class="text-uppercase fw-semibold" style="font-size:10px;">VERIFIED BY:</span>
-                                    <strong class="text-dark">{{ auth()->user()->name ?? 'System Lead' }}</strong> &bull; <span>4Bell Technology</span>
-                                </div>
-                                <span class="badge badge-light-success text-success fs-9 fw-semibold">#seq-17923401</span>
-                            </div>
-                        </div>
+                        <div class="font-12 text-muted fw-semibold">Loading 360° agency activity stream from Elasticsearch...</div>
                     </div>
+                </div>
 
-                    <!-- Events from Candidates Submitted (Pipeline) -->
-                    @if (count($candsList) > 0)
-                        @foreach ($candsList as $cand)
-                            @php
-                                $candDate = !empty($cand->created_at) ? Carbon::parse($cand->created_at)->format('M d, Y') : date('M d, Y');
-                                $candTime = !empty($cand->created_at) ? Carbon::parse($cand->created_at)->format('h:i A') . ' IST' : '11:38 AM IST';
-                                $candFullName = ucwords($cand->full_name ?? 'Candidate Profile');
-                                $candInitials = strtoupper(substr($candFullName, 0, 2));
-                                $candJobTitle = $cand->job_title ?? 'Active Requisition';
-                                $candJobId = $cand->job_id ?? '1';
-                            @endphp
-                            <div class="cd-act-card js-agency-act-item" data-category="pipeline" data-time="recent">
-                                <div class="cd-act-avatar" style="background:#faf5ff; color:#9333ea; border:1px solid #e9d5ff;">
-                                    {{ $candInitials }}
-                                </div>
-                                <div style="min-width:0; flex:1;">
-                                    <div class="d-flex align-items-center justify-content-between mb-1 flex-wrap gap-1">
-                                        <div>
-                                            <span class="badge badge-light-primary fw-bold fs-9 text-uppercase me-1">CANDIDATE</span>
-                                            <strong class="text-dark fs-7 js-act-searchable">{{ $candFullName }}</strong>
-                                            <span class="text-muted fs-8">&bull; {{ $candJobTitle }} #{{ $candJobId }}</span>
-                                        </div>
-                                        <div class="text-end">
-                                            <div class="fw-bold text-dark fs-8">{{ $candDate }}</div>
-                                            <div class="text-muted fs-9">{{ $candTime }}</div>
-                                        </div>
-                                    </div>
-                                    <div class="text-dark fs-8 mt-1" style="line-height:1.4;">
-                                        Candidate profile submitted for <strong>{{ $candJobTitle }}</strong>. Sourced and vetted by {{ $detailName }}.
-                                    </div>
-                                    <div class="d-flex align-items-center justify-content-between mt-2 pt-2 border-top border-light flex-wrap gap-2">
-                                        <div class="fs-8 text-muted">
-                                            <div style="font-size:10px; font-weight:700; text-transform:uppercase; color:#64748b;">SUBMITTED BY:</div>
-                                            <div class="fw-bold text-dark">{{ $detailName }} Recruiter</div>
-                                            <div class="text-muted fs-9">{{ $detailName }}</div>
-                                        </div>
-                                        <div class="d-flex align-items-center gap-2">
-                                            <span class="badge badge-light-info text-info fs-9 fw-semibold">#seq-cand-{{ $cand->id }}</span>
-                                            <button type="button" class="btn btn-sm btn-light-primary py-1 px-3 fs-9 fw-bold" onclick="triggerDrawerTab('candidate_list', event)">
-                                                <i class="fas fa-eye me-1"></i> View Profile
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        @endforeach
-                    @endif
+                <!-- Load Older Activities (Cursor Pagination) Container -->
+                <div class="text-center my-3" id="agencyActLoadMoreContainer" style="display: none;">
+                    <button type="button" class="btn btn-outline-primary btn-sm font-12 fw-semibold px-4 py-2" id="agencyActLoadMoreBtn" onclick="window.AgencyActivityManager.loadMore()">
+                        <span class="spinner-border spinner-border-sm me-1 d-none" id="agencyActLoadMoreSpinner" role="status"></span>
+                        <i class="fa fa-angles-down me-1" id="agencyActLoadMoreIcon"></i>
+                        <span>Load Older Activities (<span id="agencyActRemainingCount">0</span> remaining)</span>
+                    </button>
+                </div>
 
-                    <!-- Events from Shared Jobs (Jobs) -->
-                    @if (count($jobsList) > 0)
-                        @foreach ($jobsList as $job)
-                            @php
-                                $jobDate = !empty($job->shared_at ?? $job->created_at) ? Carbon::parse($job->shared_at ?? $job->created_at)->format('M d, Y') : date('M d, Y');
-                                $jobTime = !empty($job->shared_at ?? $job->created_at) ? Carbon::parse($job->shared_at ?? $job->created_at)->format('h:i A') . ' IST' : '12:00 PM IST';
-                            @endphp
-                            <div class="cd-act-card js-agency-act-item" data-category="jobs" data-time="recent">
-                                <div class="cd-act-avatar" style="background:#ecfdf5; color:#10b981; border:1px solid #a7f3d0;">
-                                    <i class="fas fa-share-nodes"></i>
+                <!-- Modal for Activity Details -->
+                <div class="modal fade" id="agencyActivityDetailsModal" tabindex="-1" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered modal-lg">
+                        <div class="modal-content border-0 shadow-lg" style="border-radius: 12px; overflow: hidden;">
+                            <div class="modal-header bg-light py-2.5 px-3 border-bottom" style="border-color: #e2e8f0;">
+                                <div class="d-flex align-items-center gap-2">
+                                    <span class="badge" id="modalEventCategoryBadge" style="background: #e0e7ff; color: #4338ca; font-size: 11px;">Category</span>
+                                    <h6 class="modal-title font-14 fw-bold text-dark mb-0" id="modalEventTitle">Event Details</h6>
                                 </div>
-                                <div style="min-width:0; flex:1;">
-                                    <div class="d-flex align-items-center justify-content-between mb-1 flex-wrap gap-1">
-                                        <div>
-                                            <span class="badge badge-light-success fw-bold fs-9 text-uppercase me-1">JOB SHARED</span>
-                                            <strong class="text-dark fs-7 js-act-searchable">{{ $job->title }}</strong>
-                                            <span class="text-muted fs-8">&bull; #{{ $job->id }} &bull; {{ $job->total_positions ?? 1 }} Opening(s)</span>
-                                        </div>
-                                        <div class="text-end">
-                                            <div class="fw-bold text-dark fs-8">{{ $jobDate }}</div>
-                                            <div class="text-muted fs-9">{{ $jobTime }}</div>
-                                        </div>
-                                    </div>
-                                    <div class="text-dark fs-8 mt-1" style="line-height:1.4;">
-                                        Requisition shared with {{ $detailName }} with prioritized 48-hour sourcing SLA.
-                                    </div>
-                                    <div class="d-flex align-items-center justify-content-between mt-2 pt-2 border-top border-light flex-wrap gap-2">
-                                        <div class="fs-8 text-muted">
-                                            <div style="font-size:10px; font-weight:700; text-transform:uppercase; color:#64748b;">SHARED BY:</div>
-                                            <div class="fw-bold text-dark">{{ auth()->user()->name ?? 'Account Lead' }}</div>
-                                            <div class="text-muted fs-9">4Bell Technology</div>
-                                        </div>
-                                        <div class="d-flex align-items-center gap-2">
-                                            <span class="badge badge-light-success text-success fs-9 fw-semibold">#seq-job-{{ $job->id }}</span>
-                                            <button type="button" class="btn btn-sm btn-light-primary py-1 px-3 fs-9 fw-bold" onclick="triggerDrawerTab('requisitions', event)">
-                                                <i class="fas fa-briefcase me-1"></i> View Job
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
+                                <button type="button" class="btn-close font-11" data-bs-dismiss="modal" data-dismiss="modal" aria-label="Close"></button>
                             </div>
-                        @endforeach
-                    @endif
-
-                    <!-- Events from Interviews (Interviews) -->
-                    @if (count($interviewsScheduleList) > 0)
-                        @foreach ($interviewsScheduleList as $it)
-                            @php
-                                $itDate = !empty($it->schedule_date) ? Carbon::parse($it->schedule_date)->format('M d, Y') : date('M d, Y');
-                                $itTime = !empty($it->schedule_time) ? Carbon::parse($it->schedule_time)->format('h:i A') . ' IST' : '02:30 PM IST';
-                            @endphp
-                            <div class="cd-act-card js-agency-act-item" data-category="interviews" data-time="recent">
-                                <div class="cd-act-avatar" style="background:#fffbeb; color:#d97706; border:1px solid #fde68a;">
-                                    <i class="fas fa-calendar-check"></i>
-                                </div>
-                                <div style="min-width:0; flex:1;">
-                                    <div class="d-flex align-items-center justify-content-between mb-1 flex-wrap gap-1">
-                                        <div>
-                                            <span class="badge badge-light-warning fw-bold fs-9 text-uppercase me-1">INTERVIEW</span>
-                                            <strong class="text-dark fs-7 js-act-searchable">{{ $it->candidate_name ?? 'Candidate' }}</strong>
-                                            <span class="text-muted fs-8">&bull; {{ $it->job_title ?? 'Shared Job' }}</span>
-                                        </div>
-                                        <div class="text-end">
-                                            <div class="fw-bold text-dark fs-8">{{ $itDate }}</div>
-                                            <div class="text-muted fs-9">{{ $itTime }}</div>
-                                        </div>
-                                    </div>
-                                    <div class="text-dark fs-8 mt-1" style="line-height:1.4;">
-                                        Technical evaluation round scheduled with candidate submitted by {{ $detailName }}.
-                                    </div>
-                                    <div class="d-flex align-items-center justify-content-between mt-2 pt-2 border-top border-light flex-wrap gap-2">
-                                        <div class="fs-8 text-muted">
-                                            <div style="font-size:10px; font-weight:700; text-transform:uppercase; color:#64748b;">SCHEDULED BY:</div>
-                                            <div class="fw-bold text-dark">{{ auth()->user()->name ?? 'Recruiting Team' }}</div>
-                                            <div class="text-muted fs-9">4Bell Technology</div>
-                                        </div>
-                                        <div class="d-flex align-items-center gap-2">
-                                            <span class="badge badge-light-warning text-warning fs-9 fw-semibold">#seq-it-{{ $it->id }}</span>
-                                            <button type="button" class="btn btn-sm btn-light-warning py-1 px-3 fs-9 fw-bold" onclick="triggerDrawerTab('interview_tracker', event)">
-                                                <i class="fas fa-calendar-days me-1"></i> Interview Details
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        @endforeach
-                    @endif
-
-                    <!-- Event: Recruiter Engagement Note (CRM) -->
-                    <div class="cd-act-card js-agency-act-item" data-category="crm" data-time="today">
-                        <div class="cd-act-avatar" style="background:#f0fdf4; color:#16a34a; border:1px solid #bbf7d0;">
-                            <i class="fas fa-handshake"></i>
-                        </div>
-                        <div style="min-width:0; flex:1;">
-                            <div class="d-flex align-items-center justify-content-between mb-1 flex-wrap gap-1">
-                                <div>
-                                    <span class="badge badge-light-success fw-bold fs-9 text-uppercase me-1">PARTNERSHIP</span>
-                                    <strong class="text-dark fs-7 js-act-searchable">Contract Terms &amp; Commercial SLA Active</strong>
-                                </div>
-                                <div class="text-end">
-                                    <div class="fw-bold text-dark fs-8">{{ date('M d, Y') }}</div>
-                                    <div class="text-muted fs-9">09:00 AM IST</div>
-                                </div>
-                            </div>
-                            <div class="text-dark fs-8 mt-1" style="line-height:1.4;">
-                                Commercial contingency staffing terms active with {{ $placement_fee }} and 90-day free replacement guarantee.
-                            </div>
-                            <div class="d-flex align-items-center justify-content-between mt-2 pt-2 border-top border-light flex-wrap gap-2">
-                                <div class="fs-8 text-muted">
-                                    <div style="font-size:10px; font-weight:700; text-transform:uppercase; color:#64748b;">VERIFIED BY:</div>
-                                    <div class="fw-bold text-dark">{{ auth()->user()->name ?? 'Account Lead' }}</div>
-                                    <div class="text-muted fs-9">4Bell Technology</div>
-                                </div>
-                                <span class="badge badge-light-success text-success fs-9 fw-semibold">#seq-17910001</span>
+                            <div class="modal-body p-3 font-12" id="modalEventBody"></div>
+                            <div class="modal-footer bg-light py-2 px-3 border-top" style="border-color: #e2e8f0;">
+                                <span class="text-muted font-11 me-auto font-monospace" id="modalEventUuid">UUID</span>
+                                <button type="button" class="btn btn-secondary btn-sm font-12" data-bs-dismiss="modal" data-dismiss="modal">Close</button>
                             </div>
                         </div>
                     </div>
@@ -4689,7 +4825,6 @@
     setupTabDebouncedSearch('#cdAgencyCandSearchInput', '#cdAgencyCandSearchClear', '.js-agency-cand-item', '.js-cand-searchable');
     setupTabDebouncedSearch('#agencyItSearchInput', '#agencyItSearchClear', '.js-agency-it-item', '.js-it-searchable');
     setupTabDebouncedSearch('#agencyOjSearchInput', '#agencyOjSearchClear', '.js-agency-oj-item', '.js-oj-searchable');
-    setupTabDebouncedSearch('#agencyActSearchInput', '#agencyActSearchClear', '.js-agency-act-item', '.js-act-searchable');
 
     // Reset Buttons
     $(document).on('click', '#btnAgencyJobReset', function() {
@@ -4712,50 +4847,8 @@
         $('#agencyOjSearchInput').val('').trigger('input');
         $('.js-agency-oj-tab[data-segment="all"]').trigger('click');
     });
-    $(document).on('click', '#agencyActRefreshBtn', function() {
-        $('#agencyActSearchInput').val('').trigger('input');
-        $('#agencyActTimeframeSelect').val('all');
-        $('.js-act-filter-btn[data-category="all"]').trigger('click');
-    });
 
     // ── Sub-Tabs Filter Handlers ──
-    // 1. Activity Filter
-    $(document).on('click', '.js-act-filter-btn', function(e) {
-        e.preventDefault();
-        $('.js-act-filter-btn').removeClass('active');
-        $(this).addClass('active');
-        var cat = $(this).data('category');
-        if (cat === 'all') {
-            $('.js-agency-act-item').show();
-        } else {
-            $('.js-agency-act-item').each(function() {
-                if ($(this).data('category') === cat) {
-                    $(this).show();
-                } else {
-                    $(this).hide();
-                }
-            });
-        }
-    });
-
-    // Timeframe Filter
-    $(document).on('change', '#agencyActTimeframeSelect', function() {
-        var val = $(this).val();
-        if (val === 'all') {
-            $('.js-agency-act-item').show();
-        } else if (val === 'today') {
-            $('.js-agency-act-item').each(function() {
-                if ($(this).data('time') === 'today') {
-                    $(this).show();
-                } else {
-                    $(this).hide();
-                }
-            });
-        } else {
-            $('.js-agency-act-item').show();
-        }
-    });
-
     // 2. Contacts Filter
     $(document).on('click', '.js-agency-contact-tab', function(e) {
         e.preventDefault();
@@ -4852,47 +4945,397 @@
         }
     });
 
-    // Quick Note Logger
-    window.saveAgencyQuickNote = function() {
-        var note = $('#agencyQuickNoteInput').val().trim();
-        if (!note) {
-            alert('Please enter a note before saving.');
-            return;
+    // ══════════════════════════════════════════════════════════════════════
+    // AGENCY 360° ACTIVITY TAB - CQRS DUAL-STORE SINGLETON MANAGER
+    // ══════════════════════════════════════════════════════════════════════
+    window.AgencyActivityManager = {
+        agencyId: {{ (int) $agencyId }},
+        serviceCompanyId: {{ (int) (auth()->user()->company_id ?? 0) }},
+        activeCategory: 'all',
+        activeTimeframe: 'all',
+        searchQuery: '',
+        nextCursor: null,
+        hasMore: false,
+        remainingCount: 0,
+        isLoading: false,
+        isInitialized: false,
+        eventsCache: {},
+        searchDebounceTimer: null,
+        routes: {
+            feed: "{{ route('service_company.agency.activity_data_ajax') }}",
+            note: "{{ route('service_company.agency.activity_quick_note') }}"
+        },
+
+        init: function() {
+            var self = this;
+            if (self.isInitialized) return;
+            self.isInitialized = true;
+
+            // Search input with 300ms debounce
+            $(document).on('input', '#agencyActSearchInput', function() {
+                var val = $(this).val().trim();
+                if (val.length > 0) {
+                    $('#agencyActSearchClear').show();
+                } else {
+                    $('#agencyActSearchClear').hide();
+                }
+                clearTimeout(self.searchDebounceTimer);
+                self.searchDebounceTimer = setTimeout(function() {
+                    self.searchQuery = val;
+                    self.fetchFeed(true);
+                }, 300);
+            });
+
+            $(document).on('click', '#agencyActSearchClear', function() {
+                $('#agencyActSearchInput').val('');
+                $(this).hide();
+                self.searchQuery = '';
+                self.fetchFeed(true);
+            });
+
+            // Timeframe selector
+            $(document).on('change', '#agencyActTimeframeSelect', function() {
+                self.activeTimeframe = $(this).val();
+                self.fetchFeed(true);
+            });
+
+            // Refresh button
+            $(document).on('click', '#agencyActRefreshBtn', function() {
+                var $icon = $(this).find('i');
+                $icon.addClass('fa-spin');
+                self.fetchFeed(true, true, function() {
+                    $icon.removeClass('fa-spin');
+                });
+            });
+
+            // Category filter buttons
+            $(document).on('click', '#agencyActivityFilterTabs .js-act-filter-btn', function(e) {
+                e.preventDefault();
+                $('#agencyActivityFilterTabs .js-act-filter-btn').removeClass('active');
+                $(this).addClass('active');
+                self.activeCategory = $(this).data('category') || 'all';
+                self.fetchFeed(true);
+            });
+
+            // Quick note character count
+            $(document).on('input', '#agencyQuickNoteInput', function() {
+                var len = $(this).val().length;
+                $('#agencyQuickNoteCharCount').text(len + ' / 2,000 characters');
+            });
+
+            // Initial feed fetch
+            self.fetchFeed(true);
+
+            // Real-time Reverb WebSocket listener
+            self.initRealtime();
+        },
+
+        fetchFeed: function(reset, forceRefresh, callback) {
+            var self = this;
+            if (self.isLoading) return;
+            self.isLoading = true;
+
+            if (reset) {
+                self.nextCursor = null;
+                $('#agencyActivityStream').html(`
+                    <div class="p-4 text-center bg-white rounded-3 border" style="border-color: #e2e8f0;">
+                        <div class="spinner-border text-primary spinner-border-sm mb-2" role="status"></div>
+                        <div class="font-12 text-muted fw-semibold">Loading 360° agency activity stream from Elasticsearch...</div>
+                    </div>
+                `);
+                $('#agencyActLoadMoreContainer').hide();
+            }
+
+            var params = {
+                agency_id: self.agencyId,
+                category: self.activeCategory,
+                timeframe: self.activeTimeframe,
+                search: self.searchQuery,
+                cursor: reset ? null : self.nextCursor,
+                refresh: forceRefresh ? 1 : 0
+            };
+
+            $.ajax({
+                url: self.routes.feed,
+                type: 'GET',
+                data: params,
+                dataType: 'json',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                success: function(res) {
+                    self.isLoading = false;
+                    if (callback) callback();
+                    if (!res || !res.success) {
+                        $('#agencyActivityStream').html('<div class="alert alert-danger font-12 m-3">Failed to load activity stream.</div>');
+                        return;
+                    }
+
+                    self.renderHeroAndKPIs(res);
+
+                    if (res.data && res.data.length > 0) {
+                        res.data.forEach(function(item) {
+                            self.eventsCache[item.event_uuid] = item;
+                        });
+                    }
+
+                    if (reset) {
+                        $('#agencyActivityStream').html(res.html || '');
+                    } else {
+                        $('#agencyActivityStream').append(res.html || '');
+                    }
+
+                    if (res.pagination && res.pagination.has_more) {
+                        self.hasMore = true;
+                        self.nextCursor = res.pagination.next_cursor;
+                        self.remainingCount = res.pagination.remaining_count;
+                        $('#agencyActRemainingCount').text(self.remainingCount);
+                        $('#agencyActLoadMoreContainer').show();
+                    } else {
+                        self.hasMore = false;
+                        self.nextCursor = null;
+                        $('#agencyActLoadMoreContainer').hide();
+                    }
+                },
+                error: function(xhr) {
+                    self.isLoading = false;
+                    if (callback) callback();
+                    $('#agencyActivityStream').html('<div class="alert alert-warning font-12 m-3">Unable to retrieve activity stream from server. Please refresh.</div>');
+                }
+            });
+        },
+
+        loadMore: function() {
+            var self = this;
+            if (!self.hasMore || self.isLoading || !self.nextCursor) return;
+            $('#agencyActLoadMoreBtn').prop('disabled', true);
+            $('#agencyActLoadMoreSpinner').removeClass('d-none');
+            $('#agencyActLoadMoreIcon').addClass('d-none');
+
+            self.fetchFeed(false, false, function() {
+                $('#agencyActLoadMoreBtn').prop('disabled', false);
+                $('#agencyActLoadMoreSpinner').addClass('d-none');
+                $('#agencyActLoadMoreIcon').removeClass('d-none');
+            });
+        },
+
+        renderHeroAndKPIs: function(res) {
+            if (res.hero) {
+                $('#heroTotalActs').text(res.hero.total_activities || 0);
+                $('#heroTotalJobs').text(res.hero.jobs_worked || 0);
+                $('#heroTotalCands').text(res.hero.candidates_submitted || 0);
+                $('#heroTotalInterviews').text(res.hero.interviews || 0);
+                $('#heroTotalOffers').text(res.hero.offers || 0);
+                $('#heroTotalJoined').text(res.hero.joined || 0);
+                $('#heroLastActiveTime').text(res.hero.last_active_relative || 'Never');
+                if (res.hero.last_active_by && res.hero.last_active_by !== 'None') {
+                    $('#heroLastActiveActor').text('by ' + res.hero.last_active_by);
+                } else {
+                    $('#heroLastActiveActor').text('');
+                }
+            }
+
+            if (res.health) {
+                var $pill = $('#agencyActHealthPill');
+                $pill.removeClass('health-active health-dormant health-inactive').addClass(res.health.css_class);
+                $('#agencyActHealthLabel').text(res.health.label);
+            }
+
+            if (res.kpi) {
+                Object.keys(res.kpi).forEach(function(key) {
+                    $('#agencyActCount-' + key).text(res.kpi[key]);
+                });
+            }
+
+            // Update Activity Integrity sync indicator
+            var now = new Date();
+            var hours = now.getHours();
+            var minutes = now.getMinutes();
+            var ampm = hours >= 12 ? 'PM' : 'AM';
+            hours = hours % 12;
+            hours = hours ? hours : 12;
+            minutes = minutes < 10 ? '0' + minutes : minutes;
+            $('#agencyActLastSyncTime').text('• Synced ' + hours + ':' + minutes + ' ' + ampm);
+        },
+
+        openNoteModal: function() {
+            $('#agencyQuickNoteCard').slideDown(150);
+            $('#agencyQuickNoteInput').focus();
+        },
+
+        saveNote: function() {
+            var self = this;
+            var note = $('#agencyQuickNoteInput').val().trim();
+            if (!note || note.length < 2) {
+                alert('Please enter at least 2 characters.');
+                return;
+            }
+
+            var $btn = $('#btnSaveAgencyQuickNote');
+            $btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-1"></span> Saving...');
+
+            $.ajax({
+                url: self.routes.note,
+                type: 'POST',
+                data: {
+                    _token: '{{ csrf_token() }}',
+                    agency_company_id: self.agencyId,
+                    note: note
+                },
+                dataType: 'json',
+                success: function(res) {
+                    $btn.prop('disabled', false).html('<i class="fa fa-paper-plane me-1"></i> Save Note');
+                    if (res && res.success) {
+                        $('#agencyQuickNoteInput').val('');
+                        $('#agencyQuickNoteCharCount').text('Max 2,000 characters');
+                        $('#agencyQuickNoteCard').slideUp(150);
+                        self.fetchFeed(true, true);
+                    } else {
+                        alert((res && res.message) ? res.message : 'Failed to save note.');
+                    }
+                },
+                error: function(xhr) {
+                    $btn.prop('disabled', false).html('<i class="fa fa-paper-plane me-1"></i> Save Note');
+                    var msg = 'Failed to save note.';
+                    if (xhr.responseJSON && xhr.responseJSON.message) {
+                        msg = xhr.responseJSON.message;
+                    }
+                    alert(msg);
+                }
+            });
+        },
+
+        viewEventDetails: function(uuid) {
+            var event = this.eventsCache[uuid];
+            if (!event) {
+                var $card = $('#activity-card-' + uuid);
+                if ($card.length) {
+                    try {
+                        event = JSON.parse($card.find('.raw-event-payload').text());
+                    } catch(e) {}
+                }
+            }
+            if (!event) return;
+
+            $('#modalEventTitle').text(event.event_title);
+            $('#modalEventCategoryBadge').text(event.category_badge || event.category)
+                .css('background', (event.category_color || '#6366f1') + '20')
+                .css('color', event.category_color || '#6366f1');
+            $('#modalEventUuid').text('UUID: ' + event.event_uuid);
+
+            var html = `
+                <div class="mb-3">
+                    <div class="text-secondary font-12 mb-1" style="white-space: pre-line;">${$('<div>').text(event.event_description || '').html()}</div>
+                    <div class="d-flex align-items-center gap-2 mt-2 pt-2 border-top font-11 text-muted flex-wrap">
+                        <span><i class="fa fa-calendar-day text-primary me-1"></i> ${event.date_formatted} ${event.time_formatted} IST</span>
+                        <span>&bull;</span>
+                        <span><i class="fa fa-user text-muted me-1"></i> <strong>${event.actor_name}</strong> (${event.actor_role})</span>
+                        <span>&bull;</span>
+                        <span>via <strong>${event.source_label}</strong></span>
+                    </div>
+                </div>
+            `;
+
+            if (event.related_candidate_name || event.related_job_title || event.related_client_name) {
+                html += `<div class="p-2.5 rounded bg-light border mb-3 font-11">
+                    <div class="fw-bold text-dark text-uppercase font-10 mb-1">Associated Entities</div>
+                    <div class="d-flex flex-wrap gap-2">
+                        ${event.related_candidate_name ? `<span><i class="fa fa-user text-purple me-1"></i> Candidate: <strong>${event.related_candidate_name}</strong></span>` : ''}
+                        ${event.related_job_title ? `<span><i class="fa fa-briefcase text-primary me-1"></i> Requisition: <strong>${event.related_job_title}</strong></span>` : ''}
+                        ${event.related_client_name ? `<span><i class="fa fa-building text-info me-1"></i> Client: <strong>${event.related_client_name}</strong></span>` : ''}
+                    </div>
+                </div>`;
+            }
+
+            if (event.has_diff) {
+                html += `
+                    <div class="p-2.5 rounded border mb-3 font-11" style="background:#f8fafc;">
+                        <div class="fw-bold text-dark text-uppercase font-10 mb-2"><i class="fa fa-code-compare text-primary me-1"></i> State Change / Terms Diff</div>
+                        <div class="row g-2">
+                            <div class="col-6">
+                                <div class="p-2 rounded bg-white border border-danger">
+                                    <span class="text-danger fw-bold font-10 d-block text-uppercase mb-1">Previous</span>
+                                    <pre class="font-10 text-muted m-0" style="white-space:pre-wrap;">${JSON.stringify(event.previous_value, null, 2)}</pre>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="p-2 rounded bg-white border border-success">
+                                    <span class="text-success fw-bold font-10 d-block text-uppercase mb-1">New Value</span>
+                                    <pre class="font-10 text-muted m-0" style="white-space:pre-wrap;">${JSON.stringify(event.new_value, null, 2)}</pre>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            if (event.metadata && Object.keys(event.metadata).length > 0) {
+                html += `
+                    <div class="mt-2">
+                        <span class="text-muted font-10 text-uppercase fw-bold">Raw Metadata</span>
+                        <pre class="bg-light p-2 rounded border font-10 text-muted mt-1" style="max-height:120px; overflow-y:auto;">${JSON.stringify(event.metadata, null, 2)}</pre>
+                    </div>
+                `;
+            }
+
+            $('#modalEventBody').html(html);
+            var modalEl = document.getElementById('agencyActivityDetailsModal');
+            if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+                var bsModal = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
+                bsModal.show();
+            } else {
+                $('#agencyActivityDetailsModal').modal('show');
+            }
+        },
+
+        switchTab: function(tabTarget) {
+            if (typeof window.triggerDrawerTab === 'function') {
+                window.triggerDrawerTab(tabTarget);
+            }
+        },
+
+        resetFilters: function() {
+            $('#agencyActSearchInput').val('');
+            $('#agencyActSearchClear').hide();
+            this.searchQuery = '';
+            $('#agencyActTimeframeSelect').val('all');
+            this.activeTimeframe = 'all';
+            $('#agencyActivityFilterTabs .js-act-filter-btn[data-category="all"]').trigger('click');
+        },
+
+        initRealtime: function() {
+            var self = this;
+            if (typeof window.Echo !== 'undefined' && self.serviceCompanyId > 0) {
+                try {
+                    window.Echo.private('company.' + self.serviceCompanyId)
+                        .listen('.agency.activity.logged', function(payload) {
+                            if (payload && payload.agency_company_id == self.agencyId) {
+                                var $badge = $('#agencyActLiveBadge');
+                                $badge.addClass('bg-success text-white').removeClass('badge-light-success text-success');
+                                setTimeout(function() {
+                                    $badge.removeClass('bg-success text-white').addClass('badge-light-success text-success');
+                                }, 1200);
+
+                                self.fetchFeed(true, true);
+                            }
+                        });
+                } catch(e) {
+                    console.warn('AgencyActivity: Echo subscription warning', e);
+                }
+            }
         }
-        var newCard = `
-            <div class="cd-act-card js-agency-act-item" data-category="crm" data-time="today">
-                <div class="cd-act-avatar" style="background:#eff6ff; color:#2563eb; border:1px solid #bfdbfe;">
-                    <i class="fas fa-comment-dots"></i>
-                </div>
-                <div style="min-width:0; flex:1;">
-                    <div class="d-flex align-items-center justify-content-between mb-1">
-                        <div class="d-flex align-items-center gap-2">
-                            <span class="badge badge-light-primary fw-bold fs-9 text-uppercase">RECRUITER NOTE</span>
-                            <span class="fw-bold text-dark fs-7">${$('<div>').text(note).html()}</span>
-                        </div>
-                        <div class="text-end">
-                            <div class="fw-bold text-dark fs-8">{{ date('M d, Y') }}</div>
-                            <div class="text-muted fs-9">{{ date('h:i A') }} IST</div>
-                        </div>
-                    </div>
-                    <div class="d-flex align-items-center justify-content-between mt-2 pt-2 border-top border-light">
-                        <div class="fs-8 text-muted">
-                            <span class="text-uppercase fw-semibold" style="font-size:10px;">LOGGED BY:</span>
-                            <strong class="text-dark">{{ auth()->user()->name ?? 'Recruiter' }}</strong> &bull; <span>4Bell Technology</span>
-                        </div>
-                        <span class="badge badge-light-info text-info fs-9 fw-semibold">#seq-note-new</span>
-                    </div>
-                </div>
-            </div>
-        `;
-        $('#agencyActivityStream').prepend(newCard);
-        $('#agencyQuickNoteInput').val('');
-        $('#agencyQuickNoteCard').slideUp(150);
-        var curCount = parseInt($('#agencyActCountAll').text() || '0', 10) + 1;
-        $('#agencyActCountAll').text(curCount);
-        var crmCount = parseInt($('#agencyActCountCrm').text() || '0', 10) + 1;
-        $('#agencyActCountCrm').text(crmCount);
     };
+
+    // Auto-initialize when activity tab is loaded or switched to
+    $(document).ready(function() {
+        window.AgencyActivityManager.init();
+    });
+
+    $(document).on('click', '.cd-drawer-tabs-list .cd-tab-pill-btn[href="#recent_activity"]', function() {
+        if (window.AgencyActivityManager) {
+            window.AgencyActivityManager.fetchFeed(false);
+        }
+    });
 
     // Copy to clipboard helper
     window.copyToClipboard = function(text, btn) {

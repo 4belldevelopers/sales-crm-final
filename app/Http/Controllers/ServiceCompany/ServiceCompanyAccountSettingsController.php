@@ -682,7 +682,20 @@ class ServiceCompanyAccountSettingsController extends ServiceCompanyBaseControll
                 'round_off' => $request->input('round_off', 'To Nearest Rupee'),
             ]);
 
+            $prevTerms = (array) DB::table('agency_commercial_terms')->where('company_id', $company_id)->first();
             app(AgencyCommercialTermsService::class)->upsertForCompany($company_id, $agencyTermsPayload);
+            try {
+                app(\App\Services\AgencyActivityLoggerService::class)->logCommercialTermsUpdated(
+                    $company_id,
+                    $company_id,
+                    $prevTerms,
+                    $agencyTermsPayload,
+                    (int) auth()->id(),
+                    auth()->user()->name ?? 'Admin'
+                );
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::warning('Failed to log agency commercial activity', ['error' => $e->getMessage()]);
+            }
             $this->accountSettingsService->flushAccountCache($company_id);
             Cache::forever("agency_drawer_version_company_{$company_id}", ((int) Cache::get("agency_drawer_version_company_{$company_id}", 1)) + 1);
 

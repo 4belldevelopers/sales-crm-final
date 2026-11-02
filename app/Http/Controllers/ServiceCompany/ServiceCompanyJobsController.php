@@ -16523,21 +16523,31 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
             'status' => $status,
             'rateType' => (int) $rateType,
             'rate_type_label' => ($commType === 2)
-                ? (((int) $rateType === 2) ? 'Percentage of CTC' : (((int) $rateType === 1) ? 'Fixed Commercial Rate' : 'Free / No Fee'))
-                : (((int) $rateType === 1) ? 'Markup on Bill Rate' : 'Contract Commercial Rate'),
+                ? (((int) $rateType === 2) ? 'Percentage of CTC' : (((int) $rateType === 1) ? 'Fixed Placement Fee' : 'Free / No Fee'))
+                : (((int) $rateType === 2) ? 'Markup on Pay Rate' : (((int) $rateType === 1) ? 'Contract Bill Rate' : 'Pass-Through / Zero Margin')),
             'sal_mode' => $sal_mode,
-            'sal_mode_label' => ($sal_mode === 0) ? 'Annual Staffing' : (($sal_mode === 1) ? 'Monthly Staffing' : 'Hourly Staffing'),
+            'sal_mode_label' => ($commType === 2)
+                ? 'Annual CTC'
+                : (((int) $sal_mode === 2) ? 'Hourly Staffing' : 'Monthly Staffing'),
             'salary_currency' => $salary_currency,
             'currency_code' => $currencyCode,
             'replacement_period_days' => $replacementPeriod,
             'replacement_type' => $replacementType,
-            'replacement_type_label' => ucwords(str_replace('_', ' ', $replacementType)),
+            'replacement_type_label' => ($commType === 2)
+                ? ucwords(str_replace('_', ' ', $replacementType))
+                : (($replacementType === 'none') ? 'No Trial' : '5-Day Satisfaction Trial'),
             'replacement_eligibility' => $replacementEligibility,
-            'replacement_eligibility_label' => ucwords(str_replace('_', ' ', $replacementEligibility)),
+            'replacement_eligibility_label' => ($commType === 2)
+                ? ucwords(str_replace('_', ' ', $replacementEligibility))
+                : '48h Backfill SLA',
             'billing_frequency' => $billingFrequency,
-            'billing_frequency_label' => ucwords(str_replace('_', ' ', $billingFrequency)),
+            'billing_frequency_label' => ($commType === 2)
+                ? 'One Time'
+                : ucwords(str_replace('_', ' ', $billingFrequency)),
             'billing_trigger' => $billingTrigger,
-            'billing_trigger_label' => ucwords(str_replace('_', ' ', $billingTrigger)),
+            'billing_trigger_label' => ($commType === 2)
+                ? 'Candidate Joined'
+                : 'Approved Timesheet',
             'payment_terms_days' => $paymentTermsDays,
             'country_count' => count($countryIds),
             'countries' => $countryNames,
