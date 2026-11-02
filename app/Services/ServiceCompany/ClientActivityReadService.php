@@ -108,8 +108,9 @@ class ClientActivityReadService
         // Step 1: Resolve Client Job IDs (Dragonfly/Redis cached - strictly relationship-scoped)
         $clientJobIds = $this->resolveClientJobIds($serviceCompanyId, $clientId, $clientType, $partnerCompanyId, $query->viewerType);
 
-        // Step 1b: Resolve Candidate Application IDs belonging strictly to this operating agency for these shared jobs
-        $agencyCandidateAppIds = ($clientType === 'direct')
+        // Step 1b: Resolve Candidate Application IDs belonging strictly to this relationship for these shared jobs
+        $isRelationship = ($clientType === 'direct' || $clientType === 'agency' || $query->viewerType === 'agency');
+        $agencyCandidateAppIds = $isRelationship
             ? $this->resolveAgencyCandidateAppIds($serviceCompanyId, $clientJobIds, $clientId, $clientType, $query->viewerType, $partnerCompanyId)
             : [];
 
@@ -487,13 +488,13 @@ class ClientActivityReadService
         $indexNotes = defined('ELASTIC_APPLICANT_NOTES') ? ELASTIC_APPLICANT_NOTES : config('constants.ELASTIC_APPLICANT_NOTES', 'local_applicant_notes');
 
         $timeRange = $this->getTimeRangeFilter($query->timeframe);
-        $isDirect = ($query->clientType === 'direct');
+        $isRelationship = ($query->clientType === 'direct' || $query->clientType === 'agency' || $query->viewerType === 'agency');
 
         // 1. Timeline Counts (Pipeline & Offers)
-        if (! empty($clientJobIds) && (! $isDirect || ! empty($agencyCandidateAppIds)) && $hasTimeline) {
+        if (! empty($clientJobIds) && (! $isRelationship || ! empty($agencyCandidateAppIds)) && $hasTimeline) {
             try {
                 $baseMust = [['terms' => ['job_id' => $clientJobIds]]];
-                if ($isDirect) {
+                if ($isRelationship) {
                     $baseMust[] = ['terms' => ['application_id' => $agencyCandidateAppIds]];
                 }
                 if ($timeRange) {
@@ -556,9 +557,9 @@ class ClientActivityReadService
         }
 
         // 2. Interview Counts
-        if ((! $isDirect || (! empty($clientJobIds) && ! empty($agencyCandidateAppIds))) && $this->elasticService->indexExists($indexInterviews)) {
+        if ((! $isRelationship || (! empty($clientJobIds) && ! empty($agencyCandidateAppIds))) && $this->elasticService->indexExists($indexInterviews)) {
             try {
-                if ($isDirect) {
+                if ($isRelationship) {
                     $candMatch = [
                         ['terms' => ['candidate_id' => $agencyCandidateAppIds]],
                         ['terms' => ['job_application_id' => $agencyCandidateAppIds]],
@@ -589,7 +590,7 @@ class ClientActivityReadService
         }
 
         // 3. Jobs Counts
-        if ($isDirect) {
+        if ($isRelationship) {
             $kpis['job_events'] = count($clientJobIds);
         } elseif ($this->elasticService->indexExists($indexJobs)) {
             try {
@@ -608,7 +609,7 @@ class ClientActivityReadService
         }
 
         // 4. Notes Counts (Direct client agency view has 0 generic notes)
-        if (! $isDirect && $this->elasticService->indexExists($indexNotes)) {
+        if (! $isRelationship && $this->elasticService->indexExists($indexNotes)) {
             try {
                 $must = [['term' => ['client_id' => $query->clientId]]];
                 if ($timeRange) {
@@ -664,15 +665,15 @@ class ClientActivityReadService
 
         $timeRange = $this->getTimeRangeFilter($query->timeframe);
         $searchQuery = $query->search;
-        $isDirect = ($query->clientType === 'direct');
+        $isRelationship = ($query->clientType === 'direct' || $query->clientType === 'agency' || $query->viewerType === 'agency');
 
         $msearchPayload = [];
         $indexKeys = [];
 
         // 1. Timeline Search Query (Pipeline & Offers)
-        if (! empty($clientJobIds) && (! $isDirect || ! empty($agencyCandidateAppIds)) && in_array($query->category, ['all', 'pipeline', 'offers', 'candidates'], true) && $hasTimeline) {
+        if (! empty($clientJobIds) && (! $isRelationship || ! empty($agencyCandidateAppIds)) && in_array($query->category, ['all', 'pipeline', 'offers', 'candidates'], true) && $hasTimeline) {
             $must = [['terms' => ['job_id' => $clientJobIds]]];
-            if ($isDirect) {
+            if ($isRelationship) {
                 // Strictly candidates submitted by this operating agency for this job
                 $must[] = ['terms' => ['application_id' => $agencyCandidateAppIds]];
             }
@@ -715,8 +716,8 @@ class ClientActivityReadService
         }
 
         // 2. Interviews Search Query
-        if ((! $isDirect || (! empty($clientJobIds) && ! empty($agencyCandidateAppIds))) && in_array($query->category, ['all', 'interviews'], true) && $this->elasticService->indexExists($indexInterviews)) {
-            if ($isDirect) {
+        if ((! $isRelationship || (! empty($clientJobIds) && ! empty($agencyCandidateAppIds))) && in_array($query->category, ['all', 'interviews'], true) && $this->elasticService->indexExists($indexInterviews)) {
+            if ($isRelationship) {
                 $candMatch = [
                     ['terms' => ['candidate_id' => $agencyCandidateAppIds]],
                     ['terms' => ['job_application_id' => $agencyCandidateAppIds]],
@@ -760,8 +761,8 @@ class ClientActivityReadService
         }
 
         // 3. Jobs Search Query
-        if ((! $isDirect || ! empty($clientJobIds)) && in_array($query->category, ['all', 'jobs'], true) && $this->elasticService->indexExists($indexJobs)) {
-            $must = $isDirect ? [['terms' => ['id' => $clientJobIds]]] : [['term' => ['client_id' => $query->clientId]]];
+        if ((! $isRelationship || ! empty($clientJobIds)) && in_array($query->category, ['all', 'jobs'], true) && $this->elasticService->indexExists($indexJobs)) {
+            $must = $isRelationship ? [['terms' => ['id' => $clientJobIds]]] : [['term' => ['client_id' => $query->clientId]]];
             if ($timeRange) {
                 $must[] = ['range' => ['created_at' => $timeRange]];
             }
@@ -796,7 +797,7 @@ class ClientActivityReadService
         }
 
         // 4. Notes Search Query (Internal clients only)
-        if (! $isDirect && in_array($query->category, ['all', 'crm'], true) && $this->elasticService->indexExists($indexNotes)) {
+        if (! $isRelationship && in_array($query->category, ['all', 'crm'], true) && $this->elasticService->indexExists($indexNotes)) {
             $must = [['term' => ['client_id' => $query->clientId]]];
             if ($timeRange) {
                 $must[] = ['range' => ['created_at' => $timeRange]];

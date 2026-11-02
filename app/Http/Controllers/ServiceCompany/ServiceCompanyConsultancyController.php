@@ -1153,35 +1153,37 @@ After completing these steps, they will be able to start collaborating with your
 
         $rawId = (int) $rawId;
 
-        // 1. Direct check: is $rawId ALREADY a company_id with active relation?
+        // 1. Direct check: is $rawId ALREADY a company_id with active agency relation?
+        // Invariant: In Agency Drawer, authenticated company is strictly the Direct Client (from_company_id),
+        // and target partner is strictly the Agency (to_company_id). Reciprocal relations MUST NOT cross-authorize.
         $isCompanyRelation = DB::table('staffing_company_relation')
             ->where('final_status', 1)
-            ->where(function ($q) use ($authCompanyId, $rawId) {
-                $q->where(function ($inner) use ($authCompanyId, $rawId) {
-                    $inner->where('from_company_id', $authCompanyId)->where('to_company_id', $rawId);
-                })->orWhere(function ($inner) use ($authCompanyId, $rawId) {
-                    $inner->where('from_company_id', $rawId)->where('to_company_id', $authCompanyId);
-                });
-            })
-            ->exists();
+            ->where('from_company_id', $authCompanyId)
+            ->where('to_company_id', $rawId)
+            ->exists()
+            || DB::table('recommendation_relation')
+                ->whereIn('final_status', [1, 2])
+                ->where('from_company_id', $authCompanyId)
+                ->where('to_company_id', $rawId)
+                ->exists();
 
         if ($isCompanyRelation) {
             return $rawId;
         }
 
-        // 2. Client ID check: is $rawId a clients.id mapping to a company_id with active relation?
+        // 2. Client ID check: is $rawId a clients.id mapping to a company_id with active agency relation?
         $mappedCompanyId = (int) DB::table('clients')->where('id', $rawId)->value('company_id');
         if ($mappedCompanyId > 0) {
             $isMappedRelation = DB::table('staffing_company_relation')
                 ->where('final_status', 1)
-                ->where(function ($q) use ($authCompanyId, $mappedCompanyId) {
-                    $q->where(function ($inner) use ($authCompanyId, $mappedCompanyId) {
-                        $inner->where('from_company_id', $authCompanyId)->where('to_company_id', $mappedCompanyId);
-                    })->orWhere(function ($inner) use ($authCompanyId, $mappedCompanyId) {
-                        $inner->where('from_company_id', $mappedCompanyId)->where('to_company_id', $authCompanyId);
-                    });
-                })
-                ->exists();
+                ->where('from_company_id', $authCompanyId)
+                ->where('to_company_id', $mappedCompanyId)
+                ->exists()
+                || DB::table('recommendation_relation')
+                    ->whereIn('final_status', [1, 2])
+                    ->where('from_company_id', $authCompanyId)
+                    ->where('to_company_id', $mappedCompanyId)
+                    ->exists();
 
             if ($isMappedRelation) {
                 return $mappedCompanyId;
