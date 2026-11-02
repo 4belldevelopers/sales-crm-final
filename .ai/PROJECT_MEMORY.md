@@ -20,6 +20,24 @@ Last updated: 2026-10-22 (Super Admin Companies Page UI Redesign, 100% CQRS Read
 - **Test coverage:** `TenantIsolationTest`, `BenchToJobAppTrackerPipelineContractTest`, `BenchTalentRequestPipelineContractTest`, `SuperAdminCompanyLoadTest`, `SuperAdminSubscriptionLoadTest`, `SuperAdminDashboardLoadTest` (100% green).
 - **V2_login blocking-scenarios architecture:** session-epoch pattern + Reverb `UserAccountSuspended` event + `SyncUserStatusAction` (cross-tenant-safe) + `BlockCompanyAction` (static bulk helper) + `block_log` audit table + drop all 20 `refresh:true` ES sites + grep-lint guard. See [docs/V2_login/BLOCKING_SCENARIOS_AUDIT.md](../docs/V2_login/BLOCKING_SCENARIOS_AUDIT.md), [ADR 0007](../docs/adr/0007-blocking-scenarios-architecture.md). Code not yet landed.
 
+- *2026-11-02* — **God-Level Commercials Engine & Multi-Page Real-Time Sync (Phase 1 COMPLETED & VERIFIED)**:
+  - **Module & Scope**: Service Company Hiring Services & Commercials Drawer (`resources/views/service_company/jobs/services_view.blade.php`), Parent Services Tab (`resources/views/service_company/account/v2/tabs/services.blade.php`), Account Save Handler (`resources/views/service_company/account/index.blade.php`), and Write Controller (`app/Http/Controllers/ServiceCompany/ServiceCompanyJobsController.php`).
+  - **Visual & UI/UX Integrity**:
+    - Eliminated font-family wildcard override `.commercial-editor-v3 * { font-family: 'Poppins' !important; }` that stripped FontAwesome Unicode glyphs.
+    - Converted all 21 icons in the sliding drawer to crisp, resolution-independent **inline SVGs**. Zero broken square `▯` boxes remain.
+    - Enhanced drawer close button to natively invoke `KTDrawer.getInstance(document.getElementById('kt_activitiesJob'))?.hide()`.
+  - **Write Path Security & Hardening (P0)**:
+    - Added Gate authorization check (`abort_if(Gate::denies('view_jobs'), 403)`) to `jobServicesAddUpdate`.
+    - Implemented optimistic locking concurrency guard (`updateId` verification) returning `HTTP 409 Conflict` on concurrent collisions.
+    - Added array type safety guard (`is_array($request->rate_val)`) preventing PHP 8 `TypeError` when rate values are null.
+    - Wrapped mutation in `DB::beginTransaction()` / `DB::commit()` and inserted durable `sys_outbox_events` (`CommercialsUpdated`).
+    - Enforced atomic tenant cache invalidation (`company:{$companyId}:commercials:version`, `account_settings:company:{$companyId}`, `agency_drawer_version_company_{$companyId}`).
+  - **Multi-Page Reactive Synchronization (Deficiency A Eliminated)**:
+    - Controller now returns canonical `commercial_state` DTO containing full updated terms.
+    - `account/index.blade.php` dispatches `commercial:saved` carrying `{ version, service_type, state }`.
+    - `services.blade.php` registers `window.ServicesTabEngine.rehydrateServiceCard(serviceType, state)` to live re-hydrate all 4 sub-cards (Model, Currency, Replacement Terms, Invoicing Terms, and Operational Countries) in client RAM without page reload.
+  - **Verification**: 10/10 automated tests passed in `scratch/test_phase1_commercials_verification.php`, Pint code style passed, committed and pushed to `staging` (commit `cf0cc4d8`).
+
 - *2026-10-30* — **God-Level Agency Tracker & Complete Module Isolation Standard (100% COMPLETED & VERIFIED)**:
   - **Module & Scope**: Service Company Agency Listing & Tracker (`resources/views/service_company/consultancy/index.blade.php`, `ajax_pages/staffing-partner-ajax.blade.php`, `app/Http/Controllers/ServiceCompany/ServiceCompanyConsultancyController.php`, `app/Services/AgencyListingService.php`, `resources/views/service_company/consultancy/dviewMore.blade.php`).
   - **Complete Tenancy & Business Isolation (Rule 17)**:
