@@ -57,21 +57,31 @@ class ServiceTermDTO
             status: (int) ($data['status'] ?? 0),
             rateType: $rateType,
             rateTypeLabel: ($commtype === 2)
-                ? ($rateType === 2 ? 'Percentage of CTC' : ($rateType === 1 ? 'Fixed Commercial Rate' : 'Free / No Fee'))
-                : ($rateType === 1 ? 'Markup on Bill Rate' : 'Contract Commercial Rate'),
+                ? ($rateType === 2 ? 'Percentage of CTC' : ($rateType === 1 ? 'Fixed Placement Fee' : 'Free / No Fee'))
+                : ($rateType === 2 ? 'Markup on Pay Rate' : ($rateType === 1 ? 'Contract Bill Rate' : 'Pass-Through / Zero Margin')),
             salMode: $salMode,
-            salModeLabel: ($salMode === 0) ? 'Annual Staffing' : (($salMode === 1) ? 'Monthly Staffing' : 'Hourly Staffing'),
+            salModeLabel: ($commtype === 2)
+                ? 'Annual CTC'
+                : (($salMode === 2) ? 'Hourly Staffing' : (($salMode === 1) ? 'Monthly Staffing' : 'Monthly Staffing')),
             salaryCurrency: $salaryCurrency,
             currencyCode: (string) ($data['currency_code'] ?? 'INR'),
             replacementPeriodDays: (int) ($data['replacement_period_days'] ?? ($commtype === 2 ? 90 : 30)),
             replacementType: (string) ($data['replacement_type'] ?? 'free_replacement'),
-            replacementTypeLabel: ucwords(str_replace('_', ' ', (string) ($data['replacement_type'] ?? 'free_replacement'))),
+            replacementTypeLabel: ($commtype === 2)
+                ? ucwords(str_replace('_', ' ', (string) ($data['replacement_type'] ?? 'free_replacement')))
+                : (($data['replacement_type'] ?? 'free_replacement') === 'none' ? 'No Trial' : '5-Day Satisfaction Trial'),
             replacementEligibility: (string) ($data['replacement_eligibility'] ?? 'early_exit'),
-            replacementEligibilityLabel: ucwords(str_replace('_', ' ', (string) ($data['replacement_eligibility'] ?? 'early_exit'))),
+            replacementEligibilityLabel: ($commtype === 2)
+                ? ucwords(str_replace('_', ' ', (string) ($data['replacement_eligibility'] ?? 'early_exit')))
+                : '48h Backfill SLA',
             billingFrequency: (string) ($data['billing_frequency'] ?? ($commtype === 2 ? 'one_time' : 'monthly')),
-            billingFrequencyLabel: ucwords(str_replace('_', ' ', (string) ($data['billing_frequency'] ?? ($commtype === 2 ? 'one_time' : 'monthly')))),
+            billingFrequencyLabel: ($commtype === 2)
+                ? 'One Time'
+                : ucwords(str_replace('_', ' ', (string) ($data['billing_frequency'] ?? 'monthly'))),
             billingTrigger: (string) ($data['billing_trigger'] ?? ($commtype === 2 ? 'candidate_joined' : 'approved_timesheet')),
-            billingTriggerLabel: ucwords(str_replace('_', ' ', (string) ($data['billing_trigger'] ?? ($commtype === 2 ? 'candidate_joined' : 'approved_timesheet')))),
+            billingTriggerLabel: ($commtype === 2)
+                ? 'Candidate Joined'
+                : 'Approved Timesheet',
             paymentTermsDays: (int) ($data['payment_terms_days'] ?? 30),
             rates: $rates,
             countryIds: $countryIds,

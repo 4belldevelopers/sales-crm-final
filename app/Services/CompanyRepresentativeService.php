@@ -282,7 +282,15 @@ class CompanyRepresentativeService
             ->where('from_company_id', $companyId)
             ->first(['id']);
 
+        $oldUserId = 0;
+        $oldUserName = 'None';
         if ($rec) {
+            $oldRec = DB::table('recommendation_relation')->where('id', $rec->id)->first(['from_user_id']);
+            $oldUserId = (int) ($oldRec->from_user_id ?? 0);
+            if ($oldUserId > 0) {
+                $oldUserName = DB::table('users')->where('id', $oldUserId)->value('name') ?: 'Representative';
+            }
+
             DB::table('recommendation_relation')
                 ->where('id', $rec->id)
                 ->update([
@@ -303,6 +311,27 @@ class CompanyRepresentativeService
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);
+        }
+
+        // Emit Agency 360 Activity Log
+        try {
+            $jobTitle = DB::table('jobs')->where('id', $jobId)->value('title') ?: "Job #{$jobId}";
+            $actorId = auth()->id() ?? $newUserId;
+            $actorName = auth()->check() ? auth()->user()->name : $newUser->name;
+            app(\App\Services\AgencyActivityLoggerService::class)->logRepresentativeAssigned(
+                $agencyCompanyId,
+                $companyId,
+                $jobId,
+                $jobTitle,
+                $oldUserId,
+                $oldUserName,
+                $newUserId,
+                $newUser->name,
+                (int) $actorId,
+                $actorName
+            );
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning('Failed to log rep assignment activity', ['error' => $e->getMessage()]);
         }
 
         // Clean cache for this job and tenant
