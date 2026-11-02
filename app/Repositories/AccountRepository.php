@@ -150,6 +150,25 @@ class AccountRepository
             $fullTimeCountries = $commCountryNames->get(2, collect())->pluck('country_name')->toArray();
             $contractCountries = $commCountryNames->get(1, collect())->pluck('country_name')->toArray();
 
+            // Auto-select Contract Hiring Services countries based on company registrations if not configured yet
+            if (empty($contractCountries)) {
+                $registeredCountryIds = \App\Services\CommercialReadModelService::getCompanyRegisteredCountryIds($companyId);
+                if (! empty($registeredCountryIds)) {
+                    $countryMap = \App\Services\CommercialReadModelService::getCountryIdToNameMap();
+                    $contractCountries = array_values(array_filter(array_map(fn ($cid) => $countryMap[$cid] ?? null, $registeredCountryIds)));
+                    $contractCount = count($contractCountries);
+                }
+            }
+
+            if (empty($fullTimeCountries)) {
+                $registeredCountryIds = \App\Services\CommercialReadModelService::getCompanyRegisteredCountryIds($companyId);
+                if (! empty($registeredCountryIds)) {
+                    $countryMap = \App\Services\CommercialReadModelService::getCountryIdToNameMap();
+                    $fullTimeCountries = array_values(array_filter(array_map(fn ($cid) => $countryMap[$cid] ?? null, $registeredCountryIds)));
+                    $fullTimeCount = count($fullTimeCountries);
+                }
+            }
+
             $commericials = DB::table('commericials')
                 ->where('company_id', $companyId)
                 ->whereIn('commtype', [1, 2])
