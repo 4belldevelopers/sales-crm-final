@@ -116,7 +116,7 @@
 
 @include('service_company.client.components.tab-jobs-style')
 @include('service_company.client.components.tab-offers-joinings-style')
-@include('service_company.consultancy.components.tab-activity-style')
+@include('service_company.client.components.tab-activity-style')
 @include('service_company.client.components.tab-interviews-style')
 
 {{-- Explicit FontAwesome Restoration: Ensure icon glyphs render cleanly across Metronic --}}
@@ -3080,12 +3080,17 @@
             </div>
         </div>
 
-                <!-- ══════════════════════════════════════════════════════════════════════
-             TAB 2: ACTIVITY TIMELINE (Master Modern Card + Sub-Card CQRS Dual-Store)
+        <!-- ══════════════════════════════════════════════════════════════════════
+             TAB 2: ACTIVITY TIMELINE (Master Shared Direct Client & Agency Activity Engine)
              ══════════════════════════════════════════════════════════════════════ -->
         <div class="tab-pane" id="recent_activity" role="tabpanel">
             <div class="px-3 py-2">
-                @include('service_company.consultancy.components.tab-activity')
+                @include('service_company.client.components.tab-activity', [
+                    'clientId' => $agencyId,
+                    'clientType' => 'agency',
+                    'viewerType' => 'agency',
+                    'agencyCompanyId' => $agencyId
+                ])
             </div>
         </div>
 
@@ -4525,10 +4530,19 @@
     });
 
     $(document).on('click', '.cd-drawer-tabs-list .cd-tab-pill-btn[href="#recent_activity"]', function() {
-        if (window.AgencyActivityManager) {
+        if (window.ClientActivityManager && typeof window.ClientActivityManager.initClient === 'function') {
+            window.ClientActivityManager.initClient({{ (int)$agencyId }}, false, {{ (int)$agencyId }}, false, 'agency', {{ (int)$agencyId }});
+        } else if (window.AgencyActivityManager) {
             window.AgencyActivityManager.loadActivity(false);
         }
     });
+
+    // Auto-init on drawer mount
+    if (window.ClientActivityManager && typeof window.ClientActivityManager.initClient === 'function') {
+        try {
+            window.ClientActivityManager.initClient({{ (int)$agencyId }}, false, {{ (int)$agencyId }}, false, 'agency', {{ (int)$agencyId }});
+        } catch(e) {}
+    }
 
     // Copy to clipboard helper
     window.copyToClipboard = function(text, btn) {
