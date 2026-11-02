@@ -26,9 +26,10 @@ Last updated: 2026-10-22 (Super Admin Companies Page UI Redesign, 100% CQRS Read
     - Subtle professional Pink visual indicator applied across idle (`#fff5f7` bg, `#fecdd3` border, `#ffe4e6` icon box, `#e11d48` text) and active states (`#fff1f2` bg, `#f43f5e` border, `#f43f5e` icon box, `#ffffff` text, `#f43f5e` radio dot).
     - Synchronized with parent settings tab (`services.blade.php`) via `.is-free-pink` badge styling on initial render and real-time client rehydration (`ServicesTabEngine.rehydrateServiceCard`).
     - Standardized label across backend DTO and controllers to `Free / No Placement Fee`.
-  - **Point 2: Fixed Placement Fee – Change Billing Basis to "Per Hire"**:
+  - **Point 2: Fixed Placement Fee – Change Billing Basis to "Per Hire" & Seniority Matrix Enforcement**:
     - Discarded irrelevant "Annual CTC" basis on Fixed Placement Fee.
     - Completely removed "Annual CTC" option from Fixed Placement Fee subcards in both Blade SSR and reactive client DOM (`appliedOn.innerHTML` and `[data-range-applied-on].innerHTML`), ensuring strictly `<option value="3" selected>Per Hire</option>` is present by default.
+    - Resolved client-side `var isFT` variable hoisting scope in `services_view.blade.php`, guaranteeing Card 2 (Seniority-Based Placement Fee Matrix) selects dynamically switch to "Per Hire" only with ₹10,000 default rate across all 4 tiers without leaving "Annual CTC".
     - Specialized commercial fee basis logic across Card 1 & Card 2:
       - *Percentage Placement Fee* -> Applied on Annual CTC (`sal_mode = 0`)
       - *Fixed Placement Fee* -> Per Hire (`sal_mode = 3`)
@@ -36,7 +37,7 @@ Last updated: 2026-10-22 (Super Admin Companies Page UI Redesign, 100% CQRS Read
     - Updated `ServiceTermDTO` `salModeLabel`, normalizer, and `ServiceCompanyJobsController` `$this->salaryMode = [0 => 'Annual CTC', 3 => 'Per Hire']`.
   - **Point 3: Default Amount for Fixed Placement Fee (₹10,000)**:
     - Automatically populates default rate of `10,000` (₹10,000 / $10,000) when switching to Fixed Placement Fee if previous value was empty, legacy <= 100, or 8.33% fallback.
-    - Automatically updates both Card 1 and Card 2 (all 4 seniority tiers), remaining 100% editable by the user.
+    - Automatically updates both Card 1 and Card 2 (all 4 seniority tiers in Blade SSR and client reactive events), remaining 100% editable by the user.
     - When switching back to Percentage, cleanly restores `8.33%`.
   - **Point 4: Removed Refresh Icon**:
     - Completely removed `.cd-tier-reset-btn` / `↻` reset button from all rows in Card 2 (Seniority-Based Placement Fee Matrix).
