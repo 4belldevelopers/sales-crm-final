@@ -28,11 +28,12 @@ Last updated: 2026-10-22 (Super Admin Companies Page UI Redesign, 100% CQRS Read
     - Standardized label across backend DTO and controllers to `Free / No Placement Fee`.
   - **Point 2: Fixed Placement Fee – Change Billing Basis to "Per Hire"**:
     - Discarded irrelevant "Annual CTC" basis on Fixed Placement Fee.
+    - Completely removed "Annual CTC" option from Fixed Placement Fee subcards in both Blade SSR and reactive client DOM (`appliedOn.innerHTML` and `[data-range-applied-on].innerHTML`), ensuring strictly `<option value="3" selected>Per Hire</option>` is present by default.
     - Specialized commercial fee basis logic across Card 1 & Card 2:
       - *Percentage Placement Fee* -> Applied on Annual CTC (`sal_mode = 0`)
       - *Fixed Placement Fee* -> Per Hire (`sal_mode = 3`)
       - *Free / No Placement Fee* -> No fee basis required / Not Applicable (`sal_mode = 0`)
-    - Updated `ServiceTermDTO` `salModeLabel` and `ServiceCompanyJobsController` `$this->salaryMode = [0 => 'Annual CTC', 3 => 'Per Hire']`.
+    - Updated `ServiceTermDTO` `salModeLabel`, normalizer, and `ServiceCompanyJobsController` `$this->salaryMode = [0 => 'Annual CTC', 3 => 'Per Hire']`.
   - **Point 3: Default Amount for Fixed Placement Fee (₹10,000)**:
     - Automatically populates default rate of `10,000` (₹10,000 / $10,000) when switching to Fixed Placement Fee if previous value was empty, legacy <= 100, or 8.33% fallback.
     - Automatically updates both Card 1 and Card 2 (all 4 seniority tiers), remaining 100% editable by the user.

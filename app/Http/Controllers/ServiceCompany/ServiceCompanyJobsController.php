@@ -16455,8 +16455,8 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
         $commType = (int) $request->commType;
         $rateType = $request->rateTypeClass;
         $sal_mode = (int) $request->sal_mode;
-        // Intent: Default sal_mode to 3 (Per Hire) for fixed placement fee on fulltime permanent hiring
-        if ($commType === 2 && (int) $rateType === 1 && empty($sal_mode)) {
+        // Intent: Normalize sal_mode to 3 (Per Hire) for fixed placement fee on fulltime permanent hiring
+        if ($commType === 2 && (int) $rateType === 1) {
             $sal_mode = 3;
         }
         $main_status = ($request->main_status) ? $request->main_status : 0;
