@@ -1623,7 +1623,7 @@
                     $('#ct-sal-mode').text(state.sal_mode_label);
                 }
 
-                // 2. Replacement Policy
+                // 2. Replacement Policy / Contractor Trial & SLA
                 if (state.replacement_period_days) {
                     $('#' + prefix + '-replacement-days').text(state.replacement_period_days + ' Days');
                 }
@@ -1631,7 +1631,8 @@
                     $('#' + prefix + '-replacement-type').text(state.replacement_type_label);
                 }
                 if (state.replacement_eligibility_label) {
-                    $('#' + prefix + '-replacement-clause').text('Clause: ' + state.replacement_eligibility_label);
+                    var clausePrefix = isFT ? 'Clause: ' : 'SLA: ';
+                    $('#' + prefix + '-replacement-clause').text(clausePrefix + state.replacement_eligibility_label);
                 }
 
                 // 3. Billing & Invoicing Terms

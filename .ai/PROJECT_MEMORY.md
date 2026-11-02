@@ -20,6 +20,32 @@ Last updated: 2026-10-22 (Super Admin Companies Page UI Redesign, 100% CQRS Read
 - **Test coverage:** `TenantIsolationTest`, `BenchToJobAppTrackerPipelineContractTest`, `BenchTalentRequestPipelineContractTest`, `SuperAdminCompanyLoadTest`, `SuperAdminSubscriptionLoadTest`, `SuperAdminDashboardLoadTest` (100% green).
 - **V2_login blocking-scenarios architecture:** session-epoch pattern + Reverb `UserAccountSuspended` event + `SyncUserStatusAction` (cross-tenant-safe) + `BlockCompanyAction` (static bulk helper) + `block_log` audit table + drop all 20 `refresh:true` ES sites + grep-lint guard. See [docs/V2_login/BLOCKING_SCENARIOS_AUDIT.md](../docs/V2_login/BLOCKING_SCENARIOS_AUDIT.md), [ADR 0007](../docs/adr/0007-blocking-scenarios-architecture.md). Code not yet landed.
 
+- *2026-11-02* — **God-Level Commercials Engine — Phase 5: Fulltime vs Contract Recruitment & Staffing Domain Specialization with Multi-Page Real-Time Sync (Rule 20 / CQRS) (100% COMPLETED & VERIFIED)**:
+  - **Module & Scope**: Hiring Services & Commercials Sliding Drawer (`resources/views/service_company/jobs/services_view.blade.php`), Parent Account Settings Services Tab (`resources/views/service_company/account/v2/tabs/services.blade.php`), Controller (`app/Http/Controllers/ServiceCompany/ServiceCompanyJobsController.php`), and Canonical DTO (`app/DTO/Commercials/ServiceTermDTO.php`).
+  - **Recruitment & Staffing Domain Alignment**:
+    - **Fulltime Permanent Placement (`commType === 2`)**:
+      - Commercial Model: *Percentage of CTC* (% of candidate annual compensation) vs *Fixed Placement Fee* (flat amount per successful joining) vs *Free / No Placement Fee*.
+      - Seniority Fee Matrix: *Seniority-Based Placement Fee Matrix* across *Entry / Associate (0-2y)*, *Mid-Level Specialist (3-5y)*, *Senior Professional (6-9y)*, and *Leadership / Executive (10+y)*. Applied on *Annual CTC Basis*.
+      - Guarantee & Warranty: *Replacement Warranty Window* (30, 60, 90, 180 Days) for *Candidate Resignation / Early Exit* or *Employer / Mutual Termination* with *Free Replacement Candidate* or *Credit Note*.
+      - Billing Cadence & Trigger: *One Time Invoicing (Upon Joining)* triggered strictly upon *Candidate Joined (First Working Day)* with *Net 15 / Net 30 / Net 45 / Net 60 Days* settlement.
+    - **Contract Contingent Staffing (`commType === 1`)**:
+      - Commercial Model: *Markup on Pay Rate (%)* (percentage margin on consultant base wage) vs *Fixed Contract Bill Rate* (all-inclusive client bill rate) vs *Pass-Through / Zero Margin*.
+      - Contractor Experience Matrix: *Contractor Experience Rate Card* across *Junior Consultant (0-2y)*, *Mid-Level Consultant (3-5y)*, *Senior Specialist (6-9y)*, and *Principal / Lead Consultant (10+y)*. Applied on *Monthly Staffing Rate* or *Hourly Contract Rate*.
+      - Guarantee & SLA: *Satisfaction Trial Window* (5-Day / 40h Trial, 10-Day Trial, 14-Day Notice, 30-Day Notice) with *Satisfaction Trial Guarantee (Credit Unbilled)*, *Free Replacement Contractor*, and *48-Hour Backfill SLA*.
+      - Billing Cadence & Trigger: *Monthly / Bi-Weekly / Weekly Recurring Billing Cycles* triggered upon *Approved Timesheet* or *Monthly Billing Cutoff*.
+  - **Multi-Page Reactive Synchronization (Rule 5 & Rule 6)**:
+    - Drawer save dispatches canonical `commercial:saved` event to DOM window.
+    - Parent tab (`services.blade.php`) `window.ServicesTabEngine.rehydrateServiceCard` immediately rehydrates all 4 sub-cards with domain-specialized labels (zero page reload, <50ms DOM patch).
+    - Multi-tenant atomic cache invalidation (`CommercialReadModelService::invalidateTenantCache`) purges Redis projection and increments version.
+    - WebSocket event (`CommercialsUpdated`) broadcast on `private-company.{id}` initiates conditional ETag fetch (`GET /service_company/jobs/commercials-state`) returning HTTP 304 or fresh canonical state.
+    - Talent marketplace search synchronization via `ElasticCompanyIndex::dispatch`.
+  - **Verification**:
+    - `scratch/test_specialized_commercials_sync.php` (10/10 PASS).
+    - `scratch/test_phase1_commercials_verification.php` (10/10 PASS).
+    - `scratch/test_phase2_cqrs_verification.php` (7/7 PASS).
+    - `php -l` on all modified files (100% clean).
+    - 0% MySQL reads on cached hits (Rule 1).
+
 - *2026-11-02* — **God-Level Commercials Engine — Phase 4: Modern Card + Sub-Card Drawer Redesign (Rule 20 / card-subcard) (100% COMPLETED & VERIFIED)**:
   - **Module & Scope**: Sliding Side-Drawer (`resources/views/service_company/jobs/services_view.blade.php`) for Fulltime & Contract Hiring Services.
   - **Tier 1 Header Toolbar Card**:

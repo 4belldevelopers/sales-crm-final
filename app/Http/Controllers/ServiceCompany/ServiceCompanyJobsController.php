@@ -52,18 +52,61 @@ use Yajra\DataTables\Facades\DataTables;
 class ServiceCompanyJobsController extends ServiceCompanyBaseController
 {
     /** Company-commercial policy options shared by drawer rendering and save validation. */
-    private const COMMERCIAL_REPLACEMENT_PERIODS = [30 => '30 Days', 60 => '60 Days', 90 => '90 Days', 180 => '180 Days'];
+    private const COMMERCIAL_REPLACEMENT_PERIODS = [
+        5 => '5 Days',
+        10 => '10 Days',
+        14 => '14 Days',
+        30 => '30 Days',
+        60 => '60 Days',
+        90 => '90 Days',
+        180 => '180 Days',
+    ];
 
-    private const COMMERCIAL_REPLACEMENT_TYPES = ['free_replacement' => 'Free Replacement', 'credit_note' => 'Credit Note', 'none' => 'No Replacement'];
+    private const COMMERCIAL_REPLACEMENT_TYPES = [
+        'free_replacement' => 'Free Replacement',
+        'trial_guarantee' => 'Satisfaction Trial Guarantee',
+        'credit_note' => 'Credit Note',
+        'none' => 'No Replacement / No Guarantee',
+    ];
 
-    private const COMMERCIAL_REPLACEMENT_ELIGIBILITY = ['early_exit' => 'Candidate Resignation / Early Exit', 'employer_termination' => 'Employer Termination', 'any_separation' => 'Any Early Separation', 'any_conditions' => 'Any conditions'];
+    private const COMMERCIAL_REPLACEMENT_ELIGIBILITY = [
+        'early_exit' => 'Candidate Resignation / Early Exit',
+        'employer_termination' => 'Employer Termination',
+        'backfill_sla' => '48h Backfill SLA',
+        'any_separation' => 'Any Early Separation',
+        'any_conditions' => 'Any conditions',
+    ];
 
     // Intent: provide the validated billing cadence choices used by both the commercial drawer and save handler.
-    private const COMMERCIAL_BILLING_FREQUENCIES = ['one_time' => 'One Time', 'weekly' => 'Weekly', 'monthly' => 'Monthly', 'quarterly' => 'Quarterly'];
+    private const COMMERCIAL_BILLING_FREQUENCIES = [
+        'one_time' => 'One Time',
+        'weekly' => 'Weekly',
+        'bi_weekly' => 'Bi-Weekly',
+        'monthly' => 'Monthly',
+        'quarterly' => 'Quarterly',
+    ];
 
-    private const COMMERCIAL_BILLING_TRIGGERS = ['candidate_joined' => 'Candidate Joined', 'offer_accepted' => 'Offer Accepted', 'invoice_raised' => 'Invoice Raised'];
+    private const COMMERCIAL_BILLING_TRIGGERS = [
+        'candidate_joined' => 'Candidate Joined',
+        'approved_timesheet' => 'Approved Timesheet',
+        'monthly_cutoff' => 'Monthly Cutoff',
+        'offer_accepted' => 'Offer Accepted',
+        'invoice_raised' => 'Invoice Raised',
+    ];
 
-    private const COMMERCIAL_PAYMENT_TERMS = [0 => 'Due Immediately', 15 => '15 Days', 30 => '30 Days', 45 => '45 Days', 60 => '60 Days', 90 => '90 Days', 120 => '120 Days', 150 => '150 Days', 180 => '180 Days', 210 => '210 Days', 240 => '240 Days'];
+    private const COMMERCIAL_PAYMENT_TERMS = [
+        0 => 'Due Immediately',
+        15 => '15 Days',
+        30 => '30 Days',
+        45 => '45 Days',
+        60 => '60 Days',
+        90 => '90 Days',
+        120 => '120 Days',
+        150 => '150 Days',
+        180 => '180 Days',
+        210 => '210 Days',
+        240 => '240 Days',
+    ];
 
     protected $mailService;
 
@@ -16266,7 +16309,9 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
         // dd($id);
         abort_if(Gate::denies('view_jobs'), 403);
         $company_id = auth()->user()->company_id;
-        $this->salaryMode = GeneralMethod::salaryMode();
+        $commType = (int) $id;
+        $isFulltime = ($commType === 2);
+
         // 1. Unified Setting Currencies List (113 currencies, cached 24h in Redis) per CURRENCY_MANAGEMENT_AND_SYNCHRONIZATION_STANDARD
         $this->currencyList = \App\Services\CurrencyService::getSettingCurrenciesList();
         // 2. Backward-compatible [key => code] array for legacy view bindings
@@ -16275,12 +16320,83 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
         $this->tenantDefaultCurrency = \App\Services\CurrencyService::getTenantCurrency($company_id);
         $this->defaultCurrencyCode = $this->tenantDefaultCurrency;
         $this->defaultCurrencyKey = \App\Services\CurrencyService::getTenantCurrencyKey($company_id);
-        $this->replacementPeriods = self::COMMERCIAL_REPLACEMENT_PERIODS;
-        $this->replacementTypes = self::COMMERCIAL_REPLACEMENT_TYPES;
-        $this->replacementEligibility = self::COMMERCIAL_REPLACEMENT_ELIGIBILITY;
-        $this->billingFrequencies = self::COMMERCIAL_BILLING_FREQUENCIES;
-        $this->billingTriggers = self::COMMERCIAL_BILLING_TRIGGERS;
-        $this->paymentTerms = self::COMMERCIAL_PAYMENT_TERMS;
+
+        if ($isFulltime) {
+            $this->salaryMode = [0 => 'Annual CTC'];
+            $this->replacementPeriods = [
+                30 => '30 Days (Warranty)',
+                60 => '60 Days (Warranty)',
+                90 => '90 Days (Standard Warranty)',
+                180 => '180 Days (Executive Warranty)',
+            ];
+            $this->replacementTypes = [
+                'free_replacement' => 'Free Replacement Candidate',
+                'credit_note' => 'Credit Note',
+                'none' => 'No Replacement Warranty',
+            ];
+            $this->replacementEligibility = [
+                'early_exit' => 'Candidate Resignation / Early Exit',
+                'employer_termination' => 'Employer / Mutual Termination',
+                'any_separation' => 'Any Separation within Warranty',
+            ];
+            $this->billingFrequencies = [
+                'one_time' => 'One Time (Upon Joining)',
+            ];
+            $this->billingTriggers = [
+                'candidate_joined' => 'Candidate Joined (First Working Day)',
+                'offer_accepted' => 'Offer Accepted',
+            ];
+            $this->paymentTerms = [
+                0 => 'Due Immediately',
+                15 => 'Net 15 Days',
+                30 => 'Net 30 Days (Standard)',
+                45 => 'Net 45 Days',
+                60 => 'Net 60 Days',
+                90 => 'Net 90 Days',
+            ];
+        } else {
+            $this->salaryMode = [
+                1 => 'Monthly Staffing Rate',
+                2 => 'Hourly Contract Rate',
+                0 => 'Annualized Staffing Rate',
+            ];
+            $this->replacementPeriods = [
+                5 => '5 Days (Satisfaction Trial)',
+                10 => '10 Days (Satisfaction Trial)',
+                14 => '14 Days (Roll-Off Notice)',
+                30 => '30 Days (Notice Period)',
+            ];
+            $this->replacementTypes = [
+                'trial_guarantee' => 'Satisfaction Trial Guarantee (Credit Unbilled)',
+                'free_replacement' => 'Free Replacement Contractor',
+                'credit_note' => 'Credit Note',
+                'none' => 'No Trial Guarantee',
+            ];
+            $this->replacementEligibility = [
+                'backfill_sla' => '48-Hour Backfill SLA',
+                'early_exit' => 'Contractor Early Departure',
+                'employer_termination' => 'Client Project Discontinuation',
+                'any_conditions' => 'Any Contingency',
+            ];
+            $this->billingFrequencies = [
+                'monthly' => 'Monthly Billing Cycle',
+                'bi_weekly' => 'Bi-Weekly Billing Cycle',
+                'weekly' => 'Weekly Billing Cycle',
+            ];
+            $this->billingTriggers = [
+                'approved_timesheet' => 'Approved Timesheet',
+                'monthly_cutoff' => 'Monthly Billing Cutoff',
+                'invoice_raised' => 'Invoice Raised',
+            ];
+            $this->paymentTerms = [
+                0 => 'Due Immediately',
+                15 => 'Net 15 Days',
+                30 => 'Net 30 Days (Standard)',
+                45 => 'Net 45 Days',
+                60 => 'Net 60 Days',
+            ];
+        }
+
         $this->employmentType = GeneralMethod::employmentType();
         // Cached Masters (Rule 1: 0% MySQL reads on web/API request paths)
         $this->commercialExperienceBands = CommercialReadModelService::getCommercialExperienceBands();
@@ -16357,12 +16473,24 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
         $salary_currency = \App\Services\CurrencyService::resolveCurrencyKey($request->salary_currency);
 
         // Intent: accept only the controller-defined commercial policy values for this tenant's service record.
-        $replacementPeriod = array_key_exists((int) $request->replacement_period_days, self::COMMERCIAL_REPLACEMENT_PERIODS) ? (int) $request->replacement_period_days : 90;
-        $replacementType = array_key_exists((string) $request->replacement_type, self::COMMERCIAL_REPLACEMENT_TYPES) ? (string) $request->replacement_type : 'free_replacement';
-        $replacementEligibility = array_key_exists((string) $request->replacement_eligibility, self::COMMERCIAL_REPLACEMENT_ELIGIBILITY) ? (string) $request->replacement_eligibility : 'early_exit';
-        $billingFrequency = array_key_exists((string) $request->billing_frequency, self::COMMERCIAL_BILLING_FREQUENCIES) ? (string) $request->billing_frequency : 'one_time';
-        $billingTrigger = array_key_exists((string) $request->billing_trigger, self::COMMERCIAL_BILLING_TRIGGERS) ? (string) $request->billing_trigger : 'candidate_joined';
-        $paymentTermsDays = array_key_exists((int) $request->payment_terms_days, self::COMMERCIAL_PAYMENT_TERMS) ? (int) $request->payment_terms_days : 30;
+        $replacementPeriod = array_key_exists((int) $request->replacement_period_days, self::COMMERCIAL_REPLACEMENT_PERIODS)
+            ? (int) $request->replacement_period_days
+            : ($commType === 2 ? 90 : 30);
+        $replacementType = array_key_exists((string) $request->replacement_type, self::COMMERCIAL_REPLACEMENT_TYPES)
+            ? (string) $request->replacement_type
+            : ($commType === 2 ? 'free_replacement' : 'trial_guarantee');
+        $replacementEligibility = array_key_exists((string) $request->replacement_eligibility, self::COMMERCIAL_REPLACEMENT_ELIGIBILITY)
+            ? (string) $request->replacement_eligibility
+            : ($commType === 2 ? 'early_exit' : 'backfill_sla');
+        $billingFrequency = array_key_exists((string) $request->billing_frequency, self::COMMERCIAL_BILLING_FREQUENCIES)
+            ? (string) $request->billing_frequency
+            : ($commType === 2 ? 'one_time' : 'monthly');
+        $billingTrigger = array_key_exists((string) $request->billing_trigger, self::COMMERCIAL_BILLING_TRIGGERS)
+            ? (string) $request->billing_trigger
+            : ($commType === 2 ? 'candidate_joined' : 'approved_timesheet');
+        $paymentTermsDays = array_key_exists((int) $request->payment_terms_days, self::COMMERCIAL_PAYMENT_TERMS)
+            ? (int) $request->payment_terms_days
+            : 30;
         $policyFields = [
             'replacement_period_days' => $replacementPeriod,
             'replacement_type' => $replacementType,
@@ -16535,11 +16663,23 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
             'replacement_type' => $replacementType,
             'replacement_type_label' => ($commType === 2)
                 ? ucwords(str_replace('_', ' ', $replacementType))
-                : (($replacementType === 'none') ? 'No Trial' : '5-Day Satisfaction Trial'),
+                : match ($replacementType) {
+                    'trial_guarantee' => 'Satisfaction Trial Guarantee',
+                    'free_replacement' => 'Free Replacement Contractor',
+                    'credit_note' => 'Credit Note',
+                    'none' => 'No Trial Guarantee',
+                    default => ucwords(str_replace('_', ' ', $replacementType)),
+                },
             'replacement_eligibility' => $replacementEligibility,
             'replacement_eligibility_label' => ($commType === 2)
                 ? ucwords(str_replace('_', ' ', $replacementEligibility))
-                : '48h Backfill SLA',
+                : match ($replacementEligibility) {
+                    'backfill_sla' => '48h Backfill SLA',
+                    'early_exit' => 'Contractor Early Departure',
+                    'employer_termination' => 'Client Project Discontinuation',
+                    'any_conditions' => 'Any Contingency',
+                    default => ucwords(str_replace('_', ' ', $replacementEligibility)),
+                },
             'billing_frequency' => $billingFrequency,
             'billing_frequency_label' => ($commType === 2)
                 ? 'One Time'
@@ -16547,7 +16687,12 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
             'billing_trigger' => $billingTrigger,
             'billing_trigger_label' => ($commType === 2)
                 ? 'Candidate Joined'
-                : 'Approved Timesheet',
+                : match ($billingTrigger) {
+                    'approved_timesheet' => 'Approved Timesheet',
+                    'monthly_cutoff' => 'Monthly Billing Cutoff',
+                    'invoice_raised' => 'Invoice Raised',
+                    default => ucwords(str_replace('_', ' ', $billingTrigger)),
+                },
             'payment_terms_days' => $paymentTermsDays,
             'country_count' => count($countryIds),
             'countries' => $countryNames,
