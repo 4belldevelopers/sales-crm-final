@@ -10,7 +10,7 @@
      * Screen: Fully responsive for 15.6" laptops (1366×768 & 1920×1080) with zero horizontal overflow.
      *
      * Author: Antigravity AI (Rule 20 / card-subcard / drawer-master)
-     * Date: October 31, 2026
+     * Date: November 02, 2026
      */
     $commercial = @$commericials[0] ?? [];
     $isFulltime = (int) $sectionCheck === 2;
@@ -76,6 +76,7 @@
     });
 
     $activeCountryCount = count($selectedCountryIds);
+    $isServiceActive = !empty($commercial['status']);
 @endphp
 
 <style>
@@ -94,6 +95,14 @@
 .commercial-editor-v3 {
     box-sizing: border-box;
     font-family: 'Poppins', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+    width: 100%;
+    min-height: 100%;
+    background: #f8fafc;
+    color: #0f172a;
+    font-size: 12px;
+    display: flex;
+    flex-direction: column;
+    overflow-x: hidden;
 }
 
 .commercial-editor-v3 *,
@@ -110,33 +119,22 @@
     flex-shrink: 0;
 }
 
-.commercial-editor-v3 {
-    width: 100%;
-    min-height: 100%;
-    background: #f8fafc;
-    color: #0f172a;
-    font-size: 12px;
-    display: flex;
-    flex-direction: column;
-    overflow-x: hidden;
-}
-
 /* --------------------------------------------------------------------------
-   TIER 1: TOP HEADER TOOLBAR CARD
+   TIER 1: TOP HEADER TOOLBAR CARD (Sticky #ffffff, Border #e2e8f0, Radius 10px)
    -------------------------------------------------------------------------- */
 .cd-drw-header-card {
     position: sticky;
     top: 0;
-    z-index: 30;
+    z-index: 40;
     background: #ffffff !important;
     border-bottom: 1px solid #e2e8f0 !important;
     box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04) !important;
-    padding: 12px 18px !important;
+    padding: 12px 20px !important;
     display: flex !important;
     align-items: center !important;
     justify-content: space-between !important;
-    flex-wrap: wrap !important;
-    gap: 12px !important;
+    gap: 14px !important;
+    flex-wrap: wrap;
 }
 
 .cd-drw-header-left {
@@ -155,27 +153,25 @@
     align-items: center;
     justify-content: center;
     font-size: 14px;
-    font-weight: 800;
-    letter-spacing: 0.02em;
+    font-weight: 700;
     flex-shrink: 0;
+    border: 1px solid;
+    transition: all 0.2s ease;
 }
 
 .cd-drw-symbol.ft {
     background: #eff6ff;
-    color: #0085ff;
-    border: 1px solid #bfdbfe;
+    color: #009ef7;
+    border-color: #bfdbfe;
 }
 
 .cd-drw-symbol.ct {
-    background: #f5f3ff;
-    color: #8b5cf6;
-    border: 1px solid #ddd6fe;
+    background: #ecfdf5;
+    color: #10b981;
+    border-color: #a7f3d0;
 }
 
 .cd-drw-title-meta {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
     min-width: 0;
 }
 
@@ -190,86 +186,143 @@
     font-size: 15px !important;
     font-weight: 700 !important;
     color: #0f172a !important;
+    letter-spacing: -0.01em;
     margin: 0 !important;
-    line-height: 1.25 !important;
 }
 
 .cd-drw-code-chip {
-    font-size: 10px;
-    font-weight: 600;
-    color: #009ef7;
+    font-size: 10.5px;
+    font-weight: 700;
+    color: #2563eb;
     background: #eff6ff;
-    padding: 2px 7px;
-    border-radius: 5px;
-    letter-spacing: 0.02em;
+    border: 1px solid #dbeafe;
+    padding: 1px 7px;
+    border-radius: 6px;
+    font-variant-numeric: tabular-nums;
 }
 
 .cd-drw-scope-pill {
     display: inline-flex;
     align-items: center;
     gap: 4px;
-    height: 20px;
-    padding: 0 8px;
-    border-radius: 10px;
-    background: #ecfdf5;
-    color: #047857;
-    font-size: 10px;
+    font-size: 10.5px;
     font-weight: 600;
-}
-
-.cd-drw-status-badge {
-    display: inline-flex;
-    align-items: center;
-    height: 20px;
-    padding: 0 8px;
-    border-radius: 6px;
-    font-size: 10px;
-    font-weight: 700;
-    letter-spacing: 0.02em;
-    text-transform: uppercase;
-    background: #dcfce7;
-    color: #15803d;
-}
-
-.cd-drw-status-badge.is-inactive {
-    background: #fee2e2 !important;
-    color: #b91c1c !important;
+    color: #059669;
+    background: #ecfdf5;
+    border: 1px solid #a7f3d0;
+    padding: 1px 8px;
+    border-radius: 12px;
 }
 
 .cd-drw-subtitle {
     font-size: 11px;
     color: #64748b;
-    margin: 0;
-    line-height: 1.35;
+    margin: 2px 0 0;
 }
 
 .cd-drw-header-right {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 10px;
     flex-shrink: 0;
 }
 
-.cd-drw-head-btn {
-    height: 34px;
-    padding: 0 12px;
-    border-radius: 8px;
+/* Header Dynamic Search Sub-Card */
+.cd-drw-search-subcard {
+    height: 36px;
+    width: 250px;
+    background: #f8fafc;
     border: 1px solid #e2e8f0;
-    background: #ffffff;
-    color: #334155;
-    font-size: 11.5px;
-    font-weight: 600;
-    display: inline-flex;
+    border-radius: 8px;
+    display: flex;
     align-items: center;
-    gap: 6px;
-    cursor: pointer;
-    transition: all 0.15s ease;
+    padding: 0 10px;
+    gap: 8px;
+    transition: all 0.2s ease;
 }
 
-.cd-drw-head-btn:hover {
+.cd-drw-search-subcard:focus-within {
+    background: #ffffff;
+    border-color: #009ef7;
+    box-shadow: 0 0 0 3px rgba(0, 158, 247, 0.12);
+}
+
+.cd-drw-search-input {
+    border: none;
+    outline: none;
+    background: transparent;
+    font-size: 11.5px;
+    font-family: inherit;
+    color: #0f172a;
+    width: 100%;
+}
+
+.cd-drw-search-input::placeholder {
+    color: #94a3b8;
+}
+
+/* Fast Header Status Toggle Box */
+.cd-drw-toggle-box {
+    display: flex;
+    align-items: center;
+    gap: 8px;
     background: #f8fafc;
-    border-color: #cbd5e1;
-    color: #009ef7;
+    border: 1px solid #e2e8f0;
+    padding: 4px 10px;
+    border-radius: 8px;
+}
+
+.cd-drw-toggle-label {
+    font-size: 10.5px;
+    font-weight: 700;
+    color: {{ $isServiceActive ? '#10b981' : '#64748b' }};
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    min-width: 48px;
+}
+
+.cd-drw-switch {
+    position: relative;
+    display: inline-block;
+    width: 36px;
+    height: 20px;
+    margin: 0;
+}
+
+.cd-drw-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.cd-drw-switch-slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background-color: #cbd5e1;
+    transition: .2s;
+    border-radius: 20px;
+}
+
+.cd-drw-switch-slider:before {
+    position: absolute;
+    content: "";
+    height: 14px;
+    width: 14px;
+    left: 3px;
+    bottom: 3px;
+    background-color: white;
+    transition: .2s;
+    border-radius: 50%;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+}
+
+.cd-drw-switch input:checked + .cd-drw-switch-slider {
+    background-color: #10b981;
+}
+
+.cd-drw-switch input:checked + .cd-drw-switch-slider:before {
+    transform: translateX(16px);
 }
 
 .cd-drw-close-btn {
@@ -282,14 +335,14 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 15px;
     cursor: pointer;
+    font-size: 14px;
     transition: all 0.15s ease;
 }
 
 .cd-drw-close-btn:hover {
     background: #fee2e2;
-    border-color: #fecaca;
+    border-color: #fca5a5;
     color: #ef4444;
 }
 
@@ -301,8 +354,12 @@
     border: 1px solid #e2e8f0 !important;
     border-radius: 10px !important;
     box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03) !important;
-    padding: 7px 12px !important;
-    margin: 12px 16px 0 16px !important;
+    padding: 8px 12px !important;
+    margin: 14px 18px 0 18px !important;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
 }
 
 .cd-drw-tabs-group {
@@ -310,7 +367,6 @@
     align-items: center;
     gap: 8px;
     flex-wrap: wrap;
-    min-width: 0;
 }
 
 .cd-drw-tab-btn {
@@ -321,10 +377,9 @@
     font-size: 11.5px !important;
     font-weight: 600 !important;
     color: #475569 !important;
-    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.02) !important;
     display: inline-flex !important;
     align-items: center !important;
-    gap: 7px !important;
+    gap: 6px !important;
     cursor: pointer !important;
     transition: all 0.15s ease !important;
     min-height: 34px !important;
@@ -341,7 +396,7 @@
     background: #009ef7 !important;
     border-color: #009ef7 !important;
     color: #ffffff !important;
-    box-shadow: 0 2px 4px rgba(0, 158, 247, 0.22) !important;
+    box-shadow: 0 2px 6px rgba(0, 158, 247, 0.25) !important;
 }
 
 .cd-drw-tab-badge {
@@ -372,7 +427,7 @@
     display: flex;
     flex-direction: column;
     gap: 14px;
-    padding: 12px 16px 80px 16px;
+    padding: 14px 18px 80px 18px;
     width: 100%;
 }
 
@@ -382,12 +437,13 @@
     border-radius: 10px !important;
     box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04) !important;
     padding: 16px 18px !important;
+    border-left: 3.5px solid #009ef7 !important;
     transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
 .cd-drw-card:hover {
-    border-color: #cbd5e1;
-    box-shadow: 0 3px 8px rgba(15, 23, 42, 0.05) !important;
+    border-color: #cbd5e1 !important;
+    box-shadow: 0 4px 14px rgba(15, 23, 42, 0.07) !important;
 }
 
 .cd-drw-card-head {
@@ -396,7 +452,7 @@
     justify-content: space-between;
     gap: 12px;
     margin-bottom: 14px;
-    padding-bottom: 12px;
+    padding-bottom: 10px;
     border-bottom: 1px solid #f1f5f9;
 }
 
@@ -418,6 +474,7 @@
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
+    border: 1px solid #bfdbfe;
 }
 
 .cd-drw-card-title {
@@ -434,7 +491,7 @@
     margin: 2px 0 0;
 }
 
-/* Sub-Card 1: Model Option Radio Cards */
+/* Sub-Card: Model Option Radio Cards */
 .cd-model-options-grid {
     display: grid !important;
     grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
@@ -443,42 +500,40 @@
 }
 
 .cd-model-card {
-    position: relative;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 12px 14px;
+    cursor: pointer;
+    background: #ffffff;
+    transition: all 0.2s ease;
     display: flex;
     align-items: flex-start;
-    gap: 12px;
-    padding: 14px 16px;
-    background: #ffffff;
-    border: 1px solid #e2e8f0;
-    border-radius: 9px;
-    text-align: left;
-    cursor: pointer;
-    transition: all 0.15s ease;
-    user-select: none;
+    gap: 10px;
+    position: relative;
 }
 
 .cd-model-card:hover {
-    border-color: #93c5fd;
-    background: #f8faff;
+    border-color: #cbd5e1;
+    background: #f8fafc;
 }
 
 .cd-model-card.active {
     border-color: #009ef7 !important;
-    background: #f1faff !important;
-    box-shadow: 0 0 0 2px rgba(0, 158, 247, 0.15) !important;
+    background: #f8fbff !important;
+    box-shadow: 0 0 0 3px rgba(0, 158, 247, 0.12) !important;
 }
 
 .cd-model-icon-box {
-    width: 36px;
-    height: 36px;
+    width: 32px;
+    height: 32px;
     border-radius: 8px;
     background: #eff6ff;
     color: #009ef7;
-    font-size: 15px;
-    font-weight: 800;
     display: flex;
     align-items: center;
     justify-content: center;
+    font-size: 14px;
+    font-weight: 700;
     flex-shrink: 0;
 }
 
@@ -487,470 +542,314 @@
     color: #ffffff;
 }
 
-.cd-model-copy-wrap {
-    display: flex;
-    flex-direction: column;
-    min-width: 0;
-    flex: 1 1 auto;
-}
-
 .cd-model-title {
-    font-size: 12.5px;
+    font-size: 12px;
     font-weight: 700;
     color: #0f172a;
-    margin: 0 0 4px;
+    margin: 0;
 }
 
 .cd-model-desc {
     font-size: 10.5px;
     color: #64748b;
-    line-height: 1.45;
-    margin: 0;
+    line-height: 1.35;
+    margin: 2px 0 0;
 }
 
 .cd-model-radio-dot {
-    position: absolute;
-    right: 14px;
-    top: 14px;
     width: 16px;
     height: 16px;
     border-radius: 50%;
-    border: 1.5px solid #cbd5e1;
-    background: #ffffff;
-    transition: all 0.15s ease;
+    border: 2px solid #cbd5e1;
+    margin-left: auto;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
 }
 
 .cd-model-card.active .cd-model-radio-dot {
     border-color: #009ef7;
-    border-width: 5px;
+    background: #009ef7;
+    box-shadow: inset 0 0 0 3px #ffffff;
 }
 
-.cd-info-banner {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 10px 14px;
-    background: #f0fdf4;
-    border: 1px solid #bbf7d0;
-    border-radius: 8px;
-    color: #166534;
-    font-size: 11px;
-    font-weight: 500;
-}
-
-.cd-info-banner.blue {
-    background: #eff6ff;
-    border-color: #bfdbfe;
-    color: #1e40af;
-}
-
-/* Default Base Pricing Sub-Card Grid */
-.cd-pricing-subcard-grid {
+/* Discrete Field Sub-Cards Grid */
+.cd-field-grid {
     display: grid !important;
     grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
     gap: 12px !important;
-    padding: 14px 16px;
-    background: #f8fafc;
-    border: 1px solid #eef2f6;
-    border-radius: 8px;
 }
 
 .cd-field-group {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 10px 12px;
     display: flex;
     flex-direction: column;
     gap: 4px;
-    min-width: 0;
 }
 
 .cd-field-label {
-    font-size: 10px;
+    font-size: 10.5px;
     font-weight: 700;
     color: #475569;
-    letter-spacing: 0.03em;
     text-transform: uppercase;
-    margin-bottom: 2px;
+    letter-spacing: 0.03em;
+    margin: 0;
 }
 
 .cd-field-control {
-    width: 100%;
-    height: 36px;
-    padding: 6px 12px;
-    background: #ffffff;
-    border: 1px solid #cbd5e1;
-    border-radius: 7px;
-    font-size: 11.5px;
-    font-weight: 500;
+    height: 34px;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    padding: 0 10px;
+    font-size: 12px;
+    font-family: inherit;
     color: #0f172a;
+    background: #ffffff;
     outline: none;
-    transition: all 0.15s ease;
+    transition: border-color 0.15s;
+    width: 100%;
 }
 
 .cd-field-control:focus {
     border-color: #009ef7;
-    box-shadow: 0 0 0 3px rgba(0, 158, 247, 0.12);
+    box-shadow: 0 0 0 2px rgba(0, 158, 247, 0.12);
 }
 
-.cd-field-control:disabled {
-    background: #f1f5f9;
-    color: #94a3b8;
-    cursor: not-allowed;
+.cd-field-help {
+    font-size: 10px;
+    color: #64748b;
 }
 
 .cd-rate-input-wrap {
     position: relative;
     display: flex;
     align-items: center;
+    width: 100%;
 }
 
-.cd-rate-input-wrap .cd-field-control {
-    padding-right: 32px;
+.cd-rate-input-wrap input {
+    width: 100%;
+    padding-right: 28px;
     font-variant-numeric: tabular-nums;
     font-weight: 600;
 }
 
 .cd-rate-suffix {
     position: absolute;
-    right: 12px;
-    top: 50%;
-    transform: translateY(-50%);
+    right: 10px;
     font-size: 11px;
     font-weight: 700;
     color: #64748b;
+    pointer-events: none;
 }
 
-.cd-field-help {
-    font-size: 10px;
-    color: #94a3b8;
-    margin-top: 3px;
-    line-height: 1.35;
-}
-
-/* Free/No fee summary sub-card */
-.cd-free-fee-banner {
-    display: none;
-    grid-column: 1 / -1;
-    align-items: center;
-    gap: 14px;
-    padding: 14px 18px;
-    background: #f8fafc;
-    border: 1px dashed #cbd5e1;
-    border-radius: 8px;
-}
-
-.commercial-editor-v3.is-free-fee .cd-free-fee-banner {
+/* Discrete Experience Matrix Tier Sub-Cards */
+.cd-matrix-list {
     display: flex;
+    flex-direction: column;
+    gap: 8px;
 }
 
-.commercial-editor-v3.is-free-fee .cd-pricing-subcard-grid > .cd-field-group {
-    display: none;
-}
-
-/* Experience Matrix Table */
-.cd-range-matrix {
-    width: 100%;
+.cd-matrix-tier-card {
+    background: #f8fafc;
     border: 1px solid #e2e8f0;
     border-radius: 8px;
-    overflow: hidden;
-    background: #ffffff;
-}
-
-.cd-range-head,
-.cd-range-row {
-    display: grid !important;
-    grid-template-columns: minmax(140px, 1.2fr) minmax(110px, 0.8fr) minmax(120px, 0.9fr) minmax(140px, 1fr) 36px !important;
+    padding: 10px 14px;
+    display: grid;
+    grid-template-columns: minmax(0, 2fr) minmax(0, 1.2fr) minmax(0, 1.2fr) minmax(0, 1.4fr) 36px;
+    gap: 12px;
     align-items: center;
-    gap: 10px;
-    padding: 8px 12px;
+    transition: all 0.15s;
 }
 
-.cd-range-head {
-    background: #f8fafc;
-    border-bottom: 1px solid #e2e8f0;
+.cd-matrix-tier-card:hover {
+    background: #ffffff;
+    border-color: #cbd5e1;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.03);
+}
+
+.cd-tier-identity {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+}
+
+.cd-tier-pill {
     font-size: 10px;
     font-weight: 700;
-    color: #64748b;
-    text-transform: uppercase;
-    letter-spacing: 0.03em;
-}
-
-.cd-range-row {
-    border-bottom: 1px solid #f1f5f9;
-    min-height: 46px;
-    transition: background 0.12s ease;
-}
-
-.cd-range-row:last-child {
-    border-bottom: none;
-}
-
-.cd-range-row:hover {
-    background: #f8fafc;
-}
-
-.cd-tier-badge {
+    padding: 3px 8px;
+    border-radius: 6px;
+    background: #eff6ff;
+    color: #009ef7;
+    border: 1px solid #bfdbfe;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
     display: inline-flex;
     align-items: center;
-    gap: 6px;
+    gap: 4px;
+}
+
+.cd-tier-name {
     font-size: 11.5px;
-    font-weight: 700;
+    font-weight: 600;
     color: #0f172a;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
-.cd-tier-badge i {
-    color: #009ef7;
-    font-size: 11px;
-}
-
-.cd-range-row .cd-field-control {
-    height: 32px;
-    font-size: 11px;
-    padding: 4px 8px;
-}
-
-.cd-range-reset-btn {
+.cd-tier-reset-btn {
     width: 32px;
     height: 32px;
-    border-radius: 7px;
+    border-radius: 6px;
     border: 1px solid #e2e8f0;
     background: #ffffff;
     color: #64748b;
+    cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 12px;
-    cursor: pointer;
-    transition: all 0.15s ease;
+    font-size: 13px;
+    transition: all 0.15s;
 }
 
-.cd-range-reset-btn:hover {
+.cd-tier-reset-btn:hover {
     background: #eff6ff;
-    border-color: #bfdbfe;
     color: #009ef7;
+    border-color: #009ef7;
 }
 
-/* Replacement Policy & Payment Timeline 3-column sub-card grids */
-.cd-policy-grid,
-.cd-payment-grid {
+/* Guarantee Policy & Terms Sub-Cards */
+.cd-policy-grid {
     display: grid !important;
     grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
     gap: 12px !important;
-    padding: 14px 16px;
-    background: #f8fafc;
-    border: 1px solid #eef2f6;
-    border-radius: 8px;
+    margin-bottom: 12px;
 }
 
-.cd-policy-alert {
+.cd-summary-strip {
+    background: #eff6ff;
+    border: 1px solid #bfdbfe;
+    border-radius: 8px;
+    padding: 10px 14px;
     display: flex;
     align-items: center;
     gap: 10px;
-    grid-column: 1 / -1;
-    margin-top: 4px;
-    padding: 10px 14px;
-    background: #eff6ff;
-    border: 1px solid #bfdbfe;
-    border-radius: 7px;
     font-size: 11px;
     color: #1e40af;
 }
 
-/* Country Coverage Section */
+/* Country Coverage Sub-Cards */
 .cd-country-toolbar {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 8px 12px;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    flex-wrap: wrap;
-    gap: 10px;
+    gap: 12px;
     margin-bottom: 12px;
+    flex-wrap: wrap;
 }
 
-.cd-country-search-box {
-    position: relative;
-    height: 36px;
-    width: 280px;
-    max-width: 100%;
-    background: #ffffff;
-    border: 1px solid #cbd5e1;
-    border-radius: 8px;
-    display: flex;
-    align-items: center;
-    padding: 0 10px;
-}
-
-.cd-country-search-box:focus-within {
-    border-color: #009ef7;
-    box-shadow: 0 0 0 3px rgba(0, 158, 247, 0.12);
-}
-
-.cd-country-search-box i {
-    color: #94a3b8;
-    font-size: 11px;
-    margin-right: 8px;
-}
-
-.cd-country-search-input {
-    border: none !important;
-    outline: none !important;
-    background: transparent !important;
-    width: 100%;
-    font-size: 11.5px !important;
-    color: #0f172a !important;
-    padding: 0 !important;
-}
-
-.cd-country-btn-group {
+.cd-country-pills-bar {
     display: flex;
     align-items: center;
     gap: 6px;
     flex-wrap: wrap;
-}
-
-.cd-country-btn {
-    height: 32px;
-    padding: 0 10px;
-    border-radius: 7px;
-    border: 1px solid #e2e8f0;
-    background: #ffffff;
-    color: #334155;
-    font-size: 10.5px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.15s ease;
-}
-
-.cd-country-btn:hover {
-    background: #f8fafc;
-    border-color: #cbd5e1;
-    color: #009ef7;
-}
-
-/* Selected Countries Chip Bar */
-.cd-selected-chips-bar {
-    display: flex;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 6px;
-    min-height: 34px;
-    padding: 8px 12px;
-    background: #f8fafc;
-    border: 1px solid #e2e8f0;
-    border-radius: 8px;
     margin-bottom: 12px;
+    min-height: 28px;
 }
 
-.cd-country-chip-item {
+.cd-country-chip {
     display: inline-flex;
     align-items: center;
     gap: 5px;
-    height: 24px;
-    padding: 0 8px;
-    border-radius: 6px;
     background: #ffffff;
-    border: 1px solid #cbd5e1;
-    color: #0f172a;
+    border: 1px solid #e2e8f0;
+    border-radius: 14px;
+    padding: 2px 8px;
     font-size: 10.5px;
     font-weight: 600;
+    color: #0f172a;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.03);
 }
 
-.cd-chip-code {
-    font-size: 9px;
-    font-weight: 700;
-    color: #009ef7;
-    background: #eff6ff;
-    padding: 1px 4px;
-    border-radius: 4px;
-}
-
-.cd-chip-remove {
-    border: none;
-    background: transparent;
-    color: #94a3b8;
-    font-size: 11px;
+.cd-country-chip-remove {
     cursor: pointer;
-    padding: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    color: #94a3b8;
+    font-size: 12px;
+    line-height: 1;
 }
 
-.cd-chip-remove:hover {
+.cd-country-chip-remove:hover {
     color: #ef4444;
 }
 
-/* Region Filter Tabs */
-.cd-region-tabs {
-    display: flex;
-    gap: 6px;
-    overflow-x: auto;
-    padding-bottom: 8px;
-    margin-bottom: 10px;
-    scrollbar-width: none;
-}
-
-.cd-region-tabs::-webkit-scrollbar {
-    display: none;
-}
-
-.cd-region-tab {
-    height: 28px;
-    padding: 0 10px;
-    border-radius: 6px;
-    border: 1px solid #e2e8f0;
-    background: #f8fafc;
-    color: #475569;
-    font-size: 10.5px;
-    font-weight: 600;
-    white-space: nowrap;
-    cursor: pointer;
-    transition: all 0.15s ease;
-}
-
-.cd-region-tab:hover {
-    background: #ffffff;
-    border-color: #cbd5e1;
-    color: #0f172a;
-}
-
-.cd-region-tab.active {
-    background: #009ef7 !important;
-    border-color: #009ef7 !important;
-    color: #ffffff !important;
-}
-
-/* Country Selection Grid */
 .cd-country-grid {
     display: grid !important;
     grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
-    gap: 6px 14px !important;
-    max-height: 280px;
+    gap: 8px !important;
+    max-height: 260px;
     overflow-y: auto;
-    padding: 10px;
-    background: #ffffff;
-    border: 1px solid #e2e8f0;
-    border-radius: 8px;
-    scrollbar-width: thin;
-    scrollbar-color: #cbd5e1 transparent;
+    padding-right: 4px;
 }
 
-.cd-country-option {
+.cd-country-item {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    padding: 6px 10px;
     display: flex;
     align-items: center;
     gap: 8px;
-    min-height: 28px;
-    padding: 4px 6px;
-    border-radius: 6px;
-    transition: background 0.12s ease;
+    cursor: pointer;
+    transition: all 0.15s;
 }
 
-.cd-country-option:hover {
-    background: #f8fafc;
+.cd-country-item:hover {
+    background: #ffffff;
+    border-color: #cbd5e1;
 }
 
-.cd-country-option[hidden] {
-    display: none !important;
+.cd-country-item.is-selected {
+    background: #eff6ff;
+    border-color: #bfdbfe;
 }
 
-.cd-country-option input.countries {
+.cd-country-code {
+    font-size: 9.5px;
+    font-weight: 700;
+    color: #64748b;
+    background: #e2e8f0;
+    padding: 1px 4px;
+    border-radius: 4px;
+    min-width: 24px;
+    text-align: center;
+}
+
+.cd-country-item.is-selected .cd-country-code {
+    background: #bfdbfe;
+    color: #1e40af;
+}
+
+.cd-country-name {
+    font-size: 11px;
+    font-weight: 500;
+    color: #0f172a;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.cd-country-item input.countries {
     width: 15px;
     height: 15px;
     margin: 0;
@@ -958,38 +857,13 @@
     accent-color: #009ef7;
 }
 
-.cd-country-label {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    margin: 0;
-    font-size: 11px;
-    color: #334155;
-    cursor: pointer;
-    user-select: none;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-.cd-iso-badge {
-    font-size: 9px;
-    font-weight: 700;
-    color: #64748b;
-    background: #f1f5f9;
-    padding: 1px 4px;
-    border-radius: 4px;
-    min-width: 22px;
-    text-align: center;
-}
-
 /* --------------------------------------------------------------------------
-   STICKY FOOTER ACTION STRIP
+   STICKY BOTTOM FOOTER ACTION STRIP
    -------------------------------------------------------------------------- */
 .cd-drw-footer {
     position: sticky;
     bottom: 0;
-    z-index: 30;
+    z-index: 40;
     background: rgba(255, 255, 255, 0.98) !important;
     backdrop-filter: blur(8px) !important;
     border-top: 1px solid #e2e8f0 !important;
@@ -1027,6 +901,7 @@
     border: 1px solid #e2e8f0;
     background: #ffffff;
     color: #334155;
+    font-family: inherit;
 }
 
 .cd-drw-btn:hover {
@@ -1076,40 +951,27 @@
 .commercial-editor-v3.is-fixed-fee .cd-percentage-only {
     display: none !important;
 }
-.commercial-editor-v3.is-free-fee .cd-range-matrix,
-.commercial-editor-v3.is-free-fee .cd-payment-grid {
+.commercial-editor-v3.is-free-fee .cd-matrix-list,
+.commercial-editor-v3.is-free-fee .cd-policy-grid {
     display: none !important;
 }
 
 /* Responsive adjustments for 15.6" screens (1366x768) */
 @media (max-width: 1200px) {
-    .cd-model-options-grid {
-        grid-template-columns: 1fr !important;
-    }
-    .cd-pricing-subcard-grid,
+    .cd-model-options-grid,
+    .cd-field-grid,
     .cd-policy-grid,
-    .cd-payment-grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-    }
     .cd-country-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
     }
 }
 
 @media (max-width: 767px) {
-    .cd-pricing-subcard-grid,
+    .cd-model-options-grid,
+    .cd-field-grid,
     .cd-policy-grid,
-    .cd-payment-grid,
     .cd-country-grid {
         grid-template-columns: 1fr !important;
-    }
-    .cd-range-head,
-    .cd-range-row {
-        grid-template-columns: 120px 85px 95px 120px 32px !important;
-        min-width: 480px;
-    }
-    .cd-range-matrix {
-        overflow-x: auto;
     }
 }
 </style>
@@ -1130,21 +992,31 @@
                     <h3 class="cd-drw-title">Edit {{ $isFulltime ? 'Fulltime' : 'Contract' }} Hiring Services</h3>
                     <span class="cd-drw-code-chip">#SRV-{{ $isFulltime ? 'FT01' : 'CT02' }}</span>
                     <span class="cd-drw-scope-pill">
-                        <svg class="cd-svg-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg> Direct Client Commercials
-                    </span>
-                    <span class="cd-drw-status-badge {{ !empty($commercial['status']) ? '' : 'is-inactive' }}">
-                        {{ !empty($commercial['status']) ? 'Active' : 'Inactive' }}
+                        <svg class="cd-svg-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg> Direct Client Scope
                     </span>
                 </div>
                 <p class="cd-drw-subtitle">
-                    Configure your placement fee structures, experience bands, guarantees, and operational countries for clients.
+                    Configure placement fee structures, experience bands, guarantees, and operational countries for clients.
                 </p>
             </div>
         </div>
+
         <div class="cd-drw-header-right">
-            <button type="button" class="cd-drw-head-btn" data-commercial-reset title="Reset all fields to saved values">
-                <svg class="cd-svg-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg> Reset
-            </button>
+            <!-- Dynamic Search Sub-Card -->
+            <div class="cd-drw-search-subcard">
+                <svg class="cd-svg-icon text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                <input type="search" class="cd-drw-search-input" id="drwGlobalSearch" placeholder="Quick find field, rate, or tier..." />
+            </div>
+
+            <!-- Fast Status Toggle Sub-Card -->
+            <div class="cd-drw-toggle-box">
+                <span class="cd-drw-toggle-label" id="toggleStatusText">{{ $isServiceActive ? 'ACTIVE' : 'INACTIVE' }}</span>
+                <label class="cd-drw-switch">
+                    <input type="checkbox" id="headerStatusToggle" {{ $isServiceActive ? 'checked' : '' }}>
+                    <span class="cd-drw-switch-slider"></span>
+                </label>
+            </div>
+
             <button type="button"
                     class="cd-drw-close-btn"
                     aria-label="Close drawer"
@@ -1162,7 +1034,7 @@
         <div class="cd-drw-tabs-group">
             <button type="button" class="cd-drw-tab-btn active" data-drawer-tab="all">
                 <svg class="cd-svg-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>
-                <span>All Settings</span>
+                <span>All Sections</span>
             </button>
             <button type="button" class="cd-drw-tab-btn" data-drawer-tab="model">
                 <svg class="cd-svg-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
@@ -1185,7 +1057,7 @@
     </div>
 
     <!-- Hidden State Inputs for Controller Action Binding -->
-    <input class="main_status" type="hidden" value="{{ !empty($commercial['status']) ? 1 : 0 }}">
+    <input class="main_status" type="hidden" value="{{ $isServiceActive ? 1 : 0 }}">
     <input class="rateTypeClass" type="hidden" value="{{ $rateType }}">
     <input class="updateId" type="hidden" value="{{ $commercial['id'] ?? '' }}">
     <input class="commType" type="hidden" value="{{ $sectionCheck }}">
@@ -1196,15 +1068,15 @@
     <main class="cd-drw-stream">
 
         <!-- ----------------------------------------------------------------
-             CARD 1: COMMERCIAL MODEL
+             PRIMARY CARD 1: COMMERCIAL FEE MODEL & DEFAULT BASE PRICING
              ---------------------------------------------------------------- -->
         <section class="cd-drw-card" id="drwSectionModel" data-section-category="model">
             <div class="cd-drw-card-head">
                 <div class="cd-drw-card-title-group">
                     <span class="cd-drw-step-num">1</span>
                     <div>
-                        <h4 class="cd-drw-card-title">Commercial Fee Model</h4>
-                        <p class="cd-drw-card-copy">Choose how your agency is compensated for client placements.</p>
+                        <h4 class="cd-drw-card-title">Commercial Fee Model & Base Pricing</h4>
+                        <p class="cd-drw-card-copy">Select placement fee methodology and default baseline compensation for clients.</p>
                     </div>
                 </div>
             </div>
@@ -1219,8 +1091,8 @@
                      aria-checked="{{ $selectedCommercialModel === 2 ? 'true' : 'false' }}">
                     <div class="cd-model-icon-box">%</div>
                     <div class="cd-model-copy-wrap">
-                        <h5 class="cd-model-title">Percentage Based</h5>
-                        <p class="cd-model-desc">Charge a percentage of candidate's annual CTC or contract bill rate.</p>
+                        <h5 class="cd-model-title">Percentage of CTC</h5>
+                        <p class="cd-model-desc">Charge standard placement fee calculated as % of annual compensation.</p>
                     </div>
                     <span class="cd-model-radio-dot"></span>
                 </div>
@@ -1232,7 +1104,7 @@
                     <div class="cd-model-icon-box">₹</div>
                     <div class="cd-model-copy-wrap">
                         <h5 class="cd-model-title">Fixed Placement Fee</h5>
-                        <p class="cd-model-desc">Charge a fixed flat amount for each successful hire or billing cycle.</p>
+                        <p class="cd-model-desc">Charge a fixed commercial flat amount for every successful joining.</p>
                     </div>
                     <span class="cd-model-radio-dot"></span>
                 </div>
@@ -1244,40 +1116,15 @@
                     <div class="cd-model-icon-box">◇</div>
                     <div class="cd-model-copy-wrap">
                         <h5 class="cd-model-title">Free / No Placement Fee</h5>
-                        <p class="cd-model-desc">Zero commercial placement fees apply to client engagements.</p>
+                        <p class="cd-model-desc">Zero commercial placement fee charged to client relationships.</p>
                     </div>
                     <span class="cd-model-radio-dot"></span>
                 </div>
             </div>
 
-            <div class="cd-info-banner">
-                <svg class="cd-svg-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                <span data-commercial-model-copy>
-                    {{ $selectedCommercialModel === 0 ? 'No commercial placement fee will be charged for the selected countries.' : ($selectedCommercialModel === 2 ? "Placement fees are calculated as a percentage of the candidate's Cost to Company (CTC)." : 'Billing is calculated from the configured fixed rate for each experience range.') }}
-                </span>
-            </div>
-        </section>
-
-        <!-- ----------------------------------------------------------------
-             CARD 2: DEFAULT BASE PRICING
-             ---------------------------------------------------------------- -->
-        <section class="cd-drw-card" id="drwSectionPricing" data-section-category="model">
-            <div class="cd-drw-card-head">
-                <div class="cd-drw-card-title-group">
-                    <span class="cd-drw-step-num">2</span>
-                    <div>
-                        <h4 class="cd-drw-card-title">Default Base Pricing</h4>
-                        <p class="cd-drw-card-copy" data-default-pricing-copy>
-                            {{ $selectedCommercialModel === 1 ? 'Set the default fixed fee and how it will be charged.' : 'Set the default pricing for all experience ranges.' }}
-                        </p>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Discrete Sub-Cards Grid: Base Controls -->
-            <div class="cd-pricing-subcard-grid">
-
-                <!-- Sub-Card: Currency -->
+            <!-- Discrete Sub-Cards: Base Configuration Grid -->
+            <div class="cd-field-grid">
+                <!-- Sub-Card: Multi-Tenant Currency -->
                 <div class="cd-field-group">
                     <label class="cd-field-label" for="commercial_salary_currency">Currency</label>
                     <select id="commercial_salary_currency" name="salary_currency" class="cd-field-control" data-pricing-currency>
@@ -1305,10 +1152,10 @@
                     <span class="cd-field-help">Multi-tenant authorized currency</span>
                 </div>
 
-                <!-- Sub-Card: Default Rate / Amount -->
+                <!-- Sub-Card: Default Rate / Fixed Amount -->
                 <div class="cd-field-group">
                     <label class="cd-field-label" for="commercial_default_rate" data-rate-label>
-                        {{ $selectedCommercialModel === 2 ? 'Rate / Percentage' : 'Fixed Fee Amount' }}
+                        {{ $selectedCommercialModel === 2 ? 'Default CTC Percentage' : 'Fixed Fee Amount' }}
                     </label>
                     <div class="cd-rate-input-wrap">
                         <input type="number"
@@ -1325,7 +1172,7 @@
                     </span>
                 </div>
 
-                <!-- Sub-Card: Applied On / Billing Mode -->
+                <!-- Sub-Card: Billing Basis -->
                 <div class="cd-field-group">
                     <label class="cd-field-label" for="commercial_salary_mode">Applied On</label>
                     <select id="commercial_salary_mode" name="sal_mode" class="cd-field-control" data-applied-on>
@@ -1363,54 +1210,41 @@
                     </select>
                     <span class="cd-field-help">Invoicing cadence</span>
                 </div>
-
-                <!-- Free/No Fee Banner -->
-                <div class="cd-free-fee-banner">
-                    <svg class="cd-svg-icon text-success" style="width:24px;height:24px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                    <div>
-                        <strong class="d-block text-dark fs-6">Zero Commercial Fee Agreement</strong>
-                        <span class="text-muted fs-8">This service agreement is configured as Free / No Fee. No candidate placement charges will apply.</span>
-                    </div>
-                </div>
-
             </div>
         </section>
 
         <!-- ----------------------------------------------------------------
-             CARD 3: EXPERIENCE-BASED PRICING MATRIX
+             PRIMARY CARD 2: EXPERIENCE-BASED PRICING MATRIX
              ---------------------------------------------------------------- -->
         <section class="cd-drw-card" id="drwSectionExperience" data-section-category="experience">
             <div class="cd-drw-card-head">
                 <div class="cd-drw-card-title-group">
-                    <span class="cd-drw-step-num">3</span>
+                    <span class="cd-drw-step-num">2</span>
                     <div>
                         <h4 class="cd-drw-card-title">Experience-Based Pricing Matrix</h4>
                         <p class="cd-drw-card-copy" data-experience-pricing-copy>
-                            {{ $selectedCommercialModel === 1 ? 'Define different fixed fees for different experience bands.' : 'Define pricing tiers using clear candidate experience ranges.' }}
+                            {{ $selectedCommercialModel === 1 ? 'Define different fixed fees for different experience bands.' : 'Discrete tiered sub-cards allow bespoke placement pricing across seniority bands.' }}
                         </p>
                     </div>
                 </div>
             </div>
 
-            <!-- Tabular Matrix Sub-Card -->
-            <div class="cd-range-matrix">
-                <div class="cd-range-head">
-                    <span>Experience Tier</span>
-                    <span>Currency</span>
-                    <span data-range-rate-label>{{ $selectedCommercialModel === 2 ? 'Rate / Percentage' : 'Fixed Fee Amount' }}</span>
-                    <span>Timing / Basis</span>
-                    <span>Reset</span>
-                </div>
-
+            <!-- Discrete Sub-Cards Stream: Seniority Bands -->
+            <div class="cd-matrix-list">
                 @foreach($experienceRanges as $range)
                     @php
                         $firstExperienceIndex = $range['indexes'][0];
                         $rangeRate = data_get($commercialDetails->get($firstExperienceIndex), 'rate', $defaultRate);
                     @endphp
-                    <div class="cd-range-row" data-experience-range>
-                        <div class="cd-tier-badge">
-                            <svg class="cd-svg-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                            <span>{{ $range['label'] }}</span>
+                    <div class="cd-matrix-tier-card" data-experience-range>
+                        <div class="cd-tier-identity">
+                            <span class="cd-tier-pill">
+                                <svg class="cd-svg-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                {{ $range['label'] }}
+                            </span>
+                            <span class="cd-tier-name">
+                                {{ $loop->first ? 'Entry / Associate' : ($loop->index === 1 ? 'Mid-Level Specialist' : ($loop->index === 2 ? 'Senior Professional' : 'Leadership / Executive')) }}
+                            </span>
                         </div>
 
                         <div>
@@ -1460,7 +1294,7 @@
 
                         <div>
                             <button type="button"
-                                    class="cd-range-reset-btn"
+                                    class="cd-tier-reset-btn"
                                     data-range-reset
                                     title="Reset tier to default rate"
                                     aria-label="Reset {{ $range['label'] }}">
@@ -1480,25 +1314,18 @@
                     </div>
                 @endforeach
             </div>
-
-            <div class="cd-info-banner blue mt-3">
-                <svg class="cd-svg-icon text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                <span data-experience-info>
-                    Each experience band is saved through the existing data structure. Currency and applied billing period remain consistent across the commercial tier.
-                </span>
-            </div>
         </section>
 
         <!-- ----------------------------------------------------------------
-             CARD 4: REPLACEMENT GUARANTEE POLICY
+             PRIMARY CARD 3: REPLACEMENT GUARANTEE & INVOICING GOVERNANCE
              ---------------------------------------------------------------- -->
-        <section class="cd-drw-card" id="drwSectionReplacement" data-section-category="policy">
+        <section class="cd-drw-card" id="drwSectionGovernance" data-section-category="policy">
             <div class="cd-drw-card-head">
                 <div class="cd-drw-card-title-group">
-                    <span class="cd-drw-step-num">4</span>
+                    <span class="cd-drw-step-num">3</span>
                     <div>
-                        <h4 class="cd-drw-card-title">Replacement Guarantee Policy</h4>
-                        <p class="cd-drw-card-copy">Define warranty period, remedy clause, and candidate exit conditions for clients.</p>
+                        <h4 class="cd-drw-card-title">Replacement Guarantee & Invoicing Governance</h4>
+                        <p class="cd-drw-card-copy">Warranty clauses, candidate separation eligibility, and client payment credit windows.</p>
                     </div>
                 </div>
             </div>
@@ -1518,7 +1345,7 @@
                 </div>
 
                 <div class="cd-field-group">
-                    <label class="cd-field-label" for="commercial_replacement_type">Replacement Type</label>
+                    <label class="cd-field-label" for="commercial_replacement_type">Remedy Clause</label>
                     <select id="commercial_replacement_type" class="cd-field-control" data-replacement-type>
                         @foreach(($replacementTypes ?? []) as $typeValue => $typeLabel)
                             <option value="{{ $typeValue }}" {{ $selectedReplacementType === (string) $typeValue ? 'selected' : '' }}>
@@ -1530,7 +1357,7 @@
                 </div>
 
                 <div class="cd-field-group">
-                    <label class="cd-field-label" for="commercial_replacement_eligibility">Replacement Eligibility</label>
+                    <label class="cd-field-label" for="commercial_replacement_eligibility">Separation Eligibility</label>
                     <select id="commercial_replacement_eligibility" class="cd-field-control" data-replacement-eligibility>
                         @foreach(($replacementEligibility ?? []) as $eligibilityValue => $eligibilityLabel)
                             <option value="{{ $eligibilityValue }}" {{ $selectedReplacementEligibility === (string) $eligibilityValue ? 'selected' : '' }}>
@@ -1538,34 +1365,9 @@
                             </option>
                         @endforeach
                     </select>
-                    <span class="cd-field-help">Eligible exit circumstances</span>
+                    <span class="cd-field-help">Trigger conditions for warranty</span>
                 </div>
 
-                <div class="cd-policy-alert">
-                    <svg class="cd-svg-icon text-primary" style="width:20px;height:20px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
-                    <div>
-                        A <b data-replacement-summary>{{ strtolower($replacementTypes[$selectedReplacementType] ?? 'free replacement') }}</b> guarantee applies when an eligible candidate exit occurs within <b data-replacement-days>{{ $selectedReplacementPeriod }}</b> days of joining.
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- ----------------------------------------------------------------
-             CARD 5: PAYMENT & BILLING TIMELINE
-             ---------------------------------------------------------------- -->
-        <section class="cd-drw-card" id="drwSectionPayment" data-section-category="policy">
-            <div class="cd-drw-card-head">
-                <div class="cd-drw-card-title-group">
-                    <span class="cd-drw-step-num">5</span>
-                    <div>
-                        <h4 class="cd-drw-card-title">Invoicing & Payment Timeline</h4>
-                        <p class="cd-drw-card-copy">Configure billing cadence, invoice triggers, and payment credit terms.</p>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Discrete Sub-Cards Grid -->
-            <div class="cd-payment-grid">
                 <div class="cd-field-group">
                     <label class="cd-field-label" for="commercial_billing_frequency">Invoicing Cadence</label>
                     <select id="commercial_billing_frequency" class="cd-field-control" data-billing-frequency>
@@ -1575,7 +1377,7 @@
                             </option>
                         @endforeach
                     </select>
-                    <span class="cd-field-help">How often invoices are raised</span>
+                    <span class="cd-field-help">Invoice generation schedule</span>
                 </div>
 
                 <div class="cd-field-group">
@@ -1602,70 +1404,67 @@
                     <span class="cd-field-help">Net days allowed for settlement</span>
                 </div>
             </div>
+
+            <!-- Authoritative Human Summary Strip -->
+            <div class="cd-summary-strip">
+                <svg class="cd-svg-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                <span>A <strong data-replacement-summary>{{ strtolower($replacementTypes[$selectedReplacementType] ?? 'free replacement') }}</strong> guarantee applies if candidate departs within <strong data-replacement-days>{{ $selectedReplacementPeriod }}</strong> days of joining. Invoices are triggered on <strong data-trigger-summary>{{ strtolower($billingTriggers[$selectedBillingTrigger] ?? 'candidate joined') }}</strong> with <strong data-terms-summary>{{ $paymentTerms[$selectedPaymentTerms] ?? 'Net 30 Days' }}</strong> settlement.</span>
+            </div>
         </section>
 
         <!-- ----------------------------------------------------------------
-             CARD 6: OPERATIONAL COUNTRIES & GEOGRAPHIC COVERAGE
+             PRIMARY CARD 4: OPERATIONAL COUNTRIES & GEOGRAPHIC COVERAGE
              ---------------------------------------------------------------- -->
         <section class="cd-drw-card" id="drwSectionCountries" data-section-category="countries">
             <div class="cd-drw-card-head">
                 <div class="cd-drw-card-title-group">
-                    <span class="cd-drw-step-num">6</span>
+                    <span class="cd-drw-step-num">4</span>
                     <div>
                         <h4 class="cd-drw-card-title">Operational Countries & Geographic Scope</h4>
-                        <p class="cd-drw-card-copy">Select the countries where your company offers {{ $isFulltime ? 'fulltime hiring' : 'contract staffing' }} services.</p>
+                        <p class="cd-drw-card-copy">Select the countries where your organization offers {{ $isFulltime ? 'fulltime placement' : 'contract staffing' }} services.</p>
                     </div>
                 </div>
                 <div class="cd-drw-scope-pill">
                     <svg class="cd-svg-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                    <span id="countrySelectedHeaderBadge">{{ $activeCountryCount }} Countries Active</span>
+                    <span id="countrySelectedHeaderBadge">{{ $activeCountryCount }} Countries Enabled</span>
                 </div>
             </div>
 
             <!-- Toolbar Sub-Card -->
             <div class="cd-country-toolbar">
-                <div class="cd-country-search-box">
-                    <svg class="cd-svg-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                <div class="cd-drw-search-subcard" style="width: 280px;">
+                    <svg class="cd-svg-icon text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
                     <input type="search"
-                           class="cd-country-search-input"
-                           placeholder="Search country by name or code..."
+                           class="cd-drw-search-input"
+                           placeholder="Search country by name or ISO..."
                            data-country-search />
                 </div>
-                <div class="cd-country-btn-group">
-                    <button type="button" class="cd-country-btn" data-country-top title="Quick select top global hiring hubs">
-                        <svg class="cd-svg-icon text-warning me-1" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg> Top Hiring Hubs
+                <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+                    <button type="button" class="cd-drw-btn" data-country-top title="Quick select top global hiring hubs">
+                        ⭐ Top Hubs
                     </button>
-                    <button type="button" class="cd-country-btn" data-country-select-all>
-                        <svg class="cd-svg-icon me-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7m-14 6l4 4L19 7"/></svg> Select All
+                    <button type="button" class="cd-drw-btn" data-country-select-all>
+                        ✓ Select All
                     </button>
-                    <button type="button" class="cd-country-btn" data-country-clear>
-                        <svg class="cd-svg-icon me-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg> Clear All
+                    <button type="button" class="cd-drw-btn" data-country-clear>
+                        ✕ Clear All
                     </button>
                 </div>
             </div>
 
-            <!-- Selected Countries Chip Bar -->
-            <div class="cd-selected-chips-bar" data-selected-countries></div>
+            <!-- Selected Countries Active Chips -->
+            <div class="cd-country-pills-bar" data-selected-countries></div>
 
-            <!-- Region Tabs -->
-            <div class="cd-region-tabs">
-                <button type="button" class="cd-region-tab active" data-region="all">All Regions</button>
-                @foreach($countryRegions as $regionName => $regionCountries)
-                    <button type="button" class="cd-region-tab" data-region="{{ strtolower($regionName) }}">
-                        {{ $regionName }} ({{ count($regionCountries) }})
-                    </button>
-                @endforeach
-            </div>
-
-            <!-- Country Selection Grid (High Density 3-Column Grid) -->
+            <!-- Country Selection Grid (3-Column Discrete Grid) -->
             <div class="cd-country-grid" data-country-grid>
                 @foreach(($countries ?? []) as $country)
                     @php
                         $countryId = (int) $country->id;
                         $countryRegion = strtolower(trim((string) ($country->region ?? '')) ?: 'other');
                         $countryCode = strtoupper(trim((string) ($country->iso2 ?? $country->country_code ?? '')));
+                        $isChecked = in_array($countryId, $selectedCountryIds, true);
                     @endphp
-                    <div class="cd-country-option"
+                    <div class="cd-country-item {{ $isChecked ? 'is-selected' : '' }}"
                          data-country-item
                          data-name="{{ strtolower(trim($countryCode . ' ' . $country->country_name)) }}"
                          data-region="{{ $countryRegion }}">
@@ -1675,11 +1474,11 @@
                                value="{{ $countryId }}"
                                data-country-name="{{ $country->country_name }}"
                                data-country-code="{{ $countryCode }}"
-                               data-initial="{{ in_array($countryId, $selectedCountryIds, true) ? '1' : '0' }}"
-                               {{ in_array($countryId, $selectedCountryIds, true) ? 'checked' : '' }} />
-                        <label class="cd-country-label" for="commercial_country_{{ $sectionCheck }}_{{ $countryId }}">
-                            <span class="cd-iso-badge">{{ $countryCode ?: '—' }}</span>
-                            <span>{{ $country->country_name }}</span>
+                               data-initial="{{ $isChecked ? '1' : '0' }}"
+                               {{ $isChecked ? 'checked' : '' }} />
+                        <span class="cd-country-code">{{ $countryCode ?: '—' }}</span>
+                        <label class="cd-country-name" for="commercial_country_{{ $sectionCheck }}_{{ $countryId }}">
+                            {{ $country->country_name }}
                         </label>
                     </div>
                 @endforeach
@@ -1694,10 +1493,11 @@
     <footer class="cd-drw-footer">
         <div class="cd-drw-footer-left">
             <button type="button" class="cd-drw-btn" data-commercial-cancel>
-                <svg class="cd-svg-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg> Cancel
+                Cancel
             </button>
             <button type="button" class="cd-drw-btn" data-commercial-reset>
-                <svg class="cd-svg-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg> Reset to Saved Values
+                <svg class="cd-svg-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                Reset to Saved Values
             </button>
         </div>
         <div class="cd-drw-footer-right">
@@ -1706,7 +1506,8 @@
                     class="btn btn-primary fw-bold copy_current_selected_applicant cd-drw-btn btn-primary"
                     aria-live="polite">
                 <span class="indicator-label">
-                    <svg class="cd-svg-icon me-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> Save Commercials
+                    <svg class="cd-svg-icon me-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                    Save Commercial Terms
                 </span>
                 <span class="indicator-progress">
                     <span class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>
@@ -1744,8 +1545,23 @@
     var fixedFeeTrigger = root.querySelector('[data-fixed-fee-trigger]');
     var fixedFeeFrequency = root.querySelector('[data-fixed-fee-frequency]');
     var paymentTerms = root.querySelector('[data-payment-terms]');
+    var mainStatusInput = root.querySelector('.main_status');
+    var headerStatusToggle = root.querySelector('#headerStatusToggle');
+    var toggleStatusText = root.querySelector('#toggleStatusText');
+    var globalSearch = root.querySelector('#drwGlobalSearch');
     var initialState;
-    var activeRegion = 'all';
+
+    // Fast Header Status Toggle Synchronization
+    if (headerStatusToggle) {
+        headerStatusToggle.addEventListener('change', function () {
+            var isChecked = headerStatusToggle.checked;
+            if (mainStatusInput) mainStatusInput.value = isChecked ? 1 : 0;
+            if (toggleStatusText) {
+                toggleStatusText.textContent = isChecked ? 'ACTIVE' : 'INACTIVE';
+                toggleStatusText.style.color = isChecked ? '#10b981' : '#64748b';
+            }
+        });
+    }
 
     function updateCommercialType() {
         var modelValue = commercialType.value;
@@ -1791,22 +1607,16 @@
         });
 
         var rateLabelEl = root.querySelector('[data-rate-label]');
-        if (rateLabelEl) rateLabelEl.textContent = isFree ? 'No Fee' : (isPercentage ? 'Rate / Percentage' : 'Fixed Fee Amount');
+        if (rateLabelEl) rateLabelEl.textContent = isFree ? 'No Fee' : (isPercentage ? 'Default CTC Percentage' : 'Fixed Fee Amount');
 
         var rateHelpEl = root.querySelector('[data-rate-help]');
         if (rateHelpEl) rateHelpEl.textContent = isFree ? 'No commercial fee is charged.' : (isPercentage ? 'Changing this rate updates all experience tiers.' : 'Default fixed amount applied per successful hire.');
-
-        var rangeRateLabelEl = root.querySelector('[data-range-rate-label]');
-        if (rangeRateLabelEl) rangeRateLabelEl.textContent = isFree ? 'No Fee' : (isPercentage ? 'Rate / Percentage' : 'Fixed Fee Amount');
 
         var defaultPricingCopyEl = root.querySelector('[data-default-pricing-copy]');
         if (defaultPricingCopyEl) defaultPricingCopyEl.textContent = isFree ? 'No charge will be applied for this service.' : (isPercentage ? 'Set the default pricing for all experience ranges.' : 'Set the default fixed fee and how it will be charged.');
 
         var expPricingCopyEl = root.querySelector('[data-experience-pricing-copy]');
-        if (expPricingCopyEl) expPricingCopyEl.textContent = isFree ? 'No per-range fee is required for this service.' : (isPercentage ? 'Define pricing tiers using clear candidate experience ranges.' : 'Define different fixed fees for different experience bands.');
-
-        var commModelCopyEl = root.querySelector('[data-commercial-model-copy]');
-        if (commModelCopyEl) commModelCopyEl.textContent = isFree ? 'No commercial placement fee will be charged for the selected countries.' : (isPercentage ? "Placement fees are calculated as a percentage of the candidate's Cost to Company (CTC)." : 'Billing is calculated from the configured fixed rate for each experience range.');
+        if (expPricingCopyEl) expPricingCopyEl.textContent = isFree ? 'No per-range fee is required for this service.' : (isPercentage ? 'Discrete tiered sub-cards allow bespoke placement pricing across seniority bands.' : 'Define different fixed fees for different experience bands.');
     }
 
     function captureInitialState() {
@@ -1821,6 +1631,7 @@
             billingFrequency: billingFrequency.value,
             billingTrigger: billingTrigger.value,
             paymentTerms: paymentTerms.value,
+            mainStatus: mainStatusInput ? mainStatusInput.value : '1',
             storedRates: Array.prototype.map.call(root.querySelectorAll('.rate_val,.perecentage_val'), function (rate) { return rate.value; }),
             countries: countries.map(function (country) { return country.checked; })
         };
@@ -1840,6 +1651,16 @@
         billingTrigger.value = initialState.billingTrigger;
         paymentTerms.value = initialState.paymentTerms;
 
+        if (mainStatusInput) {
+            mainStatusInput.value = initialState.mainStatus;
+            var isChk = String(initialState.mainStatus) === '1';
+            if (headerStatusToggle) headerStatusToggle.checked = isChk;
+            if (toggleStatusText) {
+                toggleStatusText.textContent = isChk ? 'ACTIVE' : 'INACTIVE';
+                toggleStatusText.style.color = isChk ? '#10b981' : '#64748b';
+            }
+        }
+
         root.querySelectorAll('.rate_val,.perecentage_val').forEach(function (rate, index) {
             rate.value = initialState.storedRates[index];
         });
@@ -1854,6 +1675,8 @@
 
         countries.forEach(function (country, index) {
             country.checked = initialState.countries[index];
+            var parentItem = country.closest('[data-country-item]');
+            if (parentItem) parentItem.classList.toggle('is-selected', country.checked);
         });
 
         syncRangeSelects('[data-range-applied-on]', appliedOn.value);
@@ -1869,9 +1692,18 @@
     function updateReplacementSummary() {
         var daysEl = root.querySelector('[data-replacement-days]');
         var summaryEl = root.querySelector('[data-replacement-summary]');
+        var triggerSummaryEl = root.querySelector('[data-trigger-summary]');
+        var termsSummaryEl = root.querySelector('[data-terms-summary]');
+
         if (daysEl) daysEl.textContent = replacementPeriod.value;
         if (summaryEl && replacementType.options[replacementType.selectedIndex]) {
             summaryEl.textContent = replacementType.options[replacementType.selectedIndex].text.toLowerCase();
+        }
+        if (triggerSummaryEl && billingTrigger.options[billingTrigger.selectedIndex]) {
+            triggerSummaryEl.textContent = billingTrigger.options[billingTrigger.selectedIndex].text.toLowerCase();
+        }
+        if (termsSummaryEl && paymentTerms.options[paymentTerms.selectedIndex]) {
+            termsSummaryEl.textContent = paymentTerms.options[paymentTerms.selectedIndex].text;
         }
     }
 
@@ -1905,10 +1737,14 @@
 
     appliedOn.addEventListener('change', function () { syncRangeSelects('[data-range-applied-on]', appliedOn.value); });
     pricingCurrency.addEventListener('change', function () { syncRangeSelects('[data-range-currency]', pricingCurrency.value); });
-    billingTrigger.addEventListener('change', function () { syncRangeSelects('[data-fixed-fee-trigger]', billingTrigger.value); });
+    billingTrigger.addEventListener('change', function () {
+        syncRangeSelects('[data-fixed-fee-trigger]', billingTrigger.value);
+        updateReplacementSummary();
+    });
     billingFrequency.addEventListener('change', function () { syncRangeSelects('[data-fixed-fee-frequency]', billingFrequency.value); });
     replacementPeriod.addEventListener('change', updateReplacementSummary);
     replacementType.addEventListener('change', updateReplacementSummary);
+    paymentTerms.addEventListener('change', updateReplacementSummary);
 
     root.querySelectorAll('[data-commercial-model]').forEach(function (option) {
         option.addEventListener('click', function () {
@@ -1952,32 +1788,34 @@
         });
     });
 
-    // Country chips rendering & counter synchronization
+    // Country selection & active chips rendering
     function renderSelectedCountries() {
         var selected = countries.filter(function (country) { return country.checked; });
         if (!selectedHost) return;
 
         selectedHost.innerHTML = '';
-        selected.slice(0, 8).forEach(function (country) {
+        selected.slice(0, 10).forEach(function (country) {
             var chip = document.createElement('span');
-            chip.className = 'cd-country-chip-item';
-            chip.innerHTML = '<span class="cd-chip-code"></span><span></span><button type="button" class="cd-chip-remove" aria-label="Remove country">✕</button>';
+            chip.className = 'cd-country-chip';
+            chip.innerHTML = '<span class="cd-country-code"></span><span></span><span class="cd-country-chip-remove" title="Remove country">×</span>';
             chip.children[0].textContent = country.dataset.countryCode || '—';
             chip.children[1].textContent = country.dataset.countryName;
-            chip.querySelector('button').addEventListener('click', function () {
+            chip.querySelector('.cd-country-chip-remove').addEventListener('click', function () {
                 country.checked = false;
+                var pItem = country.closest('[data-country-item]');
+                if (pItem) pItem.classList.remove('is-selected');
                 renderSelectedCountries();
             });
             selectedHost.appendChild(chip);
         });
 
-        if (selected.length > 8) {
+        if (selected.length > 10) {
             var more = document.createElement('span');
-            more.className = 'cd-country-chip-item';
+            more.className = 'cd-country-chip';
             more.style.background = '#eff6ff';
             more.style.borderColor = '#bfdbfe';
             more.style.color = '#009ef7';
-            more.textContent = '+ ' + (selected.length - 8) + ' more';
+            more.textContent = '+ ' + (selected.length - 10) + ' more';
             selectedHost.appendChild(more);
         }
 
@@ -1993,41 +1831,37 @@
         if (countBadge) countBadge.textContent = selected.length;
 
         var headerBadge = document.getElementById('countrySelectedHeaderBadge');
-        if (headerBadge) headerBadge.textContent = selected.length + (selected.length === 1 ? ' Country Active' : ' Countries Active');
+        if (headerBadge) headerBadge.textContent = selected.length + (selected.length === 1 ? ' Country Enabled' : ' Countries Enabled');
     }
 
     function filterCountries() {
         var term = (search.value || '').trim().toLowerCase();
         countryItems.forEach(function (item) {
-            var matchesRegion = (activeRegion === 'all' || item.dataset.region === activeRegion);
             var matchesSearch = (!term || item.dataset.name.indexOf(term) !== -1);
-            item.hidden = !(matchesRegion && matchesSearch);
+            item.hidden = !matchesSearch;
         });
     }
 
     countries.forEach(function (country) {
-        country.addEventListener('change', renderSelectedCountries);
+        country.addEventListener('change', function () {
+            var parentItem = country.closest('[data-country-item]');
+            if (parentItem) parentItem.classList.toggle('is-selected', country.checked);
+            renderSelectedCountries();
+        });
     });
 
     if (search) {
         search.addEventListener('input', filterCountries);
     }
 
-    root.querySelectorAll('.cd-region-tab[data-region]').forEach(function (button) {
-        button.addEventListener('click', function () {
-            activeRegion = button.dataset.region;
-            root.querySelectorAll('.cd-region-tab[data-region]').forEach(function (tab) {
-                tab.classList.toggle('active', tab === button);
-            });
-            filterCountries();
-        });
-    });
-
     root.querySelectorAll('[data-country-select-all]').forEach(function (button) {
         button.addEventListener('click', function () {
             countryItems.filter(function (item) { return !item.hidden; }).forEach(function (item) {
                 var chk = item.querySelector('.countries');
-                if (chk) chk.checked = true;
+                if (chk) {
+                    chk.checked = true;
+                    item.classList.add('is-selected');
+                }
             });
             renderSelectedCountries();
         });
@@ -2035,7 +1869,11 @@
 
     root.querySelectorAll('[data-country-clear]').forEach(function (button) {
         button.addEventListener('click', function () {
-            countries.forEach(function (country) { country.checked = false; });
+            countries.forEach(function (country) {
+                country.checked = false;
+                var pItem = country.closest('[data-country-item]');
+                if (pItem) pItem.classList.remove('is-selected');
+            });
             renderSelectedCountries();
         });
     });
@@ -2046,9 +1884,31 @@
             var topCountries = ['india', 'united states', 'australia', 'united kingdom', 'united arab emirates', 'singapore', 'germany', 'canada'];
             countries.forEach(function (country) {
                 var cName = (country.dataset.countryName || '').toLowerCase();
-                country.checked = (topCountries.indexOf(cName) !== -1);
+                var shouldCheck = (topCountries.indexOf(cName) !== -1);
+                country.checked = shouldCheck;
+                var pItem = country.closest('[data-country-item]');
+                if (pItem) pItem.classList.toggle('is-selected', shouldCheck);
             });
             renderSelectedCountries();
+        });
+    }
+
+    // Tier 1 Global Field Search
+    if (globalSearch) {
+        var searchDebounce;
+        globalSearch.addEventListener('input', function () {
+            clearTimeout(searchDebounce);
+            searchDebounce = setTimeout(function () {
+                var query = globalSearch.value.trim().toLowerCase();
+                if (!query) {
+                    root.querySelectorAll('.cd-drw-card').forEach(function (c) { c.style.display = 'block'; });
+                    return;
+                }
+                root.querySelectorAll('.cd-drw-card').forEach(function (card) {
+                    var cardText = card.textContent.toLowerCase();
+                    card.style.display = (cardText.indexOf(query) !== -1) ? 'block' : 'none';
+                });
+            }, 250);
         });
     }
 
@@ -2070,7 +1930,6 @@
                 });
             }
 
-            // Smooth scroll to top of stream
             var stream = root.querySelector('.cd-drw-stream');
             if (stream) stream.scrollTop = 0;
         });
