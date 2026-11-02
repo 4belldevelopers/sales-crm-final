@@ -1125,8 +1125,13 @@
                         </label>
                         <select id="commercial_salary_mode" name="sal_mode" class="cd-field-control" data-applied-on>
                             @if($isFulltime)
-                                <option value="0" {{ $selectedSalaryMode === 0 ? 'selected' : '' }}>Annual CTC</option>
-                                <option value="3" {{ $selectedSalaryMode === 3 ? 'selected' : '' }}>Per Hire</option>
+                                @if($selectedCommercialModel === 1)
+                                    <option value="3" selected>Per Hire</option>
+                                @elseif($selectedCommercialModel === 0)
+                                    <option value="0" selected>Not Applicable</option>
+                                @else
+                                    <option value="0" selected>Annual CTC</option>
+                                @endif
                             @else
                                 @foreach(($salaryMode ?? []) as $modeKey => $modeLabel)
                                     <option value="{{ $modeKey }}" {{ $selectedSalaryMode === (int) $modeKey ? 'selected' : '' }}>
@@ -1209,8 +1214,13 @@
                             <div>
                                 <select class="cd-field-control" data-range-applied-on>
                                     @if($isFulltime)
-                                        <option value="0" {{ $selectedSalaryMode === 0 ? 'selected' : '' }}>Annual CTC</option>
-                                        <option value="3" {{ $selectedSalaryMode === 3 ? 'selected' : '' }}>Per Hire</option>
+                                        @if($selectedCommercialModel === 1)
+                                            <option value="3" selected>Per Hire</option>
+                                        @elseif($selectedCommercialModel === 0)
+                                            <option value="0" selected>Not Applicable</option>
+                                        @else
+                                            <option value="0" selected>Annual CTC</option>
+                                        @endif
                                     @else
                                         @foreach(($salaryMode ?? []) as $modeKey => $modeLabel)
                                             <option value="{{ $modeKey }}" {{ $selectedSalaryMode === (int) $modeKey ? 'selected' : '' }}>
@@ -1531,16 +1541,30 @@
         var appliedOnHelp = root.querySelector('[data-applied-on-help]');
         if (isFT) {
             if (isFixedFee) {
+                appliedOn.innerHTML = '<option value="3" selected>Per Hire</option>';
                 appliedOn.value = '3';
-                syncRangeSelects('[data-range-applied-on]', '3');
+                root.querySelectorAll('[data-range-applied-on]').forEach(function (sel) {
+                    sel.innerHTML = '<option value="3" selected>Per Hire</option>';
+                    sel.value = '3';
+                });
                 if (appliedOnLabel) appliedOnLabel.textContent = 'Billing Basis';
                 if (appliedOnHelp) appliedOnHelp.textContent = 'Fixed fee charged per successful hire';
             } else if (isPercentage) {
+                appliedOn.innerHTML = '<option value="0" selected>Annual CTC</option>';
                 appliedOn.value = '0';
-                syncRangeSelects('[data-range-applied-on]', '0');
+                root.querySelectorAll('[data-range-applied-on]').forEach(function (sel) {
+                    sel.innerHTML = '<option value="0" selected>Annual CTC</option>';
+                    sel.value = '0';
+                });
                 if (appliedOnLabel) appliedOnLabel.textContent = 'Applied On';
                 if (appliedOnHelp) appliedOnHelp.textContent = 'Commercial placement billing basis';
             } else if (isFree) {
+                appliedOn.innerHTML = '<option value="0" selected>Not Applicable</option>';
+                appliedOn.value = '0';
+                root.querySelectorAll('[data-range-applied-on]').forEach(function (sel) {
+                    sel.innerHTML = '<option value="0" selected>Not Applicable</option>';
+                    sel.value = '0';
+                });
                 if (appliedOnLabel) appliedOnLabel.textContent = 'Fee Basis';
                 if (appliedOnHelp) appliedOnHelp.textContent = 'No fee basis required';
             }
