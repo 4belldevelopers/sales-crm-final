@@ -20,6 +20,35 @@ Last updated: 2026-10-22 (Super Admin Companies Page UI Redesign, 100% CQRS Read
 - **Test coverage:** `TenantIsolationTest`, `BenchToJobAppTrackerPipelineContractTest`, `BenchTalentRequestPipelineContractTest`, `SuperAdminCompanyLoadTest`, `SuperAdminSubscriptionLoadTest`, `SuperAdminDashboardLoadTest` (100% green).
 - **V2_login blocking-scenarios architecture:** session-epoch pattern + Reverb `UserAccountSuspended` event + `SyncUserStatusAction` (cross-tenant-safe) + `BlockCompanyAction` (static bulk helper) + `block_log` audit table + drop all 20 `refresh:true` ES sites + grep-lint guard. See [docs/V2_login/BLOCKING_SCENARIOS_AUDIT.md](../docs/V2_login/BLOCKING_SCENARIOS_AUDIT.md), [ADR 0007](../docs/adr/0007-blocking-scenarios-architecture.md). Code not yet landed.
 
+- *2026-11-02* — **God-Level Commercials Engine — Phase 6: Subcard Cleanup, Colored Card Headers, Separate Replacement & Invoicing Cards, and Distinct Fee Types Visual Treatment (Rule 20 / card-subcard) (100% COMPLETED & VERIFIED)**:
+  - **Module & Scope**: Sliding Side-Drawer (`resources/views/service_company/jobs/services_view.blade.php`) and Visual Preview Artifact (`drawer_commercials_card_subcard_preview.html`).
+  - **Cleaned Card 1**:
+    - Completely removed redundant `Fee Charged On` (`data-fixed-fee-trigger`) and `Billing Frequency` (`data-fixed-fee-frequency`) subcards from Card 1.
+    - Card 1 now contains strictly 3 clean subcards: `Currency`, `Default Base Rate / Bill Rate`, and `Applied On / Billing Basis`.
+  - **Separate Configuration Cards (5 Distinct Cards)**:
+    - **Card 3**: Dedicated *Replacement Guarantee Policy* (Full-time: Guarantee window, remedy clause, separation eligibility) / *Satisfaction Trial & Guarantee Policy* (Contract: Trial window, remedy clause, SLA & contingency) with dedicated emerald summary strip.
+    - **Card 4**: Dedicated *Billing Trigger & Payment Terms* (Full-time: Trigger event, invoicing cadence, credit window) / *Timesheet Invoicing Cadence & Payment Terms* (Contract: Timesheet trigger, recurring cycle, payment terms) with dedicated amber summary strip.
+    - **Card 5**: Dedicated *Operational Countries & Geographic Scope* (Hub selector, active chips, 3-column country selection grid).
+  - **Colored Card Header Banners**:
+    - Every major configuration card features a distinct pastel header banner with colored left accent and solid step badge:
+      - Card 1: Blue banner (`#f0f7ff`, border-left `#009ef7`, badge blue `#009ef7`).
+      - Card 2: Violet/Indigo banner (`#f5f3ff`, border-left `#6366f1`, badge indigo `#6366f1`).
+      - Card 3: Emerald banner (`#ecfdf5`, border-left `#10b981`, badge emerald `#10b981`).
+      - Card 4: Amber banner (`#fffbeb`, border-left `#f59e0b`, badge amber `#f59e0b`).
+      - Card 5: Cyan/Teal banner (`#f0fdfa`, border-left `#06b6d4`, badge cyan `#06b6d4`).
+  - **Visually Differentiated Fee Types**:
+    - *Percentage*: Subtle Professional Blue (`#f8fbff`, active `#eff6ff`, border `#009ef7`, icon box `#dbeafe`).
+    - *Fixed Rate*: Subtle Professional Indigo/Lavender (`#faf8ff`, active `#f5f3ff`, border `#6366f1`, icon box `#ede9fe`).
+    - *Free (Full-time)*: Subtle Professional Mint/Emerald (`#f6fdf9`, active `#ecfdf5`, border `#10b981`, icon box `#d1fae5`).
+    - *Pass-Through / Zero Margin (Contract)*: Subtle Professional Warm Amber (`#fffdf5`, active `#fffbeb`, border `#f59e0b`, icon box `#fef3c7`).
+  - **Form Submission Integrity**: Form collection bindings (`replacement_period_days`, `replacement_type`, `replacement_eligibility`, `billing_frequency`, `billing_trigger`, `payment_terms_days`) preserved with 100% fidelity.
+  - **Verification**:
+    - `php -l resources/views/service_company/jobs/services_view.blade.php`: Pass (No syntax errors).
+    - `scratch/test_specialized_commercials_sync.php`: 10/10 PASS.
+    - `scratch/test_phase1_commercials_verification.php`: 10/10 PASS.
+    - `scratch/test_phase2_cqrs_verification.php`: 7/7 PASS.
+    - Pint code linter passed (100% clean).
+
 - *2026-11-02* — **God-Level Commercials Engine — Phase 5: Fulltime vs Contract Recruitment & Staffing Domain Specialization with Multi-Page Real-Time Sync (Rule 20 / CQRS) (100% COMPLETED & VERIFIED)**:
   - **Module & Scope**: Hiring Services & Commercials Sliding Drawer (`resources/views/service_company/jobs/services_view.blade.php`), Parent Account Settings Services Tab (`resources/views/service_company/account/v2/tabs/services.blade.php`), Controller (`app/Http/Controllers/ServiceCompany/ServiceCompanyJobsController.php`), and Canonical DTO (`app/DTO/Commercials/ServiceTermDTO.php`).
   - **Recruitment & Staffing Domain Alignment**:

@@ -288,8 +288,8 @@
     border: 1px solid #e2e8f0 !important;
     border-radius: 10px !important;
     box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04) !important;
-    padding: 16px 18px !important;
-    border-left: 3.5px solid #009ef7 !important;
+    padding: 0 !important;
+    overflow: hidden !important;
     transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
@@ -300,12 +300,12 @@
 
 .cd-drw-card-head {
     display: flex;
-    align-items: flex-start;
+    align-items: center;
     justify-content: space-between;
     gap: 12px;
-    margin-bottom: 14px;
-    padding-bottom: 10px;
-    border-bottom: 1px solid #f1f5f9;
+    padding: 11px 18px !important;
+    border-bottom: 1px solid #e2e8f0;
+    margin-bottom: 0 !important;
 }
 
 .cd-drw-card-title-group {
@@ -315,22 +315,19 @@
 }
 
 .cd-drw-step-num {
-    width: 26px;
-    height: 26px;
-    border-radius: 7px;
-    background: #eff6ff;
-    color: #009ef7;
+    width: 24px;
+    height: 24px;
+    border-radius: 6px;
     font-size: 11.5px;
     font-weight: 700;
     display: flex;
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
-    border: 1px solid #bfdbfe;
 }
 
 .cd-drw-card-title {
-    font-size: 13.5px !important;
+    font-size: 13px !important;
     font-weight: 700 !important;
     color: #0f172a !important;
     margin: 0 !important;
@@ -338,9 +335,67 @@
 }
 
 .cd-drw-card-copy {
-    font-size: 11px;
+    font-size: 10.5px;
     color: #64748b;
     margin: 2px 0 0;
+}
+
+.cd-drw-card-body {
+    padding: 14px 18px 16px 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+/* Distinct Card Header Colored Styling */
+.cd-head-model {
+    background: #f0f7ff !important;
+    border-bottom: 1px solid #dbeafe !important;
+    border-left: 4px solid #009ef7 !important;
+}
+.cd-head-model .cd-drw-step-num {
+    background: #009ef7 !important;
+    color: #ffffff !important;
+}
+
+.cd-head-experience {
+    background: #f5f3ff !important;
+    border-bottom: 1px solid #ede9fe !important;
+    border-left: 4px solid #6366f1 !important;
+}
+.cd-head-experience .cd-drw-step-num {
+    background: #6366f1 !important;
+    color: #ffffff !important;
+}
+
+.cd-head-replacement {
+    background: #ecfdf5 !important;
+    border-bottom: 1px solid #d1fae5 !important;
+    border-left: 4px solid #10b981 !important;
+}
+.cd-head-replacement .cd-drw-step-num {
+    background: #10b981 !important;
+    color: #ffffff !important;
+}
+
+.cd-head-invoicing {
+    background: #fffbeb !important;
+    border-bottom: 1px solid #fef3c7 !important;
+    border-left: 4px solid #f59e0b !important;
+}
+.cd-head-invoicing .cd-drw-step-num {
+    background: #f59e0b !important;
+    color: #ffffff !important;
+}
+
+.cd-head-countries {
+    background: #f0fdfa !important;
+    border-bottom: 1px solid #ccfbf1 !important;
+    border-left: 4px solid #06b6d4 !important;
+}
+.cd-head-countries .cd-drw-step-num {
+    background: #06b6d4 !important;
+    color: #ffffff !important;
 }
 
 /* Sub-Card: Model Option Radio Cards */
@@ -348,7 +403,6 @@
     display: grid !important;
     grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
     gap: 12px !important;
-    margin-bottom: 12px;
 }
 
 .cd-model-card {
@@ -364,34 +418,134 @@
     position: relative;
 }
 
-.cd-model-card:hover {
-    border-color: #cbd5e1;
-    background: #f8fafc;
+/* Distinct Fee Type Visual Treatment: Percentage (Blue) */
+.cd-model-card[data-commercial-model="2"] {
+    background: #f8fbff;
+    border-color: #dbeafe;
+}
+.cd-model-card[data-commercial-model="2"]:hover {
+    background: #f0f7ff;
+    border-color: #93c5fd;
+}
+.cd-model-card[data-commercial-model="2"].active {
+    background: #eff6ff !important;
+    border-color: #009ef7 !important;
+    box-shadow: 0 0 0 3px rgba(0, 158, 247, 0.14) !important;
+}
+.cd-model-card[data-commercial-model="2"] .cd-model-icon-box {
+    background: #dbeafe;
+    color: #0284c7;
+}
+.cd-model-card[data-commercial-model="2"].active .cd-model-icon-box {
+    background: #009ef7;
+    color: #ffffff;
+}
+.cd-model-card[data-commercial-model="2"].active .cd-model-radio-dot {
+    border-color: #009ef7;
+    background: #009ef7;
+    box-shadow: inset 0 0 0 3px #ffffff;
 }
 
-.cd-model-card.active {
-    border-color: #009ef7 !important;
-    background: #f8fbff !important;
-    box-shadow: 0 0 0 3px rgba(0, 158, 247, 0.12) !important;
+/* Distinct Fee Type Visual Treatment: Fixed Rate (Indigo / Lavender) */
+.cd-model-card[data-commercial-model="1"] {
+    background: #faf8ff;
+    border-color: #ede9fe;
+}
+.cd-model-card[data-commercial-model="1"]:hover {
+    background: #f5f3ff;
+    border-color: #c7d2fe;
+}
+.cd-model-card[data-commercial-model="1"].active {
+    background: #f5f3ff !important;
+    border-color: #6366f1 !important;
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.14) !important;
+}
+.cd-model-card[data-commercial-model="1"] .cd-model-icon-box {
+    background: #ede9fe;
+    color: #6366f1;
+}
+.cd-model-card[data-commercial-model="1"].active .cd-model-icon-box {
+    background: #6366f1;
+    color: #ffffff;
+}
+.cd-model-card[data-commercial-model="1"].active .cd-model-radio-dot {
+    border-color: #6366f1;
+    background: #6366f1;
+    box-shadow: inset 0 0 0 3px #ffffff;
+}
+
+/* Distinct Fee Type Visual Treatment: Free Commercial Model (Emerald) */
+.commercial-editor-v3.is-fulltime-view .cd-model-card[data-commercial-model="0"] {
+    background: #f6fdf9;
+    border-color: #d1fae5;
+}
+.commercial-editor-v3.is-fulltime-view .cd-model-card[data-commercial-model="0"]:hover {
+    background: #ecfdf5;
+    border-color: #a7f3d0;
+}
+.commercial-editor-v3.is-fulltime-view .cd-model-card[data-commercial-model="0"].active {
+    background: #ecfdf5 !important;
+    border-color: #10b981 !important;
+    box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.14) !important;
+}
+.commercial-editor-v3.is-fulltime-view .cd-model-card[data-commercial-model="0"] .cd-model-icon-box {
+    background: #d1fae5;
+    color: #059669;
+}
+.commercial-editor-v3.is-fulltime-view .cd-model-card[data-commercial-model="0"].active .cd-model-icon-box {
+    background: #10b981;
+    color: #ffffff;
+}
+.commercial-editor-v3.is-fulltime-view .cd-model-card[data-commercial-model="0"].active .cd-model-radio-dot {
+    border-color: #10b981;
+    background: #10b981;
+    box-shadow: inset 0 0 0 3px #ffffff;
+}
+
+/* Distinct Fee Type Visual Treatment: Zero Margin / Pass-Through (Warm Amber) */
+.commercial-editor-v3.is-contract-view .cd-model-card[data-commercial-model="0"] {
+    background: #fffdf5;
+    border-color: #fef3c7;
+}
+.commercial-editor-v3.is-contract-view .cd-model-card[data-commercial-model="0"]:hover {
+    background: #fffbeb;
+    border-color: #fde68a;
+}
+.commercial-editor-v3.is-contract-view .cd-model-card[data-commercial-model="0"].active {
+    background: #fffbeb !important;
+    border-color: #f59e0b !important;
+    box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.14) !important;
+}
+.commercial-editor-v3.is-contract-view .cd-model-card[data-commercial-model="0"] .cd-model-icon-box {
+    background: #fef3c7;
+    color: #d97706;
+}
+.commercial-editor-v3.is-contract-view .cd-model-card[data-commercial-model="0"].active .cd-model-icon-box {
+    background: #f59e0b;
+    color: #ffffff;
+}
+.commercial-editor-v3.is-contract-view .cd-model-card[data-commercial-model="0"].active .cd-model-radio-dot {
+    border-color: #f59e0b;
+    background: #f59e0b;
+    box-shadow: inset 0 0 0 3px #ffffff;
 }
 
 .cd-model-icon-box {
     width: 32px;
     height: 32px;
     border-radius: 8px;
-    background: #eff6ff;
-    color: #009ef7;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 14px;
+    font-size: 13.5px;
     font-weight: 700;
     flex-shrink: 0;
+    transition: all 0.2s ease;
 }
 
-.cd-model-card.active .cd-model-icon-box {
-    background: #009ef7;
-    color: #ffffff;
+.cd-model-copy-wrap {
+    min-width: 0;
+    flex: 1 1 auto;
 }
 
 .cd-model-title {
@@ -419,12 +573,6 @@
     align-items: center;
     justify-content: center;
     transition: all 0.2s;
-}
-
-.cd-model-card.active .cd-model-radio-dot {
-    border-color: #009ef7;
-    background: #009ef7;
-    box-shadow: inset 0 0 0 3px #ffffff;
 }
 
 /* Discrete Field Sub-Cards Grid */
@@ -577,24 +725,35 @@
     border-color: #009ef7;
 }
 
-/* Guarantee Policy & Terms Sub-Cards */
-.cd-policy-grid {
-    display: grid !important;
-    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
-    gap: 12px !important;
-    margin-bottom: 12px;
-}
-
+/* Policy & Invoicing Sub-Cards */
 .cd-summary-strip {
-    background: #eff6ff;
-    border: 1px solid #bfdbfe;
     border-radius: 8px;
     padding: 10px 14px;
     display: flex;
     align-items: center;
     gap: 10px;
     font-size: 11px;
-    color: #1e40af;
+    line-height: 1.45;
+}
+
+.cd-summary-strip.strip-emerald {
+    background: #ecfdf5;
+    border: 1px solid #a7f3d0;
+    color: #065f46;
+}
+
+.cd-summary-strip.strip-emerald .cd-svg-icon {
+    color: #10b981;
+}
+
+.cd-summary-strip.strip-amber {
+    background: #fffbeb;
+    border: 1px solid #fde68a;
+    color: #92400e;
+}
+
+.cd-summary-strip.strip-amber .cd-svg-icon {
+    color: #f59e0b;
 }
 
 /* Country Coverage Sub-Cards */
@@ -765,18 +924,8 @@
     display: inline-flex;
 }
 
-/* Dynamic Fixed-Fee and Free Mode Toggles */
-.cd-fixed-only {
-    display: none;
-}
-.commercial-editor-v3.is-fixed-fee .cd-fixed-only {
-    display: flex !important;
-}
-.commercial-editor-v3.is-fixed-fee .cd-percentage-only {
-    display: none !important;
-}
-.commercial-editor-v3.is-free-fee .cd-matrix-list,
-.commercial-editor-v3.is-free-fee .cd-policy-grid {
+/* Dynamic Free Mode Toggle */
+.commercial-editor-v3.is-free-fee #drwSectionExperience {
     display: none !important;
 }
 
@@ -784,7 +933,6 @@
 @media (max-width: 1200px) {
     .cd-model-options-grid,
     .cd-field-grid,
-    .cd-policy-grid,
     .cd-country-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
     }
@@ -793,7 +941,6 @@
 @media (max-width: 767px) {
     .cd-model-options-grid,
     .cd-field-grid,
-    .cd-policy-grid,
     .cd-country-grid {
         grid-template-columns: 1fr !important;
     }
@@ -801,7 +948,7 @@
 </style>
 
 <!--begin::Hiring Services Commercial Editor (Rule 20 Modern Card + Sub-Card)-->
-<div id="commercial-editor-v3" class="commercial-editor-v3">
+<div id="commercial-editor-v3" class="commercial-editor-v3 {{ $isFulltime ? 'is-fulltime-view' : 'is-contract-view' }}">
 
     <!-- ====================================================================
          TIER 1: TOP HEADER TOOLBAR CARD
@@ -872,7 +1019,7 @@
              PRIMARY CARD 1: COMMERCIAL FEE MODEL & DEFAULT BASE PRICING
              ---------------------------------------------------------------- -->
         <section class="cd-drw-card" id="drwSectionModel" data-section-category="model">
-            <div class="cd-drw-card-head">
+            <div class="cd-drw-card-head cd-head-model">
                 <div class="cd-drw-card-title-group">
                     <span class="cd-drw-step-num">1</span>
                     <div>
@@ -882,134 +1029,110 @@
                 </div>
             </div>
 
-            <input type="hidden" data-commercial-type value="{{ $selectedCommercialModel }}">
+            <div class="cd-drw-card-body">
+                <input type="hidden" data-commercial-type value="{{ $selectedCommercialModel }}">
 
-            <!-- Discrete Sub-Cards: Model Selection Radios -->
-            <div class="cd-model-options-grid" role="radiogroup" aria-label="Commercial fee model">
-                <div class="cd-model-card {{ $selectedCommercialModel === 2 ? 'active' : '' }}"
-                     data-commercial-model="2"
-                     role="radio"
-                     aria-checked="{{ $selectedCommercialModel === 2 ? 'true' : 'false' }}">
-                    <div class="cd-model-icon-box">%</div>
-                    <div class="cd-model-copy-wrap">
-                        <h5 class="cd-model-title">{{ $isFulltime ? 'Percentage of CTC' : 'Markup on Pay Rate (%)' }}</h5>
-                        <p class="cd-model-desc">{{ $isFulltime ? 'Standard placement fee calculated as % of candidate annual compensation (CTC).' : 'Charge an agency percentage markup on top of candidate base hourly or monthly wage.' }}</p>
+                <!-- Discrete Sub-Cards: Model Selection Radios -->
+                <div class="cd-model-options-grid" role="radiogroup" aria-label="Commercial fee model">
+                    <div class="cd-model-card {{ $selectedCommercialModel === 2 ? 'active' : '' }}"
+                         data-commercial-model="2"
+                         role="radio"
+                         aria-checked="{{ $selectedCommercialModel === 2 ? 'true' : 'false' }}">
+                        <div class="cd-model-icon-box">%</div>
+                        <div class="cd-model-copy-wrap">
+                            <h5 class="cd-model-title">{{ $isFulltime ? 'Percentage of CTC' : 'Markup on Pay Rate (%)' }}</h5>
+                            <p class="cd-model-desc">{{ $isFulltime ? 'Standard placement fee calculated as % of candidate annual compensation (CTC).' : 'Charge an agency percentage markup on top of candidate base hourly or monthly wage.' }}</p>
+                        </div>
+                        <span class="cd-model-radio-dot"></span>
                     </div>
-                    <span class="cd-model-radio-dot"></span>
-                </div>
 
-                <div class="cd-model-card {{ $selectedCommercialModel === 1 ? 'active' : '' }}"
-                     data-commercial-model="1"
-                     role="radio"
-                     aria-checked="{{ $selectedCommercialModel === 1 ? 'true' : 'false' }}">
-                    <div class="cd-model-icon-box">{{ $isFulltime ? '₹' : 'Fix' }}</div>
-                    <div class="cd-model-copy-wrap">
-                        <h5 class="cd-model-title">{{ $isFulltime ? 'Fixed Placement Fee' : 'Fixed Contract Bill Rate' }}</h5>
-                        <p class="cd-model-desc">{{ $isFulltime ? 'Charge a flat fixed commercial recruitment fee for every successful candidate joining.' : 'Charge an agreed all-inclusive fixed bill rate per hour or per month directly to client.' }}</p>
+                    <div class="cd-model-card {{ $selectedCommercialModel === 1 ? 'active' : '' }}"
+                         data-commercial-model="1"
+                         role="radio"
+                         aria-checked="{{ $selectedCommercialModel === 1 ? 'true' : 'false' }}">
+                        <div class="cd-model-icon-box">{{ $isFulltime ? '₹' : 'Fix' }}</div>
+                        <div class="cd-model-copy-wrap">
+                            <h5 class="cd-model-title">{{ $isFulltime ? 'Fixed Placement Fee' : 'Fixed Contract Bill Rate' }}</h5>
+                            <p class="cd-model-desc">{{ $isFulltime ? 'Charge a flat fixed commercial recruitment fee for every successful candidate joining.' : 'Charge an agreed all-inclusive fixed bill rate per hour or per month directly to client.' }}</p>
+                        </div>
+                        <span class="cd-model-radio-dot"></span>
                     </div>
-                    <span class="cd-model-radio-dot"></span>
-                </div>
 
-                <div class="cd-model-card {{ $selectedCommercialModel === 0 ? 'active' : '' }}"
-                     data-commercial-model="0"
-                     role="radio"
-                     aria-checked="{{ $selectedCommercialModel === 0 ? 'true' : 'false' }}">
-                    <div class="cd-model-icon-box">◇</div>
-                    <div class="cd-model-copy-wrap">
-                        <h5 class="cd-model-title">{{ $isFulltime ? 'Free / No Placement Fee' : 'Pass-Through / Zero Margin' }}</h5>
-                        <p class="cd-model-desc">{{ $isFulltime ? 'Zero commercial placement fee charged to client relationships.' : 'Contractor wages passed through at cost with zero agency staffing margin.' }}</p>
+                    <div class="cd-model-card {{ $selectedCommercialModel === 0 ? 'active' : '' }}"
+                         data-commercial-model="0"
+                         role="radio"
+                         aria-checked="{{ $selectedCommercialModel === 0 ? 'true' : 'false' }}">
+                        <div class="cd-model-icon-box">◇</div>
+                        <div class="cd-model-copy-wrap">
+                            <h5 class="cd-model-title">{{ $isFulltime ? 'Free / No Placement Fee' : 'Pass-Through / Zero Margin' }}</h5>
+                            <p class="cd-model-desc">{{ $isFulltime ? 'Zero commercial placement fee charged to client relationships.' : 'Contractor wages passed through at cost with zero agency staffing margin.' }}</p>
+                        </div>
+                        <span class="cd-model-radio-dot"></span>
                     </div>
-                    <span class="cd-model-radio-dot"></span>
-                </div>
-            </div>
-
-            <!-- Discrete Sub-Cards: Base Configuration Grid -->
-            <div class="cd-field-grid">
-                <!-- Sub-Card: Multi-Tenant Currency -->
-                <div class="cd-field-group">
-                    <label class="cd-field-label" for="commercial_salary_currency">Currency</label>
-                    <select id="commercial_salary_currency" name="salary_currency" class="cd-field-control" data-pricing-currency>
-                        @foreach($currenciesToRender as $cItem)
-                            @php
-                                if (is_array($cItem)) {
-                                    $optCode = $cItem['code'] ?? '';
-                                    $optKey = $cItem['key'] ?? (\App\Services\CurrencyService::resolveCurrencyKey($optCode) ?? $loop->index);
-                                    $optLabel = $cItem['label'] ?? ($optCode . ' — ' . ($cItem['name'] ?? ''));
-                                    $optKeywords = $cItem['keywords'] ?? strtolower($optCode . ' ' . ($cItem['name'] ?? ''));
-                                } else {
-                                    $optKey = $loop->index;
-                                    $optCode = (string) $cItem;
-                                    $cMeta = \App\Helper\GeneralMethod::currencyEnterpriseMeta($optCode);
-                                    $optLabel = $cMeta['label'] ?? $optCode;
-                                    $optKeywords = $cMeta['keywords'] ?? strtolower($optCode);
-                                }
-                                $isSelected = ($selectedCurrency === (int) $optKey || (string) $selectedCurrency === (string) $optKey);
-                            @endphp
-                            <option value="{{ $optKey }}" data-code="{{ $optCode }}" data-search="{{ $optKeywords }}" {{ $isSelected ? 'selected' : '' }}>
-                                {{ $optLabel }}
-                            </option>
-                        @endforeach
-                    </select>
-                    <span class="cd-field-help">Multi-tenant authorized currency</span>
                 </div>
 
-                <!-- Sub-Card: Default Rate / Fixed Amount -->
-                <div class="cd-field-group">
-                    <label class="cd-field-label" for="commercial_default_rate" data-rate-label>
-                        {{ $selectedCommercialModel === 2 ? ($isFulltime ? 'Default CTC Percentage' : 'Default Markup Percentage') : ($isFulltime ? 'Fixed Placement Fee' : 'Default Contract Bill Rate') }}
-                    </label>
-                    <div class="cd-rate-input-wrap">
-                        <input type="number"
-                               id="commercial_default_rate"
-                               class="cd-field-control"
-                               data-fallback-rate="{{ $fallbackDefaultRate }}"
-                               step="0.01"
-                               min="0"
-                               value="{{ $defaultRate }}" />
-                        <span class="cd-rate-suffix" data-rate-suffix>{{ $selectedCommercialModel === 2 ? '%' : '' }}</span>
+                <!-- Discrete Sub-Cards: Base Configuration Grid -->
+                <div class="cd-field-grid">
+                    <!-- Sub-Card: Multi-Tenant Currency -->
+                    <div class="cd-field-group">
+                        <label class="cd-field-label" for="commercial_salary_currency">Currency</label>
+                        <select id="commercial_salary_currency" name="salary_currency" class="cd-field-control" data-pricing-currency>
+                            @foreach($currenciesToRender as $cItem)
+                                @php
+                                    if (is_array($cItem)) {
+                                        $optCode = $cItem['code'] ?? '';
+                                        $optKey = $cItem['key'] ?? (\App\Services\CurrencyService::resolveCurrencyKey($optCode) ?? $loop->index);
+                                        $optLabel = $cItem['label'] ?? ($optCode . ' — ' . ($cItem['name'] ?? ''));
+                                        $optKeywords = $cItem['keywords'] ?? strtolower($optCode . ' ' . ($cItem['name'] ?? ''));
+                                    } else {
+                                        $optKey = $loop->index;
+                                        $optCode = (string) $cItem;
+                                        $cMeta = \App\Helper\GeneralMethod::currencyEnterpriseMeta($optCode);
+                                        $optLabel = $cMeta['label'] ?? $optCode;
+                                        $optKeywords = $cMeta['keywords'] ?? strtolower($optCode);
+                                    }
+                                    $isSelected = ($selectedCurrency === (int) $optKey || (string) $selectedCurrency === (string) $optKey);
+                                @endphp
+                                <option value="{{ $optKey }}" data-code="{{ $optCode }}" data-search="{{ $optKeywords }}" {{ $isSelected ? 'selected' : '' }}>
+                                    {{ $optLabel }}
+                                </option>
+                            @endforeach
+                        </select>
+                        <span class="cd-field-help">Multi-tenant authorized currency</span>
                     </div>
-                    <span class="cd-field-help" data-rate-help>
-                        {{ $selectedCommercialModel === 2 ? ($isFulltime ? 'Changing this rate updates all experience ranges.' : 'Default markup % applied across experience tiers.') : ($isFulltime ? 'Default fixed amount applied per successful hire.' : 'Default billing rate per cycle for contingent consultants.') }}
-                    </span>
-                </div>
 
-                <!-- Sub-Card: Billing Basis -->
-                <div class="cd-field-group">
-                    <label class="cd-field-label" for="commercial_salary_mode">{{ $isFulltime ? 'Applied On' : 'Billing Basis' }}</label>
-                    <select id="commercial_salary_mode" name="sal_mode" class="cd-field-control" data-applied-on>
-                        @foreach(($salaryMode ?? []) as $modeKey => $modeLabel)
-                            <option value="{{ $modeKey }}" {{ $selectedSalaryMode === (int) $modeKey ? 'selected' : '' }}>
-                                {{ $modeLabel }}
-                            </option>
-                        @endforeach
-                    </select>
-                    <span class="cd-field-help">{{ $isFulltime ? 'Commercial placement billing basis' : 'Contract staffing billing cadence' }}</span>
-                </div>
+                    <!-- Sub-Card: Default Rate / Fixed Amount -->
+                    <div class="cd-field-group">
+                        <label class="cd-field-label" for="commercial_default_rate" data-rate-label>
+                            {{ $selectedCommercialModel === 2 ? ($isFulltime ? 'Default CTC Percentage' : 'Default Markup Percentage') : ($isFulltime ? 'Fixed Placement Fee' : 'Default Contract Bill Rate') }}
+                        </label>
+                        <div class="cd-rate-input-wrap">
+                            <input type="number"
+                                   id="commercial_default_rate"
+                                   class="cd-field-control"
+                                   data-fallback-rate="{{ $fallbackDefaultRate }}"
+                                   step="0.01"
+                                   min="0"
+                                   value="{{ $defaultRate }}" />
+                            <span class="cd-rate-suffix" data-rate-suffix>{{ $selectedCommercialModel === 2 ? '%' : '' }}</span>
+                        </div>
+                        <span class="cd-field-help" data-rate-help>
+                            {{ $selectedCommercialModel === 2 ? ($isFulltime ? 'Changing this rate updates all experience ranges.' : 'Default markup % applied across experience tiers.') : ($isFulltime ? 'Default fixed amount applied per successful hire.' : 'Default billing rate per cycle for contingent consultants.') }}
+                        </span>
+                    </div>
 
-                <!-- Sub-Card: Fixed Trigger (Fixed Fee Only) -->
-                <div class="cd-field-group cd-fixed-only">
-                    <label class="cd-field-label">Fee Charged On</label>
-                    <select class="cd-field-control" data-fixed-fee-trigger>
-                        @foreach(($billingTriggers ?? []) as $triggerValue => $triggerLabel)
-                            <option value="{{ $triggerValue }}" {{ $selectedBillingTrigger === (string) $triggerValue ? 'selected' : '' }}>
-                                {{ $triggerValue === 'candidate_joined' ? 'Per Successful Hire' : $triggerLabel }}
-                            </option>
-                        @endforeach
-                    </select>
-                    <span class="cd-field-help">When fee becomes chargeable</span>
-                </div>
-
-                <!-- Sub-Card: Fixed Frequency (Fixed Fee Only) -->
-                <div class="cd-field-group cd-fixed-only">
-                    <label class="cd-field-label">Billing Frequency</label>
-                    <select class="cd-field-control" data-fixed-fee-frequency>
-                        @foreach(($billingFrequencies ?? []) as $frequencyValue => $frequencyLabel)
-                            <option value="{{ $frequencyValue }}" {{ $selectedBillingFrequency === (string) $frequencyValue ? 'selected' : '' }}>
-                                {{ $frequencyLabel }}
-                            </option>
-                        @endforeach
-                    </select>
-                    <span class="cd-field-help">Invoicing cadence</span>
+                    <!-- Sub-Card: Billing Basis -->
+                    <div class="cd-field-group">
+                        <label class="cd-field-label" for="commercial_salary_mode">{{ $isFulltime ? 'Applied On' : 'Billing Basis' }}</label>
+                        <select id="commercial_salary_mode" name="sal_mode" class="cd-field-control" data-applied-on>
+                            @foreach(($salaryMode ?? []) as $modeKey => $modeLabel)
+                                <option value="{{ $modeKey }}" {{ $selectedSalaryMode === (int) $modeKey ? 'selected' : '' }}>
+                                    {{ $modeLabel }}
+                                </option>
+                            @endforeach
+                        </select>
+                        <span class="cd-field-help">{{ $isFulltime ? 'Commercial placement billing basis' : 'Contract staffing billing cadence' }}</span>
+                    </div>
                 </div>
             </div>
         </section>
@@ -1018,7 +1141,7 @@
              PRIMARY CARD 2: EXPERIENCE-BASED PRICING MATRIX
              ---------------------------------------------------------------- -->
         <section class="cd-drw-card" id="drwSectionExperience" data-section-category="experience">
-            <div class="cd-drw-card-head">
+            <div class="cd-drw-card-head cd-head-experience">
                 <div class="cd-drw-card-title-group">
                     <span class="cd-drw-step-num">2</span>
                     <div>
@@ -1030,263 +1153,292 @@
                 </div>
             </div>
 
-            <!-- Discrete Sub-Cards Stream: Seniority Bands -->
-            <div class="cd-matrix-list">
-                @foreach($experienceRanges as $range)
-                    @php
-                        $firstExperienceIndex = $range['indexes'][0];
-                        $rangeRate = data_get($commercialDetails->get($firstExperienceIndex), 'rate', $defaultRate);
-                    @endphp
-                    <div class="cd-matrix-tier-card" data-experience-range>
-                        <div class="cd-tier-identity">
-                            <span class="cd-tier-pill">
-                                <svg class="cd-svg-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                                {{ $range['label'] }}
-                            </span>
-                            <span class="cd-tier-name">
-                                {{ $loop->first ? ($isFulltime ? 'Entry / Associate' : 'Junior Consultant') : ($loop->index === 1 ? ($isFulltime ? 'Mid-Level Specialist' : 'Mid-Level Consultant') : ($loop->index === 2 ? ($isFulltime ? 'Senior Professional' : 'Senior Specialist') : ($isFulltime ? 'Leadership / Executive' : 'Principal / Lead Consultant'))) }}
-                            </span>
-                        </div>
+            <div class="cd-drw-card-body">
+                <!-- Discrete Sub-Cards Stream: Seniority Bands -->
+                <div class="cd-matrix-list">
+                    @foreach($experienceRanges as $range)
+                        @php
+                            $firstExperienceIndex = $range['indexes'][0];
+                            $rangeRate = data_get($commercialDetails->get($firstExperienceIndex), 'rate', $defaultRate);
+                        @endphp
+                        <div class="cd-matrix-tier-card" data-experience-range>
+                            <div class="cd-tier-identity">
+                                <span class="cd-tier-pill">
+                                    <svg class="cd-svg-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                    {{ $range['label'] }}
+                                </span>
+                                <span class="cd-tier-name">
+                                    {{ $loop->first ? ($isFulltime ? 'Entry / Associate' : 'Junior Consultant') : ($loop->index === 1 ? ($isFulltime ? 'Mid-Level Specialist' : 'Mid-Level Consultant') : ($loop->index === 2 ? ($isFulltime ? 'Senior Professional' : 'Senior Specialist') : ($isFulltime ? 'Leadership / Executive' : 'Principal / Lead Consultant'))) }}
+                                </span>
+                            </div>
 
-                        <div>
-                            <select class="cd-field-control" data-range-currency>
-                                @foreach($currenciesToRender as $cItem)
-                                    @php
-                                        if (is_array($cItem)) {
-                                            $optCode = $cItem['code'] ?? '';
-                                            $optKey = $cItem['key'] ?? (\App\Services\CurrencyService::resolveCurrencyKey($optCode) ?? $loop->index);
-                                        } else {
-                                            $optKey = $loop->index;
-                                            $optCode = (string) $cItem;
-                                        }
-                                        $isSelected = ($selectedCurrency === (int) $optKey || (string) $selectedCurrency === (string) $optKey);
-                                    @endphp
-                                    <option value="{{ $optKey }}" {{ $isSelected ? 'selected' : '' }}>{{ $optCode }}</option>
-                                @endforeach
-                            </select>
-                        </div>
+                            <div>
+                                <select class="cd-field-control" data-range-currency>
+                                    @foreach($currenciesToRender as $cItem)
+                                        @php
+                                            if (is_array($cItem)) {
+                                                $optCode = $cItem['code'] ?? '';
+                                                $optKey = $cItem['key'] ?? (\App\Services\CurrencyService::resolveCurrencyKey($optCode) ?? $loop->index);
+                                            } else {
+                                                $optKey = $loop->index;
+                                                $optCode = (string) $cItem;
+                                            }
+                                            $isSelected = ($selectedCurrency === (int) $optKey || (string) $selectedCurrency === (string) $optKey);
+                                        @endphp
+                                        <option value="{{ $optKey }}" {{ $isSelected ? 'selected' : '' }}>{{ $optCode }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
 
-                        <div class="cd-rate-input-wrap">
-                            <input type="number"
-                                   class="cd-field-control"
-                                   data-range-rate
-                                   step="0.01"
-                                   min="0"
-                                   value="{{ $rangeRate }}" />
-                            <span class="cd-rate-suffix" data-rate-suffix>{{ $selectedCommercialModel === 2 ? '%' : '' }}</span>
-                        </div>
+                            <div class="cd-rate-input-wrap">
+                                <input type="number"
+                                       class="cd-field-control"
+                                       data-range-rate
+                                       step="0.01"
+                                       min="0"
+                                       value="{{ $rangeRate }}" />
+                                <span class="cd-rate-suffix" data-rate-suffix>{{ $selectedCommercialModel === 2 ? '%' : '' }}</span>
+                            </div>
 
-                        <div>
-                            <select class="cd-field-control cd-percentage-only" data-range-applied-on>
-                                @foreach(($salaryMode ?? []) as $modeKey => $modeLabel)
-                                    <option value="{{ $modeKey }}" {{ $selectedSalaryMode === (int) $modeKey ? 'selected' : '' }}>
-                                        {{ $modeLabel }}
-                                    </option>
-                                @endforeach
-                            </select>
-                            <select class="cd-field-control cd-fixed-only" data-range-fixed-trigger>
-                                @foreach(($billingTriggers ?? []) as $triggerValue => $triggerLabel)
-                                    <option value="{{ $triggerValue }}" {{ $selectedBillingTrigger === (string) $triggerValue ? 'selected' : '' }}>
-                                        {{ $triggerValue === 'candidate_joined' ? 'Per Hire' : $triggerLabel }}
-                                    </option>
-                                @endforeach
-                            </select>
-                        </div>
+                            <div>
+                                <select class="cd-field-control" data-range-applied-on>
+                                    @foreach(($salaryMode ?? []) as $modeKey => $modeLabel)
+                                        <option value="{{ $modeKey }}" {{ $selectedSalaryMode === (int) $modeKey ? 'selected' : '' }}>
+                                            {{ $modeLabel }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
 
-                        <div>
-                            <button type="button"
-                                    class="cd-tier-reset-btn"
-                                    data-range-reset
-                                    title="Reset tier to default rate"
-                                    aria-label="Reset {{ $range['label'] }}">
-                                ↻
-                            </button>
-                        </div>
+                            <div>
+                                <button type="button"
+                                        class="cd-tier-reset-btn"
+                                        data-range-reset
+                                        title="Reset tier to default rate"
+                                        aria-label="Reset {{ $range['label'] }}">
+                                    ↻
+                                </button>
+                            </div>
 
-                        <!-- Preserved Hidden Persistence Inputs -->
-                        @foreach($range['indexes'] as $experienceIndex)
-                            @php $experienceRate = data_get($commercialDetails->get($experienceIndex), 'rate', $defaultRate); @endphp
-                            <input type="hidden"
-                                   class="{{ $isFulltime ? 'perecentage_val' : 'rate_val' }}"
-                                   name="{{ $isFulltime ? 'perecentage[]' : 'rate[]' }}"
-                                   data-experience-index="{{ $experienceIndex }}"
-                                   value="{{ $experienceRate }}" />
-                        @endforeach
-                    </div>
-                @endforeach
+                            <!-- Preserved Hidden Persistence Inputs -->
+                            @foreach($range['indexes'] as $experienceIndex)
+                                @php $experienceRate = data_get($commercialDetails->get($experienceIndex), 'rate', $defaultRate); @endphp
+                                <input type="hidden"
+                                       class="{{ $isFulltime ? 'perecentage_val' : 'rate_val' }}"
+                                       name="{{ $isFulltime ? 'perecentage[]' : 'rate[]' }}"
+                                       data-experience-index="{{ $experienceIndex }}"
+                                       value="{{ $experienceRate }}" />
+                            @endforeach
+                        </div>
+                    @endforeach
+                </div>
             </div>
         </section>
 
         <!-- ----------------------------------------------------------------
-             PRIMARY CARD 3: REPLACEMENT GUARANTEE & INVOICING GOVERNANCE
+             PRIMARY CARD 3: REPLACEMENT / SATISFACTION TRIAL GUARANTEE POLICY
              ---------------------------------------------------------------- -->
-        <section class="cd-drw-card" id="drwSectionGovernance" data-section-category="policy">
-            <div class="cd-drw-card-head">
+        <section class="cd-drw-card" id="drwSectionReplacement" data-section-category="policy">
+            <div class="cd-drw-card-head cd-head-replacement">
                 <div class="cd-drw-card-title-group">
                     <span class="cd-drw-step-num">3</span>
                     <div>
-                        <h4 class="cd-drw-card-title">{{ $isFulltime ? 'Replacement Guarantee & Invoicing Governance' : 'Contractor Satisfaction Trial & Invoicing SLA' }}</h4>
-                        <p class="cd-drw-card-copy">{{ $isFulltime ? 'Warranty clauses, candidate separation eligibility, and client payment credit windows.' : 'Satisfaction trial guarantee, contractor backfill SLA, recurring invoice cadence, and payment terms.' }}</p>
+                        <h4 class="cd-drw-card-title">{{ $isFulltime ? 'Replacement Guarantee Policy' : 'Satisfaction Trial & Guarantee Policy' }}</h4>
+                        <p class="cd-drw-card-copy">{{ $isFulltime ? 'Warranty clauses, candidate separation eligibility, and replacement fulfillment rules.' : 'Client satisfaction trial window, contractor roll-off contingency, and backfill SLA.' }}</p>
                     </div>
                 </div>
             </div>
 
-            <!-- Discrete Sub-Cards Grid -->
-            <div class="cd-policy-grid">
-                <div class="cd-field-group">
-                    <label class="cd-field-label" for="commercial_replacement_period">{{ $isFulltime ? 'Guarantee Window' : 'Trial & Notice Window' }}</label>
-                    <select id="commercial_replacement_period" class="cd-field-control" data-replacement-period>
-                        @foreach(($replacementPeriods ?? []) as $periodValue => $periodLabel)
-                            <option value="{{ $periodValue }}" {{ $selectedReplacementPeriod === (int) $periodValue ? 'selected' : '' }}>
-                                {{ $periodLabel }}
-                            </option>
-                        @endforeach
-                    </select>
-                    <span class="cd-field-help">{{ $isFulltime ? 'Warranty window for replacement' : 'Trial period or roll-off notice' }}</span>
+            <div class="cd-drw-card-body">
+                <!-- Discrete Sub-Cards Grid: 3 Sub-Cards for Policy -->
+                <div class="cd-field-grid">
+                    <div class="cd-field-group">
+                        <label class="cd-field-label" for="commercial_replacement_period">{{ $isFulltime ? 'Guarantee Window' : 'Trial & Notice Window' }}</label>
+                        <select id="commercial_replacement_period" class="cd-field-control" data-replacement-period>
+                            @foreach(($replacementPeriods ?? []) as $periodValue => $periodLabel)
+                                <option value="{{ $periodValue }}" {{ $selectedReplacementPeriod === (int) $periodValue ? 'selected' : '' }}>
+                                    {{ $periodLabel }}
+                                </option>
+                            @endforeach
+                        </select>
+                        <span class="cd-field-help">{{ $isFulltime ? 'Warranty window for replacement' : 'Trial period or roll-off notice' }}</span>
+                    </div>
+
+                    <div class="cd-field-group">
+                        <label class="cd-field-label" for="commercial_replacement_type">{{ $isFulltime ? 'Remedy Clause' : 'Staffing Remedy Clause' }}</label>
+                        <select id="commercial_replacement_type" class="cd-field-control" data-replacement-type>
+                            @foreach(($replacementTypes ?? []) as $typeValue => $typeLabel)
+                                <option value="{{ $typeValue }}" {{ $selectedReplacementType === (string) $typeValue ? 'selected' : '' }}>
+                                    {{ $typeLabel }}
+                                </option>
+                            @endforeach
+                        </select>
+                        <span class="cd-field-help">{{ $isFulltime ? 'Remedy offered to the client' : 'Client satisfaction remedy' }}</span>
+                    </div>
+
+                    <div class="cd-field-group">
+                        <label class="cd-field-label" for="commercial_replacement_eligibility">{{ $isFulltime ? 'Separation Eligibility' : 'SLA & Contingency' }}</label>
+                        <select id="commercial_replacement_eligibility" class="cd-field-control" data-replacement-eligibility>
+                            @foreach(($replacementEligibility ?? []) as $eligibilityValue => $eligibilityLabel)
+                                <option value="{{ $eligibilityValue }}" {{ $selectedReplacementEligibility === (string) $eligibilityValue ? 'selected' : '' }}>
+                                    {{ $eligibilityLabel }}
+                                </option>
+                            @endforeach
+                        </select>
+                        <span class="cd-field-help">{{ $isFulltime ? 'Trigger conditions for warranty' : 'Service level agreement rule' }}</span>
+                    </div>
                 </div>
 
-                <div class="cd-field-group">
-                    <label class="cd-field-label" for="commercial_replacement_type">{{ $isFulltime ? 'Remedy Clause' : 'Staffing Remedy Clause' }}</label>
-                    <select id="commercial_replacement_type" class="cd-field-control" data-replacement-type>
-                        @foreach(($replacementTypes ?? []) as $typeValue => $typeLabel)
-                            <option value="{{ $typeValue }}" {{ $selectedReplacementType === (string) $typeValue ? 'selected' : '' }}>
-                                {{ $typeLabel }}
-                            </option>
-                        @endforeach
-                    </select>
-                    <span class="cd-field-help">{{ $isFulltime ? 'Remedy offered to the client' : 'Client satisfaction remedy' }}</span>
+                <!-- Authoritative Human Summary Strip for Replacement Policy -->
+                <div class="cd-summary-strip strip-emerald">
+                    <svg class="cd-svg-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+                    @if($isFulltime)
+                        <span>A <strong data-replacement-summary>{{ strtolower($replacementTypes[$selectedReplacementType] ?? 'free replacement candidate') }}</strong> guarantee applies if candidate departs within <strong data-replacement-days>{{ $selectedReplacementPeriod }}</strong> days of joining (<span data-eligibility-summary>{{ strtolower($replacementEligibility[$selectedReplacementEligibility] ?? 'all standard separations') }}</span>).</span>
+                    @else
+                        <span>A <strong data-replacement-summary>{{ strtolower($replacementTypes[$selectedReplacementType] ?? 'satisfaction trial guarantee') }}</strong> (<strong data-replacement-days>{{ $selectedReplacementPeriod }}</strong> days) with <strong data-eligibility-summary>{{ strtolower($replacementEligibility[$selectedReplacementEligibility] ?? '48h backfill sla') }}</strong> applies.</span>
+                    @endif
                 </div>
-
-                <div class="cd-field-group">
-                    <label class="cd-field-label" for="commercial_replacement_eligibility">{{ $isFulltime ? 'Separation Eligibility' : 'SLA & Contingency' }}</label>
-                    <select id="commercial_replacement_eligibility" class="cd-field-control" data-replacement-eligibility>
-                        @foreach(($replacementEligibility ?? []) as $eligibilityValue => $eligibilityLabel)
-                            <option value="{{ $eligibilityValue }}" {{ $selectedReplacementEligibility === (string) $eligibilityValue ? 'selected' : '' }}>
-                                {{ $eligibilityLabel }}
-                            </option>
-                        @endforeach
-                    </select>
-                    <span class="cd-field-help">{{ $isFulltime ? 'Trigger conditions for warranty' : 'Service level agreement rule' }}</span>
-                </div>
-
-                <div class="cd-field-group">
-                    <label class="cd-field-label" for="commercial_billing_frequency">Invoicing Cadence</label>
-                    <select id="commercial_billing_frequency" class="cd-field-control" data-billing-frequency>
-                        @foreach(($billingFrequencies ?? []) as $frequencyValue => $frequencyLabel)
-                            <option value="{{ $frequencyValue }}" {{ $selectedBillingFrequency === (string) $frequencyValue ? 'selected' : '' }}>
-                                {{ $frequencyLabel }}
-                            </option>
-                        @endforeach
-                    </select>
-                    <span class="cd-field-help">{{ $isFulltime ? 'One-time invoice schedule' : 'Recurring timesheet cycle' }}</span>
-                </div>
-
-                <div class="cd-field-group">
-                    <label class="cd-field-label" for="commercial_billing_trigger">Invoice Trigger Event</label>
-                    <select id="commercial_billing_trigger" class="cd-field-control" data-billing-trigger>
-                        @foreach(($billingTriggers ?? []) as $triggerValue => $triggerLabel)
-                            <option value="{{ $triggerValue }}" {{ $selectedBillingTrigger === (string) $triggerValue ? 'selected' : '' }}>
-                                {{ $triggerLabel }}
-                            </option>
-                        @endforeach
-                    </select>
-                    <span class="cd-field-help">{{ $isFulltime ? 'Event that initiates the invoice' : 'Timesheet milestone trigger' }}</span>
-                </div>
-
-                <div class="cd-field-group">
-                    <label class="cd-field-label" for="commercial_payment_terms">Payment Terms (Credit Window)</label>
-                    <select id="commercial_payment_terms" class="cd-field-control" data-payment-terms>
-                        @foreach(($paymentTerms ?? []) as $termsValue => $termsLabel)
-                            <option value="{{ $termsValue }}" {{ $selectedPaymentTerms === (int) $termsValue ? 'selected' : '' }}>
-                                {{ $termsLabel }}
-                            </option>
-                        @endforeach
-                    </select>
-                    <span class="cd-field-help">Net days allowed for settlement</span>
-                </div>
-            </div>
-
-            <!-- Authoritative Human Summary Strip -->
-            <div class="cd-summary-strip">
-                <svg class="cd-svg-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                @if($isFulltime)
-                    <span>A <strong data-replacement-summary>{{ strtolower($replacementTypes[$selectedReplacementType] ?? 'free replacement candidate') }}</strong> guarantee applies if candidate departs within <strong data-replacement-days>{{ $selectedReplacementPeriod }}</strong> days of joining. Invoices are triggered on <strong data-trigger-summary>{{ strtolower($billingTriggers[$selectedBillingTrigger] ?? 'candidate joined') }}</strong> with <strong data-terms-summary>{{ $paymentTerms[$selectedPaymentTerms] ?? 'Net 30 Days' }}</strong> settlement.</span>
-                @else
-                    <span>A <strong data-replacement-summary>{{ strtolower($replacementTypes[$selectedReplacementType] ?? 'satisfaction trial guarantee') }}</strong> (<strong data-replacement-days>{{ $selectedReplacementPeriod }}</strong> days) with <strong data-eligibility-summary>{{ strtolower($replacementEligibility[$selectedReplacementEligibility] ?? '48h backfill sla') }}</strong> applies. Invoices are generated on <strong data-trigger-summary>{{ strtolower($billingTriggers[$selectedBillingTrigger] ?? 'approved timesheet') }}</strong> with <strong data-terms-summary>{{ $paymentTerms[$selectedPaymentTerms] ?? 'Net 30 Days' }}</strong> settlement.</span>
-                @endif
             </div>
         </section>
 
         <!-- ----------------------------------------------------------------
-             PRIMARY CARD 4: OPERATIONAL COUNTRIES & GEOGRAPHIC COVERAGE
+             PRIMARY CARD 4: INVOICING CADENCE & PAYMENT TERMS
              ---------------------------------------------------------------- -->
-        <section class="cd-drw-card" id="drwSectionCountries" data-section-category="countries">
-            <div class="cd-drw-card-head">
+        <section class="cd-drw-card" id="drwSectionInvoicing" data-section-category="invoicing">
+            <div class="cd-drw-card-head cd-head-invoicing">
                 <div class="cd-drw-card-title-group">
                     <span class="cd-drw-step-num">4</span>
+                    <div>
+                        <h4 class="cd-drw-card-title">{{ $isFulltime ? 'Billing Trigger & Payment Terms' : 'Timesheet Invoicing Cadence & Payment Terms' }}</h4>
+                        <p class="cd-drw-card-copy">{{ $isFulltime ? 'Placement fee invoice milestone, billing schedule, and client settlement credit terms.' : 'Contingent timesheet billing trigger, recurring invoice cadence, and settlement credit terms.' }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="cd-drw-card-body">
+                <!-- Discrete Sub-Cards Grid: 3 Sub-Cards for Invoicing & Payment Terms -->
+                <div class="cd-field-grid">
+                    <div class="cd-field-group">
+                        <label class="cd-field-label" for="commercial_billing_trigger">Invoice Trigger Event</label>
+                        <select id="commercial_billing_trigger" class="cd-field-control" data-billing-trigger>
+                            @foreach(($billingTriggers ?? []) as $triggerValue => $triggerLabel)
+                                <option value="{{ $triggerValue }}" {{ $selectedBillingTrigger === (string) $triggerValue ? 'selected' : '' }}>
+                                    {{ $triggerLabel }}
+                                </option>
+                            @endforeach
+                        </select>
+                        <span class="cd-field-help">{{ $isFulltime ? 'Event that initiates the invoice' : 'Timesheet milestone trigger' }}</span>
+                    </div>
+
+                    <div class="cd-field-group">
+                        <label class="cd-field-label" for="commercial_billing_frequency">Invoicing Cadence</label>
+                        <select id="commercial_billing_frequency" class="cd-field-control" data-billing-frequency>
+                            @foreach(($billingFrequencies ?? []) as $frequencyValue => $frequencyLabel)
+                                <option value="{{ $frequencyValue }}" {{ $selectedBillingFrequency === (string) $frequencyValue ? 'selected' : '' }}>
+                                    {{ $frequencyLabel }}
+                                </option>
+                            @endforeach
+                        </select>
+                        <span class="cd-field-help">{{ $isFulltime ? 'One-time invoice schedule' : 'Recurring timesheet cycle' }}</span>
+                    </div>
+
+                    <div class="cd-field-group">
+                        <label class="cd-field-label" for="commercial_payment_terms">Payment Terms (Credit Window)</label>
+                        <select id="commercial_payment_terms" class="cd-field-control" data-payment-terms>
+                            @foreach(($paymentTerms ?? []) as $termsValue => $termsLabel)
+                                <option value="{{ $termsValue }}" {{ $selectedPaymentTerms === (int) $termsValue ? 'selected' : '' }}>
+                                    {{ $termsLabel }}
+                                </option>
+                            @endforeach
+                        </select>
+                        <span class="cd-field-help">Net days allowed for settlement</span>
+                    </div>
+                </div>
+
+                <!-- Authoritative Human Summary Strip for Invoicing & Terms -->
+                <div class="cd-summary-strip strip-amber">
+                    <svg class="cd-svg-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 14l6-6m-5.5.5h.01m4.99 5h.01M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16l3.5-2 3.5 2 3.5-2 3.5 2z"/></svg>
+                    @if($isFulltime)
+                        <span>Invoices are triggered on <strong data-trigger-summary>{{ strtolower($billingTriggers[$selectedBillingTrigger] ?? 'candidate joined') }}</strong> with <strong data-frequency-summary>{{ strtolower($billingFrequencies[$selectedBillingFrequency] ?? 'one-time upon placement') }}</strong> cadence and <strong data-terms-summary>{{ $paymentTerms[$selectedPaymentTerms] ?? 'Net 30 Days' }}</strong> credit window.</span>
+                    @else
+                        <span>Invoices are generated on <strong data-trigger-summary>{{ strtolower($billingTriggers[$selectedBillingTrigger] ?? 'approved timesheet') }}</strong> on a <strong data-frequency-summary>{{ strtolower($billingFrequencies[$selectedBillingFrequency] ?? 'monthly billing cycle') }}</strong> with <strong data-terms-summary>{{ $paymentTerms[$selectedPaymentTerms] ?? 'Net 30 Days' }}</strong> settlement terms.</span>
+                    @endif
+                </div>
+            </div>
+        </section>
+
+        <!-- ----------------------------------------------------------------
+             PRIMARY CARD 5: OPERATIONAL COUNTRIES & GEOGRAPHIC COVERAGE
+             ---------------------------------------------------------------- -->
+        <section class="cd-drw-card" id="drwSectionCountries" data-section-category="countries">
+            <div class="cd-drw-card-head cd-head-countries">
+                <div class="cd-drw-card-title-group">
+                    <span class="cd-drw-step-num">5</span>
                     <div>
                         <h4 class="cd-drw-card-title">Operational Countries & Geographic Scope</h4>
                         <p class="cd-drw-card-copy">Select the countries where your organization offers {{ $isFulltime ? 'fulltime permanent placement' : 'contract staffing' }} services.</p>
                     </div>
                 </div>
                 <div class="cd-drw-scope-pill">
-                    <svg class="cd-svg-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    <svg class="cd-svg-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                     <span id="countrySelectedHeaderBadge">{{ $activeCountryCount }} Countries Enabled</span>
                 </div>
             </div>
 
-            <!-- Toolbar Sub-Card -->
-            <div class="cd-country-toolbar">
-                <div class="cd-drw-search-subcard" style="width: 280px;">
-                    <svg class="cd-svg-icon text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
-                    <input type="search"
-                           class="cd-drw-search-input"
-                           placeholder="Search country by name or ISO..."
-                           data-country-search />
-                </div>
-                <div style="display: flex; gap: 6px; flex-wrap: wrap;">
-                    <button type="button" class="cd-drw-btn" data-country-top title="Quick select top global hiring hubs">
-                        ⭐ Top Hubs
-                    </button>
-                    <button type="button" class="cd-drw-btn" data-country-select-all>
-                        ✓ Select All
-                    </button>
-                    <button type="button" class="cd-drw-btn" data-country-clear>
-                        ✕ Clear All
-                    </button>
-                </div>
-            </div>
-
-            <!-- Selected Countries Active Chips -->
-            <div class="cd-country-pills-bar" data-selected-countries></div>
-
-            <!-- Country Selection Grid (3-Column Discrete Grid) -->
-            <div class="cd-country-grid" data-country-grid>
-                @foreach(($countries ?? []) as $country)
-                    @php
-                        $countryId = (int) $country->id;
-                        $countryRegion = strtolower(trim((string) ($country->region ?? '')) ?: 'other');
-                        $countryCode = strtoupper(trim((string) ($country->iso2 ?? $country->country_code ?? '')));
-                        $isChecked = in_array($countryId, $selectedCountryIds, true);
-                    @endphp
-                    <div class="cd-country-item {{ $isChecked ? 'is-selected' : '' }}"
-                         data-country-item
-                         data-name="{{ strtolower(trim($countryCode . ' ' . $country->country_name)) }}"
-                         data-region="{{ $countryRegion }}">
-                        <input class="countries"
-                               type="checkbox"
-                               id="commercial_country_{{ $sectionCheck }}_{{ $countryId }}"
-                               value="{{ $countryId }}"
-                               data-country-name="{{ $country->country_name }}"
-                               data-country-code="{{ $countryCode }}"
-                               data-initial="{{ $isChecked ? '1' : '0' }}"
-                               {{ $isChecked ? 'checked' : '' }} />
-                        <span class="cd-country-code">{{ $countryCode ?: '—' }}</span>
-                        <label class="cd-country-name" for="commercial_country_{{ $sectionCheck }}_{{ $countryId }}">
-                            {{ $country->country_name }}
-                        </label>
+            <div class="cd-drw-card-body">
+                <!-- Toolbar Sub-Card -->
+                <div class="cd-country-toolbar">
+                    <div class="cd-drw-search-subcard" style="width: 280px;">
+                        <svg class="cd-svg-icon text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                        <input type="search"
+                               class="cd-drw-search-input"
+                               placeholder="Search country by name or ISO..."
+                               data-country-search />
                     </div>
-                @endforeach
+                    <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+                        <button type="button" class="cd-drw-btn" data-country-top title="Quick select top global hiring hubs">
+                            ⭐ Top Hubs
+                        </button>
+                        <button type="button" class="cd-drw-btn" data-country-select-all>
+                            ✓ Select All
+                        </button>
+                        <button type="button" class="cd-drw-btn" data-country-clear>
+                            ✕ Clear All
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Selected Countries Active Chips -->
+                <div class="cd-country-pills-bar" data-selected-countries></div>
+
+                <!-- Country Selection Grid (3-Column Discrete Grid) -->
+                <div class="cd-country-grid" data-country-grid>
+                    @foreach(($countries ?? []) as $country)
+                        @php
+                            $countryId = (int) $country->id;
+                            $countryRegion = strtolower(trim((string) ($country->region ?? '')) ?: 'other');
+                            $countryCode = strtoupper(trim((string) ($country->iso2 ?? $country->country_code ?? '')));
+                            $isChecked = in_array($countryId, $selectedCountryIds, true);
+                        @endphp
+                        <div class="cd-country-item {{ $isChecked ? 'is-selected' : '' }}"
+                             data-country-item
+                             data-name="{{ strtolower(trim($countryCode . ' ' . $country->country_name)) }}"
+                             data-region="{{ $countryRegion }}">
+                            <input class="countries"
+                                   type="checkbox"
+                                   id="commercial_country_{{ $sectionCheck }}_{{ $countryId }}"
+                                   value="{{ $countryId }}"
+                                   data-country-name="{{ $country->country_name }}"
+                                   data-country-code="{{ $countryCode }}"
+                                   data-initial="{{ $isChecked ? '1' : '0' }}"
+                                   {{ $isChecked ? 'checked' : '' }} />
+                            <span class="cd-country-code">{{ $countryCode ?: '—' }}</span>
+                            <label class="cd-country-name" for="commercial_country_{{ $sectionCheck }}_{{ $countryId }}">
+                                {{ $country->country_name }}
+                            </label>
+                        </div>
+                    @endforeach
+                </div>
             </div>
         </section>
 
@@ -1317,8 +1469,6 @@
     var replacementEligibility = root.querySelector('[data-replacement-eligibility]');
     var billingFrequency = root.querySelector('[data-billing-frequency]');
     var billingTrigger = root.querySelector('[data-billing-trigger]');
-    var fixedFeeTrigger = root.querySelector('[data-fixed-fee-trigger]');
-    var fixedFeeFrequency = root.querySelector('[data-fixed-fee-frequency]');
     var paymentTerms = root.querySelector('[data-payment-terms]');
     var mainStatusInput = root.querySelector('.main_status');
     var initialState;
@@ -1356,11 +1506,7 @@
         appliedOn.disabled = isFree;
         pricingCurrency.disabled = isFree;
 
-        root.querySelectorAll('[data-range-rate],[data-range-applied-on],[data-range-currency],[data-range-fixed-trigger],[data-range-fixed-frequency],[data-range-reset]').forEach(function (control) {
-            control.disabled = isFree;
-        });
-
-        root.querySelectorAll('[data-fixed-fee-trigger],[data-fixed-fee-frequency]').forEach(function (control) {
+        root.querySelectorAll('[data-range-rate],[data-range-applied-on],[data-range-currency],[data-range-reset]').forEach(function (control) {
             control.disabled = isFree;
         });
 
@@ -1462,8 +1608,6 @@
 
         syncRangeSelects('[data-range-applied-on]', appliedOn.value);
         syncRangeSelects('[data-range-currency]', pricingCurrency.value);
-        syncRangeSelects('[data-fixed-fee-trigger]', billingTrigger.value);
-        syncRangeSelects('[data-fixed-fee-frequency]', billingFrequency.value);
 
         updateCommercialType();
         updateReplacementSummary();
@@ -1475,6 +1619,7 @@
         var summaryEl = root.querySelector('[data-replacement-summary]');
         var eligibilityEl = root.querySelector('[data-eligibility-summary]');
         var triggerSummaryEl = root.querySelector('[data-trigger-summary]');
+        var frequencySummaryEl = root.querySelector('[data-frequency-summary]');
         var termsSummaryEl = root.querySelector('[data-terms-summary]');
 
         if (daysEl) daysEl.textContent = replacementPeriod.value;
@@ -1486,6 +1631,9 @@
         }
         if (triggerSummaryEl && billingTrigger.options[billingTrigger.selectedIndex]) {
             triggerSummaryEl.textContent = billingTrigger.options[billingTrigger.selectedIndex].text.toLowerCase();
+        }
+        if (frequencySummaryEl && billingFrequency.options[billingFrequency.selectedIndex]) {
+            frequencySummaryEl.textContent = billingFrequency.options[billingFrequency.selectedIndex].text.toLowerCase();
         }
         if (termsSummaryEl && paymentTerms.options[paymentTerms.selectedIndex]) {
             termsSummaryEl.textContent = paymentTerms.options[paymentTerms.selectedIndex].text;
@@ -1522,11 +1670,8 @@
 
     appliedOn.addEventListener('change', function () { syncRangeSelects('[data-range-applied-on]', appliedOn.value); });
     pricingCurrency.addEventListener('change', function () { syncRangeSelects('[data-range-currency]', pricingCurrency.value); });
-    billingTrigger.addEventListener('change', function () {
-        syncRangeSelects('[data-fixed-fee-trigger]', billingTrigger.value);
-        updateReplacementSummary();
-    });
-    billingFrequency.addEventListener('change', function () { syncRangeSelects('[data-fixed-fee-frequency]', billingFrequency.value); });
+    billingTrigger.addEventListener('change', updateReplacementSummary);
+    billingFrequency.addEventListener('change', updateReplacementSummary);
     replacementPeriod.addEventListener('change', updateReplacementSummary);
     replacementType.addEventListener('change', updateReplacementSummary);
     replacementEligibility.addEventListener('change', updateReplacementSummary);
@@ -1557,20 +1702,6 @@
         select.addEventListener('change', function () {
             pricingCurrency.value = select.value;
             syncRangeSelects('[data-range-currency]', select.value);
-        });
-    });
-
-    root.querySelectorAll('[data-fixed-fee-trigger]').forEach(function (select) {
-        select.addEventListener('change', function () {
-            billingTrigger.value = select.value;
-            syncRangeSelects('[data-fixed-fee-trigger]', select.value);
-        });
-    });
-
-    root.querySelectorAll('[data-fixed-fee-frequency]').forEach(function (select) {
-        select.addEventListener('change', function () {
-            billingFrequency.value = select.value;
-            syncRangeSelects('[data-fixed-fee-frequency]', select.value);
         });
     });
 
