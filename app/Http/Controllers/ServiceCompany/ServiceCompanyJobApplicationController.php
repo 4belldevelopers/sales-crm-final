@@ -4367,6 +4367,10 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
                 \Illuminate\Support\Facades\Cache::forget("custome_count_all:v3:{$company_id}:{$rawJobId}");
                 \Illuminate\Support\Facades\Cache::forget("custome_count_all:{$company_id}:{$rawJobId}");
                 \Illuminate\Support\Facades\Cache::forget("pipeline:{$company_id}:{$rawJobId}:v".cache()->get("allapptracker_version_company_{$company_id}", 1));
+                $targetJob = DB::table('jobs')->select('client_id', 'company_id')->where('id', $rawJobId)->first();
+                if ($targetJob) {
+                    GeneralMethod::invalidateClientCandidateCounters((int) $company_id, (int) ($targetJob->client_id ?? 0), (int) ($targetJob->company_id ?? 0));
+                }
             }
             $newJobDatasetVersion = 1;
             if ($rawJobId > 0) {

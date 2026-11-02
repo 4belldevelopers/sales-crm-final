@@ -10028,7 +10028,7 @@ END:VCALENDAR";
             ]);
 
             // Atomically invalidate candidate & interview counters for this client
-            if (!empty($row->company_id)) {
+            if (! empty($row->company_id)) {
                 self::invalidateClientCandidateCounters($row->company_id, $row->client_id ?? null, $row->from_company_id ?? null);
             }
         }
@@ -15946,6 +15946,7 @@ END:VCALENDAR";
             $allInterview = 0;
 
             if ($elasticService->indexExists(ELASTIC_CANDIDATES)) {
+                $pairCompIds = array_values(array_unique(array_filter([(int) $from_company_id, (int) $to_company_id])));
                 $params = [
                     'index' => ELASTIC_CANDIDATES,
                     'request_cache' => true,
@@ -15954,10 +15955,37 @@ END:VCALENDAR";
                         'query' => [
                             'bool' => [
                                 'must' => [
-                                    ['term' => ['from_company_id' => $from_company_id]],
-                                    ['term' => ['to_company_id' => $to_company_id]],
-                                    ['term' => ['ClientComID' => $to_company_id]],
-                                    ['term' => ['final_status' => 1]],
+                                    [
+                                        'bool' => [
+                                            'should' => [
+                                                [
+                                                    'bool' => [
+                                                        'must' => [
+                                                            ['terms' => ['from_company_id' => $pairCompIds]],
+                                                            ['terms' => ['to_company_id' => $pairCompIds]],
+                                                        ],
+                                                    ],
+                                                ],
+                                                [
+                                                    'bool' => [
+                                                        'must' => [
+                                                            ['terms' => ['company_id' => $pairCompIds]],
+                                                            ['terms' => ['ClientComID' => $pairCompIds]],
+                                                        ],
+                                                    ],
+                                                ],
+                                                [
+                                                    'bool' => [
+                                                        'must' => [
+                                                            ['terms' => ['company_id' => $pairCompIds]],
+                                                            ['terms' => ['thirdparty_company_id' => $pairCompIds]],
+                                                        ],
+                                                    ],
+                                                ],
+                                            ],
+                                            'minimum_should_match' => 1,
+                                        ],
+                                    ],
                                 ],
                                 'must_not' => [
                                     ['terms' => ['job_master_status_id' => [8, 9, '8', '9']]],
@@ -16053,6 +16081,14 @@ END:VCALENDAR";
                 cache()->forget("ats:kpi:internal_client_cand_v2:{$cl}");
                 cache()->forget("ats:client_kpi_v9:{$comp}:{$cl}");
                 cache()->forget("ats:client_kpi_v10:{$comp}:{$cl}");
+                // Direct client partner boundary invalidation
+                cache()->forget("ats:kpi:direct_client_cand:{$cl}:{$comp}");
+                cache()->forget("ats:kpi:direct_client_cand:{$comp}:{$cl}");
+                cache()->forget("ats:kpi:direct_client_cand_v2:{$cl}:{$comp}");
+                cache()->forget("ats:kpi:direct_client_cand_v2:{$comp}:{$cl}");
+                cache()->forget("ats:direct_client_kpi_v9:{$comp}:{$cl}");
+                cache()->forget("ats:direct_client_kpi_v10:{$comp}:{$cl}");
+                cache()->increment("tenant_{$cl}_pipeline_rev");
             }
             $dComp = (int) $directCompanyId;
             if ($dComp > 0) {

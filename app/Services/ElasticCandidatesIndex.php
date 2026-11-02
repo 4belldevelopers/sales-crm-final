@@ -31,7 +31,7 @@ class ElasticCandidatesIndex
 
                 $id = $add_job_wise->id;
                 $jobId = $add_job_wise->job_id;
-                $applications = JobApplication::select(
+                $applications = JobApplication::withoutGlobalScopes()->select(
                     'job_applications.id',
                     'job_applications.thirdparty_company_id',
                     'job_applications.full_name',
@@ -136,18 +136,6 @@ class ElasticCandidatesIndex
                     'offer_job_applications.id as offer_id',
                     'offer_job_applications.document',
                     'offer_job_applications.sub_for_approval',
-                    'offer_job_applications.commercial_service_type',
-                    'offer_job_applications.commercial_model',
-                    'offer_job_applications.commercial_fee_method',
-                    'offer_job_applications.commercial_fee_base',
-                    'offer_job_applications.commercial_fee_pct',
-                    'offer_job_applications.commercial_fee_fixed',
-                    'offer_job_applications.assignment_status',
-                    'offer_job_applications.assignment_expected_end_date',
-                    'offer_job_applications.assignment_client_location',
-                    'offer_job_applications.assignment_exit_reason',
-                    'offer_job_applications.assignment_project_outcome',
-                    'offer_job_applications.assignment_remarks',
                     'add_job_wise_condidates.thirdparty_company_id as ClientComID',
                     'jobs.min_salary',
                     'jobs.max_salary',
@@ -166,7 +154,11 @@ class ElasticCandidatesIndex
                         $join->on('jobs.id', 'add_job_wise_condidates.job_id');
                     })
                     ->leftJoin('recommendation_relation', function ($join) {
-                        $join->on('recommendation_relation.job_id', 'jobs.id');
+                        $join->on('recommendation_relation.job_id', '=', 'jobs.id')
+                            ->where(function ($q) {
+                                $q->whereColumn('recommendation_relation.to_company_id', 'add_job_wise_condidates.thirdparty_company_id')
+                                    ->orWhereColumn('recommendation_relation.from_company_id', 'add_job_wise_condidates.thirdparty_company_id');
+                            });
                     })
                     // ->leftJoin('recommendation_relation', 'recommendation_relation.job_id', '=', 'jobs.id')
                     ->leftJoin('companies', function ($join) {
