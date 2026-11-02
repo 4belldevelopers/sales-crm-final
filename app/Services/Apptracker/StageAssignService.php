@@ -84,10 +84,11 @@ class StageAssignService
 
         // Atomic Client Counter Invalidation & WebSocket Broadcast with Revision
         try {
-            $jobRow = DB::table('jobs')->select('client_id')->where('id', $jobId)->first();
+            $jobRow = DB::table('jobs')->select('client_id', 'company_id')->where('id', $jobId)->first();
             $clientId = (int) ($jobRow->client_id ?? 0);
-            if ($clientId > 0) {
-                \App\Helper\GeneralMethod::invalidateClientCandidateCounters($companyId, $clientId);
+            $jobCompanyId = (int) ($jobRow->company_id ?? 0);
+            if ($clientId > 0 || $jobCompanyId > 0) {
+                \App\Helper\GeneralMethod::invalidateClientCandidateCounters($companyId, $clientId, $jobCompanyId);
                 $revision = (int) cache()->get("tenant_{$companyId}_pipeline_rev", 1);
                 broadcast(new \App\Events\PipelineUpdated(
                     $companyId,
