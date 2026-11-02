@@ -5713,7 +5713,7 @@ $(document).ready(function(){
             var rateVal = $editor.find('.rate_val').map(function () {
                 return this.value;
             }).get();
-            var rateTypeClass = $editor.find('.rateTypeClass').val();
+            var rateTypeClass = $editor.find('[data-commercial-type]').val() || $editor.find('.rateTypeClass:checked').val() || $editor.find('.rateTypeClass').val();
             var mainStatus = $editor.find('.main_status').val();
             var salMode = $editor.find('select[name="sal_mode"]').val();
             var salaryCurrency = $editor.find('select[name="salary_currency"]').val();
@@ -5784,13 +5784,20 @@ $(document).ready(function(){
                             window.ServicesTabEngine.rehydrateServiceCard(serviceType, response.commercial_state);
                         }
 
+                        // Ensure Services tab is active and visible
+                        if ($('#services').length && !$('#services').hasClass('active')) {
+                            $('.nav-link[href="#services"], .nav-link[data-bs-target="#services"]').trigger('click');
+                            $('#services').addClass('active show');
+                        }
+
                         // 2. Automatically close sliding drawer (#kt_activitiesJob) and return to listing page
-                        if (window.KTDrawer && KTDrawer.getInstance(document.getElementById('kt_activitiesJob'))) {
-                            KTDrawer.getInstance(document.getElementById('kt_activitiesJob')).hide();
+                        var drawerEl = document.getElementById('kt_activitiesJob');
+                        if (window.KTDrawer && KTDrawer.getInstance(drawerEl)) {
+                            KTDrawer.getInstance(drawerEl).hide();
                         }
                         $('#kt_activitiesJob_close').trigger('click');
                         $('.cd-drw-close-btn').trigger('click');
-                        $('#kt_activitiesJob').removeClass('drawer-on');
+                        $(drawerEl).removeClass('drawer-on');
                         $('.drawer-overlay').remove();
                         $('body').removeAttr('data-kt-drawer');
 
