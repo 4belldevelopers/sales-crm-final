@@ -105,12 +105,12 @@ class ClientActivityReadService
             }
         }
 
-        // Step 1: Resolve Client Job IDs (Dragonfly/Redis cached - strictly shared jobs for direct client)
-        $clientJobIds = $this->resolveClientJobIds($serviceCompanyId, $clientId, $clientType, $partnerCompanyId);
+        // Step 1: Resolve Client Job IDs (Dragonfly/Redis cached - strictly relationship-scoped)
+        $clientJobIds = $this->resolveClientJobIds($serviceCompanyId, $clientId, $clientType, $partnerCompanyId, $query->viewerType);
 
         // Step 1b: Resolve Candidate Application IDs belonging strictly to this operating agency for these shared jobs
         $agencyCandidateAppIds = ($clientType === 'direct')
-            ? $this->resolveAgencyCandidateAppIds($serviceCompanyId, $clientJobIds, $clientId, $clientType)
+            ? $this->resolveAgencyCandidateAppIds($serviceCompanyId, $clientJobIds, $clientId, $clientType, $query->viewerType, $partnerCompanyId)
             : [];
 
         // Step 2: Decoupled KPI Calculation (Cached under filter hash)
@@ -212,12 +212,15 @@ class ClientActivityReadService
 
     /**
      * Resolves all job IDs belonging to this client/agency boundary from ELASTIC_JOBS with 0% MySQL reads.
-     * For Direct Clients: strictly resolves ONLY jobs shared specifically with this operating agency ($companyId).
+     * Enforces strict unidirectional role-based data isolation:
+     * - Same Company != Same Data Context
+     * - When viewerType === 'agency': Direct Client ($companyId) -> Agency ($partnerCompanyId / $clientId)
+     * - When viewerType === 'client': Direct Client ($partnerCompanyId / $clientId) -> Agency ($companyId)
      */
-    protected function resolveClientJobIds(int $companyId, int $clientId, string $clientType, ?int $partnerCompanyId = null): array
+    protected function resolveClientJobIds(int $companyId, int $clientId, string $clientType, ?int $partnerCompanyId = null, string $viewerType = 'client'): array
     {
         $partnerPart = (int) ($partnerCompanyId ?? 0);
-        $cacheKey = "ats:client_job_ids:{$companyId}:{$clientId}:{$clientType}:{$partnerPart}";
+        $cacheKey = "ats:client_job_ids:{$companyId}:{$clientId}:{$clientType}:{$partnerPart}:{$viewerType}";
         try {
             $cached = Redis::get($cacheKey);
             if ($cached) {
@@ -248,22 +251,34 @@ class ClientActivityReadService
                         ],
                     ];
                 } else {
-                    // Direct Client / Agency: Jobs shared via recommendation_relation (bidirectional match)
-                    $fromCompId = $partnerPart > 0 ? $partnerPart : $clientId;
-                    $dir1 = [
-                        ['term' => ['recommendation_relation.to_company_id' => $companyId]],
-                        ['terms' => ['recommendation_relation.final_status' => [1, 2]]],
-                    ];
-                    if ($fromCompId > 0) {
-                        $dir1[] = ['term' => ['recommendation_relation.from_company_id' => $fromCompId]];
-                    }
+                    // Strict Directional Role-Based Scoping:
+                    // Invariant: Direct Client and Agency roles are relationship-specific.
+                    // 1. In Agency Drawer (viewerType === 'agency'):
+                    //    Operating company ($companyId) is the Direct Client.
+                    //    Target partner ($partnerPart ?: $clientId) is the Agency.
+                    //    Jobs MUST be shared: from_company_id = $companyId -> to_company_id = $targetPartnerId.
+                    // 2. In Direct Client Drawer (viewerType === 'client'):
+                    //    Operating company ($companyId) is the Agency.
+                    //    Target partner ($partnerPart ?: $clientId) is the Direct Client.
+                    //    Jobs MUST be shared: from_company_id = $targetPartnerId -> to_company_id = $companyId.
+                    $targetPartnerId = $partnerPart > 0 ? $partnerPart : $clientId;
 
-                    $dir2 = [
-                        ['term' => ['recommendation_relation.from_company_id' => $companyId]],
-                        ['terms' => ['recommendation_relation.final_status' => [1, 2]]],
-                    ];
-                    if ($fromCompId > 0) {
-                        $dir2[] = ['term' => ['recommendation_relation.to_company_id' => $fromCompId]];
+                    if ($viewerType === 'agency') {
+                        $dirFilter = [
+                            ['term' => ['recommendation_relation.from_company_id' => $companyId]],
+                            ['terms' => ['recommendation_relation.final_status' => [1, 2]]],
+                        ];
+                        if ($targetPartnerId > 0) {
+                            $dirFilter[] = ['term' => ['recommendation_relation.to_company_id' => $targetPartnerId]];
+                        }
+                    } else {
+                        $dirFilter = [
+                            ['term' => ['recommendation_relation.to_company_id' => $companyId]],
+                            ['terms' => ['recommendation_relation.final_status' => [1, 2]]],
+                        ];
+                        if ($targetPartnerId > 0) {
+                            $dirFilter[] = ['term' => ['recommendation_relation.from_company_id' => $targetPartnerId]];
+                        }
                     }
 
                     $scopeMust = [
@@ -272,11 +287,7 @@ class ClientActivityReadService
                                 'path' => 'recommendation_relation',
                                 'query' => [
                                     'bool' => [
-                                        'should' => [
-                                            ['bool' => ['must' => $dir1]],
-                                            ['bool' => ['must' => $dir2]],
-                                        ],
-                                        'minimum_should_match' => 1,
+                                        'must' => $dirFilter,
                                     ],
                                 ],
                             ],
@@ -320,12 +331,14 @@ class ClientActivityReadService
     }
 
     /**
-     * Resolves all candidate application IDs submitted by this operating agency for the given shared jobs.
-     * Guarantees 0% MySQL reads and enforces strict candidate ownership isolation.
+     * Resolves all candidate application IDs submitted for the given shared jobs within this relationship context.
+     * Guarantees 0% MySQL reads and enforces strict candidate ownership isolation:
+     * - In Agency Drawer (viewerType === 'agency'): Candidates submitted by target partner agency.
+     * - In Client Drawer (viewerType === 'client'): Candidates submitted by operating agency.
      *
      * @return array<int> Candidate application IDs belonging to this agency
      */
-    protected function resolveAgencyCandidateAppIds(int $agencyCompanyId, array $clientJobIds, int $clientId, string $clientType): array
+    protected function resolveAgencyCandidateAppIds(int $agencyCompanyId, array $clientJobIds, int $clientId, string $clientType, string $viewerType = 'client', ?int $partnerCompanyId = null): array
     {
         if (empty($clientJobIds)) {
             return [];
@@ -335,7 +348,8 @@ class ClientActivityReadService
             return []; // Internal clients have no agency ownership boundary restriction
         }
 
-        $cacheKey = "ats:client_agency_cand_ids:{$agencyCompanyId}:{$clientId}:".md5(implode(',', $clientJobIds));
+        $partnerPart = (int) ($partnerCompanyId ?? 0);
+        $cacheKey = "ats:client_agency_cand_ids:{$agencyCompanyId}:{$clientId}:{$viewerType}:{$partnerPart}:".md5(implode(',', $clientJobIds));
         try {
             $cached = Redis::get($cacheKey);
             if ($cached) {
@@ -355,13 +369,21 @@ class ClientActivityReadService
                 $must = [
                     ['terms' => ['job_id' => $clientJobIds]],
                 ];
-                $targetAgencyIds = array_values(array_unique(array_filter([$agencyCompanyId, $clientId])));
-                $agencyOwnership = [];
-                foreach ($targetAgencyIds as $tAgId) {
-                    $agencyOwnership[] = ['term' => ['thirdparty_company_id' => $tAgId]];
-                    $agencyOwnership[] = ['term' => ['ClientComID' => $tAgId]];
-                    $agencyOwnership[] = ['term' => ['to_company_id' => $tAgId]];
-                }
+
+                // Strict Directional Role-Based Candidate Ownership:
+                // If viewerType === 'agency': Direct Client is viewing Agency partner's candidate submissions.
+                // Target Agency = $partnerPart > 0 ? $partnerPart : $clientId.
+                // If viewerType === 'client': Agency is viewing its own candidate submissions.
+                // Target Agency = $agencyCompanyId.
+                $effectiveAgencyId = ($viewerType === 'agency')
+                    ? ($partnerPart > 0 ? $partnerPart : $clientId)
+                    : $agencyCompanyId;
+
+                $agencyOwnership = [
+                    ['term' => ['thirdparty_company_id' => $effectiveAgencyId]],
+                    ['term' => ['ClientComID' => $effectiveAgencyId]],
+                    ['term' => ['to_company_id' => $effectiveAgencyId]],
+                ];
 
                 $params = [
                     'index' => $indices,
