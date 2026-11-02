@@ -996,7 +996,7 @@
                     </span>
                 </div>
                 <p class="cd-drw-subtitle">
-                    Configure placement fee structures, experience bands, guarantees, and operational countries for clients.
+                    Configure {{ $isFulltime ? 'permanent placement fee structures, seniority bands, replacement warranty, and client operational countries.' : 'contractor markup %, hourly/monthly bill rates, satisfaction trial guarantee, and client operational countries.' }}
                 </p>
             </div>
         </div>
@@ -1075,8 +1075,8 @@
                 <div class="cd-drw-card-title-group">
                     <span class="cd-drw-step-num">1</span>
                     <div>
-                        <h4 class="cd-drw-card-title">Commercial Fee Model & Base Pricing</h4>
-                        <p class="cd-drw-card-copy">Select placement fee methodology and default baseline compensation for clients.</p>
+                        <h4 class="cd-drw-card-title">{{ $isFulltime ? 'Commercial Placement Model & Base Fee' : 'Contract Staffing Model & Billing Rates' }}</h4>
+                        <p class="cd-drw-card-copy">{{ $isFulltime ? 'Select placement fee methodology and default baseline compensation for permanent hires.' : 'Select contractor markup or direct bill rate methodology and default billing cadence.' }}</p>
                     </div>
                 </div>
             </div>
@@ -1091,8 +1091,8 @@
                      aria-checked="{{ $selectedCommercialModel === 2 ? 'true' : 'false' }}">
                     <div class="cd-model-icon-box">%</div>
                     <div class="cd-model-copy-wrap">
-                        <h5 class="cd-model-title">Percentage of CTC</h5>
-                        <p class="cd-model-desc">Charge standard placement fee calculated as % of annual compensation.</p>
+                        <h5 class="cd-model-title">{{ $isFulltime ? 'Percentage of CTC' : 'Markup on Pay Rate (%)' }}</h5>
+                        <p class="cd-model-desc">{{ $isFulltime ? 'Standard placement fee calculated as % of candidate annual compensation (CTC).' : 'Charge an agency percentage markup on top of candidate base hourly or monthly wage.' }}</p>
                     </div>
                     <span class="cd-model-radio-dot"></span>
                 </div>
@@ -1101,10 +1101,10 @@
                      data-commercial-model="1"
                      role="radio"
                      aria-checked="{{ $selectedCommercialModel === 1 ? 'true' : 'false' }}">
-                    <div class="cd-model-icon-box">₹</div>
+                    <div class="cd-model-icon-box">{{ $isFulltime ? '₹' : 'Fix' }}</div>
                     <div class="cd-model-copy-wrap">
-                        <h5 class="cd-model-title">Fixed Placement Fee</h5>
-                        <p class="cd-model-desc">Charge a fixed commercial flat amount for every successful joining.</p>
+                        <h5 class="cd-model-title">{{ $isFulltime ? 'Fixed Placement Fee' : 'Fixed Contract Bill Rate' }}</h5>
+                        <p class="cd-model-desc">{{ $isFulltime ? 'Charge a flat fixed commercial recruitment fee for every successful candidate joining.' : 'Charge an agreed all-inclusive fixed bill rate per hour or per month directly to client.' }}</p>
                     </div>
                     <span class="cd-model-radio-dot"></span>
                 </div>
@@ -1115,8 +1115,8 @@
                      aria-checked="{{ $selectedCommercialModel === 0 ? 'true' : 'false' }}">
                     <div class="cd-model-icon-box">◇</div>
                     <div class="cd-model-copy-wrap">
-                        <h5 class="cd-model-title">Free / No Placement Fee</h5>
-                        <p class="cd-model-desc">Zero commercial placement fee charged to client relationships.</p>
+                        <h5 class="cd-model-title">{{ $isFulltime ? 'Free / No Placement Fee' : 'Pass-Through / Zero Margin' }}</h5>
+                        <p class="cd-model-desc">{{ $isFulltime ? 'Zero commercial placement fee charged to client relationships.' : 'Contractor wages passed through at cost with zero agency staffing margin.' }}</p>
                     </div>
                     <span class="cd-model-radio-dot"></span>
                 </div>
@@ -1155,7 +1155,7 @@
                 <!-- Sub-Card: Default Rate / Fixed Amount -->
                 <div class="cd-field-group">
                     <label class="cd-field-label" for="commercial_default_rate" data-rate-label>
-                        {{ $selectedCommercialModel === 2 ? 'Default CTC Percentage' : 'Fixed Fee Amount' }}
+                        {{ $selectedCommercialModel === 2 ? ($isFulltime ? 'Default CTC Percentage' : 'Default Markup Percentage') : ($isFulltime ? 'Fixed Placement Fee' : 'Default Contract Bill Rate') }}
                     </label>
                     <div class="cd-rate-input-wrap">
                         <input type="number"
@@ -1168,21 +1168,21 @@
                         <span class="cd-rate-suffix" data-rate-suffix>{{ $selectedCommercialModel === 2 ? '%' : '' }}</span>
                     </div>
                     <span class="cd-field-help" data-rate-help>
-                        {{ $selectedCommercialModel === 2 ? 'Changing this rate updates all experience ranges.' : 'Default fixed amount applied per successful hire.' }}
+                        {{ $selectedCommercialModel === 2 ? ($isFulltime ? 'Changing this rate updates all experience ranges.' : 'Default markup % applied across experience tiers.') : ($isFulltime ? 'Default fixed amount applied per successful hire.' : 'Default billing rate per cycle for contingent consultants.') }}
                     </span>
                 </div>
 
                 <!-- Sub-Card: Billing Basis -->
                 <div class="cd-field-group">
-                    <label class="cd-field-label" for="commercial_salary_mode">Applied On</label>
+                    <label class="cd-field-label" for="commercial_salary_mode">{{ $isFulltime ? 'Applied On' : 'Billing Basis' }}</label>
                     <select id="commercial_salary_mode" name="sal_mode" class="cd-field-control" data-applied-on>
                         @foreach(($salaryMode ?? []) as $modeKey => $modeLabel)
                             <option value="{{ $modeKey }}" {{ $selectedSalaryMode === (int) $modeKey ? 'selected' : '' }}>
-                                {{ $modeLabel }} {{ $isFulltime ? 'CTC' : 'Bill Rate' }}
+                                {{ $modeLabel }}
                             </option>
                         @endforeach
                     </select>
-                    <span class="cd-field-help">Commercial billing basis</span>
+                    <span class="cd-field-help">{{ $isFulltime ? 'Commercial placement billing basis' : 'Contract staffing billing cadence' }}</span>
                 </div>
 
                 <!-- Sub-Card: Fixed Trigger (Fixed Fee Only) -->
@@ -1221,9 +1221,9 @@
                 <div class="cd-drw-card-title-group">
                     <span class="cd-drw-step-num">2</span>
                     <div>
-                        <h4 class="cd-drw-card-title">Experience-Based Pricing Matrix</h4>
+                        <h4 class="cd-drw-card-title">{{ $isFulltime ? 'Seniority-Based Placement Fee Matrix' : 'Contractor Experience Rate Card' }}</h4>
                         <p class="cd-drw-card-copy" data-experience-pricing-copy>
-                            {{ $selectedCommercialModel === 1 ? 'Define different fixed fees for different experience bands.' : 'Discrete tiered sub-cards allow bespoke placement pricing across seniority bands.' }}
+                            {{ $selectedCommercialModel === 1 ? ($isFulltime ? 'Define different fixed placement fees for different experience bands.' : 'Define different fixed bill rates for different contractor experience bands.') : ($isFulltime ? 'Discrete tiered sub-cards allow bespoke placement pricing across seniority bands.' : 'Discrete tiered sub-cards allow bespoke contractor markup or bill rates.') }}
                         </p>
                     </div>
                 </div>
@@ -1243,7 +1243,7 @@
                                 {{ $range['label'] }}
                             </span>
                             <span class="cd-tier-name">
-                                {{ $loop->first ? 'Entry / Associate' : ($loop->index === 1 ? 'Mid-Level Specialist' : ($loop->index === 2 ? 'Senior Professional' : 'Leadership / Executive')) }}
+                                {{ $loop->first ? ($isFulltime ? 'Entry / Associate' : 'Junior Consultant') : ($loop->index === 1 ? ($isFulltime ? 'Mid-Level Specialist' : 'Mid-Level Consultant') : ($loop->index === 2 ? ($isFulltime ? 'Senior Professional' : 'Senior Specialist') : ($isFulltime ? 'Leadership / Executive' : 'Principal / Lead Consultant'))) }}
                             </span>
                         </div>
 
@@ -1279,7 +1279,7 @@
                             <select class="cd-field-control cd-percentage-only" data-range-applied-on>
                                 @foreach(($salaryMode ?? []) as $modeKey => $modeLabel)
                                     <option value="{{ $modeKey }}" {{ $selectedSalaryMode === (int) $modeKey ? 'selected' : '' }}>
-                                        {{ $modeLabel }} {{ $isFulltime ? 'CTC' : 'Bill Rate' }}
+                                        {{ $modeLabel }}
                                     </option>
                                 @endforeach
                             </select>
@@ -1324,8 +1324,8 @@
                 <div class="cd-drw-card-title-group">
                     <span class="cd-drw-step-num">3</span>
                     <div>
-                        <h4 class="cd-drw-card-title">Replacement Guarantee & Invoicing Governance</h4>
-                        <p class="cd-drw-card-copy">Warranty clauses, candidate separation eligibility, and client payment credit windows.</p>
+                        <h4 class="cd-drw-card-title">{{ $isFulltime ? 'Replacement Guarantee & Invoicing Governance' : 'Contractor Satisfaction Trial & Invoicing SLA' }}</h4>
+                        <p class="cd-drw-card-copy">{{ $isFulltime ? 'Warranty clauses, candidate separation eligibility, and client payment credit windows.' : 'Satisfaction trial guarantee, contractor backfill SLA, recurring invoice cadence, and payment terms.' }}</p>
                     </div>
                 </div>
             </div>
@@ -1333,7 +1333,7 @@
             <!-- Discrete Sub-Cards Grid -->
             <div class="cd-policy-grid">
                 <div class="cd-field-group">
-                    <label class="cd-field-label" for="commercial_replacement_period">Guarantee Period</label>
+                    <label class="cd-field-label" for="commercial_replacement_period">{{ $isFulltime ? 'Guarantee Window' : 'Trial & Notice Window' }}</label>
                     <select id="commercial_replacement_period" class="cd-field-control" data-replacement-period>
                         @foreach(($replacementPeriods ?? []) as $periodValue => $periodLabel)
                             <option value="{{ $periodValue }}" {{ $selectedReplacementPeriod === (int) $periodValue ? 'selected' : '' }}>
@@ -1341,11 +1341,11 @@
                             </option>
                         @endforeach
                     </select>
-                    <span class="cd-field-help">Warranty window for replacement</span>
+                    <span class="cd-field-help">{{ $isFulltime ? 'Warranty window for replacement' : 'Trial period or roll-off notice' }}</span>
                 </div>
 
                 <div class="cd-field-group">
-                    <label class="cd-field-label" for="commercial_replacement_type">Remedy Clause</label>
+                    <label class="cd-field-label" for="commercial_replacement_type">{{ $isFulltime ? 'Remedy Clause' : 'Staffing Remedy Clause' }}</label>
                     <select id="commercial_replacement_type" class="cd-field-control" data-replacement-type>
                         @foreach(($replacementTypes ?? []) as $typeValue => $typeLabel)
                             <option value="{{ $typeValue }}" {{ $selectedReplacementType === (string) $typeValue ? 'selected' : '' }}>
@@ -1353,11 +1353,11 @@
                             </option>
                         @endforeach
                     </select>
-                    <span class="cd-field-help">Remedy offered to the client</span>
+                    <span class="cd-field-help">{{ $isFulltime ? 'Remedy offered to the client' : 'Client satisfaction remedy' }}</span>
                 </div>
 
                 <div class="cd-field-group">
-                    <label class="cd-field-label" for="commercial_replacement_eligibility">Separation Eligibility</label>
+                    <label class="cd-field-label" for="commercial_replacement_eligibility">{{ $isFulltime ? 'Separation Eligibility' : 'SLA & Contingency' }}</label>
                     <select id="commercial_replacement_eligibility" class="cd-field-control" data-replacement-eligibility>
                         @foreach(($replacementEligibility ?? []) as $eligibilityValue => $eligibilityLabel)
                             <option value="{{ $eligibilityValue }}" {{ $selectedReplacementEligibility === (string) $eligibilityValue ? 'selected' : '' }}>
@@ -1365,7 +1365,7 @@
                             </option>
                         @endforeach
                     </select>
-                    <span class="cd-field-help">Trigger conditions for warranty</span>
+                    <span class="cd-field-help">{{ $isFulltime ? 'Trigger conditions for warranty' : 'Service level agreement rule' }}</span>
                 </div>
 
                 <div class="cd-field-group">
@@ -1377,7 +1377,7 @@
                             </option>
                         @endforeach
                     </select>
-                    <span class="cd-field-help">Invoice generation schedule</span>
+                    <span class="cd-field-help">{{ $isFulltime ? 'One-time invoice schedule' : 'Recurring timesheet cycle' }}</span>
                 </div>
 
                 <div class="cd-field-group">
@@ -1389,7 +1389,7 @@
                             </option>
                         @endforeach
                     </select>
-                    <span class="cd-field-help">Event that initiates the invoice</span>
+                    <span class="cd-field-help">{{ $isFulltime ? 'Event that initiates the invoice' : 'Timesheet milestone trigger' }}</span>
                 </div>
 
                 <div class="cd-field-group">
@@ -1408,7 +1408,11 @@
             <!-- Authoritative Human Summary Strip -->
             <div class="cd-summary-strip">
                 <svg class="cd-svg-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                <span>A <strong data-replacement-summary>{{ strtolower($replacementTypes[$selectedReplacementType] ?? 'free replacement') }}</strong> guarantee applies if candidate departs within <strong data-replacement-days>{{ $selectedReplacementPeriod }}</strong> days of joining. Invoices are triggered on <strong data-trigger-summary>{{ strtolower($billingTriggers[$selectedBillingTrigger] ?? 'candidate joined') }}</strong> with <strong data-terms-summary>{{ $paymentTerms[$selectedPaymentTerms] ?? 'Net 30 Days' }}</strong> settlement.</span>
+                @if($isFulltime)
+                    <span>A <strong data-replacement-summary>{{ strtolower($replacementTypes[$selectedReplacementType] ?? 'free replacement candidate') }}</strong> guarantee applies if candidate departs within <strong data-replacement-days>{{ $selectedReplacementPeriod }}</strong> days of joining. Invoices are triggered on <strong data-trigger-summary>{{ strtolower($billingTriggers[$selectedBillingTrigger] ?? 'candidate joined') }}</strong> with <strong data-terms-summary>{{ $paymentTerms[$selectedPaymentTerms] ?? 'Net 30 Days' }}</strong> settlement.</span>
+                @else
+                    <span>A <strong data-replacement-summary>{{ strtolower($replacementTypes[$selectedReplacementType] ?? 'satisfaction trial guarantee') }}</strong> (<strong data-replacement-days>{{ $selectedReplacementPeriod }}</strong> days) with <strong data-eligibility-summary>{{ strtolower($replacementEligibility[$selectedReplacementEligibility] ?? '48h backfill sla') }}</strong> applies. Invoices are generated on <strong data-trigger-summary>{{ strtolower($billingTriggers[$selectedBillingTrigger] ?? 'approved timesheet') }}</strong> with <strong data-terms-summary>{{ $paymentTerms[$selectedPaymentTerms] ?? 'Net 30 Days' }}</strong> settlement.</span>
+                @endif
             </div>
         </section>
 
@@ -1421,7 +1425,7 @@
                     <span class="cd-drw-step-num">4</span>
                     <div>
                         <h4 class="cd-drw-card-title">Operational Countries & Geographic Scope</h4>
-                        <p class="cd-drw-card-copy">Select the countries where your organization offers {{ $isFulltime ? 'fulltime placement' : 'contract staffing' }} services.</p>
+                        <p class="cd-drw-card-copy">Select the countries where your organization offers {{ $isFulltime ? 'fulltime permanent placement' : 'contract staffing' }} services.</p>
                     </div>
                 </div>
                 <div class="cd-drw-scope-pill">
@@ -1606,17 +1610,35 @@
             suffix.textContent = isPercentage ? '%' : '';
         });
 
+        var isFT = root.querySelector('.commType').value === '2';
+
         var rateLabelEl = root.querySelector('[data-rate-label]');
-        if (rateLabelEl) rateLabelEl.textContent = isFree ? 'No Fee' : (isPercentage ? 'Default CTC Percentage' : 'Fixed Fee Amount');
+        if (rateLabelEl) {
+            rateLabelEl.textContent = isFree
+                ? (isFT ? 'No Placement Fee' : 'Pass-Through')
+                : (isPercentage ? (isFT ? 'Default CTC Percentage' : 'Default Markup Percentage') : (isFT ? 'Fixed Placement Fee' : 'Default Contract Bill Rate'));
+        }
 
         var rateHelpEl = root.querySelector('[data-rate-help]');
-        if (rateHelpEl) rateHelpEl.textContent = isFree ? 'No commercial fee is charged.' : (isPercentage ? 'Changing this rate updates all experience tiers.' : 'Default fixed amount applied per successful hire.');
+        if (rateHelpEl) {
+            rateHelpEl.textContent = isFree
+                ? (isFT ? 'No commercial placement fee is charged.' : 'Pass-through wages with zero margin.')
+                : (isPercentage ? (isFT ? 'Changing this rate updates all experience tiers.' : 'Default markup % applied across experience tiers.') : (isFT ? 'Default fixed amount applied per successful hire.' : 'Default billing rate per cycle for contingent consultants.'));
+        }
 
         var defaultPricingCopyEl = root.querySelector('[data-default-pricing-copy]');
-        if (defaultPricingCopyEl) defaultPricingCopyEl.textContent = isFree ? 'No charge will be applied for this service.' : (isPercentage ? 'Set the default pricing for all experience ranges.' : 'Set the default fixed fee and how it will be charged.');
+        if (defaultPricingCopyEl) {
+            defaultPricingCopyEl.textContent = isFree
+                ? 'No charge will be applied for this service.'
+                : (isPercentage ? (isFT ? 'Set the default percentage fee for permanent placements.' : 'Set the default markup percentage on contractor pay.') : (isFT ? 'Set the default fixed placement fee per successful hire.' : 'Set the default contract bill rate per cycle.'));
+        }
 
         var expPricingCopyEl = root.querySelector('[data-experience-pricing-copy]');
-        if (expPricingCopyEl) expPricingCopyEl.textContent = isFree ? 'No per-range fee is required for this service.' : (isPercentage ? 'Discrete tiered sub-cards allow bespoke placement pricing across seniority bands.' : 'Define different fixed fees for different experience bands.');
+        if (expPricingCopyEl) {
+            expPricingCopyEl.textContent = isFree
+                ? 'No per-range fee is required for this service.'
+                : (isPercentage ? (isFT ? 'Discrete tiered sub-cards allow bespoke placement pricing across seniority bands.' : 'Discrete tiered sub-cards allow bespoke markup % across contractor experience levels.') : (isFT ? 'Define different fixed placement fees for different seniority bands.' : 'Define different contract bill rates for different experience bands.'));
+        }
     }
 
     function captureInitialState() {
@@ -1692,12 +1714,16 @@
     function updateReplacementSummary() {
         var daysEl = root.querySelector('[data-replacement-days]');
         var summaryEl = root.querySelector('[data-replacement-summary]');
+        var eligibilityEl = root.querySelector('[data-eligibility-summary]');
         var triggerSummaryEl = root.querySelector('[data-trigger-summary]');
         var termsSummaryEl = root.querySelector('[data-terms-summary]');
 
         if (daysEl) daysEl.textContent = replacementPeriod.value;
         if (summaryEl && replacementType.options[replacementType.selectedIndex]) {
             summaryEl.textContent = replacementType.options[replacementType.selectedIndex].text.toLowerCase();
+        }
+        if (eligibilityEl && replacementEligibility.options[replacementEligibility.selectedIndex]) {
+            eligibilityEl.textContent = replacementEligibility.options[replacementEligibility.selectedIndex].text.toLowerCase();
         }
         if (triggerSummaryEl && billingTrigger.options[billingTrigger.selectedIndex]) {
             triggerSummaryEl.textContent = billingTrigger.options[billingTrigger.selectedIndex].text.toLowerCase();
@@ -1744,6 +1770,7 @@
     billingFrequency.addEventListener('change', function () { syncRangeSelects('[data-fixed-fee-frequency]', billingFrequency.value); });
     replacementPeriod.addEventListener('change', updateReplacementSummary);
     replacementType.addEventListener('change', updateReplacementSummary);
+    replacementEligibility.addEventListener('change', updateReplacementSummary);
     paymentTerms.addEventListener('change', updateReplacementSummary);
 
     root.querySelectorAll('[data-commercial-model]').forEach(function (option) {

@@ -69,11 +69,28 @@ class ServiceTermDTO
             replacementType: (string) ($data['replacement_type'] ?? 'free_replacement'),
             replacementTypeLabel: ($commtype === 2)
                 ? ucwords(str_replace('_', ' ', (string) ($data['replacement_type'] ?? 'free_replacement')))
-                : (($data['replacement_type'] ?? 'free_replacement') === 'none' ? 'No Trial' : '5-Day Satisfaction Trial'),
+                : match ((string) ($data['replacement_type'] ?? 'trial_guarantee')) {
+                    'trial_guarantee' => 'Satisfaction Trial Guarantee',
+                    'free_replacement' => 'Free Replacement Contractor',
+                    'credit_note' => 'Credit Note',
+                    'none' => 'No Trial Guarantee',
+                    default => ucwords(str_replace('_', ' ', (string) ($data['replacement_type'] ?? 'trial_guarantee'))),
+                },
             replacementEligibility: (string) ($data['replacement_eligibility'] ?? 'early_exit'),
             replacementEligibilityLabel: ($commtype === 2)
-                ? ucwords(str_replace('_', ' ', (string) ($data['replacement_eligibility'] ?? 'early_exit')))
-                : '48h Backfill SLA',
+                ? match ((string) ($data['replacement_eligibility'] ?? 'early_exit')) {
+                    'early_exit' => 'Candidate Resignation / Early Exit',
+                    'employer_termination' => 'Employer / Mutual Termination',
+                    'any_separation' => 'Any Separation within Warranty',
+                    default => ucwords(str_replace('_', ' ', (string) ($data['replacement_eligibility'] ?? 'early_exit'))),
+                }
+            : match ((string) ($data['replacement_eligibility'] ?? 'backfill_sla')) {
+                'backfill_sla' => '48h Backfill SLA',
+                'early_exit' => 'Contractor Early Departure',
+                'employer_termination' => 'Client Project Discontinuation',
+                'any_conditions' => 'Any Contingency',
+                default => ucwords(str_replace('_', ' ', (string) ($data['replacement_eligibility'] ?? 'backfill_sla'))),
+            },
             billingFrequency: (string) ($data['billing_frequency'] ?? ($commtype === 2 ? 'one_time' : 'monthly')),
             billingFrequencyLabel: ($commtype === 2)
                 ? 'One Time'
@@ -81,7 +98,12 @@ class ServiceTermDTO
             billingTrigger: (string) ($data['billing_trigger'] ?? ($commtype === 2 ? 'candidate_joined' : 'approved_timesheet')),
             billingTriggerLabel: ($commtype === 2)
                 ? 'Candidate Joined'
-                : 'Approved Timesheet',
+                : match ((string) ($data['billing_trigger'] ?? 'approved_timesheet')) {
+                    'approved_timesheet' => 'Approved Timesheet',
+                    'monthly_cutoff' => 'Monthly Billing Cutoff',
+                    'invoice_raised' => 'Invoice Raised',
+                    default => ucwords(str_replace('_', ' ', (string) ($data['billing_trigger'] ?? 'approved_timesheet'))),
+                },
             paymentTermsDays: (int) ($data['payment_terms_days'] ?? 30),
             rates: $rates,
             countryIds: $countryIds,
