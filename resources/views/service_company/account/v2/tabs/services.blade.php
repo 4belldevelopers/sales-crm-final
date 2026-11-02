@@ -740,6 +740,10 @@
 .cd-subcard-val.rate-highlight {
     color: #059669;
 }
+.cd-subcard-val.rate-highlight.is-free-pink,
+.cd-subcard-val.rate-highlight.is-free-pink span {
+    color: #e11d48 !important;
+}
 
 .cd-subcard-val .val-sub {
     font-size: 10.5px;
@@ -1081,8 +1085,12 @@
                         </div>
                         <span class="cd-num-badge">5 Tiers</span>
                     </div>
-                    <div class="cd-subcard-val rate-highlight">
-                        <span id="ft-model-val">{{ (@$fullTimeStatus->rateType == 2) ? 'Percentage of CTC' : 'Fixed Placement Fee' }}</span>
+                    @php
+                        $isFreeFT = (@$fullTimeStatus->rateType == 0);
+                        $ftModelLabel = (@$fullTimeStatus->rateType == 2) ? 'Percentage of CTC' : ((@$fullTimeStatus->rateType == 1) ? 'Fixed Placement Fee' : 'Free / No Placement Fee');
+                    @endphp
+                    <div class="cd-subcard-val rate-highlight {{ $isFreeFT ? 'is-free-pink' : '' }}">
+                        <span id="ft-model-val">{{ $ftModelLabel }}</span>
                     </div>
                     <div class="cd-subcard-meta">
                         <svg class="text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1613,7 +1621,13 @@
 
                 // 1. Model & Currency
                 if (state.rate_type_label) {
-                    $('#' + prefix + '-model-val').text(state.rate_type_label);
+                    var $modelVal = $('#' + prefix + '-model-val');
+                    $modelVal.text(state.rate_type_label);
+                    if (isFT && (state.rateType === 0 || String(state.rate_type_label).indexOf('Free') !== -1)) {
+                        $modelVal.closest('.cd-subcard-val').addClass('is-free-pink');
+                    } else if (isFT) {
+                        $modelVal.closest('.cd-subcard-val').removeClass('is-free-pink');
+                    }
                 }
                 if (state.currency_code) {
                     $('#' + prefix + '-currency-val').text(state.currency_code);

@@ -20,6 +20,37 @@ Last updated: 2026-10-22 (Super Admin Companies Page UI Redesign, 100% CQRS Read
 - **Test coverage:** `TenantIsolationTest`, `BenchToJobAppTrackerPipelineContractTest`, `BenchTalentRequestPipelineContractTest`, `SuperAdminCompanyLoadTest`, `SuperAdminSubscriptionLoadTest`, `SuperAdminDashboardLoadTest` (100% green).
 - **V2_login blocking-scenarios architecture:** session-epoch pattern + Reverb `UserAccountSuspended` event + `SyncUserStatusAction` (cross-tenant-safe) + `BlockCompanyAction` (static bulk helper) + `block_log` audit table + drop all 20 `refresh:true` ES sites + grep-lint guard. See [docs/V2_login/BLOCKING_SCENARIOS_AUDIT.md](../docs/V2_login/BLOCKING_SCENARIOS_AUDIT.md), [ADR 0007](../docs/adr/0007-blocking-scenarios-architecture.md). Code not yet landed.
 
+- *2026-11-02* — **God-Level Commercials Engine — Phase 7: Placement Fee Refinements (Pink Styling for Free Fee, Per-Hire Basis for Fixed Fee, 10K Default Amount, Removed Refresh Icon, and Tenant Country Auto-Selection) (100% COMPLETED & VERIFIED)**:
+  - **Module & Scope**: Sliding Side-Drawer (`resources/views/service_company/jobs/services_view.blade.php`), Parent Settings Tab (`resources/views/service_company/account/v2/tabs/services.blade.php`), Controller (`ServiceCompanyJobsController`, `ServiceCompanyConsultancyController`), DTO (`ServiceTermDTO`), and Visual Preview Artifact (`drawer_commercials_card_subcard_preview.html`).
+  - **Point 1: Free / No Placement Fee Visual Treatment (Pink)**:
+    - Subtle professional Pink visual indicator applied across idle (`#fff5f7` bg, `#fecdd3` border, `#ffe4e6` icon box, `#e11d48` text) and active states (`#fff1f2` bg, `#f43f5e` border, `#f43f5e` icon box, `#ffffff` text, `#f43f5e` radio dot).
+    - Synchronized with parent settings tab (`services.blade.php`) via `.is-free-pink` badge styling on initial render and real-time client rehydration (`ServicesTabEngine.rehydrateServiceCard`).
+    - Standardized label across backend DTO and controllers to `Free / No Placement Fee`.
+  - **Point 2: Fixed Placement Fee – Change Billing Basis to "Per Hire"**:
+    - Discarded irrelevant "Annual CTC" basis on Fixed Placement Fee.
+    - Specialized commercial fee basis logic across Card 1 & Card 2:
+      - *Percentage Placement Fee* -> Applied on Annual CTC (`sal_mode = 0`)
+      - *Fixed Placement Fee* -> Per Hire (`sal_mode = 3`)
+      - *Free / No Placement Fee* -> No fee basis required / Not Applicable (`sal_mode = 0`)
+    - Updated `ServiceTermDTO` `salModeLabel` and `ServiceCompanyJobsController` `$this->salaryMode = [0 => 'Annual CTC', 3 => 'Per Hire']`.
+  - **Point 3: Default Amount for Fixed Placement Fee (₹10,000)**:
+    - Automatically populates default rate of `10,000` (₹10,000 / $10,000) when switching to Fixed Placement Fee if previous value was empty, legacy <= 100, or 8.33% fallback.
+    - Automatically updates both Card 1 and Card 2 (all 4 seniority tiers), remaining 100% editable by the user.
+    - When switching back to Percentage, cleanly restores `8.33%`.
+  - **Point 4: Removed Refresh Icon**:
+    - Completely removed `.cd-tier-reset-btn` / `↻` reset button from all rows in Card 2 (Seniority-Based Placement Fee Matrix).
+    - Refactored `.cd-matrix-tier-card` CSS grid to 4 clean proportional columns: `minmax(0, 2fr) minmax(0, 1.1fr) minmax(0, 1.3fr) minmax(0, 1.4fr)`.
+  - **Point 5: Auto-Select Services Country from Tenant Address**:
+    - Automatically determines Services Country from registered tenant address via `\App\Helper\GeneralMethod::defaultCountryId($company_id)`.
+    - If tenant has registered address (e.g. India, ID 101), automatically selects it as default on initial drawer load when no countries are explicitly configured, displaying `1 Country Enabled` and active chip.
+    - Fully editable by user (can toggle countries, select top hubs, or clear all).
+  - **Verification**:
+    - `php -l` on all modified files: Pass (0 syntax errors).
+    - `scratch/test_placement_fee_fixes.php`: 10/10 PASS.
+    - `scratch/test_specialized_commercials_sync.php`: 10/10 PASS.
+    - `scratch/test_phase1_commercials_verification.php`: 10/10 PASS.
+    - `scratch/test_phase2_cqrs_verification.php`: 7/7 PASS.
+
 - *2026-11-02* — **God-Level Commercials Engine — Phase 6: Subcard Cleanup, Colored Card Headers, Separate Replacement & Invoicing Cards, and Distinct Fee Types Visual Treatment (Rule 20 / card-subcard) (100% COMPLETED & VERIFIED)**:
   - **Module & Scope**: Sliding Side-Drawer (`resources/views/service_company/jobs/services_view.blade.php`) and Visual Preview Artifact (`drawer_commercials_card_subcard_preview.html`).
   - **Cleaned Card 1**:

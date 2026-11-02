@@ -1817,10 +1817,10 @@ After completing these steps, they will be able to start collaborating with your
                 } elseif ((int) $contractRow->rateType === 1) {
                     $commercialRate = $currSymbol.number_format($firstRate, 2).' / '.$salModeText;
                 } elseif ((int) $contractRow->rateType === 0) {
-                    $commercialRate = 'Free / No Fee';
+                    $commercialRate = 'Free / No Placement Fee';
                 }
             } elseif ((int) $contractRow->rateType === 0) {
-                $commercialRate = 'Free / No Fee';
+                $commercialRate = 'Free / No Placement Fee';
             }
 
             $billingCycle = null;
@@ -1899,7 +1899,7 @@ After completing these steps, they will be able to start collaborating with your
                 $amt = $firstRate !== null && $firstRate > 0 ? $firstRate : (! empty($agencyTerms->fulltime_fixed_fee_amount) ? (float) $agencyTerms->fulltime_fixed_fee_amount : 0);
                 $placementFee = $currSymbol.number_format($amt).' Per Hire';
             } elseif ((int) $permanentRow->rateType === 0) {
-                $placementFee = 'Free / No Fee';
+                $placementFee = 'Free / No Placement Fee';
             } else {
                 $pct = $firstRate !== null && $firstRate > 0 ? $firstRate : (! empty($this->directClientDetail->success_per) ? (float) $this->directClientDetail->success_per : (! empty($partnerCompany->success_per) ? (float) $partnerCompany->success_per : (! empty($agencyTerms->fulltime_success_fee_percentage) ? (float) $agencyTerms->fulltime_success_fee_percentage : 8.33)));
                 $salBasis = [0 => 'Annual CTC', 1 => 'Monthly CTC'][$permanentRow->sal_mode] ?? 'Annual CTC';
