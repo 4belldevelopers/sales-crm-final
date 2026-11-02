@@ -1221,7 +1221,7 @@ class ClientActivityReadService
                 continue;
             }
             try {
-                $cached = Redis::get("ats:job_brief:id:{$jid}:{$serviceCompanyId}:{$clientType}");
+                $cached = Redis::get("ats:job_brief:v4:id:{$jid}:{$serviceCompanyId}:{$clientType}");
                 if ($cached) {
                     $decoded = json_decode($cached, true);
                     if (is_array($decoded)) {
@@ -1242,7 +1242,14 @@ class ClientActivityReadService
                 $params = [
                     'index' => $indices,
                     'size' => max(count($cleanJids), 10),
-                    '_source' => ['id', 'title', 'raw_designation', 'status', 'total_positions', 'job_assign', 'user_name', 'created_by_name', 'posted_by', 'company_name', 'recommendation_relation', 'created_at', 'job_code'],
+                    '_source' => [
+                        'id', 'title', 'raw_designation', 'status', 'total_positions',
+                        'job_assign', 'user_name', 'created_by_name', 'posted_by',
+                        'company_name', 'comId', 'recommendation_relation', 'created_at',
+                        'job_code', 'client_id', 'client_name', 'client_or_company_name',
+                        'self_company', 'logo', 'client_logo', 'client_city_jobs',
+                        'client_location', 'work_shifts', 'employment_type',
+                    ],
                     'body' => [
                         'query' => [
                             'bool' => [
@@ -1262,7 +1269,7 @@ class ClientActivityReadService
                     $jid = (int) ($s['id'] ?? $hit['_id'] ?? 0);
                     $title = trim((string) ($s['raw_designation'] ?? $s['title'] ?? 'Requisition'));
 
-                    // Resolve original creator name & company
+                    // Resolve original creator name
                     $creatorName = null;
                     if (! empty($s['job_assign']) && is_array($s['job_assign'])) {
                         $creatorName = $s['job_assign'][0]['user_name'] ?? null;
@@ -1274,6 +1281,7 @@ class ClientActivityReadService
                         $creatorName = 'Account Manager';
                     }
 
+                    // 1. Direct Client Company & Logo
                     $jComp = trim((string) ($s['company_name'] ?? ''));
                     if (empty($jComp) && $tenantId > 0) {
                         $jComp = $this->resolveTenantCompanyName($tenantId);
@@ -1281,7 +1289,44 @@ class ClientActivityReadService
                     if (empty($jComp)) {
                         $jComp = '4Bell Technology';
                     }
-                    $creatorCompany = $this->formatCompanyName($jComp);
+                    $directClientCompany = $this->formatCompanyName($jComp);
+                    $directClientLogo = ! empty($s['logo']) ? (string) $s['logo'] : null;
+
+                    // 2. Internal Client Name & Logo (e.g. Mahindra under Cognizant)
+                    $rawClientName = trim((string) ($s['client_name'] ?? ($s['client_or_company_name'] ?? '')));
+                    $internalClientName = ! empty($rawClientName) ? $this->formatCompanyName($rawClientName) : '';
+                    $internalClientLogo = ! empty($s['client_logo']) ? (string) $s['client_logo'] : null;
+
+                    // Has Internal Client Context?
+                    $selfCompany = isset($s['self_company']) ? (int) $s['self_company'] : 1;
+                    $hasInternalClient = ($selfCompany === 0 && ! empty($internalClientName) && strtolower($internalClientName) !== strtolower($directClientCompany));
+
+                    if ($hasInternalClient && empty($internalClientLogo) && ! empty($internalClientName)) {
+                        $clientSlug = \Illuminate\Support\Str::slug($internalClientName);
+                        $internalClientLogo = "https://www.google.com/s2/favicons?domain={$clientSlug}.com&sz=256";
+                    }
+
+                    // 3. Location
+                    $location = '';
+                    if (! empty($s['client_city_jobs']) && is_array($s['client_city_jobs'])) {
+                        foreach ($s['client_city_jobs'] as $ccj) {
+                            if (! empty($ccj['city_name'])) {
+                                $location = ucwords(trim($ccj['city_name']));
+                                break;
+                            }
+                        }
+                    }
+                    if (empty($location) && ! empty($s['client_location']) && is_array($s['client_location'])) {
+                        foreach ($s['client_location'] as $cloc) {
+                            if (! empty($cloc['address'])) {
+                                $location = ucwords(trim($cloc['address']));
+                                break;
+                            }
+                        }
+                    }
+
+                    // 4. Job Type
+                    $jobType = ! empty($s['work_shifts']) ? trim($s['work_shifts']) : (! empty($s['employment_type']) ? 'Full Time' : '');
 
                     $rawStatus = strtolower(trim((string) ($s['status'] ?? 'active')));
                     $canonicalStatus = match ($rawStatus) {
@@ -1298,7 +1343,7 @@ class ClientActivityReadService
                         'removed' => 'Removed',
                     };
 
-                    // Resolve Job Sharing & Attribution for Direct Client (Rules 2, 3, 4)
+                    // Resolve Job Sharing & Attribution for Direct Client
                     $isShared = false;
                     $sharerUserId = 0;
                     $sharerName = null;
@@ -1365,7 +1410,15 @@ class ClientActivityReadService
                         'id' => $jid,
                         'title' => ! empty($title) ? ucwords($title) : 'Requisition',
                         'creator_name' => ucwords(trim($creatorName)),
-                        'creator_company' => $creatorCompany,
+                        'creator_company' => $directClientCompany,
+                        'direct_client_company' => $directClientCompany,
+                        'direct_client_logo' => $directClientLogo,
+                        'internal_client_name' => $internalClientName,
+                        'internal_client_logo' => $internalClientLogo,
+                        'has_internal_client' => $hasInternalClient,
+                        'location' => $location,
+                        'job_type' => $jobType,
+                        'total_positions' => (int) ($s['total_positions'] ?? 1),
                         'is_shared' => $isShared,
                         'shared_by_user_id' => $sharerUserId,
                         'shared_by_name' => $sharerName,
@@ -1374,13 +1427,13 @@ class ClientActivityReadService
                         'agency_name' => $agencyName,
                         'status' => $canonicalStatus,
                         'status_label' => $statusLabel,
-                        'total_positions' => (int) ($s['total_positions'] ?? 1),
+                        'recommendation_relation' => $s['recommendation_relation'] ?? [],
                     ];
 
                     if ($jid > 0) {
                         $profiles[$jid] = $data;
                         try {
-                            Redis::setex("ats:job_brief:id:{$jid}:{$serviceCompanyId}:{$clientType}", 900, json_encode($data));
+                            Redis::setex("ats:job_brief:v4:id:{$jid}:{$serviceCompanyId}:{$clientType}", 900, json_encode($data));
                         } catch (\Throwable) {
                         }
                     }
@@ -1546,15 +1599,51 @@ class ClientActivityReadService
                 $resolvedJobTitle = $jobProfile['title'] ?? (! empty($src['title']) ? ucwords(trim($src['title'])) : 'Open Requisition');
                 $resolvedDesignation = $profile['designation'] ?? $src['designation_offer'] ?? $resolvedJobTitle;
 
+                // Job Company Context (Role-aware & Privacy-controlled):
+                // Direct Client View -> Show internal client/company context where permitted (e.g. Mahindra). If no internal client, show Direct Client.
+                // Agency View -> ALWAYS show external Direct Client identity (Cognizant). NEVER expose internal client (Mahindra) name or logo!
+                if ($isAgencyViewer) {
+                    $displayJobCompanyName = $jobProfile['direct_client_company'] ?? ($jobProfile['creator_company'] ?? 'Direct Client');
+                    $displayJobCompanyLogo = $jobProfile['direct_client_logo'] ?? null;
+                    $isInternalClientContext = false;
+                } else {
+                    if (! empty($jobProfile['has_internal_client']) && ! empty($jobProfile['internal_client_name'])) {
+                        $displayJobCompanyName = $jobProfile['internal_client_name'];
+                        $displayJobCompanyLogo = $jobProfile['internal_client_logo'] ?: ($jobProfile['direct_client_logo'] ?? null);
+                        $isInternalClientContext = true;
+                    } else {
+                        $displayJobCompanyName = $jobProfile['direct_client_company'] ?? ($jobProfile['creator_company'] ?? 'Direct Client');
+                        $displayJobCompanyLogo = $jobProfile['direct_client_logo'] ?? null;
+                        $isInternalClientContext = false;
+                    }
+                }
+                $jobLocation = $jobProfile['location'] ?? '';
+                $jobType = $jobProfile['job_type'] ?? '';
+                $totalPositions = $jobProfile['total_positions'] ?? 1;
+
                 // Candidate Uploader & Agency Info
+                $targetAgencyId = $query->agencyCompanyId > 0 ? $query->agencyCompanyId : ($isAgencyViewer ? $query->clientId : 0);
+                if ($targetAgencyId <= 0 && ! empty($jobProfile['recommendation_relation']) && is_array($jobProfile['recommendation_relation'])) {
+                    foreach ($jobProfile['recommendation_relation'] as $rec) {
+                        $toC = (int) ($rec['to_company_id'] ?? 0);
+                        if ($toC > 0 && in_array((int) ($rec['final_status'] ?? 0), [1, 2], true)) {
+                            $targetAgencyId = $toC;
+                            break;
+                        }
+                    }
+                }
+                if ($targetAgencyId <= 0) {
+                    $targetAgencyId = (int) ($src['event_by_company_id'] ?? ($src['thirdparty_company_id'] ?? 0));
+                }
+
                 $agencyCompanyName = $targetAgencyId > 0
                     ? $this->resolveTenantCompanyName($targetAgencyId)
-                    : ($query->clientType === 'direct' ? $this->resolveTenantCompanyName($query->serviceCompanyId) : '4Bell Technology');
+                    : (! empty($src['cur_companyname']) ? $this->formatCompanyName((string) $src['cur_companyname']) : '4Bell Technology');
 
                 $uploaderName = $profile['uploader_name'] ?? (! empty($src['name']) ? ucwords(trim($src['name'])) : 'Technical Recruiter');
                 $uploaderCompany = $agencyCompanyName;
 
-                // Actor & Performer Resolution (Strict Actor-Based Attribution):
+                // Actor & Performer Resolution:
                 $performerUserId = (int) ($src['event_by_user_id'] ?? 0);
                 $performerCompanyId = (int) ($src['event_by_company_id'] ?? 0);
                 $performerRawName = ! empty($src['name']) ? ucwords(trim($src['name'])) : null;
@@ -1563,44 +1652,42 @@ class ClientActivityReadService
                 $isSubmission = ($eventType === 'candidate.uploaded' || ($eventId === 1 && $toStageLower === 'sourcing') || ($fromStageLower === 'inreview' && $toStageLower === 'sourcing'));
 
                 if ($isSubmission) {
-                    // Requirement 2: Agency Candidate Submission Attribution -> Assigned Agency Captain on that job
+                    // Agency Candidate Submission: Display the Assigned Agency Captain on that job
                     $agencyCaptain = $this->resolveAgencyCaptain($jobId, $targetAgencyId, $jobProfile);
                     $rawCapName = (! empty($agencyCaptain['name']) && $agencyCaptain['name'] !== 'Agency Captain')
                         ? $agencyCaptain['name']
-                        : ($uploaderName ?: 'Agency Captain');
-                    if (! str_starts_with(strtolower($rawCapName), 'agency captain')) {
-                        $displayActorName = "Agency Captain {$rawCapName}";
-                    } else {
-                        $displayActorName = $rawCapName;
-                    }
+                        : ($uploaderName ?: 'Agency Representative');
+
+                    // Requirement 2: Remove "Agency Captain" text everywhere. Display only the actual Captain's name.
+                    $cleanCapName = preg_replace('/^agency\s+captain\s*:?\s*/i', '', trim($rawCapName));
+                    $displayActorName = ucwords($cleanCapName);
                     $actorRole = 'Agency Captain';
-                    $actorCompany = $uploaderCompany;
+                    $actorCompany = $agencyCompanyName;
                     $attributionLabel = 'Submitted by';
                     $isClientActor = false;
                 } else {
-                    // Requirements 3 & 4: Subsequent Stage Movements -> Actual Performer
-                    $isPerformerAgency = ($performerCompanyId > 0 && $performerCompanyId === $targetAgencyId);
+                    // Subsequent Stage Movements: Actual Performer
+                    $isPerformerAgency = ($targetAgencyId > 0 && $performerCompanyId === $targetAgencyId)
+                        || (! empty($src['cur_companyname']) && strtolower((string) $src['cur_companyname']) === strtolower($agencyCompanyName));
 
                     if ($isPerformerAgency) {
                         $pName = $performerRawName ?: 'Agency Recruiter';
-                        $displayActorName = "Agency Representative {$pName}";
+                        $cleanPName = preg_replace('/^agency\s+(captain|representative)\s*:?\s*/i', '', trim($pName));
+                        $displayActorName = ucwords($cleanPName);
                         $actorRole = 'Agency Representative';
-                        $actorCompany = $uploaderCompany;
+                        $actorCompany = $agencyCompanyName;
                         $isClientActor = false;
+                        $attributionLabel = 'Moved by';
                     } else {
-                        // Performed by Direct Client Staff
+                        // Direct Client Staff performed stage move
                         $isClientActor = true;
-                        if ($isAgencyViewer) {
-                            // Requirement 1: Privacy Masking for Agency Partner
-                            $displayActorName = 'Client Partner';
-                            $actorRole = 'Client Representative';
-                            $actorCompany = 'Client Partner';
-                        } else {
-                            $pName = $performerRawName ?: 'Client Representative';
-                            $displayActorName = "Direct Client Representative {$pName}";
-                            $actorRole = 'Direct Client Representative';
-                            $actorCompany = $performerRawCompany ?: ($jobProfile['shared_by_company'] ?? 'Direct Client');
-                        }
+                        $pName = $performerRawName ?: (! empty($userProfile['name']) ? $userProfile['name'] : 'Client Representative');
+                        $cleanPName = preg_replace('/^(direct\s+client\s+representative|client\s+partner)\s*:?\s*/i', '', trim($pName));
+                        $displayActorName = ucwords($cleanPName);
+                        $actorRole = 'Direct Client Representative';
+                        // Always show the external Direct Client company (e.g. Cognizant / TechNova), never internal client (Mahindra) to Agency, never "Client Partner"
+                        $actorCompany = $performerRawCompany ?: ($jobProfile['direct_client_company'] ?? ($jobProfile['creator_company'] ?? 'Direct Client'));
+                        $attributionLabel = 'Moved by';
                     }
                 }
 
@@ -1646,18 +1733,21 @@ class ClientActivityReadService
                         'candidate_agency' => $uploaderCompany,
                         'experience_years' => (float) ($src['min_exp'] ?? 0),
                     ],
-                    'job' => array_merge([
+                    'job' => [
                         'id' => $jobId,
                         'code' => $jobId > 0 ? '#'.$jobId : '',
                         'title' => $resolvedJobTitle,
-                        'shared_by' => $isAgencyViewer ? 'Client Partner' : ($jobProfile['shared_by_name'] ?? null),
-                        'shared_by_name' => $isAgencyViewer ? 'Client Partner' : ($jobProfile['shared_by_name'] ?? null),
-                        'shared_by_company' => $isAgencyViewer ? 'Client Partner' : ($jobProfile['shared_by_company'] ?? null),
+                        'company_name' => $displayJobCompanyName,
+                        'company_logo' => $displayJobCompanyLogo,
+                        'is_internal_client' => $isInternalClientContext,
+                        'location' => $jobLocation,
+                        'job_type' => $jobType,
+                        'total_positions' => $totalPositions,
+                        'shared_by' => $jobProfile['shared_by_name'] ?? 'Account Lead',
+                        'shared_by_name' => $jobProfile['shared_by_name'] ?? 'Account Lead',
+                        'shared_by_company' => $jobProfile['direct_client_company'] ?? ($jobProfile['shared_by_company'] ?? 'Direct Client'),
                         'shared_with_agency' => $jobProfile['agency_name'] ?? null,
-                    ], ($query->clientType === 'direct' || $isAgencyViewer) ? [] : [
-                        'creator_name' => $jobProfile['creator_name'] ?? 'Account Manager',
-                        'creator_company' => $jobProfile['creator_company'] ?? $uploaderCompany,
-                    ]),
+                    ],
                     'transition' => [
                         'from_stage_name' => $fromStage ?: ($eventType === 'candidate.uploaded' ? 'Submitted' : 'Sourcing'),
                         'to_stage_name' => $toStage,
@@ -1709,6 +1799,26 @@ class ClientActivityReadService
                 $resolvedJobTitle = $jobProfile['title'] ?? (! empty($src['title']) ? ucwords(trim($src['title'])) : 'Open Requisition');
                 $resolvedDesignation = $intProfile['designation'] ?? (! empty($src['current_designation']) ? ucwords(trim($src['current_designation'])) : $resolvedJobTitle);
 
+                // Job Company Context
+                if ($isAgencyViewer) {
+                    $displayJobCompanyName = $jobProfile['direct_client_company'] ?? ($jobProfile['creator_company'] ?? 'Direct Client');
+                    $displayJobCompanyLogo = $jobProfile['direct_client_logo'] ?? null;
+                    $isInternalClientContext = false;
+                } else {
+                    if (! empty($jobProfile['has_internal_client']) && ! empty($jobProfile['internal_client_name'])) {
+                        $displayJobCompanyName = $jobProfile['internal_client_name'];
+                        $displayJobCompanyLogo = $jobProfile['internal_client_logo'] ?: ($jobProfile['direct_client_logo'] ?? null);
+                        $isInternalClientContext = true;
+                    } else {
+                        $displayJobCompanyName = $jobProfile['direct_client_company'] ?? ($jobProfile['creator_company'] ?? 'Direct Client');
+                        $displayJobCompanyLogo = $jobProfile['direct_client_logo'] ?? null;
+                        $isInternalClientContext = false;
+                    }
+                }
+                $jobLocation = $jobProfile['location'] ?? '';
+                $jobType = $jobProfile['job_type'] ?? '';
+                $totalPositions = $jobProfile['total_positions'] ?? 1;
+
                 $stage = $src['stage'] ?? $src['master_status_name'] ?? 'Interview';
                 $stageLower = strtolower(trim((string) $stage));
                 $intStatusId = (int) ($src['master_status_id'] ?? 0);
@@ -1724,17 +1834,11 @@ class ClientActivityReadService
                 $uploaderName = $intProfile['uploader_name'] ?? (! empty($src['posted_by']) ? ucwords(trim($src['posted_by'])) : (! empty($src['source']) ? ucwords(trim($src['source'])) : 'Technical Recruiter'));
                 $interviewMode = ! empty($src['mode_name']) ? $src['mode_name'] : (! empty($src['interview_type']) ? $src['interview_type'] : 'Video Call');
 
-                if ($isAgencyViewer) {
-                    $intActorName = 'Client Partner';
-                    $intActorRole = 'Client Representative';
-                    $intCompany = 'Client Partner';
-                    $intPanel = null;
-                } else {
-                    $intActorName = $uploaderName;
-                    $intActorRole = 'Client Scheduler';
-                    $intCompany = ($query->clientType === 'direct') ? $this->resolveTenantCompanyName($query->serviceCompanyId) : 'Client Company';
-                    $intPanel = $src['interviewers'] ?? 'Client Hiring Panel';
-                }
+                $cleanIntActor = preg_replace('/^(client\s+partner|client\s+representative)\s*:?\s*/i', '', trim($uploaderName));
+                $intActorName = ! empty($cleanIntActor) ? ucwords($cleanIntActor) : 'Account Lead';
+                $intActorRole = 'Client Scheduler';
+                $intCompany = $jobProfile['direct_client_company'] ?? ($jobProfile['creator_company'] ?? 'Direct Client');
+                $intPanel = $isAgencyViewer ? null : ($src['interviewers'] ?? 'Client Hiring Panel');
 
                 $normalized[] = [
                     'event_id' => $canonicalId,
@@ -1767,9 +1871,15 @@ class ClientActivityReadService
                         'id' => $jobId,
                         'code' => $jobId > 0 ? '#'.$jobId : '',
                         'title' => $resolvedJobTitle,
-                        'shared_by' => $isAgencyViewer ? 'Client Partner' : ($jobProfile['shared_by_name'] ?? null),
-                        'shared_by_name' => $isAgencyViewer ? 'Client Partner' : ($jobProfile['shared_by_name'] ?? null),
-                        'shared_by_company' => $isAgencyViewer ? 'Client Partner' : ($jobProfile['shared_by_company'] ?? null),
+                        'company_name' => $displayJobCompanyName,
+                        'company_logo' => $displayJobCompanyLogo,
+                        'is_internal_client' => $isInternalClientContext,
+                        'location' => $jobLocation,
+                        'job_type' => $jobType,
+                        'total_positions' => $totalPositions,
+                        'shared_by' => $jobProfile['shared_by_name'] ?? 'Account Lead',
+                        'shared_by_name' => $jobProfile['shared_by_name'] ?? 'Account Lead',
+                        'shared_by_company' => $jobProfile['direct_client_company'] ?? ($jobProfile['shared_by_company'] ?? 'Direct Client'),
                         'shared_with_agency' => $jobProfile['agency_name'] ?? null,
                     ],
                     'transition' => [
@@ -1803,10 +1913,28 @@ class ClientActivityReadService
                 $jobProfile = $jobProfiles[$jobId] ?? null;
                 $resolvedJobTitle = $jobProfile['title'] ?? (! empty($src['raw_designation']) ? ucwords(trim($src['raw_designation'])) : (! empty($src['title']) ? ucwords(trim($src['title'])) : 'New Requisition'));
                 $creatorName = $jobProfile['creator_name'] ?? (! empty($src['user_name']) ? ucwords(trim($src['user_name'])) : 'Account Manager');
-                $jobCompany = $jobProfile['creator_company'] ?? (! empty($src['company_name']) ? $this->formatCompanyName((string) $src['company_name']) : $this->resolveTenantCompanyName($query->tenantId));
                 $jobStatus = $jobProfile['status'] ?? 'active';
                 $statusLabel = $jobProfile['status_label'] ?? 'Active';
                 $totalPositions = (int) ($src['total_positions'] ?? ($jobProfile['total_positions'] ?? 1));
+
+                // Job Company Context
+                if ($isAgencyViewer) {
+                    $displayJobCompanyName = $jobProfile['direct_client_company'] ?? ($jobProfile['creator_company'] ?? 'Direct Client');
+                    $displayJobCompanyLogo = $jobProfile['direct_client_logo'] ?? null;
+                    $isInternalClientContext = false;
+                } else {
+                    if (! empty($jobProfile['has_internal_client']) && ! empty($jobProfile['internal_client_name'])) {
+                        $displayJobCompanyName = $jobProfile['internal_client_name'];
+                        $displayJobCompanyLogo = $jobProfile['internal_client_logo'] ?: ($jobProfile['direct_client_logo'] ?? null);
+                        $isInternalClientContext = true;
+                    } else {
+                        $displayJobCompanyName = $jobProfile['direct_client_company'] ?? ($jobProfile['creator_company'] ?? 'Direct Client');
+                        $displayJobCompanyLogo = $jobProfile['direct_client_logo'] ?? null;
+                        $isInternalClientContext = false;
+                    }
+                }
+                $jobLocation = $jobProfile['location'] ?? '';
+                $jobType = $jobProfile['job_type'] ?? '';
 
                 $jobSequence = $isDirectShared && ! empty($jobProfile['shared_at'])
                     ? Carbon::parse($jobProfile['shared_at'])->timestamp
@@ -1815,19 +1943,14 @@ class ClientActivityReadService
                     ? $jobProfile['shared_at']
                     : Carbon::parse($createdAt)->toIso8601String();
 
-                if ($isAgencyViewer) {
-                    $sharedByName = 'Client Partner';
-                    $sharedByCompany = 'Client Partner';
-                    $sharedWithAgency = 'Your Agency';
-                    $actorRole = 'Client Representative';
-                    $transitionText = 'Job Shared with your agency';
-                } else {
-                    $sharedByName = $jobProfile['shared_by_name'] ?? 'Account Lead';
-                    $sharedByCompany = $jobProfile['shared_by_company'] ?? $jobCompany;
-                    $sharedWithAgency = $jobProfile['agency_name'] ?? $this->resolveTenantCompanyName($query->serviceCompanyId);
-                    $actorRole = $isDirectShared ? 'Direct Client Representative' : 'Account Manager';
-                    $transitionText = $isDirectShared ? ('Shared with '.$sharedWithAgency) : ($statusLabel.' Requisition');
-                }
+                $sharerName = $jobProfile['shared_by_name'] ?? (! empty($src['user_name']) ? ucwords(trim($src['user_name'])) : 'Account Lead');
+                $cleanSharer = preg_replace('/^(direct\s+client\s+representative|client\s+partner)\s*:?\s*/i', '', trim($sharerName));
+                $sharedByName = ucwords($cleanSharer);
+                $sharedByCompany = $jobProfile['direct_client_company'] ?? ($jobProfile['creator_company'] ?? 'Direct Client');
+                $sharedWithAgency = $isAgencyViewer ? 'Your Agency' : ($jobProfile['agency_name'] ?? $this->resolveTenantCompanyName($query->serviceCompanyId));
+                $actorRole = 'Direct Client Representative';
+                $attributionLabel = $isDirectShared ? 'Shared by' : 'Created by';
+                $transitionText = $isDirectShared ? ('Shared with '.$sharedWithAgency) : ($statusLabel.' Requisition');
 
                 $normalized[] = [
                     'event_id' => $canonicalId,
@@ -1844,15 +1967,21 @@ class ClientActivityReadService
                         'is_client' => true,
                     ],
                     'attribution' => [
-                        'label' => $isDirectShared ? 'Shared by' : 'Created by',
+                        'label' => $attributionLabel,
                         'name' => $sharedByName,
                         'role' => $actorRole,
                         'company_name' => $sharedByCompany,
                     ],
-                    'job' => array_merge([
+                    'job' => [
                         'id' => $jobId,
                         'code' => $jobId > 0 ? '#'.$jobId : '',
                         'title' => $resolvedJobTitle,
+                        'company_name' => $displayJobCompanyName,
+                        'company_logo' => $displayJobCompanyLogo,
+                        'is_internal_client' => $isInternalClientContext,
+                        'location' => $jobLocation,
+                        'job_type' => $jobType,
+                        'total_positions' => $totalPositions,
                         'shared_by' => $sharedByName,
                         'shared_by_name' => $sharedByName,
                         'shared_by_company' => $sharedByCompany,
@@ -1860,12 +1989,7 @@ class ClientActivityReadService
                         'agency_name' => $sharedWithAgency,
                         'status' => $jobStatus,
                         'status_label' => $statusLabel,
-                        'total_positions' => $totalPositions,
-                    ], ($isDirectShared || $isAgencyViewer) ? [] : [
-                        'created_by' => $creatorName,
-                        'creator_name' => $creatorName,
-                        'creator_company' => $jobCompany,
-                    ]),
+                    ],
                     'transition' => [
                         'to_stage_name' => $transitionText,
                         'status' => $isDirectShared ? 'active' : $jobStatus,
