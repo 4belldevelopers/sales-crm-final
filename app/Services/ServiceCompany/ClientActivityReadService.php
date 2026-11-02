@@ -1547,10 +1547,12 @@ class ClientActivityReadService
                 $resolvedDesignation = $profile['designation'] ?? $src['designation_offer'] ?? $resolvedJobTitle;
 
                 // Candidate Uploader & Agency Info
+                $agencyCompanyName = $targetAgencyId > 0
+                    ? $this->resolveTenantCompanyName($targetAgencyId)
+                    : ($query->clientType === 'direct' ? $this->resolveTenantCompanyName($query->serviceCompanyId) : '4Bell Technology');
+
                 $uploaderName = $profile['uploader_name'] ?? (! empty($src['name']) ? ucwords(trim($src['name'])) : 'Technical Recruiter');
-                $uploaderCompany = ($query->clientType === 'direct')
-                    ? $this->resolveTenantCompanyName($query->serviceCompanyId)
-                    : ($profile['company_name'] ?? (! empty($src['cur_companyname']) ? $this->formatCompanyName((string) $src['cur_companyname']) : $this->resolveTenantCompanyName($query->tenantId)));
+                $uploaderCompany = $agencyCompanyName;
 
                 // Actor & Performer Resolution (Strict Actor-Based Attribution):
                 $performerUserId = (int) ($src['event_by_user_id'] ?? 0);
@@ -1563,11 +1565,13 @@ class ClientActivityReadService
                 if ($isSubmission) {
                     // Requirement 2: Agency Candidate Submission Attribution -> Assigned Agency Captain on that job
                     $agencyCaptain = $this->resolveAgencyCaptain($jobId, $targetAgencyId, $jobProfile);
-                    $captainName = $agencyCaptain['name'] ?? ($uploaderName ?? 'Agency Captain');
-                    if (! str_starts_with(strtolower($captainName), 'agency captain')) {
-                        $displayActorName = "Agency Captain {$captainName}";
+                    $rawCapName = (! empty($agencyCaptain['name']) && $agencyCaptain['name'] !== 'Agency Captain')
+                        ? $agencyCaptain['name']
+                        : ($uploaderName ?: 'Agency Captain');
+                    if (! str_starts_with(strtolower($rawCapName), 'agency captain')) {
+                        $displayActorName = "Agency Captain {$rawCapName}";
                     } else {
-                        $displayActorName = $captainName;
+                        $displayActorName = $rawCapName;
                     }
                     $actorRole = 'Agency Captain';
                     $actorCompany = $uploaderCompany;
