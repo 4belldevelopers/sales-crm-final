@@ -86,6 +86,21 @@ Last updated: 2026-10-22 (Super Admin Companies Page UI Redesign, 100% CQRS Read
     - `scratch/test_phase2_cqrs_verification.php` verified 7/7 tests passed (0 failures).
     - Pint code linter passed (100% clean).
 
+- *2026-11-02* — **God-Level Unified Activity Presentation Engine & Zero-MySQL Read Layer (100% COMPLETED & VERIFIED)**:
+  - **Module & Scope**: Client and Agency Activity Drawers (`app/Services/ServiceCompany/ClientActivityReadService.php`, `app/DTO/ServiceCompany/ClientActivityQuery.php`, `app/DTO/ServiceCompany/ClientAccessContext.php`, `app/DTO/ServiceCompany/ActivityInternalContext.php`, `app/DTO/ServiceCompany/ActivityPresentationDTO.php`, `app/Enums/ActivitySource.php`, `app/Services/CompanyRepresentativeService.php`, `resources/views/service_company/ajax_pages/client_activity_cards_ajax.blade.php`, `resources/views/service_company/client/components/tab-activity.blade.php`, `resources/views/service_company/consultancy/dviewMore.blade.php`).
+  - **Zero-MySQL Fallback (Rule 1)**: Eliminated relational MySQL queries on candidate and job resolver fallbacks; all profile resolutions operate strictly in-memory or via cached Redis/Dragonfly and Elasticsearch projections.
+  - **Boundary-Safe Presentation Model**:
+    - Introduced `ActivitySource` backed enum for typed event origins.
+    - Introduced `ActivityInternalContext` for internal domain representation retaining unmasked performer context.
+    - Introduced `ActivityPresentationDTO` boundary contract guaranteeing confidential candidate feedback, notes, and internal client PII are physically excluded before reaching Agency view.
+    - Scoped bidirectional job resolution across direct client and marketplace agencies.
+  - **Verification**:
+    - `tests/Feature/ClientDrawerCandidateVisibilityRuleTest.php`: 10/10 PASS (38 assertions).
+    - `tests/Feature/DirectClientDrawerAttributionSecurityTest.php`: 39/39 PASS (105 assertions).
+    - `scratch/test_specialized_commercials_sync.php`: 10/10 PASS.
+    - `scratch/test_phase1_commercials_verification.php`: 10/10 PASS.
+    - Pint: 100% clean across all 7 PHP files.
+
 - *2026-11-02* — **Commercials Services Drawer UX & Header Streamlining (100% COMPLETED & VERIFIED)**:
   - **Module & Scope**: Service Company Hiring Services Drawer (`resources/views/service_company/jobs/services_view.blade.php`, `resources/views/service_company/jobs/services.blade.php`, `resources/views/service_company/account/index.blade.php`).
   - **UX Streamlining & Layout Fixes**:

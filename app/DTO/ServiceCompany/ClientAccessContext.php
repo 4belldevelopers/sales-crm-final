@@ -52,7 +52,8 @@ class ClientAccessContext
         $rawClientId = (int) $request->input('client_id');
         $customRaw = $request->input('custom');
         $isCustom = ($customRaw === 'true' || $customRaw === true || $customRaw === '1' || (int) $customRaw === 1);
-        $clientType = $isCustom ? 'internal' : 'direct';
+        $rawClientType = $request->input('client_type') ?: ($request->input('viewer_type') === 'agency' ? 'agency' : null);
+        $clientType = $isCustom ? 'internal' : ($rawClientType ?: 'direct');
 
         // Super Admin resolution: Resolve operating company context
         $isSuperAdmin = (bool) ($user->is_superadmin ?? false)
@@ -132,7 +133,7 @@ class ClientAccessContext
                 tenantId: $tenantId,
                 serviceCompanyId: $serviceCompanyId,
                 clientId: $rawClientId,
-                clientType: 'direct',
+                clientType: $clientType,
                 partnerCompanyId: $partnerCompanyId,
                 authorizationVersion: 1,
                 isAuthorized: $isAuthorized

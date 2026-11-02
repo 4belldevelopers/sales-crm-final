@@ -337,6 +337,16 @@ class CompanyRepresentativeService
         // Clean cache for this job and tenant
         $this->invalidateTenantRepresentativeCache($companyId);
         Cache::forget("ats:job_proj:{$jobId}");
+        try {
+            Redis::del("ats:job_agency_rep:{$jobId}:{$agencyCompanyId}");
+            Redis::setex("ats:job_agency_rep:{$jobId}:{$agencyCompanyId}", 86400, json_encode([
+                'user_id' => $newUserId,
+                'name' => $newUser->name,
+                'role' => 'Agency Captain',
+                'company_id' => $agencyCompanyId,
+            ]));
+        } catch (\Throwable) {
+        }
 
         return [
             'status' => 'success',

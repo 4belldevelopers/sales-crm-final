@@ -315,7 +315,11 @@
                             </div>
                             @if(!empty($companyName))
                                 <div class="cd-activity-actor-company" title="{{ $companyName }}">
-                                    <i class="far fa-building me-1" style="font-size: 10px; color: #64748b;"></i>{{ $companyName }}
+                                    @if($companyName === 'Client Partner')
+                                        <i class="fas fa-handshake me-1 text-success" style="font-size: 10px;"></i>{{ $companyName }}
+                                    @else
+                                        <i class="far fa-building me-1" style="font-size: 10px; color: #64748b;"></i>{{ $companyName }}
+                                    @endif
                                 </div>
                             @endif
                         </div>
