@@ -22,6 +22,7 @@ use App\Models\Country;
 use App\Models\JobCategory;
 use App\Models\User;
 use App\Services\AgencyListingService;
+use App\Services\CurrencyService;
 use App\Services\ElasticService;
 use App\Services\MailService;
 use Carbon\Carbon;
@@ -29,7 +30,6 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
-use Maatwebsite\Excel\Excel as ExcelExcel;
 use Maatwebsite\Excel\Facades\Excel;
 use Yajra\DataTables\Facades\DataTables;
 
@@ -57,8 +57,16 @@ class ServiceCompanyConsultancyController extends ServiceCompanyBaseController
         $company_id = auth()->user()->company_id;
         $this->spartnerDataCnt = $this->agencyListingService->getSummaryCounters($company_id);
         $this->countries = cache()->remember('static_countries_list', now()->addDays(7), function () {
-            return DB::table('countries')->get();
+            return DB::table('countries')->orderBy('country_name', 'asc')->get();
         });
+        $this->industries = cache()->remember('static_industries_list', now()->addDays(7), function () {
+            return DB::table('td_industries')->where('status', 'Y')->orderBy('ind_name', 'asc')->get();
+        });
+        $this->industriesManifest = \App\Services\IndustryTaxonomyService::getGlobalManifest();
+        $this->agencyLocationFacets = $this->agencyListingService->getAgencyLocationFacets($company_id);
+        $this->agencyRecencyCounts = $this->agencyListingService->getAgencyRecencyCounts($company_id);
+        $this->agencyPipelineCounts = $this->agencyListingService->getAgencyPipelineCounts($company_id);
+        $this->initialTab = $request->input('tab', 'all');
 
         // ── Phase 1 God-Level Optimization: Bootstrap Page 1 data directly into view ──
         try {
@@ -78,24 +86,24 @@ class ServiceCompanyConsultancyController extends ServiceCompanyBaseController
 
     public function data_ajax(Request $request)
     {
-        $company_id = '';
-        $company_id = auth()->user()->company_id;
+        $company_id = (int) auth()->user()->company_id;
         $searchTerms = request('cus_search');
         $custom_search = $searchTerms;
-        $searchQuery = $request->input('q');
-        $countryFilter = request('country');
-        $performanceFilter = request('agency_performance');
-        $slaFilter = request('response_sla');
-        $valCheck = request('sortingfilter');
-        $tab = request('tab') ?: request('active_tab', '');
+        $searchQuery = trim((string) $request->input('q', $request->input('search', '')));
+        $countryFilter = request('country', request('country_id', ''));
+        $cityFilter = request('city', request('city_id', ''));
+        $unspecifiedLocation = (bool) request('unspecified_location', false);
+        $industryFilter = request('industry', request('industry_id', ''));
+        $performanceFilter = request('agency_performance', '');
+        $activityFilter = request('activity', '');
+        $pipelineFilter = request('pipeline', '');
+        $slaFilter = request('response_sla', '');
+        $valCheck = request('sort', request('sortingfilter', 'recent'));
+        $tab = $request->input('tab') ?: $request->input('active_tab', 'all');
         $page = max((int) $request->input('page', 1), 1);
         $size = (int) ($request->input('per_page') ?? $request->input('size') ?? $request->input('limit') ?? 10);
         $from = ($page - 1) * $size;
-        $sort = [];
-        $customSearch = trim($custom_search);
-        $shouldSearch = [];
-        $must = [];
-
+        $customSearch = trim($custom_search ?: $searchQuery);
         $userId = (int) ($this->user ? $this->user->id : (auth()->id() ?? 0));
 
         $cachePayload = [
@@ -103,10 +111,15 @@ class ServiceCompanyConsultancyController extends ServiceCompanyBaseController
             'size' => $size,
             'q' => $searchQuery,
             'country' => $countryFilter,
+            'city' => $cityFilter,
+            'unspecified_location' => $unspecifiedLocation,
+            'industry' => $industryFilter,
+            'activity' => $activityFilter,
+            'pipeline' => $pipelineFilter,
             'agency_performance' => $performanceFilter,
             'response_sla' => $slaFilter,
             'company' => $company_id,
-            'custom_search' => $custom_search,
+            'custom_search' => $customSearch,
             'user_id' => $userId,
             'valCheck' => $valCheck,
             'tab' => $tab,
@@ -114,82 +127,332 @@ class ServiceCompanyConsultancyController extends ServiceCompanyBaseController
 
         $versionKey = 'allconsultancy_version_user_'.$userId;
         $version = cache()->get($versionKey, 1);
-        $cacheKeySet = 'ats:allconsultancy:'.$userId.':'.$version.':'.md5(json_encode($cachePayload));
-        /* ----------------------------
-        ⚡ Check DragonflyDB first
-        ----------------------------- */
-        if (cache()->has($cacheKeySet)) {
-            return response()->json(cache()->get($cacheKeySet));
+        $hash = md5(json_encode($cachePayload));
+        $cacheKeySet = 'ats:allconsultancy:'.$userId.':'.$version.':'.$hash;
+        $etag = '"agency-'.$company_id.'-'.$version.'-'.$hash.'"';
+
+        if ($request->header('If-None-Match') === $etag) {
+            return response('', 304)->header('ETag', $etag);
         }
 
-        try {
-            // Build relation query based on Status filter ($valCheck: '' = All Status, 1 = Active, 2 = Inactive)
-            $relationMust = [
-                ['term' => ['from_company_id' => $company_id]],
-            ];
-
-            if ($valCheck == '1') {
-                $relationMust[] = ['term' => ['final_status' => 1]];
-            } elseif ($valCheck == '2') {
-                $relationMust[] = ['term' => ['final_status' => 0]];
-            } else {
-                // All Status: include both active and inactive relations
-                $relationMust[] = [
-                    'bool' => [
-                        'should' => [
-                            ['term' => ['final_status' => 1]],
-                            ['term' => ['final_status' => 0]],
-                        ],
-                        'minimum_should_match' => 1,
-                    ],
-                ];
+        /* ----------------------------
+        ⚡ Check DragonflyDB / Redis first
+        ----------------------------- */
+        if (cache()->has($cacheKeySet)) {
+            $cached = cache()->get($cacheKeySet);
+            if (! isset($cached['agencyDataCnt'])) {
+                $cached['agencyDataCnt'] = $this->agencyListingService->getSummaryCounters($company_id);
             }
 
-            $relationIds = $this->elasticService->getClient()->search([
-                'index' => ELASTIC_CLIENT_AND_AGENCY_RELATION_INDEX,
-                'body' => [
-                    'size' => 10000,
-                    'query' => [
-                        'bool' => [
-                            'must' => $relationMust,
+            return response()->json($cached)->header('ETag', $etag);
+        }
+
+        // Single-flight lock anti-stampede
+        $singleFlightLock = null;
+        try {
+            $lockKey = 'lock:'.$cacheKeySet;
+            $singleFlightLock = cache()->lock($lockKey, 5);
+            if (! $singleFlightLock->block(2)) {
+                $singleFlightLock = null;
+                if (cache()->has($cacheKeySet)) {
+                    $cached = cache()->get($cacheKeySet);
+                    if (! isset($cached['agencyDataCnt'])) {
+                        $cached['agencyDataCnt'] = $this->agencyListingService->getSummaryCounters($company_id);
+                    }
+
+                    return response()->json($cached)->header('ETag', $etag);
+                }
+            } else {
+                if (cache()->has($cacheKeySet)) {
+                    $singleFlightLock->release();
+                    $singleFlightLock = null;
+                    $cached = cache()->get($cacheKeySet);
+                    if (! isset($cached['agencyDataCnt'])) {
+                        $cached['agencyDataCnt'] = $this->agencyListingService->getSummaryCounters($company_id);
+                    }
+
+                    return response()->json($cached)->header('ETag', $etag);
+                }
+            }
+        } catch (\Throwable $e) {
+            $singleFlightLock = null;
+        }
+
+        // ── Tab 6: Pending Invitations (`tab === 'request'`) ──
+        if ($tab === 'request') {
+            $invitationsQuery = DB::table('staffing_company_invitation')
+                ->select(
+                    'staffing_company_invitation.id',
+                    'staffing_company_invitation.to_email',
+                    'staffing_company_invitation.to_company_id',
+                    'staffing_company_invitation.to_invitation_status',
+                    'staffing_company_invitation.from_created_at',
+                    'staffing_company_invitation.job_id',
+                    'companies.company_name',
+                    'companies.logo',
+                    'companies.website',
+                    'companies.industries',
+                    'td_industries.ind_name',
+                    'clients.id as client_id',
+                    'city_list.city as city_name',
+                    'state_list.state as state_name',
+                    'countries.country_name'
+                )
+                ->leftJoin('companies', 'companies.id', '=', 'staffing_company_invitation.to_company_id')
+                ->leftJoin('td_industries', 'td_industries.ind_id', '=', 'companies.industries')
+                ->leftJoin('clients', function ($join) {
+                    $join->on('clients.company_id', '=', 'companies.id')
+                        ->where('clients.self_company', 1);
+                })
+                ->leftJoin('client_location', 'client_location.client_id', '=', 'clients.id')
+                ->leftJoin('city_list', 'city_list.city_id', '=', 'client_location.city_id')
+                ->leftJoin('state_list', 'state_list.id', '=', 'client_location.state')
+                ->leftJoin('countries', 'countries.id', '=', 'client_location.country_id')
+                ->where('staffing_company_invitation.from_company_id', $company_id)
+                ->where('staffing_company_invitation.to_invitation_status', '!=', 1);
+
+            if (! empty($customSearch)) {
+                $invitationsQuery->where(function ($q) use ($customSearch) {
+                    $q->where('staffing_company_invitation.to_email', 'like', "%{$customSearch}%")
+                        ->orWhere('companies.company_name', 'like', "%{$customSearch}%")
+                        ->orWhere('td_industries.ind_name', 'like', "%{$customSearch}%");
+                });
+            }
+
+            if ($unspecifiedLocation) {
+                $invitationsQuery->whereNull('client_location.country_id');
+            } elseif (! empty($countryFilter)) {
+                $invitationsQuery->where('client_location.country_id', (int) $countryFilter);
+                if (! empty($cityFilter)) {
+                    if (is_numeric($cityFilter)) {
+                        $invitationsQuery->where('client_location.city_id', (int) $cityFilter);
+                    } else {
+                        $invitationsQuery->where(function ($q) use ($cityFilter) {
+                            $q->where('city_list.city', 'like', "%{$cityFilter}%")
+                                ->orWhere('client_location.city', 'like', "%{$cityFilter}%");
+                        });
+                    }
+                }
+            }
+
+            if (! empty($industryFilter)) {
+                $invitationsQuery->where('companies.industries', (int) $industryFilter);
+            }
+
+            $total = $invitationsQuery->count();
+
+            // Sort
+            if ($valCheck === 'name_asc') {
+                $invitationsQuery->orderBy(DB::raw('COALESCE(companies.company_name, staffing_company_invitation.to_email)'), 'asc');
+            } elseif ($valCheck === 'name_desc') {
+                $invitationsQuery->orderBy(DB::raw('COALESCE(companies.company_name, staffing_company_invitation.to_email)'), 'desc');
+            } elseif ($valCheck === 'oldest') {
+                $invitationsQuery->orderBy('staffing_company_invitation.id', 'asc');
+            } else {
+                $invitationsQuery->orderBy('staffing_company_invitation.id', 'desc');
+            }
+
+            $invitations = $invitationsQuery->skip($from)->take($size)->get();
+
+            $pagination = [
+                'total' => $total,
+                'current_page' => $page,
+                'per_page' => $size,
+                'last_page' => (int) ceil($total / $size),
+                'listType' => 'allcandidate',
+            ];
+
+            $userPermissions = $this->userPermissions;
+            $agencyDataCnt = $this->agencyListingService->getSummaryCounters($company_id);
+
+            $responseData = [
+                'html' => view('service_company.ajax_pages.staffing-partner-ajax', [
+                    'isRequest' => true,
+                    'invitations' => $invitations,
+                    'data' => [],
+                    'userPermissions' => $userPermissions,
+                    'company_id' => $company_id,
+                    'batchAgencyStats' => [],
+                    'batchLocations' => [],
+                    'batchIndustries' => [],
+                    'batchRelations' => [],
+                    'batchCompanySizes' => [],
+                ])->render(),
+                'total' => $total,
+                'pagination' => view('service_company.ajax_pages.pagination', compact('pagination'))->render(),
+                'agencyLocationFacets' => $this->agencyListingService->getAgencyLocationFacets($company_id),
+                'agencyRecencyCounts' => $this->agencyListingService->getAgencyRecencyCounts($company_id),
+                'agencyPipelineCounts' => $this->agencyListingService->getAgencyPipelineCounts($company_id),
+                'agencyDataCnt' => $agencyDataCnt,
+            ];
+
+            cache()->put($cacheKeySet, $responseData, now()->addMinutes(ALL_CONSULTANCY_TIME));
+            if ($singleFlightLock) {
+                try {
+                    $singleFlightLock->release();
+                } catch (\Throwable $e) {
+                }
+            }
+
+            return response()->json($responseData)->header('ETag', $etag);
+        }
+
+        // ── Tabs 1 to 5: Connected Agencies (`all`, `newly_added`, `top_performing`, `hiring`, `inactive`) ──
+        try {
+            if ($this->elasticService->indexExists(ELASTIC_CLIENT_AND_AGENCY_RELATION_INDEX)) {
+                $relationRes = $this->elasticService->getClient()->search([
+                    'index' => ELASTIC_CLIENT_AND_AGENCY_RELATION_INDEX,
+                    'body' => [
+                        'size' => 10000,
+                        'query' => [
+                            'bool' => [
+                                'must' => [
+                                    ['term' => ['from_company_id' => $company_id]],
+                                    ['term' => ['final_status' => 1]],
+                                ],
+                            ],
                         ],
+                        '_source' => ['to_company_id'],
                     ],
-                    '_source' => ['to_company_id'],
-                ],
-            ]);
-
-            // Extract connected agency company IDs
-            $companyIds = collect($relationIds['hits']['hits'] ?? [])
-                ->pluck('_source.to_company_id')
-                ->unique()
-                ->values()
-                ->toArray();
-
-            // Newly added agencies: joined within last 180 days (capped at 10)
-            if ($tab === 'newly_added') {
-                $recentCompanyIds = DB::table('staffing_company_relation')
+                ]);
+                $companyIds = collect($relationRes['hits']['hits'] ?? [])
+                    ->pluck('_source.to_company_id')
+                    ->filter()
+                    ->unique()
+                    ->values()
+                    ->toArray();
+            } else {
+                $companyIds = DB::table('staffing_company_relation')
                     ->where('from_company_id', $company_id)
                     ->where('final_status', 1)
-                    ->where('created_at', '>=', now()->subDays(180))
-                    ->orderBy('created_at', 'desc')
+                    ->whereNotNull('to_company_id')
+                    ->distinct()
                     ->pluck('to_company_id')
-                    ->unique()
-                    ->take(10)
                     ->toArray();
+            }
+
+            // Tab-specific pre-filtering of company IDs BEFORE Elasticsearch pagination
+            if ($tab === 'newly_added') {
+                $recentCompanyIds = $this->agencyListingService->getRecentAgencyIds($company_id, 180);
                 $companyIds = array_values(array_intersect($recentCompanyIds, $companyIds));
-                $size = min($size, 10);
             } elseif ($tab === 'top_performing') {
-                $performanceFilter = 'high';
+                $topCompanyIds = $this->agencyListingService->getTopPerformingAgencyIds($company_id, $companyIds);
+                $companyIds = array_values(array_intersect($topCompanyIds, $companyIds));
+            } elseif ($tab === 'hiring') {
+                $activeCompanyIds = $this->agencyListingService->getActiveAgencyIds($company_id, $companyIds);
+                $companyIds = array_values(array_intersect($activeCompanyIds, $companyIds));
+            } elseif ($tab === 'inactive') {
+                $activeCompanyIds = $this->agencyListingService->getActiveAgencyIds($company_id, $companyIds);
+                $companyIds = array_values(array_diff($companyIds, $activeCompanyIds));
+            }
+
+            // Activity recency filter (Mutually exclusive recency buckets matching Client Tracker UX)
+            if ($activityFilter === '7d') {
+                $active7dIds = DB::table('job_applications')
+                    ->whereIn('thirdparty_company_id', $companyIds)
+                    ->where('created_at', '>=', now()->subDays(7))
+                    ->distinct()
+                    ->pluck('thirdparty_company_id')
+                    ->toArray();
+                $companyIds = array_values(array_intersect($active7dIds, $companyIds));
+            } elseif ($activityFilter === '30d') {
+                $active30dIds = DB::table('job_applications')
+                    ->whereIn('thirdparty_company_id', $companyIds)
+                    ->where('created_at', '>=', now()->subDays(30))
+                    ->where('created_at', '<', now()->subDays(7))
+                    ->distinct()
+                    ->pluck('thirdparty_company_id')
+                    ->toArray();
+                $companyIds = array_values(array_intersect($active30dIds, $companyIds));
+            } elseif ($activityFilter === '90d') {
+                $active90dIds = DB::table('job_applications')
+                    ->whereIn('thirdparty_company_id', $companyIds)
+                    ->where('created_at', '>=', now()->subDays(90))
+                    ->where('created_at', '<', now()->subDays(30))
+                    ->distinct()
+                    ->pluck('thirdparty_company_id')
+                    ->toArray();
+                $companyIds = array_values(array_intersect($active90dIds, $companyIds));
+            } elseif ($activityFilter === 'dormant') {
+                $recentIds = DB::table('job_applications')
+                    ->whereIn('thirdparty_company_id', $companyIds)
+                    ->where('created_at', '>=', now()->subDays(90))
+                    ->distinct()
+                    ->pluck('thirdparty_company_id')
+                    ->toArray();
+                $allSubmittedIds = DB::table('job_applications')
+                    ->whereIn('thirdparty_company_id', $companyIds)
+                    ->distinct()
+                    ->pluck('thirdparty_company_id')
+                    ->toArray();
+                $dormantIds = array_values(array_diff($allSubmittedIds, $recentIds));
+                $companyIds = array_values(array_intersect($dormantIds, $companyIds));
+            } elseif ($activityFilter === 'never') {
+                $anySubmittedIds = DB::table('job_applications')
+                    ->whereIn('thirdparty_company_id', $companyIds)
+                    ->distinct()
+                    ->pluck('thirdparty_company_id')
+                    ->toArray();
+                $companyIds = array_values(array_diff($companyIds, $anySubmittedIds));
+            } elseif ($activityFilter === 'inactive') {
+                $active30dIds = DB::table('job_applications')
+                    ->whereIn('thirdparty_company_id', $companyIds)
+                    ->where('created_at', '>=', now()->subDays(30))
+                    ->distinct()
+                    ->pluck('thirdparty_company_id')
+                    ->toArray();
+                $companyIds = array_values(array_diff($companyIds, $active30dIds));
+            }
+
+            // Pipeline filter (Support both high-level state: active/none and granular stages)
+            if (! empty($pipelineFilter) && $pipelineFilter !== 'all') {
+                if ($pipelineFilter === 'active') {
+                    $pipelineActiveIds = DB::table('add_job_wise_condidates')
+                        ->whereIn('thirdparty_company_id', $companyIds)
+                        ->whereIn('master_status_id', [1, 3, 6, 7, 10])
+                        ->distinct()
+                        ->pluck('thirdparty_company_id')
+                        ->toArray();
+                    $companyIds = array_values(array_intersect($pipelineActiveIds, $companyIds));
+                } elseif ($pipelineFilter === 'none') {
+                    $pipelineActiveIds = DB::table('add_job_wise_condidates')
+                        ->whereIn('thirdparty_company_id', $companyIds)
+                        ->whereIn('master_status_id', [1, 3, 6, 7, 10])
+                        ->distinct()
+                        ->pluck('thirdparty_company_id')
+                        ->toArray();
+                    $companyIds = array_values(array_diff($companyIds, $pipelineActiveIds));
+                } else {
+                    $statusMap = [
+                        'sourcing' => [1],
+                        'screening' => [3],
+                        'interview' => [7],
+                        'offers' => [10],
+                        'joined' => [6],
+                    ];
+                    if (isset($statusMap[$pipelineFilter])) {
+                        $pipelineCompanyIds = DB::table('add_job_wise_condidates')
+                            ->whereIn('thirdparty_company_id', $companyIds)
+                            ->whereIn('master_status_id', $statusMap[$pipelineFilter])
+                            ->distinct()
+                            ->pluck('thirdparty_company_id')
+                            ->toArray();
+                        $companyIds = array_values(array_intersect($pipelineCompanyIds, $companyIds));
+                    }
+                }
             }
         } catch (\Exception $e) {
             $companyIds = [];
         }
 
-        // Early return if tenant has no connected agencies
+        $agencyDataCnt = $this->agencyListingService->getSummaryCounters($company_id);
+
+        // Early return if no agencies match
         if (empty($companyIds)) {
             $responseData = [
                 'html' => view('service_company.ajax_pages.staffing-partner-ajax', [
                     'data' => [],
+                    'isRequest' => false,
                     'userPermissions' => $this->userPermissions,
                     'company_id' => $company_id,
                     'batchAgencyStats' => [],
@@ -202,32 +465,108 @@ class ServiceCompanyConsultancyController extends ServiceCompanyBaseController
                 'pagination' => view('service_company.ajax_pages.pagination', [
                     'pagination' => ['total' => 0, 'current_page' => $page, 'last_page' => 0, 'listType' => 'allcandidate'],
                 ])->render(),
+                'agencyDataCnt' => $agencyDataCnt,
             ];
 
-            return response()->json($responseData);
+            cache()->put($cacheKeySet, $responseData, now()->addMinutes(ALL_CONSULTANCY_TIME));
+            if ($singleFlightLock) {
+                try {
+                    $singleFlightLock->release();
+                } catch (\Throwable $e) {
+                }
+            }
+
+            return response()->json($responseData)->header('ETag', $etag);
         }
 
-        $sort = [['id' => ['order' => 'desc']]];
+        // Sort configuration
+        $sort = match ($valCheck) {
+            'name_asc' => [
+                ['company_name.keyword' => ['order' => 'asc', 'unmapped_type' => 'keyword']],
+                ['id' => ['order' => 'desc']],
+            ],
+            'name_desc' => [
+                ['company_name.keyword' => ['order' => 'desc', 'unmapped_type' => 'keyword']],
+                ['id' => ['order' => 'desc']],
+            ],
+            'jobs_desc' => [
+                ['active_jobs_count' => ['order' => 'desc', 'unmapped_type' => 'long']],
+                ['id' => ['order' => 'desc']],
+            ],
+            'oldest' => [
+                ['id' => ['order' => 'asc']],
+            ],
+            default => [
+                ['id' => ['order' => 'desc']],
+            ],
+        };
 
-        // Cleaned up ES filter conditions
+        $must = [];
         $must[] = ['term' => ['self_company' => 1]];
         $must[] = ['terms' => ['company_id' => $companyIds]];
 
-        // Specialization (Country) filter via nested client_location
-        if (! empty($countryFilter)) {
+        // Location Filter (Country, City, or Unspecified)
+        if ($unspecifiedLocation || $countryFilter === 'unspecified') {
+            $must[] = [
+                'bool' => [
+                    'must_not' => [
+                        [
+                            'nested' => [
+                                'path' => 'client_location',
+                                'query' => [
+                                    'exists' => ['field' => 'client_location.country_id'],
+                                ],
+                            ],
+                        ],
+                    ],
+                ],
+            ];
+        } elseif (! empty($countryFilter) && $countryFilter !== 'all') {
+            $locFilter = [];
+            if (is_numeric($countryFilter)) {
+                $locFilter[] = ['term' => ['client_location.country_id' => (int) $countryFilter]];
+            } else {
+                $locFilter[] = ['term' => ['client_location.country_name' => strtolower(trim($countryFilter))]];
+            }
+
+            if (! empty($cityFilter) && $cityFilter !== 'all') {
+                if ($cityFilter === 'unspecified') {
+                    $locFilter[] = [
+                        'bool' => [
+                            'must_not' => [
+                                ['exists' => ['field' => 'client_location.city_id']],
+                            ],
+                        ],
+                    ];
+                } elseif (is_numeric($cityFilter)) {
+                    $locFilter[] = ['term' => ['client_location.city_id' => (int) $cityFilter]];
+                } else {
+                    $locFilter[] = ['term' => ['client_location.city_name' => strtolower(trim($cityFilter))]];
+                }
+            }
+
             $must[] = [
                 'nested' => [
                     'path' => 'client_location',
                     'query' => [
-                        'term' => ['client_location.country_id' => (int) $countryFilter],
+                        'bool' => [
+                            'filter' => $locFilter,
+                        ],
                     ],
                 ],
             ];
         }
 
+        // Industry Filter
+        if (! empty($industryFilter)) {
+            $must[] = ['term' => ['industries' => (int) $industryFilter]];
+        }
+
+        // Full-Text Search
         if (! empty($customSearch)) {
             $customSearchLower = strtolower($customSearch);
             $shouldSearch = [
+                ['match_phrase_prefix' => ['company_name' => $customSearch]],
                 ['match_phrase_prefix' => ['name' => $customSearch]],
                 ['match_phrase_prefix' => ['td_industries.ind_name' => $customSearch]],
                 ['match_phrase_prefix' => ['client_contact_info.contact_person_name' => $customSearch]],
@@ -276,6 +615,7 @@ class ServiceCompanyConsultancyController extends ServiceCompanyBaseController
             $batchLocations = [];
             $batchIndustries = [];
             $batchRelations = [];
+            $batchCompanySizes = [];
         } else {
             try {
                 $response = $this->elasticService->getClient()->search($params);
@@ -293,25 +633,6 @@ class ServiceCompanyConsultancyController extends ServiceCompanyBaseController
                 $batchIndustries = $this->agencyListingService->getBatchIndustries($industryIds);
                 $batchRelations = $this->agencyListingService->getBatchRelationData($agencyCompanyIds, $company_id);
                 $batchCompanySizes = $this->agencyListingService->getBatchCompanySizes($agencyCompanyIds);
-
-                // Optional: Performance filtering based on batch pipeline activity
-                if (! empty($performanceFilter)) {
-                    $data = array_values(array_filter($data, function ($agency) use ($batchAgencyStats, $performanceFilter) {
-                        $cId = $agency['company_id'] ?? null;
-                        $stats = $batchAgencyStats[$cId] ?? null;
-                        $score = $stats ? ($stats->all_candidates + $stats->all_interview + $stats->offers + $stats->Joined) : 0;
-                        if ($performanceFilter === 'high') {
-                            return $score >= 3 || ($stats && ($stats->all_interview > 0 || $stats->offers > 0 || $stats->Joined > 0));
-                        } elseif ($performanceFilter === 'medium') {
-                            return $score >= 1 && $score < 5;
-                        } elseif ($performanceFilter === 'low') {
-                            return $score === 0;
-                        }
-
-                        return true;
-                    }));
-                    $total = count($data);
-                }
             } catch (\Exception $e) {
                 $total = 0;
                 $data = [];
@@ -327,20 +648,40 @@ class ServiceCompanyConsultancyController extends ServiceCompanyBaseController
             'total' => $total,
             'current_page' => $page,
             'per_page' => $size,
-            'last_page' => ceil($total / $size),
+            'last_page' => (int) ceil($total / $size),
             'listType' => 'allcandidate',
         ];
 
         $userPermissions = $this->userPermissions;
         $responseData = [
-            'html' => view('service_company.ajax_pages.staffing-partner-ajax', compact('data', 'userPermissions', 'company_id', 'batchAgencyStats', 'batchLocations', 'batchIndustries', 'batchRelations', 'batchCompanySizes'))->render(),
+            'html' => view('service_company.ajax_pages.staffing-partner-ajax', [
+                'data' => $data,
+                'isRequest' => false,
+                'userPermissions' => $userPermissions,
+                'company_id' => $company_id,
+                'batchAgencyStats' => $batchAgencyStats,
+                'batchLocations' => $batchLocations,
+                'batchIndustries' => $batchIndustries,
+                'batchRelations' => $batchRelations,
+                'batchCompanySizes' => $batchCompanySizes,
+            ])->render(),
             'total' => $total,
             'pagination' => view('service_company.ajax_pages.pagination', compact('pagination'))->render(),
+            'agencyLocationFacets' => $this->agencyListingService->getAgencyLocationFacets($company_id),
+            'agencyRecencyCounts' => $this->agencyListingService->getAgencyRecencyCounts($company_id),
+            'agencyPipelineCounts' => $this->agencyListingService->getAgencyPipelineCounts($company_id),
+            'agencyDataCnt' => $agencyDataCnt,
         ];
 
         cache()->put($cacheKeySet, $responseData, now()->addMinutes(ALL_CONSULTANCY_TIME));
+        if ($singleFlightLock) {
+            try {
+                $singleFlightLock->release();
+            } catch (\Throwable $e) {
+            }
+        }
 
-        return response()->json($responseData);
+        return response()->json($responseData)->header('ETag', $etag);
     }
 
     public function staffing_invitation(Request $request, $id)
@@ -877,7 +1218,8 @@ After completing these steps, they will be able to start collaborating with your
 
         $versionKey = 'consultancyviewmore_version_user_'.$userId;
         $version = cache()->get($versionKey, 1);
-        $cacheKeySet = 'consultancyviewmore_v12:'.$userId.':'.$version.':'.md5(json_encode($cachePayload));
+        $partnerVersion = (int) cache()->get("agency_drawer_version_company_{$partnerCompanyId}", 1);
+        $cacheKeySet = 'consultancyviewmore_v18:'.$userId.':'.$version.':partner_'.$partnerCompanyId.'_v'.$partnerVersion.':'.md5(json_encode($cachePayload));
         /* ----------------------------
         ⚡ Check DragonflyDB / Redis first (Quick Win Step 4)
         ----------------------------- */
@@ -899,13 +1241,17 @@ After completing these steps, they will be able to start collaborating with your
         $this->directClientDetail = DB::table('clients')
             ->select(
                 'companies.id as company_id', 'companies.description as companies_description',
-                'clients.id as client_id', 'clients.name', 'clients.logo_logical_path', 'clients.industry', 'clients.tags', 'clients.website', 'clients.description',
+                'clients.id as client_id', 'clients.name', 'clients.logo_logical_path', 'clients.industry', 'clients.tags', 'clients.website', 'clients.description', 'clients.detail',
                 'companies.id as companies_id', 'companies.logo', 'companies.company_type', 'companies.company_size_from', 'companies.company_size', 'companies.founded',
                 'companies.success_per', 'companies.company_phone', 'companies.calling_code', 'companies.company_email',
-                'staffing_company_relation.created_at as to_created_at', 'staffing_company_relation.from_company_id', 'staffing_company_relation.to_company_id', 'companies.industries_type', 'companies.created_at', 'companies.website', 'companies.industries'
+                'staffing_company_relation.created_at as to_created_at', 'staffing_company_relation.from_company_id', 'staffing_company_relation.to_company_id', 'companies.industries_type', 'companies.created_at', 'companies.website', 'companies.industries',
+                'companies.terms', 'companies.offer_terms', 'companies.contract_offer_terms', 'companies.agency_offer_terms'
             )
             ->join('companies', 'companies.id', '=', 'clients.company_id')
-            ->leftJoin('staffing_company_relation', 'staffing_company_relation.to_company_id', '=', 'companies.id')
+            ->leftJoin('staffing_company_relation', function ($join) use ($company_id) {
+                $join->on('staffing_company_relation.to_company_id', '=', 'companies.id')
+                    ->where('staffing_company_relation.from_company_id', '=', $company_id);
+            })
             ->where('clients.id', '=', $actualClientId)
             ->first();
 
@@ -960,6 +1306,19 @@ After completing these steps, they will be able to start collaborating with your
             $this->kpiTotalJobs = $this->Active + $this->Hold + $this->Closed;
         }
 
+        // Resolve all job IDs shared between my organization and this agency (both direct and reciprocal)
+        $sharedJobIds = DB::table('recommendation_relation')
+            ->where(function ($q) use ($company_id, $partnerCompanyId) {
+                $q->where('from_company_id', $company_id)->where('to_company_id', $partnerCompanyId)
+                    ->orWhere(function ($q2) use ($company_id, $partnerCompanyId) {
+                        $q2->where('from_company_id', $partnerCompanyId)->where('to_company_id', $company_id);
+                    });
+            })
+            ->whereIn('final_status', [1, 2])
+            ->pluck('job_id')
+            ->unique()
+            ->toArray();
+
         $this->sharedJobs = DB::table('recommendation_relation')
             ->join('jobs', 'jobs.id', '=', 'recommendation_relation.job_id')
             ->leftJoin('job_locations', 'job_locations.id', '=', 'jobs.location_id')
@@ -976,15 +1335,21 @@ After completing these steps, they will be able to start collaborating with your
                 'job_locations.location as city_name',
                 'recommendation_relation.created_at as shared_at'
             )
-            ->where('recommendation_relation.from_company_id', '=', $company_id)
-            ->where('recommendation_relation.to_company_id', '=', $partnerCompanyId)
-            ->where('recommendation_relation.final_status', '=', 1)
+            ->where(function ($q) use ($company_id, $partnerCompanyId) {
+                $q->where('recommendation_relation.from_company_id', '=', $company_id)
+                    ->where('recommendation_relation.to_company_id', '=', $partnerCompanyId)
+                    ->orWhere(function ($q2) use ($company_id, $partnerCompanyId) {
+                        $q2->where('recommendation_relation.from_company_id', '=', $partnerCompanyId)
+                            ->where('recommendation_relation.to_company_id', '=', $company_id);
+                    });
+            })
+            ->whereIn('recommendation_relation.final_status', [1, 2])
             ->orderBy('recommendation_relation.id', 'desc')
-            ->limit(20)
+            ->limit(50)
             ->get();
 
         // ── 2. Candidates Pipeline Aggregation ──
-        $dbCandStats = DB::table('add_job_wise_condidates')
+        $candQuery = DB::table('add_job_wise_condidates')
             ->select(
                 DB::raw('COUNT(CASE WHEN master_status_id = 1 THEN 1 END) AS sourcing_count'),
                 DB::raw('COUNT(CASE WHEN master_status_id = 2 THEN 1 END) AS screening_count'),
@@ -996,10 +1361,20 @@ After completing these steps, they will be able to start collaborating with your
                 DB::raw('COUNT(CASE WHEN master_status_id = 8 THEN 1 END) AS inreview_count'),
                 DB::raw('COUNT(*) AS total_count')
             )
-            ->where('company_id', '=', $company_id)
+            ->where(function ($q) use ($company_id) {
+                $q->where('company_id', '=', $company_id)
+                    ->orWhere('company_id', '=', 0)
+                    ->orWhereNull('company_id');
+            })
             ->where('thirdparty_company_id', '=', $partnerCompanyId)
-            ->whereNotIn('master_status_id', [9])
-            ->first();
+            ->whereNotIn('master_status_id', [9]);
+
+        if (! empty($sharedJobIds)) {
+            $candQuery->whereIn('job_id', $sharedJobIds);
+        } else {
+            $candQuery->whereRaw('1 = 0');
+        }
+        $dbCandStats = $candQuery->first();
 
         $this->all_candidates = $dbCandStats ? (int) $dbCandStats->total_count : 0;
         $this->sourcing_count = $dbCandStats ? (int) $dbCandStats->sourcing_count : 0;
@@ -1015,53 +1390,151 @@ After completing these steps, they will be able to start collaborating with your
         $this->total_candidates = $this->all_candidates;
 
         // ── 3. Submitted Candidates List ──
-        $this->candidatesList = DB::table('job_applications')
-            ->leftJoin('jobs', 'jobs.id', '=', 'job_applications.job_id')
-            ->leftJoin('add_job_wise_condidates', 'add_job_wise_condidates.job_application_id', '=', 'job_applications.id')
-            ->select(
-                'job_applications.id',
-                'job_applications.full_name',
-                'job_applications.email',
-                'job_applications.phone',
-                'job_applications.total_exp',
-                'job_applications.current_company',
-                'job_applications.current_designation',
-                'job_applications.ctc',
-                'job_applications.ectc',
-                'job_applications.created_at',
-                'jobs.title as job_title',
-                'jobs.id as job_id',
-                'add_job_wise_condidates.master_status_id'
-            )
-            ->where('job_applications.company_id', '=', $company_id)
-            ->where('job_applications.thirdparty_company_id', '=', $partnerCompanyId)
-            ->orderBy('job_applications.id', 'desc')
-            ->limit(20)
-            ->get();
-
-        // ── 4. Interviews Schedule ──
-        $this->interviewsList = DB::table('interview_schedules')
-            ->join('job_applications', 'job_applications.id', '=', 'interview_schedules.job_application_id')
-            ->leftJoin('jobs', 'jobs.id', '=', 'job_applications.job_id')
-            ->select(
-                'interview_schedules.id',
-                'interview_schedules.schedule_date',
-                'interview_schedules.schedule_from_time as schedule_time',
-                'interview_schedules.status',
-                'interview_schedules.url_link as meeting_url',
-                'job_applications.full_name as candidate_name',
-                'jobs.title as job_title'
-            )
-            ->where('interview_schedules.company_id', '=', $company_id)
-            ->where('job_applications.thirdparty_company_id', '=', $partnerCompanyId)
-            ->orderBy('interview_schedules.schedule_date', 'desc')
-            ->limit(20)
-            ->get();
-
-        $this->all_interview = count($this->interviewsList);
-        if ($this->all_interview == 0 && ($this->screening_count + $this->evaluation_count) > 0) {
-            $this->all_interview = (int) ($this->screening_count + $this->evaluation_count);
+        $this->candidatesList = collect([]);
+        if (! empty($sharedJobIds)) {
+            $this->candidatesList = DB::table('job_applications')
+                ->leftJoin('jobs', 'jobs.id', '=', 'job_applications.job_id')
+                ->leftJoin('add_job_wise_condidates', 'add_job_wise_condidates.job_application_id', '=', 'job_applications.id')
+                ->select(
+                    'job_applications.id',
+                    'job_applications.full_name',
+                    'job_applications.email',
+                    'job_applications.phone',
+                    'job_applications.total_exp',
+                    'job_applications.current_company',
+                    'job_applications.current_designation',
+                    'job_applications.ctc',
+                    'job_applications.ectc',
+                    'job_applications.created_at',
+                    'jobs.title as job_title',
+                    'jobs.id as job_id',
+                    'add_job_wise_condidates.master_status_id'
+                )
+                ->where(function ($q) use ($company_id) {
+                    $q->where('job_applications.company_id', '=', $company_id)
+                        ->orWhere('add_job_wise_condidates.company_id', '=', $company_id);
+                })
+                ->where(function ($q) use ($partnerCompanyId) {
+                    $q->where('add_job_wise_condidates.thirdparty_company_id', '=', $partnerCompanyId)
+                        ->orWhere('job_applications.thirdparty_company_id', '=', $partnerCompanyId);
+                })
+                ->whereIn('add_job_wise_condidates.job_id', $sharedJobIds)
+                ->orderBy('job_applications.id', 'desc')
+                ->limit(50)
+                ->get();
         }
+
+        // ── 4. Interviews Schedule (Workflow: Job shared with agency + Agency candidate + Scheduled interview) ──
+        $this->interviewsList = collect([]);
+        if (! empty($sharedJobIds)) {
+            $this->interviewsList = DB::table('interview_schedules')
+                ->join('job_applications', 'job_applications.id', '=', 'interview_schedules.job_application_id')
+                ->join('add_job_wise_condidates', 'add_job_wise_condidates.job_application_id', '=', 'job_applications.id')
+                ->leftJoin('jobs', 'jobs.id', '=', 'add_job_wise_condidates.job_id')
+                ->select(
+                    'interview_schedules.id',
+                    'interview_schedules.schedule_date',
+                    'interview_schedules.schedule_from_time as schedule_time',
+                    'interview_schedules.status',
+                    'interview_schedules.url_link as meeting_url',
+                    'interview_schedules.stage as interview_stage',
+                    'interview_schedules.interviewers as interviewers_text',
+                    'interview_schedules.feedback',
+                    'job_applications.id as candidate_id',
+                    'job_applications.full_name as candidate_name',
+                    'jobs.id as job_id',
+                    'jobs.title as job_title'
+                )
+                ->where(function ($q) use ($company_id) {
+                    $q->where('interview_schedules.company_id', '=', $company_id)
+                        ->orWhere('add_job_wise_condidates.company_id', '=', $company_id);
+                })
+                ->where(function ($q) use ($partnerCompanyId) {
+                    $q->where('add_job_wise_condidates.thirdparty_company_id', '=', $partnerCompanyId)
+                        ->orWhere('job_applications.thirdparty_company_id', '=', $partnerCompanyId);
+                })
+                ->whereIn('add_job_wise_condidates.job_id', $sharedJobIds)
+                ->orderBy('interview_schedules.schedule_date', 'desc')
+                ->limit(50)
+                ->get();
+        }
+        $this->all_interview = count($this->interviewsList);
+
+        // ── 4b. Offers & Joinings (Workflow: Job shared with agency + Agency candidate + Offered / Joined) ──
+        $this->offersJoiningList = collect([]);
+        if (! empty($sharedJobIds)) {
+            $this->offersJoiningList = DB::table('add_job_wise_condidates')
+                ->join('job_applications', 'job_applications.id', '=', 'add_job_wise_condidates.job_application_id')
+                ->leftJoin('jobs', 'jobs.id', '=', 'add_job_wise_condidates.job_id')
+                ->leftJoin('offer_job_applications', function ($join) {
+                    $join->on('offer_job_applications.application_id', '=', 'job_applications.id')
+                        ->whereNull('offer_job_applications.deleted_at');
+                })
+                ->leftJoin('offer_create_main_tds', function ($join) {
+                    $join->on('offer_create_main_tds.offer_id', '=', 'offer_job_applications.id')
+                        ->whereIn('offer_create_main_tds.status', [1, 3]);
+                })
+                ->leftJoin('job_locations', 'job_locations.id', '=', 'jobs.location_id')
+                ->select(
+                    'job_applications.id as candidate_id',
+                    'job_applications.full_name as candidate_name',
+                    'job_applications.current_designation',
+                    'job_applications.ctc as candidate_ctc',
+                    'job_applications.ectc as candidate_ectc',
+                    'job_applications.serving_notice_period_mode',
+                    'jobs.id as job_id',
+                    'jobs.title as job_title',
+                    'jobs.employment_type',
+                    'jobs.work_type',
+                    'job_locations.location as job_location',
+                    'add_job_wise_condidates.master_status_id',
+                    'offer_job_applications.id as offer_id',
+                    'offer_job_applications.offer_amount',
+                    'offer_job_applications.offer_currency',
+                    'offer_job_applications.offer_mode',
+                    'offer_job_applications.offer_release',
+                    'offer_job_applications.offer_acceptance',
+                    'offer_job_applications.joined',
+                    'offer_job_applications.joined_date',
+                    'offer_job_applications.updated_at as offer_updated_at',
+                    'offer_job_applications.created_at as offer_created_at',
+                    'offer_create_main_tds.send_approved_date_time',
+                    'offer_create_main_tds.send_accept_date_time',
+                    'offer_create_main_tds.accept_date_time',
+                    'offer_create_main_tds.salary_ctc as tds_salary_ctc',
+                    'offer_create_main_tds.joined_date as tds_joined_date'
+                )
+                ->where(function ($q) use ($company_id) {
+                    $q->where('add_job_wise_condidates.company_id', '=', $company_id)
+                        ->orWhere('job_applications.company_id', '=', $company_id);
+                })
+                ->where(function ($q) use ($partnerCompanyId) {
+                    $q->where('add_job_wise_condidates.thirdparty_company_id', '=', $partnerCompanyId)
+                        ->orWhere('job_applications.thirdparty_company_id', '=', $partnerCompanyId);
+                })
+                ->whereIn('add_job_wise_condidates.job_id', $sharedJobIds)
+                ->where(function ($q) {
+                    $q->whereIn('add_job_wise_condidates.master_status_id', [5, 6])
+                        ->orWhereNotNull('offer_job_applications.id');
+                })
+                ->orderBy('add_job_wise_condidates.id', 'desc')
+                ->limit(50)
+                ->get();
+        }
+
+        $actualOffersCount = 0;
+        $actualJoinedCount = 0;
+        foreach ($this->offersJoiningList as $oj) {
+            if ((int) $oj->master_status_id === 6 || (int) $oj->joined === 1) {
+                $actualJoinedCount++;
+            } else {
+                $actualOffersCount++;
+            }
+        }
+        $this->offers = $actualOffersCount;
+        $this->Joined = $actualJoinedCount;
+        $this->offer_count = $actualOffersCount;
+        $this->joined_count = $actualJoinedCount;
 
         $this->client_contact_info = DB::table('roles')
             ->select('users.*')
@@ -1071,6 +1544,158 @@ After completing these steps, they will be able to start collaborating with your
             ->where('roles.name', '=', 'admin')
             ->where('roles.display_name', '=', 'Administrator')
             ->get();
+
+        // ── 4c. Agency Contacts (Rule 20 Sub-Card Engine) ──
+        $contactsMap = [];
+        $dbContacts = DB::table('client_contact_info')->where('client_id', $actualClientId)->get();
+        foreach ($dbContacts as $c) {
+            $cName = trim((string) $c->contact_person_name);
+            $cEmail = trim((string) $c->contact_person_email);
+            $cPhone = trim((string) $c->contact_person_number);
+            $cCode = trim((string) $c->calling_code);
+            $fullPhone = $cPhone ? ($cCode ? $cCode.' '.$cPhone : $cPhone) : null;
+            $cDesig = trim((string) $c->contact_person_designation);
+            $key = $cEmail ?: $cName;
+            if (! empty($key)) {
+                $contactsMap[$key] = [
+                    'name' => $cName ?: 'Agency Representative',
+                    'designation' => $cDesig ?: null,
+                    'phone' => $fullPhone,
+                    'email' => $cEmail ?: null,
+                    'linkedin' => null,
+                ];
+            }
+        }
+
+        $agencyUsers = DB::table('users')
+            ->leftJoin('users_profile', 'users_profile.user_id', '=', 'users.id')
+            ->select('users.id', 'users.name', 'users.email', 'users.calling_code', 'users.mobile', 'users.linkedin', 'users_profile.designation')
+            ->where('users.company_id', $partnerCompanyId)
+            ->where('users.status', 'active')
+            ->orderBy('users.root_user', 'desc')
+            ->get();
+
+        foreach ($agencyUsers as $u) {
+            $uName = trim((string) $u->name);
+            $uEmail = trim((string) $u->email);
+            $uMobile = trim((string) $u->mobile);
+            $uCode = trim((string) $u->calling_code);
+            $fullPhone = $uMobile ? ($uCode ? $uCode.' '.$uMobile : $uMobile) : null;
+            $uLinkedin = trim((string) $u->linkedin);
+            $uDesig = trim((string) $u->designation);
+            $key = $uEmail ?: $uName;
+
+            if (isset($contactsMap[$key])) {
+                if (empty($contactsMap[$key]['phone']) && $fullPhone) {
+                    $contactsMap[$key]['phone'] = $fullPhone;
+                }
+                if (empty($contactsMap[$key]['designation']) && $uDesig) {
+                    $contactsMap[$key]['designation'] = $uDesig;
+                }
+                if (empty($contactsMap[$key]['linkedin']) && $uLinkedin) {
+                    $contactsMap[$key]['linkedin'] = $uLinkedin;
+                }
+            } elseif (! empty($key)) {
+                $contactsMap[$key] = [
+                    'name' => $uName ?: 'Agency Representative',
+                    'designation' => $uDesig ?: null,
+                    'phone' => $fullPhone,
+                    'email' => $uEmail ?: null,
+                    'linkedin' => $uLinkedin ?: null,
+                ];
+            }
+        }
+
+        $this->agencyContacts = collect(array_values($contactsMap))->map(function ($cnt) {
+            $words = preg_split('/\s+/', trim($cnt['name']));
+            $inits = '';
+            foreach ($words as $w) {
+                if (! empty($w)) {
+                    $inits .= mb_strtoupper(mb_substr($w, 0, 1));
+                }
+                if (strlen($inits) >= 2) {
+                    break;
+                }
+            }
+            $cnt['initials'] = $inits ?: 'AG';
+
+            return (object) $cnt;
+        });
+
+        // ── 4d. Agency Locations (Rule 20 Sub-Card Engine) ──
+        $dbLocations = DB::table('client_location')
+            ->where(function ($q) use ($actualClientId, $partnerCompanyId) {
+                $q->where('client_id', $actualClientId);
+                if ($partnerCompanyId > 0) {
+                    $q->orWhere('company_id', $partnerCompanyId);
+                }
+            })
+            ->get();
+
+        $locList = [];
+        foreach ($dbLocations as $loc) {
+            $cName = '';
+            if (! empty($loc->city_id) && $loc->city_id > 0) {
+                $cName = DB::table('city_list')->where('city_id', $loc->city_id)->value('city') ?: '';
+            }
+            if (empty($cName) && ! empty($loc->city)) {
+                $cName = $loc->city;
+            }
+            $sName = '';
+            if (! empty($loc->state) && $loc->state > 0) {
+                $sName = DB::table('state_list')->where('id', $loc->state)->value('state') ?: '';
+            }
+            $cntryName = '';
+            if (! empty($loc->country_id) && $loc->country_id > 0) {
+                $cArr = GeneralMethod::getCountryName($loc->country_id);
+                foreach ($cArr as $cval) {
+                    $cntryName = $cval['name'];
+                }
+            }
+            $addr = trim((string) $loc->address);
+            $pcode = trim((string) $loc->postcode);
+            if ($pcode === '0' || $pcode === '') {
+                $pcode = null;
+            }
+
+            $locList[] = (object) [
+                'address' => $addr ?: null,
+                'city' => $cName ? ucwords(trim($cName)) : null,
+                'state' => $sName ? ucwords(trim($sName)) : null,
+                'country' => $cntryName ? ucwords(trim($cntryName)) : null,
+                'postcode' => $pcode,
+            ];
+        }
+
+        if (empty($locList)) {
+            $billingAddr = DB::table('billing_address_companies')->where('company_id', $partnerCompanyId)->first();
+            if ($billingAddr) {
+                $bAddr = trim(implode(' ', array_filter([$billingAddr->building, $billingAddr->street])));
+                $bCity = '';
+                if (! empty($billingAddr->city)) {
+                    $bCity = DB::table('city_list')->where('city_id', $billingAddr->city)->value('city') ?: '';
+                }
+                $bState = '';
+                if (! empty($billingAddr->state_id)) {
+                    $bState = DB::table('state_list')->where('id', $billingAddr->state_id)->value('state') ?: '';
+                }
+                $bCountry = '';
+                if (! empty($billingAddr->country_id)) {
+                    $cArr = GeneralMethod::getCountryName($billingAddr->country_id);
+                    foreach ($cArr as $cval) {
+                        $bCountry = $cval['name'];
+                    }
+                }
+                $locList[] = (object) [
+                    'address' => $bAddr ?: null,
+                    'city' => $bCity ? ucwords(trim($bCity)) : null,
+                    'state' => $bState ? ucwords(trim($bState)) : null,
+                    'country' => $bCountry ? ucwords(trim($bCountry)) : null,
+                    'postcode' => ! empty($billingAddr->postal_code) ? trim($billingAddr->postal_code) : null,
+                ];
+            }
+        }
+        $this->agencyLocations = collect($locList);
 
         if ($actualClientId && $this->elasticService->indexExists(ELASTIC_CLIENT_LIST)) {
             try {
@@ -1133,6 +1758,195 @@ After completing these steps, they will be able to start collaborating with your
         $successPer = @$this->directClientDetail->success_per;
         $this->placement_fee = (! empty($successPer) && $successPer > 0) ? ((float) $successPer).'% of Annual CTC' : '8.33% of Annual CTC';
 
+        // ── 7b. Agency Tax ID / GSTN Resolution ──
+        $detailData = [];
+        if (! empty($this->directClientDetail->detail)) {
+            $rawJson = is_array($this->directClientDetail->detail) ? $this->directClientDetail->detail : json_decode($this->directClientDetail->detail, true);
+            $detailData = is_array($rawJson) ? $rawJson : [];
+        }
+        $taxVal = $detailData['tax_id'] ?? ($detailData['gstn'] ?? ($detailData['gst_number'] ?? null));
+        if (empty($taxVal)) {
+            $bRow = DB::table('billing_address_companies')->where('company_id', $partnerCompanyId)->first();
+            if ($bRow) {
+                $taxVal = ! empty($bRow->gstin) ? trim($bRow->gstin) : (! empty($bRow->pan_no) ? trim($bRow->pan_no) : null);
+            }
+        }
+        $this->agency_tax_id = ! empty($taxVal) ? trim((string) $taxVal) : null;
+
+        // ── 7c. Dynamic Commercial Terms by Staffing Model (Rule 20 & Services Tab Single Source of Truth) ──
+        $partnerCompany = DB::table('companies')->where('id', $partnerCompanyId)->first();
+        $agencyTerms = DB::table('agency_commercial_terms')->where('company_id', $partnerCompanyId)->first();
+        $tenantDefaultCurrencyKey = CurrencyService::getTenantCurrencyKey($partnerCompanyId);
+
+        $commRows = DB::table('commericials')
+            ->where('company_id', $partnerCompanyId)
+            ->where('status', 1)
+            ->orderBy('id', 'desc')
+            ->get();
+
+        $contractRow = $commRows->firstWhere('commtype', 1);
+        $permanentRow = $commRows->firstWhere('commtype', 2);
+
+        // 1. Contract Staffing Terms Resolution
+        $this->contractCommercial = null;
+        if ($contractRow && (int) $contractRow->status === 1) {
+            $currencyKey = $contractRow->salary_currency;
+            if ($currencyKey === null || ($currencyKey == 4 && $tenantDefaultCurrencyKey !== 4)) {
+                $currencyKey = $tenantDefaultCurrencyKey;
+            }
+            $currCode = CurrencyService::resolveCurrencyCode($currencyKey) ?: CurrencyService::getTenantCurrency($partnerCompanyId);
+            $currSymbol = CurrencyService::getCurrencySymbol($currCode) ?: '₹';
+
+            $contractDetails = DB::table('commericial_details')
+                ->where('commericial_id', $contractRow->id)
+                ->orderBy('exp', 'asc')
+                ->get();
+            $firstRate = $contractDetails->first() ? (float) $contractDetails->first()->rate : null;
+
+            $salModeLabels = [0 => 'Month', 1 => 'Year', 2 => 'Hour'];
+            $salModeText = $salModeLabels[$contractRow->sal_mode] ?? 'Month';
+
+            $commercialRate = null;
+            if (! empty($agencyTerms->contract_rate_display) && $agencyTerms->contract_rate_display !== 'Depend upon job requirements') {
+                $commercialRate = $agencyTerms->contract_rate_display;
+            } elseif (! empty($agencyTerms->contract_rate_amount) && (float) $agencyTerms->contract_rate_amount > 0) {
+                $commercialRate = $currSymbol.number_format((float) $agencyTerms->contract_rate_amount).' / '.ucfirst($agencyTerms->contract_billing_model ?: 'Month');
+            } elseif ($firstRate !== null && $firstRate > 0) {
+                if ((int) $contractRow->rateType === 2) {
+                    $commercialRate = $firstRate.'% Markup on Bill Rate';
+                } elseif ((int) $contractRow->rateType === 1) {
+                    $commercialRate = $currSymbol.number_format($firstRate, 2).' / '.$salModeText;
+                } elseif ((int) $contractRow->rateType === 0) {
+                    $commercialRate = 'Free / No Fee';
+                }
+            } elseif ((int) $contractRow->rateType === 0) {
+                $commercialRate = 'Free / No Fee';
+            }
+
+            $billingCycle = null;
+            if (! empty($agencyTerms->contract_billing_cycle)) {
+                $billingCycle = $agencyTerms->contract_billing_cycle;
+            } elseif (! empty($contractRow->billing_frequency) && $contractRow->billing_frequency !== 'one_time') {
+                $billingCycle = ucwords(str_replace('_', ' ', $contractRow->billing_frequency));
+            }
+
+            $minDuration = null;
+            if (! empty($agencyTerms->contract_min_duration_months) && (int) $agencyTerms->contract_min_duration_months > 0) {
+                $minDuration = (int) $agencyTerms->contract_min_duration_months.' Months';
+            }
+
+            $replacement = null;
+            $replDays = ! empty($contractRow->replacement_period_days) ? (int) $contractRow->replacement_period_days : null;
+            if ($replDays !== null && $replDays > 0) {
+                $replType = ! empty($contractRow->replacement_type) ? ucwords(str_replace('_', ' ', $contractRow->replacement_type)) : 'Free Replacement';
+                $replacement = "{$replDays} Days {$replType}";
+            } elseif (! empty($agencyTerms->contract_replacement_policy) && $agencyTerms->contract_replacement_policy !== 'As per contract terms') {
+                $replacement = $agencyTerms->contract_replacement_policy;
+            }
+
+            $paymentTerms = null;
+            $payDays = ! empty($contractRow->payment_terms_days) ? (int) $contractRow->payment_terms_days : (! empty($agencyTerms->contract_payment_terms_days) ? (int) $agencyTerms->contract_payment_terms_days : null);
+            if ($payDays !== null) {
+                $paymentTerms = $payDays === 0 ? 'Due Immediately' : "Net {$payDays} Days";
+            }
+
+            $earlyTermination = null;
+            if (! empty($agencyTerms->contract_early_termination) && $agencyTerms->contract_early_termination !== 'As per contract terms') {
+                $earlyTermination = $agencyTerms->contract_early_termination;
+            }
+
+            $overtimePolicy = null;
+            if (! empty($agencyTerms->contract_overtime_policy) && $agencyTerms->contract_overtime_policy !== 'Not applicable' && $agencyTerms->contract_overtime_policy !== 'As per client terms') {
+                $overtimePolicy = $agencyTerms->contract_overtime_policy;
+            }
+
+            $customTerms = ! empty($this->directClientDetail->contract_offer_terms)
+                ? trim(strip_tags($this->directClientDetail->contract_offer_terms))
+                : (! empty($partnerCompany->contract_offer_terms) ? trim(strip_tags($partnerCompany->contract_offer_terms)) : null);
+
+            $this->contractCommercial = (object) [
+                'id' => $contractRow->id,
+                'active' => true,
+                'commercial_rate' => $commercialRate,
+                'billing_cycle' => $billingCycle,
+                'min_duration' => $minDuration,
+                'replacement_terms' => $replacement,
+                'payment_terms' => $paymentTerms,
+                'early_termination' => $earlyTermination,
+                'overtime_policy' => $overtimePolicy,
+                'custom_terms' => $customTerms,
+            ];
+        }
+
+        // 2. Permanent Staffing Terms Resolution
+        $this->permanentCommercial = null;
+        if ($permanentRow && (int) $permanentRow->status === 1) {
+            $currencyKey = $permanentRow->salary_currency;
+            if ($currencyKey === null || ($currencyKey == 4 && $tenantDefaultCurrencyKey !== 4)) {
+                $currencyKey = $tenantDefaultCurrencyKey;
+            }
+            $currCode = CurrencyService::resolveCurrencyCode($currencyKey) ?: CurrencyService::getTenantCurrency($partnerCompanyId);
+            $currSymbol = CurrencyService::getCurrencySymbol($currCode) ?: '₹';
+
+            $permDetails = DB::table('commericial_details')
+                ->where('commericial_id', $permanentRow->id)
+                ->orderBy('exp', 'asc')
+                ->get();
+            $firstRate = $permDetails->first() ? (float) $permDetails->first()->rate : null;
+
+            $placementFee = null;
+            if ((int) $permanentRow->rateType === 1) {
+                $amt = $firstRate !== null && $firstRate > 0 ? $firstRate : (! empty($agencyTerms->fulltime_fixed_fee_amount) ? (float) $agencyTerms->fulltime_fixed_fee_amount : 0);
+                $placementFee = $currSymbol.number_format($amt).' Per Hire';
+            } elseif ((int) $permanentRow->rateType === 0) {
+                $placementFee = 'Free / No Fee';
+            } else {
+                $pct = $firstRate !== null && $firstRate > 0 ? $firstRate : (! empty($this->directClientDetail->success_per) ? (float) $this->directClientDetail->success_per : (! empty($partnerCompany->success_per) ? (float) $partnerCompany->success_per : (! empty($agencyTerms->fulltime_success_fee_percentage) ? (float) $agencyTerms->fulltime_success_fee_percentage : 8.33)));
+                $salBasis = [0 => 'Annual CTC', 1 => 'Monthly CTC'][$permanentRow->sal_mode] ?? 'Annual CTC';
+                $placementFee = "{$pct}% of {$salBasis}";
+            }
+
+            $guarantee = null;
+            $replDays = ! empty($permanentRow->replacement_period_days) ? (int) $permanentRow->replacement_period_days : (! empty($agencyTerms->fulltime_replacement_period_days) ? (int) $agencyTerms->fulltime_replacement_period_days : null);
+            if ($replDays !== null && $replDays > 0) {
+                $replType = ! empty($permanentRow->replacement_type) ? ucwords(str_replace('_', ' ', $permanentRow->replacement_type)) : 'Free Replacement';
+                $guarantee = "{$replDays} Days {$replType}";
+            }
+
+            $paymentTerms = null;
+            $payDays = ! empty($permanentRow->payment_terms_days) ? (int) $permanentRow->payment_terms_days : (! empty($agencyTerms->fulltime_payment_terms_days) ? (int) $agencyTerms->fulltime_payment_terms_days : null);
+            if ($payDays !== null) {
+                $paymentTerms = $payDays === 0 ? 'Due Immediately' : "Net {$payDays} Days";
+            }
+
+            $billingTrigger = null;
+            if (! empty($permanentRow->billing_trigger)) {
+                $billingTrigger = ucwords(str_replace('_', ' ', $permanentRow->billing_trigger));
+            } elseif (! empty($agencyTerms->fulltime_invoice_raising)) {
+                $billingTrigger = $agencyTerms->fulltime_invoice_raising;
+            }
+
+            $customTerms = ! empty($this->directClientDetail->offer_terms)
+                ? trim(strip_tags($this->directClientDetail->offer_terms))
+                : (! empty($this->directClientDetail->agency_offer_terms)
+                    ? trim(strip_tags($this->directClientDetail->agency_offer_terms))
+                    : (! empty($partnerCompany->offer_terms) ? trim(strip_tags($partnerCompany->offer_terms)) : null));
+
+            $this->permanentCommercial = (object) [
+                'id' => $permanentRow->id,
+                'active' => true,
+                'placement_fee' => $placementFee,
+                'guarantee_period' => $guarantee,
+                'payment_terms' => $paymentTerms,
+                'billing_trigger' => $billingTrigger,
+                'custom_terms' => $customTerms,
+            ];
+        }
+
+        $this->hasContractStaffing = ! empty($this->contractCommercial);
+        $this->hasPermanentStaffing = ! empty($this->permanentCommercial);
+        $this->hasActiveCommercials = ($this->hasContractStaffing || $this->hasPermanentStaffing);
+
         // ── 8. Agency Contact & Communication Meta ──
         $callingCode = @$this->directClientDetail->calling_code ?: '+91';
         $rawPhone = @$this->directClientDetail->company_phone ?: @$this->directClientDetail->contact_number;
@@ -1151,16 +1965,16 @@ After completing these steps, they will be able to start collaborating with your
         $startOfMonthcomman = Carbon::now()->startOfMonth()->subMonths(6);
         $endOfMonthcomman = Carbon::now()->endOfMonth();
 
-        // Fallback default values for initial shell rendering (Dashboard loads lazily via dashboard_ajax)
-        $this->joined_count = 0;
-        $this->sourcing_count = 0;
-        $this->screening_count = 0;
-        $this->evaluation_count = 0;
-        $this->negotiation_count = 0;
-        $this->offer_count = 0;
-        $this->Rejected_count = 0;
-        $this->inreview_count = 0;
-        $this->total_candidates = 0;
+        // Fallback default values for initial shell rendering if not already computed
+        $this->joined_count = $this->joined_count ?? 0;
+        $this->sourcing_count = $this->sourcing_count ?? 0;
+        $this->screening_count = $this->screening_count ?? 0;
+        $this->evaluation_count = $this->evaluation_count ?? 0;
+        $this->negotiation_count = $this->negotiation_count ?? 0;
+        $this->offer_count = $this->offer_count ?? 0;
+        $this->Rejected_count = $this->Rejected_count ?? 0;
+        $this->inreview_count = $this->inreview_count ?? 0;
+        $this->total_candidates = $this->total_candidates ?? 0;
 
         $this->counts = collect([]);
         $this->labels = [];
@@ -2086,15 +2900,16 @@ After completing these steps, they will be able to start collaborating with your
      */
     public function export($start, $length)
     {
+        $data = request()->all();
         $filters = [
-            'start' => $start,
-            'length' => $length,
-            'loginUserId' => $this->user->id,
+            'start' => (int) $start,
+            'length' => (int) $length,
+            'loginUserId' => $this->user->id ?? auth()->id(),
             'loginUserRole' => $this->user->role->role_id ?? null,
-            'company_id' => auth()->user()->company_id,
+            'company_id' => (int) (auth()->user()->company_id ?? 0),
         ];
 
-        return Excel::download(new ConsultancyExport($filters, $data), 'ConsultancyExport.xlsx', ExcelExcel::XLSX);
+        return Excel::download(new ConsultancyExport($filters, $data), 'ConsultancyExport.xlsx', \Maatwebsite\Excel\Excel::XLSX);
     }
 
     /**

@@ -27,6 +27,17 @@
                 elseif ($ascii >= 117 && $ascii <= 121) { $avatarClass = 'bg-dark text-white'; }
                 else                                    { $avatarClass = 'bg-light-secondary text-dark'; }
 
+                // Role pill & System Role fallback
+                $roleName = ucwords(strtolower(@$row->display_name ?? (@$row->role_name ?? 'Team Member')));
+                $roleLower = strtolower($roleName);
+                if (str_contains($roleLower, 'admin'))     { $rolePill = 'role-admin'; }
+                elseif (str_contains($roleLower, 'lead'))  { $rolePill = 'role-lead'; }
+                else                                       { $rolePill = 'role-default'; }
+
+                // Designation Priority: 1. User Registration Designation -> 2. System Role fallback
+                $userDesignation = !empty($row->designation) ? trim($row->designation) : '';
+                $designation = !empty($userDesignation) ? $userDesignation : $roleName;
+
                 // Pre-computed metrics
                 $activeJobs   = (int) ($row->pre_active_jobs ?? 0);
                 $captainJobs  = (int) ($row->pre_captain_jobs ?? 0);
@@ -36,20 +47,26 @@
                 // Communication Representative & Channel Roles
                 $isClientRep = !empty($row->is_client_rep);
                 $isAgencyRep = !empty($row->is_agency_rep);
-                $channels = (array) ($row->channels ?? []);
-                if ($isClientRep && !in_array('client', $channels, true)) {
-                    $channels[] = 'client';
+                $rawChannels = (array) ($row->channels ?? []);
+                if ($isClientRep && !in_array('client', $rawChannels, true)) {
+                    $rawChannels[] = 'client';
                 }
-                if ($isAgencyRep && !in_array('vendor', $channels, true)) {
-                    $channels[] = 'vendor';
+                if ($isAgencyRep && !in_array('vendor', $rawChannels, true) && !in_array('agency', $rawChannels, true)) {
+                    $rawChannels[] = 'agency';
                 }
 
-                // Role pill
-                $roleName = ucwords(strtolower(@$row->display_name ?? 'Recruiter'));
-                $roleLower = strtolower($roleName);
-                if (str_contains($roleLower, 'admin'))     { $rolePill = 'role-admin'; }
-                elseif (str_contains($roleLower, 'lead'))  { $rolePill = 'role-lead'; }
-                else                                       { $rolePill = 'role-default'; }
+                // Canonical channels (Client, Agency, Bench - strictly 1 per distinct market enquiry domain)
+                $channels = [];
+                if (in_array('client', $rawChannels, true)) {
+                    $channels[] = 'client';
+                }
+                if (in_array('agency', $rawChannels, true) || in_array('vendor', $rawChannels, true)) {
+                    $channels[] = 'agency';
+                }
+                if (in_array('bench', $rawChannels, true) || in_array('recruitment', $rawChannels, true)) {
+                    $channels[] = 'bench';
+                }
+                $publicCount = count($channels);
 
                 // Rank medal
                 $medal = match ((int) @$teamRanks->rank) { 1 => '🥇', 2 => '🥈', 3 => '🥉', default => '' };
@@ -91,6 +108,7 @@
                     'initial' => strtoupper($strVal),
                     'avatar_class' => $avatarClass,
                     'role' => $roleName,
+                    'designation' => $designation,
                     'status' => strtolower($row->status ?? 'active'),
                     'last_active' => $lastActive,
                     'channels' => $channels,
@@ -98,153 +116,295 @@
                 ];
             @endphp
 
-            <!-- Primary Team Member Card (Rule 20 Enterprise Card + Sub-Card System) -->
-            <div class="team-card js-team-card" 
+            <!-- Primary Team Member Card (Rule 20 Enterprise Card + Sub-Card Design) -->
+            <div class="tm-primary-card js-team-card" 
                  data-user-id="{{ $row->id }}" 
                  data-is-client-rep="{{ $isClientRep ? '1' : '0' }}" 
                  data-is-agency-rep="{{ $isAgencyRep ? '1' : '0' }}"
                  style="border-left: 3.5px solid {{ $cardAccent }};">
                 
-                <!-- Discrete Sub-Cards Grid (Aligned with Modern 8-Column Roster Standard) -->
-                <div class="team-card-grid">
+                <!-- Discrete 5 Upper Sub-Cards Grid (Strictly 1 Row on 15.6") -->
+                <div class="tm-subcards-grid">
                     
-                    <!-- Sub-Card 1: Member Identity -->
-                    <div class="tm-cell tm-cell-member">
-                        <div class="tm-avatar {{ $avatarClass }}" title="{{ $rawName }}">
-                            @if (!empty($row->image))
-                                <img src="{{ $row->image }}" alt="{{ $rawName }}">
-                            @else
-                                {{ strtoupper($strVal) }}
-                            @endif
-                        </div>
-                        <div class="d-flex flex-column overflow-hidden min-w-0">
-                            <span class="tm-member-name" title="{{ ucwords(strtolower($rawName)) }}">
-                                {{ ucwords(strtolower(mb_substr($rawName, 0, 24))) }}
-                            </span>
+                    <!-- SUB-CARD 1: Member Identity (Name 1st row, Designation 2nd row, Email 3rd row) -->
+                    <div class="tm-subcard tm-subcard-identity">
+                        <div class="tm-subcard-head">
+                            <div class="tm-subcard-title-wrap">
+                                <svg class="tm-subcard-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                                    <circle cx="12" cy="7" r="4"/>
+                                </svg>
+                                <span class="tm-subcard-title">Member Identity</span>
+                            </div>
                             @if ($row->root_user == 1)
-                                <span class="tm-owner-tag" title="Organization Owner">
-                                    <i class="fa-solid fa-crown text-warning me-1"></i>Organization Owner
+                                <span class="tm-subcard-badge badge-owner" title="Organization Owner">
+                                    <i class="fa-solid fa-crown text-warning me-1"></i>Owner
+                                </span>
+                            @else
+                                <span class="tm-subcard-badge badge-member">
+                                    • Member
                                 </span>
                             @endif
-                            <span class="tm-member-email" title="{{ $row->email }}">
-                                {{ $row->email }}
-                            </span>
+                        </div>
+                        <div class="tm-identity-body">
+                            <div class="tm-avatar {{ $avatarClass }} show-detail-team" data-row-id="{{ $row->id }}" role="button" tabindex="0" title="View {{ $rawName }} Profile" style="cursor: pointer;">
+                                @if (!empty($row->image))
+                                    <img src="{{ $row->image }}" alt="{{ $rawName }}">
+                                @else
+                                    {{ strtoupper($strVal) }}
+                                @endif
+                            </div>
+                            <div class="tm-identity-details">
+                                {{-- 1st Row: Member Name --}}
+                                <span class="tm-member-name show-detail-team" data-row-id="{{ $row->id }}" role="button" tabindex="0" title="View {{ ucwords(strtolower($rawName)) }} Profile">
+                                    {{ ucwords(strtolower(mb_substr($rawName, 0, 24))) }}
+                                </span>
+
+                                {{-- 2nd Row: Designation just below user name (Priority: Designation -> Role) --}}
+                                <div class="tm-member-designation" title="{{ !empty($userDesignation) ? 'Designation: ' . $userDesignation : 'System Role: ' . $roleName }}">
+                                    <i class="fa-solid fa-id-badge text-muted"></i>
+                                    <span>{{ ucwords(strtolower(mb_substr($designation, 0, 26))) }}</span>
+                                </div>
+
+                                {{-- 3rd Row: Email ID --}}
+                                <div class="tm-member-email-wrap">
+                                    <i class="fa-regular fa-envelope text-muted"></i>
+                                    <a href="mailto:{{ $row->email }}" class="tm-member-email-link" title="{{ $row->email }}">
+                                        {{ mb_substr($row->email, 0, 26) }}
+                                    </a>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
-                    <!-- Sub-Card 2: Rank & Score -->
-                    <div class="tm-cell tm-cell-rank">
-                        <div class="tm-rank-val">
-                            {!! $medal !!} <strong>{{ $teamRanks->rank }}</strong>
-                            @if (!empty($teamRanks->rankMonth))
-                                <span class="tm-rank-month">{{ $teamRanks->rankMonth }}</span>
+                    <!-- SUB-CARD 2: Dedicated System Role Card (Change Role Directly from Here) -->
+                    <div class="tm-subcard tm-subcard-role">
+                        <div class="tm-subcard-head">
+                            <div class="tm-subcard-title-wrap">
+                                <svg class="tm-subcard-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                                </svg>
+                                <span class="tm-subcard-title">System Role</span>
+                            </div>
+                        </div>
+                        <div class="tm-role-body">
+                            <div class="tm-role-badge-row">
+                                <span class="tm-role-badge team-role-pill {{ $rolePill }}" title="Assigned system role">
+                                    <i class="fa-solid fa-shield-halved me-1"></i>{{ $roleName }}
+                                </span>
+                            </div>
+                            <div class="tm-role-action-row">
+                                @if ($row->root_user != 1)
+                                    <button type="button" class="btn-change-role update-user-role" data-row-id="{{ $row->id }}" title="Change role and permissions directly from here">
+                                        <i class="fa-solid fa-user-gear me-1 text-primary"></i>Change Role
+                                    </button>
+                                @else
+                                    <span class="tm-role-locked-note" title="Primary owner role is authoritative and cannot be changed">
+                                        <i class="fa-solid fa-lock text-muted"></i>Owner Role
+                                    </span>
+                                @endif
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- SUB-CARD 3: Workload -->
+                    <div class="tm-subcard tm-subcard-workload">
+                        <div class="tm-subcard-head">
+                            <div class="tm-subcard-title-wrap">
+                                <svg class="tm-subcard-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                    <rect x="2" y="7" width="20" height="14" rx="2" ry="2"/>
+                                    <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>
+                                </svg>
+                                <span class="tm-subcard-title">Workload</span>
+                            </div>
+                            <span class="tm-subcard-badge badge-count">{{ $activeJobs + $captainJobs + $trmTalents }} Ops</span>
+                        </div>
+                        <div class="tm-workload-body">
+                            <div class="tm-wl-row" title="Active Jobs Assigned">
+                                <i class="fa-solid fa-briefcase text-primary me-1"></i><span><strong>{{ $activeJobs }}</strong> Active Jobs</span>
+                            </div>
+                            <div class="tm-wl-row" title="SPOC / Captain on Jobs">
+                                <i class="fa-solid fa-crown text-purple me-1"></i><span><strong>{{ $captainJobs }}</strong> Captain Jobs</span>
+                            </div>
+                            <div class="tm-wl-row" title="Bench Talents Managed (Bench Talent Representative)">
+                                <i class="fa-solid fa-users text-success me-1"></i><span title="Bench Talents Managed (Bench Talent Representative)"><strong>{{ $trmTalents }}</strong> Bench Talent Rep</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- SUB-CARD 4: Dedicated Account Status Card (3 Clear Rows per Rule 20) -->
+                    <div class="tm-subcard tm-subcard-status">
+                        <div class="tm-subcard-head">
+                            <div class="tm-subcard-title-wrap">
+                                <svg class="tm-subcard-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M18.36 6.64a9 9 0 1 1-12.73 0"/>
+                                    <line x1="12" y1="2" x2="12" y2="12"/>
+                                </svg>
+                                <span class="tm-subcard-title">Account Status</span>
+                            </div>
+                        </div>
+                        <div class="tm-status-body">
+                            @if (!empty($row->password))
+                                {{-- Row 1: Toggle / status control icon --}}
+                                <div class="tm-status-row tm-status-row-control">
+                                    <label class="ios-switch" title="Toggle active status">
+                                        <input type="checkbox" class="chkStatus" id="status_change_{{ $row->id }}" value="active"
+                                            {{ $row->status == 'active' ? 'checked' : '' }}
+                                            onclick="handleClick(this, {{ $row->id }});"
+                                            {{ $row->root_user == 1 ? 'disabled' : '' }}>
+                                        <span class="ios-slider"></span>
+                                    </label>
+                                </div>
+                                
+                                {{-- Row 2: Active / Inactive status --}}
+                                <div class="tm-status-row tm-status-row-label">
+                                    <span class="tm-status-text status_text {{ $row->status == 'active' ? 'text-success' : 'text-muted' }}">
+                                        {{ ucfirst($row->status ?? 'Active') }}
+                                    </span>
+                                </div>
+
+                                {{-- Row 3: Supporting status information or text --}}
+                                <div class="tm-status-row tm-status-row-sub">
+                                    @if ($row->root_user == 1)
+                                        <span class="tm-status-subnote">Owner (Always Active)</span>
+                                    @else
+                                        <span class="tm-status-subnote">Click switch to toggle</span>
+                                    @endif
+                                </div>
+                            @else
+                                {{-- Row 1: Toggle / status control icon --}}
+                                <div class="tm-status-row tm-status-row-control">
+                                    <button type="button" class="btn-resend-invite-icon" onclick="reSendhandleClick(this, {{ $row->id }});" title="Resend invitation email">
+                                        <i class="fa-solid fa-paper-plane text-warning" style="font-size: 11px;"></i>
+                                    </button>
+                                </div>
+
+                                {{-- Row 2: Active / Inactive status --}}
+                                <div class="tm-status-row tm-status-row-label">
+                                    <span class="tm-status-text text-warning">Awaiting Signup</span>
+                                </div>
+
+                                {{-- Row 3: Supporting status information or text --}}
+                                <div class="tm-status-row tm-status-row-sub">
+                                    <a href="javascript:;" class="btn-resend-invite" onclick="reSendhandleClick(this, {{ $row->id }});" title="Resend invitation email">
+                                        <i class="fa-solid fa-arrows-rotate me-1"></i>Resend Invite
+                                    </a>
+                                </div>
                             @endif
                         </div>
-                        <button type="button" class="tm-btn-view-score teamViewScore" data-user-id="{{ $row->id }}" title="Click to view detailed performance scoreboard">
-                            View Score
-                        </button>
                     </div>
 
-                    <!-- Sub-Card 3: Workload -->
-                    <div class="tm-cell tm-cell-workload">
-                        <div class="tm-wl-row" title="Active Jobs Assigned">
-                            <i class="fa-solid fa-briefcase text-primary me-1"></i><strong>{{ $activeJobs }}</strong> Active Jobs
-                        </div>
-                        <div class="tm-wl-row" title="SPOC / Captain on Jobs">
-                            <i class="fa-solid fa-crown text-purple me-1"></i><strong>{{ $captainJobs }}</strong> Captain Jobs
-                        </div>
-                        <div class="tm-wl-row" title="Bench Talents Managed (Relationship Manager)">
-                            <i class="fa-solid fa-users text-success me-1"></i><strong>{{ $trmTalents }}</strong> Relationship Manager(Bench)
-                        </div>
-                    </div>
-
-                    <!-- Sub-Card 4: Role & Permissions -->
-                    <div class="tm-cell tm-cell-role">
-                        <span class="tm-role-badge team-role-pill {{ $rolePill }}" title="Assigned system role">
-                            {{ $roleName }}
-                        </span>
-                        @if ($row->root_user != 1)
-                            <button type="button" class="tm-btn-role-edit update-user-role" data-row-id="{{ $row->id }}" title="Edit Role">
-                                <i class="fa-solid fa-pen-to-square"></i>
-                            </button>
-                        @endif
-                    </div>
-
-                    <!-- Sub-Card 5: Corporate Communication Purpose -->
-                    <div class="tm-cell tm-cell-communication">
-                        @if (!empty($channels) && count($channels) > 0)
-                            <div class="d-flex flex-wrap align-items-center gap-1">
-                                @if (in_array('client', $channels, true))
-                                    @php $p = $priorities['client'] ?? 'Primary'; @endphp
-                                    <span class="tm-comm-chip client" title="{{ $p }} contact for Client &amp; Sales">
-                                        <i class="fa-solid fa-users me-1"></i>Client &amp; Sales
+                    <!-- SUB-CARD 5: Contact Details Visibility (Marketplace Enquiries) -->
+                    <div class="tm-subcard tm-subcard-comm" data-user='@json($userData)' onclick="openAssignCommDrawer(this)" role="button" tabindex="0" title="Click anywhere to manage contact visibility">
+                        <div class="tm-subcard-head">
+                            <div class="tm-subcard-title-wrap">
+                                <i class="fa-solid fa-address-book text-primary" style="font-size: 11px;"></i>
+                                <span class="tm-subcard-title">Contact Details Visibility</span>
+                            </div>
+                            <div class="d-flex align-items-center gap-1 flex-shrink-0">
+                                @if ($publicCount === 0)
+                                    <span class="tm-subcard-badge badge-role" title="Contact details kept private">
+                                        <i class="fa-solid fa-eye-slash me-1"></i>Private
                                     </span>
                                 @endif
-                                @if (in_array('vendor', $channels, true) || in_array('agency', $channels, true))
-                                    @php $p = $priorities['agency'] ?? ($priorities['vendor'] ?? 'Primary'); @endphp
-                                    <span class="tm-comm-chip vendor" title="{{ $p }} contact for Agency">
-                                        <i class="fa-solid fa-shapes me-1"></i>Agency
-                                    </span>
-                                @endif
-                                @if (in_array('recruitment', $channels, true))
-                                    @php $p = $priorities['recruitment'] ?? 'Primary'; @endphp
-                                    <span class="tm-comm-chip recruitment" title="{{ $p }} contact for Recruitment / Talent">
-                                        <i class="fa-solid fa-id-card-clip me-1"></i>Recruitment
-                                    </span>
-                                @endif
-                                @if (in_array('finance', $channels, true))
-                                    @php $p = $priorities['finance'] ?? 'Primary'; @endphp
-                                    <span class="tm-comm-chip finance" title="{{ $p }} contact for Billing &amp; Invoicing">
-                                        <i class="fa-solid fa-file-invoice-dollar me-1"></i>Billing &amp; Invoicing
-                                    </span>
-                                @endif
-                                <button type="button" class="tm-btn-edit-comm" data-user='@json($userData)' onclick="openAssignCommDrawer(this)" title="Edit communication channels &amp; priorities">
-                                    <i class="fa-solid fa-pen"></i>
+                                <button type="button" class="btn-comm-change-action" data-user='@json($userData)' onclick="event.stopPropagation(); openAssignCommDrawer(this);" title="Change contact visibility preferences">
+                                    Change
                                 </button>
                             </div>
-                        @else
-                            <button type="button" class="tm-btn-add-comm" data-user='@json($userData)' onclick="openAssignCommDrawer(this)" title="Assign corporate communication channels to this member">
-                                <i class="fa-solid fa-plus me-1 text-primary"></i>Assign Purpose
-                            </button>
-                        @endif
-                    </div>
-
-                    <!-- Sub-Card 6: Status Toggle -->
-                    <div class="tm-cell tm-cell-status">
-                        @if (!empty($row->password))
-                            <div class="team-status-cell">
-                                <label class="tm-switch">
-                                    <input type="checkbox" class="chkStatus" id="status_change_{{ $row->id }}" value="active"
-                                        {{ $row->status == 'active' ? 'checked' : '' }}
-                                        onclick="handleClick(this, {{ $row->id }});"
-                                        {{ $row->root_user == 1 ? 'disabled' : '' }}>
-                                    <span class="tm-slider"></span>
-                                </label>
-                                <span class="tm-status-text status_text {{ $row->status == 'active' ? 'text-success' : 'text-muted' }} ms-2">
-                                    {{ ucfirst($row->status) }}
-                                </span>
-                            </div>
-                        @else
-                            <a href="javascript:;" class="text-primary fw-semibold fs-8" onclick="reSendhandleClick(this, {{ $row->id }});">
-                                <i class="fa-solid fa-arrows-rotate me-1"></i>Resend Invite
-                            </a>
-                        @endif
-                    </div>
-
-                    <!-- Sub-Card 7: Last Active -->
-                    <div class="tm-cell tm-cell-lastactive">
-                        <span class="tm-dot {{ $dotClass }}"></span>
-                        <span>{{ $lastActive }}</span>
+                        </div>
+                        <div class="tm-comm-body">
+                            @if ($publicCount > 0)
+                                <div class="tm-comm-rows-list">
+                                    @if (in_array('client', $channels, true))
+                                        <div class="tm-comm-row">
+                                            <span class="tm-comm-chip client" title="Sales &amp; Client Enquiries">
+                                                <i class="fa-solid fa-phone me-1"></i>Sales &amp; Client Enquiries
+                                            </span>
+                                        </div>
+                                    @endif
+                                    @if (in_array('agency', $channels, true))
+                                        <div class="tm-comm-row">
+                                            <span class="tm-comm-chip vendor" title="Agency Queries">
+                                                <i class="fa-solid fa-phone me-1"></i>Agency Queries
+                                            </span>
+                                        </div>
+                                    @endif
+                                    @if (in_array('bench', $channels, true))
+                                        <div class="tm-comm-row">
+                                            <span class="tm-comm-chip recruitment" title="Bench Talent Enquiries">
+                                                <i class="fa-solid fa-phone me-1"></i>Bench Talent Enquiries
+                                            </span>
+                                        </div>
+                                    @endif
+                                </div>
+                            @else
+                                <div class="d-flex align-items-center justify-content-between w-100 gap-1 flex-wrap">
+                                    <span class="text-muted" style="font-size: 10.5px; font-weight: 500;">
+                                        <i class="fa-solid fa-lock text-muted me-1"></i> No Details Shared (Keep Private)
+                                    </span>
+                                    <button type="button" class="btn-assign-comm-empty" data-user='@json($userData)' onclick="event.stopPropagation(); openAssignCommDrawer(this);" title="Share contact details for marketplace enquiries">
+                                        <i class="fa-solid fa-plus me-1 text-primary"></i>Share Details
+                                    </button>
+                                </div>
+                            @endif
+                        </div>
                     </div>
 
                 </div>
 
+                <!-- SUB-CARD 6: BOTTOM ACTIVITY & PERFORMANCE STRIP (Single Row Standard) -->
+                <div class="tm-card-bottom-strip">
+                    <div class="tm-bottom-left-meta">
+                        <span class="tm-meta-item" title="Registration Date">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                                <line x1="16" y1="2" x2="16" y2="6"/>
+                                <line x1="8" y1="2" x2="8" y2="6"/>
+                                <line x1="3" y1="10" x2="21" y2="10"/>
+                            </svg>
+                            <span>Joined: <strong>{{ !empty($row->created_at) ? Carbon::parse($row->created_at)->format('d M, Y') : 'Recently' }}</strong></span>
+                        </span>
+                        <span class="tm-meta-dot">•</span>
+                        <span class="tm-meta-item" title="Last Login Freshness">
+                            <span class="dot-pulse {{ $dotClass }}"></span>
+                            <span>Last active: <strong>{{ $lastActive }}</strong></span>
+                        </span>
+                        @if (!empty($phone))
+                            <span class="tm-meta-dot">•</span>
+                            <span class="tm-meta-item" title="Direct Phone">
+                                <i class="fa-solid fa-phone" style="font-size: 10px;"></i>
+                                <span>{{ $phone }}</span>
+                            </span>
+                        @endif
+                    </div>
+
+                    <div class="tm-bottom-right-group">
+                        <!-- Performance Score & Rank (Swapped to bottom strip) -->
+                        <div class="tm-perf-strip-box">
+                            <span class="tm-perf-rank" title="Performance Rank">
+                                {!! $medal !!} <strong>{{ $teamRanks->rank }}</strong>
+                                @if (!empty($teamRanks->rankMonth))
+                                    <span class="tm-perf-month">{{ $teamRanks->rankMonth }}</span>
+                                @endif
+                            </span>
+                            @if ($isRanked)
+                                <span class="tm-meta-dot">•</span>
+                                <span class="tm-perf-score" title="Score Points">Score: <strong>{{ $teamRanks->score }} pts</strong></span>
+                            @endif
+                            <button type="button" class="btn-view-score teamViewScore" data-user-id="{{ $row->id }}" title="Click to view detailed performance scoreboard">
+                                <i class="fa-solid fa-chart-line me-1"></i>View Score
+                            </button>
+                        </div>
+
+                        <button type="button" class="btn-view-profile show-detail-team" data-row-id="{{ $row->id }}" title="View Full Profile">
+                            <span>View Profile</span>
+                            <i class="fa-solid fa-arrow-right" style="font-size: 9px;"></i>
+                        </button>
+                    </div>
+                </div>
+
             </div>
         @endforeach
-
-        <div class="d-flex align-items-center justify-content-between pt-2 pb-1 px-1 text-muted fs-8">
-            <div>Showing 1 to {{ count($data) }} of {{ $total ?? count($data) }} members</div>
-        </div>
     </div>
 @else
     <div class="team-empty-card">
