@@ -1675,10 +1675,83 @@
         // Window Event Listener for Local Save & Real-Time Updates
         $(window).off('commercial:saved.srvEngine').on('commercial:saved.srvEngine', function(e) {
             var detail = e.originalEvent ? e.originalEvent.detail : e.detail;
-            if (detail && detail.state) {
-                window.ServicesTabEngine.rehydrateServiceCard(detail.service_type, detail.state);
+            if (detail) {
+                if (detail.version) {
+                    currentCommercialVersion = detail.version;
+                }
+                if (detail.state) {
+                    window.ServicesTabEngine.rehydrateServiceCard(detail.service_type, detail.state);
+                }
             }
         });
+
+        // Real-Time Reverb Echo Synchronization on private channel company.{companyId}
+        var srvCompanyId = {{ (int) (@$account->id ?? auth()->user()->company_id ?? 0) }};
+        var currentCommercialVersion = {{ (int) Cache::get('company:' . (@$account->id ?? auth()->user()->company_id ?? 0) . ':commercials:version', 1) }};
+
+        function fetchRemoteCommercialState(targetVersion) {
+            var stateUrl = '{{ route("service_company.jobs.commercialsState") }}';
+            $.ajax({
+                type: 'GET',
+                url: stateUrl,
+                headers: {
+                    'If-None-Match': currentCommercialVersion ? ('"commercial-v' + currentCommercialVersion + '"') : undefined
+                },
+                success: function(res, statusText, xhr) {
+                    if (xhr.status === 304) {
+                        return; // Cache valid, no DOM work needed
+                    }
+                    if (res && res.status === 'success' && res.services) {
+                        currentCommercialVersion = res.version || targetVersion || currentCommercialVersion;
+                        if (res.services.fulltime) {
+                            window.ServicesTabEngine.rehydrateServiceCard('fulltime', res.services.fulltime);
+                            var isFTActive = (res.services.fulltime.status === 1);
+                            var $ftSwitch = $('.update_main_status_fulltime');
+                            if ($ftSwitch.length && $ftSwitch.is(':checked') !== isFTActive) {
+                                $ftSwitch.prop('checked', isFTActive).trigger('change.srvSync');
+                            }
+                        }
+                        if (res.services.contract) {
+                            window.ServicesTabEngine.rehydrateServiceCard('contract', res.services.contract);
+                            var isCTActive = (res.services.contract.status === 1);
+                            var $ctSwitch = $('.contract_main_status_fulltime');
+                            if ($ctSwitch.length && $ctSwitch.is(':checked') !== isCTActive) {
+                                $ctSwitch.prop('checked', isCTActive).trigger('change.srvSync');
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function bindCommercialsEcho() {
+            if (srvCompanyId && window.Echo && typeof window.Echo.private === 'function') {
+                try {
+                    window.Echo.private('company.' + srvCompanyId)
+                        .listen('.commercials.updated', function(event) {
+                            if (event && event.version && event.version > currentCommercialVersion) {
+                                fetchRemoteCommercialState(event.version);
+                            }
+                        });
+                } catch (e) {
+                    console.warn('[Commercials] Echo listener setup:', e);
+                }
+            } else {
+                setTimeout(function() {
+                    if (srvCompanyId && window.Echo && typeof window.Echo.private === 'function') {
+                        try {
+                            window.Echo.private('company.' + srvCompanyId)
+                                .listen('.commercials.updated', function(event) {
+                                    if (event && event.version && event.version > currentCommercialVersion) {
+                                        fetchRemoteCommercialState(event.version);
+                                    }
+                                });
+                        } catch (e) {}
+                    }
+                }, 1500);
+            }
+        }
+        bindCommercialsEcho();
 
         updateTabCounters();
     }

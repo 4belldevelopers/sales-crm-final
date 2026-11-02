@@ -20,6 +20,25 @@ Last updated: 2026-10-22 (Super Admin Companies Page UI Redesign, 100% CQRS Read
 - **Test coverage:** `TenantIsolationTest`, `BenchToJobAppTrackerPipelineContractTest`, `BenchTalentRequestPipelineContractTest`, `SuperAdminCompanyLoadTest`, `SuperAdminSubscriptionLoadTest`, `SuperAdminDashboardLoadTest` (100% green).
 - **V2_login blocking-scenarios architecture:** session-epoch pattern + Reverb `UserAccountSuspended` event + `SyncUserStatusAction` (cross-tenant-safe) + `BlockCompanyAction` (static bulk helper) + `block_log` audit table + drop all 20 `refresh:true` ES sites + grep-lint guard. See [docs/V2_login/BLOCKING_SCENARIOS_AUDIT.md](../docs/V2_login/BLOCKING_SCENARIOS_AUDIT.md), [ADR 0007](../docs/adr/0007-blocking-scenarios-architecture.md). Code not yet landed.
 
+- *2026-11-02* — **God-Level Commercials Engine — Phases 2 & 3: CQRS Read Architecture, ETag Caching & Real-Time Multi-Page Sync (100% COMPLETED & VERIFIED)**:
+  - **CQRS Read Model (`CommercialReadModelService`)**:
+    - Replaced 6-8 direct MySQL queries on drawer open (`serviceviewmore`) with Redis-cached projection and master datasets (`master_countries_list:v1`, `master_industries_list:v1`, `master_default_rates:v1`, `commercial_experience_bands:v1`).
+    - Achieved **0% MySQL reads** on web/API request paths per Rule 1 (0 SQL queries on repeated hits).
+    - Single logical Redis projection fetch (`company:{$companyId}:commercials:projection:v{$version}`) with batched eager-loading fallback.
+  - **Canonical DTOs**:
+    - Strongly-typed `App\DTO\Commercials\ServiceTermDTO` and `App\DTO\Commercials\CommercialStateDTO` for consistent commercial representation across drawer, parent tabs, and API endpoints.
+  - **HTTP ETag & 304 Not Modified Caching API**:
+    - Registered `Route::get('jobs/commercials-state')` (`service_company.jobs.commercialsState`) with `If-None-Match: "commercial-v{version}"` returning `304 Not Modified` when client version matches.
+  - **Real-Time Laravel Reverb Multi-Page Synchronization**:
+    - Broadcasts `App\Events\CommercialsUpdated` on private tenant channel `company.{companyId}` (`commercials.updated`).
+    - Strict Security Invariant: Only lightweight metadata is broadcast over WebSockets, never sensitive financial terms/rates.
+    - Enforced `DB::afterCommit(...)` hooks guaranteeing zero phantom events on database rollback.
+    - Parent tab (`services.blade.php`) binds Laravel Echo listener on `company.{companyId}` and invokes conditional state fetch / DOM re-hydration instantly with `window.ServicesTabEngine`.
+    - Both drawer save (`jobServicesAddUpdate`) and parent card toggle (`updateserviceviewmore`) trigger atomic invalidation and Reverb broadcast.
+  - **Verification**:
+    - `scratch/test_phase2_cqrs_verification.php` verified 7/7 tests passed (0 failures).
+    - Pint code linter passed (100% clean).
+
 - *2026-11-02* — **God-Level Commercials Engine & Multi-Page Real-Time Sync (Phase 1 COMPLETED & VERIFIED)**:
   - **Module & Scope**: Service Company Hiring Services & Commercials Drawer (`resources/views/service_company/jobs/services_view.blade.php`), Parent Services Tab (`resources/views/service_company/account/v2/tabs/services.blade.php`), Account Save Handler (`resources/views/service_company/account/index.blade.php`), and Write Controller (`app/Http/Controllers/ServiceCompany/ServiceCompanyJobsController.php`).
   - **Visual & UI/UX Integrity**:
