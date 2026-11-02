@@ -26,10 +26,10 @@ class ActivityPresentationDTO
         public readonly ?string $toStage,
 
         // Sanitized Actor Presentation (Governed by Viewer Policy)
-        public readonly string $displayActorName,   // e.g., "Rahul Sharma" OR "Client Partner"
-        public readonly string $displayActorRole,   // e.g., "Agency Captain" OR "Client Representative"
+        public readonly string $displayActorName,   // e.g., "Rahul Sharma" (Actual user name)
+        public readonly string $displayActorRole,   // e.g., "Agency Captain" OR "Direct Client Representative"
         public readonly ?string $displayActorAvatar,// Masked/Generic icon for Agency viewing Client
-        public readonly string $displayCompanyName, // Masked "Client Partner" for Agency
+        public readonly string $displayCompanyName, // e.g. "Cognizant"
         public readonly bool $isClientActor,
 
         // Public Collaborative Metadata (Internal notes & scorecards stripped)
@@ -39,7 +39,15 @@ class ActivityPresentationDTO
         public readonly string $occurredAtUtc,
         public readonly string $relativeTime,       // "2 hours ago"
         public readonly string $localizedTimeDisplay,// "02 Nov 2026, 11:42 AM IST"
-        public readonly string $sourceIndex = 'candidate_timeline' // Diagnostic origin
+        public readonly string $sourceIndex = 'candidate_timeline', // Diagnostic origin
+
+        // Job & Company Context (Role-aware & privacy-controlled)
+        public readonly ?string $jobCompanyName = null,
+        public readonly ?string $jobCompanyLogo = null,
+        public readonly ?string $jobLocation = null,
+        public readonly ?string $jobType = null,
+        public readonly ?int $jobOpenings = null,
+        public readonly bool $isInternalClientContext = false
     ) {}
 
     /**
@@ -58,7 +66,14 @@ class ActivityPresentationDTO
             'source' => $this->sourceIndex,
             'job' => [
                 'id' => $this->jobId,
+                'code' => $this->jobId > 0 ? '#'.$this->jobId : '',
                 'title' => $this->jobTitle,
+                'company_name' => $this->jobCompanyName,
+                'company_logo' => $this->jobCompanyLogo,
+                'location' => $this->jobLocation,
+                'job_type' => $this->jobType,
+                'total_positions' => $this->jobOpenings ?? 1,
+                'is_internal_client' => $this->isInternalClientContext,
                 'shared_by_name' => $this->displayActorName,
                 'shared_by_company' => $this->displayCompanyName,
             ],

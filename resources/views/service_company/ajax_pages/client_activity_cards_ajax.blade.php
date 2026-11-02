@@ -34,7 +34,7 @@
             $cInitials = strtoupper(substr($words[0] ?? 'C', 0, 1) . (isset($words[1]) ? substr($words[1], 0, 1) : ''));
             $candidateId = $candidate['wise_id'] ?? ($candidate['id'] ?? ($candidate['application_id'] ?? ''));
 
-            // Job Details
+            // Job Details & Company Context (Row 1: Position, Row 2: Company Logo+Name, Row 3: Details)
             $jobStatus = $job['status'] ?? 'active';
             $jobTitle = $job['title'] ?? 'Requisition';
             $jobId = $job['id'] ?? '';
@@ -47,15 +47,19 @@
                 $jobCode = '';
             }
             $jobOpenings = (int) ($job['total_positions'] ?? 1);
+            $jobCompanyName = $job['company_name'] ?? '';
+            $jobCompanyLogo = $job['company_logo'] ?? '';
+            $jobLocation = $job['location'] ?? '';
+            $jobType = $job['job_type'] ?? '';
 
-            // Attribution & Actor Company Resolution (Point 2: Direct Client job sharer = Client User & Client Comp; Agency action = Agency User & Agency Comp)
+            // Attribution & Actor Company Resolution (Format: Rahul Sharma · Cognizant)
             $attribution = $item['attribution'] ?? [];
             $isSharedJob = ($eventType === 'job.shared') || !empty($job['shared_by_name']);
             $attributionLabel = $attribution['label'] ?? ($isSharedJob ? 'Shared by' : ($category === 'jobs' ? 'Created by' : ($category === 'crm' ? 'Logged by' : 'Uploaded by')));
-            $attributionName = $attribution['name'] ?? ($actor['name'] ?? ($isSharedJob ? ($job['shared_by_name'] ?? 'Client Partner') : 'Technical Recruiter'));
+            $attributionName = $attribution['name'] ?? ($actor['name'] ?? ($isSharedJob ? ($job['shared_by_name'] ?? 'Account Lead') : 'Technical Recruiter'));
             $companyName = $attribution['company_name'] ?? ($actor['company_name'] ?? ($isSharedJob ? ($job['shared_by_company'] ?? '') : ''));
             if (empty($companyName) || strtolower($companyName) === 'account lead') {
-                $companyName = $isSharedJob ? ($job['shared_by_company'] ?? 'Client Company') : ($actor['company_name'] ?? '4Bell Technology');
+                $companyName = $isSharedJob ? ($job['shared_by_company'] ?? 'Direct Client') : ($actor['company_name'] ?? '4Bell Technology');
             }
 
             // Standardize Stage & Status Colors:
@@ -108,7 +112,7 @@
              data-sequence="{{ $seq }}" 
              data-category="{{ $category }}"
              data-event-type="{{ $eventType }}"
-             data-search-terms="{{ strtolower($candidateName . ' ' . ($candidate['designation'] ?? '') . ' ' . $jobTitle . ' ' . $jobCode . ' ' . $attributionName . ' ' . $companyName . ' ' . ($transition['to_stage_name'] ?? '') . ' ' . ($job['shared_with_agency'] ?? '') . ' ' . ($job['shared_by_name'] ?? '')) }}">
+             data-search-terms="{{ strtolower($candidateName . ' ' . $jobTitle . ' ' . $jobCode . ' ' . $jobCompanyName . ' ' . $attributionName . ' ' . $companyName . ' ' . ($transition['to_stage_name'] ?? '') . ' ' . ($job['shared_with_agency'] ?? '') . ' ' . ($job['shared_by_name'] ?? '')) }}">
             
             {{-- Connecting Node Dot --}}
             <div class="cd-activity-node-dot {{ $dotStatusClass }} stream-{{ $category }}"></div>
@@ -117,7 +121,7 @@
             <div class="cd-activity-card-body">
                 <div class="cd-activity-subcard-grid">
 
-                    {{-- 1. Activity & Entity Sub-Card --}}
+                    {{-- 1. Activity & Entity Sub-Card (Consistent 3-Row Structure: Row 1: Position, Row 2: Company Logo+Name, Row 3: Supporting Details) --}}
                     <div class="cd-activity-subcard-entity">
                         @if($category === 'jobs')
                             @php
@@ -129,7 +133,6 @@
                                         'closed', 'removed' => 'background: #fef2f2; color: #b91c1c; border-color: #fecaca;',
                                         default => 'background: #ecfdf5; color: #15803d; border-color: #a7f3d0;'
                                     };
-                                $sharedWithText = $job['shared_with_agency'] ?? ($job['agency_name'] ?? '');
                             @endphp
                             <div class="cd-activity-entity-avatar" style="{{ $jAvatarStyle }}">
                                 <i class="fas {{ $isSharedJob ? 'fa-share-nodes' : 'fa-briefcase' }}"></i>
@@ -138,15 +141,25 @@
                                 <div class="cd-activity-pill-label">
                                     <span class="cd-activity-stream-pill stream-jobs-pill">{{ $isSharedJob ? 'JOB SHARED' : 'JOB REQUISITION' }}</span>
                                 </div>
+                                {{-- Row 1: Job Position Name --}}
                                 <div class="cd-activity-entity-name" title="{{ $jobTitle }}">
-                                    @if($isSharedJob && !empty($sharedWithText))
-                                        {{ $jobTitle }} &rarr; Shared with {{ $sharedWithText }}
-                                    @else
-                                        {{ $jobTitle }}
-                                    @endif
+                                    {{ $jobTitle }}
                                 </div>
+                                {{-- Row 2: Company Context (Internal Client for Direct Client; Direct Client for Agency) --}}
+                                <div class="cd-activity-company-context" title="{{ $jobCompanyName }}">
+                                    @if(!empty($jobCompanyLogo))
+                                        <img src="{{ $jobCompanyLogo }}" class="cd-activity-company-logo" alt="{{ $jobCompanyName }}" onerror="this.style.display='none';">
+                                    @else
+                                        <i class="far fa-building me-1 text-muted" style="font-size: 11px;"></i>
+                                    @endif
+                                    <span class="cd-activity-company-name">{{ $jobCompanyName }}</span>
+                                </div>
+                                {{-- Row 3: Supporting Details --}}
                                 <div class="cd-activity-entity-sub">
-                                    <span class="fw-semibold text-gray-800">{{ $jobCode }}</span> &bull; {{ $jobOpenings }} {{ \Illuminate\Support\Str::plural('Opening', $jobOpenings) }}
+                                    <span class="fw-semibold text-gray-800">{{ $jobCode }}</span>
+                                    @if(!empty($jobLocation)) &bull; {{ $jobLocation }} @endif
+                                    @if(!empty($jobType)) &bull; {{ $jobType }} @endif
+                                    &bull; {{ $jobOpenings }} {{ \Illuminate\Support\Str::plural('Opening', $jobOpenings) }}
                                 </div>
                             </div>
                         @elseif($category === 'crm')
@@ -168,14 +181,24 @@
                                 <div class="cd-activity-pill-label">
                                     <span class="cd-activity-stream-pill stream-interviews-pill">INTERVIEW</span>
                                 </div>
+                                {{-- Row 1: Candidate Name --}}
                                 <div class="cd-activity-entity-name" title="{{ $candidateName }}">
                                     {{ $candidateName }}
                                 </div>
-                                <div class="cd-activity-entity-sub" title="{{ $candidate['designation'] ?? $jobTitle }}">
-                                    {{ $candidate['designation'] ?? $jobTitle }}
-                                    @if(!empty($jobCode))
-                                        &bull; {{ $jobCode }}
+                                {{-- Row 2: Company Context --}}
+                                <div class="cd-activity-company-context" title="{{ $jobCompanyName }}">
+                                    @if(!empty($jobCompanyLogo))
+                                        <img src="{{ $jobCompanyLogo }}" class="cd-activity-company-logo" alt="{{ $jobCompanyName }}" onerror="this.style.display='none';">
+                                    @else
+                                        <i class="far fa-building me-1 text-muted" style="font-size: 11px;"></i>
                                     @endif
+                                    <span class="cd-activity-company-name">{{ $jobCompanyName }}</span>
+                                </div>
+                                {{-- Row 3: Supporting Details --}}
+                                <div class="cd-activity-entity-sub" title="{{ $candidate['designation'] ?? $jobTitle }}">
+                                    <span class="fw-semibold text-gray-800">{{ $jobTitle }}</span>
+                                    @if(!empty($jobCode)) &bull; {{ $jobCode }} @endif
+                                    @if(!empty($jobLocation)) &bull; {{ $jobLocation }} @endif
                                 </div>
                             </div>
                         @else
@@ -186,14 +209,27 @@
                                 <div class="cd-activity-pill-label">
                                     <span class="cd-activity-stream-pill stream-pipeline-pill">CANDIDATE</span>
                                 </div>
+                                {{-- Row 1: Candidate Name & Candidate ID --}}
                                 <div class="cd-activity-entity-name" title="{{ $candidateName }}">
                                     {{ $candidateName }}
-                                </div>
-                                <div class="cd-activity-entity-sub" title="{{ $candidate['designation'] ?? $jobTitle }}">
-                                    <span class="fw-semibold text-gray-800">{{ $candidate['designation'] ?? $jobTitle }}</span>
                                     @if(!empty($candidateId))
-                                        &bull; #{{ $candidateId }}
+                                        <span class="text-muted fw-normal fs-8 ms-1">#{{ $candidateId }}</span>
                                     @endif
+                                </div>
+                                {{-- Row 2: Company Context (Internal Client for Direct Client; Direct Client for Agency) --}}
+                                <div class="cd-activity-company-context" title="{{ $jobCompanyName }}">
+                                    @if(!empty($jobCompanyLogo))
+                                        <img src="{{ $jobCompanyLogo }}" class="cd-activity-company-logo" alt="{{ $jobCompanyName }}" onerror="this.style.display='none';">
+                                    @else
+                                        <i class="far fa-building me-1 text-muted" style="font-size: 11px;"></i>
+                                    @endif
+                                    <span class="cd-activity-company-name">{{ $jobCompanyName }}</span>
+                                </div>
+                                {{-- Row 3: Supporting Details --}}
+                                <div class="cd-activity-entity-sub" title="{{ $candidate['designation'] ?? $jobTitle }}">
+                                    <span class="fw-semibold text-gray-800">{{ $jobTitle }}</span>
+                                    @if(!empty($jobCode)) &bull; {{ $jobCode }} @endif
+                                    @if(!empty($jobLocation)) &bull; {{ $jobLocation }} @endif
                                 </div>
                             </div>
                         @endif
@@ -304,7 +340,7 @@
                         @endif
                     </div>
 
-                    {{-- 3. Who & Company Sub-Card (Actual Owner & Company - NEVER Recruiter Role) --}}
+                    {{-- 3. Who & Company Sub-Card (Actual User Name & Company Name - Format: Rahul Sharma · Cognizant) --}}
                     <div class="cd-activity-subcard-actor">
                         <div class="cd-activity-actor-meta">
                             <div class="cd-activity-actor-attribution">
@@ -315,11 +351,7 @@
                             </div>
                             @if(!empty($companyName))
                                 <div class="cd-activity-actor-company" title="{{ $companyName }}">
-                                    @if($companyName === 'Client Partner')
-                                        <i class="fas fa-handshake me-1 text-success" style="font-size: 10px;"></i>{{ $companyName }}
-                                    @else
-                                        <i class="far fa-building me-1" style="font-size: 10px; color: #64748b;"></i>{{ $companyName }}
-                                    @endif
+                                    <i class="far fa-building me-1" style="font-size: 10px; color: #64748b;"></i>{{ $companyName }}
                                 </div>
                             @endif
                         </div>
