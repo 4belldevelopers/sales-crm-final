@@ -342,7 +342,7 @@
                            var rate_val = $(".rate_val").map(function() {
                               return this.value;
                             }).get();
-                            var rateTypeClass = $('.rateTypeClass:checked').val() || $('.rateTypeClass').val();
+                            var rateTypeClass = $('[data-commercial-type]').val() || $('.rateTypeClass:checked').val() || $('.rateTypeClass').val();
                             var main_status = $('.main_status:checked').val() !== undefined ? $('.main_status:checked').val() : ($('.main_status').val() || 0);
                             var sal_mode = $('select[name="sal_mode"]').val();
                             var salary_currency = $('select[name="salary_currency"]').val();
@@ -355,14 +355,12 @@
                             var billing_trigger = $('[data-billing-trigger]').val();
                             var payment_terms_days = $('[data-payment-terms]').val();
                             if(commType==2){
-                              sal_mode =null;
-                              salary_currency =null;
-
                               rate_val = $(".perecentage_val").map(function() {
-                              return this.value;
-                            }).get();
-
-
+                                return this.value;
+                              }).get();
+                            }
+                            if(String(rateTypeClass) === '0'){
+                              rate_val = rate_val.map(function() { return '0'; });
                             }
                          				
                            $.ajax({
@@ -396,11 +394,19 @@
                                                };
                                                window.dispatchEvent(new CustomEvent('commercial:saved', { detail: eventDetail }));
 
-                                               if (window.KTDrawer && KTDrawer.getInstance(document.getElementById('kt_activitiesJob'))) {
-                                                   KTDrawer.getInstance(document.getElementById('kt_activitiesJob')).hide();
-                                               } else {
-                                                   $('#kt_activitiesJob_close').trigger('click');
+                                               if (window.ServicesTabEngine && typeof window.ServicesTabEngine.rehydrateServiceCard === 'function') {
+                                                   window.ServicesTabEngine.rehydrateServiceCard(serviceType, response.commercial_state);
                                                }
+
+                                               var drawerEl = document.getElementById('kt_activitiesJob');
+                                               if (window.KTDrawer && KTDrawer.getInstance(drawerEl)) {
+                                                   KTDrawer.getInstance(drawerEl).hide();
+                                               }
+                                               $('#kt_activitiesJob_close').trigger('click');
+                                               $('.cd-drw-close-btn').trigger('click');
+                                               $(drawerEl).removeClass('drawer-on');
+                                               $('.drawer-overlay').remove();
+                                               $('body').removeAttr('data-kt-drawer');
 
                                                swalWithBootstrapButtons.fire(
                                                                  'Success!',
