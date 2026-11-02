@@ -19,6 +19,7 @@ class AgencyActivityQuery
 
     public const ALLOWED_CATEGORIES = [
         'all',
+        'pipeline',
         'account',
         'team',
         'services',
@@ -34,6 +35,7 @@ class AgencyActivityQuery
         'compliance',
         'relationship',
         'system',
+        'crm',
     ];
 
     public function __construct(

@@ -39,9 +39,9 @@ class AgencyAccessContext
         $agencyId = (int) ($request->input('agency_id') ?: ($request->input('agency_company_id') ?: ($request->input('partner_id') ?: $request->route('id'))));
 
         $isSuperAdmin = (bool) ($user->is_superadmin ?? false)
+            || (int) ($user->company_id ?? 0) === 1
             || in_array((int) ($user->company_id ?? 0), \App\Helper\GeneralMethod::superAdminCompanyIds(), true)
-            || (method_exists($user, 'hasRole') && $user->hasRole('super_admin'))
-            || (int) ($user->company_id ?? 0) === 1;
+            || ($user->relationLoaded('roles') && method_exists($user, 'hasRole') && $user->hasRole('super_admin'));
 
         if ($agencyId <= 0) {
             return new self(
