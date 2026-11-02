@@ -12,6 +12,7 @@ namespace App\Http\Controllers\ServiceCompany;
 
 use App\DTO\ServiceCompany\ClientAccessContext;
 use App\DTO\ServiceCompany\ClientJobsQuery;
+use App\Events\CommercialsUpdated;
 use App\Helper\GeneralMethod;
 use App\Helper\Reply;
 use App\Http\Requests\StoreJob;
@@ -28,6 +29,7 @@ use App\Models\JobCategory;
 use App\Models\JobStatusLog;
 use App\Models\Skill;
 use App\Models\User;
+use App\Services\CommercialReadModelService;
 use App\Services\ElasticService;
 use App\Services\JobIdempotencyService;
 use App\Services\JobService;
@@ -16280,86 +16282,44 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
         $this->billingTriggers = self::COMMERCIAL_BILLING_TRIGGERS;
         $this->paymentTerms = self::COMMERCIAL_PAYMENT_TERMS;
         $this->employmentType = GeneralMethod::employmentType();
-        // Intent: load the global range master from cache, replacing an old empty cache entry left by a pre-master deployment.
-        $commercialExperienceBands = Cache::get('commercial_experience_bands:v1');
-        if (collect($commercialExperienceBands)->isEmpty()) {
-            $commercialExperienceBands = DB::table('commercial_experience_bands')
-                ->select(['id', 'code', 'label', 'min_experience', 'max_experience', 'sort_order'])
-                ->where('is_active', 1)
-                ->orderBy('sort_order')
-                ->get();
-
-            Cache::put('commercial_experience_bands:v1', $commercialExperienceBands, 3600);
-        }
-        $this->commercialExperienceBands = $commercialExperienceBands;
-
-        $commericials = DB::table('commericials')
-            ->where('commtype', $id)
-            ->where('company_id', $company_id)
-            ->orderBy('id', 'desc')
-            ->get()
-            ->map(function ($commericial) {
-                $commericial_details = DB::table('commericial_details')
-                    ->where('commericial_id', $commericial->id)
-                    ->get()
-                    ->map(function ($detail) {
-                        return [
-                            'id' => $detail->id,
-                            'commericial_id' => $detail->commericial_id,
-                            'exp' => $detail->exp,
-                            'rate' => $detail->rate,
-                            'company_id' => $detail->company_id,
-                            'commtype' => $detail->commtype,
-                        ];
-                    })
-                    ->toArray();
-
-                //  dd($commericial, $commericial_details);
-
-                $commericial_countries = DB::table('commericial_countries')
-                    ->where('commericial_id', $commericial->id)
-                    ->pluck('country_id')
-                    ->toArray();
-
-                $salaryCurrency = $commericial->salary_currency;
-                // Intent: Inherit tenant default currency if commercial currency is unconfigured or legacy USD default (4) while tenant default is different.
-                if ($salaryCurrency === null || ($salaryCurrency == 4 && $this->defaultCurrencyKey !== 4)) {
-                    $salaryCurrency = $this->defaultCurrencyKey;
-                }
-
-                return [
-                    'id' => $commericial->id,
-                    'company_id' => $commericial->company_id,
-                    'rateType' => $commericial->rateType,
-                    'commtype' => $commericial->commtype,
-                    'status' => $commericial->status,
-                    'sal_mode' => $commericial->sal_mode,
-                    'salary_currency' => $salaryCurrency,
-                    'replacement_period_days' => $commericial->replacement_period_days,
-                    'replacement_type' => $commericial->replacement_type,
-                    'replacement_eligibility' => $commericial->replacement_eligibility,
-                    'billing_frequency' => $commericial->billing_frequency,
-                    'billing_trigger' => $commericial->billing_trigger,
-                    'payment_terms_days' => $commericial->payment_terms_days,
-                    'commericial_details' => $commericial_details,
-                    'commericial_countries' => $commericial_countries,
-                ];
-            });
-
-        $this->commericials = $commericials;
-        //    dd($commericials[0]['sal_mode']);
-        // return response()->json($commericials); salary_currency status
-
-        // dd($commericials);
-
-        $this->industries = DB::table('td_industries')->get();
-        $this->countries = DB::table('countries')->get();
-        $this->default_rates = DB::table('default_rates')->first();
+        // Cached Masters (Rule 1: 0% MySQL reads on web/API request paths)
+        $this->commercialExperienceBands = CommercialReadModelService::getCommercialExperienceBands();
+        $this->industries = CommercialReadModelService::getMasterIndustries();
+        $this->countries = CommercialReadModelService::getMasterCountries();
+        $this->default_rates = CommercialReadModelService::getMasterDefaultRates();
         $this->sectionCheck = $id;
 
-        // dd($this->industries);
+        // CQRS Read Model projection fetch (<= 1 logical Redis operation)
+        $commType = (int) $id;
+        $commercialState = CommercialReadModelService::getTenantCommercialsState($company_id);
+        $activeService = ($commType === 2) ? $commercialState->fulltime : $commercialState->contract;
 
-        //    dd($this->default_rates);
+        if ($activeService && $activeService->id > 0) {
+            $salaryCurrency = $activeService->salaryCurrency;
+            if ($salaryCurrency === null || ($salaryCurrency == 4 && $this->defaultCurrencyKey !== 4)) {
+                $salaryCurrency = $this->defaultCurrencyKey;
+            }
+
+            $this->commericials = collect([[
+                'id' => $activeService->id,
+                'company_id' => $activeService->companyId,
+                'rateType' => $activeService->rateType,
+                'commtype' => $activeService->commtype,
+                'status' => $activeService->status,
+                'sal_mode' => $activeService->salMode,
+                'salary_currency' => $salaryCurrency,
+                'replacement_period_days' => $activeService->replacementPeriodDays,
+                'replacement_type' => $activeService->replacementType,
+                'replacement_eligibility' => $activeService->replacementEligibility,
+                'billing_frequency' => $activeService->billingFrequency,
+                'billing_trigger' => $activeService->billingTrigger,
+                'payment_terms_days' => $activeService->paymentTermsDays,
+                'commericial_details' => $activeService->rates,
+                'commericial_countries' => $activeService->countryIds,
+            ]]);
+        } else {
+            $this->commericials = collect([]);
+        }
 
         $view = view('service_company.jobs.services_view', $this->data)->render();
 
@@ -16523,6 +16483,27 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
                 'processed_at' => now(),
             ]);
 
+            // Register post-commit events to guarantee they only fire if ACID commit succeeds
+            DB::afterCommit(function () use ($company_id, $commType, $newVersion) {
+                // Invalidate multi-tenant cache atomically per Rule 6
+                CommercialReadModelService::invalidateTenantCache($company_id);
+
+                // Real-time broadcast over Laravel Reverb (private-company.{id})
+                try {
+                    broadcast(new CommercialsUpdated(
+                        companyId: $company_id,
+                        serviceType: ($commType === 2) ? 'fulltime' : 'contract',
+                        version: $newVersion,
+                        senderId: auth()->id()
+                    ));
+                } catch (\Throwable $broadCastEx) {
+                    Log::warning('Reverb CommercialsUpdated broadcast failed: '.$broadCastEx->getMessage());
+                }
+
+                // Async ES index refresh for talent marketplace search
+                ElasticCompanyIndex::dispatch($company_id);
+            });
+
             DB::commit();
         } catch (\Throwable $e) {
             DB::rollBack();
@@ -16531,16 +16512,9 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
             return response()->json(['status' => 'error', 'message' => 'Failed to save commercials. Please try again.'], 500);
         }
 
-        // Cache Invalidation after transaction commit
-        Cache::forever("company:{$company_id}:commercials:version", $newVersion);
-        Cache::forget("account_settings:company:{$company_id}");
-        Cache::forever("agency_drawer_version_company_{$company_id}", ((int) Cache::get("agency_drawer_version_company_{$company_id}", 1)) + 1);
-
-        // Async ES index refresh
-        ElasticCompanyIndex::dispatch($company_id);
-
         // Canonical state payload for client-first reactive DOM rehydration
-        $countryNames = ! empty($countryIds) ? DB::table('countries')->whereIn('id', $countryIds)->pluck('country_name')->toArray() : [];
+        $countryMap = CommercialReadModelService::getCountryIdToNameMap();
+        $countryNames = array_values(array_filter(array_map(fn ($cid) => $countryMap[$cid] ?? null, $countryIds)));
         $currencyCode = \App\Services\CurrencyService::resolveCurrencyCode($salary_currency) ?: 'INR';
 
         $commercialState = [
@@ -16593,7 +16567,7 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
         $commercial = DB::table('commericials')
             ->where('id', $id)
             ->where('company_id', $company_id)
-            ->first(['id']);
+            ->first(['id', 'commtype']);
 
         if (! $commercial) {
             return response()->json(['status' => 'error', 'message' => 'Commercial service not found.'], 404);
@@ -16604,17 +16578,61 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
             ->where('company_id', $company_id)
             ->update(['status' => $status]);
 
-        // Intent: invalidate the tenant-only account payload so refreshes always read the persisted service status.
-        Cache::forget("account_settings:company:{$company_id}");
+        // Intent: atomically invalidate tenant commercial & agency caches per Rule 6
+        CommercialReadModelService::invalidateTenantCache($company_id);
 
-        // Intent: atomically invalidate agency drawer cache for all tenants viewing this company per Rule 6
-        Cache::forever("agency_drawer_version_company_{$company_id}", ((int) Cache::get("agency_drawer_version_company_{$company_id}", 1)) + 1);
+        $newVersion = (int) Cache::get("company:{$company_id}:commercials:version", 1);
+
+        // Real-time broadcast over Laravel Reverb (private-company.{id})
+        try {
+            broadcast(new CommercialsUpdated(
+                companyId: $company_id,
+                serviceType: ((int) $commercial->commtype === 2) ? 'fulltime' : 'contract',
+                version: $newVersion,
+                senderId: auth()->id()
+            ));
+        } catch (\Throwable $broadCastEx) {
+            Log::warning('Reverb CommercialsUpdated broadcast failed: '.$broadCastEx->getMessage());
+        }
 
         // Intent: keep agency search/recommendation data synchronized without delaying this status-toggle response.
         ElasticCompanyIndex::dispatch($company_id);
 
-        return response()->json(['status' => 'success', 'serviceStatus' => $status]);
+        return response()->json(['status' => 'success', 'serviceStatus' => $status, 'version' => $newVersion]);
 
+    }
+
+    /**
+     * CQRS Read Model API Endpoint — returns canonical commercial state with ETag conditional caching.
+     * Rule 1: 0% MySQL reads (served 100% via Redis projection).
+     * Supports If-None-Match header returning 304 Not Modified.
+     */
+    public function getCommercialsState(Request $request)
+    {
+        abort_if(Gate::denies('view_jobs'), 403);
+        $company_id = auth()->user()->company_id;
+
+        $version = (int) Cache::get("company:{$company_id}:commercials:version", 1);
+        $etag = '"commercial-v'.$version.'"';
+
+        if ($request->header('If-None-Match') === $etag) {
+            return response()->noContent(304, ['ETag' => $etag]);
+        }
+
+        $stateDTO = CommercialReadModelService::getTenantCommercialsState($company_id);
+
+        return response()->json([
+            'status' => 'success',
+            'company_id' => $company_id,
+            'version' => $version,
+            'services' => [
+                'fulltime' => $stateDTO->fulltime->toArray(),
+                'contract' => $stateDTO->contract->toArray(),
+            ],
+        ], 200, [
+            'ETag' => $etag,
+            'Cache-Control' => 'private, no-cache',
+        ]);
     }
 
     public function demoView()
