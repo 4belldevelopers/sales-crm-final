@@ -16322,7 +16322,10 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
         $this->defaultCurrencyKey = \App\Services\CurrencyService::getTenantCurrencyKey($company_id);
 
         if ($isFulltime) {
-            $this->salaryMode = [0 => 'Annual CTC'];
+            $this->salaryMode = [
+                0 => 'Annual CTC',
+                3 => 'Per Hire',
+            ];
             $this->replacementPeriods = [
                 30 => '30 Days (Warranty)',
                 60 => '60 Days (Warranty)',
@@ -16452,6 +16455,10 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
         $commType = (int) $request->commType;
         $rateType = $request->rateTypeClass;
         $sal_mode = (int) $request->sal_mode;
+        // Intent: Default sal_mode to 3 (Per Hire) for fixed placement fee on fulltime permanent hiring
+        if ($commType === 2 && (int) $rateType === 1 && empty($sal_mode)) {
+            $sal_mode = 3;
+        }
         $main_status = ($request->main_status) ? $request->main_status : 0;
 
         // Intent: Concurrency check against the row being edited to prevent silent concurrent overwrites
@@ -16651,11 +16658,11 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
             'status' => $status,
             'rateType' => (int) $rateType,
             'rate_type_label' => ($commType === 2)
-                ? (((int) $rateType === 2) ? 'Percentage of CTC' : (((int) $rateType === 1) ? 'Fixed Placement Fee' : 'Free / No Fee'))
+                ? (((int) $rateType === 2) ? 'Percentage of CTC' : (((int) $rateType === 1) ? 'Fixed Placement Fee' : 'Free / No Placement Fee'))
                 : (((int) $rateType === 2) ? 'Markup on Pay Rate' : (((int) $rateType === 1) ? 'Contract Bill Rate' : 'Pass-Through / Zero Margin')),
             'sal_mode' => $sal_mode,
             'sal_mode_label' => ($commType === 2)
-                ? 'Annual CTC'
+                ? (((int) $rateType === 1 || $sal_mode === 3) ? 'Per Hire' : (((int) $rateType === 0) ? 'Not Applicable' : 'Annual CTC'))
                 : (((int) $sal_mode === 2) ? 'Hourly Staffing' : 'Monthly Staffing'),
             'salary_currency' => $salary_currency,
             'currency_code' => $currencyCode,

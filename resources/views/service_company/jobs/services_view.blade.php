@@ -17,6 +17,14 @@
     $rateType = (int) ($commercial['rateType'] ?? $sectionCheck);
     $commercialDetails = collect($commercial['commericial_details'] ?? [])->keyBy('exp');
     $selectedCountryIds = array_map('intval', $commercial['commericial_countries'] ?? []);
+    // Requirement 5: Automatically determine Services Country from registered tenant address if none saved yet
+    if (empty($selectedCountryIds)) {
+        $tenantCompanyId = (int) ($commercial['company_id'] ?? auth()->user()->company_id ?? 0);
+        $registeredCountryId = \App\Helper\GeneralMethod::defaultCountryId($tenantCompanyId);
+        if ($registeredCountryId > 0) {
+            $selectedCountryIds = [$registeredCountryId];
+        }
+    }
     $fallbackDefaultRate = $isFulltime ? (@$default_rates->rates_perecentage ?? 8.33) : (@$default_rates->rates_fixed ?? 0);
 
     $experienceBandRows = collect($commercialExperienceBands ?? []);
@@ -34,6 +42,13 @@
     });
     $selectedCommercialModel = $isFreeModel ? 0 : $rateType;
 
+    // Requirement 2 & 3: For Fulltime Fixed Placement Fee, default amount is 10,000 and billing basis is Per Hire (3)
+    if ($isFulltime && $selectedCommercialModel === 1) {
+        if ((float) $defaultRate <= 100.0 || (float) $defaultRate === 8.33) {
+            $defaultRate = 10000.00;
+        }
+    }
+
     $experienceRanges = $experienceBandRows
         ->map(function ($band) {
             $minimum = (int) $band->min_experience;
@@ -47,6 +62,9 @@
         ->values();
 
     $selectedSalaryMode = isset($commercial['sal_mode']) ? (int) $commercial['sal_mode'] : 0;
+    if ($isFulltime && $selectedCommercialModel === 1) {
+        $selectedSalaryMode = 3; // Per Hire
+    }
 
     $tenantDefaultCurrencyKey = isset($defaultCurrencyKey)
         ? (int) $defaultCurrencyKey
@@ -474,31 +492,31 @@
     box-shadow: inset 0 0 0 3px #ffffff;
 }
 
-/* Distinct Fee Type Visual Treatment: Free Commercial Model (Emerald) */
+/* Distinct Fee Type Visual Treatment: Free Commercial Model (Subtle Professional Pink) */
 .commercial-editor-v3.is-fulltime-view .cd-model-card[data-commercial-model="0"] {
-    background: #f6fdf9;
-    border-color: #d1fae5;
+    background: #fff5f7;
+    border-color: #fecdd3;
 }
 .commercial-editor-v3.is-fulltime-view .cd-model-card[data-commercial-model="0"]:hover {
-    background: #ecfdf5;
-    border-color: #a7f3d0;
+    background: #ffe4e6;
+    border-color: #fda4af;
 }
 .commercial-editor-v3.is-fulltime-view .cd-model-card[data-commercial-model="0"].active {
-    background: #ecfdf5 !important;
-    border-color: #10b981 !important;
-    box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.14) !important;
+    background: #fff1f2 !important;
+    border-color: #f43f5e !important;
+    box-shadow: 0 0 0 3px rgba(244, 63, 94, 0.15) !important;
 }
 .commercial-editor-v3.is-fulltime-view .cd-model-card[data-commercial-model="0"] .cd-model-icon-box {
-    background: #d1fae5;
-    color: #059669;
+    background: #ffe4e6;
+    color: #e11d48;
 }
 .commercial-editor-v3.is-fulltime-view .cd-model-card[data-commercial-model="0"].active .cd-model-icon-box {
-    background: #10b981;
+    background: #f43f5e;
     color: #ffffff;
 }
 .commercial-editor-v3.is-fulltime-view .cd-model-card[data-commercial-model="0"].active .cd-model-radio-dot {
-    border-color: #10b981;
-    background: #10b981;
+    border-color: #f43f5e;
+    background: #f43f5e;
     box-shadow: inset 0 0 0 3px #ffffff;
 }
 
@@ -661,7 +679,7 @@
     border-radius: 8px;
     padding: 10px 14px;
     display: grid;
-    grid-template-columns: minmax(0, 2fr) minmax(0, 1.2fr) minmax(0, 1.2fr) minmax(0, 1.4fr) 36px;
+    grid-template-columns: minmax(0, 2fr) minmax(0, 1.1fr) minmax(0, 1.3fr) minmax(0, 1.4fr);
     gap: 12px;
     align-items: center;
     transition: all 0.15s;
@@ -702,27 +720,6 @@
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-}
-
-.cd-tier-reset-btn {
-    width: 32px;
-    height: 32px;
-    border-radius: 6px;
-    border: 1px solid #e2e8f0;
-    background: #ffffff;
-    color: #64748b;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 13px;
-    transition: all 0.15s;
-}
-
-.cd-tier-reset-btn:hover {
-    background: #eff6ff;
-    color: #009ef7;
-    border-color: #009ef7;
 }
 
 /* Policy & Invoicing Sub-Cards */
@@ -1123,15 +1120,24 @@
 
                     <!-- Sub-Card: Billing Basis -->
                     <div class="cd-field-group">
-                        <label class="cd-field-label" for="commercial_salary_mode">{{ $isFulltime ? 'Applied On' : 'Billing Basis' }}</label>
+                        <label class="cd-field-label" for="commercial_salary_mode" data-applied-on-label>
+                            {{ $isFulltime ? ($selectedCommercialModel === 1 ? 'Billing Basis' : ($selectedCommercialModel === 0 ? 'Fee Basis' : 'Applied On')) : 'Billing Basis' }}
+                        </label>
                         <select id="commercial_salary_mode" name="sal_mode" class="cd-field-control" data-applied-on>
-                            @foreach(($salaryMode ?? []) as $modeKey => $modeLabel)
-                                <option value="{{ $modeKey }}" {{ $selectedSalaryMode === (int) $modeKey ? 'selected' : '' }}>
-                                    {{ $modeLabel }}
-                                </option>
-                            @endforeach
+                            @if($isFulltime)
+                                <option value="0" {{ $selectedSalaryMode === 0 ? 'selected' : '' }}>Annual CTC</option>
+                                <option value="3" {{ $selectedSalaryMode === 3 ? 'selected' : '' }}>Per Hire</option>
+                            @else
+                                @foreach(($salaryMode ?? []) as $modeKey => $modeLabel)
+                                    <option value="{{ $modeKey }}" {{ $selectedSalaryMode === (int) $modeKey ? 'selected' : '' }}>
+                                        {{ $modeLabel }}
+                                    </option>
+                                @endforeach
+                            @endif
                         </select>
-                        <span class="cd-field-help">{{ $isFulltime ? 'Commercial placement billing basis' : 'Contract staffing billing cadence' }}</span>
+                        <span class="cd-field-help" data-applied-on-help>
+                            {{ $isFulltime ? ($selectedCommercialModel === 1 ? 'Fixed fee charged per successful hire' : ($selectedCommercialModel === 0 ? 'No fee basis required' : 'Commercial placement billing basis')) : 'Contract staffing billing cadence' }}
+                        </span>
                     </div>
                 </div>
             </div>
@@ -1202,22 +1208,17 @@
 
                             <div>
                                 <select class="cd-field-control" data-range-applied-on>
-                                    @foreach(($salaryMode ?? []) as $modeKey => $modeLabel)
-                                        <option value="{{ $modeKey }}" {{ $selectedSalaryMode === (int) $modeKey ? 'selected' : '' }}>
-                                            {{ $modeLabel }}
-                                        </option>
-                                    @endforeach
+                                    @if($isFulltime)
+                                        <option value="0" {{ $selectedSalaryMode === 0 ? 'selected' : '' }}>Annual CTC</option>
+                                        <option value="3" {{ $selectedSalaryMode === 3 ? 'selected' : '' }}>Per Hire</option>
+                                    @else
+                                        @foreach(($salaryMode ?? []) as $modeKey => $modeLabel)
+                                            <option value="{{ $modeKey }}" {{ $selectedSalaryMode === (int) $modeKey ? 'selected' : '' }}>
+                                                {{ $modeLabel }}
+                                            </option>
+                                        @endforeach
+                                    @endif
                                 </select>
-                            </div>
-
-                            <div>
-                                <button type="button"
-                                        class="cd-tier-reset-btn"
-                                        data-range-reset
-                                        title="Reset tier to default rate"
-                                        aria-label="Reset {{ $range['label'] }}">
-                                    ↻
-                                </button>
                             </div>
 
                             <!-- Preserved Hidden Persistence Inputs -->
@@ -1497,8 +1498,20 @@
         if (isFree) {
             defaultRateInput.value = '0';
             defaultRateInput.dispatchEvent(new Event('input'));
+        } else if (isFixedFee && isFT) {
+            var currRate = Number(defaultRateInput.value);
+            if (!currRate || currRate <= 100 || currRate === 8.33) {
+                defaultRateInput.value = '10000';
+                defaultRateInput.dispatchEvent(new Event('input'));
+            }
+        } else if (isPercentage && isFT) {
+            var currRate = Number(defaultRateInput.value);
+            if (!currRate || currRate > 100 || currRate === 10000) {
+                defaultRateInput.value = defaultRateInput.dataset.fallbackRate || '8.33';
+                defaultRateInput.dispatchEvent(new Event('input'));
+            }
         } else if (wasFree && Number(defaultRateInput.value) === 0) {
-            defaultRateInput.value = defaultRateInput.dataset.fallbackRate || '8.33';
+            defaultRateInput.value = defaultRateInput.dataset.fallbackRate || (isFT ? '8.33' : '0');
             defaultRateInput.dispatchEvent(new Event('input'));
         }
 
@@ -1506,13 +1519,32 @@
         appliedOn.disabled = isFree;
         pricingCurrency.disabled = isFree;
 
-        root.querySelectorAll('[data-range-rate],[data-range-applied-on],[data-range-currency],[data-range-reset]').forEach(function (control) {
+        root.querySelectorAll('[data-range-rate],[data-range-applied-on],[data-range-currency]').forEach(function (control) {
             control.disabled = isFree;
         });
 
         root.querySelectorAll('[data-rate-suffix]').forEach(function (suffix) {
             suffix.textContent = isPercentage ? '%' : '';
         });
+
+        var appliedOnLabel = root.querySelector('[data-applied-on-label]');
+        var appliedOnHelp = root.querySelector('[data-applied-on-help]');
+        if (isFT) {
+            if (isFixedFee) {
+                appliedOn.value = '3';
+                syncRangeSelects('[data-range-applied-on]', '3');
+                if (appliedOnLabel) appliedOnLabel.textContent = 'Billing Basis';
+                if (appliedOnHelp) appliedOnHelp.textContent = 'Fixed fee charged per successful hire';
+            } else if (isPercentage) {
+                appliedOn.value = '0';
+                syncRangeSelects('[data-range-applied-on]', '0');
+                if (appliedOnLabel) appliedOnLabel.textContent = 'Applied On';
+                if (appliedOnHelp) appliedOnHelp.textContent = 'Commercial placement billing basis';
+            } else if (isFree) {
+                if (appliedOnLabel) appliedOnLabel.textContent = 'Fee Basis';
+                if (appliedOnHelp) appliedOnHelp.textContent = 'No fee basis required';
+            }
+        }
 
         var isFT = root.querySelector('.commType').value === '2';
 
@@ -1655,15 +1687,6 @@
                 storedRates.forEach(function (rate) {
                     rate.value = rangeRate.value;
                 });
-            });
-        }
-        var resetBtn = rangeRow.querySelector('[data-range-reset]');
-        if (resetBtn) {
-            resetBtn.addEventListener('click', function () {
-                if (rangeRate && defaultRateInput) {
-                    rangeRate.value = defaultRateInput.value;
-                    rangeRate.dispatchEvent(new Event('input'));
-                }
             });
         }
     });

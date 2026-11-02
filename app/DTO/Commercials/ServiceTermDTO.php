@@ -57,11 +57,11 @@ class ServiceTermDTO
             status: (int) ($data['status'] ?? 0),
             rateType: $rateType,
             rateTypeLabel: ($commtype === 2)
-                ? ($rateType === 2 ? 'Percentage of CTC' : ($rateType === 1 ? 'Fixed Placement Fee' : 'Free / No Fee'))
+                ? ($rateType === 2 ? 'Percentage of CTC' : ($rateType === 1 ? 'Fixed Placement Fee' : 'Free / No Placement Fee'))
                 : ($rateType === 2 ? 'Markup on Pay Rate' : ($rateType === 1 ? 'Contract Bill Rate' : 'Pass-Through / Zero Margin')),
             salMode: $salMode,
             salModeLabel: ($commtype === 2)
-                ? 'Annual CTC'
+                ? (($rateType === 1 || $salMode === 3) ? 'Per Hire' : ($rateType === 0 ? 'Not Applicable' : 'Annual CTC'))
                 : (($salMode === 2) ? 'Hourly Staffing' : (($salMode === 1) ? 'Monthly Staffing' : 'Monthly Staffing')),
             salaryCurrency: $salaryCurrency,
             currencyCode: (string) ($data['currency_code'] ?? 'INR'),
