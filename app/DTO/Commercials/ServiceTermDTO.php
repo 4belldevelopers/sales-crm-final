@@ -42,7 +42,7 @@ class ServiceTermDTO
     {
         $commtype = (int) ($data['commtype'] ?? 2);
         $serviceType = ($commtype === 2) ? 'fulltime' : 'contract';
-        $rateType = (int) ($data['rateType'] ?? ($commtype === 2 ? 2 : 1));
+        $rateType = array_key_exists('rateType', $data) && $data['rateType'] !== null ? (int) $data['rateType'] : ($commtype === 2 ? 2 : 1);
         $salMode = (int) ($data['sal_mode'] ?? 0);
         $salaryCurrency = (int) ($data['salary_currency'] ?? 0);
         $countryIds = (array) ($data['commericial_countries'] ?? $data['country_ids'] ?? $data['countries'] ?? []);
@@ -57,12 +57,12 @@ class ServiceTermDTO
             status: (int) ($data['status'] ?? 0),
             rateType: $rateType,
             rateTypeLabel: ($commtype === 2)
-                ? ($rateType === 2 ? 'Percentage of CTC' : ($rateType === 1 ? 'Fixed Placement Fee' : 'Free / No Placement Fee'))
-                : ($rateType === 2 ? 'Markup on Pay Rate' : ($rateType === 1 ? 'Contract Bill Rate' : 'Pass-Through / Zero Margin')),
+                ? ($rateType === 2 ? 'Percentage of CTC' : ($rateType === 1 ? 'Fixed Placement Fee' : 'No Fee Applicable (Free Placement)'))
+                : ($rateType === 2 ? 'Markup on Pay Rate' : ($rateType === 1 ? 'Contract Bill Rate' : 'Zero Margin (Pass-Through)')),
             salMode: ($commtype === 2 && $rateType === 1) ? 3 : $salMode,
             salModeLabel: ($commtype === 2)
-                ? (($rateType === 1 || $salMode === 3) ? 'Per Hire' : ($rateType === 0 ? 'Not Applicable' : 'Annual CTC'))
-                : (($salMode === 2) ? 'Hourly Staffing' : (($salMode === 1) ? 'Monthly Staffing' : 'Monthly Staffing')),
+                ? (($rateType === 1 || $salMode === 3) ? 'Per Hire' : ($rateType === 0 ? 'Zero Placement Charges' : 'Annual CTC'))
+                : (($rateType === 0) ? 'At-Cost Wage Pass-Through' : (($salMode === 2) ? 'Hourly Staffing' : 'Monthly Staffing')),
             salaryCurrency: $salaryCurrency,
             currencyCode: (string) ($data['currency_code'] ?? 'INR'),
             replacementPeriodDays: (int) ($data['replacement_period_days'] ?? ($commtype === 2 ? 90 : 30)),

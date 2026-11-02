@@ -1058,8 +1058,8 @@
                          aria-checked="{{ $selectedCommercialModel === 0 ? 'true' : 'false' }}">
                         <div class="cd-model-icon-box">◇</div>
                         <div class="cd-model-copy-wrap">
-                            <h5 class="cd-model-title">{{ $isFulltime ? 'Free / No Placement Fee' : 'Pass-Through / Zero Margin' }}</h5>
-                            <p class="cd-model-desc">{{ $isFulltime ? 'Zero commercial placement fee charged to client relationships.' : 'Contractor wages passed through at cost with zero agency staffing margin.' }}</p>
+                            <h5 class="cd-model-title">{{ $isFulltime ? 'No Fee Applicable (Free Placement)' : 'Zero Margin (Pass-Through)' }}</h5>
+                            <p class="cd-model-desc">{{ $isFulltime ? 'Zero commercial placement fee charged to client relationships. Fully complimentary hiring.' : 'Contractor wages passed through at direct cost with zero agency staffing margin.' }}</p>
                         </div>
                         <span class="cd-model-radio-dot"></span>
                     </div>
@@ -1499,7 +1499,7 @@
         var supportedServiceType = isFT ? '2' : '1';
 
         root.querySelectorAll('.rateTypeClass').forEach(function (el) {
-            el.value = isFree ? supportedServiceType : modelValue;
+            el.value = modelValue;
         });
 
         root.querySelectorAll('[data-commercial-model]').forEach(function (option) {
@@ -1513,6 +1513,12 @@
 
         if (isFree) {
             defaultRateInput.value = '0';
+            root.querySelectorAll('.rate_val,.perecentage_val').forEach(function (rate) {
+                rate.value = '0';
+            });
+            root.querySelectorAll('[data-range-rate]').forEach(function (rangeRate) {
+                rangeRate.value = '0';
+            });
             defaultRateInput.dispatchEvent(new Event('input'));
         } else if (isFixedFee && isFT) {
             var currRate = Number(defaultRateInput.value);
