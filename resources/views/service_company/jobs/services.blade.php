@@ -342,12 +342,18 @@
                            var rate_val = $(".rate_val").map(function() {
                               return this.value;
                             }).get();
-                            var rateTypeClass = $('.rateTypeClass:checked').val();
-                            var main_status = $('.main_status:checked').val();
+                            var rateTypeClass = $('.rateTypeClass:checked').val() || $('.rateTypeClass').val();
+                            var main_status = $('.main_status:checked').val() !== undefined ? $('.main_status:checked').val() : ($('.main_status').val() || 0);
                             var sal_mode = $('select[name="sal_mode"]').val();
                             var salary_currency = $('select[name="salary_currency"]').val();
                             var updateId = $('.updateId').val();
                             var commType = $('.commType').val();
+                            var replacement_period_days = $('[data-replacement-period]').val();
+                            var replacement_type = $('[data-replacement-type]').val();
+                            var replacement_eligibility = $('[data-replacement-eligibility]').val();
+                            var billing_frequency = $('[data-billing-frequency]').val();
+                            var billing_trigger = $('[data-billing-trigger]').val();
+                            var payment_terms_days = $('[data-payment-terms]').val();
                             if(commType==2){
                               sal_mode =null;
                               salary_currency =null;
@@ -362,14 +368,45 @@
                            $.ajax({
                                    type		: 'POST',
                                    url			: url,
-                                   data		: {'_token': token, '_method': 'POST', 'arrCountry' : arrCountry, 'rate_val': rate_val,'rateTypeClass':rateTypeClass,'sal_mode':sal_mode,'salary_currency':salary_currency,'updateId':updateId,'commType':commType,'main_status':main_status},
+                                   data		: {
+                                       '_token': token,
+                                       '_method': 'POST',
+                                       'arrCountry': arrCountry,
+                                       'rate_val': rate_val,
+                                       'rateTypeClass': rateTypeClass,
+                                       'sal_mode': sal_mode,
+                                       'salary_currency': salary_currency,
+                                       'updateId': updateId,
+                                       'commType': commType,
+                                       'main_status': main_status,
+                                       'replacement_period_days': replacement_period_days,
+                                       'replacement_type': replacement_type,
+                                       'replacement_eligibility': replacement_eligibility,
+                                       'billing_frequency': billing_frequency,
+                                       'billing_trigger': billing_trigger,
+                                       'payment_terms_days': payment_terms_days
+                                   },
                                    success 	: function (response) {
                                            if (response.status == "success") {
+                                               var serviceType = response.service_type || (String(commType) === '2' ? 'fulltime' : 'contract');
+                                               var eventDetail = {
+                                                   version: response.version || 1,
+                                                   service_type: serviceType,
+                                                   state: response.commercial_state || {}
+                                               };
+                                               window.dispatchEvent(new CustomEvent('commercial:saved', { detail: eventDetail }));
+
+                                               if (window.KTDrawer && KTDrawer.getInstance(document.getElementById('kt_activitiesJob'))) {
+                                                   KTDrawer.getInstance(document.getElementById('kt_activitiesJob')).hide();
+                                               } else {
+                                                   $('#kt_activitiesJob_close').trigger('click');
+                                               }
+
                                                swalWithBootstrapButtons.fire(
                                                                  'Success!',
                                                                  'Updated Successfully.',
                                                                  'success'
-                                                               )
+                                                               );
                                            }
                                      }
                            });

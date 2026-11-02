@@ -9,6 +9,7 @@ use App\Http\Controllers\ServiceCompany\InterviewScheduleController;
 use App\Http\Controllers\ServiceCompany\ManageRolePermissionController;
 use App\Http\Controllers\ServiceCompany\ManageSubscriptionController;
 use App\Http\Controllers\ServiceCompany\ServiceCompanyAccountSettingsController;
+use App\Http\Controllers\ServiceCompany\ServiceCompanyAgencyActivityController;
 use App\Http\Controllers\ServiceCompany\ServiceCompanyApplicationOfferController;
 use App\Http\Controllers\ServiceCompany\ServiceCompanyAppTrackerController;
 use App\Http\Controllers\ServiceCompany\ServiceCompanyBenchCandidatesController;
@@ -458,6 +459,10 @@ Route::group(['middleware' => 'auth'], function () {
                 Route::get('consultancy/export/{start}/{length}', [ServiceCompanyConsultancyController::class, 'export'])->name('consultancy.export');
                 Route::resource('consultancy', ServiceCompanyConsultancyController::class);
 
+                // Agency 360 Activity Tab (CQRS Dual-Store)
+                Route::get('agency/activity-data', [ServiceCompanyAgencyActivityController::class, 'getActivityData'])->name('agency.activity_data_ajax');
+                Route::post('agency/activity/quick-note', [ServiceCompanyAgencyActivityController::class, 'saveQuickNote'])->name('agency.activity_quick_note');
+
                 // END
                 // ############      	START BENCH CANDIDATE MANAGEMENT
 
@@ -518,6 +523,7 @@ Route::group(['middleware' => 'auth'], function () {
                 Route::get('jobs/serviceviewmore/{id?}', [ServiceCompanyJobsController::class, 'serviceviewmore'])->name('jobs.serviceviewmore');
                 Route::post('add-update-services-job', [ServiceCompanyJobsController::class, 'jobServicesAddUpdate'])->name('jobs.addUpdateJobServices');
                 Route::post('jobs/updateserviceviewmore', [ServiceCompanyJobsController::class, 'updateserviceviewmore'])->name('jobs.updateserviceviewmore');
+                Route::get('jobs/commercials-state', [ServiceCompanyJobsController::class, 'getCommercialsState'])->name('jobs.commercialsState');
                 Route::post('download-resume-bench-candidates/', [ServiceCompanyBenchCandidatesController::class, 'downloadResumeBenchCandidate'])->name('bench-candidates.downloadResumeBenchCandidate');
                 // Intent: Isolated Forward Resume endpoints for Bench Talent Drawer
                 Route::post('bench-candidates/fwd_resume', [ServiceCompanyBenchCandidatesController::class, 'fwd_resume'])->name('bench-candidates.fwd_resume');

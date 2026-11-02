@@ -1153,35 +1153,37 @@ After completing these steps, they will be able to start collaborating with your
 
         $rawId = (int) $rawId;
 
-        // 1. Direct check: is $rawId ALREADY a company_id with active relation?
+        // 1. Direct check: is $rawId ALREADY a company_id with active agency relation?
+        // Invariant: In Agency Drawer, authenticated company is strictly the Direct Client (from_company_id),
+        // and target partner is strictly the Agency (to_company_id). Reciprocal relations MUST NOT cross-authorize.
         $isCompanyRelation = DB::table('staffing_company_relation')
             ->where('final_status', 1)
-            ->where(function ($q) use ($authCompanyId, $rawId) {
-                $q->where(function ($inner) use ($authCompanyId, $rawId) {
-                    $inner->where('from_company_id', $authCompanyId)->where('to_company_id', $rawId);
-                })->orWhere(function ($inner) use ($authCompanyId, $rawId) {
-                    $inner->where('from_company_id', $rawId)->where('to_company_id', $authCompanyId);
-                });
-            })
-            ->exists();
+            ->where('from_company_id', $authCompanyId)
+            ->where('to_company_id', $rawId)
+            ->exists()
+            || DB::table('recommendation_relation')
+                ->whereIn('final_status', [1, 2])
+                ->where('from_company_id', $authCompanyId)
+                ->where('to_company_id', $rawId)
+                ->exists();
 
         if ($isCompanyRelation) {
             return $rawId;
         }
 
-        // 2. Client ID check: is $rawId a clients.id mapping to a company_id with active relation?
+        // 2. Client ID check: is $rawId a clients.id mapping to a company_id with active agency relation?
         $mappedCompanyId = (int) DB::table('clients')->where('id', $rawId)->value('company_id');
         if ($mappedCompanyId > 0) {
             $isMappedRelation = DB::table('staffing_company_relation')
                 ->where('final_status', 1)
-                ->where(function ($q) use ($authCompanyId, $mappedCompanyId) {
-                    $q->where(function ($inner) use ($authCompanyId, $mappedCompanyId) {
-                        $inner->where('from_company_id', $authCompanyId)->where('to_company_id', $mappedCompanyId);
-                    })->orWhere(function ($inner) use ($authCompanyId, $mappedCompanyId) {
-                        $inner->where('from_company_id', $mappedCompanyId)->where('to_company_id', $authCompanyId);
-                    });
-                })
-                ->exists();
+                ->where('from_company_id', $authCompanyId)
+                ->where('to_company_id', $mappedCompanyId)
+                ->exists()
+                || DB::table('recommendation_relation')
+                    ->whereIn('final_status', [1, 2])
+                    ->where('from_company_id', $authCompanyId)
+                    ->where('to_company_id', $mappedCompanyId)
+                    ->exists();
 
             if ($isMappedRelation) {
                 return $mappedCompanyId;
@@ -1306,14 +1308,10 @@ After completing these steps, they will be able to start collaborating with your
             $this->kpiTotalJobs = $this->Active + $this->Hold + $this->Closed;
         }
 
-        // Resolve all job IDs shared between my organization and this agency (both direct and reciprocal)
+        // Resolve all job IDs shared in this specific relationship (unidirectional: Direct Client -> Agency)
         $sharedJobIds = DB::table('recommendation_relation')
-            ->where(function ($q) use ($company_id, $partnerCompanyId) {
-                $q->where('from_company_id', $company_id)->where('to_company_id', $partnerCompanyId)
-                    ->orWhere(function ($q2) use ($company_id, $partnerCompanyId) {
-                        $q2->where('from_company_id', $partnerCompanyId)->where('to_company_id', $company_id);
-                    });
-            })
+            ->where('from_company_id', $company_id)
+            ->where('to_company_id', $partnerCompanyId)
             ->whereIn('final_status', [1, 2])
             ->pluck('job_id')
             ->unique()
@@ -1335,14 +1333,8 @@ After completing these steps, they will be able to start collaborating with your
                 'job_locations.location as city_name',
                 'recommendation_relation.created_at as shared_at'
             )
-            ->where(function ($q) use ($company_id, $partnerCompanyId) {
-                $q->where('recommendation_relation.from_company_id', '=', $company_id)
-                    ->where('recommendation_relation.to_company_id', '=', $partnerCompanyId)
-                    ->orWhere(function ($q2) use ($company_id, $partnerCompanyId) {
-                        $q2->where('recommendation_relation.from_company_id', '=', $partnerCompanyId)
-                            ->where('recommendation_relation.to_company_id', '=', $company_id);
-                    });
-            })
+            ->where('recommendation_relation.from_company_id', '=', $company_id)
+            ->where('recommendation_relation.to_company_id', '=', $partnerCompanyId)
             ->whereIn('recommendation_relation.final_status', [1, 2])
             ->orderBy('recommendation_relation.id', 'desc')
             ->limit(50)
@@ -1817,10 +1809,10 @@ After completing these steps, they will be able to start collaborating with your
                 } elseif ((int) $contractRow->rateType === 1) {
                     $commercialRate = $currSymbol.number_format($firstRate, 2).' / '.$salModeText;
                 } elseif ((int) $contractRow->rateType === 0) {
-                    $commercialRate = 'Free / No Fee';
+                    $commercialRate = 'Free / No Placement Fee';
                 }
             } elseif ((int) $contractRow->rateType === 0) {
-                $commercialRate = 'Free / No Fee';
+                $commercialRate = 'Free / No Placement Fee';
             }
 
             $billingCycle = null;
@@ -1899,7 +1891,7 @@ After completing these steps, they will be able to start collaborating with your
                 $amt = $firstRate !== null && $firstRate > 0 ? $firstRate : (! empty($agencyTerms->fulltime_fixed_fee_amount) ? (float) $agencyTerms->fulltime_fixed_fee_amount : 0);
                 $placementFee = $currSymbol.number_format($amt).' Per Hire';
             } elseif ((int) $permanentRow->rateType === 0) {
-                $placementFee = 'Free / No Fee';
+                $placementFee = 'Free / No Placement Fee';
             } else {
                 $pct = $firstRate !== null && $firstRate > 0 ? $firstRate : (! empty($this->directClientDetail->success_per) ? (float) $this->directClientDetail->success_per : (! empty($partnerCompany->success_per) ? (float) $partnerCompany->success_per : (! empty($agencyTerms->fulltime_success_fee_percentage) ? (float) $agencyTerms->fulltime_success_fee_percentage : 8.33)));
                 $salBasis = [0 => 'Annual CTC', 1 => 'Monthly CTC'][$permanentRow->sal_mode] ?? 'Annual CTC';

@@ -12,6 +12,7 @@ namespace App\Http\Controllers\ServiceCompany;
 
 use App\DTO\ServiceCompany\ClientAccessContext;
 use App\DTO\ServiceCompany\ClientJobsQuery;
+use App\Events\CommercialsUpdated;
 use App\Helper\GeneralMethod;
 use App\Helper\Reply;
 use App\Http\Requests\StoreJob;
@@ -28,6 +29,7 @@ use App\Models\JobCategory;
 use App\Models\JobStatusLog;
 use App\Models\Skill;
 use App\Models\User;
+use App\Services\CommercialReadModelService;
 use App\Services\ElasticService;
 use App\Services\JobIdempotencyService;
 use App\Services\JobService;
@@ -50,18 +52,61 @@ use Yajra\DataTables\Facades\DataTables;
 class ServiceCompanyJobsController extends ServiceCompanyBaseController
 {
     /** Company-commercial policy options shared by drawer rendering and save validation. */
-    private const COMMERCIAL_REPLACEMENT_PERIODS = [30 => '30 Days', 60 => '60 Days', 90 => '90 Days', 180 => '180 Days'];
+    private const COMMERCIAL_REPLACEMENT_PERIODS = [
+        5 => '5 Days',
+        10 => '10 Days',
+        14 => '14 Days',
+        30 => '30 Days',
+        60 => '60 Days',
+        90 => '90 Days',
+        180 => '180 Days',
+    ];
 
-    private const COMMERCIAL_REPLACEMENT_TYPES = ['free_replacement' => 'Free Replacement', 'credit_note' => 'Credit Note', 'none' => 'No Replacement'];
+    private const COMMERCIAL_REPLACEMENT_TYPES = [
+        'free_replacement' => 'Free Replacement',
+        'trial_guarantee' => 'Satisfaction Trial Guarantee',
+        'credit_note' => 'Credit Note',
+        'none' => 'No Replacement / No Guarantee',
+    ];
 
-    private const COMMERCIAL_REPLACEMENT_ELIGIBILITY = ['early_exit' => 'Candidate Resignation / Early Exit', 'employer_termination' => 'Employer Termination', 'any_separation' => 'Any Early Separation', 'any_conditions' => 'Any conditions'];
+    private const COMMERCIAL_REPLACEMENT_ELIGIBILITY = [
+        'early_exit' => 'Candidate Resignation / Early Exit',
+        'employer_termination' => 'Employer Termination',
+        'backfill_sla' => '48h Backfill SLA',
+        'any_separation' => 'Any Early Separation',
+        'any_conditions' => 'Any conditions',
+    ];
 
     // Intent: provide the validated billing cadence choices used by both the commercial drawer and save handler.
-    private const COMMERCIAL_BILLING_FREQUENCIES = ['one_time' => 'One Time', 'weekly' => 'Weekly', 'monthly' => 'Monthly', 'quarterly' => 'Quarterly'];
+    private const COMMERCIAL_BILLING_FREQUENCIES = [
+        'one_time' => 'One Time',
+        'weekly' => 'Weekly',
+        'bi_weekly' => 'Bi-Weekly',
+        'monthly' => 'Monthly',
+        'quarterly' => 'Quarterly',
+    ];
 
-    private const COMMERCIAL_BILLING_TRIGGERS = ['candidate_joined' => 'Candidate Joined', 'offer_accepted' => 'Offer Accepted', 'invoice_raised' => 'Invoice Raised'];
+    private const COMMERCIAL_BILLING_TRIGGERS = [
+        'candidate_joined' => 'Candidate Joined',
+        'approved_timesheet' => 'Approved Timesheet',
+        'monthly_cutoff' => 'Monthly Cutoff',
+        'offer_accepted' => 'Offer Accepted',
+        'invoice_raised' => 'Invoice Raised',
+    ];
 
-    private const COMMERCIAL_PAYMENT_TERMS = [0 => 'Due Immediately', 15 => '15 Days', 30 => '30 Days', 45 => '45 Days', 60 => '60 Days', 90 => '90 Days', 120 => '120 Days', 150 => '150 Days', 180 => '180 Days', 210 => '210 Days', 240 => '240 Days'];
+    private const COMMERCIAL_PAYMENT_TERMS = [
+        0 => 'Due Immediately',
+        15 => '15 Days',
+        30 => '30 Days',
+        45 => '45 Days',
+        60 => '60 Days',
+        90 => '90 Days',
+        120 => '120 Days',
+        150 => '150 Days',
+        180 => '180 Days',
+        210 => '210 Days',
+        240 => '240 Days',
+    ];
 
     protected $mailService;
 
@@ -16264,7 +16309,9 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
         // dd($id);
         abort_if(Gate::denies('view_jobs'), 403);
         $company_id = auth()->user()->company_id;
-        $this->salaryMode = GeneralMethod::salaryMode();
+        $commType = (int) $id;
+        $isFulltime = ($commType === 2);
+
         // 1. Unified Setting Currencies List (113 currencies, cached 24h in Redis) per CURRENCY_MANAGEMENT_AND_SYNCHRONIZATION_STANDARD
         $this->currencyList = \App\Services\CurrencyService::getSettingCurrenciesList();
         // 2. Backward-compatible [key => code] array for legacy view bindings
@@ -16273,93 +16320,125 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
         $this->tenantDefaultCurrency = \App\Services\CurrencyService::getTenantCurrency($company_id);
         $this->defaultCurrencyCode = $this->tenantDefaultCurrency;
         $this->defaultCurrencyKey = \App\Services\CurrencyService::getTenantCurrencyKey($company_id);
-        $this->replacementPeriods = self::COMMERCIAL_REPLACEMENT_PERIODS;
-        $this->replacementTypes = self::COMMERCIAL_REPLACEMENT_TYPES;
-        $this->replacementEligibility = self::COMMERCIAL_REPLACEMENT_ELIGIBILITY;
-        $this->billingFrequencies = self::COMMERCIAL_BILLING_FREQUENCIES;
-        $this->billingTriggers = self::COMMERCIAL_BILLING_TRIGGERS;
-        $this->paymentTerms = self::COMMERCIAL_PAYMENT_TERMS;
-        $this->employmentType = GeneralMethod::employmentType();
-        // Intent: load the global range master from cache, replacing an old empty cache entry left by a pre-master deployment.
-        $commercialExperienceBands = Cache::get('commercial_experience_bands:v1');
-        if (collect($commercialExperienceBands)->isEmpty()) {
-            $commercialExperienceBands = DB::table('commercial_experience_bands')
-                ->select(['id', 'code', 'label', 'min_experience', 'max_experience', 'sort_order'])
-                ->where('is_active', 1)
-                ->orderBy('sort_order')
-                ->get();
 
-            Cache::put('commercial_experience_bands:v1', $commercialExperienceBands, 3600);
+        if ($isFulltime) {
+            $this->salaryMode = [
+                0 => 'Annual CTC',
+                3 => 'Per Hire',
+            ];
+            $this->replacementPeriods = [
+                30 => '30 Days (Warranty)',
+                60 => '60 Days (Warranty)',
+                90 => '90 Days (Standard Warranty)',
+                180 => '180 Days (Executive Warranty)',
+            ];
+            $this->replacementTypes = [
+                'free_replacement' => 'Free Replacement Candidate',
+                'credit_note' => 'Credit Note',
+                'none' => 'No Replacement Warranty',
+            ];
+            $this->replacementEligibility = [
+                'early_exit' => 'Candidate Resignation / Early Exit',
+                'employer_termination' => 'Employer / Mutual Termination',
+                'any_separation' => 'Any Separation within Warranty',
+            ];
+            $this->billingFrequencies = [
+                'one_time' => 'One Time (Upon Joining)',
+            ];
+            $this->billingTriggers = [
+                'candidate_joined' => 'Candidate Joined (First Working Day)',
+                'offer_accepted' => 'Offer Accepted',
+            ];
+            $this->paymentTerms = [
+                0 => 'Due Immediately',
+                15 => 'Net 15 Days',
+                30 => 'Net 30 Days (Standard)',
+                45 => 'Net 45 Days',
+                60 => 'Net 60 Days',
+                90 => 'Net 90 Days',
+            ];
+        } else {
+            $this->salaryMode = [
+                1 => 'Monthly Staffing Rate',
+                2 => 'Hourly Contract Rate',
+                0 => 'Annualized Staffing Rate',
+            ];
+            $this->replacementPeriods = [
+                5 => '5 Days (Satisfaction Trial)',
+                10 => '10 Days (Satisfaction Trial)',
+                14 => '14 Days (Roll-Off Notice)',
+                30 => '30 Days (Notice Period)',
+            ];
+            $this->replacementTypes = [
+                'trial_guarantee' => 'Satisfaction Trial Guarantee (Credit Unbilled)',
+                'free_replacement' => 'Free Replacement Contractor',
+                'credit_note' => 'Credit Note',
+                'none' => 'No Trial Guarantee',
+            ];
+            $this->replacementEligibility = [
+                'backfill_sla' => '48-Hour Backfill SLA',
+                'early_exit' => 'Contractor Early Departure',
+                'employer_termination' => 'Client Project Discontinuation',
+                'any_conditions' => 'Any Contingency',
+            ];
+            $this->billingFrequencies = [
+                'monthly' => 'Monthly Billing Cycle',
+                'bi_weekly' => 'Bi-Weekly Billing Cycle',
+                'weekly' => 'Weekly Billing Cycle',
+            ];
+            $this->billingTriggers = [
+                'approved_timesheet' => 'Approved Timesheet',
+                'monthly_cutoff' => 'Monthly Billing Cutoff',
+                'invoice_raised' => 'Invoice Raised',
+            ];
+            $this->paymentTerms = [
+                0 => 'Due Immediately',
+                15 => 'Net 15 Days',
+                30 => 'Net 30 Days (Standard)',
+                45 => 'Net 45 Days',
+                60 => 'Net 60 Days',
+            ];
         }
-        $this->commercialExperienceBands = $commercialExperienceBands;
 
-        $commericials = DB::table('commericials')
-            ->where('commtype', $id)
-            ->where('company_id', $company_id)
-            ->orderBy('id', 'desc')
-            ->get()
-            ->map(function ($commericial) {
-                $commericial_details = DB::table('commericial_details')
-                    ->where('commericial_id', $commericial->id)
-                    ->get()
-                    ->map(function ($detail) {
-                        return [
-                            'id' => $detail->id,
-                            'commericial_id' => $detail->commericial_id,
-                            'exp' => $detail->exp,
-                            'rate' => $detail->rate,
-                            'company_id' => $detail->company_id,
-                            'commtype' => $detail->commtype,
-                        ];
-                    })
-                    ->toArray();
-
-                //  dd($commericial, $commericial_details);
-
-                $commericial_countries = DB::table('commericial_countries')
-                    ->where('commericial_id', $commericial->id)
-                    ->pluck('country_id')
-                    ->toArray();
-
-                $salaryCurrency = $commericial->salary_currency;
-                // Intent: Inherit tenant default currency if commercial currency is unconfigured or legacy USD default (4) while tenant default is different.
-                if ($salaryCurrency === null || ($salaryCurrency == 4 && $this->defaultCurrencyKey !== 4)) {
-                    $salaryCurrency = $this->defaultCurrencyKey;
-                }
-
-                return [
-                    'id' => $commericial->id,
-                    'company_id' => $commericial->company_id,
-                    'rateType' => $commericial->rateType,
-                    'commtype' => $commericial->commtype,
-                    'status' => $commericial->status,
-                    'sal_mode' => $commericial->sal_mode,
-                    'salary_currency' => $salaryCurrency,
-                    'replacement_period_days' => $commericial->replacement_period_days,
-                    'replacement_type' => $commericial->replacement_type,
-                    'replacement_eligibility' => $commericial->replacement_eligibility,
-                    'billing_frequency' => $commericial->billing_frequency,
-                    'billing_trigger' => $commericial->billing_trigger,
-                    'payment_terms_days' => $commericial->payment_terms_days,
-                    'commericial_details' => $commericial_details,
-                    'commericial_countries' => $commericial_countries,
-                ];
-            });
-
-        $this->commericials = $commericials;
-        //    dd($commericials[0]['sal_mode']);
-        // return response()->json($commericials); salary_currency status
-
-        // dd($commericials);
-
-        $this->industries = DB::table('td_industries')->get();
-        $this->countries = DB::table('countries')->get();
-        $this->default_rates = DB::table('default_rates')->first();
+        $this->employmentType = GeneralMethod::employmentType();
+        // Cached Masters (Rule 1: 0% MySQL reads on web/API request paths)
+        $this->commercialExperienceBands = CommercialReadModelService::getCommercialExperienceBands();
+        $this->industries = CommercialReadModelService::getMasterIndustries();
+        $this->countries = CommercialReadModelService::getMasterCountries();
+        $this->default_rates = CommercialReadModelService::getMasterDefaultRates();
         $this->sectionCheck = $id;
 
-        // dd($this->industries);
+        // CQRS Read Model projection fetch (<= 1 logical Redis operation)
+        $commType = (int) $id;
+        $commercialState = CommercialReadModelService::getTenantCommercialsState($company_id);
+        $activeService = ($commType === 2) ? $commercialState->fulltime : $commercialState->contract;
 
-        //    dd($this->default_rates);
+        if ($activeService && $activeService->id > 0) {
+            $salaryCurrency = $activeService->salaryCurrency;
+            if ($salaryCurrency === null || ($salaryCurrency == 4 && $this->defaultCurrencyKey !== 4)) {
+                $salaryCurrency = $this->defaultCurrencyKey;
+            }
+
+            $this->commericials = collect([[
+                'id' => $activeService->id,
+                'company_id' => $activeService->companyId,
+                'rateType' => $activeService->rateType,
+                'commtype' => $activeService->commtype,
+                'status' => $activeService->status,
+                'sal_mode' => $activeService->salMode,
+                'salary_currency' => $salaryCurrency,
+                'replacement_period_days' => $activeService->replacementPeriodDays,
+                'replacement_type' => $activeService->replacementType,
+                'replacement_eligibility' => $activeService->replacementEligibility,
+                'billing_frequency' => $activeService->billingFrequency,
+                'billing_trigger' => $activeService->billingTrigger,
+                'payment_terms_days' => $activeService->paymentTermsDays,
+                'commericial_details' => $activeService->rates,
+                'commericial_countries' => $activeService->countryIds,
+            ]]);
+        } else {
+            $this->commericials = collect([]);
+        }
 
         $view = view('service_company.jobs.services_view', $this->data)->render();
 
@@ -16376,6 +16455,10 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
         $commType = (int) $request->commType;
         $rateType = $request->rateTypeClass;
         $sal_mode = (int) $request->sal_mode;
+        // Intent: Normalize sal_mode to 3 (Per Hire) for fixed placement fee on fulltime permanent hiring
+        if ($commType === 2 && (int) $rateType === 1) {
+            $sal_mode = 3;
+        }
         $main_status = ($request->main_status) ? $request->main_status : 0;
 
         // Intent: Concurrency check against the row being edited to prevent silent concurrent overwrites
@@ -16397,12 +16480,24 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
         $salary_currency = \App\Services\CurrencyService::resolveCurrencyKey($request->salary_currency);
 
         // Intent: accept only the controller-defined commercial policy values for this tenant's service record.
-        $replacementPeriod = array_key_exists((int) $request->replacement_period_days, self::COMMERCIAL_REPLACEMENT_PERIODS) ? (int) $request->replacement_period_days : 90;
-        $replacementType = array_key_exists((string) $request->replacement_type, self::COMMERCIAL_REPLACEMENT_TYPES) ? (string) $request->replacement_type : 'free_replacement';
-        $replacementEligibility = array_key_exists((string) $request->replacement_eligibility, self::COMMERCIAL_REPLACEMENT_ELIGIBILITY) ? (string) $request->replacement_eligibility : 'early_exit';
-        $billingFrequency = array_key_exists((string) $request->billing_frequency, self::COMMERCIAL_BILLING_FREQUENCIES) ? (string) $request->billing_frequency : 'one_time';
-        $billingTrigger = array_key_exists((string) $request->billing_trigger, self::COMMERCIAL_BILLING_TRIGGERS) ? (string) $request->billing_trigger : 'candidate_joined';
-        $paymentTermsDays = array_key_exists((int) $request->payment_terms_days, self::COMMERCIAL_PAYMENT_TERMS) ? (int) $request->payment_terms_days : 30;
+        $replacementPeriod = array_key_exists((int) $request->replacement_period_days, self::COMMERCIAL_REPLACEMENT_PERIODS)
+            ? (int) $request->replacement_period_days
+            : ($commType === 2 ? 90 : 30);
+        $replacementType = array_key_exists((string) $request->replacement_type, self::COMMERCIAL_REPLACEMENT_TYPES)
+            ? (string) $request->replacement_type
+            : ($commType === 2 ? 'free_replacement' : 'trial_guarantee');
+        $replacementEligibility = array_key_exists((string) $request->replacement_eligibility, self::COMMERCIAL_REPLACEMENT_ELIGIBILITY)
+            ? (string) $request->replacement_eligibility
+            : ($commType === 2 ? 'early_exit' : 'backfill_sla');
+        $billingFrequency = array_key_exists((string) $request->billing_frequency, self::COMMERCIAL_BILLING_FREQUENCIES)
+            ? (string) $request->billing_frequency
+            : ($commType === 2 ? 'one_time' : 'monthly');
+        $billingTrigger = array_key_exists((string) $request->billing_trigger, self::COMMERCIAL_BILLING_TRIGGERS)
+            ? (string) $request->billing_trigger
+            : ($commType === 2 ? 'candidate_joined' : 'approved_timesheet');
+        $paymentTermsDays = array_key_exists((int) $request->payment_terms_days, self::COMMERCIAL_PAYMENT_TERMS)
+            ? (int) $request->payment_terms_days
+            : 30;
         $policyFields = [
             'replacement_period_days' => $replacementPeriod,
             'replacement_type' => $replacementType,
@@ -16523,6 +16618,27 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
                 'processed_at' => now(),
             ]);
 
+            // Register post-commit events to guarantee they only fire if ACID commit succeeds
+            DB::afterCommit(function () use ($company_id, $commType, $newVersion) {
+                // Invalidate multi-tenant cache atomically per Rule 6
+                CommercialReadModelService::invalidateTenantCache($company_id);
+
+                // Real-time broadcast over Laravel Reverb (private-company.{id})
+                try {
+                    broadcast(new CommercialsUpdated(
+                        companyId: $company_id,
+                        serviceType: ($commType === 2) ? 'fulltime' : 'contract',
+                        version: $newVersion,
+                        senderId: auth()->id()
+                    ));
+                } catch (\Throwable $broadCastEx) {
+                    Log::warning('Reverb CommercialsUpdated broadcast failed: '.$broadCastEx->getMessage());
+                }
+
+                // Async ES index refresh for talent marketplace search
+                ElasticCompanyIndex::dispatch($company_id);
+            });
+
             DB::commit();
         } catch (\Throwable $e) {
             DB::rollBack();
@@ -16531,16 +16647,9 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
             return response()->json(['status' => 'error', 'message' => 'Failed to save commercials. Please try again.'], 500);
         }
 
-        // Cache Invalidation after transaction commit
-        Cache::forever("company:{$company_id}:commercials:version", $newVersion);
-        Cache::forget("account_settings:company:{$company_id}");
-        Cache::forever("agency_drawer_version_company_{$company_id}", ((int) Cache::get("agency_drawer_version_company_{$company_id}", 1)) + 1);
-
-        // Async ES index refresh
-        ElasticCompanyIndex::dispatch($company_id);
-
         // Canonical state payload for client-first reactive DOM rehydration
-        $countryNames = ! empty($countryIds) ? DB::table('countries')->whereIn('id', $countryIds)->pluck('country_name')->toArray() : [];
+        $countryMap = CommercialReadModelService::getCountryIdToNameMap();
+        $countryNames = array_values(array_filter(array_map(fn ($cid) => $countryMap[$cid] ?? null, $countryIds)));
         $currencyCode = \App\Services\CurrencyService::resolveCurrencyCode($salary_currency) ?: 'INR';
 
         $commercialState = [
@@ -16549,21 +16658,48 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
             'status' => $status,
             'rateType' => (int) $rateType,
             'rate_type_label' => ($commType === 2)
-                ? (((int) $rateType === 2) ? 'Percentage of CTC' : (((int) $rateType === 1) ? 'Fixed Commercial Rate' : 'Free / No Fee'))
-                : (((int) $rateType === 1) ? 'Markup on Bill Rate' : 'Contract Commercial Rate'),
+                ? (((int) $rateType === 2) ? 'Percentage of CTC' : (((int) $rateType === 1) ? 'Fixed Placement Fee' : 'Free / No Placement Fee'))
+                : (((int) $rateType === 2) ? 'Markup on Pay Rate' : (((int) $rateType === 1) ? 'Contract Bill Rate' : 'Pass-Through / Zero Margin')),
             'sal_mode' => $sal_mode,
-            'sal_mode_label' => ($sal_mode === 0) ? 'Annual Staffing' : (($sal_mode === 1) ? 'Monthly Staffing' : 'Hourly Staffing'),
+            'sal_mode_label' => ($commType === 2)
+                ? (((int) $rateType === 1 || $sal_mode === 3) ? 'Per Hire' : (((int) $rateType === 0) ? 'Not Applicable' : 'Annual CTC'))
+                : (((int) $sal_mode === 2) ? 'Hourly Staffing' : 'Monthly Staffing'),
             'salary_currency' => $salary_currency,
             'currency_code' => $currencyCode,
             'replacement_period_days' => $replacementPeriod,
             'replacement_type' => $replacementType,
-            'replacement_type_label' => ucwords(str_replace('_', ' ', $replacementType)),
+            'replacement_type_label' => ($commType === 2)
+                ? ucwords(str_replace('_', ' ', $replacementType))
+                : match ($replacementType) {
+                    'trial_guarantee' => 'Satisfaction Trial Guarantee',
+                    'free_replacement' => 'Free Replacement Contractor',
+                    'credit_note' => 'Credit Note',
+                    'none' => 'No Trial Guarantee',
+                    default => ucwords(str_replace('_', ' ', $replacementType)),
+                },
             'replacement_eligibility' => $replacementEligibility,
-            'replacement_eligibility_label' => ucwords(str_replace('_', ' ', $replacementEligibility)),
+            'replacement_eligibility_label' => ($commType === 2)
+                ? ucwords(str_replace('_', ' ', $replacementEligibility))
+                : match ($replacementEligibility) {
+                    'backfill_sla' => '48h Backfill SLA',
+                    'early_exit' => 'Contractor Early Departure',
+                    'employer_termination' => 'Client Project Discontinuation',
+                    'any_conditions' => 'Any Contingency',
+                    default => ucwords(str_replace('_', ' ', $replacementEligibility)),
+                },
             'billing_frequency' => $billingFrequency,
-            'billing_frequency_label' => ucwords(str_replace('_', ' ', $billingFrequency)),
+            'billing_frequency_label' => ($commType === 2)
+                ? 'One Time'
+                : ucwords(str_replace('_', ' ', $billingFrequency)),
             'billing_trigger' => $billingTrigger,
-            'billing_trigger_label' => ucwords(str_replace('_', ' ', $billingTrigger)),
+            'billing_trigger_label' => ($commType === 2)
+                ? 'Candidate Joined'
+                : match ($billingTrigger) {
+                    'approved_timesheet' => 'Approved Timesheet',
+                    'monthly_cutoff' => 'Monthly Billing Cutoff',
+                    'invoice_raised' => 'Invoice Raised',
+                    default => ucwords(str_replace('_', ' ', $billingTrigger)),
+                },
             'payment_terms_days' => $paymentTermsDays,
             'country_count' => count($countryIds),
             'countries' => $countryNames,
@@ -16593,7 +16729,7 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
         $commercial = DB::table('commericials')
             ->where('id', $id)
             ->where('company_id', $company_id)
-            ->first(['id']);
+            ->first(['id', 'commtype']);
 
         if (! $commercial) {
             return response()->json(['status' => 'error', 'message' => 'Commercial service not found.'], 404);
@@ -16604,17 +16740,61 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
             ->where('company_id', $company_id)
             ->update(['status' => $status]);
 
-        // Intent: invalidate the tenant-only account payload so refreshes always read the persisted service status.
-        Cache::forget("account_settings:company:{$company_id}");
+        // Intent: atomically invalidate tenant commercial & agency caches per Rule 6
+        CommercialReadModelService::invalidateTenantCache($company_id);
 
-        // Intent: atomically invalidate agency drawer cache for all tenants viewing this company per Rule 6
-        Cache::forever("agency_drawer_version_company_{$company_id}", ((int) Cache::get("agency_drawer_version_company_{$company_id}", 1)) + 1);
+        $newVersion = (int) Cache::get("company:{$company_id}:commercials:version", 1);
+
+        // Real-time broadcast over Laravel Reverb (private-company.{id})
+        try {
+            broadcast(new CommercialsUpdated(
+                companyId: $company_id,
+                serviceType: ((int) $commercial->commtype === 2) ? 'fulltime' : 'contract',
+                version: $newVersion,
+                senderId: auth()->id()
+            ));
+        } catch (\Throwable $broadCastEx) {
+            Log::warning('Reverb CommercialsUpdated broadcast failed: '.$broadCastEx->getMessage());
+        }
 
         // Intent: keep agency search/recommendation data synchronized without delaying this status-toggle response.
         ElasticCompanyIndex::dispatch($company_id);
 
-        return response()->json(['status' => 'success', 'serviceStatus' => $status]);
+        return response()->json(['status' => 'success', 'serviceStatus' => $status, 'version' => $newVersion]);
 
+    }
+
+    /**
+     * CQRS Read Model API Endpoint — returns canonical commercial state with ETag conditional caching.
+     * Rule 1: 0% MySQL reads (served 100% via Redis projection).
+     * Supports If-None-Match header returning 304 Not Modified.
+     */
+    public function getCommercialsState(Request $request)
+    {
+        abort_if(Gate::denies('view_jobs'), 403);
+        $company_id = auth()->user()->company_id;
+
+        $version = (int) Cache::get("company:{$company_id}:commercials:version", 1);
+        $etag = '"commercial-v'.$version.'"';
+
+        if ($request->header('If-None-Match') === $etag) {
+            return response()->noContent(304, ['ETag' => $etag]);
+        }
+
+        $stateDTO = CommercialReadModelService::getTenantCommercialsState($company_id);
+
+        return response()->json([
+            'status' => 'success',
+            'company_id' => $company_id,
+            'version' => $version,
+            'services' => [
+                'fulltime' => $stateDTO->fulltime->toArray(),
+                'contract' => $stateDTO->contract->toArray(),
+            ],
+        ], 200, [
+            'ETag' => $etag,
+            'Cache-Control' => 'private, no-cache',
+        ]);
     }
 
     public function demoView()

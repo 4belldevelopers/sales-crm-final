@@ -7,9 +7,9 @@
                 <i class="fas fa-clock-rotate-left"></i>
             </div>
             <div>
-                <div class="cd-activity-header-title">Client Activity &amp; Audit Feed</div>
+                <div class="cd-activity-header-title">{{ ($viewerType ?? '') === 'agency' ? 'Agency Activity & Collaboration Feed' : 'Client Activity & Audit Feed' }}</div>
                 <div class="cd-activity-header-sub">
-                    <span>Live recruitment timeline &amp; stakeholder activity</span>
+                    <span>{{ ($viewerType ?? '') === 'agency' ? 'Live collaborative recruitment timeline & shared activity' : 'Live recruitment timeline & stakeholder activity' }}</span>
                     <span class="cd-activity-health-pill health-active" id="cdActivityHealthPill" title="Client Activity Freshness Health">
                         <span class="cd-activity-pulse-dot"></span>
                         <span id="cdActivityHealthText">Active</span>
@@ -149,10 +149,13 @@
         lruCache: new Set(),
         maxLruSize: 500,
 
+        viewerType: '{{ $viewerType ?? "client" }}',
+        agencyCompanyId: {{ (int)($agencyCompanyId ?? 0) }},
+
         /**
          * Initializes or switches the active client context.
          */
-        initClient: function(clientId, isCustom, partnerCompanyId, forceRefresh) {
+        initClient: function(clientId, isCustom, partnerCompanyId, forceRefresh, viewerType, agencyCompanyId) {
             var cId = parseInt(clientId, 10);
             if (!cId || isNaN(cId)) return;
 
@@ -161,6 +164,12 @@
             this.activeClientId = cId;
             this.isCustom = !!isCustom;
             this.partnerCompanyId = partnerCompanyId || null;
+            if (viewerType) {
+                this.viewerType = viewerType;
+            }
+            if (agencyCompanyId) {
+                this.agencyCompanyId = agencyCompanyId;
+            }
 
             if (isNewClient || forceRefresh) {
                 this.resetState(isNewClient);
@@ -259,6 +268,13 @@
                 category: 'all', // Always hydrate full dataset for client-side filtering
                 timeframe: 'all'
             };
+
+            if (this.viewerType) {
+                params.viewer_type = this.viewerType;
+            }
+            if (this.agencyCompanyId) {
+                params.agency_company_id = this.agencyCompanyId;
+            }
 
             if (forceRefresh) {
                 params.refresh = 1;
@@ -713,6 +729,7 @@
     };
 
     window.ClientActivityManager = ClientActivityManager;
+    window.AgencyActivityManager = ClientActivityManager;
 
     /**
      * Dedicated View Profile opener for Candidates (strictly Read-Only).

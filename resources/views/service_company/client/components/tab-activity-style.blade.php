@@ -548,6 +548,39 @@
     line-height: 1.3 !important;
 }
 
+.cd-activity-company-context {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 5px !important;
+    font-size: 11.5px !important;
+    color: #475569 !important;
+    margin-top: 1px !important;
+    margin-bottom: 1px !important;
+    max-width: 100% !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    line-height: 1.25 !important;
+}
+
+.cd-activity-company-logo {
+    width: 13px !important;
+    height: 13px !important;
+    border-radius: 2px !important;
+    object-fit: contain !important;
+    display: inline-block !important;
+    vertical-align: middle !important;
+    flex-shrink: 0 !important;
+}
+
+.cd-activity-company-name {
+    font-weight: 600 !important;
+    color: #334155 !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+}
+
 .cd-activity-entity-sub {
     font-size: 11px !important;
     color: #64748b !important;

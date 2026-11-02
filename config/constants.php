@@ -95,5 +95,6 @@ return [
     'ELASTIC_CLIENT_AND_AGENCY_RELATION_INDEX' => env('ELASTIC_CLIENT_AND_AGENCY_RELATION_INDEX', 'local_client_and_agency_relation_index'),
     'ELASTIC_COMPANY_SKILLS' => env('ELASTIC_COMPANY_SKILLS', 'local_company_skills'),
     'ELASTIC_CUSTOM_PLAN_REQUESTS' => env('ELASTIC_CUSTOM_PLAN_REQUESTS', 'local_custom_plan_requests'),
+    'ELASTIC_AGENCY_ACTIVITY_STREAM' => env('ELASTIC_AGENCY_ACTIVITY_STREAM', 'local_agency_activity_stream'),
     'COUNTRY_INDIA_ID' => 101,
 ];
