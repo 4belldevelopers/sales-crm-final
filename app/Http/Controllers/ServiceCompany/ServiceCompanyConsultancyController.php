@@ -1306,14 +1306,10 @@ After completing these steps, they will be able to start collaborating with your
             $this->kpiTotalJobs = $this->Active + $this->Hold + $this->Closed;
         }
 
-        // Resolve all job IDs shared between my organization and this agency (both direct and reciprocal)
+        // Resolve all job IDs shared in this specific relationship (unidirectional: Direct Client -> Agency)
         $sharedJobIds = DB::table('recommendation_relation')
-            ->where(function ($q) use ($company_id, $partnerCompanyId) {
-                $q->where('from_company_id', $company_id)->where('to_company_id', $partnerCompanyId)
-                    ->orWhere(function ($q2) use ($company_id, $partnerCompanyId) {
-                        $q2->where('from_company_id', $partnerCompanyId)->where('to_company_id', $company_id);
-                    });
-            })
+            ->where('from_company_id', $company_id)
+            ->where('to_company_id', $partnerCompanyId)
             ->whereIn('final_status', [1, 2])
             ->pluck('job_id')
             ->unique()
@@ -1335,14 +1331,8 @@ After completing these steps, they will be able to start collaborating with your
                 'job_locations.location as city_name',
                 'recommendation_relation.created_at as shared_at'
             )
-            ->where(function ($q) use ($company_id, $partnerCompanyId) {
-                $q->where('recommendation_relation.from_company_id', '=', $company_id)
-                    ->where('recommendation_relation.to_company_id', '=', $partnerCompanyId)
-                    ->orWhere(function ($q2) use ($company_id, $partnerCompanyId) {
-                        $q2->where('recommendation_relation.from_company_id', '=', $partnerCompanyId)
-                            ->where('recommendation_relation.to_company_id', '=', $company_id);
-                    });
-            })
+            ->where('recommendation_relation.from_company_id', '=', $company_id)
+            ->where('recommendation_relation.to_company_id', '=', $partnerCompanyId)
             ->whereIn('recommendation_relation.final_status', [1, 2])
             ->orderBy('recommendation_relation.id', 'desc')
             ->limit(50)
