@@ -105,6 +105,9 @@ class CommercialReadModelService
         $buildServiceData = function ($commtype) use ($commercialRows, $allDetails, $allCountries, $countryNameMap, $defaultCurrencyKey, $companyId) {
             $row = $commercialRows->get($commtype);
             if (! $row) {
+                $registeredCIds = self::getCompanyRegisteredCountryIds($companyId);
+                $registeredCNames = array_values(array_filter(array_map(fn ($cid) => $countryNameMap[$cid] ?? null, $registeredCIds)));
+
                 return [
                     'id' => 0,
                     'company_id' => $companyId,
@@ -121,8 +124,8 @@ class CommercialReadModelService
                     'billing_trigger' => ($commtype === 2) ? 'candidate_joined' : 'approved_timesheet',
                     'payment_terms_days' => 30,
                     'commericial_details' => [],
-                    'commericial_countries' => [],
-                    'country_names' => [],
+                    'commericial_countries' => $registeredCIds,
+                    'country_names' => $registeredCNames,
                 ];
             }
 
@@ -138,6 +141,9 @@ class CommercialReadModelService
             })->all();
 
             $cIds = ($allCountries->get($row->id) ?? collect())->pluck('country_id')->all();
+            if (empty($cIds)) {
+                $cIds = self::getCompanyRegisteredCountryIds($companyId);
+            }
             $cNames = array_values(array_filter(array_map(fn ($cid) => $countryNameMap[$cid] ?? null, $cIds)));
 
             $salaryCurrency = $row->salary_currency;
@@ -227,6 +233,46 @@ class CommercialReadModelService
     }
 
     /**
+     * Get the tenant's registered company location country IDs based on company registrations.
+     * Evaluates client_location for the self_company client with fallback to defaultCountryId.
+     */
+    public static function getCompanyRegisteredCountryIds(int $companyId): array
+    {
+        if ($companyId <= 0) {
+            return [101];
+        }
+
+        return Cache::remember("tenant_registered_countries:{$companyId}", self::TTL_MASTER_DATA, function () use ($companyId) {
+            $client = DB::table('clients')
+                ->where('company_id', $companyId)
+                ->where('self_company', 1)
+                ->first();
+
+            $countryIds = [];
+            if ($client) {
+                $countryIds = DB::table('client_location')
+                    ->where('client_id', $client->id)
+                    ->whereNotNull('country_id')
+                    ->where('country_id', '>', 0)
+                    ->pluck('country_id')
+                    ->unique()
+                    ->map('intval')
+                    ->values()
+                    ->all();
+            }
+
+            if (empty($countryIds)) {
+                $defaultId = \App\Helper\GeneralMethod::defaultCountryId($companyId);
+                if ($defaultId > 0) {
+                    $countryIds = [$defaultId];
+                }
+            }
+
+            return ! empty($countryIds) ? $countryIds : [101];
+        });
+    }
+
+    /**
      * Atomically invalidate all tenant commercial cache keys per Rule 6.
      */
     public static function invalidateTenantCache(int $companyId): void
@@ -237,6 +283,7 @@ class CommercialReadModelService
         Cache::forever("company:{$companyId}:commercials:version", $nextVersion);
         Cache::forget("company:{$companyId}:commercials:projection:v{$currentVersion}");
         Cache::forget("company:{$companyId}:commercials:projection:v{$nextVersion}");
+        Cache::forget("tenant_registered_countries:{$companyId}");
         Cache::forget("account_settings:company:{$companyId}");
         Cache::forever("agency_drawer_version_company_{$companyId}", ((int) Cache::get("agency_drawer_version_company_{$companyId}", 1)) + 1);
     }

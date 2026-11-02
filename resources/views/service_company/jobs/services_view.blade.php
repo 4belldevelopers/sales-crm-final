@@ -17,13 +17,10 @@
     $rateType = (int) ($commercial['rateType'] ?? $sectionCheck);
     $commercialDetails = collect($commercial['commericial_details'] ?? [])->keyBy('exp');
     $selectedCountryIds = array_map('intval', $commercial['commericial_countries'] ?? []);
-    // Requirement 5: Automatically determine Services Country from registered tenant address if none saved yet
+    // Requirement: Automatically auto-select Services Countries from company registrations if none saved yet
     if (empty($selectedCountryIds)) {
         $tenantCompanyId = (int) ($commercial['company_id'] ?? auth()->user()->company_id ?? 0);
-        $registeredCountryId = \App\Helper\GeneralMethod::defaultCountryId($tenantCompanyId);
-        if ($registeredCountryId > 0) {
-            $selectedCountryIds = [$registeredCountryId];
-        }
+        $selectedCountryIds = \App\Services\CommercialReadModelService::getCompanyRegisteredCountryIds($tenantCompanyId);
     }
     $fallbackDefaultRate = $isFulltime ? (@$default_rates->rates_perecentage ?? 8.33) : (@$default_rates->rates_fixed ?? 0);
 
