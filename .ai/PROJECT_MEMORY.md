@@ -20,6 +20,27 @@ Last updated: 2026-10-22 (Super Admin Companies Page UI Redesign, 100% CQRS Read
 - **Test coverage:** `TenantIsolationTest`, `BenchToJobAppTrackerPipelineContractTest`, `BenchTalentRequestPipelineContractTest`, `SuperAdminCompanyLoadTest`, `SuperAdminSubscriptionLoadTest`, `SuperAdminDashboardLoadTest` (100% green).
 - **V2_login blocking-scenarios architecture:** session-epoch pattern + Reverb `UserAccountSuspended` event + `SyncUserStatusAction` (cross-tenant-safe) + `BlockCompanyAction` (static bulk helper) + `block_log` audit table + drop all 20 `refresh:true` ES sites + grep-lint guard. See [docs/V2_login/BLOCKING_SCENARIOS_AUDIT.md](../docs/V2_login/BLOCKING_SCENARIOS_AUDIT.md), [ADR 0007](../docs/adr/0007-blocking-scenarios-architecture.md). Code not yet landed.
 
+- *2026-11-02* — **God-Level Commercials Engine — Phase 4: Modern Card + Sub-Card Drawer Redesign (Rule 20 / card-subcard) (100% COMPLETED & VERIFIED)**:
+  - **Module & Scope**: Sliding Side-Drawer (`resources/views/service_company/jobs/services_view.blade.php`) for Fulltime & Contract Hiring Services.
+  - **Tier 1 Header Toolbar Card**:
+    - Pure white sticky header (`#ffffff`, border `#e2e8f0`, radius 10px).
+    - Service Symbol (`FT` primary blue vs `CT` emerald green), dynamic service code chip (`#SRV-FT01` / `#SRV-CT02`), and scope pill (`Direct Client Scope`).
+    - Dynamic search sub-card (`height: 36px; width: 250px;`) with 250ms debounce for in-drawer field filtering.
+    - Fast status toggle switch (`ACTIVE` in emerald green vs `INACTIVE` in slate) directly updating `.main_status`.
+  - **Tier 2 Dedicated Sub-Tabs Card**:
+    - Pure white sub-tabs container with single active primary blue highlight (`#009ef7`), soft background badge, and in-memory 0ms tab switching (`All Sections`, `Commercial Model & Rates`, `Experience Matrix`, `Replacement & Terms`, `Country Coverage`).
+    - Real-time country count badge (`drwCountryCountBadge`).
+  - **Tier 3 Primary Cards with Discrete Sub-Cards Stream**:
+    - **Card 1 (Commercial Fee Model & Base Pricing)**: 3 discrete model radio sub-cards (`% Percentage of CTC`, `₹ Fixed Placement Fee`, `◇ Free / No Placement Fee`) with active focus ring, coupled with a 3-field discrete sub-card grid (Currency, Default Rate with numeric suffix, and Billing Basis).
+    - **Card 2 (Experience-Based Pricing Matrix)**: Seniority band sub-cards (`0-2 Yrs Entry`, `3-5 Yrs Mid-Level`, `6-9 Yrs Senior`, `10+ Yrs Executive`) with clock pill (`🕒`), currency selector, numeric rate input, basis pill, and discrete tier reset button (`↻`).
+    - **Card 3 (Replacement Guarantee & Invoicing Governance)**: Discrete 3×2 sub-card grid for warranty window, remedy clause, exit circumstances, invoicing cadence, trigger event, and credit days, coupled with an authoritative human summary strip.
+    - **Card 4 (Operational Countries & Geographic Scope)**: Toolbar sub-card with live search, preset hub buttons (`⭐ Top Hubs`), select/clear all, selected country active chip strip with one-click `×` removal, and a 3-column country selection grid.
+  - **Tier 4 Sticky Action Strip**:
+    - Reset to saved values, cancel, and primary save CTA with progress indicator (`Save Commercial Terms`).
+  - **Verification**:
+    - Ran `scratch/test_phase1_commercials_verification.php` (10/10 PASS) and `scratch/test_phase2_cqrs_verification.php` (7/7 PASS).
+    - Zero horizontal overflow on 15.6" screens (`1366×768` and `1920×1080`).
+
 - *2026-11-02* — **God-Level Commercials Engine — Phases 2 & 3: CQRS Read Architecture, ETag Caching & Real-Time Multi-Page Sync (100% COMPLETED & VERIFIED)**:
   - **CQRS Read Model (`CommercialReadModelService`)**:
     - Replaced 6-8 direct MySQL queries on drawer open (`serviceviewmore`) with Redis-cached projection and master datasets (`master_countries_list:v1`, `master_industries_list:v1`, `master_default_rates:v1`, `commercial_experience_bands:v1`).
