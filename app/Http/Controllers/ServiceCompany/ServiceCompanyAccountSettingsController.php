@@ -1292,10 +1292,12 @@ class ServiceCompanyAccountSettingsController extends ServiceCompanyBaseControll
         \Illuminate\Support\Facades\Cache::forget("tenant_country_code:{$company_id}");
         \Illuminate\Support\Facades\Cache::forget("tenant_default_country_id:{$company_id}");
         \Illuminate\Support\Facades\Cache::forget("tenant_default_calling_code:{$company_id}");
+        \Illuminate\Support\Facades\Cache::forget("tenant_registered_countries:{$company_id}");
         \Illuminate\Support\Facades\Cache::forget("tenant_default_timezone:{$company_id}");
         \Illuminate\Support\Facades\Cache::forget("tenant_defaults_payload:{$company_id}");
         \Illuminate\Support\Facades\Cache::forever("tenant_defaults_version:{$company_id}", time());
         $this->accountSettingsService->flushAccountCache($company_id);
+        \App\Services\CommercialReadModelService::invalidateTenantCache($company_id);
 
         return Reply::dataOnly([
             'status' => 'success',
@@ -1356,9 +1358,11 @@ class ServiceCompanyAccountSettingsController extends ServiceCompanyBaseControll
                     \Illuminate\Support\Facades\Cache::forget("tenant_country_code:{$company_id}");
                     \Illuminate\Support\Facades\Cache::forget("tenant_default_country_id:{$company_id}");
                     \Illuminate\Support\Facades\Cache::forget("tenant_default_calling_code:{$company_id}");
+                    \Illuminate\Support\Facades\Cache::forget("tenant_registered_countries:{$company_id}");
                     \Illuminate\Support\Facades\Cache::forget("tenant_defaults_payload:{$company_id}");
                     \Illuminate\Support\Facades\Cache::forever("tenant_defaults_version:{$company_id}", time());
                     $this->accountSettingsService->flushAccountCache($company_id);
+                    \App\Services\CommercialReadModelService::invalidateTenantCache($company_id);
 
                     return Reply::dataOnly([
                         'status' => 'success',
