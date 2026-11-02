@@ -3398,19 +3398,25 @@
                                                 <span class="badge {{ $statusBadgeClass }} fw-bold fs-9">{{ $statusLabel }}</span>
                                             </div>
                                         </div>
+                                        @php
+                                            $hasInternalClient = (!empty($job->client_id) && !empty($job->internal_client_name));
+                                            $displayJobCompName = $hasInternalClient ? $job->internal_client_name : ($viewerCompanyName ?? 'Direct Client');
+                                            $displayJobCompLogo = $hasInternalClient ? ($job->internal_client_logo ?: $job->internal_client_logo_logical_path) : ($viewerCompanyLogo ?? null);
+                                            $displayJobInitials = strtoupper(mb_substr($displayJobCompName, 0, 1));
+                                        @endphp
                                         <div class="cd-job-details-body">
                                             <div class="cd-job-logo-box" style="background:#ffffff; border:1px solid #e2e8f0;">
-                                                @if (!empty($detailLogo))
-                                                    <img src="{{ $detailLogo }}" alt="Company" onerror="this.style.display='none'; if(this.nextElementSibling){this.nextElementSibling.style.display='flex';}">
-                                                    <span style="display:none; color:#009ef7; font-weight:700;">{{ $detailInitials }}</span>
+                                                @if (!empty($displayJobCompLogo))
+                                                    <img src="{{ $displayJobCompLogo }}" alt="{{ $displayJobCompName }}" onerror="this.style.display='none'; if(this.nextElementSibling){this.nextElementSibling.style.display='flex';}">
+                                                    <span style="display:none; color:#009ef7; font-weight:700;">{{ $displayJobInitials }}</span>
                                                 @else
-                                                    <span style="color:#009ef7; font-weight:700;">{{ $detailInitials }}</span>
+                                                    <span style="color:#009ef7; font-weight:700;">{{ $displayJobInitials }}</span>
                                                 @endif
                                             </div>
                                             <div class="cd-job-title-meta">
                                                 <a href="#" class="cd-job-title-link js-job-searchable" title="{{ $job->title }}">{{ $job->title }}</a>
                                                 <div class="cd-job-spec-line">
-                                                    <span class="fw-bold text-dark">#{{ $job->id }}</span> &bull; <span>Information Technology</span> &bull; <span>Full-Time</span>
+                                                    <span class="fw-bold text-dark">#{{ $job->id }}</span> &bull; <span>{{ $displayJobCompName }}</span> &bull; <span>Full-Time</span>
                                                 </div>
                                             </div>
                                         </div>
@@ -3484,7 +3490,7 @@
                                 <div class="cd-job-card-bottom">
                                     <div class="d-flex align-items-center gap-3 flex-wrap">
                                         <span><i class="far fa-calendar text-muted me-1"></i> Posted: <strong>{{ !empty($job->created_at) ? date('d M Y', strtotime($job->created_at)) : 'Recent' }}</strong></span>
-                                        <span><i class="fas fa-user-tie text-primary me-1"></i> Shared By: <strong>{{ auth()->user()->name ?? 'Account Lead' }} &bull; 4Bell Technology</strong></span>
+                                        <span><i class="fas fa-user-tie text-primary me-1"></i> Shared By: <strong>{{ auth()->user()->name ?? 'Account Lead' }} &bull; {{ $viewerCompanyName ?? 'Direct Client' }}</strong></span>
                                     </div>
                                     <div class="d-flex align-items-center gap-1 flex-wrap">
                                         <span class="badge badge-light fs-9 text-muted border">Java</span>
@@ -3671,7 +3677,7 @@
                                             <div>
                                                 <div class="fw-bold text-dark fs-8 text-truncate" title="{{ $cand->job_title ?? 'Active Requisition' }}">{{ $cand->job_title ?? 'Active Requisition' }}</div>
                                                 <div class="text-muted fs-9">#JOB-{{ $cand->job_id ?? '1' }} &bull; Full-Time</div>
-                                                <div class="text-muted fs-9"><i class="fas fa-building text-muted me-1"></i> 4Bell Technology</div>
+                                                <div class="text-muted fs-9"><i class="fas fa-building text-muted me-1"></i> {{ (!empty($cand->client_id) && !empty($cand->internal_client_name)) ? $cand->internal_client_name : ($viewerCompanyName ?? 'Direct Client') }}</div>
                                             </div>
                                         </div>
 
@@ -3679,7 +3685,7 @@
                                         <div class="cd-cand-subcard">
                                             <div class="cd-cand-subcard-hdr"><span class="cd-cand-subcard-label">Submitted By</span></div>
                                             <div>
-                                                <div class="fw-bold text-dark fs-8">{{ $detailName }} Sourcing Lead</div>
+                                                <div class="fw-bold text-dark fs-8">{{ $agencyCaptainName ?? ($detailName . ' Lead') }}</div>
                                                 <div class="text-muted fs-9 text-truncate">{{ $detailName }}</div>
                                                 <div class="text-muted fs-9">{{ !empty($cand->created_at) ? date('d M, Y', strtotime($cand->created_at)) : 'Recent' }}</div>
                                             </div>
@@ -3855,7 +3861,7 @@
                                         <div class="cd-it-subcard-hdr"><span class="cd-it-subcard-label">Panelists</span></div>
                                         <div>
                                             <div class="fw-bold text-dark fs-8 text-truncate">{{ $itPanelist }}</div>
-                                            <div class="text-muted fs-9 text-truncate">Tech Panelist &bull; 4Bell Technology</div>
+                                            <div class="text-muted fs-9 text-truncate">Tech Panelist &bull; {{ $viewerCompanyName ?? 'Direct Client' }}</div>
                                         </div>
                                     </div>
 
@@ -4051,7 +4057,7 @@
                                             </div>
                                             <div>
                                                 <div class="fw-bold text-dark fs-8 text-truncate" title="{{ $ojJobTitle }}">{{ $ojJobTitle }}</div>
-                                                <div class="text-muted fs-9">#{{ $ojJobId }} &bull; 4Bell Technology</div>
+                                                <div class="text-muted fs-9">#{{ $ojJobId }} &bull; {{ (!empty($oj->internal_client_name)) ? $oj->internal_client_name : ($viewerCompanyName ?? 'Direct Client') }}</div>
                                                 <div class="text-muted fs-9">{{ $ojWorkType }} &bull; {{ $ojJobLocation }}</div>
                                             </div>
                                         </div>
@@ -4093,7 +4099,7 @@
                                     <!-- Bottom Strip -->
                                     <div class="cd-oj-card-bottom">
                                         <div class="d-flex align-items-center gap-3 flex-wrap">
-                                            <span><i class="fas fa-user-tie text-primary me-1"></i> Recruiter: <strong>{{ auth()->user()->name ?? 'Recruiter' }} (4Bell Technology)</strong></span>
+                                            <span><i class="fas fa-user-tie text-primary me-1"></i> Recruiter: <strong>{{ auth()->user()->name ?? 'Recruiter' }} ({{ $viewerCompanyName ?? 'Direct Client' }})</strong></span>
                                             <span><i class="far fa-calendar-check text-success me-1"></i> Offer Date: <strong>{{ $offerDateFormatted }}</strong></span>
                                         </div>
                                         <div>

@@ -73,6 +73,23 @@ class DirectClientCandidateDTO
         $sanitized['agency_name'] = $agencyName;
         $sanitized['submitted_by_display'] = $submittedByDisplay;
 
+        // 4. Requirement 2: Strict Internal Client Masking for Direct Client Candidate Drawer
+        // If the candidate's target job belongs to an internal client (e.g. Mahindra),
+        // the Agency viewer in Client Drawer MUST ONLY see the Direct Client's name and logo!
+        $directClientName = ! empty($source['direct_client_company'])
+            ? (string) $source['direct_client_company']
+            : (! empty($source['uc_company_name'])
+                ? (string) $source['uc_company_name']
+                : (! empty($source['client_company_name'])
+                    ? (string) $source['client_company_name']
+                    : (! empty($source['from_company_name']) ? (string) $source['from_company_name'] : '')));
+
+        if (! empty($directClientName)) {
+            $sanitized['client_name'] = $directClientName;
+            $sanitized['client_company'] = $directClientName;
+            $sanitized['company_name'] = $directClientName;
+        }
+
         // Ensure canonical IDs exist
         if (isset($source['id'])) {
             $sanitized['id'] = (int) $source['id'];

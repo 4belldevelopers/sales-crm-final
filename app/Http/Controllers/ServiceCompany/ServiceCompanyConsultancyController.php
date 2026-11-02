@@ -1281,6 +1281,19 @@ After completing these steps, they will be able to start collaborating with your
             }
         }
 
+        // Resolve authoritative viewer company details & agency captain
+        $viewerCompany = DB::table('companies')->where('id', $company_id)->first();
+        $this->viewerCompanyName = $viewerCompany->company_name ?? ($viewerCompany->name ?? 'Direct Client');
+        $this->viewerCompanyLogo = ! empty($viewerCompany->logo_logical_path) ? $viewerCompany->logo_logical_path : ($viewerCompany->logo ?? null);
+
+        $this->agencyCaptainName = DB::table('users')
+            ->join('recommendation_relation', 'recommendation_relation.to_user_id', '=', 'users.id')
+            ->where('recommendation_relation.from_company_id', $company_id)
+            ->where('recommendation_relation.to_company_id', $partnerCompanyId)
+            ->value('users.name')
+            ?: (DB::table('users')->where('company_id', $partnerCompanyId)->where('is_captain', 1)->value('name')
+            ?: (DB::table('users')->where('company_id', $partnerCompanyId)->where('root_user', 1)->value('name') ?: 'Agency Captain'));
+
         // ── 1. Requisitions Status Breakdown & Shared Jobs List ──
         $this->active_requisition = 0;
         $this->Active = 0;
@@ -1320,6 +1333,7 @@ After completing these steps, they will be able to start collaborating with your
         $this->sharedJobs = DB::table('recommendation_relation')
             ->join('jobs', 'jobs.id', '=', 'recommendation_relation.job_id')
             ->leftJoin('job_locations', 'job_locations.id', '=', 'jobs.location_id')
+            ->leftJoin('clients', 'clients.id', '=', 'jobs.client_id')
             ->select(
                 'jobs.id',
                 'jobs.title',
@@ -1330,6 +1344,10 @@ After completing these steps, they will be able to start collaborating with your
                 'jobs.min_exp',
                 'jobs.max_exp',
                 'jobs.created_at',
+                'jobs.client_id',
+                'clients.name as internal_client_name',
+                'clients.logo as internal_client_logo',
+                'clients.logo_logical_path as internal_client_logo_logical_path',
                 'job_locations.location as city_name',
                 'recommendation_relation.created_at as shared_at'
             )
@@ -1386,6 +1404,7 @@ After completing these steps, they will be able to start collaborating with your
         if (! empty($sharedJobIds)) {
             $this->candidatesList = DB::table('job_applications')
                 ->leftJoin('jobs', 'jobs.id', '=', 'job_applications.job_id')
+                ->leftJoin('clients', 'clients.id', '=', 'jobs.client_id')
                 ->leftJoin('add_job_wise_condidates', 'add_job_wise_condidates.job_application_id', '=', 'job_applications.id')
                 ->select(
                     'job_applications.id',
@@ -1400,6 +1419,9 @@ After completing these steps, they will be able to start collaborating with your
                     'job_applications.created_at',
                     'jobs.title as job_title',
                     'jobs.id as job_id',
+                    'jobs.client_id',
+                    'clients.name as internal_client_name',
+                    'clients.logo as internal_client_logo',
                     'add_job_wise_condidates.master_status_id'
                 )
                 ->where(function ($q) use ($company_id) {
@@ -1423,6 +1445,7 @@ After completing these steps, they will be able to start collaborating with your
                 ->join('job_applications', 'job_applications.id', '=', 'interview_schedules.job_application_id')
                 ->join('add_job_wise_condidates', 'add_job_wise_condidates.job_application_id', '=', 'job_applications.id')
                 ->leftJoin('jobs', 'jobs.id', '=', 'add_job_wise_condidates.job_id')
+                ->leftJoin('clients', 'clients.id', '=', 'jobs.client_id')
                 ->select(
                     'interview_schedules.id',
                     'interview_schedules.schedule_date',
@@ -1435,7 +1458,10 @@ After completing these steps, they will be able to start collaborating with your
                     'job_applications.id as candidate_id',
                     'job_applications.full_name as candidate_name',
                     'jobs.id as job_id',
-                    'jobs.title as job_title'
+                    'jobs.title as job_title',
+                    'jobs.client_id',
+                    'clients.name as internal_client_name',
+                    'clients.logo as internal_client_logo'
                 )
                 ->where(function ($q) use ($company_id) {
                     $q->where('interview_schedules.company_id', '=', $company_id)
@@ -1458,6 +1484,7 @@ After completing these steps, they will be able to start collaborating with your
             $this->offersJoiningList = DB::table('add_job_wise_condidates')
                 ->join('job_applications', 'job_applications.id', '=', 'add_job_wise_condidates.job_application_id')
                 ->leftJoin('jobs', 'jobs.id', '=', 'add_job_wise_condidates.job_id')
+                ->leftJoin('clients', 'clients.id', '=', 'jobs.client_id')
                 ->leftJoin('offer_job_applications', function ($join) {
                     $join->on('offer_job_applications.application_id', '=', 'job_applications.id')
                         ->whereNull('offer_job_applications.deleted_at');
@@ -1478,6 +1505,9 @@ After completing these steps, they will be able to start collaborating with your
                     'jobs.title as job_title',
                     'jobs.employment_type',
                     'jobs.work_type',
+                    'jobs.client_id',
+                    'clients.name as internal_client_name',
+                    'clients.logo as internal_client_logo',
                     'job_locations.location as job_location',
                     'add_job_wise_condidates.master_status_id',
                     'offer_job_applications.id as offer_id',

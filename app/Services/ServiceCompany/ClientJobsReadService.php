@@ -411,10 +411,21 @@ class ClientJobsReadService
             }
         }
 
-        // Attach resolved client name to jobs missing it
-        foreach ($jobs as $job) {
-            if (empty($job->client_name) && ! empty($clientDisplayName)) {
-                $job->client_name = $clientDisplayName;
+        // Attach resolved client name and enforce strict internal client masking
+        if ($query->clientType === 'direct') {
+            // Requirement 2: Direct Client internal clients (e.g. Mahindra) MUST NEVER be shown to an Agency viewer!
+            // Strictly override client_name and company_name with Direct Client identity.
+            foreach ($jobs as $job) {
+                if (! empty($clientDisplayName)) {
+                    $job->client_name = $clientDisplayName;
+                    $job->company_name = $clientDisplayName;
+                }
+            }
+        } else {
+            foreach ($jobs as $job) {
+                if (empty($job->client_name) && ! empty($clientDisplayName)) {
+                    $job->client_name = $clientDisplayName;
+                }
             }
         }
 
