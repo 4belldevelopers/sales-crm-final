@@ -3080,297 +3080,17 @@
             </div>
         </div>
 
-                <!-- ══════════════════════════════════════════════════════════════════════
-             TAB 2: ACTIVITY TIMELINE (Master Modern Card + Sub-Card System)
+        <!-- ══════════════════════════════════════════════════════════════════════
+             TAB 2: ACTIVITY TIMELINE (Master Shared Direct Client & Agency Activity Engine)
              ══════════════════════════════════════════════════════════════════════ -->
         <div class="tab-pane" id="recent_activity" role="tabpanel">
-            <div class="cd-activity-wrapper">
-                <!-- Tier 1: Top Header Toolbar Card -->
-                <div class="cd-activity-header-card">
-                    <div class="cd-activity-header-left">
-                        <div class="cd-activity-header-icon">
-                            <i class="fas fa-clock-rotate-left"></i>
-                        </div>
-                        <div>
-                            <div class="d-flex align-items-center gap-2">
-                                <span class="cd-activity-header-title">Agency Activity &amp; Audit Feed</span>
-                                <span class="cd-activity-health-pill health-active">
-                                    <span class="cd-activity-pulse-dot"></span>
-                                    <span>Active</span>
-                                </span>
-                                <span class="badge badge-light-success text-success fw-bold" style="font-size: 10px; padding: 2px 7px;">
-                                    <i class="fas fa-wifi me-1"></i> Live
-                                </span>
-                            </div>
-                            <div class="cd-activity-header-sub">Live recruitment timeline &amp; candidate activity for {{ $detailName }}</div>
-                        </div>
-                    </div>
-                    <div class="cd-activity-header-right">
-                        <div class="cd-activity-search-subcard">
-                            <i class="fas fa-search"></i>
-                            <input type="text" id="agencyActSearchInput" placeholder="Search activity, candidates, jobs..." autocomplete="off">
-                            <button type="button" class="cd-activity-search-clear" id="agencyActSearchClear" style="display:none;" title="Clear search">
-                                <i class="fas fa-times"></i>
-                            </button>
-                        </div>
-                        <select id="agencyActTimeframeSelect" class="form-select form-select-sm" style="width: 120px; height: 34px; font-size: 11.5px; border-radius: 8px; border: 1px solid #e2e8f0; font-weight: 500;">
-                            <option value="all">All Time</option>
-                            <option value="today">Today</option>
-                            <option value="7d">Last 7 Days</option>
-                            <option value="30d">Last 30 Days</option>
-                        </select>
-                        <button type="button" class="cd-activity-btn-refresh" id="agencyActRefreshBtn" title="Refresh Activity Feed">
-                            <i class="fas fa-sync-alt"></i>
-                        </button>
-                        <button type="button" class="btn btn-sm btn-primary fw-bold" onclick="$('#agencyQuickNoteCard').slideToggle(150); $('#agencyQuickNoteInput').focus();" style="border-radius:8px; height:34px; font-size:11.5px;">
-                            <i class="fas fa-plus me-1"></i> Add Interaction Note
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Quick Note Card (Collapsible) -->
-                <div class="cd-master-subcard" id="agencyQuickNoteCard" style="display:none; margin-bottom: 12px; background: #ffffff;">
-                    <div class="d-flex align-items-center justify-content-between mb-2">
-                        <span class="fw-bold text-dark fs-7"><i class="fas fa-pen-to-square text-primary me-1"></i> Log Agency Interaction Note</span>
-                        <button type="button" class="btn btn-sm btn-icon btn-light" onclick="$('#agencyQuickNoteCard').slideUp(150);"><i class="fas fa-times fs-8"></i></button>
-                    </div>
-                    <textarea id="agencyQuickNoteInput" class="form-control form-control-solid fs-7 mb-2" rows="3" placeholder="Enter details of candidate submissions, client feedback, or recruiter follow-up..."></textarea>
-                    <div class="d-flex justify-content-end gap-2">
-                        <button type="button" class="btn btn-sm btn-light" onclick="$('#agencyQuickNoteCard').slideUp(150);">Cancel</button>
-                        <button type="button" class="btn btn-sm btn-primary fw-bold" onclick="saveAgencyQuickNote()">Save Note</button>
-                    </div>
-                </div>
-
-                <!-- Tier 2: Filter Sub-Tabs Card -->
-                @php
-                    $actPipelineCount = count($candsList);
-                    $actInterviewsCount = count($interviewsScheduleList);
-                    $actOffersCount = ($kpiOffers + $kpiJoins);
-                    $actJobsCount = count($jobsList);
-                    $actCrmCount = 2;
-                    $actTotalCount = $actPipelineCount + $actInterviewsCount + $actOffersCount + $actJobsCount + $actCrmCount;
-                @endphp
-                <div class="cd-activity-tabs-card" id="agencyActivityFilterTabs">
-                    <button type="button" class="cd-activity-tab-btn active js-act-filter-btn" data-category="all">
-                        <span>All Events</span>
-                        <span class="cd-activity-tab-badge" id="agencyActCountAll">{{ $actTotalCount }}</span>
-                    </button>
-                    <button type="button" class="cd-activity-tab-btn js-act-filter-btn" data-category="pipeline">
-                        <span>Pipeline</span>
-                        <span class="cd-activity-tab-badge" id="agencyActCountPipeline">{{ $actPipelineCount }}</span>
-                    </button>
-                    <button type="button" class="cd-activity-tab-btn js-act-filter-btn" data-category="interviews">
-                        <span>Interviews</span>
-                        <span class="cd-activity-tab-badge" id="agencyActCountInterviews">{{ $actInterviewsCount }}</span>
-                    </button>
-                    <button type="button" class="cd-activity-tab-btn js-act-filter-btn" data-category="offers">
-                        <span>Offers &amp; Joining</span>
-                        <span class="cd-activity-tab-badge" id="agencyActCountOffers">{{ $actOffersCount }}</span>
-                    </button>
-                    <button type="button" class="cd-activity-tab-btn js-act-filter-btn" data-category="jobs">
-                        <span>Jobs</span>
-                        <span class="cd-activity-tab-badge" id="agencyActCountJobs">{{ $actJobsCount }}</span>
-                    </button>
-                    <button type="button" class="cd-activity-tab-btn js-act-filter-btn" data-category="crm">
-                        <span>CRM &amp; Notes</span>
-                        <span class="cd-activity-tab-badge" id="agencyActCountCrm">{{ $actCrmCount }}</span>
-                    </button>
-                </div>
-
-                <!-- Tier 3: Activity Stream Container -->
-                <div class="cd-activity-stream" id="agencyActivityStream">
-                    <!-- Event 1: ATS System Audit (CRM) -->
-                    <div class="cd-act-card js-agency-act-item" data-category="crm" data-time="today">
-                        <div class="cd-act-avatar" style="background:#eff6ff; color:#2563eb; border:1px solid #bfdbfe;">
-                            <i class="fas fa-shield-halved"></i>
-                        </div>
-                        <div style="min-width:0; flex:1;">
-                            <div class="d-flex align-items-center justify-content-between mb-1 flex-wrap gap-1">
-                                <div class="d-flex align-items-center gap-2">
-                                    <span class="badge badge-light-primary fw-bold fs-9 text-uppercase">CRM AUDIT</span>
-                                    <span class="fw-bold text-dark fs-7">Agency Security &amp; SLA Compliance Verified</span>
-                                </div>
-                                <div class="text-end">
-                                    <div class="fw-bold text-dark fs-8">{{ date('M d, Y') }}</div>
-                                    <div class="text-muted fs-9">{{ date('h:i A') }} IST</div>
-                                </div>
-                            </div>
-                            <div class="d-flex align-items-center justify-content-between mt-2 pt-2 border-top border-light flex-wrap gap-2">
-                                <div class="fs-8 text-muted">
-                                    <span class="text-uppercase fw-semibold" style="font-size:10px;">VERIFIED BY:</span>
-                                    <strong class="text-dark">{{ auth()->user()->name ?? 'System Lead' }}</strong> &bull; <span>4Bell Technology</span>
-                                </div>
-                                <span class="badge badge-light-success text-success fs-9 fw-semibold">#seq-17923401</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Events from Candidates Submitted (Pipeline) -->
-                    @if (count($candsList) > 0)
-                        @foreach ($candsList as $cand)
-                            @php
-                                $candDate = !empty($cand->created_at) ? Carbon::parse($cand->created_at)->format('M d, Y') : date('M d, Y');
-                                $candTime = !empty($cand->created_at) ? Carbon::parse($cand->created_at)->format('h:i A') . ' IST' : '11:38 AM IST';
-                                $candFullName = ucwords($cand->full_name ?? 'Candidate Profile');
-                                $candInitials = strtoupper(substr($candFullName, 0, 2));
-                                $candJobTitle = $cand->job_title ?? 'Active Requisition';
-                                $candJobId = $cand->job_id ?? '1';
-                            @endphp
-                            <div class="cd-act-card js-agency-act-item" data-category="pipeline" data-time="recent">
-                                <div class="cd-act-avatar" style="background:#faf5ff; color:#9333ea; border:1px solid #e9d5ff;">
-                                    {{ $candInitials }}
-                                </div>
-                                <div style="min-width:0; flex:1;">
-                                    <div class="d-flex align-items-center justify-content-between mb-1 flex-wrap gap-1">
-                                        <div>
-                                            <span class="badge badge-light-primary fw-bold fs-9 text-uppercase me-1">CANDIDATE</span>
-                                            <strong class="text-dark fs-7 js-act-searchable">{{ $candFullName }}</strong>
-                                            <span class="text-muted fs-8">&bull; {{ $candJobTitle }} #{{ $candJobId }}</span>
-                                        </div>
-                                        <div class="text-end">
-                                            <div class="fw-bold text-dark fs-8">{{ $candDate }}</div>
-                                            <div class="text-muted fs-9">{{ $candTime }}</div>
-                                        </div>
-                                    </div>
-                                    <div class="text-dark fs-8 mt-1" style="line-height:1.4;">
-                                        Candidate profile submitted for <strong>{{ $candJobTitle }}</strong>. Sourced and vetted by {{ $detailName }}.
-                                    </div>
-                                    <div class="d-flex align-items-center justify-content-between mt-2 pt-2 border-top border-light flex-wrap gap-2">
-                                        <div class="fs-8 text-muted">
-                                            <div style="font-size:10px; font-weight:700; text-transform:uppercase; color:#64748b;">SUBMITTED BY:</div>
-                                            <div class="fw-bold text-dark">{{ $detailName }} Recruiter</div>
-                                            <div class="text-muted fs-9">{{ $detailName }}</div>
-                                        </div>
-                                        <div class="d-flex align-items-center gap-2">
-                                            <span class="badge badge-light-info text-info fs-9 fw-semibold">#seq-cand-{{ $cand->id }}</span>
-                                            <button type="button" class="btn btn-sm btn-light-primary py-1 px-3 fs-9 fw-bold" onclick="triggerDrawerTab('candidate_list', event)">
-                                                <i class="fas fa-eye me-1"></i> View Profile
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        @endforeach
-                    @endif
-
-                    <!-- Events from Shared Jobs (Jobs) -->
-                    @if (count($jobsList) > 0)
-                        @foreach ($jobsList as $job)
-                            @php
-                                $jobDate = !empty($job->shared_at ?? $job->created_at) ? Carbon::parse($job->shared_at ?? $job->created_at)->format('M d, Y') : date('M d, Y');
-                                $jobTime = !empty($job->shared_at ?? $job->created_at) ? Carbon::parse($job->shared_at ?? $job->created_at)->format('h:i A') . ' IST' : '12:00 PM IST';
-                            @endphp
-                            <div class="cd-act-card js-agency-act-item" data-category="jobs" data-time="recent">
-                                <div class="cd-act-avatar" style="background:#ecfdf5; color:#10b981; border:1px solid #a7f3d0;">
-                                    <i class="fas fa-share-nodes"></i>
-                                </div>
-                                <div style="min-width:0; flex:1;">
-                                    <div class="d-flex align-items-center justify-content-between mb-1 flex-wrap gap-1">
-                                        <div>
-                                            <span class="badge badge-light-success fw-bold fs-9 text-uppercase me-1">JOB SHARED</span>
-                                            <strong class="text-dark fs-7 js-act-searchable">{{ $job->title }}</strong>
-                                            <span class="text-muted fs-8">&bull; #{{ $job->id }} &bull; {{ $job->total_positions ?? 1 }} Opening(s)</span>
-                                        </div>
-                                        <div class="text-end">
-                                            <div class="fw-bold text-dark fs-8">{{ $jobDate }}</div>
-                                            <div class="text-muted fs-9">{{ $jobTime }}</div>
-                                        </div>
-                                    </div>
-                                    <div class="text-dark fs-8 mt-1" style="line-height:1.4;">
-                                        Requisition shared with {{ $detailName }} with prioritized 48-hour sourcing SLA.
-                                    </div>
-                                    <div class="d-flex align-items-center justify-content-between mt-2 pt-2 border-top border-light flex-wrap gap-2">
-                                        <div class="fs-8 text-muted">
-                                            <div style="font-size:10px; font-weight:700; text-transform:uppercase; color:#64748b;">SHARED BY:</div>
-                                            <div class="fw-bold text-dark">{{ auth()->user()->name ?? 'Account Lead' }}</div>
-                                            <div class="text-muted fs-9">4Bell Technology</div>
-                                        </div>
-                                        <div class="d-flex align-items-center gap-2">
-                                            <span class="badge badge-light-success text-success fs-9 fw-semibold">#seq-job-{{ $job->id }}</span>
-                                            <button type="button" class="btn btn-sm btn-light-primary py-1 px-3 fs-9 fw-bold" onclick="triggerDrawerTab('requisitions', event)">
-                                                <i class="fas fa-briefcase me-1"></i> View Job
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        @endforeach
-                    @endif
-
-                    <!-- Events from Interviews (Interviews) -->
-                    @if (count($interviewsScheduleList) > 0)
-                        @foreach ($interviewsScheduleList as $it)
-                            @php
-                                $itDate = !empty($it->schedule_date) ? Carbon::parse($it->schedule_date)->format('M d, Y') : date('M d, Y');
-                                $itTime = !empty($it->schedule_time) ? Carbon::parse($it->schedule_time)->format('h:i A') . ' IST' : '02:30 PM IST';
-                            @endphp
-                            <div class="cd-act-card js-agency-act-item" data-category="interviews" data-time="recent">
-                                <div class="cd-act-avatar" style="background:#fffbeb; color:#d97706; border:1px solid #fde68a;">
-                                    <i class="fas fa-calendar-check"></i>
-                                </div>
-                                <div style="min-width:0; flex:1;">
-                                    <div class="d-flex align-items-center justify-content-between mb-1 flex-wrap gap-1">
-                                        <div>
-                                            <span class="badge badge-light-warning fw-bold fs-9 text-uppercase me-1">INTERVIEW</span>
-                                            <strong class="text-dark fs-7 js-act-searchable">{{ $it->candidate_name ?? 'Candidate' }}</strong>
-                                            <span class="text-muted fs-8">&bull; {{ $it->job_title ?? 'Shared Job' }}</span>
-                                        </div>
-                                        <div class="text-end">
-                                            <div class="fw-bold text-dark fs-8">{{ $itDate }}</div>
-                                            <div class="text-muted fs-9">{{ $itTime }}</div>
-                                        </div>
-                                    </div>
-                                    <div class="text-dark fs-8 mt-1" style="line-height:1.4;">
-                                        Technical evaluation round scheduled with candidate submitted by {{ $detailName }}.
-                                    </div>
-                                    <div class="d-flex align-items-center justify-content-between mt-2 pt-2 border-top border-light flex-wrap gap-2">
-                                        <div class="fs-8 text-muted">
-                                            <div style="font-size:10px; font-weight:700; text-transform:uppercase; color:#64748b;">SCHEDULED BY:</div>
-                                            <div class="fw-bold text-dark">{{ auth()->user()->name ?? 'Recruiting Team' }}</div>
-                                            <div class="text-muted fs-9">4Bell Technology</div>
-                                        </div>
-                                        <div class="d-flex align-items-center gap-2">
-                                            <span class="badge badge-light-warning text-warning fs-9 fw-semibold">#seq-it-{{ $it->id }}</span>
-                                            <button type="button" class="btn btn-sm btn-light-warning py-1 px-3 fs-9 fw-bold" onclick="triggerDrawerTab('interview_tracker', event)">
-                                                <i class="fas fa-calendar-days me-1"></i> Interview Details
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        @endforeach
-                    @endif
-
-                    <!-- Event: Recruiter Engagement Note (CRM) -->
-                    <div class="cd-act-card js-agency-act-item" data-category="crm" data-time="today">
-                        <div class="cd-act-avatar" style="background:#f0fdf4; color:#16a34a; border:1px solid #bbf7d0;">
-                            <i class="fas fa-handshake"></i>
-                        </div>
-                        <div style="min-width:0; flex:1;">
-                            <div class="d-flex align-items-center justify-content-between mb-1 flex-wrap gap-1">
-                                <div>
-                                    <span class="badge badge-light-success fw-bold fs-9 text-uppercase me-1">PARTNERSHIP</span>
-                                    <strong class="text-dark fs-7 js-act-searchable">Contract Terms &amp; Commercial SLA Active</strong>
-                                </div>
-                                <div class="text-end">
-                                    <div class="fw-bold text-dark fs-8">{{ date('M d, Y') }}</div>
-                                    <div class="text-muted fs-9">09:00 AM IST</div>
-                                </div>
-                            </div>
-                            <div class="text-dark fs-8 mt-1" style="line-height:1.4;">
-                                Commercial contingency staffing terms active with {{ $placement_fee }} and 90-day free replacement guarantee.
-                            </div>
-                            <div class="d-flex align-items-center justify-content-between mt-2 pt-2 border-top border-light flex-wrap gap-2">
-                                <div class="fs-8 text-muted">
-                                    <div style="font-size:10px; font-weight:700; text-transform:uppercase; color:#64748b;">VERIFIED BY:</div>
-                                    <div class="fw-bold text-dark">{{ auth()->user()->name ?? 'Account Lead' }}</div>
-                                    <div class="text-muted fs-9">4Bell Technology</div>
-                                </div>
-                                <span class="badge badge-light-success text-success fs-9 fw-semibold">#seq-17910001</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+            <div class="px-3 py-2">
+                @include('service_company.client.components.tab-activity', [
+                    'clientId' => $agencyId,
+                    'clientType' => 'agency',
+                    'viewerType' => 'agency',
+                    'agencyCompanyId' => $agencyId
+                ])
             </div>
         </div>
 
@@ -4689,7 +4409,6 @@
     setupTabDebouncedSearch('#cdAgencyCandSearchInput', '#cdAgencyCandSearchClear', '.js-agency-cand-item', '.js-cand-searchable');
     setupTabDebouncedSearch('#agencyItSearchInput', '#agencyItSearchClear', '.js-agency-it-item', '.js-it-searchable');
     setupTabDebouncedSearch('#agencyOjSearchInput', '#agencyOjSearchClear', '.js-agency-oj-item', '.js-oj-searchable');
-    setupTabDebouncedSearch('#agencyActSearchInput', '#agencyActSearchClear', '.js-agency-act-item', '.js-act-searchable');
 
     // Reset Buttons
     $(document).on('click', '#btnAgencyJobReset', function() {
@@ -4712,50 +4431,8 @@
         $('#agencyOjSearchInput').val('').trigger('input');
         $('.js-agency-oj-tab[data-segment="all"]').trigger('click');
     });
-    $(document).on('click', '#agencyActRefreshBtn', function() {
-        $('#agencyActSearchInput').val('').trigger('input');
-        $('#agencyActTimeframeSelect').val('all');
-        $('.js-act-filter-btn[data-category="all"]').trigger('click');
-    });
 
     // ── Sub-Tabs Filter Handlers ──
-    // 1. Activity Filter
-    $(document).on('click', '.js-act-filter-btn', function(e) {
-        e.preventDefault();
-        $('.js-act-filter-btn').removeClass('active');
-        $(this).addClass('active');
-        var cat = $(this).data('category');
-        if (cat === 'all') {
-            $('.js-agency-act-item').show();
-        } else {
-            $('.js-agency-act-item').each(function() {
-                if ($(this).data('category') === cat) {
-                    $(this).show();
-                } else {
-                    $(this).hide();
-                }
-            });
-        }
-    });
-
-    // Timeframe Filter
-    $(document).on('change', '#agencyActTimeframeSelect', function() {
-        var val = $(this).val();
-        if (val === 'all') {
-            $('.js-agency-act-item').show();
-        } else if (val === 'today') {
-            $('.js-agency-act-item').each(function() {
-                if ($(this).data('time') === 'today') {
-                    $(this).show();
-                } else {
-                    $(this).hide();
-                }
-            });
-        } else {
-            $('.js-agency-act-item').show();
-        }
-    });
-
     // 2. Contacts Filter
     $(document).on('click', '.js-agency-contact-tab', function(e) {
         e.preventDefault();
@@ -4852,47 +4529,20 @@
         }
     });
 
-    // Quick Note Logger
-    window.saveAgencyQuickNote = function() {
-        var note = $('#agencyQuickNoteInput').val().trim();
-        if (!note) {
-            alert('Please enter a note before saving.');
-            return;
+    $(document).on('click', '.cd-drawer-tabs-list .cd-tab-pill-btn[href="#recent_activity"]', function() {
+        if (window.ClientActivityManager && typeof window.ClientActivityManager.initClient === 'function') {
+            window.ClientActivityManager.initClient({{ (int)$agencyId }}, false, {{ (int)$agencyId }}, false, 'agency', {{ (int)$agencyId }});
+        } else if (window.AgencyActivityManager) {
+            window.AgencyActivityManager.loadActivity(false);
         }
-        var newCard = `
-            <div class="cd-act-card js-agency-act-item" data-category="crm" data-time="today">
-                <div class="cd-act-avatar" style="background:#eff6ff; color:#2563eb; border:1px solid #bfdbfe;">
-                    <i class="fas fa-comment-dots"></i>
-                </div>
-                <div style="min-width:0; flex:1;">
-                    <div class="d-flex align-items-center justify-content-between mb-1">
-                        <div class="d-flex align-items-center gap-2">
-                            <span class="badge badge-light-primary fw-bold fs-9 text-uppercase">RECRUITER NOTE</span>
-                            <span class="fw-bold text-dark fs-7">${$('<div>').text(note).html()}</span>
-                        </div>
-                        <div class="text-end">
-                            <div class="fw-bold text-dark fs-8">{{ date('M d, Y') }}</div>
-                            <div class="text-muted fs-9">{{ date('h:i A') }} IST</div>
-                        </div>
-                    </div>
-                    <div class="d-flex align-items-center justify-content-between mt-2 pt-2 border-top border-light">
-                        <div class="fs-8 text-muted">
-                            <span class="text-uppercase fw-semibold" style="font-size:10px;">LOGGED BY:</span>
-                            <strong class="text-dark">{{ auth()->user()->name ?? 'Recruiter' }}</strong> &bull; <span>4Bell Technology</span>
-                        </div>
-                        <span class="badge badge-light-info text-info fs-9 fw-semibold">#seq-note-new</span>
-                    </div>
-                </div>
-            </div>
-        `;
-        $('#agencyActivityStream').prepend(newCard);
-        $('#agencyQuickNoteInput').val('');
-        $('#agencyQuickNoteCard').slideUp(150);
-        var curCount = parseInt($('#agencyActCountAll').text() || '0', 10) + 1;
-        $('#agencyActCountAll').text(curCount);
-        var crmCount = parseInt($('#agencyActCountCrm').text() || '0', 10) + 1;
-        $('#agencyActCountCrm').text(crmCount);
-    };
+    });
+
+    // Auto-init on drawer mount
+    if (window.ClientActivityManager && typeof window.ClientActivityManager.initClient === 'function') {
+        try {
+            window.ClientActivityManager.initClient({{ (int)$agencyId }}, false, {{ (int)$agencyId }}, false, 'agency', {{ (int)$agencyId }});
+        } catch(e) {}
+    }
 
     // Copy to clipboard helper
     window.copyToClipboard = function(text, btn) {

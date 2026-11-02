@@ -24,7 +24,7 @@ class ClientActivityQuery
         public readonly int $tenantId,
         public readonly int $serviceCompanyId,
         public readonly int $clientId,
-        public readonly string $clientType,         // 'internal' | 'direct'
+        public readonly string $clientType,         // 'internal' | 'direct' | 'agency'
         public readonly ?int $partnerCompanyId,     // Marketplace partner ID
         public readonly string $category,           // 'all' | 'pipeline' | 'interviews' | 'offers' | 'jobs' | 'crm'
         public readonly string $timeframe,          // 'all' | 'today' | '7d' | '30d'
@@ -35,7 +35,12 @@ class ClientActivityQuery
         public readonly ?int $fromSequence = null,
         public readonly ?int $toSequence = null,
         public readonly array $eventIds = [],
-        public readonly bool $forceRefresh = false
+        public readonly bool $forceRefresh = false,
+        public readonly string $viewerType = 'client',       // 'client' | 'agency'
+        public readonly int $agencyCompanyId = 0,
+        public readonly int $companyRelationshipId = 0,
+        public readonly int $jobAgencyRelationshipId = 0,
+        public readonly int $serviceRelationshipId = 0
     ) {}
 
     /**
@@ -80,6 +85,22 @@ class ClientActivityQuery
             }
         }
 
+        // Resolve Viewer Type & Agency Scoping
+        $rawViewerType = strtolower(trim((string) $request->input('viewer_type', '')));
+        if (empty($rawViewerType)) {
+            $rawViewerType = ($context->clientType === 'agency' || $request->input('client_type') === 'agency') ? 'agency' : 'client';
+        }
+        $viewerType = ($rawViewerType === 'agency') ? 'agency' : 'client';
+
+        $agencyCompanyId = (int) $request->input('agency_company_id', 0);
+        if ($agencyCompanyId <= 0 && $viewerType === 'agency') {
+            $agencyCompanyId = (int) ($context->clientId ?: $context->serviceCompanyId);
+        }
+
+        $companyRelId = (int) $request->input('company_relationship_id', 0);
+        $jobAgencyRelId = (int) $request->input('job_agency_relationship_id', 0);
+        $serviceRelId = (int) $request->input('service_relationship_id', 0);
+
         return new self(
             tenantId: $context->tenantId,
             serviceCompanyId: $context->serviceCompanyId,
@@ -95,7 +116,12 @@ class ClientActivityQuery
             fromSequence: $fromSequence,
             toSequence: $toSequence,
             eventIds: array_filter(array_map('trim', $eventIds)),
-            forceRefresh: $forceRefresh
+            forceRefresh: $forceRefresh,
+            viewerType: $viewerType,
+            agencyCompanyId: $agencyCompanyId,
+            companyRelationshipId: $companyRelId,
+            jobAgencyRelationshipId: $jobAgencyRelId,
+            serviceRelationshipId: $serviceRelId
         );
     }
 
@@ -177,13 +203,13 @@ class ClientActivityQuery
     }
 
     /**
-     * Page cache key incorporating current version epoch and cursor.
+     * Page cache key incorporating current version epoch, viewer type, and cursor.
      */
     public function toPageCacheKey(int $version): string
     {
         $cursorPart = $this->cursorSequence ? "{$this->cursorSequence}_{$this->cursorEventId}" : 'initial';
 
-        return "ats:client_act:page:{$this->tenantId}:{$this->clientId}:v{$version}:{$this->getFilterHash()}:{$cursorPart}:{$this->limit}";
+        return "ats:client_act:page:{$this->tenantId}:{$this->clientId}:{$this->viewerType}:v{$version}:{$this->getFilterHash()}:{$cursorPart}:{$this->limit}";
     }
 
     /**
@@ -191,6 +217,6 @@ class ClientActivityQuery
      */
     public function toKpiCacheKey(int $version): string
     {
-        return "ats:client_act:kpi:{$this->tenantId}:{$this->clientId}:v{$version}:{$this->getFilterHash()}";
+        return "ats:client_act:kpi:{$this->tenantId}:{$this->clientId}:{$this->viewerType}:v{$version}:{$this->getFilterHash()}";
     }
 }

@@ -116,7 +116,7 @@
 }
 
 .cd-srv-header-title {
-    font-size: 14.5px !important;
+    font-size: 15.5px !important;
     font-weight: 700 !important;
     color: #0f172a !important;
     line-height: 1.25 !important;
@@ -131,7 +131,7 @@
     border-radius: 10px;
     background: #eff6ff;
     color: #009ef7;
-    font-size: 10.5px;
+    font-size: 11px;
     font-weight: 700;
     font-variant-numeric: tabular-nums;
     border: 1px solid #dbeafe;
@@ -146,7 +146,7 @@
     border-radius: 10px;
     background: #ecfdf5;
     color: #047857;
-    font-size: 10px;
+    font-size: 10.5px;
     font-weight: 600;
     border: 1px solid #a7f3d0;
 }
@@ -166,9 +166,9 @@
 }
 
 .cd-srv-header-sub {
-    font-size: 11px;
+    font-size: 11.5px;
     color: #64748b;
-    margin-top: 1px;
+    margin-top: 2px;
     line-height: 1.35;
     white-space: nowrap;
     overflow: hidden;
@@ -183,101 +183,44 @@
     flex-shrink: 0;
 }
 
-.cd-srv-search-subcard {
-    position: relative;
-    height: 34px;
-    width: 230px;
-    background: #f8fafc;
-    border: 1px solid #e2e8f0;
-    border-radius: 8px;
+/* Executive Metric Strip in Header (Replaces Search & Refresh) */
+.cd-srv-metric-strip {
     display: flex;
     align-items: center;
-    padding: 0 10px;
-    transition: all 0.15s ease;
+    gap: 8px;
+    flex-wrap: nowrap;
 }
 
-.cd-srv-search-subcard:focus-within {
-    background: #ffffff;
-    border-color: #009ef7;
-    box-shadow: 0 0 0 3px rgba(0, 158, 247, 0.12);
-}
-
-.cd-srv-search-subcard svg {
-    width: 14px;
-    height: 14px;
-    color: #94a3b8;
-    margin-right: 7px;
-    flex-shrink: 0;
-}
-
-.cd-srv-search-input {
-    border: none !important;
-    outline: none !important;
-    background: transparent !important;
-    width: 100%;
-    font-size: 11.5px !important;
-    color: #0f172a !important;
-    padding: 0 !important;
-    box-shadow: none !important;
-}
-
-.cd-srv-search-input::placeholder {
-    color: #94a3b8;
-    font-size: 11px;
-}
-
-.cd-srv-search-clear {
-    border: none;
-    background: #e2e8f0;
-    color: #475569;
-    width: 18px;
-    height: 18px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 9px;
-    cursor: pointer;
-    flex-shrink: 0;
-    padding: 0;
-    transition: all 0.12s ease;
-}
-
-.cd-srv-search-clear:hover {
-    background: #cbd5e1;
-    color: #0f172a;
-}
-
-.cd-srv-refresh-btn {
-    height: 34px;
-    padding: 0 12px;
-    border-radius: 8px;
-    border: 1px solid #e2e8f0;
-    background: #ffffff;
-    color: #334155;
-    font-size: 11.5px;
-    font-weight: 600;
+.cd-srv-stat-pill {
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    cursor: pointer;
+    height: 32px;
+    padding: 0 10px;
+    border-radius: 8px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    color: #334155;
+    font-size: 11px;
+    font-weight: 600;
     transition: all 0.15s ease;
 }
 
-.cd-srv-refresh-btn svg {
+.cd-srv-stat-pill svg {
     width: 13px;
     height: 13px;
-    color: #64748b;
+    color: #10b981;
+    flex-shrink: 0;
 }
 
-.cd-srv-refresh-btn:hover {
-    background: #f8fafc;
+.cd-srv-stat-pill b {
+    color: #0f172a;
+    font-weight: 700;
+}
+
+.cd-srv-stat-pill:hover {
+    background: #ffffff;
     border-color: #cbd5e1;
-    color: #009ef7;
-}
-
-.cd-srv-refresh-btn:hover svg {
-    color: #009ef7;
 }
 
 /* --------------------------------------------------------------------------
@@ -304,17 +247,17 @@
     background: #ffffff !important;
     border: 1px solid #e2e8f0 !important;
     border-radius: 8px !important;
-    padding: 5px 12px !important;
-    font-size: 11.5px !important;
+    padding: 6px 14px !important;
+    font-size: 12px !important;
     font-weight: 600 !important;
     color: #475569 !important;
     box-shadow: 0 1px 2px rgba(15, 23, 42, 0.02) !important;
     display: inline-flex !important;
     align-items: center !important;
-    gap: 6px !important;
+    gap: 7px !important;
     cursor: pointer !important;
     transition: all 0.15s ease !important;
-    min-height: 32px !important;
+    min-height: 34px !important;
 }
 
 .cd-srv-tab-btn:hover {
@@ -334,9 +277,9 @@
 .cd-srv-tab-badge {
     min-width: 18px;
     height: 18px;
-    padding: 0 5px;
+    padding: 0 6px;
     border-radius: 9px;
-    font-size: 10px;
+    font-size: 10.5px;
     font-weight: 700;
     display: inline-flex;
     align-items: center;
@@ -451,7 +394,7 @@
 }
 
 .cd-srv-title {
-    font-size: 14px !important;
+    font-size: 14.5px !important;
     font-weight: 700 !important;
     color: #0f172a !important;
     margin: 0 !important;
@@ -459,12 +402,12 @@
 }
 
 .cd-srv-code-chip {
-    font-size: 9.5px;
+    font-size: 10px;
     font-weight: 600;
     color: #009ef7;
     background: #eff6ff;
     border: 1px solid #dbeafe;
-    padding: 1px 6px;
+    padding: 2px 7px;
     border-radius: 4px;
     letter-spacing: 0.02em;
 }
@@ -472,32 +415,32 @@
 .cd-srv-scope-pill {
     display: inline-flex;
     align-items: center;
-    gap: 4px;
-    height: 19px;
-    padding: 0 7px;
-    border-radius: 9.5px;
+    gap: 5px;
+    height: 20px;
+    padding: 0 8px;
+    border-radius: 10px;
     background: #ecfdf5;
     color: #047857;
     border: 1px solid #a7f3d0;
-    font-size: 9.5px;
+    font-size: 10.5px;
     font-weight: 600;
 }
 
 .cd-srv-scope-pill svg {
-    width: 11px;
-    height: 11px;
+    width: 12px;
+    height: 12px;
 }
 
 .cd-srv-status-badge {
     display: inline-flex;
     align-items: center;
-    gap: 4px;
-    height: 19px;
-    padding: 0 7px;
+    gap: 5px;
+    height: 20px;
+    padding: 0 8px;
     border-radius: 5px;
-    font-size: 9.5px;
+    font-size: 10.5px;
     font-weight: 700;
-    letter-spacing: 0.02em;
+    letter-spacing: 0.03em;
     text-transform: uppercase;
     background: #ecfdf5;
     color: #047857;
@@ -513,7 +456,7 @@
 }
 
 .cd-srv-subtitle {
-    font-size: 11px;
+    font-size: 11.5px;
     color: #64748b;
     margin: 0;
     white-space: nowrap;
@@ -623,17 +566,17 @@
 
 /* Primary View / Edit Action Button in Card Header */
 .cd-srv-cta-btn {
-    height: 32px;
-    padding: 0 13px;
+    height: 34px;
+    padding: 0 14px;
     border-radius: 8px;
     background: #009ef7;
     border: 1px solid #009ef7;
     color: #ffffff;
-    font-size: 11.5px;
+    font-size: 12px;
     font-weight: 600;
     display: inline-flex;
     align-items: center;
-    gap: 6px;
+    gap: 7px;
     cursor: pointer;
     box-shadow: 0 1px 3px rgba(0, 158, 247, 0.2);
     transition: all 0.15s ease;
@@ -648,8 +591,8 @@
 }
 
 .cd-srv-cta-btn svg {
-    width: 13px;
-    height: 13px;
+    width: 14px;
+    height: 14px;
 }
 
 /* --------------------------------------------------------------------------
@@ -676,13 +619,13 @@
     background: #f8fafc;
     border: 1px solid #eef2f6;
     border-radius: 8px;
-    padding: 10px 12px;
+    padding: 11px 13px;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-    gap: 6px;
+    gap: 7px;
     min-width: 0;
-    min-height: 110px;
+    min-height: 114px;
     transition: border-color 0.15s ease, background 0.15s ease;
 }
 
@@ -692,22 +635,22 @@
 }
 
 .cd-subcard-label {
-    font-size: 9.5px;
-    font-weight: 700;
+    font-size: 11px;
+    font-weight: 600;
     color: #64748b;
     letter-spacing: 0.04em;
     text-transform: uppercase;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 4px;
-    margin-bottom: 1px;
+    gap: 5px;
+    margin-bottom: 2px;
 }
 
 .cd-subcard-label-left {
     display: flex;
     align-items: center;
-    gap: 5px;
+    gap: 6px;
     min-width: 0;
 }
 
@@ -718,14 +661,14 @@
 }
 
 .cd-subcard-label svg {
-    width: 13px;
-    height: 13px;
+    width: 13.5px;
+    height: 13.5px;
     flex-shrink: 0;
 }
 
 .cd-subcard-val {
-    font-size: 13px;
-    font-weight: 800;
+    font-size: 13.5px;
+    font-weight: 700;
     color: #0f172a;
     line-height: 1.25;
     font-variant-numeric: tabular-nums;
@@ -734,35 +677,39 @@
     text-overflow: ellipsis;
     display: flex;
     align-items: baseline;
-    gap: 4px;
+    gap: 5px;
 }
 
 .cd-subcard-val.rate-highlight {
     color: #059669;
 }
+.cd-subcard-val.rate-highlight.is-free-pink,
+.cd-subcard-val.rate-highlight.is-free-pink span {
+    color: #e11d48 !important;
+}
 
 .cd-subcard-val .val-sub {
-    font-size: 10.5px;
+    font-size: 11px;
     font-weight: 600;
     color: #64748b;
 }
 
 .cd-subcard-meta {
-    font-size: 10.5px;
+    font-size: 11px;
     color: #475569;
     font-weight: 500;
     display: flex;
     align-items: center;
-    gap: 5px;
-    line-height: 1.3;
+    gap: 6px;
+    line-height: 1.35;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
 }
 
 .cd-subcard-meta svg {
-    width: 11px;
-    height: 11px;
+    width: 12px;
+    height: 12px;
     flex-shrink: 0;
 }
 
@@ -771,7 +718,7 @@
     align-items: center;
     justify-content: center;
     min-width: 18px;
-    height: 17px;
+    height: 18px;
     padding: 0 5px;
     border-radius: 5px;
     background: #eff6ff;
@@ -786,31 +733,31 @@
     display: flex;
     align-items: center;
     flex-wrap: wrap;
-    gap: 4px;
+    gap: 5px;
     margin-top: 2px;
 }
 
 .cd-country-chip {
     display: inline-flex;
     align-items: center;
-    gap: 3px;
-    height: 20px;
-    padding: 0 6px;
+    gap: 4px;
+    height: 22px;
+    padding: 0 7px;
     border-radius: 5px;
     background: #ffffff;
     border: 1px solid #e2e8f0;
     color: #334155;
-    font-size: 9.5px;
+    font-size: 10.5px;
     font-weight: 600;
     white-space: nowrap;
-    max-width: 110px;
+    max-width: 115px;
     overflow: hidden;
     text-overflow: ellipsis;
 }
 
 .cd-country-chip svg {
-    width: 10px;
-    height: 10px;
+    width: 11px;
+    height: 11px;
     color: #ef4444;
 }
 
@@ -827,13 +774,13 @@
 .cd-srv-bottom-strip {
     background: #f8fafc;
     border-top: 1px solid #f1f5f9;
-    padding: 8px 16px;
+    padding: 9px 16px;
     display: flex;
     align-items: center;
     justify-content: space-between;
     flex-wrap: wrap;
     gap: 8px;
-    font-size: 10.5px;
+    font-size: 11px;
     color: #64748b;
 }
 
@@ -944,47 +891,34 @@
             </div>
         </div>
         <div class="cd-srv-header-right">
-            <!-- Dynamic 300ms Debounced Search Bar -->
-            <div class="cd-srv-search-subcard">
-                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-                </svg>
-                <input type="text"
-                       class="cd-srv-search-input"
-                       id="inputServiceSearch"
-                       placeholder="Search services, model, currency..."
-                       autocomplete="off" />
-                <button type="button"
-                        class="cd-srv-search-clear"
-                        id="btnServiceSearchClear"
-                        style="display: none;"
-                        title="Clear search">
-                    ✕
-                </button>
+            <!-- Executive Dynamic Metric Strip (Search & Refresh Removed) -->
+            <div class="cd-srv-metric-strip">
+                <span class="cd-srv-stat-pill" title="Active Commercial Services Count">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                    <b id="hdrActiveSummary">{{ $activeCount }} / 2 Active</b>
+                </span>
+                <span class="cd-srv-stat-pill" title="Default Tenant Currency">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                    <span>Currency: <b>{{ $cv2CurrencyCode }}</b></span>
+                </span>
+                <span class="cd-srv-stat-pill" title="Automatic Multi-Tenant Real-Time Sync">
+                    <span class="cd-srv-live-dot"></span>
+                    <span>Live Sync</span>
+                </span>
             </div>
-            <!-- Quick Reset / Refresh Button -->
-            <button type="button"
-                    class="cd-srv-refresh-btn"
-                    id="btnRefreshServices"
-                    title="Reset search and filters">
-                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
-                </svg>
-                Refresh
-            </button>
         </div>
     </div>
 
     <!-- ====================================================================
-         TIER 2: DEDICATED SUB-TABS CARD (Single Active Metronic Primary Blue)
+         TIER 2: DEDICATED SUB-TABS CARD (All Services Tab Removed Completely)
          ==================================================================== -->
     <div class="cd-srv-tabs-card">
         <div class="cd-srv-tabs-group">
-            <button type="button" class="cd-srv-tab-btn active" data-filter="all">
-                <span>All Services</span>
-                <span class="cd-srv-tab-badge" id="tabCountAll">2</span>
-            </button>
-            <button type="button" class="cd-srv-tab-btn" data-filter="active">
+            <button type="button" class="cd-srv-tab-btn active" data-filter="active">
                 <span>Active Services</span>
                 <span class="cd-srv-tab-badge badge-active" id="tabCountActive">{{ $activeCount }}</span>
             </button>
@@ -1081,8 +1015,12 @@
                         </div>
                         <span class="cd-num-badge">5 Tiers</span>
                     </div>
-                    <div class="cd-subcard-val rate-highlight">
-                        <span id="ft-model-val">{{ (@$fullTimeStatus->rateType == 2) ? 'Percentage of CTC' : 'Fixed Placement Fee' }}</span>
+                    @php
+                        $isFreeFT = (@$fullTimeStatus->rateType == 0);
+                        $ftModelLabel = (@$fullTimeStatus->rateType == 2) ? 'Percentage of CTC' : ((@$fullTimeStatus->rateType == 1) ? 'Fixed Placement Fee' : 'Free / No Placement Fee');
+                    @endphp
+                    <div class="cd-subcard-val rate-highlight {{ $isFreeFT ? 'is-free-pink' : '' }}">
+                        <span id="ft-model-val">{{ $ftModelLabel }}</span>
                     </div>
                     <div class="cd-subcard-meta">
                         <svg class="text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1213,10 +1151,6 @@
                 </div>
                 <div class="cd-srv-bottom-right">
                     <span class="cd-srv-bottom-chip" id="ft-bottom-currency">{{ $cv2FulltimeCurrencyCode }} · Default</span>
-                    <span class="cd-srv-bottom-chip">One-time Placement Fee</span>
-                    <span>Last synced: Today</span>
-                </div>
-            </div>
                     <span class="cd-srv-bottom-chip">One-time Placement Fee</span>
                     <span>Last synced: Today</span>
                 </div>
@@ -1440,15 +1374,15 @@
         <div class="cd-srv-empty-card" id="emptyServicesState">
             <div class="cd-srv-empty-icon">
                 <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"/>
                 </svg>
             </div>
-            <h4 class="cd-srv-empty-title">No Matching Services Found</h4>
+            <h4 class="cd-srv-empty-title">No Services in This View</h4>
             <p class="cd-srv-empty-sub">
-                No hiring services matched your search filter. Try clearing your search keyword or switching between tabs.
+                No hiring services currently match this category filter. Switch between tabs to manage your Fulltime or Contract commercial terms.
             </p>
             <button type="button" class="btn btn-sm btn-light-primary fw-bold" id="btnResetSearchEmpty">
-                Clear Filter & Reset
+                Switch to Active Services
             </button>
         </div>
 
@@ -1461,8 +1395,8 @@
 /**
  * Services Card + Sub-Card Enterprise Controller (Rule 20)
  *
- * Scoped strictly to the Services tab. Provides 300ms debounced dynamic search,
- * single-active Sub-Tab filtering, interactive state sync, and drawer triggers.
+ * Scoped strictly to the Services tab. Provides single-active Sub-Tab filtering,
+ * interactive state sync, in-memory rehydration, and real-time drawer triggers.
  */
 (function() {
     'use strict';
@@ -1471,8 +1405,7 @@
         var $wrapper = $('#servicesCardSubcardContainer');
         if (!$wrapper.length) return;
 
-        var currentFilter = 'all';
-        var searchDebounceTimer = null;
+        var currentFilter = 'active';
 
         function updateTabCounters() {
             var fulltimeActive = $('#serviceCardFulltime').attr('data-status') === 'active';
@@ -1484,17 +1417,16 @@
             $('#tabCountActive').text(activeTotal);
             $('#tabCountInactive').text(inactiveTotal);
             $('#servicesTotalCountBadge').text('2 Services');
+            $('#hdrActiveSummary').text(activeTotal + ' / 2 Active');
         }
 
         function filterServices() {
-            var searchVal = $.trim($('#inputServiceSearch').val()).toLowerCase();
             var visibleCount = 0;
 
             $('.cd-srv-card').each(function() {
                 var $card = $(this);
                 var serviceType = $card.attr('data-service-type');
                 var status = $card.attr('data-status');
-                var searchable = ($card.attr('data-searchable') || '').toLowerCase();
 
                 // Check Sub-Tab filter
                 var matchesTab = true;
@@ -1508,13 +1440,7 @@
                     matchesTab = (serviceType === 'contract');
                 }
 
-                // Check Dynamic Search
-                var matchesSearch = true;
-                if (searchVal.length > 0) {
-                    matchesSearch = (searchable.indexOf(searchVal) > -1);
-                }
-
-                if (matchesTab && matchesSearch) {
+                if (matchesTab) {
                     $card.slideDown(140);
                     visibleCount++;
                 } else {
@@ -1529,45 +1455,20 @@
             }
         }
 
-        // Dynamic 300ms Search Handler
-        $(document).off('keyup input', '#inputServiceSearch').on('keyup input', '#inputServiceSearch', function() {
-            clearTimeout(searchDebounceTimer);
-            var val = $(this).val();
-
-            if (val.length > 0) {
-                $('#btnServiceSearchClear').show();
-            } else {
-                $('#btnServiceSearchClear').hide();
-            }
-
-            searchDebounceTimer = setTimeout(function() {
-                filterServices();
-            }, 300);
-        });
-
-        // Search Clear Button
-        $(document).off('click', '#btnServiceSearchClear').on('click', '#btnServiceSearchClear', function() {
-            $('#inputServiceSearch').val('');
-            $(this).hide();
-            filterServices();
-        });
-
         // Sub-Tabs Click Handler (Single Active Rule)
         $(document).off('click', '.cd-srv-tab-btn').on('click', '.cd-srv-tab-btn', function() {
             $('.cd-srv-tab-btn').removeClass('active');
             $(this).addClass('active');
 
-            currentFilter = $(this).data('filter') || 'all';
+            currentFilter = $(this).data('filter') || 'active';
             filterServices();
         });
 
-        // Reset & Refresh Buttons
-        $(document).off('click', '#btnRefreshServices, #btnResetSearchEmpty').on('click', '#btnRefreshServices, #btnResetSearchEmpty', function() {
-            $('#inputServiceSearch').val('');
-            $('#btnServiceSearchClear').hide();
+        // Reset Filter to Active Services
+        $(document).off('click', '#btnResetSearchEmpty').on('click', '#btnResetSearchEmpty', function() {
             $('.cd-srv-tab-btn').removeClass('active');
-            $('.cd-srv-tab-btn[data-filter="all"]').addClass('active');
-            currentFilter = 'all';
+            $('.cd-srv-tab-btn[data-filter="active"]').addClass('active');
+            currentFilter = 'active';
             filterServices();
         });
 
@@ -1613,7 +1514,13 @@
 
                 // 1. Model & Currency
                 if (state.rate_type_label) {
-                    $('#' + prefix + '-model-val').text(state.rate_type_label);
+                    var $modelVal = $('#' + prefix + '-model-val');
+                    $modelVal.text(state.rate_type_label);
+                    if (isFT && (state.rateType === 0 || String(state.rate_type_label).indexOf('Free') !== -1)) {
+                        $modelVal.closest('.cd-subcard-val').addClass('is-free-pink');
+                    } else if (isFT) {
+                        $modelVal.closest('.cd-subcard-val').removeClass('is-free-pink');
+                    }
                 }
                 if (state.currency_code) {
                     $('#' + prefix + '-currency-val').text(state.currency_code);
@@ -1623,7 +1530,7 @@
                     $('#ct-sal-mode').text(state.sal_mode_label);
                 }
 
-                // 2. Replacement Policy
+                // 2. Replacement Policy / Contractor Trial & SLA
                 if (state.replacement_period_days) {
                     $('#' + prefix + '-replacement-days').text(state.replacement_period_days + ' Days');
                 }
@@ -1631,7 +1538,8 @@
                     $('#' + prefix + '-replacement-type').text(state.replacement_type_label);
                 }
                 if (state.replacement_eligibility_label) {
-                    $('#' + prefix + '-replacement-clause').text('Clause: ' + state.replacement_eligibility_label);
+                    var clausePrefix = isFT ? 'Clause: ' : 'SLA: ';
+                    $('#' + prefix + '-replacement-clause').text(clausePrefix + state.replacement_eligibility_label);
                 }
 
                 // 3. Billing & Invoicing Terms
@@ -1675,12 +1583,86 @@
         // Window Event Listener for Local Save & Real-Time Updates
         $(window).off('commercial:saved.srvEngine').on('commercial:saved.srvEngine', function(e) {
             var detail = e.originalEvent ? e.originalEvent.detail : e.detail;
-            if (detail && detail.state) {
-                window.ServicesTabEngine.rehydrateServiceCard(detail.service_type, detail.state);
+            if (detail) {
+                if (detail.version) {
+                    currentCommercialVersion = detail.version;
+                }
+                if (detail.state) {
+                    window.ServicesTabEngine.rehydrateServiceCard(detail.service_type, detail.state);
+                }
             }
         });
 
+        // Real-Time Reverb Echo Synchronization on private channel company.{companyId}
+        var srvCompanyId = {{ (int) (@$account->id ?? auth()->user()->company_id ?? 0) }};
+        var currentCommercialVersion = {{ (int) Cache::get('company:' . (@$account->id ?? auth()->user()->company_id ?? 0) . ':commercials:version', 1) }};
+
+        function fetchRemoteCommercialState(targetVersion) {
+            var stateUrl = '{{ route("service_company.jobs.commercialsState") }}';
+            $.ajax({
+                type: 'GET',
+                url: stateUrl,
+                headers: {
+                    'If-None-Match': currentCommercialVersion ? ('"commercial-v' + currentCommercialVersion + '"') : undefined
+                },
+                success: function(res, statusText, xhr) {
+                    if (xhr.status === 304) {
+                        return; // Cache valid, no DOM work needed
+                    }
+                    if (res && res.status === 'success' && res.services) {
+                        currentCommercialVersion = res.version || targetVersion || currentCommercialVersion;
+                        if (res.services.fulltime) {
+                            window.ServicesTabEngine.rehydrateServiceCard('fulltime', res.services.fulltime);
+                            var isFTActive = (res.services.fulltime.status === 1);
+                            var $ftSwitch = $('.update_main_status_fulltime');
+                            if ($ftSwitch.length && $ftSwitch.is(':checked') !== isFTActive) {
+                                $ftSwitch.prop('checked', isFTActive).trigger('change.srvSync');
+                            }
+                        }
+                        if (res.services.contract) {
+                            window.ServicesTabEngine.rehydrateServiceCard('contract', res.services.contract);
+                            var isCTActive = (res.services.contract.status === 1);
+                            var $ctSwitch = $('.contract_main_status_fulltime');
+                            if ($ctSwitch.length && $ctSwitch.is(':checked') !== isCTActive) {
+                                $ctSwitch.prop('checked', isCTActive).trigger('change.srvSync');
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function bindCommercialsEcho() {
+            if (srvCompanyId && window.Echo && typeof window.Echo.private === 'function') {
+                try {
+                    window.Echo.private('company.' + srvCompanyId)
+                        .listen('.commercials.updated', function(event) {
+                            if (event && event.version && event.version > currentCommercialVersion) {
+                                fetchRemoteCommercialState(event.version);
+                            }
+                        });
+                } catch (e) {
+                    console.warn('[Commercials] Echo listener setup:', e);
+                }
+            } else {
+                setTimeout(function() {
+                    if (srvCompanyId && window.Echo && typeof window.Echo.private === 'function') {
+                        try {
+                            window.Echo.private('company.' + srvCompanyId)
+                                .listen('.commercials.updated', function(event) {
+                                    if (event && event.version && event.version > currentCommercialVersion) {
+                                        fetchRemoteCommercialState(event.version);
+                                    }
+                                });
+                        } catch (e) {}
+                    }
+                }, 1500);
+            }
+        }
+        bindCommercialsEcho();
+
         updateTabCounters();
+        filterServices();
     }
 
     if (document.readyState === 'loading') {

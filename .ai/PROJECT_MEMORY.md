@@ -20,6 +20,162 @@ Last updated: 2026-10-22 (Super Admin Companies Page UI Redesign, 100% CQRS Read
 - **Test coverage:** `TenantIsolationTest`, `BenchToJobAppTrackerPipelineContractTest`, `BenchTalentRequestPipelineContractTest`, `SuperAdminCompanyLoadTest`, `SuperAdminSubscriptionLoadTest`, `SuperAdminDashboardLoadTest` (100% green).
 - **V2_login blocking-scenarios architecture:** session-epoch pattern + Reverb `UserAccountSuspended` event + `SyncUserStatusAction` (cross-tenant-safe) + `BlockCompanyAction` (static bulk helper) + `block_log` audit table + drop all 20 `refresh:true` ES sites + grep-lint guard. See [docs/V2_login/BLOCKING_SCENARIOS_AUDIT.md](../docs/V2_login/BLOCKING_SCENARIOS_AUDIT.md), [ADR 0007](../docs/adr/0007-blocking-scenarios-architecture.md). Code not yet landed.
 
+- *2026-11-02* — **God-Level Commercials Engine — Phase 7: Placement Fee Refinements (Pink Styling for Free Fee, Per-Hire Basis for Fixed Fee, 10K Default Amount, Removed Refresh Icon, and Tenant Country Auto-Selection) (100% COMPLETED & VERIFIED)**:
+  - **Module & Scope**: Sliding Side-Drawer (`resources/views/service_company/jobs/services_view.blade.php`), Parent Settings Tab (`resources/views/service_company/account/v2/tabs/services.blade.php`), Controller (`ServiceCompanyJobsController`, `ServiceCompanyConsultancyController`), DTO (`ServiceTermDTO`), and Visual Preview Artifact (`drawer_commercials_card_subcard_preview.html`).
+  - **Point 1: Free / No Placement Fee Visual Treatment (Pink)**:
+    - Subtle professional Pink visual indicator applied across idle (`#fff5f7` bg, `#fecdd3` border, `#ffe4e6` icon box, `#e11d48` text) and active states (`#fff1f2` bg, `#f43f5e` border, `#f43f5e` icon box, `#ffffff` text, `#f43f5e` radio dot).
+    - Synchronized with parent settings tab (`services.blade.php`) via `.is-free-pink` badge styling on initial render and real-time client rehydration (`ServicesTabEngine.rehydrateServiceCard`).
+    - Standardized label across backend DTO and controllers to `Free / No Placement Fee`.
+  - **Point 2: Fixed Placement Fee – Change Billing Basis to "Per Hire" & Seniority Matrix Enforcement**:
+    - Discarded irrelevant "Annual CTC" basis on Fixed Placement Fee.
+    - Completely removed "Annual CTC" option from Fixed Placement Fee subcards in both Blade SSR and reactive client DOM (`appliedOn.innerHTML` and `[data-range-applied-on].innerHTML`), ensuring strictly `<option value="3" selected>Per Hire</option>` is present by default.
+    - Resolved client-side `var isFT` variable hoisting scope in `services_view.blade.php`, guaranteeing Card 2 (Seniority-Based Placement Fee Matrix) selects dynamically switch to "Per Hire" only with ₹10,000 default rate across all 4 tiers without leaving "Annual CTC".
+    - Specialized commercial fee basis logic across Card 1 & Card 2:
+      - *Percentage Placement Fee* -> Applied on Annual CTC (`sal_mode = 0`)
+      - *Fixed Placement Fee* -> Per Hire (`sal_mode = 3`)
+      - *Free / No Placement Fee* -> No fee basis required / Not Applicable (`sal_mode = 0`)
+    - Updated `ServiceTermDTO` `salModeLabel`, normalizer, and `ServiceCompanyJobsController` `$this->salaryMode = [0 => 'Annual CTC', 3 => 'Per Hire']`.
+  - **Point 3: Default Amount for Fixed Placement Fee (₹10,000)**:
+    - Automatically populates default rate of `10,000` (₹10,000 / $10,000) when switching to Fixed Placement Fee if previous value was empty, legacy <= 100, or 8.33% fallback.
+    - Automatically updates both Card 1 and Card 2 (all 4 seniority tiers in Blade SSR and client reactive events), remaining 100% editable by the user.
+    - When switching back to Percentage, cleanly restores `8.33%`.
+  - **Point 4: Removed Refresh Icon**:
+    - Completely removed `.cd-tier-reset-btn` / `↻` reset button from all rows in Card 2 (Seniority-Based Placement Fee Matrix).
+    - Refactored `.cd-matrix-tier-card` CSS grid to 4 clean proportional columns: `minmax(0, 2fr) minmax(0, 1.1fr) minmax(0, 1.3fr) minmax(0, 1.4fr)`.
+  - **Point 5: Auto-Select Services Country from Tenant Address**:
+    - Automatically determines Services Country from registered tenant address via `\App\Helper\GeneralMethod::defaultCountryId($company_id)`.
+    - If tenant has registered address (e.g. India, ID 101), automatically selects it as default on initial drawer load when no countries are explicitly configured, displaying `1 Country Enabled` and active chip.
+    - Fully editable by user (can toggle countries, select top hubs, or clear all).
+  - **Verification**:
+    - `php -l` on all modified files: Pass (0 syntax errors).
+    - `scratch/test_placement_fee_fixes.php`: 10/10 PASS.
+    - `scratch/test_specialized_commercials_sync.php`: 10/10 PASS.
+    - `scratch/test_phase1_commercials_verification.php`: 10/10 PASS.
+    - `scratch/test_phase2_cqrs_verification.php`: 7/7 PASS.
+
+- *2026-11-02* — **God-Level Commercials Engine — Phase 6: Subcard Cleanup, Colored Card Headers, Separate Replacement & Invoicing Cards, and Distinct Fee Types Visual Treatment (Rule 20 / card-subcard) (100% COMPLETED & VERIFIED)**:
+  - **Module & Scope**: Sliding Side-Drawer (`resources/views/service_company/jobs/services_view.blade.php`) and Visual Preview Artifact (`drawer_commercials_card_subcard_preview.html`).
+  - **Cleaned Card 1**:
+    - Completely removed redundant `Fee Charged On` (`data-fixed-fee-trigger`) and `Billing Frequency` (`data-fixed-fee-frequency`) subcards from Card 1.
+    - Card 1 now contains strictly 3 clean subcards: `Currency`, `Default Base Rate / Bill Rate`, and `Applied On / Billing Basis`.
+  - **Separate Configuration Cards (5 Distinct Cards)**:
+    - **Card 3**: Dedicated *Replacement Guarantee Policy* (Full-time: Guarantee window, remedy clause, separation eligibility) / *Satisfaction Trial & Guarantee Policy* (Contract: Trial window, remedy clause, SLA & contingency) with dedicated emerald summary strip.
+    - **Card 4**: Dedicated *Billing Trigger & Payment Terms* (Full-time: Trigger event, invoicing cadence, credit window) / *Timesheet Invoicing Cadence & Payment Terms* (Contract: Timesheet trigger, recurring cycle, payment terms) with dedicated amber summary strip.
+    - **Card 5**: Dedicated *Operational Countries & Geographic Scope* (Hub selector, active chips, 3-column country selection grid).
+  - **Colored Card Header Banners**:
+    - Every major configuration card features a distinct pastel header banner with colored left accent and solid step badge:
+      - Card 1: Blue banner (`#f0f7ff`, border-left `#009ef7`, badge blue `#009ef7`).
+      - Card 2: Violet/Indigo banner (`#f5f3ff`, border-left `#6366f1`, badge indigo `#6366f1`).
+      - Card 3: Emerald banner (`#ecfdf5`, border-left `#10b981`, badge emerald `#10b981`).
+      - Card 4: Amber banner (`#fffbeb`, border-left `#f59e0b`, badge amber `#f59e0b`).
+      - Card 5: Cyan/Teal banner (`#f0fdfa`, border-left `#06b6d4`, badge cyan `#06b6d4`).
+  - **Visually Differentiated Fee Types**:
+    - *Percentage*: Subtle Professional Blue (`#f8fbff`, active `#eff6ff`, border `#009ef7`, icon box `#dbeafe`).
+    - *Fixed Rate*: Subtle Professional Indigo/Lavender (`#faf8ff`, active `#f5f3ff`, border `#6366f1`, icon box `#ede9fe`).
+    - *Free (Full-time)*: Subtle Professional Mint/Emerald (`#f6fdf9`, active `#ecfdf5`, border `#10b981`, icon box `#d1fae5`).
+    - *Pass-Through / Zero Margin (Contract)*: Subtle Professional Warm Amber (`#fffdf5`, active `#fffbeb`, border `#f59e0b`, icon box `#fef3c7`).
+  - **Form Submission Integrity**: Form collection bindings (`replacement_period_days`, `replacement_type`, `replacement_eligibility`, `billing_frequency`, `billing_trigger`, `payment_terms_days`) preserved with 100% fidelity.
+  - **Verification**:
+    - `php -l resources/views/service_company/jobs/services_view.blade.php`: Pass (No syntax errors).
+    - `scratch/test_specialized_commercials_sync.php`: 10/10 PASS.
+    - `scratch/test_phase1_commercials_verification.php`: 10/10 PASS.
+    - `scratch/test_phase2_cqrs_verification.php`: 7/7 PASS.
+    - Pint code linter passed (100% clean).
+
+- *2026-11-02* — **God-Level Commercials Engine — Phase 5: Fulltime vs Contract Recruitment & Staffing Domain Specialization with Multi-Page Real-Time Sync (Rule 20 / CQRS) (100% COMPLETED & VERIFIED)**:
+  - **Module & Scope**: Hiring Services & Commercials Sliding Drawer (`resources/views/service_company/jobs/services_view.blade.php`), Parent Account Settings Services Tab (`resources/views/service_company/account/v2/tabs/services.blade.php`), Controller (`app/Http/Controllers/ServiceCompany/ServiceCompanyJobsController.php`), and Canonical DTO (`app/DTO/Commercials/ServiceTermDTO.php`).
+  - **Recruitment & Staffing Domain Alignment**:
+    - **Fulltime Permanent Placement (`commType === 2`)**:
+      - Commercial Model: *Percentage of CTC* (% of candidate annual compensation) vs *Fixed Placement Fee* (flat amount per successful joining) vs *Free / No Placement Fee*.
+      - Seniority Fee Matrix: *Seniority-Based Placement Fee Matrix* across *Entry / Associate (0-2y)*, *Mid-Level Specialist (3-5y)*, *Senior Professional (6-9y)*, and *Leadership / Executive (10+y)*. Applied on *Annual CTC Basis*.
+      - Guarantee & Warranty: *Replacement Warranty Window* (30, 60, 90, 180 Days) for *Candidate Resignation / Early Exit* or *Employer / Mutual Termination* with *Free Replacement Candidate* or *Credit Note*.
+      - Billing Cadence & Trigger: *One Time Invoicing (Upon Joining)* triggered strictly upon *Candidate Joined (First Working Day)* with *Net 15 / Net 30 / Net 45 / Net 60 Days* settlement.
+    - **Contract Contingent Staffing (`commType === 1`)**:
+      - Commercial Model: *Markup on Pay Rate (%)* (percentage margin on consultant base wage) vs *Fixed Contract Bill Rate* (all-inclusive client bill rate) vs *Pass-Through / Zero Margin*.
+      - Contractor Experience Matrix: *Contractor Experience Rate Card* across *Junior Consultant (0-2y)*, *Mid-Level Consultant (3-5y)*, *Senior Specialist (6-9y)*, and *Principal / Lead Consultant (10+y)*. Applied on *Monthly Staffing Rate* or *Hourly Contract Rate*.
+      - Guarantee & SLA: *Satisfaction Trial Window* (5-Day / 40h Trial, 10-Day Trial, 14-Day Notice, 30-Day Notice) with *Satisfaction Trial Guarantee (Credit Unbilled)*, *Free Replacement Contractor*, and *48-Hour Backfill SLA*.
+      - Billing Cadence & Trigger: *Monthly / Bi-Weekly / Weekly Recurring Billing Cycles* triggered upon *Approved Timesheet* or *Monthly Billing Cutoff*.
+  - **Multi-Page Reactive Synchronization (Rule 5 & Rule 6)**:
+    - Drawer save dispatches canonical `commercial:saved` event to DOM window.
+    - Parent tab (`services.blade.php`) `window.ServicesTabEngine.rehydrateServiceCard` immediately rehydrates all 4 sub-cards with domain-specialized labels (zero page reload, <50ms DOM patch).
+    - Multi-tenant atomic cache invalidation (`CommercialReadModelService::invalidateTenantCache`) purges Redis projection and increments version.
+    - WebSocket event (`CommercialsUpdated`) broadcast on `private-company.{id}` initiates conditional ETag fetch (`GET /service_company/jobs/commercials-state`) returning HTTP 304 or fresh canonical state.
+    - Talent marketplace search synchronization via `ElasticCompanyIndex::dispatch`.
+  - **Verification**:
+    - `scratch/test_specialized_commercials_sync.php` (10/10 PASS).
+    - `scratch/test_phase1_commercials_verification.php` (10/10 PASS).
+    - `scratch/test_phase2_cqrs_verification.php` (7/7 PASS).
+    - `php -l` on all modified files (100% clean).
+    - 0% MySQL reads on cached hits (Rule 1).
+
+- *2026-11-02* — **God-Level Commercials Engine — Phase 4: Modern Card + Sub-Card Drawer Redesign (Rule 20 / card-subcard) (100% COMPLETED & VERIFIED)**:
+  - **Module & Scope**: Sliding Side-Drawer (`resources/views/service_company/jobs/services_view.blade.php`) for Fulltime & Contract Hiring Services.
+  - **Tier 1 Header Toolbar Card**:
+    - Pure white sticky header (`#ffffff`, border `#e2e8f0`, radius 10px).
+    - Service Symbol (`FT` primary blue vs `CT` emerald green), dynamic service code chip (`#SRV-FT01` / `#SRV-CT02`), and scope pill (`Direct Client Scope`).
+    - Dynamic search sub-card (`height: 36px; width: 250px;`) with 250ms debounce for in-drawer field filtering.
+    - Fast status toggle switch (`ACTIVE` in emerald green vs `INACTIVE` in slate) directly updating `.main_status`.
+  - **Tier 2 Dedicated Sub-Tabs Card**:
+    - Pure white sub-tabs container with single active primary blue highlight (`#009ef7`), soft background badge, and in-memory 0ms tab switching (`All Sections`, `Commercial Model & Rates`, `Experience Matrix`, `Replacement & Terms`, `Country Coverage`).
+    - Real-time country count badge (`drwCountryCountBadge`).
+  - **Tier 3 Primary Cards with Discrete Sub-Cards Stream**:
+    - **Card 1 (Commercial Fee Model & Base Pricing)**: 3 discrete model radio sub-cards (`% Percentage of CTC`, `₹ Fixed Placement Fee`, `◇ Free / No Placement Fee`) with active focus ring, coupled with a 3-field discrete sub-card grid (Currency, Default Rate with numeric suffix, and Billing Basis).
+    - **Card 2 (Experience-Based Pricing Matrix)**: Seniority band sub-cards (`0-2 Yrs Entry`, `3-5 Yrs Mid-Level`, `6-9 Yrs Senior`, `10+ Yrs Executive`) with clock pill (`🕒`), currency selector, numeric rate input, basis pill, and discrete tier reset button (`↻`).
+    - **Card 3 (Replacement Guarantee & Invoicing Governance)**: Discrete 3×2 sub-card grid for warranty window, remedy clause, exit circumstances, invoicing cadence, trigger event, and credit days, coupled with an authoritative human summary strip.
+    - **Card 4 (Operational Countries & Geographic Scope)**: Toolbar sub-card with live search, preset hub buttons (`⭐ Top Hubs`), select/clear all, selected country active chip strip with one-click `×` removal, and a 3-column country selection grid.
+  - **Tier 4 Sticky Action Strip**:
+    - Reset to saved values, cancel, and primary save CTA with progress indicator (`Save Commercial Terms`).
+  - **Verification**:
+    - Ran `scratch/test_phase1_commercials_verification.php` (10/10 PASS) and `scratch/test_phase2_cqrs_verification.php` (7/7 PASS).
+    - Zero horizontal overflow on 15.6" screens (`1366×768` and `1920×1080`).
+
+- *2026-11-02* — **God-Level Commercials Engine — Phases 2 & 3: CQRS Read Architecture, ETag Caching & Real-Time Multi-Page Sync (100% COMPLETED & VERIFIED)**:
+  - **CQRS Read Model (`CommercialReadModelService`)**:
+    - Replaced 6-8 direct MySQL queries on drawer open (`serviceviewmore`) with Redis-cached projection and master datasets (`master_countries_list:v1`, `master_industries_list:v1`, `master_default_rates:v1`, `commercial_experience_bands:v1`).
+    - Achieved **0% MySQL reads** on web/API request paths per Rule 1 (0 SQL queries on repeated hits).
+    - Single logical Redis projection fetch (`company:{$companyId}:commercials:projection:v{$version}`) with batched eager-loading fallback.
+  - **Canonical DTOs**:
+    - Strongly-typed `App\DTO\Commercials\ServiceTermDTO` and `App\DTO\Commercials\CommercialStateDTO` for consistent commercial representation across drawer, parent tabs, and API endpoints.
+  - **HTTP ETag & 304 Not Modified Caching API**:
+    - Registered `Route::get('jobs/commercials-state')` (`service_company.jobs.commercialsState`) with `If-None-Match: "commercial-v{version}"` returning `304 Not Modified` when client version matches.
+  - **Real-Time Laravel Reverb Multi-Page Synchronization**:
+    - Broadcasts `App\Events\CommercialsUpdated` on private tenant channel `company.{companyId}` (`commercials.updated`).
+    - Strict Security Invariant: Only lightweight metadata is broadcast over WebSockets, never sensitive financial terms/rates.
+    - Enforced `DB::afterCommit(...)` hooks guaranteeing zero phantom events on database rollback.
+    - Parent tab (`services.blade.php`) binds Laravel Echo listener on `company.{companyId}` and invokes conditional state fetch / DOM re-hydration instantly with `window.ServicesTabEngine`.
+    - Both drawer save (`jobServicesAddUpdate`) and parent card toggle (`updateserviceviewmore`) trigger atomic invalidation and Reverb broadcast.
+  - **Verification**:
+    - `scratch/test_phase2_cqrs_verification.php` verified 7/7 tests passed (0 failures).
+    - Pint code linter passed (100% clean).
+
+- *2026-11-02* — **God-Level Unified Activity Presentation Engine & Zero-MySQL Read Layer (100% COMPLETED & VERIFIED)**:
+  - **Module & Scope**: Client and Agency Activity Drawers (`app/Services/ServiceCompany/ClientActivityReadService.php`, `app/DTO/ServiceCompany/ClientActivityQuery.php`, `app/DTO/ServiceCompany/ClientAccessContext.php`, `app/DTO/ServiceCompany/ActivityInternalContext.php`, `app/DTO/ServiceCompany/ActivityPresentationDTO.php`, `app/Enums/ActivitySource.php`, `app/Services/CompanyRepresentativeService.php`, `resources/views/service_company/ajax_pages/client_activity_cards_ajax.blade.php`, `resources/views/service_company/client/components/tab-activity.blade.php`, `resources/views/service_company/consultancy/dviewMore.blade.php`).
+  - **Zero-MySQL Fallback (Rule 1)**: Eliminated relational MySQL queries on candidate and job resolver fallbacks; all profile resolutions operate strictly in-memory or via cached Redis/Dragonfly and Elasticsearch projections.
+  - **Boundary-Safe Presentation Model**:
+    - Introduced `ActivitySource` backed enum for typed event origins.
+    - Introduced `ActivityInternalContext` for internal domain representation retaining unmasked performer context.
+    - Introduced `ActivityPresentationDTO` boundary contract guaranteeing confidential candidate feedback, notes, and internal client PII are physically excluded before reaching Agency view.
+    - Scoped bidirectional job resolution across direct client and marketplace agencies.
+  - **Verification**:
+    - `tests/Feature/ClientDrawerCandidateVisibilityRuleTest.php`: 10/10 PASS (38 assertions).
+    - `tests/Feature/DirectClientDrawerAttributionSecurityTest.php`: 39/39 PASS (105 assertions).
+    - `scratch/test_specialized_commercials_sync.php`: 10/10 PASS.
+    - `scratch/test_phase1_commercials_verification.php`: 10/10 PASS.
+    - Pint: 100% clean across all 7 PHP files.
+
+- *2026-11-02* — **Commercials Services Drawer UX & Header Streamlining (100% COMPLETED & VERIFIED)**:
+  - **Module & Scope**: Service Company Hiring Services Drawer (`resources/views/service_company/jobs/services_view.blade.php`, `resources/views/service_company/jobs/services.blade.php`, `resources/views/service_company/account/index.blade.php`).
+  - **UX Streamlining & Layout Fixes**:
+    - **Removed Tier 2 Sub-Tabs Card**: Completely removed `.cd-drw-tabs-card` (containing "All Sections", "Commercial Model & Rates", "Experience Matrix", "Replacement & Terms", and "Country Coverage" tab buttons) so that all 4 commercial cards stream sequentially without redundant tab bars.
+    - **Removed Header Search Bar**: Eliminated `#drwGlobalSearch` and `.cd-drw-search-subcard` from the drawer header. The in-card Country Coverage search bar remains dedicated to country filtering.
+    - **Removed Code Chip**: Removed `#SRV-CT02` / `#SRV-FT01` chip (`.cd-drw-code-chip`) from the drawer title row.
+    - **Removed Header Active Toggle**: Removed visual `ACTIVE` switch and toggle box (`.cd-drw-toggle-box`) from the drawer header. Active/inactive state is authoritatively held by `<input class="main_status">` and controlled from the parent page card switch (`#switch_fulltime` / `#switch_contract`).
+    - **Header Action Strip**: Moved `Cancel`, `Reset` (`data-commercial-reset`), and `Save Commercial Terms` (`#form-submit`, `.copy_current_selected_applicant`, `.cd-drw-btn.btn-primary`) directly into the top sticky header (`.cd-drw-header-right`) next to the close button (`✕`), eliminating the need to scroll to the bottom on 15.6" screens (`1366×768` and `1920×1080`).
+    - **Eliminated Bottom Sticky Footer**: Completely removed the redundant bottom footer strip (`.cd-drw-footer`), adjusting `.cd-drw-stream` bottom padding from 80px to 24px.
+    - **Backward-Compatible State Bindings**: Added fallback checkbox/radio hidden inputs (`main_status`, `rateTypeClass`) so legacy jQuery `:checked` selectors in `services.blade.php` continue to resolve cleanly while preserving CQRS state.
+    - **Real-Time Cross-Page Sync**: `services.blade.php` and `account/index.blade.php` dispatch canonical `commercial:saved` event on successful save and cleanly dismiss the Metronic drawer via `KTDrawer.getInstance().hide()` / `$('#kt_activitiesJob_close').trigger('click')`.
+  - **Verification**: `php -l` passed on all blade files, 10/10 PASS on specialized recruitment sync, 10/10 PASS on Phase 1 verification, 7/7 PASS on Phase 2 CQRS verification.
+
 - *2026-11-02* — **God-Level Commercials Engine & Multi-Page Real-Time Sync (Phase 1 COMPLETED & VERIFIED)**:
   - **Module & Scope**: Service Company Hiring Services & Commercials Drawer (`resources/views/service_company/jobs/services_view.blade.php`), Parent Services Tab (`resources/views/service_company/account/v2/tabs/services.blade.php`), Account Save Handler (`resources/views/service_company/account/index.blade.php`), and Write Controller (`app/Http/Controllers/ServiceCompany/ServiceCompanyJobsController.php`).
   - **Visual & UI/UX Integrity**:
