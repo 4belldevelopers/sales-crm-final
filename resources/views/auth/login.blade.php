@@ -1250,6 +1250,18 @@ select.jw-inp option {
                 <!-- STATE 2-TEAM: TEAM MEMBER ACTIVATION CARD -->
                 <form class="jw-card-form jw-fade-enter" novalidate id="kt_team_activate_form" action="{{ route('register.activate') }}" method="post" style="{{ $teamStyle }}">
                     @csrf
+                    <input type="hidden" name="invitation_id" value="{{ $registrationContext['invitation_id'] ?? '' }}">
+                    @if(isset($registrationContext['invitation_id']))
+                        <input type="hidden" name="invitation_envelope" value="{{ Crypt::encrypt([
+                            'invitation_id' => $registrationContext['invitation_id'],
+                            'tenant_id' => $registrationContext['tenant']['id'] ?? 0,
+                            'session_nonce' => bin2hex(random_bytes(16)),
+                            'expires_at' => now()->addHours(2)->timestamp
+                        ]) }}">
+                    @endif
+                    @if(request()->has('token'))
+                        <input type="hidden" name="token" value="{{ request('token') }}">
+                    @endif
                     
                     <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;">
                         <span style="display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; background: #eff6ff; color: #2563eb; border: 1px solid #bfdbfe; border-radius: 999px; font-size: 11px; font-weight: 600;">
@@ -1521,11 +1533,19 @@ window.addEventListener('popstate', function (e) {
     if (e.state && e.state.authMode) {
         jwSwitchAuth(e.state.authMode);
     } else if (window.location.pathname.indexOf('register') !== -1) {
-        jwSwitchAuth('signup');
+        jwSwitchAuth('{{ $activeState === "team_invite" ? "team_invite" : "signup" }}');
     } else {
         jwSwitchAuth('login');
     }
 });
+
+// Client-side URL token scrubbing: removes raw token from address bar cleanly without round-trip redirect (INV-01)
+if (window.history && window.history.replaceState && window.location.search.indexOf('token=') !== -1) {
+    var cleanUrl = window.location.protocol + "//" + window.location.host + window.location.pathname;
+    try {
+        window.history.replaceState({ authMode: '{{ $activeState }}' }, '', cleanUrl);
+    } catch(e) {}
+}
 
 // Switch from domain collision card to login with prefilled email
 function jwSwitchToLoginWithEmail() {

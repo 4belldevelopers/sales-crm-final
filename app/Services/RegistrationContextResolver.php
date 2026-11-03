@@ -36,7 +36,22 @@ class RegistrationContextResolver
      */
     public function resolve(Request $request): array
     {
-        // Check for Team Invitation Session Envelope Cookie (INV-02)
+        // 1. Direct Token Resolution from Query String (Immediate zero-latency path)
+        if ($request->has('token')) {
+            try {
+                $rawSecret = (string) $request->query('token');
+                $tokenHash = hash('sha256', $rawSecret);
+                $invitation = TeamInvitation::where('token_hash', $tokenHash)->first();
+
+                if ($invitation && $invitation->isAcceptable()) {
+                    return $this->buildTeamContext($invitation);
+                }
+            } catch (\Throwable $e) {
+                // Token invalid or expired, continue to fallback
+            }
+        }
+
+        // 2. Check for Team Invitation Session Envelope Cookie (INV-02)
         $cookieVal = $request->cookie(TeamInvitationService::COOKIE_NAME) ?? $request->cookies->get(TeamInvitationService::COOKIE_NAME);
         if ($cookieVal) {
             try {
@@ -49,7 +64,7 @@ class RegistrationContextResolver
             }
         }
 
-        // Agency onboarding check
+        // 3. Agency onboarding check
         if ($request->has('agency_code') || $request->route('code')) {
             return $this->buildAgencyContext((string) ($request->input('agency_code') ?? $request->route('code')));
         }
