@@ -1,8 +1,9 @@
 {{--
-  God-Level Company Profile — Step 1: Company Information & Logo
-  100% Replicates Add Client Step 1 Design System (Rule 20 Design Standard)
-  Preserves 100% Form Bindings, JeroIndustryIntelligenceEngine, and Tenant Scoping
+  God-Level Company Profile — Step 1: Company Profile & Company Logo
+  Pixel-matched to user specification & reference design system (Rule 20 Design Standard)
+  Preserves 100% of Form Bindings, tenanted scope, and JeroIndustryIntelligenceEngine integration
   Optimized for 15.6" Screens (1366x768 & 1920x1080) and smaller viewports
+  Primary Domain field removed from UI per explicit user instruction
 --}}
 <?php
   use App\Helper\GeneralMethod;
@@ -61,7 +62,7 @@
 
   // Company Type taxonomy
   $companyTypeTaxonomy = $companyTypeTaxonomy ?? \App\Helper\GeneralMethod::companyTypeTaxonomy();
-  $selectedCompType = $account->company_type ?? ($account->industries_type ?? 2);
+  $selectedCompType = $account->company_type ?? ($account->industries_type ?? 0);
   $selectedCompTypeName = '';
   foreach ($companyTypeTaxonomy as $tItem) {
       if ((string)$tItem['id'] === (string)$selectedCompType) {
@@ -78,7 +79,7 @@
   <div class="client-step-layout client-information-layout god-level-company-layout">
     
     <!-- =========================================================================
-         LEFT CARD: Company Profile (Core Identity & Business Attributes)
+         LEFT CARD: Company Profile (Review and update extracted website info)
          ========================================================================= -->
     <div class="client-main-column client-information-main">
       <section class="card god-card god-company-profile-card" aria-labelledby="god_company_profile_title">
@@ -99,14 +100,14 @@
           </div>
           <div class="god-card-header-titles">
             <h3 class="god-card-title" id="god_company_profile_title">Company Profile</h3>
-            <p class="god-card-subtitle">Manage and update your organization's business identity, domain, and operating parameters.</p>
+            <p class="god-card-subtitle">Review and update the information extracted from the company website.</p>
           </div>
         </div>
 
-        <!-- 2-Column Fields Grid -->
+        <!-- 2-Column Fields Grid (Matches Add Internal Client reference design 100%) -->
         <div class="god-fields-grid">
 
-          <!-- ROW 1 (Full Width): Company Website with Fetch Details Button -->
+          <!-- ROW 1 (Full Width): Company Website (Optional) with Fetch Details Button -->
           <div class="client-field fv-plugins-icon-container god-field-wrap god-field-full">
             <div class="god-field-header">
               <label class="god-field-label" for="website">Company Website (Optional)</label>
@@ -125,7 +126,7 @@
                        name="website"
                        id="website"
                        value="{{ $compWebsite }}"
-                       placeholder="https://example.com"
+                       placeholder="https://stripe.com"
                        autocomplete="off"
                        spellcheck="false"
                        onkeydown="if(event.key==='Enter'||event.keyCode===13){event.preventDefault();if(window.fetchGodLevelCompanyIntelligence)window.fetchGodLevelCompanyIntelligence(this.value);return false;}"
@@ -175,6 +176,8 @@
                   <line x1="15" y1="6" x2="15" y2="6.01"/>
                   <line x1="9" y1="10" x2="9" y2="10.01"/>
                   <line x1="15" y1="10" x2="15" y2="10.01"/>
+                  <line x1="9" y1="14" x2="9" y2="14.01"/>
+                  <line x1="15" y1="14" x2="15" y2="14.01"/>
                   <path d="M10 22v-4h4v4"/>
                 </svg>
               </span>
@@ -183,7 +186,7 @@
                      name="company_name"
                      id="company_name"
                      value="{{ $compName }}"
-                     placeholder="e.g. Acme Corporation"
+                     placeholder="e.g. Stripe"
                      required>
             </div>
             <div class="god-field-inline-error text-danger" id="company_name_error" style="display:none; font-size:12px; margin-top:6px; font-weight:500;">
@@ -194,31 +197,10 @@
             </div>
           </div>
 
-          <!-- ROW 3, COL 1: Primary Corporate Domain (Normalized) -->
-          <div class="client-field fv-plugins-icon-container god-field-wrap">
-            <div class="god-field-header">
-              <label class="god-field-label" for="domain_key_display">Primary Domain</label>
-              <span class="badge" style="background:#f1f5f9; color:#475569; font-size:10px; font-weight:600; padding:2px 7px; border-radius:4px;">Canonical Identity</span>
-            </div>
-            <div class="god-input-box" style="background:#f8fafc;">
-              <span class="god-input-left-icon" style="color:#64748b;">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-                </svg>
-              </span>
-              <input type="text"
-                     class="god-native-input"
-                     name="domain_key"
-                     id="domain_key"
-                     value="{{ $compDomainKey }}"
-                     placeholder="acme.com"
-                     readonly
-                     style="background:transparent; cursor:default; color:#334155; font-weight:500;">
-            </div>
-            <p style="font-size:10.5px; color:#64748b; margin:4px 0 0;">Automatically normalized from your verified corporate website or email.</p>
-          </div>
+          <!-- Hidden Normalized Domain Key (Preserved for backend, removed from UI per user request) -->
+          <input type="hidden" name="domain_key" id="domain_key" value="{{ $compDomainKey }}">
 
-          <!-- ROW 3, COL 2: Industry (Combobox with JeroIndustryIntelligenceEngine) -->
+          <!-- ROW 3, COL 1: Industry (Combobox with JeroIndustryIntelligenceEngine) -->
           <div class="client-field fv-plugins-icon-container god-field-wrap">
             <div class="god-field-header">
               <label class="god-field-label" for="industry_display">Industry <span class="text-danger">*</span></label>
@@ -226,6 +208,21 @@
 
             <!-- Native select kept synchronized for form POST & validation -->
             <select name="industries" id="industries" style="position:absolute; width:1px; height:1px; opacity:0; pointer-events:none;" tabindex="-1" aria-hidden="true" required>
+              <option value="">Select industry</option>
+              @if(!empty($department))
+                @foreach($department as $key => $val)
+                  @php
+                    $optId = is_object($val) ? ($val->ind_id ?? $key) : (is_array($val) ? ($val['ind_id'] ?? $key) : $key);
+                    $optName = is_object($val) ? ($val->ind_name ?? $val->name ?? '') : (is_array($val) ? ($val['ind_name'] ?? $val['name'] ?? '') : $val);
+                  @endphp
+                  @if(!empty($optId) && !empty($optName))
+                    <option value="{{ $optId }}" {{ (string)$optId === (string)$selectedIndustryId ? 'selected="selected"' : '' }}>{{ ucwords($optName) }}</option>
+                  @endif
+                @endforeach
+              @endif
+            </select>
+            <!-- Native alias for client validation compatibility -->
+            <select name="industry" id="industry" style="position:absolute; width:1px; height:1px; opacity:0; pointer-events:none;" tabindex="-1" aria-hidden="true">
               <option value="">Select industry</option>
               @if(!empty($department))
                 @foreach($department as $key => $val)
@@ -282,7 +279,7 @@
             </div>
           </div>
 
-          <!-- ROW 4, COL 1: Company Size (Enterprise Custom Dropdown) -->
+          <!-- ROW 3, COL 2: Company Size (Enterprise Custom Dropdown) -->
           <div class="client-field fv-plugins-icon-container god-field-wrap">
             <div class="god-field-header">
               <label class="god-field-label" for="company_size_display">Company Size <span class="text-danger">*</span></label>
@@ -290,6 +287,13 @@
 
             <!-- Native select kept synchronized for 100% Form POST & Validation compatibility -->
             <select name="company_size" id="company_size" style="position:absolute; width:1px; height:1px; opacity:0; pointer-events:none;" tabindex="-1" aria-hidden="true" required>
+              <option value="">Select company size</option>
+              @foreach($companySizeTiers as $cVal => $cData)
+                <option value="{{ $cVal }}" {{ (string)$currSizeKey === (string)$cVal ? 'selected="selected"' : '' }}>{{ $cData['label'] }}</option>
+              @endforeach
+            </select>
+            <!-- Native alias for client engine compatibility -->
+            <select name="company_sizes" id="company_sizes" style="position:absolute; width:1px; height:1px; opacity:0; pointer-events:none;" tabindex="-1" aria-hidden="true">
               <option value="">Select company size</option>
               @foreach($companySizeTiers as $cVal => $cData)
                 <option value="{{ $cVal }}" {{ (string)$currSizeKey === (string)$cVal ? 'selected="selected"' : '' }}>{{ $cData['label'] }}</option>
@@ -358,7 +362,7 @@
             </div>
           </div>
 
-          <!-- ROW 4, COL 2: Company Type (Search-First Dual-Layer Intelligence Combobox) -->
+          <!-- ROW 4, COL 1: Company Type (Search-First Dual-Layer Intelligence Combobox) -->
           <div class="client-field fv-plugins-icon-container god-field-wrap">
             <div class="god-field-header">
               <label class="god-field-label" for="company_type_display">Company Type <span class="text-danger">*</span></label>
@@ -391,7 +395,7 @@
                 <input type="text"
                        class="god-native-input jero-ctype-input"
                        id="company_type_display"
-                       placeholder="Select company type (e.g. Services Company, Product, Staffing)"
+                       placeholder="Select company type (e.g. LLC, GmbH, Pvt Ltd, Inc)"
                        autocomplete="off"
                        spellcheck="false"
                        role="combobox"
@@ -413,9 +417,12 @@
                 <div class="jero-ctype-list-container" id="jero_ctype_list_container"></div>
               </div>
             </div>
+            <div class="god-field-inline-error text-danger" id="company_type_error" style="display:none; font-size:12px; margin-top:6px; font-weight:500;">
+              <span>Please select your organization type.</span>
+            </div>
           </div>
 
-          <!-- ROW 5, COL 1: Founded Year (Enterprise Searchable Dropdown) -->
+          <!-- ROW 4, COL 2: Founded Year (Enterprise Searchable Dropdown) -->
           <div class="client-field fv-plugins-icon-container god-field-wrap">
             <div class="god-field-header">
               <label class="god-field-label" for="founded_display">Founded Year</label>
@@ -483,10 +490,10 @@
             </div>
           </div>
 
-          <!-- ROW 5, COL 2: Career / Jobs Page URL with External Link Button -->
+          <!-- ROW 5, COL 1: Career / Jobs Page URL with External Link Button -->
           <div class="client-field fv-plugins-icon-container god-field-wrap">
             <div class="god-field-header">
-              <label class="god-field-label" for="career_page_url">Career / Jobs Page URL (Optional)</label>
+              <label class="god-field-label" for="career_page_url">Career / Jobs Page URL</label>
             </div>
             <div class="god-input-box">
               <span class="god-input-left-icon">
@@ -500,13 +507,13 @@
                      name="career_page_url"
                      id="career_page_url"
                      value="{{ $compCareerLink }}"
-                     placeholder="https://example.com/careers">
+                     placeholder="https://stripe.com/jobs">
               <button type="button"
                       class="god-input-external-btn"
                       id="career_url_open_btn"
                       title="Open career page in new tab"
                       aria-label="Open career page"
-                      onclick="var u=document.getElementById('career_page_url').value; if(u) window.open((u.indexOf('http')===0?'':'https://')+u, '_blank'); return false;">
+                      onclick="var u=document.getElementById('career_page_url').value; if(u){ window.open(u.startsWith('http')?u:('https://'+u), '_blank'); }">
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
                   <polyline points="15 3 21 3 21 9"/>
@@ -516,10 +523,10 @@
             </div>
           </div>
 
-          <!-- ROW 6 (Full Width): Tax ID / Business Reg No -->
-          <div class="client-field fv-plugins-icon-container god-field-wrap god-field-full">
+          <!-- ROW 5, COL 2: Tax ID / Business Reg No / GST / Service Number (Optional) -->
+          <div class="client-field fv-plugins-icon-container god-field-wrap">
             <div class="god-field-header">
-              <label class="god-field-label" for="tax_id">Tax ID / Business Registration No / GST / EIN / CIN (Optional)</label>
+              <label class="god-field-label" for="tax_id">Tax ID / Business Reg No / GST / Service Number (Optional)</label>
             </div>
             <div class="god-input-box">
               <span class="god-input-left-icon">
@@ -535,7 +542,7 @@
                      name="tax_id"
                      id="tax_id"
                      value="{{ $compTaxId }}"
-                     placeholder="e.g. EIN, CIN, GSTIN, VAT, LEI">
+                     placeholder="e.g. EIN, CIN, VAT, LEI">
             </div>
           </div>
 
@@ -545,7 +552,7 @@
     </div>
 
     <!-- =========================================================================
-         RIGHT CARD: Company Logo (Drag-and-Drop, Upload, Replace, Remove)
+         RIGHT CARD: Company Logo (Set or update the company logo)
          ========================================================================= -->
     <div class="client-side-column client-information-sidebar god-logo-column">
       <section class="card god-card god-company-logo-card" aria-labelledby="god_company_logo_title">
@@ -561,65 +568,77 @@
           </div>
           <div class="god-card-header-titles">
             <h3 class="god-card-title" id="god_company_logo_title">Company Logo</h3>
-            <p class="god-card-subtitle">Set or update your official company logo.</p>
+            <p class="god-card-subtitle">Set or update the company logo.</p>
           </div>
         </div>
 
-        <div class="god-logo-body">
-          <div class="image-input image-input-outline client-logo-input-wrap w-100" id="kt_user_add_avatar">
-            
-            <!-- Hidden native file input (Strict <= 2MB upload ceiling) -->
-            <input type="file" name="logo" id="logo_input" accept=".png, .jpg, .jpeg, .svg, .webp" style="display:none !important;">
-            <input type="hidden" name="existing_logo" id="existing_logo" value="{{ $compLogo }}">
+        <!-- Hidden Native File & Avatar Remove Inputs (Preserves controller upload contract) -->
+        <input type="file"
+               name="logo"
+               id="client_logo_input"
+               accept=".png, .jpg, .jpeg, .webp, .svg"
+               onchange="loadFile(event)"
+               style="display:none;" />
+        <input type="hidden" name="avatar_remove" id="client_avatar_remove" value="0" />
 
-            <!-- State A: Upload Box (shown when no logo present) -->
-            <div class="god-logo-dropzone" id="client_logo_empty_state" style="{{ !empty($compLogo) ? 'display:none;' : 'display:flex;' }}" onclick="document.getElementById('logo_input').click();">
-              <div class="god-logo-cloud-icon">
-                <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242"/>
-                  <path d="M12 12v9"/>
-                  <path d="m8 16 4-4 4 4"/>
+        <!-- Large Logo Preview Container (Dashed border rounded box) -->
+        <div class="god-logo-preview-box" id="company_logo_preview_box">
+          <div class="god-logo-surface {{ !empty($compLogo) ? 'has-image' : '' }}"
+               id="company_logo_box"
+               style="<?php echo !empty($compLogo) ? 'background-image: url(' . $compLogo . ');' : ''; ?>">
+            @if(empty($compLogo))
+              <div class="god-logo-placeholder" id="logo_placeholder">
+                <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                  <circle cx="8.5" cy="8.5" r="1.5"/>
+                  <polyline points="21 15 16 10 5 21"/>
                 </svg>
+                <span class="placeholder-title">Company Logo</span>
+                <span class="placeholder-sub">Click Change Logo or auto-fetch</span>
               </div>
-              <div class="god-logo-dropzone-prompt">
-                <span class="prompt-link">Click to upload</span> or drag and drop
-              </div>
-              <p class="god-logo-dropzone-specs">SVG, PNG, JPG, WebP (max 2MB)</p>
-            </div>
-
-            <!-- State B: Active Logo Preview (shown when logo exists) -->
-            <div class="god-logo-active-view" id="client_logo_preview_state" style="{{ !empty($compLogo) ? 'display:flex;' : 'display:none;' }}">
-              <div class="god-logo-active-image-wrap">
-                <img src="{{ !empty($compLogo) ? (strpos($compLogo, 'http') === 0 ? $compLogo : asset('user-uploads/company-logo/' . $compLogo)) : '' }}"
-                     alt="Company Logo"
-                     id="client_logo_img"
-                     class="god-logo-active-img"
-                     onerror="this.src='{{ asset('assets/images/placeholder-logo.png') }}';">
-              </div>
-              <div class="god-logo-active-actions">
-                <button type="button" class="btn god-logo-replace-btn" id="client_logo_replace_btn" onclick="document.getElementById('logo_input').click();">
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-                  <span>Change</span>
-                </button>
-                <button type="button" class="btn god-logo-remove-btn" id="client_logo_remove_btn" onclick="window.removeCompanyLogo ? window.removeCompanyLogo() : false;">
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
-                  <span>Remove</span>
-                </button>
-              </div>
-            </div>
-
+            @endif
           </div>
+        </div>
 
-          <!-- Quick Tip Card -->
-          <div class="god-quick-tip-box" style="margin-top:14px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:12px 14px;">
-            <div class="d-flex align-items-center gap-2 mb-1" style="font-size:12px; font-weight:600; color:#0f172a;">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
-              <span>Branding Guidelines</span>
-            </div>
-            <p style="font-size:11px; color:#64748b; margin:0; line-height:1.5;">
-              Use a transparent high-resolution PNG or SVG logo. Your logo appears on candidate offers, candidate tracking portals, job posts, and talent invoices.
-            </p>
-          </div>
+        <!-- Status Banner: Logo automatically detected from website -->
+        <div class="god-logo-status-banner {{ !empty($compLogo) ? 'is-detected' : 'is-empty' }}" id="logo_status_banner">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="20 6 9 17 4 12"/>
+          </svg>
+          <span id="logo_status_text">{{ !empty($compLogo) ? 'Logo automatically detected from website' : 'No logo detected yet' }}</span>
+        </div>
+
+        <!-- Action Buttons: Change Logo & Remove Logo -->
+        <div class="god-logo-actions">
+          <button type="button" class="btn god-logo-btn god-change-logo-btn" id="client_change_logo_btn" onclick="document.getElementById('client_logo_input').click();">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+              <circle cx="12" cy="13" r="4"/>
+            </svg>
+            <span>Change Logo</span>
+          </button>
+
+          <button type="button"
+                  class="btn god-logo-btn god-remove-logo-btn"
+                  id="client_remove_logo_btn"
+                  style="{{ !empty($compLogo) ? 'display:flex;' : 'display:none;' }}"
+                  onclick="window.removeCompanyLogo ? window.removeCompanyLogo() : false;">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="3 6 5 6 21 6"/>
+              <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+            </svg>
+            <span>Remove Logo</span>
+          </button>
+        </div>
+
+        <!-- Supported formats helper note -->
+        <div class="god-logo-formats-note">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/>
+            <line x1="12" y1="16" x2="12" y2="12"/>
+            <line x1="12" y1="8" x2="12.01" y2="8"/>
+          </svg>
+          <span>Supported formats: PNG, JPG, WEBP, SVG (Max 2MB).<br>Recommended: 400×400px. Used in job postings & client portals.</span>
         </div>
 
       </section>
