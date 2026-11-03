@@ -923,7 +923,7 @@
     display: none !important;
 }
 
-/* Responsive adjustments for 15.6" screens (1366x768) */
+/* Responsive adjustments for 15.6" screens (1366x768) and smaller devices */
 @media (max-width: 1200px) {
     .cd-model-options-grid,
     .cd-field-grid,
@@ -933,10 +933,34 @@
 }
 
 @media (max-width: 767px) {
+    .cd-drw-header-card {
+        flex-wrap: wrap !important;
+        padding: 10px 14px !important;
+        gap: 10px !important;
+    }
+    .cd-drw-header-left {
+        width: 100% !important;
+    }
+    .cd-drw-header-right {
+        width: 100% !important;
+        justify-content: flex-end !important;
+        flex-wrap: wrap !important;
+        gap: 8px !important;
+    }
     .cd-model-options-grid,
     .cd-field-grid,
     .cd-country-grid {
         grid-template-columns: 1fr !important;
+    }
+    .cd-matrix-tier-card {
+        grid-template-columns: 1fr 1fr !important;
+        gap: 8px !important;
+    }
+    .cd-tier-identity {
+        grid-column: span 2;
+    }
+    .cd-drw-stream {
+        padding: 12px 14px 20px 14px !important;
     }
 }
 </style>

@@ -20,6 +20,38 @@ Last updated: 2026-10-22 (Super Admin Companies Page UI Redesign, 100% CQRS Read
 - **Test coverage:** `TenantIsolationTest`, `BenchToJobAppTrackerPipelineContractTest`, `BenchTalentRequestPipelineContractTest`, `SuperAdminCompanyLoadTest`, `SuperAdminSubscriptionLoadTest`, `SuperAdminDashboardLoadTest` (100% green).
 - **V2_login blocking-scenarios architecture:** session-epoch pattern + Reverb `UserAccountSuspended` event + `SyncUserStatusAction` (cross-tenant-safe) + `BlockCompanyAction` (static bulk helper) + `block_log` audit table + drop all 20 `refresh:true` ES sites + grep-lint guard. See [docs/V2_login/BLOCKING_SCENARIOS_AUDIT.md](../docs/V2_login/BLOCKING_SCENARIOS_AUDIT.md), [ADR 0007](../docs/adr/0007-blocking-scenarios-architecture.md). Code not yet landed.
 
+- *2026-11-03* — **God-Level Commercials Engine — Phase 8: 15.6" Laptop Screen & Responsive Viewport Fit Optimization (Rule 14 & Rule 20) (100% COMPLETED & VERIFIED)**:
+  - **Module & Scope**: Parent Account Settings Services Tab (`resources/views/service_company/account/v2/tabs/services.blade.php`), Sliding Side-Drawer (`resources/views/service_company/jobs/services_view.blade.php`), and Canonical DTO (`app/DTO/Commercials/ServiceTermDTO.php`).
+  - **Problem Solved**: On 15.6" laptop screens (`1366×768` and `1920×1080` with 125%/150% scaling) and compact viewports (< 1200px), sub-cards suffered from mid-word text clipping ("At-Cost C", "Wage Reimburseme") and header/badge label collisions ("NO FEE APPLICA...", "ZERO MARGIN (PASS...").
+  - **Responsive Container Queries & Layout System**:
+    - Embedded `container-type: inline-size; container-name: srvcard;` on `.cd-srv-card`.
+    - Implemented fluid container queries:
+      - `@container srvcard (max-width: 980px)` gracefully transitions from 4 columns to a balanced 2x2 grid (`repeat(2, minmax(0, 1fr))`) with 10px gaps and 12px padding.
+      - `@container srvcard (max-width: 520px)` transitions to 1 column for mobile viewports.
+      - Viewport media queries (`max-width: 1200px` and `max-width: 680px`) provided as resilient fallbacks.
+  - **Typography & Metric Wrapping (Zero Clipping)**:
+    - Removed rigid `white-space: nowrap` and `text-overflow: ellipsis` from `.cd-subcard-val`.
+    - Configured `.cd-subcard-val` with `display: flex; align-items: baseline; flex-wrap: wrap; gap: 2px 6px; min-height: 38px;` and `.val-sub` with `white-space: normal; line-height: 1.25;`.
+    - Guaranteed all primary values and secondary descriptors (`Pass-Through (0%) At-Cost Contractor Pay`, `Net 30 Days Wage Reimbursement`, `Free (0%) Zero Placement Fee`) wrap naturally with 100% full word visibility without ellipsis or mid-word cuts.
+  - **Concise Subcard Headers & Badges**:
+    - Replaced overly verbose uppercase headers and badges with concise, standard labels:
+      - Fulltime Free: `FREE PLACEMENT` + `0% Fee` badge (was `NO FEE APPLICABLE` + `ZERO CHARGES`).
+      - Fulltime Fixed: `FIXED PLACEMENT` + `5 Tiers` badge (was `FIXED PLACEMENT FEE`).
+      - Contract Pass-Through: `ZERO MARGIN` + `0% Margin` badge (was `ZERO MARGIN (PASS-THROUGH)`).
+      - Contract Markup: `MARKUP ON PAY` + `Hourly` badge (was `MARKUP ON PAY RATE`).
+      - Contract Invoicing: `INVOICING TERMS` (was `INVOICING & REIMBURSEMENT`).
+      - Invoicing Meta: `Cycle: Monthly Wages` and `Trigger: Approved Timesheet`.
+    - Added semantic HTML `title` attributes across all header labels and badges for full tooltip visibility on hover.
+  - **Drawer Viewport Optimization**:
+    - Enhanced sliding drawer `@media (max-width: 767px)` responsiveness: added header wrap (`flex-wrap: wrap`), 2-column seniority matrix grid, and mobile padding.
+  - **DTO Alignment**: Updated `ServiceTermDTO` to return canonical `Free / No Placement Fee` and `Not Applicable` basis.
+  - **Verification**:
+    - `php -l` on all modified files: Pass (0 syntax errors).
+    - `scratch/test_placement_fee_fixes.php`: 13/13 PASS.
+    - `scratch/test_specialized_commercials_sync.php`: 10/10 PASS.
+    - `scratch/test_phase1_commercials_verification.php`: 10/10 PASS.
+    - `scratch/test_phase2_cqrs_verification.php`: 7/7 PASS.
+
 - *2026-11-02* — **God-Level Commercials Engine — Phase 7: Placement Fee Refinements (Pink Styling for Free Fee, Per-Hire Basis for Fixed Fee, 10K Default Amount, Removed Refresh Icon, and Tenant Country Auto-Selection) (100% COMPLETED & VERIFIED)**:
   - **Module & Scope**: Sliding Side-Drawer (`resources/views/service_company/jobs/services_view.blade.php`), Parent Settings Tab (`resources/views/service_company/account/v2/tabs/services.blade.php`), Controller (`ServiceCompanyJobsController`, `ServiceCompanyConsultancyController`), DTO (`ServiceTermDTO`), and Visual Preview Artifact (`drawer_commercials_card_subcard_preview.html`).
   - **Point 1: Free / No Placement Fee Visual Treatment (Pink)**:
