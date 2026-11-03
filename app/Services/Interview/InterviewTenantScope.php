@@ -20,9 +20,9 @@ class InterviewTenantScope
      * Constructs the canonical, authoritative Elasticsearch query filter for a client's interviews.
      * Strictly enforces tenant boundaries with mandatory typed parameters.
      *
-     * @param int $companyId Authenticated tenant organization ID (Service Company)
-     * @param int $clientId  Target client ID
-     * @param string $clientType 'internal' or 'direct'
+     * @param  int  $companyId  Authenticated tenant organization ID (Service Company)
+     * @param  int  $clientId  Target client ID
+     * @param  string  $clientType  'internal' or 'direct'
      * @return array Elasticsearch bool query filter array
      *
      * @throws InvalidArgumentException If tenancy parameters are non-positive or client type is invalid
@@ -39,8 +39,43 @@ class InterviewTenantScope
         $relationshipType = match ($canonicalType) {
             'direct' => 'DIRECT_CLIENT',
             'internal', 'service' => 'INTERNAL_CLIENT',
-            default => throw new InvalidArgumentException("Invalid client type: '{$clientType}'. Must be 'internal' or 'direct'."),
+            'agency', 'consultancy' => 'AGENCY',
+            default => throw new InvalidArgumentException("Invalid client type: '{$clientType}'. Must be 'internal', 'direct', or 'agency'."),
         };
+
+        if ($relationshipType === 'AGENCY') {
+            // Agency Tenancy Filter:
+            // Candidate submitted by agency (thirdparty_company_id / from_company_id matches clientId)
+            // AND associated with current Service Company (company_id / job_company_id / ClientComID / to_company_id matches companyId)
+            return [
+                'bool' => [
+                    'must' => [
+                        [
+                            'bool' => [
+                                'should' => [
+                                    ['term' => ['security.agency_id' => $clientId]],
+                                    ['term' => ['thirdparty_company_id' => $clientId]],
+                                    ['term' => ['from_company_id' => $clientId]],
+                                ],
+                                'minimum_should_match' => 1,
+                            ],
+                        ],
+                        [
+                            'bool' => [
+                                'should' => [
+                                    ['term' => ['security.visible_to_tenants' => $companyId]],
+                                    ['term' => ['company_id' => $companyId]],
+                                    ['term' => ['job_company_id' => $companyId]],
+                                    ['term' => ['ClientComID' => $companyId]],
+                                    ['term' => ['to_company_id' => $companyId]],
+                                ],
+                                'minimum_should_match' => 1,
+                            ],
+                        ],
+                    ],
+                ],
+            ];
+        }
 
         if ($relationshipType === 'DIRECT_CLIENT') {
             // Direct Client Tenancy Filter:

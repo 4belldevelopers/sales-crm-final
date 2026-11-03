@@ -109,14 +109,14 @@ class ClientAccessContext
                 isAuthorized: $isAuthorized
             );
         } else {
-            // 4-Level Boundary for Direct Clients:
+            // 4-Level Boundary for Direct Clients & Agency Partners:
             // Partner relationship must be pre-authorized
-            $partnerCompanyId = (int) ($request->input('partner_company_id') ?: $request->input('from_company_id') ?: 0);
+            $partnerCompanyId = (int) ($request->input('partner_company_id') ?: $request->input('from_company_id') ?: $request->input('agency_company_id') ?: 0);
             if ($partnerCompanyId <= 0 && $rawClientId > 0) {
                 $partnerCompanyId = $rawClientId;
             }
 
-            $authCacheKey = "ats:auth_context:direct:{$serviceCompanyId}:{$partnerCompanyId}:{$rawClientId}";
+            $authCacheKey = "ats:auth_context:{$clientType}:{$serviceCompanyId}:{$partnerCompanyId}:{$rawClientId}";
             $cachedStatus = Redis::get($authCacheKey);
 
             $isAuthorized = false;

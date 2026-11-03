@@ -1029,15 +1029,9 @@ window.ClientJobsPipelineEngine = window.ClientJobsPipelineEngine || {
                     }
                 }
 
-                // Rule 10: In Review candidates must NOT be included anywhere for Direct Client!
-                if (isDirect && isInReview) {
+                // Status 8 (In Review) and Status 9 (Archived) must NOT be included anywhere for Direct Client or Agency
+                if (isInReview || sid === 8 || sid === 9 || jSid === 8 || jSid === 9 || mSid === 8 || mSid === 9) {
                     return; // Dropped client-side
-                }
-
-                if (isInReview) {
-                    counts[8]++;
-                    totalApps++;
-                    return;
                 }
 
                 if (sid === 1) {
@@ -1063,12 +1057,13 @@ window.ClientJobsPipelineEngine = window.ClientJobsPipelineEngine || {
                     counts[6]++;
                     totalJoined++;
                     totalApps++;
-                } else if (sid === 7 || sid === 9) {
+                } else if (sid === 7) {
                     counts[7]++;
                     totalApps++;
                 } else {
                     var sName = String(cand.child_status_name || cand.master_status_name || cand.name || '').toLowerCase().trim();
-                    if (sName.indexOf('sourc') !== -1) { counts[1]++; totalSourcing++; totalApps++; }
+                    if (sName.indexOf('inreview') !== -1 || sName.indexOf('in review') !== -1 || sName.indexOf('archived') !== -1) { return; }
+                    else if (sName.indexOf('sourc') !== -1) { counts[1]++; totalSourcing++; totalApps++; }
                     else if (sName.indexOf('screen') !== -1) { counts[2]++; totalApps++; }
                     else if (sName.indexOf('eval') !== -1 || sName.indexOf('interview') !== -1) { counts[3]++; totalInterviews++; totalApps++; }
                     else if (sName.indexOf('negot') !== -1) { counts[4]++; totalInterviews++; totalApps++; }

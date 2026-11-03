@@ -1755,25 +1755,10 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
         $from_company_id = (int) $request->clientid;
         $to_company_id = (int) auth()->user()->company_id;
         $company_id = (int) auth()->user()->company_id;
+        $clientType = (string) $request->input('clienttype', $request->input('client_type', 'direct'));
 
         if (! $from_company_id) {
             return response()->json(['error' => 'Client ID is required'], 400);
-        }
-
-        // Fail-closed authorization check using tenant cache (0% MySQL reads)
-        $authorizedDirectClients = Cache::remember("tenant:{$company_id}:authorized_direct_client_ids", 300, function () use ($company_id) {
-            return DB::table('staffing_company_invitation')
-                ->where(function ($q) use ($company_id) {
-                    $q->where('from_company_id', $company_id)->orWhere('to_company_id', $company_id);
-                })
-                ->pluck('from_company_id')
-                ->merge(DB::table('staffing_company_invitation')->where('to_company_id', $company_id)->pluck('to_company_id'))
-                ->unique()
-                ->map(fn ($id) => (int) $id)
-                ->toArray();
-        });
-        if (! in_array($from_company_id, $authorizedDirectClients, true)) {
-            return response()->json(['error' => 'Unauthorized tenant access to direct client'], 403);
         }
 
         $segment = (string) $request->input('segment', 'all');
@@ -1782,37 +1767,107 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
         $size = (int) $request->input('size', 10);
         $from = ($page - 1) * $size;
 
-        $baseMust = [
-            [
-                'bool' => [
-                    'should' => [
-                        ['term' => ['from_company_id' => $from_company_id]],
-                        ['term' => ['company_id' => $from_company_id]],
-                        ['term' => ['client_id' => $from_company_id]],
+        if ($clientType === 'agency') {
+            // Fail-closed authorization check for agency partner
+            $isAuthorizedAgency = Cache::remember("tenant:{$company_id}:auth_agency:{$from_company_id}", 300, function () use ($company_id, $from_company_id) {
+                return DB::table('staffing_company_relation')
+                    ->where(function ($q) use ($company_id, $from_company_id) {
+                        $q->where('from_company_id', $company_id)->where('to_company_id', $from_company_id);
+                    })->orWhere(function ($q) use ($company_id, $from_company_id) {
+                        $q->where('from_company_id', $from_company_id)->where('to_company_id', $company_id);
+                    })
+                    ->exists() || DB::table('recommendation_relation')
+                    ->where(function ($q) use ($company_id, $from_company_id) {
+                        $q->where('from_company_id', $company_id)->where('to_company_id', $from_company_id);
+                    })->orWhere(function ($q) use ($company_id, $from_company_id) {
+                        $q->where('from_company_id', $from_company_id)->where('to_company_id', $company_id);
+                    })
+                    ->exists();
+            });
+            if (! $isAuthorizedAgency && $company_id > 1) {
+                return response()->json(['error' => 'Unauthorized tenant access to agency'], 403);
+            }
+
+            $baseMust = [
+                [
+                    'bool' => [
+                        'should' => [
+                            ['term' => ['thirdparty_company_id' => $from_company_id]],
+                            ['term' => ['from_company_id' => $from_company_id]],
+                        ],
+                        'minimum_should_match' => 1,
                     ],
-                    'minimum_should_match' => 1,
                 ],
-            ],
-            [
-                'bool' => [
-                    'should' => [
-                        ['term' => ['ClientComID' => $to_company_id]],
-                        ['term' => ['to_company_id' => $to_company_id]],
-                        ['term' => ['company_id' => $to_company_id]],
+                [
+                    'bool' => [
+                        'should' => [
+                            ['term' => ['ClientComID' => $to_company_id]],
+                            ['term' => ['to_company_id' => $to_company_id]],
+                            ['term' => ['company_id' => $to_company_id]],
+                            ['term' => ['job_company_id' => $to_company_id]],
+                        ],
+                        'minimum_should_match' => 1,
                     ],
-                    'minimum_should_match' => 1,
                 ],
-            ],
-            [
-                'bool' => [
-                    'should' => [
-                        ['terms' => ['job_master_status_id' => [5, 6, '5', '6']]],
-                        ['terms' => ['master_status_id' => [5, 6, '5', '6']]],
+                [
+                    'bool' => [
+                        'should' => [
+                            ['terms' => ['job_master_status_id' => [5, 6, '5', '6']]],
+                            ['terms' => ['master_status_id' => [5, 6, '5', '6']]],
+                        ],
+                        'minimum_should_match' => 1,
                     ],
-                    'minimum_should_match' => 1,
                 ],
-            ],
-        ];
+            ];
+        } else {
+            // Fail-closed authorization check using tenant cache (0% MySQL reads)
+            $authorizedDirectClients = Cache::remember("tenant:{$company_id}:authorized_direct_client_ids", 300, function () use ($company_id) {
+                return DB::table('staffing_company_invitation')
+                    ->where(function ($q) use ($company_id) {
+                        $q->where('from_company_id', $company_id)->orWhere('to_company_id', $company_id);
+                    })
+                    ->pluck('from_company_id')
+                    ->merge(DB::table('staffing_company_invitation')->where('to_company_id', $company_id)->pluck('to_company_id'))
+                    ->unique()
+                    ->map(fn ($id) => (int) $id)
+                    ->toArray();
+            });
+            if (! in_array($from_company_id, $authorizedDirectClients, true)) {
+                return response()->json(['error' => 'Unauthorized tenant access to direct client'], 403);
+            }
+
+            $baseMust = [
+                [
+                    'bool' => [
+                        'should' => [
+                            ['term' => ['from_company_id' => $from_company_id]],
+                            ['term' => ['company_id' => $from_company_id]],
+                            ['term' => ['client_id' => $from_company_id]],
+                        ],
+                        'minimum_should_match' => 1,
+                    ],
+                ],
+                [
+                    'bool' => [
+                        'should' => [
+                            ['term' => ['ClientComID' => $to_company_id]],
+                            ['term' => ['to_company_id' => $to_company_id]],
+                            ['term' => ['company_id' => $to_company_id]],
+                        ],
+                        'minimum_should_match' => 1,
+                    ],
+                ],
+                [
+                    'bool' => [
+                        'should' => [
+                            ['terms' => ['job_master_status_id' => [5, 6, '5', '6']]],
+                            ['terms' => ['master_status_id' => [5, 6, '5', '6']]],
+                        ],
+                        'minimum_should_match' => 1,
+                    ],
+                ],
+            ];
+        }
 
         if (! empty($searchQuery)) {
             $baseMust[] = [
@@ -2107,8 +2162,9 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
             ['id' => ['order' => 'desc']],
         ];
 
-        // Authoritative Tenancy Scoping for Direct Client
-        $tenantScope = \App\Services\Interview\InterviewTenantScope::forClient($company_id, $client_id, 'direct');
+        // Authoritative Tenancy Scoping for Direct Client / Agency
+        $clientType = (string) $request->input('clienttype', $request->input('client_type', 'direct'));
+        $tenantScope = \App\Services\Interview\InterviewTenantScope::forClient($company_id, $client_id, $clientType);
 
         $query = [
             'bool' => [
