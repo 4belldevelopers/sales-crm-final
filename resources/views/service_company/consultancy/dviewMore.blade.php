@@ -1697,36 +1697,42 @@
     opacity: 0.85 !important;
 }
 
-/* 4-Line Compact High-Density Body */
+/* 5-Line Compact High-Density Body (Rule 20 Modern Standard) */
 .cd-srv-c-body {
-    padding: 7px 12px !important;
+    padding: 7px 12px 8px 12px !important;
     display: flex !important;
     flex-direction: column !important;
-    gap: 4.5px !important;
+    gap: 4px !important;
     background: #ffffff !important;
 }
 .cd-srv-c-row {
     display: flex !important;
     align-items: center !important;
-    gap: 8px !important;
+    gap: 6px !important;
     font-size: 11px !important;
     line-height: 1.35 !important;
     min-width: 0 !important;
+    white-space: nowrap !important;
 }
 .cd-srv-c-key {
     display: inline-flex !important;
     align-items: center !important;
-    gap: 5px !important;
-    width: 120px !important;
+    gap: 4.5px !important;
+    width: 98px !important;
+    min-width: 98px !important;
+    max-width: 98px !important;
     flex-shrink: 0 !important;
     font-weight: 600 !important;
     color: #64748b !important;
     letter-spacing: 0.01em !important;
-    font-size: 10.5px !important;
+    font-size: 10px !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
 }
 .cd-srv-c-icon {
-    font-size: 10px !important;
-    width: 13px !important;
+    font-size: 9.5px !important;
+    width: 12px !important;
     text-align: center !important;
     flex-shrink: 0 !important;
 }
@@ -1735,25 +1741,40 @@
 .cd-srv-c-val {
     display: flex !important;
     align-items: center !important;
-    flex-wrap: wrap !important;
-    gap: 2px 6px !important;
+    flex-wrap: nowrap !important;
+    gap: 4px !important;
     color: #334155 !important;
     font-weight: 500 !important;
     min-width: 0 !important;
     flex: 1 1 auto !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+}
+.cd-srv-c-val strong {
+    font-weight: 700 !important;
+    color: #0f172a !important;
+}
+.cd-srv-c-val .text-purple {
+    color: #7c3aed !important;
+}
+.cd-srv-c-val .text-success {
+    color: #10b981 !important;
 }
 .cd-srv-c-sep {
     color: #cbd5e1 !important;
     font-weight: 400 !important;
     user-select: none !important;
-    font-size: 10px !important;
+    font-size: 9.5px !important;
+    flex-shrink: 0 !important;
 }
 .cd-srv-c-badge {
     font-size: 9px !important;
     font-weight: 700 !important;
     padding: 1px 5px !important;
-    border-radius: 4px !important;
+    border-radius: 3.5px !important;
     line-height: 1.25 !important;
+    flex-shrink: 0 !important;
 }
 .cd-srv-c-badge.ft {
     background: #eff6ff !important;
@@ -1770,23 +1791,25 @@
 .cd-srv-c-country-list {
     display: inline-flex !important;
     align-items: center !important;
-    flex-wrap: wrap !important;
-    gap: 3.5px !important;
+    flex-wrap: nowrap !important;
+    gap: 3px !important;
+    flex-shrink: 0 !important;
 }
 .cd-srv-c-country-chip {
     display: inline-flex !important;
     align-items: center !important;
     height: 17px !important;
-    padding: 0 5px !important;
-    border-radius: 3.5px !important;
+    padding: 0 4.5px !important;
+    border-radius: 3px !important;
     background: #f8fafc !important;
     border: 1px solid #e2e8f0 !important;
     color: #1e293b !important;
-    font-size: 9.5px !important;
+    font-size: 9px !important;
     font-weight: 700 !important;
     letter-spacing: 0.03em !important;
     cursor: default !important;
     transition: all 0.15s ease !important;
+    flex-shrink: 0 !important;
 }
 .cd-srv-c-country-chip:hover {
     border-color: #94a3b8 !important;
@@ -3312,7 +3335,7 @@
                                             </div>
                                         </div>
 
-                                        <!-- 4 Lines of High-Density Commercial Intelligence -->
+                                        <!-- 5 Lines of High-Density Commercial Intelligence (Rule 20 Modern Standard) -->
                                         <div class="cd-srv-c-body">
                                             <!-- Line 1: Default Rate & Model -->
                                             <div class="cd-srv-c-row">
@@ -3324,44 +3347,49 @@
                                                     <strong class="text-dark">{{ $permanentCommercial->default_rate ?? ($placement_fee ?? '8.33%') }}</strong>
                                                     <span class="cd-srv-c-sep">·</span>
                                                     <span class="text-gray-800">{{ $permanentCommercial->model_label ?? 'Percentage of CTC' }}</span>
-                                                    <span class="text-muted fs-9">({{ $permanentCommercial->sal_mode_label ?? 'Annual CTC' }})</span>
                                                     @if(!empty($permanentCommercial->mode_badge))
                                                         <span class="cd-srv-c-badge ft">{{ $permanentCommercial->mode_badge }}</span>
                                                     @endif
                                                 </div>
                                             </div>
 
-                                            <!-- Line 2: Fee Structure & Invoicing Trigger -->
+                                            <!-- Line 2: Invoicing Structure & Trigger -->
                                             <div class="cd-srv-c-row">
                                                 <div class="cd-srv-c-key">
                                                     <i class="fas fa-file-invoice-dollar cd-srv-c-icon ft"></i>
-                                                    <span>Invoicing &amp; Fee:</span>
+                                                    <span>Invoicing:</span>
                                                 </div>
                                                 <div class="cd-srv-c-val">
-                                                    <span class="fw-semibold text-gray-800">{{ $permanentCommercial->billing_frequency ?? 'One Time' }} Fee</span>
+                                                    <span class="text-gray-800">{{ $permanentCommercial->billing_frequency ?? 'One Time' }} Fee</span>
                                                     <span class="cd-srv-c-sep">·</span>
-                                                    <span>Trigger: <strong class="text-gray-900">{{ $permanentCommercial->billing_trigger ?? 'Candidate Joined' }}</strong></span>
-                                                    <span class="cd-srv-c-sep">·</span>
-                                                    <span class="text-muted fs-9">{{ $permanentCommercial->currency_code ?? 'INR' }} Currency</span>
+                                                    <span>Trigger: <strong>{{ $permanentCommercial->billing_trigger ?? 'Candidate Joined' }}</strong></span>
                                                 </div>
                                             </div>
 
-                                            <!-- Line 3: Payment Terms & Replacement Guarantee -->
+                                            <!-- Line 3: Payment Terms -->
+                                            <div class="cd-srv-c-row">
+                                                <div class="cd-srv-c-key">
+                                                    <i class="fas fa-clock cd-srv-c-icon ft"></i>
+                                                    <span>Payment Terms:</span>
+                                                </div>
+                                                <div class="cd-srv-c-val">
+                                                    <strong>{{ $permanentCommercial->payment_terms ?? 'Net 30 Days' }}</strong>
+                                                </div>
+                                            </div>
+
+                                            <!-- Line 4: Replacement Guarantee (Dedicated Separate Row) -->
                                             <div class="cd-srv-c-row">
                                                 <div class="cd-srv-c-key">
                                                     <i class="fas fa-shield-halved cd-srv-c-icon ft"></i>
-                                                    <span>Terms &amp; Guarantee:</span>
+                                                    <span>Replacement:</span>
                                                 </div>
-                                                <div class="cd-srv-c-val">
-                                                    <span class="fw-semibold text-gray-900">{{ $permanentCommercial->payment_terms ?? 'Net 30 Days' }}</span>
-                                                    <span class="cd-srv-c-sep">·</span>
-                                                    <span><strong class="text-success">{{ $permanentCommercial->replacement_days ?? 90 }} Days</strong> {{ $permanentCommercial->replacement_type ?? 'Free Replacement' }}</span>
-                                                    <span class="cd-srv-c-sep">·</span>
-                                                    <span class="text-muted fs-9" title="{{ $permanentCommercial->replacement_clause ?? 'Early Exit' }}">Clause: {{ $permanentCommercial->replacement_clause ?? 'Early Exit' }}</span>
+                                                <div class="cd-srv-c-val" title="{{ !empty($permanentCommercial->replacement_clause) ? 'Clause: ' . $permanentCommercial->replacement_clause : 'Replacement Guarantee' }}">
+                                                    <strong class="text-success">{{ $permanentCommercial->replacement_days ?? 90 }} Days</strong>
+                                                    <span class="text-gray-800">{{ $permanentCommercial->replacement_type ?? 'Free Replacement' }}</span>
                                                 </div>
                                             </div>
 
-                                            <!-- Line 4: Country Operations in Short Form -->
+                                            <!-- Line 5: Country Operations in Short Form -->
                                             <div class="cd-srv-c-row">
                                                 <div class="cd-srv-c-key">
                                                     <i class="fas fa-earth-americas cd-srv-c-icon ft"></i>
@@ -3386,12 +3414,6 @@
                                                     </div>
                                                 </div>
                                             </div>
-                                        </div>
-
-                                        <!-- Micro Activity Strip -->
-                                        <div class="cd-srv-c-strip">
-                                            <span class="cd-srv-c-strip-text"><i class="fas fa-circle-check text-success me-1"></i>Fulltime terms bind automatically to agency agreements &amp; submissions</span>
-                                            <span class="cd-srv-c-strip-tag">{{ $permanentCommercial->bottom_model ?? 'One-time Placement Fee' }}</span>
                                         </div>
                                     </article>
                                 @endif
@@ -3422,7 +3444,7 @@
                                             </div>
                                         </div>
 
-                                        <!-- 4 Lines of High-Density Commercial Intelligence -->
+                                        <!-- 5 Lines of High-Density Commercial Intelligence (Rule 20 Modern Standard) -->
                                         <div class="cd-srv-c-body">
                                             <!-- Line 1: Bill Rate & Model -->
                                             <div class="cd-srv-c-row">
@@ -3435,44 +3457,49 @@
                                                     <span class="text-muted fs-9">{{ $contractCommercial->default_rate_sub ?? '/ Hour' }}</span>
                                                     <span class="cd-srv-c-sep">·</span>
                                                     <span class="text-gray-800">{{ $contractCommercial->model_label ?? 'Contract Bill Rate' }}</span>
-                                                    <span class="text-muted fs-9">({{ $contractCommercial->sal_mode_label ?? 'Hourly Rate' }})</span>
                                                     @if(!empty($contractCommercial->mode_badge))
                                                         <span class="cd-srv-c-badge ct">{{ $contractCommercial->mode_badge }}</span>
                                                     @endif
                                                 </div>
                                             </div>
 
-                                            <!-- Line 2: Billing Cycle & Trigger -->
+                                            <!-- Line 2: Invoicing Cycle & Trigger -->
                                             <div class="cd-srv-c-row">
                                                 <div class="cd-srv-c-key">
-                                                    <i class="fas fa-calendar-check cd-srv-c-icon ct"></i>
-                                                    <span>Invoicing Cycle:</span>
+                                                    <i class="fas fa-file-invoice-dollar cd-srv-c-icon ct"></i>
+                                                    <span>Invoicing:</span>
                                                 </div>
                                                 <div class="cd-srv-c-val">
-                                                    <span class="fw-semibold text-gray-800">{{ $contractCommercial->billing_cycle ?? 'Monthly' }} Invoicing</span>
+                                                    <span class="text-gray-800">{{ $contractCommercial->billing_cycle ?? 'Monthly' }} Invoicing</span>
                                                     <span class="cd-srv-c-sep">·</span>
-                                                    <span>Trigger: <strong class="text-gray-900">{{ $contractCommercial->billing_trigger ?? 'Approved Timesheet' }}</strong></span>
-                                                    <span class="cd-srv-c-sep">·</span>
-                                                    <span class="text-muted fs-9">Min: {{ $contractCommercial->min_duration ?? '3 Months' }}</span>
+                                                    <span>Trigger: <strong>{{ $contractCommercial->billing_trigger ?? 'Approved Timesheet' }}</strong></span>
                                                 </div>
                                             </div>
 
-                                            <!-- Line 3: Payment Terms & Contractor Guarantee -->
+                                            <!-- Line 3: Payment Terms -->
+                                            <div class="cd-srv-c-row">
+                                                <div class="cd-srv-c-key">
+                                                    <i class="fas fa-clock cd-srv-c-icon ct"></i>
+                                                    <span>Payment Terms:</span>
+                                                </div>
+                                                <div class="cd-srv-c-val">
+                                                    <strong>{{ $contractCommercial->payment_terms ?? 'Net 30 Days' }}</strong>
+                                                </div>
+                                            </div>
+
+                                            <!-- Line 4: Replacement Guarantee / Notice (Dedicated Separate Row) -->
                                             <div class="cd-srv-c-row">
                                                 <div class="cd-srv-c-key">
                                                     <i class="fas fa-shield-halved cd-srv-c-icon ct"></i>
-                                                    <span>Terms &amp; Notice:</span>
+                                                    <span>Replacement:</span>
                                                 </div>
-                                                <div class="cd-srv-c-val">
-                                                    <span class="fw-semibold text-gray-900">{{ $contractCommercial->payment_terms ?? 'Net 30 Days' }}</span>
-                                                    <span class="cd-srv-c-sep">·</span>
-                                                    <span><strong class="text-purple">{{ $contractCommercial->replacement_days ?? 30 }} Days</strong> {{ $contractCommercial->replacement_type ?? 'Contractor Replacement' }}</span>
-                                                    <span class="cd-srv-c-sep">·</span>
-                                                    <span class="text-muted fs-9" title="{{ $contractCommercial->replacement_clause ?? 'Contractor Early Departure' }}">Clause: {{ $contractCommercial->replacement_clause ?? 'Early Departure' }}</span>
+                                                <div class="cd-srv-c-val" title="{{ !empty($contractCommercial->replacement_clause) ? 'Clause: ' . $contractCommercial->replacement_clause : 'Replacement Guarantee' }}">
+                                                    <strong class="text-purple">{{ $contractCommercial->replacement_days ?? 30 }} Days</strong>
+                                                    <span class="text-gray-800">{{ $contractCommercial->replacement_type ?? 'Contractor Replacement' }}</span>
                                                 </div>
                                             </div>
 
-                                            <!-- Line 4: Country Operations in Short Form -->
+                                            <!-- Line 5: Country Operations in Short Form -->
                                             <div class="cd-srv-c-row">
                                                 <div class="cd-srv-c-key">
                                                     <i class="fas fa-earth-americas cd-srv-c-icon ct"></i>
@@ -3497,12 +3524,6 @@
                                                     </div>
                                                 </div>
                                             </div>
-                                        </div>
-
-                                        <!-- Micro Activity Strip -->
-                                        <div class="cd-srv-c-strip">
-                                            <span class="cd-srv-c-strip-text"><i class="fas fa-circle-check text-purple me-1"></i>Contract terms apply automatically to candidate timesheets &amp; invoices</span>
-                                            <span class="cd-srv-c-strip-tag purple">{{ $contractCommercial->bottom_model ?? 'Contract Bill Rate' }}</span>
                                         </div>
                                     </article>
                                 @endif
