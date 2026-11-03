@@ -17,10 +17,11 @@
     $rateType = (int) ($commercial['rateType'] ?? $sectionCheck);
     $commercialDetails = collect($commercial['commericial_details'] ?? [])->keyBy('exp');
     $selectedCountryIds = array_map('intval', $commercial['commericial_countries'] ?? []);
+    $tenantCompanyId = (int) ($commercial['company_id'] ?? auth()->user()->company_id ?? 0);
+    $registeredCountryIds = \App\Services\CommercialReadModelService::getCompanyRegisteredCountryIds($tenantCompanyId);
     // Requirement: Automatically auto-select Services Countries from company registrations if none saved yet
     if (empty($selectedCountryIds)) {
-        $tenantCompanyId = (int) ($commercial['company_id'] ?? auth()->user()->company_id ?? 0);
-        $selectedCountryIds = \App\Services\CommercialReadModelService::getCompanyRegisteredCountryIds($tenantCompanyId);
+        $selectedCountryIds = $registeredCountryIds;
     }
     $fallbackDefaultRate = $isFulltime ? (@$default_rates->rates_perecentage ?? 8.33) : (@$default_rates->rates_fixed ?? 0);
 
@@ -966,7 +967,11 @@
 </style>
 
 <!--begin::Hiring Services Commercial Editor (Rule 20 Modern Card + Sub-Card)-->
-<div id="commercial-editor-v3" class="commercial-editor-v3 {{ $isFulltime ? 'is-fulltime-view' : 'is-contract-view' }}">
+<div id="commercial-editor-v3"
+     class="commercial-editor-v3 {{ $isFulltime ? 'is-fulltime-view' : 'is-contract-view' }}"
+     data-default-currency-key="{{ $tenantDefaultCurrencyKey }}"
+     data-default-currency-code="{{ \App\Services\CurrencyService::resolveCurrencyCode($tenantDefaultCurrencyKey) }}"
+     data-registered-countries="{{ json_encode($registeredCountryIds) }}">
 
     <!-- ====================================================================
          TIER 1: TOP HEADER TOOLBAR CARD
