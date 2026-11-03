@@ -33,8 +33,9 @@ This skill executes a forensic, multi-dimensional audit of any JERO view, contro
 - Poppins font, max 14px, tabular numerals (`font-variant-numeric: tabular-nums;`).
 
 ## Deliverable Format
-Always output the audit findings into a **Brain Artifact** containing:
+Always persist the complete audit findings into a markdown document inside `docs/audit documents/` (`docs/audit documents/YYYY-MM-DD-<module>-audit.md`) and mirror as a **Brain Artifact** containing:
 1. Executive Summary & Root-Cause Analysis.
 2. Violation Matrix (File : Line, Severity, Impact).
 3. Mermaid Data-Flow Architecture Diagram.
 4. Step-by-Step Remediation Plan with `RequestFeedback: true`.
+5. Permanent repository file reference link to `docs/audit documents/`.

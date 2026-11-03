@@ -26,7 +26,7 @@ class RegistrationIdempotencyHandler
      */
     public function handle(Request $request, int $tenantId, int $invitationId, callable $action): JsonResponse
     {
-        $idempotencyKey = $request->header('Idempotency-Key') ?? $request->input('idempotency_key');
+        $idempotencyKey = $request->header('Idempotency-Key') ?? $request->header('X-Idempotency-Key') ?? $request->input('idempotency_key');
         if (empty($idempotencyKey)) {
             return response()->json([
                 'error' => 'MISSING_IDEMPOTENCY_KEY',

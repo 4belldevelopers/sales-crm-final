@@ -117,6 +117,43 @@ class TeamMutationService
 
             $outboxId = null;
             if ($isSuccessfulMutation) {
+                // Canonical Outbox Event Contract (Schema Version 1) per INV-OUTBOX-02
+                $emailBlock = null;
+                if (! empty($responseData['email_data'])) {
+                    $emailData = $responseData['email_data'];
+                    $emailBlock = [
+                        'to' => $emailData['to'] ?? ($responseData['email'] ?? ($requestPayload['email'] ?? null)),
+                        'name' => $emailData['name'] ?? ($requestPayload['name'] ?? null),
+                        'subject' => $responseData['email_subject'] ?? 'Account Credential',
+                        'template' => $responseData['email_template'] ?? 'email.team.create-account',
+                        'from_address' => $responseData['from_address'] ?? '',
+                        'sender_name' => $responseData['sender_name'] ?? '',
+                        'invitation_url' => $responseData['invitation_url'] ?? ($emailData['url'] ?? null),
+                        'data' => $emailData,
+                        'metadata' => [
+                            'user_id' => $resolvedUserId,
+                            'company_id' => $tenantId,
+                            'company_name' => $emailData['company_name'] ?? '',
+                        ],
+                    ];
+                }
+
+                $outboxPayload = array_merge($requestPayload, [
+                    'schema_version' => 1,
+                    'tenant_id' => $tenantId,
+                    'aggregate_id' => $resolvedUserId,
+                    'aggregate_version' => $newVersion,
+                    'action' => $eventType,
+                    'email' => $emailBlock,
+                    'email_data' => $responseData['email_data'] ?? null, // Backward compatibility
+                    'email_subject' => $responseData['email_subject'] ?? null,
+                    'email_template' => $responseData['email_template'] ?? null,
+                    'from_address' => $responseData['from_address'] ?? null,
+                    'sender_name' => $responseData['sender_name'] ?? null,
+                    'response_data' => $responseData,
+                    'timestamp' => now()->toIso8601String(),
+                ]);
+
                 // 3. Atomically write to sys_outbox_events
                 $outboxId = DB::table('sys_outbox_events')->insertGetId([
                     'tenant_id' => $tenantId,
@@ -125,14 +162,7 @@ class TeamMutationService
                     'aggregate_id' => $resolvedUserId,
                     'aggregate_version' => $newVersion,
                     'event_type' => $eventType,
-                    'payload' => json_encode(array_merge($requestPayload, [
-                        'tenant_id' => $tenantId,
-                        'aggregate_id' => $resolvedUserId,
-                        'aggregate_version' => $newVersion,
-                        'action' => $eventType,
-                        'response_data' => $responseData,
-                        'timestamp' => now()->toIso8601String(),
-                    ])),
+                    'payload' => json_encode($outboxPayload),
                     'status' => 'PENDING',
                     'attempts' => 0,
                     'available_at' => now(),
