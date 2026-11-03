@@ -50,7 +50,7 @@ class RegistrationActivationService
     public function activate(Request $request): JsonResponse
     {
         // 1. Session Envelope Validation (INV-02 & INV-17)
-        $rawCookie = $request->cookie(TeamInvitationService::COOKIE_NAME) 
+        $rawCookie = $request->cookie(TeamInvitationService::COOKIE_NAME)
             ?? $request->cookies->get(TeamInvitationService::COOKIE_NAME)
             ?? $request->input('invitation_envelope')
             ?? $request->header('X-Invitation-Envelope');
@@ -92,10 +92,12 @@ class RegistrationActivationService
 
         // 2. Validate Input Payload
         $validator = Validator::make($request->all(), [
-            'name' => 'required|string|max:191',
+            'name' => 'nullable|string|max:191',
+            'mobile' => 'nullable|string|max:25',
+            'calling_code' => 'nullable|string|max:10',
             'password' => 'required|string|min:8|confirmed',
             'password_confirmation' => 'required|string|min:8',
-            'toc' => 'accepted',
+            'toc' => 'nullable',
         ]);
 
         if ($validator->fails()) {
@@ -137,11 +139,11 @@ class RegistrationActivationService
             $this->invitationService->burnNonceAndRotateSession($nonce, $request);
 
             $email = strtolower(trim($invitation->email));
-            $name = trim((string) $request->input('name'));
             $password = (string) $request->input('password');
 
             // Identity Collision Resolution (INV-05)
             $existingUser = User::withoutGlobalScopes()->where('email', $email)->first();
+            $name = trim((string) ($request->input('name') ?: ($existingUser->name ?? 'Team Member')));
 
             if ($existingUser) {
                 if ((int) $existingUser->company_id !== $tenantId) {
@@ -155,6 +157,12 @@ class RegistrationActivationService
                 $user->status = 'active';
                 $user->working_status = 1;
                 $user->email_verification_code = null;
+                if ($request->filled('mobile')) {
+                    $user->mobile = trim((string) $request->input('mobile'));
+                }
+                if ($request->filled('calling_code')) {
+                    $user->calling_code = trim((string) $request->input('calling_code'));
+                }
                 $user->save();
             } else {
                 // Provision new User
@@ -165,6 +173,12 @@ class RegistrationActivationService
                 $user->status = 'active';
                 $user->working_status = 1;
                 $user->email_verification_code = null;
+                if ($request->filled('mobile')) {
+                    $user->mobile = trim((string) $request->input('mobile'));
+                }
+                if ($request->filled('calling_code')) {
+                    $user->calling_code = trim((string) $request->input('calling_code'));
+                }
                 $user->save();
 
                 // Attach User to Tenant via Resolver Interface (Model A / Model B Bridge)

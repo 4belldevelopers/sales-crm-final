@@ -583,6 +583,110 @@ select.jw-inp option {
     color: var(--jw-navy) !important;
 }
 
+/* ==========================================================================
+   STATE 2-TEAM: Team Member Invitation Activation Card (Enterprise Tier)
+   15.6" Screen Fit | WCAG 2.1 AA | Read-only Identity | Auto-Accept TOC
+   ========================================================================== */
+.jw-card-team-invite {
+    background: linear-gradient(180deg, #f0f6ff 0%, #f8faff 42%, #ffffff 100%) !important;
+    border: 1.5px solid #bfdbfe !important;
+    border-radius: 20px !important;
+    box-shadow: 0 20px 48px rgba(37, 99, 235, 0.08), 0 2px 8px rgba(37, 99, 235, 0.04) !important;
+    padding: clamp(18px, 2.2vh, 26px) clamp(22px, 2.5vw, 32px) !important;
+    position: relative;
+    overflow: hidden;
+}
+.jw-card-team-invite::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, #2563eb 0%, #6366f1 50%, #3b82f6 100%);
+}
+.jw-card-team-invite h2 {
+    font-size: 22px !important;
+    margin: 0 0 4px !important;
+    line-height: 1.25 !important;
+}
+.jw-card-team-invite .sub {
+    font-size: 12.5px !important;
+    margin: 2px 0 14px !important;
+    line-height: 1.4 !important;
+    color: #475467 !important;
+}
+.jw-card-team-invite .jw-field {
+    margin-bottom: 10px !important;
+}
+.jw-card-team-invite .jw-field label,
+.jw-card-team-invite .jw-field-row label,
+.jw-card-team-invite .jero-phone-label {
+    margin: 0 0 4px !important;
+    font-size: 11.5px !important;
+    font-weight: 700 !important;
+    color: var(--jw-navy) !important;
+}
+.jw-card-team-invite .jw-inp {
+    height: 42px !important;
+    font-size: 13px !important;
+    border-radius: 8px !important;
+    padding: 0 40px 0 38px !important;
+}
+.jw-card-team-invite .jw-iw .il {
+    left: 12px !important;
+}
+.jw-card-team-invite .jw-iw .ir,
+.jw-card-team-invite .jw-iw .ok-mark {
+    right: 12px !important;
+}
+.jw-card-team-invite .jw-iw svg {
+    width: 17px !important;
+    height: 17px !important;
+}
+.jw-card-team-invite .jero-phone-field-group {
+    margin-bottom: 0 !important;
+}
+.jw-card-team-invite .jero-phone-input-wrap {
+    height: 42px !important;
+    min-height: 42px !important;
+    max-height: 42px !important;
+    border-radius: 8px !important;
+    border: 1.5px solid #d7ddea !important;
+}
+.jw-card-team-invite .jero-phone-input-wrap:focus-within {
+    border-color: var(--jw-blue) !important;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, .11) !important;
+}
+.jw-card-team-invite .jero-phone-native-input {
+    font-size: 13px !important;
+    height: 40px !important;
+    color: var(--jw-navy) !important;
+}
+.jw-card-team-invite .jero-phone-trigger {
+    padding: 0 8px 0 10px !important;
+    font-size: 12.5px !important;
+}
+.jw-card-team-invite .jw-pwd-strength-bar {
+    margin-top: 5px !important;
+    height: 3px !important;
+}
+.jw-card-team-invite .jw-pwd-hint {
+    margin-top: 3px !important;
+    font-size: 10.5px !important;
+}
+.jw-card-team-invite .jw-btn {
+    height: 46px !important;
+    font-size: 15px !important;
+    border-radius: 8px !important;
+    margin-top: 6px !important;
+    box-shadow: 0 8px 20px rgba(88, 74, 234, .24) !important;
+}
+.jw-card-team-invite .jw-switch-row {
+    margin-top: 10px !important;
+    font-size: 12px !important;
+}
+
 /* Password strength bar */
 .jw-pwd-strength-bar {
     display: flex;
@@ -1248,7 +1352,7 @@ select.jw-inp option {
                 </form>
 
                 <!-- STATE 2-TEAM: TEAM MEMBER ACTIVATION CARD -->
-                <form class="jw-card-form jw-fade-enter" novalidate id="kt_team_activate_form" action="{{ route('register.activate') }}" method="post" style="{{ $teamStyle }}">
+                <form class="jw-card-form jw-fade-enter jw-card-team-invite" novalidate id="kt_team_activate_form" action="{{ route('register.activate') }}" method="post" style="{{ $teamStyle }}">
                     @csrf
                     <input type="hidden" name="invitation_id" value="{{ $registrationContext['invitation_id'] ?? '' }}">
                     @if(isset($registrationContext['invitation_id']))
@@ -1263,67 +1367,92 @@ select.jw-inp option {
                         <input type="hidden" name="token" value="{{ request('token') }}">
                     @endif
                     
-                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;">
-                        <span style="display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; background: #eff6ff; color: #2563eb; border: 1px solid #bfdbfe; border-radius: 999px; font-size: 11px; font-weight: 600;">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="9" cy="7" r="4" stroke="currentColor" stroke-width="2"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; flex-wrap: wrap; gap: 8px;">
+                        <span style="display: inline-flex; align-items: center; gap: 5px; padding: 3px 9px; background: #eff6ff; color: #2563eb; border: 1px solid #bfdbfe; border-radius: 999px; font-size: 11px; font-weight: 600;">
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="9" cy="7" r="4" stroke="currentColor" stroke-width="2"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
                             Team Invitation
                         </span>
-                        <span style="display: inline-flex; align-items: center; padding: 3px 8px; background: #f1f5f9; color: #475467; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 11px; font-weight: 600;">
+                        <span style="display: inline-flex; align-items: center; padding: 2px 8px; background: #f8fafc; color: #475467; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 11px; font-weight: 600;">
                             Role: {{ $registrationContext['member']['role_name'] ?? 'Team Member' }}
                         </span>
                     </div>
 
-                    <h2 style="margin-bottom: 4px;">Join {{ $registrationContext['tenant']['name'] ?? 'Your Organization' }} 👋</h2>
-                    <p class="sub" style="margin-bottom: 18px;">Set up your password to activate your account and access the workspace.</p>
+                    <h2>Join {{ $registrationContext['tenant']['name'] ?? 'Your Organization' }} 👋</h2>
+                    <p class="sub">Set up your password to activate your account and access the workspace.</p>
 
                     <!-- Dynamic Error Alert Box -->
                     <div class="jw-alert jw-alert-danger" id="jw_team_alert" style="display:none;" role="alert"></div>
 
-                    <!-- Work Email (Immutable / Bound to Invitation) -->
+                    <!-- Field 1: Full Name (Immutable / Assigned by Admin) -->
                     <div class="jw-field">
-                        <div class="jw-field-row">
-                            <label for="jw-team-email">Work Email Address</label>
-                            <span class="jw-domain-tag corporate">Verified Invitation ✓</span>
+                        <div class="jw-field-row" style="margin-bottom: 4px;">
+                            <label for="jw-team-name">Full Name</label>
+                            <span style="display: inline-flex; align-items: center; gap: 4px; padding: 2px 7px; background: #f1f5f9; color: #475467; border: 1px solid #e2e8f0; border-radius: 999px; font-size: 10px; font-weight: 600;">
+                                <svg width="10" height="10" viewBox="0 0 24 24" fill="none"><rect x="3" y="11" width="18" height="11" rx="2" stroke="currentColor" stroke-width="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4" stroke="currentColor" stroke-width="2"/></svg>
+                                Assigned by Admin
+                            </span>
                         </div>
                         <div class="jw-iw">
                             <span class="il" aria-hidden="true">
-                                <svg width="19" height="19" viewBox="0 0 20 20" fill="none">
+                                <svg width="17" height="17" viewBox="0 0 24 24" fill="none">
+                                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                                    <circle cx="12" cy="7" r="4" stroke="currentColor" stroke-width="1.8"/>
+                                </svg>
+                            </span>
+                            <input class="jw-inp" type="text" name="name" id="jw-team-name" value="{{ $registrationContext['member']['name'] ?? old('name', '') }}" readonly style="background-color: #f8fafc; color: #334155; cursor: not-allowed; border-color: #cbd5e1; font-weight: 600;" />
+                            <span class="ok-mark" style="display:flex;" aria-hidden="true">
+                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
+                                    <rect x="3" y="11" width="18" height="11" rx="2" fill="#e2e8f0" stroke="#94a3b8" stroke-width="1.8"/>
+                                    <path d="M7 11V7a5 5 0 0 1 10 0v4" stroke="#94a3b8" stroke-width="1.8"/>
+                                </svg>
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Field 2: Work Email Address (Immutable / Bound to Invitation) -->
+                    <div class="jw-field">
+                        <div class="jw-field-row" style="margin-bottom: 4px;">
+                            <label for="jw-team-email">Work Email Address</label>
+                            <span class="jw-domain-tag corporate" style="font-size: 10px; padding: 1px 7px;">Verified Invitation ✓</span>
+                        </div>
+                        <div class="jw-iw">
+                            <span class="il" aria-hidden="true">
+                                <svg width="17" height="17" viewBox="0 0 20 20" fill="none">
                                     <rect x="2.2" y="4.5" width="15.6" height="11" rx="2.2" stroke="currentColor" stroke-width="1.7"/>
                                     <path d="M3 7.2l7 5 7-5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
                                 </svg>
                             </span>
-                            <input class="jw-inp" type="email" name="email" id="jw-team-email" value="{{ $registrationContext['member']['email'] ?? '' }}" readonly style="background-color: #f8fafc; color: #475467; cursor: not-allowed; border-color: #cbd5e1;" />
+                            <input class="jw-inp" type="email" name="email" id="jw-team-email" value="{{ $registrationContext['member']['email'] ?? '' }}" readonly style="background-color: #f8fafc; color: #334155; cursor: not-allowed; border-color: #cbd5e1; font-weight: 500;" />
                             <span class="ok-mark" style="display:flex;" aria-hidden="true">
-                                <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                                <svg width="15" height="15" viewBox="0 0 18 18" fill="none">
                                     <circle cx="9" cy="9" r="8.4" fill="#16B364"/>
                                     <path d="M5 9l3 3 5-5.5" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
                                 </svg>
                             </span>
                         </div>
-                        <span style="font-size: 11px; color: #64748b; margin-top: 4px; display: block;">This email is cryptographically bound to your invitation and cannot be modified.</span>
                     </div>
 
-                    <!-- Full Name -->
+                    <!-- Field 3: Phone Number (Optional) -->
                     <div class="jw-field">
-                        <label for="jw-team-name">Full Name</label>
-                        <div class="jw-iw">
-                            <span class="il" aria-hidden="true">
-                                <svg width="19" height="19" viewBox="0 0 24 24" fill="none">
-                                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-                                    <circle cx="12" cy="7" r="4" stroke="currentColor" stroke-width="1.8"/>
-                                </svg>
-                            </span>
-                            <input class="jw-inp" type="text" name="name" id="jw-team-name" placeholder="e.g. Sarah Jenkins" value="{{ old('name') }}" autocomplete="name" required/>
-                        </div>
-                        <span class="jw-err" id="jw-team-name-err" style="display:none;"></span>
+                        <x-jero-phone-input
+                            id="team_mobile"
+                            name="mobile"
+                            countryCodeName="calling_code"
+                            countryCodeId="team_calling_code"
+                            label="Phone Number (Optional)"
+                            placeholder="Enter mobile number"
+                            :required="false"
+                            :value="old('mobile', $registrationContext['member']['mobile'] ?? '')"
+                            :countryCode="old('calling_code', $registrationContext['member']['calling_code'] ?? '')"
+                        />
                     </div>
 
-                    <!-- Password -->
+                    <!-- Field 4: Create Password -->
                     <div class="jw-field">
                         <label for="jw-team-pwd">Create Password</label>
                         <div class="jw-iw">
                             <span class="il" aria-hidden="true">
-                                <svg width="19" height="19" viewBox="0 0 20 20" fill="none">
+                                <svg width="17" height="17" viewBox="0 0 20 20" fill="none">
                                     <rect x="3.3" y="8.7" width="13.4" height="8.2" rx="2.1" stroke="currentColor" stroke-width="1.7"/>
                                     <path d="M6.6 8.7V6.4a3.4 3.4 0 0 1 6.8 0v2.3" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
                                     <circle cx="10" cy="12.9" r="1.25" fill="currentColor"/>
@@ -1331,7 +1460,7 @@ select.jw-inp option {
                             </span>
                             <input class="jw-inp" type="password" name="password" id="jw-team-pwd" placeholder="Enter at least 8 characters" autocomplete="new-password" required/>
                             <span class="ir" onclick="jwTeamEye('pwd')" role="button" tabindex="0" aria-label="Toggle password visibility">
-                                <svg id="jw-team-eye-pwd" width="19" height="19" viewBox="0 0 20 20" fill="none">
+                                <svg id="jw-team-eye-pwd" width="17" height="17" viewBox="0 0 20 20" fill="none">
                                     <path d="M2 10s3-5.6 8-5.6S18 10 18 10s-3 5.6-8 5.6S2 10 2 10Z" stroke="currentColor" stroke-width="1.7"/>
                                     <circle cx="10" cy="10" r="2.4" stroke="currentColor" stroke-width="1.7"/>
                                 </svg>
@@ -1347,12 +1476,12 @@ select.jw-inp option {
                         <span class="jw-err" id="jw-team-pwd-err" style="display:none;"></span>
                     </div>
 
-                    <!-- Password Confirmation -->
+                    <!-- Field 5: Confirm Password -->
                     <div class="jw-field">
                         <label for="jw-team-pwd-confirm">Confirm Password</label>
                         <div class="jw-iw">
                             <span class="il" aria-hidden="true">
-                                <svg width="19" height="19" viewBox="0 0 20 20" fill="none">
+                                <svg width="17" height="17" viewBox="0 0 20 20" fill="none">
                                     <rect x="3.3" y="8.7" width="13.4" height="8.2" rx="2.1" stroke="currentColor" stroke-width="1.7"/>
                                     <path d="M6.6 8.7V6.4a3.4 3.4 0 0 1 6.8 0v2.3" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
                                     <circle cx="10" cy="12.9" r="1.25" fill="currentColor"/>
@@ -1360,7 +1489,7 @@ select.jw-inp option {
                             </span>
                             <input class="jw-inp" type="password" name="password_confirmation" id="jw-team-pwd-confirm" placeholder="Confirm your password" autocomplete="new-password" required/>
                             <span class="ir" onclick="jwTeamEye('confirm')" role="button" tabindex="0" aria-label="Toggle password visibility">
-                                <svg id="jw-team-eye-confirm" width="19" height="19" viewBox="0 0 20 20" fill="none">
+                                <svg id="jw-team-eye-confirm" width="17" height="17" viewBox="0 0 20 20" fill="none">
                                     <path d="M2 10s3-5.6 8-5.6S18 10 18 10s-3 5.6-8 5.6S2 10 2 10Z" stroke="currentColor" stroke-width="1.7"/>
                                     <circle cx="10" cy="10" r="2.4" stroke="currentColor" stroke-width="1.7"/>
                                 </svg>
@@ -1369,20 +1498,14 @@ select.jw-inp option {
                         <span class="jw-err" id="jw-team-pwd-confirm-err" style="display:none;"></span>
                     </div>
 
-                    <!-- Terms of Service Checkbox -->
-                    <div class="jw-field" style="margin-top: 10px; margin-bottom: 22px;">
-                        <label style="display: flex; align-items: flex-start; gap: 8px; font-weight: 400; font-size: 13px; color: #475467; cursor: pointer;">
-                            <input type="checkbox" name="toc" id="jw-team-toc" value="1" style="margin-top: 3px; accent-color: #2563eb; width: 16px; height: 16px; cursor: pointer;" required>
-                            <span>I accept the <a href="/terms" target="_blank" style="color: #2563eb; font-weight: 500; text-decoration: none;">Terms & Conditions</a> and <a href="/privacy" target="_blank" style="color: #2563eb; font-weight: 500; text-decoration: none;">Privacy Policy</a></span>
-                        </label>
-                        <span class="jw-err" id="jw-team-toc-err" style="display:none;"></span>
-                    </div>
+                    <!-- Auto-Accepted Terms of Service -->
+                    <input type="hidden" name="toc" value="1">
 
                     <!-- Submit Button -->
                     <button type="submit" id="kt_team_activate_submit" class="jw-btn">
                         <span class="indicator-label">Activate Account & Join Workspace</span>
                         <span class="arrow" aria-hidden="true">
-                            <svg width="22" height="22" viewBox="0 0 20 20" fill="none">
+                            <svg width="18" height="18" viewBox="0 0 20 20" fill="none">
                                 <path d="M3 10h13M11 5l5 5-5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                             </svg>
                         </span>
@@ -1390,6 +1513,14 @@ select.jw-inp option {
                             Activating Account...&nbsp;<span class="spinner-border spinner-border-sm align-middle"></span>
                         </span>
                     </button>
+
+                    <!-- Legal Copy: Terms Auto-Accepted -->
+                    <p style="font-size: 11px; color: #64748b; text-align: center; margin: 10px 0 0; line-height: 1.45;">
+                        By clicking <strong style="color: #0b1f44;">Activate Account & Join Workspace</strong>, you agree to our 
+                        <a href="/terms" target="_blank" style="color: #2563eb; text-decoration: none; font-weight: 500;">Terms & Conditions</a> 
+                        and 
+                        <a href="/privacy-policy" target="_blank" style="color: #2563eb; text-decoration: none; font-weight: 500;">Privacy Policy</a>.
+                    </p>
 
                     <!-- In-Place Switch to Login -->
                     <div class="jw-switch-row">
@@ -1995,16 +2126,9 @@ document.addEventListener('DOMContentLoaded', function () {
             e.preventDefault();
             if (teamAlert) { teamAlert.style.display = 'none'; teamAlert.textContent = ''; }
 
-            var nameInput = document.getElementById('jw-team-name');
             var pwdInput = document.getElementById('jw-team-pwd');
             var pwdConfirmInput = document.getElementById('jw-team-pwd-confirm');
-            var tocInput = document.getElementById('jw-team-toc');
 
-            if (!nameInput || !nameInput.value.trim()) {
-                if (teamAlert) { teamAlert.textContent = 'Please enter your full name.'; teamAlert.style.display = 'block'; }
-                if (nameInput) nameInput.focus();
-                return;
-            }
             if (!pwdInput || pwdInput.value.length < 8) {
                 if (teamAlert) { teamAlert.textContent = 'Password must be at least 8 characters long.'; teamAlert.style.display = 'block'; }
                 if (pwdInput) pwdInput.focus();
@@ -2013,11 +2137,6 @@ document.addEventListener('DOMContentLoaded', function () {
             if (!pwdConfirmInput || pwdConfirmInput.value !== pwdInput.value) {
                 if (teamAlert) { teamAlert.textContent = 'Password confirmation does not match.'; teamAlert.style.display = 'block'; }
                 if (pwdConfirmInput) pwdConfirmInput.focus();
-                return;
-            }
-            if (!tocInput || !tocInput.checked) {
-                if (teamAlert) { teamAlert.textContent = 'You must accept the Terms & Conditions and Privacy Policy.'; teamAlert.style.display = 'block'; }
-                if (tocInput) tocInput.focus();
                 return;
             }
 
