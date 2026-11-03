@@ -57,7 +57,7 @@ class TeamInvitationWorkflowTest extends TestCase
 
         config([
             'database.default' => 'mysql',
-            'database.connections.mysql.database' => 'newdata',
+            'database.connections.mysql.database' => 'dbmaster',
         ]);
         DB::purge('mysql');
         DB::reconnect('mysql');
