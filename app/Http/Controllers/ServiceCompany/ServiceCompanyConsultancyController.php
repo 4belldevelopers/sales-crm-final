@@ -1221,7 +1221,7 @@ After completing these steps, they will be able to start collaborating with your
         $versionKey = 'consultancyviewmore_version_user_'.$userId;
         $version = cache()->get($versionKey, 1);
         $partnerVersion = (int) cache()->get("agency_drawer_version_company_{$partnerCompanyId}", 1);
-        $cacheKeySet = 'consultancyviewmore_v23:'.$userId.':'.$version.':partner_'.$partnerCompanyId.'_v'.$partnerVersion.':'.md5(json_encode($cachePayload));
+        $cacheKeySet = 'consultancyviewmore_v31:'.$userId.':'.$version.':partner_'.$partnerCompanyId.'_v'.$partnerVersion.':'.md5(json_encode($cachePayload));
         /* ----------------------------
         ⚡ Check DragonflyDB / Redis first (Quick Win Step 4)
         ----------------------------- */
@@ -1286,13 +1286,21 @@ After completing these steps, they will be able to start collaborating with your
         $this->viewerCompanyName = $viewerCompany->company_name ?? ($viewerCompany->name ?? 'Direct Client');
         $this->viewerCompanyLogo = ! empty($viewerCompany->logo_logical_path) ? $viewerCompany->logo_logical_path : ($viewerCompany->logo ?? null);
 
-        $this->agencyCaptainName = DB::table('users')
-            ->join('recommendation_relation', 'recommendation_relation.to_user_id', '=', 'users.id')
-            ->where('recommendation_relation.from_company_id', $company_id)
-            ->where('recommendation_relation.to_company_id', $partnerCompanyId)
+        $this->agencyCaptainName = DB::table('job_assign')
+            ->join('users', 'users.id', '=', 'job_assign.spok_user_id')
+            ->where('job_assign.company_id', $partnerCompanyId)
+            ->where('job_assign.spok_user_id', '>', 0)
             ->value('users.name')
+            ?: (DB::table('users')
+                ->join('recommendation_relation', 'recommendation_relation.to_user_id', '=', 'users.id')
+                ->where('recommendation_relation.from_company_id', $company_id)
+                ->where('recommendation_relation.to_company_id', $partnerCompanyId)
+                ->where('users.company_id', $partnerCompanyId)
+                ->value('users.name')
             ?: (DB::table('users')->where('company_id', $partnerCompanyId)->where('is_captain', 1)->value('name')
-            ?: (DB::table('users')->where('company_id', $partnerCompanyId)->where('root_user', 1)->value('name') ?: 'Agency Captain'));
+            ?: (DB::table('users')->where('company_id', $partnerCompanyId)->where('root_user', 1)->value('name')
+            ?: (DB::table('users')->where('company_id', $partnerCompanyId)->orderBy('id', 'asc')->value('name')
+            ?: 'Agency Captain'))));
 
         // ── 1. Requisitions Status Breakdown & Shared Jobs List ──
         $this->active_requisition = 0;

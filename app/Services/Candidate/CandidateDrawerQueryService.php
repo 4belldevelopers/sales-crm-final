@@ -611,8 +611,50 @@ class CandidateDrawerQueryService
         ];
 
         if ($clientType === 'direct' || $clientType === 'agency') {
-            $items = array_map(function ($doc) {
-                return \App\DTO\ServiceCompany\DirectClientCandidateDTO::fromElasticDoc($doc)->toArray();
+            $agencyContext = [];
+            if ($clientType === 'agency' && $clientId > 0) {
+                $cacheKey = "ats:agency_attribution_meta:{$clientId}";
+                try {
+                    $agencyContext = cache()->store('dragonfly')->get($cacheKey);
+                } catch (\Throwable $e) {
+                    $agencyContext = cache()->get($cacheKey);
+                }
+
+                if (! is_array($agencyContext)) {
+                    $agencyCompName = \Illuminate\Support\Facades\DB::table('companies')->where('id', $clientId)->value('company_name')
+                        ?: (\Illuminate\Support\Facades\DB::table('clients')->where('company_id', $clientId)->value('name') ?: 'Agency Partner');
+
+                    $jobCaptainMap = \Illuminate\Support\Facades\DB::table('job_assign')
+                        ->join('users', 'users.id', '=', 'job_assign.spok_user_id')
+                        ->where('job_assign.company_id', $clientId)
+                        ->where('job_assign.spok_user_id', '>', 0)
+                        ->pluck('users.name', 'job_assign.job_id')
+                        ->toArray();
+
+                    $agencyRootCaptain = \Illuminate\Support\Facades\DB::table('users')
+                        ->where('company_id', $clientId)
+                        ->where('root_user', 1)
+                        ->value('name')
+                        ?: (\Illuminate\Support\Facades\DB::table('users')->where('company_id', $clientId)->where('is_captain', 1)->value('name')
+                        ?: (\Illuminate\Support\Facades\DB::table('users')->where('company_id', $clientId)->orderBy('id', 'asc')->value('name')
+                        ?: 'Agency Captain'));
+
+                    $agencyContext = [
+                        'agency_name' => $agencyCompName,
+                        'captain_name' => $agencyRootCaptain,
+                        'job_captain_map' => $jobCaptainMap,
+                    ];
+
+                    try {
+                        cache()->store('dragonfly')->put($cacheKey, $agencyContext, 3600);
+                    } catch (\Throwable $e) {
+                        cache()->put($cacheKey, $agencyContext, 3600);
+                    }
+                }
+            }
+
+            $items = array_map(function ($doc) use ($agencyContext) {
+                return \App\DTO\ServiceCompany\DirectClientCandidateDTO::fromElasticDoc($doc, $agencyContext)->toArray();
             }, $items);
         }
 

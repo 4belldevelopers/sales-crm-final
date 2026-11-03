@@ -3,6 +3,8 @@
 namespace App\Services\Interview;
 
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Throwable;
 
 /**
@@ -292,9 +294,73 @@ class InterviewReadModel
             }
         }
 
-        // Source (Recruiter / Spokperson)
-        $sourceName = trim((string) ($source['submitted_by_name'] ?? ($source['posted_by'] ?? ($source['spokperson_name'] ?? ($source['source'] ?? '—')))));
+        // Source (Recruiter / Spokperson / Team Captain)
+        $partnerCompId = (int) ($source['ClientComID'] ?? ($source['thirdparty_company_id'] ?? ($source['from_company_id'] ?? ($source['to_company_id'] ?? 0))));
+        $isAgency = ($partnerCompId > 0 && $authCompanyId && $partnerCompId !== (int) $authCompanyId);
+
+        $captainName = null;
+        if (! empty($source['job_assign']) && is_array($source['job_assign'])) {
+            // Priority 1: Match spok_user_id for partner company
+            foreach ($source['job_assign'] as $ja) {
+                if (is_array($ja) && isset($ja['company_id']) && (int) $ja['company_id'] === $partnerCompId) {
+                    if (! empty($ja['spok_user_id']) && (int) ($ja['user_id'] ?? 0) === (int) $ja['spok_user_id'] && ! empty($ja['user_name'])) {
+                        $captainName = ucwords(trim((string) $ja['user_name']));
+                        break;
+                    }
+                }
+            }
+            // Priority 2: Any entry with spok_user_id > 0 for partner company
+            if (! $captainName) {
+                foreach ($source['job_assign'] as $ja) {
+                    if (is_array($ja) && isset($ja['company_id']) && (int) $ja['company_id'] === $partnerCompId) {
+                        if (! empty($ja['spok_user_id']) && ! empty($ja['user_name'])) {
+                            $captainName = ucwords(trim((string) $ja['user_name']));
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+
+        if (! $captainName && ! empty($source['captain_name'])) {
+            $captainName = ucwords(trim((string) $source['captain_name']));
+        }
+        if (! $captainName && ! empty($source['spokperson_name'])) {
+            $captainName = ucwords(trim((string) $source['spokperson_name']));
+        }
+
+        // Priority 3: Cached lookup for partner agency team captain
+        if (! $captainName && $isAgency && $partnerCompId > 0) {
+            $captainName = Cache::remember("partner_captain_{$partnerCompId}", 3600, function () use ($partnerCompId, $authCompanyId) {
+                return DB::table('job_assign')
+                    ->join('users', 'users.id', '=', 'job_assign.spok_user_id')
+                    ->where('job_assign.company_id', $partnerCompId)
+                    ->where('job_assign.spok_user_id', '>', 0)
+                    ->value('users.name')
+                    ?: (DB::table('users')
+                        ->join('recommendation_relation', 'recommendation_relation.to_user_id', '=', 'users.id')
+                        ->where('recommendation_relation.from_company_id', $authCompanyId)
+                        ->where('recommendation_relation.to_company_id', $partnerCompId)
+                        ->where('users.company_id', $partnerCompId)
+                        ->value('users.name')
+                    ?: (DB::table('users')->where('company_id', $partnerCompId)->where('is_captain', 1)->value('name')
+                    ?: (DB::table('users')->where('company_id', $partnerCompId)->where('root_user', 1)->value('name')
+                    ?: (DB::table('users')->where('company_id', $partnerCompId)->orderBy('id', 'asc')->value('name')
+                    ?: null))));
+            });
+        }
+
+        $sourceName = $captainName ?: trim((string) ($source['submitted_by_name'] ?? ($source['posted_by'] ?? ($source['source'] ?? '—'))));
         $sourceCompany = trim((string) ($source['submitted_by_company_name'] ?? ($source['post_company_name'] ?? ($source['from_company_name'] ?? ($source['uc_company_name'] ?? ($source['company_name'] ?? ''))))));
+
+        if ($isAgency && (empty($sourceCompany) || strtolower($sourceCompany) === '4bell technology' || strtolower($sourceCompany) === 'internal team')) {
+            $sourceCompany = Cache::remember("partner_comp_name_{$partnerCompId}", 3600, function () use ($partnerCompId) {
+                return DB::table('companies')->where('id', $partnerCompId)->value('company_name') ?: 'Partner Agency';
+            });
+        }
+
+        $sourceLabel = $isAgency ? 'TEAM CAPTAIN' : 'RECRUITER INFO';
+
         $createdAtRaw = $source['created_at'] ?? null;
         $submittedAt = 'Recently';
         if ($createdAtRaw) {
@@ -385,9 +451,10 @@ class InterviewReadModel
                 'total_count' => count($interviewers),
             ],
             'source_info' => [
-                'name' => $sourceName,
+                'name' => ucwords($sourceName),
                 'company_name' => $sourceCompany,
                 'submitted_at' => $submittedAt,
+                'label' => $sourceLabel,
             ],
             'attendance' => $attendance,
             'evaluation' => $evaluation,

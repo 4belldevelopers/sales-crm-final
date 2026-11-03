@@ -2532,6 +2532,125 @@
   }
 }
 
+/* ── Tier 4: Enterprise Candidate Pagination Card (Rule 20 Standard) ── */
+.cd-cand-tab-container {
+  width: 100% !important;
+  padding: 0 0 28px 0 !important;
+}
+.cd-cand-pagi-bar {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  flex-wrap: wrap !important;
+  gap: 12px !important;
+  padding: 10px 18px !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 10px !important;
+  background: #ffffff !important;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04) !important;
+  font-family: 'Poppins', sans-serif !important;
+  width: 100% !important;
+  margin-top: 14px !important;
+  margin-bottom: 24px !important;
+}
+.cd-cand-pagi-info {
+  font-size: 12px !important;
+  font-weight: 500 !important;
+  color: #64748b !important;
+  font-family: 'Poppins', sans-serif !important;
+}
+.cd-cand-pagi-info strong {
+  color: #0f172a !important;
+  font-weight: 700 !important;
+  font-variant-numeric: tabular-nums !important;
+}
+.cd-cand-pagi-right {
+  display: flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+}
+.cd-cand-pagi-arrow {
+  width: 32px !important;
+  height: 32px !important;
+  border: 1.5px solid #e2e8f0 !important;
+  border-radius: 8px !important;
+  background: #ffffff !important;
+  color: #64748b !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  cursor: pointer !important;
+  font-size: 11px !important;
+  transition: all 0.15s ease !important;
+  padding: 0 !important;
+}
+.cd-cand-pagi-arrow:hover:not(.disabled):not(:disabled) {
+  background: #009ef7 !important;
+  color: #ffffff !important;
+  border-color: #009ef7 !important;
+}
+.cd-cand-pagi-arrow.disabled,
+.cd-cand-pagi-arrow:disabled {
+  opacity: 0.35 !important;
+  pointer-events: none !important;
+  cursor: not-allowed !important;
+}
+.cd-cand-pagi-page {
+  min-width: 32px !important;
+  height: 32px !important;
+  padding: 0 8px !important;
+  border: 1.5px solid #e2e8f0 !important;
+  border-radius: 8px !important;
+  background: #ffffff !important;
+  color: #334151 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  cursor: pointer !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  font-family: 'Poppins', sans-serif !important;
+  font-variant-numeric: tabular-nums !important;
+  transition: all 0.15s ease !important;
+}
+.cd-cand-pagi-page:hover:not(.active) {
+  background: #f1faff !important;
+  color: #009ef7 !important;
+  border-color: #bfdbfe !important;
+}
+.cd-cand-pagi-page.active {
+  background: #009ef7 !important;
+  color: #ffffff !important;
+  border-color: #009ef7 !important;
+  pointer-events: none !important;
+  cursor: default !important;
+}
+.cd-cand-pagi-dots {
+  font-size: 12px !important;
+  color: #94a3b8 !important;
+  padding: 0 4px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+}
+.cd-cand-pagi-size-select {
+  height: 32px !important;
+  padding: 0 8px !important;
+  border: 1.5px solid #e2e8f0 !important;
+  border-radius: 8px !important;
+  font-size: 11.5px !important;
+  font-weight: 600 !important;
+  color: #475569 !important;
+  background: #f8fafc !important;
+  font-family: 'Poppins', sans-serif !important;
+  margin-left: 6px !important;
+  cursor: pointer !important;
+  outline: none !important;
+  font-variant-numeric: tabular-nums !important;
+}
+.cd-cand-pagi-size-select:focus {
+  border-color: #009ef7 !important;
+}
+
 /* ── 10. Master Performance Tab Modern Dashboard System ── */
 .cd-perf-wrap {
   padding: 14px 18px 24px;
@@ -3271,7 +3390,7 @@
         </a>
 
         <!-- KPI 5: All Offers -->
-        <a href="#candidate_joining" class="cd-kpi-card cd-kpi-nav-trigger" onclick="triggerDrawerTab('candidate_joining', event)" title="Offers extended to agency candidates">
+        <a href="#candidate_offers" class="cd-kpi-card cd-kpi-nav-trigger" onclick="triggerDrawerTab('candidate_offers', event)" title="Offers extended to agency candidates">
             <div class="cd-kpi-icon cd-kpi-icon-rose"><i class="fas fa-file-signature"></i></div>
             <div class="cd-kpi-body">
                 <div class="cd-kpi-num" id="agencyKpiOffers">{{ number_format($kpiOffers) }}</div>
@@ -3280,7 +3399,7 @@
         </a>
 
         <!-- KPI 6: All Joined -->
-        <a href="#candidate_joining" class="cd-kpi-card cd-kpi-nav-trigger" onclick="triggerDrawerTab('candidate_joining', event)" title="Candidates successfully joined">
+        <a href="#candidate_joined" class="cd-kpi-card cd-kpi-nav-trigger" onclick="triggerDrawerTab('candidate_joined', event)" title="Candidates successfully joined">
             <div class="cd-kpi-icon cd-kpi-icon-teal"><i class="fas fa-handshake"></i></div>
             <div class="cd-kpi-body">
                 <div class="cd-kpi-num" id="agencyKpiJoins">{{ number_format($kpiJoins) }}</div>
@@ -3333,10 +3452,17 @@
                 </a>
             </li>
             <li class="nav-item" role="presentation">
-                <a class="cd-tab-pill-btn nav-link" data-bs-toggle="tab" data-toggle="tab" href="#candidate_joining" role="tab" aria-selected="false">
+                <a class="cd-tab-pill-btn nav-link" data-bs-toggle="tab" data-toggle="tab" href="#candidate_offers" role="tab" aria-selected="false">
                     <i class="fas fa-file-signature"></i>
-                    <span>Offers &amp; Joins</span>
-                    <span class="cd-tab-badge-pill" id="agencyTabBadgeOffersJoins">{{ $kpiOffersTotal }}</span>
+                    <span>Offers</span>
+                    <span class="cd-tab-badge-pill" id="agencyTabBadgeOffers">{{ $kpiOffers }}</span>
+                </a>
+            </li>
+            <li class="nav-item" role="presentation">
+                <a class="cd-tab-pill-btn nav-link" data-bs-toggle="tab" data-toggle="tab" href="#candidate_joined" role="tab" aria-selected="false">
+                    <i class="fas fa-handshake"></i>
+                    <span>Joined</span>
+                    <span class="cd-tab-badge-pill" id="agencyTabBadgeJoined">{{ $kpiJoins }}</span>
                 </a>
             </li>
             <li class="nav-item" role="presentation">
@@ -4176,7 +4302,7 @@
                         <div class="cd-cand-title-wrap">
                             <div class="d-flex align-items-center gap-2">
                                 <h4 class="cd-cand-title">Candidates</h4>
-                                <span class="cd-cand-count-badge" id="cdAgencyCandCountBadge">
+                                <span class="cd-cand-count-badge" id="cdAgencyCandCountBadge" style="cursor:pointer;" title="Click to view all candidates">
                                     <span id="cdAgencyCandCountText">{{ $kpiSubmitted }}</span> Candidates
                                 </span>
                             </div>
@@ -4264,7 +4390,7 @@
                 <div class="cd-cand-stream-wrap" id="cdCandidateTableWrapAgency">
                     <div class="cd-cand-stream" id="agencyCandidatesStream">
                     </div>
-                    <div id="paginationAgencyCandidates" class="d-flex align-items-center justify-content-between pt-4">
+                    <div id="paginationAgencyCandidates">
                     </div>
                 </div>
             </div>
@@ -4346,33 +4472,33 @@
         </div>
 
         <!-- ══════════════════════════════════════════════════════════════════════
-             TAB 7: OFFERS & JOININGS (Master Modern Card + Sub-Card)
+             TAB 7: ALL OFFERS (Master Modern Card + Sub-Card)
              ══════════════════════════════════════════════════════════════════════ -->
-        <div class="tab-pane" id="candidate_joining" role="tabpanel" style="background:#ffffff; min-height: 520px;">
+        <div class="tab-pane" id="candidate_offers" role="tabpanel" style="background:#ffffff; min-height: 520px;">
             <div class="cd-oj-wrapper">
                 <!-- TIER 1: TOP HEADER TOOLBAR CARD -->
                 <div class="cd-oj-header-card">
                     <div class="cd-oj-header-left">
-                        <div class="cd-oj-header-icon">
-                            <i class="fas fa-handshake"></i>
+                        <div class="cd-oj-header-icon" style="background: rgba(244, 63, 94, 0.1); color: #f43f5e;">
+                            <i class="fas fa-file-signature"></i>
                         </div>
                         <div>
                             <div class="d-flex align-items-center gap-2">
-                                <h4 class="cd-oj-header-title">Offer &amp; Joining</h4>
-                                <span class="cd-oj-header-badge" id="agencyOjHeaderBadge"><span id="agencyOjCountText">{{ $kpiOffersTotal }}</span> Offers &amp; Joinings</span>
+                                <h4 class="cd-oj-header-title">Candidate Offers</h4>
+                                <span class="cd-oj-header-badge" id="agencyOffersHeaderBadge"><span id="agencyOffersCountText">{{ $kpiOffers }}</span> Offers</span>
                             </div>
-                            <div class="cd-oj-header-sub">Track candidate job offers, joining confirmations and onboardings from {{ $detailName }}.</div>
+                            <div class="cd-oj-header-sub">Track candidate job offers and offer letters extended to candidates submitted by {{ $detailName }}.</div>
                         </div>
                     </div>
                     <div class="cd-oj-header-right">
                         <div class="cd-oj-search-subcard">
                             <i class="fas fa-search"></i>
-                            <input type="text" id="agencyOjSearchInput" placeholder="Search candidate, job, CTC, status..." autocomplete="off">
-                            <button type="button" class="cd-oj-search-clear" id="agencyOjSearchClear" style="display:none;" title="Clear search">
+                            <input type="text" id="agencyOffersSearchInput" placeholder="Search candidate, job, CTC, status..." autocomplete="off">
+                            <button type="button" class="cd-oj-search-clear" id="agencyOffersSearchClear" style="display:none;" title="Clear search">
                                 <i class="fas fa-times"></i>
                             </button>
                         </div>
-                        <button type="button" id="agencyOjResetBtn" class="cd-oj-action-subcard" title="Reset Filters &amp; Refresh">
+                        <button type="button" id="agencyOffersResetBtn" class="cd-oj-action-subcard" title="Reset Filters &amp; Refresh">
                             <i class="fas fa-sync-alt"></i>
                         </button>
                     </div>
@@ -4380,39 +4506,96 @@
 
                 <!-- TIER 2: SUB-TABS CARD WITH WHITE BACKGROUND -->
                 <div class="cd-oj-tabs-card">
-                    <div class="cd-oj-tabs-group" id="agencyOjSegmentGroup">
-                        <button type="button" class="cd-oj-tab-btn active cd-oj-seg-btn-agency js-agency-oj-tab" data-segment="all">
-                            <span>All Records</span>
-                            <span class="cd-oj-tab-badge" id="agencyOjCountAll">{{ $ojCountAll }}</span>
+                    <div class="cd-oj-tabs-group" id="agencyOffersSegmentGroup">
+                        <button type="button" class="cd-oj-tab-btn active cd-offers-seg-btn-agency js-agency-offers-tab" data-segment="offers">
+                            <span>All Offers</span>
+                            <span class="cd-oj-tab-badge" id="agencyOffersCountAll">{{ $kpiOffers }}</span>
                         </button>
-                        <button type="button" class="cd-oj-tab-btn cd-oj-seg-btn-agency js-agency-oj-tab" data-segment="offers">
+                        <button type="button" class="cd-oj-tab-btn cd-offers-seg-btn-agency js-agency-offers-tab" data-segment="offers">
                             <span class="cd-oj-dot dot-warning"></span>
                             <span>Offers Extended</span>
-                            <span class="cd-oj-tab-badge badge-warning" id="agencyOjCountOffers">{{ $ojCountOffers }}</span>
+                            <span class="cd-oj-tab-badge badge-warning" id="agencyOffersCountOffers">{{ $kpiOffers }}</span>
                         </button>
-                        <button type="button" class="cd-oj-tab-btn cd-oj-seg-btn-agency js-agency-oj-tab" data-segment="joining">
+                        <button type="button" class="cd-oj-tab-btn cd-offers-seg-btn-agency js-agency-offers-tab" data-segment="joining">
                             <span class="cd-oj-dot dot-primary"></span>
                             <span>Joining Soon</span>
-                            <span class="cd-oj-tab-badge badge-primary" id="agencyOjCountJoining">{{ $ojCountJoiningSoon }}</span>
-                        </button>
-                        <button type="button" class="cd-oj-tab-btn cd-oj-seg-btn-agency js-agency-oj-tab" data-segment="joined">
-                            <span class="cd-oj-dot dot-success"></span>
-                            <span>Joined &amp; Onboarded</span>
-                            <span class="cd-oj-tab-badge badge-success" id="agencyOjCountJoined">{{ $ojCountJoined }}</span>
+                            <span class="cd-oj-tab-badge badge-primary" id="agencyOffersCountJoining">{{ $ojCountJoiningSoon }}</span>
                         </button>
                     </div>
                 </div>
 
                 <!-- TIER 3: PRIMARY CARDS LIST STREAM (Populated via AJAX) -->
                 <div class="cd-oj-stream-wrap">
-                    <div id="candidatetListJoinAgency" class="cd-oj-stream" data-role="offer-joining-list">
+                    <div id="candidatetListOffersAgency" class="cd-oj-stream" data-role="offer-list">
                         <div class="d-flex align-items-center justify-content-center py-10">
                             <div class="spinner-border text-primary me-3" role="status"></div>
-                            <span class="text-gray-600 fs-7">Loading authoritative offers &amp; joinings...</span>
+                            <span class="text-gray-600 fs-7">Loading candidate offers...</span>
                         </div>
                     </div>
                 </div>
-                <div id="paginationcandidatejoinAgency" class="mt-3">
+                <div id="paginationcandidateOffersAgency" class="mt-3">
+                </div>
+            </div>
+        </div>
+
+        <!-- ══════════════════════════════════════════════════════════════════════
+             TAB 8: ALL JOINED (Master Modern Card + Sub-Card)
+             ══════════════════════════════════════════════════════════════════════ -->
+        <div class="tab-pane" id="candidate_joined" role="tabpanel" style="background:#ffffff; min-height: 520px;">
+            <div class="cd-oj-wrapper">
+                <!-- TIER 1: TOP HEADER TOOLBAR CARD -->
+                <div class="cd-oj-header-card">
+                    <div class="cd-oj-header-left">
+                        <div class="cd-oj-header-icon" style="background: rgba(20, 184, 166, 0.1); color: #14b8a6;">
+                            <i class="fas fa-handshake"></i>
+                        </div>
+                        <div>
+                            <div class="d-flex align-items-center gap-2">
+                                <h4 class="cd-oj-header-title">Joined Candidates</h4>
+                                <span class="cd-oj-header-badge" id="agencyJoinedHeaderBadge"><span id="agencyJoinedCountText">{{ $kpiJoins }}</span> Joined</span>
+                            </div>
+                            <div class="cd-oj-header-sub">Track candidate onboarding and joining confirmations for candidates submitted by {{ $detailName }}.</div>
+                        </div>
+                    </div>
+                    <div class="cd-oj-header-right">
+                        <div class="cd-oj-search-subcard">
+                            <i class="fas fa-search"></i>
+                            <input type="text" id="agencyJoinedSearchInput" placeholder="Search candidate, job, CTC, status..." autocomplete="off">
+                            <button type="button" class="cd-oj-search-clear" id="agencyJoinedSearchClear" style="display:none;" title="Clear search">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                        <button type="button" id="agencyJoinedResetBtn" class="cd-oj-action-subcard" title="Reset Filters &amp; Refresh">
+                            <i class="fas fa-sync-alt"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- TIER 2: SUB-TABS CARD WITH WHITE BACKGROUND -->
+                <div class="cd-oj-tabs-card">
+                    <div class="cd-oj-tabs-group" id="agencyJoinedSegmentGroup">
+                        <button type="button" class="cd-oj-tab-btn active cd-joined-seg-btn-agency js-agency-joined-tab" data-segment="joined">
+                            <span>All Joined</span>
+                            <span class="cd-oj-tab-badge" id="agencyJoinedCountAll">{{ $kpiJoins }}</span>
+                        </button>
+                        <button type="button" class="cd-oj-tab-btn cd-joined-seg-btn-agency js-agency-joined-tab" data-segment="joined">
+                            <span class="cd-oj-dot dot-success"></span>
+                            <span>Joined &amp; Onboarded</span>
+                            <span class="cd-oj-tab-badge badge-success" id="agencyJoinedCountJoined">{{ $kpiJoins }}</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- TIER 3: PRIMARY CARDS LIST STREAM (Populated via AJAX) -->
+                <div class="cd-oj-stream-wrap">
+                    <div id="candidatetListJoinedAgency" class="cd-oj-stream" data-role="joined-list">
+                        <div class="d-flex align-items-center justify-content-center py-10">
+                            <div class="spinner-border text-primary me-3" role="status"></div>
+                            <span class="text-gray-600 fs-7">Loading joined candidates...</span>
+                        </div>
+                    </div>
+                </div>
+                <div id="paginationcandidateJoinedAgency" class="mt-3">
                 </div>
             </div>
         </div>
@@ -4501,7 +4684,7 @@
                     </div>
 
                     <!-- KPI 3: Offers Generated -->
-                    <div class="cd-perf-kpi-card" onclick="triggerDrawerTab('candidate_joining', event)">
+                    <div class="cd-perf-kpi-card" onclick="triggerDrawerTab('candidate_offers', event)">
                         <div class="cd-perf-kpi-top">
                             <div class="cd-perf-kpi-icon cd-perf-kpi-icon-amber">
                                 <i class="fas fa-file-alt fa-solid fa-file-lines"></i>
@@ -4515,7 +4698,7 @@
                     </div>
 
                     <!-- KPI 4: Successful Joins -->
-                    <div class="cd-perf-kpi-card" onclick="triggerDrawerTab('candidate_joining', event)">
+                    <div class="cd-perf-kpi-card" onclick="triggerDrawerTab('candidate_joined', event)">
                         <div class="cd-perf-kpi-top">
                             <div class="cd-perf-kpi-icon cd-perf-kpi-icon-purple">
                                 <i class="fas fa-user-check fa-solid"></i>
@@ -4895,7 +5078,7 @@
     var agencyCompanyId = {{ (int)$agencyId }};
     var currentAuthCompanyId = {{ (int)(auth()->user()->company_id ?? 0) }};
 
-    window.agencyTabLoadedState = window.agencyTabLoadedState || {};
+    window.agencyTabLoadedState = {};
     window.perfChartInstances = window.perfChartInstances || {};
     window.perfClientCache = window.perfClientCache || {};
     window.perfCurrentRange = '12M';
@@ -4934,6 +5117,15 @@
         if (href && href.startsWith('#')) {
             e.preventDefault();
             window.triggerDrawerTab(href);
+        }
+    });
+
+    // Bootstrap shown.bs.tab delegation
+    $(document).off('shown.bs.tab.agencyTab', '.cd-drawer-tabs-list .cd-tab-pill-btn');
+    $(document).on('shown.bs.tab.agencyTab', '.cd-drawer-tabs-list .cd-tab-pill-btn', function(e) {
+        var href = $(this).attr('href');
+        if (href && href.startsWith('#')) {
+            window.loadAgencyTabContent(href.replace(/^#/, ''), false);
         }
     });
 
@@ -4985,7 +5177,8 @@
 
         if (targetTab === 'interview_tracker' || targetTab === 'interviews') {
             if (window.ClientInterviewStoreAgency) {
-                if (force || !window.agencyTabLoadedState[cacheKey]) {
+                var needsLoad = force || !window.agencyTabLoadedState[cacheKey] || $('#candidatetListinterviewtrackerAgency .it-loading-card').length > 0;
+                if (needsLoad) {
                     window.agencyTabLoadedState[cacheKey] = true;
                     window.ClientInterviewStoreAgency.fetch(agencyCompanyId, null, force, $('#agencyItSearchInput').val() || '');
                 }
@@ -4993,10 +5186,26 @@
             return;
         }
 
-        if (targetTab === 'candidate_joining' || targetTab === 'offers') {
+        if (targetTab === 'candidate_offers' || targetTab === 'offers') {
             if (force || !window.agencyTabLoadedState[cacheKey]) {
                 window.agencyTabLoadedState[cacheKey] = true;
-                agencyfetchCandidatesJoin(1, $('#agencyOjSearchInput').val() || '', window.currentAgencyOjSegment || 'all');
+                agencyFetchCandidatesOffers(1, $('#agencyOffersSearchInput').val() || '', window.currentAgencyOffersSegment || 'offers');
+            }
+            return;
+        }
+
+        if (targetTab === 'candidate_joined' || targetTab === 'joined') {
+            if (force || !window.agencyTabLoadedState[cacheKey]) {
+                window.agencyTabLoadedState[cacheKey] = true;
+                agencyFetchCandidatesJoined(1, $('#agencyJoinedSearchInput').val() || '', window.currentAgencyJoinedSegment || 'joined');
+            }
+            return;
+        }
+
+        if (targetTab === 'candidate_joining') {
+            if (force || !window.agencyTabLoadedState[cacheKey]) {
+                window.agencyTabLoadedState[cacheKey] = true;
+                agencyFetchCandidatesJoined(1, '', 'joined');
             }
             return;
         }
@@ -5203,7 +5412,7 @@
         activeStage: 'sourcing',
         searchTerm: '',
         currentPage: 1,
-        pageSize: 25,
+        pageSize: 10,
 
         init: function(companyId, clientId, clientType) {
             this.companyId = companyId;
@@ -5213,6 +5422,7 @@
             this.activeStage = 'sourcing';
             this.searchTerm = '';
             this.currentPage = 1;
+            this.pageSize = this.pageSize || 10;
             this.fetch(1);
         },
 
@@ -5384,7 +5594,9 @@
                 });
             }
 
-            if (filtered.length === 0) {
+            var total = filtered.length;
+
+            if (total === 0) {
                 $('#agencyCandidatesStream').empty();
                 $('#paginationAgencyCandidates').empty();
                 var stageLabel = (this.activeStage && this.activeStage !== 'all')
@@ -5401,11 +5613,69 @@
 
             $('#cdCandEmptyStateAgency').hide();
             $('#cdCandidateTableWrapAgency').show();
+
+            var pageSize = this.pageSize || 10;
+            var totalPages = Math.ceil(total / pageSize) || 1;
+            if (this.currentPage > totalPages) {
+                this.currentPage = totalPages;
+            }
+            if (this.currentPage < 1) {
+                this.currentPage = 1;
+            }
+
+            var start = (this.currentPage - 1) * pageSize;
+            var pagedItems = filtered.slice(start, start + pageSize);
+
             var html = '';
-            filtered.forEach(function(cand) {
+            pagedItems.forEach(function(cand) {
                 html += self.buildCandidateCard(cand);
             });
             $('#agencyCandidatesStream').html(html);
+
+            this.renderPagination(total, totalPages, start, pagedItems.length);
+        },
+
+        renderPagination: function(total, totalPages, start, count) {
+            var currentPage = this.currentPage || 1;
+            var pageSize = this.pageSize || 10;
+            var from = total === 0 ? 0 : (start + 1);
+            var to = total === 0 ? 0 : (start + count);
+
+            var html = `
+                <div class="cd-cand-pagi-bar">
+                    <div class="cd-cand-pagi-info">
+                        Showing <strong>${from}</strong> to <strong>${to}</strong> of <strong>${total}</strong> candidates
+                    </div>
+                    <div class="cd-cand-pagi-right">
+                        <button type="button" class="cd-cand-pagi-arrow ${currentPage <= 1 ? 'disabled' : ''}" data-page="${currentPage - 1}" ${currentPage <= 1 ? 'disabled' : ''} title="Previous Page">
+                            <i class="fas fa-chevron-left"></i>
+                        </button>
+            `;
+
+            for (var i = 1; i <= totalPages; i++) {
+                if (i === 1 || i === totalPages || (i >= currentPage - 2 && i <= currentPage + 2)) {
+                    html += `
+                        <button type="button" class="cd-cand-pagi-page ${i === currentPage ? 'active' : ''}" data-page="${i}">${i}</button>
+                    `;
+                } else if (i === currentPage - 3 || i === currentPage + 3) {
+                    html += `<span class="cd-cand-pagi-dots">…</span>`;
+                }
+            }
+
+            html += `
+                        <button type="button" class="cd-cand-pagi-arrow ${currentPage >= totalPages ? 'disabled' : ''}" data-page="${currentPage + 1}" ${currentPage >= totalPages ? 'disabled' : ''} title="Next Page">
+                            <i class="fas fa-chevron-right"></i>
+                        </button>
+                        <select class="cd-cand-pagi-size-select" id="agencyCandPageSizeSelect" title="Candidates per page">
+                            <option value="10" ${pageSize === 10 ? 'selected' : ''}>10 / page</option>
+                            <option value="25" ${pageSize === 25 ? 'selected' : ''}>25 / page</option>
+                            <option value="50" ${pageSize === 50 ? 'selected' : ''}>50 / page</option>
+                        </select>
+                    </div>
+                </div>
+            `;
+
+            $('#paginationAgencyCandidates').html(html);
         },
 
         buildCandidateCard: function(row) {
@@ -5608,8 +5878,30 @@
             }
 
             // 5. Sub-Card 5: Sourcing & Agency Attribution
-            var captain = row.captain_name || (row.submitted_by_display ? row.submitted_by_display.split(' — ')[0] : (row.spokperson_name || 'Agency Lead'));
-            var submitterCompany = row.agency_name || '{{ addslashes($detailName) }}';
+            var defaultCaptain = '{{ addslashes($agencyCaptainName ?? "Agency Captain") }}';
+            var defaultAgencyCompany = '{{ addslashes($detailName ?? "Recruitment Agency") }}';
+
+            var captain = row.captain_name;
+            if (!captain || captain === 'Agency Lead' || captain === 'Agency Captain' || captain.toLowerCase() === 'agency lead') {
+                captain = (row.submitted_by_display && row.submitted_by_display.indexOf(' — ') !== -1)
+                    ? row.submitted_by_display.split(' — ')[0].trim()
+                    : (row.spokperson_name || defaultCaptain);
+            }
+            if (!captain || captain === 'Agency Lead' || captain.toLowerCase() === 'agency lead') {
+                captain = defaultCaptain;
+            }
+
+            var submitterCompany = row.agency_name;
+            var viewerCompName = '{{ addslashes($viewerCompanyName ?? "4bell technology") }}'.toLowerCase();
+            if (!submitterCompany || submitterCompany.toLowerCase() === viewerCompName || submitterCompany.toLowerCase().indexOf('4bell') !== -1 || submitterCompany === 'Agency Partner') {
+                submitterCompany = (row.submitted_by_display && row.submitted_by_display.indexOf(' — ') !== -1)
+                    ? row.submitted_by_display.split(' — ')[1].trim()
+                    : defaultAgencyCompany;
+            }
+            if (!submitterCompany || submitterCompany.toLowerCase() === viewerCompName || submitterCompany.toLowerCase().indexOf('4bell') !== -1) {
+                submitterCompany = defaultAgencyCompany;
+            }
+
             var captainFormatted = formatWithAcronyms(limitWords(captain, 12));
             var submitterFormatted = formatWithAcronyms(limitWords(submitterCompany, 12));
             var submittedAgo = formatTimeAgo(row.created_at);
@@ -5873,6 +6165,8 @@
         }
     };
 
+    window.CandidateDrawerAgencyStore = window.ClientCandidateStoreAgency;
+
     $(document).off('click.agencyCandStage', '.js-agency-cand-stage');
     $(document).on('click.agencyCandStage', '.js-agency-cand-stage', function(e) {
         e.preventDefault();
@@ -5880,6 +6174,16 @@
         $(this).addClass('active');
         var stage = $(this).data('stage') || 'sourcing';
         window.ClientCandidateStoreAgency.activeStage = stage;
+        window.ClientCandidateStoreAgency.currentPage = 1;
+        window.ClientCandidateStoreAgency.filterAndRender();
+    });
+
+    $(document).off('click.agencyCandAllBadge', '#cdAgencyCandCountBadge');
+    $(document).on('click.agencyCandAllBadge', '#cdAgencyCandCountBadge', function(e) {
+        e.preventDefault();
+        $('.js-agency-cand-stage').removeClass('active');
+        window.ClientCandidateStoreAgency.activeStage = 'all';
+        window.ClientCandidateStoreAgency.currentPage = 1;
         window.ClientCandidateStoreAgency.filterAndRender();
     });
 
@@ -5891,6 +6195,7 @@
         clearTimeout(agencyCandSearchTimer);
         agencyCandSearchTimer = setTimeout(function() {
             window.ClientCandidateStoreAgency.searchTerm = val;
+            window.ClientCandidateStoreAgency.currentPage = 1;
             window.ClientCandidateStoreAgency.filterAndRender();
         }, 250);
     });
@@ -5900,6 +6205,7 @@
         $('#cdAgencyCandSearchInput').val('');
         $(this).hide();
         window.ClientCandidateStoreAgency.searchTerm = '';
+        window.ClientCandidateStoreAgency.currentPage = 1;
         window.ClientCandidateStoreAgency.filterAndRender();
     });
 
@@ -5909,18 +6215,51 @@
         $('#cdAgencyCandSearchClear').hide();
         window.ClientCandidateStoreAgency.searchTerm = '';
         window.ClientCandidateStoreAgency.activeStage = 'sourcing';
+        window.ClientCandidateStoreAgency.currentPage = 1;
         $('.js-agency-cand-stage').removeClass('active');
         $('.js-agency-cand-stage[data-stage="sourcing"]').addClass('active');
         window.ClientCandidateStoreAgency.fetch(1);
     });
 
+    $(document).off('click.agencyCandPagination', '#paginationAgencyCandidates [data-page]');
+    $(document).on('click.agencyCandPagination', '#paginationAgencyCandidates [data-page]', function(e) {
+        e.preventDefault();
+        var $btn = $(this);
+        if ($btn.hasClass('disabled') || $btn.hasClass('active') || $btn.is(':disabled')) return;
+        var page = parseInt($btn.attr('data-page'), 10);
+        if (!isNaN(page) && page > 0) {
+            window.ClientCandidateStoreAgency.currentPage = page;
+            window.ClientCandidateStoreAgency.filterAndRender();
+            var $drawerBody = $('#kt_activitiesDirectClient_body');
+            if ($drawerBody.length) {
+                var $tableWrap = $('#cdCandidateTableWrapAgency');
+                if ($tableWrap.length) {
+                    $drawerBody.animate({ scrollTop: $tableWrap.position().top - 20 }, 200);
+                }
+            }
+        }
+    });
+
+    $(document).off('change.agencyCandPageSize', '#agencyCandPageSizeSelect');
+    $(document).on('change.agencyCandPageSize', '#agencyCandPageSizeSelect', function(e) {
+        var size = parseInt($(this).val(), 10) || 10;
+        window.ClientCandidateStoreAgency.pageSize = size;
+        window.ClientCandidateStoreAgency.currentPage = 1;
+        window.ClientCandidateStoreAgency.filterAndRender();
+    });
+
     // ── 4. Tab 6: Interviews Reactive Engine (ClientInterviewStoreAgency) ──
     window.ClientInterviewStoreAgency = (function() {
-        const store = new Map();
         let currentSearch = '';
         let activeFilter = 'all';
         let pageSize = 10;
         let activeXhr = null;
+        let currentRawData = [];
+
+        function setFilter(filter) {
+            activeFilter = filter || 'all';
+            applyCurrentFilter();
+        }
 
         function fetch(clientId, cursor = null, force = false, search = null) {
             if (search !== null) currentSearch = search;
@@ -5931,7 +6270,7 @@
                 try { activeXhr.abort(); } catch(e){}
             }
 
-            if (force || $list.children().length === 0) {
+            if (force || $list.find('.cd-it-card').length === 0) {
                 $list.html(`
                     <div class="it-loading-card text-center py-8">
                         <span class="spinner-border spinner-border-sm text-primary me-2"></span>
@@ -5949,12 +6288,20 @@
                 type: 'GET',
                 dataType: 'json',
                 success: function(res) {
-                    if (res && Array.isArray(res.data)) {
-                        renderCards(res.data);
-                        renderPagination(res.next_cursor, res.total);
-                        updateCounters(res.total, res.counts);
-                    } else if (res && res.html) {
+                    currentRawData = (res && Array.isArray(res.data)) ? res.data : [];
+                    var totalCount = (res && typeof res.total === 'number') ? res.total : currentRawData.length;
+                    updateCounters(totalCount, currentRawData);
+
+                    if (res && res.html && res.html.trim().length > 0) {
                         $list.html(res.html);
+                        if (res.pagination) {
+                            $('#paginationcandidateinterviewtrackerAgency').html(res.pagination);
+                        } else {
+                            renderPagination(res.next_cursor, totalCount);
+                        }
+                    } else if (currentRawData.length > 0) {
+                        renderFilteredRows(currentRawData);
+                        renderPagination(res.next_cursor, totalCount);
                     } else {
                         $list.html(`
                             <div class="cd-it-empty-state text-center py-12 px-4" style="background:#ffffff; border:1px solid #e2e8f0; border-radius:10px; margin: 12px 0;">
@@ -5965,7 +6312,10 @@
                                 </div>
                             </div>
                         `);
+                        $('#paginationcandidateinterviewtrackerAgency').empty();
                     }
+
+                    applyCurrentFilter();
                 },
                 error: function(xhr, status) {
                     if (status === 'abort') return;
@@ -5980,106 +6330,257 @@
             });
         }
 
-        function renderCards(interviews) {
+        function renderFilteredRows(rows) {
             var $list = $('#candidatetListinterviewtrackerAgency');
-            if (!interviews || interviews.length === 0) {
+            if (!rows || !rows.length) {
                 $list.html(`
                     <div class="cd-it-empty-state text-center py-12 px-4" style="background:#ffffff; border:1px solid #e2e8f0; border-radius:10px; margin: 12px 0;">
-                        <div class="mb-3"><i class="fas fa-calendar-xmark text-muted" style="font-size: 38px; opacity: 0.35;"></i></div>
-                        <div class="fw-bold text-dark fs-6 mb-1">No Interviews Scheduled</div>
+                        <div class="mb-3"><i class="fas fa-calendar-times text-muted" style="font-size: 38px; opacity: 0.35;"></i></div>
+                        <div class="fw-bold text-dark fs-6 mb-1">No Matching Interviews</div>
                         <div class="text-muted fs-8" style="max-width: 440px; margin: 0 auto;">
-                            No interview schedules found for candidates submitted by {{ addslashes($detailName) }}.
+                            No scheduled interviews match this filter criteria.
                         </div>
                     </div>
                 `);
                 return;
             }
 
-            var html = '';
-            interviews.forEach(function(it) {
-                var cName = it.candidate_name || 'Candidate Profile';
-                var initials = cName.split(' ').filter(Boolean).map(function(w){ return w[0]; }).join('').substring(0, 2).toUpperCase() || 'IT';
-                var jTitle = it.job_title || 'Shared Position';
-                var round = it.interview_stage || 'Round 1';
-                var panel = it.interviewers_text || 'Technical Lead';
-                var sDate = it.schedule_date ? it.schedule_date.substring(0, 10) : 'Upcoming';
-                var sTime = it.schedule_time || 'IST';
-                var meetUrl = it.meeting_url || it.url_link || '';
+            var html = rows.map(function(intv) {
+                var cand = intv.candidate || {};
+                var fu = intv.followup || {};
+                var job = intv.job || {};
+                var sch = intv.schedule || {};
+                var src = intv.source_info || {};
+                var stg = intv.stage || {};
+                var fb = intv.feedback_view || {};
+                var att = intv.attendance || {};
+                var evalData = intv.evaluation || {};
 
-                var rawSt = (it.status || 'pending').toLowerCase();
-                var statusLabel = 'SCHEDULED';
-                var statusColor = 'warning';
-                var cat = 'upcoming';
+                var jobTitleInitial = (job.title || 'J').charAt(0).toUpperCase();
 
-                if (rawSt === 'canceled' || rawSt === 'rejected') {
-                    statusLabel = 'CANCELLED'; statusColor = 'danger'; cat = 'cancelled';
-                } else if (rawSt === 'hired' || rawSt === 'completed' || it.feedback == 1) {
-                    statusLabel = 'COMPLETED'; statusColor = 'success'; cat = 'completed';
+                var followupHtml = '';
+                if (fu.label) {
+                    followupHtml = `<span class="cd-followup-pill ${fu.style_class || 'confirmed'}">${fu.label}</span>`;
                 }
 
-                html += `
-                    <div class="cd-it-card js-agency-it-item" data-filter="${cat}">
+                var linkHtml = '';
+                if (sch.meeting_link) {
+                    if (sch.link_type === 'address') {
+                        linkHtml = `
+                            <span class="cd-it-link-pill" title="${sch.meeting_link}">
+                                <i class="fas fa-map-marker-alt me-1"></i>
+                                <span>${sch.link_label || 'View Venue Address'}</span>
+                            </span>
+                        `;
+                    } else {
+                        linkHtml = `
+                            <a href="${sch.meeting_link}" target="_blank" rel="noopener noreferrer" class="cd-it-link-pill">
+                                <i class="fas fa-video me-1"></i>
+                                <span>${sch.link_label || 'Join Interview Link'}</span>
+                            </a>
+                        `;
+                    }
+                }
+
+                var modeIcon = '<i class="fas fa-video me-1"></i>';
+                if (sch.mode_icon_type === 'phone') {
+                    modeIcon = '<i class="fas fa-phone-alt me-1"></i>';
+                } else if (sch.mode_icon_type === 'map-marker') {
+                    modeIcon = '<i class="fas fa-building me-1"></i>';
+                }
+
+                var ratingHtml = '<span class="text-muted fs-8 font-weight-normal">★ Rating Pending</span>';
+                if (evalData.star_rating) {
+                    ratingHtml = `★ ${evalData.star_rating} / 5.0 Rating`;
+                }
+
+                var panelistCardHtml = '';
+                if (window.JeroPanelistComponent && typeof window.JeroPanelistComponent.render === 'function') {
+                    panelistCardHtml = window.JeroPanelistComponent.render(intv);
+                } else {
+                    panelistCardHtml = `
+                        <div class="cd-it-subcard cd-it-panelist-card">
+                            <div class="cd-subcard-header">
+                                <span class="cd-subcard-label">PANELISTS</span>
+                                <span class="cd-it-panel-count-pill cd-it-empty-pill">—</span>
+                            </div>
+                            <div class="cd-it-panelist-empty">
+                                <div class="cd-it-empty-dash">—</div>
+                                <div class="cd-it-empty-sub">Not Assigned</div>
+                            </div>
+                        </div>
+                    `;
+                }
+
+                var dateText = sch.date_formatted || '—';
+                var timeText = sch.time_formatted || '';
+                var modeText = sch.mode_label || 'Video Call';
+                var timeModeHtml = '';
+                if (timeText) {
+                    timeModeHtml = `
+                        <div class="cd-it-dt-time-mode">
+                            <i class="far fa-clock me-1 text-primary"></i>
+                            <span class="cd-it-dt-time-val">${timeText}</span>
+                            <span class="cd-dot-sep">|</span>
+                            ${modeIcon}
+                            <span class="cd-it-dt-mode-val">${modeText}</span>
+                        </div>
+                    `;
+                } else {
+                    timeModeHtml = `
+                        <div class="cd-it-dt-time-mode">
+                            ${modeIcon}
+                            <span class="cd-it-dt-mode-val">${modeText}</span>
+                        </div>
+                    `;
+                }
+
+                var recHtml = '';
+                if (fb.recommendation && fb.recommendation.label) {
+                    recHtml = `<span class="cd-it-rec-pill" style="background:${fb.recommendation.bg};color:${fb.recommendation.color};">${fb.recommendation.label}</span>`;
+                } else if (fb.status_text && fb.status_text !== 'Pending') {
+                    recHtml = `<span class="cd-it-rec-pill" style="background:#f1f5f9;color:${fb.status_color || '#64748b'};">${fb.status_text}</span>`;
+                }
+
+                return `
+                    <div class="cd-it-card" data-interview-id="${intv.id || ''}" data-status="${att.code || 0}" data-feedback="${evalData.code || 0}">
                         <div class="cd-it-card-grid">
                             <div class="cd-it-subcard">
-                                <div class="cd-it-subcard-hdr">
-                                    <span class="cd-it-subcard-label">Candidate &amp; Job</span>
-                                    <span class="badge badge-light-primary fw-bold fs-9">${round}</span>
+                                <div class="cd-subcard-header">
+                                    <span class="cd-subcard-label">CANDIDATE INFO</span>
+                                    ${followupHtml}
                                 </div>
                                 <div class="d-flex align-items-center gap-2">
-                                    <div class="cd-contact-avatar-box" style="width:36px; height:36px; min-width:36px; font-size:12px; background:#eff6ff; color:#009ef7; border:1px solid #bfdbfe;">
-                                        ${initials}
+                                    <div class="cd-avatar-box ${cand.avatar_color_class || 'avatar-blue'}">
+                                        ${cand.initial || 'C'}
                                     </div>
-                                    <div style="min-width:0;">
-                                        <div class="fw-bold text-dark fs-7 text-truncate js-it-searchable" title="${cName}">${cName}</div>
-                                        <div class="text-muted fs-8 text-truncate">${jTitle}</div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="cd-it-subcard">
-                                <div class="cd-it-subcard-hdr"><span class="cd-it-subcard-label">Schedule &amp; Time</span></div>
-                                <div>
-                                    <div class="fw-bold text-dark fs-8"><i class="far fa-calendar text-primary me-1"></i> ${sDate}</div>
-                                    <div class="text-muted fs-9"><i class="far fa-clock text-muted me-1"></i> ${sTime} &bull; 45 Mins</div>
-                                    <div class="text-muted fs-9">Virtual Interview</div>
-                                </div>
-                            </div>
-
-                            <div class="cd-it-subcard">
-                                <div class="cd-it-subcard-hdr"><span class="cd-it-subcard-label">Panelists</span></div>
-                                <div>
-                                    <div class="fw-bold text-dark fs-8 text-truncate">${panel}</div>
-                                    <div class="text-muted fs-9 text-truncate">Tech Panelist</div>
-                                </div>
-                            </div>
-
-                            <div class="cd-it-subcard">
-                                <div class="cd-it-subcard-hdr">
-                                    <span class="cd-it-subcard-label">Status &amp; Link</span>
-                                    <span class="badge badge-light-${statusColor} text-${statusColor} fw-bold fs-9 text-uppercase">${statusLabel}</span>
-                                </div>
-                                <div class="mt-2">
-                                    ${meetUrl && meetUrl !== '#' ? `
-                                        <a href="${meetUrl}" target="_blank" class="btn btn-sm btn-primary py-1 px-3 fs-9 fw-bold w-100 text-center">
-                                            <i class="fas fa-video me-1"></i> Join Meeting
+                                    <div class="min-w-0 flex-grow-1 overflow-hidden">
+                                        <a href="javascript:void(0)" class="cd-it-cand-name client-show-application-detail js-view-candidate" data-row-id="${cand.application_id || cand.id || ''}" data-id="${cand.id || ''}" data-cand-id="${cand.id || ''}" title="${cand.name || 'Candidate'}">
+                                            ${cand.name || 'Candidate'}
                                         </a>
-                                    ` : `
-                                        <span class="btn btn-sm btn-light-primary py-1 px-3 fs-9 fw-semibold w-100 text-center disabled">
-                                            <i class="fas fa-video me-1"></i> Virtual Interview
+                                        <div class="cd-it-cand-role" title="${cand.designation || '—'}">
+                                            ${cand.designation || '—'}
+                                        </div>
+                                        <div class="cd-it-cand-company" title="${cand.current_company || ''}">
+                                            <i class="far fa-building me-1 text-gray-400"></i>
+                                            <span>${cand.current_company || '88 Technology'}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="cd-it-subcard">
+                                <div class="cd-subcard-header">
+                                    <span class="cd-subcard-label">TARGET REQUISITION</span>
+                                    <div class="d-flex align-items-center gap-1">
+                                        <span class="cd-badge-scope ${job.job_type_class || 'scope-direct'}">${job.job_type_label || 'Direct Client'}</span>
+                                        <span class="cd-status-hiring">Hiring</span>
+                                    </div>
+                                </div>
+                                <div class="d-flex align-items-center gap-2">
+                                    <div class="cd-avatar-box avatar-purple">
+                                        ${jobTitleInitial}
+                                    </div>
+                                    <div class="min-w-0 flex-grow-1 overflow-hidden">
+                                        <a href="/service_company/jobs/${job.id || ''}" target="_blank" class="cd-it-job-title" title="${job.title || 'Job Position'}">
+                                            ${job.title || 'Job Position'}
+                                        </a>
+                                        <div class="cd-it-job-meta">
+                                            ${job.job_id_display ? `<span class="cd-it-job-id">${job.job_id_display}</span><span class="cd-dot-sep">•</span>` : ''}
+                                            <span>Technology</span>
+                                        </div>
+                                        <div class="cd-it-job-emp" title="${job.display_company_name || job.client_name || ''}">
+                                            ${job.display_company_name || job.client_name || 'Client Account'}
+                                            <span class="cd-dot-sep">•</span>
+                                            <span>💼 Full-Time</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="cd-it-subcard">
+                                <div class="cd-subcard-header">
+                                    <span class="cd-subcard-label">SCHEDULE &amp; LINK</span>
+                                </div>
+                                <div>
+                                    <div class="cd-it-dt-date">
+                                        <i class="far fa-calendar-alt me-1 text-primary"></i>
+                                        <span>${dateText}</span>
+                                    </div>
+                                    ${timeModeHtml}
+                                    ${linkHtml}
+                                </div>
+                            </div>
+
+                            <div class="cd-it-subcard">
+                                <div class="cd-subcard-header">
+                                    <span class="cd-subcard-label">${src.label || 'TEAM CAPTAIN'}</span>
+                                </div>
+                                <div>
+                                    <div class="cd-it-recruiter-name" title="${src.name || '—'}">
+                                        ${src.name || '—'}
+                                    </div>
+                                    <div class="cd-it-recruiter-comp" title="${src.company_name || ''}">
+                                        ${src.company_name || 'Internal Team'}
+                                    </div>
+                                    <div class="cd-it-submitted-at">
+                                        <i class="far fa-clock me-1"></i>
+                                        <span>Submitted: ${src.submitted_at || 'Recently'}</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            ${panelistCardHtml}
+
+                            <div class="cd-it-subcard">
+                                <div class="cd-subcard-header">
+                                    <span class="cd-subcard-label">STATUS &amp; FEEDBACK</span>
+                                </div>
+                                <div>
+                                    <div class="d-flex align-items-center gap-1 flex-wrap">
+                                        <span class="cd-it-att-pill ${att.css_class || 'cit-fb-scheduled'}">
+                                            ${att.label || 'Scheduled'}
                                         </span>
-                                    `}
+                                        ${recHtml}
+                                    </div>
+                                    <div class="cd-it-rating">
+                                        ${ratingHtml}
+                                    </div>
                                 </div>
                             </div>
                         </div>
+
                         <div class="cd-it-card-bottom">
-                            <div><i class="fas fa-user-check text-muted me-1"></i> Sourced by {{ addslashes($detailName) }} &bull; ${round} ${jTitle}</div>
-                            <div class="d-flex align-items-center gap-2">
-                                <span class="badge badge-light fs-9 text-muted border">Authoritative Schedule</span>
+                            <div class="cd-it-bottom-left">
+                                <div class="d-flex align-items-center gap-1">
+                                    <span class="cd-it-stage-lbl">CANDIDATE STAGE:</span>
+                                    <span class="cd-it-stage-badge ${stg.badge_class || 'cd-stage-in-review'}">
+                                        ${stg.master_status_name || 'In Review'}
+                                    </span>
+                                </div>
+                                <span class="cd-dot-sep">•</span>
+                                <div class="d-flex align-items-center gap-1">
+                                    <span class="cd-it-stage-lbl">SUBSTAGE:</span>
+                                    <span class="cd-it-substage-badge">
+                                        ${stg.child_status_name || 'Private'}
+                                    </span>
+                                </div>
+                                <span class="cd-dot-sep">•</span>
+                                <span class="cd-it-source-subtext">
+                                    Sourced via <strong>${src.company_name || 'Internal'}</strong>
+                                </span>
+                            </div>
+
+                            <div class="cd-it-bottom-right">
+                                <button type="button" class="btn btn-sm btn-light-primary py-1 px-3 client-show-application-detail js-view-candidate" data-row-id="${cand.application_id || cand.id || ''}" data-id="${cand.id || ''}" data-cand-id="${cand.id || ''}">
+                                    Candidate Drawer <i class="fas fa-external-link-alt ms-1 fs-9"></i>
+                                </button>
                             </div>
                         </div>
                     </div>
                 `;
-            });
+            }).join('');
+
             $list.html(html);
         }
 
@@ -6101,23 +6602,64 @@
             `);
         }
 
-        function updateCounters(total, counts) {
-            var all = total || 0;
+        function updateCounters(total, rows) {
+            var all = typeof total === 'number' ? total : 0;
+            let upcoming = 0;
+            let pending = 0;
+            let completed = 0;
+            let cancelled = 0;
+
+            if (Array.isArray(rows)) {
+                rows.forEach(function(r) {
+                    const att = r.attendance ? r.attendance.code : (r.available_status || 0);
+                    const fb = r.evaluation ? r.evaluation.code : (r.feedback || 0);
+                    if (att === 0 || att === 3) upcoming++;
+                    if (att === 1 && fb === 5) pending++;
+                    if (att === 1) completed++;
+                    if (att === 2 || att === 4 || att === 7) cancelled++;
+                });
+            }
+
             $('#agencyItFilterCountAll').text(all);
+            $('#agencyItFilterCountUpcoming').text(upcoming);
+            $('#agencyItFilterCountPending').text(pending);
+            $('#agencyItFilterCountCompleted').text(completed);
+            $('#agencyItFilterCountCancelled').text(cancelled);
             $('#agencyItHeaderBadge').text(all);
             $('#agencyKpiInterviews').text(all);
             $('#agencyTabBadgeInterviews').text(all);
+        }
 
-            if (counts) {
-                $('#agencyItFilterCountUpcoming').text(counts.upcoming || 0);
-                $('#agencyItFilterCountPending').text(counts.pending || 0);
-                $('#agencyItFilterCountCompleted').text(counts.completed || 0);
-                $('#agencyItFilterCountCancelled').text(counts.cancelled || 0);
+        function applyCurrentFilter() {
+            var $cards = $('#candidatetListinterviewtrackerAgency .cd-it-card');
+            if (!$cards.length) return;
+
+            if (activeFilter === 'all') {
+                $cards.show();
+            } else {
+                $cards.each(function() {
+                    var status = parseInt($(this).attr('data-status') || 0, 10);
+                    var feedback = parseInt($(this).attr('data-feedback') || 0, 10);
+                    var match = false;
+
+                    if (activeFilter === 'upcoming') {
+                        match = (status === 0 || status === 3);
+                    } else if (activeFilter === 'pending_feedback') {
+                        match = (status === 1 && feedback === 5);
+                    } else if (activeFilter === 'completed') {
+                        match = (status === 1);
+                    } else if (activeFilter === 'cancelled') {
+                        match = (status === 2 || status === 4 || status === 7);
+                    }
+
+                    $(this).toggle(match);
+                });
             }
         }
 
         return {
-            fetch: fetch
+            fetch: fetch,
+            setFilter: setFilter
         };
     })();
 
@@ -6134,15 +6676,8 @@
         $('.js-agency-it-tab').removeClass('active');
         $(this).addClass('active');
         var filter = $(this).data('filter') || 'all';
-
-        var $cards = $('#candidatetListinterviewtrackerAgency .js-agency-it-item');
-        if (filter === 'all') {
-            $cards.show();
-        } else {
-            $cards.each(function() {
-                var f = $(this).data('filter');
-                $(this).toggle(f === filter);
-            });
+        if (window.ClientInterviewStoreAgency && typeof window.ClientInterviewStoreAgency.setFilter === 'function') {
+            window.ClientInterviewStoreAgency.setFilter(filter);
         }
     });
 
@@ -6170,117 +6705,232 @@
         $('#agencyItSearchClear').hide();
         $('.js-agency-it-tab').removeClass('active');
         $('.js-agency-it-tab[data-filter="all"]').addClass('active');
+        if (window.ClientInterviewStoreAgency && typeof window.ClientInterviewStoreAgency.setFilter === 'function') {
+            window.ClientInterviewStoreAgency.setFilter('all');
+        }
         window.ClientInterviewStoreAgency.fetch(agencyCompanyId, null, true, '');
     });
 
-    // ── 5. Tab 7: Offers & Joins Reactive Engine ──
-    window._activeAgencyOjXhr = null;
-    function agencyfetchCandidatesJoin(page = 1, search = '', segment = null) {
+    // ── 5a. Tab 7: All Offers Reactive Engine ──
+    window._activeAgencyOffersXhr = null;
+    window.currentAgencyOffersSegment = 'offers';
+    function agencyFetchCandidatesOffers(page = 1, search = '', segment = null) {
         if (segment === null || segment === undefined) {
-            segment = window.currentAgencyOjSegment || 'all';
+            segment = window.currentAgencyOffersSegment || 'offers';
         } else {
-            window.currentAgencyOjSegment = segment;
+            window.currentAgencyOffersSegment = segment;
         }
 
         if (search === null || search === undefined) {
-            search = $('#agencyOjSearchInput').val() || '';
+            search = $('#agencyOffersSearchInput').val() || '';
         }
 
-        if (window._activeAgencyOjXhr && window._activeAgencyOjXhr.readyState !== 4) {
-            try { window._activeAgencyOjXhr.abort(); } catch(e){}
+        if (window._activeAgencyOffersXhr && window._activeAgencyOffersXhr.readyState !== 4) {
+            try { window._activeAgencyOffersXhr.abort(); } catch(e){}
         }
 
-        window._activeAgencyOjXhr = $.ajax({
+        window._activeAgencyOffersXhr = $.ajax({
             url: `{{ url('service_company/direct-client-candidate-join-list') }}?page=${page}`,
             type: 'GET',
+            cache: false,
             data: {
                 search: search,
                 segment: segment,
                 clientid: agencyCompanyId,
-                clienttype: 'agency'
+                clienttype: 'agency',
+                _t: Date.now()
             },
             success: function(response) {
-                if (response && response.html) {
-                    $('#candidatetListJoinAgency').html(response.html);
-                    $('#paginationcandidatejoinAgency').html(response.pagination || '');
+                if (response && response.html && response.counts && response.counts.offers > 0) {
+                    $('#candidatetListOffersAgency').html(response.html);
+                    $('#paginationcandidateOffersAgency').html(response.pagination || '');
                 } else {
-                    $('#candidatetListJoinAgency').html(`
+                    $('#candidatetListOffersAgency').html(`
                         <div class="cd-oj-empty-state text-center py-12 px-4" style="background:#ffffff; border:1px solid #e2e8f0; border-radius:10px; margin: 12px 0;">
-                            <div class="mb-3"><i class="fas fa-handshake-slash text-muted" style="font-size: 38px; opacity: 0.35;"></i></div>
-                            <div class="fw-bold text-dark fs-6 mb-1">No Offers or Joinings</div>
+                            <div class="mb-3"><i class="fas fa-file-signature text-muted" style="font-size: 38px; opacity: 0.35;"></i></div>
+                            <div class="fw-bold text-dark fs-6 mb-1">No Candidate Offers</div>
                             <div class="text-muted fs-8" style="max-width: 440px; margin: 0 auto;">
-                                No candidate job offers or onboardings recorded yet for {{ addslashes($detailName) }}.
+                                No candidate job offers or offer letters recorded yet for {{ addslashes($detailName) }}.
                             </div>
                         </div>
                     `);
-                    $('#paginationcandidatejoinAgency').empty();
+                    $('#paginationcandidateOffersAgency').empty();
                 }
 
                 if (response && response.counts) {
-                    var total = response.counts.all || 0;
-                    $('#agencyOjCountAll').text(total);
-                    $('#agencyOjCountOffers').text(response.counts.offers || 0);
-                    $('#agencyOjCountJoining').text(response.counts.joining || 0);
-                    $('#agencyOjCountJoined').text(response.counts.joined || 0);
-                    $('#agencyOjCountText').text(total);
-                    $('#agencyOjHeaderBadge').text(total + ' Offers & Joinings');
-                    $('#agencyKpiOffers').text(response.counts.offers || 0);
-                    $('#agencyKpiJoins').text(response.counts.joined || 0);
-                    $('#agencyTabBadgeOffersJoins').text(total);
+                    var countOffers = response.counts.offers || 0;
+                    $('#agencyOffersCountAll').text(countOffers);
+                    $('#agencyOffersCountOffers').text(countOffers);
+                    $('#agencyOffersCountJoining').text(response.counts.joining || 0);
+                    $('#agencyOffersCountText').text(countOffers);
+                    $('#agencyOffersHeaderBadge').text(countOffers + ' Offers');
+                    $('#agencyKpiOffers').text(countOffers);
+                    $('#agencyTabBadgeOffers').text(countOffers);
                 }
             },
             error: function(xhr, status) {
                 if (status === 'abort') return;
-                $('#candidatetListJoinAgency').html(`
+                $('#candidatetListOffersAgency').html(`
                     <div class="text-center py-8">
                         <i class="fas fa-exclamation-circle fa-2x mb-3 text-danger d-block"></i>
-                        <div class="fw-bold fs-6 text-gray-700 mb-1">Failed to load offers &amp; joinings</div>
+                        <div class="fw-bold fs-6 text-gray-700 mb-1">Failed to load candidate offers</div>
                         <div class="text-muted fs-7">Please refresh or try again.</div>
                     </div>
                 `);
             }
         });
-        return window._activeAgencyOjXhr;
+        return window._activeAgencyOffersXhr;
     }
-    window.agencyfetchCandidatesJoin = agencyfetchCandidatesJoin;
+    window.agencyFetchCandidatesOffers = agencyFetchCandidatesOffers;
 
-    $(document).off('click.agencyOjSegment', '.cd-oj-seg-btn-agency');
-    $(document).on('click.agencyOjSegment', '.cd-oj-seg-btn-agency', function(e) {
+    $(document).off('click.agencyOffersSegment', '.cd-offers-seg-btn-agency');
+    $(document).on('click.agencyOffersSegment', '.cd-offers-seg-btn-agency', function(e) {
         e.preventDefault();
-        var segment = $(this).data('segment') || 'all';
-        $('.cd-oj-seg-btn-agency').removeClass('active');
+        var segment = $(this).data('segment') || 'offers';
+        $('.cd-offers-seg-btn-agency').removeClass('active');
         $(this).addClass('active');
-        window.currentAgencyOjSegment = segment;
-        var search = $('#agencyOjSearchInput').val() || '';
-        agencyfetchCandidatesJoin(1, search, segment);
+        window.currentAgencyOffersSegment = segment;
+        var search = $('#agencyOffersSearchInput').val() || '';
+        agencyFetchCandidatesOffers(1, search, segment);
     });
 
-    var agencyOjSearchTimer = null;
-    $(document).off('input.agencyOjSearch', '#agencyOjSearchInput');
-    $(document).on('input.agencyOjSearch', '#agencyOjSearchInput', function() {
+    var agencyOffersSearchTimer = null;
+    $(document).off('input.agencyOffersSearch', '#agencyOffersSearchInput');
+    $(document).on('input.agencyOffersSearch', '#agencyOffersSearchInput', function() {
         var val = $(this).val().trim();
-        $('#agencyOjSearchClear').toggle(val.length > 0);
-        clearTimeout(agencyOjSearchTimer);
-        agencyOjSearchTimer = setTimeout(function() {
-            agencyfetchCandidatesJoin(1, val, window.currentAgencyOjSegment || 'all');
+        $('#agencyOffersSearchClear').toggle(val.length > 0);
+        clearTimeout(agencyOffersSearchTimer);
+        agencyOffersSearchTimer = setTimeout(function() {
+            agencyFetchCandidatesOffers(1, val, window.currentAgencyOffersSegment || 'offers');
         }, 250);
     });
 
-    $(document).off('click.agencyOjClear', '#agencyOjSearchClear');
-    $(document).on('click.agencyOjClear', '#agencyOjSearchClear', function() {
-        $('#agencyOjSearchInput').val('');
+    $(document).off('click.agencyOffersClear', '#agencyOffersSearchClear');
+    $(document).on('click.agencyOffersClear', '#agencyOffersSearchClear', function() {
+        $('#agencyOffersSearchInput').val('');
         $(this).hide();
-        agencyfetchCandidatesJoin(1, '', window.currentAgencyOjSegment || 'all');
+        agencyFetchCandidatesOffers(1, '', window.currentAgencyOffersSegment || 'offers');
     });
 
-    $(document).off('click.agencyOjReset', '#agencyOjResetBtn');
-    $(document).on('click.agencyOjReset', '#agencyOjResetBtn', function() {
-        $('#agencyOjSearchInput').val('');
-        $('#agencyOjSearchClear').hide();
-        window.currentAgencyOjSegment = 'all';
-        $('.cd-oj-seg-btn-agency').removeClass('active');
-        $('.cd-oj-seg-btn-agency[data-segment="all"]').addClass('active');
-        agencyfetchCandidatesJoin(1, '', 'all');
+    $(document).off('click.agencyOffersReset', '#agencyOffersResetBtn');
+    $(document).on('click.agencyOffersReset', '#agencyOffersResetBtn', function() {
+        $('#agencyOffersSearchInput').val('');
+        $('#agencyOffersSearchClear').hide();
+        window.currentAgencyOffersSegment = 'offers';
+        $('.cd-offers-seg-btn-agency').removeClass('active');
+        $('.cd-offers-seg-btn-agency[data-segment="offers"]').addClass('active');
+        agencyFetchCandidatesOffers(1, '', 'offers');
+    });
+
+    // ── 5b. Tab 8: All Joined Reactive Engine ──
+    window._activeAgencyJoinedXhr = null;
+    window.currentAgencyJoinedSegment = 'joined';
+    function agencyFetchCandidatesJoined(page = 1, search = '', segment = null) {
+        if (segment === null || segment === undefined) {
+            segment = window.currentAgencyJoinedSegment || 'joined';
+        } else {
+            window.currentAgencyJoinedSegment = segment;
+        }
+
+        if (search === null || search === undefined) {
+            search = $('#agencyJoinedSearchInput').val() || '';
+        }
+
+        if (window._activeAgencyJoinedXhr && window._activeAgencyJoinedXhr.readyState !== 4) {
+            try { window._activeAgencyJoinedXhr.abort(); } catch(e){}
+        }
+
+        window._activeAgencyJoinedXhr = $.ajax({
+            url: `{{ url('service_company/direct-client-candidate-join-list') }}?page=${page}`,
+            type: 'GET',
+            cache: false,
+            data: {
+                search: search,
+                segment: segment,
+                clientid: agencyCompanyId,
+                clienttype: 'agency',
+                _t: Date.now()
+            },
+            success: function(response) {
+                if (response && response.html && response.counts && response.counts.joined > 0) {
+                    $('#candidatetListJoinedAgency').html(response.html);
+                    $('#paginationcandidateJoinedAgency').html(response.pagination || '');
+                } else {
+                    $('#candidatetListJoinedAgency').html(`
+                        <div class="cd-oj-empty-state text-center py-12 px-4" style="background:#ffffff; border:1px solid #e2e8f0; border-radius:10px; margin: 12px 0;">
+                            <div class="mb-3"><i class="fas fa-handshake-slash text-muted" style="font-size: 38px; opacity: 0.35;"></i></div>
+                            <div class="fw-bold text-dark fs-6 mb-1">No Joined Candidates</div>
+                            <div class="text-muted fs-8" style="max-width: 440px; margin: 0 auto;">
+                                No candidate joining confirmations or onboardings recorded yet for {{ addslashes($detailName) }}.
+                            </div>
+                        </div>
+                    `);
+                    $('#paginationcandidateJoinedAgency').empty();
+                }
+
+                if (response && response.counts) {
+                    var countJoined = response.counts.joined || 0;
+                    $('#agencyJoinedCountAll').text(countJoined);
+                    $('#agencyJoinedCountJoined').text(countJoined);
+                    $('#agencyJoinedCountText').text(countJoined);
+                    $('#agencyJoinedHeaderBadge').text(countJoined + ' Joined');
+                    $('#agencyKpiJoins').text(countJoined);
+                    $('#agencyTabBadgeJoined').text(countJoined);
+                }
+            },
+            error: function(xhr, status) {
+                if (status === 'abort') return;
+                $('#candidatetListJoinedAgency').html(`
+                    <div class="text-center py-8">
+                        <i class="fas fa-exclamation-circle fa-2x mb-3 text-danger d-block"></i>
+                        <div class="fw-bold fs-6 text-gray-700 mb-1">Failed to load joined candidates</div>
+                        <div class="text-muted fs-7">Please refresh or try again.</div>
+                    </div>
+                `);
+            }
+        });
+        return window._activeAgencyJoinedXhr;
+    }
+    window.agencyFetchCandidatesJoined = agencyFetchCandidatesJoined;
+    window.agencyfetchCandidatesJoin = agencyFetchCandidatesJoined; // backward compatibility
+
+    $(document).off('click.agencyJoinedSegment', '.cd-joined-seg-btn-agency');
+    $(document).on('click.agencyJoinedSegment', '.cd-joined-seg-btn-agency', function(e) {
+        e.preventDefault();
+        var segment = $(this).data('segment') || 'joined';
+        $('.cd-joined-seg-btn-agency').removeClass('active');
+        $(this).addClass('active');
+        window.currentAgencyJoinedSegment = segment;
+        var search = $('#agencyJoinedSearchInput').val() || '';
+        agencyFetchCandidatesJoined(1, search, segment);
+    });
+
+    var agencyJoinedSearchTimer = null;
+    $(document).off('input.agencyJoinedSearch', '#agencyJoinedSearchInput');
+    $(document).on('input.agencyJoinedSearch', '#agencyJoinedSearchInput', function() {
+        var val = $(this).val().trim();
+        $('#agencyJoinedSearchClear').toggle(val.length > 0);
+        clearTimeout(agencyJoinedSearchTimer);
+        agencyJoinedSearchTimer = setTimeout(function() {
+            agencyFetchCandidatesJoined(1, val, window.currentAgencyJoinedSegment || 'joined');
+        }, 250);
+    });
+
+    $(document).off('click.agencyJoinedClear', '#agencyJoinedSearchClear');
+    $(document).on('click.agencyJoinedClear', '#agencyJoinedSearchClear', function() {
+        $('#agencyJoinedSearchInput').val('');
+        $(this).hide();
+        agencyFetchCandidatesJoined(1, '', window.currentAgencyJoinedSegment || 'joined');
+    });
+
+    $(document).off('click.agencyJoinedReset', '#agencyJoinedResetBtn');
+    $(document).on('click.agencyJoinedReset', '#agencyJoinedResetBtn', function() {
+        $('#agencyJoinedSearchInput').val('');
+        $('#agencyJoinedSearchClear').hide();
+        window.currentAgencyJoinedSegment = 'joined';
+        $('.cd-joined-seg-btn-agency').removeClass('active');
+        $('.cd-joined-seg-btn-agency[data-segment="joined"]').addClass('active');
+        agencyFetchCandidatesJoined(1, '', 'joined');
     });
 
     // ── 6. Tab 8: Performance Analytics Engine (Agency Scope) ──

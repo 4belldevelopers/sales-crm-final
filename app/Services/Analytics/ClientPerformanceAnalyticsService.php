@@ -205,18 +205,18 @@ class ClientPerformanceAnalyticsService
         $uniqueCandCount = (int) ($cAggs['eligible_submissions']['unique_count']['value'] ?? $cAggs['unique_candidates']['value'] ?? 0);
         $inReviewCount = 0; // Strictly zero In Review candidates in Performance analytics (Rule 4)
         $inReviewUniqueCount = 0;
-        $screenedCount = (int) ($cAggs['screened_candidates']['unique_count']['value'] ?? 0);
-        $interviewCount = (int) ($cAggs['interviewed_candidates']['unique_count']['value'] ?? 0);
-        $offerCount = (int) ($cAggs['offered_candidates']['unique_count']['value'] ?? 0);
-        $joinCount = (int) ($cAggs['joined_candidates']['unique_count']['value'] ?? 0);
+        $screenedCount = (int) ($cAggs['screened_candidates']['submissions']['value'] ?? $cAggs['screened_candidates']['unique_count']['value'] ?? 0);
+        $interviewCount = (int) ($cAggs['interviewed_candidates']['submissions']['value'] ?? $cAggs['interviewed_candidates']['unique_count']['value'] ?? 0);
+        $offerCount = (int) ($cAggs['offered_candidates']['submissions']['value'] ?? $cAggs['offered_candidates']['unique_count']['value'] ?? 0);
+        $joinCount = (int) ($cAggs['joined_candidates']['submissions']['value'] ?? $cAggs['joined_candidates']['unique_count']['value'] ?? 0);
         $scheduledCount = (int) ($iAggs['scheduled_count']['value'] ?? 0);
 
         // Previous summary counts (strictly statuses 1..6, 0% In Review)
         $prevCand = (int) ($pAggs['eligible_submissions']['submissions']['value'] ?? $pAggs['total_submissions']['value'] ?? 0);
-        $prevScreened = (int) ($pAggs['screened_candidates']['unique_count']['value'] ?? 0);
-        $prevInterview = (int) ($pAggs['interviewed_candidates']['unique_count']['value'] ?? 0);
-        $prevOffer = (int) ($pAggs['offered_candidates']['unique_count']['value'] ?? 0);
-        $prevJoin = (int) ($pAggs['joined_candidates']['unique_count']['value'] ?? 0);
+        $prevScreened = (int) ($pAggs['screened_candidates']['submissions']['value'] ?? $pAggs['screened_candidates']['unique_count']['value'] ?? 0);
+        $prevInterview = (int) ($pAggs['interviewed_candidates']['submissions']['value'] ?? $pAggs['interviewed_candidates']['unique_count']['value'] ?? 0);
+        $prevOffer = (int) ($pAggs['offered_candidates']['submissions']['value'] ?? $pAggs['offered_candidates']['unique_count']['value'] ?? 0);
+        $prevJoin = (int) ($pAggs['joined_candidates']['submissions']['value'] ?? $pAggs['joined_candidates']['unique_count']['value'] ?? 0);
 
         // Exact Time-to-Hire calculation from joined hits (placed_end_date - created_at)
         $tthData = $this->calculateTimeToHire($cResp['hits']['hits'] ?? []);
