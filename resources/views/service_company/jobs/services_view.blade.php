@@ -1706,12 +1706,45 @@
             if (parentItem) parentItem.classList.toggle('is-selected', country.checked);
         });
 
+        if (search) {
+            search.value = '';
+            filterCountries();
+        }
+
         syncRangeSelects('[data-range-applied-on]', appliedOn.value);
         syncRangeSelects('[data-range-currency]', pricingCurrency.value);
 
         updateCommercialType();
         updateReplacementSummary();
         renderSelectedCountries();
+
+        // Immediate tactile rotation feedback on Reset button
+        var resetBtn = root.querySelector('[data-commercial-reset]');
+        if (resetBtn) {
+            var svgIcon = resetBtn.querySelector('svg');
+            if (svgIcon) {
+                svgIcon.style.transition = 'transform 0.4s ease';
+                svgIcon.style.transform = 'rotate(-360deg)';
+                window.setTimeout(function () {
+                    svgIcon.style.transition = 'none';
+                    svgIcon.style.transform = 'none';
+                }, 400);
+            }
+        }
+
+        // Informative notification confirming reset to saved state
+        if (typeof toastr !== 'undefined') {
+            toastr.info('Commercial terms reset to saved values.');
+        } else if (typeof Swal !== 'undefined') {
+            Swal.fire({
+                toast: true,
+                position: 'top-end',
+                icon: 'info',
+                title: 'Commercial terms reset to saved values.',
+                showConfirmButton: false,
+                timer: 2000
+            });
+        }
     }
 
     function updateReplacementSummary() {
@@ -1904,6 +1937,182 @@
     root.querySelectorAll('[data-commercial-reset]').forEach(function (button) {
         button.addEventListener('click', restoreInitialState);
     });
+
+    // ── Self-Contained Resilient Save Commercial Terms Handler (Rule 17) ──
+    var saveBtn = root.querySelector('#form-submit');
+    if (saveBtn) {
+        saveBtn.addEventListener('click', function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+
+            if (saveBtn.classList.contains('is-saving') || saveBtn.disabled) {
+                return;
+            }
+
+            var token = '{{ csrf_token() }}';
+            var saveUrl = '{{ route("service_company.jobs.addUpdateJobServices") }}';
+            var commTypeVal = root.querySelector('.commType') ? root.querySelector('.commType').value : '{{ $sectionCheck }}';
+            var updateIdVal = root.querySelector('.updateId') ? root.querySelector('.updateId').value : '';
+            var modelVal = commercialType ? commercialType.value : '2';
+
+            var arrCountry = [];
+            countries.forEach(function (chk) {
+                if (chk.checked) arrCountry.push(chk.value);
+            });
+
+            var rateVal = [];
+            var rateInputs = root.querySelectorAll(String(commTypeVal) === '2' ? '.perecentage_val' : '.rate_val');
+            rateInputs.forEach(function (inp) {
+                rateVal.push(inp.value);
+            });
+
+            // Free commercial model forces zero rates
+            if (String(modelVal) === '0') {
+                rateVal = rateVal.map(function () { return '0'; });
+            }
+
+            // Normalize salary mode for fixed placement fee on fulltime permanent hiring
+            var salModeVal = appliedOn ? appliedOn.value : '0';
+            if (String(commTypeVal) === '2' && String(modelVal) === '1') {
+                salModeVal = '3'; // Per Hire
+            }
+
+            var payload = {
+                '_token': token,
+                '_method': 'POST',
+                'arrCountry': arrCountry,
+                'rate_val': rateVal,
+                'rateTypeClass': modelVal,
+                'sal_mode': salModeVal,
+                'salary_currency': pricingCurrency ? pricingCurrency.value : '4',
+                'replacement_period_days': replacementPeriod ? replacementPeriod.value : '90',
+                'replacement_type': replacementType ? replacementType.value : 'free_replacement',
+                'replacement_eligibility': replacementEligibility ? replacementEligibility.value : 'early_exit',
+                'billing_frequency': billingFrequency ? billingFrequency.value : 'one_time',
+                'billing_trigger': billingTrigger ? billingTrigger.value : 'candidate_joined',
+                'payment_terms_days': paymentTerms ? paymentTerms.value : '30',
+                'updateId': updateIdVal,
+                'commType': commTypeVal,
+                'main_status': mainStatusInput ? mainStatusInput.value : '1'
+            };
+
+            // Set loading state immediately with visual indicator
+            saveBtn.disabled = true;
+            saveBtn.classList.add('is-saving');
+            saveBtn.setAttribute('aria-busy', 'true');
+
+            // Fail-safe safety timeout: Guarantees button never remains stuck with a spinner
+            var safetyTimer = window.setTimeout(function () {
+                if (saveBtn.classList.contains('is-saving')) {
+                    saveBtn.disabled = false;
+                    saveBtn.classList.remove('is-saving');
+                    saveBtn.removeAttribute('aria-busy');
+                }
+            }, 10000);
+
+            function clearSavingIndicator() {
+                window.clearTimeout(safetyTimer);
+                saveBtn.disabled = false;
+                saveBtn.classList.remove('is-saving');
+                saveBtn.removeAttribute('aria-busy');
+            }
+
+            $.ajax({
+                type: 'POST',
+                url: saveUrl,
+                data: payload,
+                dataType: 'json',
+                success: function (response) {
+                    clearSavingIndicator();
+
+                    if (response && response.status === 'success') {
+                        var countryCount = arrCountry.length;
+                        if (String(commTypeVal) === '2') {
+                            var ftBadge = document.getElementById('fullTimeCount');
+                            if (ftBadge) ftBadge.textContent = countryCount;
+                        } else {
+                            var ctBadge = document.getElementById('contractCount');
+                            if (ctBadge) ctBadge.textContent = countryCount;
+                        }
+
+                        // Dispatch authoritative state event across window and drawer
+                        var serviceType = response.service_type || (String(commTypeVal) === '2' ? 'fulltime' : 'contract');
+                        var eventDetail = {
+                            version: response.version || 1,
+                            service_type: serviceType,
+                            state: response.commercial_state || {}
+                        };
+                        window.dispatchEvent(new CustomEvent('commercial:saved', { detail: eventDetail }));
+                        root.dispatchEvent(new CustomEvent('commercial:saved', { detail: eventDetail }));
+
+                        // Rehydrate listing card instantly if client-first engine is loaded
+                        if (window.ServicesTabEngine && typeof window.ServicesTabEngine.rehydrateServiceCard === 'function') {
+                            window.ServicesTabEngine.rehydrateServiceCard(serviceType, response.commercial_state);
+                        }
+
+                        // Toast confirmation
+                        if (typeof toastr !== 'undefined') {
+                            toastr.success('Commercial terms saved successfully.');
+                        } else if (typeof Swal !== 'undefined') {
+                            Swal.fire({
+                                toast: true,
+                                position: 'top-end',
+                                icon: 'success',
+                                title: 'Commercial terms saved successfully.',
+                                showConfirmButton: false,
+                                timer: 2000,
+                                timerProgressBar: true
+                            });
+                        }
+
+                        // Automatically close sliding drawer safely
+                        var drawerEl = document.getElementById('kt_activitiesJob');
+                        if (window.KTDrawer && drawerEl) {
+                            var drwInst = KTDrawer.getInstance(drawerEl);
+                            if (drwInst) drwInst.hide();
+                        }
+                        if (drawerEl) {
+                            drawerEl.classList.remove('drawer-on');
+                        }
+                        var closeBtn = root.querySelector('.cd-drw-close-btn');
+                        if (closeBtn) {
+                            closeBtn.click();
+                        } else {
+                            var fallbackClose = document.getElementById('kt_activitiesJob_close');
+                            if (fallbackClose) fallbackClose.click();
+                        }
+                        document.querySelectorAll('.drawer-overlay').forEach(function (overlay) {
+                            overlay.remove();
+                        });
+                        document.body.removeAttribute('data-kt-drawer');
+                    } else {
+                        var errMsg = (response && response.message) ? response.message : 'Services could not be saved.';
+                        if (typeof toastr !== 'undefined') {
+                            toastr.error(errMsg);
+                        } else if (typeof Swal !== 'undefined') {
+                            Swal.fire({ toast: true, position: 'top-end', icon: 'error', title: errMsg, showConfirmButton: false, timer: 3200 });
+                        }
+                    }
+                },
+                error: function (xhr) {
+                    clearSavingIndicator();
+                    var msg = 'Services could not be saved. Please try again.';
+                    if (xhr && xhr.status === 409 && xhr.responseJSON && xhr.responseJSON.message) {
+                        msg = xhr.responseJSON.message;
+                    } else if (xhr && xhr.status === 403) {
+                        msg = 'You are not authorized to update commercial terms.';
+                    } else if (xhr && xhr.responseJSON && xhr.responseJSON.message) {
+                        msg = xhr.responseJSON.message;
+                    }
+                    if (typeof toastr !== 'undefined') {
+                        toastr.error(msg);
+                    } else if (typeof Swal !== 'undefined') {
+                        Swal.fire({ toast: true, position: 'top-end', icon: 'error', title: msg, showConfirmButton: false, timer: 3500 });
+                    }
+                }
+            });
+        });
+    }
 
     var cancelBtn = root.querySelector('[data-commercial-cancel]');
     if (cancelBtn) {
