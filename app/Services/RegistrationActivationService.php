@@ -50,20 +50,39 @@ class RegistrationActivationService
     public function activate(Request $request): JsonResponse
     {
         // 1. Session Envelope Validation (INV-02 & INV-17)
-        $rawCookie = $request->cookie(TeamInvitationService::COOKIE_NAME) ?? $request->cookies->get(TeamInvitationService::COOKIE_NAME);
-        if (! $rawCookie) {
+        $rawCookie = $request->cookie(TeamInvitationService::COOKIE_NAME) 
+            ?? $request->cookies->get(TeamInvitationService::COOKIE_NAME)
+            ?? $request->input('invitation_envelope')
+            ?? $request->header('X-Invitation-Envelope');
+
+        $envelope = null;
+
+        if ($rawCookie) {
+            try {
+                $envelope = Crypt::decrypt($rawCookie);
+            } catch (\Throwable $e) {
+                // If encrypted envelope string failed, will try token fallback
+            }
+        }
+
+        if (! $envelope && $request->has('token')) {
+            $rawSecret = (string) $request->input('token');
+            $tokenHash = hash('sha256', $rawSecret);
+            $inv = TeamInvitation::where('token_hash', $tokenHash)->first();
+            if ($inv && $inv->isAcceptable()) {
+                $envelope = [
+                    'invitation_id' => $inv->id,
+                    'tenant_id' => $inv->company_id,
+                    'token_hash' => $tokenHash,
+                    'session_nonce' => bin2hex(random_bytes(16)),
+                ];
+            }
+        }
+
+        if (! $envelope) {
             return response()->json([
                 'error' => 'MISSING_INVITATION_SESSION',
                 'message' => 'No active invitation session found. Please re-open your invitation link.',
-            ], 401);
-        }
-
-        try {
-            $envelope = Crypt::decrypt($rawCookie);
-        } catch (\Throwable $e) {
-            return response()->json([
-                'error' => 'INVALID_SESSION_ENVELOPE',
-                'message' => 'The invitation session envelope is corrupted or invalid.',
             ], 401);
         }
 

@@ -30,13 +30,17 @@ class RegisterController extends SaasFrontBaseController
 
     public function showRegistrationForm(Request $request)
     {
-        // 1. URL Token Scrubbing (INV-01 & INV-02)
-        // If raw secret token is in URL query parameters, issue 302 redirect with HttpOnly session envelope cookie
+        $envelopeCookie = null;
+
+        // 1. Process raw secret token if provided in query string (Direct Zero-Latency Resolution)
         if ($request->has('token')) {
             $rawSecret = (string) $request->query('token');
-            $envelopeData = app(TeamInvitationService::class)->resolveTokenAndCreateEnvelope($rawSecret, $request);
-
-            return redirect()->route('register')->withCookie($envelopeData['cookie']);
+            try {
+                $envelopeData = app(TeamInvitationService::class)->resolveTokenAndCreateEnvelope($rawSecret, $request);
+                $envelopeCookie = $envelopeData['cookie'] ?? null;
+            } catch (\Throwable $e) {
+                // If token is invalid or expired, continue to fallback
+            }
         }
 
         // 2. Resolve Dynamic Registration Context (SELF, AGENCY, or TEAM)
@@ -51,8 +55,8 @@ class RegisterController extends SaasFrontBaseController
         $this->headerData = FrontCmsHeader::first();
         $this->frontTheme = $this->adminTheme;
 
-        return view('auth.login', array_merge($this->data, [
-            'initialMode' => 'signup',
+        $viewResponse = response()->view('auth.login', array_merge($this->data, [
+            'initialMode' => ($registrationContext['context'] === RegistrationContextResolver::CONTEXT_TEAM) ? 'team_invite' : 'signup',
             'registrationContext' => $registrationContext,
             'setting' => $this->global,
             'global' => $this->global,
@@ -60,6 +64,12 @@ class RegisterController extends SaasFrontBaseController
             'headerData' => FrontCmsHeader::first(),
             'adminTheme' => $this->adminTheme,
         ]));
+
+        if ($envelopeCookie) {
+            $viewResponse->withCookie($envelopeCookie);
+        }
+
+        return $viewResponse;
     }
 
     /**
