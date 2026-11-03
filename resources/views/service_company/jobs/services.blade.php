@@ -448,15 +448,17 @@ $('.ser_show-detail').click(function()
    		var id    		=	$(this).attr('data-type');
    		var url   		=	"{{ route('service_company.jobs.serviceviewmore',':id') }}?viewmore=viewmore";
    		url     		=	url.replace(':id', id);
-   		var baseurl    	=	"{{ asset('assets/images/Loading2.gif') }}"; 
    		$.ajax({
    						type  		: 'GET',
    						url   		: url,
-   						 beforeSend	: function() {
-                                     $('#kt_activitiesJob_body').html('<img src="'+baseurl+'" height="35px" width="100%">');
+   						beforeSend	: function() {
+                                     $('#kt_activitiesJob_body').html('<div class="d-flex flex-column align-items-center justify-content-center p-12 text-center" style="min-height:350px;"><div class="spinner-border text-primary mb-3" role="status" style="width:2.5rem;height:2.5rem;"></div><div class="fw-semibold text-gray-700 fs-6">Loading Commercial Configuration...</div></div>');
                        	},
    						success 	: function (response) {
 									$('#kt_activitiesJob_body').html(response.view);	
+   						},
+   						error 	    : function (xhr) {
+									$('#kt_activitiesJob_body').html('<div class="d-flex flex-column align-items-center justify-content-center p-12 text-center text-danger" style="min-height:350px;"><i class="bi bi-exclamation-triangle fs-2x mb-2 text-danger"></i><div class="fw-bold fs-6 mb-1">Failed to load hiring services</div><div class="text-muted fs-8 mb-4">An error occurred while loading commercial terms. Please try again.</div><button type="button" class="btn btn-sm btn-primary ser_show-detail" data-type="'+id+'">Retry</button></div>');
    						}
    	  			});
    	});

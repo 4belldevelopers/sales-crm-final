@@ -16636,7 +16636,11 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
                 }
 
                 // Async ES index refresh for talent marketplace search
-                ElasticCompanyIndex::dispatch($company_id);
+                try {
+                    ElasticCompanyIndex::dispatch($company_id);
+                } catch (\Throwable $esEx) {
+                    Log::warning('Commercials ElasticCompanyIndex dispatch failed: '.$esEx->getMessage());
+                }
             });
 
             DB::commit();
