@@ -91,6 +91,29 @@ class ClientJobsReadService
                 ['term' => ['comId' => (int) $query->serviceCompanyId]],
                 ['term' => ['client_id' => (int) $query->clientId]],
             ];
+        } elseif ($query->clientType === 'agency') {
+            // Agency Shared Jobs Boundary (Operating Company -> Agency)
+            $agencyCompanyId = $partnerPart > 0 ? $partnerPart : (int) $query->clientId;
+            $nestedMust = [
+                ['term' => ['recommendation_relation.from_company_id' => (int) $query->serviceCompanyId]],
+                ['terms' => ['recommendation_relation.final_status' => [1, 2]]],
+            ];
+            if ($agencyCompanyId > 0) {
+                $nestedMust[] = ['term' => ['recommendation_relation.to_company_id' => $agencyCompanyId]];
+            }
+
+            $scopeMust = [
+                [
+                    'nested' => [
+                        'path' => 'recommendation_relation',
+                        'query' => [
+                            'bool' => [
+                                'must' => $nestedMust,
+                            ],
+                        ],
+                    ],
+                ],
+            ];
         } else {
             // Direct Client Complete 4-Level Defense-in-Depth Boundary
             $fromCompId = $partnerPart > 0 ? $partnerPart : (int) $query->clientId;
@@ -252,6 +275,41 @@ class ClientJobsReadService
                 if ($query->clientId > 0) {
                     $candFilter[] = ['term' => ['client_id' => (int) $query->clientId]];
                 }
+            } elseif ($query->clientType === 'agency') {
+                $agencyCompanyId = $partnerPart > 0 ? $partnerPart : (int) $query->clientId;
+                $candFilter[] = [
+                    'bool' => [
+                        'should' => [
+                            ['term' => ['ClientComID' => $agencyCompanyId]],
+                            [
+                                'bool' => [
+                                    'must' => [
+                                        ['term' => ['thirdparty_company_id' => $agencyCompanyId]],
+                                    ],
+                                    'must_not' => [
+                                        ['term' => ['ClientComID' => 0]],
+                                    ],
+                                ],
+                            ],
+                            ['term' => ['agency_id' => $agencyCompanyId]],
+                            ['term' => ['agency_company_id' => $agencyCompanyId]],
+                            ['term' => ['from_company_id' => $agencyCompanyId]],
+                        ],
+                        'minimum_should_match' => 1,
+                    ],
+                ];
+                $candFilter[] = [
+                    'bool' => [
+                        'should' => [
+                            ['term' => ['company_id' => (int) $query->serviceCompanyId]],
+                            ['term' => ['to_company_id' => (int) $query->serviceCompanyId]],
+                            ['term' => ['ClientComID' => (int) $query->serviceCompanyId]],
+                            ['term' => ['job_company_id' => (int) $query->serviceCompanyId]],
+                            ['term' => ['client_comapny_id' => (int) $query->serviceCompanyId]],
+                        ],
+                        'minimum_should_match' => 1,
+                    ],
+                ];
             } else {
                 $allowedCompIds = array_values(array_filter([
                     (int) $query->clientId,
@@ -272,15 +330,10 @@ class ClientJobsReadService
             }
 
             $mustNot = [];
-            if ($query->clientType === 'direct') {
+            if ($query->clientType === 'direct' || $query->clientType === 'agency') {
                 $mustNot = [
                     ['terms' => ['job_master_status_id' => [8, 9, '8', '9']]],
-                    [
-                        'bool' => [
-                            'must' => [['terms' => ['master_status_id' => [8, 9, '8', '9']]]],
-                            'must_not' => [['range' => ['job_master_status_id' => ['gt' => 0]]]],
-                        ],
-                    ],
+                    ['terms' => ['master_status_id' => [8, 9, '8', '9']]],
                 ];
             }
 
@@ -322,7 +375,7 @@ class ClientJobsReadService
                         foreach ($jobStageBuckets as $sb) {
                             $sId = (int) $sb['key'];
                             if ($sId > 0) {
-                                if ($query->clientType === 'direct' && $sId === 8) {
+                                if (($query->clientType === 'direct' || $query->clientType === 'agency') && ($sId === 8 || $sId === 9)) {
                                     continue;
                                 }
                                 $pipelineStageMap[$jId][$sId] = ($pipelineStageMap[$jId][$sId] ?? 0) + (int) $sb['doc_count'];
@@ -332,7 +385,7 @@ class ClientJobsReadService
                         foreach ($masterStageBuckets as $sb) {
                             $sId = (int) $sb['key'];
                             if ($sId > 0) {
-                                if ($query->clientType === 'direct' && $sId === 8) {
+                                if (($query->clientType === 'direct' || $query->clientType === 'agency') && ($sId === 8 || $sId === 9)) {
                                     continue;
                                 }
                                 $pipelineStageMap[$jId][$sId] = ($pipelineStageMap[$jId][$sId] ?? 0) + (int) $sb['doc_count'];

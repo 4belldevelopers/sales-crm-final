@@ -273,6 +273,116 @@ class ClientPerformanceScopeResolver
             }
         }
 
+        // Step 3: Detect or verify Agency Partner scope
+        if ($clientTypeHint === 'agency' || $clientTypeHint === 'consultancy' || $clientTypeHint === 'auto') {
+            $isAgency = $this->verifyAgencyPartner($authCompanyId, $clientId);
+            if ($isAgency) {
+                $sharedJobData = $this->resolveSharedJobIds($authCompanyId, $clientId, 'agency', $jobsIndex);
+                $sharedJobIds = $sharedJobData['shared_job_ids'];
+                $activeSharedJobIds = $sharedJobData['active_job_ids'];
+
+                $contract = new PerformanceScopeContract(
+                    clientId: $clientId,
+                    agencyCompanyId: $authCompanyId,
+                    clientType: 'agency',
+                    clientName: $isAgency['name'] ?? 'Agency #'.$clientId,
+                    relationshipType: 'AGENCY_PARTNER',
+                    sharedJobIds: $sharedJobIds,
+                    activeSharedJobIds: $activeSharedJobIds,
+                    activeRelationshipOnly: true,
+                    range: '12M',
+                    compareWith: 'previous_period',
+                    timezone: 'Asia/Kolkata',
+                    dateBoundaries: [],
+                    theme: 'indigo',
+                    themeColor: '#6366f1',
+                    indices: [
+                        'candidates' => $candidatesIndex,
+                        'jobs' => $jobsIndex,
+                        'interviews' => $interviewsIndex,
+                        'timeline' => $timelineIndex,
+                        'clients' => $clientsIndex,
+                    ],
+                    correlationId: 'cor_'.Str::random(12),
+                    scopeVersion: 1
+                );
+
+                $scope = [
+                    'contract' => $contract,
+                    'client_type' => 'agency',
+                    'client_id' => $clientId,
+                    'client_name' => $isAgency['name'] ?? 'Agency #'.$clientId,
+                    'auth_company_id' => $authCompanyId,
+                    'shared_job_ids' => $sharedJobIds,
+                    'active_shared_job_ids' => $activeSharedJobIds,
+                    'theme' => 'indigo',
+                    'theme_color' => '#6366f1',
+                    'indices' => [
+                        'candidates' => $candidatesIndex,
+                        'jobs' => $jobsIndex,
+                        'interviews' => $interviewsIndex,
+                        'timeline' => $timelineIndex,
+                        'clients' => $clientsIndex,
+                    ],
+                    'candidate_filter' => [
+                        'bool' => [
+                            'must' => [
+                                ['terms' => ['jobId' => ! empty($sharedJobIds) ? $sharedJobIds : [-1]]],
+                                [
+                                    'bool' => [
+                                        'should' => [
+                                            ['term' => ['thirdparty_company_id' => $clientId]],
+                                            ['term' => ['from_company_id' => $clientId]],
+                                        ],
+                                        'minimum_should_match' => 1,
+                                    ],
+                                ],
+                                [
+                                    'bool' => [
+                                        'should' => [
+                                            ['term' => ['company_id' => $authCompanyId]],
+                                            ['term' => ['to_company_id' => $authCompanyId]],
+                                            ['term' => ['ClientComID' => $authCompanyId]],
+                                            ['term' => ['job_company_id' => $authCompanyId]],
+                                        ],
+                                        'minimum_should_match' => 1,
+                                    ],
+                                ],
+                                ['terms' => ['job_master_status_id' => PerformanceStatusMap::SHARED_PIPELINE_STATUSES]],
+                            ],
+                            'must_not' => [
+                                ['terms' => ['job_master_status_id' => [8, 9, '8', '9']]],
+                                ['terms' => ['master_status_id' => [8, 9, '8', '9']]],
+                            ],
+                        ],
+                    ],
+                    'job_filter' => [
+                        'bool' => [
+                            'must' => [
+                                [
+                                    'nested' => [
+                                        'path' => 'recommendation_relation',
+                                        'query' => [
+                                            'bool' => [
+                                                'must' => [
+                                                    ['term' => ['recommendation_relation.from_company_id' => (int) $authCompanyId]],
+                                                    ['term' => ['recommendation_relation.to_company_id' => (int) $clientId]],
+                                                    ['term' => ['recommendation_relation.final_status' => 1]],
+                                                ],
+                                            ],
+                                        ],
+                                    ],
+                                ],
+                            ],
+                        ],
+                    ],
+                ];
+                self::$inMemoryScopeCache[$cacheKey] = $scope;
+
+                return $scope;
+            }
+        }
+
         // Unauthorized access: Neither an internal client of this company nor an authorized direct client
         throw new AuthorizationException('Unauthorized access to client performance analytics.');
     }
@@ -299,6 +409,21 @@ class ClientPerformanceScopeResolver
                                 'must' => [
                                     ['term' => ['recommendation_relation.to_company_id' => (int) $authCompanyId]],
                                     ['term' => ['recommendation_relation.from_company_id' => (int) $clientId]],
+                                    ['term' => ['recommendation_relation.final_status' => 1]],
+                                ],
+                            ],
+                        ],
+                    ],
+                ];
+            } elseif ($clientType === 'agency') {
+                $query = [
+                    'nested' => [
+                        'path' => 'recommendation_relation',
+                        'query' => [
+                            'bool' => [
+                                'must' => [
+                                    ['term' => ['recommendation_relation.from_company_id' => (int) $authCompanyId]],
+                                    ['term' => ['recommendation_relation.to_company_id' => (int) $clientId]],
                                     ['term' => ['recommendation_relation.final_status' => 1]],
                                 ],
                             ],
@@ -437,6 +562,42 @@ class ClientPerformanceScopeResolver
             });
 
             return ['name' => $compName ?? 'Direct Client #'.$clientId];
+        }
+
+        return null;
+    }
+
+    /**
+     * Verify if agency partner relationship is active between authenticated company and target agency.
+     */
+    protected function verifyAgencyPartner(int $authCompanyId, int $clientId): ?array
+    {
+        $rel = cache()->remember("agency_rel_{$authCompanyId}_{$clientId}", 3600, function () use ($authCompanyId, $clientId) {
+            $r = DB::table('recommendation_relation')
+                ->where('from_company_id', $authCompanyId)
+                ->where('to_company_id', $clientId)
+                ->where('final_status', 1)
+                ->first();
+
+            if (! $r) {
+                $r = DB::table('staffing_company_relation')
+                    ->where(function ($q) use ($authCompanyId, $clientId) {
+                        $q->where('from_company_id', $authCompanyId)->where('to_company_id', $clientId);
+                    })->orWhere(function ($q) use ($authCompanyId, $clientId) {
+                        $q->where('from_company_id', $clientId)->where('to_company_id', $authCompanyId);
+                    })
+                    ->first();
+            }
+
+            return $r ? true : false;
+        });
+
+        if ($rel) {
+            $compName = cache()->remember("company_name_{$clientId}", 86400, function () use ($clientId) {
+                return DB::table('companies')->where('id', $clientId)->value('company_name');
+            });
+
+            return ['name' => $compName ?? 'Agency #'.$clientId];
         }
 
         return null;

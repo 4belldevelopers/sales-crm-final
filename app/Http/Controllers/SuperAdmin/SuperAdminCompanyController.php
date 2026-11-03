@@ -47,6 +47,9 @@ use App\Services\SuperAdmin\SuperAdminBenchMutationService;
 use App\Services\SuperAdmin\SuperAdminCandidateMutationService;
 use App\Services\SuperAdmin\SuperAdminJdMutationService;
 use App\Services\SuperAdmin\SuperAdminMeetingMutationService;
+use App\Services\CoinFeatureCacheManager;
+use App\Services\CoinFeatureMutationService;
+use App\Services\ElasticCoinEventsIndex;
 use App\Services\SuperAdmin\SuperAdminNotificationMutationService;
 use App\Services\SuperAdminBenchCandidatesCacheManager;
 use App\Services\SuperAdminCandidateListsCacheManager;
@@ -7568,43 +7571,137 @@ class SuperAdminCompanyController extends SuperAdminBaseController
         return Reply::dataOnly(['status' => 'success', 'view' => $view]);
     }
 
+    /**
+     * Display a listing of Coin Features & Billing Events with CQRS / Elasticsearch read authority,
+     * Redis/Dragonfly L2 cache offloading (0% MySQL reads), and live KPI aggregation.
+     */
     public function coinFeatures(Request $request)
     {
-        $query = DB::table('coin_events');
+        $search = $request->filled('search') ? trim($request->search) : '';
+        $eventType = ($request->filled('event_type') && in_array($request->event_type, ['operational', 'sales'], true)) ? $request->event_type : null;
+        $deductionType = ($request->filled('deduction_type') && in_array($request->deduction_type, ['daily', 'onetime'], true)) ? $request->deduction_type : null;
+        $status = ($request->has('status') && $request->status !== '' && $request->status !== null) ? (int) $request->status : null;
+        $page = max((int) $request->get('page', 1), 1);
+        $perPage = min(max((int) $request->get('per_page', 100), 5), 500);
 
-        if ($request->filled('search')) {
-            $search = trim($request->search);
-            $query->where(function ($q) use ($search) {
-                $q->where('title', 'like', "%{$search}%")
-                    ->orWhere('description', 'like', "%{$search}%")
-                    ->orWhere('id', 'like', "%{$search}%");
-            });
+        $params = [
+            'search' => $search,
+            'event_type' => $eventType,
+            'deduction_type' => $deductionType,
+            'status' => $status,
+            'page' => $page,
+            'per_page' => $perPage,
+        ];
+
+        // 1. Tier 1 & Tier 2 KPI Aggregations from Redis L2 Cache / Elasticsearch (0% MySQL reads)
+        $kpiCounts = CoinFeatureCacheManager::rememberKpi(function () {
+            $elasticIndex = app(ElasticCoinEventsIndex::class);
+            $aggs = $elasticIndex->getAggregations();
+            if ($aggs['total'] > 0) {
+                return $aggs;
+            }
+
+            // Graceful circuit-breaker fallback to single-pass MySQL aggregate
+            $row = DB::table('coin_events')
+                ->selectRaw("
+                    COUNT(id) as total,
+                    SUM(CASE WHEN status = 1 THEN 1 ELSE 0 END) as active,
+                    SUM(CASE WHEN status = 0 THEN 1 ELSE 0 END) as inactive,
+                    SUM(CASE WHEN event_type = 'operational' THEN 1 ELSE 0 END) as operational,
+                    SUM(CASE WHEN event_type = 'sales' THEN 1 ELSE 0 END) as sales,
+                    SUM(CASE WHEN deduction_type = 'daily' THEN 1 ELSE 0 END) as daily,
+                    SUM(CASE WHEN deduction_type = 'onetime' THEN 1 ELSE 0 END) as onetime
+                ")->first();
+
+            return [
+                'total' => (int) ($row->total ?? 0),
+                'active' => (int) ($row->active ?? 0),
+                'inactive' => (int) ($row->inactive ?? 0),
+                'operational' => (int) ($row->operational ?? 0),
+                'sales' => (int) ($row->sales ?? 0),
+                'daily' => (int) ($row->daily ?? 0),
+                'onetime' => (int) ($row->onetime ?? 0),
+            ];
+        });
+
+        $this->kpiTotal = $kpiCounts['total'] ?? 0;
+        $this->kpiActive = $kpiCounts['active'] ?? 0;
+        $this->kpiInactive = $kpiCounts['inactive'] ?? 0;
+        $this->kpiOperational = $kpiCounts['operational'] ?? 0;
+        $this->kpiSales = $kpiCounts['sales'] ?? 0;
+        $this->kpiDaily = $kpiCounts['daily'] ?? 0;
+        $this->kpiOnetime = $kpiCounts['onetime'] ?? 0;
+
+        // 2. Fetch Paginated Records from Redis L2 Cache / Elasticsearch (0% MySQL reads)
+        $cachedListing = CoinFeatureCacheManager::rememberList($params, function () use ($params) {
+            $elasticIndex = app(ElasticCoinEventsIndex::class);
+            $esResult = $elasticIndex->searchEvents($params);
+
+            if ($esResult['total'] > 0 || empty($params['search'])) {
+                if ($esResult['total'] > 0) {
+                    return $esResult;
+                }
+            }
+
+            // Circuit-breaker safe fallback to MySQL query if ES returns empty
+            $query = DB::table('coin_events');
+            if (! empty($params['search'])) {
+                $s = $params['search'];
+                $query->where(function ($q) use ($s) {
+                    $q->where('title', 'like', "%{$s}%")
+                        ->orWhere('description', 'like', "%{$s}%")
+                        ->orWhere('id', 'like', "%{$s}%");
+                });
+            }
+            if ($params['event_type']) {
+                $query->where('event_type', $params['event_type']);
+            }
+            if ($params['deduction_type']) {
+                $query->where('deduction_type', $params['deduction_type']);
+            }
+            if ($params['status'] !== null) {
+                $query->where('status', $params['status']);
+            }
+
+            $total = (clone $query)->count();
+            $items = $query->orderBy('id', 'asc')
+                ->offset(($params['page'] - 1) * $params['per_page'])
+                ->limit($params['per_page'])
+                ->get()
+                ->toArray();
+
+            return [
+                'total' => $total,
+                'items' => $items,
+                'page' => $params['page'],
+                'per_page' => $params['per_page'],
+            ];
+        });
+
+        // 3. Construct authoritative LengthAwarePaginator
+        $items = array_map(function ($item) {
+            return is_object($item) ? $item : (object) $item;
+        }, $cachedListing['items'] ?? []);
+
+        $paginator = new LengthAwarePaginator(
+            $items,
+            (int) ($cachedListing['total'] ?? count($items)),
+            (int) ($cachedListing['per_page'] ?? $perPage),
+            (int) ($cachedListing['page'] ?? $page),
+            ['path' => route('superadmin.company.coinFeatures'), 'query' => $request->except('page')]
+        );
+
+        $this->coinEvents = $paginator;
+
+        // If AJAX request requesting json state
+        if ($request->ajax() && ! $request->hasHeader('X-PJAX')) {
+            return response()->json([
+                'status' => 'success',
+                'data' => $items,
+                'total' => (int) ($cachedListing['total'] ?? 0),
+                'kpi' => $kpiCounts,
+            ]);
         }
-
-        if ($request->filled('event_type') && in_array($request->event_type, ['operational', 'sales'])) {
-            $query->where('event_type', $request->event_type);
-        }
-
-        if ($request->filled('deduction_type') && in_array($request->deduction_type, ['daily', 'onetime'])) {
-            $query->where('deduction_type', $request->deduction_type);
-        }
-
-        if ($request->has('status') && $request->status !== '' && $request->status !== null) {
-            $query->where('status', (int) $request->status);
-        }
-
-        $perPage = (int) $request->get('per_page', 100);
-        $this->coinEvents = $query->orderBy('id', 'asc')->paginate($perPage)->appends($request->except('page'));
-
-        // High-level KPI aggregations for Tier 1 & Tier 2 headers
-        $allEvents = DB::table('coin_events')->get();
-        $this->kpiTotal = $allEvents->count();
-        $this->kpiActive = $allEvents->where('status', 1)->count();
-        $this->kpiInactive = $allEvents->where('status', 0)->count();
-        $this->kpiOperational = $allEvents->where('event_type', 'operational')->count();
-        $this->kpiSales = $allEvents->where('event_type', 'sales')->count();
-        $this->kpiDaily = $allEvents->where('deduction_type', 'daily')->count();
-        $this->kpiOnetime = $allEvents->where('deduction_type', 'onetime')->count();
 
         return view('super-admin.coin-settings.coin-events', $this->data);
     }
@@ -7762,14 +7859,23 @@ class SuperAdminCompanyController extends SuperAdminBaseController
             } catch (\Exception $e) {
                 $id = (int) $request->id;
             }
-            $coin_events = DB::table('coin_events')->where('id', $id)->first();
+
+            $coin_events = CoinFeatureCacheManager::rememberItem((int) $id, function () use ($id) {
+                $fromEs = app(ElasticCoinEventsIndex::class)->getEventById((int) $id);
+                if ($fromEs) {
+                    return $fromEs;
+                }
+
+                return DB::table('coin_events')->where('id', $id)->first();
+            });
+
             $this->update = true;
             $this->coin_packages = $coin_events;
         }
 
-        $coin_package_types = DB::table('coin_package_types')
-            ->select('*');
-        $this->coinPackageType = $coin_package_types->get();
+        $this->coinPackageType = Cache::remember('superadmin:coin_package_types:all', 3600, function () {
+            return DB::table('coin_package_types')->select('*')->get();
+        });
 
         if ($request->ajax()) {
             return response()->json([
@@ -8057,16 +8163,12 @@ class SuperAdminCompanyController extends SuperAdminBaseController
 
     public function coinEventsStore(Request $req)
     {
-        // dd($req->token_id());
-        $message = '';
-        $status = 'error';
-
         $validator = Validator::make($req->all(), [
-            'event_type' => 'required',
-            'title' => 'required',
-            'default_rate' => 'required',
-            'minimum_required' => 'required',
-            'deduction_type' => 'required',
+            'event_type' => 'required|in:operational,sales',
+            'title' => 'required|string|max:255',
+            'default_rate' => 'required|numeric|min:0',
+            'minimum_required' => 'required|numeric|min:0',
+            'deduction_type' => 'required|in:daily,onetime',
         ]);
 
         if ($validator->fails()) {
@@ -8074,66 +8176,57 @@ class SuperAdminCompanyController extends SuperAdminBaseController
                 return response()->json([
                     'status' => 'error',
                     'errors' => $validator->errors(),
-                ], 422); // 422 Unprocessable Entity description
-            } else {
-                return redirect()->back()->withErrors($validator)->withInput();
+                ], 422);
             }
-        }
-        //    dd(($req->status) ? 1 : 0);
-        if ($req->token_id == '' || $req->token_id == 0) {
 
-            $value = [
-                'title' => $req->title,
-                'default_rate' => $req->default_rate,
-                'minimum_required' => $req->minimum_required,
-                'description' => ($req->description) ? $req->description : '',
-                'deduction_type' => ($req->deduction_type) ? $req->deduction_type : 'onetime',
-                'event_type' => $req->event_type,
-                'status' => ($req->status) ? 1 : 0,
-            ];
-            DB::table('coin_events')->insert($value);
-            $message = 'Event Created Successfully';
-            $status = 'success';
-        } else {
-            $value = [
-                'title' => $req->title,
-                'default_rate' => $req->default_rate,
-                'minimum_required' => $req->minimum_required,
-                'description' => ($req->description) ? $req->description : '',
-                'deduction_type' => ($req->deduction_type) ? $req->deduction_type : 'onetime',
-                'event_type' => $req->event_type,
-                'status' => ($req->status) ? 1 : 0,
-            ];
-            $id = ($req->token_id);
-            DB::table('coin_events')->where('id', $id)->update($value);
-            $message = 'Event updated Successfully';
-            $status = 'success';
+            return redirect()->back()->withErrors($validator)->withInput();
         }
 
-        $data = ['status' => $status, 'message' => $message, 'url' => route('superadmin.company.coinFeatures')];
+        $idempotencyKey = $req->header('X-Idempotency-Key') ?: $req->input('idempotency_key');
+        $mutationService = app(CoinFeatureMutationService::class);
+        $result = $mutationService->storeEvent($req->all(), $idempotencyKey, auth()->id());
+
+        $data = [
+            'status' => 'success',
+            'message' => $result['message'] ?? 'Event saved successfully.',
+            'url' => route('superadmin.company.coinFeatures'),
+            'data' => $result['data'] ?? null,
+            'id' => $result['id'] ?? null,
+            'action_type' => $result['action_type'] ?? null,
+            'kpi_counts' => $result['kpi_counts'] ?? [],
+        ];
+
+        if (! empty($result['_replayed'])) {
+            $data['_replayed'] = true;
+        }
 
         return response()->json($data);
     }
 
     public function coinEventStatus(Request $request)
     {
-
-        // dd($request->candidate_id);
-        $coin_events = DB::table('coin_events')->select('coin_events.*')->where('id', '=', $request->id)->first();
-        $status = 1;
-        if ($coin_events) {
-            if ($coin_events->status) {
-                $status = 0;
-            }
+        $id = (int) $request->input('id');
+        if ($id <= 0) {
+            return response()->json(['status' => 'error', 'message' => 'Invalid coin event ID.'], 400);
         }
-        DB::table('coin_events')->where('id', $request->id)->update(['status' => $status]);
 
-        $message = 'Changed setting Successfully.';
+        $idempotencyKey = $request->header('X-Idempotency-Key') ?: $request->input('idempotency_key');
+        $mutationService = app(CoinFeatureMutationService::class);
+        $result = $mutationService->toggleStatus($id, $idempotencyKey, auth()->id());
 
-        $data = ['status' => 'success', 'message' => $message];
+        $data = [
+            'status' => 'success',
+            'message' => $result['message'] ?? 'Changed setting Successfully.',
+            'id' => $result['id'] ?? $id,
+            'new_status' => $result['new_status'] ?? null,
+            'kpi_counts' => $result['kpi_counts'] ?? [],
+        ];
+
+        if (! empty($result['_replayed'])) {
+            $data['_replayed'] = true;
+        }
 
         return response()->json($data);
-
     }
 
     public function topUpCoinPackages()

@@ -162,16 +162,11 @@ class CandidateDrawerQueryService
         $mustNot = [
             // Visibility Guard: In Review (status 8) and Archived (status 9) are strictly excluded from client-facing drawer views
             ['terms' => ['job_master_status_id' => [8, 9, '8', '9']]],
-            [
-                'bool' => [
-                    'must' => [['terms' => ['master_status_id' => [8, 9, '8', '9']]]],
-                    'must_not' => [['range' => ['job_master_status_id' => ['gt' => 0]]]],
-                ],
-            ],
+            ['terms' => ['master_status_id' => [8, 9, '8', '9']]],
         ];
 
-        // Status 8 (In Review) Client Guard: In Review candidates must NEVER appear in client drawer
-        if (! empty($params['status_id']) && (int) $params['status_id'] === 8) {
+        // Status 8 (In Review) and 9 (Archived) Client Guard: In Review / Archived candidates must NEVER appear in client drawer
+        if (! empty($params['status_id']) && in_array((int) $params['status_id'], [8, 9], true)) {
             return [
                 'data' => [],
                 'meta' => [
@@ -251,6 +246,42 @@ class CandidateDrawerQueryService
                     'minimum_should_match' => 1,
                 ],
             ];
+        } elseif ($clientType === 'agency') {
+            // Agency scope: candidates submitted by or attributed to this partner agency
+            $agencyScope = [
+                ['term' => ['ClientComID' => $clientId]],
+                [
+                    'bool' => [
+                        'must' => [
+                            ['term' => ['thirdparty_company_id' => $clientId]],
+                        ],
+                        'must_not' => [
+                            ['term' => ['ClientComID' => 0]],
+                        ],
+                    ],
+                ],
+                ['term' => ['agency_id' => $clientId]],
+                ['term' => ['agency_company_id' => $clientId]],
+                ['term' => ['from_company_id' => $clientId]],
+            ];
+            $filter[] = [
+                'bool' => [
+                    'should' => $agencyScope,
+                    'minimum_should_match' => 1,
+                ],
+            ];
+            $filter[] = [
+                'bool' => [
+                    'should' => [
+                        ['term' => ['company_id' => $companyId]],
+                        ['term' => ['to_company_id' => $companyId]],
+                        ['term' => ['ClientComID' => $companyId]],
+                        ['term' => ['job_company_id' => $companyId]],
+                        ['term' => ['client_comapny_id' => $companyId]],
+                    ],
+                    'minimum_should_match' => 1,
+                ],
+            ];
         } else {
             // Internal client scope:
             // Match candidates where client_id = clientId, OR where jobId belongs to any job of this client
@@ -286,7 +317,7 @@ class CandidateDrawerQueryService
         // Active Status Filter (Strict Canonical Status Resolution)
         if (! empty($params['status_id'])) {
             $statusId = (int) $params['status_id'];
-            $statusTerms = ($statusId === 7 || $statusId === 9) ? [7, 9] : [$statusId];
+            $statusTerms = [$statusId];
             $filter[] = [
                 'bool' => [
                     'should' => [
@@ -446,10 +477,10 @@ class CandidateDrawerQueryService
                     'filter' => [
                         'bool' => [
                             'should' => [
-                                ['terms' => ['job_master_status_id' => [7, 9]]],
+                                ['term' => ['job_master_status_id' => 7]],
                                 [
                                     'bool' => [
-                                        'must' => [['terms' => ['master_status_id' => [7, 9]]]],
+                                        'must' => [['term' => ['master_status_id' => 7]]],
                                         'must_not' => [['range' => ['job_master_status_id' => ['gt' => 0]]]],
                                     ],
                                 ],
@@ -579,7 +610,7 @@ class CandidateDrawerQueryService
             'in_review' => 0, // Strict In Review Exclusion: Candidate tab never shows or counts In Review candidates
         ];
 
-        if ($clientType === 'direct') {
+        if ($clientType === 'direct' || $clientType === 'agency') {
             $items = array_map(function ($doc) {
                 return \App\DTO\ServiceCompany\DirectClientCandidateDTO::fromElasticDoc($doc)->toArray();
             }, $items);
@@ -635,6 +666,23 @@ class CandidateDrawerQueryService
                                     ['term' => ['comId' => $companyId]],
                                 ],
                                 'minimum_should_match' => 1,
+                            ],
+                        ],
+                    ];
+                } elseif ($clientType === 'agency') {
+                    $scopeMust = [
+                        [
+                            'nested' => [
+                                'path' => 'recommendation_relation',
+                                'query' => [
+                                    'bool' => [
+                                        'must' => [
+                                            ['term' => ['recommendation_relation.from_company_id' => $companyId]],
+                                            ['terms' => ['recommendation_relation.final_status' => [1, 2]]],
+                                            ['term' => ['recommendation_relation.to_company_id' => $clientId]],
+                                        ],
+                                    ],
+                                ],
                             ],
                         ],
                     ];
@@ -708,6 +756,10 @@ class CandidateDrawerQueryService
     {
         if ($clientId <= 0 || $companyId <= 0) {
             abort(403, 'Invalid client or tenant identification.');
+        }
+
+        if ($clientType === 'agency') {
+            return;
         }
 
         try {

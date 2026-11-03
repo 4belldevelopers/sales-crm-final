@@ -77,4 +77,10 @@ Broadcast::channel('superadmin.marketplace', function ($user) {
     return (bool) ($user && (! empty($user->is_superadmin) || (int) ($user->role_id ?? 0) === 1 || ! empty($user->root_user)));
 });
 
+// Super Admin private channel for Coin Features & Billing Events real-time delta synchronization
+Broadcast::channel('superadmin.coin-features', function ($user) {
+    return (bool) ($user && (! empty($user->is_superadmin) || (int) ($user->role_id ?? 0) === 1 || ! empty($user->root_user)));
+});
+
+
 

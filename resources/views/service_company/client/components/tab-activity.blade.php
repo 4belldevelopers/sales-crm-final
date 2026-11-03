@@ -171,6 +171,12 @@
                 this.agencyCompanyId = agencyCompanyId;
             }
 
+            if (this.viewerType === 'agency') {
+                this.endpoint = '{!! route('service_company.agency.activity_data_ajax') !!}';
+            } else {
+                this.endpoint = '{!! route('service_company.clients.activity_data_ajax') !!}';
+            }
+
             if (isNewClient || forceRefresh) {
                 this.resetState(isNewClient);
                 if (isNewClient) {
@@ -272,8 +278,10 @@
             if (this.viewerType) {
                 params.viewer_type = this.viewerType;
             }
-            if (this.agencyCompanyId) {
-                params.agency_company_id = this.agencyCompanyId;
+            if (this.agencyCompanyId || this.viewerType === 'agency') {
+                var agId = this.agencyCompanyId || this.activeClientId;
+                params.agency_company_id = agId;
+                params.agency_id = agId;
             }
 
             if (forceRefresh) {

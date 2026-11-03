@@ -1422,6 +1422,20 @@
                 }
             });
 
+            // RFC-4122 UUID v4 Generator for Durable Idempotency
+            function generateUUID() {
+                if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+                    return crypto.randomUUID();
+                }
+                return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+                    var r = Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8);
+                    return v.toString(16);
+                });
+            }
+
+            // In-Flight Mutation Lock Guard (Prevents concurrent double submissions in user RAM)
+            var inFlightMutations = new Set();
+
             // Metronic Drawer Instance helper & Backdrop Lifecycle
             var coinDrawerEl = document.getElementById('kt_coin_drawer');
 
@@ -1461,7 +1475,120 @@
             var searchDebounceTimer = null;
 
             // =====================================================================
-            // 1. Dynamic Client-Side Filtering & Search Engine (0% Server Strain)
+            // 0. IndexedDB Client Cache Engine (JeroCoinFeaturesDB)
+            // =====================================================================
+            var idb = null;
+            function initIndexedDB() {
+                if (!window.indexedDB) return;
+                try {
+                    var request = indexedDB.open('JeroCoinFeaturesDB', 1);
+                    request.onupgradeneeded = function(e) {
+                        var db = e.target.result;
+                        if (!db.objectStoreNames.contains('feature_cache')) {
+                            db.createObjectStore('feature_cache', { keyPath: 'id' });
+                        }
+                    };
+                    request.onsuccess = function(e) {
+                        idb = e.target.result;
+                        cacheCurrentFeatures();
+                    };
+                } catch (ex) {
+                    console.warn('[JeroCoinFeaturesDB] IndexedDB notice:', ex);
+                }
+            }
+
+            function cacheCurrentFeatures() {
+                if (!idb) return;
+                try {
+                    var tx = idb.transaction('feature_cache', 'readwrite');
+                    var store = tx.objectStore('feature_cache');
+                    $('.js-coin-card').each(function() {
+                        var $c = $(this);
+                        store.put({
+                            id: $c.attr('data-id'),
+                            title: $c.attr('data-title'),
+                            type: $c.attr('data-type'),
+                            deduction: $c.attr('data-deduction'),
+                            status: $c.attr('data-status'),
+                            cached_at: Date.now()
+                        });
+                    });
+                } catch (e) {}
+            }
+            initIndexedDB();
+
+            // =====================================================================
+            // 1. Cross-Tab & Real-Time WebSockets Delta Synchronization
+            // =====================================================================
+            function handleRemoteDeltaUpdate(delta) {
+                if (!delta || !delta.id) return;
+                var id = delta.id;
+                var $card = $('#cf-card-' + id);
+                var $badge = $('#statusBadge' + id);
+                var $switch = $('#switchStatus' + id);
+
+                if (typeof delta.status !== 'undefined') {
+                    var isActive = (delta.status == 1);
+                    if ($switch.length) {
+                        $switch.prop('checked', isActive);
+                    }
+                    if ($badge.length) {
+                        $badge.removeClass('active inactive')
+                              .addClass(isActive ? 'active' : 'inactive')
+                              .text(isActive ? 'Active' : 'Inactive');
+                    }
+                    if ($card.length) {
+                        $card.attr('data-status', isActive ? '1' : '0');
+                    }
+                }
+
+                if (delta.kpi_counts) {
+                    updateKpiSpans(delta.kpi_counts);
+                } else {
+                    recalculateKpiBadges();
+                }
+
+                if (currentFilter === 'active' || currentFilter === 'inactive') {
+                    applyFilters();
+                }
+            }
+
+            // Cross-Tab Broadcast Channel
+            var coinSyncChannel = null;
+            if (typeof BroadcastChannel !== 'undefined') {
+                coinSyncChannel = new BroadcastChannel('jero_coin_features_sync');
+                coinSyncChannel.onmessage = function(event) {
+                    if (event && event.data) {
+                        handleRemoteDeltaUpdate(event.data);
+                    }
+                };
+            }
+
+            // Real-Time WebSockets via Laravel Reverb / Echo
+            if (typeof window.Echo !== 'undefined') {
+                try {
+                    window.Echo.private('superadmin.coin-features')
+                        .listen('.coin.feature.delta', function(data) {
+                            handleRemoteDeltaUpdate(data);
+                        });
+                } catch (e) {
+                    console.warn('[Echo] Reverb listener notice:', e);
+                }
+            }
+
+            function updateKpiSpans(counts) {
+                if (!counts) return;
+                if (typeof counts.total !== 'undefined') $('#kpiTotalSpan, #tabCountAll').text(counts.total);
+                if (typeof counts.active !== 'undefined') $('#kpiActiveSpan, #tabCountActive').text(counts.active);
+                if (typeof counts.inactive !== 'undefined') $('#tabCountInactive').text(counts.inactive);
+                if (typeof counts.operational !== 'undefined') $('#kpiOperationalSpan, #tabCountOperational').text(counts.operational);
+                if (typeof counts.sales !== 'undefined') $('#kpiSalesSpan, #tabCountSales').text(counts.sales);
+                if (typeof counts.daily !== 'undefined') $('#tabCountDaily').text(counts.daily);
+                if (typeof counts.onetime !== 'undefined') $('#tabCountOnetime').text(counts.onetime);
+            }
+
+            // =====================================================================
+            // 2. Dynamic Client-Side Filtering & Search Engine (0% Server Strain)
             // =====================================================================
             function applyFilters() {
                 var visibleCount = 0;
@@ -1524,9 +1651,7 @@
                 }
             }
 
-            // =====================================================================
-            // 2. Debounced Live Search Handler (300ms)
-            // =====================================================================
+            // Debounced Live Search Handler (300ms)
             $('#inputCoinSearch').on('keyup', function() {
                 clearTimeout(searchDebounceTimer);
                 var val = $(this).val();
@@ -1550,9 +1675,7 @@
                 applyFilters();
             });
 
-            // =====================================================================
-            // 3. Sub-Tabs Filter Click Handler (Single Active Highlight)
-            // =====================================================================
+            // Sub-Tabs Filter Click Handler (Single Active Highlight)
             $('.js-coin-filter-btn').on('click', function() {
                 $('.js-coin-filter-btn').removeClass('active');
                 $(this).addClass('active');
@@ -1574,7 +1697,7 @@
             });
 
             // =====================================================================
-            // 4. Live Operational Status Switch Toggle (AJAX)
+            // 3. Live Operational Status Switch Toggle with Idempotency & In-Flight Lock
             // =====================================================================
             $(document).on('change', '.js-status-toggle', function() {
                 var $switch = $(this);
@@ -1584,19 +1707,32 @@
                 var $card = $('#cf-card-' + id);
                 var $badge = $('#statusBadge' + id);
 
+                var lockKey = 'toggle_' + id;
+                if (inFlightMutations.has(lockKey)) {
+                    return false;
+                }
+                inFlightMutations.add(lockKey);
+
+                var idempotencyKey = generateUUID();
+
                 $.ajax({
                     type: 'POST',
                     url: "{{ route('superadmin.company.coinEventStatus') }}",
+                    headers: {
+                        'X-Idempotency-Key': idempotencyKey
+                    },
                     data: {
-                        id: id
+                        id: id,
+                        idempotency_key: idempotencyKey
                     },
                     beforeSend: function() {
                         $switch.prop('disabled', true);
                     },
                     success: function(response) {
                         $switch.prop('disabled', false);
+                        inFlightMutations.delete(lockKey);
+
                         if (response.status === 'success') {
-                            // Update badge text and classes
                             if (isChecked) {
                                 $badge.removeClass('inactive').addClass('active').text('Active');
                                 $card.attr('data-status', '1');
@@ -1605,15 +1741,26 @@
                                 $card.attr('data-status', '0');
                             }
 
-                            // Update KPI badge numbers dynamically
-                            recalculateKpiBadges();
+                            if (response.kpi_counts) {
+                                updateKpiSpans(response.kpi_counts);
+                            } else {
+                                recalculateKpiBadges();
+                            }
 
-                            // Re-apply active filters if filtering by status
+                            cacheCurrentFeatures();
+
+                            if (coinSyncChannel) {
+                                coinSyncChannel.postMessage({
+                                    id: id,
+                                    status: isChecked ? 1 : 0,
+                                    kpi_counts: response.kpi_counts || null
+                                });
+                            }
+
                             if (currentFilter === 'active' || currentFilter === 'inactive') {
                                 applyFilters();
                             }
 
-                            // Notification toast
                             Swal.fire({
                                 toast: true,
                                 position: 'top-end',
@@ -1629,6 +1776,7 @@
                         }
                     },
                     error: function() {
+                        inFlightMutations.delete(lockKey);
                         $switch.prop('disabled', false);
                         $switch.prop('checked', !isChecked);
                         Swal.fire('Error', 'Server communication error occurred.', 'error');
@@ -1655,14 +1803,13 @@
             }
 
             // =====================================================================
-            // 5. Metronic Slide-Over Drawer: Add & Quick Edit Handler
+            // 4. Metronic Slide-Over Drawer: Add & Quick Edit Handler
             // =====================================================================
             function openDrawer() {
                 var d = getDrawer();
                 if (d && typeof d.show === 'function') {
                     d.show();
                 } else {
-                    // Fallback if KTDrawer is not instantiated
                     $('#kt_coin_drawer').addClass('drawer-on');
                     if ($('.cf-drawer-overlay').length === 0) {
                         $('body').append('<div class="cf-drawer-overlay"></div>');
@@ -1678,19 +1825,16 @@
                 cleanupDrawerState();
             }
 
-            // Click outside on backdrop overlay (Metronic native or fallback) cleanly dismisses
             $(document).on('click', '.drawer-overlay, .cf-drawer-overlay', function() {
                 closeDrawer();
             });
 
-            // Escape key closes drawer and removes backdrop
             $(document).on('keydown', function(e) {
                 if (e.key === 'Escape' && ($('#kt_coin_drawer').hasClass('drawer-on') || $('.drawer-overlay, .cf-drawer-overlay').length > 0)) {
                     closeDrawer();
                 }
             });
 
-            // Header close icon and sticky footer cancel button
             $('#btnDrawerCloseIcon, #btnDrawerCancel').on('click', function(e) {
                 e.preventDefault();
                 closeDrawer();
@@ -1738,14 +1882,17 @@
                 openDrawer();
             });
 
-            // Save Feature Form Submission
+            // Save Feature Form Submission with In-Flight Lock & Idempotency Key
             $('#btnSaveDrawerFeature').on('click', function(e) {
                 e.preventDefault();
+
+                if (inFlightMutations.has('drawer_save')) {
+                    return false;
+                }
 
                 var $btn = $(this);
                 var $form = $('#coinFeatureDrawerForm');
 
-                // Basic client validation
                 var title = $.trim($('#drawer_title').val());
                 if (!title) {
                     Swal.fire('Validation Required', 'Please enter a Feature / Event Name.', 'warning');
@@ -1753,7 +1900,11 @@
                     return;
                 }
 
+                inFlightMutations.add('drawer_save');
+                var idempotencyKey = generateUUID();
+
                 var formData = new FormData($form[0]);
+                formData.append('idempotency_key', idempotencyKey);
 
                 $btn.find('.indicator-label').addClass('d-none');
                 $btn.find('.indicator-progress').removeClass('d-none');
@@ -1762,16 +1913,28 @@
                 $.ajax({
                     url: "{{ route('superadmin.company.coinEventsStore') }}",
                     type: "POST",
+                    headers: {
+                        'X-Idempotency-Key': idempotencyKey
+                    },
                     data: formData,
                     processData: false,
                     contentType: false,
                     success: function(response) {
+                        inFlightMutations.delete('drawer_save');
                         $btn.find('.indicator-label').removeClass('d-none');
                         $btn.find('.indicator-progress').addClass('d-none');
                         $btn.prop('disabled', false);
 
                         if (response.status === 'success') {
                             closeDrawer();
+
+                            if (coinSyncChannel && response.id) {
+                                coinSyncChannel.postMessage({
+                                    id: response.id,
+                                    status: $('#drawer_status').is(':checked') ? 1 : 0,
+                                    kpi_counts: response.kpi_counts || null
+                                });
+                            }
 
                             Swal.fire({
                                 text: response.message || 'Coin feature saved successfully!',
@@ -1789,6 +1952,7 @@
                         }
                     },
                     error: function(xhr) {
+                        inFlightMutations.delete('drawer_save');
                         $btn.find('.indicator-label').removeClass('d-none');
                         $btn.find('.indicator-progress').addClass('d-none');
                         $btn.prop('disabled', false);

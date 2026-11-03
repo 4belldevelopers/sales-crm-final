@@ -1221,7 +1221,7 @@ After completing these steps, they will be able to start collaborating with your
         $versionKey = 'consultancyviewmore_version_user_'.$userId;
         $version = cache()->get($versionKey, 1);
         $partnerVersion = (int) cache()->get("agency_drawer_version_company_{$partnerCompanyId}", 1);
-        $cacheKeySet = 'consultancyviewmore_v18:'.$userId.':'.$version.':partner_'.$partnerCompanyId.'_v'.$partnerVersion.':'.md5(json_encode($cachePayload));
+        $cacheKeySet = 'consultancyviewmore_v23:'.$userId.':'.$version.':partner_'.$partnerCompanyId.'_v'.$partnerVersion.':'.md5(json_encode($cachePayload));
         /* ----------------------------
         ⚡ Check DragonflyDB / Redis first (Quick Win Step 4)
         ----------------------------- */
@@ -1377,13 +1377,8 @@ After completing these steps, they will be able to start collaborating with your
                     ->orWhereNull('company_id');
             })
             ->where('thirdparty_company_id', '=', $partnerCompanyId)
-            ->whereNotIn('master_status_id', [9]);
+            ->whereNotIn('master_status_id', [8, 9]);
 
-        if (! empty($sharedJobIds)) {
-            $candQuery->whereIn('job_id', $sharedJobIds);
-        } else {
-            $candQuery->whereRaw('1 = 0');
-        }
         $dbCandStats = $candQuery->first();
 
         $this->all_candidates = $dbCandStats ? (int) $dbCandStats->total_count : 0;
@@ -1394,49 +1389,46 @@ After completing these steps, they will be able to start collaborating with your
         $this->offers = $dbCandStats ? (int) $dbCandStats->offer_count : 0;
         $this->Joined = $dbCandStats ? (int) $dbCandStats->joined_count : 0;
         $this->Rejected_count = $dbCandStats ? (int) $dbCandStats->rejected_count : 0;
-        $this->inreview_count = $dbCandStats ? (int) $dbCandStats->inreview_count : 0;
+        $this->inreview_count = 0; // Strict in-review exclusion from candidate pipeline
         $this->joined_count = $this->Joined;
         $this->offer_count = $this->offers;
         $this->total_candidates = $this->all_candidates;
 
         // ── 3. Submitted Candidates List ──
-        $this->candidatesList = collect([]);
-        if (! empty($sharedJobIds)) {
-            $this->candidatesList = DB::table('job_applications')
-                ->leftJoin('jobs', 'jobs.id', '=', 'job_applications.job_id')
-                ->leftJoin('clients', 'clients.id', '=', 'jobs.client_id')
-                ->leftJoin('add_job_wise_condidates', 'add_job_wise_condidates.job_application_id', '=', 'job_applications.id')
-                ->select(
-                    'job_applications.id',
-                    'job_applications.full_name',
-                    'job_applications.email',
-                    'job_applications.phone',
-                    'job_applications.total_exp',
-                    'job_applications.current_company',
-                    'job_applications.current_designation',
-                    'job_applications.ctc',
-                    'job_applications.ectc',
-                    'job_applications.created_at',
-                    'jobs.title as job_title',
-                    'jobs.id as job_id',
-                    'jobs.client_id',
-                    'clients.name as internal_client_name',
-                    'clients.logo as internal_client_logo',
-                    'add_job_wise_condidates.master_status_id'
-                )
-                ->where(function ($q) use ($company_id) {
-                    $q->where('job_applications.company_id', '=', $company_id)
-                        ->orWhere('add_job_wise_condidates.company_id', '=', $company_id);
-                })
-                ->where(function ($q) use ($partnerCompanyId) {
-                    $q->where('add_job_wise_condidates.thirdparty_company_id', '=', $partnerCompanyId)
-                        ->orWhere('job_applications.thirdparty_company_id', '=', $partnerCompanyId);
-                })
-                ->whereIn('add_job_wise_condidates.job_id', $sharedJobIds)
-                ->orderBy('job_applications.id', 'desc')
-                ->limit(50)
-                ->get();
-        }
+        $this->candidatesList = DB::table('job_applications')
+            ->leftJoin('jobs', 'jobs.id', '=', 'job_applications.job_id')
+            ->leftJoin('clients', 'clients.id', '=', 'jobs.client_id')
+            ->leftJoin('add_job_wise_condidates', 'add_job_wise_condidates.job_application_id', '=', 'job_applications.id')
+            ->select(
+                'job_applications.id',
+                'job_applications.full_name',
+                'job_applications.email',
+                'job_applications.phone',
+                'job_applications.total_exp',
+                'job_applications.current_company',
+                'job_applications.current_designation',
+                'job_applications.ctc',
+                'job_applications.ectc',
+                'job_applications.created_at',
+                'jobs.title as job_title',
+                'jobs.id as job_id',
+                'jobs.client_id',
+                'clients.name as internal_client_name',
+                'clients.logo as internal_client_logo',
+                'add_job_wise_condidates.master_status_id'
+            )
+            ->where(function ($q) use ($company_id) {
+                $q->where('job_applications.company_id', '=', $company_id)
+                    ->orWhere('add_job_wise_condidates.company_id', '=', $company_id);
+            })
+            ->where(function ($q) use ($partnerCompanyId) {
+                $q->where('add_job_wise_condidates.thirdparty_company_id', '=', $partnerCompanyId)
+                    ->orWhere('job_applications.thirdparty_company_id', '=', $partnerCompanyId);
+            })
+            ->whereNotIn('add_job_wise_condidates.master_status_id', [8, 9])
+            ->orderBy('job_applications.id', 'desc')
+            ->limit(50)
+            ->get();
 
         // ── 4. Interviews Schedule (Workflow: Job shared with agency + Agency candidate + Scheduled interview) ──
         $this->interviewsList = collect([]);
@@ -2064,21 +2056,43 @@ After completing these steps, they will be able to start collaborating with your
         $boolQuery = [
             'bool' => [
                 'must' => [
-                    ['term' => ['from_company_id' => $company_id]],
                     [
                         'bool' => [
                             'should' => [
-                                ['term' => ['ClientComID' => $to_company_id]],
-                                ['term' => ['to_company_id' => $to_company_id]],
-                                ['term' => ['thirdparty_company_id' => $to_company_id]],
+                                ['term' => ['company_id' => $company_id]],
+                                ['term' => ['job_company_id' => $company_id]],
+                                ['term' => ['client_comapny_id' => $company_id]],
+                                ['term' => ['to_company_id' => $company_id]],
+                                ['term' => ['from_company_id' => $company_id]],
                             ],
                             'minimum_should_match' => 1,
                         ],
                     ],
-                    ['term' => ['final_status' => 1]],
+                    [
+                        'bool' => [
+                            'should' => [
+                                ['term' => ['ClientComID' => $to_company_id]],
+                                [
+                                    'bool' => [
+                                        'must' => [
+                                            ['term' => ['thirdparty_company_id' => $to_company_id]],
+                                        ],
+                                        'must_not' => [
+                                            ['term' => ['ClientComID' => 0]],
+                                        ],
+                                    ],
+                                ],
+                                ['term' => ['agency_id' => $to_company_id]],
+                                ['term' => ['agency_company_id' => $to_company_id]],
+                                ['term' => ['from_company_id' => $to_company_id]],
+                            ],
+                            'minimum_should_match' => 1,
+                        ],
+                    ],
                 ],
                 'must_not' => [
-                    ['terms' => ['job_master_status_id' => [8, 9]]],
+                    ['terms' => ['job_master_status_id' => [8, 9, '8', '9']]],
+                    ['terms' => ['master_status_id' => [8, 9, '8', '9']]],
                 ],
             ],
         ];
@@ -2117,8 +2131,8 @@ After completing these steps, they will be able to start collaborating with your
         $negotiation_count = $resultData->get('4', 0);
         $offer_count = $resultData->get('5', 0);
         $Rejected_count = $resultData->get('7', 0);
-        $inreview_count = $resultData->get('8', 0);
-        $total_candidates = $inreview_count + $sourcing_count + $screening_count + $evaluation_count + $negotiation_count + $offer_count + $joined_count + $Rejected_count;
+        $inreview_count = 0; // Strict in-review exclusion from candidate pipeline
+        $total_candidates = $sourcing_count + $screening_count + $evaluation_count + $negotiation_count + $offer_count + $joined_count + $Rejected_count;
 
         // DB Fallback for Candidate Pipeline breakdown if ES count is 0
         if ($total_candidates == 0) {
@@ -2135,7 +2149,7 @@ After completing these steps, they will be able to start collaborating with your
                 )
                 ->where('company_id', $company_id)
                 ->where('thirdparty_company_id', $to_company_id)
-                ->whereNotIn('master_status_id', [9])
+                ->whereNotIn('master_status_id', [8, 9])
                 ->first();
 
             if ($dbCandStats) {
@@ -2146,8 +2160,8 @@ After completing these steps, they will be able to start collaborating with your
                 $negotiation_count = (int) $dbCandStats->negotiation_count;
                 $offer_count = (int) $dbCandStats->offer_count;
                 $Rejected_count = (int) $dbCandStats->rejected_count;
-                $inreview_count = (int) $dbCandStats->inreview_count;
-                $total_candidates = $inreview_count + $sourcing_count + $screening_count + $evaluation_count + $negotiation_count + $offer_count + $joined_count + $Rejected_count;
+                $inreview_count = 0;
+                $total_candidates = $sourcing_count + $screening_count + $evaluation_count + $negotiation_count + $offer_count + $joined_count + $Rejected_count;
             }
         }
 

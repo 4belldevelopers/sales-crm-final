@@ -418,8 +418,8 @@ class ClientPerformanceQueryBuilder
                 $tenantQuery,
             ],
             'must_not' => [
-                ['terms' => ['master_status_id' => [8, '8']]],
-                ['terms' => ['job_master_status_id' => [8, '8']]],
+                ['terms' => ['master_status_id' => [8, 9, '8', '9']]],
+                ['terms' => ['job_master_status_id' => [8, 9, '8', '9']]],
             ],
         ];
 

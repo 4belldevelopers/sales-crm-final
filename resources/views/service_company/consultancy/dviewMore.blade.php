@@ -1981,6 +1981,8 @@
   gap: 10px;
   width: 100%;
 }
+
+/* Individual Candidate Master Card (Card + Sub-Card Enterprise Standard) */
 .cd-cand-card {
   background: #ffffff !important;
   border: 1px solid #e2e8f0 !important;
@@ -1989,20 +1991,26 @@
   transition: all 0.15s ease-in-out !important;
   overflow: hidden !important;
   width: 100% !important;
+  max-width: 100% !important;
 }
 .cd-cand-card:hover {
   border-color: #cbd5e1 !important;
   box-shadow: 0 4px 14px rgba(15, 23, 42, 0.06) !important;
   transform: translateY(-1px) !important;
 }
+
+/* 6 Discrete Sub-Cards Grid */
 .cd-cand-card-grid {
   display: grid !important;
   grid-template-columns: minmax(0, 1.85fr) minmax(0, 1.35fr) minmax(0, 1.25fr) minmax(0, 2.35fr) minmax(0, 1.55fr) minmax(0, 1.25fr) !important;
   gap: 8px !important;
   padding: 10px 12px !important;
   width: 100% !important;
+  max-width: 100% !important;
   align-items: stretch !important;
 }
+
+/* Discrete Sub-Card Container */
 .cd-cand-subcard {
   background: #f8fafc !important;
   border: 1px solid #edf2f7 !important;
@@ -2012,12 +2020,15 @@
   flex-direction: column !important;
   justify-content: space-between !important;
   min-width: 0 !important;
+  overflow: hidden !important;
 }
 .cd-cand-subcard-hdr {
   display: flex !important;
   align-items: center !important;
   justify-content: space-between !important;
-  margin-bottom: 4px !important;
+  margin-bottom: 5px !important;
+  gap: 4px !important;
+  line-height: 1 !important;
 }
 .cd-cand-subcard-label {
   font-size: 9.5px !important;
@@ -2025,16 +2036,500 @@
   text-transform: uppercase !important;
   letter-spacing: 0.3px !important;
   color: #64748b !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
 }
-.cd-cand-card-bottom {
-  border-top: 1px solid #f1f5f9;
-  padding: 6px 12px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  background: #fafafa;
-  font-size: 11px;
-  color: #64748b;
+.cd-cand-subcard-body {
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: center !important;
+  gap: 2.5px !important;
+  flex: 1 1 auto !important;
+  min-width: 0 !important;
+  overflow: hidden !important;
+}
+
+/* Sub-Card 1: Profile */
+.cd-cand-profile-row {
+  display: block !important;
+  width: 100% !important;
+  min-width: 0 !important;
+}
+.cd-cand-profile-meta {
+  display: block !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  overflow: hidden !important;
+}
+.cd-cand-name {
+  font-size: 13px !important;
+  font-weight: 700 !important;
+  color: #0f172a !important;
+  line-height: 1.25 !important;
+  display: block !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+  text-decoration: none !important;
+  cursor: default !important;
+  user-select: text !important;
+}
+.cd-cand-desig {
+  font-size: 11px !important;
+  font-weight: 500 !important;
+  color: #475569 !important;
+  line-height: 1.2 !important;
+  margin-top: 1px !important;
+  display: block !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+.cd-cand-employer {
+  font-size: 10.5px !important;
+  color: #64748b !important;
+  line-height: 1.2 !important;
+  margin-top: 2px !important;
+  display: block !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+/* Sub-Card 2: Comp & Exp */
+.cd-val-salary {
+  font-size: 12px !important;
+  font-weight: 700 !important;
+  color: #0f172a !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  line-height: 1.3 !important;
+}
+.cd-val-exp {
+  font-size: 10.5px !important;
+  font-weight: 500 !important;
+  color: #475569 !important;
+  margin-top: 2px !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 4px !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  line-height: 1.3 !important;
+}
+.cd-val-notice {
+  font-size: 10.5px !important;
+  font-weight: 600 !important;
+  margin-top: 2px !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  line-height: 1.3 !important;
+}
+.cd-notice-clean {
+  font-weight: 600 !important;
+  background: transparent !important;
+  border: none !important;
+  padding: 0 !important;
+}
+.cd-notice-immediate { color: #16a34a !important; }
+.cd-notice-snp { color: #7c3aed !important; }
+.cd-notice-days { color: #d97706 !important; }
+.cd-notice-default { color: #475569 !important; }
+
+/* Sub-Card 3: Location & Degree */
+.cd-loc-val {
+  font-size: 11.5px !important;
+  font-weight: 600 !important;
+  color: #0f172a !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  line-height: 1.3 !important;
+}
+.cd-loc-mode {
+  font-size: 10.5px !important;
+  color: #64748b !important;
+  margin-top: 2px !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 4px !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  line-height: 1.3 !important;
+}
+.cd-loc-edu {
+  font-size: 10.5px !important;
+  color: #64748b !important;
+  margin-top: 2px !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 4px !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  line-height: 1.3 !important;
+}
+
+/* Sub-Card 4: Target Requisition */
+.cd-header-badges {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 4px !important;
+  flex-shrink: 0 !important;
+}
+.cd-badge-client-type {
+  font-size: 8.5px !important;
+  font-weight: 700 !important;
+  padding: 1px 6px !important;
+  border-radius: 4px !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.2px !important;
+  line-height: 1.3 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 3px !important;
+  white-space: nowrap !important;
+  flex-shrink: 0 !important;
+}
+.cd-badge-client-type.type-direct {
+  background: #ecfdf5 !important;
+  color: #059669 !important;
+  border: 1px solid #a7f3d0 !important;
+}
+.cd-badge-client-type.type-internal {
+  background: #eff6ff !important;
+  color: #2563eb !important;
+  border: 1px solid #bfdbfe !important;
+}
+.cd-status-badge {
+  font-size: 8.5px !important;
+  font-weight: 700 !important;
+  padding: 1px 6px !important;
+  border-radius: 4px !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.2px !important;
+  line-height: 1.3 !important;
+  flex-shrink: 0 !important;
+}
+.status-hiring   { background: #dcfce7 !important; color: #15803d !important; }
+.status-hold     { background: #fef3c7 !important; color: #b45309 !important; }
+.status-closed   { background: #fee2e2 !important; color: #b91c1c !important; }
+.status-inactive { background: #f1f5f9 !important; color: #64748b !important; }
+
+.cd-job-row {
+  display: flex !important;
+  align-items: center !important;
+  gap: 7px !important;
+  min-width: 0 !important;
+}
+.cd-job-logo-wrap {
+  width: 28px !important;
+  height: 28px !important;
+  min-width: 28px !important;
+  border-radius: 6px !important;
+  background: #ffffff !important;
+  border: 1px solid #e2e8f0 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  overflow: hidden !important;
+  flex-shrink: 0 !important;
+}
+.cd-job-logo-img {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: contain !important;
+  display: block !important;
+}
+.cd-job-logo-fallback {
+  width: 100% !important;
+  height: 100% !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  background: #eff6ff !important;
+  color: #009ef7 !important;
+  font-size: 11px !important;
+  font-weight: 700 !important;
+}
+.cd-job-meta-wrap {
+  flex: 1 1 auto !important;
+  min-width: 0 !important;
+  overflow: hidden !important;
+}
+.cd-job-title-link {
+  font-size: 12px !important;
+  font-weight: 700 !important;
+  color: #0f172a !important;
+  line-height: 1.25 !important;
+  display: block !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+  text-decoration: none !important;
+  transition: color 0.12s ease !important;
+}
+.cd-job-title-link:hover {
+  color: #009ef7 !important;
+}
+.cd-job-submeta {
+  font-size: 10px !important;
+  color: #64748b !important;
+  line-height: 1.2 !important;
+  margin-top: 1px !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+.cd-job-footer-line {
+  font-size: 10px !important;
+  color: #64748b !important;
+  line-height: 1.2 !important;
+  margin-top: 2px !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+
+/* Sub-Card 5: Recruiter & Sourcing */
+.cd-recruiter-name {
+  font-size: 11.5px !important;
+  font-weight: 600 !important;
+  color: #0f172a !important;
+  line-height: 1.3 !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+.cd-recruiter-company {
+  font-size: 10.5px !important;
+  color: #64748b !important;
+  margin-top: 2px !important;
+  line-height: 1.3 !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+.cd-recruiter-time {
+  font-size: 10px !important;
+  color: #94a3b8 !important;
+  margin-top: 2px !important;
+  line-height: 1.3 !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+
+/* Sub-Card 6: Pipeline & Stage */
+.cd-stage-chip {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 4px !important;
+  padding: 2px 7px !important;
+  border-radius: 6px !important;
+  font-size: 10.5px !important;
+  font-weight: 600 !important;
+  line-height: 1.3 !important;
+  text-decoration: none !important;
+  cursor: default !important;
+  pointer-events: none !important;
+  user-select: none !important;
+  max-width: 100% !important;
+  overflow: hidden !important;
+  white-space: nowrap !important;
+}
+.cd-stage-sub {
+  font-size: 10.5px !important;
+  color: #64748b !important;
+  margin-top: 2px !important;
+  line-height: 1.2 !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+.cd-stage-action {
+  font-size: 10.5px !important;
+  line-height: 1.2 !important;
+  margin-top: 2px !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+.cd-action-link {
+  color: #009ef7 !important;
+  font-weight: 600 !important;
+  text-decoration: none !important;
+}
+.cd-action-link:hover {
+  color: #007bb5 !important;
+  text-decoration: underline !important;
+}
+
+/* Sub-Card 7: Full-Width Intelligence Strip */
+.cd-cand-bottom-strip {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 10px !important;
+  padding: 6px 12px !important;
+  background: #ffffff !important;
+  border-top: 1px solid #f1f5f9 !important;
+  width: 100% !important;
+  overflow: hidden !important;
+}
+.cd-cand-bottom-left {
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  min-width: 0 !important;
+  flex: 1 1 auto !important;
+  overflow: hidden !important;
+}
+.cd-cand-bottom-right {
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  flex-shrink: 0 !important;
+  white-space: nowrap !important;
+}
+.cd-bottom-skills-scroll {
+  display: flex !important;
+  align-items: center !important;
+  gap: 4px !important;
+  overflow-x: auto !important;
+  overflow-y: hidden !important;
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+  white-space: nowrap !important;
+  min-width: 0 !important;
+}
+.cd-bottom-skills-scroll::-webkit-scrollbar {
+  display: none !important;
+}
+
+/* CV Tracker Match % & Skills Pill Styles */
+.cd-match-badge-cv {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 3px !important;
+  padding: 1.5px 7px !important;
+  border-radius: 4px !important;
+  font-size: 10px !important;
+  font-weight: 700 !important;
+  line-height: 1.3 !important;
+  white-space: nowrap !important;
+  flex-shrink: 0 !important;
+}
+.cd-match-green {
+  background: #dcfce7 !important;
+  color: #15803d !important;
+  border: 1px solid #bbf7d0 !important;
+}
+.cd-match-amber {
+  background: #fef3c7 !important;
+  color: #b45309 !important;
+  border: 1px solid #fde68a !important;
+}
+.cd-match-red {
+  background: #fee2e2 !important;
+  color: #dc2626 !important;
+  border: 1px solid #fecdd3 !important;
+}
+
+.cd-skill-pill-cv {
+  display: inline-flex !important;
+  align-items: center !important;
+  padding: 1px 7px !important;
+  border-radius: 4px !important;
+  background: #f8fafc !important;
+  color: #334155 !important;
+  font-size: 10px !important;
+  font-weight: 500 !important;
+  border: 1px solid #e2e8f0 !important;
+  white-space: nowrap !important;
+  line-height: 1.4 !important;
+  flex-shrink: 0 !important;
+}
+
+/* Dynamic LinkedIn & Visa Status Badges */
+.cd-cand-linkedin-pill {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 4px !important;
+  padding: 1.5px 8px !important;
+  border-radius: 4px !important;
+  background: #eff6ff !important;
+  color: #1d4ed8 !important;
+  border: 1px solid #bfdbfe !important;
+  font-size: 10px !important;
+  font-weight: 600 !important;
+  text-decoration: none !important;
+  line-height: 1.4 !important;
+  white-space: nowrap !important;
+  flex-shrink: 0 !important;
+  transition: all 0.15s ease !important;
+}
+.cd-cand-linkedin-pill:hover {
+  background: #dbeafe !important;
+  color: #1e40af !important;
+  border-color: #93c5fd !important;
+}
+.cd-cand-visa-pill {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 4px !important;
+  padding: 1.5px 8px !important;
+  border-radius: 4px !important;
+  background: #f8fafc !important;
+  color: #334155 !important;
+  border: 1px solid #e2e8f0 !important;
+  font-size: 10px !important;
+  font-weight: 600 !important;
+  line-height: 1.4 !important;
+  white-space: nowrap !important;
+  flex-shrink: 0 !important;
+}
+
+/* Responsive Scaling for 15.6" Laptops (1366x768 & 1920x1080) and Smaller */
+@media (max-width: 1440px) {
+  .cd-cand-card-grid {
+    grid-template-columns: minmax(0, 1.9fr) minmax(0, 1.3fr) minmax(0, 1.2fr) minmax(0, 2.2fr) minmax(0, 1.45fr) minmax(0, 1.2fr) !important;
+    gap: 6px !important;
+    padding: 8px 10px !important;
+  }
+  .cd-cand-subcard {
+    padding: 6px 8px !important;
+  }
+}
+@media (max-width: 1200px) {
+  .cd-cand-card-grid {
+    grid-template-columns: minmax(0, 1.8fr) minmax(0, 1.25fr) minmax(0, 1.15fr) minmax(0, 2fr) minmax(0, 1.4fr) minmax(0, 1.15fr) !important;
+    gap: 6px !important;
+    padding: 8px 10px !important;
+  }
+}
+@media (max-width: 992px) {
+  .cd-cand-card-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    gap: 8px !important;
+  }
+  .cd-cand-bottom-strip {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 6px !important;
+  }
+}
+@media (max-width: 640px) {
+  .cd-cand-card-grid {
+    grid-template-columns: 1fr !important;
+    gap: 8px !important;
+  }
 }
 
 /* ── 10. Master Performance Tab Modern Dashboard System ── */
@@ -2114,7 +2609,13 @@
   border-radius: 6px !important;
   cursor: pointer;
   outline: none;
+  transition: border-color 0.15s ease-in-out;
 }
+.cd-perf-select:focus {
+  border-color: #10b981 !important;
+}
+
+/* KPI 5-Card Row */
 .cd-perf-kpi-grid {
   display: grid;
   grid-template-columns: repeat(5, 1fr);
@@ -2128,6 +2629,7 @@
   padding: 10px 12px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
   transition: all 0.15s ease-in-out;
+  cursor: pointer;
 }
 .cd-perf-kpi-card:hover {
   transform: translateY(-2px);
@@ -2154,6 +2656,7 @@
 .cd-perf-kpi-icon-amber  { background: #fffbeb; color: #d97706; border: 1.5px solid #fde68a; }
 .cd-perf-kpi-icon-purple { background: #f5f3ff; color: #7c3aed; border: 1.5px solid #ddd6fe; }
 .cd-perf-kpi-icon-cyan   { background: #f0f9ff; color: #0284c7; border: 1.5px solid #bae6fd; }
+
 .cd-perf-pill {
   font-size: 10px !important;
   font-weight: 500 !important;
@@ -2164,7 +2667,10 @@
   gap: 3px;
   line-height: 1.2;
 }
-.cd-perf-pill-up { background: #ecfdf5; color: #10b981; }
+.cd-perf-pill-up   { background: #ecfdf5; color: #10b981; }
+.cd-perf-pill-down { background: #fef2f2; color: #ef4444; }
+.cd-perf-pill-good { background: #ecfdf5; color: #10b981; }
+
 .cd-perf-kpi-num {
   font-size: 14px !important;
   font-weight: 700 !important;
@@ -2186,6 +2692,15 @@
   margin-top: 3px;
   line-height: 1.2;
 }
+.cd-perf-kpi-comp {
+  font-size: 10.5px !important;
+  font-weight: 400 !important;
+  color: #94a3b8;
+  margin-top: 1px;
+  line-height: 1.2;
+}
+
+/* Row 1, Row 2, Row 3 Layouts */
 .cd-perf-row-1 {
   display: grid;
   grid-template-columns: 1fr 1.6fr 1.4fr;
@@ -2198,6 +2713,14 @@
   gap: 12px;
   margin-bottom: 12px;
 }
+.cd-perf-row-3 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+/* Card Panel Structure */
 .cd-perf-card {
   background: #ffffff;
   border: 1px solid #eef2f6;
@@ -2224,6 +2747,50 @@
   align-items: center;
   gap: 6px;
 }
+.cd-perf-card-title i {
+  font-size: 12.5px !important;
+}
+.cd-perf-card-mini-select {
+  height: 26px !important;
+  padding: 0 18px 0 6px !important;
+  font-size: 10.5px !important;
+  font-weight: 500 !important;
+  color: #475569 !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 4px !important;
+  background: #ffffff;
+  cursor: pointer;
+  outline: none;
+}
+.cd-perf-legend {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 6px;
+  font-size: 10.5px !important;
+  font-weight: 400 !important;
+  color: #64748b;
+  flex-wrap: wrap;
+}
+.cd-perf-legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.cd-perf-legend-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  display: inline-block;
+}
+.cd-perf-legend-sq {
+  width: 7px;
+  height: 7px;
+  border-radius: 2px;
+  display: inline-block;
+}
+
+/* Funnel Components */
 .cd-funnel-wrap {
   display: flex;
   align-items: center;
@@ -2235,6 +2802,7 @@
   width: 92px;
   height: 132px;
   flex-shrink: 0;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.04));
 }
 .cd-funnel-list {
   flex: 1;
@@ -2274,6 +2842,229 @@
   min-width: 32px;
   text-align: right;
   font-size: 11.5px !important;
+}
+
+/* Donut Job Type Components */
+.cd-donut-wrap {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex: 1;
+  padding: 4px 0;
+}
+.cd-donut-chart-box {
+  position: relative;
+  width: 110px;
+  height: 110px;
+  flex-shrink: 0;
+}
+.cd-donut-center {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+.cd-donut-center-num {
+  font-size: 14px !important;
+  font-weight: 700 !important;
+  color: #0f172a;
+  line-height: 1;
+}
+.cd-donut-center-lbl {
+  font-size: 10px !important;
+  font-weight: 400 !important;
+  color: #94a3b8;
+  line-height: 1;
+  margin-top: 2px;
+}
+.cd-donut-list {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+.cd-donut-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 11.5px !important;
+  gap: 6px;
+}
+.cd-donut-item-left {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: #334155;
+  font-weight: 400;
+}
+.cd-donut-item-count {
+  font-weight: 600 !important;
+  color: #0f172a;
+  font-size: 12px !important;
+}
+.cd-donut-item-pct {
+  font-weight: 500 !important;
+  color: #64748b;
+  min-width: 28px;
+  text-align: right;
+  font-size: 11.5px !important;
+}
+
+/* Tables */
+.cd-perf-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.cd-perf-table th {
+  font-size: 11px !important;
+  font-weight: 500 !important;
+  color: #64748b;
+  padding: 7px 6px;
+  border-bottom: 1.5px solid #f1f5f9;
+  text-align: right;
+}
+.cd-perf-table th:first-child,
+.cd-perf-table th:nth-child(2) {
+  text-align: left;
+}
+.cd-perf-table td {
+  font-size: 11.5px !important;
+  color: #334155;
+  padding: 7px 6px;
+  border-bottom: 1px dashed #f1f5f9;
+  text-align: right;
+  vertical-align: middle;
+}
+.cd-perf-table tr:last-child td {
+  border-bottom: none;
+}
+.cd-perf-table td:first-child,
+.cd-perf-table td:nth-child(2) {
+  text-align: left;
+}
+.cd-perf-table td:first-child {
+  color: #94a3b8;
+  font-weight: 500;
+  width: 18px;
+}
+.cd-perf-table td:nth-child(2) {
+  font-weight: 500 !important;
+  color: #0f172a;
+}
+.cd-perf-progress-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  justify-content: flex-end;
+}
+.cd-perf-progress-bar {
+  width: 48px;
+  height: 5px;
+  background: #f1f5f9;
+  border-radius: 4px;
+  overflow: hidden;
+  position: relative;
+}
+.cd-perf-progress-fill {
+  height: 100%;
+  background: #10b981;
+  border-radius: 4px;
+}
+.cd-recruiter-avatar {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 8.5px !important;
+  font-weight: 600 !important;
+  margin-right: 6px;
+  vertical-align: middle;
+}
+
+/* Additional Intelligence & Insights */
+.cd-perf-intelligence-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  margin-bottom: 12px;
+}
+.cd-perf-intel-card {
+  background: #ffffff;
+  border: 1px solid #eef2f6;
+  border-radius: 8px;
+  padding: 10px 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+}
+.cd-perf-intel-lbl {
+  font-size: 11px !important;
+  font-weight: 500 !important;
+  color: #64748b;
+}
+.cd-perf-intel-val {
+  font-size: 14px !important;
+  font-weight: 600 !important;
+  color: #0f172a;
+  margin-top: 3px;
+}
+.cd-perf-intel-sub {
+  font-size: 10.5px !important;
+  font-weight: 400 !important;
+  color: #94a3b8;
+  margin-top: 2px;
+}
+
+.cd-perf-insights-card {
+  background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%);
+  border: 1px solid #a7f3d0;
+  border-radius: 8px;
+  padding: 12px 16px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+}
+.cd-perf-insights-hdr {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12.5px !important;
+  font-weight: 600 !important;
+  color: #065f46;
+  margin-bottom: 8px;
+}
+.cd-perf-insights-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px 16px;
+  font-size: 11.5px !important;
+  font-weight: 400 !important;
+  color: #334155;
+  line-height: 1.5;
+}
+
+@media (max-width: 1280px) {
+  .cd-perf-row-1, .cd-perf-row-2 {
+    grid-template-columns: 1fr;
+  }
+  .cd-perf-row-3 {
+    grid-template-columns: 1fr;
+  }
+  .cd-perf-kpi-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+  .cd-perf-intelligence-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .cd-perf-insights-grid {
+    grid-template-columns: 1fr;
+  }
+}
+@media (max-width: 768px) {
+  .cd-perf-kpi-grid {
+    grid-template-columns: 1fr 1fr;
+  }
 }
 
 /* ── 10. Empty State Standard ── */
@@ -2444,11 +3235,10 @@
     <!-- ── AUTHORITATIVE HERO KPI STRIP (Strictly 6 Cards in 1 Row on 15.6" Screens) ── -->
     <div class="cd-kpi-grid">
         <!-- KPI 1: All Shared Jobs -->
-        <!-- KPI 1: All Shared Jobs -->
         <a href="#requisitions" class="cd-kpi-card cd-kpi-nav-trigger" onclick="triggerDrawerTab('requisitions', event)" title="Total jobs shared with this agency">
             <div class="cd-kpi-icon cd-kpi-icon-blue"><i class="fas fa-layer-group"></i></div>
             <div class="cd-kpi-body">
-                <div class="cd-kpi-num">{{ number_format($kpiTotalJobs) }}</div>
+                <div class="cd-kpi-num" id="agencyKpiAllJobs">{{ number_format($kpiTotalJobs) }}</div>
                 <div class="cd-kpi-lbl">All Shared Jobs</div>
             </div>
         </a>
@@ -2457,7 +3247,7 @@
         <a href="#requisitions" class="cd-kpi-card cd-kpi-nav-trigger" onclick="triggerDrawerTab('requisitions', event)" title="Active jobs currently being sourced">
             <div class="cd-kpi-icon cd-kpi-icon-emerald"><i class="fas fa-bolt"></i></div>
             <div class="cd-kpi-body">
-                <div class="cd-kpi-num">{{ number_format($kpiActiveJobs) }}</div>
+                <div class="cd-kpi-num" id="agencyKpiActiveJobs">{{ number_format($kpiActiveJobs) }}</div>
                 <div class="cd-kpi-lbl">All Active Jobs</div>
             </div>
         </a>
@@ -2466,7 +3256,7 @@
         <a href="#candidate_list" class="cd-kpi-card cd-kpi-nav-trigger" onclick="triggerDrawerTab('candidate_list', event)" title="Total candidate profiles submitted">
             <div class="cd-kpi-icon cd-kpi-icon-purple"><i class="fas fa-users"></i></div>
             <div class="cd-kpi-body">
-                <div class="cd-kpi-num">{{ number_format($kpiSubmitted) }}</div>
+                <div class="cd-kpi-num" id="agencyKpiCandidates">{{ number_format($kpiSubmitted) }}</div>
                 <div class="cd-kpi-lbl">All Candidates</div>
             </div>
         </a>
@@ -2475,7 +3265,7 @@
         <a href="#interview_tracker" class="cd-kpi-card cd-kpi-nav-trigger" onclick="triggerDrawerTab('interview_tracker', event)" title="Interviews conducted for agency candidates">
             <div class="cd-kpi-icon cd-kpi-icon-amber"><i class="fas fa-calendar-check"></i></div>
             <div class="cd-kpi-body">
-                <div class="cd-kpi-num">{{ number_format($kpiInterviews) }}</div>
+                <div class="cd-kpi-num" id="agencyKpiInterviews">{{ number_format($kpiInterviews) }}</div>
                 <div class="cd-kpi-lbl">All Interviews</div>
             </div>
         </a>
@@ -2484,7 +3274,7 @@
         <a href="#candidate_joining" class="cd-kpi-card cd-kpi-nav-trigger" onclick="triggerDrawerTab('candidate_joining', event)" title="Offers extended to agency candidates">
             <div class="cd-kpi-icon cd-kpi-icon-rose"><i class="fas fa-file-signature"></i></div>
             <div class="cd-kpi-body">
-                <div class="cd-kpi-num">{{ number_format($kpiOffers) }}</div>
+                <div class="cd-kpi-num" id="agencyKpiOffers">{{ number_format($kpiOffers) }}</div>
                 <div class="cd-kpi-lbl">All Offers</div>
             </div>
         </a>
@@ -2493,7 +3283,7 @@
         <a href="#candidate_joining" class="cd-kpi-card cd-kpi-nav-trigger" onclick="triggerDrawerTab('candidate_joining', event)" title="Candidates successfully joined">
             <div class="cd-kpi-icon cd-kpi-icon-teal"><i class="fas fa-handshake"></i></div>
             <div class="cd-kpi-body">
-                <div class="cd-kpi-num">{{ number_format($kpiJoins) }}</div>
+                <div class="cd-kpi-num" id="agencyKpiJoins">{{ number_format($kpiJoins) }}</div>
                 <div class="cd-kpi-lbl">All Joined</div>
             </div>
         </a>
@@ -2525,28 +3315,28 @@
                 <a class="cd-tab-pill-btn nav-link" data-bs-toggle="tab" data-toggle="tab" href="#requisitions" role="tab" aria-selected="false">
                     <i class="fas fa-briefcase"></i>
                     <span>Jobs</span>
-                    @if($kpiTotalJobs > 0)<span class="cd-tab-badge-pill">{{ $kpiTotalJobs }}</span>@endif
+                    <span class="cd-tab-badge-pill" id="agencyTabBadgeJobs">{{ $kpiTotalJobs }}</span>
                 </a>
             </li>
             <li class="nav-item" role="presentation">
                 <a class="cd-tab-pill-btn nav-link" data-bs-toggle="tab" data-toggle="tab" href="#candidate_list" role="tab" aria-selected="false">
                     <i class="fas fa-users"></i>
                     <span>Candidates</span>
-                    @if($kpiSubmitted > 0)<span class="cd-tab-badge-pill">{{ $kpiSubmitted }}</span>@endif
+                    <span class="cd-tab-badge-pill" id="agencyTabBadgeCandidates">{{ $kpiSubmitted }}</span>
                 </a>
             </li>
             <li class="nav-item" role="presentation">
                 <a class="cd-tab-pill-btn nav-link" data-bs-toggle="tab" data-toggle="tab" href="#interview_tracker" role="tab" aria-selected="false">
                     <i class="fas fa-calendar-days"></i>
                     <span>Interviews</span>
-                    <span class="cd-tab-badge-pill">{{ $kpiInterviews }}</span>
+                    <span class="cd-tab-badge-pill" id="agencyTabBadgeInterviews">{{ $kpiInterviews }}</span>
                 </a>
             </li>
             <li class="nav-item" role="presentation">
                 <a class="cd-tab-pill-btn nav-link" data-bs-toggle="tab" data-toggle="tab" href="#candidate_joining" role="tab" aria-selected="false">
                     <i class="fas fa-file-signature"></i>
                     <span>Offers &amp; Joins</span>
-                    <span class="cd-tab-badge-pill">{{ $kpiOffersTotal }}</span>
+                    <span class="cd-tab-badge-pill" id="agencyTabBadgeOffersJoins">{{ $kpiOffersTotal }}</span>
                 </a>
             </li>
             <li class="nav-item" role="presentation">
@@ -3362,153 +4152,13 @@
                 </div>
 
                 <!-- Tier 3: Card-Based Jobs Stream -->
-                <div class="cd-jobs-stream" id="agencyJobsStream">
-                    @if (count($jobsList) > 0)
-                        @foreach ($jobsList as $job)
-                            @php
-                                $jobStatus = strtolower($job->status ?? 'active');
-                                $isHiring = ($jobStatus === 'active');
-                                $statusBadgeClass = $isHiring ? 'badge-light-success text-success' : 'badge-light-warning text-warning';
-                                $statusLabel = $isHiring ? 'HIRING' : 'ON HOLD';
-
-                                $minSalaryFormatted = $formatCompactSalary($job->min_salary ?? ($job->minimum_salary ?? null));
-                                $maxSalaryFormatted = $formatCompactSalary($job->max_salary ?? ($job->maximum_salary ?? null));
-                                $compDisplay = ($minSalaryFormatted && $maxSalaryFormatted)
-                                    ? ($minSalaryFormatted . ' – ' . $maxSalaryFormatted)
-                                    : ($minSalaryFormatted ? $minSalaryFormatted . '+' : '₹500K – 900K');
-
-                                $minExp = $job->min_exp ?? ($job->minimum_experience ?? 0);
-                                $maxExp = $job->max_exp ?? ($job->maximum_experience ?? 3);
-                                $expDisplay = $minExp . ' – ' . $maxExp . ' Yrs';
-                                $locDisplay = $job->city_name ?: 'Noida';
-
-                                $jobAppCount = (int)($kpiSubmitted > 0 ? ceil($kpiSubmitted / max(count($jobsList), 1)) : 0);
-                                $jobIntCount = (int)($kpiInterviews > 0 ? ceil($kpiInterviews / max(count($jobsList), 1)) : 0);
-                                $jobOffCount = (int)($kpiOffers > 0 ? ceil($kpiOffers / max(count($jobsList), 1)) : 0);
-                                $jobJoiCount = (int)($kpiJoins > 0 ? ceil($kpiJoins / max(count($jobsList), 1)) : 0);
-                            @endphp
-                            <div class="cd-job-card js-agency-job-item" data-status="{{ $jobStatus }}">
-                                <div class="cd-job-card-grid">
-                                    <!-- Sub-card 1: Job Details (Logo has pure white background per user request) -->
-                                    <div class="cd-job-subcard cd-job-subcard-details">
-                                        <div class="cd-job-subcard-hdr">
-                                            <span class="cd-job-subcard-label">Job Details</span>
-                                            <div class="d-flex align-items-center gap-1">
-                                                <span class="badge badge-light-primary text-primary fw-bold fs-9">AGENCY PARTNER</span>
-                                                <span class="badge {{ $statusBadgeClass }} fw-bold fs-9">{{ $statusLabel }}</span>
-                                            </div>
-                                        </div>
-                                        @php
-                                            $hasInternalClient = (!empty($job->client_id) && !empty($job->internal_client_name));
-                                            $displayJobCompName = $hasInternalClient ? $job->internal_client_name : ($viewerCompanyName ?? 'Direct Client');
-                                            $displayJobCompLogo = $hasInternalClient ? ($job->internal_client_logo ?: $job->internal_client_logo_logical_path) : ($viewerCompanyLogo ?? null);
-                                            $displayJobInitials = strtoupper(mb_substr($displayJobCompName, 0, 1));
-                                        @endphp
-                                        <div class="cd-job-details-body">
-                                            <div class="cd-job-logo-box" style="background:#ffffff; border:1px solid #e2e8f0;">
-                                                @if (!empty($displayJobCompLogo))
-                                                    <img src="{{ $displayJobCompLogo }}" alt="{{ $displayJobCompName }}" onerror="this.style.display='none'; if(this.nextElementSibling){this.nextElementSibling.style.display='flex';}">
-                                                    <span style="display:none; color:#009ef7; font-weight:700;">{{ $displayJobInitials }}</span>
-                                                @else
-                                                    <span style="color:#009ef7; font-weight:700;">{{ $displayJobInitials }}</span>
-                                                @endif
-                                            </div>
-                                            <div class="cd-job-title-meta">
-                                                <a href="#" class="cd-job-title-link js-job-searchable" title="{{ $job->title }}">{{ $job->title }}</a>
-                                                <div class="cd-job-spec-line">
-                                                    <span class="fw-bold text-dark">#{{ $job->id }}</span> &bull; <span>{{ $displayJobCompName }}</span> &bull; <span>Full-Time</span>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <!-- Sub-card 2: Compensation & Exp -->
-                                    <div class="cd-job-subcard cd-job-subcard-comp">
-                                        <div class="cd-job-subcard-hdr">
-                                            <span class="cd-job-subcard-label">Compensation &amp; Exp</span>
-                                        </div>
-                                        <div class="cd-job-comp-body">
-                                            <div class="cd-job-comp-val">{{ $compDisplay }}</div>
-                                            <div class="cd-job-comp-sub"><i class="fas fa-briefcase text-muted me-1"></i> {{ $expDisplay }}</div>
-                                            <div class="cd-job-comp-sub"><i class="fas fa-location-dot text-muted me-1"></i> {{ $locDisplay }} &bull; Work From Office</div>
-                                        </div>
-                                    </div>
-
-                                    <!-- Sub-card 3: Team (Captain first) -->
-                                    <div class="cd-job-subcard cd-job-subcard-team">
-                                        <div class="cd-job-subcard-hdr">
-                                            <span class="cd-job-subcard-label"><i class="fas fa-users text-primary me-1"></i> Team</span>
-                                        </div>
-                                        <div class="cd-job-team-body">
-                                            <div class="fw-bold text-dark fs-7">{{ auth()->user()->name ?? 'Account Lead' }}</div>
-                                            <div class="text-muted fs-8">+ 2 other members</div>
-                                        </div>
-                                    </div>
-
-                                    <!-- Sub-card 4: Agency -->
-                                    <div class="cd-job-subcard cd-job-subcard-agency">
-                                        <div class="cd-job-subcard-hdr">
-                                            <span class="cd-job-subcard-label"><i class="fas fa-handshake text-primary me-1"></i> Agency</span>
-                                        </div>
-                                        <div class="cd-job-agency-body">
-                                            <div class="fw-bold text-dark fs-7 text-truncate" title="{{ $detailName }}">{{ $detailName }}</div>
-                                            <div class="text-muted fs-8">Direct Partner</div>
-                                        </div>
-                                    </div>
-
-                                    <!-- Sub-card 5: Hiring Pipeline (Applications, Interviews, Offers, Joined - NO Sourcing per instruction) -->
-                                    <div class="cd-job-subcard cd-job-subcard-pipeline">
-                                        <div class="cd-job-subcard-hdr">
-                                            <span class="cd-job-subcard-label">Hiring Pipeline</span>
-                                        </div>
-                                        <div class="cd-job-pipeline-metric-row">
-                                            <div class="cd-job-pipeline-item">
-                                                <span class="cd-job-pipeline-count text-primary">{{ $jobAppCount }}</span>
-                                                <span class="cd-job-pipeline-tag">APP</span>
-                                            </div>
-                                            <div class="cd-job-pipeline-item">
-                                                <span class="cd-job-pipeline-count text-warning">{{ $jobIntCount }}</span>
-                                                <span class="cd-job-pipeline-tag">INT</span>
-                                            </div>
-                                            <div class="cd-job-pipeline-item">
-                                                <span class="cd-job-pipeline-count text-danger">{{ $jobOffCount }}</span>
-                                                <span class="cd-job-pipeline-tag">OFF</span>
-                                            </div>
-                                            <div class="cd-job-pipeline-item">
-                                                <span class="cd-job-pipeline-count text-success">{{ $jobJoiCount }}</span>
-                                                <span class="cd-job-pipeline-tag">JOI</span>
-                                            </div>
-                                        </div>
-                                        <div class="cd-job-pipeline-summary-line">
-                                            <span>Applications: <strong>{{ $jobAppCount }}</strong></span> &bull; 
-                                            <span>Interviews: <strong>{{ $jobIntCount }}</strong></span>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- Bottom Activity Strip -->
-                                <div class="cd-job-card-bottom">
-                                    <div class="d-flex align-items-center gap-3 flex-wrap">
-                                        <span><i class="far fa-calendar text-muted me-1"></i> Posted: <strong>{{ !empty($job->created_at) ? date('d M Y', strtotime($job->created_at)) : 'Recent' }}</strong></span>
-                                        <span><i class="fas fa-user-tie text-primary me-1"></i> Shared By: <strong>{{ auth()->user()->name ?? 'Account Lead' }} &bull; {{ $viewerCompanyName ?? 'Direct Client' }}</strong></span>
-                                    </div>
-                                    <div class="d-flex align-items-center gap-1 flex-wrap">
-                                        <span class="badge badge-light fs-9 text-muted border">Java</span>
-                                        <span class="badge badge-light fs-9 text-muted border">AWS</span>
-                                        <span class="badge badge-light fs-9 text-muted border">Node</span>
-                                        <span class="badge badge-light fs-9 text-muted border">React</span>
-                                    </div>
-                                </div>
-                            </div>
-                        @endforeach
-                    @else
-                        <div class="cd-empty-state">
-                            <div class="cd-empty-icon"><i class="fas fa-briefcase"></i></div>
-                            <div class="cd-empty-title">No Jobs Shared Yet</div>
-                            <div class="cd-empty-desc">Share open requisitions with {{ $detailName }} to accelerate candidate sourcing and pipeline flow.</div>
-                        </div>
-                    @endif
+                <div class="cd-jobs-stream" id="agencyJobsListajax">
+                    <div class="d-flex flex-column align-items-center justify-content-center py-10" style="min-height:200px;">
+                        <div class="spinner-border text-primary mb-3" style="width:2rem;height:2rem;" role="status"></div>
+                        <span class="text-gray-600 font-poppins fs-7 fw-semibold">Loading open jobs...</span>
+                    </div>
                 </div>
+                <div id="paginationAgencyJobs" class="mt-3"></div>
             </div>
         </div>
 
@@ -3549,183 +4199,72 @@
 
                 <!-- TIER 2: SUB-TABS PIPELINE CARD (8 Pipeline Stages) -->
                 <div class="cd-cand-tabs-card">
-                    <div class="cd-cand-tabs-list">
-                        <button type="button" class="cd-cand-subtab active js-agency-cand-stage" data-stage="all">
-                            <span>All Candidates</span>
-                            <span class="cd-cand-subtab-badge">{{ $kpiSubmitted }}</span>
-                        </button>
-                        <button type="button" class="cd-cand-subtab js-agency-cand-stage" data-stage="sourcing">
+                    <div class="cd-cand-tabs-list" role="tablist">
+                        <button type="button" class="cd-cand-subtab cd-cand-subtab-agency active js-agency-cand-stage" data-stage="sourcing" data-status="1" role="tab" id="agencyCandTabSourcing">
                             <span>Sourcing</span>
-                            <span class="cd-cand-subtab-badge">{{ $sourcing_count ?? 0 }}</span>
+                            <span class="cd-cand-subtab-badge" id="candTabCountSourcingAgency">{{ $sourcing_count ?? 0 }}</span>
                         </button>
-                        <button type="button" class="cd-cand-subtab js-agency-cand-stage" data-stage="screening">
+                        <button type="button" class="cd-cand-subtab cd-cand-subtab-agency js-agency-cand-stage" data-stage="screening" data-status="2" role="tab" id="agencyCandTabScreening">
                             <span>Screening</span>
-                            <span class="cd-cand-subtab-badge">{{ $screening_count ?? 0 }}</span>
+                            <span class="cd-cand-subtab-badge" id="candTabCountScreeningAgency">{{ $screening_count ?? 0 }}</span>
                         </button>
-                        <button type="button" class="cd-cand-subtab js-agency-cand-stage" data-stage="evaluation">
+                        <button type="button" class="cd-cand-subtab cd-cand-subtab-agency js-agency-cand-stage" data-stage="evaluation" data-status="3" role="tab" id="agencyCandTabEvaluation">
                             <span>Evaluation</span>
-                            <span class="cd-cand-subtab-badge">{{ $evaluation_count ?? 0 }}</span>
+                            <span class="cd-cand-subtab-badge" id="candTabCountEvaluationAgency">{{ $evaluation_count ?? 0 }}</span>
                         </button>
-                        <button type="button" class="cd-cand-subtab js-agency-cand-stage" data-stage="negotiations">
+                        <button type="button" class="cd-cand-subtab cd-cand-subtab-agency js-agency-cand-stage" data-stage="negotiations" data-status="4" role="tab" id="agencyCandTabNegotiations">
                             <span>Negotiations</span>
-                            <span class="cd-cand-subtab-badge">{{ $negotiation_count ?? 0 }}</span>
+                            <span class="cd-cand-subtab-badge" id="candTabCountNegotiationsAgency">{{ $negotiation_count ?? 0 }}</span>
                         </button>
-                        <button type="button" class="cd-cand-subtab js-agency-cand-stage" data-stage="offer">
+                        <button type="button" class="cd-cand-subtab cd-cand-subtab-agency js-agency-cand-stage" data-stage="offer" data-status="5" role="tab" id="agencyCandTabOffer">
                             <span>Offer</span>
-                            <span class="cd-cand-subtab-badge">{{ $kpiOffers }}</span>
+                            <span class="cd-cand-subtab-badge" id="candTabCountOfferAgency">{{ $kpiOffers }}</span>
                         </button>
-                        <button type="button" class="cd-cand-subtab js-agency-cand-stage" data-stage="joined">
+                        <button type="button" class="cd-cand-subtab cd-cand-subtab-agency js-agency-cand-stage" data-stage="joined" data-status="6" role="tab" id="agencyCandTabJoined">
                             <span>Joined</span>
-                            <span class="cd-cand-subtab-badge">{{ $kpiJoins }}</span>
+                            <span class="cd-cand-subtab-badge" id="candTabCountJoinedAgency">{{ $kpiJoins }}</span>
                         </button>
-                        <button type="button" class="cd-cand-subtab js-agency-cand-stage" data-stage="rejected">
+                        <button type="button" class="cd-cand-subtab cd-cand-subtab-agency js-agency-cand-stage" data-stage="rejected" data-status="7" role="tab" id="agencyCandTabRejected">
                             <span>Rejected</span>
-                            <span class="cd-cand-subtab-badge">{{ $Rejected_count ?? 0 }}</span>
+                            <span class="cd-cand-subtab-badge" id="candTabCountRejectedAgency">{{ $Rejected_count ?? 0 }}</span>
                         </button>
                     </div>
                 </div>
 
+                <!-- Local Skeleton Loader Cards -->
+                <div id="cdCandSkeletonLoaderAgency" style="display:none;" class="py-2">
+                    <div class="cd-cand-skeleton-card">
+                        <div class="cd-cand-skeleton-pulse" style="width: 25%; height: 24px;"></div>
+                        <div class="cd-cand-skeleton-pulse" style="width: 18%; height: 24px;"></div>
+                        <div class="cd-cand-skeleton-pulse" style="width: 16%; height: 24px;"></div>
+                        <div class="cd-cand-skeleton-pulse" style="width: 28%; height: 50px;"></div>
+                        <div class="cd-cand-skeleton-pulse" style="width: 13%; height: 24px;"></div>
+                    </div>
+                    <div class="cd-cand-skeleton-card">
+                        <div class="cd-cand-skeleton-pulse" style="width: 25%; height: 24px;"></div>
+                        <div class="cd-cand-skeleton-pulse" style="width: 18%; height: 24px;"></div>
+                        <div class="cd-cand-skeleton-pulse" style="width: 16%; height: 24px;"></div>
+                        <div class="cd-cand-skeleton-pulse" style="width: 28%; height: 50px;"></div>
+                        <div class="cd-cand-skeleton-pulse" style="width: 13%; height: 24px;"></div>
+                    </div>
+                </div>
+
+                <!-- Empty State Card -->
+                <div id="cdCandEmptyStateAgency" class="text-center py-12" style="display:none; background:#ffffff; border-radius:10px; border:1px dashed #cbd5e1; margin:8px 0;">
+                    <div class="symbol symbol-50px mx-auto mb-3">
+                        <span class="symbol-label bg-light-primary text-primary fs-2">
+                            <i class="fas fa-user-slash fa-solid"></i>
+                        </span>
+                    </div>
+                    <div class="text-dark fs-6 fw-bold mb-1">No candidates found</div>
+                    <div class="text-gray-400 fs-7">Try adjusting your search query or pipeline filter.</div>
+                </div>
+
                 <!-- TIER 3: Candidate Cards Stream -->
-                <div class="cd-cand-stream-wrap">
+                <div class="cd-cand-stream-wrap" id="cdCandidateTableWrapAgency">
                     <div class="cd-cand-stream" id="agencyCandidatesStream">
-                        @if (count($candsList) > 0)
-                            @foreach ($candsList as $cand)
-                                @php
-                                    $cFull = ucwords($cand->full_name ?? 'Candidate Profile');
-                                    $cInitials = strtoupper(substr($cFull, 0, 2));
-                                    $cDesig = $cand->current_designation ?: 'Software Engineer';
-                                    $cComp = $cand->current_company ?: 'Enterprise Technologies';
-                                    $cExp = $cand->total_exp ?: '4+ Yrs';
-
-                                    $candCtcFormatted = $formatCompactSalary($cand->ctc);
-                                    $candEctcFormatted = $formatCompactSalary($cand->ectc);
-
-                                    $masterId = (int)($cand->master_status_id ?? 1);
-                                    $stageKey = match($masterId) {
-                                        1 => 'sourcing',
-                                        2 => 'screening',
-                                        3 => 'evaluation',
-                                        4 => 'negotiations',
-                                        5 => 'offer',
-                                        6 => 'joined',
-                                        7 => 'rejected',
-                                        default => 'screening'
-                                    };
-                                    $stageLabel = match($stageKey) {
-                                        'sourcing' => 'Sourcing',
-                                        'screening' => 'Screening',
-                                        'evaluation' => 'Evaluation',
-                                        'negotiations' => 'Negotiations',
-                                        'offer' => 'Offer Extended',
-                                        'joined' => 'Joined & Onboarded',
-                                        'rejected' => 'Rejected',
-                                        default => 'In Review'
-                                    };
-                                    $stagePillClass = match($stageKey) {
-                                        'sourcing' => 'badge-light-info text-info',
-                                        'screening' => 'badge-light-primary text-primary',
-                                        'evaluation' => 'badge-light-primary text-primary',
-                                        'negotiations' => 'badge-light-warning text-warning',
-                                        'offer' => 'badge-light-warning text-warning',
-                                        'joined' => 'badge-light-success text-success',
-                                        'rejected' => 'badge-light-danger text-danger',
-                                        default => 'badge-light-secondary text-muted'
-                                    };
-                                @endphp
-                                <div class="cd-cand-card js-agency-cand-item" data-stage="{{ $stageKey }}">
-                                    <div class="cd-cand-card-grid">
-                                        <!-- Sub-card 1: Candidate Info -->
-                                        <div class="cd-cand-subcard">
-                                            <div class="cd-cand-subcard-hdr">
-                                                <span class="cd-cand-subcard-label">Candidate</span>
-                                                <span class="badge badge-light-primary fw-bold fs-9">#CAN-{{ $cand->id }}</span>
-                                            </div>
-                                            <div class="d-flex align-items-center gap-2">
-                                                <div class="cd-contact-avatar-box" style="width:36px; height:36px; min-width:36px; font-size:12px; background:#eff6ff; color:#009ef7; border:1px solid #bfdbfe;">
-                                                    {{ $cInitials }}
-                                                </div>
-                                                <div style="min-width:0;">
-                                                    <div class="fw-bold text-dark fs-7 text-truncate js-cand-searchable" title="{{ $cFull }}">{{ $cFull }}</div>
-                                                    <div class="text-muted fs-8 text-truncate">{{ $cDesig }} &bull; {{ $cComp }}</div>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <!-- Sub-card 2: Comp & Exp -->
-                                        <div class="cd-cand-subcard">
-                                            <div class="cd-cand-subcard-hdr"><span class="cd-cand-subcard-label">Comp &amp; Exp</span></div>
-                                            <div>
-                                                <div class="fw-bold text-dark fs-8">{{ $cExp }} Experience</div>
-                                                <div class="text-muted fs-9">Current: <strong>{{ $candCtcFormatted ?: '₹600K' }}</strong></div>
-                                                <div class="text-muted fs-9">Expected: <strong class="text-success">{{ $candEctcFormatted ?: '₹950K' }}</strong></div>
-                                            </div>
-                                        </div>
-
-                                        <!-- Sub-card 3: Location & Notice -->
-                                        <div class="cd-cand-subcard">
-                                            <div class="cd-cand-subcard-hdr"><span class="cd-cand-subcard-label">Location &amp; Notice</span></div>
-                                            <div>
-                                                <div class="fw-bold text-dark fs-8"><i class="fas fa-location-dot text-muted me-1"></i> Noida</div>
-                                                <div class="text-muted fs-9">Notice: <strong>Immediate / 15d</strong></div>
-                                                <div class="text-muted fs-9">Degree: B.Tech / MCA</div>
-                                            </div>
-                                        </div>
-
-                                        <!-- Sub-card 4: Target Requisition -->
-                                        <div class="cd-cand-subcard">
-                                            <div class="cd-cand-subcard-hdr"><span class="cd-cand-subcard-label">Requisition</span></div>
-                                            <div>
-                                                <div class="fw-bold text-dark fs-8 text-truncate" title="{{ $cand->job_title ?? 'Active Requisition' }}">{{ $cand->job_title ?? 'Active Requisition' }}</div>
-                                                <div class="text-muted fs-9">#JOB-{{ $cand->job_id ?? '1' }} &bull; Full-Time</div>
-                                                <div class="text-muted fs-9"><i class="fas fa-building text-muted me-1"></i> {{ (!empty($cand->client_id) && !empty($cand->internal_client_name)) ? $cand->internal_client_name : ($viewerCompanyName ?? 'Direct Client') }}</div>
-                                            </div>
-                                        </div>
-
-                                        <!-- Sub-card 5: Submitted By -->
-                                        <div class="cd-cand-subcard">
-                                            <div class="cd-cand-subcard-hdr"><span class="cd-cand-subcard-label">Submitted By</span></div>
-                                            <div>
-                                                <div class="fw-bold text-dark fs-8">{{ $agencyCaptainName ?? ($detailName . ' Lead') }}</div>
-                                                <div class="text-muted fs-9 text-truncate">{{ $detailName }}</div>
-                                                <div class="text-muted fs-9">{{ !empty($cand->created_at) ? date('d M, Y', strtotime($cand->created_at)) : 'Recent' }}</div>
-                                            </div>
-                                        </div>
-
-                                        <!-- Sub-card 6: Pipeline & Stage -->
-                                        <div class="cd-cand-subcard">
-                                            <div class="cd-cand-subcard-hdr"><span class="cd-cand-subcard-label">Pipeline Stage</span></div>
-                                            <div class="d-flex flex-column justify-content-center">
-                                                <span class="badge {{ $stagePillClass }} fw-bold fs-9 text-uppercase py-1 text-center">{{ $stageLabel }}</span>
-                                                <div class="text-center mt-1"><span class="badge bg-light-success text-success fs-9 fw-semibold">94% Match</span></div>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <!-- Bottom Strip -->
-                                    <div class="cd-cand-card-bottom">
-                                        <div class="d-flex align-items-center gap-3 flex-wrap">
-                                            <span><i class="far fa-clock text-muted me-1"></i> Submitted: <strong>{{ !empty($cand->created_at) ? date('M d, Y', strtotime($cand->created_at)) : date('M d, Y') }}</strong></span>
-                                            <span><i class="fas fa-envelope text-muted me-1"></i> {{ $cand->email ?? 'candidate@domain.com' }}</span>
-                                            <span><i class="fas fa-phone text-muted me-1"></i> {{ $cand->phone ?? '+91 98765 00000' }}</span>
-                                        </div>
-                                        <div class="d-flex align-items-center gap-2">
-                                            <button type="button" class="btn btn-sm btn-light py-1 px-3 fs-9 fw-semibold border" onclick="alert('Viewing Resume for {{ $cFull }}')">
-                                                <i class="fas fa-file-pdf text-danger me-1"></i> Resume
-                                            </button>
-                                            <button type="button" class="btn btn-sm btn-light-primary py-1 px-3 fs-9 fw-bold" onclick="alert('Opening Full Profile for {{ $cFull }}')">
-                                                <i class="fas fa-user me-1"></i> View Profile
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-                            @endforeach
-                        @else
-                            <div class="cd-empty-state">
-                                <div class="cd-empty-icon"><i class="fas fa-user-slash"></i></div>
-                                <div class="cd-empty-title">No Candidates Submitted</div>
-                                <div class="cd-empty-desc">Candidates submitted by {{ $detailName }} will appear here across all pipeline stages.</div>
-                            </div>
-                        @endif
+                    </div>
+                    <div id="paginationAgencyCandidates" class="d-flex align-items-center justify-content-between pt-4">
                     </div>
                 </div>
             </div>
@@ -3768,143 +4307,40 @@
                 <div class="cd-it-tabs-card">
                     <button type="button" class="cd-it-tab-btn active js-agency-it-tab" data-filter="all">
                         <span>All Interviews</span>
-                        <span class="cd-it-tab-badge">{{ $itCountAll }}</span>
+                        <span class="cd-it-tab-badge" id="agencyItFilterCountAll">{{ $itCountAll }}</span>
                     </button>
                     <button type="button" class="cd-it-tab-btn js-agency-it-tab" data-filter="upcoming">
                         <span class="cd-it-dot dot-primary"></span>
                         <span>Upcoming / Today</span>
-                        <span class="cd-it-tab-badge badge-primary">{{ $itCountUpcoming }}</span>
+                        <span class="cd-it-tab-badge badge-primary" id="agencyItFilterCountUpcoming">{{ $itCountUpcoming }}</span>
                     </button>
                     <button type="button" class="cd-it-tab-btn js-agency-it-tab" data-filter="pending_feedback">
                         <span class="cd-it-dot dot-warning"></span>
                         <span>Feedback Pending</span>
-                        <span class="cd-it-tab-badge badge-warning">{{ $itCountPendingFeedback }}</span>
+                        <span class="cd-it-tab-badge badge-warning" id="agencyItFilterCountPending">{{ $itCountPendingFeedback }}</span>
                     </button>
                     <button type="button" class="cd-it-tab-btn js-agency-it-tab" data-filter="completed">
                         <span class="cd-it-dot dot-success"></span>
                         <span>Completed / Attended</span>
-                        <span class="cd-it-tab-badge badge-success">{{ $itCountCompleted }}</span>
+                        <span class="cd-it-tab-badge badge-success" id="agencyItFilterCountCompleted">{{ $itCountCompleted }}</span>
                     </button>
                     <button type="button" class="cd-it-tab-btn js-agency-it-tab" data-filter="cancelled">
                         <span class="cd-it-dot dot-danger"></span>
                         <span>Cancelled / Rescheduled</span>
-                        <span class="cd-it-tab-badge">{{ $itCountCancelled }}</span>
+                        <span class="cd-it-tab-badge" id="agencyItFilterCountCancelled">{{ $itCountCancelled }}</span>
                     </button>
                 </div>
 
                 <!-- Tier 3: Primary Interviews Stream -->
-                <div class="cd-it-stream" id="agencyInterviewsStream">
-                    @if (count($interviewsScheduleList) > 0)
-                        @foreach ($interviewsScheduleList as $it)
-                            @php
-                                $itCandName = ucwords($it->candidate_name ?? 'Candidate Profile');
-                                $itCandInitials = strtoupper(substr($itCandName, 0, 2));
-                                $itJobTitle = $it->job_title ?? 'Shared Position';
-                                $itJobId = $it->job_id ?? '';
-                                $itDateFormatted = !empty($it->schedule_date) ? Carbon::parse($it->schedule_date)->format('M d, Y') : date('M d, Y');
-                                $itTimeFormatted = !empty($it->schedule_time) ? Carbon::parse($it->schedule_time)->format('h:i A') . ' IST' : '03:00 PM IST';
-                                $meetingUrl = $it->meeting_url ?? ($it->url_link ?? '');
-                                $itRound = !empty($it->interview_stage) ? $it->interview_stage : 'Round 1';
-                                $itPanelist = !empty($it->interviewers_text) ? $it->interviewers_text : 'VP of Engineering';
+                <div class="cd-it-stream" id="candidatetListinterviewtrackerAgency" data-role="interview-list">
+                    <div class="it-loading-card">
+                        <span class="spinner-border spinner-border-sm text-primary me-2"></span>
+                        <span class="text-gray-600 fs-7">Loading Authoritative Interview Projection...</span>
+                    </div>
+                </div>
 
-                                $rawStatus = strtolower($it->status ?? 'pending');
-                                $sDate = !empty($it->schedule_date) ? substr($it->schedule_date, 0, 10) : '';
-                                if ($rawStatus === 'canceled' || $rawStatus === 'rejected') {
-                                    $filterCat = 'cancelled';
-                                    $statusColor = 'danger';
-                                    $statusLabel = 'CANCELLED';
-                                } elseif ($rawStatus === 'hired' || $rawStatus === 'completed' || (!empty($it->feedback) && (int)$it->feedback === 1)) {
-                                    $filterCat = 'completed';
-                                    $statusColor = 'success';
-                                    $statusLabel = 'COMPLETED';
-                                } elseif (!empty($sDate) && $sDate < $todayDate) {
-                                    $filterCat = 'pending_feedback';
-                                    $statusColor = 'warning';
-                                    $statusLabel = 'FEEDBACK PENDING';
-                                } else {
-                                    $filterCat = 'upcoming';
-                                    $statusColor = 'warning';
-                                    $statusLabel = 'SCHEDULED';
-                                }
-                            @endphp
-                            <div class="cd-it-card js-agency-it-item" data-filter="{{ $filterCat }}">
-                                <div class="cd-it-card-grid">
-                                    <!-- Sub-card 1: Candidate & Requisition -->
-                                    <div class="cd-it-subcard">
-                                        <div class="cd-it-subcard-hdr">
-                                            <span class="cd-it-subcard-label">Candidate &amp; Job</span>
-                                            <span class="badge badge-light-primary fw-bold fs-9">{{ $itRound }}</span>
-                                        </div>
-                                        <div class="d-flex align-items-center gap-2">
-                                            <div class="cd-contact-avatar-box" style="width:36px; height:36px; min-width:36px; font-size:12px; background:#eff6ff; color:#009ef7; border:1px solid #bfdbfe;">
-                                                {{ $itCandInitials }}
-                                            </div>
-                                            <div style="min-width:0;">
-                                                <div class="fw-bold text-dark fs-7 text-truncate js-it-searchable" title="{{ $itCandName }}">{{ $itCandName }}</div>
-                                                <div class="text-muted fs-8 text-truncate">{{ $itJobTitle }} &bull; #{{ $itJobId }}</div>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <!-- Sub-card 2: Schedule & Time -->
-                                    <div class="cd-it-subcard">
-                                        <div class="cd-it-subcard-hdr"><span class="cd-it-subcard-label">Schedule &amp; Time</span></div>
-                                        <div>
-                                            <div class="fw-bold text-dark fs-8"><i class="far fa-calendar text-primary me-1"></i> {{ $itDateFormatted }}</div>
-                                            <div class="text-muted fs-9"><i class="far fa-clock text-muted me-1"></i> {{ $itTimeFormatted }} &bull; 45 Mins</div>
-                                            <div class="text-muted fs-9">Virtual Interview</div>
-                                        </div>
-                                    </div>
-
-                                    <!-- Sub-card 3: Panelists -->
-                                    <div class="cd-it-subcard">
-                                        <div class="cd-it-subcard-hdr"><span class="cd-it-subcard-label">Panelists</span></div>
-                                        <div>
-                                            <div class="fw-bold text-dark fs-8 text-truncate">{{ $itPanelist }}</div>
-                                            <div class="text-muted fs-9 text-truncate">Tech Panelist &bull; {{ $viewerCompanyName ?? 'Direct Client' }}</div>
-                                        </div>
-                                    </div>
-
-                                    <!-- Sub-card 4: Meeting Link & Status -->
-                                    <div class="cd-it-subcard">
-                                        <div class="cd-it-subcard-hdr">
-                                            <span class="cd-it-subcard-label">Status &amp; Link</span>
-                                            <span class="badge badge-light-{{ $statusColor }} text-{{ $statusColor }} fw-bold fs-9 text-uppercase">{{ $statusLabel }}</span>
-                                        </div>
-                                        <div class="mt-2">
-                                            @if (!empty($meetingUrl) && $meetingUrl !== '#')
-                                                <a href="{{ $meetingUrl }}" target="_blank" class="btn btn-sm btn-primary py-1 px-3 fs-9 fw-bold w-100 text-center">
-                                                    <i class="fas fa-video me-1"></i> Join Meeting
-                                                </a>
-                                            @else
-                                                <span class="btn btn-sm btn-light-primary py-1 px-3 fs-9 fw-semibold w-100 text-center disabled">
-                                                    <i class="fas fa-video me-1"></i> In-Person / Virtual
-                                                </span>
-                                            @endif
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="cd-it-card-bottom">
-                                    <div><i class="fas fa-user-check text-muted me-1"></i> Sourced by {{ $detailName }} &bull; {{ $itRound }} {{ $itJobTitle }}</div>
-                                    <div class="d-flex align-items-center gap-2">
-                                        <button type="button" class="btn btn-sm btn-light py-1 px-2 fs-9 fw-semibold border" onclick="alert('Reschedule Dialog')">Reschedule</button>
-                                        <button type="button" class="btn btn-sm btn-light-success py-1 px-2 fs-9 fw-bold" onclick="alert('Feedback Dialog')">Add Feedback</button>
-                                    </div>
-                                </div>
-                            </div>
-                        @endforeach
-                    @else
-                        <!-- Enterprise Clean Empty State (Rule 20) -->
-                        <div class="cd-it-empty-state text-center py-12 px-4" style="background:#ffffff; border:1px solid #e2e8f0; border-radius:10px; margin: 12px 0;">
-                            <div class="mb-3">
-                                <i class="fas fa-calendar-xmark text-muted" style="font-size: 38px; opacity: 0.35;"></i>
-                            </div>
-                            <div class="fw-bold text-dark fs-6 mb-1">No Interviews Scheduled</div>
-                            <div class="text-muted fs-8" style="max-width: 440px; margin: 0 auto;">
-                                No interview schedules found for candidates submitted by {{ $detailName }}. When candidates from this agency have interviews scheduled, they will appear here.
-                            </div>
-                        </div>
-                    @endif
+                <!-- Tier 4: Enterprise Pagination Card -->
+                <div id="paginationcandidateinterviewtrackerAgency" class="cd-it-pagination-card" data-role="interview-pagination">
                 </div>
             </div>
         </div>
@@ -3923,7 +4359,7 @@
                         <div>
                             <div class="d-flex align-items-center gap-2">
                                 <h4 class="cd-oj-header-title">Offer &amp; Joining</h4>
-                                <span class="cd-oj-header-badge" id="agencyOjHeaderBadge">{{ $kpiOffersTotal }} Offers &amp; Joinings</span>
+                                <span class="cd-oj-header-badge" id="agencyOjHeaderBadge"><span id="agencyOjCountText">{{ $kpiOffersTotal }}</span> Offers &amp; Joinings</span>
                             </div>
                             <div class="cd-oj-header-sub">Track candidate job offers, joining confirmations and onboardings from {{ $detailName }}.</div>
                         </div>
@@ -3944,185 +4380,39 @@
 
                 <!-- TIER 2: SUB-TABS CARD WITH WHITE BACKGROUND -->
                 <div class="cd-oj-tabs-card">
-                    <div class="cd-oj-tabs-group">
-                        <button type="button" class="cd-oj-tab-btn active js-agency-oj-tab" data-segment="all">
+                    <div class="cd-oj-tabs-group" id="agencyOjSegmentGroup">
+                        <button type="button" class="cd-oj-tab-btn active cd-oj-seg-btn-agency js-agency-oj-tab" data-segment="all">
                             <span>All Records</span>
-                            <span class="cd-oj-tab-badge">{{ $ojCountAll }}</span>
+                            <span class="cd-oj-tab-badge" id="agencyOjCountAll">{{ $ojCountAll }}</span>
                         </button>
-                        <button type="button" class="cd-oj-tab-btn js-agency-oj-tab" data-segment="offers">
+                        <button type="button" class="cd-oj-tab-btn cd-oj-seg-btn-agency js-agency-oj-tab" data-segment="offers">
                             <span class="cd-oj-dot dot-warning"></span>
                             <span>Offers Extended</span>
-                            <span class="cd-oj-tab-badge badge-warning">{{ $ojCountOffers }}</span>
+                            <span class="cd-oj-tab-badge badge-warning" id="agencyOjCountOffers">{{ $ojCountOffers }}</span>
                         </button>
-                        <button type="button" class="cd-oj-tab-btn js-agency-oj-tab" data-segment="joining">
+                        <button type="button" class="cd-oj-tab-btn cd-oj-seg-btn-agency js-agency-oj-tab" data-segment="joining">
                             <span class="cd-oj-dot dot-primary"></span>
                             <span>Joining Soon</span>
-                            <span class="cd-oj-tab-badge badge-primary">{{ $ojCountJoiningSoon }}</span>
+                            <span class="cd-oj-tab-badge badge-primary" id="agencyOjCountJoining">{{ $ojCountJoiningSoon }}</span>
                         </button>
-                        <button type="button" class="cd-oj-tab-btn js-agency-oj-tab" data-segment="joined">
+                        <button type="button" class="cd-oj-tab-btn cd-oj-seg-btn-agency js-agency-oj-tab" data-segment="joined">
                             <span class="cd-oj-dot dot-success"></span>
                             <span>Joined &amp; Onboarded</span>
-                            <span class="cd-oj-tab-badge badge-success">{{ $ojCountJoined }}</span>
+                            <span class="cd-oj-tab-badge badge-success" id="agencyOjCountJoined">{{ $ojCountJoined }}</span>
                         </button>
                     </div>
                 </div>
 
-                <!-- TIER 3: PRIMARY CARDS LIST STREAM -->
+                <!-- TIER 3: PRIMARY CARDS LIST STREAM (Populated via AJAX) -->
                 <div class="cd-oj-stream-wrap">
-                    <div class="cd-oj-stream" id="agencyOffersStream">
-                        @if (count($offersJoiningList) > 0)
-                            @foreach ($offersJoiningList as $oj)
-                                @php
-                                    $ojCandName = ucwords($oj->candidate_name ?? 'Candidate Profile');
-                                    $ojCandInitials = strtoupper(substr($ojCandName, 0, 2));
-                                    $ojCandId = $oj->candidate_id ?? '';
-                                    $ojDesignation = $oj->current_designation ?? 'Candidate';
-                                    $ojJobTitle = $oj->job_title ?? 'Shared Position';
-                                    $ojJobId = $oj->job_id ?? '';
-                                    $ojWorkType = $oj->work_type ?? 'Full Time';
-                                    $ojJobLocation = $oj->job_location ?? 'Noida';
-
-                                    $ojSalRaw = $oj->offer_amount ?: ($oj->tds_salary_ctc ?: $oj->candidate_ctc);
-                                    $ojSalaryFormatted = $formatCompactSalary($ojSalRaw, '₹') ?? '₹800K';
-                                    if (strpos($ojSalaryFormatted, '/yr') === false && strpos($ojSalaryFormatted, '/ yr') === false) {
-                                        $ojSalaryFormatted .= ' / yr';
-                                    }
-
-                                    $ojNotice = (!empty($oj->serving_notice_period_mode) && (int)$oj->serving_notice_period_mode === 1) ? 'Serving Notice' : 'Immediate';
-
-                                    $msId = (int)($oj->master_status_id ?? 0);
-                                    $isJoined = ((int)($oj->joined ?? 0) === 1 || $msId === 6 || !empty($oj->joined_date));
-                                    $isAccepted = (!empty($oj->offer_acceptance) && (int)$oj->offer_acceptance === 1);
-
-                                    if ($isJoined) {
-                                        $ojSegment = 'joined';
-                                        $ojBadgeText = 'JOINED';
-                                        $ojBadgeColor = 'success';
-                                        $ojLifecycleStatus = 'Joined & Onboarded';
-                                        $ojOfferReleaseStatus = 'Offer Accepted';
-                                        $ojDojText = 'DOJ Confirmed';
-                                    } elseif ($isAccepted) {
-                                        $ojSegment = 'joining';
-                                        $ojBadgeText = 'OFFERED';
-                                        $ojBadgeColor = 'warning';
-                                        $ojLifecycleStatus = 'Joining Soon';
-                                        $ojOfferReleaseStatus = 'Offer Accepted';
-                                        $ojDojText = 'Awaiting DOJ Confirmation';
-                                    } else {
-                                        $ojSegment = 'offers';
-                                        $ojBadgeText = 'OFFERED';
-                                        $ojBadgeColor = 'warning';
-                                        $ojLifecycleStatus = 'Offer Extended';
-                                        $ojOfferReleaseStatus = 'Offer Released';
-                                        $ojDojText = 'Awaiting DOJ Confirmation';
-                                    }
-
-                                    $relDate = $oj->send_approved_date_time ?: ($oj->offer_created_at ?: ($oj->offer_updated_at ?: date('Y-m-d')));
-                                    $relDateFormatted = Carbon::parse($relDate)->format('d M Y');
-
-                                    $joinDateRaw = $oj->joined_date ?: $oj->tds_joined_date;
-                                    $joinDateFormatted = !empty($joinDateRaw) ? Carbon::parse($joinDateRaw)->format('d M Y') : 'Date Pending';
-
-                                    $offerDateRaw = $oj->offer_created_at ?: ($oj->offer_updated_at ?? date('Y-m-d'));
-                                    $offerDateFormatted = Carbon::parse($offerDateRaw)->format('d M Y');
-                                @endphp
-                                <div class="cd-oj-card js-agency-oj-item" data-segment="{{ $ojSegment }}">
-                                    <div class="cd-oj-card-grid">
-                                        <!-- Sub-card 1: Candidate Details -->
-                                        <div class="cd-oj-subcard">
-                                            <div class="cd-oj-subcard-hdr">
-                                                <span class="cd-oj-subcard-label">Candidate</span>
-                                                <div class="d-flex align-items-center gap-1">
-                                                    <span class="badge badge-light-primary text-primary fw-bold fs-9">AGENCY PARTNER</span>
-                                                    <span class="badge badge-light-{{ $ojBadgeColor }} text-{{ $ojBadgeColor }} fw-bold fs-9 text-uppercase">{{ $ojBadgeText }}</span>
-                                                </div>
-                                            </div>
-                                            <div class="d-flex align-items-center gap-2">
-                                                <div class="cd-contact-avatar-box" style="width:36px; height:36px; min-width:36px; font-size:12px; background:#eff6ff; color:#009ef7; border:1px solid #bfdbfe;">
-                                                    {{ $ojCandInitials }}
-                                                </div>
-                                                <div style="min-width:0;">
-                                                    <div class="fw-bold text-dark fs-7 text-truncate js-oj-searchable" title="{{ $ojCandName }}">{{ $ojCandName }}</div>
-                                                    <div class="text-muted fs-8 text-truncate">{{ $ojDesignation }} &bull; #{{ $ojCandId }}</div>
-                                                    <div class="text-muted fs-9 text-truncate">{{ $detailName }}</div>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <!-- Sub-card 2: Job Requisition -->
-                                        <div class="cd-oj-subcard">
-                                            <div class="cd-oj-subcard-hdr">
-                                                <span class="cd-oj-subcard-label">Job Requisition</span>
-                                                <span class="badge badge-light-success text-success fw-bold fs-9">ACTIVE</span>
-                                            </div>
-                                            <div>
-                                                <div class="fw-bold text-dark fs-8 text-truncate" title="{{ $ojJobTitle }}">{{ $ojJobTitle }}</div>
-                                                <div class="text-muted fs-9">#{{ $ojJobId }} &bull; {{ (!empty($oj->internal_client_name)) ? $oj->internal_client_name : ($viewerCompanyName ?? 'Direct Client') }}</div>
-                                                <div class="text-muted fs-9">{{ $ojWorkType }} &bull; {{ $ojJobLocation }}</div>
-                                            </div>
-                                        </div>
-
-                                        <!-- Sub-card 3: Compensation -->
-                                        <div class="cd-oj-subcard">
-                                            <div class="cd-oj-subcard-hdr">
-                                                <span class="cd-oj-subcard-label">Compensation</span>
-                                                <span class="text-primary fs-9 fw-semibold cursor-pointer">Details</span>
-                                            </div>
-                                            <div>
-                                                <div class="fw-bold text-dark fs-7">{{ $ojSalaryFormatted }}</div>
-                                                <div class="text-muted fs-9">{{ $ojWorkType }} &bull; Annual CTC</div>
-                                                <div class="text-muted fs-9">Notice: {{ $ojNotice }}</div>
-                                            </div>
-                                        </div>
-
-                                        <!-- Sub-card 4: Offer Status (exact date per user request 8) -->
-                                        <div class="cd-oj-subcard">
-                                            <div class="cd-oj-subcard-hdr"><span class="cd-oj-subcard-label">Offer Status</span></div>
-                                            <div>
-                                                <span class="badge badge-light-primary text-primary fw-bold fs-9"><i class="fas fa-paper-plane me-1"></i> {{ $ojOfferReleaseStatus }}</span>
-                                                <div class="text-muted fs-9 mt-1">Released: <strong>{{ $relDateFormatted }}</strong></div>
-                                                <div class="text-warning fs-9 fw-semibold">{{ $ojLifecycleStatus }}</div>
-                                            </div>
-                                        </div>
-
-                                        <!-- Sub-card 5: Joining Schedule (exact date per user request 8) -->
-                                        <div class="cd-oj-subcard">
-                                            <div class="cd-oj-subcard-hdr"><span class="cd-oj-subcard-label">Joining Schedule</span></div>
-                                            <div>
-                                                <div class="fw-bold text-dark fs-8">{{ $joinDateFormatted }}</div>
-                                                <div class="text-muted fs-9"><i class="far fa-clock text-muted me-1"></i> Notice: {{ $ojNotice }}</div>
-                                                <div class="text-muted fs-9"><i class="far fa-calendar text-muted me-1"></i> {{ $ojDojText }}</div>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <!-- Bottom Strip -->
-                                    <div class="cd-oj-card-bottom">
-                                        <div class="d-flex align-items-center gap-3 flex-wrap">
-                                            <span><i class="fas fa-user-tie text-primary me-1"></i> Recruiter: <strong>{{ auth()->user()->name ?? 'Recruiter' }} ({{ $viewerCompanyName ?? 'Direct Client' }})</strong></span>
-                                            <span><i class="far fa-calendar-check text-success me-1"></i> Offer Date: <strong>{{ $offerDateFormatted }}</strong></span>
-                                        </div>
-                                        <div>
-                                            <span class="badge badge-light-primary text-primary fw-bold fs-9">
-                                                <i class="fas fa-signature me-1"></i> Stage: {{ $ojLifecycleStatus }}
-                                            </span>
-                                        </div>
-                                    </div>
-                                </div>
-                            @endforeach
-                        @else
-                            <!-- Enterprise Clean Empty State (Rule 20) -->
-                            <div class="cd-oj-empty-state text-center py-12 px-4" style="background:#ffffff; border:1px solid #e2e8f0; border-radius:10px; margin: 12px 0;">
-                                <div class="mb-3">
-                                    <i class="fas fa-handshake-slash text-muted" style="font-size: 38px; opacity: 0.35;"></i>
-                                </div>
-                                <div class="fw-bold text-dark fs-6 mb-1">No Offers or Joinings</div>
-                                <div class="text-muted fs-8" style="max-width: 440px; margin: 0 auto;">
-                                    No candidate job offers, joining confirmations or onboardings recorded yet for candidates submitted by {{ $detailName }}. When candidates from this agency receive offers or join, they will appear here.
-                                </div>
-                            </div>
-                        @endif
+                    <div id="candidatetListJoinAgency" class="cd-oj-stream" data-role="offer-joining-list">
+                        <div class="d-flex align-items-center justify-content-center py-10">
+                            <div class="spinner-border text-primary me-3" role="status"></div>
+                            <span class="text-gray-600 fs-7">Loading authoritative offers &amp; joinings...</span>
+                        </div>
                     </div>
+                </div>
+                <div id="paginationcandidatejoinAgency" class="mt-3">
                 </div>
             </div>
         </div>
@@ -4132,6 +4422,7 @@
              ══════════════════════════════════════════════════════════════════════ -->
         <div class="tab-pane" id="candidateDashboard" role="tabpanel">
             <div class="cd-perf-wrap">
+
                 <!-- ── 1. Performance Header Bar ── -->
                 <div class="cd-perf-header">
                     <div class="cd-perf-header-left">
@@ -4146,7 +4437,7 @@
                     <div class="cd-perf-header-right">
                         <div class="cd-perf-select-wrap">
                             <span class="cd-perf-select-lbl">Date Range:</span>
-                            <select class="cd-perf-select" id="agencyPerfDateRangeSelect">
+                            <select class="cd-perf-select" id="perfDateRangeSelect" onchange="cdPerfSyncRange(this.value)">
                                 <option value="12M" selected>Last 12 Months</option>
                                 <option value="6M">Last 6 Months</option>
                                 <option value="3M">Last 3 Months</option>
@@ -4156,15 +4447,26 @@
                         </div>
                         <div class="cd-perf-select-wrap">
                             <span class="cd-perf-select-lbl">Compare:</span>
-                            <select class="cd-perf-select" id="agencyPerfCompareSelect">
+                            <select class="cd-perf-select" id="perfCompareWithSelect" onchange="cdPerfSyncCompare(this.value)">
                                 <option value="previous_period" selected>vs. Previous Period</option>
                                 <option value="same_period_last_year">vs. Same Period Last Year</option>
                                 <option value="none">No Comparison</option>
                             </select>
                         </div>
-                        <button type="button" class="btn btn-sm btn-icon btn-light" id="btnAgencyPerfRefresh" title="Refresh Analytics" style="height:30px; width:30px; border-radius:6px; border:1px solid #e2e8f0;">
+                        <button type="button" class="btn btn-sm btn-icon btn-light" id="btnPerfRefresh" onclick="cdPerfRefresh()" title="Refresh Analytics" style="height:30px; width:30px; border-radius:6px; border:1px solid #e2e8f0;">
                             <i class="fas fa-rotate fa-solid" style="font-size:11px; color:#64748b;"></i>
                         </button>
+                    </div>
+                </div>
+
+                <!-- ── Dynamic Empty State Banner (Shown conditionally) ── -->
+                <div id="perfEmptyStateBanner" style="display:none; margin-bottom:12px;">
+                    <div class="alert alert-dismissible bg-light-warning border border-warning border-dashed d-flex flex-column flex-sm-row p-3 rounded-2">
+                        <i class="fas fa-circle-info fa-solid fs-5 text-warning me-3 mb-2 mb-sm-0 align-self-center"></i>
+                        <div class="d-flex flex-column pe-0 pe-sm-10 justify-content-center" style="font-size:11.5px; color:#475569;">
+                            <strong id="perfEmptyStateTitle" style="font-weight:600;"></strong>
+                            <span id="perfEmptyStateMessage" style="margin-left:4px;"></span>
+                        </div>
                     </div>
                 </div>
 
@@ -4173,70 +4475,89 @@
                     <!-- KPI 1: Total Candidates -->
                     <div class="cd-perf-kpi-card" onclick="triggerDrawerTab('candidate_list', event)">
                         <div class="cd-perf-kpi-top">
-                            <div class="cd-perf-kpi-icon cd-perf-kpi-icon-green"><i class="fas fa-users fa-solid"></i></div>
-                            <span class="cd-perf-pill cd-perf-pill-up"><i class="fas fa-arrow-up fa-solid" style="font-size:8px;"></i>0.0%</span>
+                            <div class="cd-perf-kpi-icon cd-perf-kpi-icon-green">
+                                <i class="fas fa-users fa-solid"></i>
+                            </div>
+                            <span class="cd-perf-pill cd-perf-pill-up" id="perfKpiCandPill"><i class="fas fa-arrow-up fa-solid" style="font-size:8px;"></i>0.0%</span>
                         </div>
-                        <div class="cd-perf-kpi-num">{{ number_format($kpiSubmitted) }}</div>
+                        <div class="cd-perf-kpi-num" id="perfKpiCandidates">{{ number_format($kpiSubmitted ?? 0) }}</div>
                         <div class="cd-perf-kpi-lbl">Total Candidates</div>
                         <div class="cd-perf-kpi-sub">Submitted by this agency</div>
-                        <div class="cd-perf-kpi-comp">vs. previous period</div>
+                        <div class="cd-perf-kpi-comp" id="perfKpiCandComp">vs. previous period</div>
                     </div>
 
                     <!-- KPI 2: Interviews Scheduled -->
                     <div class="cd-perf-kpi-card" onclick="triggerDrawerTab('interview_tracker', event)">
                         <div class="cd-perf-kpi-top">
-                            <div class="cd-perf-kpi-icon cd-perf-kpi-icon-blue"><i class="fas fa-calendar-days fa-solid"></i></div>
-                            <span class="cd-perf-pill cd-perf-pill-up"><i class="fas fa-arrow-up fa-solid" style="font-size:8px;"></i>0.0%</span>
+                            <div class="cd-perf-kpi-icon cd-perf-kpi-icon-blue">
+                                <i class="fas fa-calendar-alt fa-solid fa-calendar-days"></i>
+                            </div>
+                            <span class="cd-perf-pill cd-perf-pill-up" id="perfKpiIntPill"><i class="fas fa-arrow-up fa-solid" style="font-size:8px;"></i>0.0%</span>
                         </div>
-                        <div class="cd-perf-kpi-num">{{ number_format($kpiInterviews) }}</div>
+                        <div class="cd-perf-kpi-num" id="perfKpiInterviews">{{ number_format($kpiInterviews ?? 0) }}</div>
                         <div class="cd-perf-kpi-lbl">Interviews Scheduled</div>
                         <div class="cd-perf-kpi-sub">Across all rounds</div>
-                        <div class="cd-perf-kpi-comp">vs. previous period</div>
+                        <div class="cd-perf-kpi-comp" id="perfKpiIntComp">vs. previous period</div>
                     </div>
 
                     <!-- KPI 3: Offers Generated -->
                     <div class="cd-perf-kpi-card" onclick="triggerDrawerTab('candidate_joining', event)">
                         <div class="cd-perf-kpi-top">
-                            <div class="cd-perf-kpi-icon cd-perf-kpi-icon-amber"><i class="fas fa-file-signature fa-solid"></i></div>
-                            <span class="cd-perf-pill cd-perf-pill-up"><i class="fas fa-arrow-up fa-solid" style="font-size:8px;"></i>0.0%</span>
+                            <div class="cd-perf-kpi-icon cd-perf-kpi-icon-amber">
+                                <i class="fas fa-file-alt fa-solid fa-file-lines"></i>
+                            </div>
+                            <span class="cd-perf-pill cd-perf-pill-up" id="perfKpiOfferPill"><i class="fas fa-arrow-up fa-solid" style="font-size:8px;"></i>0.0%</span>
                         </div>
-                        <div class="cd-perf-kpi-num">{{ number_format($kpiOffers) }}</div>
+                        <div class="cd-perf-kpi-num" id="perfKpiOffers">{{ number_format($kpiOffers ?? 0) }}</div>
                         <div class="cd-perf-kpi-lbl">Offers Generated</div>
                         <div class="cd-perf-kpi-sub">Offer letters sent</div>
-                        <div class="cd-perf-kpi-comp">vs. previous period</div>
+                        <div class="cd-perf-kpi-comp" id="perfKpiOfferComp">vs. previous period</div>
                     </div>
 
                     <!-- KPI 4: Successful Joins -->
                     <div class="cd-perf-kpi-card" onclick="triggerDrawerTab('candidate_joining', event)">
                         <div class="cd-perf-kpi-top">
-                            <div class="cd-perf-kpi-icon cd-perf-kpi-icon-purple"><i class="fas fa-user-check fa-solid"></i></div>
-                            <span class="cd-perf-pill cd-perf-pill-up"><i class="fas fa-arrow-up fa-solid" style="font-size:8px;"></i>0.0%</span>
+                            <div class="cd-perf-kpi-icon cd-perf-kpi-icon-purple">
+                                <i class="fas fa-user-check fa-solid"></i>
+                            </div>
+                            <span class="cd-perf-pill cd-perf-pill-up" id="perfKpiJoinPill"><i class="fas fa-arrow-up fa-solid" style="font-size:8px;"></i>0.0%</span>
                         </div>
-                        <div class="cd-perf-kpi-num">{{ number_format($kpiJoins) }}</div>
+                        <div class="cd-perf-kpi-num" id="perfKpiJoins">{{ number_format($kpiJoins ?? 0) }}</div>
                         <div class="cd-perf-kpi-lbl">Successful Joins</div>
                         <div class="cd-perf-kpi-sub">Candidates placed</div>
-                        <div class="cd-perf-kpi-comp">vs. previous period</div>
+                        <div class="cd-perf-kpi-comp" id="perfKpiJoinComp">vs. previous period</div>
                     </div>
 
-                    <!-- KPI 5: Sourcing Turnaround SLA -->
+                    <!-- KPI 5: Avg. Time to Hire -->
                     <div class="cd-perf-kpi-card">
                         <div class="cd-perf-kpi-top">
-                            <div class="cd-perf-kpi-icon cd-perf-kpi-icon-cyan"><i class="fas fa-bolt fa-solid"></i></div>
-                            <span class="cd-perf-pill cd-perf-pill-up">48h SLA</span>
+                            <div class="cd-perf-kpi-icon cd-perf-kpi-icon-cyan">
+                                <i class="fas fa-clock fa-solid"></i>
+                            </div>
+                            <span class="cd-perf-pill cd-perf-pill-good" id="perfKpiTimePill"><i class="fas fa-minus fa-solid" style="font-size:8px;"></i>—</span>
                         </div>
-                        <div class="cd-perf-kpi-num">{{ $placement_fee }}</div>
-                        <div class="cd-perf-kpi-lbl">Placement Fee Rate</div>
-                        <div class="cd-perf-kpi-sub">90-Day Free Replacement</div>
-                        <div class="cd-perf-kpi-comp">Contracted commercial terms</div>
+                        <div class="cd-perf-kpi-num" id="perfKpiTimeToHire">—</div>
+                        <div class="cd-perf-kpi-lbl">Avg. Time to Hire</div>
+                        <div class="cd-perf-kpi-sub">From submission to join</div>
+                        <div class="cd-perf-kpi-comp" id="perfKpiTimeComp">vs. previous period</div>
                     </div>
                 </div>
 
-                <!-- ── 3. Analytics Grid Row 1 (Funnel & SLA Scorecard) ── -->
+                <!-- ── 3. Analytics Grid Row 1 (Funnel, Candidates & Interviews, All Jobs Status) ── -->
                 <div class="cd-perf-row-1">
-                    <!-- Funnel Card -->
+                    <!-- Card 1: Hiring Pipeline Funnel -->
                     <div class="cd-perf-card">
                         <div class="cd-perf-card-hdr">
-                            <div class="cd-perf-card-title"><i class="fas fa-filter text-success"></i> Recruitment Pipeline Funnel</div>
+                            <div class="cd-perf-card-title">
+                                <i class="fas fa-filter fa-solid text-success"></i> Hiring Pipeline Funnel
+                            </div>
+                            <select class="cd-perf-card-mini-select perf-sync-select" onchange="cdPerfSyncRange(this.value)">
+                                <option value="12M" selected>Last 12 Months</option>
+                                <option value="6M">Last 6 Months</option>
+                                <option value="3M">Last 3 Months</option>
+                                <option value="30D">Last 30 Days</option>
+                                <option value="all">All Time</option>
+                            </select>
                         </div>
                         <div class="cd-funnel-wrap">
                             <svg class="cd-funnel-svg" viewBox="0 0 100 130" preserveAspectRatio="none">
@@ -4248,98 +4569,317 @@
                             </svg>
                             <div class="cd-funnel-list">
                                 <div class="cd-funnel-item">
-                                    <div class="cd-funnel-stage"><span class="cd-funnel-dot" style="background:#3b82f6;"></span><span>Submitted</span></div>
-                                    <span class="cd-funnel-val">{{ $kpiSubmitted }}</span>
-                                    <span class="cd-funnel-pct">100%</span>
+                                    <div class="cd-funnel-stage">
+                                        <span class="cd-funnel-dot" style="background:#3b82f6;"></span>
+                                        <span class="cd-funnel-val" id="funnelCountCand">0</span>
+                                        <span>Candidates</span>
+                                    </div>
+                                    <span class="cd-funnel-pct" id="funnelPctCand">100%</span>
                                 </div>
                                 <div class="cd-funnel-item">
-                                    <div class="cd-funnel-stage"><span class="cd-funnel-dot" style="background:#6366f1;"></span><span>Screened</span></div>
-                                    <span class="cd-funnel-val">{{ $screening_count ?? 0 }}</span>
-                                    <span class="cd-funnel-pct">{{ $kpiSubmitted > 0 ? round((($screening_count ?? 0) / $kpiSubmitted) * 100) : 0 }}%</span>
+                                    <div class="cd-funnel-stage">
+                                        <span class="cd-funnel-dot" style="background:#6366f1;"></span>
+                                        <span class="cd-funnel-val" id="funnelCountScreened">0</span>
+                                        <span>Screened</span>
+                                    </div>
+                                    <span class="cd-funnel-pct" id="funnelPctScreened">0%</span>
                                 </div>
                                 <div class="cd-funnel-item">
-                                    <div class="cd-funnel-stage"><span class="cd-funnel-dot" style="background:#8b5cf6;"></span><span>Interviews</span></div>
-                                    <span class="cd-funnel-val">{{ $kpiInterviews }}</span>
-                                    <span class="cd-funnel-pct">{{ $kpiSubmitted > 0 ? round(($kpiInterviews / $kpiSubmitted) * 100) : 0 }}%</span>
+                                    <div class="cd-funnel-stage">
+                                        <span class="cd-funnel-dot" style="background:#8b5cf6;"></span>
+                                        <span class="cd-funnel-val" id="funnelCountInt">0</span>
+                                        <span>Interviews</span>
+                                    </div>
+                                    <span class="cd-funnel-pct" id="funnelPctInt">0%</span>
                                 </div>
                                 <div class="cd-funnel-item">
-                                    <div class="cd-funnel-stage"><span class="cd-funnel-dot" style="background:#f59e0b;"></span><span>Offers</span></div>
-                                    <span class="cd-funnel-val">{{ $kpiOffers }}</span>
-                                    <span class="cd-funnel-pct">{{ $kpiSubmitted > 0 ? round(($kpiOffers / $kpiSubmitted) * 100) : 0 }}%</span>
+                                    <div class="cd-funnel-stage">
+                                        <span class="cd-funnel-dot" style="background:#f59e0b;"></span>
+                                        <span class="cd-funnel-val" id="funnelCountOff">0</span>
+                                        <span>Offers</span>
+                                    </div>
+                                    <span class="cd-funnel-pct" id="funnelPctOff">0%</span>
                                 </div>
                                 <div class="cd-funnel-item">
-                                    <div class="cd-funnel-stage"><span class="cd-funnel-dot" style="background:#10b981;"></span><span>Joined</span></div>
-                                    <span class="cd-funnel-val">{{ $kpiJoins }}</span>
-                                    <span class="cd-funnel-pct">{{ $kpiSubmitted > 0 ? round(($kpiJoins / $kpiSubmitted) * 100) : 0 }}%</span>
+                                    <div class="cd-funnel-stage">
+                                        <span class="cd-funnel-dot" style="background:#10b981;"></span>
+                                        <span class="cd-funnel-val" id="funnelCountJoin">0</span>
+                                        <span>Joined</span>
+                                    </div>
+                                    <span class="cd-funnel-pct" id="funnelPctJoin">0%</span>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- SLA Performance Card -->
+                    <!-- Card 2: Candidates & Interviews (Month to Year) -->
                     <div class="cd-perf-card">
                         <div class="cd-perf-card-hdr">
-                            <div class="cd-perf-card-title"><i class="fas fa-clock text-primary"></i> Sourcing Turnaround &amp; SLA Metrics</div>
-                            <span class="badge badge-light-success text-success fw-bold fs-9">96.4% Compliance</span>
+                            <div class="cd-perf-card-title">
+                                <i class="fas fa-chart-line fa-solid text-success"></i> Candidates &amp; Interviews (Month to Year)
+                            </div>
+                            <select class="cd-perf-card-mini-select perf-sync-select" onchange="cdPerfSyncRange(this.value)">
+                                <option value="12M" selected>Last 12 Months</option>
+                                <option value="6M">Last 6 Months</option>
+                                <option value="3M">Last 3 Months</option>
+                                <option value="30D">Last 30 Days</option>
+                                <option value="all">All Time</option>
+                            </select>
                         </div>
-                        <div class="d-flex flex-column gap-3 py-2">
-                            <div>
-                                <div class="d-flex justify-content-between fs-8 fw-semibold mb-1">
-                                    <span>First Profile Submission (&lt; 48 Hours)</span>
-                                    <span class="text-success fw-bold">98.2%</span>
-                                </div>
-                                <div class="progress" style="height: 6px; background:#f1f5f9;">
-                                    <div class="progress-bar bg-success" style="width: 98.2%;"></div>
-                                </div>
-                            </div>
-                            <div>
-                                <div class="d-flex justify-content-between fs-8 fw-semibold mb-1">
-                                    <span>Interview Availability Confirmation</span>
-                                    <span class="text-primary fw-bold">94.0%</span>
-                                </div>
-                                <div class="progress" style="height: 6px; background:#f1f5f9;">
-                                    <div class="progress-bar bg-primary" style="width: 94%;"></div>
-                                </div>
-                            </div>
-                            <div>
-                                <div class="d-flex justify-content-between fs-8 fw-semibold mb-1">
-                                    <span>Offer Acceptance SLA</span>
-                                    <span class="text-warning fw-bold">91.5%</span>
-                                </div>
-                                <div class="progress" style="height: 6px; background:#f1f5f9;">
-                                    <div class="progress-bar bg-warning" style="width: 91.5%;"></div>
-                                </div>
-                            </div>
+                        <div class="cd-perf-legend">
+                            <span class="cd-perf-legend-item">
+                                <span class="cd-perf-legend-dot" style="background:#10b981;"></span> Candidates Submitted
+                            </span>
+                            <span class="cd-perf-legend-item">
+                                <span class="cd-perf-legend-dot" style="background:#8b5cf6;"></span> Interviewed Candidates
+                            </span>
+                        </div>
+                        <div style="position:relative; height:150px; width:100%;">
+                            <canvas id="chartCandidatesInterviews"></canvas>
                         </div>
                     </div>
 
-                    <!-- Requisition Fulfillment Card -->
+                    <!-- Card 3: All Jobs Status (Hiring, Hold, Closed) -->
                     <div class="cd-perf-card">
                         <div class="cd-perf-card-hdr">
-                            <div class="cd-perf-card-title"><i class="fas fa-medal text-warning"></i> Quality &amp; Retention Benchmark</div>
-                            <span class="badge bg-light-success text-success fw-bold fs-9">EXCELLENT</span>
+                            <div class="cd-perf-card-title">
+                                <i class="fas fa-briefcase fa-solid text-success"></i> All Jobs Status (Hiring, Hold, Closed)
+                            </div>
+                            <select class="cd-perf-card-mini-select perf-sync-select" onchange="cdPerfSyncRange(this.value)">
+                                <option value="12M" selected>Last 12 Months</option>
+                                <option value="6M">Last 6 Months</option>
+                                <option value="3M">Last 3 Months</option>
+                                <option value="30D">Last 30 Days</option>
+                                <option value="all">All Time</option>
+                            </select>
                         </div>
-                        <div class="d-flex flex-column gap-2 py-1">
-                            <div class="d-flex justify-content-between fs-8 py-1 border-bottom border-light">
-                                <span class="text-muted">90-Day Guarantee Retention:</span>
-                                <span class="text-success fw-bold">100% Retained</span>
-                            </div>
-                            <div class="d-flex justify-content-between fs-8 py-1 border-bottom border-light">
-                                <span class="text-muted">Profile Rejection Ratio:</span>
-                                <span class="text-primary fw-bold">&lt; 8% Rejections</span>
-                            </div>
-                            <div class="d-flex justify-content-between fs-8 py-1 border-bottom border-light">
-                                <span class="text-muted">Direct SPOC Rating:</span>
-                                <span class="text-warning fw-bold"><i class="fas fa-star text-warning"></i> 4.9 / 5.0</span>
-                            </div>
-                            <div class="p-2 bg-light rounded mt-1">
-                                <div class="text-muted fs-9" style="line-height:1.35;">
-                                    <i class="fas fa-circle-check text-success me-1"></i> Ranks in top tier of enterprise agencies with verified talent pipeline and zero early dropouts.
-                                </div>
-                            </div>
+                        <div class="cd-perf-legend">
+                            <span class="cd-perf-legend-sq" style="background:#10b981;"></span> Hiring (Active)
+                            <span class="cd-perf-legend-sq" style="background:#f59e0b;"></span> On Hold
+                            <span class="cd-perf-legend-sq" style="background:#ef4444;"></span> Closed
+                        </div>
+                        <div style="position:relative; height:150px; width:100%;">
+                            <canvas id="chartAllJobsStatus"></canvas>
                         </div>
                     </div>
                 </div>
+
+                <!-- ── 4. Analytics Grid Row 2 (Offers & Joins, Job Type Performance, Time to Hire) ── -->
+                <div class="cd-perf-row-2">
+                    <!-- Card 1: Offers & Joinings (Month to Year) -->
+                    <div class="cd-perf-card">
+                        <div class="cd-perf-card-hdr">
+                            <div class="cd-perf-card-title">
+                                <i class="fas fa-file-alt fa-solid text-warning"></i> Offers &amp; Joinings (Month to Year)
+                            </div>
+                            <select class="cd-perf-card-mini-select perf-sync-select" onchange="cdPerfSyncRange(this.value)">
+                                <option value="12M" selected>Last 12 Months</option>
+                                <option value="6M">Last 6 Months</option>
+                                <option value="3M">Last 3 Months</option>
+                                <option value="30D">Last 30 Days</option>
+                                <option value="all">All Time</option>
+                            </select>
+                        </div>
+                        <div class="cd-perf-legend">
+                            <span class="cd-perf-legend-item">
+                                <span class="cd-perf-legend-sq" style="background:#f59e0b;"></span> Offers Generated
+                            </span>
+                            <span class="cd-perf-legend-item">
+                                <span class="cd-perf-legend-dot" style="background:#10b981;"></span> Successful Joins
+                            </span>
+                        </div>
+                        <div style="position:relative; height:150px; width:100%;">
+                            <canvas id="chartOffersJoinings"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Card 2: Job Type Performance -->
+                    <div class="cd-perf-card">
+                        <div class="cd-perf-card-hdr">
+                            <div class="cd-perf-card-title">
+                                <i class="fas fa-sliders-h fa-solid text-success"></i> Job Type Performance
+                            </div>
+                            <select class="cd-perf-card-mini-select perf-sync-select" onchange="cdPerfSyncRange(this.value)">
+                                <option value="12M" selected>Last 12 Months</option>
+                                <option value="6M">Last 6 Months</option>
+                                <option value="3M">Last 3 Months</option>
+                                <option value="30D">Last 30 Days</option>
+                                <option value="all">All Time</option>
+                            </select>
+                        </div>
+                        <div class="cd-donut-wrap">
+                            <div class="cd-donut-chart-box">
+                                <canvas id="chartJobType" width="110" height="110"></canvas>
+                                <div class="cd-donut-center">
+                                    <div class="cd-donut-center-num" id="donutTotalJobs">0</div>
+                                    <div class="cd-donut-center-lbl">Active Jobs</div>
+                                </div>
+                            </div>
+                            <div class="cd-donut-list">
+                                <div class="cd-donut-item">
+                                    <div class="cd-donut-item-left">
+                                        <span class="cd-funnel-dot" style="background:#10b981;"></span>
+                                        <span>Full-Time</span>
+                                    </div>
+                                    <div class="d-flex align-items-center gap-3">
+                                        <span class="cd-donut-item-count" id="donutCountFulltime">0</span>
+                                        <span class="cd-donut-item-pct" id="donutPctFulltime">0%</span>
+                                    </div>
+                                </div>
+                                <div class="cd-donut-item">
+                                    <div class="cd-donut-item-left">
+                                        <span class="cd-funnel-dot" style="background:#8b5cf6;"></span>
+                                        <span>Contract</span>
+                                    </div>
+                                    <div class="d-flex align-items-center gap-3">
+                                        <span class="cd-donut-item-count" id="donutCountContract">0</span>
+                                        <span class="cd-donut-item-pct" id="donutPctContract">0%</span>
+                                    </div>
+                                </div>
+                                <div class="cd-donut-item">
+                                    <div class="cd-donut-item-left">
+                                        <span class="cd-funnel-dot" style="background:#f59e0b;"></span>
+                                        <span>Freelance</span>
+                                    </div>
+                                    <div class="d-flex align-items-center gap-3">
+                                        <span class="cd-donut-item-count" id="donutCountFreelance">0</span>
+                                        <span class="cd-donut-item-pct" id="donutPctFreelance">0%</span>
+                                    </div>
+                                </div>
+                                <div class="cd-donut-item">
+                                    <div class="cd-donut-item-left">
+                                        <span class="cd-funnel-dot" style="background:#06b6d4;"></span>
+                                        <span>Part-Time</span>
+                                    </div>
+                                    <div class="d-flex align-items-center gap-3">
+                                        <span class="cd-donut-item-count" id="donutCountPartTime">0</span>
+                                        <span class="cd-donut-item-pct" id="donutPctPartTime">0%</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Card 3: Time to Hire Trend (Days) -->
+                    <div class="cd-perf-card">
+                        <div class="cd-perf-card-hdr">
+                            <div class="cd-perf-card-title">
+                                <i class="fas fa-clock fa-solid text-success"></i> Time to Hire Trend (Days)
+                            </div>
+                            <select class="cd-perf-card-mini-select perf-sync-select" onchange="cdPerfSyncRange(this.value)">
+                                <option value="12M" selected>Last 12 Months</option>
+                                <option value="6M">Last 6 Months</option>
+                                <option value="3M">Last 3 Months</option>
+                                <option value="30D">Last 30 Days</option>
+                                <option value="all">All Time</option>
+                            </select>
+                        </div>
+                        <div style="position:relative; height:150px; width:100%;">
+                            <canvas id="chartTimeToHire"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ── 5. Analytics Grid Row 3 (Top Roles & Recruiter Performance) ── -->
+                <div class="cd-perf-row-3">
+                    <!-- Card 1: Top Hiring Roles -->
+                    <div class="cd-perf-card">
+                        <div class="cd-perf-card-hdr">
+                            <div class="cd-perf-card-title">
+                                <i class="fas fa-briefcase fa-solid text-success"></i> Top Hiring Roles
+                            </div>
+                            <a href="javascript:void(0);" onclick="triggerDrawerTab('requisitions', event)" class="cd-card-hdr-link">View All Jobs <i class="fas fa-arrow-right fa-solid ms-1" style="font-size:8.5px;"></i></a>
+                        </div>
+                        <div style="overflow-x:auto;">
+                            <table class="cd-perf-table">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Job Title</th>
+                                        <th>Candidates</th>
+                                        <th>Interviews</th>
+                                        <th>Offers</th>
+                                        <th>Joins</th>
+                                        <th>Conversion</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="perfTopRolesTbody">
+                                    <tr>
+                                        <td colspan="7" class="text-center py-4 text-muted">
+                                            <i class="fas fa-spinner fa-spin text-success me-2"></i>Loading live requisition metrics...
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Card 2: Recruiter Performance -->
+                    <div class="cd-perf-card">
+                        <div class="cd-perf-card-hdr">
+                            <div class="cd-perf-card-title">
+                                <i class="fas fa-users fa-solid text-success"></i> Recruiter Performance
+                            </div>
+                            <a href="javascript:void(0);" onclick="triggerDrawerTab('candidate_list', event)" class="cd-card-hdr-link">View All Recruiters <i class="fas fa-arrow-right fa-solid ms-1" style="font-size:8.5px;"></i></a>
+                        </div>
+                        <div style="overflow-x:auto;">
+                            <table class="cd-perf-table">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Recruiter</th>
+                                        <th>Candidates</th>
+                                        <th>Interviews</th>
+                                        <th>Offers</th>
+                                        <th>Joins</th>
+                                        <th>Success Rate</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="perfRecruitersTbody">
+                                    <tr>
+                                        <td colspan="7" class="text-center py-4 text-muted">
+                                            <i class="fas fa-spinner fa-spin text-success me-2"></i>Loading live recruiter performance...
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ── 6. Additional Intelligence & Insights ── -->
+                <div class="cd-perf-intelligence-grid">
+                    <div class="cd-perf-intel-card">
+                        <div class="cd-perf-intel-lbl"><i class="fas fa-bolt fa-solid text-warning me-1"></i> Hiring Velocity</div>
+                        <div class="cd-perf-intel-val" id="perfIntelVelocity">—</div>
+                        <div class="cd-perf-intel-sub" id="perfIntelVelocitySub">Average cycle duration</div>
+                    </div>
+                    <div class="cd-perf-intel-card">
+                        <div class="cd-perf-intel-lbl"><i class="fas fa-filter fa-solid text-success me-1"></i> Interview Conversion</div>
+                        <div class="cd-perf-intel-val" id="perfIntelIntConv">—</div>
+                        <div class="cd-perf-intel-sub" id="perfIntelIntConvSub">Stage conversion yield</div>
+                    </div>
+                    <div class="cd-perf-intel-card">
+                        <div class="cd-perf-intel-lbl"><i class="fas fa-file-signature fa-solid text-info me-1"></i> Offer Conversion</div>
+                        <div class="cd-perf-intel-val" id="perfIntelOfferConv">—</div>
+                        <div class="cd-perf-intel-sub" id="perfIntelOfferConvSub">Interview to offer ratio</div>
+                    </div>
+                    <div class="cd-perf-intel-card">
+                        <div class="cd-perf-intel-lbl"><i class="fas fa-handshake fa-solid text-success me-1"></i> Cumulative Yield</div>
+                        <div class="cd-perf-intel-val" id="perfIntelJoinRatio">—</div>
+                        <div class="cd-perf-intel-sub" id="perfIntelJoinRatioSub">Placements / Submissions</div>
+                    </div>
+                </div>
+
+                <div class="cd-perf-insights-card">
+                    <div class="cd-perf-insights-hdr">
+                        <i class="fas fa-lightbulb fa-solid text-warning"></i> Performance Intelligence &amp; Actionable Insights
+                    </div>
+                    <div class="cd-perf-insights-grid" id="perfInsightsGrid">
+                        <div><i class="fas fa-spinner fa-spin text-success me-1"></i> Loading intelligent recruitment heuristics...</div>
+                    </div>
+                </div>
+
             </div>
         </div>
 
@@ -4347,22 +4887,49 @@
 </div>
 
 <script>
-    // ── Agency Drawer Tab Switcher (Standard Bootstrap & Fallback Native Execution) ──
+    // ══════════════════════════════════════════════════════════════════════════
+    // Agency Drawer Reactive Orchestration Engine (Rule 17 Isolated)
+    // CQRS Architecture: 100% Elasticsearch Read Path / Zero MySQL Reads
+    // ══════════════════════════════════════════════════════════════════════════
+
+    var agencyCompanyId = {{ (int)$agencyId }};
+    var currentAuthCompanyId = {{ (int)(auth()->user()->company_id ?? 0) }};
+
+    window.agencyTabLoadedState = window.agencyTabLoadedState || {};
+    window.perfChartInstances = window.perfChartInstances || {};
+    window.perfClientCache = window.perfClientCache || {};
+    window.perfCurrentRange = '12M';
+    window.perfCurrentCompare = 'previous_period';
+    window.perfIsLoading = false;
+    window.agencyPerfClientCache = window.perfClientCache;
+    window.agencyPerfChartInstances = window.perfChartInstances;
+    window.agencyPerfCurrentRange = window.perfCurrentRange;
+    window.agencyPerfCurrentCompare = window.perfCurrentCompare;
+    window.agencyPerfIsLoading = window.perfIsLoading;
+    window.currentAgencyJobStatus = 'all';
+    window.currentAgencyOjSegment = 'all';
+
+    // ── 1. Master Tab Switcher & Orchestration ──
     window.triggerDrawerTab = function(tabId, e) {
         if (e && typeof e.preventDefault === 'function') e.preventDefault();
-        tabId = tabId.replace(/^#/, '');
+        tabId = String(tabId || '').replace(/^#/, '');
+        if (!tabId) return;
 
         // 1. Activate tab pill button
-        $('.cd-drawer-tabs-list .cd-tab-pill-btn').removeClass('active');
-        $(`.cd-drawer-tabs-list .cd-tab-pill-btn[href="#${tabId}"]`).addClass('active');
+        $('.cd-drawer-tabs-list .cd-tab-pill-btn').removeClass('active').attr('aria-selected', 'false');
+        $(`.cd-drawer-tabs-list .cd-tab-pill-btn[href="#${tabId}"]`).addClass('active').attr('aria-selected', 'true');
 
         // 2. Activate matching tab pane
         $('.cd-tab-content-wrapper .tab-pane').removeClass('active show');
         $(`#${tabId}`).addClass('active show');
+
+        // 3. Load tab content via authoritative reactive store
+        window.loadAgencyTabContent(tabId, false);
     };
 
-    // Bootstrap nav tab delegation
-    $(document).on('click', '.cd-drawer-tabs-list .cd-tab-pill-btn', function(e) {
+    // Bootstrap nav tab click delegation
+    $(document).off('click.agencyTabPill', '.cd-drawer-tabs-list .cd-tab-pill-btn');
+    $(document).on('click.agencyTabPill', '.cd-drawer-tabs-list .cd-tab-pill-btn', function(e) {
         var href = $(this).attr('href');
         if (href && href.startsWith('#')) {
             e.preventDefault();
@@ -4370,8 +4937,9 @@
         }
     });
 
-    // KPI nav triggers
-    $(document).on('click', '.cd-kpi-nav-trigger', function(e) {
+    // Hero KPI click delegation
+    $(document).off('click.agencyKpiNav', '.cd-kpi-nav-trigger');
+    $(document).on('click.agencyKpiNav', '.cd-kpi-nav-trigger', function(e) {
         var href = $(this).attr('href');
         if (href && href.startsWith('#')) {
             e.preventDefault();
@@ -4379,176 +4947,1848 @@
         }
     });
 
-    // ── Universal Real-Time 300ms Debounced Search ──
-    function setupTabDebouncedSearch(inputId, clearId, itemSelector, textSelector) {
-        var debounceTimer = null;
-        $(document).on('input', inputId, function() {
-            var $this = $(this);
-            var val = $this.val().trim();
-            if (val.length > 0) {
-                $(clearId).show();
-            } else {
-                $(clearId).hide();
+    // Master Tab Content Coordinator
+    window.loadAgencyTabContent = function(targetTab, force) {
+        targetTab = String(targetTab || '').replace(/^#/, '').toLowerCase();
+        var cacheKey = agencyCompanyId + '_' + targetTab;
+
+        if (targetTab === 'recent_activity') {
+            if (window.ClientActivityManager && typeof window.ClientActivityManager.initClient === 'function') {
+                try {
+                    window.ClientActivityManager.initClient(agencyCompanyId, false, agencyCompanyId, false, 'agency', agencyCompanyId);
+                } catch(e){}
+            } else if (window.AgencyActivityManager && typeof window.AgencyActivityManager.loadActivity === 'function') {
+                window.AgencyActivityManager.loadActivity(false);
             }
-            clearTimeout(debounceTimer);
-            debounceTimer = setTimeout(function() {
-                var q = val.toLowerCase();
-                $(itemSelector).each(function() {
-                    var txt = $(this).find(textSelector).text().toLowerCase();
-                    if (q === '' || txt.indexOf(q) !== -1) {
-                        $(this).show();
-                    } else {
-                        $(this).hide();
+            return;
+        }
+
+        if (targetTab === 'requisitions' || targetTab === 'jobs') {
+            if (force || !window.agencyTabLoadedState[cacheKey]) {
+                window.agencyTabLoadedState[cacheKey] = true;
+                fetchAgencyJobs(1, $('#agencyJobSearchInput').val() || '', window.currentAgencyJobStatus || 'all', force);
+            }
+            return;
+        }
+
+        if (targetTab === 'candidate_list' || targetTab === 'candidates') {
+            if (window.ClientCandidateStoreAgency) {
+                if (window.ClientCandidateStoreAgency.clientId !== agencyCompanyId) {
+                    window.ClientCandidateStoreAgency.init(currentAuthCompanyId, agencyCompanyId, 'agency');
+                } else if (force || !window.agencyTabLoadedState[cacheKey]) {
+                    window.agencyTabLoadedState[cacheKey] = true;
+                    window.ClientCandidateStoreAgency.fetch(1);
+                }
+            }
+            return;
+        }
+
+        if (targetTab === 'interview_tracker' || targetTab === 'interviews') {
+            if (window.ClientInterviewStoreAgency) {
+                if (force || !window.agencyTabLoadedState[cacheKey]) {
+                    window.agencyTabLoadedState[cacheKey] = true;
+                    window.ClientInterviewStoreAgency.fetch(agencyCompanyId, null, force, $('#agencyItSearchInput').val() || '');
+                }
+            }
+            return;
+        }
+
+        if (targetTab === 'candidate_joining' || targetTab === 'offers') {
+            if (force || !window.agencyTabLoadedState[cacheKey]) {
+                window.agencyTabLoadedState[cacheKey] = true;
+                agencyfetchCandidatesJoin(1, $('#agencyOjSearchInput').val() || '', window.currentAgencyOjSegment || 'all');
+            }
+            return;
+        }
+
+        if (targetTab === 'candidatedashboard' || targetTab === 'performance') {
+            if (force || !window.agencyTabLoadedState[cacheKey]) {
+                window.agencyTabLoadedState[cacheKey] = true;
+                agencyPerfFetchData(window.agencyPerfCurrentRange, window.agencyPerfCurrentCompare, force);
+            }
+            return;
+        }
+    };
+
+    // ── 2. Tab 4: Jobs Reactive Engine ──
+    window._activeAgencyJobsXhr = null;
+    function fetchAgencyJobs(page = 1, search = '', status = 'all', force = false) {
+        var $jobsList = $('#agencyJobsListajax');
+        if (!$jobsList.length) return;
+
+        if (window._activeAgencyJobsXhr && window._activeAgencyJobsXhr.readyState !== 4) {
+            try { window._activeAgencyJobsXhr.abort(); } catch(e){}
+        }
+
+        if (force || $jobsList.children().length === 0) {
+            $jobsList.html(`
+                <div class="d-flex flex-column align-items-center justify-content-center py-10" style="min-height:200px;">
+                    <div class="spinner-border text-primary mb-3" style="width:2rem;height:2rem;" role="status"></div>
+                    <span class="text-gray-600 font-poppins fs-7 fw-semibold">Loading open shared jobs...</span>
+                </div>
+            `);
+        }
+
+        window._activeAgencyJobsXhr = $.ajax({
+            url: `{{ url('service_company/jobs_side_bar_job_ajax/data') }}`,
+            type: 'GET',
+            data: {
+                search: '',
+                status: 'all',
+                per_page: 500,
+                client_id: agencyCompanyId,
+                partner_company_id: agencyCompanyId,
+                client_type: 'agency',
+                custom: false
+            },
+            success: function(response) {
+                if (!response || !response.html) {
+                    $jobsList.html(`
+                        <div class="cd-empty-state">
+                            <div class="cd-empty-icon"><i class="fas fa-briefcase"></i></div>
+                            <div class="cd-empty-title">No Jobs Shared Yet</div>
+                            <div class="cd-empty-desc">Share open requisitions with {{ addslashes($detailName) }} to accelerate sourcing.</div>
+                        </div>
+                    `);
+                    return;
+                }
+
+                $jobsList.html(response.html);
+                $('#paginationAgencyJobs').empty(); // 100% client-side memory virtual pagination
+
+                applyAgencyJobFilter(status || window.currentAgencyJobStatus || 'all');
+            },
+            error: function(xhr, st) {
+                if (st === 'abort') return;
+                $jobsList.html(`
+                    <div class="cd-jobs-empty text-center py-8">
+                        <i class="fas fa-exclamation-circle fa-2x mb-3 text-danger d-block"></i>
+                        <div class="fw-bold fs-6 text-gray-700 mb-1">Failed to load shared jobs</div>
+                        <div class="text-muted fs-7">Please refresh or try again.</div>
+                    </div>
+                `);
+            }
+        });
+        return window._activeAgencyJobsXhr;
+    }
+    window.fetchAgencyJobs = fetchAgencyJobs;
+
+    function applyAgencyJobFilter(overrideStatus) {
+        var $pane = $('#requisitions');
+        var $container = $('#agencyJobsListajax');
+        if (!$container.length) return;
+
+        var rawSearch = ($pane.find('#agencyJobSearchInput').val() || '').trim().toLowerCase();
+        var searchWords = rawSearch.length > 0 ? rawSearch.split(/\s+/).filter(Boolean) : [];
+
+        var activeBtn = $pane.find('.js-agency-job-tab.active');
+        var targetStatus = (overrideStatus || (activeBtn.length ? activeBtn.data('status') : (window.currentAgencyJobStatus || 'all')) || 'all').toLowerCase();
+
+        var totalCount = 0;
+        var hiringCount = 0;
+        var holdCount = 0;
+        var closedCount = 0;
+        var visibleCount = 0;
+
+        $container.find('.cd-job-card').each(function() {
+            var $card = $(this);
+            var cardStatus = ($card.attr('data-status') || $card.data('status') || 'active').toString().toLowerCase();
+
+            totalCount++;
+            if (cardStatus === 'active' || cardStatus === 'hiring') hiringCount++;
+            else if (cardStatus === 'hold') holdCount++;
+            else if (cardStatus === 'closed' || cardStatus === 'inactive') closedCount++;
+
+            var matchesStatus = false;
+            if (targetStatus === 'all') matchesStatus = true;
+            else if (targetStatus === 'hiring' || targetStatus === 'active') matchesStatus = (cardStatus === 'active' || cardStatus === 'hiring');
+            else if (targetStatus === 'hold') matchesStatus = (cardStatus === 'hold');
+            else if (targetStatus === 'closed' || targetStatus === 'inactive') matchesStatus = (cardStatus === 'closed' || cardStatus === 'inactive');
+
+            var matchesSearch = true;
+            if (matchesStatus && searchWords.length > 0) {
+                var cardText = ($card.text() || '').toLowerCase();
+                for (var i = 0; i < searchWords.length; i++) {
+                    if (cardText.indexOf(searchWords[i]) === -1) {
+                        matchesSearch = false;
+                        break;
                     }
-                });
-            }, 300);
+                }
+            }
+
+            if (matchesStatus && matchesSearch) {
+                $card.show();
+                visibleCount++;
+            } else {
+                $card.hide();
+            }
         });
 
-        $(document).on('click', clearId, function() {
-            $(inputId).val('').trigger('input');
-            $(this).hide();
-        });
+        // Sync Subtab Counters
+        $('#agencyJobCountAll').text(totalCount);
+        $('#agencyJobCountHiring').text(hiringCount);
+        $('#agencyJobCountHold').text(holdCount);
+        $('#agencyJobCountClosed').text(closedCount);
+        $('#agencyJobHeaderBadge').text(totalCount + ' Jobs');
+        $('#agencyKpiAllJobs').text(totalCount);
+        $('#agencyKpiActiveJobs').text(hiringCount);
+        $('#agencyTabBadgeJobs').text(totalCount);
+
+        var $emptyMsg = $container.find('.cd-jobs-client-empty');
+        if (visibleCount === 0 && totalCount > 0) {
+            if (!$emptyMsg.length) {
+                $container.append(`
+                    <div class="cd-jobs-client-empty text-center py-8">
+                        <i class="fas fa-search fa-2x mb-2 text-muted d-block opacity-50"></i>
+                        <div class="fw-semibold fs-7 text-gray-600">No jobs match your filter criteria.</div>
+                    </div>
+                `);
+            } else {
+                $emptyMsg.show();
+            }
+        } else if ($emptyMsg.length) {
+            $emptyMsg.hide();
+        }
     }
 
-    setupTabDebouncedSearch('#agencyJobSearchInput', '#btnAgencyJobSearchClear', '.js-agency-job-item', '.js-job-searchable');
-    setupTabDebouncedSearch('#cdAgencyContactSearchInput', '#cdAgencyContactSearchClear', '.js-agency-contact-item', '.js-contact-searchable');
-    setupTabDebouncedSearch('#cdAgencyCandSearchInput', '#cdAgencyCandSearchClear', '.js-agency-cand-item', '.js-cand-searchable');
-    setupTabDebouncedSearch('#agencyItSearchInput', '#agencyItSearchClear', '.js-agency-it-item', '.js-it-searchable');
-    setupTabDebouncedSearch('#agencyOjSearchInput', '#agencyOjSearchClear', '.js-agency-oj-item', '.js-oj-searchable');
-
-    // Reset Buttons
-    $(document).on('click', '#btnAgencyJobReset', function() {
-        $('#agencyJobSearchInput').val('').trigger('input');
-        $('.js-agency-job-tab[data-status="all"]').trigger('click');
-    });
-    $(document).on('click', '#cdAgencyContactResetBtn', function() {
-        $('#cdAgencyContactSearchInput').val('').trigger('input');
-        $('.js-agency-contact-tab[data-filter="all"]').trigger('click');
-    });
-    $(document).on('click', '#cdAgencyCandResetBtn', function() {
-        $('#cdAgencyCandSearchInput').val('').trigger('input');
-        $('.js-agency-cand-stage[data-stage="all"]').trigger('click');
-    });
-    $(document).on('click', '#agencyItResetBtn', function() {
-        $('#agencyItSearchInput').val('').trigger('input');
-        $('.js-agency-it-tab[data-filter="all"]').trigger('click');
-    });
-    $(document).on('click', '#agencyOjResetBtn', function() {
-        $('#agencyOjSearchInput').val('').trigger('input');
-        $('.js-agency-oj-tab[data-segment="all"]').trigger('click');
-    });
-
-    // ── Sub-Tabs Filter Handlers ──
-    // 2. Contacts Filter
-    $(document).on('click', '.js-agency-contact-tab', function(e) {
-        e.preventDefault();
-        $('.js-agency-contact-tab').removeClass('active');
-        $(this).addClass('active');
-        var filter = $(this).data('filter');
-        if (filter === 'all' || filter === 'active') {
-            $('.js-agency-contact-item').show();
-        } else {
-            $('.js-agency-contact-item').each(function() {
-                var role = ($(this).data('role') || '').toLowerCase();
-                if (role.indexOf(filter) !== -1) {
-                    $(this).show();
-                } else {
-                    $(this).hide();
-                }
-            });
-        }
-    });
-
-    // 3. Jobs Filter
-    $(document).on('click', '.js-agency-job-tab', function(e) {
+    $(document).off('click.agencyJobTab', '.js-agency-job-tab');
+    $(document).on('click.agencyJobTab', '.js-agency-job-tab', function(e) {
         e.preventDefault();
         $('.js-agency-job-tab').removeClass('active');
         $(this).addClass('active');
         var status = $(this).data('status');
-        if (status === 'all') {
-            $('.js-agency-job-item').show();
-        } else {
-            $('.js-agency-job-item').each(function() {
-                if ($(this).data('status') === status) {
-                    $(this).show();
-                } else {
-                    $(this).hide();
-                }
-            });
-        }
+        window.currentAgencyJobStatus = status;
+        applyAgencyJobFilter(status);
     });
 
-    // 4. Candidates Pipeline Filter (8 stages)
-    $(document).on('click', '.js-agency-cand-stage', function(e) {
+    var agencyJobSearchTimer = null;
+    $(document).off('input.agencyJobSearch', '#agencyJobSearchInput');
+    $(document).on('input.agencyJobSearch', '#agencyJobSearchInput', function() {
+        var val = $(this).val().trim();
+        $('#btnAgencyJobSearchClear').toggle(val.length > 0);
+        clearTimeout(agencyJobSearchTimer);
+        agencyJobSearchTimer = setTimeout(function() {
+            applyAgencyJobFilter();
+        }, 250);
+    });
+
+    $(document).off('click.agencyJobClear', '#btnAgencyJobSearchClear');
+    $(document).on('click.agencyJobClear', '#btnAgencyJobSearchClear', function() {
+        $('#agencyJobSearchInput').val('');
+        $(this).hide();
+        applyAgencyJobFilter();
+    });
+
+    $(document).off('click.agencyJobReset', '#btnAgencyJobReset');
+    $(document).on('click.agencyJobReset', '#btnAgencyJobReset', function() {
+        $('#agencyJobSearchInput').val('');
+        $('#btnAgencyJobSearchClear').hide();
+        window.currentAgencyJobStatus = 'all';
+        $('.js-agency-job-tab').removeClass('active');
+        $('.js-agency-job-tab[data-status="all"]').addClass('active');
+        applyAgencyJobFilter('all');
+    });
+
+    // ── 3. Tab 5: Candidates Reactive Engine (ClientCandidateStoreAgency) ──
+    window.ClientCandidateStoreAgency = {
+        state: 'IDLE',
+        companyId: null,
+        clientId: null,
+        clientType: 'agency',
+        allCandidates: [],
+        stageCounts: {
+            sourcing: 0, screening: 0, evaluation: 0, negotiations: 0,
+            offer: 0, joined: 0, rejected: 0
+        },
+        activeStage: 'sourcing',
+        searchTerm: '',
+        currentPage: 1,
+        pageSize: 25,
+
+        init: function(companyId, clientId, clientType) {
+            this.companyId = companyId;
+            this.clientId = clientId;
+            this.clientType = clientType || 'agency';
+            this.allCandidates = [];
+            this.activeStage = 'sourcing';
+            this.searchTerm = '';
+            this.currentPage = 1;
+            this.fetch(1);
+        },
+
+        fetch: function(page) {
+            var self = this;
+            this.currentPage = page || 1;
+            this.state = 'LOADING';
+
+            $('#cdCandSkeletonLoaderAgency').show();
+            $('#cdCandidateTableWrapAgency').hide();
+            $('#cdCandEmptyStateAgency').hide();
+
+            $.ajax({
+                url: '{{ url("service_company/direct-client-candidate-list") }}',
+                type: 'GET',
+                headers: { 'Accept': 'application/json' },
+                data: {
+                    clientid: this.clientId,
+                    client_type: 'agency',
+                    page: this.currentPage,
+                    size: 100
+                },
+                success: function(res) {
+                    self.allCandidates = (res.data || []).filter(function(cand) {
+                        var jSid = parseInt(cand.job_master_status_id, 10);
+                        var mSid = parseInt(cand.master_status_id, 10);
+                        if (jSid === 8 || jSid === 9) return false;
+                        if ((isNaN(jSid) || jSid <= 0) && (mSid === 8 || mSid === 9)) return false;
+                        return true;
+                    });
+                    self.calculateStageCounts(self.allCandidates);
+                    self.state = 'READY';
+
+                    $('#cdCandSkeletonLoaderAgency').hide();
+                    $('#cdCandidateTableWrapAgency').show();
+
+                    self.updateStageBadges();
+                    self.filterAndRender();
+                },
+                error: function(err) {
+                    self.state = 'ERROR';
+                    $('#cdCandSkeletonLoaderAgency').hide();
+                    $('#agencyCandidatesStream').html(`
+                        <div class="text-center py-8">
+                            <i class="fas fa-exclamation-circle fa-2x mb-3 text-danger d-block"></i>
+                            <div class="fw-bold fs-6 text-gray-700 mb-1">Failed to load candidates</div>
+                            <div class="text-muted fs-7">Please refresh or try again.</div>
+                        </div>
+                    `);
+                    $('#cdCandidateTableWrapAgency').show();
+                }
+            });
+        },
+
+        getCandidateStage: function(cand) {
+            if (!cand) return 'unknown';
+
+            // Authoritative pipeline stage: job_master_status_id first, then master_status_id
+            var jSid = parseInt(cand.job_master_status_id, 10);
+            var mSid = parseInt(cand.master_status_id, 10);
+
+            // Strict Status 8 (In Review) and 9 (Archived) exclusion guard
+            if (jSid === 8 || jSid === 9) return 'excluded';
+            if ((isNaN(jSid) || jSid <= 0) && (mSid === 8 || mSid === 9)) return 'excluded';
+
+            var sid = (!isNaN(jSid) && jSid > 0) ? jSid : ((!isNaN(mSid) && mSid > 0) ? mSid : 0);
+
+            if (sid === 1) return 'sourcing';
+            if (sid === 2) return 'screening';
+            if (sid === 3) return 'evaluation';
+            if (sid === 4) return 'negotiations';
+            if (sid === 5) return 'offer';
+            if (sid === 6) return 'joined';
+            if (sid === 7) return 'rejected';
+            if (sid === 8 || sid === 9) return 'excluded';
+
+            var sName = String(cand.child_status_name || cand.master_status_name || cand.name || '').toLowerCase().trim();
+            if (sName.indexOf('inreview') !== -1 || sName.indexOf('in review') !== -1 || sName.indexOf('archived') !== -1) return 'excluded';
+            if (sName.indexOf('sourc') !== -1) return 'sourcing';
+            if (sName.indexOf('screen') !== -1) return 'screening';
+            if (sName.indexOf('eval') !== -1 || sName.indexOf('interview') !== -1) return 'evaluation';
+            if (sName.indexOf('negot') !== -1) return 'negotiations';
+            if (sName.indexOf('offer') !== -1) return 'offer';
+            if (sName.indexOf('join') !== -1 || sName.indexOf('onboard') !== -1) return 'joined';
+            if (sName.indexOf('reject') !== -1) return 'rejected';
+
+            return 'unknown';
+        },
+
+        calculateStageCounts: function(candidates) {
+            var counts = { sourcing: 0, screening: 0, evaluation: 0, negotiations: 0, offer: 0, joined: 0, rejected: 0 };
+            var self = this;
+            (candidates || []).forEach(function(cand) {
+                var stage = self.getCandidateStage(cand);
+                if (stage !== 'excluded' && stage !== 'unknown' && counts.hasOwnProperty(stage)) {
+                    counts[stage]++;
+                }
+            });
+            this.stageCounts = counts;
+            return counts;
+        },
+
+        updateStageBadges: function() {
+            var c = this.stageCounts || {};
+            var total = (c.sourcing || 0) + (c.screening || 0) + (c.evaluation || 0) + (c.negotiations || 0) + (c.offer || 0) + (c.joined || 0) + (c.rejected || 0);
+
+            $('#candTabCountSourcingAgency').text(c.sourcing || 0);
+            $('#candTabCountScreeningAgency').text(c.screening || 0);
+            $('#candTabCountEvaluationAgency').text(c.evaluation || 0);
+            $('#candTabCountNegotiationsAgency').text(c.negotiations || 0);
+            $('#candTabCountOfferAgency').text(c.offer || 0);
+            $('#candTabCountJoinedAgency').text(c.joined || 0);
+            $('#candTabCountRejectedAgency').text(c.rejected || 0);
+
+            $('#cdAgencyCandCountText').text(total);
+            $('#agencyKpiCandidates').text(total);
+            $('#perfKpiCandidates').text(total);
+            $('#agencyTabBadgeCandidates').text(total);
+        },
+
+        filterAndRender: function() {
+            var self = this;
+            var stage = this.activeStage || 'sourcing';
+            var term = (this.searchTerm || '').toLowerCase().trim();
+
+            var stageCandidates = (this.allCandidates || []).filter(function(cand) {
+                var candStage = self.getCandidateStage(cand);
+                if (candStage === 'excluded' || candStage === 'unknown') return false;
+                if (!stage || stage === 'all') return true;
+                return candStage === stage;
+            });
+
+            var filtered = stageCandidates;
+            if (term) {
+                filtered = stageCandidates.filter(function(cand) {
+                    var skillsStr = '';
+                    if (Array.isArray(cand.skills)) {
+                        skillsStr = cand.skills.join(' ');
+                    } else if (typeof cand.skills === 'string') {
+                        skillsStr = cand.skills;
+                    }
+                    var corpus = [
+                        cand.full_name,
+                        cand.first_name,
+                        cand.last_name,
+                        cand.email,
+                        cand.phone,
+                        cand.current_designation,
+                        cand.current_company,
+                        cand.cur_company_name,
+                        cand.company_name,
+                        cand.client_name,
+                        cand.title,
+                        cand.job_title,
+                        cand.city_name,
+                        cand.state_name,
+                        cand.country_name,
+                        cand.location,
+                        cand.captain_name,
+                        cand.agency_name,
+                        cand.submitted_by_display,
+                        skillsStr,
+                        String(cand.id || ''),
+                        String(cand.candidate_id || ''),
+                        String(cand.job_id || cand.jobId || '')
+                    ].filter(Boolean).join(' ').toLowerCase();
+
+                    return corpus.indexOf(term) !== -1;
+                });
+            }
+
+            if (filtered.length === 0) {
+                $('#agencyCandidatesStream').empty();
+                $('#paginationAgencyCandidates').empty();
+                var stageLabel = (this.activeStage && this.activeStage !== 'all')
+                    ? (this.activeStage.charAt(0).toUpperCase() + this.activeStage.slice(1)) + ' stage'
+                    : 'this agency';
+                var emptyMsg = this.searchTerm
+                    ? 'No candidates match "' + $('<div>').text(this.searchTerm).html() + '" in ' + stageLabel + '.'
+                    : 'No candidates currently in ' + stageLabel + '.';
+                $('#cdCandEmptyStateAgency .text-dark').text(emptyMsg);
+                $('#cdCandEmptyStateAgency').show();
+                $('#cdCandidateTableWrapAgency').hide();
+                return;
+            }
+
+            $('#cdCandEmptyStateAgency').hide();
+            $('#cdCandidateTableWrapAgency').show();
+            var html = '';
+            filtered.forEach(function(cand) {
+                html += self.buildCandidateCard(cand);
+            });
+            $('#agencyCandidatesStream').html(html);
+        },
+
+        buildCandidateCard: function(row) {
+            var cid = row.id || row.wiseId || row.candidate_id || 0;
+            var jobId = row.jobId || row.job_id || 0;
+
+            // Acronym-preserving sentence/title case formatter
+            var formatWithAcronyms = function(str) {
+                if (!str || typeof str !== 'string') return '';
+                var s = str.trim();
+                if (!s) return '';
+                var acronyms = {
+                    'php': 'PHP', 'aws': 'AWS', 'gcp': 'GCP', 'azure': 'Azure', 'api': 'API',
+                    'sql': 'SQL', 'mysql': 'MySQL', 'nosql': 'NoSQL', 'ui': 'UI', 'ux': 'UX',
+                    'qa': 'QA', 'hr': 'HR', 'ats': 'ATS', 'crm': 'CRM', 'erp': 'ERP',
+                    'in': 'IN', 'us': 'US', 'uk': 'UK', 'uae': 'UAE', 'ca': 'CA', 'sg': 'SG', 'au': 'AU',
+                    'b.tech': 'B.Tech', 'b.e': 'B.E', 'm.tech': 'M.Tech', 'm.e': 'M.E',
+                    'bca': 'BCA', 'mca': 'MCA', 'mba': 'MBA', 'b.sc': 'B.Sc', 'm.sc': 'M.Sc',
+                    'wfo': 'WFO', 'wfh': 'WFH', 'it': 'IT'
+                };
+                return s.split(/(\s+|[/\-+&])/).map(function(token) {
+                    var lower = token.toLowerCase();
+                    if (acronyms[lower]) return acronyms[lower];
+                    if (token.length <= 1) return token.toUpperCase();
+                    return token.charAt(0).toUpperCase() + token.slice(1).toLowerCase();
+                }).join('');
+            };
+
+            // Word limiter helper: allows up to maxWords
+            var limitWords = function(str, maxWords) {
+                if (!str || typeof str !== 'string') return '';
+                var words = str.trim().split(/\s+/);
+                if (words.length <= maxWords) return str.trim();
+                return words.slice(0, maxWords).join(' ') + '...';
+            };
+
+            // Relative time formatted helper
+            var formatTimeAgo = function(createdVal) {
+                if (!createdVal) return 'Recently';
+                var time;
+                if (typeof createdVal === 'number') {
+                    time = (createdVal > 1e11) ? createdVal : createdVal * 1000;
+                } else {
+                    time = Date.parse(createdVal);
+                }
+                if (isNaN(time)) return 'Recently';
+                var diff = Math.floor((Date.now() - time) / 1000);
+                if (diff < 60) return 'Just now';
+                if (diff < 3600) return Math.floor(diff / 60) + 'm ago';
+                if (diff < 86400) return Math.floor(diff / 3600) + 'h ago';
+                if (diff < 2592000) {
+                    var days = Math.floor(diff / 86400);
+                    return days === 1 ? '1 day ago' : (days + ' days ago');
+                }
+                var months = Math.floor(diff / 2592000);
+                return months === 1 ? '1 mo ago' : (months + ' mos ago');
+            };
+
+            // Experience number cleaner
+            var cleanExpNum = function(val) {
+                if (val === undefined || val === null || val === '') return null;
+                var s = String(val).trim().replace(/\.+$/, '');
+                var n = parseFloat(s);
+                if (isNaN(n)) return s;
+                return (n % 1 === 0) ? n.toString() : n.toFixed(1);
+            };
+
+            // Compact salary formatting
+            var formatCompactSalary = function(val) {
+                if (val === null || val === undefined || val === '') return null;
+                var num = Number(String(val).replace(/,/g, '').trim());
+                if (isNaN(num) || num <= 0) return null;
+                if (num >= 1000) {
+                    var kVal = num / 1000;
+                    var formatted = (kVal % 1 === 0) ? kVal.toString() : kVal.toFixed(1).replace(/\.0$/, '');
+                    return formatted + 'K';
+                }
+                return num.toLocaleString();
+            };
+
+            // 1. Sub-Card 1: Candidate Profile
+            var rawFullName = (row.full_name || ((row.first_name || '') + ' ' + (row.last_name || ''))).trim() || 'Candidate';
+            var rawDesignation = (row.current_designation || '----').trim();
+            var currCompany = (row.current_company || '----').trim();
+
+            var displayName = formatWithAcronyms(limitWords(rawFullName, 15));
+            var displayDesig = formatWithAcronyms(limitWords(rawDesignation, 15));
+            var currCompanyClean = formatWithAcronyms(limitWords(currCompany, 10));
+
+            // 2. Sub-Card 2: Compensation & Experience
+            var currencySymbol = row.current_ctc_cur || row.salary_currency || row.job_currency || '₹';
+            if (currencySymbol === '0' || !currencySymbol || currencySymbol === 'INR') currencySymbol = '₹';
+            if (currencySymbol === 'USD' || currencySymbol === '4') currencySymbol = '$';
+            if (currencySymbol === 'EUR' || currencySymbol === '1') currencySymbol = '€';
+            if (currencySymbol === 'GBP' || currencySymbol === '3') currencySymbol = '£';
+            if (currencySymbol === 'AED' || currencySymbol === '5') currencySymbol = 'AED ';
+
+            var ectcVal = formatCompactSalary(row.ectc_yearly || row.ectc || row.salary);
+            var ctcVal = formatCompactSalary(row.ctc_yearly || row.ctc);
+            var salaryPrimaryHtml = ectcVal
+                ? `<span class="fw-bold text-dark">${currencySymbol}${ectcVal}</span> <span class="text-muted fs-8">/ Yr</span>`
+                : (ctcVal ? `<span class="fw-bold text-dark">${currencySymbol}${ctcVal}</span> <span class="text-muted fs-8">/ Yr</span>` : '<span class="text-muted">----</span>');
+
+            var totalExpNum = cleanExpNum(row.total_exp);
+            var relExpNum = cleanExpNum(row.rel_exp);
+            var totalExpStr = totalExpNum !== null ? (totalExpNum + ' Yrs Total') : '----';
+            if (relExpNum !== null && relExpNum !== '0' && relExpNum !== totalExpNum) {
+                totalExpStr += ` (${relExpNum} Rel)`;
+            }
+
+            var noticeText = 'Immediate';
+            var noticeColorClass = 'cd-notice-immediate';
+            var rawNotice = String(row.np_id || row.notice || '').trim();
+
+            if (row.serving_notice_period_mode == 1 || (rawNotice && rawNotice.includes('-'))) {
+                var cleanDate = rawNotice.replace('SNP LWD', '').trim();
+                noticeText = 'SNP LWD ' + cleanDate;
+                noticeColorClass = 'cd-notice-snp';
+            } else if (rawNotice === 'Immediate' || rawNotice === '0' || rawNotice === '') {
+                noticeText = 'Immediate';
+                noticeColorClass = 'cd-notice-immediate';
+            } else if (!isNaN(Number(rawNotice))) {
+                noticeText = rawNotice + ' Days';
+                noticeColorClass = 'cd-notice-days';
+            } else {
+                noticeText = rawNotice;
+                noticeColorClass = 'cd-notice-default';
+            }
+
+            // 3. Sub-Card 3: Location & Education
+            var city = row.city_name || row.city || '----';
+            var country = row.country_name || '';
+            var locLine1 = city;
+            if (country && country !== '----') {
+                var cShort = country.length > 2 ? country.substring(0, 2).toUpperCase() : country.toUpperCase();
+                locLine1 += ', ' + cShort;
+            }
+            var locLine1Clean = formatWithAcronyms(locLine1);
+
+            var rawWorkMode = String(row.job_mode || '').toLowerCase();
+            var workModeClean = 'Work From Office';
+            if (rawWorkMode.includes('remote') || rawWorkMode === '3') {
+                workModeClean = 'Remote';
+            } else if (rawWorkMode.includes('hybrid') || rawWorkMode === '2') {
+                workModeClean = 'Hybrid';
+            } else if (rawWorkMode.includes('office') || rawWorkMode.includes('wfo') || rawWorkMode === '1') {
+                workModeClean = 'Work From Office';
+            }
+
+            var qualification = row.qualification_name || '----';
+            var qualificationClean = formatWithAcronyms(limitWords(qualification, 8));
+
+            // 4. Sub-Card 4: Target Job Requisition
+            var jobTitle = row.title || row.job_title || ('Job #' + jobId);
+            var jobTitleFormatted = formatWithAcronyms(limitWords(jobTitle, 15));
+            var companyName = row.cur_company_name || row.client_name || row.company_name || 'Client';
+            var companyNameFormatted = formatWithAcronyms(limitWords(companyName, 12));
+            var jobUrl = jobId ? `{{ url('service_company/jobs') }}/${jobId}` : 'javascript:void(0);';
+
+            var deptFormatted = formatWithAcronyms(row.industry_name || row.department || 'Technology');
+            var jobTypeClean = (row.job_type || 'Full-Time');
+
+            var scopeTag = 'Shared Requisition';
+            var scopeCls = 'type-direct';
+            if (row.client_type === 'internal') {
+                scopeTag = 'Internal Client';
+                scopeCls = 'type-internal';
+            }
+
+            var rawJobStatus = String(row.job_status || 'active').toLowerCase();
+            var statusPillText = 'Hiring';
+            var statusChipClass = 'status-hiring';
+            if (rawJobStatus === 'active' || rawJobStatus === 'hiring') {
+                statusPillText = 'Hiring';
+                statusChipClass = 'status-hiring';
+            } else if (rawJobStatus === 'hold') {
+                statusPillText = 'Hold';
+                statusChipClass = 'status-hold';
+            } else if (rawJobStatus === 'inactive' || rawJobStatus === 'closed') {
+                statusPillText = 'Closed';
+                statusChipClass = 'status-closed';
+            }
+
+            var companyLogo = row.client_logo || row.company_logo || row.logo_logical_path || row.logo || '';
+            var companyInitial = (companyName && companyName.length > 0) ? companyName.charAt(0).toUpperCase() : 'C';
+            var logoHtml = '';
+            if (companyLogo && companyLogo.length > 5) {
+                logoHtml = `
+                    <div class="cd-job-logo-wrap" title="${$('<div>').text(companyNameFormatted).html()}">
+                        <img src="${companyLogo}" alt="${$('<div>').text(companyNameFormatted).html()}" class="cd-job-logo-img" onerror="this.style.display='none'; if(this.nextElementSibling) this.nextElementSibling.style.display='flex';">
+                        <div class="cd-job-logo-fallback" style="display:none;">${companyInitial}</div>
+                    </div>
+                `;
+            } else {
+                logoHtml = `
+                    <div class="cd-job-logo-wrap" title="${$('<div>').text(companyNameFormatted).html()}">
+                        <div class="cd-job-logo-fallback"><i class="fas fa-building text-primary"></i></div>
+                    </div>
+                `;
+            }
+
+            // 5. Sub-Card 5: Sourcing & Agency Attribution
+            var captain = row.captain_name || (row.submitted_by_display ? row.submitted_by_display.split(' — ')[0] : (row.spokperson_name || 'Agency Lead'));
+            var submitterCompany = row.agency_name || '{{ addslashes($detailName) }}';
+            var captainFormatted = formatWithAcronyms(limitWords(captain, 12));
+            var submitterFormatted = formatWithAcronyms(limitWords(submitterCompany, 12));
+            var submittedAgo = formatTimeAgo(row.created_at);
+
+            // 6. Sub-Card 6: Pipeline & Stage
+            var canonicalStage = this.getCandidateStage(row);
+            var stageLabels = {
+                sourcing: 'Sourcing',
+                screening: 'Screening',
+                evaluation: 'Evaluation',
+                negotiations: 'Negotiations',
+                offer: 'Offered',
+                joined: 'Joined',
+                rejected: 'Rejected'
+            };
+            var stageName = row.master_status_name || stageLabels[canonicalStage] || 'Sourcing';
+            var sLower = canonicalStage.toLowerCase();
+            var stageChipStyle = 'background:#ecfeff;color:#0891b2;border:1px solid #a5f3fc;';
+            if (sLower === 'screening') {
+                stageChipStyle = 'background:#faf5ff;color:#9333ea;border:1px solid #e9d5ff;';
+            } else if (sLower === 'evaluation') {
+                stageChipStyle = 'background:#eef2ff;color:#4f46e5;border:1px solid #c7d2fe;';
+            } else if (sLower === 'negotiations') {
+                stageChipStyle = 'background:#fdf2f8;color:#db2777;border:1px solid #fbcfe8;';
+            } else if (sLower === 'offer') {
+                stageChipStyle = 'background:#fffbeb;color:#d97706;border:1px solid #fde68a;';
+            } else if (sLower === 'joined') {
+                stageChipStyle = 'background:#f0fdf4;color:#16a34a;border:1px solid #bbf7d0;';
+            } else if (sLower === 'rejected') {
+                stageChipStyle = 'background:#fef2f2;color:#ef4444;border:1px solid #fecaca;';
+            }
+            var subStageText = row.child_status_name || 'Active';
+
+            // 7. Sub-Card 7 (Bottom Strip): Skills, CV Match, LinkedIn Verified, Visa Status
+            var matchPct = (row.skill_match !== undefined && row.skill_match !== null) ? Math.round(row.skill_match) : 0;
+            var matchBadgeClass = 'cd-match-red';
+            if (matchPct >= 85) {
+                matchBadgeClass = 'cd-match-green';
+            } else if (matchPct >= 50) {
+                matchBadgeClass = 'cd-match-amber';
+            }
+
+            var skillsList = [];
+            if (Array.isArray(row.skills)) {
+                skillsList = row.skills;
+            } else if (typeof row.skills === 'string' && row.skills.trim()) {
+                skillsList = row.skills.split(',').map(function(s) { return s.trim(); }).filter(Boolean);
+            }
+
+            var skillsPillsHtml = '';
+            if (skillsList.length > 0) {
+                skillsList.forEach(function(s) {
+                    var cleanSkill = $('<div>').text(formatWithAcronyms(s)).html();
+                    skillsPillsHtml += `<span class="cd-skill-pill-cv">${cleanSkill}</span>`;
+                });
+            } else {
+                skillsPillsHtml = `<span class="text-muted fs-8">No specific skills tagged</span>`;
+            }
+
+            var rawLinkedin = String(row.linkedin || row.ci_linkedin || '').trim();
+            var linkedinHtml = '';
+            if (rawLinkedin && rawLinkedin !== '0' && rawLinkedin.toLowerCase() !== 'none' && rawLinkedin.toLowerCase() !== 'null' && rawLinkedin !== '----') {
+                var linkedinUrl = rawLinkedin;
+                if (!linkedinUrl.startsWith('http://') && !linkedinUrl.startsWith('https://')) {
+                    if (linkedinUrl.includes('linkedin.com')) {
+                        linkedinUrl = 'https://' + linkedinUrl;
+                    } else {
+                        linkedinUrl = 'https://www.linkedin.com/in/' + linkedinUrl.replace(/^@/, '');
+                    }
+                }
+                linkedinHtml = `
+                    <a href="${linkedinUrl}" target="_blank" rel="noopener noreferrer" class="cd-cand-linkedin-pill" title="LinkedIn Profile Verified">
+                        <i class="fab fa-linkedin text-primary"></i><span>LinkedIn Verified</span>
+                    </a>
+                `;
+            }
+
+            var rawVisa = String(row.visastatu || row.visa_status || row.visa || '').trim();
+            var visaHtml = '';
+            if (rawVisa && rawVisa !== '0' && rawVisa.toLowerCase() !== 'none' && rawVisa.toLowerCase() !== 'null' && rawVisa !== '----') {
+                var visaCountryShort = '';
+                var rawCountry = String(row.country_name || '').trim().toUpperCase();
+                if (rawCountry && rawCountry !== '----') {
+                    visaCountryShort = rawCountry.length > 2 ? rawCountry.substring(0, 2) : rawCountry;
+                }
+
+                var vLower = rawVisa.toLowerCase();
+                if (vLower.includes('us') || vLower.includes('h-1b') || vLower.includes('h1b') || vLower.includes('green card') || vLower.includes('gc-ead') || vLower.includes('opt') || vLower.includes('cpt') || vLower.includes('tn permit')) {
+                    if (!visaCountryShort) visaCountryShort = 'US';
+                } else if (vLower.includes('canada') || vLower.includes('canadian')) {
+                    if (!visaCountryShort) visaCountryShort = 'CA';
+                } else if (vLower.includes('india') || vLower.includes('indian')) {
+                    if (!visaCountryShort) visaCountryShort = 'IN';
+                } else if (vLower.includes('uk') || vLower.includes('british')) {
+                    if (!visaCountryShort) visaCountryShort = 'UK';
+                } else if (vLower.includes('uae') || vLower.includes('dubai')) {
+                    if (!visaCountryShort) visaCountryShort = 'UAE';
+                } else if (vLower.includes('singapore')) {
+                    if (!visaCountryShort) visaCountryShort = 'SG';
+                } else if (vLower.includes('australia')) {
+                    if (!visaCountryShort) visaCountryShort = 'AU';
+                }
+                if (!visaCountryShort) visaCountryShort = 'Visa';
+
+                var cleanVisaName = rawVisa
+                    .replace(/^(US|United States|Canada|Canadian|India|Indian|UK|UAE|Dubai|Singapore|Australia)\s+/i, '')
+                    .trim();
+                if (!cleanVisaName) cleanVisaName = rawVisa;
+                cleanVisaName = formatWithAcronyms(cleanVisaName);
+
+                var visaDisplay = `(${visaCountryShort}, ${cleanVisaName})`;
+                visaHtml = `
+                    <span class="cd-cand-visa-pill" title="Visa Status: ${$('<div>').text(rawVisa).html()}">
+                        <i class="fas fa-passport text-muted"></i><span>${$('<div>').text(visaDisplay).html()}</span>
+                    </span>
+                `;
+            }
+
+            return `
+                <div class="cd-cand-card" data-candidate-id="${cid}">
+                    <div class="cd-cand-card-grid">
+                        <!-- Sub-Card 1: CANDIDATE INFO -->
+                        <div class="cd-cand-subcard cd-cand-subcard-info">
+                            <div class="cd-cand-subcard-hdr">
+                                <span class="cd-cand-subcard-label">CANDIDATE INFO</span>
+                            </div>
+                            <div class="cd-cand-subcard-body">
+                                <div class="cd-cand-profile-row">
+                                    <div class="cd-cand-profile-meta">
+                                        <span class="cd-cand-name" title="${$('<div>').text(rawFullName).html()}">
+                                            ${displayName}
+                                        </span>
+                                        <div class="cd-cand-desig" title="${$('<div>').text(rawDesignation).html()}">${displayDesig}</div>
+                                        <div class="cd-cand-employer" title="${$('<div>').text(currCompany).html()}">
+                                            <i class="fas fa-building text-muted me-1" style="font-size:9.5px;"></i>${currCompanyClean}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Sub-Card 2: COMPENSATION & EXP -->
+                        <div class="cd-cand-subcard cd-cand-subcard-comp">
+                            <div class="cd-cand-subcard-hdr">
+                                <span class="cd-cand-subcard-label">COMPENSATION &amp; EXP</span>
+                            </div>
+                            <div class="cd-cand-subcard-body">
+                                <div class="cd-val-salary" title="${ectcVal || ctcVal || ''}">
+                                    ${salaryPrimaryHtml}
+                                </div>
+                                <div class="cd-val-exp" title="${totalExpStr}">
+                                    <i class="far fa-clock text-muted me-1" style="font-size:10px;"></i><span>${totalExpStr}</span>
+                                </div>
+                                <div class="cd-val-notice" title="${noticeText}">
+                                    <span class="cd-notice-clean ${noticeColorClass}">${noticeText}</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Sub-Card 3: LOCATION & DEGREE -->
+                        <div class="cd-cand-subcard cd-cand-subcard-loc">
+                            <div class="cd-cand-subcard-hdr">
+                                <span class="cd-cand-subcard-label">LOCATION &amp; DEGREE</span>
+                            </div>
+                            <div class="cd-cand-subcard-body">
+                                <div class="cd-loc-val" title="${$('<div>').text(locLine1Clean).html()}">
+                                    <i class="fas fa-map-marker-alt text-muted me-1" style="font-size:10px;"></i>${locLine1Clean}
+                                </div>
+                                <div class="cd-loc-mode" title="${workModeClean}">
+                                    <i class="fas fa-building text-muted me-1" style="font-size:9.5px;"></i>${workModeClean}
+                                </div>
+                                <div class="cd-loc-edu" title="${$('<div>').text(qualification).html()}">
+                                    <i class="fas fa-graduation-cap text-muted me-1" style="font-size:10px;"></i>${qualificationClean}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Sub-Card 4: TARGET REQUISITION -->
+                        <div class="cd-cand-subcard cd-cand-subcard-job">
+                            <div class="cd-cand-subcard-hdr">
+                                <span class="cd-cand-subcard-label">TARGET REQUISITION</span>
+                                <div class="cd-header-badges">
+                                    <span class="cd-badge-client-type ${scopeCls}">${scopeTag}</span>
+                                    <span class="cd-status-badge ${statusChipClass}">${statusPillText}</span>
+                                </div>
+                            </div>
+                            <div class="cd-cand-subcard-body">
+                                <div class="cd-job-row">
+                                    ${logoHtml}
+                                    <div class="cd-job-meta-wrap">
+                                        <a href="${jobUrl}" target="_blank" class="cd-job-title-link" title="${$('<div>').text(jobTitle).html()}">
+                                            ${jobTitleFormatted}
+                                        </a>
+                                        <div class="cd-job-submeta">
+                                            <span class="text-primary fw-bold">#${jobId}</span> &bull; <span>${deptFormatted}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="cd-job-footer-line">
+                                    <span class="fw-semibold text-dark">${companyNameFormatted}</span> &bull; <span><i class="fas fa-briefcase text-primary me-1" style="font-size:9px;"></i>${jobTypeClean}</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Sub-Card 5: SOURCING & AGENCY ATTRIBUTION -->
+                        <div class="cd-cand-subcard cd-cand-subcard-recruiter">
+                            <div class="cd-cand-subcard-hdr">
+                                <span class="cd-cand-subcard-label"><i class="fa fa-user-tie me-1 text-muted"></i>SUBMITTED BY</span>
+                            </div>
+                            <div class="cd-cand-subcard-body">
+                                <div class="cd-recruiter-name" title="${$('<div>').text(captain).html()}">
+                                    <i class="fas fa-user-circle text-primary me-1" style="font-size:10.5px;"></i>${captainFormatted}
+                                </div>
+                                <div class="cd-recruiter-company" title="${$('<div>').text(submitterCompany).html()}">
+                                    <i class="fas fa-building text-muted me-1" style="font-size:9.5px;"></i>${submitterFormatted}
+                                </div>
+                                <div class="cd-recruiter-time" title="${submittedAgo}">
+                                    <i class="far fa-calendar-alt text-muted me-1" style="font-size:9.5px;"></i>Submitted: ${submittedAgo}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Sub-Card 6: PIPELINE & STAGE -->
+                        <div class="cd-cand-subcard cd-cand-subcard-stage">
+                            <div class="cd-cand-subcard-hdr">
+                                <span class="cd-cand-subcard-label">PIPELINE &amp; STAGE</span>
+                            </div>
+                            <div class="cd-cand-subcard-body">
+                                <div>
+                                    <span class="cd-stage-chip cd-stage-chip-readonly" style="${stageChipStyle}; cursor: default !important; pointer-events: none !important;" title="Current Stage: ${stageName}">
+                                        <span>${stageName}</span>
+                                    </span>
+                                </div>
+                                <div class="cd-stage-sub" title="${subStageText}">
+                                    <span class="text-muted">Sub-stage:</span> <span class="fw-medium text-dark">${subStageText}</span>
+                                </div>
+                                <div class="cd-stage-action">
+                                    <a href="javascript:void(0);" class="cd-action-link js-view-profile-readonly" data-row-id="${cid}" title="View Profile">
+                                        <i class="far fa-user text-primary me-1" style="font-size:9.5px;"></i>View Profile
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Sub-Card 7: Full-Width Intelligence Strip -->
+                    <div class="cd-cand-bottom-strip">
+                        <div class="cd-cand-bottom-left">
+                            <span class="cd-match-badge-cv ${matchBadgeClass}">Match ${matchPct}%</span>
+                            <div class="cd-bottom-skills-scroll">
+                                ${skillsPillsHtml}
+                            </div>
+                        </div>
+                        <div class="cd-cand-bottom-right">
+                            ${linkedinHtml}
+                            ${visaHtml}
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+    };
+
+    $(document).off('click.agencyCandStage', '.js-agency-cand-stage');
+    $(document).on('click.agencyCandStage', '.js-agency-cand-stage', function(e) {
         e.preventDefault();
         $('.js-agency-cand-stage').removeClass('active');
         $(this).addClass('active');
-        var stage = $(this).data('stage');
-        if (stage === 'all') {
-            $('.js-agency-cand-item').show();
-        } else {
-            $('.js-agency-cand-item').each(function() {
-                if ($(this).data('stage') === stage) {
-                    $(this).show();
-                } else {
-                    $(this).hide();
+        var stage = $(this).data('stage') || 'sourcing';
+        window.ClientCandidateStoreAgency.activeStage = stage;
+        window.ClientCandidateStoreAgency.filterAndRender();
+    });
+
+    var agencyCandSearchTimer = null;
+    $(document).off('input.agencyCandSearch', '#cdAgencyCandSearchInput');
+    $(document).on('input.agencyCandSearch', '#cdAgencyCandSearchInput', function() {
+        var val = $(this).val().trim();
+        $('#cdAgencyCandSearchClear').toggle(val.length > 0);
+        clearTimeout(agencyCandSearchTimer);
+        agencyCandSearchTimer = setTimeout(function() {
+            window.ClientCandidateStoreAgency.searchTerm = val;
+            window.ClientCandidateStoreAgency.filterAndRender();
+        }, 250);
+    });
+
+    $(document).off('click.agencyCandClear', '#cdAgencyCandSearchClear');
+    $(document).on('click.agencyCandClear', '#cdAgencyCandSearchClear', function() {
+        $('#cdAgencyCandSearchInput').val('');
+        $(this).hide();
+        window.ClientCandidateStoreAgency.searchTerm = '';
+        window.ClientCandidateStoreAgency.filterAndRender();
+    });
+
+    $(document).off('click.agencyCandReset', '#cdAgencyCandResetBtn');
+    $(document).on('click.agencyCandReset', '#cdAgencyCandResetBtn', function() {
+        $('#cdAgencyCandSearchInput').val('');
+        $('#cdAgencyCandSearchClear').hide();
+        window.ClientCandidateStoreAgency.searchTerm = '';
+        window.ClientCandidateStoreAgency.activeStage = 'sourcing';
+        $('.js-agency-cand-stage').removeClass('active');
+        $('.js-agency-cand-stage[data-stage="sourcing"]').addClass('active');
+        window.ClientCandidateStoreAgency.fetch(1);
+    });
+
+    // ── 4. Tab 6: Interviews Reactive Engine (ClientInterviewStoreAgency) ──
+    window.ClientInterviewStoreAgency = (function() {
+        const store = new Map();
+        let currentSearch = '';
+        let activeFilter = 'all';
+        let pageSize = 10;
+        let activeXhr = null;
+
+        function fetch(clientId, cursor = null, force = false, search = null) {
+            if (search !== null) currentSearch = search;
+            var $list = $('#candidatetListinterviewtrackerAgency');
+            if (!$list.length) return;
+
+            if (activeXhr && activeXhr.readyState !== 4) {
+                try { activeXhr.abort(); } catch(e){}
+            }
+
+            if (force || $list.children().length === 0) {
+                $list.html(`
+                    <div class="it-loading-card text-center py-8">
+                        <span class="spinner-border spinner-border-sm text-primary me-2"></span>
+                        <span class="text-gray-600 fs-7">Loading Authoritative Interview Projection...</span>
+                    </div>
+                `);
+            }
+
+            let url = `{{ url('service_company/direct-client-candidate-interview-tracker') }}?clientid=${clientId}&clienttype=agency&size=${pageSize}`;
+            if (cursor) url += `&cursor=${encodeURIComponent(cursor)}`;
+            if (currentSearch) url += `&search=${encodeURIComponent(currentSearch)}`;
+
+            activeXhr = $.ajax({
+                url: url,
+                type: 'GET',
+                dataType: 'json',
+                success: function(res) {
+                    if (res && Array.isArray(res.data)) {
+                        renderCards(res.data);
+                        renderPagination(res.next_cursor, res.total);
+                        updateCounters(res.total, res.counts);
+                    } else if (res && res.html) {
+                        $list.html(res.html);
+                    } else {
+                        $list.html(`
+                            <div class="cd-it-empty-state text-center py-12 px-4" style="background:#ffffff; border:1px solid #e2e8f0; border-radius:10px; margin: 12px 0;">
+                                <div class="mb-3"><i class="fas fa-calendar-xmark text-muted" style="font-size: 38px; opacity: 0.35;"></i></div>
+                                <div class="fw-bold text-dark fs-6 mb-1">No Interviews Scheduled</div>
+                                <div class="text-muted fs-8" style="max-width: 440px; margin: 0 auto;">
+                                    No interview schedules found for candidates submitted by {{ addslashes($detailName) }}.
+                                </div>
+                            </div>
+                        `);
+                    }
+                },
+                error: function(xhr, status) {
+                    if (status === 'abort') return;
+                    $list.html(`
+                        <div class="text-center py-8">
+                            <i class="fas fa-exclamation-circle fa-2x mb-3 text-danger d-block"></i>
+                            <div class="fw-bold fs-6 text-gray-700 mb-1">Failed to load interviews</div>
+                            <div class="text-muted fs-7">Please refresh or try again.</div>
+                        </div>
+                    `);
                 }
             });
         }
+
+        function renderCards(interviews) {
+            var $list = $('#candidatetListinterviewtrackerAgency');
+            if (!interviews || interviews.length === 0) {
+                $list.html(`
+                    <div class="cd-it-empty-state text-center py-12 px-4" style="background:#ffffff; border:1px solid #e2e8f0; border-radius:10px; margin: 12px 0;">
+                        <div class="mb-3"><i class="fas fa-calendar-xmark text-muted" style="font-size: 38px; opacity: 0.35;"></i></div>
+                        <div class="fw-bold text-dark fs-6 mb-1">No Interviews Scheduled</div>
+                        <div class="text-muted fs-8" style="max-width: 440px; margin: 0 auto;">
+                            No interview schedules found for candidates submitted by {{ addslashes($detailName) }}.
+                        </div>
+                    </div>
+                `);
+                return;
+            }
+
+            var html = '';
+            interviews.forEach(function(it) {
+                var cName = it.candidate_name || 'Candidate Profile';
+                var initials = cName.split(' ').filter(Boolean).map(function(w){ return w[0]; }).join('').substring(0, 2).toUpperCase() || 'IT';
+                var jTitle = it.job_title || 'Shared Position';
+                var round = it.interview_stage || 'Round 1';
+                var panel = it.interviewers_text || 'Technical Lead';
+                var sDate = it.schedule_date ? it.schedule_date.substring(0, 10) : 'Upcoming';
+                var sTime = it.schedule_time || 'IST';
+                var meetUrl = it.meeting_url || it.url_link || '';
+
+                var rawSt = (it.status || 'pending').toLowerCase();
+                var statusLabel = 'SCHEDULED';
+                var statusColor = 'warning';
+                var cat = 'upcoming';
+
+                if (rawSt === 'canceled' || rawSt === 'rejected') {
+                    statusLabel = 'CANCELLED'; statusColor = 'danger'; cat = 'cancelled';
+                } else if (rawSt === 'hired' || rawSt === 'completed' || it.feedback == 1) {
+                    statusLabel = 'COMPLETED'; statusColor = 'success'; cat = 'completed';
+                }
+
+                html += `
+                    <div class="cd-it-card js-agency-it-item" data-filter="${cat}">
+                        <div class="cd-it-card-grid">
+                            <div class="cd-it-subcard">
+                                <div class="cd-it-subcard-hdr">
+                                    <span class="cd-it-subcard-label">Candidate &amp; Job</span>
+                                    <span class="badge badge-light-primary fw-bold fs-9">${round}</span>
+                                </div>
+                                <div class="d-flex align-items-center gap-2">
+                                    <div class="cd-contact-avatar-box" style="width:36px; height:36px; min-width:36px; font-size:12px; background:#eff6ff; color:#009ef7; border:1px solid #bfdbfe;">
+                                        ${initials}
+                                    </div>
+                                    <div style="min-width:0;">
+                                        <div class="fw-bold text-dark fs-7 text-truncate js-it-searchable" title="${cName}">${cName}</div>
+                                        <div class="text-muted fs-8 text-truncate">${jTitle}</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="cd-it-subcard">
+                                <div class="cd-it-subcard-hdr"><span class="cd-it-subcard-label">Schedule &amp; Time</span></div>
+                                <div>
+                                    <div class="fw-bold text-dark fs-8"><i class="far fa-calendar text-primary me-1"></i> ${sDate}</div>
+                                    <div class="text-muted fs-9"><i class="far fa-clock text-muted me-1"></i> ${sTime} &bull; 45 Mins</div>
+                                    <div class="text-muted fs-9">Virtual Interview</div>
+                                </div>
+                            </div>
+
+                            <div class="cd-it-subcard">
+                                <div class="cd-it-subcard-hdr"><span class="cd-it-subcard-label">Panelists</span></div>
+                                <div>
+                                    <div class="fw-bold text-dark fs-8 text-truncate">${panel}</div>
+                                    <div class="text-muted fs-9 text-truncate">Tech Panelist</div>
+                                </div>
+                            </div>
+
+                            <div class="cd-it-subcard">
+                                <div class="cd-it-subcard-hdr">
+                                    <span class="cd-it-subcard-label">Status &amp; Link</span>
+                                    <span class="badge badge-light-${statusColor} text-${statusColor} fw-bold fs-9 text-uppercase">${statusLabel}</span>
+                                </div>
+                                <div class="mt-2">
+                                    ${meetUrl && meetUrl !== '#' ? `
+                                        <a href="${meetUrl}" target="_blank" class="btn btn-sm btn-primary py-1 px-3 fs-9 fw-bold w-100 text-center">
+                                            <i class="fas fa-video me-1"></i> Join Meeting
+                                        </a>
+                                    ` : `
+                                        <span class="btn btn-sm btn-light-primary py-1 px-3 fs-9 fw-semibold w-100 text-center disabled">
+                                            <i class="fas fa-video me-1"></i> Virtual Interview
+                                        </span>
+                                    `}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="cd-it-card-bottom">
+                            <div><i class="fas fa-user-check text-muted me-1"></i> Sourced by {{ addslashes($detailName) }} &bull; ${round} ${jTitle}</div>
+                            <div class="d-flex align-items-center gap-2">
+                                <span class="badge badge-light fs-9 text-muted border">Authoritative Schedule</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            $list.html(html);
+        }
+
+        function renderPagination(nextCursor, total) {
+            var $pagi = $('#paginationcandidateinterviewtrackerAgency');
+            if (!nextCursor && !total) {
+                $pagi.empty();
+                return;
+            }
+            $pagi.html(`
+                <div class="d-flex align-items-center justify-content-between p-2">
+                    <span class="text-muted fs-8">Total: <strong>${total || 0}</strong> interviews</span>
+                    ${nextCursor ? `
+                        <button type="button" class="btn btn-sm btn-light-primary py-1 px-3 fs-8 fw-semibold" id="btnAgencyItNextCursor" data-cursor="${nextCursor}">
+                            Next Page <i class="fas fa-chevron-right ms-1 fs-9"></i>
+                        </button>
+                    ` : ''}
+                </div>
+            `);
+        }
+
+        function updateCounters(total, counts) {
+            var all = total || 0;
+            $('#agencyItFilterCountAll').text(all);
+            $('#agencyItHeaderBadge').text(all);
+            $('#agencyKpiInterviews').text(all);
+            $('#agencyTabBadgeInterviews').text(all);
+
+            if (counts) {
+                $('#agencyItFilterCountUpcoming').text(counts.upcoming || 0);
+                $('#agencyItFilterCountPending').text(counts.pending || 0);
+                $('#agencyItFilterCountCompleted').text(counts.completed || 0);
+                $('#agencyItFilterCountCancelled').text(counts.cancelled || 0);
+            }
+        }
+
+        return {
+            fetch: fetch
+        };
+    })();
+
+    $(document).off('click.agencyItNext', '#btnAgencyItNextCursor');
+    $(document).on('click.agencyItNext', '#btnAgencyItNextCursor', function(e) {
+        e.preventDefault();
+        var cursor = $(this).data('cursor');
+        window.ClientInterviewStoreAgency.fetch(agencyCompanyId, cursor, false, $('#agencyItSearchInput').val() || '');
     });
 
-    // 5. Interviews Filter
-    $(document).on('click', '.js-agency-it-tab', function(e) {
+    $(document).off('click.agencyItFilter', '.js-agency-it-tab');
+    $(document).on('click.agencyItFilter', '.js-agency-it-tab', function(e) {
         e.preventDefault();
         $('.js-agency-it-tab').removeClass('active');
         $(this).addClass('active');
-        var filter = $(this).data('filter');
-        if (filter === 'all' || filter === 'upcoming') {
-            $('.js-agency-it-item').show();
+        var filter = $(this).data('filter') || 'all';
+
+        var $cards = $('#candidatetListinterviewtrackerAgency .js-agency-it-item');
+        if (filter === 'all') {
+            $cards.show();
         } else {
-            $('.js-agency-it-item').each(function() {
-                if ($(this).data('filter') === filter) {
-                    $(this).show();
-                } else {
-                    $(this).hide();
-                }
+            $cards.each(function() {
+                var f = $(this).data('filter');
+                $(this).toggle(f === filter);
             });
         }
     });
 
-    // 6. Offers & Joins Filter
-    $(document).on('click', '.js-agency-oj-tab', function(e) {
+    var agencyItSearchTimer = null;
+    $(document).off('input.agencyItSearch', '#agencyItSearchInput');
+    $(document).on('input.agencyItSearch', '#agencyItSearchInput', function() {
+        var val = $(this).val().trim();
+        $('#agencyItSearchClear').toggle(val.length > 0);
+        clearTimeout(agencyItSearchTimer);
+        agencyItSearchTimer = setTimeout(function() {
+            window.ClientInterviewStoreAgency.fetch(agencyCompanyId, null, true, val);
+        }, 250);
+    });
+
+    $(document).off('click.agencyItClear', '#agencyItSearchClear');
+    $(document).on('click.agencyItClear', '#agencyItSearchClear', function() {
+        $('#agencyItSearchInput').val('');
+        $(this).hide();
+        window.ClientInterviewStoreAgency.fetch(agencyCompanyId, null, true, '');
+    });
+
+    $(document).off('click.agencyItReset', '#agencyItResetBtn');
+    $(document).on('click.agencyItReset', '#agencyItResetBtn', function() {
+        $('#agencyItSearchInput').val('');
+        $('#agencyItSearchClear').hide();
+        $('.js-agency-it-tab').removeClass('active');
+        $('.js-agency-it-tab[data-filter="all"]').addClass('active');
+        window.ClientInterviewStoreAgency.fetch(agencyCompanyId, null, true, '');
+    });
+
+    // ── 5. Tab 7: Offers & Joins Reactive Engine ──
+    window._activeAgencyOjXhr = null;
+    function agencyfetchCandidatesJoin(page = 1, search = '', segment = null) {
+        if (segment === null || segment === undefined) {
+            segment = window.currentAgencyOjSegment || 'all';
+        } else {
+            window.currentAgencyOjSegment = segment;
+        }
+
+        if (search === null || search === undefined) {
+            search = $('#agencyOjSearchInput').val() || '';
+        }
+
+        if (window._activeAgencyOjXhr && window._activeAgencyOjXhr.readyState !== 4) {
+            try { window._activeAgencyOjXhr.abort(); } catch(e){}
+        }
+
+        window._activeAgencyOjXhr = $.ajax({
+            url: `{{ url('service_company/direct-client-candidate-join-list') }}?page=${page}`,
+            type: 'GET',
+            data: {
+                search: search,
+                segment: segment,
+                clientid: agencyCompanyId,
+                clienttype: 'agency'
+            },
+            success: function(response) {
+                if (response && response.html) {
+                    $('#candidatetListJoinAgency').html(response.html);
+                    $('#paginationcandidatejoinAgency').html(response.pagination || '');
+                } else {
+                    $('#candidatetListJoinAgency').html(`
+                        <div class="cd-oj-empty-state text-center py-12 px-4" style="background:#ffffff; border:1px solid #e2e8f0; border-radius:10px; margin: 12px 0;">
+                            <div class="mb-3"><i class="fas fa-handshake-slash text-muted" style="font-size: 38px; opacity: 0.35;"></i></div>
+                            <div class="fw-bold text-dark fs-6 mb-1">No Offers or Joinings</div>
+                            <div class="text-muted fs-8" style="max-width: 440px; margin: 0 auto;">
+                                No candidate job offers or onboardings recorded yet for {{ addslashes($detailName) }}.
+                            </div>
+                        </div>
+                    `);
+                    $('#paginationcandidatejoinAgency').empty();
+                }
+
+                if (response && response.counts) {
+                    var total = response.counts.all || 0;
+                    $('#agencyOjCountAll').text(total);
+                    $('#agencyOjCountOffers').text(response.counts.offers || 0);
+                    $('#agencyOjCountJoining').text(response.counts.joining || 0);
+                    $('#agencyOjCountJoined').text(response.counts.joined || 0);
+                    $('#agencyOjCountText').text(total);
+                    $('#agencyOjHeaderBadge').text(total + ' Offers & Joinings');
+                    $('#agencyKpiOffers').text(response.counts.offers || 0);
+                    $('#agencyKpiJoins').text(response.counts.joined || 0);
+                    $('#agencyTabBadgeOffersJoins').text(total);
+                }
+            },
+            error: function(xhr, status) {
+                if (status === 'abort') return;
+                $('#candidatetListJoinAgency').html(`
+                    <div class="text-center py-8">
+                        <i class="fas fa-exclamation-circle fa-2x mb-3 text-danger d-block"></i>
+                        <div class="fw-bold fs-6 text-gray-700 mb-1">Failed to load offers &amp; joinings</div>
+                        <div class="text-muted fs-7">Please refresh or try again.</div>
+                    </div>
+                `);
+            }
+        });
+        return window._activeAgencyOjXhr;
+    }
+    window.agencyfetchCandidatesJoin = agencyfetchCandidatesJoin;
+
+    $(document).off('click.agencyOjSegment', '.cd-oj-seg-btn-agency');
+    $(document).on('click.agencyOjSegment', '.cd-oj-seg-btn-agency', function(e) {
         e.preventDefault();
-        $('.js-agency-oj-tab').removeClass('active');
+        var segment = $(this).data('segment') || 'all';
+        $('.cd-oj-seg-btn-agency').removeClass('active');
         $(this).addClass('active');
-        var segment = $(this).data('segment');
-        if (segment === 'all') {
-            $('.js-agency-oj-item').show();
+        window.currentAgencyOjSegment = segment;
+        var search = $('#agencyOjSearchInput').val() || '';
+        agencyfetchCandidatesJoin(1, search, segment);
+    });
+
+    var agencyOjSearchTimer = null;
+    $(document).off('input.agencyOjSearch', '#agencyOjSearchInput');
+    $(document).on('input.agencyOjSearch', '#agencyOjSearchInput', function() {
+        var val = $(this).val().trim();
+        $('#agencyOjSearchClear').toggle(val.length > 0);
+        clearTimeout(agencyOjSearchTimer);
+        agencyOjSearchTimer = setTimeout(function() {
+            agencyfetchCandidatesJoin(1, val, window.currentAgencyOjSegment || 'all');
+        }, 250);
+    });
+
+    $(document).off('click.agencyOjClear', '#agencyOjSearchClear');
+    $(document).on('click.agencyOjClear', '#agencyOjSearchClear', function() {
+        $('#agencyOjSearchInput').val('');
+        $(this).hide();
+        agencyfetchCandidatesJoin(1, '', window.currentAgencyOjSegment || 'all');
+    });
+
+    $(document).off('click.agencyOjReset', '#agencyOjResetBtn');
+    $(document).on('click.agencyOjReset', '#agencyOjResetBtn', function() {
+        $('#agencyOjSearchInput').val('');
+        $('#agencyOjSearchClear').hide();
+        window.currentAgencyOjSegment = 'all';
+        $('.cd-oj-seg-btn-agency').removeClass('active');
+        $('.cd-oj-seg-btn-agency[data-segment="all"]').addClass('active');
+        agencyfetchCandidatesJoin(1, '', 'all');
+    });
+
+    // ── 6. Tab 8: Performance Analytics Engine (Agency Scope) ──
+    window.perfChartInstances = window.perfChartInstances || {};
+    window.perfClientCache = window.perfClientCache || {};
+    window.perfCurrentRange = '12M';
+    window.perfCurrentCompare = 'previous_period';
+    window.perfIsLoading = false;
+    var perfClientId = agencyCompanyId;
+    var perfBaseApiUrl = "{{ url('service_company/clients/api/v1/performance-analytics') }}/" + perfClientId;
+
+    function ensureChartJsLoaded(callback) {
+        if (typeof Chart !== 'undefined') {
+            callback();
+            return;
+        }
+        var script = document.getElementById('chartjs-cdn-script');
+        if (!script) {
+            script = document.createElement('script');
+            script.id = 'chartjs-cdn-script';
+            script.src = 'https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js';
+            script.onload = callback;
+            document.head.appendChild(script);
         } else {
-            $('.js-agency-oj-item').each(function() {
-                if ($(this).data('segment') === segment) {
-                    $(this).show();
-                } else {
-                    $(this).hide();
+            var interval = setInterval(function() {
+                if (typeof Chart !== 'undefined') {
+                    clearInterval(interval);
+                    callback();
+                }
+            }, 50);
+        }
+    }
+
+    function cdPerfSyncRange(val) {
+        if (!val) return;
+        window.perfCurrentRange = val;
+        window.agencyPerfCurrentRange = val;
+        $('#perfDateRangeSelect, .perf-sync-select').val(val);
+        cdPerfFetchData(val, window.perfCurrentCompare, false);
+    }
+    window.cdPerfSyncRange = cdPerfSyncRange;
+    window.agencyPerfSyncRange = cdPerfSyncRange;
+
+    function cdPerfSyncCompare(val) {
+        if (!val) return;
+        window.perfCurrentCompare = val;
+        window.agencyPerfCurrentCompare = val;
+        $('#perfCompareWithSelect').val(val);
+        cdPerfFetchData(window.perfCurrentRange, val, false);
+    }
+    window.cdPerfSyncCompare = cdPerfSyncCompare;
+    window.agencyPerfSyncCompare = cdPerfSyncCompare;
+
+    function cdPerfRefresh() {
+        var $btn = $('#btnPerfRefresh i, #btnAgencyPerfRefresh i');
+        $btn.addClass('fa-spin');
+        var cacheKey = perfClientId + '_' + window.perfCurrentRange + '_' + window.perfCurrentCompare;
+        delete window.perfClientCache[cacheKey];
+        if (window.agencyPerfClientCache) delete window.agencyPerfClientCache[cacheKey];
+        cdPerfFetchData(window.perfCurrentRange, window.perfCurrentCompare, true, function() {
+            $btn.removeClass('fa-spin');
+        });
+    }
+    window.cdPerfRefresh = cdPerfRefresh;
+    window.agencyPerfRefresh = cdPerfRefresh;
+
+    function cdPerfFetchData(range, compare, force, onComplete) {
+        range = range || window.perfCurrentRange || '12M';
+        compare = compare || window.perfCurrentCompare || 'previous_period';
+        var cacheKey = perfClientId + '_' + range + '_' + compare;
+
+        // 1. Client-Side User RAM Cache Hit (0% Server / 0% DB reads)
+        if (!force && window.perfClientCache[cacheKey]) {
+            cdPerfRender(window.perfClientCache[cacheKey]);
+            if (typeof onComplete === 'function') onComplete();
+            return;
+        }
+
+        if (window.perfIsLoading) return;
+        window.perfIsLoading = true;
+
+        $.ajax({
+            url: perfBaseApiUrl,
+            type: 'GET',
+            dataType: 'json',
+            headers: {
+                'X-Request-ID': 'req_' + Math.random().toString(36).substring(2, 12),
+            },
+            data: {
+                range: range,
+                compare: compare,
+                client_type: 'agency',
+                timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'Asia/Kolkata',
+            },
+            success: function(res) {
+                window.perfIsLoading = false;
+                window.perfClientCache[cacheKey] = res;
+                if (window.agencyPerfClientCache) window.agencyPerfClientCache[cacheKey] = res;
+                cdPerfRender(res);
+                if (typeof onComplete === 'function') onComplete();
+            },
+            error: function(err) {
+                window.perfIsLoading = false;
+                console.warn('Performance Analytics API error:', err);
+                if (typeof onComplete === 'function') onComplete();
+            }
+        });
+    }
+    window.cdPerfFetchData = cdPerfFetchData;
+    window.agencyPerfFetchData = cdPerfFetchData;
+
+    function cdPerfRender(data) {
+        if (!data || !data.summary) return;
+
+        var s = data.summary;
+
+        // 1. Update 5 Hero KPI Cards
+        var candLabel = (s.candidates && s.candidates.display_label) ? s.candidates.display_label : (s.candidates ? s.candidates.value.toLocaleString() : '0');
+        $('#perfKpiCandidates').text(candLabel);
+        cdPerfUpdatePill($('#perfKpiCandPill'), s.candidates ? s.candidates.delta_label : null, s.candidates ? s.candidates.delta_value : null, false);
+        $('#perfKpiCandComp').text('vs. ' + (data.meta && data.meta.compare === 'none' ? 'none' : 'prior period'));
+
+        $('#perfKpiInterviews').text(s.interviews_scheduled ? s.interviews_scheduled.value.toLocaleString() : '0');
+        cdPerfUpdatePill($('#perfKpiIntPill'), s.interviews_scheduled ? s.interviews_scheduled.delta_label : null, s.interviews_scheduled ? s.interviews_scheduled.delta_value : null, false);
+        $('#perfKpiIntComp').text('vs. ' + (data.meta && data.meta.compare === 'none' ? 'none' : 'prior period'));
+
+        $('#perfKpiOffers').text(s.offers ? s.offers.value.toLocaleString() : '0');
+        cdPerfUpdatePill($('#perfKpiOfferPill'), s.offers ? s.offers.delta_label : null, s.offers ? s.offers.delta_value : null, false);
+        $('#perfKpiOfferComp').text('vs. ' + (data.meta && data.meta.compare === 'none' ? 'none' : 'prior period'));
+
+        $('#perfKpiJoins').text(s.joins ? s.joins.value.toLocaleString() : '0');
+        cdPerfUpdatePill($('#perfKpiJoinPill'), s.joins ? s.joins.delta_label : null, s.joins ? s.joins.delta_value : null, false);
+        $('#perfKpiJoinComp').text('vs. ' + (data.meta && data.meta.compare === 'none' ? 'none' : 'prior period'));
+
+        var tthFormatted = (s.avg_time_to_hire_days && s.avg_time_to_hire_days.formatted) ? s.avg_time_to_hire_days.formatted : '—';
+        $('#perfKpiTimeToHire').text(tthFormatted);
+        cdPerfUpdatePill($('#perfKpiTimePill'), s.avg_time_to_hire_days ? s.avg_time_to_hire_days.delta_label : null, s.avg_time_to_hire_days ? s.avg_time_to_hire_days.delta_value : null, true);
+        $('#perfKpiTimeComp').text((s.avg_time_to_hire_days && s.avg_time_to_hire_days.placed_count) ? (s.avg_time_to_hire_days.placed_count + ' placements') : 'vs. prior period');
+
+        // 2. Empty State Banner
+        var $banner = $('#perfEmptyStateBanner');
+        if (data.empty_state) {
+            $('#perfEmptyStateTitle').text(data.empty_state.title + ':');
+            $('#perfEmptyStateMessage').text(data.empty_state.message);
+            $banner.slideDown(150);
+        } else {
+            $banner.slideUp(150);
+        }
+
+        // 3. Funnel Stages (In Review strictly excluded from Performance funnel)
+        if (data.funnel && data.funnel.stages) {
+            var st = data.funnel.stages;
+            if (st[0]) { $('#funnelCountCand').text(st[0].count); $('#funnelPctCand').text(st[0].conversion_pct); }
+            if (st[1]) { $('#funnelCountScreened').text(st[1].count); $('#funnelPctScreened').text(st[1].conversion_pct); }
+            if (st[2]) { $('#funnelCountInt').text(st[2].count); $('#funnelPctInt').text(st[2].conversion_pct); }
+            if (st[3]) { $('#funnelCountOff').text(st[3].count); $('#funnelPctOff').text(st[3].conversion_pct); }
+            if (st[4]) { $('#funnelCountJoin').text(st[4].count); $('#funnelPctJoin').text(st[4].conversion_pct); }
+        }
+
+        // 4. Intelligence Grid
+        var vVal = (s.avg_time_to_hire_days && s.avg_time_to_hire_days.formatted !== '—') ? s.avg_time_to_hire_days.formatted : 'Active';
+        $('#perfIntelVelocity').text(vVal);
+
+        var candCount = s.candidates ? s.candidates.value : 0;
+        var intCount = s.interviewed ? s.interviewed.value : 0;
+        var offCount = s.offers ? s.offers.value : 0;
+        var joinCount = s.joins ? s.joins.value : 0;
+
+        var intConv = candCount > 0 ? ((intCount / candCount) * 100).toFixed(1) + '%' : '0.0%';
+        $('#perfIntelIntConv').text(intConv);
+        $('#perfIntelIntConvSub').text(intCount + ' of ' + candCount + ' candidates');
+
+        var offConv = intCount > 0 ? ((offCount / intCount) * 100).toFixed(1) + '%' : '0.0%';
+        $('#perfIntelOfferConv').text(offConv);
+        $('#perfIntelOfferConvSub').text(offCount + ' of ' + intCount + ' interviews');
+
+        var yieldVal = data.funnel && data.funnel.overall_yield_pct ? data.funnel.overall_yield_pct : '0.0%';
+        $('#perfIntelJoinRatio').text(yieldVal);
+        $('#perfIntelJoinRatioSub').text(joinCount + ' placed from ' + candCount + ' submitted');
+
+        // 5. Intelligence Actionable Insights
+        if (data.insights && data.insights.length > 0) {
+            var insHtml = '';
+            data.insights.forEach(function(item) {
+                var iconColor = item.type === 'positive' ? '#10b981' : (item.type === 'warning' ? '#d97706' : '#10b981');
+                insHtml += '<div style="margin-bottom:4px;"><i class="fas ' + item.icon + ' fa-solid me-1" style="color:' + iconColor + ';"></i> <strong>' + item.title + ':</strong> ' + item.text + '</div>';
+            });
+            $('#perfInsightsGrid').html(insHtml);
+        }
+
+        // 6. Top Hiring Roles Table
+        var rolesHtml = '';
+        if (data.roles && data.roles.items && data.roles.items.length > 0) {
+            data.roles.items.forEach(function(r, idx) {
+                var pctVal = parseFloat(r.conversion_pct) || 0;
+                rolesHtml += '<tr>' +
+                    '<td>' + (idx + 1) + '</td>' +
+                    '<td>' + r.title + '</td>' +
+                    '<td>' + r.submissions + '</td>' +
+                    '<td>' + r.interviews + '</td>' +
+                    '<td>' + r.offers + '</td>' +
+                    '<td>' + r.joined + '</td>' +
+                    '<td><div class="cd-perf-progress-wrap"><span>' + r.conversion_pct + '</span><div class="cd-perf-progress-bar"><div class="cd-perf-progress-fill" style="width:' + Math.min(100, pctVal) + '%;"></div></div></div></td>' +
+                    '</tr>';
+            });
+        } else {
+            rolesHtml = '<tr><td colspan="7" class="text-center py-3 text-muted">No active requisitions recorded for this period.</td></tr>';
+        }
+        $('#perfTopRolesTbody').html(rolesHtml);
+
+        // 7. Recruiter Performance Table
+        var recHtml = '';
+        if (data.recruiters && data.recruiters.items && data.recruiters.items.length > 0) {
+            data.recruiters.items.forEach(function(rec, idx) {
+                var initials = rec.name.split(' ').map(function(n){ return n[0]; }).join('').substring(0, 2).toUpperCase();
+                var pctVal = parseFloat(rec.join_rate_pct) || 0;
+                var candLabel = rec.submissions + (rec.submissions === 1 ? ' Candidate' : ' Candidates');
+                var recruiterDisplay = '<strong>' + rec.name + '</strong>' +
+                    ' <span class="text-muted fs-8 ms-1 fw-normal">— ' + candLabel + '</span>';
+                recHtml += '<tr>' +
+                    '<td>' + (idx + 1) + '</td>' +
+                    '<td><div class="d-flex align-items-center gap-2"><span class="cd-recruiter-avatar" style="background:#ecfdf5; color:#059669;">' + initials + '</span><div>' + recruiterDisplay + '</div></div></td>' +
+                    '<td>' + rec.submissions + '</td>' +
+                    '<td>' + rec.interviews + '</td>' +
+                    '<td>' + rec.offers + '</td>' +
+                    '<td>' + rec.joins + '</td>' +
+                    '<td><div class="cd-perf-progress-wrap"><span>' + rec.join_rate_pct + '</span><div class="cd-perf-progress-bar"><div class="cd-perf-progress-fill" style="width:' + Math.min(100, pctVal) + '%;"></div></div></div></td>' +
+                    '</tr>';
+            });
+        } else {
+            recHtml = '<tr><td colspan="7" class="text-center py-3 text-muted">No assigned recruiters recorded for this agency.</td></tr>';
+        }
+        $('#perfRecruitersTbody').html(recHtml);
+
+        // 8. Render Reactive Chart.js Visualizations
+        ensureChartJsLoaded(function() {
+            cdPerfRenderCharts(data);
+        });
+    }
+    window.cdPerfRender = cdPerfRender;
+    window.agencyPerfRender = cdPerfRender;
+
+    function cdPerfUpdatePill($pill, deltaLabel, deltaValue, isLowerBetter) {
+        if (!$pill.length) return;
+
+        if (deltaLabel === 'New') {
+            $pill.removeClass('cd-perf-pill-up cd-perf-pill-down cd-perf-pill-good')
+                 .addClass('cd-perf-pill-up')
+                 .css({ 'background': '#f1f5f9', 'color': '#475569' })
+                 .html('<i class="fas fa-sparkles fa-solid" style="font-size:8px;"></i> New');
+            return;
+        }
+
+        var isPositive = deltaValue !== null && deltaValue > 0;
+        var isNegative = deltaValue !== null && deltaValue < 0;
+
+        var isGood = isLowerBetter ? isNegative : isPositive;
+
+        $pill.removeClass('cd-perf-pill-up cd-perf-pill-down cd-perf-pill-good');
+        if (isGood) {
+            $pill.addClass('cd-perf-pill-up').css({ 'background': '#ecfdf5', 'color': '#10b981' });
+        } else if (isNegative || isPositive) {
+            $pill.addClass('cd-perf-pill-down').css({ 'background': '#fef2f2', 'color': '#ef4444' });
+        } else {
+            $pill.addClass('cd-perf-pill-up').css({ 'background': '#f8fafc', 'color': '#64748b' });
+        }
+
+        var icon = isPositive ? 'fa-arrow-up' : (isNegative ? 'fa-arrow-down' : 'fa-minus');
+        $pill.html('<i class="fas ' + icon + ' fa-solid" style="font-size:8px;"></i> ' + (deltaLabel || '0.0%'));
+    }
+    window.cdPerfUpdatePill = cdPerfUpdatePill;
+
+    function cdPerfRenderCharts(data) {
+        function getOrCreateChart(canvasId, config) {
+            var canvas = document.getElementById(canvasId);
+            if (!canvas) return null;
+            try {
+                if (typeof Chart.getChart === 'function') {
+                    var existing = Chart.getChart(canvas);
+                    if (existing) existing.destroy();
+                }
+                if (window.perfChartInstances[canvasId]) {
+                    window.perfChartInstances[canvasId].destroy();
+                }
+            } catch(e) {}
+            var ctx = canvas.getContext('2d');
+            var inst = new Chart(ctx, config);
+            window.perfChartInstances[canvasId] = inst;
+            return inst;
+        }
+
+        var v = data.velocity || { labels: [], candidates_submitted: [], interviewed_candidates: [] };
+        var j = data.jobs || { active: 0, hold: 0, closed: 0, total_count: 0 };
+        var o = data.offers || { labels: [], offers_generated: [], successful_joins: [] };
+        var jt = data.job_types || { labels: [], counts: [], percentages: [] };
+
+        // 1. Combo: Candidates & Interviews
+        getOrCreateChart('chartCandidatesInterviews', {
+            type: 'bar',
+            data: {
+                labels: v.labels,
+                datasets: [
+                    {
+                        type: 'bar',
+                        label: 'Candidates Submitted',
+                        data: v.candidates_submitted,
+                        backgroundColor: '#10b981',
+                        borderRadius: 4,
+                        barPercentage: 0.5,
+                        order: 2
+                    },
+                    {
+                        type: 'line',
+                        label: 'Interviewed Candidates',
+                        data: v.interviewed_candidates,
+                        borderColor: '#8b5cf6',
+                        backgroundColor: '#8b5cf6',
+                        borderWidth: 2,
+                        pointRadius: 3,
+                        pointBackgroundColor: '#8b5cf6',
+                        tension: 0.35,
+                        order: 1
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: { grid: { display: false }, ticks: { font: { size: 9.5 } } },
+                    y: { beginAtZero: true, grid: { color: '#f1f5f9' }, ticks: { font: { size: 9.5 }, precision: 0 } }
+                }
+            }
+        });
+
+        // 2. Bar: All Jobs Status
+        getOrCreateChart('chartAllJobsStatus', {
+            type: 'bar',
+            data: {
+                labels: ['Active', 'On Hold', 'Closed'],
+                datasets: [{
+                    label: 'Jobs Count',
+                    data: [j.active, j.hold, j.closed],
+                    backgroundColor: ['#10b981', '#f59e0b', '#ef4444'],
+                    borderRadius: 4,
+                    barPercentage: 0.45
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: { grid: { display: false }, ticks: { font: { size: 9.5 } } },
+                    y: { beginAtZero: true, grid: { color: '#f1f5f9' }, ticks: { font: { size: 9.5 }, precision: 0 } }
+                }
+            }
+        });
+
+        // 3. Line/Bar: Offers & Joins
+        getOrCreateChart('chartOffersJoinings', {
+            type: 'bar',
+            data: {
+                labels: o.labels,
+                datasets: [
+                    {
+                        type: 'bar',
+                        label: 'Offers',
+                        data: o.offers_generated,
+                        backgroundColor: '#f59e0b',
+                        borderRadius: 4,
+                        barPercentage: 0.45
+                    },
+                    {
+                        type: 'line',
+                        label: 'Joins',
+                        data: o.successful_joins,
+                        borderColor: '#10b981',
+                        backgroundColor: '#10b981',
+                        borderWidth: 2,
+                        pointRadius: 3,
+                        tension: 0.35
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: { grid: { display: false }, ticks: { font: { size: 9.5 } } },
+                    y: { beginAtZero: true, grid: { color: '#f1f5f9' }, ticks: { font: { size: 9.5 }, precision: 0 } }
+                }
+            }
+        });
+
+        // 4. Doughnut: Job Type Performance
+        var donutData = jt.counts && jt.counts.length > 0 ? jt.counts : [j.active, j.hold, 0, 0];
+        getOrCreateChart('chartJobType', {
+            type: 'doughnut',
+            data: {
+                labels: jt.labels || ['Full-Time', 'Contract', 'Freelance', 'Part-Time'],
+                datasets: [{
+                    data: donutData,
+                    backgroundColor: ['#10b981', '#8b5cf6', '#f59e0b', '#06b6d4', '#94a3b8'],
+                    borderWidth: 0,
+                    hoverOffset: 3
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                cutout: '72%',
+                plugins: { legend: { display: false } }
+            }
+        });
+
+        $('#donutTotalJobs').text(j.active || 0);
+        if (jt.counts && jt.counts[0] !== undefined) $('#donutCountFulltime').text(jt.counts[0]);
+        if (jt.percentages && jt.percentages[0]) $('#donutPctFulltime').text(jt.percentages[0]);
+        if (jt.counts && jt.counts[1] !== undefined) $('#donutCountContract').text(jt.counts[1]);
+        if (jt.percentages && jt.percentages[1]) $('#donutPctContract').text(jt.percentages[1]);
+        if (jt.counts && jt.counts[2] !== undefined) $('#donutCountFreelance').text(jt.counts[2]);
+        if (jt.percentages && jt.percentages[2]) $('#donutPctFreelance').text(jt.percentages[2]);
+        if (jt.counts && jt.counts[3] !== undefined) $('#donutCountPartTime').text(jt.counts[3]);
+        if (jt.percentages && jt.percentages[3]) $('#donutPctPartTime').text(jt.percentages[3]);
+
+        // 5. Line: Time to Hire Trend (Zero-Data Rule: null for months with 0 joins, spanGaps: true)
+        var tthData = (data.tth_trend && data.tth_trend.length)
+            ? data.tth_trend
+            : (v.time_to_hire && v.time_to_hire.length)
+                ? v.time_to_hire
+                : v.labels.map(function() { return null; });
+
+        getOrCreateChart('chartTimeToHire', {
+            type: 'line',
+            data: {
+                labels: v.labels,
+                datasets: [{
+                    label: 'Days to Hire',
+                    data: tthData,
+                    borderColor: '#10b981',
+                    backgroundColor: 'rgba(16, 185, 129, 0.08)',
+                    borderWidth: 2,
+                    fill: true,
+                    pointRadius: 2.5,
+                    tension: 0.35,
+                    spanGaps: true
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return context.raw !== null ? context.raw + ' days' : 'No joins';
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: { grid: { display: false }, ticks: { font: { size: 9.5 } } },
+                    y: { beginAtZero: true, grid: { color: '#f1f5f9' }, ticks: { font: { size: 9.5 } } }
+                }
+            }
+        });
+    }
+    window.cdPerfRenderCharts = cdPerfRenderCharts;
+    window.initPerformanceDashboard = function() {
+        cdPerfFetchData(window.perfCurrentRange, window.perfCurrentCompare, false);
+    };
+    window.fetchDirectClientDashboardAnalytics = window.initPerformanceDashboard;
+
+    // ── 7. Reverb WebSocket Monotonic State Updates ──
+    if (window.Echo && agencyCompanyId) {
+        var agencyChannel = 'private-company.' + currentAuthCompanyId + '.agency.' + agencyCompanyId;
+        try {
+            window.Echo.private(agencyChannel).listen('.AgencyDataUpdated', function(payload) {
+                if (!payload) return;
+                // Bust cache and revalidate active tab
+                var activeTab = $('.cd-drawer-tabs-list .cd-tab-pill-btn.active').attr('href');
+                if (activeTab) {
+                    window.loadAgencyTabContent(activeTab, true);
                 }
             });
-        }
-    });
-
-    $(document).on('click', '.cd-drawer-tabs-list .cd-tab-pill-btn[href="#recent_activity"]', function() {
-        if (window.ClientActivityManager && typeof window.ClientActivityManager.initClient === 'function') {
-            window.ClientActivityManager.initClient({{ (int)$agencyId }}, false, {{ (int)$agencyId }}, false, 'agency', {{ (int)$agencyId }});
-        } else if (window.AgencyActivityManager) {
-            window.AgencyActivityManager.loadActivity(false);
-        }
-    });
-
-    // Auto-init on drawer mount
-    if (window.ClientActivityManager && typeof window.ClientActivityManager.initClient === 'function') {
-        try {
-            window.ClientActivityManager.initClient({{ (int)$agencyId }}, false, {{ (int)$agencyId }}, false, 'agency', {{ (int)$agencyId }});
         } catch(e) {}
     }
+
+    // ── 8. Mount / Initialization Hook ──
+    $(document).ready(function() {
+        // Pre-warm candidates store in browser RAM
+        if (window.ClientCandidateStoreAgency && typeof window.ClientCandidateStoreAgency.init === 'function') {
+            try {
+                window.ClientCandidateStoreAgency.init(currentAuthCompanyId, agencyCompanyId, 'agency');
+            } catch(e) {}
+        }
+
+        // Pre-warm activity manager
+        if (window.ClientActivityManager && typeof window.ClientActivityManager.initClient === 'function') {
+            try {
+                window.ClientActivityManager.initClient(agencyCompanyId, false, agencyCompanyId, false, 'agency', agencyCompanyId);
+            } catch(e) {}
+        }
+    });
 
     // Copy to clipboard helper
     window.copyToClipboard = function(text, btn) {

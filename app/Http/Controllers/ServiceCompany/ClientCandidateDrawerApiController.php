@@ -61,10 +61,12 @@ class ClientCandidateDrawerApiController extends Controller
             $companyId = $passedCompanyId > 1 ? $passedCompanyId : 2;
         }
 
+        $clientType = (string) ($request->input('client_type') ?: ($request->input('clienttype') ?: 'direct'));
+
         $result = $this->queryService->getCandidates(
             $companyId,
             $clientId,
-            'direct',
+            $clientType,
             [
                 'search' => $request->input('search', $request->input('q', '')),
                 'status_id' => $request->input('status_id'),
