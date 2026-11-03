@@ -64,7 +64,8 @@
     $ftRateType = $ftDTO ? $ftDTO->rateType : (int) (@$fullTimeStatus->rateType ?? 2);
     $isFreeFT = ($ftRateType === 0);
     $ftModelLabel = $ftDTO ? $ftDTO->rateTypeLabel : (($ftRateType === 2) ? 'Percentage of CTC' : (($ftRateType === 1) ? 'Fixed Placement Fee' : 'No Fee Applicable (Free Placement)'));
-    $ftHeaderLabel = $isFreeFT ? 'NO FEE APPLICABLE' : strtoupper($ftModelLabel);
+    $ftHeaderLabel = $isFreeFT ? 'FREE PLACEMENT' : ($ftRateType === 1 ? 'FIXED PLACEMENT' : 'PERCENTAGE OF CTC');
+    $ftModeBadgeText = $isFreeFT ? '0% Fee' : '5 Tiers';
     $ftFirstRate = ($ftDTO && !empty($ftDTO->rates)) ? (float) data_get(collect($ftDTO->rates)->sortBy('exp')->first(), 'rate', 8.33) : 8.33;
     $ftCurrencySymbol = \App\Services\CurrencyService::getCurrencySymbol($cv2FulltimeCurrencyCode);
     if ($ftRateType === 2) {
@@ -79,7 +80,7 @@
     $ctRateType = $ctDTO ? $ctDTO->rateType : (int) (@$contractStatus->rateType ?? 1);
     $isFreeCT = ($ctRateType === 0);
     $ctModelLabel = $ctDTO ? $ctDTO->rateTypeLabel : (($ctRateType === 2) ? 'Markup on Pay Rate' : (($ctRateType === 1) ? 'Contract Bill Rate' : 'Zero Margin (Pass-Through)'));
-    $ctHeaderLabel = $isFreeCT ? 'ZERO MARGIN (PASS-THROUGH)' : strtoupper($ctModelLabel);
+    $ctHeaderLabel = $isFreeCT ? 'ZERO MARGIN' : ($ctRateType === 2 ? 'MARKUP ON PAY' : 'CONTRACT BILL RATE');
     $ctSalMode = $ctDTO ? $ctDTO->salMode : (int) (@$contractStatus->sal_mode ?? 2);
     $ctSalModeLabel = $isFreeCT ? 'At-Cost Wage Pass-Through' : match($ctSalMode) {
         2 => 'Hourly Contract Rate',
@@ -444,6 +445,8 @@
     overflow: hidden;
     transition: border-color 0.18s ease, box-shadow 0.18s ease;
     border-left: 4px solid #cbd5e1 !important;
+    container-type: inline-size;
+    container-name: srvcard;
 }
 
 .cd-srv-card.is-active {
@@ -700,27 +703,43 @@
 }
 
 /* --------------------------------------------------------------------------
-   STRICTLY FIXED 1-ROW 4-COLUMN SUB-CARDS GRID
-   All 4 cards permanently locked on 1 single row (repeat(4, minmax(0, 1fr)))
+   STRICTLY FIXED 1-ROW 4-COLUMN SUB-CARDS GRID (RESPONSIVE CONTAINER SYSTEM)
+   Optimized for 15.6" screens (1366x768 & 1920x1080) with dynamic 2-col fallback
    -------------------------------------------------------------------------- */
 .cd-srv-grid {
     display: grid !important;
     grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
-    gap: 12px !important;
-    padding: 14px 18px !important;
+    gap: 10px !important;
+    padding: 12px 14px !important;
     width: 100% !important;
     align-items: stretch !important;
     background: #ffffff;
     transition: opacity 0.2s ease;
 }
 
-@media (max-width: 1100px) {
+/* Container query responsiveness based on card width */
+@container srvcard (max-width: 980px) {
+    .cd-srv-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+        gap: 10px !important;
+        padding: 12px 14px !important;
+    }
+}
+
+@container srvcard (max-width: 520px) {
+    .cd-srv-grid {
+        grid-template-columns: 1fr !important;
+    }
+}
+
+/* Viewport fallback queries */
+@media (max-width: 1200px) {
     .cd-srv-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
     }
 }
 
-@media (max-width: 640px) {
+@media (max-width: 680px) {
     .cd-srv-header-card {
         flex-direction: column !important;
         align-items: flex-start !important;
@@ -749,13 +768,13 @@
     background: #f8fafc;
     border: 1px solid #eef2f6;
     border-radius: 8px;
-    padding: 12px 14px;
+    padding: 10px 12px;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-    gap: 7px;
+    gap: 6px;
     min-width: 0;
-    min-height: 116px;
+    min-height: 122px;
     transition: border-color 0.15s ease, background 0.15s ease;
 }
 
@@ -765,23 +784,24 @@
 }
 
 .cd-subcard-label {
-    font-size: 11px;
+    font-size: 10.5px;
     font-weight: 600;
     color: #64748b;
-    letter-spacing: 0.05em;
+    letter-spacing: 0.04em;
     text-transform: uppercase;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 5px;
+    gap: 6px;
     margin-bottom: 2px;
 }
 
 .cd-subcard-label-left {
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 5px;
     min-width: 0;
+    flex: 1 1 auto;
 }
 
 .cd-subcard-label-left span {
@@ -797,17 +817,17 @@
 }
 
 .cd-subcard-val {
-    font-size: 16px !important;
+    font-size: 15px !important;
     font-weight: 700 !important;
     color: #0f172a;
     line-height: 1.25;
     font-variant-numeric: tabular-nums;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
     display: flex;
     align-items: baseline;
-    gap: 6px;
+    flex-wrap: wrap;
+    gap: 2px 6px;
+    min-height: 38px;
+    min-width: 0;
 }
 
 .cd-subcard-val.rate-highlight {
@@ -844,11 +864,12 @@
     font-size: 11px;
     font-weight: 500;
     color: #64748b;
-    margin-left: 2px;
+    white-space: normal;
+    line-height: 1.25;
 }
 
 .cd-subcard-meta {
-    font-size: 11.5px;
+    font-size: 11px;
     color: #334155;
     font-weight: 500;
     display: flex;
@@ -858,6 +879,7 @@
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    min-width: 0;
 }
 
 .cd-subcard-meta svg {
@@ -872,14 +894,17 @@
     justify-content: center;
     min-width: 18px;
     height: 18px;
-    padding: 0 5px;
-    border-radius: 5px;
+    padding: 1px 6px;
+    border-radius: 4px;
     background: #eff6ff;
     color: #009ef7;
-    font-size: 10.5px;
+    font-size: 10px;
     font-weight: 700;
     font-variant-numeric: tabular-nums;
     border: 1px solid #dbeafe;
+    flex-shrink: 0;
+    white-space: nowrap;
+    text-transform: uppercase;
 }
 
 .cd-country-pills-row {
@@ -1076,9 +1101,9 @@
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/>
                             </svg>
                             <!-- Dynamic Subcard Header -->
-                            <span id="ft-header-label">{{ $ftHeaderLabel }}</span>
+                            <span id="ft-header-label" title="{{ $ftModelLabel }}">{{ $ftHeaderLabel }}</span>
                         </div>
-                        <span class="cd-num-badge {{ $isFreeFT ? 'is-free-pink' : '' }}" id="ft-mode-badge">{{ $isFreeFT ? 'Zero Charges' : '5 Tiers' }}</span>
+                        <span class="cd-num-badge {{ $isFreeFT ? 'is-free-pink' : '' }}" id="ft-mode-badge" title="{{ $isFreeFT ? 'Zero Placement Fee' : 'Commercial Bands' }}">{{ $ftModeBadgeText }}</span>
                     </div>
                     <!-- Primary Default Rate Metric -->
                     <div class="cd-subcard-val rate-highlight {{ $isFreeFT ? 'is-free-pink' : '' }}">
@@ -1088,11 +1113,11 @@
                     <!-- Metadata Attributes -->
                     <div class="cd-subcard-meta">
                         <span class="cd-bullet-dot"></span>
-                        <span id="ft-sal-mode">{{ $isFreeFT ? 'Direct Candidate Hire' : ($ftRateType === 1 ? 'Per Hire' : 'Annual CTC') }}</span>
+                        <span id="ft-sal-mode" title="Billing Basis">{{ $isFreeFT ? 'Direct Candidate Hire' : ($ftRateType === 1 ? 'Per Hire' : 'Annual CTC') }}</span>
                     </div>
                     <div class="cd-subcard-meta">
                         <span class="cd-bullet-dot"></span>
-                        <span id="ft-model-val">{{ $isFreeFT ? 'Complimentary Placement' : $ftModelLabel }}</span>
+                        <span id="ft-model-val" title="Fee Structure">{{ $isFreeFT ? 'Complimentary Placement' : $ftModelLabel }}</span>
                     </div>
                     <span id="ft-currency-val" style="display:none;">{{ $cv2FulltimeCurrencyCode }}</span>
                 </div>
@@ -1132,16 +1157,16 @@
                         </div>
                     </div>
                     <div class="cd-subcard-val">
-                        <span id="ft-payment-terms-days">{{ $isFreeFT ? 'No Invoicing Required' : ('Net ' . (@$fullTimeStatus->payment_terms_days ?: 30) . ' Days') }}</span>
+                        <span id="ft-payment-terms-days">{{ $isFreeFT ? 'No Invoicing' : ('Net ' . (@$fullTimeStatus->payment_terms_days ?: 30) . ' Days') }}</span>
                         <span class="val-sub" id="ft-payment-terms-sub">{{ $isFreeFT ? 'Zero Liability' : 'Payment' }}</span>
                     </div>
                     <div class="cd-subcard-meta">
                         <span class="cd-bullet-dot sky"></span>
-                        <span id="ft-billing-frequency">{{ $isFreeFT ? 'Billing: Non-Billable Hire' : ('Invoicing: ' . ucwords(str_replace('_', ' ', @$fullTimeStatus->billing_frequency ?: 'one_time'))) }}</span>
+                        <span id="ft-billing-frequency" title="Billing Cadence">{{ $isFreeFT ? 'Billing: Non-Billable Hire' : ('Invoicing: ' . ucwords(str_replace('_', ' ', @$fullTimeStatus->billing_frequency ?: 'one_time'))) }}</span>
                     </div>
                     <div class="cd-subcard-meta">
                         <span class="cd-bullet-dot amber"></span>
-                        <span id="ft-billing-trigger">{{ $isFreeFT ? 'Status: 100% Free Placement' : ('Trigger: ' . ucwords(str_replace('_', ' ', @$fullTimeStatus->billing_trigger ?: 'candidate_joined'))) }}</span>
+                        <span id="ft-billing-trigger" title="Payment Trigger">{{ $isFreeFT ? 'Status: 100% Free Placement' : ('Trigger: ' . ucwords(str_replace('_', ' ', @$fullTimeStatus->billing_trigger ?: 'candidate_joined'))) }}</span>
                     </div>
                 </div>
 
@@ -1274,9 +1299,9 @@
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
                             </svg>
                             <!-- Dynamic Subcard Header -->
-                            <span id="ct-header-label">{{ $ctHeaderLabel }}</span>
+                            <span id="ct-header-label" title="{{ $ctModelLabel }}">{{ $ctHeaderLabel }}</span>
                         </div>
-                        <span class="cd-num-badge {{ $isFreeCT ? 'is-free-amber' : '' }}" id="ct-mode-badge" style="{{ $isFreeCT ? '' : 'color: #7c3aed; background: #f5f3ff; border-color: #ddd6fe;' }}">{{ $ctModeBadgeText }}</span>
+                        <span class="cd-num-badge {{ $isFreeCT ? 'is-free-amber' : '' }}" id="ct-mode-badge" style="{{ $isFreeCT ? '' : 'color: #7c3aed; background: #f5f3ff; border-color: #ddd6fe;' }}" title="{{ $isFreeCT ? 'Pass-Through Staffing' : $ctSalModeLabel }}">{{ $ctModeBadgeText }}</span>
                     </div>
                     <!-- Primary Default Rate Metric -->
                     <div class="cd-subcard-val rate-highlight-purple {{ $isFreeCT ? 'is-free-amber' : '' }}">
@@ -1286,11 +1311,11 @@
                     <!-- Metadata Attributes -->
                     <div class="cd-subcard-meta">
                         <span class="cd-bullet-dot purple"></span>
-                        <span id="ct-sal-mode">{{ $isFreeCT ? 'Hourly Wage Pass-Through' : $ctSalModeLabel }}</span>
+                        <span id="ct-sal-mode" title="Billing Cadence">{{ $isFreeCT ? 'Hourly Wage Pass-Through' : $ctSalModeLabel }}</span>
                     </div>
                     <div class="cd-subcard-meta">
                         <span class="cd-bullet-dot purple"></span>
-                        <span id="ct-model-val">{{ $isFreeCT ? 'Zero Agency Staffing Margin' : $ctModelLabel }}</span>
+                        <span id="ct-model-val" title="Fee Structure">{{ $isFreeCT ? 'Zero Agency Staffing Margin' : $ctModelLabel }}</span>
                     </div>
                     <span id="ct-currency-val" style="display:none;">{{ $cv2ContractCurrencyCode }}</span>
                 </div>
@@ -1326,7 +1351,7 @@
                             <svg class="text-info" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                             </svg>
-                            <span id="ct-billing-label">{{ $isFreeCT ? 'INVOICING & REIMBURSEMENT' : 'INVOICING & TERMS' }}</span>
+                            <span id="ct-billing-label">{{ $isFreeCT ? 'INVOICING TERMS' : 'INVOICING & TERMS' }}</span>
                         </div>
                     </div>
                     <div class="cd-subcard-val">
@@ -1335,11 +1360,11 @@
                     </div>
                     <div class="cd-subcard-meta">
                         <span class="cd-bullet-dot sky"></span>
-                        <span id="ct-billing-frequency">{{ $isFreeCT ? 'Cycle: Monthly Wage Reimbursement' : ('Cycle: ' . ucwords(str_replace('_', ' ', @$contractStatus->billing_frequency ?: 'monthly'))) }}</span>
+                        <span id="ct-billing-frequency" title="Billing Cadence">{{ $isFreeCT ? 'Cycle: Monthly Wages' : ('Cycle: ' . ucwords(str_replace('_', ' ', @$contractStatus->billing_frequency ?: 'monthly'))) }}</span>
                     </div>
                     <div class="cd-subcard-meta">
                         <span class="cd-bullet-dot amber"></span>
-                        <span id="ct-billing-trigger">{{ $isFreeCT ? 'Trigger: Approved Timesheet (At Cost)' : ('Trigger: ' . ucwords(str_replace('_', ' ', @$contractStatus->billing_trigger ?: 'approved_timesheet'))) }}</span>
+                        <span id="ct-billing-trigger" title="Payment Trigger">{{ $isFreeCT ? 'Trigger: Approved Timesheet' : ('Trigger: ' . ucwords(str_replace('_', ' ', @$contractStatus->billing_trigger ?: 'approved_timesheet'))) }}</span>
                     </div>
                 </div>
 
@@ -1490,8 +1515,8 @@
 
                 if (isFT) {
                     if (isFree) {
-                        $('#ft-header-label').text('NO FEE APPLICABLE');
-                        $('#ft-mode-badge').text('Zero Charges').addClass('is-free-pink');
+                        $('#ft-header-label').text('FREE PLACEMENT').attr('title', 'Free / No Commercial Placement Fee');
+                        $('#ft-mode-badge').text('0% Fee').addClass('is-free-pink').attr('title', 'Zero Placement Fee');
                         $('#ft-default-rate').text('Free (0%)');
                         $('#ft-default-rate-sub').text('Zero Placement Fee');
                         $('#ft-default-rate').closest('.cd-subcard-val').addClass('is-free-pink');
@@ -1499,7 +1524,7 @@
                         $('#ft-model-val').text('Complimentary Placement');
 
                         $('#ft-billing-label').text('BILLING & STATUS');
-                        $('#ft-payment-terms-days').text('No Invoicing Required');
+                        $('#ft-payment-terms-days').text('No Invoicing');
                         $('#ft-payment-terms-sub').text('Zero Liability');
                         $('#ft-billing-frequency').text('Billing: Non-Billable Hire');
                         $('#ft-billing-trigger').text('Status: 100% Free Placement');
@@ -1508,8 +1533,8 @@
                         $('#ft-bottom-model').text('Free Placement Service');
                     } else if (rateType === 2) {
                         var ftRateFormatted = (firstRateVal % 1 === 0 ? firstRateVal.toFixed(0) : firstRateVal.toFixed(2)) + '%';
-                        $('#ft-header-label').text('PERCENTAGE OF CTC');
-                        $('#ft-mode-badge').text('5 Tiers').removeClass('is-free-pink');
+                        $('#ft-header-label').text('PERCENTAGE OF CTC').attr('title', 'Percentage of CTC Placement Fee');
+                        $('#ft-mode-badge').text('5 Tiers').removeClass('is-free-pink').attr('title', 'Commercial Bands');
                         $('#ft-default-rate').text(ftRateFormatted);
                         $('#ft-default-rate-sub').text('Default Rate');
                         $('#ft-default-rate').closest('.cd-subcard-val').removeClass('is-free-pink');
@@ -1526,8 +1551,8 @@
                         $('#ft-bottom-model').text('One-time Placement Fee');
                     } else {
                         var ftFixedFormatted = currSymbol + ' ' + Number(firstRateVal).toLocaleString();
-                        $('#ft-header-label').text('FIXED PLACEMENT FEE');
-                        $('#ft-mode-badge').text('5 Tiers').removeClass('is-free-pink');
+                        $('#ft-header-label').text('FIXED PLACEMENT').attr('title', 'Fixed Placement Fee Per Hire');
+                        $('#ft-mode-badge').text('5 Tiers').removeClass('is-free-pink').attr('title', 'Commercial Bands');
                         $('#ft-default-rate').text(ftFixedFormatted);
                         $('#ft-default-rate-sub').text('Default Rate');
                         $('#ft-default-rate').closest('.cd-subcard-val').removeClass('is-free-pink');
@@ -1549,26 +1574,26 @@
                     var modeBadge = (salMode === 2 ? 'Hourly' : (salMode === 1 ? 'Monthly' : 'Annual'));
 
                     if (isFree) {
-                        $('#ct-header-label').text('ZERO MARGIN (PASS-THROUGH)');
-                        $('#ct-mode-badge').text('0% Margin').addClass('is-free-amber').removeAttr('style');
+                        $('#ct-header-label').text('ZERO MARGIN').attr('title', 'Pass-Through / Zero Margin Contractor Staffing');
+                        $('#ct-mode-badge').text('0% Margin').addClass('is-free-amber').removeAttr('style').attr('title', 'Pass-Through Staffing');
                         $('#ct-default-rate').text('Pass-Through (0%)');
                         $('#ct-default-rate-sub').text('At-Cost Contractor Pay');
                         $('#ct-default-rate').closest('.cd-subcard-val').addClass('is-free-amber');
                         $('#ct-sal-mode').text('Hourly Wage Pass-Through');
                         $('#ct-model-val').text('Zero Agency Staffing Margin');
 
-                        $('#ct-billing-label').text('INVOICING & REIMBURSEMENT');
+                        $('#ct-billing-label').text('INVOICING TERMS');
                         $('#ct-payment-terms-days').text('Net ' + (state.payment_terms_days || 30) + ' Days');
                         $('#ct-payment-terms-sub').text('Wage Reimbursement');
-                        $('#ct-billing-frequency').text('Cycle: Monthly Wage Reimbursement');
-                        $('#ct-billing-trigger').text('Trigger: Approved Timesheet (At Cost)');
+                        $('#ct-billing-frequency').text('Cycle: Monthly Wages');
+                        $('#ct-billing-trigger').text('Trigger: Approved Timesheet');
 
                         $('#ct-bottom-note').text('Pass-through contract staffing terms apply. Candidate contractor compensation is reimbursed at direct cost with zero agency markup.');
                         $('#ct-bottom-model').text('Pass-Through · Zero Margin');
                     } else if (rateType === 2) {
                         var ctRateFormatted = (firstRateVal % 1 === 0 ? firstRateVal.toFixed(0) : firstRateVal.toFixed(1)) + '%';
-                        $('#ct-header-label').text('MARKUP ON PAY RATE');
-                        $('#ct-mode-badge').text(modeBadge).removeClass('is-free-amber').attr('style', 'color: #7c3aed; background: #f5f3ff; border-color: #ddd6fe;');
+                        $('#ct-header-label').text('MARKUP ON PAY').attr('title', 'Markup on Candidate Base Wage Rate');
+                        $('#ct-mode-badge').text(modeBadge).removeClass('is-free-amber').attr('style', 'color: #7c3aed; background: #f5f3ff; border-color: #ddd6fe;').attr('title', salModeLabel);
                         $('#ct-default-rate').text(ctRateFormatted);
                         $('#ct-default-rate-sub').text('Default Rate');
                         $('#ct-default-rate').closest('.cd-subcard-val').removeClass('is-free-amber');
@@ -1585,8 +1610,8 @@
                         $('#ct-bottom-model').text('Contract & Augmentation');
                     } else {
                         var ctFixedFormatted = currSymbol + ' ' + (firstRateVal % 1 === 0 ? firstRateVal.toFixed(0) : firstRateVal.toFixed(2));
-                        $('#ct-header-label').text('CONTRACT BILL RATE');
-                        $('#ct-mode-badge').text(modeBadge).removeClass('is-free-amber').attr('style', 'color: #7c3aed; background: #f5f3ff; border-color: #ddd6fe;');
+                        $('#ct-header-label').text('CONTRACT BILL RATE').attr('title', 'Direct Fixed Client Bill Rate');
+                        $('#ct-mode-badge').text(modeBadge).removeClass('is-free-amber').attr('style', 'color: #7c3aed; background: #f5f3ff; border-color: #ddd6fe;').attr('title', salModeLabel);
                         $('#ct-default-rate').text(ctFixedFormatted);
                         $('#ct-default-rate-sub').text('Default Rate');
                         $('#ct-default-rate').closest('.cd-subcard-val').removeClass('is-free-amber');

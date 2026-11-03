@@ -20,6 +20,75 @@ Last updated: 2026-10-22 (Super Admin Companies Page UI Redesign, 100% CQRS Read
 - **Test coverage:** `TenantIsolationTest`, `BenchToJobAppTrackerPipelineContractTest`, `BenchTalentRequestPipelineContractTest`, `SuperAdminCompanyLoadTest`, `SuperAdminSubscriptionLoadTest`, `SuperAdminDashboardLoadTest` (100% green).
 - **V2_login blocking-scenarios architecture:** session-epoch pattern + Reverb `UserAccountSuspended` event + `SyncUserStatusAction` (cross-tenant-safe) + `BlockCompanyAction` (static bulk helper) + `block_log` audit table + drop all 20 `refresh:true` ES sites + grep-lint guard. See [docs/V2_login/BLOCKING_SCENARIOS_AUDIT.md](../docs/V2_login/BLOCKING_SCENARIOS_AUDIT.md), [ADR 0007](../docs/adr/0007-blocking-scenarios-architecture.md). Code not yet landed.
 
+- *2026-11-03* — **God-Level Unified Registration & Add/Invite Team Member Lifecycle Audit & Architecture Implementation (Phases 0–6) (100% COMPLETED & VERIFIED)**:
+  - **Module & Scope**: Service Company Team Member Invitation & Resend (`app/Http/Controllers/ServiceCompany/ServiceCompanyTeamController.php`), Idempotent Transactional Outbox Pipeline (`app/Services/TeamMutationService.php`), Asynchronous Dual-Store Worker (`app/Jobs/ProcessTeamOutboxEventJob.php`), Horizon Queue Configuration (`config/horizon.php`), Transport Mail Service (`app/Services/MailService.php`), Unified Registration Shell & Context Engine (`app/Http/Controllers/Auth/RegisterController.php`, `app/Services/RegistrationContextResolver.php`, `app/Services/RegistrationActivationService.php`, `resources/views/auth/login.blade.php`), and Architecture Blueprint (`docs/GOD_LEVEL_UNIFIED_REGISTRATION_AND_INVITATION_ARCHITECTURE_BLUEPRINT.md`).
+  - **Direct Email Activation Bug Diagnosed & Fixed (Zero-Redirect Direct Token Resolution)**:
+    - *Symptom*: When invited users clicked "Activate Account" in the email, the page rendered the standard Company Self-Registration experience ("Create your Jero.works account") instead of the Team Member Activation card.
+    - *Root Causes*:
+      1. **302 Redirect Cookie Drop**: `RegisterController::showRegistrationForm` issued a 302 redirect from `/register?token=...` to `/register` with `Set-Cookie`. When navigating from an external mail client (Gmail/Outlook), modern browsers treated the redirect as cross-site top-level navigation.
+      2. **SameSite=Strict & Secure=true Mismatch**: The session envelope cookie was hardcoded with `SameSite=Strict` and `Secure=true`. Browsers dropped the cookie when accessing over HTTP/127.0.0.1 or navigating cross-site from webmail, arriving at `/register` with no cookie, forcing `RegistrationContextResolver` into fallback `SELF` mode.
+      3. **Token Ignored in Resolver**: `RegistrationContextResolver` only looked for cookie values, ignoring `$request->query('token')` completely.
+    - *God-Level Solution Implemented*:
+      1. **Zero-Redirect Direct Resolution**: `RegistrationContextResolver` and `RegisterController` now directly resolve `$request->query('token')` in the initial request, immediately returning HTTP 200 with `$registrationContext['context'] = 'TEAM'`, mounting `#kt_team_activate_form` and prefilling the verified email without any redirect hop.
+      2. **Client-Side URL Scrubbing (INV-01)**: The raw token is seamlessly scrubbed from the browser address bar via `window.history.replaceState({ authMode: 'team_invite' }, '', '/register')` upon render, preventing token leakage in bookmarks/history without network latency.
+      3. **Browser Compatibility Standards**: Cookie updated to `SameSite=lax` with dynamically bound `Secure` flag (`$request->isSecure()`), guaranteeing persistence across page refreshes.
+      4. **Triple-Barrier Activation Fallback**: `RegistrationActivationService` now accepts session envelope from cookie, encrypted hidden input field, or direct token validation.
+  - **Root Cause of "Original Invitation Email Failed vs Resend Worked" Diagnosed**:
+    - `TeamMutationService` nested the email data inside `response_data` (`$payload['response_data']['email_data']`).
+    - `ProcessTeamOutboxEventJob` checked `$payload['email_data']` at the root. Because it was `null`, the worker silently skipped mail delivery and falsely marked the event `COMPLETED` without sending any email or throwing an error (False-Success Invariant Violation).
+    - Furthermore, `config/horizon.php` did not monitor the `team-outbox` queue, leaving asynchronous real-time dispatch dead in production with only a 60-second fallback cron command (`team:process-outbox`).
+    - Investigation revealed Resend (Event 188) only worked because a developer had executed a manual test script (`scratch/test_mail_send.php`) that unpacked the nested payload and called `MailService::sendEmail()`; the automated pipeline was broken for both original and resend invitations.
+  - **God-Level Architectural Solutions Implemented**:
+    1. **Hard Invariant (INV-OUTBOX-01)**: Zero False-Success Invariant strictly enforced in `ProcessTeamOutboxEventJob`. An outbox event must NEVER transition to `COMPLETED` if the required side-effect (email delivery) has not executed. Throws `RuntimeException` on missing payload or failed delivery.
+    2. **Canonical Event Contract (Schema v1)**: Standardized `sys_outbox_events` payload to Schema v1 with top-level typed `email` object (`to`, `subject`, `template`, `sender_name`, `from_address`, `data`), while providing a guarded legacy adapter for older in-flight rows.
+    3. **Dual-Engine Dispatch & Horizon Supervision**: Added `'team-outbox'` to `config/horizon.php`'s `supervisor-outbox` supervisor for sub-500ms real-time delivery via `afterCommit()`, while preserving the `team:process-outbox` console command strictly as a 60-second safety-net reconciliation sweeper.
+    4. **Transport Fault Tolerance**: Guarded `MailService::addReplyTo()` and CC lists with email validation to prevent PHPMailer crashes on empty company emails.
+    5. **Unified Registration Context Engine (P0)**: Connected backend `context => 'TEAM'` to `resources/views/auth/login.blade.php`. Integrated the Team Member Activation Card (`#kt_team_activate_form`) into the master authentication shell with immutable verified work email, password strength evaluator, client-generated idempotency keys (`Idempotency-Key` / `X-Idempotency-Key`), and AJAX activation redirecting to `/service_company/dashboard`.
+    6. **Pessimistic Locking & Idempotent Token Consumption**: Enforced atomic row locking (`SELECT ... FOR UPDATE`), temporal role binding, single-use nonce burning, monotonic universal tenant state version allocation (`team`), and instant rejection of replay attempts (HTTP 410).
+  - **Verification**:
+    - `php -l` on all modified files: Pass (0 syntax errors).
+    - `scratch/verify_god_level_fix.php`: 6/6 tests PASS (Schema v1 generation, Zero False-Success invariant enforcement, Token resolution & HttpOnly cookie envelope, Blade Unified Shell rendering in TEAM mode, RegistrationActivationService execution, and Double-Activation rejection).
+    - `scratch/test_outbox_job_delivery.php`: 100% PASS (End-to-end email dispatch, `sys_outbox_events` -> COMPLETED, `team_invitations.delivery_status` -> SENT).
+    - `scratch/test_outbox_job_failure.php`: 100% PASS (Failure handling, `sys_outbox_events` -> FAILED, `team_invitations.delivery_status` -> FAILED).
+
+- *2026-11-03* — **Permanent Rule Enacted: Mandatory Document Storage for Audits, Feedback, Changes & Feature Proposals (Rule 21 / Rule 05) (100% COMPLETED)**:
+  - **Directive**: Enforced permanent rule across all AI coding assistants (Antigravity, Claude, Cursor, Windsurf, Copilot) and human engineers.
+  - **Standard Storage Location**: `docs/audit documents/` (created with `README.md` and standard naming pattern `YYYY-MM-DD-<module-or-topic>-<type>.md`).
+  - **Scope**: Every new document produced for any audit, review, feedback session, technical change / refactor log, new feature blueprint, or architectural / UX suggestion must be persistently saved in `docs/audit documents/` so it is permanently reviewable.
+  - **Files Updated**: `AGENTS.md` (Rule 21), `CLAUDE.md` (Rule 15 & Rule 17), `docs/AI_RULES.md` (Rule 20), `.cursorrules` (Rule 14), `.windsurfrules` (Rule 12), `.agents/rules/05-audit-documentation-storage.md` (Rule 05), `.agents/rules/01-founder-intent-decoder.md` (shorthand translation), and `.agents/skills/god-audit/SKILL.md` (deliverable format).
+
+- *2026-11-03* — **God-Level Commercials Engine — Phase 8: 15.6" Laptop Screen & Responsive Viewport Fit Optimization (Rule 14 & Rule 20) (100% COMPLETED & VERIFIED)**:
+  - **Module & Scope**: Parent Account Settings Services Tab (`resources/views/service_company/account/v2/tabs/services.blade.php`), Sliding Side-Drawer (`resources/views/service_company/jobs/services_view.blade.php`), and Canonical DTO (`app/DTO/Commercials/ServiceTermDTO.php`).
+  - **Problem Solved**: On 15.6" laptop screens (`1366×768` and `1920×1080` with 125%/150% scaling) and compact viewports (< 1200px), sub-cards suffered from mid-word text clipping ("At-Cost C", "Wage Reimburseme") and header/badge label collisions ("NO FEE APPLICA...", "ZERO MARGIN (PASS...").
+  - **Responsive Container Queries & Layout System**:
+    - Embedded `container-type: inline-size; container-name: srvcard;` on `.cd-srv-card`.
+    - Implemented fluid container queries:
+      - `@container srvcard (max-width: 980px)` gracefully transitions from 4 columns to a balanced 2x2 grid (`repeat(2, minmax(0, 1fr))`) with 10px gaps and 12px padding.
+      - `@container srvcard (max-width: 520px)` transitions to 1 column for mobile viewports.
+      - Viewport media queries (`max-width: 1200px` and `max-width: 680px`) provided as resilient fallbacks.
+  - **Typography & Metric Wrapping (Zero Clipping)**:
+    - Removed rigid `white-space: nowrap` and `text-overflow: ellipsis` from `.cd-subcard-val`.
+    - Configured `.cd-subcard-val` with `display: flex; align-items: baseline; flex-wrap: wrap; gap: 2px 6px; min-height: 38px;` and `.val-sub` with `white-space: normal; line-height: 1.25;`.
+    - Guaranteed all primary values and secondary descriptors (`Pass-Through (0%) At-Cost Contractor Pay`, `Net 30 Days Wage Reimbursement`, `Free (0%) Zero Placement Fee`) wrap naturally with 100% full word visibility without ellipsis or mid-word cuts.
+  - **Concise Subcard Headers & Badges**:
+    - Replaced overly verbose uppercase headers and badges with concise, standard labels:
+      - Fulltime Free: `FREE PLACEMENT` + `0% Fee` badge (was `NO FEE APPLICABLE` + `ZERO CHARGES`).
+      - Fulltime Fixed: `FIXED PLACEMENT` + `5 Tiers` badge (was `FIXED PLACEMENT FEE`).
+      - Contract Pass-Through: `ZERO MARGIN` + `0% Margin` badge (was `ZERO MARGIN (PASS-THROUGH)`).
+      - Contract Markup: `MARKUP ON PAY` + `Hourly` badge (was `MARKUP ON PAY RATE`).
+      - Contract Invoicing: `INVOICING TERMS` (was `INVOICING & REIMBURSEMENT`).
+      - Invoicing Meta: `Cycle: Monthly Wages` and `Trigger: Approved Timesheet`.
+    - Added semantic HTML `title` attributes across all header labels and badges for full tooltip visibility on hover.
+  - **Drawer Viewport Optimization**:
+    - Enhanced sliding drawer `@media (max-width: 767px)` responsiveness: added header wrap (`flex-wrap: wrap`), 2-column seniority matrix grid, and mobile padding.
+  - **DTO Alignment**: Updated `ServiceTermDTO` to return canonical `Free / No Placement Fee` and `Not Applicable` basis.
+  - **Verification**:
+    - `php -l` on all modified files: Pass (0 syntax errors).
+    - `scratch/test_placement_fee_fixes.php`: 13/13 PASS.
+    - `scratch/test_specialized_commercials_sync.php`: 10/10 PASS.
+    - `scratch/test_phase1_commercials_verification.php`: 10/10 PASS.
+    - `scratch/test_phase2_cqrs_verification.php`: 7/7 PASS.
+
 - *2026-11-02* — **God-Level Commercials Engine — Phase 7: Placement Fee Refinements (Pink Styling for Free Fee, Per-Hire Basis for Fixed Fee, 10K Default Amount, Removed Refresh Icon, and Tenant Country Auto-Selection) (100% COMPLETED & VERIFIED)**:
   - **Module & Scope**: Sliding Side-Drawer (`resources/views/service_company/jobs/services_view.blade.php`), Parent Settings Tab (`resources/views/service_company/account/v2/tabs/services.blade.php`), Controller (`ServiceCompanyJobsController`, `ServiceCompanyConsultancyController`), DTO (`ServiceTermDTO`), and Visual Preview Artifact (`drawer_commercials_card_subcard_preview.html`).
   - **Point 1: Free / No Placement Fee Visual Treatment (Pink)**:

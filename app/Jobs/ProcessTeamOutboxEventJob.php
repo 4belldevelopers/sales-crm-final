@@ -47,7 +47,7 @@ class ProcessTeamOutboxEventJob implements ShouldQueue
 
         // Batch processing if called without specific ID (scheduler / sweeper)
         $events = DB::table('sys_outbox_events')
-            ->where('aggregate_type', 'TeamMember')
+            ->whereIn('aggregate_type', ['TeamMember', 'team_member', 'team_invitation', 'TeamInvitation'])
             ->where(function ($q) {
                 $q->whereIn('status', ['PENDING', 'FAILED'])
                     ->orWhere(function ($sub) {
@@ -71,7 +71,7 @@ class ProcessTeamOutboxEventJob implements ShouldQueue
     {
         $claimed = DB::table('sys_outbox_events')
             ->where('id', $eventId)
-            ->where('aggregate_type', 'TeamMember')
+            ->whereIn('aggregate_type', ['TeamMember', 'team_member', 'team_invitation', 'TeamInvitation'])
             ->where(function ($q) {
                 $q->whereIn('status', ['PENDING', 'FAILED'])
                     ->orWhere(function ($sub) {
@@ -94,39 +94,84 @@ class ProcessTeamOutboxEventJob implements ShouldQueue
             return;
         }
 
+        $to = null;
+        $companyId = (int) $event->tenant_id;
+
         try {
             $payload = json_decode($event->payload, true) ?: [];
             $targetUserId = (int) ($event->aggregate_id ?: ($payload['user_id'] ?? 0));
             $eventType = $event->event_type;
 
-            // 1. Deliver email asynchronously if this event requires it (e.g. team_member.invited, team_member.resend_invitation)
-            if (in_array($eventType, ['team_member.invited', 'team_member.resend_invitation', 'team_member.created']) && ! empty($payload['email_data'])) {
-                $emailData = $payload['email_data'];
-                $to = $emailData['to'] ?? ($payload['email'] ?? null);
-                $subject = $payload['email_subject'] ?? 'Account Credential';
-                $view = $payload['email_template'] ?? 'email.team.create-account';
-                $senderName = $payload['sender_name'] ?? '';
-                $fromAddress = $payload['from_address'] ?? '';
-                $companyId = (int) ($event->tenant_id ?: ($payload['company_id'] ?? 0));
+            // 1. Deliver email asynchronously if this event requires it (INV-OUTBOX-01 & INV-OUTBOX-02)
+            $requiresEmail = in_array($eventType, ['team_member.invited', 'team_member.resend_invitation', 'team_member.created'], true);
 
-                if (! empty($to)) {
-                    $mailService = app(MailService::class);
-                    $result = $mailService->sendEmail(
-                        $to,
-                        $subject,
-                        $view,
-                        (object) $emailData,
-                        [],
-                        $fromAddress,
-                        $senderName,
-                        [],
-                        $companyId
-                    );
+            if ($requiresEmail) {
+                $emailBlock = null;
+                $schemaVersion = (int) ($payload['schema_version'] ?? 0);
 
-                    if ($result !== true) {
-                        throw new \RuntimeException('Mail sending failed: '.(is_string($result) ? $result : 'unknown error'));
+                if ($schemaVersion >= 1 && ! empty($payload['email'])) {
+                    // Canonical Schema v1 Contract
+                    $emailBlock = $payload['email'];
+                } else {
+                    // Guarded Legacy Adapter for in-flight historic records
+                    $legacyData = $payload['response_data']['email_data'] ?? ($payload['email_data'] ?? null);
+                    if (! empty($legacyData)) {
+                        $emailBlock = [
+                            'to' => $legacyData['to'] ?? ($payload['response_data']['email'] ?? ($payload['email'] ?? null)),
+                            'name' => $legacyData['name'] ?? null,
+                            'subject' => $payload['response_data']['email_subject'] ?? ($payload['email_subject'] ?? 'Account Credential'),
+                            'template' => $payload['response_data']['email_template'] ?? ($payload['email_template'] ?? 'email.team.create-account'),
+                            'sender_name' => $payload['response_data']['sender_name'] ?? ($payload['sender_name'] ?? ''),
+                            'from_address' => $payload['response_data']['from_address'] ?? ($payload['from_address'] ?? ''),
+                            'data' => $legacyData,
+                        ];
                     }
                 }
+
+                // Hard Invariant INV-OUTBOX-01: Zero False-Success
+                // An outbox event must NEVER transition to COMPLETED if the side effect cannot execute!
+                if (empty($emailBlock) || empty($emailBlock['to'])) {
+                    throw new \RuntimeException("Outbox Event #{$eventId} Contract Violation: Event '{$eventType}' requires email delivery but no valid recipient address is present.");
+                }
+
+                $to = strtolower(trim((string) $emailBlock['to']));
+                $subject = $emailBlock['subject'] ?? 'Account Credential';
+                $view = $emailBlock['template'] ?? 'email.team.create-account';
+                $senderName = $emailBlock['sender_name'] ?? '';
+                $fromAddress = $emailBlock['from_address'] ?? '';
+                $companyId = (int) ($event->tenant_id ?: ($payload['tenant_id'] ?? ($payload['company_id'] ?? 0)));
+                $templateData = (object) ($emailBlock['data'] ?? $emailBlock);
+
+                $mailService = app(MailService::class);
+                $result = $mailService->sendEmail(
+                    $to,
+                    $subject,
+                    $view,
+                    $templateData,
+                    [],
+                    $fromAddress,
+                    $senderName,
+                    [],
+                    $companyId
+                );
+
+                if ($result !== true) {
+                    // Update transport state to FAILED upon delivery failure
+                    DB::table('team_invitations')
+                        ->where('company_id', $companyId)
+                        ->where('email', $to)
+                        ->whereIn('status', ['PENDING', 'LINK_ACCESSED'])
+                        ->update(['delivery_status' => 'FAILED', 'updated_at' => now()]);
+
+                    throw new \RuntimeException('Mail sending failed: '.(is_string($result) ? $result : 'unknown error'));
+                }
+
+                // Update transport state to SENT upon verified delivery
+                DB::table('team_invitations')
+                    ->where('company_id', $companyId)
+                    ->where('email', $to)
+                    ->whereIn('status', ['PENDING', 'LINK_ACCESSED'])
+                    ->update(['delivery_status' => 'SENT', 'updated_at' => now()]);
             }
 
             // 2. Synchronize to Elasticsearch if user exists
@@ -150,6 +195,14 @@ class ProcessTeamOutboxEventJob implements ShouldQueue
 
         } catch (\Throwable $e) {
             Log::error("ProcessTeamOutboxEventJob failed for event {$eventId}: ".$e->getMessage());
+
+            if (! empty($to) && ! empty($companyId)) {
+                DB::table('team_invitations')
+                    ->where('company_id', $companyId)
+                    ->where('email', $to)
+                    ->whereIn('status', ['PENDING', 'LINK_ACCESSED'])
+                    ->update(['delivery_status' => 'FAILED', 'updated_at' => now()]);
+            }
 
             $finalStatus = ($event->attempts >= $this->tries) ? 'DEAD_LETTER' : 'FAILED';
             $backoffSeconds = $this->backoff * max(1, $event->attempts);

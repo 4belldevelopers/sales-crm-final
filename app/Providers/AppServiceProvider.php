@@ -29,6 +29,10 @@ class AppServiceProvider extends ServiceProvider
             \App\Services\ForwardResume\Providers\ForwardResumeProvider::class,
             \App\Services\ForwardResume\Providers\SesForwardResumeProvider::class
         );
+        $this->app->bind(
+            \App\Services\Contracts\TenantMembershipResolverInterface::class,
+            \App\Services\ModelATenantMembershipResolver::class
+        );
     }
 
     /**

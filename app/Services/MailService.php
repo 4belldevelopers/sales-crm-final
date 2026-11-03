@@ -47,7 +47,7 @@ class MailService
             // $mail->addBCC($fromAddress_reply);
             $mail->setFrom($fromAddress, $fromName);
             $mail->addAddress($to);
-            if (! empty($fromAddress_reply)) {
+            if (! empty($fromAddress_reply) && filter_var($fromAddress_reply, FILTER_VALIDATE_EMAIL)) {
                 $cc[] = $fromAddress_reply;
             }
             if (count($cc) > 0) {
@@ -68,10 +68,14 @@ class MailService
                     }
                 }
                 if (empty($addedReplyTo)) {
-                    $mail->addReplyTo($fromAddress_reply, $fromName_reply);
+                    if (! empty($fromAddress_reply) && filter_var($fromAddress_reply, FILTER_VALIDATE_EMAIL)) {
+                        $mail->addReplyTo($fromAddress_reply, $fromName_reply);
+                    }
                 }
             } else {
-                $mail->addReplyTo($fromAddress_reply, $fromName_reply);
+                if (! empty($fromAddress_reply) && filter_var($fromAddress_reply, FILTER_VALIDATE_EMAIL)) {
+                    $mail->addReplyTo($fromAddress_reply, $fromName_reply);
+                }
             }
 
             // dd($attachments);
