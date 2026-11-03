@@ -51,3 +51,11 @@ When the user provides a brief or shorthand request, the AI MUST automatically i
   - Stage only intentional files; format conventional commit message.
   - Push strictly to `origin/staging` (NEVER push to `main`).
   - Append the decision to `.ai/PROJECT_MEMORY.md`.
+
+#### Shorthand: `"audit"` / `"review"` / `"feedback"` / `"changes"` / `"suggestions"` / `"new feature"`
+- **Meaning**: Execute audit, feedback capture, changelog/refactor documentation, feature design, or suggestions.
+- **Enforced Execution**:
+  - Store the resulting document permanently in `docs/audit documents/`.
+  - Format filename as `YYYY-MM-DD-<topic>-<type>.md` (e.g. `YYYY-MM-DD-candidate-drawer-audit.md`).
+  - Never keep critical review findings solely in ephemeral chat context or memory.
+

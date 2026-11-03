@@ -89,6 +89,10 @@ This fragmentation created severe architectural vulnerabilities:
 | **INV-15** | B1: Invitation | **Universal Email Inclusivity & Cross-Tenant Domain Shield** | All companies (whether registered with a corporate domain or Gmail) are **100% authorized to invite team members using personal email IDs (Gmail, Yahoo, Outlook, etc.) or corporate email IDs**. No admin or company is ever blocked from adding team members using personal emails. The only restriction is cross-tenant corporate domain protection: no company can invite an email ending in a proprietary corporate domain registered to another organization. |
 | **INV-16** | B3: Activation | **Canonical Request-Hash Idempotency Protocol (IDEMPOTENCY-01)** | The same `Idempotency-Key` may only represent one canonical request payload (`request_hash`). If matching payload and `COMPLETED`, returns stored response. If payload hash differs, rejects with `409 Conflict` (`IDEMPOTENCY_KEY_REUSED_WITH_DIFFERENT_REQUEST`). If `IN_PROGRESS`, rejects with `409 Conflict` (`REQUEST_IN_PROGRESS`) and `Retry-After: 2` header, eliminating thread starvation under 10k concurrency. |
 | **INV-17** | B1: Invitation | **Triple-Barrier Session Envelope Lifecycle (SESSION-01/02/03)** | (1) `SESSION-01`: Session rotation destroys invitation cookie and regenerates Laravel session ID on activation. (2) `SESSION-02`: Activation `POST` strictly enforces standard CSRF token validation. (3) `SESSION-03`: Single-use atomic `session_nonce` burn prevents envelope replay. |
+| **INV-18** | B4: Tenant Data | **Zero False-Success Outbox Invariant** | An outbox event must **NEVER** transition to `COMPLETED` unless the intended side effect has actually executed successfully. If email data is missing or unparseable for an event requiring email dispatch, the worker **must throw a fatal exception** and transition the event to `FAILED` or `DEAD_LETTER`. Silent no-op completions are strictly forbidden. |
+| **INV-19** | B4: Tenant Data | **Canonical Outbox Event Contract (Schema v1)** | All newly emitted team outbox events must conform to a single canonical JSON schema with top-level `schema_version: 1` and a typed `email` object. In-flight historic rows are parsed via a guarded legacy adapter, eliminating ad-hoc fallback guessing. |
+| **INV-20** | B4: Tenant Data | **Dual-Engine Dispatch Decoupling** | Redis/Horizon is the **primary real-time path** (`afterCommit()` $\to$ sub-second dispatch). The 60-second cron command (`team:process-outbox`) is strictly an **automated reconciliation safety net** for recovering stranded events or worker crashes. |
+| **INV-21** | B2: Context | **Unified Registration Context Engine** | A single authentication shell (`/register` $\to$ `auth/login.blade.php`) dynamically mounts one of three declarative context experiences: `SELF` (Company Creation), `TEAM_INVITE` (Team Member Activation), or `AGENCY_INVITE` (Agency Partner Onboarding). Multiple fragmented registration views are prohibited. |
 
 ---
 
@@ -422,6 +426,47 @@ public function delta(Request $request): JsonResponse
     ]);
 }
 ```
+
+### 6.3 Canonical Outbox Event Contract & Zero False-Success Invariant (INV-18 & INV-19)
+
+To eliminate ambiguous event shapes and false-positive completions, all newly emitted team outbox events conform to **Schema Version 1**:
+
+```json
+{
+  "schema_version": 1,
+  "event_type": "team_member.invited",
+  "tenant_id": 2,
+  "aggregate_id": 999131,
+  "aggregate_version": 3,
+  "timestamp": "2026-11-03T15:45:00+05:30",
+  "email": {
+    "to": "recruiter@gmail.com",
+    "name": "Alex Jenkins",
+    "subject": "Account Credential",
+    "template": "email.team.create-account",
+    "from_address": "noreply@jeroworks.in",
+    "sender_name": "JERO.WORKS",
+    "invitation_url": "https://testing.jero.works/register?token=...",
+    "metadata": {
+      "invitation_id": 48,
+      "role_id": 11,
+      "company_name": "TechNova Inc"
+    }
+  },
+  "context": {
+    "actor_id": 2,
+    "ip_address": "127.0.0.1"
+  }
+}
+```
+
+#### Dual-Engine Dispatch (INV-20):
+1. **Primary Real-Time Path (<500ms):** `ProcessTeamOutboxEventJob::dispatch($outboxId)->afterCommit()` pushes to Redis queue `team-outbox`, picked up instantly by Horizon's `supervisor-outbox`.
+2. **Reconciliation Safety Net (Cron Every 1m):** `team:process-outbox --limit=25` runs periodically to reclaim events stranded by network outages or worker crashes.
+
+#### Zero False-Success Enforcement (INV-18):
+An outbox event must **never** transition to `COMPLETED` unless the intended side effect has actually executed. If email data is missing or unparseable, the worker throws a fatal contract exception, ensuring failed events are visible, retried, or alerted in DLQ.
+
 
 ---
 
