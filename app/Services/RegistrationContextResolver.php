@@ -88,7 +88,7 @@ class RegistrationContextResolver
             $user = \App\Models\User::withoutGlobalScopes()->where('email', $invitation->email)->first();
         }
 
-        $memberName = $user->name ?? '';
+        $memberName = ucwords(trim($user->name ?? ''));
         $memberMobile = $user->mobile ?? '';
         $memberCallingCode = $user->calling_code ?? '+91';
 
