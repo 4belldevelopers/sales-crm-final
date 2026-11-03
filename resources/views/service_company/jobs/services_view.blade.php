@@ -40,10 +40,28 @@
     });
     $selectedCommercialModel = $isFreeModel ? 0 : $rateType;
 
+    $tenantDefaultCurrencyKey = isset($defaultCurrencyKey)
+        ? (int) $defaultCurrencyKey
+        : \App\Services\CurrencyService::getTenantCurrencyKey($commercial['company_id'] ?? auth()->user()->company_id ?? null);
+    $savedCurrency = (isset($commercial['salary_currency']) && $commercial['salary_currency'] !== '' && $commercial['salary_currency'] !== null)
+        ? (int) $commercial['salary_currency']
+        : null;
+
+    $selectedCurrency = ($savedCurrency === null || ($savedCurrency === 4 && $tenantDefaultCurrencyKey !== 4))
+        ? $tenantDefaultCurrencyKey
+        : $savedCurrency;
+
+    $isTenantCurrencyINR = ($selectedCurrency === 0 || \App\Services\CurrencyService::resolveCurrencyCode($selectedCurrency) === 'INR');
+
     // Requirement 2 & 3: For Fulltime Fixed Placement Fee, default amount is 10,000 and billing basis is Per Hire (3)
     if ($isFulltime && $selectedCommercialModel === 1) {
         if ((float) $defaultRate <= 100.0 || (float) $defaultRate === 8.33) {
             $defaultRate = 10000.00;
+        }
+    } elseif (!$isFulltime && $selectedCommercialModel === 1) {
+        // Contract Hiring Services: Default 50000 for INR, 5 for Dollars/international
+        if ($commercialDetails->isEmpty() || (float) $defaultRate === 0.0) {
+            $defaultRate = $isTenantCurrencyINR ? 50000.00 : 5.00;
         }
     }
 
@@ -62,25 +80,16 @@
     $selectedSalaryMode = isset($commercial['sal_mode']) ? (int) $commercial['sal_mode'] : 0;
     if ($isFulltime && $selectedCommercialModel === 1) {
         $selectedSalaryMode = 3; // Per Hire
+    } elseif (!$isFulltime && $selectedCommercialModel === 1 && !isset($commercial['sal_mode'])) {
+        $selectedSalaryMode = $isTenantCurrencyINR ? 1 : 2; // 1 = Monthly Staffing Rate for INR, 2 = Hourly Contract Rate for Dollars
     }
-
-    $tenantDefaultCurrencyKey = isset($defaultCurrencyKey)
-        ? (int) $defaultCurrencyKey
-        : \App\Services\CurrencyService::getTenantCurrencyKey($commercial['company_id'] ?? auth()->user()->company_id ?? null);
-    $savedCurrency = (isset($commercial['salary_currency']) && $commercial['salary_currency'] !== '' && $commercial['salary_currency'] !== null)
-        ? (int) $commercial['salary_currency']
-        : null;
-
-    $selectedCurrency = ($savedCurrency === null || ($savedCurrency === 4 && $tenantDefaultCurrencyKey !== 4))
-        ? $tenantDefaultCurrencyKey
-        : $savedCurrency;
 
     $currenciesToRender = !empty($currencyList) ? $currencyList : \App\Services\CurrencyService::getSettingCurrenciesList();
     if (empty($currenciesToRender)) {
         $currenciesToRender = !empty($currency) ? $currency : \App\Helper\GeneralMethod::currency();
     }
 
-    $selectedReplacementPeriod = (int) ($commercial['replacement_period_days'] ?? ($isFulltime ? 90 : 30));
+    $selectedReplacementPeriod = (int) ($commercial['replacement_period_days'] ?? ($isFulltime ? 90 : 5));
     $selectedReplacementType = (string) ($commercial['replacement_type'] ?? 'free_replacement');
     $selectedReplacementEligibility = (string) ($commercial['replacement_eligibility'] ?? 'early_exit');
     $selectedBillingFrequency = (string) ($commercial['billing_frequency'] ?? ($isFulltime ? 'one_time' : 'monthly'));
@@ -998,7 +1007,7 @@
             <button type="button" class="cd-drw-btn" data-commercial-cancel>
                 Cancel
             </button>
-            <button type="button" class="cd-drw-btn" data-commercial-reset title="Reset to saved values">
+            <button type="button" class="cd-drw-btn" data-commercial-reset title="Reset to standard defaults">
                 <svg class="cd-svg-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
                 Reset
             </button>
@@ -1199,6 +1208,10 @@
                             $rangeRate = data_get($commercialDetails->get($firstExperienceIndex), 'rate', $defaultRate);
                             if ($isFulltime && $selectedCommercialModel === 1 && ((float) $rangeRate <= 100.0 || (float) $rangeRate === 8.33)) {
                                 $rangeRate = 10000.00;
+                            } elseif (!$isFulltime && $selectedCommercialModel === 1 && ($commercialDetails->isEmpty() || (float) $rangeRate === 0.0)) {
+                                $inrTierDefaults = [0 => 50000, 1 => 60000, 2 => 70000, 3 => 80000];
+                                $dollarTierDefaults = [0 => 5, 1 => 6, 2 => 7, 3 => 8];
+                                $rangeRate = $isTenantCurrencyINR ? ($inrTierDefaults[$loop->index] ?? 80000) : ($dollarTierDefaults[$loop->index] ?? 8);
                             }
                         @endphp
                         <div class="cd-matrix-tier-card" data-experience-range>
@@ -1266,6 +1279,10 @@
                                     $experienceRate = data_get($commercialDetails->get($experienceIndex), 'rate', $defaultRate);
                                     if ($isFulltime && $selectedCommercialModel === 1 && ((float) $experienceRate <= 100.0 || (float) $experienceRate === 8.33)) {
                                         $experienceRate = 10000.00;
+                                    } elseif (!$isFulltime && $selectedCommercialModel === 1 && ($commercialDetails->isEmpty() || (float) $experienceRate === 0.0)) {
+                                        $inrTierDefaults = [0 => 50000, 1 => 60000, 2 => 70000, 3 => 80000];
+                                        $dollarTierDefaults = [0 => 5, 1 => 6, 2 => 7, 3 => 8];
+                                        $experienceRate = $isTenantCurrencyINR ? ($inrTierDefaults[$loop->parent->index] ?? 80000) : ($dollarTierDefaults[$loop->parent->index] ?? 8);
                                     }
                                 @endphp
                                 <input type="hidden"
@@ -1565,6 +1582,40 @@
                     }
                 }
             });
+        } else if (isFixedFee && !isFT) {
+            var selectedCurrOpt = pricingCurrency.options[pricingCurrency.selectedIndex];
+            var currCode = selectedCurrOpt ? (selectedCurrOpt.getAttribute('data-code') || selectedCurrOpt.text.trim().slice(0, 3)).toUpperCase() : '';
+            var isINR = currCode === 'INR' || pricingCurrency.value === '0';
+            var inrRates = ['50000', '60000', '70000', '80000'];
+            var dollarRates = ['5', '6', '7', '8'];
+
+            if (isINR) {
+                var currRate = Number(defaultRateInput.value);
+                if (!currRate || currRate <= 100) {
+                    defaultRateInput.value = '50000';
+                    appliedOn.value = '1'; // Monthly Staffing Rate
+                    syncRangeSelects('[data-range-applied-on]', '1');
+                    root.querySelectorAll('[data-experience-range]').forEach(function (rangeRow, tierIdx) {
+                        var targetRate = inrRates[tierIdx] || String(80000 + (tierIdx - 3) * 10000);
+                        var rangeRate = rangeRow.querySelector('[data-range-rate]');
+                        if (rangeRate) rangeRate.value = targetRate;
+                        rangeRow.querySelectorAll('.rate_val, .perecentage_val').forEach(function (h) { h.value = targetRate; });
+                    });
+                }
+            } else {
+                var currRate = Number(defaultRateInput.value);
+                if (!currRate || currRate >= 1000) {
+                    defaultRateInput.value = '5';
+                    appliedOn.value = '2'; // Hourly Contract Rate
+                    syncRangeSelects('[data-range-applied-on]', '2');
+                    root.querySelectorAll('[data-experience-range]').forEach(function (rangeRow, tierIdx) {
+                        var targetRate = dollarRates[tierIdx] || String(8 + (tierIdx - 3));
+                        var rangeRate = rangeRow.querySelector('[data-range-rate]');
+                        if (rangeRate) rangeRate.value = targetRate;
+                        rangeRow.querySelectorAll('.rate_val, .perecentage_val').forEach(function (h) { h.value = targetRate; });
+                    });
+                }
+            }
         } else if (isPercentage && isFT) {
             var currRate = Number(defaultRateInput.value);
             if (!currRate || currRate > 100 || currRate === 10000) {
@@ -1668,47 +1719,144 @@
         };
     }
 
-    function restoreInitialState() {
-        if (!initialState) return;
+    function handleCurrencyChange() {
+        var selVal = pricingCurrency.value;
+        syncRangeSelects('[data-range-currency]', selVal);
 
-        commercialType.value = initialState.commercialType;
-        defaultRateInput.value = initialState.defaultRate;
-        appliedOn.value = initialState.appliedOn;
-        pricingCurrency.value = initialState.currency;
-        replacementPeriod.value = initialState.replacementPeriod;
-        replacementType.value = initialState.replacementType;
-        replacementEligibility.value = initialState.replacementEligibility;
-        billingFrequency.value = initialState.billingFrequency;
-        billingTrigger.value = initialState.billingTrigger;
-        paymentTerms.value = initialState.paymentTerms;
+        // In Contract mode, if Fixed Contract Bill Rate is selected, dynamically adapt rate defaults and basis
+        if (!isFT && commercialType.value === '1') {
+            var selectedCurrOpt = pricingCurrency.options[pricingCurrency.selectedIndex];
+            var currCode = selectedCurrOpt ? (selectedCurrOpt.getAttribute('data-code') || selectedCurrOpt.text.trim().slice(0, 3)).toUpperCase() : '';
+            var isINR = currCode === 'INR' || selVal === '0';
 
+            var inrRates = ['50000', '60000', '70000', '80000'];
+            var dollarRates = ['5', '6', '7', '8'];
+
+            if (isINR) {
+                defaultRateInput.value = '50000';
+                appliedOn.value = '1'; // Monthly Staffing Rate
+                syncRangeSelects('[data-range-applied-on]', '1');
+
+                root.querySelectorAll('[data-experience-range]').forEach(function (rangeRow, tierIdx) {
+                    var targetRate = inrRates[tierIdx] || String(80000 + (tierIdx - 3) * 10000);
+                    var rangeRate = rangeRow.querySelector('[data-range-rate]');
+                    if (rangeRate) rangeRate.value = targetRate;
+                    rangeRow.querySelectorAll('.rate_val, .perecentage_val').forEach(function (h) { h.value = targetRate; });
+                });
+            } else {
+                defaultRateInput.value = '5';
+                appliedOn.value = '2'; // Hourly Contract Rate
+                syncRangeSelects('[data-range-applied-on]', '2');
+
+                root.querySelectorAll('[data-experience-range]').forEach(function (rangeRow, tierIdx) {
+                    var targetRate = dollarRates[tierIdx] || String(8 + (tierIdx - 3));
+                    var rangeRate = rangeRow.querySelector('[data-range-rate]');
+                    if (rangeRate) rangeRate.value = targetRate;
+                    rangeRow.querySelectorAll('.rate_val, .perecentage_val').forEach(function (h) { h.value = targetRate; });
+                });
+            }
+        }
+    }
+
+    function resetToAuthoritativeDefaults() {
+        var defaultCurrKey = String(root.dataset.defaultCurrencyKey || '0');
+        var registeredCountries = [];
+        try {
+            registeredCountries = JSON.parse(root.dataset.registeredCountries || '[]');
+        } catch (e) {
+            registeredCountries = [];
+        }
+        var regCountrySet = new Set(registeredCountries.map(function (c) { return Number(c); }));
+        if (regCountrySet.size === 0) {
+            regCountrySet.add(101); // Fallback to India if none registered
+        }
+
+        // Reset Currency to registered company default
+        pricingCurrency.value = defaultCurrKey;
+        if (!pricingCurrency.value && pricingCurrency.options.length > 0) {
+            pricingCurrency.selectedIndex = 0;
+        }
+
+        var selectedCurrOpt = pricingCurrency.options[pricingCurrency.selectedIndex];
+        var currCode = selectedCurrOpt ? (selectedCurrOpt.getAttribute('data-code') || selectedCurrOpt.text.trim().slice(0, 3)).toUpperCase() : '';
+        var isINR = currCode === 'INR' || pricingCurrency.value === '0';
+
+        if (isFT) {
+            // Fulltime authoritative defaults
+            commercialType.value = '2'; // Percentage of CTC
+            defaultRateInput.value = '8.33';
+            appliedOn.value = '0'; // Annual CTC
+
+            root.querySelectorAll('[data-experience-range]').forEach(function (rangeRow) {
+                var rangeRate = rangeRow.querySelector('[data-range-rate]');
+                if (rangeRate) rangeRate.value = '8.33';
+                rangeRow.querySelectorAll('.perecentage_val, .rate_val').forEach(function (hiddenInput) {
+                    hiddenInput.value = '8.33';
+                });
+            });
+
+            replacementPeriod.value = '90'; // 90 Days Standard Warranty
+            replacementType.value = 'free_replacement'; // Free Replacement Candidate
+            replacementEligibility.value = 'early_exit'; // Candidate Resignation / Early Exit
+
+            billingTrigger.value = 'candidate_joined'; // Candidate Joined
+            billingFrequency.value = 'one_time'; // One Time
+            paymentTerms.value = '30'; // Net 30 Days
+        } else {
+            // Contract authoritative defaults
+            commercialType.value = '1'; // Fixed Contract Bill Rate
+
+            var inrRates = ['50000', '60000', '70000', '80000'];
+            var dollarRates = ['5', '6', '7', '8'];
+
+            if (isINR) {
+                defaultRateInput.value = '50000';
+                appliedOn.value = '1'; // Monthly Staffing Rate
+            } else {
+                defaultRateInput.value = '5';
+                appliedOn.value = '2'; // Hourly Contract Rate
+            }
+
+            var rangeRows = root.querySelectorAll('[data-experience-range]');
+            rangeRows.forEach(function (rangeRow, tierIdx) {
+                var targetRate = isINR
+                    ? (inrRates[tierIdx] || String(80000 + (tierIdx - 3) * 10000))
+                    : (dollarRates[tierIdx] || String(8 + (tierIdx - 3)));
+
+                var rangeRate = rangeRow.querySelector('[data-range-rate]');
+                if (rangeRate) rangeRate.value = targetRate;
+                rangeRow.querySelectorAll('.rate_val, .perecentage_val').forEach(function (hiddenInput) {
+                    hiddenInput.value = targetRate;
+                });
+            });
+
+            replacementPeriod.value = '5'; // 5 Days Satisfaction Trial
+            replacementType.value = 'free_replacement'; // Free Replacement Contractor
+            replacementEligibility.value = 'early_exit'; // Contractor Early Departure
+
+            billingTrigger.value = 'approved_timesheet'; // Approved Timesheet
+            billingFrequency.value = 'monthly'; // Monthly Billing Cycle
+            paymentTerms.value = '30'; // Net 30 Days
+        }
+
+        // Active Service Status
         if (mainStatusInput) {
-            mainStatusInput.value = initialState.mainStatus;
+            mainStatusInput.value = '1';
             root.querySelectorAll('.main_status').forEach(function (el) {
-                if (el.type === 'checkbox') {
-                    el.checked = String(initialState.mainStatus) === '1';
-                } else {
-                    el.value = initialState.mainStatus;
-                }
+                if (el.type === 'checkbox') el.checked = true;
+                else el.value = '1';
             });
         }
 
-        root.querySelectorAll('.rate_val,.perecentage_val').forEach(function (rate, index) {
-            rate.value = initialState.storedRates[index];
-        });
-
-        root.querySelectorAll('[data-experience-range]').forEach(function (rangeRow) {
-            var hiddenRate = rangeRow.querySelector('.rate_val,.perecentage_val');
-            var inputRate = rangeRow.querySelector('[data-range-rate]');
-            if (hiddenRate && inputRate) {
-                inputRate.value = hiddenRate.value;
-            }
-        });
-
-        countries.forEach(function (country, index) {
-            country.checked = initialState.countries[index];
+        // Operational Countries: Registered company countries only
+        countries.forEach(function (country) {
+            var cId = Number(country.value);
+            var shouldCheck = regCountrySet.has(cId);
+            country.checked = shouldCheck;
             var parentItem = country.closest('[data-country-item]');
-            if (parentItem) parentItem.classList.toggle('is-selected', country.checked);
+            if (parentItem) {
+                parentItem.classList.toggle('is-selected', shouldCheck);
+            }
         });
 
         if (search) {
@@ -1723,7 +1871,7 @@
         updateReplacementSummary();
         renderSelectedCountries();
 
-        // Immediate tactile rotation feedback on Reset button
+        // 360-degree rotation animation on Reset icon
         var resetBtn = root.querySelector('[data-commercial-reset]');
         if (resetBtn) {
             var svgIcon = resetBtn.querySelector('svg');
@@ -1737,17 +1885,19 @@
             }
         }
 
-        // Informative notification confirming reset to saved state
+        // Informative confirmation toast
+        var modeName = isFT ? 'Fulltime Hiring' : 'Contract Staffing';
+        var toastMsg = modeName + ' services reset to authoritative standard defaults.';
         if (typeof toastr !== 'undefined') {
-            toastr.info('Commercial terms reset to saved values.');
+            toastr.success(toastMsg);
         } else if (typeof Swal !== 'undefined') {
             Swal.fire({
                 toast: true,
                 position: 'top-end',
-                icon: 'info',
-                title: 'Commercial terms reset to saved values.',
+                icon: 'success',
+                title: toastMsg,
                 showConfirmButton: false,
-                timer: 2000
+                timer: 2500
             });
         }
     }
@@ -1798,7 +1948,7 @@
     });
 
     appliedOn.addEventListener('change', function () { syncRangeSelects('[data-range-applied-on]', appliedOn.value); });
-    pricingCurrency.addEventListener('change', function () { syncRangeSelects('[data-range-currency]', pricingCurrency.value); });
+    pricingCurrency.addEventListener('change', handleCurrencyChange);
     billingTrigger.addEventListener('change', updateReplacementSummary);
     billingFrequency.addEventListener('change', updateReplacementSummary);
     replacementPeriod.addEventListener('change', updateReplacementSummary);
@@ -1830,7 +1980,7 @@
     root.querySelectorAll('[data-range-currency]').forEach(function (select) {
         select.addEventListener('change', function () {
             pricingCurrency.value = select.value;
-            syncRangeSelects('[data-range-currency]', select.value);
+            handleCurrencyChange();
         });
     });
 
@@ -1940,7 +2090,7 @@
     }
 
     root.querySelectorAll('[data-commercial-reset]').forEach(function (button) {
-        button.addEventListener('click', restoreInitialState);
+        button.addEventListener('click', resetToAuthoritativeDefaults);
     });
 
     // ── Self-Contained Resilient Save Commercial Terms Handler (Rule 17) ──
