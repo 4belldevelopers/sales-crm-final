@@ -454,23 +454,24 @@ class ServiceCompanyAccountSettingsController extends ServiceCompanyBaseControll
 
         $this->categories = JobCategory::all();
         $this->companyType = GeneralMethod::companyType();
+        $this->companyTypeTaxonomy = GeneralMethod::companyTypeTaxonomy();
+        $this->department = \App\Services\IndustryTaxonomyService::getGlobalManifest();
         $company_id = auth()->user()->company_id;
         $this->company_id = $company_id;
         $this->account = DB::table('companies')->select('*')->where('id', $company_id)->first();
+        $this->company = $this->account;
         $this->company_tags = DB::table('company_tags')->select('*')->where('company_id', $company_id)->get();
 
         $this->industries_type_arr = GeneralMethod::industries_type_arr();
 
-        $this->client = Client::select('clients.id', 'clients.tags')->where('clients.company_id', '=', $company_id)->where('clients.self_company', '=', 1)->first();
+        $this->client = Client::select('clients.*')->where('clients.company_id', '=', $company_id)->where('clients.self_company', '=', 1)->first();
         $this->client_location = DB::table('client_location')
-            ->join('countries', 'countries.id', '=', 'client_location.country_id')
-            ->join('state_list', 'state_list.id', '=', 'client_location.state')
-            ->join('city_list', 'city_list.city_id', '=', 'client_location.city_id')
-            ->select('client_location.city', 'client_location.city_id', 'client_location.address', 'client_location.postcode', 'countries.country_name', 'state_list.state as state_name', 'city_list.city as city_name', 'client_location.country_id', 'client_location.state')
+            ->leftJoin('countries', 'countries.id', '=', 'client_location.country_id')
+            ->leftJoin('state_list', 'state_list.id', '=', 'client_location.state')
+            ->leftJoin('city_list', 'city_list.city_id', '=', 'client_location.city_id')
+            ->select('client_location.*', 'countries.country_name', 'state_list.state as state_name', 'city_list.city as city_name')
             ->where('client_location.client_id', @$this->client->id)
             ->get();
-
-        // dd($this->client_location);
 
         $this->industries = DB::table('td_industries')
             ->select('td_industries.ind_id', 'td_industries.ind_name')
@@ -480,12 +481,12 @@ class ServiceCompanyAccountSettingsController extends ServiceCompanyBaseControll
         $this->countryArr = GeneralMethod::getAllCountryList();
         $this->statelist = GeneralMethod::statelist(101);
         $this->cities = GeneralMethod::allCities();
-        // dd($this->cities);
         $statelist = DB::table('state_list')
             ->select('state_list.id', 'state_list.state as name', DB::raw('101 as country_id'))
             ->orderBy('state_list.state')
             ->get()->toArray();
         $this->indianStatelist = json_decode(json_encode($statelist), true);
+        $this->page_mode = 'EDIT';
 
         return view('service_company.account.edit', $this->data);
 
@@ -710,6 +711,17 @@ class ServiceCompanyAccountSettingsController extends ServiceCompanyBaseControll
         }
         if (! empty(@$request->website)) {
             $company->website = @$request->website;
+            if ($request->filled('domain_key')) {
+                $company->domain_key = strtolower(trim($request->domain_key));
+            } elseif (empty($company->domain_key)) {
+                $parsedHost = parse_url($request->website, PHP_URL_HOST) ?? $request->website;
+                $company->domain_key = preg_replace('/^www\./i', '', strtolower(trim($parsedHost)));
+            }
+        } elseif ($request->filled('domain_key')) {
+            $company->domain_key = strtolower(trim($request->domain_key));
+        }
+        if ($request->filled('career_page_link') || $request->filled('career_page_url')) {
+            $company->career_page_link = $request->career_page_link ?? $request->career_page_url;
         }
         if (! empty(@$request->industries)) {
             $company->industries = @$request->industries;
@@ -720,7 +732,11 @@ class ServiceCompanyAccountSettingsController extends ServiceCompanyBaseControll
             $company->company_size_from = $from_size;
             $company->company_size = $to_size;
         }
-        if (! empty(@$request->industries_type)) {
+        if (! empty(@$request->company_type)) {
+            $company->company_type = @$request->company_type;
+            $company->industries_type = @$request->company_type;
+        } elseif (! empty(@$request->industries_type)) {
+            $company->company_type = @$request->industries_type;
             $company->industries_type = @$request->industries_type;
         }
         if (! empty(@$request->founded)) {
@@ -729,9 +745,43 @@ class ServiceCompanyAccountSettingsController extends ServiceCompanyBaseControll
         if (! empty(@$request->success_per)) {
             $company->success_per = @$request->success_per;
         }
-        // 	dd(@$request->description);
         if (! empty(@$request->description)) {
-            $company->description = @$request->description; // htmlentities(@$request->kt_docs_tinymce_hidden, ENT_QUOTES, "UTF-8");
+            $company->description = @$request->description;
+        }
+
+        if ($request->has('technologies')) {
+            $techRaw = $request->technologies;
+            $techArr = [];
+            if (is_string($techRaw)) {
+                $decoded = json_decode($techRaw, true);
+                if (is_array($decoded)) {
+                    foreach ($decoded as $item) {
+                        $techArr[] = is_array($item) ? ($item['value'] ?? '') : (string)$item;
+                    }
+                } else {
+                    $techArr = explode(',', $techRaw);
+                }
+            } elseif (is_array($techRaw)) {
+                $techArr = $techRaw;
+            }
+            $techArr = array_values(array_unique(array_filter(array_map('trim', $techArr))));
+
+            DB::table('company_tags')->where('company_id', $company_id)->delete();
+            $now = now();
+            $tagRows = [];
+            foreach ($techArr as $tName) {
+                if ($tName !== '' && mb_strlen($tName) <= 55) {
+                    $tagRows[] = [
+                        'company_id' => $company_id,
+                        'tag_name' => $tName,
+                        'created_at' => $now,
+                        'updated_at' => $now,
+                    ];
+                }
+            }
+            if (! empty($tagRows)) {
+                DB::table('company_tags')->insert($tagRows);
+            }
         }
 
         if ($request->hasFile('logo')) {
@@ -844,8 +894,8 @@ class ServiceCompanyAccountSettingsController extends ServiceCompanyBaseControll
         $client_data = GeneralMethod::getClientIdCompany($company_id);
         // dd($client_data,$company_id);
         $client = Client::withoutGlobalScopes()->findOrFail($client_data->client_id);
-        if (! empty(@$request->name)) {
-            $client->name = @$request->company_name;
+        if (! empty(@$request->company_name) || ! empty(@$request->name)) {
+            $client->name = @$request->company_name ?: @$request->name;
         }
         if (! empty(@$request->website)) {
             $client->website = @$request->website;
@@ -854,22 +904,30 @@ class ServiceCompanyAccountSettingsController extends ServiceCompanyBaseControll
             $client->industry = @$request->industries;
         }
         if (! empty(@$request->company_size)) {
-
             $company_size = $request->company_size;
             [$from_size, $to_size] = explode('-', $company_size);
             $client->company_size_from = $from_size;
             $client->company_sizes = $to_size;
-            // $client->company_sizes 			=	@$request->company_size;
         }
-        if (! empty(@$request->industries_type)) {
+        if (! empty(@$request->company_type)) {
+            $client->company_type = @$request->company_type;
+        } elseif (! empty(@$request->industries_type)) {
             $client->company_type = @$request->industries_type;
         }
         if (! empty(@$request->founded)) {
             $client->founded = @$request->founded;
         }
-        $client->logo = $company->logo;
+        if (\Illuminate\Support\Facades\Schema::hasColumn('clients', 'tax_id') && $request->filled('tax_id')) {
+            $client->tax_id = $request->tax_id;
+        }
+        if (\Illuminate\Support\Facades\Schema::hasColumn('clients', 'career_page_link') && ($request->filled('career_page_link') || $request->filled('career_page_url'))) {
+            $client->career_page_link = $request->career_page_link ?? $request->career_page_url;
+        }
+        if ($company->logo) {
+            $client->logo = $company->logo;
+        }
         if (! empty(@$request->description)) {
-            $client->description = @$request->description; // htmlentities(@$request->kt_docs_tinymce_hidden, ENT_QUOTES, "UTF-8");
+            $client->description = @$request->description;
         }
         $client->save();
 
@@ -1277,12 +1335,15 @@ class ServiceCompanyAccountSettingsController extends ServiceCompanyBaseControll
         // 	}
         //    }
 
-        $cachekeys = [
-            'candidateDetails_version_user_'.$this->user->id,
-            'clientsviewmore_version_user_'.$this->user->id,
-        ];
-        foreach ($cachekeys as $key) {
-            GeneralMethod::cacheClean($key);
+        $userId = $this->user ? $this->user->id : (auth()->id() ?? 0);
+        if ($userId) {
+            $cachekeys = [
+                'candidateDetails_version_user_'.$userId,
+                'clientsviewmore_version_user_'.$userId,
+            ];
+            foreach ($cachekeys as $key) {
+                GeneralMethod::cacheClean($key);
+            }
         }
 
         \Illuminate\Support\Facades\Cache::forget("tenant_default_currency:{$company_id}");
@@ -1301,6 +1362,8 @@ class ServiceCompanyAccountSettingsController extends ServiceCompanyBaseControll
 
         return Reply::dataOnly([
             'status' => 'success',
+            'message' => 'Company profile updated successfully.',
+            'redirect_url' => route('service_company.account.index'),
             'tenant_defaults' => GeneralMethod::getTenantDefaultsPayload($company_id),
         ]);
 
@@ -1908,66 +1971,53 @@ class ServiceCompanyAccountSettingsController extends ServiceCompanyBaseControll
      */
     public function onboarding()
     {
-        $this->pageTitle = 'Setup Your Workspace';
+        $this->pageTitle = 'Setup Company Profile';
         $company_id = auth()->user()->company_id;
-        $this->company = DB::table('companies')->where('id', $company_id)->first();
+        $this->company_id = $company_id;
+        $this->categories = JobCategory::all();
+        $this->companyType = GeneralMethod::companyType();
+        $this->companyTypeTaxonomy = GeneralMethod::companyTypeTaxonomy();
+        $this->department = \App\Services\IndustryTaxonomyService::getGlobalManifest();
+        $this->industries_type_arr = GeneralMethod::industries_type_arr();
+        $this->account = DB::table('companies')->select('*')->where('id', $company_id)->first();
+        $this->company = $this->account;
+        $this->company_tags = DB::table('company_tags')->select('*')->where('company_id', $company_id)->get();
+
+        $this->client = Client::select('clients.*')->where('clients.company_id', '=', $company_id)->where('clients.self_company', '=', 1)->first();
+        $this->client_location = DB::table('client_location')
+            ->leftJoin('countries', 'countries.id', '=', 'client_location.country_id')
+            ->leftJoin('state_list', 'state_list.id', '=', 'client_location.state')
+            ->leftJoin('city_list', 'city_list.city_id', '=', 'client_location.city_id')
+            ->select('client_location.*', 'countries.country_name', 'state_list.state as state_name', 'city_list.city as city_name')
+            ->where('client_location.client_id', @$this->client->id)
+            ->get();
+
+        $this->industries = DB::table('td_industries')
+            ->select('td_industries.ind_id', 'td_industries.ind_name')
+            ->orderBy('td_industries.ind_name', 'ASC')
+            ->get();
+
+        $this->countryArr = GeneralMethod::getAllCountryList();
+        $this->statelist = GeneralMethod::statelist(101);
+        $this->cities = GeneralMethod::allCities();
+        $statelist = DB::table('state_list')
+            ->select('state_list.id', 'state_list.state as name', DB::raw('101 as country_id'))
+            ->orderBy('state_list.state')
+            ->get()->toArray();
+        $this->indianStatelist = json_decode(json_encode($statelist), true);
+        $this->page_mode = 'ONBOARDING';
 
         return view('service_company.account.onboarding', $this->data);
     }
 
     /**
      * Save Onboarding Setup & Transition to ATS Dashboard
-     * Enforces strict <= 2MB logo limit.
+     * Shares identical update engine as company edit.
      */
     public function onboardingSave(Request $request)
     {
-        $request->validate([
-            'company_name' => 'required|string|min:2|max:191',
-            'website' => 'nullable|url|max:191',
-            'logo' => 'nullable|file|image|mimes:png,jpg,jpeg,svg,webp|max:2048',
-        ], [
-            'company_name.required' => 'Please enter your organization name.',
-            'logo.max' => 'Company logo must not exceed 2MB in file size.',
-            'logo.image' => 'Uploaded logo must be a valid image file (PNG, JPG, SVG, WebP).',
-        ]);
-
         $company_id = auth()->user()->company_id;
-        $company = Company::withoutGlobalScopes()->findOrFail($company_id);
-
-        $company->company_name = trim($request->company_name);
-        if ($request->filled('website')) {
-            $company->website = trim($request->website);
-            if (empty($company->domain_key)) {
-                $parsedHost = parse_url($request->website, PHP_URL_HOST) ?? $request->website;
-                $cleanDomain = preg_replace('/^www\./i', '', strtolower(trim($parsedHost)));
-                $existing = DB::table('companies')->where('domain_key', $cleanDomain)->where('id', '!=', $company_id)->exists();
-                if (! $existing) {
-                    $company->domain_key = $cleanDomain;
-                }
-            }
-        }
-
-        if ($request->hasFile('logo')) {
-            try {
-                $file = $request->file('logo');
-                $filename = uniqid('JERO_logo_').'.'.$file->getClientOriginalExtension();
-                $fileUrl = $file->storeAs('Companies/'.$company_id.'/Images', $filename, 'r2');
-                $company->logo = $fileUrl;
-            } catch (\Throwable $r2Ex) {
-                $company->logo = \App\Helper\Files::upload($request->logo, 'company-logo');
-            }
-        }
-
-        $company->save();
-
-        // Synchronize with Elasticsearch so SuperAdmin immediately sees updated company profile
-        try {
-            app(\App\Services\ElasticCaompanyIndex::class)->companyIndexElastic($company_id);
-        } catch (\Throwable $esEx) {
-            \Log::warning('ES sync in onboardingSave deferred: '.$esEx->getMessage());
-        }
-
-        \App\Services\CurrencyService::invalidateTenantCache($company_id);
+        $this->update($request, GeneralMethod::value_encrypt($company_id));
 
         return response()->json([
             'status' => 'success',
