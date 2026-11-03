@@ -168,7 +168,25 @@ As shown in the reference screenshot, the **Full Name** field displayed lowercas
 
 ---
 
-## 5. Recommendation
+## 5. Recommendation & Decision
 
-**Option 1 (Royal Indigo & Collaboration Violet)** is strongly recommended.  
-In B2B SaaS applications, team invitation links are opened by users whose mental model is "I am joining my team's account," not "I am buying/registering software." Indigo/Violet delivers that exact collaborative emotion with immediate visual clarity, while keeping the form clean and 100% compliant with 15.6" screen specifications.
+**Option 1 (Royal Indigo & Collaboration Violet)** was proposed as the collaborative SaaS standard, while **Option 4** was proposed for strict JERO brand hallmark fidelity.
+
+---
+
+## 6. Approved Implementation: Option 4 with JERO Brand Gold Action Button
+
+Per user approval, **Option 4** was selected and implemented with a **Gold CTA Button**:
+1. **Card Background:** Pure white (`#ffffff !important`) per Rule 20 with 1.5px `#e2e8f0` border and `border-radius: 20px`.
+2. **Top Accent Stripe:** JERO Brand Gold (`linear-gradient(90deg, #ffd428 0%, #f59e0b 100%) !important`).
+3. **Badges:**
+   - Team Invitation: Warm gold pill (`#fef3c7` / `#b45309`, border `#fde68a`).
+   - Role: Clean white pill (`#ffffff` / `#334155`, border `#e2e8f0`).
+   - Assigned by Admin: Warm amber pill (`#fef9c3` / `#854d0e`, border `#fef08a`).
+4. **Action CTA Button:**
+   - Gold gradient: `linear-gradient(180deg, #ffd428 0%, #f5c400 100%) !important;`
+   - Dark Navy bold text: `color: #10143b !important; font-weight: 700 !important;`
+   - Gold border: `border: 1px solid #d4a017 !important;`
+   - Elevation shadow: `box-shadow: 0 4px 14px rgba(245, 196, 0, 0.35) !important;`
+5. **Full Name:** Standardized with `ucwords()` across view, resolver, activation service, and team controller (`Kajal`).
+
