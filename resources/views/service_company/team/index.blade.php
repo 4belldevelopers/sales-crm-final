@@ -52,14 +52,14 @@
             background: #ffffff !important;
             border: 1px solid #e2e8f0 !important;
             border-radius: 10px !important;
-            padding: 12px 18px !important;
-            margin-bottom: 12px !important;
+            padding: 8px 16px !important;
+            margin-bottom: 8px !important;
             box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04) !important;
             display: flex;
             align-items: center;
             justify-content: space-between;
             flex-wrap: wrap;
-            gap: 14px;
+            gap: 12px;
         }
         .team-toolbar-left {
             display: flex;
@@ -224,7 +224,7 @@
             overflow-y: hidden !important;
             scrollbar-width: none !important;
             -ms-overflow-style: none !important;
-            margin-bottom: 14px !important;
+            margin-bottom: 8px !important;
         }
         .tm-stat-grid-wrap::-webkit-scrollbar {
             display: none !important;
@@ -348,14 +348,14 @@
             background: #ffffff;
             border: 1px solid #e2e8f0;
             border-radius: 10px;
-            padding: 10px 14px;
+            padding: 8px 12px;
             display: flex;
             align-items: center;
             justify-content: space-between;
-            gap: 16px;
+            gap: 12px;
             box-shadow: 0 1px 3px rgba(15, 23, 42, 0.02);
-            flex-wrap: nowrap;
-            margin-bottom: 12px;
+            flex-wrap: wrap;
+            margin-bottom: 8px;
             box-sizing: border-box;
             width: 100%;
         }
@@ -431,6 +431,86 @@
             display: flex;
             align-items: center;
             gap: 4px;
+        }
+        .team-sort-dropdown-wrap {
+            position: relative;
+        }
+        .team-sort-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            height: 36px;
+            padding: 0 12px;
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 12px;
+            font-family: 'Poppins', sans-serif;
+            color: #0f172a;
+            cursor: pointer;
+            transition: all .15s ease;
+            white-space: nowrap;
+        }
+        .team-sort-pill:hover, .team-sort-pill:focus, .team-sort-pill[aria-expanded="true"] {
+            border-color: #009ef7;
+            background: #ffffff;
+            box-shadow: 0 0 0 2px rgba(0, 158, 247, 0.12);
+            color: #009ef7;
+        }
+        .team-sort-label {
+            font-weight: 500;
+            color: #64748b;
+        }
+        .team-sort-current {
+            font-weight: 600;
+            color: #0f172a;
+        }
+        .team-sort-menu {
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+            padding: 6px 0;
+            font-size: 12px;
+            font-family: 'Poppins', sans-serif;
+            min-width: 250px;
+            z-index: 1050;
+        }
+        .team-sort-menu .dropdown-item {
+            padding: 7px 14px;
+            font-weight: 500;
+            color: #334155;
+            display: flex;
+            align-items: center;
+            transition: background .12s ease;
+        }
+        .team-sort-menu .dropdown-item:hover {
+            background: #f1f5f9;
+            color: #009ef7;
+        }
+        .team-sort-menu .dropdown-item.active {
+            background: #eff6ff;
+            color: #009ef7;
+            font-weight: 600;
+        }
+        .team-btn-reset-filters {
+            display: inline-flex;
+            align-items: center;
+            height: 36px;
+            padding: 0 10px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            background: #f8fafc;
+            color: #64748b;
+            font-size: 11.5px;
+            font-weight: 600;
+            font-family: 'Poppins', sans-serif;
+            cursor: pointer;
+            transition: all .15s ease;
+            white-space: nowrap;
+        }
+        .team-btn-reset-filters:hover {
+            background: #eff6ff;
+            border-color: #009ef7;
+            color: #009ef7;
         }
         .team-select-control {
             height: 38px;
@@ -2186,7 +2266,7 @@
                 <div class="team-filter-bar mb-3">
                     <div class="team-filter-search">
                         <i class="fa-solid fa-magnifying-glass"></i>
-                        <input type="text" id="kt_tagify_2" class="team-search-input" placeholder="Search by name, email or phone..." autocomplete="off" />
+                        <input type="text" id="kt_tagify_2" class="team-search-input" placeholder="Search by name, email, phone or ID..." autocomplete="off" />
                         <button type="button" class="team-search-clear" id="teamSearchClearBtn" onclick="clearTeamFilters()" title="Clear Search">✕</button>
                     </div>
 
@@ -2194,22 +2274,36 @@
                         <!-- Hidden input to maintain JS status filter compatibility -->
                         <input type="hidden" id="teamStatusFilterDropdown" value="all" />
 
-                        <div class="team-filter-group">
-                            <span class="team-filter-label"><i class="fa-solid fa-arrow-down-short-wide me-1 text-muted"></i>Sort by:</span>
-                            <select class="team-select-control" id="sortingfilter" onchange="onTeamSortChange(this.value)">
-                                <option value="">Last Active</option>
-                                <option value="1">Joined: Newest to Oldest</option>
-                                <option value="2">Joined: Oldest to Newest</option>
-                                <option value="name_asc">Name: A to Z</option>
-                                <option value="name_desc">Name: Z to A</option>
-                                <option value="designation_asc">Designation: A to Z</option>
-                                <option value="role_asc">System Role: A to Z</option>
-                                <option value="active_jobs_desc">Workload: Active Jobs (High to Low)</option>
-                                <option value="bench_talents_desc">Workload: Bench Talent Rep (High to Low)</option>
-                                <option value="score_desc">Performance Score (High to Low)</option>
-                                <option value="status_active">Account Status: Active First</option>
-                            </select>
+                        <!-- Compact Metronic Sort Pill (Rule 20 Enterprise Standard) -->
+                        <div class="dropdown team-sort-dropdown-wrap">
+                            <button type="button" class="team-sort-pill dropdown-toggle" id="teamSortDropdownBtn" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="fa-solid fa-arrow-down-short-wide text-muted me-1"></i>
+                                <span class="team-sort-label">Sort:</span>
+                                <span class="team-sort-current" id="teamSortCurrentText">Last Active</span>
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end team-sort-menu shadow-sm" aria-labelledby="teamSortDropdownBtn">
+                                <li><a class="dropdown-item js-sort-opt active" href="javascript:void(0);" onclick="selectTeamSort('', 'Last Active', this)"><i class="fa-solid fa-clock-rotate-left me-2 text-muted"></i>Last Active</a></li>
+                                <li><a class="dropdown-item js-sort-opt" href="javascript:void(0);" onclick="selectTeamSort('joined_newest', 'Joined: Newest to Oldest', this)"><i class="fa-solid fa-calendar-plus me-2 text-muted"></i>Joined: Newest to Oldest</a></li>
+                                <li><a class="dropdown-item js-sort-opt" href="javascript:void(0);" onclick="selectTeamSort('joined_oldest', 'Joined: Oldest to Newest', this)"><i class="fa-solid fa-calendar-minus me-2 text-muted"></i>Joined: Oldest to Newest</a></li>
+                                <li><hr class="dropdown-divider my-1"></li>
+                                <li><a class="dropdown-item js-sort-opt" href="javascript:void(0);" onclick="selectTeamSort('name_asc', 'Name: A to Z', this)"><i class="fa-solid fa-arrow-down-a-z me-2 text-muted"></i>Name: A to Z</a></li>
+                                <li><a class="dropdown-item js-sort-opt" href="javascript:void(0);" onclick="selectTeamSort('name_desc', 'Name: Z to A', this)"><i class="fa-solid fa-arrow-down-z-a me-2 text-muted"></i>Name: Z to A</a></li>
+                                <li><a class="dropdown-item js-sort-opt" href="javascript:void(0);" onclick="selectTeamSort('designation_asc', 'Designation: A to Z', this)"><i class="fa-solid fa-id-badge me-2 text-muted"></i>Designation: A to Z</a></li>
+                                <li><a class="dropdown-item js-sort-opt" href="javascript:void(0);" onclick="selectTeamSort('role_asc', 'System Role: A to Z', this)"><i class="fa-solid fa-shield-halved me-2 text-muted"></i>System Role: A to Z</a></li>
+                                <li><hr class="dropdown-divider my-1"></li>
+                                <li><a class="dropdown-item js-sort-opt" href="javascript:void(0);" onclick="selectTeamSort('active_jobs_desc', 'Workload: Active Jobs', this)"><i class="fa-solid fa-briefcase me-2 text-muted"></i>Workload: Active Jobs (High to Low)</a></li>
+                                <li><a class="dropdown-item js-sort-opt" href="javascript:void(0);" onclick="selectTeamSort('bench_talents_desc', 'Workload: Bench Talent Rep', this)"><i class="fa-solid fa-users me-2 text-muted"></i>Workload: Bench Talent Rep (High to Low)</a></li>
+                                <li><a class="dropdown-item js-sort-opt" href="javascript:void(0);" onclick="selectTeamSort('score_desc', 'Performance Score', this)"><i class="fa-solid fa-chart-line me-2 text-muted"></i>Performance Score (High to Low)</a></li>
+                                <li><a class="dropdown-item js-sort-opt" href="javascript:void(0);" onclick="selectTeamSort('status_active', 'Status: Active First', this)"><i class="fa-solid fa-circle-check me-2 text-muted"></i>Account Status: Active First</a></li>
+                            </ul>
+                            <!-- Hidden input for backwards-compatibility -->
+                            <input type="hidden" id="sortingfilter" value="" />
                         </div>
+
+                        <!-- Dedicated Reset Filters Action -->
+                        <button type="button" class="team-btn-reset-filters" onclick="resetTeamFilters()" title="Reset All Filters to Default">
+                            <i class="fa-solid fa-rotate-left me-1"></i>Reset
+                        </button>
                     </div>
                 </div>
 
@@ -3047,7 +3141,7 @@
                 var currentUserId = parseInt("{{ auth()->id() ?? 0 }}", 10);
                 var senderId = e.sender_id ? parseInt(e.sender_id, 10) : 0;
 
-                // 1. Invalidate L2 IndexedDB cache immediately so subsequent pagination or refreshes fetch fresh data
+                // 1. Invalidate L2 IndexedDB recovery cache snapshot
                 if (window.JeroTeamLocalStore) {
                     window.JeroTeamLocalStore.purge();
                 }
@@ -3059,8 +3153,44 @@
 
                 var userId = parseInt(e.user_id, 10);
 
-                // 2. Perform surgical DOM and RAM delta updates
-                if (e.action === 'team_member.role_updated') {
+                // Optimistic Concurrency & Monotonic Version check
+                if (window.teamState && Array.isArray(window.teamState.records)) {
+                    var targetRec = window.teamState.records.find(function(r) { return parseInt(r.id || r.user_id, 10) === userId; });
+                    if (targetRec && e.version && targetRec.version && parseInt(e.version, 10) <= parseInt(targetRec.version, 10)) {
+                        console.info('Ignoring out-of-order Reverb event (version ' + e.version + ' <= ' + targetRec.version + ')');
+                        return;
+                    }
+                }
+
+                // 2. Event Lifecycle Taxonomy Handling
+                if (e.action === 'permission.changed') {
+                    if (userId === currentUserId && Array.isArray(e.revoked_permissions) && e.revoked_permissions.indexOf('view_team') !== -1) {
+                        window.teamState.records = [];
+                        if (window.JeroTeamLocalStore) { window.JeroTeamLocalStore.purge(); }
+                        window.location.reload();
+                        return;
+                    }
+                } else if (e.action === 'member.deleted' || e.action === 'team_member.deleted') {
+                    if (window.teamState && Array.isArray(window.teamState.records)) {
+                        window.teamState.records = window.teamState.records.filter(function(r) {
+                            return parseInt(r.id || r.user_id, 10) !== userId;
+                        });
+                        window.teamState.totalCount = window.teamState.records.length;
+                    }
+                    if (window.teamState && window.teamState.isFullDataset) {
+                        renderDerivedTeamStream(window.teamState.currentPage || 1);
+                    } else {
+                        fetchTeamsServer(window.teamState ? window.teamState.currentPage : 1);
+                    }
+                } else if (e.action === 'member.created' || e.action === 'team_member.created') {
+                    if (e.member && window.teamState && Array.isArray(window.teamState.records)) {
+                        window.teamState.records.unshift(e.member);
+                        window.teamState.totalCount = window.teamState.records.length;
+                        renderDerivedTeamStream(1);
+                    } else {
+                        fetchTeamsServer(window.teamState ? window.teamState.currentPage : 1);
+                    }
+                } else if (e.action === 'team_member.role_updated' || e.action === 'member.role_updated') {
                     var $btn = $('.update-user-role[data-row-id="' + userId + '"]');
                     var $pill = $btn.siblings('.team-role-pill');
                     if ($pill.length && e.role_name) {
@@ -3077,13 +3207,14 @@
                     }
 
                     if (window.teamState && Array.isArray(window.teamState.records)) {
-                        var rec = window.teamState.records.find(function(r) { return parseInt(r.id, 10) === userId; });
+                        var rec = window.teamState.records.find(function(r) { return parseInt(r.id || r.user_id, 10) === userId; });
                         if (rec) {
                             rec.display_name = e.role_name;
                             rec.role_name = e.role_name;
+                            if (e.version) rec.version = e.version;
                         }
                     }
-                } else if (e.action === 'team_member.status_updated') {
+                } else if (e.action === 'team_member.status_updated' || e.action === 'member.status_updated') {
                     var $chk = $('#status_change_' + userId);
                     if ($chk.length) {
                         var isActive = (e.status === 'active');
@@ -3097,9 +3228,10 @@
                     }
 
                     if (window.teamState && Array.isArray(window.teamState.records)) {
-                        var rec = window.teamState.records.find(function(r) { return parseInt(r.id, 10) === userId; });
+                        var rec = window.teamState.records.find(function(r) { return parseInt(r.id || r.user_id, 10) === userId; });
                         if (rec) {
                             rec.status = e.status;
+                            if (e.version) rec.version = e.version;
                         }
                     }
                 } else if (e.action === 'team_member.working_status_updated') {
@@ -3107,13 +3239,30 @@
                     if ($ws.length) {
                         $ws.prop('checked', parseInt(e.working_status, 10) === 1);
                     }
-                } else if (e.action === 'team_member.created' || e.action === 'team_member.invited' || e.action === 'team_member.deleted') {
-                    // Member added, invited, or removed: purge L1/L2 and reload team records
-                    if (window.JeroTeamLocalStore) {
-                        window.JeroTeamLocalStore.purge();
-                    }
-                    fetchTeams(window.teamState.currentPage || 1);
+                } else {
+                    fetchTeams(window.teamState ? window.teamState.currentPage : 1);
                 }
+            }
+
+            // Reconnect Synchronization Probe
+            function checkTeamSyncStatus() {
+                var currentVer = (window.teamState && window.teamState.records && window.teamState.records[0]) 
+                    ? (window.teamState.records[0].version || 1) 
+                    : 1;
+                $.ajax({
+                    url: '{{ route("service_company.team.sync_status") }}',
+                    type: 'GET',
+                    data: { last_known_version: currentVer },
+                    dataType: 'json',
+                    success: function(resp) {
+                        if (resp && resp.requires_full_resync) {
+                            if (window.JeroTeamLocalStore) {
+                                window.JeroTeamLocalStore.purge();
+                            }
+                            fetchTeamsServer(window.teamState ? window.teamState.currentPage : 1);
+                        }
+                    }
+                });
             }
 
             // Bind Reverb WebSocket channel listener on company-scoped private channel
@@ -4561,31 +4710,41 @@
 					});
 				}
 
-				// 3. FULL-TEXT SEARCH FILTERING
+				// 3. FULL-TEXT SEARCH FILTERING (Unified Normalized Specification)
 				if (query) {
+					var queryDigits = query.replace(/\D/g, '');
 					list = list.filter(function(r) {
 						var name = (r.name || '').toLowerCase();
 						var email = (r.email || '').toLowerCase();
 						var phone = (r.phone || r.mobile || '').toLowerCase();
+						var phoneNorm = (r.phone_normalized || '').toLowerCase();
 						var designation = (r.designation || '').toLowerCase();
 						var role = (r.display_name || r.role_name || '').toLowerCase();
+						var empId = String(r.user_id || r.id || '');
+						var status = (r.status || '').toLowerCase();
+
 						return name.indexOf(query) !== -1 ||
 							   email.indexOf(query) !== -1 ||
 							   phone.indexOf(query) !== -1 ||
+							   (queryDigits && phoneNorm.indexOf(queryDigits) !== -1) ||
 							   designation.indexOf(query) !== -1 ||
-							   role.indexOf(query) !== -1;
+							   role.indexOf(query) !== -1 ||
+							   empId.indexOf(query) !== -1 ||
+							   status.indexOf(query) !== -1;
 					});
 				}
 
-				// 4. MULTI-DIMENSIONAL IN-MEMORY SORTING
+				// 4. MULTI-DIMENSIONAL IN-MEMORY SORTING (Canonical 11-Sort Parity)
 				list.sort(function(a, b) {
 					switch (sortVal) {
+						case 'joined_newest':
 						case '1': // Joined: Newest to Oldest
 							var tA1 = a.created_at ? new Date(a.created_at).getTime() : 0;
 							var tB1 = b.created_at ? new Date(b.created_at).getTime() : 0;
 							if (tA1 !== tB1) return tB1 - tA1;
 							return (b.id || 0) - (a.id || 0);
 
+						case 'joined_oldest':
 						case '2': // Joined: Oldest to Newest
 							var tA2 = a.created_at ? new Date(a.created_at).getTime() : 0;
 							var tB2 = b.created_at ? new Date(b.created_at).getTime() : 0;
@@ -4593,39 +4752,51 @@
 							return (a.id || 0) - (b.id || 0);
 
 						case 'name_asc': // Name: A to Z
-							return (a.name || '').localeCompare(b.name || '');
+							var nA = (a.name || '').toLowerCase();
+							var nB = (b.name || '').toLowerCase();
+							var nCmp = nA.localeCompare(nB);
+							if (nCmp !== 0) return nCmp;
+							return (a.id || 0) - (b.id || 0);
 
 						case 'name_desc': // Name: Z to A
-							return (b.name || '').localeCompare(a.name || '');
+							var ndA = (a.name || '').toLowerCase();
+							var ndB = (b.name || '').toLowerCase();
+							var ndCmp = ndB.localeCompare(ndA);
+							if (ndCmp !== 0) return ndCmp;
+							return (b.id || 0) - (a.id || 0);
 
 						case 'designation_asc': // Designation: A to Z
-							var desA = a.designation || a.role_name || '';
-							var desB = b.designation || b.role_name || '';
-							return desA.localeCompare(desB);
+							var desA = (a.designation || a.role_name || '').toLowerCase();
+							var desB = (b.designation || b.role_name || '').toLowerCase();
+							var desCmp = desA.localeCompare(desB);
+							if (desCmp !== 0) return desCmp;
+							return (a.id || 0) - (b.id || 0);
 
 						case 'role_asc': // System Role: A to Z
-							var rA = a.display_name || a.role_name || '';
-							var rB = b.display_name || b.role_name || '';
-							return rA.localeCompare(rB);
+							var rA = (a.display_name || a.role_name || '').toLowerCase();
+							var rB = (b.display_name || b.role_name || '').toLowerCase();
+							var rCmp = rA.localeCompare(rB);
+							if (rCmp !== 0) return rCmp;
+							return (a.id || 0) - (b.id || 0);
 
 						case 'active_jobs_desc': // Workload: Active Jobs High to Low
-							var ajDiff = (b.pre_active_jobs || 0) - (a.pre_active_jobs || 0);
+							var ajDiff = (b.active_jobs || b.pre_active_jobs || 0) - (a.active_jobs || a.pre_active_jobs || 0);
 							if (ajDiff !== 0) return ajDiff;
 							return (b.id || 0) - (a.id || 0);
 
 						case 'bench_talents_desc': // Workload: Bench Talent Rep High to Low
-							var btDiff = (b.pre_trm_talents || 0) - (a.pre_trm_talents || 0);
+							var btDiff = (b.trm_talents || b.pre_trm_talents || 0) - (a.trm_talents || a.pre_trm_talents || 0);
 							if (btDiff !== 0) return btDiff;
 							return (b.id || 0) - (a.id || 0);
 
 						case 'score_desc': // Performance Score High to Low
-							var scDiff = (b.pre_score || b.score || 0) - (a.pre_score || a.score || 0);
+							var scDiff = (b.performance_score || b.pre_score || b.score || 0) - (a.performance_score || a.pre_score || a.score || 0);
 							if (scDiff !== 0) return scDiff;
 							return (b.id || 0) - (a.id || 0);
 
 						case 'status_active': // Account Status: Active First
-							var aAct = (a.status === 'active') ? 1 : 0;
-							var bAct = (b.status === 'active') ? 1 : 0;
+							var aAct = (String(a.status || '').toLowerCase() === 'active') ? 1 : 0;
+							var bAct = (String(b.status || '').toLowerCase() === 'active') ? 1 : 0;
 							if (aAct !== bAct) return bAct - aAct;
 							return (b.id || 0) - (a.id || 0);
 
@@ -4651,9 +4822,9 @@
 				var userDesignation = (row.designation && row.designation.trim()) ? row.designation.trim() : '';
 				var designation = userDesignation ? userDesignation : roleName;
 
-				var activeJobs = parseInt(row.pre_active_jobs, 10) || 0;
-				var captainJobs = parseInt(row.pre_captain_jobs, 10) || 0;
-				var trmTalents = parseInt(row.pre_trm_talents, 10) || 0;
+				var activeJobs = parseInt(row.active_jobs || row.pre_active_jobs, 10) || 0;
+				var captainJobs = parseInt(row.captain_jobs || row.pre_captain_jobs, 10) || 0;
+				var trmTalents = parseInt(row.trm_talents || row.pre_trm_talents, 10) || 0;
 				var totalOps = activeJobs + captainJobs + trmTalents;
 
 				var channels = Array.isArray(row.channels) ? row.channels : [];
@@ -4677,11 +4848,12 @@
 					phone = (row.calling_code ? '+' + row.calling_code.replace(/^\+/, '') + ' ' : '') + row.mobile;
 				}
 
-				var isRanked = !isInvited && typeof row.pre_rank === 'number' && row.pre_rank > 0 && isActive;
-				var rankDisplay = isRanked ? '#' + row.pre_rank : 'N/A';
-				var rankMonthDisplay = (isRanked && row.pre_rank_month) ? '(' + row.pre_rank_month + ')' : '';
-				var scoreVal = isRanked ? (parseInt(row.pre_score || row.score, 10) || 0) : 0;
-				var medal = (isRanked && row.pre_rank === 1) ? '🥇' : ((isRanked && row.pre_rank === 2) ? '🥈' : ((isRanked && row.pre_rank === 3) ? '🥉' : ''));
+				var isRanked = !isInvited && ((typeof row.ranking === 'number' && row.ranking > 0) || (typeof row.pre_rank === 'number' && row.pre_rank > 0)) && isActive;
+				var rawRank = (typeof row.ranking === 'number' && row.ranking > 0) ? row.ranking : row.pre_rank;
+				var rankDisplay = isRanked ? '#' + rawRank : 'N/A';
+				var rankMonthDisplay = (isRanked && (row.performance_band || row.pre_rank_month)) ? '(' + (row.performance_band || row.pre_rank_month) + ')' : '';
+				var scoreVal = isRanked ? (parseInt(row.performance_score || row.pre_score || row.score, 10) || 0) : 0;
+				var medal = (isRanked && rawRank === 1) ? '🥇' : ((isRanked && rawRank === 2) ? '🥈' : ((isRanked && rawRank === 3) ? '🥉' : ''));
 
 				var userDataObj = {
 					id: row.id,
@@ -5095,6 +5267,24 @@
 				}
 			}
 
+			function selectTeamSort(sortVal, sortLabel, el) {
+				$('#sortingfilter').val(sortVal);
+				$('#teamSortCurrentText').text(sortLabel);
+				$('.team-sort-menu .js-sort-opt').removeClass('active');
+				if (el) {
+					$(el).addClass('active');
+				}
+				if (window.teamState) {
+					window.teamState.sortVal = sortVal;
+				}
+				if (window.teamState && window.teamState.isFullDataset) {
+					renderDerivedTeamStream(1);
+				} else {
+					fetchTeamsServer(1);
+				}
+			}
+			window.selectTeamSort = selectTeamSort;
+
 			function onTeamSortChange(sortVal) {
 				if (window.teamState) {
 					window.teamState.sortVal = sortVal;
@@ -5377,10 +5567,13 @@
 				}
 			});
 
-			// Dynamic Search with 300ms debounce
+			// Dynamic Search with 300ms debounce & instant RAM synchronization
 			var teamSearchTimeout = null;
 			$('#kt_tagify_2').on('input', function() {
 				var val = $(this).val();
+				if (window.teamState) {
+					window.teamState.searchQuery = (val || '').trim();
+				}
 				if (val && val.trim().length > 0) {
 					$('.team-search-clear').show();
 				} else {
@@ -5392,6 +5585,21 @@
 				}, 300);
 			});
 
+			$('#kt_tagify_2').on('keydown', function(e) {
+				if (e.key === 'Enter') {
+					e.preventDefault();
+					clearTimeout(teamSearchTimeout);
+					var val = $(this).val();
+					if (window.teamState) {
+						window.teamState.searchQuery = (val || '').trim();
+					}
+					fetchTeams(1);
+				} else if (e.key === 'Escape') {
+					e.preventDefault();
+					clearTeamFilters();
+				}
+			});
+
 			// Rows-per-page selector in the footer
 			function changeTeamPageSize(val) {
 				teamPageSize = parseInt(val) || 10;
@@ -5399,12 +5607,39 @@
 				fetchTeams(1);
 			}
 
+			// Clear Search: Resets query ONLY; preserves active tab, sort preference, and page size
 			function clearTeamFilters() {
 				$('#kt_tagify_2').val('');
 				$('.team-search-clear').hide();
-				$('#sortingfilter').val('');
+				if (window.teamState) {
+					window.teamState.searchQuery = '';
+				}
 				fetchTeams(1);
 			}
+
+			// Reset Filters: Restores all faceted filters back to system default
+			function resetTeamFilters() {
+				$('#kt_tagify_2').val('');
+				$('.team-search-clear').hide();
+				$('#sortingfilter').val('');
+				$('#teamSortCurrentText').text('Last Active');
+				$('.team-sort-menu .js-sort-opt').removeClass('active');
+				$('.team-sort-menu .js-sort-opt').first().addClass('active');
+
+				teamStatusTab = 'all';
+				$('#teamStatusFilterDropdown').val('all');
+				$('.tm-stat-grid .tm-stat-card').removeClass('active');
+				$('.tm-stat-grid .tm-stat-card[data-tab="all"]').addClass('active');
+
+				if (window.teamState) {
+					window.teamState.searchQuery = '';
+					window.teamState.sortVal = '';
+					window.teamState.statusTab = 'all';
+				}
+
+				fetchTeams(1);
+			}
+			window.resetTeamFilters = resetTeamFilters;
 
 			// Keep the "N selected" bulk counter in sync
 			function updateTeamSelectedCount() {

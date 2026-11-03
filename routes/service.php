@@ -577,6 +577,7 @@ Route::group(['middleware' => 'auth'], function () {
                 Route::get('team_ajax/dashboarddata', [ServiceCompanyTeamController::class, 'dashboarddata_ajax'])->name('team.dashboarddata_ajax');
                 Route::get('team/assigndata', [ServiceCompanyTeamController::class, 'assigndata'])->name('team.assigndata');
                 Route::get('team/scoreboard', [ServiceCompanyTeamController::class, 'teamScoreboard'])->name('team.scoreboard');
+                Route::get('team/sync-status', [ServiceCompanyTeamController::class, 'syncStatus'])->name('team.sync_status');
                 Route::get('team/representatives-data', [ServiceCompanyTeamController::class, 'representativesData'])->name('team.representatives_data');
                 Route::post('team/set-default-representative', [ServiceCompanyTeamController::class, 'setDefaultRepresentative'])->name('team.set_default_representative');
                 Route::post('team/set-communication-roles', [ServiceCompanyTeamController::class, 'setCommunicationRoles'])->name('team.set_communication_roles');
