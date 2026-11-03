@@ -8,12 +8,12 @@
                 $row = (object) $rowArr;
 
                 // Rank & Scores
-                $rawRank = $row->pre_rank ?? $row->rank ?? 'N/A';
+                $rawRank = $row->ranking ?? ($row->pre_rank ?? ($row->rank ?? 'N/A'));
                 $isInvited = empty($row->password) || strtolower($row->status ?? '') === 'invited';
                 $isRanked = ! $isInvited && is_numeric($rawRank) && (int) $rawRank > 0 && strtolower($row->status ?? '') === 'active';
                 $rankDisplay = $isRanked ? '#' . (int) $rawRank : 'N/A';
-                $rankMonthDisplay = $isRanked ? '(' . ($row->pre_rank_month ?? Carbon::now()->startOfMonth()->subMonth()->format('M Y')) . ')' : '';
-                $scoreVal = $isRanked ? ($row->pre_score ?? $row->score ?? 0) : 0;
+                $rankMonthDisplay = $isRanked ? '(' . ($row->performance_band ?? ($row->pre_rank_month ?? Carbon::now()->startOfMonth()->subMonth()->format('M Y'))) . ')' : '';
+                $scoreVal = $isRanked ? ($row->performance_score ?? ($row->pre_score ?? ($row->score ?? 0))) : 0;
                 $teamRanks = (object) ['rank' => $rankDisplay, 'score' => $scoreVal, 'rankMonth' => $rankMonthDisplay];
 
                 // Avatar initials & background tint
@@ -39,10 +39,10 @@
                 $designation = !empty($userDesignation) ? $userDesignation : $roleName;
 
                 // Pre-computed metrics
-                $activeJobs   = (int) ($row->pre_active_jobs ?? 0);
-                $captainJobs  = (int) ($row->pre_captain_jobs ?? 0);
-                $trmTalents   = (int) ($row->pre_trm_talents ?? 0);
-                $agencyShares = (int) ($row->pre_agency_shares ?? 0);
+                $activeJobs   = (int) ($row->active_jobs ?? ($row->pre_active_jobs ?? 0));
+                $captainJobs  = (int) ($row->captain_jobs ?? ($row->pre_captain_jobs ?? 0));
+                $trmTalents   = (int) ($row->trm_talents ?? ($row->pre_trm_talents ?? 0));
+                $agencyShares = (int) ($row->agency_shares ?? ($row->pre_agency_shares ?? 0));
 
                 // Communication Representative & Channel Roles
                 $isClientRep = !empty($row->is_client_rep);
