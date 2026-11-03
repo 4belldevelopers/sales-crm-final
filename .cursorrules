@@ -38,6 +38,9 @@ memory is CLAUDE.md and the docs/ + .ai/ knowledge base. ALWAYS consult them bef
     every new file, class, and method; add an intent + company_id tenancy note on complex/raw
     queries; explain business logic and ES-sync points. Keep comments truthful, no dead/debug
     code. Undocumented new code is an incomplete change. See docs/CODE_DOCUMENTATION_STANDARD.md.
+14. SAVE ALL AUDITS, FEEDBACK, CHANGES & SUGGESTIONS TO DOCS: Store every new document generated
+    for any audit, feedback, changes, new features, or suggestions in `docs/audit documents/`
+    (e.g. `docs/audit documents/YYYY-MM-DD-<topic>-<type>.md`) so they can be reviewed at any time.
 
 ## Watch out (known issues — see docs/V2_BugsReport and Implementation/BUG_REPORT.md, docs/SECURITY.md)
 - Active dd() calls and debug routes in code; JobApplication tenant scope is commented out

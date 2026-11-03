@@ -27,6 +27,8 @@ core rules below; full detail in docs/AI_RULES.md and docs/README.md.
     file/class/method; intent + company_id tenancy note on complex/raw queries; explain
     business logic + ES-sync. No dead/debug code. Undocumented new code = incomplete change.
     See docs/CODE_DOCUMENTATION_STANDARD.md.
+12. Save all audits, feedback, changes & suggestions: store every new document in `docs/audit documents/`
+    (e.g. `docs/audit documents/YYYY-MM-DD-<topic>-<type>.md`) so they can be reviewed at any time.
 
 ## Known issues (don't replicate): active dd() + debug routes, commented-out tenant scope
 (leak risk), 1227 unescaped {!! !!} (XSS), secrets in .env. See docs/V2_BugsReport and Implementation/BUG_REPORT.md & docs/SECURITY.md.

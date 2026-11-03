@@ -22,6 +22,7 @@ use App\Models\Country;
 use App\Models\JobCategory;
 use App\Models\User;
 use App\Services\AgencyListingService;
+use App\Services\CommercialReadModelService;
 use App\Services\CurrencyService;
 use App\Services\ElasticService;
 use App\Services\MailService;
@@ -1221,12 +1222,16 @@ After completing these steps, they will be able to start collaborating with your
         $versionKey = 'consultancyviewmore_version_user_'.$userId;
         $version = cache()->get($versionKey, 1);
         $partnerVersion = (int) cache()->get("agency_drawer_version_company_{$partnerCompanyId}", 1);
+<<<<<<< HEAD
         $cacheKeySet = 'consultancyviewmore_v31:'.$userId.':'.$version.':partner_'.$partnerCompanyId.'_v'.$partnerVersion.':'.md5(json_encode($cachePayload));
+=======
+        $cacheKeySet = 'consultancyviewmore_v21:'.$userId.':'.$version.':partner_'.$partnerCompanyId.'_v'.$partnerVersion.':'.md5(json_encode($cachePayload));
+>>>>>>> 543a6b51575ee2db7c519c66ca127e9bc51b4d00
         /* ----------------------------
         ⚡ Check DragonflyDB / Redis first (Quick Win Step 4)
         ----------------------------- */
         if (cache()->has($cacheKeySet)) {
-            return response()->json(cache()->get($cacheKeySet));
+            return cache()->get($cacheKeySet);
         }
 
         $this->countries = Country::all();
@@ -1797,173 +1802,178 @@ After completing these steps, they will be able to start collaborating with your
 
         // ── 7c. Dynamic Commercial Terms by Staffing Model (Rule 20 & Services Tab Single Source of Truth) ──
         $partnerCompany = DB::table('companies')->where('id', $partnerCompanyId)->first();
-        $agencyTerms = DB::table('agency_commercial_terms')->where('company_id', $partnerCompanyId)->first();
-        $tenantDefaultCurrencyKey = CurrencyService::getTenantCurrencyKey($partnerCompanyId);
+        $agencyTermsSpecific = DB::table('agency_commercial_terms')->where('company_id', $partnerCompanyId)->first();
+        $agencyTermsFallback = DB::table('agency_commercial_terms')->where('company_id', $company_id)->first();
+        $agencyTerms = $agencyTermsSpecific ?: $agencyTermsFallback;
+        $settingsJson = ($agencyTerms && ! empty($agencyTerms->settings_json))
+            ? (is_array($agencyTerms->settings_json) ? $agencyTerms->settings_json : json_decode($agencyTerms->settings_json, true))
+            : [];
 
-        $commRows = DB::table('commericials')
-            ->where('company_id', $partnerCompanyId)
-            ->where('status', 1)
-            ->orderBy('id', 'desc')
-            ->get();
+        $commStateDTO = CommercialReadModelService::getTenantCommercialsState($partnerCompanyId);
+        $ftDTO = $commStateDTO->fulltime;
+        $ctDTO = $commStateDTO->contract;
 
-        $contractRow = $commRows->firstWhere('commtype', 1);
-        $permanentRow = $commRows->firstWhere('commtype', 2);
+        // Intent: Sync active services strictly with agency-activated state (Rule 1, 5, 20)
+        $isContractActive = ($ctDTO && (int) $ctDTO->status === 1) || (! empty($agencyTermsSpecific) && ! empty($agencyTermsSpecific->contract_billing_model));
+        $isFulltimeActive = ($ftDTO && (int) $ftDTO->status === 1) || (! empty($agencyTermsSpecific) && ! empty($agencyTermsSpecific->fulltime_fee_model));
 
-        // 1. Contract Staffing Terms Resolution
+        // 1. Contract Staffing Terms Resolution (Synced with Hiring Services & Commercials)
         $this->contractCommercial = null;
-        if ($contractRow && (int) $contractRow->status === 1) {
-            $currencyKey = $contractRow->salary_currency;
-            if ($currencyKey === null || ($currencyKey == 4 && $tenantDefaultCurrencyKey !== 4)) {
-                $currencyKey = $tenantDefaultCurrencyKey;
-            }
-            $currCode = CurrencyService::resolveCurrencyCode($currencyKey) ?: CurrencyService::getTenantCurrency($partnerCompanyId);
-            $currSymbol = CurrencyService::getCurrencySymbol($currCode) ?: '₹';
+        if ($isContractActive) {
+            $ctRateType = $ctDTO ? (int) $ctDTO->rateType : 1;
+            $isFreeCT = ($ctRateType === 0);
+            $ctModelLabel = $ctDTO ? $ctDTO->rateTypeLabel : ($ctRateType === 2 ? 'Markup on Pay Rate' : ($ctRateType === 1 ? 'Contract Bill Rate' : 'Zero Margin (Pass-Through)'));
+            $ctHeaderLabel = $isFreeCT ? 'ZERO MARGIN' : ($ctRateType === 2 ? 'MARKUP ON PAY' : 'CONTRACT BILL RATE');
 
-            $contractDetails = DB::table('commericial_details')
-                ->where('commericial_id', $contractRow->id)
-                ->orderBy('exp', 'asc')
-                ->get();
-            $firstRate = $contractDetails->first() ? (float) $contractDetails->first()->rate : null;
+            $ctSalMode = $ctDTO ? (int) $ctDTO->salMode : 2;
+            $ctSalModeLabel = $isFreeCT ? 'At-Cost Wage Pass-Through' : match ($ctSalMode) {
+                2 => 'Hourly Contract Rate',
+                1 => 'Monthly Staffing Rate',
+                0 => 'Annual Staffing Rate',
+                default => 'Hourly Contract Rate',
+            };
+            $ctModeBadgeText = $isFreeCT ? '0% Margin' : match ($ctSalMode) {
+                2 => 'Hourly',
+                1 => 'Monthly',
+                0 => 'Annual',
+                default => 'Hourly',
+            };
 
-            $salModeLabels = [0 => 'Month', 1 => 'Year', 2 => 'Hour'];
-            $salModeText = $salModeLabels[$contractRow->sal_mode] ?? 'Month';
+            $ctCurrencyCode = $ctDTO ? $ctDTO->currencyCode : 'INR';
+            $ctCurrencySymbol = CurrencyService::getCurrencySymbol($ctCurrencyCode) ?: '₹';
 
-            $commercialRate = null;
-            if (! empty($agencyTerms->contract_rate_display) && $agencyTerms->contract_rate_display !== 'Depend upon job requirements') {
-                $commercialRate = $agencyTerms->contract_rate_display;
-            } elseif (! empty($agencyTerms->contract_rate_amount) && (float) $agencyTerms->contract_rate_amount > 0) {
-                $commercialRate = $currSymbol.number_format((float) $agencyTerms->contract_rate_amount).' / '.ucfirst($agencyTerms->contract_billing_model ?: 'Month');
-            } elseif ($firstRate !== null && $firstRate > 0) {
-                if ((int) $contractRow->rateType === 2) {
-                    $commercialRate = $firstRate.'% Markup on Bill Rate';
-                } elseif ((int) $contractRow->rateType === 1) {
-                    $commercialRate = $currSymbol.number_format($firstRate, 2).' / '.$salModeText;
-                } elseif ((int) $contractRow->rateType === 0) {
-                    $commercialRate = 'Free / No Placement Fee';
-                }
-            } elseif ((int) $contractRow->rateType === 0) {
-                $commercialRate = 'Free / No Placement Fee';
-            }
+            $ctFirstRate = ($ctDTO && ! empty($ctDTO->rates)) ? (float) data_get(collect($ctDTO->rates)->sortBy('exp')->first(), 'rate', 5.0) : 5.0;
 
-            $billingCycle = null;
-            if (! empty($agencyTerms->contract_billing_cycle)) {
-                $billingCycle = $agencyTerms->contract_billing_cycle;
-            } elseif (! empty($contractRow->billing_frequency) && $contractRow->billing_frequency !== 'one_time') {
-                $billingCycle = ucwords(str_replace('_', ' ', $contractRow->billing_frequency));
-            }
-
-            $minDuration = null;
-            if (! empty($agencyTerms->contract_min_duration_months) && (int) $agencyTerms->contract_min_duration_months > 0) {
-                $minDuration = (int) $agencyTerms->contract_min_duration_months.' Months';
+            if (! empty($settingsJson['contract_rate_amount']) && (float) $settingsJson['contract_rate_amount'] > 0) {
+                $ctDefaultRateText = $ctCurrencySymbol.' '.number_format((float) $settingsJson['contract_rate_amount']);
+                $ctDefaultRateSub = '/ '.ucfirst($agencyTerms->contract_billing_model ?? 'Month');
+            } elseif ($ctRateType === 2) {
+                $ctDefaultRateText = number_format($ctFirstRate, ($ctFirstRate == (int) $ctFirstRate ? 0 : 1)).'%';
+                $ctDefaultRateSub = 'Markup on Pay';
+            } elseif ($ctRateType === 1) {
+                $ctDefaultRateText = $ctCurrencySymbol.' '.number_format($ctFirstRate, ($ctFirstRate == (int) $ctFirstRate ? 0 : 2));
+                $ctDefaultRateSub = match ($ctSalMode) {
+                    2 => '/ Hour', 1 => '/ Month', default => '/ Month'
+                };
+            } else {
+                $ctDefaultRateText = 'Pass-Through (0%)';
+                $ctDefaultRateSub = 'Zero Margin';
             }
 
-            $replacement = null;
-            $replDays = ! empty($contractRow->replacement_period_days) ? (int) $contractRow->replacement_period_days : null;
-            if ($replDays !== null && $replDays > 0) {
-                $replType = ! empty($contractRow->replacement_type) ? ucwords(str_replace('_', ' ', $contractRow->replacement_type)) : 'Free Replacement';
-                $replacement = "{$replDays} Days {$replType}";
-            } elseif (! empty($agencyTerms->contract_replacement_policy) && $agencyTerms->contract_replacement_policy !== 'As per contract terms') {
-                $replacement = $agencyTerms->contract_replacement_policy;
-            }
+            $ctReplacementDays = $ctDTO && $ctDTO->replacementPeriodDays ? (int) $ctDTO->replacementPeriodDays : 30;
+            $ctReplacementType = $ctDTO && $ctDTO->replacementTypeLabel ? $ctDTO->replacementTypeLabel : 'Contractor Replacement';
+            $ctReplacementClause = $ctDTO && $ctDTO->replacementEligibilityLabel ? $ctDTO->replacementEligibilityLabel : 'Contractor Early Departure';
 
-            $paymentTerms = null;
-            $payDays = ! empty($contractRow->payment_terms_days) ? (int) $contractRow->payment_terms_days : (! empty($agencyTerms->contract_payment_terms_days) ? (int) $agencyTerms->contract_payment_terms_days : null);
-            if ($payDays !== null) {
-                $paymentTerms = $payDays === 0 ? 'Due Immediately' : "Net {$payDays} Days";
-            }
+            $ctPaymentDays = $ctDTO && $ctDTO->paymentTermsDays !== null ? (int) $ctDTO->paymentTermsDays : 30;
+            $ctPaymentTermsDays = ($ctPaymentDays === 0) ? 'Due Immediately' : "Net {$ctPaymentDays} Days";
 
-            $earlyTermination = null;
-            if (! empty($agencyTerms->contract_early_termination) && $agencyTerms->contract_early_termination !== 'As per contract terms') {
-                $earlyTermination = $agencyTerms->contract_early_termination;
-            }
+            $ctBillingCycle = ! empty($settingsJson['contract_billing_cycle']) ? $settingsJson['contract_billing_cycle'] : ($ctDTO ? $ctDTO->billingFrequencyLabel : 'Monthly');
+            $ctBillingTrigger = ! empty($settingsJson['contract_invoice_raising']) ? $settingsJson['contract_invoice_raising'] : ($ctDTO ? $ctDTO->billingTriggerLabel : 'Approved Timesheet');
 
-            $overtimePolicy = null;
-            if (! empty($agencyTerms->contract_overtime_policy) && $agencyTerms->contract_overtime_policy !== 'Not applicable' && $agencyTerms->contract_overtime_policy !== 'As per client terms') {
-                $overtimePolicy = $agencyTerms->contract_overtime_policy;
-            }
+            $ctMinDuration = (! empty($agencyTerms->contract_min_duration_months) && (int) $agencyTerms->contract_min_duration_months > 0)
+                ? (int) $agencyTerms->contract_min_duration_months.' Months'
+                : '3 Months';
 
-            $customTerms = ! empty($this->directClientDetail->contract_offer_terms)
-                ? trim(strip_tags($this->directClientDetail->contract_offer_terms))
-                : (! empty($partnerCompany->contract_offer_terms) ? trim(strip_tags($partnerCompany->contract_offer_terms)) : null);
+            $ctEarlyTermination = ! empty($settingsJson['contract_early_termination']) ? $settingsJson['contract_early_termination'] : 'As per contract terms';
+            $ctOvertimePolicy = ! empty($settingsJson['contract_overtime_policy']) ? $settingsJson['contract_overtime_policy'] : 'As per client terms';
+
+            $ctCountries = ($ctDTO && ! empty($ctDTO->countryNames)) ? $ctDTO->countryNames : ['India'];
 
             $this->contractCommercial = (object) [
-                'id' => $contractRow->id,
+                'id' => $ctDTO ? $ctDTO->id : 0,
                 'active' => true,
-                'commercial_rate' => $commercialRate,
-                'billing_cycle' => $billingCycle,
-                'min_duration' => $minDuration,
-                'replacement_terms' => $replacement,
-                'payment_terms' => $paymentTerms,
-                'early_termination' => $earlyTermination,
-                'overtime_policy' => $overtimePolicy,
-                'custom_terms' => $customTerms,
+                'rate_type' => $ctRateType,
+                'header_label' => $ctHeaderLabel,
+                'mode_badge' => $ctModeBadgeText,
+                'default_rate' => $ctDefaultRateText,
+                'default_rate_sub' => $ctDefaultRateSub,
+                'commercial_rate' => $ctDefaultRateText.' '.$ctDefaultRateSub,
+                'sal_mode_label' => $ctSalModeLabel,
+                'model_label' => $ctModelLabel,
+                'currency_code' => $ctCurrencyCode,
+                'currency_symbol' => $ctCurrencySymbol,
+                'replacement_days' => $ctReplacementDays,
+                'replacement_type' => $ctReplacementType,
+                'replacement_clause' => $ctReplacementClause,
+                'replacement_terms' => "{$ctReplacementDays} Days {$ctReplacementType}",
+                'payment_terms' => $ctPaymentTermsDays,
+                'billing_cycle' => $ctBillingCycle,
+                'billing_trigger' => $ctBillingTrigger,
+                'min_duration' => $ctMinDuration,
+                'early_termination' => $ctEarlyTermination,
+                'overtime_policy' => $ctOvertimePolicy,
+                'countries' => $ctCountries,
+                'bottom_note' => 'Contract staffing terms apply automatically to candidate contractor timesheets, bill rates, and monthly agency invoices.',
+                'bottom_model' => $ctModelLabel,
             ];
         }
 
-        // 2. Permanent Staffing Terms Resolution
+        // 2. Fulltime / Permanent Staffing Terms Resolution (Synced with Hiring Services & Commercials)
         $this->permanentCommercial = null;
-        if ($permanentRow && (int) $permanentRow->status === 1) {
-            $currencyKey = $permanentRow->salary_currency;
-            if ($currencyKey === null || ($currencyKey == 4 && $tenantDefaultCurrencyKey !== 4)) {
-                $currencyKey = $tenantDefaultCurrencyKey;
+        if ($isFulltimeActive) {
+            $ftRateType = $ftDTO ? (int) $ftDTO->rateType : 2;
+            $isFreeFT = ($ftRateType === 0);
+            $ftModelLabel = $ftDTO ? $ftDTO->rateTypeLabel : ($ftRateType === 2 ? 'Percentage of CTC' : ($ftRateType === 1 ? 'Fixed Placement Fee' : 'No Fee Applicable (Free Placement)'));
+            $ftHeaderLabel = $isFreeFT ? 'FREE PLACEMENT' : ($ftRateType === 1 ? 'FIXED PLACEMENT' : 'PERCENTAGE OF CTC');
+            $ftModeBadgeText = $isFreeFT ? '0% Fee' : '5 Tiers';
+
+            $ftFirstRate = ($ftDTO && ! empty($ftDTO->rates)) ? (float) data_get(collect($ftDTO->rates)->sortBy('exp')->first(), 'rate', 8.33) : 8.33;
+            if (! empty($partnerCompany->success_per) && (float) $partnerCompany->success_per > 0) {
+                $ftFirstRate = (float) $partnerCompany->success_per;
+            } elseif (! empty($agencyTerms->fulltime_success_fee_percentage) && (float) $agencyTerms->fulltime_success_fee_percentage > 0) {
+                $ftFirstRate = (float) $agencyTerms->fulltime_success_fee_percentage;
             }
-            $currCode = CurrencyService::resolveCurrencyCode($currencyKey) ?: CurrencyService::getTenantCurrency($partnerCompanyId);
-            $currSymbol = CurrencyService::getCurrencySymbol($currCode) ?: '₹';
+            $ftCurrencyCode = $ftDTO ? $ftDTO->currencyCode : 'INR';
+            $ftCurrencySymbol = CurrencyService::getCurrencySymbol($ftCurrencyCode) ?: '₹';
 
-            $permDetails = DB::table('commericial_details')
-                ->where('commericial_id', $permanentRow->id)
-                ->orderBy('exp', 'asc')
-                ->get();
-            $firstRate = $permDetails->first() ? (float) $permDetails->first()->rate : null;
-
-            $placementFee = null;
-            if ((int) $permanentRow->rateType === 1) {
-                $amt = $firstRate !== null && $firstRate > 0 ? $firstRate : (! empty($agencyTerms->fulltime_fixed_fee_amount) ? (float) $agencyTerms->fulltime_fixed_fee_amount : 0);
-                $placementFee = $currSymbol.number_format($amt).' Per Hire';
-            } elseif ((int) $permanentRow->rateType === 0) {
-                $placementFee = 'Free / No Placement Fee';
+            if ($ftRateType === 2) {
+                $ftDefaultRateText = number_format($ftFirstRate, ($ftFirstRate == (int) $ftFirstRate ? 0 : 2)).'%';
+                $ftSalModeText = 'Annual CTC';
+            } elseif ($ftRateType === 1) {
+                $ftDefaultRateText = $ftCurrencySymbol.' '.number_format($ftFirstRate, ($ftFirstRate == (int) $ftFirstRate ? 0 : 2));
+                $ftSalModeText = 'Per Hire';
             } else {
-                $pct = $firstRate !== null && $firstRate > 0 ? $firstRate : (! empty($this->directClientDetail->success_per) ? (float) $this->directClientDetail->success_per : (! empty($partnerCompany->success_per) ? (float) $partnerCompany->success_per : (! empty($agencyTerms->fulltime_success_fee_percentage) ? (float) $agencyTerms->fulltime_success_fee_percentage : 8.33)));
-                $salBasis = [0 => 'Annual CTC', 1 => 'Monthly CTC'][$permanentRow->sal_mode] ?? 'Annual CTC';
-                $placementFee = "{$pct}% of {$salBasis}";
+                $ftDefaultRateText = 'Free (0%)';
+                $ftSalModeText = 'Direct Candidate Hire';
             }
 
-            $guarantee = null;
-            $replDays = ! empty($permanentRow->replacement_period_days) ? (int) $permanentRow->replacement_period_days : (! empty($agencyTerms->fulltime_replacement_period_days) ? (int) $agencyTerms->fulltime_replacement_period_days : null);
-            if ($replDays !== null && $replDays > 0) {
-                $replType = ! empty($permanentRow->replacement_type) ? ucwords(str_replace('_', ' ', $permanentRow->replacement_type)) : 'Free Replacement';
-                $guarantee = "{$replDays} Days {$replType}";
-            }
+            $ftReplacementDays = $ftDTO && $ftDTO->replacementPeriodDays ? (int) $ftDTO->replacementPeriodDays : 90;
+            $ftReplacementType = $ftDTO && $ftDTO->replacementTypeLabel ? $ftDTO->replacementTypeLabel : 'Free Replacement';
+            $ftReplacementClause = $ftDTO && $ftDTO->replacementEligibilityLabel ? $ftDTO->replacementEligibilityLabel : 'Candidate Resignation / Early Exit';
 
-            $paymentTerms = null;
-            $payDays = ! empty($permanentRow->payment_terms_days) ? (int) $permanentRow->payment_terms_days : (! empty($agencyTerms->fulltime_payment_terms_days) ? (int) $agencyTerms->fulltime_payment_terms_days : null);
-            if ($payDays !== null) {
-                $paymentTerms = $payDays === 0 ? 'Due Immediately' : "Net {$payDays} Days";
-            }
+            $ftPaymentDays = $ftDTO && $ftDTO->paymentTermsDays !== null ? (int) $ftDTO->paymentTermsDays : 30;
+            $ftPaymentTermsDays = ($ftPaymentDays === 0) ? 'Due Immediately' : "Net {$ftPaymentDays} Days";
+            $ftBillingFrequency = $ftDTO && $ftDTO->billingFrequencyLabel ? $ftDTO->billingFrequencyLabel : 'One Time';
+            $ftBillingTrigger = $ftDTO && $ftDTO->billingTriggerLabel ? $ftDTO->billingTriggerLabel : 'Candidate Joined';
 
-            $billingTrigger = null;
-            if (! empty($permanentRow->billing_trigger)) {
-                $billingTrigger = ucwords(str_replace('_', ' ', $permanentRow->billing_trigger));
-            } elseif (! empty($agencyTerms->fulltime_invoice_raising)) {
-                $billingTrigger = $agencyTerms->fulltime_invoice_raising;
-            }
-
-            $customTerms = ! empty($this->directClientDetail->offer_terms)
-                ? trim(strip_tags($this->directClientDetail->offer_terms))
-                : (! empty($this->directClientDetail->agency_offer_terms)
-                    ? trim(strip_tags($this->directClientDetail->agency_offer_terms))
-                    : (! empty($partnerCompany->offer_terms) ? trim(strip_tags($partnerCompany->offer_terms)) : null));
+            $ftCountries = ($ftDTO && ! empty($ftDTO->countryNames)) ? $ftDTO->countryNames : ['India'];
 
             $this->permanentCommercial = (object) [
-                'id' => $permanentRow->id,
+                'id' => $ftDTO ? $ftDTO->id : 0,
                 'active' => true,
-                'placement_fee' => $placementFee,
-                'guarantee_period' => $guarantee,
-                'payment_terms' => $paymentTerms,
-                'billing_trigger' => $billingTrigger,
-                'custom_terms' => $customTerms,
+                'rate_type' => $ftRateType,
+                'header_label' => $ftHeaderLabel,
+                'mode_badge' => $ftModeBadgeText,
+                'default_rate' => $ftDefaultRateText,
+                'default_rate_sub' => 'Default Rate',
+                'placement_fee' => $ftDefaultRateText.' of '.$ftSalModeText,
+                'sal_mode_label' => $ftSalModeText,
+                'model_label' => $ftModelLabel,
+                'currency_code' => $ftCurrencyCode,
+                'currency_symbol' => $ftCurrencySymbol,
+                'replacement_days' => $ftReplacementDays,
+                'replacement_type' => $ftReplacementType,
+                'replacement_clause' => $ftReplacementClause,
+                'guarantee_period' => "{$ftReplacementDays} Days {$ftReplacementType}",
+                'payment_terms' => $ftPaymentTermsDays,
+                'billing_frequency' => $ftBillingFrequency,
+                'billing_trigger' => $ftBillingTrigger,
+                'countries' => $ftCountries,
+                'bottom_note' => 'Fulltime placement commercial terms bind automatically to agency agreements, shared job requisitions, and candidate submissions.',
+                'bottom_model' => ($ftRateType === 2) ? 'One-time Placement Fee' : $ftModelLabel,
             ];
         }
+        $this->fulltimeCommercial = $this->permanentCommercial;
 
         $this->hasContractStaffing = ! empty($this->contractCommercial);
         $this->hasPermanentStaffing = ! empty($this->permanentCommercial);

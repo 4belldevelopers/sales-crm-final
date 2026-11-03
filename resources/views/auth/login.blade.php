@@ -1,6 +1,9 @@
 @extends('layouts.metronic_front_app')
 
 <?php
+$isTeamInvite = isset($registrationContext) && ($registrationContext['context'] ?? '') === \App\Services\RegistrationContextResolver::CONTEXT_TEAM;
+$isAgencyInvite = isset($registrationContext) && ($registrationContext['context'] ?? '') === \App\Services\RegistrationContextResolver::CONTEXT_AGENCY;
+
 $isSignup = (isset($initialMode) && $initialMode === 'signup') 
     || request()->routeIs('register') 
     || request('mode') === 'signup' 
@@ -8,6 +11,8 @@ $isSignup = (isset($initialMode) && $initialMode === 'signup')
 
 if (session('status')) {
     $activeState = 'recover';
+} elseif ($isTeamInvite) {
+    $activeState = 'team_invite';
 } elseif ($isSignup) {
     $activeState = 'signup';
 } else {
@@ -16,10 +21,19 @@ if (session('status')) {
 
 $loginStyle   = ($activeState === 'login') ? '' : 'display:none;';
 $signupStyle  = ($activeState === 'signup') ? '' : 'display:none;';
+$teamStyle    = ($activeState === 'team_invite') ? '' : 'display:none;';
 $recoverStyle = ($activeState === 'recover') ? '' : 'display:none;';
 ?>
 
-<title id="jw-page-title">{{ $activeState === 'signup' ? 'Create your Jero.works account' : 'Sign In - jero.works' }}</title>
+<title id="jw-page-title">
+    @if($activeState === 'team_invite')
+        Join {{ $registrationContext['tenant']['name'] ?? 'Organization' }} - Jero.works
+    @elseif($activeState === 'signup')
+        Create your Jero.works account
+    @else
+        Sign In - jero.works
+    @endif
+</title>
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -569,6 +583,110 @@ select.jw-inp option {
     color: var(--jw-navy) !important;
 }
 
+/* ==========================================================================
+   STATE 2-TEAM: Team Member Invitation Activation Card (Enterprise Tier)
+   15.6" Screen Fit | WCAG 2.1 AA | Read-only Identity | Auto-Accept TOC
+   ========================================================================== */
+.jw-card-team-invite {
+    background: linear-gradient(180deg, #f0f6ff 0%, #f8faff 42%, #ffffff 100%) !important;
+    border: 1.5px solid #bfdbfe !important;
+    border-radius: 20px !important;
+    box-shadow: 0 20px 48px rgba(37, 99, 235, 0.08), 0 2px 8px rgba(37, 99, 235, 0.04) !important;
+    padding: clamp(18px, 2.2vh, 26px) clamp(22px, 2.5vw, 32px) !important;
+    position: relative;
+    overflow: hidden;
+}
+.jw-card-team-invite::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, #2563eb 0%, #6366f1 50%, #3b82f6 100%);
+}
+.jw-card-team-invite h2 {
+    font-size: 22px !important;
+    margin: 0 0 4px !important;
+    line-height: 1.25 !important;
+}
+.jw-card-team-invite .sub {
+    font-size: 12.5px !important;
+    margin: 2px 0 14px !important;
+    line-height: 1.4 !important;
+    color: #475467 !important;
+}
+.jw-card-team-invite .jw-field {
+    margin-bottom: 10px !important;
+}
+.jw-card-team-invite .jw-field label,
+.jw-card-team-invite .jw-field-row label,
+.jw-card-team-invite .jero-phone-label {
+    margin: 0 0 4px !important;
+    font-size: 11.5px !important;
+    font-weight: 700 !important;
+    color: var(--jw-navy) !important;
+}
+.jw-card-team-invite .jw-inp {
+    height: 42px !important;
+    font-size: 13px !important;
+    border-radius: 8px !important;
+    padding: 0 40px 0 38px !important;
+}
+.jw-card-team-invite .jw-iw .il {
+    left: 12px !important;
+}
+.jw-card-team-invite .jw-iw .ir,
+.jw-card-team-invite .jw-iw .ok-mark {
+    right: 12px !important;
+}
+.jw-card-team-invite .jw-iw svg {
+    width: 17px !important;
+    height: 17px !important;
+}
+.jw-card-team-invite .jero-phone-field-group {
+    margin-bottom: 0 !important;
+}
+.jw-card-team-invite .jero-phone-input-wrap {
+    height: 42px !important;
+    min-height: 42px !important;
+    max-height: 42px !important;
+    border-radius: 8px !important;
+    border: 1.5px solid #d7ddea !important;
+}
+.jw-card-team-invite .jero-phone-input-wrap:focus-within {
+    border-color: var(--jw-blue) !important;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, .11) !important;
+}
+.jw-card-team-invite .jero-phone-native-input {
+    font-size: 13px !important;
+    height: 40px !important;
+    color: var(--jw-navy) !important;
+}
+.jw-card-team-invite .jero-phone-trigger {
+    padding: 0 8px 0 10px !important;
+    font-size: 12.5px !important;
+}
+.jw-card-team-invite .jw-pwd-strength-bar {
+    margin-top: 5px !important;
+    height: 3px !important;
+}
+.jw-card-team-invite .jw-pwd-hint {
+    margin-top: 3px !important;
+    font-size: 10.5px !important;
+}
+.jw-card-team-invite .jw-btn {
+    height: 46px !important;
+    font-size: 15px !important;
+    border-radius: 8px !important;
+    margin-top: 6px !important;
+    box-shadow: 0 8px 20px rgba(88, 74, 234, .24) !important;
+}
+.jw-card-team-invite .jw-switch-row {
+    margin-top: 10px !important;
+    font-size: 12px !important;
+}
+
 /* Password strength bar */
 .jw-pwd-strength-bar {
     display: flex;
@@ -952,9 +1070,9 @@ select.jw-inp option {
                 <span>AI Recruitment Platform</span>
             </a>
             <div class="jw-account-cta">
-                <span id="jw-top-cta-text">{{ $activeState === 'signup' ? 'Already have an account?' : 'New to Jero.works?' }}</span>
-                <button type="button" class="jw-create-btn" id="jw-top-switch-btn" onclick="jwSwitchAuth('{{ $activeState === 'signup' ? 'login' : 'signup' }}')">
-                    <span id="jw-top-btn-label">{{ $activeState === 'signup' ? 'Sign In' : 'Create Free Account' }}</span>
+                <span id="jw-top-cta-text">{{ $activeState === 'signup' || $activeState === 'team_invite' ? 'Already have an account?' : 'New to Jero.works?' }}</span>
+                <button type="button" class="jw-create-btn" id="jw-top-switch-btn" onclick="jwSwitchAuth('{{ $activeState === 'signup' || $activeState === 'team_invite' ? 'login' : 'signup' }}')">
+                    <span id="jw-top-btn-label">{{ $activeState === 'signup' || $activeState === 'team_invite' ? 'Sign In' : 'Create Free Account' }}</span>
                     <svg id="jw-top-btn-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                         <path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                     </svg>
@@ -1233,6 +1351,184 @@ select.jw-inp option {
                     </div>
                 </form>
 
+                <!-- STATE 2-TEAM: TEAM MEMBER ACTIVATION CARD -->
+                <form class="jw-card-form jw-fade-enter jw-card-team-invite" novalidate id="kt_team_activate_form" action="{{ route('register.activate') }}" method="post" style="{{ $teamStyle }}">
+                    @csrf
+                    <input type="hidden" name="invitation_id" value="{{ $registrationContext['invitation_id'] ?? '' }}">
+                    @if(isset($registrationContext['invitation_id']))
+                        <input type="hidden" name="invitation_envelope" value="{{ Crypt::encrypt([
+                            'invitation_id' => $registrationContext['invitation_id'],
+                            'tenant_id' => $registrationContext['tenant']['id'] ?? 0,
+                            'session_nonce' => bin2hex(random_bytes(16)),
+                            'expires_at' => now()->addHours(2)->timestamp
+                        ]) }}">
+                    @endif
+                    @if(request()->has('token'))
+                        <input type="hidden" name="token" value="{{ request('token') }}">
+                    @endif
+                    
+                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; flex-wrap: wrap; gap: 8px;">
+                        <span style="display: inline-flex; align-items: center; gap: 5px; padding: 3px 9px; background: #eff6ff; color: #2563eb; border: 1px solid #bfdbfe; border-radius: 999px; font-size: 11px; font-weight: 600;">
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="9" cy="7" r="4" stroke="currentColor" stroke-width="2"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                            Team Invitation
+                        </span>
+                        <span style="display: inline-flex; align-items: center; padding: 2px 8px; background: #f8fafc; color: #475467; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 11px; font-weight: 600;">
+                            Role: {{ $registrationContext['member']['role_name'] ?? 'Team Member' }}
+                        </span>
+                    </div>
+
+                    <h2>Join {{ $registrationContext['tenant']['name'] ?? 'Your Organization' }} 👋</h2>
+                    <p class="sub">Set up your password to activate your account and access the workspace.</p>
+
+                    <!-- Dynamic Error Alert Box -->
+                    <div class="jw-alert jw-alert-danger" id="jw_team_alert" style="display:none;" role="alert"></div>
+
+                    <!-- Field 1: Full Name (Immutable / Assigned by Admin) -->
+                    <div class="jw-field">
+                        <div class="jw-field-row" style="margin-bottom: 4px;">
+                            <label for="jw-team-name">Full Name</label>
+                            <span style="display: inline-flex; align-items: center; gap: 4px; padding: 2px 7px; background: #f1f5f9; color: #475467; border: 1px solid #e2e8f0; border-radius: 999px; font-size: 10px; font-weight: 600;">
+                                <svg width="10" height="10" viewBox="0 0 24 24" fill="none"><rect x="3" y="11" width="18" height="11" rx="2" stroke="currentColor" stroke-width="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4" stroke="currentColor" stroke-width="2"/></svg>
+                                Assigned by Admin
+                            </span>
+                        </div>
+                        <div class="jw-iw">
+                            <span class="il" aria-hidden="true">
+                                <svg width="17" height="17" viewBox="0 0 24 24" fill="none">
+                                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                                    <circle cx="12" cy="7" r="4" stroke="currentColor" stroke-width="1.8"/>
+                                </svg>
+                            </span>
+                            <input class="jw-inp" type="text" name="name" id="jw-team-name" value="{{ $registrationContext['member']['name'] ?? old('name', '') }}" readonly style="background-color: #f8fafc; color: #334155; cursor: not-allowed; border-color: #cbd5e1; font-weight: 600;" />
+                            <span class="ok-mark" style="display:flex;" aria-hidden="true">
+                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
+                                    <rect x="3" y="11" width="18" height="11" rx="2" fill="#e2e8f0" stroke="#94a3b8" stroke-width="1.8"/>
+                                    <path d="M7 11V7a5 5 0 0 1 10 0v4" stroke="#94a3b8" stroke-width="1.8"/>
+                                </svg>
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Field 2: Work Email Address (Immutable / Bound to Invitation) -->
+                    <div class="jw-field">
+                        <div class="jw-field-row" style="margin-bottom: 4px;">
+                            <label for="jw-team-email">Work Email Address</label>
+                            <span class="jw-domain-tag corporate" style="font-size: 10px; padding: 1px 7px;">Verified Invitation ✓</span>
+                        </div>
+                        <div class="jw-iw">
+                            <span class="il" aria-hidden="true">
+                                <svg width="17" height="17" viewBox="0 0 20 20" fill="none">
+                                    <rect x="2.2" y="4.5" width="15.6" height="11" rx="2.2" stroke="currentColor" stroke-width="1.7"/>
+                                    <path d="M3 7.2l7 5 7-5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+                                </svg>
+                            </span>
+                            <input class="jw-inp" type="email" name="email" id="jw-team-email" value="{{ $registrationContext['member']['email'] ?? '' }}" readonly style="background-color: #f8fafc; color: #334155; cursor: not-allowed; border-color: #cbd5e1; font-weight: 500;" />
+                            <span class="ok-mark" style="display:flex;" aria-hidden="true">
+                                <svg width="15" height="15" viewBox="0 0 18 18" fill="none">
+                                    <circle cx="9" cy="9" r="8.4" fill="#16B364"/>
+                                    <path d="M5 9l3 3 5-5.5" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                                </svg>
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Field 3: Phone Number (Optional) -->
+                    <div class="jw-field">
+                        <x-jero-phone-input
+                            id="team_mobile"
+                            name="mobile"
+                            countryCodeName="calling_code"
+                            countryCodeId="team_calling_code"
+                            label="Phone Number (Optional)"
+                            placeholder="Enter mobile number"
+                            :required="false"
+                            :value="old('mobile', $registrationContext['member']['mobile'] ?? '')"
+                            :countryCode="old('calling_code', $registrationContext['member']['calling_code'] ?? '')"
+                        />
+                    </div>
+
+                    <!-- Field 4: Create Password -->
+                    <div class="jw-field">
+                        <label for="jw-team-pwd">Create Password</label>
+                        <div class="jw-iw">
+                            <span class="il" aria-hidden="true">
+                                <svg width="17" height="17" viewBox="0 0 20 20" fill="none">
+                                    <rect x="3.3" y="8.7" width="13.4" height="8.2" rx="2.1" stroke="currentColor" stroke-width="1.7"/>
+                                    <path d="M6.6 8.7V6.4a3.4 3.4 0 0 1 6.8 0v2.3" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+                                    <circle cx="10" cy="12.9" r="1.25" fill="currentColor"/>
+                                </svg>
+                            </span>
+                            <input class="jw-inp" type="password" name="password" id="jw-team-pwd" placeholder="Enter at least 8 characters" autocomplete="new-password" required/>
+                            <span class="ir" onclick="jwTeamEye('pwd')" role="button" tabindex="0" aria-label="Toggle password visibility">
+                                <svg id="jw-team-eye-pwd" width="17" height="17" viewBox="0 0 20 20" fill="none">
+                                    <path d="M2 10s3-5.6 8-5.6S18 10 18 10s-3 5.6-8 5.6S2 10 2 10Z" stroke="currentColor" stroke-width="1.7"/>
+                                    <circle cx="10" cy="10" r="2.4" stroke="currentColor" stroke-width="1.7"/>
+                                </svg>
+                            </span>
+                        </div>
+                        <div class="jw-pwd-strength-bar" id="jw_team_pwd_strength_bar">
+                            <div class="jw-pwd-seg" id="jw_team_seg_1"></div>
+                            <div class="jw-pwd-seg" id="jw_team_seg_2"></div>
+                            <div class="jw-pwd-seg" id="jw_team_seg_3"></div>
+                            <div class="jw-pwd-seg" id="jw_team_seg_4"></div>
+                        </div>
+                        <div class="jw-pwd-hint" id="jw_team_pwd_hint">Use 8 or more characters with letters & numbers</div>
+                        <span class="jw-err" id="jw-team-pwd-err" style="display:none;"></span>
+                    </div>
+
+                    <!-- Field 5: Confirm Password -->
+                    <div class="jw-field">
+                        <label for="jw-team-pwd-confirm">Confirm Password</label>
+                        <div class="jw-iw">
+                            <span class="il" aria-hidden="true">
+                                <svg width="17" height="17" viewBox="0 0 20 20" fill="none">
+                                    <rect x="3.3" y="8.7" width="13.4" height="8.2" rx="2.1" stroke="currentColor" stroke-width="1.7"/>
+                                    <path d="M6.6 8.7V6.4a3.4 3.4 0 0 1 6.8 0v2.3" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+                                    <circle cx="10" cy="12.9" r="1.25" fill="currentColor"/>
+                                </svg>
+                            </span>
+                            <input class="jw-inp" type="password" name="password_confirmation" id="jw-team-pwd-confirm" placeholder="Confirm your password" autocomplete="new-password" required/>
+                            <span class="ir" onclick="jwTeamEye('confirm')" role="button" tabindex="0" aria-label="Toggle password visibility">
+                                <svg id="jw-team-eye-confirm" width="17" height="17" viewBox="0 0 20 20" fill="none">
+                                    <path d="M2 10s3-5.6 8-5.6S18 10 18 10s-3 5.6-8 5.6S2 10 2 10Z" stroke="currentColor" stroke-width="1.7"/>
+                                    <circle cx="10" cy="10" r="2.4" stroke="currentColor" stroke-width="1.7"/>
+                                </svg>
+                            </span>
+                        </div>
+                        <span class="jw-err" id="jw-team-pwd-confirm-err" style="display:none;"></span>
+                    </div>
+
+                    <!-- Auto-Accepted Terms of Service -->
+                    <input type="hidden" name="toc" value="1">
+
+                    <!-- Submit Button -->
+                    <button type="submit" id="kt_team_activate_submit" class="jw-btn">
+                        <span class="indicator-label">Activate Account & Join Workspace</span>
+                        <span class="arrow" aria-hidden="true">
+                            <svg width="18" height="18" viewBox="0 0 20 20" fill="none">
+                                <path d="M3 10h13M11 5l5 5-5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                        </span>
+                        <span class="indicator-progress" style="display:none" aria-live="polite">
+                            Activating Account...&nbsp;<span class="spinner-border spinner-border-sm align-middle"></span>
+                        </span>
+                    </button>
+
+                    <!-- Legal Copy: Terms Auto-Accepted -->
+                    <p style="font-size: 11px; color: #64748b; text-align: center; margin: 10px 0 0; line-height: 1.45;">
+                        By clicking <strong style="color: #0b1f44;">Activate Account & Join Workspace</strong>, you agree to our 
+                        <a href="/terms" target="_blank" style="color: #2563eb; text-decoration: none; font-weight: 500;">Terms & Conditions</a> 
+                        and 
+                        <a href="/privacy-policy" target="_blank" style="color: #2563eb; text-decoration: none; font-weight: 500;">Privacy Policy</a>.
+                    </p>
+
+                    <!-- In-Place Switch to Login -->
+                    <div class="jw-switch-row">
+                        <span>Already have an account?</span>
+                        <a href="javascript:void(0);" onclick="jwSwitchAuth('login')" class="jw-link-switch">Sign In →</a>
+                    </div>
+                </form>
+
                 <!-- STATE 3: POST-SIGNUP VERIFICATION CONFIRMATION -->
                 <div class="jw-card-form jw-fade-enter" id="jw_signup_success_card" style="display:none;">
                     <div style="text-align:center; padding: 12px 0 16px;">
@@ -1293,10 +1589,11 @@ select.jw-inp option {
 
 @push('scripts')
 <script>
-// State management & In-Place switching between Login, Signup, Recover
+// State management & In-Place switching between Login, Signup, Recover, Team Invite
 function jwSwitchAuth(mode) {
     var loginForm   = document.getElementById('kt_sign_in_form1');
     var signupForm  = document.getElementById('kt_sign_up_form');
+    var teamForm    = document.getElementById('kt_team_activate_form');
     var recoverForm = document.getElementById('recoverform');
     var successCard = document.getElementById('jw_signup_success_card');
 
@@ -1308,6 +1605,7 @@ function jwSwitchAuth(mode) {
     // Hide all
     if (loginForm)   loginForm.style.display = 'none';
     if (signupForm)  signupForm.style.display = 'none';
+    if (teamForm)    teamForm.style.display = 'none';
     if (recoverForm) recoverForm.style.display = 'none';
     if (successCard) successCard.style.display = 'none';
 
@@ -1323,6 +1621,17 @@ function jwSwitchAuth(mode) {
         if (topSwitchBtn) topSwitchBtn.setAttribute('onclick', "jwSwitchAuth('login')");
         if (pageTitle)   pageTitle.textContent = 'Create your Jero.works account';
         try { history.pushState({ authMode: 'signup' }, '', '{{ route("register") }}'); } catch(e) {}
+    } else if (mode === 'team_invite') {
+        if (teamForm) {
+            teamForm.style.display = 'block';
+            teamForm.classList.remove('jw-fade-enter');
+            void teamForm.offsetWidth;
+            teamForm.classList.add('jw-fade-enter');
+        }
+        if (topCtaText)  topCtaText.textContent = 'Already have an account?';
+        if (topBtnLabel) topBtnLabel.textContent = 'Sign In';
+        if (topSwitchBtn) topSwitchBtn.setAttribute('onclick', "jwSwitchAuth('login')");
+        if (pageTitle)   pageTitle.textContent = 'Join {{ addslashes($registrationContext['tenant']['name'] ?? 'Organization') }} - Jero.works';
     } else if (mode === 'recover') {
         if (recoverForm) {
             recoverForm.style.display = 'block';
@@ -1355,11 +1664,19 @@ window.addEventListener('popstate', function (e) {
     if (e.state && e.state.authMode) {
         jwSwitchAuth(e.state.authMode);
     } else if (window.location.pathname.indexOf('register') !== -1) {
-        jwSwitchAuth('signup');
+        jwSwitchAuth('{{ $activeState === "team_invite" ? "team_invite" : "signup" }}');
     } else {
         jwSwitchAuth('login');
     }
 });
+
+// Client-side URL token scrubbing: removes raw token from address bar cleanly without round-trip redirect (INV-01)
+if (window.history && window.history.replaceState && window.location.search.indexOf('token=') !== -1) {
+    var cleanUrl = window.location.protocol + "//" + window.location.host + window.location.pathname;
+    try {
+        window.history.replaceState({ authMode: '{{ $activeState }}' }, '', cleanUrl);
+    } catch(e) {}
+}
 
 // Switch from domain collision card to login with prefilled email
 function jwSwitchToLoginWithEmail() {
@@ -1399,6 +1716,21 @@ function jwEye() {
 
 function jwEyeSignup() {
     var i = document.getElementById('jw-signup-pwd'), e = document.getElementById('jw-signup-eye');
+    if (!i || !e) return;
+    if (i.type === 'password') {
+        i.type = 'text';
+        e.innerHTML = '<path d="M2 10s3-5.6 8-5.6S18 10 18 10s-3 5.6-8 5.6S2 10 2 10Z" stroke="currentColor" stroke-width="1.7"/><circle cx="10" cy="10" r="2.4" stroke="currentColor" stroke-width="1.7"/><line x1="2.5" y1="2.5" x2="17.5" y2="17.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>';
+        e.setAttribute('aria-label', 'Hide password');
+    } else {
+        i.type = 'password';
+        e.innerHTML = '<path d="M2 10s3-5.6 8-5.6S18 10 18 10s-3 5.6-8 5.6S2 10 2 10Z" stroke="currentColor" stroke-width="1.7"/><circle cx="10" cy="10" r="2.4" stroke="currentColor" stroke-width="1.7"/>';
+        e.setAttribute('aria-label', 'Show password');
+    }
+}
+
+function jwTeamEye(which) {
+    var i = document.getElementById(which === 'pwd' ? 'jw-team-pwd' : 'jw-team-pwd-confirm');
+    var e = document.getElementById(which === 'pwd' ? 'jw-team-eye-pwd' : 'jw-team-eye-confirm');
     if (!i || !e) return;
     if (i.type === 'password') {
         i.type = 'text';
@@ -1723,6 +2055,156 @@ document.addEventListener('DOMContentLoaded', function () {
                     signupAlert.style.display = 'block';
                 }
                 resetSignupBtn();
+            });
+        });
+    }
+
+    // Team Member Activation: Password Strength Evaluator (User RAM)
+    var teamPwd = document.getElementById('jw-team-pwd');
+    var tseg1 = document.getElementById('jw_team_seg_1');
+    var tseg2 = document.getElementById('jw_team_seg_2');
+    var tseg3 = document.getElementById('jw_team_seg_3');
+    var tseg4 = document.getElementById('jw_team_seg_4');
+    var tpwdHint = document.getElementById('jw_team_pwd_hint');
+
+    function evalTeamPasswordStrength() {
+        if (!teamPwd) return;
+        var p = teamPwd.value;
+        var score = 0;
+        if (p.length >= 8) score++;
+        if (p.length >= 12) score++;
+        if (/[A-Z]/.test(p) && /[a-z]/.test(p)) score++;
+        if (/[0-9]/.test(p) || /[^A-Za-z0-9]/.test(p)) score++;
+
+        [tseg1, tseg2, tseg3, tseg4].forEach(function(s) { if (s) s.className = 'jw-pwd-seg'; });
+
+        if (p.length === 0) {
+            if (tpwdHint) tpwdHint.textContent = 'Use 8 or more characters with letters & numbers';
+            return;
+        }
+
+        if (score === 1) {
+            if (tseg1) tseg1.classList.add('weak');
+            if (tpwdHint) tpwdHint.textContent = 'Too weak (minimum 8 characters)';
+        } else if (score === 2) {
+            if (tseg1) tseg1.classList.add('fair');
+            if (tseg2) tseg2.classList.add('fair');
+            if (tpwdHint) tpwdHint.textContent = 'Fair password — add uppercase or numbers';
+        } else if (score === 3) {
+            if (tseg1) tseg1.classList.add('good');
+            if (tseg2) tseg2.classList.add('good');
+            if (tseg3) tseg3.classList.add('good');
+            if (tpwdHint) tpwdHint.textContent = 'Good password';
+        } else if (score >= 4) {
+            if (tseg1) tseg1.classList.add('strong');
+            if (tseg2) tseg2.classList.add('strong');
+            if (tseg3) tseg3.classList.add('strong');
+            if (tseg4) tseg4.classList.add('strong');
+            if (tpwdHint) tpwdHint.textContent = 'Strong enterprise-grade password';
+        }
+    }
+    if (teamPwd) teamPwd.addEventListener('input', evalTeamPasswordStrength);
+
+    // Team Member Activation: AJAX Submission Handler with Idempotency Guarantee
+    var teamForm = document.getElementById('kt_team_activate_form');
+    var teamBtn  = document.getElementById('kt_team_activate_submit');
+    var teamAlert= document.getElementById('jw_team_alert');
+
+    function resetTeamBtn() {
+        if (!teamBtn) return;
+        teamBtn.removeAttribute('disabled');
+        var label = teamBtn.querySelector('.indicator-label');
+        var prog  = teamBtn.querySelector('.indicator-progress');
+        var arrow = teamBtn.querySelector('.arrow');
+        if (label) label.style.display = 'inline';
+        if (arrow) arrow.style.display = 'inline-flex';
+        if (prog)  prog.style.display = 'none';
+    }
+
+    if (teamForm && teamBtn) {
+        teamForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            if (teamAlert) { teamAlert.style.display = 'none'; teamAlert.textContent = ''; }
+
+            var pwdInput = document.getElementById('jw-team-pwd');
+            var pwdConfirmInput = document.getElementById('jw-team-pwd-confirm');
+
+            if (!pwdInput || pwdInput.value.length < 8) {
+                if (teamAlert) { teamAlert.textContent = 'Password must be at least 8 characters long.'; teamAlert.style.display = 'block'; }
+                if (pwdInput) pwdInput.focus();
+                return;
+            }
+            if (!pwdConfirmInput || pwdConfirmInput.value !== pwdInput.value) {
+                if (teamAlert) { teamAlert.textContent = 'Password confirmation does not match.'; teamAlert.style.display = 'block'; }
+                if (pwdConfirmInput) pwdConfirmInput.focus();
+                return;
+            }
+
+            // Spinner state
+            var label = teamBtn.querySelector('.indicator-label');
+            var prog  = teamBtn.querySelector('.indicator-progress');
+            var arrow = teamBtn.querySelector('.arrow');
+            if (label) label.style.display = 'none';
+            if (arrow) arrow.style.display = 'none';
+            if (prog)  prog.style.display = 'inline-flex';
+            teamBtn.setAttribute('disabled', 'disabled');
+
+            // Client-generated UUID for Idempotency
+            var idempotencyKey = 'team-act-' + (window.crypto && crypto.randomUUID ? crypto.randomUUID() : (Date.now() + '-' + Math.random().toString(36).substring(2)));
+
+            var formData = new FormData(teamForm);
+
+            fetch("{{ route('register.activate') }}", {
+                method: 'POST',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                    'Idempotency-Key': idempotencyKey,
+                    'X-Idempotency-Key': idempotencyKey
+                },
+                body: formData
+            })
+            .then(async function(res) {
+                var data = await res.json().catch(function() { return {}; });
+                if (res.ok && (data.status === 'success' || res.status === 201)) {
+                    if (typeof Swal !== 'undefined') {
+                        Swal.fire({
+                            text: data.message || 'Account activated successfully! Redirecting...',
+                            icon: 'success',
+                            buttonsStyling: false,
+                            confirmButtonText: 'Continue',
+                            customClass: {
+                                confirmButton: 'btn btn-primary'
+                            }
+                        }).then(function() {
+                            window.location.href = data.redirect_url || '/service_company/dashboard';
+                        });
+                    } else {
+                        window.location.href = data.redirect_url || '/service_company/dashboard';
+                    }
+                } else if (res.status === 422 && data.errors) {
+                    var keys = Object.keys(data.errors);
+                    var firstMsg = data.errors[keys[0]][0];
+                    if (teamAlert) {
+                        teamAlert.textContent = firstMsg;
+                        teamAlert.style.display = 'block';
+                    }
+                    resetTeamBtn();
+                } else {
+                    if (teamAlert) {
+                        teamAlert.textContent = data.message || 'Unable to activate account. The invitation link may have expired or already been used.';
+                        teamAlert.style.display = 'block';
+                    }
+                    resetTeamBtn();
+                }
+            })
+            .catch(function() {
+                if (teamAlert) {
+                    teamAlert.textContent = 'A network error occurred. Please check your connection and retry.';
+                    teamAlert.style.display = 'block';
+                }
+                resetTeamBtn();
             });
         });
     }
