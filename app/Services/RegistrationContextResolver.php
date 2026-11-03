@@ -80,6 +80,17 @@ class RegistrationContextResolver
     {
         $company = Company::withoutGlobalScopes()->find($invitation->company_id);
         $role = $invitation->role;
+        $user = \App\Models\User::withoutGlobalScopes()
+            ->where('email', $invitation->email)
+            ->where('company_id', $invitation->company_id)
+            ->first();
+        if (! $user) {
+            $user = \App\Models\User::withoutGlobalScopes()->where('email', $invitation->email)->first();
+        }
+
+        $memberName = $user->name ?? '';
+        $memberMobile = $user->mobile ?? '';
+        $memberCallingCode = $user->calling_code ?? '+91';
 
         return [
             'context' => self::CONTEXT_TEAM,
@@ -92,7 +103,10 @@ class RegistrationContextResolver
                 'logo' => $company->logo_url ?? null,
             ],
             'member' => [
+                'name' => $memberName,
                 'email' => $invitation->email,
+                'mobile' => $memberMobile,
+                'calling_code' => $memberCallingCode,
                 'role_name' => $role->display_name ?? $role->name ?? 'Team Member',
                 'role_id' => $invitation->role_id,
             ],
@@ -102,15 +116,22 @@ class RegistrationContextResolver
                         'type' => 'text',
                         'label' => 'Full Name',
                         'required' => true,
-                        'editable' => true,
-                        'placeholder' => 'Enter your full name',
+                        'editable' => false, // Immutable server-authoritative
+                        'value' => $memberName,
                     ],
                     'email' => [
                         'type' => 'email',
-                        'label' => 'Email Address',
+                        'label' => 'Work Email Address',
                         'required' => true,
                         'editable' => false, // Immutable server-authoritative
                         'value' => $invitation->email,
+                    ],
+                    'mobile' => [
+                        'type' => 'tel',
+                        'label' => 'Phone Number',
+                        'required' => false,
+                        'editable' => true,
+                        'value' => $memberMobile,
                     ],
                     'password' => [
                         'type' => 'password',
@@ -122,12 +143,6 @@ class RegistrationContextResolver
                     'password_confirmation' => [
                         'type' => 'password',
                         'label' => 'Confirm Password',
-                        'required' => true,
-                        'editable' => true,
-                    ],
-                    'toc' => [
-                        'type' => 'checkbox',
-                        'label' => 'I accept the Terms & Conditions and Privacy Policy',
                         'required' => true,
                         'editable' => true,
                     ],
