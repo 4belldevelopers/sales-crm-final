@@ -327,11 +327,22 @@ class ClientPerformanceScopeResolver
                     'candidate_filter' => [
                         'bool' => [
                             'must' => [
-                                ['terms' => ['jobId' => ! empty($sharedJobIds) ? $sharedJobIds : [-1]]],
                                 [
                                     'bool' => [
                                         'should' => [
-                                            ['term' => ['thirdparty_company_id' => $clientId]],
+                                            ['term' => ['ClientComID' => $clientId]],
+                                            [
+                                                'bool' => [
+                                                    'must' => [
+                                                        ['term' => ['thirdparty_company_id' => $clientId]],
+                                                    ],
+                                                    'must_not' => [
+                                                        ['term' => ['ClientComID' => 0]],
+                                                    ],
+                                                ],
+                                            ],
+                                            ['term' => ['agency_id' => $clientId]],
+                                            ['term' => ['agency_company_id' => $clientId]],
                                             ['term' => ['from_company_id' => $clientId]],
                                         ],
                                         'minimum_should_match' => 1,
@@ -344,6 +355,7 @@ class ClientPerformanceScopeResolver
                                             ['term' => ['to_company_id' => $authCompanyId]],
                                             ['term' => ['ClientComID' => $authCompanyId]],
                                             ['term' => ['job_company_id' => $authCompanyId]],
+                                            ['term' => ['client_comapny_id' => $authCompanyId]],
                                         ],
                                         'minimum_should_match' => 1,
                                     ],
@@ -352,7 +364,12 @@ class ClientPerformanceScopeResolver
                             ],
                             'must_not' => [
                                 ['terms' => ['job_master_status_id' => [8, 9, '8', '9']]],
-                                ['terms' => ['master_status_id' => [8, 9, '8', '9']]],
+                                [
+                                    'bool' => [
+                                        'must' => [['terms' => ['master_status_id' => [8, 9, '8', '9']]]],
+                                        'must_not' => [['range' => ['job_master_status_id' => ['gt' => 0]]]],
+                                    ],
+                                ],
                             ],
                         ],
                     ],

@@ -3143,6 +3143,7 @@
         $.ajax({
             url: url,
             type: 'GET',
+            cache: false,
             success: function(response) {
                 if (response.status === 'success' && response.view) {
                     $('#kt_activitiesDirectClient_body').html(response.view);

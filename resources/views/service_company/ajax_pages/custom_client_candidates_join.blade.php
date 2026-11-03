@@ -22,7 +22,8 @@
         @foreach ($data as $rowArr)
             @php
                 $row = (object) $rowArr;
-                $row->thirdparty_company_id = $row->ClientComID ?? 0;
+                $row->thirdparty_company_id = $row->thirdparty_company_id ?? ($row->ClientComID ?? 0);
+                $row->ClientComID = $row->ClientComID ?? ($row->thirdparty_company_id ?? 0);
                 $wiseId = (int) ($row->wiseId ?? 0);
 
                 // 1. Relational Offer Meta Lookup (Single Bulk Query from Controller)
@@ -283,9 +284,74 @@
 
                 $stageDefaultCss = ($row->thirdparty_company_id > 0) ? 'client_stage_sub_stage' : 'stage_sub_stage';
 
-                // 10. Ownership & Recruiter
-                $recruiterName = !empty($row->posted_by) ? $row->posted_by : (!empty($row->submitted_by_name) ? $row->submitted_by_name : (!empty($row->spokperson_name) ? $row->spokperson_name : (!empty($row->upload_by_name) ? $row->upload_by_name : (@$row->source ?: 'Recruiter'))));
-                $organizationName = @$row->submitted_by_company_name ?: (@$row->post_company_name ?: (@$row->uc_company_name ?: (@$row->from_company_name ?: (@$row->company_name ?: '—'))));
+                // 10. Ownership & Attribution (Team Captain & Company)
+                $partnerCompId = (int) (@$row->ClientComID ?: (@$row->thirdparty_company_id ?: (@$row->agency_company_id ?: (@$row->agency_id ?: 0))));
+                $isAgency = ($clientType ?? '') === 'agency' 
+                    || ($partnerCompId > 0 && $partnerCompId !== (int) $company_id);
+
+                $assignKey = ($row->jobId ?? 0) . '_' . ($partnerCompId ?: (@$row->to_company_id ?? 0));
+                $captainName = $jobAssignMap[$assignKey] ?? ($jobAssignMap[($row->jobId ?? 0) . '_' . ($row->ClientComID ?? 0)] ?? ($jobAssignMap[($row->jobId ?? 0) . '_' . ($row->thirdparty_company_id ?? 0)] ?? null));
+
+                $resolvedCaptain = null;
+                if ($isAgency && $partnerCompId > 0) {
+                    $resolvedCaptain = \Illuminate\Support\Facades\Cache::remember("partner_captain_{$partnerCompId}", 3600, function () use ($partnerCompId, $company_id) {
+                        return \Illuminate\Support\Facades\DB::table('job_assign')
+                            ->join('users', 'users.id', '=', 'job_assign.spok_user_id')
+                            ->where('job_assign.company_id', $partnerCompId)
+                            ->where('job_assign.spok_user_id', '>', 0)
+                            ->value('users.name')
+                            ?: (\Illuminate\Support\Facades\DB::table('users')
+                                ->join('recommendation_relation', 'recommendation_relation.to_user_id', '=', 'users.id')
+                                ->where('recommendation_relation.from_company_id', $company_id)
+                                ->where('recommendation_relation.to_company_id', $partnerCompId)
+                                ->where('users.company_id', $partnerCompId)
+                                ->value('users.name')
+                            ?: (\Illuminate\Support\Facades\DB::table('users')->where('company_id', $partnerCompId)->where('is_captain', 1)->value('name')
+                            ?: (\Illuminate\Support\Facades\DB::table('users')->where('company_id', $partnerCompId)->where('root_user', 1)->value('name')
+                            ?: (\Illuminate\Support\Facades\DB::table('users')->where('company_id', $partnerCompId)->orderBy('id', 'asc')->value('name')
+                            ?: null))));
+                    });
+                }
+
+                if (empty($captainName)) {
+                    if (! empty($row->captain_name)) {
+                        $captainName = $row->captain_name;
+                    } elseif (! empty($row->spokperson_name)) {
+                        $captainName = $row->spokperson_name;
+                    } elseif ($isAgency && ! empty($agencyCaptainName)) {
+                        $captainName = $agencyCaptainName;
+                    } elseif ($isAgency && ! empty($resolvedCaptain)) {
+                        $captainName = $resolvedCaptain;
+                    } elseif (! empty($row->posted_by)) {
+                        $captainName = $row->posted_by;
+                    } elseif (! empty($row->submitted_by_name)) {
+                        $captainName = $row->submitted_by_name;
+                    } else {
+                        $captainName = @$row->source ?: ($isAgency ? 'Team Captain' : 'Recruiter');
+                    }
+                }
+
+                if ($isAgency) {
+                    // Agency partner candidates must strictly display the Agency Team Captain name
+                    if (empty($captainName) || $captainName === ($row->posted_by ?? null) || in_array(strtolower((string) $captainName), ['agency lead', 'agency captain', 'recruiter'], true)) {
+                        $captainName = $agencyCaptainName ?: ($resolvedCaptain ?: $captainName);
+                    }
+                }
+
+                $organizationName = @$row->submitted_by_company_name ?: (@$row->post_company_name ?: (@$row->uc_company_name ?: (@$row->from_company_name ?: '')));
+                if (empty($organizationName) || strtolower($organizationName) === '4bell technology' || strtolower($organizationName) === 'internal team') {
+                    if (! empty($agencyCompanyName)) {
+                        $organizationName = $agencyCompanyName;
+                    } elseif ($partnerCompId > 0) {
+                        $organizationName = \Illuminate\Support\Facades\Cache::remember("partner_comp_name_{$partnerCompId}", 3600, function () use ($partnerCompId) {
+                            return \Illuminate\Support\Facades\DB::table('companies')->where('id', $partnerCompId)->value('company_name') ?: 'Partner Agency';
+                        });
+                    } else {
+                        $organizationName = @$row->company_name ?: 'Partner Agency';
+                    }
+                }
+
+                $captainLabel = $isAgency ? 'Team Captain' : 'Recruiter';
             @endphp
 
             <!-- Master Primary Card for Candidate Offer & Joining -->
@@ -426,7 +492,7 @@
                 <!-- Sub-Card 6: Bottom Activity Strip (Recruiter, Offer Timeline & Stage Action) -->
                 <div class="cd-oj-card-bottom">
                     <div class="cd-oj-bottom-left">
-                        <span><i class="far fa-user text-muted me-1"></i>Recruiter: <strong>{{ $recruiterName }}</strong> ({{ $organizationName }})</span>
+                        <span><i class="far fa-user text-muted me-1"></i>{{ $captainLabel }}: <strong>{{ ucwords($captainName) }}</strong> ({{ $organizationName }})</span>
                         <span class="cd-bullet">&bull;</span>
                         <span><i class="far fa-clock text-muted me-1"></i>{{ $bottomDateLabel }}: <strong>{{ $bottomDateVal }}</strong></span>
                     </div>

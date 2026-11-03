@@ -1794,6 +1794,10 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
                         'should' => [
                             ['term' => ['thirdparty_company_id' => $from_company_id]],
                             ['term' => ['from_company_id' => $from_company_id]],
+                            ['term' => ['ClientComID' => $from_company_id]],
+                            ['term' => ['agency_id' => $from_company_id]],
+                            ['term' => ['agency_company_id' => $from_company_id]],
+                            ['term' => ['client_comapny_id' => $from_company_id]],
                         ],
                         'minimum_should_match' => 1,
                     ],
@@ -1805,6 +1809,7 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
                             ['term' => ['to_company_id' => $to_company_id]],
                             ['term' => ['company_id' => $to_company_id]],
                             ['term' => ['job_company_id' => $to_company_id]],
+                            ['term' => ['from_company_id' => $to_company_id]],
                         ],
                         'minimum_should_match' => 1,
                     ],
@@ -1813,7 +1818,16 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
                     'bool' => [
                         'should' => [
                             ['terms' => ['job_master_status_id' => [5, 6, '5', '6']]],
-                            ['terms' => ['master_status_id' => [5, 6, '5', '6']]],
+                            [
+                                'bool' => [
+                                    'must' => [
+                                        ['terms' => ['master_status_id' => [5, 6, '5', '6']]],
+                                    ],
+                                    'must_not' => [
+                                        ['exists' => ['field' => 'job_master_status_id']],
+                                    ],
+                                ],
+                            ],
                         ],
                         'minimum_should_match' => 1,
                     ],
@@ -1861,7 +1875,16 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
                     'bool' => [
                         'should' => [
                             ['terms' => ['job_master_status_id' => [5, 6, '5', '6']]],
-                            ['terms' => ['master_status_id' => [5, 6, '5', '6']]],
+                            [
+                                'bool' => [
+                                    'must' => [
+                                        ['terms' => ['master_status_id' => [5, 6, '5', '6']]],
+                                    ],
+                                    'must_not' => [
+                                        ['exists' => ['field' => 'job_master_status_id']],
+                                    ],
+                                ],
+                            ],
                         ],
                         'minimum_should_match' => 1,
                     ],
@@ -1888,7 +1911,12 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
                 'bool' => [
                     'should' => [
                         ['terms' => ['job_master_status_id' => [5, '5']]],
-                        ['terms' => ['master_status_id' => [5, '5']]],
+                        [
+                            'bool' => [
+                                'must' => [['terms' => ['master_status_id' => [5, '5']]]],
+                                'must_not' => [['exists' => ['field' => 'job_master_status_id']]],
+                            ],
+                        ],
                     ],
                     'minimum_should_match' => 1,
                 ],
@@ -1898,7 +1926,12 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
                 'bool' => [
                     'should' => [
                         ['terms' => ['job_master_status_id' => [6, '6']]],
-                        ['terms' => ['master_status_id' => [6, '6']]],
+                        [
+                            'bool' => [
+                                'must' => [['terms' => ['master_status_id' => [6, '6']]]],
+                                'must_not' => [['exists' => ['field' => 'job_master_status_id']]],
+                            ],
+                        ],
                     ],
                     'minimum_should_match' => 1,
                 ],
@@ -1908,7 +1941,12 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
                 'bool' => [
                     'should' => [
                         ['terms' => ['job_master_status_id' => [5, '5']]],
-                        ['terms' => ['master_status_id' => [5, '5']]],
+                        [
+                            'bool' => [
+                                'must' => [['terms' => ['master_status_id' => [5, '5']]]],
+                                'must_not' => [['exists' => ['field' => 'job_master_status_id']]],
+                            ],
+                        ],
                     ],
                     'minimum_should_match' => 1,
                 ],
@@ -1925,7 +1963,7 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
                 'bool' => [
                     'must' => $baseMust,
                     'must_not' => [
-                        ['terms' => ['job_master_status_id' => [8, 9, '8', '9']]],
+                        ['terms' => ['job_master_status_id' => [7, 8, 9, '7', '8', '9']]],
                     ],
                 ],
             ],
@@ -1935,7 +1973,12 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
                         'bool' => [
                             'should' => [
                                 ['terms' => ['job_master_status_id' => [5, '5']]],
-                                ['terms' => ['master_status_id' => [5, '5']]],
+                                [
+                                    'bool' => [
+                                        'must' => [['terms' => ['master_status_id' => [5, '5']]]],
+                                        'must_not' => [['exists' => ['field' => 'job_master_status_id']]],
+                                    ],
+                                ],
                             ],
                             'minimum_should_match' => 1,
                         ],
@@ -1946,7 +1989,12 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
                         'bool' => [
                             'should' => [
                                 ['terms' => ['job_master_status_id' => [6, '6']]],
-                                ['terms' => ['master_status_id' => [6, '6']]],
+                                [
+                                    'bool' => [
+                                        'must' => [['terms' => ['master_status_id' => [6, '6']]]],
+                                        'must_not' => [['exists' => ['field' => 'job_master_status_id']]],
+                                    ],
+                                ],
                             ],
                             'minimum_should_match' => 1,
                         ],
@@ -1983,9 +2031,9 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
         $allCount = $offersCount + $joinedCount;
 
         // ETag 304 Validation
-        $etag = 'W/"'.md5("direct_oj_{$company_id}_{$from_company_id}_{$page}_{$size}_{$segment}_{$total}_{$allCount}").'"';
+        $etag = 'W/"'.md5("direct_oj_v35_{$company_id}_{$from_company_id}_{$page}_{$size}_{$segment}_{$total}_{$allCount}").'"';
         if ($request->header('If-None-Match') === $etag) {
-            return response('', 304)->header('ETag', $etag)->header('Cache-Control', 'private, no-cache');
+            return response('', 304)->header('ETag', $etag)->header('Cache-Control', 'no-cache, no-store, must-revalidate');
         }
 
         // Pre-batch relational lookup maps to eliminate N+1 queries in Blade loop
@@ -2024,15 +2072,42 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
             return DB::table('candidate_status')->pluck('name', 'id')->toArray();
         });
 
+        $agencyCaptainName = null;
+        $agencyCompanyName = null;
+        if ($clientType === 'agency' && $from_company_id > 0) {
+            $agencyCaptainName = Cache::remember("partner_captain_{$from_company_id}", 3600, function () use ($from_company_id, $company_id) {
+                return DB::table('job_assign')
+                    ->join('users', 'users.id', '=', 'job_assign.spok_user_id')
+                    ->where('job_assign.company_id', $from_company_id)
+                    ->where('job_assign.spok_user_id', '>', 0)
+                    ->value('users.name')
+                    ?: (DB::table('users')
+                        ->join('recommendation_relation', 'recommendation_relation.to_user_id', '=', 'users.id')
+                        ->where('recommendation_relation.from_company_id', $company_id)
+                        ->where('recommendation_relation.to_company_id', $from_company_id)
+                        ->where('users.company_id', $from_company_id)
+                        ->value('users.name')
+                    ?: (DB::table('users')->where('company_id', $from_company_id)->where('is_captain', 1)->value('name')
+                    ?: (DB::table('users')->where('company_id', $from_company_id)->where('root_user', 1)->value('name')
+                    ?: (DB::table('users')->where('company_id', $from_company_id)->orderBy('id', 'asc')->value('name')
+                    ?: null))));
+            });
+
+            $agencyCompanyName = Cache::remember("partner_comp_name_{$from_company_id}", 3600, function () use ($from_company_id) {
+                return DB::table('companies')->where('id', $from_company_id)->value('company_name') ?: 'Partner Agency';
+            });
+        }
+
         // Batch resolve spokesperson names in 1 query instead of N queries in foreach loop
         $jobAssignMap = [];
         $assignPairs = [];
         foreach ($data as $candidateRow) {
             $cObj = (object) $candidateRow;
-            if ($company_id != @$cObj->ClientComID && @$cObj->ClientComID > 0 && ! empty($cObj->jobId)) {
+            $partnerCompId = (int) (@$cObj->ClientComID ?: (@$cObj->thirdparty_company_id ?: (@$cObj->to_company_id ?: (@$cObj->from_company_id ?: 0))));
+            if ($company_id != $partnerCompId && $partnerCompId > 0 && ! empty($cObj->jobId)) {
                 $assignPairs[] = [
                     'job_id' => $cObj->jobId,
-                    'company_id' => $cObj->ClientComID,
+                    'company_id' => $partnerCompId,
                 ];
             }
         }
@@ -2107,7 +2182,7 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
         ];
 
         return response()->json([
-            'html' => view('service_company.ajax_pages.custom_client_candidates_join', compact('data', 'company_id', 'jobsMap', 'citiesMap', 'statusMap', 'jobAssignMap', 'jobSkillsMap', 'offerMeta'))->render(),
+            'html' => view('service_company.ajax_pages.custom_client_candidates_join', compact('data', 'company_id', 'jobsMap', 'citiesMap', 'statusMap', 'jobAssignMap', 'jobSkillsMap', 'offerMeta', 'clientType', 'agencyCaptainName', 'agencyCompanyName'))->render(),
             'pagination' => view('service_company.ajax_pages.pagination', compact('pagination'))->render(),
             'counts' => [
                 'all' => $allCount,
@@ -2116,7 +2191,7 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
                 'joined' => $joinedCount,
             ],
             'current_segment' => $segment,
-        ])->header('ETag', $etag)->header('Cache-Control', 'private, no-cache');
+        ])->header('ETag', $etag)->header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')->header('Pragma', 'no-cache')->header('Expires', '0');
     }
 
     public function directclientCandidateInterviewTracker(Request $request)

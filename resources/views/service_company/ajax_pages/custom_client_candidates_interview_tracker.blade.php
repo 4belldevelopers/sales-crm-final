@@ -138,7 +138,7 @@
                 <!-- 4. RECRUITER INFO -->
                 <div class="cd-it-subcard">
                     <div class="cd-subcard-header">
-                        <span class="cd-subcard-label">RECRUITER INFO</span>
+                        <span class="cd-subcard-label">{{ $src['label'] ?? 'TEAM CAPTAIN' }}</span>
                     </div>
                     <div>
                         <div class="cd-it-recruiter-name" title="{{ $src['name'] }}">
