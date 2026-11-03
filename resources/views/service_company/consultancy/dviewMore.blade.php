@@ -1699,81 +1699,108 @@
 
 /* 5-Line Compact High-Density Body (Rule 20 Modern Standard) */
 .cd-srv-c-body {
-    padding: 7px 12px 8px 12px !important;
+    padding: 7px 12px 9px 12px !important;
     display: flex !important;
     flex-direction: column !important;
-    gap: 4px !important;
+    gap: 3.5px !important;
     background: #ffffff !important;
 }
 .cd-srv-c-row {
     display: flex !important;
-    align-items: center !important;
-    gap: 6px !important;
+    align-items: baseline !important;
+    gap: 8px !important;
     font-size: 11px !important;
-    line-height: 1.35 !important;
+    line-height: 20px !important;
     min-width: 0 !important;
     white-space: nowrap !important;
 }
 .cd-srv-c-key {
     display: inline-flex !important;
-    align-items: center !important;
-    gap: 4.5px !important;
-    width: 98px !important;
-    min-width: 98px !important;
-    max-width: 98px !important;
+    align-items: baseline !important;
+    gap: 5px !important;
+    width: 105px !important;
+    min-width: 105px !important;
+    max-width: 105px !important;
     flex-shrink: 0 !important;
     font-weight: 600 !important;
     color: #64748b !important;
     letter-spacing: 0.01em !important;
-    font-size: 10px !important;
+    font-size: 10.5px !important;
+    line-height: 20px !important;
     white-space: nowrap !important;
     overflow: hidden !important;
     text-overflow: ellipsis !important;
 }
 .cd-srv-c-icon {
     font-size: 9.5px !important;
-    width: 12px !important;
+    width: 13px !important;
     text-align: center !important;
     flex-shrink: 0 !important;
+    position: relative !important;
+    top: 1px !important;
 }
 .cd-srv-c-icon.ft { color: #009ef7 !important; }
 .cd-srv-c-icon.ct { color: #7c3aed !important; }
 .cd-srv-c-val {
-    display: flex !important;
-    align-items: center !important;
-    flex-wrap: nowrap !important;
-    gap: 4px !important;
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+    font-size: 11px !important;
+    line-height: 20px !important;
     color: #334155 !important;
     font-weight: 500 !important;
-    min-width: 0 !important;
-    flex: 1 1 auto !important;
     white-space: nowrap !important;
     overflow: hidden !important;
     text-overflow: ellipsis !important;
+}
+.cd-srv-c-val,
+.cd-srv-c-val * {
+    vertical-align: baseline !important;
+    line-height: 20px !important;
 }
 .cd-srv-c-val strong {
     font-weight: 700 !important;
     color: #0f172a !important;
 }
+.cd-srv-c-val strong.text-dark {
+    color: #0f172a !important;
+}
+.cd-srv-c-val strong.text-purple,
 .cd-srv-c-val .text-purple {
     color: #7c3aed !important;
 }
+.cd-srv-c-val strong.text-success,
 .cd-srv-c-val .text-success {
     color: #10b981 !important;
+}
+.cd-val-muted {
+    color: #64748b !important;
+    font-weight: 500 !important;
+}
+.cd-val-text {
+    color: #334155 !important;
+    font-weight: 500 !important;
 }
 .cd-srv-c-sep {
     color: #cbd5e1 !important;
     font-weight: 400 !important;
+    margin: 0 4px !important;
     user-select: none !important;
-    font-size: 9.5px !important;
-    flex-shrink: 0 !important;
+    font-size: 10px !important;
+    display: inline !important;
+    vertical-align: baseline !important;
 }
 .cd-srv-c-badge {
+    display: inline-flex !important;
+    align-items: center !important;
+    vertical-align: middle !important;
+    position: relative !important;
+    top: -1px !important;
     font-size: 9px !important;
     font-weight: 700 !important;
     padding: 1px 5px !important;
     border-radius: 3.5px !important;
-    line-height: 1.25 !important;
+    line-height: 1.2 !important;
+    margin-left: 4px !important;
     flex-shrink: 0 !important;
 }
 .cd-srv-c-badge.ft {
@@ -1791,8 +1818,12 @@
 .cd-srv-c-country-list {
     display: inline-flex !important;
     align-items: center !important;
+    vertical-align: middle !important;
+    position: relative !important;
+    top: -1px !important;
     flex-wrap: nowrap !important;
     gap: 3px !important;
+    margin-left: 4px !important;
     flex-shrink: 0 !important;
 }
 .cd-srv-c-country-chip {
@@ -3344,12 +3375,7 @@
                                                     <span>Default Rate:</span>
                                                 </div>
                                                 <div class="cd-srv-c-val">
-                                                    <strong class="text-dark">{{ $permanentCommercial->default_rate ?? ($placement_fee ?? '8.33%') }}</strong>
-                                                    <span class="cd-srv-c-sep">·</span>
-                                                    <span class="text-gray-800">{{ $permanentCommercial->model_label ?? 'Percentage of CTC' }}</span>
-                                                    @if(!empty($permanentCommercial->mode_badge))
-                                                        <span class="cd-srv-c-badge ft">{{ $permanentCommercial->mode_badge }}</span>
-                                                    @endif
+                                                    <strong class="text-dark">{{ $permanentCommercial->default_rate ?? ($placement_fee ?? '8.33%') }}</strong><span class="cd-srv-c-sep">·</span><span class="cd-val-text">{{ $permanentCommercial->model_label ?? 'Percentage of CTC' }}</span>@if(!empty($permanentCommercial->mode_badge))<span class="cd-srv-c-badge ft">{{ $permanentCommercial->mode_badge }}</span>@endif
                                                 </div>
                                             </div>
 
@@ -3360,9 +3386,7 @@
                                                     <span>Invoicing:</span>
                                                 </div>
                                                 <div class="cd-srv-c-val">
-                                                    <span class="text-gray-800">{{ $permanentCommercial->billing_frequency ?? 'One Time' }} Fee</span>
-                                                    <span class="cd-srv-c-sep">·</span>
-                                                    <span>Trigger: <strong>{{ $permanentCommercial->billing_trigger ?? 'Candidate Joined' }}</strong></span>
+                                                    <span class="cd-val-text">{{ $permanentCommercial->billing_frequency ?? 'One Time' }} Fee</span><span class="cd-srv-c-sep">·</span><span class="cd-val-muted">Trigger:</span> <strong class="text-dark">{{ $permanentCommercial->billing_trigger ?? 'Candidate Joined' }}</strong>
                                                 </div>
                                             </div>
 
@@ -3373,7 +3397,7 @@
                                                     <span>Payment Terms:</span>
                                                 </div>
                                                 <div class="cd-srv-c-val">
-                                                    <strong>{{ $permanentCommercial->payment_terms ?? 'Net 30 Days' }}</strong>
+                                                    <strong class="text-dark">{{ $permanentCommercial->payment_terms ?? 'Net 30 Days' }}</strong>
                                                 </div>
                                             </div>
 
@@ -3384,8 +3408,7 @@
                                                     <span>Replacement:</span>
                                                 </div>
                                                 <div class="cd-srv-c-val" title="{{ !empty($permanentCommercial->replacement_clause) ? 'Clause: ' . $permanentCommercial->replacement_clause : 'Replacement Guarantee' }}">
-                                                    <strong class="text-success">{{ $permanentCommercial->replacement_days ?? 90 }} Days</strong>
-                                                    <span class="text-gray-800">{{ $permanentCommercial->replacement_type ?? 'Free Replacement' }}</span>
+                                                    <strong class="text-success">{{ $permanentCommercial->replacement_days ?? 90 }} Days</strong> <span class="cd-val-text">{{ $permanentCommercial->replacement_type ?? 'Free Replacement' }}</span>
                                                 </div>
                                             </div>
 
@@ -3400,18 +3423,7 @@
                                                         $rawCountries = $permanentCommercial->countries ?? ['India'];
                                                         $cCount = count($rawCountries);
                                                     @endphp
-                                                    <span>Operate in <strong>{{ $cCount }} {{ $cCount === 1 ? 'Country' : 'Countries' }}:</strong></span>
-                                                    <div class="cd-srv-c-country-list">
-                                                        @foreach(array_slice($rawCountries, 0, 5) as $cName)
-                                                            @php
-                                                                $sCode = $getCountryShort($cName);
-                                                            @endphp
-                                                            <span class="cd-srv-c-country-chip" title="{{ $cName }}">{{ $sCode }}</span>
-                                                        @endforeach
-                                                        @if($cCount > 5)
-                                                            <span class="cd-srv-c-country-chip more" title="{{ implode(', ', array_slice($rawCountries, 5)) }}">+{{ $cCount - 5 }}</span>
-                                                        @endif
-                                                    </div>
+                                                    <span class="cd-val-text">Operate in <strong>{{ $cCount }} {{ $cCount === 1 ? 'Country' : 'Countries' }}:</strong></span><div class="cd-srv-c-country-list">@foreach(array_slice($rawCountries, 0, 5) as $cName)@php $sCode = $getCountryShort($cName); @endphp<span class="cd-srv-c-country-chip" title="{{ $cName }}">{{ $sCode }}</span>@endforeach @if($cCount > 5)<span class="cd-srv-c-country-chip more" title="{{ implode(', ', array_slice($rawCountries, 5)) }}">+{{ $cCount - 5 }}</span>@endif</div>
                                                 </div>
                                             </div>
                                         </div>
@@ -3453,13 +3465,7 @@
                                                     <span>Bill Rate:</span>
                                                 </div>
                                                 <div class="cd-srv-c-val">
-                                                    <strong class="text-purple">{{ $contractCommercial->default_rate ?? ($contractCommercial->commercial_rate ?? '₹ 80,000') }}</strong>
-                                                    <span class="text-muted fs-9">{{ $contractCommercial->default_rate_sub ?? '/ Hour' }}</span>
-                                                    <span class="cd-srv-c-sep">·</span>
-                                                    <span class="text-gray-800">{{ $contractCommercial->model_label ?? 'Contract Bill Rate' }}</span>
-                                                    @if(!empty($contractCommercial->mode_badge))
-                                                        <span class="cd-srv-c-badge ct">{{ $contractCommercial->mode_badge }}</span>
-                                                    @endif
+                                                    <strong class="text-purple">{{ $contractCommercial->default_rate ?? ($contractCommercial->commercial_rate ?? '₹ 80,000') }}</strong> <span class="cd-val-muted" style="font-size: 9.5px;">{{ $contractCommercial->default_rate_sub ?? '/ Hour' }}</span><span class="cd-srv-c-sep">·</span><span class="cd-val-text">{{ $contractCommercial->model_label ?? 'Contract Bill Rate' }}</span>@if(!empty($contractCommercial->mode_badge))<span class="cd-srv-c-badge ct">{{ $contractCommercial->mode_badge }}</span>@endif
                                                 </div>
                                             </div>
 
@@ -3470,9 +3476,7 @@
                                                     <span>Invoicing:</span>
                                                 </div>
                                                 <div class="cd-srv-c-val">
-                                                    <span class="text-gray-800">{{ $contractCommercial->billing_cycle ?? 'Monthly' }} Invoicing</span>
-                                                    <span class="cd-srv-c-sep">·</span>
-                                                    <span>Trigger: <strong>{{ $contractCommercial->billing_trigger ?? 'Approved Timesheet' }}</strong></span>
+                                                    <span class="cd-val-text">{{ $contractCommercial->billing_cycle ?? 'Monthly in Advance' }} Invoicing</span><span class="cd-srv-c-sep">·</span><span class="cd-val-muted">Trigger:</span> <strong class="text-dark">{{ $contractCommercial->billing_trigger ?? 'Monthly in Advance' }}</strong>
                                                 </div>
                                             </div>
 
@@ -3483,7 +3487,7 @@
                                                     <span>Payment Terms:</span>
                                                 </div>
                                                 <div class="cd-srv-c-val">
-                                                    <strong>{{ $contractCommercial->payment_terms ?? 'Net 30 Days' }}</strong>
+                                                    <strong class="text-dark">{{ $contractCommercial->payment_terms ?? 'Net 30 Days' }}</strong>
                                                 </div>
                                             </div>
 
@@ -3494,8 +3498,7 @@
                                                     <span>Replacement:</span>
                                                 </div>
                                                 <div class="cd-srv-c-val" title="{{ !empty($contractCommercial->replacement_clause) ? 'Clause: ' . $contractCommercial->replacement_clause : 'Replacement Guarantee' }}">
-                                                    <strong class="text-purple">{{ $contractCommercial->replacement_days ?? 30 }} Days</strong>
-                                                    <span class="text-gray-800">{{ $contractCommercial->replacement_type ?? 'Contractor Replacement' }}</span>
+                                                    <strong class="text-purple">{{ $contractCommercial->replacement_days ?? 30 }} Days</strong> <span class="cd-val-text">{{ $contractCommercial->replacement_type ?? 'Contractor Replacement' }}</span>
                                                 </div>
                                             </div>
 
@@ -3510,18 +3513,7 @@
                                                         $rawCountriesCt = $contractCommercial->countries ?? ['India'];
                                                         $cCountCt = count($rawCountriesCt);
                                                     @endphp
-                                                    <span>Operate in <strong>{{ $cCountCt }} {{ $cCountCt === 1 ? 'Country' : 'Countries' }}:</strong></span>
-                                                    <div class="cd-srv-c-country-list">
-                                                        @foreach(array_slice($rawCountriesCt, 0, 5) as $cName)
-                                                            @php
-                                                                $sCode = $getCountryShort($cName);
-                                                            @endphp
-                                                            <span class="cd-srv-c-country-chip" title="{{ $cName }}">{{ $sCode }}</span>
-                                                        @endforeach
-                                                        @if($cCountCt > 5)
-                                                            <span class="cd-srv-c-country-chip more" title="{{ implode(', ', array_slice($rawCountriesCt, 5)) }}">+{{ $cCountCt - 5 }}</span>
-                                                        @endif
-                                                    </div>
+                                                    <span class="cd-val-text">Operate in <strong>{{ $cCountCt }} {{ $cCountCt === 1 ? 'Country' : 'Countries' }}:</strong></span><div class="cd-srv-c-country-list">@foreach(array_slice($rawCountriesCt, 0, 5) as $cName)@php $sCode = $getCountryShort($cName); @endphp<span class="cd-srv-c-country-chip" title="{{ $cName }}">{{ $sCode }}</span>@endforeach @if($cCountCt > 5)<span class="cd-srv-c-country-chip more" title="{{ implode(', ', array_slice($rawCountriesCt, 5)) }}">+{{ $cCountCt - 5 }}</span>@endif</div>
                                                 </div>
                                             </div>
                                         </div>
