@@ -2088,7 +2088,7 @@ class ServiceCompanyTeamController extends ServiceCompanyBaseController
                     }
 
                     $user = new User;
-                    $user->name = $request->name;
+                    $user->name = ucwords(trim($request->name));
                     $user->email = $email;
                     $user->company_id = $company_id;
                     $user->email_verification_code = str_random(40);
@@ -2200,7 +2200,7 @@ class ServiceCompanyTeamController extends ServiceCompanyBaseController
 
         DB::beginTransaction();
         try {
-            $user->name = $request->name;
+            $user->name = ucwords(trim($request->name));
             $user->mobile = $request->mobile;
             if ($request->hasFile('logo')) {
                 $file = $request->file('logo');

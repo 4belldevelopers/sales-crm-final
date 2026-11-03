@@ -143,7 +143,7 @@ class RegistrationActivationService
 
             // Identity Collision Resolution (INV-05)
             $existingUser = User::withoutGlobalScopes()->where('email', $email)->first();
-            $name = trim((string) ($request->input('name') ?: ($existingUser->name ?? 'Team Member')));
+            $name = ucwords(trim((string) ($request->input('name') ?: ($existingUser->name ?? 'Team Member'))));
 
             if ($existingUser) {
                 if ((int) $existingUser->company_id !== $tenantId) {
