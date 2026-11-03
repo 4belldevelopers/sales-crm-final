@@ -27,6 +27,11 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
+        // Exclude manual AES-256 session envelopes from framework auto-cookie encryption
+        $middleware->encryptCookies(except: [
+            \App\Services\TeamInvitationService::COOKIE_NAME,
+        ]);
+
         // Phase 5.5: exempt Stripe + Razorpay webhook receivers from CSRF.
         // These endpoints are authenticated via provider signatures, not session tokens.
         $middleware->validateCsrfTokens(except: [

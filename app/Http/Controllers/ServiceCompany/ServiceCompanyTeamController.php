@@ -1822,7 +1822,41 @@ class ServiceCompanyTeamController extends ServiceCompanyBaseController
             ],
             mutationCallback: function () use ($user, $company_id, $userId) {
                 $Companies = Company::withoutGlobalScopes()->find($company_id);
-                $Url = url('/teamReg/'.base64_encode($company_id).'/'.base64_encode($userId));
+
+                // Cryptographic Opaque Invitation generation (INV-01 & INV-03)
+                $rawSecret = bin2hex(random_bytes(32));
+                $tokenHash = hash('sha256', $rawSecret);
+                $normalizedEmail = strtolower(trim((string) $user->email));
+
+                // Cancel previous active token slot for this email before issuing fresh token
+                DB::table('team_invitations')
+                    ->where('company_id', $company_id)
+                    ->where('email', $normalizedEmail)
+                    ->whereIn('status', ['PENDING', 'LINK_ACCESSED'])
+                    ->update([
+                        'status' => 'REVOKED',
+                        'revoked_at' => now(),
+                        'updated_at' => now(),
+                    ]);
+
+                DB::table('team_invitations')->insert([
+                    'uuid' => (string) \Illuminate\Support\Str::uuid(),
+                    'company_id' => $company_id,
+                    'email' => $normalizedEmail,
+                    'token_hash' => $tokenHash,
+                    'role_id' => (int) (DB::table('role_user')->where('user_id', $userId)->value('role_id') ?? 1),
+                    'context_version' => 'TEAM_V2',
+                    'status' => 'PENDING',
+                    'delivery_status' => 'QUEUED',
+                    'invited_by' => (int) (auth()->id() ?? 1),
+                    'expires_at' => now()->addHours(72),
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+
+                \App\Services\TenantVersioningService::allocateNextVersion($company_id, 'team');
+
+                $Url = url('/register?token='.$rawSecret);
                 $basecompany = GeneralMethod::baseCompany();
 
                 $emailData = [
@@ -1856,6 +1890,17 @@ class ServiceCompanyTeamController extends ServiceCompanyBaseController
     {
         $company_id = (int) auth()->user()->company_id;
         $email = strtolower(trim((string) $request->email));
+
+        // Domain Protection & Universal Personal Email Inclusivity (INV-15)
+        try {
+            \App\Services\CorporateDomainProtectionService::validateTeamInvitationDomain($company_id, $email);
+        } catch (\App\Exceptions\DomainProtectionException $e) {
+            return Reply::dataOnly([
+                'status' => 'success',
+                'msgType' => 'warning',
+                'message' => $e->getMessage(),
+            ]);
+        }
 
         // Strict Tenant Scoping: Verify role exists and belongs to this company or system
         $role_row = DB::table('roles')
@@ -1966,7 +2011,35 @@ class ServiceCompanyTeamController extends ServiceCompanyBaseController
                     ];
                     DB::table('users_profile')->insert($users_profile);
 
-                    $Url = url('/teamReg/'.base64_encode($company_id).'/'.base64_encode($user->id));
+                    // Cryptographic Opaque Invitation record generation (INV-01 & INV-03)
+                    $rawSecret = bin2hex(random_bytes(32));
+                    $tokenHash = hash('sha256', $rawSecret);
+
+                    // Cancel any previous active token for this email before inserting
+                    DB::table('team_invitations')
+                        ->where('company_id', $company_id)
+                        ->where('email', $email)
+                        ->whereIn('status', ['PENDING', 'LINK_ACCESSED'])
+                        ->update(['status' => 'REVOKED', 'revoked_at' => now(), 'updated_at' => now()]);
+
+                    DB::table('team_invitations')->insert([
+                        'uuid' => (string) \Illuminate\Support\Str::uuid(),
+                        'company_id' => $company_id,
+                        'email' => $email,
+                        'token_hash' => $tokenHash,
+                        'role_id' => (int) $request->role_id,
+                        'context_version' => 'TEAM_V2',
+                        'status' => 'PENDING',
+                        'delivery_status' => 'QUEUED',
+                        'invited_by' => (int) (auth()->id() ?? 1),
+                        'expires_at' => now()->addHours(72),
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ]);
+
+                    \App\Services\TenantVersioningService::allocateNextVersion($company_id, 'team');
+
+                    $Url = url('/register?token='.$rawSecret);
                     $Companies = Company::withoutGlobalScopes()->find($company_id);
                     $basecompany = GeneralMethod::baseCompany();
                     $senderName = ($basecompany->companyName) ? $basecompany->companyName : '';

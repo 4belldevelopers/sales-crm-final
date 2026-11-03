@@ -112,6 +112,64 @@
         }
         return $cur . number_format($num);
     };
+
+    // Helper: Country ISO / Standard Short Form Resolver (e.g. India -> IN, United States -> US, Japan -> JPN)
+    $getCountryShort = function($cName) {
+        if (empty($cName)) return 'GLB';
+        $c = strtolower(trim((string)$cName));
+        $map = [
+            'india' => 'IN',
+            'united states' => 'US',
+            'united states of america' => 'USA',
+            'usa' => 'US',
+            'japan' => 'JPN',
+            'united kingdom' => 'UK',
+            'uk' => 'UK',
+            'germany' => 'DE',
+            'france' => 'FR',
+            'canada' => 'CAN',
+            'australia' => 'AUS',
+            'singapore' => 'SGP',
+            'united arab emirates' => 'UAE',
+            'uae' => 'UAE',
+            'dubai' => 'DXB',
+            'saudi arabia' => 'KSA',
+            'netherlands' => 'NL',
+            'switzerland' => 'CH',
+            'ireland' => 'IRL',
+            'new zealand' => 'NZ',
+            'south africa' => 'ZA',
+            'brazil' => 'BR',
+            'mexico' => 'MEX',
+            'spain' => 'ES',
+            'italy' => 'IT',
+            'poland' => 'PL',
+            'sweden' => 'SE',
+            'norway' => 'NO',
+            'denmark' => 'DK',
+            'finland' => 'FI',
+            'belgium' => 'BE',
+            'austria' => 'AT',
+            'philippines' => 'PH',
+            'malaysia' => 'MY',
+            'indonesia' => 'ID',
+            'vietnam' => 'VN',
+            'thailand' => 'TH',
+            'china' => 'CN',
+            'hong kong' => 'HK',
+            'taiwan' => 'TW',
+            'south korea' => 'KR',
+            'korea' => 'KR',
+        ];
+        if (isset($map[$c])) {
+            return $map[$c];
+        }
+        $words = preg_split('/\s+/', $c);
+        if (count($words) > 1) {
+            return strtoupper(substr($words[0], 0, 1) . substr($words[1], 0, 1));
+        }
+        return strtoupper(substr($c, 0, 3));
+    };
 @endphp
 
 @include('service_company.client.components.tab-jobs-style')
@@ -1464,418 +1522,321 @@
 .cd-bullet-dot.sky { background: #0284c7 !important; }
 .cd-bullet-dot.amber { background: #f59e0b !important; }
 
-.cd-srv-card {
+/* ── Modern Compact Commercial Services Card System (Rule 20 Modern Short-Form Standard) ── */
+.cd-srv-master-box {
+    margin-top: 12px !important;
+}
+.cd-srv-filter-pills {
+    display: inline-flex !important;
+    align-items: center !important;
+    background: #f1f5f9 !important;
+    padding: 2px !important;
+    border-radius: 6px !important;
+    border: 1px solid #e2e8f0 !important;
+}
+.cd-srv-filter-btn {
+    border: none !important;
+    background: transparent !important;
+    font-size: 10px !important;
+    font-weight: 600 !important;
+    color: #64748b !important;
+    padding: 2px 8px !important;
+    border-radius: 4px !important;
+    cursor: pointer !important;
+    transition: all 0.15s ease !important;
+    line-height: 1.4 !important;
+}
+.cd-srv-filter-btn:hover {
+    color: #0f172a !important;
+}
+.cd-srv-filter-btn.active {
+    background: #ffffff !important;
+    color: #009ef7 !important;
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.08) !important;
+    font-weight: 700 !important;
+}
+.cd-srv-compact-stack {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 10px !important;
+}
+.cd-srv-card-compact {
     background: #ffffff !important;
     border: 1px solid #e2e8f0 !important;
-    border-radius: 10px !important;
-    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04) !important;
+    border-radius: 8px !important;
     overflow: hidden !important;
     transition: border-color 0.18s ease, box-shadow 0.18s ease !important;
-    border-left: 4px solid #cbd5e1 !important;
-    container-type: inline-size;
-    container-name: srvcard;
-    margin-bottom: 12px !important;
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03) !important;
     width: 100% !important;
     box-sizing: border-box !important;
 }
-
-.cd-srv-card.is-active {
-    border-left-color: #10b981 !important;
+.cd-srv-card-compact:hover {
+    box-shadow: 0 3px 8px rgba(15, 23, 42, 0.06) !important;
 }
-
-.cd-srv-card:hover {
-    border-color: #cbd5e1 !important;
-    box-shadow: 0 3px 10px rgba(15, 23, 42, 0.06) !important;
-}
-
-.cd-srv-card.theme-fulltime {
+.cd-srv-card-compact.theme-fulltime {
+    border-left: 3.5px solid #009ef7 !important;
     border-color: #dbeafe !important;
-    border-left-color: #009ef7 !important;
 }
-.cd-srv-card.theme-fulltime .cd-srv-card-head {
+.cd-srv-card-compact.theme-contract {
+    border-left: 3.5px solid #7c3aed !important;
+    border-color: #ede9fe !important;
+}
+
+/* Slim Card Header */
+.cd-srv-c-head {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    padding: 7px 12px !important;
+    gap: 8px !important;
+    flex-wrap: nowrap !important;
+}
+.cd-srv-card-compact.theme-fulltime .cd-srv-c-head {
     background: #f0f7ff !important;
     border-bottom: 1px solid #dbeafe !important;
 }
-.cd-srv-card.theme-fulltime .cd-srv-grid {
-    background: #f8fbff !important;
+.cd-srv-card-compact.theme-contract .cd-srv-c-head {
+    background: #faf7ff !important;
+    border-bottom: 1px solid #ede9fe !important;
 }
-.cd-srv-card.theme-fulltime .cd-subcard {
+.cd-srv-c-head-left {
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    min-width: 0 !important;
+    flex: 1 1 auto !important;
+}
+.cd-srv-c-symbol {
+    width: 26px !important;
+    height: 26px !important;
+    border-radius: 6px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: 11px !important;
+    font-weight: 800 !important;
+    flex-shrink: 0 !important;
+    letter-spacing: 0.02em !important;
+}
+.cd-srv-c-symbol.ft {
     background: #ffffff !important;
-    border: 1px solid #dbeafe !important;
-    box-shadow: 0 1px 3px rgba(0, 158, 247, 0.04) !important;
+    color: #009ef7 !important;
+    border: 1px solid #bfdbfe !important;
 }
-.cd-srv-card.theme-fulltime .cd-subcard:hover {
-    border-color: #93c5fd !important;
-    box-shadow: 0 3px 10px rgba(0, 158, 247, 0.10) !important;
-}
-.cd-srv-card.theme-fulltime .cd-srv-bottom-strip {
-    background: #f0f7ff !important;
-    border-top: 1px solid #dbeafe !important;
-    color: #475569 !important;
-}
-.cd-srv-card.theme-fulltime .cd-srv-bottom-chip {
+.cd-srv-c-symbol.ct {
     background: #ffffff !important;
-    border: 1px solid #dbeafe !important;
-    color: #1e40af !important;
+    color: #7c3aed !important;
+    border: 1px solid #ddd6fe !important;
 }
-.cd-srv-card.theme-fulltime .cd-srv-scope-pill {
+.cd-srv-c-title-box {
+    display: flex !important;
+    flex-direction: column !important;
+    min-width: 0 !important;
+    gap: 1px !important;
+}
+.cd-srv-c-title-row {
+    display: flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+}
+.cd-srv-c-title {
+    font-size: 12.5px !important;
+    font-weight: 700 !important;
+    color: #0f172a !important;
+    line-height: 1.25 !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+}
+.cd-srv-c-subtitle {
+    font-size: 10px !important;
+    color: #64748b !important;
+    line-height: 1.25 !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+}
+.cd-srv-c-status-dot {
+    width: 6.5px !important;
+    height: 6.5px !important;
+    border-radius: 50% !important;
+    background: #10b981 !important;
+    box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.25) !important;
+    flex-shrink: 0 !important;
+}
+.cd-srv-c-status-dot.purple {
+    background: #7c3aed !important;
+    box-shadow: 0 0 0 2px rgba(124, 58, 237, 0.25) !important;
+}
+.cd-srv-c-rate-pill {
+    display: inline-flex !important;
+    align-items: baseline !important;
+    gap: 4px !important;
+    padding: 2.5px 8px !important;
+    border-radius: 5px !important;
+    flex-shrink: 0 !important;
+}
+.cd-srv-c-rate-pill.ft {
     background: #eff6ff !important;
     border: 1px solid #bfdbfe !important;
     color: #1e40af !important;
 }
-.cd-srv-card.theme-fulltime .cd-srv-scope-pill svg {
-    color: #009ef7 !important;
-}
-
-.cd-srv-card.theme-contract {
-    border-color: #ede9fe !important;
-    border-left-color: #7c3aed !important;
-}
-.cd-srv-card.theme-contract .cd-srv-card-head {
-    background: #f5f0ff !important;
-    border-bottom: 1px solid #ede9fe !important;
-}
-.cd-srv-card.theme-contract .cd-srv-grid {
-    background: #faf7ff !important;
-}
-.cd-srv-card.theme-contract .cd-subcard {
-    background: #ffffff !important;
-    border: 1px solid #ede9fe !important;
-    box-shadow: 0 1px 3px rgba(124, 58, 237, 0.04) !important;
-}
-.cd-srv-card.theme-contract .cd-subcard:hover {
-    border-color: #c4b5fd !important;
-    box-shadow: 0 3px 10px rgba(124, 58, 237, 0.10) !important;
-}
-.cd-srv-card.theme-contract .cd-srv-bottom-strip {
-    background: #f5f0ff !important;
-    border-top: 1px solid #ede9fe !important;
-    color: #475569 !important;
-}
-.cd-srv-card.theme-contract .cd-srv-bottom-chip {
-    background: #ffffff !important;
-    border: 1px solid #ede9fe !important;
-    color: #6d28d9 !important;
-}
-.cd-srv-card.theme-contract .cd-srv-scope-pill {
+.cd-srv-c-rate-pill.ct {
     background: #f5f3ff !important;
     border: 1px solid #ddd6fe !important;
     color: #6d28d9 !important;
 }
-.cd-srv-card.theme-contract .cd-srv-scope-pill svg {
-    color: #7c3aed !important;
+.cd-srv-c-rate-pill .rate-val {
+    font-size: 12.5px !important;
+    font-weight: 800 !important;
+    font-variant-numeric: tabular-nums !important;
+}
+.cd-srv-c-rate-pill .rate-lbl {
+    font-size: 9px !important;
+    font-weight: 600 !important;
+    opacity: 0.85 !important;
 }
 
-.cd-srv-card-head {
+/* 4-Line Compact High-Density Body */
+.cd-srv-c-body {
+    padding: 7px 12px !important;
     display: flex !important;
-    align-items: center !important;
-    justify-content: space-between !important;
-    flex-wrap: nowrap !important;
-    gap: 12px !important;
-    padding: 10px 16px !important;
+    flex-direction: column !important;
+    gap: 4.5px !important;
+    background: #ffffff !important;
 }
-.cd-srv-head-left {
+.cd-srv-c-row {
     display: flex !important;
     align-items: center !important;
-    gap: 12px !important;
+    gap: 8px !important;
+    font-size: 11px !important;
+    line-height: 1.35 !important;
+    min-width: 0 !important;
+}
+.cd-srv-c-key {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 5px !important;
+    width: 120px !important;
+    flex-shrink: 0 !important;
+    font-weight: 600 !important;
+    color: #64748b !important;
+    letter-spacing: 0.01em !important;
+    font-size: 10.5px !important;
+}
+.cd-srv-c-icon {
+    font-size: 10px !important;
+    width: 13px !important;
+    text-align: center !important;
+    flex-shrink: 0 !important;
+}
+.cd-srv-c-icon.ft { color: #009ef7 !important; }
+.cd-srv-c-icon.ct { color: #7c3aed !important; }
+.cd-srv-c-val {
+    display: flex !important;
+    align-items: center !important;
+    flex-wrap: wrap !important;
+    gap: 2px 6px !important;
+    color: #334155 !important;
+    font-weight: 500 !important;
     min-width: 0 !important;
     flex: 1 1 auto !important;
 }
-.cd-srv-symbol {
-    width: 38px !important;
-    height: 38px !important;
-    border-radius: 9px !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    font-size: 13px !important;
-    font-weight: 800 !important;
-    letter-spacing: 0.02em !important;
-    flex-shrink: 0 !important;
+.cd-srv-c-sep {
+    color: #cbd5e1 !important;
+    font-weight: 400 !important;
+    user-select: none !important;
+    font-size: 10px !important;
 }
-.cd-srv-symbol.ft {
+.cd-srv-c-badge {
+    font-size: 9px !important;
+    font-weight: 700 !important;
+    padding: 1px 5px !important;
+    border-radius: 4px !important;
+    line-height: 1.25 !important;
+}
+.cd-srv-c-badge.ft {
     background: #eff6ff !important;
     color: #0085ff !important;
     border: 1px solid #bfdbfe !important;
 }
-.cd-srv-symbol.ct {
+.cd-srv-c-badge.ct {
     background: #f5f3ff !important;
     color: #7c3aed !important;
     border: 1px solid #ddd6fe !important;
 }
-.cd-srv-head-meta {
-    display: flex !important;
-    flex-direction: column !important;
-    gap: 1px !important;
-    min-width: 0 !important;
-}
-.cd-srv-title-row {
-    display: flex !important;
-    align-items: center !important;
-    gap: 8px !important;
-    flex-wrap: wrap !important;
-}
-.cd-srv-title {
-    font-size: 14px !important;
-    font-weight: 700 !important;
-    color: #0f172a !important;
-    margin: 0 !important;
-    line-height: 1.25 !important;
-}
-.cd-srv-scope-pill {
-    display: inline-flex !important;
-    align-items: center !important;
-    gap: 4px !important;
-    font-size: 10.5px !important;
-    font-weight: 600 !important;
-    padding: 1px 7px !important;
-    border-radius: 5px !important;
-}
-.cd-srv-scope-pill svg {
-    width: 12px !important;
-    height: 12px !important;
-}
-.cd-srv-status-badge {
-    display: inline-flex !important;
-    align-items: center !important;
-    font-size: 10px !important;
-    font-weight: 700 !important;
-    text-transform: uppercase !important;
-    letter-spacing: 0.04em !important;
-    padding: 1px 7px !important;
-    border-radius: 4px !important;
-    background: #ecfdf5 !important;
-    color: #059669 !important;
-    border: 1px solid #a7f3d0 !important;
-}
-.cd-srv-subtitle {
-    font-size: 11px !important;
-    color: #64748b !important;
-    margin: 0 !important;
-    line-height: 1.35 !important;
-    white-space: nowrap !important;
-    overflow: hidden !important;
-    text-overflow: ellipsis !important;
-}
-.cd-srv-head-right {
-    display: flex !important;
-    align-items: center !important;
-    gap: 10px !important;
-    flex-shrink: 0 !important;
-}
-.cd-srv-live-chip {
-    display: inline-flex !important;
-    align-items: center !important;
-    gap: 5px !important;
-    height: 20px !important;
-    padding: 0 8px !important;
-    border-radius: 10px !important;
-    background: #ecfdf5 !important;
-    color: #047857 !important;
-    font-size: 10.5px !important;
-    font-weight: 600 !important;
-    border: 1px solid #a7f3d0 !important;
-}
-.cd-srv-live-dot {
-    width: 6px !important;
-    height: 6px !important;
-    border-radius: 50% !important;
-    background: #10b981 !important;
-    box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.25) !important;
-    animation: cdPulseDot 2s infinite !important;
-}
-@keyframes cdPulseDot {
-    0%, 100% { opacity: 1; transform: scale(1); }
-    50% { opacity: 0.5; transform: scale(1.15); }
-}
 
-.cd-srv-grid {
-    display: grid !important;
-    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
-    gap: 10px !important;
-    padding: 12px 14px !important;
-    width: 100% !important;
-    align-items: stretch !important;
-}
-@container srvcard (max-width: 980px) {
-    .cd-srv-grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-        gap: 10px !important;
-        padding: 12px 14px !important;
-    }
-}
-@container srvcard (max-width: 520px) {
-    .cd-srv-grid {
-        grid-template-columns: 1fr !important;
-    }
-}
-
-.cd-subcard {
-    background: #ffffff !important;
-    border: 1px solid #eef2f6 !important;
-    border-radius: 8px !important;
-    padding: 10px 12px !important;
-    display: flex !important;
-    flex-direction: column !important;
-    justify-content: space-between !important;
-    gap: 6px !important;
-    min-width: 0 !important;
-    min-height: 118px !important;
-    transition: border-color 0.15s ease, background 0.15s ease !important;
-    box-sizing: border-box !important;
-}
-.cd-subcard-label {
-    font-size: 10.5px !important;
-    font-weight: 600 !important;
-    color: #64748b !important;
-    letter-spacing: 0.04em !important;
-    text-transform: uppercase !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: space-between !important;
-    gap: 6px !important;
-    margin-bottom: 2px !important;
-}
-.cd-subcard-label-left {
-    display: flex !important;
-    align-items: center !important;
-    gap: 5px !important;
-    min-width: 0 !important;
-    flex: 1 1 auto !important;
-}
-.cd-subcard-label-left span {
-    white-space: nowrap !important;
-    overflow: hidden !important;
-    text-overflow: ellipsis !important;
-}
-.cd-subcard-label svg {
-    width: 13.5px !important;
-    height: 13.5px !important;
-    flex-shrink: 0 !important;
-}
-.cd-subcard-val {
-    font-size: 15px !important;
-    font-weight: 700 !important;
-    color: #0f172a !important;
-    line-height: 1.25 !important;
-    font-variant-numeric: tabular-nums !important;
-    display: flex !important;
-    align-items: baseline !important;
-    flex-wrap: wrap !important;
-    gap: 2px 6px !important;
-    min-height: 36px !important;
-    min-width: 0 !important;
-}
-.cd-subcard-val.rate-highlight {
-    color: #059669 !important;
-}
-.cd-subcard-val.rate-highlight-purple {
-    color: #7c3aed !important;
-}
-.cd-subcard-val .val-sub {
-    font-size: 11px !important;
-    font-weight: 500 !important;
-    color: #64748b !important;
-    white-space: normal !important;
-    line-height: 1.25 !important;
-}
-.cd-subcard-meta {
-    font-size: 11px !important;
-    color: #334155 !important;
-    font-weight: 500 !important;
-    display: flex !important;
-    align-items: center !important;
-    gap: 6px !important;
-    line-height: 1.35 !important;
-    white-space: nowrap !important;
-    overflow: hidden !important;
-    text-overflow: ellipsis !important;
-    min-width: 0 !important;
-}
-.cd-subcard-meta svg {
-    width: 12px !important;
-    height: 12px !important;
-    flex-shrink: 0 !important;
-}
-.cd-country-pills-row {
-    display: flex !important;
-    align-items: center !important;
-    flex-wrap: wrap !important;
-    gap: 5px !important;
-    margin-top: 2px !important;
-}
-.cd-country-chip {
+/* Country Micro-Chips in Short Form */
+.cd-srv-c-country-list {
     display: inline-flex !important;
     align-items: center !important;
-    gap: 4px !important;
-    height: 22px !important;
-    padding: 0 7px !important;
-    border-radius: 5px !important;
-    background: #ffffff !important;
+    flex-wrap: wrap !important;
+    gap: 3.5px !important;
+}
+.cd-srv-c-country-chip {
+    display: inline-flex !important;
+    align-items: center !important;
+    height: 17px !important;
+    padding: 0 5px !important;
+    border-radius: 3.5px !important;
+    background: #f8fafc !important;
     border: 1px solid #e2e8f0 !important;
-    color: #334155 !important;
-    font-size: 10.5px !important;
-    font-weight: 600 !important;
-    white-space: nowrap !important;
-    max-width: 115px !important;
-    overflow: hidden !important;
-    text-overflow: ellipsis !important;
+    color: #1e293b !important;
+    font-size: 9.5px !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.03em !important;
+    cursor: default !important;
+    transition: all 0.15s ease !important;
 }
-.cd-country-chip svg {
-    width: 11px !important;
-    height: 11px !important;
-    color: #ef4444 !important;
+.cd-srv-c-country-chip:hover {
+    border-color: #94a3b8 !important;
+    background: #ffffff !important;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06) !important;
 }
-.cd-country-chip.more-chip {
+.cd-srv-c-country-chip.more {
     background: #eff6ff !important;
     border-color: #bfdbfe !important;
     color: #009ef7 !important;
     font-weight: 700 !important;
 }
-.cd-srv-bottom-strip {
-    background: #f8fafc !important;
-    border-top: 1px solid #f1f5f9 !important;
-    padding: 8px 14px !important;
+
+/* Micro Activity Strip */
+.cd-srv-c-strip {
+    padding: 4px 12px !important;
     display: flex !important;
     align-items: center !important;
     justify-content: space-between !important;
-    flex-wrap: wrap !important;
     gap: 8px !important;
-    font-size: 11px !important;
+    font-size: 10px !important;
     color: #64748b !important;
+    border-top: 1px solid #f1f5f9 !important;
 }
-.cd-srv-bottom-left {
-    display: flex !important;
-    align-items: center !important;
-    gap: 6px !important;
-    flex: 1 1 auto !important;
-    min-width: 0 !important;
+.cd-srv-card-compact.theme-fulltime .cd-srv-c-strip {
+    background: #f8fbff !important;
+}
+.cd-srv-card-compact.theme-contract .cd-srv-c-strip {
+    background: #faf7ff !important;
+}
+.cd-srv-c-strip-text {
     white-space: nowrap !important;
     overflow: hidden !important;
     text-overflow: ellipsis !important;
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
 }
-.cd-srv-bottom-left svg {
-    width: 13px !important;
-    height: 13px !important;
-    color: #10b981 !important;
-    flex-shrink: 0 !important;
-}
-.cd-srv-bottom-right {
-    display: flex !important;
-    align-items: center !important;
-    gap: 8px !important;
-    flex-shrink: 0 !important;
-}
-.cd-srv-bottom-chip {
-    display: inline-flex !important;
-    align-items: center !important;
+.cd-srv-c-strip-tag {
+    font-size: 9px !important;
+    font-weight: 600 !important;
     padding: 1px 6px !important;
     border-radius: 4px !important;
     background: #ffffff !important;
-    border: 1px solid #e2e8f0 !important;
-    font-weight: 600 !important;
-    color: #334155 !important;
-    font-size: 10.5px !important;
+    border: 1px solid #dbeafe !important;
+    color: #1e40af !important;
+    flex-shrink: 0 !important;
+}
+.cd-srv-c-strip-tag.purple {
+    border-color: #ede9fe !important;
+    color: #6d28d9 !important;
 }
 
 /* ── 8. Master Contacts Tab Modern Card + Sub-Card System (Rule 20) ── */
@@ -3301,325 +3262,263 @@
                         </div>
                     </div>
 
-                    <!-- Commercial Terms Cards (Rule 20 Modern Card + Sub-Card System / Synced with Hiring Services & Commercials) -->
+                    <!-- Commercial Terms Cards (Rule 20 Modern Card + Sub-Card System / Modern Compact 4-Line Standard) -->
                     @if(!empty($hasActiveCommercials))
-                        @if(!empty($hasPermanentStaffing) && !empty($permanentCommercial))
-                            <!-- ──────────────────────────────────────────────────────────────────
-                                 COMMERCIAL CARD 1: FULLTIME HIRING SERVICES (Executive Corporate Blue)
-                                 Sourced strictly in sync with Hiring Services & Commercials settings
-                                 ────────────────────────────────────────────────────────────────── -->
-                            <article class="cd-srv-card theme-fulltime is-active" style="margin-top: 10px;">
-                                <!-- Master Card Header -->
-                                <div class="cd-srv-card-head">
-                                    <div class="cd-srv-head-left">
-                                        <div class="cd-srv-symbol ft" title="Fulltime Hiring">FT</div>
-                                        <div class="cd-srv-head-meta">
-                                            <div class="cd-srv-title-row">
-                                                <h4 class="cd-srv-title">Fulltime Hiring Services</h4>
-                                                <span class="cd-srv-scope-pill">
-                                                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
-                                                    </svg>
-                                                    Fulltime Staffing Terms
-                                                </span>
-                                                <span class="cd-srv-status-badge">Active</span>
-                                            </div>
-                                            <p class="cd-srv-subtitle">Permanent direct-hire recruitment, contingency search, and senior executive placement</p>
+                        <div class="cd-master-subcard cd-srv-master-box">
+                            <div class="cd-subcard-header">
+                                <div class="cd-subcard-header-left">
+                                    <div class="cd-subcard-header-icon blue"><i class="fas fa-handshake-angle"></i></div>
+                                    <h4 class="cd-subcard-heading">Hiring Services &amp; Commercials</h4>
+                                </div>
+                                <div class="d-flex align-items-center gap-2">
+                                    @if(!empty($hasPermanentStaffing) && !empty($hasContractStaffing))
+                                        <div class="cd-srv-filter-pills" role="tablist">
+                                            <button type="button" class="cd-srv-filter-btn active" data-srv-filter="all" onclick="filterAgencyServices('all', this)">All (2)</button>
+                                            <button type="button" class="cd-srv-filter-btn" data-srv-filter="fulltime" onclick="filterAgencyServices('fulltime', this)">Fulltime</button>
+                                            <button type="button" class="cd-srv-filter-btn" data-srv-filter="contract" onclick="filterAgencyServices('contract', this)">Contract</button>
                                         </div>
-                                    </div>
-                                    <div class="cd-srv-head-right">
-                                        <span class="cd-srv-live-chip">
-                                            <span class="cd-srv-live-dot"></span>
-                                            Active Agreement
+                                    @else
+                                        <span class="badge bg-light-success text-success fw-bold" style="font-size:10px; padding:3px 8px; border-radius:12px;">
+                                            <i class="fas fa-check-circle me-1"></i>Active Terms
                                         </span>
-                                    </div>
+                                    @endif
                                 </div>
+                            </div>
 
-                                <!-- STRICTLY FIXED SUB-CARDS GRID (Responsive 2-col or 4-col per Rule 20) -->
-                                <div class="cd-srv-grid">
-                                    <!-- Sub-Card 1: Commercial Model & Rates -->
-                                    <div class="cd-subcard">
-                                        <div class="cd-subcard-label">
-                                            <div class="cd-subcard-label-left">
-                                                <svg class="text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/>
-                                                </svg>
-                                                <span title="{{ $permanentCommercial->model_label ?? 'Percentage of CTC' }}">{{ $permanentCommercial->header_label ?? 'PERCENTAGE OF CTC' }}</span>
+                            <div class="cd-srv-compact-stack">
+                                @if(!empty($hasPermanentStaffing) && !empty($permanentCommercial))
+                                    <!-- ──────────────────────────────────────────────────────────────────
+                                         COMMERCIAL CARD 1: FULLTIME HIRING SERVICES (Short Form Standard)
+                                         Sourced strictly in sync with Hiring Services & Commercials settings
+                                         ────────────────────────────────────────────────────────────────── -->
+                                    <article class="cd-srv-card-compact theme-fulltime is-active cd-srv-item" data-srv="fulltime">
+                                        <!-- Slim Header -->
+                                        <div class="cd-srv-c-head">
+                                            <div class="cd-srv-c-head-left">
+                                                <div class="cd-srv-c-symbol ft" title="Fulltime Hiring">FT</div>
+                                                <div class="cd-srv-c-title-box">
+                                                    <div class="cd-srv-c-title-row">
+                                                        <span class="cd-srv-c-title">Fulltime Hiring Services</span>
+                                                        <span class="cd-srv-c-status-dot" title="Active Staffing Agreement"></span>
+                                                    </div>
+                                                    <span class="cd-srv-c-subtitle">Permanent direct-hire recruitment &amp; contingency search</span>
+                                                </div>
                                             </div>
-                                            <span class="cd-num-badge">{{ $permanentCommercial->mode_badge ?? '5 Tiers' }}</span>
-                                        </div>
-                                        <div class="cd-subcard-val rate-highlight">
-                                            <span>{{ $permanentCommercial->default_rate ?? ($placement_fee ?? '8.33%') }}</span>
-                                            <span class="val-sub">{{ $permanentCommercial->default_rate_sub ?? 'Default Rate' }}</span>
-                                        </div>
-                                        <div class="cd-subcard-meta">
-                                            <span class="cd-bullet-dot"></span>
-                                            <span title="Billing Basis">{{ $permanentCommercial->sal_mode_label ?? 'Annual CTC' }}</span>
-                                        </div>
-                                        <div class="cd-subcard-meta">
-                                            <span class="cd-bullet-dot"></span>
-                                            <span title="Fee Structure">{{ $permanentCommercial->model_label ?? 'Percentage of CTC' }}</span>
-                                        </div>
-                                    </div>
-
-                                    <!-- Sub-Card 2: Replacement Policy & Guarantee -->
-                                    <div class="cd-subcard">
-                                        <div class="cd-subcard-label">
-                                            <div class="cd-subcard-label-left">
-                                                <svg class="text-success" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
-                                                </svg>
-                                                <span>REPLACEMENT GUARANTEE</span>
-                                            </div>
-                                        </div>
-                                        <div class="cd-subcard-val">
-                                            <span>{{ $permanentCommercial->replacement_days ?? 90 }} Days</span>
-                                            <span class="val-sub">Replacement</span>
-                                        </div>
-                                        <div class="cd-subcard-meta">
-                                            <span class="cd-bullet-dot emerald"></span>
-                                            <span>{{ $permanentCommercial->replacement_type ?? 'Free Replacement' }}</span>
-                                        </div>
-                                        <div class="cd-subcard-meta">
-                                            <span class="cd-bullet-dot emerald"></span>
-                                            <span title="Eligibility">Clause: {{ $permanentCommercial->replacement_clause ?? 'Early Exit' }}</span>
-                                        </div>
-                                    </div>
-
-                                    <!-- Sub-Card 3: Billing & Invoicing Terms -->
-                                    <div class="cd-subcard">
-                                        <div class="cd-subcard-label">
-                                            <div class="cd-subcard-label-left">
-                                                <svg class="text-info" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-                                                </svg>
-                                                <span>BILLING &amp; PAYMENT TERMS</span>
-                                            </div>
-                                        </div>
-                                        <div class="cd-subcard-val">
-                                            <span>{{ $permanentCommercial->payment_terms ?? 'Net 30 Days' }}</span>
-                                            <span class="val-sub">Payment</span>
-                                        </div>
-                                        <div class="cd-subcard-meta">
-                                            <span class="cd-bullet-dot sky"></span>
-                                            <span title="Billing Cadence">Invoicing: {{ $permanentCommercial->billing_frequency ?? 'One Time' }}</span>
-                                        </div>
-                                        <div class="cd-subcard-meta">
-                                            <span class="cd-bullet-dot amber"></span>
-                                            <span title="Payment Trigger">Trigger: {{ $permanentCommercial->billing_trigger ?? 'Candidate Joined' }}</span>
-                                        </div>
-                                    </div>
-
-                                    <!-- Sub-Card 4: Operational Scope & SLA -->
-                                    <div class="cd-subcard">
-                                        <div class="cd-subcard-label">
-                                            <div class="cd-subcard-label-left">
-                                                <svg class="text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                                                </svg>
-                                                <span>OPERATIONAL SCOPE</span>
-                                            </div>
-                                            <span class="cd-num-badge">{{ count($permanentCommercial->countries ?? ['India']) }}</span>
-                                        </div>
-                                        <div class="cd-subcard-val">
-                                            <div class="cd-country-pills-row">
-                                                @foreach(array_slice($permanentCommercial->countries ?? ['India'], 0, 2) as $cName)
-                                                    <span class="cd-country-chip" title="{{ $cName }}">
-                                                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
-                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
-                                                        </svg>
-                                                        {{ $cName }}
-                                                    </span>
-                                                @endforeach
-                                                @if(count($permanentCommercial->countries ?? ['India']) > 2)
-                                                    <span class="cd-country-chip more-chip">+{{ count($permanentCommercial->countries) - 2 }}</span>
-                                                @endif
-                                            </div>
-                                        </div>
-                                        <div class="cd-subcard-meta">
-                                            <span class="cd-bullet-dot emerald"></span>
-                                            <span>Auto-enabled for shared jobs</span>
-                                        </div>
-                                        <div class="cd-subcard-meta">
-                                            <span class="cd-bullet-dot sky"></span>
-                                            <span>48-Hour Profile Turnaround SLA</span>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- Bottom Activity & Metadata Strip -->
-                                <div class="cd-srv-bottom-strip">
-                                    <div class="cd-srv-bottom-left">
-                                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
-                                        </svg>
-                                        <span>Fulltime placement commercial terms bind automatically to agency agreements, shared job requisitions, and candidate submissions.</span>
-                                    </div>
-                                    <div class="cd-srv-bottom-right">
-                                        <span class="cd-srv-bottom-chip">{{ $permanentCommercial->currency_code ?? 'INR' }} · Default</span>
-                                        <span class="cd-srv-bottom-chip">{{ $permanentCommercial->bottom_model ?? 'One-time Placement Fee' }}</span>
-                                    </div>
-                                </div>
-                            </article>
-                        @endif
-
-                        @if(!empty($hasContractStaffing) && !empty($contractCommercial))
-                            <!-- ──────────────────────────────────────────────────────────────────
-                                 COMMERCIAL CARD 2: CONTRACT HIRING SERVICES (Enterprise Modern Violet)
-                                 Sourced strictly in sync with Hiring Services & Commercials settings
-                                 ────────────────────────────────────────────────────────────────── -->
-                            <article class="cd-srv-card theme-contract is-active" style="margin-top: 10px;">
-                                <!-- Master Card Header -->
-                                <div class="cd-srv-card-head">
-                                    <div class="cd-srv-head-left">
-                                        <div class="cd-srv-symbol ct" title="Contract Hiring">CT</div>
-                                        <div class="cd-srv-head-meta">
-                                            <div class="cd-srv-title-row">
-                                                <h4 class="cd-srv-title">Contract Hiring Services</h4>
-                                                <span class="cd-srv-scope-pill">
-                                                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
-                                                    </svg>
-                                                    Contract Staffing Terms
+                                            <div class="cd-srv-c-head-right">
+                                                <span class="cd-srv-c-rate-pill ft" title="Default Fulltime Fee Rate">
+                                                    <span class="rate-val">{{ $permanentCommercial->default_rate ?? ($placement_fee ?? '8.33%') }}</span>
+                                                    <span class="rate-lbl">{{ $permanentCommercial->default_rate_sub ?? 'Default Rate' }}</span>
                                                 </span>
-                                                <span class="cd-srv-status-badge">Active</span>
-                                            </div>
-                                            <p class="cd-srv-subtitle">Contract staffing, hourly/monthly consultants, and talent augmentation solutions</p>
-                                        </div>
-                                    </div>
-                                    <div class="cd-srv-head-right">
-                                        <span class="cd-srv-live-chip" style="background:#f5f3ff; color:#7c3aed; border-color:#ddd6fe;">
-                                            <span class="cd-srv-live-dot" style="background:#7c3aed; box-shadow:0 0 0 2px rgba(124,58,237,0.25);"></span>
-                                            Active Agreement
-                                        </span>
-                                    </div>
-                                </div>
-
-                                <!-- STRICTLY FIXED SUB-CARDS GRID (Responsive 2-col or 4-col per Rule 20) -->
-                                <div class="cd-srv-grid">
-                                    <!-- Sub-Card 1: Commercial Model & Pricing -->
-                                    <div class="cd-subcard">
-                                        <div class="cd-subcard-label">
-                                            <div class="cd-subcard-label-left">
-                                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width:13.5px; height:13.5px; color:#7c3aed;">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                                                </svg>
-                                                <span title="{{ $contractCommercial->model_label ?? 'Contract Bill Rate' }}">{{ $contractCommercial->header_label ?? 'CONTRACT BILL RATE' }}</span>
-                                            </div>
-                                            <span class="cd-num-badge" style="color:#7c3aed; background:#f5f3ff; border-color:#ddd6fe;">{{ $contractCommercial->mode_badge ?? 'Hourly' }}</span>
-                                        </div>
-                                        <div class="cd-subcard-val rate-highlight-purple">
-                                            <span>{{ $contractCommercial->default_rate ?? ($contractCommercial->commercial_rate ?? '₹ 80,000') }}</span>
-                                            <span class="val-sub">{{ $contractCommercial->default_rate_sub ?? '/ Hour' }}</span>
-                                        </div>
-                                        <div class="cd-subcard-meta">
-                                            <span class="cd-bullet-dot purple"></span>
-                                            <span title="Billing Cadence">{{ $contractCommercial->sal_mode_label ?? 'Hourly Contract Rate' }}</span>
-                                        </div>
-                                        <div class="cd-subcard-meta">
-                                            <span class="cd-bullet-dot purple"></span>
-                                            <span title="Fee Structure">{{ $contractCommercial->model_label ?? 'Contract Bill Rate' }}</span>
-                                        </div>
-                                    </div>
-
-                                    <!-- Sub-Card 2: Contractor Guarantee & Replacement -->
-                                    <div class="cd-subcard">
-                                        <div class="cd-subcard-label">
-                                            <div class="cd-subcard-label-left">
-                                                <svg class="text-success" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
-                                                </svg>
-                                                <span>CONTRACTOR GUARANTEE</span>
                                             </div>
                                         </div>
-                                        <div class="cd-subcard-val">
-                                            <span>{{ $contractCommercial->replacement_days ?? 30 }} Days</span>
-                                            <span class="val-sub">Notice Period</span>
-                                        </div>
-                                        <div class="cd-subcard-meta">
-                                            <span class="cd-bullet-dot emerald"></span>
-                                            <span>{{ $contractCommercial->replacement_type ?? 'Contractor Replacement' }}</span>
-                                        </div>
-                                        <div class="cd-subcard-meta">
-                                            <span class="cd-bullet-dot emerald"></span>
-                                            <span title="Eligibility">Clause: {{ $contractCommercial->replacement_clause ?? 'Contractor Early Departure' }}</span>
-                                        </div>
-                                    </div>
 
-                                    <!-- Sub-Card 3: Invoicing & Payment Terms -->
-                                    <div class="cd-subcard">
-                                        <div class="cd-subcard-label">
-                                            <div class="cd-subcard-label-left">
-                                                <svg class="text-info" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-                                                </svg>
-                                                <span>INVOICING &amp; TERMS</span>
+                                        <!-- 4 Lines of High-Density Commercial Intelligence -->
+                                        <div class="cd-srv-c-body">
+                                            <!-- Line 1: Default Rate & Model -->
+                                            <div class="cd-srv-c-row">
+                                                <div class="cd-srv-c-key">
+                                                    <i class="fas fa-percent cd-srv-c-icon ft"></i>
+                                                    <span>Default Rate:</span>
+                                                </div>
+                                                <div class="cd-srv-c-val">
+                                                    <strong class="text-dark">{{ $permanentCommercial->default_rate ?? ($placement_fee ?? '8.33%') }}</strong>
+                                                    <span class="cd-srv-c-sep">·</span>
+                                                    <span class="text-gray-800">{{ $permanentCommercial->model_label ?? 'Percentage of CTC' }}</span>
+                                                    <span class="text-muted fs-9">({{ $permanentCommercial->sal_mode_label ?? 'Annual CTC' }})</span>
+                                                    @if(!empty($permanentCommercial->mode_badge))
+                                                        <span class="cd-srv-c-badge ft">{{ $permanentCommercial->mode_badge }}</span>
+                                                    @endif
+                                                </div>
+                                            </div>
+
+                                            <!-- Line 2: Fee Structure & Invoicing Trigger -->
+                                            <div class="cd-srv-c-row">
+                                                <div class="cd-srv-c-key">
+                                                    <i class="fas fa-file-invoice-dollar cd-srv-c-icon ft"></i>
+                                                    <span>Invoicing &amp; Fee:</span>
+                                                </div>
+                                                <div class="cd-srv-c-val">
+                                                    <span class="fw-semibold text-gray-800">{{ $permanentCommercial->billing_frequency ?? 'One Time' }} Fee</span>
+                                                    <span class="cd-srv-c-sep">·</span>
+                                                    <span>Trigger: <strong class="text-gray-900">{{ $permanentCommercial->billing_trigger ?? 'Candidate Joined' }}</strong></span>
+                                                    <span class="cd-srv-c-sep">·</span>
+                                                    <span class="text-muted fs-9">{{ $permanentCommercial->currency_code ?? 'INR' }} Currency</span>
+                                                </div>
+                                            </div>
+
+                                            <!-- Line 3: Payment Terms & Replacement Guarantee -->
+                                            <div class="cd-srv-c-row">
+                                                <div class="cd-srv-c-key">
+                                                    <i class="fas fa-shield-halved cd-srv-c-icon ft"></i>
+                                                    <span>Terms &amp; Guarantee:</span>
+                                                </div>
+                                                <div class="cd-srv-c-val">
+                                                    <span class="fw-semibold text-gray-900">{{ $permanentCommercial->payment_terms ?? 'Net 30 Days' }}</span>
+                                                    <span class="cd-srv-c-sep">·</span>
+                                                    <span><strong class="text-success">{{ $permanentCommercial->replacement_days ?? 90 }} Days</strong> {{ $permanentCommercial->replacement_type ?? 'Free Replacement' }}</span>
+                                                    <span class="cd-srv-c-sep">·</span>
+                                                    <span class="text-muted fs-9" title="{{ $permanentCommercial->replacement_clause ?? 'Early Exit' }}">Clause: {{ $permanentCommercial->replacement_clause ?? 'Early Exit' }}</span>
+                                                </div>
+                                            </div>
+
+                                            <!-- Line 4: Country Operations in Short Form -->
+                                            <div class="cd-srv-c-row">
+                                                <div class="cd-srv-c-key">
+                                                    <i class="fas fa-earth-americas cd-srv-c-icon ft"></i>
+                                                    <span>Operations:</span>
+                                                </div>
+                                                <div class="cd-srv-c-val">
+                                                    @php
+                                                        $rawCountries = $permanentCommercial->countries ?? ['India'];
+                                                        $cCount = count($rawCountries);
+                                                    @endphp
+                                                    <span>Operate in <strong>{{ $cCount }} {{ $cCount === 1 ? 'Country' : 'Countries' }}:</strong></span>
+                                                    <div class="cd-srv-c-country-list">
+                                                        @foreach(array_slice($rawCountries, 0, 5) as $cName)
+                                                            @php
+                                                                $sCode = $getCountryShort($cName);
+                                                            @endphp
+                                                            <span class="cd-srv-c-country-chip" title="{{ $cName }}">{{ $sCode }}</span>
+                                                        @endforeach
+                                                        @if($cCount > 5)
+                                                            <span class="cd-srv-c-country-chip more" title="{{ implode(', ', array_slice($rawCountries, 5)) }}">+{{ $cCount - 5 }}</span>
+                                                        @endif
+                                                    </div>
+                                                </div>
                                             </div>
                                         </div>
-                                        <div class="cd-subcard-val">
-                                            <span>{{ $contractCommercial->payment_terms ?? 'Net 30 Days' }}</span>
-                                            <span class="val-sub">Payment</span>
-                                        </div>
-                                        <div class="cd-subcard-meta">
-                                            <span class="cd-bullet-dot sky"></span>
-                                            <span title="Billing Cadence">Cycle: {{ $contractCommercial->billing_cycle ?? 'Monthly' }}</span>
-                                        </div>
-                                        <div class="cd-subcard-meta">
-                                            <span class="cd-bullet-dot amber"></span>
-                                            <span title="Payment Trigger">Trigger: {{ $contractCommercial->billing_trigger ?? 'Approved Timesheet' }}</span>
-                                        </div>
-                                    </div>
 
-                                    <!-- Sub-Card 4: Contract Duration & SLA -->
-                                    <div class="cd-subcard">
-                                        <div class="cd-subcard-label">
-                                            <div class="cd-subcard-label-left">
-                                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width:13.5px; height:13.5px; color:#7c3aed;">
-                                                    <circle cx="12" cy="12" r="10" stroke-width="2"/>
-                                                    <polyline points="12 6 12 16 14" stroke-width="2"/>
-                                                </svg>
-                                                <span>CONTRACT DURATION &amp; SLA</span>
+                                        <!-- Micro Activity Strip -->
+                                        <div class="cd-srv-c-strip">
+                                            <span class="cd-srv-c-strip-text"><i class="fas fa-circle-check text-success me-1"></i>Fulltime terms bind automatically to agency agreements &amp; submissions</span>
+                                            <span class="cd-srv-c-strip-tag">{{ $permanentCommercial->bottom_model ?? 'One-time Placement Fee' }}</span>
+                                        </div>
+                                    </article>
+                                @endif
+
+                                @if(!empty($hasContractStaffing) && !empty($contractCommercial))
+                                    <!-- ──────────────────────────────────────────────────────────────────
+                                         COMMERCIAL CARD 2: CONTRACT HIRING SERVICES (Short Form Standard)
+                                         Sourced strictly in sync with Hiring Services & Commercials settings
+                                         ────────────────────────────────────────────────────────────────── -->
+                                    <article class="cd-srv-card-compact theme-contract is-active cd-srv-item" data-srv="contract">
+                                        <!-- Slim Header -->
+                                        <div class="cd-srv-c-head">
+                                            <div class="cd-srv-c-head-left">
+                                                <div class="cd-srv-c-symbol ct" title="Contract Hiring">CT</div>
+                                                <div class="cd-srv-c-title-box">
+                                                    <div class="cd-srv-c-title-row">
+                                                        <span class="cd-srv-c-title">Contract Hiring Services</span>
+                                                        <span class="cd-srv-c-status-dot purple" title="Active Contract Staffing Agreement"></span>
+                                                    </div>
+                                                    <span class="cd-srv-c-subtitle">Contract staffing, hourly consultants &amp; talent augmentation</span>
+                                                </div>
                                             </div>
-                                            <span class="cd-num-badge" style="color:#7c3aed; background:#f5f3ff; border-color:#ddd6fe;">Term</span>
+                                            <div class="cd-srv-c-head-right">
+                                                <span class="cd-srv-c-rate-pill ct" title="Default Contract Bill Rate">
+                                                    <span class="rate-val">{{ $contractCommercial->default_rate ?? ($contractCommercial->commercial_rate ?? '₹ 80,000') }}</span>
+                                                    <span class="rate-lbl">{{ $contractCommercial->default_rate_sub ?? '/ Hour' }}</span>
+                                                </span>
+                                            </div>
                                         </div>
-                                        <div class="cd-subcard-val">
-                                            <span>{{ $contractCommercial->min_duration ?? '3 Months' }}</span>
-                                            <span class="val-sub">Min Duration</span>
-                                        </div>
-                                        <div class="cd-subcard-meta">
-                                            <span class="cd-bullet-dot purple"></span>
-                                            <span title="Notice Period">Exit: {{ $contractCommercial->early_termination ?? 'As per contract terms' }}</span>
-                                        </div>
-                                        <div class="cd-subcard-meta">
-                                            <span class="cd-bullet-dot purple"></span>
-                                            <span title="Overtime">Overtime: {{ $contractCommercial->overtime_policy ?? 'As per client terms' }}</span>
-                                        </div>
-                                    </div>
-                                </div>
 
-                                <!-- Bottom Activity & Metadata Strip -->
-                                <div class="cd-srv-bottom-strip">
-                                    <div class="cd-srv-bottom-left">
-                                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color:#7c3aed;">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
-                                        </svg>
-                                        <span>Contract staffing terms apply automatically to candidate contractor timesheets, bill rates, and monthly agency invoices.</span>
-                                    </div>
-                                    <div class="cd-srv-bottom-right">
-                                        <span class="cd-srv-bottom-chip">{{ $contractCommercial->currency_code ?? 'INR' }} · Default</span>
-                                        <span class="cd-srv-bottom-chip">{{ $contractCommercial->bottom_model ?? 'Contract Bill Rate' }}</span>
-                                    </div>
-                                </div>
-                            </article>
-                        @endif
+                                        <!-- 4 Lines of High-Density Commercial Intelligence -->
+                                        <div class="cd-srv-c-body">
+                                            <!-- Line 1: Bill Rate & Model -->
+                                            <div class="cd-srv-c-row">
+                                                <div class="cd-srv-c-key">
+                                                    <i class="fas fa-tag cd-srv-c-icon ct"></i>
+                                                    <span>Bill Rate:</span>
+                                                </div>
+                                                <div class="cd-srv-c-val">
+                                                    <strong class="text-purple">{{ $contractCommercial->default_rate ?? ($contractCommercial->commercial_rate ?? '₹ 80,000') }}</strong>
+                                                    <span class="text-muted fs-9">{{ $contractCommercial->default_rate_sub ?? '/ Hour' }}</span>
+                                                    <span class="cd-srv-c-sep">·</span>
+                                                    <span class="text-gray-800">{{ $contractCommercial->model_label ?? 'Contract Bill Rate' }}</span>
+                                                    <span class="text-muted fs-9">({{ $contractCommercial->sal_mode_label ?? 'Hourly Rate' }})</span>
+                                                    @if(!empty($contractCommercial->mode_badge))
+                                                        <span class="cd-srv-c-badge ct">{{ $contractCommercial->mode_badge }}</span>
+                                                    @endif
+                                                </div>
+                                            </div>
+
+                                            <!-- Line 2: Billing Cycle & Trigger -->
+                                            <div class="cd-srv-c-row">
+                                                <div class="cd-srv-c-key">
+                                                    <i class="fas fa-calendar-check cd-srv-c-icon ct"></i>
+                                                    <span>Invoicing Cycle:</span>
+                                                </div>
+                                                <div class="cd-srv-c-val">
+                                                    <span class="fw-semibold text-gray-800">{{ $contractCommercial->billing_cycle ?? 'Monthly' }} Invoicing</span>
+                                                    <span class="cd-srv-c-sep">·</span>
+                                                    <span>Trigger: <strong class="text-gray-900">{{ $contractCommercial->billing_trigger ?? 'Approved Timesheet' }}</strong></span>
+                                                    <span class="cd-srv-c-sep">·</span>
+                                                    <span class="text-muted fs-9">Min: {{ $contractCommercial->min_duration ?? '3 Months' }}</span>
+                                                </div>
+                                            </div>
+
+                                            <!-- Line 3: Payment Terms & Contractor Guarantee -->
+                                            <div class="cd-srv-c-row">
+                                                <div class="cd-srv-c-key">
+                                                    <i class="fas fa-shield-halved cd-srv-c-icon ct"></i>
+                                                    <span>Terms &amp; Notice:</span>
+                                                </div>
+                                                <div class="cd-srv-c-val">
+                                                    <span class="fw-semibold text-gray-900">{{ $contractCommercial->payment_terms ?? 'Net 30 Days' }}</span>
+                                                    <span class="cd-srv-c-sep">·</span>
+                                                    <span><strong class="text-purple">{{ $contractCommercial->replacement_days ?? 30 }} Days</strong> {{ $contractCommercial->replacement_type ?? 'Contractor Replacement' }}</span>
+                                                    <span class="cd-srv-c-sep">·</span>
+                                                    <span class="text-muted fs-9" title="{{ $contractCommercial->replacement_clause ?? 'Contractor Early Departure' }}">Clause: {{ $contractCommercial->replacement_clause ?? 'Early Departure' }}</span>
+                                                </div>
+                                            </div>
+
+                                            <!-- Line 4: Country Operations in Short Form -->
+                                            <div class="cd-srv-c-row">
+                                                <div class="cd-srv-c-key">
+                                                    <i class="fas fa-earth-americas cd-srv-c-icon ct"></i>
+                                                    <span>Operations:</span>
+                                                </div>
+                                                <div class="cd-srv-c-val">
+                                                    @php
+                                                        $rawCountriesCt = $contractCommercial->countries ?? ['India'];
+                                                        $cCountCt = count($rawCountriesCt);
+                                                    @endphp
+                                                    <span>Operate in <strong>{{ $cCountCt }} {{ $cCountCt === 1 ? 'Country' : 'Countries' }}:</strong></span>
+                                                    <div class="cd-srv-c-country-list">
+                                                        @foreach(array_slice($rawCountriesCt, 0, 5) as $cName)
+                                                            @php
+                                                                $sCode = $getCountryShort($cName);
+                                                            @endphp
+                                                            <span class="cd-srv-c-country-chip" title="{{ $cName }}">{{ $sCode }}</span>
+                                                        @endforeach
+                                                        @if($cCountCt > 5)
+                                                            <span class="cd-srv-c-country-chip more" title="{{ implode(', ', array_slice($rawCountriesCt, 5)) }}">+{{ $cCountCt - 5 }}</span>
+                                                        @endif
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Micro Activity Strip -->
+                                        <div class="cd-srv-c-strip">
+                                            <span class="cd-srv-c-strip-text"><i class="fas fa-circle-check text-purple me-1"></i>Contract terms apply automatically to candidate timesheets &amp; invoices</span>
+                                            <span class="cd-srv-c-strip-tag purple">{{ $contractCommercial->bottom_model ?? 'Contract Bill Rate' }}</span>
+                                        </div>
+                                    </article>
+                                @endif
+                            </div>
+                        </div>
                     @else
-                        <div class="card p-4 text-center mt-3" style="background:#ffffff; border:1px dashed #cbd5e1; border-radius:10px;">
-                            <div class="d-flex align-items-center justify-content-center gap-2 text-muted fs-7">
-                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width:16px; height:16px; color:#94a3b8;">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                                </svg>
-                                <span>No commercial staffing services activated by this agency.</span>
+                        <div class="cd-master-subcard cd-srv-master-box">
+                            <div class="cd-subcard-header">
+                                <div class="cd-subcard-header-left">
+                                    <div class="cd-subcard-header-icon blue"><i class="fas fa-handshake-angle"></i></div>
+                                    <h4 class="cd-subcard-heading">Hiring Services &amp; Commercials</h4>
+                                </div>
+                                <span class="badge bg-light-secondary text-muted fw-bold" style="font-size:10px; padding:3px 8px; border-radius:12px;">Inactive</span>
+                            </div>
+                            <div class="text-muted fs-8 py-3 text-center">
+                                <i class="fas fa-file-invoice text-muted me-1"></i> No commercial staffing services activated by this agency.
                             </div>
                         </div>
                     @endif
@@ -5096,6 +4995,21 @@
             window.ClientActivityManager.initClient({{ (int)$agencyId }}, false, {{ (int)$agencyId }}, false, 'agency', {{ (int)$agencyId }});
         } catch(e) {}
     }
+
+    // ── Instant 0ms In-Memory Commercial Services Filter (Rule 20 Modern Standard) ──
+    window.filterAgencyServices = function(filterType, btnEl) {
+        if (!btnEl) return;
+        var $masterBox = $(btnEl).closest('.cd-srv-master-box');
+        $masterBox.find('.cd-srv-filter-btn').removeClass('active');
+        $(btnEl).addClass('active');
+
+        if (filterType === 'all') {
+            $masterBox.find('.cd-srv-item').stop(true, true).fadeIn(140);
+        } else {
+            $masterBox.find('.cd-srv-item').not('[data-srv="' + filterType + '"]').hide();
+            $masterBox.find('.cd-srv-item[data-srv="' + filterType + '"]').stop(true, true).fadeIn(140);
+        }
+    };
 
     // Copy to clipboard helper
     window.copyToClipboard = function(text, btn) {

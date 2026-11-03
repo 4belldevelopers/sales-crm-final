@@ -2,42 +2,22 @@
 
 namespace App\Http\Controllers\Auth;
 
-use App\Http\Controllers\Controller;
 use App\Http\Controllers\SaasFront\SaasFrontBaseController;
 use App\Models\FrontCmsHeader;
 use App\Models\ThemeSetting;
-// use Illuminate\Foundation\Auth\RegistersUsers;
 use App\Models\User;
+use App\Services\RegistrationActivationService;
+use App\Services\RegistrationContextResolver;
+use App\Services\TeamInvitationService;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 
 class RegisterController extends SaasFrontBaseController
 {
-    /*
-    |--------------------------------------------------------------------------
-    | Register Controller
-    |--------------------------------------------------------------------------
-    |
-    | This controller handles the registration of new users as well as their
-    | validation and creation. By default this controller uses a trait to
-    | provide this functionality without requiring any additional code.
-    |
-    */
-
-    // use RegistersUsers;
-
-    /**
-     * Where to redirect users after registration.
-     *
-     * @var string
-     */
     protected $redirectTo = '/home';
 
-    /**
-     * Create a new controller instance.
-     *
-     * @return void
-     */
     public function __construct()
     {
         parent::__construct();
@@ -45,12 +25,25 @@ class RegisterController extends SaasFrontBaseController
         $this->pageTitle = 'Meecruit | Register';
         $this->pageIcon = 'icon-grid';
 
-        $this->middleware('guest')->except('logout');
+        $this->middleware('guest')->except(['logout', 'activateTeamMember']);
     }
 
-    public function showRegistrationForm()
+    public function showRegistrationForm(Request $request)
     {
-        if (auth()->check()) {
+        // 1. URL Token Scrubbing (INV-01 & INV-02)
+        // If raw secret token is in URL query parameters, issue 302 redirect with HttpOnly session envelope cookie
+        if ($request->has('token')) {
+            $rawSecret = (string) $request->query('token');
+            $envelopeData = app(TeamInvitationService::class)->resolveTokenAndCreateEnvelope($rawSecret, $request);
+
+            return redirect()->route('register')->withCookie($envelopeData['cookie']);
+        }
+
+        // 2. Resolve Dynamic Registration Context (SELF, AGENCY, or TEAM)
+        $contextResolver = app(RegistrationContextResolver::class);
+        $registrationContext = $contextResolver->resolve($request);
+
+        if (auth()->check() && $registrationContext['context'] !== RegistrationContextResolver::CONTEXT_TEAM) {
             return app(\App\Actions\Auth\ShowLoginFormAction::class)->redirectIfAuthenticated() ?? redirect('/service_company/dashboard');
         }
 
@@ -60,12 +53,21 @@ class RegisterController extends SaasFrontBaseController
 
         return view('auth.login', array_merge($this->data, [
             'initialMode' => 'signup',
+            'registrationContext' => $registrationContext,
             'setting' => $this->global,
             'global' => $this->global,
             'frontTheme' => ThemeSetting::whereNull('company_id')->first(),
             'headerData' => FrontCmsHeader::first(),
             'adminTheme' => $this->adminTheme,
         ]));
+    }
+
+    /**
+     * Activates an invited team member account (Boundary 3).
+     */
+    public function activateTeamMember(Request $request): JsonResponse
+    {
+        return app(RegistrationActivationService::class)->activate($request);
     }
 
     /**
@@ -85,7 +87,7 @@ class RegisterController extends SaasFrontBaseController
     /**
      * Create a new user instance after a valid registration.
      *
-     * @return \App\User
+     * @return \App\Models\User
      */
     protected function create(array $data)
     {
