@@ -588,10 +588,10 @@ select.jw-inp option {
    15.6" Screen Fit | WCAG 2.1 AA | Read-only Identity | Auto-Accept TOC
    ========================================================================== */
 .jw-card-team-invite {
-    background: #ffffff !important;
-    border: 1.5px solid #e2e8f0 !important;
+    background: linear-gradient(180deg, #f0f6ff 0%, #f8faff 42%, #ffffff 100%) !important;
+    border: 1.5px solid #bfdbfe !important;
     border-radius: 20px !important;
-    box-shadow: 0 24px 50px rgba(23, 40, 84, 0.08), 0 2px 6px rgba(23, 40, 84, 0.04) !important;
+    box-shadow: 0 20px 48px rgba(37, 99, 235, 0.08), 0 2px 8px rgba(37, 99, 235, 0.04) !important;
     padding: clamp(18px, 2.2vh, 26px) clamp(22px, 2.5vw, 32px) !important;
     position: relative;
     overflow: hidden;
@@ -603,7 +603,7 @@ select.jw-inp option {
     left: 0;
     right: 0;
     height: 4px;
-    background: linear-gradient(90deg, #ffd428 0%, #f59e0b 100%) !important;
+    background: linear-gradient(90deg, #2563eb 0%, #6366f1 50%, #3b82f6 100%) !important;
 }
 .jw-card-team-invite h2 {
     font-size: 22px !important;

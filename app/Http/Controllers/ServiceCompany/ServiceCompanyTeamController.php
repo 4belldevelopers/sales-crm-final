@@ -96,6 +96,9 @@ class ServiceCompanyTeamController extends ServiceCompanyBaseController
                                 'invited_count' => [
                                     'filter' => [
                                         'bool' => [
+                                            'must_not' => [
+                                                ['term' => ['status' => 'active']],
+                                            ],
                                             'should' => [
                                                 ['wildcard' => ['email_verification_code' => '?*']],
                                                 ['bool' => ['must_not' => [['wildcard' => ['password' => '?*']]]]],
@@ -607,7 +610,8 @@ class ServiceCompanyTeamController extends ServiceCompanyBaseController
         // Invited users (no password) & inactive users get 'N/A'
         $activeRankIndex = 1;
         $allRankedUsers = $allRankedUsers->map(function ($user) use (&$activeRankIndex) {
-            $isInvited = ! empty($user['email_verification_code']) || empty($user['password']);
+            $isInvited = (! empty($user['email_verification_code']) || empty($user['password']))
+                && (strtolower($user['status'] ?? '') !== 'active');
             $isFullyActive = strtolower($user['status'] ?? '') === 'active' && ! $isInvited;
             if ($isFullyActive) {
                 $user['rank'] = $activeRankIndex++;
