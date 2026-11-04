@@ -603,7 +603,7 @@ select.jw-inp option {
     left: 0;
     right: 0;
     height: 4px;
-    background: linear-gradient(90deg, #2563eb 0%, #6366f1 50%, #3b82f6 100%);
+    background: linear-gradient(90deg, #2563eb 0%, #6366f1 50%, #3b82f6 100%) !important;
 }
 .jw-card-team-invite h2 {
     font-size: 22px !important;
@@ -680,7 +680,19 @@ select.jw-inp option {
     font-size: 15px !important;
     border-radius: 8px !important;
     margin-top: 6px !important;
-    box-shadow: 0 8px 20px rgba(88, 74, 234, .24) !important;
+    background: linear-gradient(180deg, #ffd428 0%, #f5c400 100%) !important;
+    color: #10143b !important;
+    border: 1px solid #d4a017 !important;
+    font-weight: 700 !important;
+    box-shadow: 0 4px 14px rgba(245, 196, 0, 0.35) !important;
+    transition: all .16s ease !important;
+}
+.jw-card-team-invite .jw-btn:hover {
+    background: #f5c400 !important;
+    border-color: #c7950f !important;
+    color: #10143b !important;
+    transform: translateY(-1px);
+    box-shadow: 0 6px 18px rgba(245, 196, 0, 0.45) !important;
 }
 .jw-card-team-invite .jw-switch-row {
     margin-top: 10px !important;
@@ -1368,11 +1380,11 @@ select.jw-inp option {
                     @endif
                     
                     <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; flex-wrap: wrap; gap: 8px;">
-                        <span style="display: inline-flex; align-items: center; gap: 5px; padding: 3px 9px; background: #eff6ff; color: #2563eb; border: 1px solid #bfdbfe; border-radius: 999px; font-size: 11px; font-weight: 600;">
+                        <span style="display: inline-flex; align-items: center; gap: 5px; padding: 3px 9px; background: #fef3c7; color: #b45309; border: 1px solid #fde68a; border-radius: 999px; font-size: 11px; font-weight: 600;">
                             <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="9" cy="7" r="4" stroke="currentColor" stroke-width="2"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
                             Team Invitation
                         </span>
-                        <span style="display: inline-flex; align-items: center; padding: 2px 8px; background: #f8fafc; color: #475467; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 11px; font-weight: 600;">
+                        <span style="display: inline-flex; align-items: center; padding: 2px 8px; background: #ffffff; color: #334155; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 11px; font-weight: 600;">
                             Role: {{ $registrationContext['member']['role_name'] ?? 'Team Member' }}
                         </span>
                     </div>
@@ -1387,7 +1399,7 @@ select.jw-inp option {
                     <div class="jw-field">
                         <div class="jw-field-row" style="margin-bottom: 4px;">
                             <label for="jw-team-name">Full Name</label>
-                            <span style="display: inline-flex; align-items: center; gap: 4px; padding: 2px 7px; background: #f1f5f9; color: #475467; border: 1px solid #e2e8f0; border-radius: 999px; font-size: 10px; font-weight: 600;">
+                            <span style="display: inline-flex; align-items: center; gap: 4px; padding: 2px 7px; background: #fef9c3; color: #854d0e; border: 1px solid #fef08a; border-radius: 999px; font-size: 10px; font-weight: 600;">
                                 <svg width="10" height="10" viewBox="0 0 24 24" fill="none"><rect x="3" y="11" width="18" height="11" rx="2" stroke="currentColor" stroke-width="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4" stroke="currentColor" stroke-width="2"/></svg>
                                 Assigned by Admin
                             </span>
@@ -1399,7 +1411,7 @@ select.jw-inp option {
                                     <circle cx="12" cy="7" r="4" stroke="currentColor" stroke-width="1.8"/>
                                 </svg>
                             </span>
-                            <input class="jw-inp" type="text" name="name" id="jw-team-name" value="{{ $registrationContext['member']['name'] ?? old('name', '') }}" readonly style="background-color: #f8fafc; color: #334155; cursor: not-allowed; border-color: #cbd5e1; font-weight: 600;" />
+                            <input class="jw-inp" type="text" name="name" id="jw-team-name" value="{{ ucwords($registrationContext['member']['name'] ?? old('name', '')) }}" readonly style="background-color: #f8fafc; color: #334155; cursor: not-allowed; border-color: #cbd5e1; font-weight: 600; text-transform: capitalize;" />
                             <span class="ok-mark" style="display:flex;" aria-hidden="true">
                                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
                                     <rect x="3" y="11" width="18" height="11" rx="2" fill="#e2e8f0" stroke="#94a3b8" stroke-width="1.8"/>

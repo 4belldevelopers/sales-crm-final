@@ -3,15 +3,20 @@
 namespace App\Services;
 
 use App\Enums\InvitationStatus;
+use App\Events\TeamMemberUpdated;
+use App\Helper\GeneralMethod;
+use App\Jobs\SyncUserToElasticJob;
 use App\Models\TeamInvitation;
 use App\Models\User;
 use App\Services\Contracts\TenantMembershipResolverInterface;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 
 /**
@@ -143,7 +148,7 @@ class RegistrationActivationService
 
             // Identity Collision Resolution (INV-05)
             $existingUser = User::withoutGlobalScopes()->where('email', $email)->first();
-            $name = trim((string) ($request->input('name') ?: ($existingUser->name ?? 'Team Member')));
+            $name = ucwords(trim((string) ($request->input('name') ?: ($existingUser->name ?? 'Team Member'))));
 
             if ($existingUser) {
                 if ((int) $existingUser->company_id !== $tenantId) {
@@ -239,6 +244,50 @@ class RegistrationActivationService
                 \App\Support\DeviceSessionManager::recordLogin($user->id, $sessionId);
                 session(['login_at' => now()->timestamp]);
             }
+
+            // Multi-Tenant Atomic Cache Invalidation (Rule 6)
+            Cache::forget('ats:teamcounts:'.$tenantId);
+            Cache::forget('ats:company_rep:defaults:'.$tenantId);
+            $versionKey = 'ats:teamversion:company_'.$tenantId;
+            if (Cache::has($versionKey)) {
+                Cache::increment($versionKey);
+            } else {
+                Cache::put($versionKey, 2, now()->addDays(30));
+            }
+            if (method_exists(GeneralMethod::class, 'cacheClean')) {
+                GeneralMethod::cacheClean('allteam_version_user_'.$user->id);
+            }
+
+            // Synchronous Elasticsearch Document Sync & Real-time Signal (Rule 10 & CQRS)
+            DB::afterCommit(function () use ($user, $tenantId, $invitation, $nextVersion) {
+                try {
+                    GeneralMethod::userIndexingupload($user->id);
+                } catch (\Throwable $e) {
+                    Log::warning("RegistrationActivationService: synchronous ES sync warning for user {$user->id}: ".$e->getMessage());
+                }
+
+                try {
+                    SyncUserToElasticJob::dispatch($user->id);
+                } catch (\Throwable $e) {
+                    Log::warning('RegistrationActivationService: SyncUserToElasticJob dispatch warning: '.$e->getMessage());
+                }
+
+                try {
+                    broadcast(new TeamMemberUpdated(
+                        companyId: $tenantId,
+                        userId: $user->id,
+                        action: 'INVITATION_ACTIVATED',
+                        senderId: $user->id,
+                        status: 'active',
+                        roleId: (int) ($invitation->role_id ?? 0),
+                        roleName: null,
+                        workingStatus: 1,
+                        version: $nextVersion
+                    ));
+                } catch (\Throwable $e) {
+                    Log::warning('RegistrationActivationService: TeamMemberUpdated broadcast warning: '.$e->getMessage());
+                }
+            });
 
             return response()->json([
                 'status' => 'success',

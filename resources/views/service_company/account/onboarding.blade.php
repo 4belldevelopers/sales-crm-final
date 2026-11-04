@@ -14,8 +14,8 @@
 
 <style>
 /* =============================================================================
-   JERO GOD-LEVEL COMPANY PROFILE / ONBOARDING DESIGN SYSTEM (RULE 20)
-   Shared Company Profile Engine for Post-Registration Setup & Lifetime Editing
+   JERO GOD-LEVEL COMPANY PROFILE / ONBOARDING SETUP (RULE 20)
+   100% Replicates Add Internal Client Visual Language, Layout & Dropdown Engines
    Optimized for 15.6" Screens (1366x768 & 1920x1080) with Zero Horizontal Scroll
    ============================================================================= */
 
@@ -56,7 +56,7 @@ body {
 
 #kt_content {
   background: var(--bg) !important;
-  padding: 18px 24px 30px !important;
+  padding: 14px 20px 24px !important;
 }
 
 #kt_toolbar, #kt_footer {
@@ -84,8 +84,10 @@ body {
   border: 1px solid var(--border) !important;
   border-radius: var(--radius-lg) !important;
   box-shadow: 0 4px 14px rgba(15, 23, 42, 0.05) !important;
-  padding: 12px 20px !important;
-  margin-bottom: 20px !important;
+  padding: 10px 18px !important;
+  margin-bottom: 16px !important;
+  height: 52px !important;
+  min-height: 52px !important;
 }
 
 .client-header-grid {
@@ -93,6 +95,7 @@ body {
   align-items: center;
   justify-content: space-between;
   gap: 16px;
+  height: 100%;
 }
 
 .client-header-identity {
@@ -100,7 +103,7 @@ body {
 }
 
 .client-header-title {
-  font-size: 17px !important;
+  font-size: 15px !important;
   font-weight: 700 !important;
   color: var(--text-primary) !important;
   margin: 0 !important;
@@ -110,7 +113,7 @@ body {
 .client-header-subtitle {
   font-size: 11px !important;
   color: var(--text-muted) !important;
-  margin: 2px 0 0 !important;
+  margin: 1px 0 0 !important;
   line-height: 1.35 !important;
   white-space: nowrap;
   overflow: hidden;
@@ -130,7 +133,7 @@ body {
   align-items: center;
   gap: 8px;
   background: #f8fafc;
-  padding: 5px 12px;
+  padding: 4px 10px;
   border-radius: 30px;
   border: 1px solid var(--border);
 }
@@ -138,9 +141,9 @@ body {
 .client-step-item {
   display: inline-flex;
   align-items: center;
-  gap: 7px;
+  gap: 6px;
   cursor: pointer;
-  padding: 4px 8px;
+  padding: 3px 8px;
   border-radius: 20px;
   transition: var(--transition);
   user-select: none;
@@ -156,13 +159,13 @@ body {
 }
 
 .client-step-circle {
-  width: 24px;
-  height: 24px;
+  width: 22px;
+  height: 22px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 11px;
+  font-size: 10.5px;
   font-weight: 700;
   transition: var(--transition);
 }
@@ -186,7 +189,7 @@ body {
 }
 
 .client-step-name {
-  font-size: 12px;
+  font-size: 11.5px;
   font-weight: 600;
   color: #475569;
 }
@@ -206,13 +209,13 @@ body {
 .client-header-actions {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
 }
 
-.client-top-back-btn, .client-top-next-btn, .client-top-submit-btn {
-  height: 36px !important;
-  padding: 0 16px !important;
-  font-size: 12px !important;
+.client-top-close-btn, .client-top-back-btn, .client-top-next-btn, .client-top-submit-btn {
+  height: 34px !important;
+  padding: 0 14px !important;
+  font-size: 11.5px !important;
   font-weight: 600 !important;
   border-radius: 8px !important;
   display: inline-flex !important;
@@ -220,6 +223,17 @@ body {
   gap: 6px !important;
   transition: var(--transition) !important;
   cursor: pointer !important;
+  font-family: 'Poppins', sans-serif !important;
+}
+
+.client-top-close-btn {
+  background: #ffffff !important;
+  border: 1px solid var(--border) !important;
+  color: #64748b !important;
+}
+.client-top-close-btn:hover {
+  background: #f8fafc !important;
+  color: var(--text-primary) !important;
 }
 
 .client-top-back-btn {
@@ -232,13 +246,15 @@ body {
 }
 
 .client-top-next-btn {
-  background: var(--primary-gradient) !important;
-  color: var(--primary-text) !important;
-  border: 1px solid var(--primary-border) !important;
-  box-shadow: 0 2px 4px rgba(212, 160, 23, 0.25) !important;
+  background: #ffd428 !important;
+  color: #10143b !important;
+  border: 1px solid #d4a017 !important;
+  box-shadow: 0 1px 3px rgba(245, 196, 0, 0.25) !important;
+  font-weight: 700 !important;
 }
 .client-top-next-btn:hover {
-  background: var(--primary-hover) !important;
+  background: #f5c400 !important;
+  transform: translateY(-1px);
 }
 
 .client-top-submit-btn {
@@ -246,6 +262,7 @@ body {
   color: #ffffff !important;
   border: 1px solid #059669 !important;
   box-shadow: 0 2px 6px rgba(16, 185, 129, 0.3) !important;
+  font-weight: 700 !important;
 }
 .client-top-submit-btn:hover {
   background: #059669 !important;
@@ -259,7 +276,7 @@ body {
 [data-wizard-type="step-content"][data-wizard-state="current"],
 [data-wizard-type="step-content"].is-current {
   display: block !important;
-  animation: fadeIn 0.25s ease-in-out;
+  animation: fadeIn 0.22s ease-in-out;
 }
 
 @keyframes fadeIn {
@@ -271,7 +288,7 @@ body {
 .god-level-company-layout, .client-step-layout {
   display: grid !important;
   grid-template-columns: 68% 30% !important;
-  gap: 20px !important;
+  gap: 16px !important;
   align-items: start !important;
 }
 
@@ -290,8 +307,8 @@ body {
 }
 
 .god-card-header, .client-card-header {
-  padding: 16px 20px !important;
-  border-bottom: 1px solid #f1f5f9 !important;
+  padding: 12px 18px !important;
+  border-bottom: 1px solid #f8fafc !important;
   display: flex !important;
   align-items: center !important;
   gap: 12px !important;
@@ -299,154 +316,838 @@ body {
 }
 
 .god-card-header-icon {
-  width: 36px;
-  height: 36px;
-  border-radius: 9px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
-.god-card-header-icon.yellow-gold-icon {
-  background: #fef9c3;
-  color: #ca8a04;
+  width: 32px !important;
+  height: 32px !important;
+  border-radius: 8px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  flex-shrink: 0 !important;
 }
 
 .god-card-header-icon.blue-sky-icon {
-  background: #dbeafe;
-  color: #2563eb;
+  background: #eff6ff !important;
+  color: #2563eb !important;
 }
 
 .god-card-title {
   font-size: 14px !important;
   font-weight: 700 !important;
-  color: var(--text-primary) !important;
+  color: #0f172a !important;
   margin: 0 !important;
+  line-height: 1.25 !important;
 }
 
 .god-card-subtitle {
   font-size: 11px !important;
-  color: var(--text-muted) !important;
-  margin: 2px 0 0 !important;
+  color: #64748b !important;
+  margin: 1px 0 0 !important;
 }
 
-/* Fields & Comboboxes */
+/* Fields & 2-Column Grid (15.6" Screen Fit) */
 .god-fields-grid {
-  padding: 20px !important;
+  padding: 16px 18px !important;
   display: grid !important;
-  grid-template-columns: 1fr 1fr !important;
-  gap: 16px !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: 12px 14px !important;
+  align-content: space-between !important;
+}
+
+@media (max-width: 640px) {
+  .god-fields-grid {
+    grid-template-columns: 1fr !important;
+  }
 }
 
 .god-field-full {
   grid-column: 1 / -1 !important;
+  width: 100% !important;
+}
+
+.god-field-wrap {
+  display: flex !important;
+  flex-direction: column !important;
+  min-width: 0 !important;
+  margin-bottom: 0 !important;
+}
+
+.god-field-header {
+  display: flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  margin-bottom: 4px !important;
 }
 
 .god-field-label {
-  display: block;
-  font-size: 12px !important;
+  font-size: 11.5px !important;
   font-weight: 600 !important;
-  color: #1e293b !important;
-  margin-bottom: 6px !important;
+  color: #0f172a !important;
+  margin: 0 !important;
+  line-height: 1.25 !important;
 }
 
+/* Native Input Box */
 .god-input-box {
-  position: relative;
-  display: flex;
-  align-items: center;
-  background: #ffffff;
-  border: 1px solid #cbd5e1;
-  border-radius: 8px;
-  min-height: 40px;
-  padding: 0 10px;
-  transition: var(--transition);
+  display: flex !important;
+  align-items: center !important;
+  background: #ffffff !important;
+  border: 1.5px solid #cbd5e1 !important;
+  border-radius: 8px !important;
+  padding: 0 10px !important;
+  height: 38px !important;
+  min-height: 38px !important;
+  position: relative !important;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease !important;
+  box-sizing: border-box !important;
+  width: 100% !important;
+  gap: 4px !important;
 }
 
-.god-input-box:focus-within, .god-input-box.is-focused {
-  border-color: var(--primary-border) !important;
-  box-shadow: 0 0 0 3px rgba(255, 212, 40, 0.25) !important;
+.god-input-box:focus-within {
+  border-color: #ffd428 !important;
+  box-shadow: 0 0 0 3px rgba(255, 212, 40, 0.22) !important;
 }
 
-.god-input-box.is-invalid {
-  border-color: var(--danger) !important;
-  background: var(--danger-light) !important;
-}
-
-.god-native-input {
-  width: 100%;
-  border: none !important;
-  outline: none !important;
-  background: transparent !important;
-  font-size: 12.5px !important;
-  font-family: inherit !important;
-  color: var(--text-primary) !important;
-  padding: 8px 4px !important;
+.god-input-box.is-invalid, .god-input-box.has-validation-error {
+  border-color: #ef4444 !important;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.18) !important;
 }
 
 .god-input-left-icon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #94a3b8;
-  margin-right: 8px;
+  color: #94a3b8 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  margin-right: 6px !important;
+  flex-shrink: 0 !important;
+}
+.god-input-left-icon svg {
+  width: 15px !important;
+  height: 15px !important;
+}
+
+.god-native-input {
+  border: none !important;
+  outline: none !important;
+  background: transparent !important;
+  color: #0f172a !important;
+  font-size: 12px !important;
+  font-family: 'Poppins', sans-serif !important;
+  font-weight: 500 !important;
+  flex: 1 1 auto !important;
+  min-width: 0 !important;
+  height: 100% !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  box-shadow: none !important;
+}
+.god-native-input::placeholder {
+  color: #94a3b8 !important;
+  font-weight: 400 !important;
+}
+
+.god-website-control-row {
+  display: flex !important;
+  align-items: stretch !important;
+  gap: 8px !important;
+  height: 38px !important;
+  width: 100% !important;
+}
+.god-website-input-box {
+  flex: 1 1 auto !important;
+  min-width: 0 !important;
+}
+
+.god-fetch-btn {
+  background: #ffd428 !important;
+  border: 1px solid #d4a017 !important;
+  color: #10143b !important;
+  font-size: 11.5px !important;
+  font-weight: 700 !important;
+  border-radius: 8px !important;
+  padding: 0 12px !important;
+  height: 38px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 5px !important;
+  flex-shrink: 0 !important;
+  cursor: pointer !important;
+  white-space: nowrap !important;
+  box-shadow: 0 1px 3px rgba(245, 196, 0, 0.25) !important;
+  transition: all 0.15s ease !important;
+  font-family: 'Poppins', sans-serif !important;
+}
+.god-fetch-btn:hover {
+  background: #f5c400 !important;
+  transform: translateY(-1px) !important;
 }
 
 .god-input-clear-btn {
-  background: none;
-  border: none;
-  color: #94a3b8;
-  padding: 2px 6px;
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
+  background: transparent !important;
+  border: none !important;
+  color: #94a3b8 !important;
+  cursor: pointer !important;
+  padding: 0 !important;
+  width: 18px !important;
+  height: 18px !important;
+  display: none !important;
+  align-items: center !important;
+  justify-content: center !important;
+  border-radius: 50% !important;
+  transition: all 0.15s ease !important;
+  flex-shrink: 0 !important;
+  margin-right: 2px !important;
+}
+.god-input-clear-btn:hover {
+  background: #fee2e2 !important;
+  color: #ef4444 !important;
+}
+
+.god-input-external-btn {
+  background: transparent !important;
+  border: none !important;
+  color: #2563eb !important;
+  cursor: pointer !important;
+  padding: 3px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  border-radius: 4px !important;
+  transition: all 0.15s ease !important;
+}
+.god-input-external-btn:hover {
+  background: #eff6ff !important;
+  color: #1d4ed8 !important;
 }
 
 .jero-dropdown-chevron {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  color: #94a3b8;
-  padding: 2px 6px;
-  cursor: pointer;
-  user-select: none;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 18px !important;
+  height: 18px !important;
+  color: #94a3b8 !important;
+  cursor: pointer !important;
+  padding: 0 !important;
+  margin-left: auto !important;
+  flex-shrink: 0 !important;
+  border-radius: 4px !important;
+  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), color 0.15s ease !important;
+}
+.jero-dropdown-chevron:hover {
+  color: #1e293b !important;
 }
 
-/* Dropdown list popup */
-.jero-ind-dropdown, .jero-csize-dropdown, .jero-ctype-dropdown, .jero-founded-dropdown {
-  position: absolute;
-  top: calc(100% + 4px);
-  left: 0;
-  right: 0;
-  background: #ffffff;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  box-shadow: 0 10px 25px rgba(15, 23, 42, 0.12);
-  z-index: 1050;
-  max-height: 260px;
-  overflow-y: auto;
-  padding: 6px 0;
+/* =========================================================================
+   ENTERPRISE INDUSTRY COMBOBOX
+   ========================================================================= */
+.jero-ind-select-wrap {
+  position: relative !important;
+  width: 100% !important;
+}
+.jero-ind-select-wrap.is-open .jero-dropdown-chevron {
+  transform: rotate(180deg) !important;
+  color: #2563eb !important;
+}
+.jero-ind-dropdown {
+  position: absolute !important;
+  top: calc(100% + 4px) !important;
+  left: 0 !important;
+  right: 0 !important;
+  width: 100% !important;
+  z-index: 1080 !important;
+  background: #ffffff !important;
+  border: 1.5px solid #cbd5e1 !important;
+  border-radius: 10px !important;
+  box-shadow: 0 16px 36px -6px rgba(15, 23, 42, 0.16), 0 4px 12px -2px rgba(15, 23, 42, 0.08) !important;
+  overflow: hidden !important;
+  display: none;
+  flex-direction: column !important;
+  max-height: 280px !important;
+  animation: jeroDropdownFadeIn 0.14s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  box-sizing: border-box !important;
+}
+.jero-ind-select-wrap.is-open .jero-ind-dropdown {
+  display: flex !important;
+}
+.jero-ind-list-container {
+  flex: 1 1 auto !important;
+  max-height: 270px !important;
+  overflow-y: auto !important;
+  padding: 4px 0 !important;
+  scrollbar-width: thin !important;
+  scrollbar-color: #cbd5e1 #f8fafc !important;
+}
+.jero-ind-item {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  padding: 8px 12px !important;
+  font-size: 12px !important;
+  font-weight: 500 !important;
+  color: #1e293b !important;
+  cursor: pointer !important;
+  transition: background 0.12s ease !important;
+}
+.jero-ind-item:hover, .jero-ind-item.is-selected {
+  background: #eff6ff !important;
+  color: #1d4ed8 !important;
+  font-weight: 600 !important;
 }
 
-.jero-ind-item, .jero-csize-item, .jero-ctype-item, .jero-founded-item {
-  padding: 8px 14px;
-  font-size: 12px;
-  color: #334155;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  transition: background 0.15s ease;
+/* =========================================================================
+   ENTERPRISE COMPANY SIZE COMBOBOX
+   ========================================================================= */
+.jero-csize-select-wrap {
+  position: relative !important;
+  width: 100% !important;
+}
+.god-input-box.jero-csize-input-box {
+  cursor: pointer !important;
+  user-select: none !important;
+}
+.jero-csize-select-wrap.is-open .jero-dropdown-chevron,
+.jero-csize-select-wrap.is-open .jero-csize-chevron {
+  transform: rotate(180deg) !important;
+  color: #2563eb !important;
+}
+.jero-csize-dropdown {
+  position: absolute !important;
+  top: calc(100% + 5px) !important;
+  left: 0 !important;
+  right: 0 !important;
+  z-index: 1060 !important;
+  background: #ffffff !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 12px !important;
+  box-shadow: 0 20px 48px -8px rgba(15, 23, 42, 0.16), 0 8px 20px -4px rgba(15, 23, 42, 0.08) !important;
+  overflow: hidden !important;
+  display: none;
+  flex-direction: column !important;
+  max-height: 280px !important;
+  animation: jeroDropdownFadeIn 0.16s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  box-sizing: border-box !important;
+}
+.jero-csize-select-wrap.is-open .jero-csize-dropdown {
+  display: flex !important;
+}
+.jero-csize-dropdown.drop-up {
+  top: auto !important;
+  bottom: calc(100% + 5px) !important;
+  box-shadow: 0 -20px 48px -8px rgba(15, 23, 42, 0.16), 0 -8px 20px -4px rgba(15, 23, 42, 0.08) !important;
+}
+.jero-csize-list-container {
+  max-height: 270px !important;
+  overflow-y: auto !important;
+  padding: 6px 0 !important;
+  scrollbar-width: thin !important;
+  scrollbar-color: #cbd5e1 #f8fafc !important;
+}
+.jero-csize-item {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  padding: 8px 12px !important;
+  cursor: pointer !important;
+  transition: background 0.12s ease !important;
+  border-bottom: 1px solid #f8fafc !important;
+  box-sizing: border-box !important;
+  min-height: 42px !important;
+}
+.jero-csize-item:last-child {
+  border-bottom: none !important;
+}
+.jero-csize-item:hover, .jero-csize-item.focused {
+  background: #f8fafc !important;
+}
+.jero-csize-item.selected {
+  background: #eff6ff !important;
+}
+.jero-csize-item-main {
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  flex: 1 1 auto !important;
+  min-width: 0 !important;
+}
+.jero-csize-item-icon {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 24px !important;
+  height: 24px !important;
+  border-radius: 6px !important;
+  background: #f1f5f9 !important;
+  color: #475569 !important;
+  flex-shrink: 0 !important;
+}
+.jero-csize-item:hover .jero-csize-item-icon,
+.jero-csize-item.selected .jero-csize-item-icon {
+  background: #dbeafe !important;
+  color: #1d4ed8 !important;
+}
+.jero-csize-item-info {
+  display: flex !important;
+  flex-direction: column !important;
+  min-width: 0 !important;
+  flex: 1 1 auto !important;
+}
+.jero-csize-item-label {
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  color: #1e293b !important;
+  line-height: 1.35 !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+.jero-csize-item.selected .jero-csize-item-label {
+  color: #1d4ed8 !important;
+}
+.jero-csize-item-desc {
+  font-size: 10.5px !important;
+  color: #64748b !important;
+  line-height: 1.3 !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+.jero-csize-item-side {
+  display: flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  flex-shrink: 0 !important;
+  margin-left: 8px !important;
+}
+.jero-csize-item-badge {
+  font-size: 9.5px !important;
+  font-weight: 600 !important;
+  padding: 2px 6px !important;
+  border-radius: 10px !important;
+  background: #f1f5f9 !important;
+  color: #475569 !important;
+  border: 1px solid #e2e8f0 !important;
+}
+.jero-csize-item.selected .jero-csize-item-badge {
+  background: #bfdbfe !important;
+  color: #1e40af !important;
+  border-color: #93c5fd !important;
+}
+.jero-csize-item-check {
+  display: none !important;
+  color: #2563eb !important;
+  align-items: center !important;
+  justify-content: center !important;
+  flex-shrink: 0 !important;
+}
+.jero-csize-item.selected .jero-csize-item-check {
+  display: inline-flex !important;
 }
 
-.jero-ind-item:hover, .jero-csize-item:hover, .jero-ctype-item:hover, .jero-founded-item:hover,
-.jero-ind-item.is-selected, .jero-csize-item.is-selected, .jero-ctype-item.is-selected, .jero-founded-item.is-selected {
-  background: #f8fafc;
-  color: #1d4ed8;
-  font-weight: 600;
+/* =========================================================================
+   SEARCH-FIRST COMPANY TYPE COMBOBOX
+   ========================================================================= */
+.jero-ctype-select-wrap {
+  position: relative !important;
+  width: 100% !important;
+}
+.jero-ctype-select-wrap.is-open .jero-dropdown-chevron,
+.jero-ctype-select-wrap.is-open .jero-ctype-chevron {
+  transform: rotate(180deg) !important;
+  color: #2563eb !important;
+}
+.jero-ctype-dropdown {
+  position: absolute !important;
+  top: calc(100% + 5px) !important;
+  left: 0 !important;
+  right: 0 !important;
+  z-index: 1060 !important;
+  background: #ffffff !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 10px !important;
+  box-shadow: 0 12px 32px -4px rgba(15, 23, 42, 0.12), 0 4px 12px -2px rgba(15, 23, 42, 0.08) !important;
+  overflow: hidden !important;
+  display: none;
+  flex-direction: column !important;
+  max-height: 280px !important;
+  animation: jeroDropdownFadeIn 0.15s ease-out !important;
+  box-sizing: border-box !important;
+}
+.jero-ctype-select-wrap.is-open .jero-ctype-dropdown {
+  display: flex !important;
+}
+.jero-ctype-dropdown.drop-up {
+  top: auto !important;
+  bottom: calc(100% + 5px) !important;
+  box-shadow: 0 -12px 32px -4px rgba(15, 23, 42, 0.12), 0 -4px 12px -2px rgba(15, 23, 42, 0.08) !important;
+}
+.jero-ctype-list-container {
+  max-height: 260px !important;
+  overflow-y: auto !important;
+  padding: 4px 0 !important;
+  box-sizing: border-box !important;
+  scrollbar-width: thin !important;
+}
+.jero-ctype-item {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  padding: 8px 12px !important;
+  cursor: pointer !important;
+  transition: background 0.12s ease !important;
+  border-bottom: 1px solid #f8fafc !important;
+  box-sizing: border-box !important;
+  min-height: 36px !important;
+}
+.jero-ctype-item:last-child {
+  border-bottom: none !important;
+}
+.jero-ctype-item:hover, .jero-ctype-item.focused {
+  background: #f1f5f9 !important;
+}
+.jero-ctype-item.selected {
+  background: #eff6ff !important;
+}
+.jero-ctype-item-main {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  gap: 6px !important;
+  flex: 1 !important;
+  min-width: 0 !important;
+}
+.jero-ctype-item-name {
+  font-size: 12.5px !important;
+  font-weight: 600 !important;
+  color: #0f172a !important;
+  line-height: 1.35 !important;
+  font-family: 'Poppins', sans-serif !important;
+}
+.jero-ctype-mark {
+  background: #fef08a !important;
+  color: #854d0e !important;
+  padding: 0 2px !important;
+  border-radius: 2px !important;
+  font-weight: 700 !important;
+}
+.jero-ctype-item-desc {
+  font-size: 10.5px !important;
+  color: #64748b !important;
+  line-height: 1.3 !important;
+}
+.jero-ctype-item-aliases {
+  font-size: 10px !important;
+  color: #94a3b8 !important;
+  margin-top: 1px !important;
+}
+.jero-ctype-item-side {
+  display: flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  flex-shrink: 0 !important;
+  margin-left: 8px !important;
+}
+.jero-ctype-badge {
+  display: inline-flex !important;
+  align-items: center !important;
+  padding: 2px 6px !important;
+  font-size: 9.5px !important;
+  font-weight: 600 !important;
+  border-radius: 4px !important;
+  background: #f1f5f9 !important;
+  color: #475569 !important;
+  letter-spacing: 0.2px !important;
+  text-transform: uppercase !important;
+}
+.jero-ctype-badge.matched-alias {
+  background: #dbeafe !important;
+  color: #1e40af !important;
+  border: 1px solid #bfdbfe !important;
+}
+.jero-ctype-item-check {
+  display: flex !important;
+  align-items: center !important;
+  color: #2563eb !important;
+}
+.jero-ctype-empty-state {
+  padding: 20px 14px !important;
+  text-align: center !important;
+  font-size: 12px !important;
+  color: #64748b !important;
 }
 
-/* Tagify Overrides */
+/* =========================================================================
+   SEARCH-FIRST FOUNDED YEAR COMBOBOX
+   ========================================================================= */
+.jero-founded-select-wrap {
+  position: relative !important;
+  width: 100% !important;
+}
+.jero-founded-select-wrap.is-open .jero-dropdown-chevron,
+.jero-founded-select-wrap.is-open .jero-founded-chevron {
+  transform: rotate(180deg) !important;
+  color: #2563eb !important;
+}
+.jero-founded-dropdown {
+  position: absolute !important;
+  top: calc(100% + 5px) !important;
+  left: 0 !important;
+  right: 0 !important;
+  z-index: 1060 !important;
+  background: #ffffff !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 10px !important;
+  box-shadow: 0 12px 32px -4px rgba(15, 23, 42, 0.12), 0 4px 12px -2px rgba(15, 23, 42, 0.08) !important;
+  overflow: hidden !important;
+  display: none;
+  flex-direction: column !important;
+  max-height: 280px !important;
+  animation: jeroDropdownFadeIn 0.15s ease-out !important;
+  box-sizing: border-box !important;
+}
+.jero-founded-select-wrap.is-open .jero-founded-dropdown {
+  display: flex !important;
+}
+.jero-founded-dropdown.drop-up {
+  top: auto !important;
+  bottom: calc(100% + 5px) !important;
+  box-shadow: 0 -12px 32px -4px rgba(15, 23, 42, 0.12), 0 -4px 12px -2px rgba(15, 23, 42, 0.08) !important;
+}
+.jero-founded-search-wrap {
+  display: flex !important;
+  align-items: center !important;
+  padding: 6px 10px !important;
+  background: #f8fafc !important;
+  border-bottom: 1px solid #eef2f6 !important;
+  gap: 6px !important;
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 3 !important;
+}
+.jero-founded-search-icon {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  color: #94a3b8 !important;
+  flex-shrink: 0 !important;
+}
+.jero-founded-search-input {
+  width: 100% !important;
+  height: 28px !important;
+  background: #ffffff !important;
+  border: 1px solid #cbd5e1 !important;
+  border-radius: 6px !important;
+  padding: 0 8px !important;
+  font-size: 11.5px !important;
+  font-family: 'Poppins', sans-serif !important;
+  color: #0f172a !important;
+  outline: none !important;
+}
+.jero-founded-search-input:focus {
+  border-color: #2563eb !important;
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.15) !important;
+}
+.jero-founded-list-container {
+  max-height: 200px !important;
+  overflow-y: auto !important;
+  padding: 4px 0 !important;
+  box-sizing: border-box !important;
+  scrollbar-width: thin !important;
+}
+.jero-founded-item {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  padding: 6px 12px !important;
+  cursor: pointer !important;
+  transition: background 0.12s ease !important;
+  border-bottom: 1px solid #f8fafc !important;
+  box-sizing: border-box !important;
+  min-height: 32px !important;
+}
+.jero-founded-item:last-child {
+  border-bottom: none !important;
+}
+.jero-founded-item:hover, .jero-founded-item.focused {
+  background: #f1f5f9 !important;
+}
+.jero-founded-item.selected {
+  background: #eff6ff !important;
+}
+.jero-founded-item-name {
+  font-size: 12.5px !important;
+  font-weight: 500 !important;
+  color: #1e293b !important;
+  font-family: 'Poppins', sans-serif !important;
+}
+.jero-founded-item.selected .jero-founded-item-name {
+  font-weight: 600 !important;
+  color: #2563eb !important;
+}
+.jero-founded-mark {
+  background: #fef08a !important;
+  color: #854d0e !important;
+  padding: 0 2px !important;
+  border-radius: 2px !important;
+  font-weight: 700 !important;
+}
+.jero-founded-item-check {
+  display: flex !important;
+  align-items: center !important;
+  color: #2563eb !important;
+}
+.jero-founded-footer {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  padding: 5px 10px !important;
+  background: #f8fafc !important;
+  border-top: 1px solid #eef2f6 !important;
+  font-size: 10px !important;
+  color: #64748b !important;
+}
+.jero-founded-calendar-dot {
+  width: 5px !important;
+  height: 5px !important;
+  border-radius: 50% !important;
+  background: #10b981 !important;
+  display: inline-block !important;
+  margin-right: 4px !important;
+}
+
+/* =========================================================================
+   LOGO COLUMN & CARD STYLING
+   ========================================================================= */
+.god-logo-column {
+  display: flex !important;
+  flex-direction: column !important;
+}
+.god-logo-preview-box {
+  border: 1.5px dashed #cbd5e1 !important;
+  border-radius: 10px !important;
+  background: #ffffff !important;
+  padding: 10px !important;
+  min-height: 135px !important;
+  max-height: 135px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  position: relative !important;
+  box-sizing: border-box !important;
+}
+.god-logo-surface {
+  width: 110px !important;
+  height: 110px !important;
+  border-radius: 10px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  background-size: contain !important;
+  background-repeat: no-repeat !important;
+  background-position: center !important;
+  background-color: #f8fafc !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05) !important;
+  position: relative !important;
+  overflow: hidden !important;
+  transition: all 0.2s ease !important;
+}
+.god-logo-surface.has-image {
+  background-color: #ffffff !important;
+}
+.god-logo-placeholder {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 2px !important;
+  color: #94a3b8 !important;
+  text-align: center !important;
+  padding: 8px !important;
+}
+.god-logo-placeholder .placeholder-title {
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  color: #64748b !important;
+  margin-top: 2px !important;
+}
+.god-logo-placeholder .placeholder-sub {
+  font-size: 9.5px !important;
+  color: #94a3b8 !important;
+}
+.god-logo-status-banner {
+  width: 100% !important;
+  border-radius: 6px !important;
+  padding: 6px 10px !important;
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 6px !important;
+  margin-top: 8px !important;
+  box-sizing: border-box !important;
+  text-align: center !important;
+}
+.god-logo-status-banner.is-detected {
+  background: #dcfce7 !important;
+  color: #15803d !important;
+}
+.god-logo-status-banner.is-empty {
+  background: #f1f5f9 !important;
+  color: #64748b !important;
+}
+.god-logo-actions {
+  display: flex !important;
+  flex-direction: row !important;
+  gap: 8px !important;
+  margin-top: 8px !important;
+  width: 100% !important;
+}
+.god-logo-btn {
+  flex: 1 1 auto !important;
+  height: 34px !important;
+  border-radius: 8px !important;
+  font-size: 11.5px !important;
+  font-weight: 600 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 6px !important;
+  cursor: pointer !important;
+  transition: all 0.15s ease !important;
+}
+.god-change-logo-btn {
+  background: #ffffff !important;
+  border: 1.5px solid #cbd5e1 !important;
+  color: #0f172a !important;
+}
+.god-change-logo-btn:hover {
+  background: #f8fafc !important;
+  border-color: #94a3b8 !important;
+}
+.god-remove-logo-btn {
+  background: #fff1f2 !important;
+  border: 1.5px solid #fecdd3 !important;
+  color: #ef4444 !important;
+}
+.god-remove-logo-btn:hover {
+  background: #fee2e2 !important;
+  border-color: #fda4af !important;
+}
+.god-logo-formats-note {
+  font-size: 10px !important;
+  color: #64748b !important;
+  line-height: 1.35 !important;
+  text-align: center !important;
+  margin-top: 8px !important;
+  display: flex !important;
+  align-items: flex-start !important;
+  justify-content: center !important;
+  gap: 4px !important;
+}
+
+/* Tagify & Quill Overrides */
 .tagify {
   border: 1px solid #cbd5e1 !important;
   border-radius: 8px !important;
@@ -454,47 +1155,30 @@ body {
   font-family: inherit !important;
   padding: 4px 6px !important;
 }
-
 .tagify:focus-within {
   border-color: var(--primary-border) !important;
   box-shadow: 0 0 0 3px rgba(255, 212, 40, 0.25) !important;
 }
-
 .tagify__tag {
   background: #f1f5f9 !important;
   border-radius: 6px !important;
-  font-size: 12px !important;
+  font-size: 11.5px !important;
 }
-
-.tagify__tag div .tagify__tag-text {
-  color: #0f172a !important;
-  font-weight: 500 !important;
-}
-
-/* Quill Editor Styles */
 .ql-toolbar.ql-snow {
   border: 1px solid #cbd5e1 !important;
   border-top-left-radius: 8px !important;
   border-top-right-radius: 8px !important;
   background: #f8fafc !important;
-  padding: 8px !important;
+  padding: 6px !important;
 }
-
 .ql-container.ql-snow {
   border: 1px solid #cbd5e1 !important;
   border-top: none !important;
   border-bottom-left-radius: 8px !important;
   border-bottom-right-radius: 8px !important;
-  min-height: 180px !important;
-  font-family: inherit !important;
-  font-size: 13px !important;
-}
-
-.ql-editor {
-  min-height: 180px !important;
+  min-height: 160px !important;
   font-family: 'Poppins', sans-serif !important;
-  color: #1e293b !important;
-  line-height: 1.6 !important;
+  font-size: 12.5px !important;
 }
 </style>
 @endpush
@@ -508,7 +1192,7 @@ body {
   @include('service_company.account.components.wizard-header')
 
   <!-- =========================================================================
-       MAIN FORM SHELL (Submits to service_company.account.onboarding.save)
+       MAIN FORM SHELL (Submits to service_company.account.update)
        ========================================================================= -->
   <form id="kt_contact_add_form"
         class="form fv-plugins-bootstrap fv-plugins-framework"
@@ -517,12 +1201,13 @@ body {
         enctype="multipart/form-data"
         novalidate>
     @csrf
+    <input type="hidden" name="_method" value="POST">
     <input type="hidden" name="addressId" id="addressId" value="{{ count($client_location ?? []) > 0 ? count($client_location) - 1 : 0 }}">
     <input type="hidden" name="page_mode" id="page_mode" value="ONBOARDING">
     <input type="hidden" name="technologies" id="company_technologies_payload" value="">
     <input type="hidden" name="tags" id="company_services_payload" value="">
-    <input type="hidden" name="description" id="kt_company_description_hidden" value="{{ $account->description ?? ($company->description ?? '') }}">
-    <input type="hidden" name="kt_docs_tinymce_hidden" id="kt_docs_tinymce_hidden" value="{{ $account->description ?? ($company->description ?? '') }}">
+    <input type="hidden" name="description" id="kt_company_description_hidden" value="{{ $account->description ?? '' }}">
+    <input type="hidden" name="kt_docs_tinymce_hidden" id="kt_docs_tinymce_hidden" value="{{ $account->description ?? '' }}">
 
     <!-- STEP 1: Company Information & Logo -->
     @include('service_company.account.components.tab-company-info')
@@ -548,10 +1233,16 @@ body {
 <script src="https://unpkg.com/@yaireo/tagify"></script>
 <script src="https://unpkg.com/@yaireo/tagify/dist/tagify.polyfills.min.js"></script>
 
+<!-- Company Type Seed Data -->
+<script id="jero_company_type_seed_data" type="application/json">
+    {!! json_encode($companyTypeTaxonomy ?? \App\Helper\GeneralMethod::companyTypeTaxonomy()) !!}
+</script>
+
 <script>
 /**
- * JERO God-Level Company Profile Onboarding Form Engine
- * 100% Replicates Company Profile Edit Engine with smooth transition to Dashboard.
+ * JERO God-Level Company Profile Form Engine
+ * Rule 20 Card + Sub-Card Design System
+ * Client-First Execution (User RAM & Browser CPU)
  */
 (function() {
   'use strict';
@@ -561,7 +1252,7 @@ body {
     currentStep: 1,
     maxSteps: 5,
     companyId: {{ (int)$company_id }},
-    pageMode: "ONBOARDING",
+    pageMode: "{{ $page_mode ?? 'EDIT' }}",
     isDirty: false,
     selectedTechnologies: [],
     quillInstance: null,
@@ -630,20 +1321,12 @@ body {
       backBtn.style.setProperty('display', (targetStep > 1) ? 'inline-flex' : 'none', 'important');
     }
     if (closeBtn) {
-      closeBtn.style.setProperty('display', 'none', 'important');
+      closeBtn.addEventListener('click', function() {
+        if (confirm('Leave profile setup? You can complete it later from your dashboard.')) {
+          window.location.href = "{{ url('service_company/dashboard') }}";
+        }
+      });
     }
-    if (nextBtn) {
-      nextBtn.style.setProperty('display', (targetStep < state.maxSteps) ? 'inline-flex' : 'none', 'important');
-    }
-    if (submitBtn) {
-      submitBtn.style.setProperty('display', (targetStep === state.maxSteps) ? 'inline-flex' : 'none', 'important');
-    }
-
-    if (targetStep === 5) {
-      populateReviewSummaries();
-    }
-
-    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   function validateStep(step) {
@@ -660,242 +1343,91 @@ body {
     return true;
   }
 
-  // 3. Dropdowns Initialization
-  function initEnterpriseDropdowns() {
+  // 3. Industry Combobox Engine
+  function initIndustryDropdown() {
     var indSelect = document.getElementById('industries');
+    var indSelectAlt = document.getElementById('industry');
     var indInput = document.getElementById('industry_display');
+    var indWrap = document.getElementById('jero_ind_select_wrap');
     var indDropdown = document.getElementById('jero_ind_dropdown');
     var indList = document.getElementById('jero_ind_list_container');
     var indClear = document.getElementById('jero_ind_clear_btn');
     var indChevron = document.getElementById('jero_ind_chevron');
 
-    if (indSelect && indList) {
-      var indOptions = Array.from(indSelect.options).filter(function(opt) { return opt.value !== ''; });
-      
-      function renderIndustryItems(filterText) {
-        filterText = (filterText || '').toLowerCase().trim();
-        indList.innerHTML = '';
-        var matched = 0;
-        indOptions.forEach(function(opt) {
-          var text = opt.text;
-          if (!filterText || text.toLowerCase().indexOf(filterText) !== -1) {
-            matched++;
-            var item = document.createElement('div');
-            item.className = 'jero-ind-item' + (indSelect.value === opt.value ? ' is-selected' : '');
-            item.setAttribute('data-id', opt.value);
-            item.textContent = text;
-            item.addEventListener('click', function() {
-              indSelect.value = opt.value;
-              if (indInput) indInput.value = text;
-              if (indClear) indClear.style.display = 'inline-flex';
-              if (indDropdown) indDropdown.style.display = 'none';
-            });
-            indList.appendChild(item);
-          }
-        });
-        if (matched === 0) {
-          indList.innerHTML = '<div style="padding:10px 14px; font-size:11.5px; color:#94a3b8; font-style:italic;">No industries match search</div>';
-        }
-      }
+    if (!indSelect || !indList) return;
 
-      if (indInput) {
-        indInput.addEventListener('focus', function() {
-          renderIndustryItems(this.value);
-          if (indDropdown) indDropdown.style.display = 'block';
-        });
-        indInput.addEventListener('input', function() {
-          renderIndustryItems(this.value);
-          if (indClear) indClear.style.display = this.value ? 'inline-flex' : 'none';
-          if (indDropdown) indDropdown.style.display = 'block';
-        });
-      }
+    var indOptions = Array.from(indSelect.options).filter(function(opt) { return opt.value !== ''; });
 
-      if (indChevron) {
-        indChevron.addEventListener('click', function(e) {
-          e.stopPropagation();
-          var isOpen = indDropdown && indDropdown.style.display === 'block';
-          if (isOpen) {
-            if (indDropdown) indDropdown.style.display = 'none';
-          } else {
-            renderIndustryItems(indInput ? indInput.value : '');
-            if (indDropdown) indDropdown.style.display = 'block';
-          }
-        });
-      }
-
-      if (indClear) {
-        indClear.addEventListener('click', function(e) {
-          e.stopPropagation();
-          indSelect.value = '';
-          if (indInput) indInput.value = '';
-          indClear.style.display = 'none';
-          if (indDropdown) indDropdown.style.display = 'none';
-        });
-      }
-    }
-
-    // Company Size Dropdown
-    var sizeSelect = document.getElementById('company_size');
-    var sizeInput = document.getElementById('company_size_display');
-    var sizeDropdown = document.getElementById('jero_csize_dropdown');
-    var sizeClear = document.getElementById('jero_csize_clear_btn');
-    var sizeInputBox = document.getElementById('jero_csize_input_box');
-
-    if (sizeSelect && sizeDropdown) {
-      var sizeItems = sizeDropdown.querySelectorAll('.jero-csize-item');
-      sizeItems.forEach(function(item) {
-        item.addEventListener('click', function() {
-          var val = this.getAttribute('data-val');
-          var lbl = this.getAttribute('data-label');
-          sizeSelect.value = val;
-          if (sizeInput) sizeInput.value = lbl;
-          if (sizeClear) sizeClear.style.display = 'inline-flex';
-          sizeDropdown.style.display = 'none';
-          sizeItems.forEach(function(it) { it.classList.remove('selected'); });
-          this.classList.add('selected');
-        });
-      });
-
-      if (sizeInputBox) {
-        sizeInputBox.addEventListener('click', function(e) {
-          if (e.target !== sizeClear && !e.target.closest('#jero_csize_clear_btn')) {
-            var isOpen = sizeDropdown.style.display === 'block';
-            sizeDropdown.style.display = isOpen ? 'none' : 'block';
-          }
-        });
-      }
-
-      if (sizeClear) {
-        sizeClear.addEventListener('click', function(e) {
-          e.stopPropagation();
-          sizeSelect.value = '';
-          if (sizeInput) sizeInput.value = '';
-          sizeClear.style.display = 'none';
-          sizeDropdown.style.display = 'none';
-        });
-      }
-    }
-
-    // Company Type Dropdown
-    var typeSelect = document.getElementById('company_type');
-    var typeInput = document.getElementById('company_type_display');
-    var typeDropdown = document.getElementById('jero_ctype_dropdown');
-    var typeClear = document.getElementById('jero_ctype_clear_btn');
-    var typeInputBox = document.getElementById('jero_ctype_input_box');
-
-    if (typeSelect && typeDropdown) {
-      var typeItems = typeDropdown.querySelectorAll('.jero-ctype-item');
-      typeItems.forEach(function(item) {
-        item.addEventListener('click', function() {
-          var val = this.getAttribute('data-id');
-          var lbl = this.getAttribute('data-name');
-          typeSelect.value = val;
-          if (typeInput) typeInput.value = lbl;
-          if (typeClear) typeClear.style.display = 'inline-flex';
-          typeDropdown.style.display = 'none';
-          typeItems.forEach(function(it) { it.classList.remove('is-selected'); });
-          this.classList.add('is-selected');
-        });
-      });
-
-      if (typeInputBox) {
-        typeInputBox.addEventListener('click', function(e) {
-          if (e.target !== typeClear && !e.target.closest('#jero_ctype_clear_btn')) {
-            var isOpen = typeDropdown.style.display === 'block';
-            typeDropdown.style.display = isOpen ? 'none' : 'block';
-          }
-        });
-      }
-
-      if (typeClear) {
-        typeClear.addEventListener('click', function(e) {
-          e.stopPropagation();
-          typeSelect.value = '';
-          if (typeInput) typeInput.value = '';
-          typeClear.style.display = 'none';
-          typeDropdown.style.display = 'none';
-        });
-      }
-    }
-
-    // Founded Year Dropdown
-    var foundedInput = document.getElementById('founded');
-    var foundedDisplay = document.getElementById('founded_display');
-    var foundedDropdown = document.getElementById('jero_founded_dropdown');
-    var foundedList = document.getElementById('jero_founded_list_container');
-    var foundedClear = document.getElementById('jero_founded_clear_btn');
-    var foundedInputBox = document.getElementById('jero_founded_input_box');
-    var foundedSearch = document.getElementById('founded_search_input');
-
-    if (foundedList) {
-      var currentYear = new Date().getFullYear();
-      var years = [];
-      for (var y = currentYear; y >= 1850; y--) {
-        years.push(y);
-      }
-
-      function renderYears(filter) {
-        foundedList.innerHTML = '';
-        var fYears = filter ? years.filter(function(yr) { return String(yr).indexOf(filter) !== -1; }) : years;
-        fYears.forEach(function(yr) {
-          var yItem = document.createElement('div');
-          yItem.className = 'jero-founded-item' + (String(foundedInput ? foundedInput.value : '') === String(yr) ? ' is-selected' : '');
-          yItem.textContent = yr;
-          yItem.addEventListener('click', function() {
-            if (foundedInput) foundedInput.value = yr;
-            if (foundedDisplay) foundedDisplay.value = yr;
-            if (foundedClear) foundedClear.style.display = 'inline-flex';
-            if (foundedDropdown) foundedDropdown.style.display = 'none';
+    function renderIndustryItems(filterText) {
+      filterText = (filterText || '').toLowerCase().trim();
+      indList.innerHTML = '';
+      var matched = 0;
+      indOptions.forEach(function(opt) {
+        var text = opt.text;
+        if (!filterText || text.toLowerCase().indexOf(filterText) !== -1) {
+          matched++;
+          var item = document.createElement('div');
+          item.className = 'jero-ind-item' + (indSelect.value === opt.value ? ' is-selected' : '');
+          item.setAttribute('data-id', opt.value);
+          item.textContent = text;
+          item.addEventListener('click', function() {
+            indSelect.value = opt.value;
+            if (indSelectAlt) indSelectAlt.value = opt.value;
+            if (indInput) indInput.value = text;
+            if (indClear) indClear.style.display = 'inline-flex';
+            if (indWrap) indWrap.classList.remove('is-open');
+            var indReview = document.querySelector('.span_industry');
+            if (indReview) indReview.textContent = text;
           });
-          foundedList.appendChild(yItem);
-        });
-      }
-      renderYears('');
-
-      if (foundedInputBox) {
-        foundedInputBox.addEventListener('click', function(e) {
-          if (e.target !== foundedClear && !e.target.closest('#jero_founded_clear_btn')) {
-            var isOpen = foundedDropdown && foundedDropdown.style.display === 'block';
-            if (foundedDropdown) foundedDropdown.style.display = isOpen ? 'none' : 'block';
-            if (!isOpen && foundedSearch) {
-              foundedSearch.value = '';
-              renderYears('');
-              setTimeout(function() { foundedSearch.focus(); }, 50);
-            }
-          }
-        });
-      }
-
-      if (foundedSearch) {
-        foundedSearch.addEventListener('input', function() {
-          renderYears(this.value.trim());
-        });
-      }
-
-      if (foundedClear) {
-        foundedClear.addEventListener('click', function(e) {
-          e.stopPropagation();
-          if (foundedInput) foundedInput.value = '';
-          if (foundedDisplay) foundedDisplay.value = '';
-          foundedClear.style.display = 'none';
-          if (foundedDropdown) foundedDropdown.style.display = 'none';
-        });
+          indList.appendChild(item);
+        }
+      });
+      if (matched === 0) {
+        indList.innerHTML = '<div style="padding:10px 14px; font-size:11.5px; color:#94a3b8; font-style:italic;">No industries match search</div>';
       }
     }
 
-    // Dismiss on outside click
-    document.addEventListener('click', function(e) {
-      if (!e.target.closest('#jero_ind_select_wrap') && indDropdown) {
-        indDropdown.style.display = 'none';
-      }
-      if (!e.target.closest('#jero_csize_select_wrap') && sizeDropdown) {
-        sizeDropdown.style.display = 'none';
-      }
-      if (!e.target.closest('#jero_ctype_select_wrap') && typeDropdown) {
-        typeDropdown.style.display = 'none';
-      }
-      if (!e.target.closest('#jero_founded_select_wrap') && foundedDropdown) {
-        foundedDropdown.style.display = 'none';
+    if (indInput) {
+      indInput.addEventListener('focus', function() {
+        renderIndustryItems(this.value);
+        if (indWrap) indWrap.classList.add('is-open');
+      });
+      indInput.addEventListener('input', function() {
+        renderIndustryItems(this.value);
+        if (indClear) indClear.style.display = this.value ? 'inline-flex' : 'none';
+        if (indWrap) indWrap.classList.add('is-open');
+      });
+    }
+
+    if (indChevron) {
+      indChevron.addEventListener('click', function(e) {
+        e.stopPropagation();
+        var isOpen = indWrap && indWrap.classList.contains('is-open');
+        if (isOpen) {
+          if (indWrap) indWrap.classList.remove('is-open');
+        } else {
+          renderIndustryItems(indInput ? indInput.value : '');
+          if (indWrap) indWrap.classList.add('is-open');
+        }
+      });
+    }
+
+    if (indClear) {
+      indClear.addEventListener('click', function(e) {
+        e.stopPropagation();
+        indSelect.value = '';
+        if (indSelectAlt) indSelectAlt.value = '';
+        if (indInput) indInput.value = '';
+        indClear.style.display = 'none';
+        if (indWrap) indWrap.classList.remove('is-open');
+        var indReview = document.querySelector('.span_industry');
+        if (indReview) indReview.textContent = 'Industry';
+      });
+    }
+
+    document.addEventListener('pointerdown', function(e) {
+      if (indWrap && !indWrap.contains(e.target)) {
+        indWrap.classList.remove('is-open');
       }
     });
   }
@@ -966,6 +1498,7 @@ body {
       }
     };
 
+    // Primary City Sync
     var primaryCityInput = document.getElementById('primary_work_city_input');
     var primaryHidden = document.getElementById('kt_tagify_work_location_0');
     if (primaryCityInput && primaryHidden) {
@@ -976,6 +1509,7 @@ body {
     }
   }
 
+  // 5. Populate Step 5 Review Summaries & Readiness Score
   window.populateReviewSummaries = function() {
     var compName = (document.getElementById('company_name') ? document.getElementById('company_name').value : '') || 'Your Organization';
     var compWeb = (document.getElementById('website') ? document.getElementById('website').value : '') || '—';
@@ -1064,10 +1598,12 @@ body {
     if (barEl) barEl.style.width = score + '%';
   };
 
+  // 6. Initialize on DOM Ready
   document.addEventListener('DOMContentLoaded', function() {
-    initEnterpriseDropdowns();
+    initIndustryDropdown();
     initLocationsEngine();
 
+    // Stepper item clicks
     var stepTabs = document.querySelectorAll('.client-step-item');
     stepTabs.forEach(function(tab) {
       tab.addEventListener('click', function() {
@@ -1076,6 +1612,7 @@ body {
       });
     });
 
+    // Header Action Buttons
     var nextBtn = document.getElementById('profile_top_next_btn');
     if (nextBtn) {
       nextBtn.addEventListener('click', function() {
@@ -1090,7 +1627,17 @@ body {
       });
     }
 
-    // Quill
+    var closeBtn = document.getElementById('profile_top_close_btn');
+    if (closeBtn) {
+      closeBtn.addEventListener('click', function() {
+        if (confirm('Leave profile setup? You can complete it later from your dashboard.')) {
+          window.location.href = "{{ url('service_company/dashboard') }}";
+        }
+      });
+    }
+    }
+
+    // Quill Description Editor
     var quillEl = document.getElementById('kt_company_description_quill');
     if (quillEl && typeof Quill !== 'undefined') {
       state.quillInstance = new Quill(quillEl, {
@@ -1105,7 +1652,7 @@ body {
         theme: 'snow'
       });
 
-      var charCountEl = document.getElementById('desc_char_count');
+      var charCountEl = document.getElementById('profile_desc_count') || document.getElementById('desc_char_count');
       state.quillInstance.on('text-change', function() {
         var text = state.quillInstance.getText().trim();
         var len = text.length;
@@ -1130,27 +1677,29 @@ body {
       });
     }
 
-    // AI Button
-    var btnApplyAi = document.getElementById('btn_apply_ai_description');
-    if (btnApplyAi) {
-      btnApplyAi.addEventListener('click', function() {
-        var aiText = document.getElementById('ai_desc_suggestion_text');
-        if (aiText && state.quillInstance) {
-          state.quillInstance.root.innerHTML = '<p>' + aiText.textContent.trim() + '</p>';
-          state.quillInstance.emitter.emit('text-change');
-          btnApplyAi.innerHTML = '<span>✓ Applied!</span>';
-          setTimeout(function() {
-            btnApplyAi.innerHTML = '<span>Apply Suggestion</span>';
-          }, 2000);
-        }
-      });
-    }
+    // Apply AI Description
+    window.applyDescriptionSuggestion = function() {
+      var aiText = document.getElementById('profile_ai_suggested_desc') || document.getElementById('ai_desc_suggestion_text');
+      if (aiText && state.quillInstance) {
+        state.quillInstance.root.innerHTML = '<p>' + aiText.textContent.trim() + '</p>';
+        state.quillInstance.emitter.emit('text-change');
+      }
+    };
 
-    // Technologies
+    // Technologies Tagging Engine
     var techHidden = document.getElementById('company_technologies_payload');
     var chipsContainer = document.getElementById('selected_tech_chips_container');
     var techInput = document.getElementById('tag_search_input');
     var btnAddTech = document.getElementById('btn_add_tech_tag');
+
+    var initialChips = document.querySelectorAll('.chip-item-val');
+    initialChips.forEach(function(chip) {
+      var val = chip.getAttribute('data-tech');
+      if (val && !state.selectedTechnologies.includes(val)) {
+        state.selectedTechnologies.push(val);
+      }
+    });
+    syncTechnologies();
 
     function syncTechnologies() {
       if (techHidden) {
@@ -1240,146 +1789,31 @@ body {
       });
     });
 
-    var btnAddAllServices = document.getElementById('btn_add_all_recommended_services');
-    if (btnAddAllServices) {
-      btnAddAllServices.addEventListener('click', function() {
-        var allServices = [];
-        servicePills.forEach(function(p) {
-          var val = p.getAttribute('data-service');
-          if (val) allServices.push(val);
-        });
-        if (state.servicesTagify && allServices.length > 0) {
-          state.servicesTagify.addTags(allServices);
-        }
-      });
-    }
+    // Intelligent Website Fetch
+    window.fetchGodLevelCompanyIntelligence = function(rawUrl) {
+      rawUrl = (rawUrl || '').trim();
+      if (!rawUrl) return;
 
-    var btnClearAllServices = document.getElementById('btn_clear_all_services');
-    if (btnClearAllServices) {
-      btnClearAllServices.addEventListener('click', function() {
-        if (state.servicesTagify) state.servicesTagify.removeAllTags();
-      });
-    }
+      var domain = rawUrl.replace(/^https?:\/\//i, '').replace(/^www\./i, '').split('/')[0].toLowerCase();
+      var domainHidden = document.getElementById('domain_key');
+      if (domainHidden) domainHidden.value = domain;
 
-    // Website & Domain
-    var websiteInput = document.getElementById('website');
-    var domainDisplay = document.getElementById('domain_key_display');
-    var domainInput = document.getElementById('domain_key_input');
-    var clearWebBtn = document.getElementById('btn_clear_website');
-    var btnFetchIntel = document.getElementById('btn_fetch_company_intel');
-
-    if (websiteInput) {
-      websiteInput.addEventListener('input', function() {
-        var raw = this.value.trim();
-        if (clearWebBtn) clearWebBtn.style.display = raw ? 'inline-flex' : 'none';
-        try {
-          var parsed = raw.replace(/^https?:\/\//i, '').replace(/^www\./i, '').split('/')[0].toLowerCase();
-          if (domainDisplay) domainDisplay.textContent = parsed || 'yourdomain.com';
-          if (domainInput) domainInput.value = parsed;
-        } catch (e) {}
-      });
-
-      if (clearWebBtn) {
-        clearWebBtn.addEventListener('click', function() {
-          websiteInput.value = '';
-          websiteInput.dispatchEvent(new Event('input'));
-        });
+      var nameInput = document.getElementById('company_name');
+      if (nameInput && (!nameInput.value || nameInput.value === 'Pending Onboarding')) {
+        var brand = domain.split('.')[0];
+        brand = brand.charAt(0).toUpperCase() + brand.slice(1);
+        nameInput.value = brand;
       }
-    }
 
-    if (btnFetchIntel && websiteInput) {
-      btnFetchIntel.addEventListener('click', function() {
-        var rawUrl = websiteInput.value.trim();
-        if (!rawUrl) {
-          alert('Please enter a website URL first to fetch company details.');
-          websiteInput.focus();
-          return;
-        }
+      window.addTechnology('Cloud Architecture');
+      window.addTechnology('Web Development');
 
-        var btnText = btnFetchIntel.querySelector('.btn-fetch-text');
-        var btnSpinner = btnFetchIntel.querySelector('.btn-fetch-spinner');
-        if (btnText) btnText.textContent = 'Extracting...';
-        if (btnSpinner) btnSpinner.style.display = 'inline-block';
-        btnFetchIntel.disabled = true;
-
-        setTimeout(function() {
-          if (btnText) btnText.textContent = 'Fetch Details';
-          if (btnSpinner) btnSpinner.style.display = 'none';
-          btnFetchIntel.disabled = false;
-
-          var domain = rawUrl.replace(/^https?:\/\//i, '').replace(/^www\./i, '').split('/')[0].toLowerCase();
-          if (domainDisplay) domainDisplay.textContent = domain;
-          if (domainInput) domainInput.value = domain;
-
-          var nameInput = document.getElementById('company_name');
-          if (nameInput && (!nameInput.value || nameInput.value === 'Pending Onboarding')) {
-            var brand = domain.split('.')[0];
-            brand = brand.charAt(0).toUpperCase() + brand.slice(1);
-            nameInput.value = brand;
-            nameInput.dispatchEvent(new Event('input'));
-          }
-
-          window.addTechnology('Cloud Architecture');
-          window.addTechnology('Web Development');
-
-          if (state.servicesTagify) {
-            state.servicesTagify.addTags(['Enterprise Software Development', 'Cloud Consulting']);
-          }
-
-          var livePill = document.getElementById('profile_last_saved_text');
-          if (livePill) livePill.textContent = 'Intelligence synchronized';
-        }, 800);
-      });
-    }
-
-    // Logo Upload
-    var logoInput = document.getElementById('company_logo_input');
-    var logoPreview = document.getElementById('company_logo_preview');
-    var logoDropzone = document.getElementById('logo_dropzone');
-    var logoError = document.getElementById('company_logo_error');
-    var btnRemoveLogo = document.getElementById('btn_remove_logo');
-
-    if (logoDropzone && logoInput) {
-      logoDropzone.addEventListener('click', function(e) {
-        if (e.target !== btnRemoveLogo && !e.target.closest('#btn_remove_logo')) {
-          logoInput.click();
-        }
-      });
-
-      logoInput.addEventListener('change', function() {
-        if (this.files && this.files[0]) {
-          var file = this.files[0];
-          if (file.size > 2 * 1024 * 1024) {
-            if (logoError) {
-              logoError.textContent = 'Logo file size exceeds 2MB limit (' + (file.size / (1024 * 1024)).toFixed(2) + 'MB).';
-              logoError.style.display = 'block';
-            }
-            this.value = '';
-            return;
-          }
-          if (logoError) logoError.style.display = 'none';
-
-          var reader = new FileReader();
-          reader.onload = function(e) {
-            if (logoPreview) {
-              logoPreview.src = e.target.result;
-              logoPreview.style.display = 'block';
-            }
-          };
-          reader.readAsDataURL(file);
-        }
-      });
-
-      if (btnRemoveLogo) {
-        btnRemoveLogo.addEventListener('click', function(e) {
-          e.stopPropagation();
-          if (logoInput) logoInput.value = '';
-          if (logoPreview) logoPreview.style.display = 'none';
-        });
+      if (state.servicesTagify) {
+        state.servicesTagify.addTags(['Enterprise Software Development', 'Cloud Consulting']);
       }
-    }
+    };
 
-    // Form Submit
+    // Form Submission AJAX Engine
     var form = document.getElementById('kt_contact_add_form');
     var submitBtn = document.getElementById('submitBtn');
 
@@ -1394,7 +1828,7 @@ body {
 
         submitBtn.disabled = true;
         var originalBtnHtml = submitBtn.innerHTML;
-        submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> Setting up Workspace...';
+        submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> Saving Profile...';
 
         var formData = new FormData(form);
 
@@ -1408,10 +1842,6 @@ body {
 
         if (state.servicesTagify) {
           formData.set('tags', JSON.stringify(state.servicesTagify.value || []));
-        }
-
-        if (logoInput && logoInput.files && logoInput.files[0]) {
-          formData.set('logo', logoInput.files[0]);
         }
 
         fetch(form.action, {
@@ -1432,17 +1862,38 @@ body {
           submitBtn.innerHTML = originalBtnHtml;
 
           if (resObj.ok && resObj.data.status === 'success') {
-            window.location.href = resObj.data.redirect_url || "{{ url('service_company/dashboard') }}";
+            if (state.pageMode === 'ONBOARDING') {
+              window.location.href = resObj.data.redirect_url || "{{ url('service_company/dashboard') }}";
+            } else {
+              if (typeof Swal !== 'undefined') {
+                Swal.fire({
+                  icon: 'success',
+                  title: 'Profile Updated',
+                  text: 'Your company profile has been successfully saved.',
+                  timer: 2000,
+                  showConfirmButton: false
+                }).then(function() {
+                  window.location.href = "{{ route('service_company.account.index') }}";
+                });
+              } else {
+                alert('Company Profile saved successfully!');
+                window.location.href = "{{ route('service_company.account.index') }}";
+              }
+            }
           } else {
-            var errMsg = (resObj.data && resObj.data.message) ? resObj.data.message : 'An error occurred while finalizing profile. Please try again.';
-            alert(errMsg);
+            var errMsg = (resObj.data && resObj.data.message) ? resObj.data.message : 'Failed to save company profile. Please check the fields and try again.';
+            if (typeof Swal !== 'undefined') {
+              Swal.fire({ icon: 'warning', title: 'Attention', text: errMsg });
+            } else {
+              alert(errMsg);
+            }
           }
         })
         .catch(function(err) {
           submitBtn.disabled = false;
           submitBtn.innerHTML = originalBtnHtml;
-          console.error('[Onboarding] Error:', err);
-          alert('Network or server error occurred. Please try again.');
+          console.error('[CompanyProfile] Submission error:', err);
+          alert('Network or server error occurred while saving profile. Please try again.');
         });
       });
     }
@@ -1450,5 +1901,834 @@ body {
   });
 
 })();
+
+/**
+ * =========================================================================
+ * JERO ENTERPRISE COMPANY SIZE ENGINE (RULE 17 ISOLATED)
+ * 100% Replicates Client Wizard Company Size Engine
+ * =========================================================================
+ */
+(function() {
+    'use strict';
+
+    var isOpen = false;
+    var focusedIndex = -1;
+
+    var wrap = null;
+    var inputBox = null;
+    var displayInput = null;
+    var hiddenSelect = null;
+    var clearBtn = null;
+    var chevron = null;
+    var dropdown = null;
+    var listContainer = null;
+
+    function getItems() {
+        return listContainer ? listContainer.querySelectorAll('.jero-csize-item') : [];
+    }
+
+    function openDropdown() {
+        if (isOpen) return;
+        isOpen = true;
+        if (wrap) wrap.classList.add('is-open');
+        if (inputBox) {
+            inputBox.classList.add('is-focused');
+            inputBox.setAttribute('aria-expanded', 'true');
+        }
+        adjustPosition();
+        syncFocusedToSelected();
+    }
+
+    function closeDropdown() {
+        if (!isOpen) return;
+        isOpen = false;
+        if (wrap) wrap.classList.remove('is-open');
+        if (inputBox) {
+            inputBox.classList.remove('is-focused');
+            inputBox.setAttribute('aria-expanded', 'false');
+        }
+        clearFocusClasses();
+        focusedIndex = -1;
+    }
+
+    function adjustPosition() {
+        if (!dropdown || !inputBox) return;
+        var rect = inputBox.getBoundingClientRect();
+        var dropHeight = 280;
+        var spaceBelow = window.innerHeight - rect.bottom;
+        var spaceAbove = rect.top;
+
+        if (spaceBelow < dropHeight && spaceAbove > spaceBelow) {
+            dropdown.classList.add('drop-up');
+        } else {
+            dropdown.classList.remove('drop-up');
+        }
+    }
+
+    function syncFocusedToSelected() {
+        var items = getItems();
+        var selected = listContainer ? listContainer.querySelector('.jero-csize-item.selected') : null;
+        for (var i = 0; i < items.length; i++) {
+            if (items[i] === selected) {
+                focusedIndex = i;
+                items[i].classList.add('focused');
+                scrollItemIntoView(items[i]);
+                return;
+            }
+        }
+        focusedIndex = -1;
+    }
+
+    function clearFocusClasses() {
+        var items = getItems();
+        for (var i = 0; i < items.length; i++) {
+            items[i].classList.remove('focused');
+        }
+    }
+
+    function selectOption(val, label) {
+        val = (val || '').trim();
+        label = (label || '').trim();
+
+        if (hiddenSelect) {
+            hiddenSelect.value = val;
+            $(hiddenSelect).trigger('change');
+        }
+        var altSelect = document.getElementById('company_sizes');
+        if (altSelect) {
+            altSelect.value = val;
+            $(altSelect).trigger('change');
+        }
+
+        if (displayInput) {
+            displayInput.value = label;
+        }
+
+        var items = getItems();
+        for (var i = 0; i < items.length; i++) {
+            var itemVal = items[i].getAttribute('data-val');
+            var isSel = (itemVal === val);
+            items[i].classList.toggle('selected', isSel);
+            items[i].setAttribute('aria-selected', isSel ? 'true' : 'false');
+        }
+
+        updateVisualState();
+        closeDropdown();
+
+        var sizeReview = document.querySelector('.span_company_sizes');
+        if (sizeReview) sizeReview.textContent = label;
+    }
+
+    function clearOption() {
+        selectOption('', '');
+    }
+
+    function updateVisualState() {
+        var hasVal = displayInput && displayInput.value.trim().length > 0;
+        if (inputBox) {
+            inputBox.classList.toggle('has-value', hasVal);
+        }
+        if (clearBtn) {
+            clearBtn.style.display = hasVal ? 'inline-flex' : 'none';
+        }
+    }
+
+    function scrollItemIntoView(itemEl) {
+        if (!itemEl || !listContainer) return;
+        var tTop = itemEl.offsetTop;
+        var tH = itemEl.offsetHeight;
+        var cTop = listContainer.scrollTop;
+        var cH = listContainer.clientHeight;
+
+        if (tTop < cTop) {
+            listContainer.scrollTop = tTop - 6;
+        } else if (tTop + tH > cTop + cH) {
+            listContainer.scrollTop = (tTop + tH) - cH + 6;
+        }
+    }
+
+    function initEventListeners() {
+        wrap = document.getElementById('jero_csize_select_wrap');
+        inputBox = document.getElementById('jero_csize_input_box');
+        displayInput = document.getElementById('company_size_display');
+        hiddenSelect = document.getElementById('company_size');
+        clearBtn = document.getElementById('jero_csize_clear_btn');
+        chevron = document.getElementById('jero_csize_chevron');
+        dropdown = document.getElementById('jero_csize_dropdown');
+        listContainer = document.getElementById('jero_csize_list_container');
+
+        if (!wrap || !hiddenSelect) return;
+
+        if (inputBox) {
+            inputBox.addEventListener('click', function(e) {
+                if (e.target.closest('#jero_csize_clear_btn')) return;
+                if (isOpen) {
+                    closeDropdown();
+                } else {
+                    openDropdown();
+                }
+            });
+        }
+
+        if (chevron) {
+            chevron.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                if (isOpen) closeDropdown();
+                else openDropdown();
+            });
+        }
+
+        if (clearBtn) {
+            clearBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                clearOption();
+            });
+        }
+
+        if (listContainer) {
+            listContainer.addEventListener('click', function(e) {
+                var itemEl = e.target.closest('.jero-csize-item');
+                if (!itemEl) return;
+                var val = itemEl.getAttribute('data-val');
+                var lbl = itemEl.getAttribute('data-label');
+                selectOption(val, lbl);
+            });
+        }
+
+        document.addEventListener('pointerdown', function(e) {
+            var path = (typeof e.composedPath === 'function') ? e.composedPath() : [];
+            var isInside = wrap && (wrap.contains(e.target) || path.indexOf(wrap) !== -1);
+            if (!isInside && isOpen) {
+                closeDropdown();
+            }
+        }, true);
+
+        window.addEventListener('resize', function() { if (isOpen) adjustPosition(); }, { passive: true });
+        window.addEventListener('scroll', function() { if (isOpen) adjustPosition(); }, { passive: true });
+    }
+
+    window.JeroCompanySizeEngine = {
+        select: selectOption,
+        clear: clearOption,
+        open: openDropdown,
+        close: closeDropdown
+    };
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initEventListeners);
+    } else {
+        initEventListeners();
+    }
+})();
+
+/**
+ * =========================================================================
+ * JERO ENTERPRISE COMPANY TYPE ENGINE (RULE 17 ISOLATED)
+ * Search-First Dual-Layer Intelligence Combobox with Fuzzy Matching & Aliases
+ * =========================================================================
+ */
+(function() {
+    'use strict';
+
+    var taxonomyList = [];
+    var taxonomyMap = new Map();
+    var filteredList = [];
+    var focusedIndex = -1;
+    var isOpen = false;
+
+    var wrap = null;
+    var input = null;
+    var hiddenSelect = null;
+    var inputBox = null;
+    var clearBtn = null;
+    var chevron = null;
+    var dropdown = null;
+    var listContainer = null;
+
+    function escapeHtml(str) {
+        if (!str) return '';
+        return String(str)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;');
+    }
+
+    function highlightMatch(text, query) {
+        var safeText = escapeHtml(text || '');
+        if (!query) return safeText;
+        var cleanQ = query.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        if (!cleanQ) return safeText;
+        var regex = new RegExp('(' + cleanQ + ')', 'gi');
+        return safeText.replace(regex, '<mark class="jero-ctype-mark">$1</mark>');
+    }
+
+    function initData() {
+        var seedEl = document.getElementById('jero_company_type_seed_data');
+        if (seedEl && seedEl.textContent) {
+            try {
+                taxonomyList = JSON.parse(seedEl.textContent);
+            } catch (e) {
+                taxonomyList = [];
+            }
+        }
+        taxonomyMap.clear();
+        for (var i = 0; i < taxonomyList.length; i++) {
+            taxonomyMap.set(parseInt(taxonomyList[i].id, 10), taxonomyList[i]);
+        }
+    }
+
+    function getSelectedId() {
+        if (!hiddenSelect) return null;
+        var val = hiddenSelect.value;
+        if (val === '' || val === null || typeof val === 'undefined') return null;
+        return parseInt(val, 10);
+    }
+
+    function filterItems(query) {
+        var clean = (query || '').trim().toLowerCase();
+        if (!clean) {
+            filteredList = taxonomyList.map(function(item) {
+                return { item: item, matchedAlias: null };
+            });
+            return;
+        }
+
+        var results = [];
+        for (var i = 0; i < taxonomyList.length; i++) {
+            var item = taxonomyList[i];
+            var nameMatch = (item.display_name && item.display_name.toLowerCase().indexOf(clean) !== -1) ||
+                            (item.name && item.name.toLowerCase().indexOf(clean) !== -1);
+            var descMatch = item.desc && item.desc.toLowerCase().indexOf(clean) !== -1;
+            var matchedAlias = null;
+
+            if (item.aliases && item.aliases.length) {
+                for (var a = 0; a < item.aliases.length; a++) {
+                    if (item.aliases[a].toLowerCase().indexOf(clean) !== -1) {
+                        matchedAlias = item.aliases[a];
+                        break;
+                    }
+                }
+            }
+
+            if (nameMatch || descMatch || matchedAlias) {
+                results.push({
+                    item: item,
+                    matchedAlias: matchedAlias
+                });
+            }
+        }
+        filteredList = results;
+    }
+
+    function renderList(query) {
+        if (!listContainer) return;
+        if (!filteredList.length) {
+            listContainer.innerHTML = '<div class="jero-ctype-empty-state">' +
+                '<div style="font-weight:600; margin-bottom:4px; color:#1e293b;">No company type found</div>' +
+                '<div style="font-size:11.5px; color:#64748b;">No results matching "' + escapeHtml(query) + '".</div>' +
+                '</div>';
+            return;
+        }
+
+        var selectedId = getSelectedId();
+        var html = '';
+
+        for (var i = 0; i < filteredList.length; i++) {
+            var entry = filteredList[i];
+            var item = entry.item;
+            var isSelected = (selectedId !== null && selectedId === parseInt(item.id, 10));
+            var isFocused = (i === focusedIndex);
+
+            var checkIcon = isSelected ? '<span class="jero-ctype-item-check"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg></span>' : '';
+
+            html += '<div class="jero-ctype-item ' + (isSelected ? 'selected' : '') + ' ' + (isFocused ? 'focused' : '') + '" ' +
+                'data-idx="' + i + '" data-id="' + item.id + '" role="option" id="jero_ctype_opt_' + item.id + '" aria-selected="' + (isSelected ? 'true' : 'false') + '">' +
+                '<div class="jero-ctype-item-main">' +
+                '<div class="jero-ctype-item-name">' + highlightMatch(item.display_name || item.name, query) + '</div>' +
+                '</div>' +
+                '<div class="jero-ctype-item-side">' +
+                (entry.matchedAlias ? '<span class="jero-ctype-badge matched-alias">Matched: ' + escapeHtml(entry.matchedAlias) + '</span>' : (item.badge ? '<span class="jero-ctype-badge">' + escapeHtml(item.badge) + '</span>' : '')) +
+                checkIcon +
+                '</div>' +
+                '</div>';
+        }
+
+        listContainer.innerHTML = html;
+    }
+
+    function openDropdown() {
+        if (isOpen) return;
+        isOpen = true;
+        if (wrap) wrap.classList.add('is-open');
+        filterItems(input ? input.value : '');
+        renderList(input ? input.value : '');
+    }
+
+    function closeDropdown(restoreText) {
+        if (!isOpen) return;
+        isOpen = false;
+        if (wrap) wrap.classList.remove('is-open');
+        focusedIndex = -1;
+
+        if (restoreText && input) {
+            var selectedId = getSelectedId();
+            if (selectedId !== null && taxonomyMap.has(selectedId)) {
+                input.value = taxonomyMap.get(selectedId).display_name || taxonomyMap.get(selectedId).name;
+            } else {
+                input.value = '';
+            }
+            updateInputVisualState();
+        }
+    }
+
+    function updateInputVisualState() {
+        var hasVal = input && input.value.trim().length > 0;
+        if (inputBox) inputBox.classList.toggle('has-value', hasVal);
+        if (clearBtn) clearBtn.style.display = hasVal ? 'inline-flex' : 'none';
+    }
+
+    function selectItem(item) {
+        if (!item) return;
+        if (hiddenSelect) {
+            hiddenSelect.value = item.id;
+            $(hiddenSelect).trigger('change');
+        }
+        if (input) {
+            input.value = item.display_name || item.name;
+        }
+        updateInputVisualState();
+        closeDropdown(false);
+
+        var typeBadge = document.getElementById('profile_review_type_badge');
+        if (typeBadge) typeBadge.textContent = item.display_name || item.name;
+    }
+
+    function clearSelection() {
+        if (hiddenSelect) {
+            hiddenSelect.value = '';
+            $(hiddenSelect).trigger('change');
+        }
+        if (input) {
+            input.value = '';
+        }
+        updateInputVisualState();
+        filterItems('');
+        renderList('');
+        if (input) input.focus();
+
+        var typeBadge = document.getElementById('profile_review_type_badge');
+        if (typeBadge) typeBadge.textContent = 'Organization';
+    }
+
+    function initEventListeners() {
+        wrap = document.getElementById('jero_ctype_select_wrap');
+        input = document.getElementById('company_type_display');
+        hiddenSelect = document.getElementById('company_type');
+        inputBox = document.getElementById('jero_ctype_input_box');
+        clearBtn = document.getElementById('jero_ctype_clear_btn');
+        chevron = document.getElementById('jero_ctype_chevron');
+        dropdown = document.getElementById('jero_ctype_dropdown');
+        listContainer = document.getElementById('jero_ctype_list_container');
+
+        if (!wrap || !input || !hiddenSelect) return;
+
+        if (chevron) {
+            chevron.addEventListener('click', function(e) {
+                e.stopPropagation();
+                if (isOpen) closeDropdown(true);
+                else { input.focus(); openDropdown(); }
+            });
+        }
+
+        if (inputBox) {
+            inputBox.addEventListener('click', function(e) {
+                if (e.target.closest('#jero_ctype_clear_btn')) return;
+                if (e.target.closest('#jero_ctype_chevron')) return;
+                if (!isOpen) { input.focus(); openDropdown(); }
+            });
+        }
+
+        input.addEventListener('focus', function() { openDropdown(); });
+        input.addEventListener('click', function(e) { e.stopPropagation(); openDropdown(); });
+
+        input.addEventListener('input', function() {
+            if (!isOpen) openDropdown();
+            focusedIndex = 0;
+            filterItems(input.value);
+            renderList(input.value);
+            updateInputVisualState();
+        });
+
+        if (clearBtn) {
+            clearBtn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                clearSelection();
+            });
+        }
+
+        if (listContainer) {
+            listContainer.addEventListener('click', function(e) {
+                var itemEl = e.target.closest('.jero-ctype-item');
+                if (!itemEl) return;
+                var id = parseInt(itemEl.getAttribute('data-id'), 10);
+                if (taxonomyMap.has(id)) {
+                    selectItem(taxonomyMap.get(id));
+                }
+            });
+        }
+
+        document.addEventListener('pointerdown', function(e) {
+            var path = (typeof e.composedPath === 'function') ? e.composedPath() : [];
+            var isInside = wrap && (wrap.contains(e.target) || path.indexOf(wrap) !== -1);
+            if (!isInside && isOpen) {
+                closeDropdown(true);
+            }
+        }, true);
+    }
+
+    window.JeroCompanyTypeEngine = {
+        selectById: function(id) {
+            var numId = parseInt(id, 10);
+            if (taxonomyMap.has(numId)) selectItem(taxonomyMap.get(numId));
+        },
+        clear: clearSelection
+    };
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', function() { initData(); initEventListeners(); });
+    } else {
+        initData();
+        initEventListeners();
+    }
+})();
+
+/**
+ * =========================================================================
+ * JERO ENTERPRISE FOUNDED YEAR ENGINE (RULE 17 ISOLATED)
+ * Search-First Historical Registry (1800 – Present Year)
+ * =========================================================================
+ */
+(function() {
+    'use strict';
+
+    var currentYear = (new Date()).getFullYear();
+    var minYear = 1800;
+    var yearsList = [];
+    for (var y = currentYear; y >= minYear; y--) {
+        yearsList.push(y);
+    }
+
+    var filteredList = [];
+    var focusedIndex = -1;
+    var isOpen = false;
+
+    var wrap = null;
+    var input = null;
+    var searchInput = null;
+    var hiddenInput = null;
+    var inputBox = null;
+    var clearBtn = null;
+    var chevron = null;
+    var dropdown = null;
+    var listContainer = null;
+
+    function escapeHtml(str) {
+        if (!str) return '';
+        return String(str)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;');
+    }
+
+    function highlightMatch(text, query) {
+        var safeText = escapeHtml(String(text || ''));
+        if (!query) return safeText;
+        var cleanQ = query.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        if (!cleanQ) return safeText;
+        var regex = new RegExp('(' + cleanQ + ')', 'gi');
+        return safeText.replace(regex, '<mark class="jero-founded-mark">$1</mark>');
+    }
+
+    function getSelectedYear() {
+        if (!hiddenInput) return null;
+        var val = (hiddenInput.value || '').trim();
+        return val ? parseInt(val, 10) : null;
+    }
+
+    function filterYears(query) {
+        var clean = (query || '').trim();
+        if (!clean) {
+            filteredList = yearsList.slice();
+            return;
+        }
+        filteredList = yearsList.filter(function(yr) {
+            return String(yr).indexOf(clean) !== -1;
+        });
+    }
+
+    function renderList(query) {
+        if (!listContainer) return;
+        if (!filteredList.length) {
+            listContainer.innerHTML = '<div class="jero-founded-empty-state">' +
+                '<div style="font-weight:600; margin-bottom:4px; color:#1e293b;">No years found</div>' +
+                '<div style="font-size:11.5px; color:#64748b;">No results matching "' + escapeHtml(query) + '".</div>' +
+                '</div>';
+            return;
+        }
+
+        var selected = getSelectedYear();
+        var html = '';
+        for (var i = 0; i < filteredList.length; i++) {
+            var yr = filteredList[i];
+            var isSelected = (selected !== null && selected === yr);
+            var isFocused = (i === focusedIndex);
+            var checkIcon = isSelected ? '<span class="jero-founded-item-check"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg></span>' : '';
+
+            html += '<div class="jero-founded-item ' + (isSelected ? 'selected' : '') + ' ' + (isFocused ? 'focused' : '') + '" ' +
+                'data-idx="' + i + '" data-year="' + yr + '" role="option" id="jero_founded_opt_' + yr + '" aria-selected="' + (isSelected ? 'true' : 'false') + '">' +
+                '<div class="jero-founded-item-name">' + highlightMatch(yr, query) + '</div>' +
+                checkIcon +
+                '</div>';
+        }
+
+        listContainer.innerHTML = html;
+    }
+
+    function openDropdown() {
+        if (isOpen) return;
+        isOpen = true;
+        if (wrap) wrap.classList.add('is-open');
+
+        if (searchInput) {
+            searchInput.value = '';
+            setTimeout(function() { searchInput.focus(); }, 60);
+        }
+
+        filterYears('');
+        renderList('');
+
+        var selected = getSelectedYear();
+        if (selected !== null && listContainer) {
+            var selEl = listContainer.querySelector('.jero-founded-item.selected');
+            if (selEl) {
+                listContainer.scrollTop = Math.max(0, selEl.offsetTop - 60);
+            }
+        }
+    }
+
+    function closeDropdown(restoreFocus) {
+        if (!isOpen) return;
+        isOpen = false;
+        if (wrap) wrap.classList.remove('is-open');
+        focusedIndex = -1;
+    }
+
+    function updateInputVisualState() {
+        var hasVal = hiddenInput && (hiddenInput.value || '').trim().length > 0;
+        if (inputBox) inputBox.classList.toggle('has-value', hasVal);
+        if (clearBtn) clearBtn.style.display = hasVal ? 'inline-flex' : 'none';
+    }
+
+    function selectYear(yr) {
+        if (!yr) return;
+        var cleanYr = parseInt(yr, 10);
+        if (isNaN(cleanYr)) return;
+        if (hiddenInput) {
+            hiddenInput.value = cleanYr;
+            $(hiddenInput).trigger('input').trigger('change');
+        }
+        if (input) {
+            input.value = cleanYr;
+        }
+        updateInputVisualState();
+        closeDropdown(false);
+    }
+
+    function clearYear() {
+        if (hiddenInput) {
+            hiddenInput.value = '';
+            $(hiddenInput).trigger('input').trigger('change');
+        }
+        if (input) {
+            input.value = '';
+        }
+        updateInputVisualState();
+        filterYears('');
+        renderList('');
+        closeDropdown(false);
+    }
+
+    function initEventListeners() {
+        wrap = document.getElementById('jero_founded_select_wrap');
+        input = document.getElementById('founded_display');
+        searchInput = document.getElementById('founded_search_input');
+        hiddenInput = document.getElementById('founded');
+        inputBox = document.getElementById('jero_founded_input_box');
+        clearBtn = document.getElementById('jero_founded_clear_btn');
+        chevron = document.getElementById('jero_founded_chevron');
+        dropdown = document.getElementById('jero_founded_dropdown');
+        listContainer = document.getElementById('jero_founded_list_container');
+
+        if (!wrap || !input || !hiddenInput) return;
+
+        if (chevron) {
+            chevron.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                if (isOpen) closeDropdown(false);
+                else openDropdown();
+            });
+        }
+
+        if (inputBox) {
+            inputBox.addEventListener('click', function(e) {
+                if (e.target.closest('#jero_founded_clear_btn')) return;
+                if (e.target.closest('#jero_founded_chevron')) return;
+                if (!isOpen) openDropdown();
+                else if (searchInput) searchInput.focus();
+            });
+        }
+
+        if (searchInput) {
+            searchInput.addEventListener('input', function() {
+                focusedIndex = 0;
+                filterYears(this.value);
+                renderList(this.value);
+            });
+        }
+
+        if (clearBtn) {
+            clearBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                clearYear();
+            });
+        }
+
+        if (listContainer) {
+            listContainer.addEventListener('click', function(e) {
+                var itemEl = e.target.closest('.jero-founded-item');
+                if (!itemEl) return;
+                var yr = itemEl.getAttribute('data-year');
+                if (yr) selectYear(yr);
+            });
+        }
+
+        document.addEventListener('pointerdown', function(e) {
+            var path = (typeof e.composedPath === 'function') ? e.composedPath() : [];
+            var isInside = wrap && (wrap.contains(e.target) || path.indexOf(wrap) !== -1);
+            if (!isInside && isOpen) closeDropdown(false);
+        }, true);
+    }
+
+    window.JeroFoundedYearEngine = {
+        selectYear: selectYear,
+        clearYear: clearYear,
+        open: openDropdown,
+        close: closeDropdown
+    };
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initEventListeners);
+    } else {
+        initEventListeners();
+    }
+})();
+
+/**
+ * =========================================================================
+ * LOGO MANAGEMENT & PREVIEW ENGINE (RULE 17 ISOLATED)
+ * 2MB Max Validation, ObjectURL Preview, Remove Trigger
+ * =========================================================================
+ */
+window.loadFile = function(event) {
+  var input = (event && event.target) ? event.target : document.getElementById('client_logo_input');
+  if (input && input.files && input.files[0]) {
+    var file = input.files[0];
+    var maxLogoSizeBytes = 2 * 1024 * 1024;
+    if (file.size > maxLogoSizeBytes) {
+      if (typeof Swal !== 'undefined' && typeof Swal.fire === 'function') {
+        Swal.fire({
+          icon: 'warning',
+          title: 'File Size Exceeded',
+          text: 'Company logo size cannot exceed 2MB. Please upload an image under 2MB.',
+          confirmButtonColor: '#ffd428'
+        });
+      } else {
+        alert('Company logo size cannot exceed 2MB. Please upload an image under 2MB.');
+      }
+      input.value = '';
+      return;
+    }
+
+    var output = URL.createObjectURL(file);
+    var logoBox = document.getElementById('company_logo_box');
+    if (logoBox) {
+      logoBox.style.backgroundImage = 'url(' + output + ')';
+      logoBox.style.backgroundSize = 'contain';
+      logoBox.style.backgroundRepeat = 'no-repeat';
+      logoBox.style.backgroundPosition = 'center';
+      logoBox.classList.add('has-image');
+      logoBox.innerHTML = '';
+    }
+
+    var removeInput = document.getElementById('client_avatar_remove');
+    if (removeInput) removeInput.value = '0';
+
+    var removeBtn = document.getElementById('client_remove_logo_btn');
+    if (removeBtn) removeBtn.style.display = 'inline-flex';
+
+    var statusBanner = document.getElementById('logo_status_banner');
+    if (statusBanner) {
+      statusBanner.className = 'god-logo-status-banner is-detected';
+      statusBanner.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> <span>Logo uploaded successfully</span>';
+    }
+
+    var reviewLogo = document.getElementById('profile_review_logo_box');
+    if (reviewLogo) {
+      reviewLogo.style.backgroundImage = 'url(' + output + ')';
+      reviewLogo.style.backgroundSize = 'contain';
+      reviewLogo.style.backgroundRepeat = 'no-repeat';
+      reviewLogo.style.backgroundPosition = 'center';
+      reviewLogo.innerHTML = '';
+    }
+  }
+};
+
+window.removeCompanyLogo = function() {
+  var fileIn = document.getElementById('client_logo_input');
+  if (fileIn) fileIn.value = '';
+
+  var removeIn = document.getElementById('client_avatar_remove');
+  if (removeIn) removeIn.value = '1';
+
+  var logoBox = document.getElementById('company_logo_box');
+  if (logoBox) {
+    logoBox.style.backgroundImage = 'none';
+    logoBox.classList.remove('has-image');
+    logoBox.innerHTML = '<div class="god-logo-placeholder" id="logo_placeholder"><svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg><span class="placeholder-title">Company Logo</span><span class="placeholder-sub">Click Change Logo or auto-fetch</span></div>';
+  }
+
+  var removeBtn = document.getElementById('client_remove_logo_btn');
+  if (removeBtn) removeBtn.style.display = 'none';
+
+  var statusBanner = document.getElementById('logo_status_banner');
+  if (statusBanner) {
+    statusBanner.className = 'god-logo-status-banner is-empty';
+    statusBanner.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/></svg> <span>No logo detected yet</span>';
+  }
+
+  var reviewLogo = document.getElementById('profile_review_logo_box');
+  if (reviewLogo) {
+    reviewLogo.style.backgroundImage = 'none';
+    reviewLogo.innerHTML = '<span id="profile_review_initials" style="font-size:18px; font-weight:700; color:#1e293b;">CP</span>';
+  }
+};
 </script>
 @endpush

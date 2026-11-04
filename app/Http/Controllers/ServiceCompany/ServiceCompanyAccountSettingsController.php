@@ -726,11 +726,13 @@ class ServiceCompanyAccountSettingsController extends ServiceCompanyBaseControll
         if (! empty(@$request->industries)) {
             $company->industries = @$request->industries;
         }
-        if (! empty(@$request->company_size)) {
-            $company_size = $request->company_size;
-            [$from_size, $to_size] = explode('-', $company_size);
-            $company->company_size_from = $from_size;
-            $company->company_size = $to_size;
+        if (! empty(@$request->company_size) || ! empty(@$request->company_sizes)) {
+            $company_size = @$request->company_size ?: @$request->company_sizes;
+            if (strpos($company_size, '-') !== false) {
+                [$from_size, $to_size] = explode('-', $company_size);
+                $company->company_size_from = $from_size;
+                $company->company_size = $to_size;
+            }
         }
         if (! empty(@$request->company_type)) {
             $company->company_type = @$request->company_type;
@@ -903,11 +905,13 @@ class ServiceCompanyAccountSettingsController extends ServiceCompanyBaseControll
         if (! empty(@$request->industries)) {
             $client->industry = @$request->industries;
         }
-        if (! empty(@$request->company_size)) {
-            $company_size = $request->company_size;
-            [$from_size, $to_size] = explode('-', $company_size);
-            $client->company_size_from = $from_size;
-            $client->company_sizes = $to_size;
+        if (! empty(@$request->company_size) || ! empty(@$request->company_sizes)) {
+            $company_size = @$request->company_size ?: @$request->company_sizes;
+            if (strpos($company_size, '-') !== false) {
+                [$from_size, $to_size] = explode('-', $company_size);
+                $client->company_size_from = $from_size;
+                $client->company_sizes = $to_size;
+            }
         }
         if (! empty(@$request->company_type)) {
             $client->company_type = @$request->company_type;

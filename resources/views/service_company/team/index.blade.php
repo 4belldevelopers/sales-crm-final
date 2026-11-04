@@ -4830,7 +4830,7 @@
 				var channels = Array.isArray(row.channels) ? row.channels : [];
 				var publicCount = channels.length;
 
-				var isInvited = !row.password || row.status === 'invited';
+				var isInvited = (!row.password && row.status !== 'active') || row.status === 'invited';
 				var isActive = (row.status === 'active');
 
 				var cardAccent = '#cbd5e1';
@@ -4950,7 +4950,7 @@
 				html += '<span class="tm-subcard-title">Account Status</span>';
 				html += '</div></div>';
 				html += '<div class="tm-status-body">';
-				if (row.password) {
+				if (row.password || (row.status && row.status.toLowerCase() === 'active')) {
 					html += '<div class="tm-status-row tm-status-row-control">';
 					html += '<label class="ios-switch" title="Toggle active status">';
 					html += '<input type="checkbox" class="chkStatus" id="status_change_' + row.id + '" value="active" ' + (isActive ? 'checked' : '') + ' onclick="handleClick(this, ' + row.id + ');" ' + (parseInt(row.root_user, 10) === 1 ? 'disabled' : '') + '>';
