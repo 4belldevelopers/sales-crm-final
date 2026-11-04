@@ -20,6 +20,38 @@ Last updated: 2026-10-22 (Super Admin Companies Page UI Redesign, 100% CQRS Read
 - **Test coverage:** `TenantIsolationTest`, `BenchToJobAppTrackerPipelineContractTest`, `BenchTalentRequestPipelineContractTest`, `SuperAdminCompanyLoadTest`, `SuperAdminSubscriptionLoadTest`, `SuperAdminDashboardLoadTest` (100% green).
 - **V2_login blocking-scenarios architecture:** session-epoch pattern + Reverb `UserAccountSuspended` event + `SyncUserStatusAction` (cross-tenant-safe) + `BlockCompanyAction` (static bulk helper) + `block_log` audit table + drop all 20 `refresh:true` ES sites + grep-lint guard. See [docs/V2_login/BLOCKING_SCENARIOS_AUDIT.md](../docs/V2_login/BLOCKING_SCENARIOS_AUDIT.md), [ADR 0007](../docs/adr/0007-blocking-scenarios-architecture.md). Code not yet landed.
 
+- *2026-11-04* — **Service Company Partner Agency Drawer Hiring Pipeline Funnel & Offer KPI Counting Fix (100% COMPLETED & VERIFIED)**:
+  - **Module & Scope**: Performance Tab Analytics Engine (`app/Services/Analytics/Contracts/PerformanceStatusMap.php`, `app/Services/Analytics/ClientPerformanceConstants.php`, `app/Services/Analytics/ClientPerformanceAnalyticsService.php`, `resources/views/service_company/consultancy/dviewMore.blade.php`), Controller Cache (`app/Http/Controllers/ServiceCompany/ServiceCompanyConsultancyController.php`), and Audit Documentation (`docs/audit documents/2026-11-04-consultancy-funnel-counting-fix.md`).
+  - **Problem Diagnosed**:
+    - Performance tab Hiring Pipeline Funnel displayed misleading numbers (`Candidates: 10`, `Screened: 4 (40.0%)`, `Interviews: 1 (25.0%)`, `Offers: 1 (100.0%)`, `Joined: 1 (100.0%)`), and Hero KPI card showed `Offers Generated: 1`.
+    - Meanwhile, the Candidates tab stage pills authoritative counts were: `Sourcing: 6`, `Screening: 3`, `Evaluation: 0`, `Negotiations: 0`, `Offer: 0`, `Joined: 1`, `Rejected: 0`.
+    - Drawer top tabs and KPI badges displayed `Offers: 0`.
+  - **Root Cause**:
+    - `PerformanceStatusMap` defined cumulative milestone arrays that bundled all downstream statuses (`MILESTONE_SCREENED_STATUSES = [2, 3, 4, 5, 6]`, `MILESTONE_INTERVIEW_STATUSES = [3, 4, 5, 6]`, `MILESTONE_OFFER_STATUSES = [5, 6]`).
+    - The single placed candidate (Candidate `#3`, status 6) was falsely counted as an Offer, an Interview, and a Screened candidate, inflating Screened from 3 to 4, Interviews from 0 to 1, and Offers from 0 to 1.
+  - **God-Level Fix Implemented**:
+    1. Restructured `MILESTONE_SCREENED_STATUSES` to `[2]`, `MILESTONE_INTERVIEW_STATUSES` to `[3, 4]`, and `MILESTONE_OFFER_STATUSES` to `[5]` in `PerformanceStatusMap.php` and `ClientPerformanceConstants.php`.
+    2. Made `ClientPerformanceAnalyticsService::buildFunnel` conversion calculations robust to direct stage completion without division-by-zero or artificial 0.0% join rates.
+    3. Bumped controller cache key to `consultancyviewmore_v33` and added `_v33` to client-side RAM cache key `window.perfClientCache`.
+    4. Verified complete harmony: Funnel now displays `10 Candidates (100.0%)`, `3 Screened (30.0%)`, `0 Interviews (0.0%)`, `0 Offers (0.0%)`, `1 Joined (10.0%)`, matching Candidate tab pills and drawer tabs 100%. All 10 feature tests pass green.
+
+- *2026-11-04* — **Service Company Partner Agency Drawer Click & Tab Switching Engine Fix (100% COMPLETED & VERIFIED)**:
+  - **Module & Scope**: Service Company Consultancy Drawer (`resources/views/service_company/consultancy/dviewMore.blade.php`), Controller Cache (`app/Http/Controllers/ServiceCompany/ServiceCompanyConsultancyController.php`), and Audit Documentation (`docs/audit documents/2026-11-04-consultancy-drawer-clicks-fix.md`).
+  - **Problem Solved**:
+    - Clicking any of the 6 Hero KPI cards or 9 nav tabs failed to switch the active tab pane; clicking `Performance` highlighted the pill blue while remaining stuck on `Overview` content, and clicking KPI cards added `#candidate_list` to the address bar.
+  - **Root Causes Diagnosed**:
+    1. Undeclared function call `agencyPerfFetchData(...)` in `loadAgencyTabContent` triggered `Uncaught ReferenceError: agencyPerfFetchData is not defined` because it was only assigned later on `window`.
+    2. Overriding CSS `.tab-pane.show { display: block !important; }` caused `#overview` to remain displayed on screen even when `.active` was removed.
+    3. Missing tab identity normalization caused mismatch between target names and actual DOM pane IDs (`candidateDashboard` vs `candidatedashboard` / `performance`).
+    4. Anchor tags had `href="#requisitions"`, `href="#candidate_list"` without `javascript:void(0);`, causing anchor navigation on event bubbling.
+  - **God-Level Fix Implemented**:
+    1. Built authoritative `mapAgencyTabIdentity(rawTarget)` normalizing all tab aliases to proper `normTab` and `domPaneId`.
+    2. Built robust `triggerAgencyDrawerTab(target, e, force)` with explicit `display: none` / `display: block` toggling, tab pill active management, and try-catch guarded store loading.
+    3. Pre-declared `agencyPerfFetchData` function hoist so analytics calls never throw ReferenceError.
+    4. Scoped `.cd-scope .tab-pane { display: none !important; }` and `.cd-scope .tab-pane.active { display: block !important; }`, completely removing `.tab-pane.show`.
+    5. Updated all KPI cards and tab buttons with `href="javascript:void(0);"` and `data-target-tab` attributes.
+    6. Bumped Redis cache key to `consultancyviewmore_v32` and verified all 9 tab clicks pass with 0 errors.
+
 - *2026-11-03* — **God-Level Unified Registration & Add/Invite Team Member Lifecycle Audit & Architecture Implementation (Phases 0–6) (100% COMPLETED & VERIFIED)**:
   - **Module & Scope**: Service Company Team Member Invitation & Resend (`app/Http/Controllers/ServiceCompany/ServiceCompanyTeamController.php`), Idempotent Transactional Outbox Pipeline (`app/Services/TeamMutationService.php`), Asynchronous Dual-Store Worker (`app/Jobs/ProcessTeamOutboxEventJob.php`), Horizon Queue Configuration (`config/horizon.php`), Transport Mail Service (`app/Services/MailService.php`), Unified Registration Shell & Context Engine (`app/Http/Controllers/Auth/RegisterController.php`, `app/Services/RegistrationContextResolver.php`, `app/Services/RegistrationActivationService.php`, `resources/views/auth/login.blade.php`), and Architecture Blueprint (`docs/GOD_LEVEL_UNIFIED_REGISTRATION_AND_INVITATION_ARCHITECTURE_BLUEPRINT.md`).
   - **Direct Email Activation Bug Diagnosed & Fixed (Zero-Redirect Direct Token Resolution)**:
@@ -604,7 +636,6 @@ Last updated: 2026-10-22 (Super Admin Companies Page UI Redesign, 100% CQRS Read
       - Added responsive breakpoints at 1280px, 860px, and 600px for robust adaptability.
       - Integrated interactive one-click copy buttons with checkmark feedback, debounced dynamic search, single active blue sub-tab highlight (`#009ef7`), and seamless switching to the Requisitions tab.
   - **Verification**: `php -l` passed clean with 0 syntax errors, Laravel Pint formatted clean, end-to-end simulation verified `contactdata` (HTTP 200, 1 record returned) and `viewMore` (instant RAM hydration and rendering).
->>>>>>> 78b3dc34d3fd3a313cb7a8d7451cc9a87b135553
 
 - *2026-10-26* — **Client Drawer Modern Card + Sub-Card Overhaul & Linear/Stripe Continuous Hero Header (100% COMPLETED & VERIFIED)**:
   - **Scope**: Internal Client Drawer (`resources/views/service_company/client/show.blade.php`), Direct Client Drawer (`resources/views/service_company/client/dviewMore.blade.php`), Direct Client Terms/Request Drawer (`resources/views/service_company/client/requestviewmore.blade.php`).

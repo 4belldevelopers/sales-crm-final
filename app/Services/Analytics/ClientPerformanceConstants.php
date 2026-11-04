@@ -36,10 +36,10 @@ class ClientPerformanceConstants
     public const STATUS_IN_REVIEW = 8;
     public const STATUS_ARCHIVED = 9;
 
-    // Milestone set definitions for current active pipeline distribution
-    public const MILESTONE_SCREENED_STATUSES = [2, 3, 4, 5, 6];
-    public const MILESTONE_INTERVIEW_STATUSES = [3, 4, 5, 6];
-    public const MILESTONE_OFFER_STATUSES = [5, 6];
+    // Milestone set definitions for current active pipeline distribution (Discrete Stages)
+    public const MILESTONE_SCREENED_STATUSES = [2];
+    public const MILESTONE_INTERVIEW_STATUSES = [3, 4];
+    public const MILESTONE_OFFER_STATUSES = [5];
     public const MILESTONE_JOINED_STATUSES = [6];
 
     // Master Process Names in ELASTIC_CANDIDATE_TIMELINE for historical stage progression

@@ -9,8 +9,15 @@
 /* ── Guaranteed Card-Based Header Design (Rule 20 Enterprise Standard) ── */
 .kt_content_agency,
 #kt_content.kt_content_agency {
-  margin-top: -30px !important;
-  padding-top: 14px !important;
+  margin-top: -65px !important;
+  padding-top: 12px !important;
+}
+@media (max-width: 991.98px) {
+  .kt_content_agency,
+  #kt_content.kt_content_agency {
+    margin-top: -55px !important;
+    padding-top: 10px !important;
+  }
 }
 .cd-activities-drawer {
   width: 80% !important;
@@ -1634,7 +1641,7 @@
 </script>
 
 <!--begin::Content-->
-<div class="content d-flex flex-column flex-column-fluid pt-3 kt_content_agency" id="kt_content">
+<div class="content d-flex flex-column flex-column-fluid pt-0 kt_content_agency" id="kt_content">
   <!--begin::Post-->
   <div class="post d-flex flex-column-fluid" id="kt_post">
     <!--begin::Container-->
