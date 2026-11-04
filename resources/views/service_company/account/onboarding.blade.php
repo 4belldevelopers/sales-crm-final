@@ -76,154 +76,202 @@ body {
 
 /* ===== STICKY TOP NAVIGATION BAR (Header & Stepper) ===== */
 .client-top-nav-card.company-profile-nav-card {
-  position: sticky;
-  top: 10px;
-  z-index: 100;
+  position: sticky !important;
+  top: 10px !important;
+  z-index: 100 !important;
   background: rgba(255, 255, 255, 0.98) !important;
-  backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px) !important;
   border: 1px solid var(--border) !important;
   border-radius: var(--radius-lg) !important;
-  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.05) !important;
-  padding: 10px 18px !important;
-  margin-bottom: 16px !important;
-  height: 52px !important;
-  min-height: 52px !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03) !important;
+  padding: 0 14px !important;
+  margin-bottom: 10px !important;
+  height: 48px !important;
+  min-height: 48px !important;
+  max-height: 48px !important;
+  box-sizing: border-box !important;
+  transition: box-shadow 0.2s ease, top 0.2s ease !important;
 }
 
 .client-header-grid {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  height: 100%;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  width: 100% !important;
+  height: 100% !important;
+  gap: 10px !important;
+  box-sizing: border-box !important;
 }
 
 .client-header-identity {
-  min-width: 200px;
+  flex: 0 0 auto !important;
+  min-width: 120px !important;
+  max-width: 190px !important;
+  height: 100% !important;
+  display: flex !important;
+  align-items: center !important;
 }
 
 .client-header-title {
-  font-size: 15px !important;
+  font-size: 13.5px !important;
   font-weight: 700 !important;
   color: var(--text-primary) !important;
   margin: 0 !important;
   line-height: 1.25 !important;
+  white-space: nowrap !important;
 }
 
 .client-header-subtitle {
-  font-size: 11px !important;
+  font-size: 10.5px !important;
   color: var(--text-muted) !important;
   margin: 1px 0 0 !important;
-  line-height: 1.35 !important;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 320px;
+  line-height: 1.3 !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  max-width: 180px !important;
 }
 
 /* Center Stepper */
 .client-header-stepper-col {
-  flex: 1 1 auto;
-  display: flex;
-  justify-content: center;
+  flex: 1 1 auto !important;
+  display: flex !important;
+  justify-content: center !important;
+  min-width: 0 !important;
 }
 
 .client-stepper-wrap {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  background: #f8fafc;
-  padding: 4px 10px;
-  border-radius: 30px;
-  border: 1px solid var(--border);
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 2px !important;
+  background: #f8fafc !important;
+  padding: 2px 6px !important;
+  border-radius: 24px !important;
+  border: 1px solid var(--border) !important;
 }
 
 .client-step-item {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  cursor: pointer;
-  padding: 3px 8px;
-  border-radius: 20px;
-  transition: var(--transition);
-  user-select: none;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 4px !important;
+  cursor: pointer !important;
+  padding: 2px 5px !important;
+  border-radius: 14px !important;
+  transition: var(--transition) !important;
+  user-select: none !important;
 }
 
 .client-step-item:hover {
-  background: #f1f5f9;
+  background: #f1f5f9 !important;
 }
 
 .client-step-item.is-active {
-  background: #ffffff;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+  background: #ffffff !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06) !important;
 }
 
 .client-step-circle {
-  width: 22px;
-  height: 22px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 10.5px;
-  font-weight: 700;
-  transition: var(--transition);
+  width: 20px !important;
+  height: 20px !important;
+  min-width: 20px !important;
+  min-height: 20px !important;
+  border-radius: 50% !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-size: 10px !important;
+  font-weight: 700 !important;
+  transition: var(--transition) !important;
 }
 
 .client-step-circle.is-upcoming {
-  background: #e2e8f0;
-  color: #64748b;
+  background: #e2e8f0 !important;
+  color: #64748b !important;
 }
 
 .client-step-circle.is-active {
-  background: var(--primary-gradient);
-  color: var(--primary-text);
-  border: 1px solid var(--primary-border);
-  box-shadow: 0 0 0 2px rgba(245, 196, 0, 0.25);
+  background: var(--primary-gradient) !important;
+  color: var(--primary-text) !important;
+  border: 1px solid var(--primary-border) !important;
+  box-shadow: 0 0 0 2px rgba(245, 196, 0, 0.25) !important;
 }
 
 .client-step-circle.is-complete {
-  background: var(--success);
-  color: #ffffff;
-  border: 1px solid var(--success);
+  background: var(--success) !important;
+  color: #ffffff !important;
+  border: 1px solid var(--success) !important;
 }
 
 .client-step-name {
-  font-size: 11.5px;
-  font-weight: 600;
-  color: #475569;
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  color: #475569 !important;
+  white-space: nowrap !important;
 }
 
 .client-step-item.is-active .client-step-name {
-  color: var(--text-primary);
-  font-weight: 700;
+  color: var(--text-primary) !important;
+  font-weight: 700 !important;
 }
 
 .client-step-arrow {
-  color: #cbd5e1;
-  display: flex;
-  align-items: center;
+  color: #cbd5e1 !important;
+  display: flex !important;
+  align-items: center !important;
+  margin: 0 2px !important;
+}
+
+.client-step-arrow-svg {
+  width: 10px !important;
+  height: 10px !important;
 }
 
 /* Action Buttons in Header */
 .client-header-actions {
-  display: flex;
-  align-items: center;
-  gap: 8px;
+  flex: 0 0 auto !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+}
+
+.profile-live-status-pill {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 5px !important;
+  font-size: 10.5px !important;
+  font-weight: 500 !important;
+  color: #64748b !important;
+  padding: 3px 8px !important;
+  background: #f8fafc !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 14px !important;
+  white-space: nowrap !important;
+}
+
+.status-indicator-dot {
+  width: 6px !important;
+  height: 6px !important;
+  border-radius: 50% !important;
+  background: #10b981 !important;
+  display: inline-block !important;
+  box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2) !important;
 }
 
 .client-top-close-btn, .client-top-back-btn, .client-top-next-btn, .client-top-submit-btn {
-  height: 34px !important;
-  padding: 0 14px !important;
-  font-size: 11.5px !important;
+  height: 30px !important;
+  min-height: 30px !important;
+  max-height: 30px !important;
+  padding: 0 11px !important;
+  font-size: 11px !important;
   font-weight: 600 !important;
-  border-radius: 8px !important;
+  border-radius: 7px !important;
   display: inline-flex !important;
   align-items: center !important;
-  gap: 6px !important;
+  gap: 5px !important;
   transition: var(--transition) !important;
   cursor: pointer !important;
   font-family: 'Poppins', sans-serif !important;
+  white-space: nowrap !important;
 }
 
 .client-top-close-btn {
@@ -268,6 +316,80 @@ body {
   background: #059669 !important;
 }
 
+/* 15.6" Screen Responsive Navigation Collapse */
+@media (max-width: 1400px) {
+  .client-top-nav-card.company-profile-nav-card {
+    padding: 0 10px !important;
+    height: 46px !important;
+    min-height: 46px !important;
+    max-height: 46px !important;
+  }
+  .client-header-grid {
+    gap: 6px !important;
+  }
+  .client-header-identity {
+    max-width: 155px !important;
+    min-width: 105px !important;
+  }
+  .client-header-title {
+    font-size: 13px !important;
+  }
+  .client-header-subtitle {
+    display: none !important;
+  }
+  #profile_last_saved_text {
+    display: none !important;
+  }
+  .profile-live-status-pill {
+    padding: 3px 6px !important;
+  }
+  .client-stepper-wrap {
+    padding: 2px 4px !important;
+    gap: 1px !important;
+  }
+  .client-step-item {
+    padding: 2px 4px !important;
+    gap: 3px !important;
+  }
+  .client-step-name {
+    font-size: 10.5px !important;
+  }
+  .client-step-circle {
+    width: 18px !important;
+    height: 18px !important;
+    min-width: 18px !important;
+    min-height: 18px !important;
+    font-size: 9.5px !important;
+  }
+  .client-step-arrow {
+    margin: 0 1px !important;
+  }
+  .client-step-arrow-svg {
+    width: 9px !important;
+    height: 9px !important;
+  }
+  .client-top-close-btn,
+  .client-top-back-btn,
+  .client-top-next-btn,
+  .client-top-submit-btn {
+    height: 28px !important;
+    min-height: 28px !important;
+    max-height: 28px !important;
+    padding: 0 9px !important;
+    font-size: 10.5px !important;
+    gap: 4px !important;
+  }
+}
+
+@media (max-width: 1100px) {
+  .client-step-name {
+    display: none !important;
+  }
+  .client-step-item.is-active .client-step-name {
+    display: inline !important;
+  }
+}
+
 /* ===== STEP CONTENT VISIBILITY ===== */
 [data-wizard-type="step-content"] {
   display: none !important;
@@ -284,15 +406,18 @@ body {
   to { opacity: 1; transform: translateY(0); }
 }
 
-/* ===== TWO-COLUMN SUB-CARD SYSTEM (Rule 20) ===== */
+/* ===== TWO-COLUMN SUB-CARD SYSTEM (Rule 20 & 15.6" Screen Fit) ===== */
 .god-level-company-layout, .client-step-layout {
   display: grid !important;
-  grid-template-columns: 68% 30% !important;
-  gap: 16px !important;
+  grid-template-columns: minmax(0, 1fr) 290px !important;
+  gap: 12px !important;
   align-items: start !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
 }
 
-@media (max-width: 1200px) {
+@media (max-width: 1024px) {
   .god-level-company-layout, .client-step-layout {
     grid-template-columns: 1fr !important;
   }
@@ -304,21 +429,24 @@ body {
   border-radius: var(--radius-lg) !important;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03) !important;
   overflow: hidden !important;
+  min-width: 0 !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
 }
 
 .god-card-header, .client-card-header {
-  padding: 12px 18px !important;
-  border-bottom: 1px solid #f8fafc !important;
+  padding: 8px 14px !important;
+  border-bottom: 1px solid #f1f5f9 !important;
   display: flex !important;
   align-items: center !important;
-  gap: 12px !important;
+  gap: 10px !important;
   background: #ffffff !important;
 }
 
 .god-card-header-icon {
-  width: 32px !important;
-  height: 32px !important;
-  border-radius: 8px !important;
+  width: 28px !important;
+  height: 28px !important;
+  border-radius: 7px !important;
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
@@ -331,7 +459,7 @@ body {
 }
 
 .god-card-title {
-  font-size: 14px !important;
+  font-size: 13.5px !important;
   font-weight: 700 !important;
   color: #0f172a !important;
   margin: 0 !important;
@@ -339,18 +467,19 @@ body {
 }
 
 .god-card-subtitle {
-  font-size: 11px !important;
+  font-size: 10.5px !important;
   color: #64748b !important;
   margin: 1px 0 0 !important;
 }
 
 /* Fields & 2-Column Grid (15.6" Screen Fit) */
 .god-fields-grid {
-  padding: 16px 18px !important;
+  padding: 10px 14px !important;
   display: grid !important;
   grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-  gap: 12px 14px !important;
+  gap: 8px 12px !important;
   align-content: space-between !important;
+  box-sizing: border-box !important;
 }
 
 @media (max-width: 640px) {
@@ -374,12 +503,12 @@ body {
 .god-field-header {
   display: flex !important;
   align-items: center !important;
-  gap: 6px !important;
-  margin-bottom: 4px !important;
+  gap: 5px !important;
+  margin-bottom: 3px !important;
 }
 
 .god-field-label {
-  font-size: 11.5px !important;
+  font-size: 11px !important;
   font-weight: 600 !important;
   color: #0f172a !important;
   margin: 0 !important;
@@ -392,10 +521,11 @@ body {
   align-items: center !important;
   background: #ffffff !important;
   border: 1.5px solid #cbd5e1 !important;
-  border-radius: 8px !important;
-  padding: 0 10px !important;
-  height: 38px !important;
-  min-height: 38px !important;
+  border-radius: 7px !important;
+  padding: 0 8px !important;
+  height: 35px !important;
+  min-height: 35px !important;
+  max-height: 35px !important;
   position: relative !important;
   transition: border-color 0.15s ease, box-shadow 0.15s ease !important;
   box-sizing: border-box !important;
@@ -418,12 +548,12 @@ body {
   display: inline-flex !important;
   align-items: center !important;
   justify-content: center !important;
-  margin-right: 6px !important;
+  margin-right: 4px !important;
   flex-shrink: 0 !important;
 }
 .god-input-left-icon svg {
-  width: 15px !important;
-  height: 15px !important;
+  width: 14px !important;
+  height: 14px !important;
 }
 
 .god-native-input {
@@ -431,7 +561,7 @@ body {
   outline: none !important;
   background: transparent !important;
   color: #0f172a !important;
-  font-size: 12px !important;
+  font-size: 11.5px !important;
   font-family: 'Poppins', sans-serif !important;
   font-weight: 500 !important;
   flex: 1 1 auto !important;
@@ -450,12 +580,38 @@ body {
   display: flex !important;
   align-items: stretch !important;
   gap: 8px !important;
-  height: 38px !important;
+  height: 35px !important;
   width: 100% !important;
 }
 .god-website-input-box {
   flex: 1 1 auto !important;
   min-width: 0 !important;
+}
+
+.god-fetch-btn {
+  background: #ffd428 !important;
+  border: 1px solid #d4a017 !important;
+  color: #10143b !important;
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  border-radius: 7px !important;
+  padding: 0 11px !important;
+  height: 35px !important;
+  min-height: 35px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 5px !important;
+  flex-shrink: 0 !important;
+  cursor: pointer !important;
+  white-space: nowrap !important;
+  box-shadow: 0 1px 3px rgba(245, 196, 0, 0.25) !important;
+  transition: all 0.15s ease !important;
+  font-family: 'Poppins', sans-serif !important;
+}
+.god-fetch-btn:hover {
+  background: #f5c400 !important;
+  transform: translateY(-1px) !important;
 }
 
 .god-fetch-btn {
@@ -1025,11 +1181,11 @@ body {
 }
 .god-logo-preview-box {
   border: 1.5px dashed #cbd5e1 !important;
-  border-radius: 10px !important;
+  border-radius: 8px !important;
   background: #ffffff !important;
-  padding: 10px !important;
-  min-height: 135px !important;
-  max-height: 135px !important;
+  padding: 6px !important;
+  min-height: 100px !important;
+  max-height: 100px !important;
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
@@ -1037,9 +1193,9 @@ body {
   box-sizing: border-box !important;
 }
 .god-logo-surface {
-  width: 110px !important;
-  height: 110px !important;
-  border-radius: 10px !important;
+  width: 86px !important;
+  height: 86px !important;
+  border-radius: 8px !important;
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
@@ -1047,7 +1203,7 @@ body {
   background-repeat: no-repeat !important;
   background-position: center !important;
   background-color: #f8fafc !important;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05) !important;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05) !important;
   position: relative !important;
   overflow: hidden !important;
   transition: all 0.2s ease !important;
@@ -1063,29 +1219,33 @@ body {
   gap: 2px !important;
   color: #94a3b8 !important;
   text-align: center !important;
-  padding: 8px !important;
+  padding: 4px !important;
+}
+.god-logo-placeholder svg {
+  width: 32px !important;
+  height: 32px !important;
 }
 .god-logo-placeholder .placeholder-title {
-  font-size: 11px !important;
+  font-size: 10.5px !important;
   font-weight: 600 !important;
   color: #64748b !important;
-  margin-top: 2px !important;
+  margin-top: 1px !important;
 }
 .god-logo-placeholder .placeholder-sub {
-  font-size: 9.5px !important;
+  font-size: 8.5px !important;
   color: #94a3b8 !important;
 }
 .god-logo-status-banner {
   width: 100% !important;
   border-radius: 6px !important;
-  padding: 6px 10px !important;
-  font-size: 11px !important;
+  padding: 4px 8px !important;
+  font-size: 10.5px !important;
   font-weight: 600 !important;
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
-  gap: 6px !important;
-  margin-top: 8px !important;
+  gap: 5px !important;
+  margin-top: 6px !important;
   box-sizing: border-box !important;
   text-align: center !important;
 }
@@ -1100,20 +1260,22 @@ body {
 .god-logo-actions {
   display: flex !important;
   flex-direction: row !important;
-  gap: 8px !important;
-  margin-top: 8px !important;
+  gap: 6px !important;
+  margin-top: 6px !important;
   width: 100% !important;
 }
 .god-logo-btn {
   flex: 1 1 auto !important;
-  height: 34px !important;
-  border-radius: 8px !important;
-  font-size: 11.5px !important;
+  height: 30px !important;
+  min-height: 30px !important;
+  max-height: 30px !important;
+  border-radius: 6px !important;
+  font-size: 11px !important;
   font-weight: 600 !important;
   display: inline-flex !important;
   align-items: center !important;
   justify-content: center !important;
-  gap: 6px !important;
+  gap: 5px !important;
   cursor: pointer !important;
   transition: all 0.15s ease !important;
 }
@@ -1136,11 +1298,11 @@ body {
   border-color: #fda4af !important;
 }
 .god-logo-formats-note {
-  font-size: 10px !important;
+  font-size: 9.5px !important;
   color: #64748b !important;
-  line-height: 1.35 !important;
+  line-height: 1.3 !important;
   text-align: center !important;
-  margin-top: 8px !important;
+  margin-top: 6px !important;
   display: flex !important;
   align-items: flex-start !important;
   justify-content: center !important;

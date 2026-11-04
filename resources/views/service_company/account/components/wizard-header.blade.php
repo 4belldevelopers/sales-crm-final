@@ -11,10 +11,10 @@
     <div class="client-header-identity">
       <div class="client-header-titles">
         <h2 class="client-header-title" id="profile_header_title">
-          {{ ($page_mode ?? '') === 'ONBOARDING' ? 'Set Up Company Profile' : 'Company Profile' }}
+          {{ ($page_mode ?? '') === 'ONBOARDING' ? 'Set Up Profile' : 'Company Profile' }}
         </h2>
-        <p class="client-header-subtitle" id="profile_header_subtitle" title="Manage your company's identity, business information, technology expertise, locations and contact details.">
-          Manage your company's identity, business information, technology expertise, locations and contact details.
+        <p class="client-header-subtitle" id="profile_header_subtitle" title="Manage your company identity, expertise, locations & profiles.">
+          Manage identity, expertise, locations & profiles.
         </p>
       </div>
     </div>
@@ -101,15 +101,15 @@
     <div class="client-header-actions" id="profile_header_actions">
       
       <!-- Live Status Indicator -->
-      <div class="profile-live-status-pill" id="profile_live_status_pill" style="display:inline-flex; align-items:center; gap:6px; font-size:11px; font-weight:500; color:#64748b; padding:4px 10px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:20px; white-space:nowrap;">
-        <span class="status-indicator-dot" style="width:7px; height:7px; border-radius:50%; background:#10b981; display:inline-block;"></span>
-        <span id="profile_last_saved_text">All changes saved</span>
+      <div class="profile-live-status-pill" id="profile_live_status_pill" data-bs-toggle="tooltip" data-bs-placement="bottom" title="All changes saved in real time">
+        <span class="status-indicator-dot"></span>
+        <span class="profile-saved-label" id="profile_last_saved_text">Saved</span>
       </div>
 
       <!-- Step 1: Close (✕) Button (Exits back to Account overview) -->
       @if(($page_mode ?? '') !== 'ONBOARDING')
       <button type="button" class="btn client-top-close-btn profile-nav-close" id="profile_top_close_btn" title="Exit to Account Overview">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
           <line x1="18" y1="6" x2="6" y2="18"></line>
           <line x1="6" y1="6" x2="18" y2="18"></line>
         </svg>
@@ -119,7 +119,7 @@
 
       <!-- Steps 2-6: Back Button (Returns to previous step) -->
       <button type="button" class="btn client-top-back-btn profile-nav-back" id="profile_top_back_btn" title="Back to previous step" style="display:none !important;">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
           <path d="M19 12H5"/>
           <path d="m12 19-7-7 7-7"/>
         </svg>
@@ -129,7 +129,7 @@
       <!-- Steps 1-5: Next Page Button -->
       <button type="button" class="btn client-top-next-btn profile-nav-next" id="profile_top_next_btn">
         <span>Next Page</span>
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
           <path d="M5 12h14"/>
           <path d="m12 5 7 7-7 7"/>
         </svg>
@@ -137,7 +137,7 @@
 
       <!-- Step 6: Final Submit / Update Button -->
       <button type="button" class="btn client-top-submit-btn profile-submit-btn frmupdate" id="submitBtn" style="display:none !important;">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
           <polyline points="20 6 9 17 4 12"/>
         </svg>
         <span>{{ ($page_mode ?? '') === 'ONBOARDING' ? 'Complete Profile & Continue' : 'Save Changes' }}</span>
