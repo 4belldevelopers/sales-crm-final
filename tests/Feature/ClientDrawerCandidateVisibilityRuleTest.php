@@ -889,4 +889,60 @@ class ClientDrawerCandidateVisibilityRuleTest extends TestCase
         $this->assertEquals(0, $internalCounts->in_review, 'Internal Client GeneralMethod counter must return in_review = 0');
         $this->assertEquals(10, $internalCounts->all_candidates);
     }
+
+    public function test_direct_client_candidates_count_list_query_contract_excludes_status_8_and_9(): void
+    {
+        $mockElastic = \Mockery::mock(ElasticService::class);
+        $mockClient = \Mockery::mock();
+
+        $mockElastic->shouldReceive('indexExists')->andReturn(true);
+        $mockElastic->shouldReceive('getClient')->andReturn($mockClient);
+        $this->app->instance(ElasticService::class, $mockElastic);
+
+        $capturedParams = [];
+        $mockClient->shouldReceive('search')->andReturnUsing(function ($params) use (&$capturedParams) {
+            $capturedParams[$params['index']] = $params;
+            if (str_contains($params['index'], 'interview')) {
+                return ['hits' => ['total' => ['value' => 1]]];
+            }
+
+            return [
+                'hits' => ['total' => ['value' => 5]],
+                'aggregations' => [
+                    'all_candidates' => ['doc_count' => 5],
+                    'joined' => ['doc_count' => 1],
+                    'sourced' => ['doc_count' => 2],
+                    'screening' => ['doc_count' => 2],
+                    'evaluated' => ['doc_count' => 0],
+                    'negotiations' => ['doc_count' => 0],
+                    'offers' => ['doc_count' => 0],
+                    'rejected' => ['doc_count' => 0],
+                    'in_review' => ['doc_count' => 0],
+                ],
+            ];
+        });
+
+        // Clear cache key to ensure fresh query execution
+        cache()->forget('ats:kpi:direct_client_cand_v2:2:4');
+
+        $result = \App\Helper\GeneralMethod::DirectClientCandidatesCountList(2, 4);
+
+        $this->assertEquals(5, $result->all_candidates);
+        $this->assertEquals(1, $result->joined);
+        $this->assertEquals(2, $result->sourced);
+        $this->assertEquals(2, $result->screening);
+        $this->assertEquals(0, $result->in_review);
+
+        // Verify candidate query scopes to client and agency attribution, and excludes job_master_status_id [8, 9]
+        $candQuery = $capturedParams[ELASTIC_CANDIDATES]['body']['query']['bool'] ?? [];
+        $this->assertNotEmpty($candQuery, 'ELASTIC_CANDIDATES query must be executed');
+
+        $mustNot = json_encode($candQuery['must_not'] ?? []);
+        $this->assertStringContainsString('8', $mustNot);
+        $this->assertStringContainsString('9', $mustNot);
+
+        $must = json_encode($candQuery['must'] ?? []);
+        $this->assertStringContainsString('company_id', $must);
+        $this->assertStringContainsString('ClientComID', $must);
+    }
 }
