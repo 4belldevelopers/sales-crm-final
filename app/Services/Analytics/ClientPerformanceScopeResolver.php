@@ -204,34 +204,33 @@ class ClientPerformanceScopeResolver
                         'clients' => $clientsIndex,
                     ],
                     // Candidate filter for direct client:
-                    // 1. Strictly bounded by canonical shared_job_ids (if none, [-1] guarantees 0 leakage)
-                    // 2. Both client and agency matching
-                    // 3. Active shared relationship final_status = 1
-                    // 4. Positive allow-list: SHARED_PIPELINE_STATUSES [1, 2, 3, 4, 5, 6] (Sourcing onward)
+                    // 1. Client Organization Scope (from_company_id, company_id, client_id, or sharedJobIds)
+                    // 2. Viewer Agency Attribution: ClientComID strictly matching authCompanyId
+                    // 3. Positive allow-list: SHARED_PIPELINE_STATUSES [1, 2, 3, 4, 5, 6] (Sourcing onward)
+                    // 4. Strictly excludes In Review (8) and Archived (9)
                     'candidate_filter' => [
                         'bool' => [
                             'must' => [
-                                ['terms' => ['jobId' => ! empty($sharedJobIds) ? $sharedJobIds : [-1]]],
                                 [
                                     'bool' => [
-                                        'should' => [
+                                        'should' => array_values(array_filter([
                                             ['term' => ['from_company_id' => $clientId]],
                                             ['term' => ['company_id' => $clientId]],
-                                        ],
+                                            ['term' => ['client_id' => $clientId]],
+                                            ! empty($sharedJobIds) ? ['terms' => ['jobId' => $sharedJobIds]] : null,
+                                            ! empty($sharedJobIds) ? ['terms' => ['job_id' => $sharedJobIds]] : null,
+                                        ])),
                                         'minimum_should_match' => 1,
                                     ],
                                 ],
                                 [
                                     'bool' => [
                                         'should' => [
-                                            ['term' => ['to_company_id' => $authCompanyId]],
                                             ['term' => ['ClientComID' => $authCompanyId]],
-                                            ['term' => ['thirdparty_company_id' => $authCompanyId]],
                                         ],
                                         'minimum_should_match' => 1,
                                     ],
                                 ],
-                                ['term' => ['final_status' => 1]],
                                 ['terms' => ['job_master_status_id' => PerformanceStatusMap::SHARED_PIPELINE_STATUSES]],
                             ],
                             'must_not' => [
@@ -245,25 +244,42 @@ class ClientPerformanceScopeResolver
                             ],
                         ],
                     ],
-                    // Job filter for direct client: Strictly matches nested recommendation_relation (final_status = 1)
+                    // Job filter for direct client: Matches jobs belonging to client or shared with agency
                     'job_filter' => [
                         'bool' => [
-                            'must' => [
+                            'should' => [
+                                ['term' => ['company_id' => (int) $clientId]],
+                                ['term' => ['client_id' => (int) $clientId]],
                                 [
                                     'nested' => [
                                         'path' => 'recommendation_relation',
                                         'query' => [
                                             'bool' => [
-                                                'must' => [
-                                                    ['term' => ['recommendation_relation.to_company_id' => (int) $authCompanyId]],
-                                                    ['term' => ['recommendation_relation.from_company_id' => (int) $clientId]],
-                                                    ['term' => ['recommendation_relation.final_status' => 1]],
+                                                'should' => [
+                                                    [
+                                                        'bool' => [
+                                                            'must' => [
+                                                                ['term' => ['recommendation_relation.to_company_id' => (int) $authCompanyId]],
+                                                                ['term' => ['recommendation_relation.from_company_id' => (int) $clientId]],
+                                                            ],
+                                                        ],
+                                                    ],
+                                                    [
+                                                        'bool' => [
+                                                            'must' => [
+                                                                ['term' => ['recommendation_relation.to_company_id' => (int) $clientId]],
+                                                                ['term' => ['recommendation_relation.from_company_id' => (int) $authCompanyId]],
+                                                            ],
+                                                        ],
+                                                    ],
                                                 ],
+                                                'minimum_should_match' => 1,
                                             ],
                                         ],
                                     ],
                                 ],
                             ],
+                            'minimum_should_match' => 1,
                         ],
                     ],
                 ];
@@ -419,17 +435,40 @@ class ClientPerformanceScopeResolver
 
             if ($clientType === 'direct') {
                 $query = [
-                    'nested' => [
-                        'path' => 'recommendation_relation',
-                        'query' => [
-                            'bool' => [
-                                'must' => [
-                                    ['term' => ['recommendation_relation.to_company_id' => (int) $authCompanyId]],
-                                    ['term' => ['recommendation_relation.from_company_id' => (int) $clientId]],
-                                    ['term' => ['recommendation_relation.final_status' => 1]],
+                    'bool' => [
+                        'should' => [
+                            ['term' => ['company_id' => (int) $clientId]],
+                            ['term' => ['client_id' => (int) $clientId]],
+                            [
+                                'nested' => [
+                                    'path' => 'recommendation_relation',
+                                    'query' => [
+                                        'bool' => [
+                                            'should' => [
+                                                [
+                                                    'bool' => [
+                                                        'must' => [
+                                                            ['term' => ['recommendation_relation.to_company_id' => (int) $authCompanyId]],
+                                                            ['term' => ['recommendation_relation.from_company_id' => (int) $clientId]],
+                                                        ],
+                                                    ],
+                                                ],
+                                                [
+                                                    'bool' => [
+                                                        'must' => [
+                                                            ['term' => ['recommendation_relation.to_company_id' => (int) $clientId]],
+                                                            ['term' => ['recommendation_relation.from_company_id' => (int) $authCompanyId]],
+                                                        ],
+                                                    ],
+                                                ],
+                                            ],
+                                            'minimum_should_match' => 1,
+                                        ],
+                                    ],
                                 ],
                             ],
                         ],
+                        'minimum_should_match' => 1,
                     ],
                 ];
             } elseif ($clientType === 'agency') {

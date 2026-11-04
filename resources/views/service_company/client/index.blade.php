@@ -3863,7 +3863,9 @@ window.ClientPipelineStore = {
         const totalOffersJoined = Number(offers) + Number(joined);
 
         $('#ojInternalTabBadge, #ojCountAllInternal, #ojDirectTabBadge, #ojCountAllDirect').text(totalOffersJoined).toggle(totalOffersJoined > 0);
-        $('#ojCountOffersInternal, #ojCountOffersDirect').text(offers);
+        $('#ojCountOffersInternal, #ojCountOffersDirect, #offersCountOffersDirect, #offersCountOffersInternal').text(offers);
+        $('#offersDirectTabBadge, #offersInternalTabBadge').text(offers).toggle(Number(offers) > 0);
+        $('#joinedDirectTabBadge, #joinedInternalTabBadge, #ojCountJoinedDirect, #ojCountJoinedInternal').text(joined).toggle(Number(joined) > 0);
         $('#tabBadgeInterviewTrackerShow, #tabBadgeInterviewTracker').text(numInterviews).toggle(numInterviews > 0);
         $('#perfKpiInterviews').text(numInterviews.toLocaleString());
         $('#candTabCountScreening').text(screening);
