@@ -444,9 +444,9 @@ class ClientPerformanceAnalyticsService
     protected function buildFunnel(int $cand, int $screened, int $interview, int $offer, int $joined, int $inReview = 0, int $inReviewUnique = 0): array
     {
         $screenedConv = $cand > 0 ? ($screened / $cand) * 100 : 0;
-        $interviewConv = $screened > 0 ? ($interview / $screened) * 100 : 0;
-        $offerConv = $interview > 0 ? ($offer / $interview) * 100 : 0;
-        $joinConv = $offer > 0 ? ($joined / $offer) * 100 : 0;
+        $interviewConv = $screened > 0 ? ($interview / $screened) * 100 : ($cand > 0 && $interview > 0 ? ($interview / $cand) * 100 : 0);
+        $offerConv = $interview > 0 ? ($offer / $interview) * 100 : ($cand > 0 && $offer > 0 ? ($offer / $cand) * 100 : 0);
+        $joinConv = $offer > 0 ? ($joined / $offer) * 100 : ($cand > 0 && $joined > 0 ? ($joined / $cand) * 100 : 0);
         $overallYield = $cand > 0 ? ($joined / $cand) * 100 : 0;
 
         return [

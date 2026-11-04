@@ -1222,11 +1222,7 @@ After completing these steps, they will be able to start collaborating with your
         $versionKey = 'consultancyviewmore_version_user_'.$userId;
         $version = cache()->get($versionKey, 1);
         $partnerVersion = (int) cache()->get("agency_drawer_version_company_{$partnerCompanyId}", 1);
-<<<<<<< HEAD
-        $cacheKeySet = 'consultancyviewmore_v31:'.$userId.':'.$version.':partner_'.$partnerCompanyId.'_v'.$partnerVersion.':'.md5(json_encode($cachePayload));
-=======
-        $cacheKeySet = 'consultancyviewmore_v21:'.$userId.':'.$version.':partner_'.$partnerCompanyId.'_v'.$partnerVersion.':'.md5(json_encode($cachePayload));
->>>>>>> 543a6b51575ee2db7c519c66ca127e9bc51b4d00
+        $cacheKeySet = 'consultancyviewmore_v33:'.$userId.':'.$version.':partner_'.$partnerCompanyId.'_v'.$partnerVersion.':'.md5(json_encode($cachePayload));
         /* ----------------------------
         ⚡ Check DragonflyDB / Redis first (Quick Win Step 4)
         ----------------------------- */

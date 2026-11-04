@@ -69,14 +69,14 @@ class PerformanceStatusMap
      */
     public const PIPELINE_WITH_IN_REVIEW_STATUSES = [1, 2, 3, 4, 5, 6];
 
-    // Pipeline Milestone Sets (Cumulative Funnel Reach from Sourcing onward)
-    public const MILESTONE_SOURCING_STATUSES = [1, 2, 3, 4, 5, 6];
+    // Canonical Pipeline Stage Status Sets (Discrete Recruitment Lifecycle Stages)
+    public const MILESTONE_SOURCING_STATUSES = [1];
 
-    public const MILESTONE_SCREENED_STATUSES = [2, 3, 4, 5, 6];
+    public const MILESTONE_SCREENED_STATUSES = [2];
 
-    public const MILESTONE_INTERVIEW_STATUSES = [3, 4, 5, 6];
+    public const MILESTONE_INTERVIEW_STATUSES = [3, 4];
 
-    public const MILESTONE_OFFER_STATUSES = [5, 6];
+    public const MILESTONE_OFFER_STATUSES = [5];
 
     public const MILESTONE_JOINED_STATUSES = [6];
 

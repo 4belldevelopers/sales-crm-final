@@ -758,11 +758,10 @@
 .cd-tab-content-wrapper {
   width: 100% !important;
 }
-.tab-pane {
-  display: none;
+.cd-scope .tab-pane {
+  display: none !important;
 }
-.tab-pane.active,
-.tab-pane.show {
+.cd-scope .tab-pane.active {
   display: block !important;
 }
 
@@ -3774,7 +3773,7 @@
                         </span>
                     @endif
                     <span class="text-muted">|</span>
-                    <a href="#requisitions" class="cd-hero-positions-link" onclick="triggerDrawerTab('requisitions', event)" title="View Shared Job Positions">
+                    <a href="javascript:void(0);" class="cd-hero-positions-link" onclick="triggerAgencyDrawerTab('requisitions', event)" title="View Shared Job Positions">
                         <i class="fas fa-bolt text-warning"></i>
                         <span><strong>{{ $kpiActiveJobs }}</strong> Shared {{ $kpiActiveJobs == 1 ? 'Job' : 'Jobs' }}</span>
                     </a>
@@ -3797,7 +3796,7 @@
     <!-- ── AUTHORITATIVE HERO KPI STRIP (Strictly 6 Cards in 1 Row on 15.6" Screens) ── -->
     <div class="cd-kpi-grid">
         <!-- KPI 1: All Shared Jobs -->
-        <a href="#requisitions" class="cd-kpi-card cd-kpi-nav-trigger" onclick="triggerDrawerTab('requisitions', event)" title="Total jobs shared with this agency">
+        <a href="javascript:void(0);" class="cd-kpi-card cd-kpi-nav-trigger" data-target-tab="requisitions" onclick="triggerAgencyDrawerTab('requisitions', event)" title="Total jobs shared with this agency">
             <div class="cd-kpi-icon cd-kpi-icon-blue"><i class="fas fa-layer-group"></i></div>
             <div class="cd-kpi-body">
                 <div class="cd-kpi-num" id="agencyKpiAllJobs">{{ number_format($kpiTotalJobs) }}</div>
@@ -3806,7 +3805,7 @@
         </a>
 
         <!-- KPI 2: All Active Jobs -->
-        <a href="#requisitions" class="cd-kpi-card cd-kpi-nav-trigger" onclick="triggerDrawerTab('requisitions', event)" title="Active jobs currently being sourced">
+        <a href="javascript:void(0);" class="cd-kpi-card cd-kpi-nav-trigger" data-target-tab="requisitions" onclick="triggerAgencyDrawerTab('requisitions', event)" title="Active jobs currently being sourced">
             <div class="cd-kpi-icon cd-kpi-icon-emerald"><i class="fas fa-bolt"></i></div>
             <div class="cd-kpi-body">
                 <div class="cd-kpi-num" id="agencyKpiActiveJobs">{{ number_format($kpiActiveJobs) }}</div>
@@ -3815,7 +3814,7 @@
         </a>
 
         <!-- KPI 3: All Candidates -->
-        <a href="#candidate_list" class="cd-kpi-card cd-kpi-nav-trigger" onclick="triggerDrawerTab('candidate_list', event)" title="Total candidate profiles submitted">
+        <a href="javascript:void(0);" class="cd-kpi-card cd-kpi-nav-trigger" data-target-tab="candidate_list" onclick="triggerAgencyDrawerTab('candidate_list', event)" title="Total candidate profiles submitted">
             <div class="cd-kpi-icon cd-kpi-icon-purple"><i class="fas fa-users"></i></div>
             <div class="cd-kpi-body">
                 <div class="cd-kpi-num" id="agencyKpiCandidates">{{ number_format($kpiSubmitted) }}</div>
@@ -3824,7 +3823,7 @@
         </a>
 
         <!-- KPI 4: All Interviews -->
-        <a href="#interview_tracker" class="cd-kpi-card cd-kpi-nav-trigger" onclick="triggerDrawerTab('interview_tracker', event)" title="Interviews conducted for agency candidates">
+        <a href="javascript:void(0);" class="cd-kpi-card cd-kpi-nav-trigger" data-target-tab="interview_tracker" onclick="triggerAgencyDrawerTab('interview_tracker', event)" title="Interviews conducted for agency candidates">
             <div class="cd-kpi-icon cd-kpi-icon-amber"><i class="fas fa-calendar-check"></i></div>
             <div class="cd-kpi-body">
                 <div class="cd-kpi-num" id="agencyKpiInterviews">{{ number_format($kpiInterviews) }}</div>
@@ -3833,7 +3832,7 @@
         </a>
 
         <!-- KPI 5: All Offers -->
-        <a href="#candidate_offers" class="cd-kpi-card cd-kpi-nav-trigger" onclick="triggerDrawerTab('candidate_offers', event)" title="Offers extended to agency candidates">
+        <a href="javascript:void(0);" class="cd-kpi-card cd-kpi-nav-trigger" data-target-tab="candidate_offers" onclick="triggerAgencyDrawerTab('candidate_offers', event)" title="Offers extended to agency candidates">
             <div class="cd-kpi-icon cd-kpi-icon-rose"><i class="fas fa-file-signature"></i></div>
             <div class="cd-kpi-body">
                 <div class="cd-kpi-num" id="agencyKpiOffers">{{ number_format($kpiOffers) }}</div>
@@ -3842,7 +3841,7 @@
         </a>
 
         <!-- KPI 6: All Joined -->
-        <a href="#candidate_joined" class="cd-kpi-card cd-kpi-nav-trigger" onclick="triggerDrawerTab('candidate_joined', event)" title="Candidates successfully joined">
+        <a href="javascript:void(0);" class="cd-kpi-card cd-kpi-nav-trigger" data-target-tab="candidate_joined" onclick="triggerAgencyDrawerTab('candidate_joined', event)" title="Candidates successfully joined">
             <div class="cd-kpi-icon cd-kpi-icon-teal"><i class="fas fa-handshake"></i></div>
             <div class="cd-kpi-body">
                 <div class="cd-kpi-num" id="agencyKpiJoins">{{ number_format($kpiJoins) }}</div>
@@ -3855,61 +3854,61 @@
     <div class="cd-drawer-tabs-card">
         <ul class="cd-drawer-tabs-list nav nav-tabs border-0 flex-nowrap" role="tablist">
             <li class="nav-item" role="presentation">
-                <a class="cd-tab-pill-btn nav-link active" data-bs-toggle="tab" data-toggle="tab" href="#overview" role="tab" aria-selected="true">
+                <a class="cd-tab-pill-btn nav-link active" data-bs-toggle="tab" data-toggle="tab" href="#overview" data-target-tab="overview" role="tab" aria-selected="true" onclick="triggerAgencyDrawerTab('overview', event)">
                     <i class="fas fa-house"></i>
                     <span>Overview</span>
                 </a>
             </li>
             <li class="nav-item" role="presentation">
-                <a class="cd-tab-pill-btn nav-link" data-bs-toggle="tab" data-toggle="tab" href="#recent_activity" role="tab" aria-selected="false">
+                <a class="cd-tab-pill-btn nav-link" data-bs-toggle="tab" data-toggle="tab" href="#recent_activity" data-target-tab="recent_activity" role="tab" aria-selected="false" onclick="triggerAgencyDrawerTab('recent_activity', event)">
                     <i class="fas fa-clock"></i>
                     <span>Activity</span>
                 </a>
             </li>
             <li class="nav-item" role="presentation">
-                <a class="cd-tab-pill-btn nav-link" data-bs-toggle="tab" data-toggle="tab" href="#contacts" role="tab" aria-selected="false">
+                <a class="cd-tab-pill-btn nav-link" data-bs-toggle="tab" data-toggle="tab" href="#contacts" data-target-tab="contacts" role="tab" aria-selected="false" onclick="triggerAgencyDrawerTab('contacts', event)">
                     <i class="fas fa-address-book"></i>
                     <span>Contacts</span>
                     <span class="cd-tab-badge-pill">{{ count($contactsList) > 0 ? count($contactsList) : 1 }}</span>
                 </a>
             </li>
             <li class="nav-item" role="presentation">
-                <a class="cd-tab-pill-btn nav-link" data-bs-toggle="tab" data-toggle="tab" href="#requisitions" role="tab" aria-selected="false">
+                <a class="cd-tab-pill-btn nav-link" data-bs-toggle="tab" data-toggle="tab" href="#requisitions" data-target-tab="requisitions" role="tab" aria-selected="false" onclick="triggerAgencyDrawerTab('requisitions', event)">
                     <i class="fas fa-briefcase"></i>
                     <span>Jobs</span>
                     <span class="cd-tab-badge-pill" id="agencyTabBadgeJobs">{{ $kpiTotalJobs }}</span>
                 </a>
             </li>
             <li class="nav-item" role="presentation">
-                <a class="cd-tab-pill-btn nav-link" data-bs-toggle="tab" data-toggle="tab" href="#candidate_list" role="tab" aria-selected="false">
+                <a class="cd-tab-pill-btn nav-link" data-bs-toggle="tab" data-toggle="tab" href="#candidate_list" data-target-tab="candidate_list" role="tab" aria-selected="false" onclick="triggerAgencyDrawerTab('candidate_list', event)">
                     <i class="fas fa-users"></i>
                     <span>Candidates</span>
                     <span class="cd-tab-badge-pill" id="agencyTabBadgeCandidates">{{ $kpiSubmitted }}</span>
                 </a>
             </li>
             <li class="nav-item" role="presentation">
-                <a class="cd-tab-pill-btn nav-link" data-bs-toggle="tab" data-toggle="tab" href="#interview_tracker" role="tab" aria-selected="false">
+                <a class="cd-tab-pill-btn nav-link" data-bs-toggle="tab" data-toggle="tab" href="#interview_tracker" data-target-tab="interview_tracker" role="tab" aria-selected="false" onclick="triggerAgencyDrawerTab('interview_tracker', event)">
                     <i class="fas fa-calendar-days"></i>
                     <span>Interviews</span>
                     <span class="cd-tab-badge-pill" id="agencyTabBadgeInterviews">{{ $kpiInterviews }}</span>
                 </a>
             </li>
             <li class="nav-item" role="presentation">
-                <a class="cd-tab-pill-btn nav-link" data-bs-toggle="tab" data-toggle="tab" href="#candidate_offers" role="tab" aria-selected="false">
+                <a class="cd-tab-pill-btn nav-link" data-bs-toggle="tab" data-toggle="tab" href="#candidate_offers" data-target-tab="candidate_offers" role="tab" aria-selected="false" onclick="triggerAgencyDrawerTab('candidate_offers', event)">
                     <i class="fas fa-file-signature"></i>
                     <span>Offers</span>
                     <span class="cd-tab-badge-pill" id="agencyTabBadgeOffers">{{ $kpiOffers }}</span>
                 </a>
             </li>
             <li class="nav-item" role="presentation">
-                <a class="cd-tab-pill-btn nav-link" data-bs-toggle="tab" data-toggle="tab" href="#candidate_joined" role="tab" aria-selected="false">
+                <a class="cd-tab-pill-btn nav-link" data-bs-toggle="tab" data-toggle="tab" href="#candidate_joined" data-target-tab="candidate_joined" role="tab" aria-selected="false" onclick="triggerAgencyDrawerTab('candidate_joined', event)">
                     <i class="fas fa-handshake"></i>
                     <span>Joined</span>
                     <span class="cd-tab-badge-pill" id="agencyTabBadgeJoined">{{ $kpiJoins }}</span>
                 </a>
             </li>
             <li class="nav-item" role="presentation">
-                <a class="cd-tab-pill-btn nav-link" data-bs-toggle="tab" data-toggle="tab" href="#candidateDashboard" role="tab" aria-selected="false">
+                <a class="cd-tab-pill-btn nav-link" data-bs-toggle="tab" data-toggle="tab" href="#candidateDashboard" data-target-tab="candidateDashboard" role="tab" aria-selected="false" onclick="triggerAgencyDrawerTab('candidateDashboard', event)">
                     <i class="fas fa-chart-column"></i>
                     <span>Performance</span>
                 </a>
@@ -4016,7 +4015,7 @@
                                 <div class="cd-subcard-header-icon amber"><i class="fas fa-clock"></i></div>
                                 <h4 class="cd-subcard-heading">Recent Touchpoint Activity</h4>
                             </div>
-                            <a href="#recent_activity" onclick="triggerDrawerTab('recent_activity', event)" class="text-primary fw-bold fs-8 text-decoration-none d-inline-flex align-items-center gap-1">
+                            <a href="javascript:void(0);" onclick="triggerAgencyDrawerTab('recent_activity', event)" class="text-primary fw-bold fs-8 text-decoration-none d-inline-flex align-items-center gap-1">
                                 View Activity Log <i class="fas fa-arrow-right fs-9"></i>
                             </a>
                         </div>
@@ -5115,7 +5114,7 @@
                 <!-- ── 2. Single-Row KPI Section (5 Cards) ── -->
                 <div class="cd-perf-kpi-grid">
                     <!-- KPI 1: Total Candidates -->
-                    <div class="cd-perf-kpi-card" onclick="triggerDrawerTab('candidate_list', event)">
+                    <div class="cd-perf-kpi-card" onclick="triggerAgencyDrawerTab('candidate_list', event)">
                         <div class="cd-perf-kpi-top">
                             <div class="cd-perf-kpi-icon cd-perf-kpi-icon-green">
                                 <i class="fas fa-users fa-solid"></i>
@@ -5129,7 +5128,7 @@
                     </div>
 
                     <!-- KPI 2: Interviews Scheduled -->
-                    <div class="cd-perf-kpi-card" onclick="triggerDrawerTab('interview_tracker', event)">
+                    <div class="cd-perf-kpi-card" onclick="triggerAgencyDrawerTab('interview_tracker', event)">
                         <div class="cd-perf-kpi-top">
                             <div class="cd-perf-kpi-icon cd-perf-kpi-icon-blue">
                                 <i class="fas fa-calendar-alt fa-solid fa-calendar-days"></i>
@@ -5143,7 +5142,7 @@
                     </div>
 
                     <!-- KPI 3: Offers Generated -->
-                    <div class="cd-perf-kpi-card" onclick="triggerDrawerTab('candidate_offers', event)">
+                    <div class="cd-perf-kpi-card" onclick="triggerAgencyDrawerTab('candidate_offers', event)">
                         <div class="cd-perf-kpi-top">
                             <div class="cd-perf-kpi-icon cd-perf-kpi-icon-amber">
                                 <i class="fas fa-file-alt fa-solid fa-file-lines"></i>
@@ -5157,7 +5156,7 @@
                     </div>
 
                     <!-- KPI 4: Successful Joins -->
-                    <div class="cd-perf-kpi-card" onclick="triggerDrawerTab('candidate_joined', event)">
+                    <div class="cd-perf-kpi-card" onclick="triggerAgencyDrawerTab('candidate_joined', event)">
                         <div class="cd-perf-kpi-top">
                             <div class="cd-perf-kpi-icon cd-perf-kpi-icon-purple">
                                 <i class="fas fa-user-check fa-solid"></i>
@@ -5430,7 +5429,7 @@
                             <div class="cd-perf-card-title">
                                 <i class="fas fa-briefcase fa-solid text-success"></i> Top Hiring Roles
                             </div>
-                            <a href="javascript:void(0);" onclick="triggerDrawerTab('requisitions', event)" class="cd-card-hdr-link">View All Jobs <i class="fas fa-arrow-right fa-solid ms-1" style="font-size:8.5px;"></i></a>
+                            <a href="javascript:void(0);" onclick="triggerAgencyDrawerTab('requisitions', event)" class="cd-card-hdr-link">View All Jobs <i class="fas fa-arrow-right fa-solid ms-1" style="font-size:8.5px;"></i></a>
                         </div>
                         <div style="overflow-x:auto;">
                             <table class="cd-perf-table">
@@ -5462,7 +5461,7 @@
                             <div class="cd-perf-card-title">
                                 <i class="fas fa-users fa-solid text-success"></i> Recruiter Performance
                             </div>
-                            <a href="javascript:void(0);" onclick="triggerDrawerTab('candidate_list', event)" class="cd-card-hdr-link">View All Recruiters <i class="fas fa-arrow-right fa-solid ms-1" style="font-size:8.5px;"></i></a>
+                            <a href="javascript:void(0);" onclick="triggerAgencyDrawerTab('candidate_list', event)" class="cd-card-hdr-link">View All Recruiters <i class="fas fa-arrow-right fa-solid ms-1" style="font-size:8.5px;"></i></a>
                         </div>
                         <div style="overflow-x:auto;">
                             <table class="cd-perf-table">
@@ -5551,128 +5550,244 @@
     window.currentAgencyJobStatus = 'all';
     window.currentAgencyOjSegment = 'all';
 
-    // ── 1. Master Tab Switcher & Orchestration ──
-    window.triggerDrawerTab = function(tabId, e) {
-        if (e && typeof e.preventDefault === 'function') e.preventDefault();
-        tabId = String(tabId || '').replace(/^#/, '');
-        if (!tabId) return;
+    // ── Pre-declare Performance fetch helper to prevent any bare ReferenceError ──
+    function agencyPerfFetchData(range, compare, force, onComplete) {
+        if (typeof cdPerfFetchData === 'function') {
+            return cdPerfFetchData(range, compare, force, onComplete);
+        } else if (typeof window.cdPerfFetchData === 'function') {
+            return window.cdPerfFetchData(range, compare, force, onComplete);
+        }
+    }
+    window.agencyPerfFetchData = agencyPerfFetchData;
 
-        // 1. Activate tab pill button
-        $('.cd-drawer-tabs-list .cd-tab-pill-btn').removeClass('active').attr('aria-selected', 'false');
-        $(`.cd-drawer-tabs-list .cd-tab-pill-btn[href="#${tabId}"]`).addClass('active').attr('aria-selected', 'true');
+    // ── Authoritative Agency Drawer Tab Identity Mapper ──
+    function mapAgencyTabIdentity(rawTarget) {
+        var clean = String(rawTarget || '').replace(/^#/, '').trim();
+        var lower = clean.toLowerCase();
+        var normTab = 'overview';
+        var domPaneId = 'overview';
 
-        // 2. Activate matching tab pane
-        $('.cd-tab-content-wrapper .tab-pane').removeClass('active show');
-        $(`#${tabId}`).addClass('active show');
+        if (lower === 'requisitions' || lower === 'jobs' || lower === 'job') {
+            normTab = 'jobs';
+            domPaneId = 'requisitions';
+        } else if (lower === 'candidate_list' || lower === 'candidates' || lower === 'candidate') {
+            normTab = 'candidates';
+            domPaneId = 'candidate_list';
+        } else if (lower === 'interview_tracker' || lower === 'interviews' || lower === 'interview') {
+            normTab = 'interviews';
+            domPaneId = 'interview_tracker';
+        } else if (lower === 'candidate_offers' || lower === 'offers' || lower === 'offer') {
+            normTab = 'offers';
+            domPaneId = 'candidate_offers';
+        } else if (lower === 'candidate_joined' || lower === 'joined' || lower === 'join' || lower === 'joins' || lower === 'candidate_joining') {
+            normTab = 'joined';
+            domPaneId = 'candidate_joined';
+        } else if (lower === 'recent_activity' || lower === 'activity') {
+            normTab = 'recent_activity';
+            domPaneId = 'recent_activity';
+        } else if (lower === 'contacts' || lower === 'contact') {
+            normTab = 'contacts';
+            domPaneId = 'contacts';
+        } else if (lower === 'candidatedashboard' || lower === 'performance' || lower === 'dashboard' || lower === 'analytics') {
+            normTab = 'performance';
+            domPaneId = 'candidateDashboard';
+        } else if (lower === 'overview') {
+            normTab = 'overview';
+            domPaneId = 'overview';
+        }
 
-        // 3. Load tab content via authoritative reactive store
-        window.loadAgencyTabContent(tabId, false);
+        return { normTab: normTab, domPaneId: domPaneId };
+    }
+    window.mapAgencyTabIdentity = mapAgencyTabIdentity;
+
+    // ── 1. Master Tab Switcher & Orchestration Engine ──
+    window.triggerAgencyDrawerTab = function(target, e, force) {
+        if (e) {
+            if (typeof e.preventDefault === 'function') e.preventDefault();
+            if (typeof e.stopPropagation === 'function') e.stopPropagation();
+        }
+        var info = mapAgencyTabIdentity(target);
+        var normTab = info.normTab;
+        var domPaneId = info.domPaneId;
+
+        var $drawer = $('#kt_activitiesDirectClient');
+        if (!$drawer.length) {
+            $drawer = $(document);
+        }
+
+        // 1. Activate matching tab pill button
+        $drawer.find('.cd-drawer-tabs-list .nav-link, .cd-drawer-tabs-list .cd-tab-pill-btn')
+            .removeClass('active')
+            .attr('aria-selected', 'false');
+
+        var $targetPill = $drawer.find(`.cd-drawer-tabs-list .cd-tab-pill-btn[href="#${domPaneId}"], .cd-drawer-tabs-list a[href="#${domPaneId}"]`);
+        if (!$targetPill.length) {
+            $targetPill = $drawer.find(`.cd-drawer-tabs-list .cd-tab-pill-btn[href="#${normTab}"], .cd-drawer-tabs-list a[href="#${normTab}"]`);
+        }
+        if (!$targetPill.length) {
+            $targetPill = $drawer.find(`.cd-drawer-tabs-list .cd-tab-pill-btn[data-target-tab="${domPaneId}"], .cd-drawer-tabs-list .cd-tab-pill-btn[data-target-tab="${normTab}"]`);
+        }
+        if ($targetPill.length) {
+            $targetPill.addClass('active').attr('aria-selected', 'true');
+        }
+
+        // 2. Hide all tab panes explicitly and show the matching target pane
+        $drawer.find('.cd-tab-content-wrapper .tab-pane')
+            .removeClass('active show')
+            .css('display', 'none');
+
+        var $targetPane = $drawer.find('#' + domPaneId);
+        if (!$targetPane.length) {
+            $drawer.find('.cd-tab-content-wrapper .tab-pane').each(function() {
+                var paneId = $(this).attr('id');
+                if (paneId && paneId.toLowerCase() === domPaneId.toLowerCase()) {
+                    $targetPane = $(this);
+                }
+            });
+        }
+        if ($targetPane.length) {
+            $targetPane.addClass('active show').css('display', 'block');
+        }
+
+        // 3. Load tab content via authoritative reactive store (guarded with try/catch)
+        try {
+            window.loadAgencyTabContent(domPaneId, force || false);
+        } catch(err) {
+            console.error('[AgencyDrawer] Error loading tab content for ' + domPaneId, err);
+        }
     };
+    window.triggerDrawerTab = window.triggerAgencyDrawerTab;
 
-    // Bootstrap nav tab click delegation
-    $(document).off('click.agencyTabPill', '.cd-drawer-tabs-list .cd-tab-pill-btn');
-    $(document).on('click.agencyTabPill', '.cd-drawer-tabs-list .cd-tab-pill-btn', function(e) {
-        var href = $(this).attr('href');
-        if (href && href.startsWith('#')) {
-            e.preventDefault();
-            window.triggerDrawerTab(href);
-        }
+    // ── Clean unbind and bind scoped delegated click listeners ──
+    $(document).off('.agencyDrawerTab .agencyDrawerKpi');
+
+    // Scoped Delegated Click Handler for Tab Nav Pills
+    $(document).on('click.agencyDrawerTab', '#kt_activitiesDirectClient .cd-drawer-tabs-list .nav-link, #kt_activitiesDirectClient .cd-tab-pill-btn, .cd-drawer-tabs-list .cd-tab-pill-btn', function(e) {
+        if (e && typeof e.preventDefault === 'function') e.preventDefault();
+        if (e && typeof e.stopPropagation === 'function') e.stopPropagation();
+        var $link = $(this).closest('.cd-tab-pill-btn, .nav-link');
+        var target = ($link.attr('data-target-tab') || $link.attr('href') || $link.attr('data-bs-target') || '').replace('#', '').trim();
+        if (!target) return;
+        window.triggerAgencyDrawerTab(target, e, false);
     });
 
-    // Bootstrap shown.bs.tab delegation
-    $(document).off('shown.bs.tab.agencyTab', '.cd-drawer-tabs-list .cd-tab-pill-btn');
-    $(document).on('shown.bs.tab.agencyTab', '.cd-drawer-tabs-list .cd-tab-pill-btn', function(e) {
-        var href = $(this).attr('href');
-        if (href && href.startsWith('#')) {
-            window.loadAgencyTabContent(href.replace(/^#/, ''), false);
-        }
-    });
-
-    // Hero KPI click delegation
-    $(document).off('click.agencyKpiNav', '.cd-kpi-nav-trigger');
-    $(document).on('click.agencyKpiNav', '.cd-kpi-nav-trigger', function(e) {
-        var href = $(this).attr('href');
-        if (href && href.startsWith('#')) {
-            e.preventDefault();
-            window.triggerDrawerTab(href);
-        }
+    // Scoped Delegated Click Handler for Hero KPI Cards
+    $(document).on('click.agencyDrawerKpi', '#kt_activitiesDirectClient .cd-kpi-card, .cd-kpi-card.cd-kpi-nav-trigger', function(e) {
+        if (e && typeof e.preventDefault === 'function') e.preventDefault();
+        if (e && typeof e.stopPropagation === 'function') e.stopPropagation();
+        var target = $(this).attr('data-target-tab') || $(this).data('target-tab') || $(this).attr('href') || '';
+        target = target.replace('#', '').trim();
+        if (!target) return;
+        window.triggerAgencyDrawerTab(target, e, false);
     });
 
     // Master Tab Content Coordinator
     window.loadAgencyTabContent = function(targetTab, force) {
-        targetTab = String(targetTab || '').replace(/^#/, '').toLowerCase();
-        var cacheKey = agencyCompanyId + '_' + targetTab;
+        var info = mapAgencyTabIdentity(targetTab);
+        var normTab = info.normTab;
+        var domPaneId = info.domPaneId;
+        var cacheKey = agencyCompanyId + '_' + normTab;
 
-        if (targetTab === 'recent_activity') {
-            if (window.ClientActivityManager && typeof window.ClientActivityManager.initClient === 'function') {
-                try {
+        if (normTab === 'recent_activity') {
+            try {
+                if (window.ClientActivityManager && typeof window.ClientActivityManager.initClient === 'function') {
                     window.ClientActivityManager.initClient(agencyCompanyId, false, agencyCompanyId, false, 'agency', agencyCompanyId);
-                } catch(e){}
-            } else if (window.AgencyActivityManager && typeof window.AgencyActivityManager.loadActivity === 'function') {
-                window.AgencyActivityManager.loadActivity(false);
-            }
-            return;
-        }
-
-        if (targetTab === 'requisitions' || targetTab === 'jobs') {
-            if (force || !window.agencyTabLoadedState[cacheKey]) {
-                window.agencyTabLoadedState[cacheKey] = true;
-                fetchAgencyJobs(1, $('#agencyJobSearchInput').val() || '', window.currentAgencyJobStatus || 'all', force);
-            }
-            return;
-        }
-
-        if (targetTab === 'candidate_list' || targetTab === 'candidates') {
-            if (window.ClientCandidateStoreAgency) {
-                if (window.ClientCandidateStoreAgency.clientId !== agencyCompanyId) {
-                    window.ClientCandidateStoreAgency.init(currentAuthCompanyId, agencyCompanyId, 'agency');
-                } else if (force || !window.agencyTabLoadedState[cacheKey]) {
-                    window.agencyTabLoadedState[cacheKey] = true;
-                    window.ClientCandidateStoreAgency.fetch(1);
+                } else if (window.AgencyActivityManager && typeof window.AgencyActivityManager.loadActivity === 'function') {
+                    window.AgencyActivityManager.loadActivity(false);
                 }
+            } catch(e) {
+                console.error('[AgencyDrawer] Activity load error:', e);
             }
             return;
         }
 
-        if (targetTab === 'interview_tracker' || targetTab === 'interviews') {
-            if (window.ClientInterviewStoreAgency) {
-                var needsLoad = force || !window.agencyTabLoadedState[cacheKey] || $('#candidatetListinterviewtrackerAgency .it-loading-card').length > 0;
-                if (needsLoad) {
+        if (normTab === 'jobs') {
+            try {
+                if (force || !window.agencyTabLoadedState[cacheKey]) {
                     window.agencyTabLoadedState[cacheKey] = true;
-                    window.ClientInterviewStoreAgency.fetch(agencyCompanyId, null, force, $('#agencyItSearchInput').val() || '');
+                    if (typeof fetchAgencyJobs === 'function') {
+                        fetchAgencyJobs(1, $('#agencyJobSearchInput').val() || '', window.currentAgencyJobStatus || 'all', force);
+                    }
                 }
+            } catch(e) {
+                console.error('[AgencyDrawer] Jobs load error:', e);
             }
             return;
         }
 
-        if (targetTab === 'candidate_offers' || targetTab === 'offers') {
-            if (force || !window.agencyTabLoadedState[cacheKey]) {
-                window.agencyTabLoadedState[cacheKey] = true;
-                agencyFetchCandidatesOffers(1, $('#agencyOffersSearchInput').val() || '', window.currentAgencyOffersSegment || 'offers');
+        if (normTab === 'candidates') {
+            try {
+                if (window.ClientCandidateStoreAgency) {
+                    if (window.ClientCandidateStoreAgency.clientId !== agencyCompanyId) {
+                        window.ClientCandidateStoreAgency.init(currentAuthCompanyId, agencyCompanyId, 'agency');
+                    } else if (force || !window.agencyTabLoadedState[cacheKey]) {
+                        window.agencyTabLoadedState[cacheKey] = true;
+                        window.ClientCandidateStoreAgency.fetch(1);
+                    }
+                }
+            } catch(e) {
+                console.error('[AgencyDrawer] Candidates load error:', e);
             }
             return;
         }
 
-        if (targetTab === 'candidate_joined' || targetTab === 'joined') {
-            if (force || !window.agencyTabLoadedState[cacheKey]) {
-                window.agencyTabLoadedState[cacheKey] = true;
-                agencyFetchCandidatesJoined(1, $('#agencyJoinedSearchInput').val() || '', window.currentAgencyJoinedSegment || 'joined');
+        if (normTab === 'interviews') {
+            try {
+                if (window.ClientInterviewStoreAgency) {
+                    var needsLoad = force || !window.agencyTabLoadedState[cacheKey] || $('#candidatetListinterviewtrackerAgency .it-loading-card').length > 0;
+                    if (needsLoad) {
+                        window.agencyTabLoadedState[cacheKey] = true;
+                        window.ClientInterviewStoreAgency.fetch(agencyCompanyId, null, force, $('#agencyItSearchInput').val() || '');
+                    }
+                }
+            } catch(e) {
+                console.error('[AgencyDrawer] Interviews load error:', e);
             }
             return;
         }
 
-        if (targetTab === 'candidate_joining') {
-            if (force || !window.agencyTabLoadedState[cacheKey]) {
-                window.agencyTabLoadedState[cacheKey] = true;
-                agencyFetchCandidatesJoined(1, '', 'joined');
+        if (normTab === 'offers') {
+            try {
+                if (force || !window.agencyTabLoadedState[cacheKey]) {
+                    window.agencyTabLoadedState[cacheKey] = true;
+                    if (typeof agencyFetchCandidatesOffers === 'function') {
+                        agencyFetchCandidatesOffers(1, $('#agencyOffersSearchInput').val() || '', window.currentAgencyOffersSegment || 'offers');
+                    }
+                }
+            } catch(e) {
+                console.error('[AgencyDrawer] Offers load error:', e);
             }
             return;
         }
 
-        if (targetTab === 'candidatedashboard' || targetTab === 'performance') {
-            if (force || !window.agencyTabLoadedState[cacheKey]) {
-                window.agencyTabLoadedState[cacheKey] = true;
-                agencyPerfFetchData(window.agencyPerfCurrentRange, window.agencyPerfCurrentCompare, force);
+        if (normTab === 'joined') {
+            try {
+                if (force || !window.agencyTabLoadedState[cacheKey]) {
+                    window.agencyTabLoadedState[cacheKey] = true;
+                    if (typeof agencyFetchCandidatesJoined === 'function') {
+                        agencyFetchCandidatesJoined(1, $('#agencyJoinedSearchInput').val() || '', window.currentAgencyJoinedSegment || 'joined');
+                    }
+                }
+            } catch(e) {
+                console.error('[AgencyDrawer] Joined load error:', e);
+            }
+            return;
+        }
+
+        if (normTab === 'performance') {
+            try {
+                if (force || !window.agencyTabLoadedState[cacheKey]) {
+                    window.agencyTabLoadedState[cacheKey] = true;
+                    if (typeof cdPerfFetchData === 'function') {
+                        cdPerfFetchData(window.agencyPerfCurrentRange || window.perfCurrentRange, window.agencyPerfCurrentCompare || window.perfCurrentCompare, force);
+                    } else if (typeof window.agencyPerfFetchData === 'function') {
+                        window.agencyPerfFetchData(window.agencyPerfCurrentRange || window.perfCurrentRange, window.agencyPerfCurrentCompare || window.perfCurrentCompare, force);
+                    } else if (typeof window.cdPerfFetchData === 'function') {
+                        window.cdPerfFetchData(window.agencyPerfCurrentRange || window.perfCurrentRange, window.agencyPerfCurrentCompare || window.perfCurrentCompare, force);
+                    }
+                }
+            } catch(e) {
+                console.error('[AgencyDrawer] Performance load error:', e);
             }
             return;
         }
@@ -7446,7 +7561,7 @@
     function cdPerfRefresh() {
         var $btn = $('#btnPerfRefresh i, #btnAgencyPerfRefresh i');
         $btn.addClass('fa-spin');
-        var cacheKey = perfClientId + '_' + window.perfCurrentRange + '_' + window.perfCurrentCompare;
+        var cacheKey = perfClientId + '_' + window.perfCurrentRange + '_' + window.perfCurrentCompare + '_v33';
         delete window.perfClientCache[cacheKey];
         if (window.agencyPerfClientCache) delete window.agencyPerfClientCache[cacheKey];
         cdPerfFetchData(window.perfCurrentRange, window.perfCurrentCompare, true, function() {
@@ -7459,7 +7574,7 @@
     function cdPerfFetchData(range, compare, force, onComplete) {
         range = range || window.perfCurrentRange || '12M';
         compare = compare || window.perfCurrentCompare || 'previous_period';
-        var cacheKey = perfClientId + '_' + range + '_' + compare;
+        var cacheKey = perfClientId + '_' + range + '_' + compare + '_v33';
 
         // 1. Client-Side User RAM Cache Hit (0% Server / 0% DB reads)
         if (!force && window.perfClientCache[cacheKey]) {
@@ -7881,8 +7996,6 @@
             });
         } catch(e) {}
     }
-
-<<<<<<< HEAD
     // ── 8. Mount / Initialization Hook ──
     $(document).ready(function() {
         // Pre-warm candidates store in browser RAM
@@ -7899,7 +8012,7 @@
             } catch(e) {}
         }
     });
-=======
+
     // ── Instant 0ms In-Memory Commercial Services Filter (Rule 20 Modern Standard) ──
     window.filterAgencyServices = function(filterType, btnEl) {
         if (!btnEl) return;
@@ -7914,7 +8027,6 @@
             $masterBox.find('.cd-srv-item[data-srv="' + filterType + '"]').stop(true, true).fadeIn(140);
         }
     };
->>>>>>> 543a6b51575ee2db7c519c66ca127e9bc51b4d00
 
     // Copy to clipboard helper
     window.copyToClipboard = function(text, btn) {
