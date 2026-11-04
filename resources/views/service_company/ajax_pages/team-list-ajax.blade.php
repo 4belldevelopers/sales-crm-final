@@ -9,7 +9,7 @@
 
                 // Rank & Scores
                 $rawRank = $row->ranking ?? ($row->pre_rank ?? ($row->rank ?? 'N/A'));
-                $isInvited = empty($row->password) || strtolower($row->status ?? '') === 'invited';
+                $isInvited = (empty($row->password) && strtolower($row->status ?? '') !== 'active') || strtolower($row->status ?? '') === 'invited';
                 $isRanked = ! $isInvited && is_numeric($rawRank) && (int) $rawRank > 0 && strtolower($row->status ?? '') === 'active';
                 $rankDisplay = $isRanked ? '#' . (int) $rawRank : 'N/A';
                 $rankMonthDisplay = $isRanked ? '(' . ($row->performance_band ?? ($row->pre_rank_month ?? Carbon::now()->startOfMonth()->subMonth()->format('M Y'))) . ')' : '';
@@ -244,7 +244,7 @@
                             </div>
                         </div>
                         <div class="tm-status-body">
-                            @if (!empty($row->password))
+                            @if (!empty($row->password) || (isset($row->status) && strtolower($row->status) === 'active'))
                                 {{-- Row 1: Toggle / status control icon --}}
                                 <div class="tm-status-row tm-status-row-control">
                                     <label class="ios-switch" title="Toggle active status">
