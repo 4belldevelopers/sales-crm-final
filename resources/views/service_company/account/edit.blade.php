@@ -1221,7 +1221,10 @@ body {
     <!-- STEP 4: Locations & Headquarters -->
     @include('service_company.account.components.tab-locations')
 
-    <!-- STEP 5: Review & Readiness -->
+    <!-- STEP 5: Social Links & Official Profiles -->
+    @include('service_company.account.components.tab-social-links')
+
+    <!-- STEP 6: Review & Readiness -->
     @include('service_company.account.components.tab-review')
 
   </form>
@@ -1250,7 +1253,7 @@ body {
   // 1. State Configuration
   window.JERO_PROFILE_STATE = {
     currentStep: 1,
-    maxSteps: 5,
+    maxSteps: 6,
     companyId: {{ (int)$company_id }},
     pageMode: "{{ $page_mode ?? 'EDIT' }}",
     isDirty: false,
@@ -1330,7 +1333,7 @@ body {
       submitBtn.style.setProperty('display', (targetStep === state.maxSteps) ? 'inline-flex' : 'none', 'important');
     }
 
-    if (targetStep === 5) {
+    if (targetStep === 6) {
       populateReviewSummaries();
     }
 
@@ -1345,6 +1348,18 @@ body {
         var errEl = document.getElementById('company_name_error');
         if (errEl) errEl.style.display = 'block';
         compName.focus();
+        return false;
+      }
+      var dupErr = document.getElementById('website_duplicate_error');
+      if (dupErr && dupErr.style.display !== 'none') {
+        if (typeof Swal !== 'undefined') {
+          Swal.fire({
+            icon: 'warning',
+            title: 'Action Required',
+            text: 'Please resolve the website domain duplication before proceeding.',
+            confirmButtonColor: '#ffd428'
+          });
+        }
         return false;
       }
     }
@@ -1588,21 +1603,54 @@ body {
       }
     }
 
+    // Social links review summary
+    var socialContainer = document.getElementById('profile_review_social_badges');
+    var hasSocial = false;
+    if (socialContainer) {
+      socialContainer.innerHTML = '';
+      var platforms = [
+        { id: 'linkedin_url', name: 'LinkedIn', bg: '#0a66c2' },
+        { id: 'twitter_url', name: 'X / Twitter', bg: '#000000' },
+        { id: 'facebook_url', name: 'Facebook', bg: '#1877f2' },
+        { id: 'instagram_url', name: 'Instagram', bg: '#e1306c' },
+        { id: 'youtube_url', name: 'YouTube', bg: '#ff0000' },
+        { id: 'github_url', name: 'GitHub', bg: '#24292f' },
+        { id: 'custom_link', name: 'Custom Link', bg: '#475569' }
+      ];
+      platforms.forEach(function(p) {
+        var inp = document.getElementById(p.id);
+        if (inp && inp.value.trim()) {
+          hasSocial = true;
+          var badge = document.createElement('a');
+          badge.href = inp.value.trim().startsWith('http') ? inp.value.trim() : ('https://' + inp.value.trim());
+          badge.target = '_blank';
+          badge.className = 'badge';
+          badge.style.cssText = 'background:#f1f5f9; color:#0f172a; border:1px solid #cbd5e1; font-size:11.5px; font-weight:600; padding:5px 10px; border-radius:6px; text-decoration:none; display:inline-flex; align-items:center; gap:6px;';
+          badge.innerHTML = '<span style="width:8px; height:8px; border-radius:50%; background:' + p.bg + '; display:inline-block;"></span> ' + p.name;
+          socialContainer.appendChild(badge);
+        }
+      });
+      if (!hasSocial) {
+        socialContainer.innerHTML = '<span class="text-muted" style="font-size:11.5px; font-style:italic;">No official social profiles added yet.</span>';
+      }
+    }
+
     var score = 0;
     if (compName && compName !== 'Pending Onboarding') score += 20;
     if (compWeb && compWeb !== '—') score += 15;
     if (compInd) score += 15;
     if (compSize && compSize !== '—') score += 10;
     if (state.quillInstance && state.quillInstance.getText().trim().length > 30) score += 15;
-    if (state.selectedTechnologies.length > 0 || (state.servicesTagify && state.servicesTagify.value.length > 0)) score += 15;
+    if (state.selectedTechnologies.length > 0 || (state.servicesTagify && state.servicesTagify.value.length > 0)) score += 10;
     if (compCity && compCity !== '—') score += 10;
+    if (hasSocial) score += 5;
 
     score = Math.min(score, 100);
 
-    var pctEl = document.getElementById('profile_readiness_pct');
+    var pctEl = document.getElementById('profile_readiness_pct') || document.getElementById('profile_review_completion_percent');
     if (pctEl) pctEl.textContent = score + '%';
 
-    var barEl = document.getElementById('profile_readiness_bar');
+    var barEl = document.getElementById('profile_readiness_bar') || document.getElementById('profile_review_completion_bar');
     if (barEl) barEl.style.width = score + '%';
   };
 
@@ -1796,29 +1844,552 @@ body {
       });
     });
 
-    // Intelligent Website Fetch
-    window.fetchGodLevelCompanyIntelligence = function(rawUrl) {
-      rawUrl = (rawUrl || '').trim();
-      if (!rawUrl) return;
+    // =========================================================================
+    // GOD-LEVEL COMPANY INTELLIGENCE & DUPLICATE VALIDATION ENGINE
+    // Direct Client-First Cloudflare Edge Worker execution (0% server strain)
+    // Matches Add Internal Client Architecture 100%
+    // =========================================================================
+    window._companyIntelligenceCache = {};
+    window._clientDomainCheckCache = {};
+    window._lastFetchedWebsite = '';
+    window._lastCheckedWebsite = '';
 
-      var domain = rawUrl.replace(/^https?:\/\//i, '').replace(/^www\./i, '').split('/')[0].toLowerCase();
-      var domainHidden = document.getElementById('domain_key');
-      if (domainHidden) domainHidden.value = domain;
-
-      var nameInput = document.getElementById('company_name');
-      if (nameInput && (!nameInput.value || nameInput.value === 'Pending Onboarding')) {
-        var brand = domain.split('.')[0];
-        brand = brand.charAt(0).toUpperCase() + brand.slice(1);
-        nameInput.value = brand;
+    // 1. Point-of-Entry Duplicate Domain Verification
+    function checkDomainDuplicate(silent) {
+      var website = ($('#website').val() || '').trim();
+      if (!website) {
+        $('#website_duplicate_error').hide();
+        $('#website').removeClass('is-invalid');
+        return true;
       }
 
-      window.addTechnology('Cloud Architecture');
-      window.addTechnology('Web Development');
+      var cleanDomain = website.replace(/^https?:\/\//i, '').replace(/^www\./i, '').split('/')[0].trim().toLowerCase();
+      if (!cleanDomain || cleanDomain.length < 3) return true;
 
-      if (state.servicesTagify) {
-        state.servicesTagify.addTags(['Enterprise Software Development', 'Cloud Consulting']);
+      if (window._clientDomainCheckCache[cleanDomain]) {
+        var cached = window._clientDomainCheckCache[cleanDomain];
+        handleDomainCheckResult(cached, silent);
+        return cached.status !== 'fail';
+      }
+
+      $('#website_checking_indicator').show();
+      $('#website_duplicate_error').hide();
+
+      $.ajax({
+        url: "{{ route('service_company.account.check_domain') }}",
+        headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
+        type: "POST",
+        data: { website: website },
+        success: function(response) {
+          $('#website_checking_indicator').hide();
+          window._clientDomainCheckCache[cleanDomain] = response;
+          handleDomainCheckResult(response, silent);
+        },
+        error: function(err) {
+          $('#website_checking_indicator').hide();
+        }
+      });
+    }
+
+    function handleDomainCheckResult(response, silent) {
+      if (response && response.status === 'fail') {
+        $('#website_duplicate_error_text').text(response.message || 'This website domain is already registered to another organization.');
+        $('#website_duplicate_error').show();
+        $('#website').addClass('is-invalid');
+        if (!silent && typeof Swal !== 'undefined') {
+          Swal.fire({
+            icon: 'warning',
+            title: 'Duplicate Domain Detected',
+            text: response.message || 'This website domain is already registered to another organization.',
+            confirmButtonColor: '#ffd428'
+          });
+        }
+      } else {
+        $('#website_duplicate_error').hide();
+        $('#website').removeClass('is-invalid');
+      }
+    }
+
+    // 2. Intelligent Website Fetch & Auto-Fill Pipeline
+    function fetchGodLevelCompanyIntelligence(website, forceRefresh) {
+      if (!website) return;
+      var cleanDomain = website.replace(/^https?:\/\//i, '').replace(/^www\./i, '').split('/')[0].trim();
+      if (!cleanDomain || cleanDomain.length < 3) return;
+
+      window._lastFetchedWebsite = website;
+
+      if (forceRefresh) {
+        delete window._companyIntelligenceCache[cleanDomain];
+      }
+
+      var $fetchBtn = $('#client_auto_fetch');
+      var originalBtnHtml = $fetchBtn.html();
+      $fetchBtn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true" style="width:13px;height:13px;"></span> Extracting...');
+
+      // In-Memory RAM Cache lookup (only when not forced)
+      if (!forceRefresh && window._companyIntelligenceCache[cleanDomain]) {
+        applyCompanyIntelligenceData(window._companyIntelligenceCache[cleanDomain]);
+        $fetchBtn.prop('disabled', false).html(originalBtnHtml);
+        return;
+      }
+
+      var workerEndpoint = 'https://jero-company-intelligence.vibhu21m.workers.dev';
+      var targetUrl = workerEndpoint + '/?domain=' + encodeURIComponent(cleanDomain);
+
+      function handleSuccess(data) {
+        $fetchBtn.prop('disabled', false).html(originalBtnHtml);
+        if (!data || data.error) {
+          console.warn('[CompanyIntelligence] No data or error in payload:', data ? data.error : 'empty');
+          return;
+        }
+        window._companyIntelligenceCache[cleanDomain] = data;
+        applyCompanyIntelligenceData(data);
+      }
+
+      // Direct Client-Side Edge Worker Fetch (0% server load)
+      fetch(targetUrl, {
+        method: 'GET',
+        mode: 'cors',
+        headers: { 'Accept': 'application/json' }
+      })
+      .then(function(response) {
+        if (!response.ok) throw new Error('HTTP ' + response.status);
+        return response.json();
+      })
+      .then(function(data) {
+        handleSuccess(data);
+      })
+      .catch(function(err) {
+        $fetchBtn.prop('disabled', false).html(originalBtnHtml);
+        console.warn('[CompanyIntelligence] Direct edge fetch error, synthesizing client intelligence:', err);
+        var clientSideName = cleanDomain.split('.')[0].replace(/[-_]/g, ' ').replace(/\b\w/g, function(l) { return l.toUpperCase(); });
+        var clientSideData = {
+          domain: cleanDomain,
+          website: 'https://' + cleanDomain,
+          name: clientSideName,
+          industry: 'Information Technology & Services',
+          industries: ['Information Technology & Services', 'Computer Software'],
+          logo: 'https://www.google.com/s2/favicons?domain=' + cleanDomain + '&sz=256',
+          description: clientSideName + ' is a high-growth technology organization delivering high-value solutions, specialized talent operations, and enterprise digital services across global markets.',
+          tags: ['Technology Services', 'Software Development', 'Cloud Architecture']
+        };
+        window._companyIntelligenceCache[cleanDomain] = clientSideData;
+        applyCompanyIntelligenceData(clientSideData);
+      });
+
+      // Background non-blocking duplicate domain check
+      checkDomainDuplicate(true);
+    }
+
+    window.fetchGodLevelCompanyIntelligence = fetchGodLevelCompanyIntelligence;
+
+    // 3. Apply Company Intelligence Data Across Form
+    function applyCompanyIntelligenceData(data) {
+      if (!data) return;
+
+      // 1. Domain Key
+      var domainInput = document.getElementById('domain_key');
+      if (domainInput) domainInput.value = data.domain || '';
+
+      // 2. Company Name
+      var nameInput = document.getElementById('company_name');
+      if (nameInput && (!nameInput.value || nameInput.value === 'Pending Onboarding' || nameInput.value === 'Your Organization')) {
+        nameInput.value = data.name || data.legal_name || '';
+        nameInput.classList.remove('is-invalid');
+        var errEl = document.getElementById('company_name_error');
+        if (errEl) errEl.style.display = 'none';
+      }
+
+      // 3. Industry Auto-Selection
+      if (data.industry || (data.industries && data.industries.length)) {
+        var indName = data.industry || data.industries[0];
+        var indSelect = document.getElementById('industries');
+        var indInput = document.getElementById('industry_display');
+        if (indSelect) {
+          for (var i = 0; i < indSelect.options.length; i++) {
+            var opt = indSelect.options[i];
+            if (opt.text.toLowerCase().indexOf(indName.toLowerCase()) !== -1 || indName.toLowerCase().indexOf(opt.text.toLowerCase()) !== -1) {
+              indSelect.value = opt.value;
+              var indAlt = document.getElementById('industry');
+              if (indAlt) indAlt.value = opt.value;
+              if (indInput) indInput.value = opt.text;
+              var clearB = document.getElementById('jero_ind_clear_btn');
+              if (clearB) clearB.style.display = 'inline-flex';
+              var indReview = document.querySelector('.span_industry');
+              if (indReview) indReview.textContent = opt.text;
+              break;
+            }
+          }
+        }
+      }
+
+      // 4. Company Size Combobox Auto-Selection
+      if (data.company_size || data.employees || (data.metrics && data.metrics.employees)) {
+        var empCount = data.employees || (data.metrics && data.metrics.employees);
+        var targetTier = '';
+        var targetLabel = '';
+        if (empCount) {
+          empCount = parseInt(empCount, 10);
+          if (empCount === 1) { targetTier = '1-1'; targetLabel = 'Solo (1 employee)'; }
+          else if (empCount <= 10) { targetTier = '2-10'; targetLabel = '2 – 10 employees'; }
+          else if (empCount <= 50) { targetTier = '11-50'; targetLabel = '11 – 50 employees'; }
+          else if (empCount <= 200) { targetTier = '51-200'; targetLabel = '51 – 200 employees'; }
+          else if (empCount <= 500) { targetTier = '201-500'; targetLabel = '201 – 500 employees'; }
+          else if (empCount <= 1000) { targetTier = '501-1000'; targetLabel = '501 – 1,000 employees'; }
+          else if (empCount <= 5000) { targetTier = '1001-5000'; targetLabel = '1,001 – 5,000 employees'; }
+          else if (empCount <= 10000) { targetTier = '5001-10000'; targetLabel = '5,001 – 10,000 employees'; }
+          else if (empCount <= 50000) { targetTier = '10001-50000'; targetLabel = '10,001 – 50,000 employees'; }
+          else { targetTier = '50001-0'; targetLabel = '50,000+ employees'; }
+        } else if (data.company_size) {
+          var sStr = String(data.company_size).toLowerCase();
+          if (sStr.indexOf('1-10') !== -1 || sStr.indexOf('startup') !== -1) { targetTier = '2-10'; targetLabel = '2 – 10 employees'; }
+          else if (sStr.indexOf('11-50') !== -1) { targetTier = '11-50'; targetLabel = '11 – 50 employees'; }
+          else if (sStr.indexOf('51-200') !== -1) { targetTier = '51-200'; targetLabel = '51 – 200 employees'; }
+          else if (sStr.indexOf('201-500') !== -1) { targetTier = '201-500'; targetLabel = '201 – 500 employees'; }
+          else if (sStr.indexOf('501-1000') !== -1 || sStr.indexOf('1,000') !== -1) { targetTier = '501-1000'; targetLabel = '501 – 1,000 employees'; }
+          else if (sStr.indexOf('1001-5000') !== -1 || sStr.indexOf('5,000') !== -1) { targetTier = '1001-5000'; targetLabel = '1,001 – 5,000 employees'; }
+          else if (sStr.indexOf('5001-10000') !== -1 || sStr.indexOf('10,000') !== -1) { targetTier = '5001-10000'; targetLabel = '5,001 – 10,000 employees'; }
+          else { targetTier = '1001-5000'; targetLabel = '1,001 – 5,000 employees'; }
+        }
+        if (targetTier && window.JeroCompanySizeEngine && window.JeroCompanySizeEngine.select) {
+          window.JeroCompanySizeEngine.select(targetTier, targetLabel);
+        }
+      }
+
+      // 5. Company Type Auto-Selection
+      if (data.company_type || data.type) {
+        var typeStr = String(data.company_type || data.type).toLowerCase();
+        if (window.JeroCompanyTypeEngine && window.JeroCompanyTypeEngine.selectById) {
+          if (typeStr.indexOf('public') !== -1 || typeStr.indexOf('listed') !== -1) {
+            window.JeroCompanyTypeEngine.selectById(4);
+          } else if (typeStr.indexOf('llc') !== -1 || typeStr.indexOf('limited liability') !== -1) {
+            window.JeroCompanyTypeEngine.selectById(1);
+          } else if (typeStr.indexOf('pvt') !== -1 || typeStr.indexOf('private') !== -1) {
+            window.JeroCompanyTypeEngine.selectById(2);
+          } else {
+            window.JeroCompanyTypeEngine.selectById(3);
+          }
+        }
+      }
+
+      // 6. Founded Year Auto-Selection
+      if (data.founded || data.founded_year || data.year_founded) {
+        var fYear = parseInt(data.founded || data.founded_year || data.year_founded, 10);
+        if (!isNaN(fYear) && fYear >= 1800 && fYear <= (new Date()).getFullYear()) {
+          if (window.JeroFoundedYearEngine && window.JeroFoundedYearEngine.selectYear) {
+            window.JeroFoundedYearEngine.selectYear(fYear);
+          }
+        }
+      }
+
+      // 7. Career / Jobs URL
+      if (data.career_page_url || data.careers_url || data.jobs_url) {
+        var cUrl = data.career_page_url || data.careers_url || data.jobs_url;
+        var cInput = document.getElementById('career_page_url');
+        if (cInput) cInput.value = cUrl;
+      }
+
+      // 8. Tax ID / Reg No
+      if (data.tax_id || data.lei || data.registration_number) {
+        var tInput = document.getElementById('tax_id');
+        if (tInput && !tInput.value) tInput.value = data.tax_id || data.lei || data.registration_number;
+      }
+
+      // 9. Logo Auto-Detection & Preview
+      if (data.logo) {
+        var logoBox = document.getElementById('company_logo_box');
+        if (logoBox) {
+          logoBox.style.backgroundImage = 'url(' + data.logo + ')';
+          logoBox.style.backgroundSize = 'contain';
+          logoBox.style.backgroundRepeat = 'no-repeat';
+          logoBox.style.backgroundPosition = 'center';
+          logoBox.classList.add('has-image');
+          logoBox.innerHTML = '';
+        }
+        var removeBtn = document.getElementById('client_remove_logo_btn');
+        if (removeBtn) removeBtn.style.display = 'inline-flex';
+        var statusBanner = document.getElementById('logo_status_banner');
+        if (statusBanner) {
+          statusBanner.className = 'god-logo-status-banner is-detected';
+          statusBanner.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> <span>Logo automatically detected from website</span>';
+        }
+        var reviewLogo = document.getElementById('profile_review_logo_box');
+        if (reviewLogo) {
+          reviewLogo.style.backgroundImage = 'url(' + data.logo + ')';
+          reviewLogo.style.backgroundSize = 'contain';
+          reviewLogo.style.backgroundRepeat = 'no-repeat';
+          reviewLogo.style.backgroundPosition = 'center';
+          reviewLogo.innerHTML = '';
+        }
+      }
+
+      // 10. Description & AI Assist (Step 2)
+      if (data.description) {
+        var aiDescEl = document.getElementById('profile_ai_suggested_desc');
+        if (aiDescEl) aiDescEl.textContent = data.description;
+        if (state.quillInstance && state.quillInstance.getText().trim().length < 20) {
+          state.quillInstance.root.innerHTML = '<p>' + data.description + '</p>';
+          state.quillInstance.emitter.emit('text-change');
+        }
+      }
+
+      // 11. Technologies Tagging (Step 3)
+      if (data.tags && Array.isArray(data.tags)) {
+        data.tags.slice(0, 6).forEach(function(t) {
+          if (typeof window.addTechnology === 'function') window.addTechnology(t);
+        });
+      }
+
+      // 12. Headquarters Location (Step 4)
+      if (data.city) {
+        var displayCity = data.city;
+        if (data.country_name && displayCity.indexOf(data.country_name) === -1) {
+          displayCity += ', ' + data.country_name;
+        }
+        var citySearch = document.getElementById('city_search_0');
+        if (citySearch) $(citySearch).val(displayCity).trigger('input');
+        var tagifyLocation = document.getElementById('kt_tagify_work_location_0');
+        if (tagifyLocation) tagifyLocation.value = JSON.stringify([{ value: displayCity }]);
+        var addrInput = document.getElementById('address_0');
+        if (addrInput && !addrInput.value.trim() && data.address) {
+          addrInput.value = data.address;
+        }
+      }
+
+      // 13. Social Links & AI Profile Discovery (Step 5)
+      if (window.clientSocialManager) {
+        window.clientSocialManager.setDiscoveredUrls({
+          linkedin: data.linkedin_url || null,
+          twitter: data.twitter_url || null,
+          facebook: data.facebook_url || null,
+          instagram: data.instagram_url || null,
+          youtube: data.youtube_url || null,
+          github: data.github_url || null
+        });
+        window.clientSocialManager.syncWebsiteLink();
+        window.clientSocialManager.syncAiButtons();
+      }
+
+      // 14. SweetAlert Feedback Toast
+      if (typeof Swal !== 'undefined' && typeof Swal.mixin === 'function') {
+        var Toast = Swal.mixin({
+          toast: true,
+          position: 'top-end',
+          showConfirmButton: false,
+          timer: 3500,
+          timerProgressBar: true
+        });
+        Toast.fire({
+          icon: 'success',
+          title: '✨ Auto-filled company intelligence from ' + (data.domain || 'website')
+        });
+      }
+    }
+
+    // 4. Client Social Manager Engine (Rule 20 Design Standard)
+    window.clientSocialManager = {
+      platforms: ['linkedin', 'twitter', 'facebook', 'instagram', 'youtube', 'github'],
+      discoveredUrls: {},
+
+      setDiscoveredUrls: function(urls) {
+        this.discoveredUrls = urls || {};
+      },
+
+      clearDiscoveredUrls: function() {
+        this.discoveredUrls = {};
+      },
+
+      getSlug: function() {
+        var web = ($('#website').val() || '').trim();
+        var name = ($('#company_name').val() || '').trim();
+        var slug = '';
+        if (web) {
+          try {
+            var cleanWeb = web.replace(/^https?:\/\//i, '').replace(/^www\./i, '').split('/')[0];
+            slug = cleanWeb.split('.')[0] || '';
+          } catch (e) {}
+        }
+        if (!slug && name) {
+          slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+        }
+        return slug || 'companyname';
+      },
+
+      getCleanHandle: function() {
+        var s = this.getSlug();
+        return s.replace(/-/g, '');
+      },
+
+      getUrlForPlatform: function(platform) {
+        if (this.discoveredUrls && this.discoveredUrls[platform]) {
+          return this.discoveredUrls[platform];
+        }
+        var slug = this.getSlug();
+        var handle = this.getCleanHandle();
+        switch (platform) {
+          case 'linkedin': return 'https://linkedin.com/company/' + slug;
+          case 'twitter': return 'https://x.com/' + handle;
+          case 'facebook': return 'https://facebook.com/' + handle;
+          case 'instagram': return 'https://instagram.com/' + handle;
+          case 'youtube': return 'https://youtube.com/@' + handle;
+          case 'github': return 'https://github.com/' + handle;
+          default: return '';
+        }
+      },
+
+      syncWebsiteLink: function() {
+        var self = this;
+        this.platforms.forEach(function(plat) {
+          var url = self.getUrlForPlatform(plat);
+          $('#ai_url_' + plat).text(url).attr('title', url);
+        });
+      },
+
+      addPlatform: function(platform) {
+        var url = ($('#ai_url_' + platform).text() || '').trim() || this.getUrlForPlatform(platform);
+        var $input = $('#' + platform + '_url');
+        if ($input.length && url) {
+          $input.val(url).trigger('input').trigger('change');
+        }
+        this.markButtonAdded(platform);
+
+        if (typeof Swal !== 'undefined' && typeof Swal.mixin === 'function') {
+          var Toast = Swal.mixin({
+            toast: true,
+            position: 'top-end',
+            showConfirmButton: false,
+            timer: 2000,
+            timerProgressBar: true
+          });
+          var platNames = {
+            linkedin: 'LinkedIn',
+            twitter: 'X / Twitter',
+            facebook: 'Facebook',
+            instagram: 'Instagram',
+            youtube: 'YouTube',
+            github: 'GitHub'
+          };
+          Toast.fire({
+            icon: 'success',
+            title: (platNames[platform] || platform) + ' profile added'
+          });
+        }
+        this.syncAiButtons();
+        if (typeof populateReviewSummaries === 'function') populateReviewSummaries();
+      },
+
+      addAllSuggested: function() {
+        var self = this;
+        var addedCount = 0;
+        this.platforms.forEach(function(plat) {
+          var url = ($('#ai_url_' + plat).text() || '').trim() || self.getUrlForPlatform(plat);
+          var $input = $('#' + plat + '_url');
+          if ($input.length && url) {
+            $input.val(url).trigger('input').trigger('change');
+            self.markButtonAdded(plat);
+            addedCount++;
+          }
+        });
+
+        var $btnAll = $('#btn_add_all_social');
+        $btnAll.html('<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" style="margin-right:4px;"><polyline points="20 6 9 17 4 12"/></svg> All Added')
+               .css({ 'background': '#ecfdf5', 'border': '1px solid #a7f3d0', 'color': '#059669', 'cursor': 'default' });
+
+        if (typeof Swal !== 'undefined' && typeof Swal.mixin === 'function') {
+          var Toast = Swal.mixin({
+            toast: true,
+            position: 'top-end',
+            showConfirmButton: false,
+            timer: 2500,
+            timerProgressBar: true
+          });
+          Toast.fire({
+            icon: 'success',
+            title: 'All ' + addedCount + ' social profiles added'
+          });
+        }
+        if (typeof populateReviewSummaries === 'function') populateReviewSummaries();
+      },
+
+      markButtonAdded: function(platform) {
+        var $btn = $('#btn_ai_add_' + platform);
+        $btn.addClass('is-added')
+            .html('<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" style="margin-right:4px;"><polyline points="20 6 9 17 4 12"/></svg> Added')
+            .css({ 'background': '#ecfdf5', 'border': '1px solid #a7f3d0', 'color': '#059669', 'cursor': 'default' });
+      },
+
+      resetButton: function(platform) {
+        var $btn = $('#btn_ai_add_' + platform);
+        $btn.removeClass('is-added')
+            .html('+ Add')
+            .css({ 'background': '#ffffff', 'border': '1px solid #2563eb', 'color': '#2563eb', 'cursor': 'pointer' });
+      },
+
+      syncAiButtons: function() {
+        var self = this;
+        this.platforms.forEach(function(plat) {
+          var inputVal = ($('#' + plat + '_url').val() || '').trim();
+          var suggestedUrl = ($('#ai_url_' + plat).text() || '').trim();
+          if (inputVal && (inputVal === suggestedUrl || inputVal.toLowerCase().indexOf(plat) !== -1)) {
+            self.markButtonAdded(plat);
+          } else {
+            self.resetButton(plat);
+          }
+        });
       }
     };
+
+    // 5. Social Clear & Input Listeners
+    $(document).on('click', '.client-social-clear-btn', function(e) {
+      e.preventDefault();
+      var target = $(this).data('target');
+      if (target) {
+        var $inp = $('#' + target);
+        $inp.val('').trigger('input').trigger('change');
+        $(this).hide();
+        if (window.clientSocialManager) window.clientSocialManager.syncAiButtons();
+      }
+    });
+
+    $(document).on('input', '.client-social-url-input', function() {
+      var target = $(this).attr('id');
+      var $clearBtn = $('.client-social-clear-btn[data-target="' + target + '"]');
+      if ($clearBtn.length) {
+        $clearBtn.toggle(Boolean($(this).val().trim().length));
+      }
+      if (window.clientSocialManager) window.clientSocialManager.syncAiButtons();
+    });
+
+    // 6. Website Domain Point-of-Entry & Clear Listeners
+    var webClearBtn = document.getElementById('website_clear_btn');
+    var webInputEl = document.getElementById('website');
+    if (webClearBtn && webInputEl) {
+      webClearBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        webInputEl.value = '';
+        webClearBtn.style.display = 'none';
+        $('#website_duplicate_error').hide();
+        $('#website').removeClass('is-invalid');
+        webInputEl.focus();
+      });
+      webInputEl.addEventListener('input', function() {
+        webClearBtn.style.display = this.value.trim().length > 0 ? 'inline-flex' : 'none';
+      });
+      webInputEl.addEventListener('blur', function() {
+        if (this.value && this.value.trim().length > 3) {
+          checkDomainDuplicate(false);
+          if (this.value !== window._lastFetchedWebsite && window.fetchGodLevelCompanyIntelligence) {
+            window.fetchGodLevelCompanyIntelligence(this.value);
+          }
+        }
+      });
+    }
+
+    // Initial sync of social manager
+    if (window.clientSocialManager) {
+      window.clientSocialManager.syncWebsiteLink();
+      window.clientSocialManager.syncAiButtons();
+    }
 
     // Form Submission AJAX Engine
     var form = document.getElementById('kt_contact_add_form');

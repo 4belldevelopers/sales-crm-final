@@ -161,6 +161,13 @@
               <span class="spinner-border spinner-border-sm me-1" style="width:12px;height:12px;border-width:1.5px;" role="status"></span>
               <span>Checking domain availability...</span>
             </div>
+            <!-- Duplicate error alert for Website -->
+            <div class="god-field-inline-error text-danger" id="website_duplicate_error" style="display:none; font-size:12px; margin-top:6px; font-weight:500;">
+              <span class="d-inline-flex align-items-center gap-1">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                <span id="website_duplicate_error_text">This website domain is already registered to another organization.</span>
+              </span>
+            </div>
           </div>
 
           <!-- ROW 2 (Full Width): Company Name -->

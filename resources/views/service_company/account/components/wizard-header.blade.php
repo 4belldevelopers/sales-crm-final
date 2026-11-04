@@ -75,9 +75,22 @@
           </svg>
         </div>
 
-        <!-- Step 5: Review -->
-        <div class="client-step-item" data-step="5" role="tab" aria-label="Step 5: Review">
+        <!-- Step 5: Social Links -->
+        <div class="client-step-item" data-step="5" role="tab" aria-label="Step 5: Social Links">
           <div class="client-step-circle client-step-circle-5 is-upcoming">5</div>
+          <span class="client-step-name">Social Links</span>
+        </div>
+
+        <div class="client-step-arrow" data-arrow-after="5" aria-hidden="true">
+          <svg class="client-step-arrow-svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M5 12h14"/>
+            <path d="m12 5 7 7-7 7"/>
+          </svg>
+        </div>
+
+        <!-- Step 6: Review -->
+        <div class="client-step-item" data-step="6" role="tab" aria-label="Step 6: Review">
+          <div class="client-step-circle client-step-circle-6 is-upcoming">6</div>
           <span class="client-step-name">Review</span>
         </div>
 
@@ -104,7 +117,7 @@
       </button>
       @endif
 
-      <!-- Steps 2-5: Back Button (Returns to previous step) -->
+      <!-- Steps 2-6: Back Button (Returns to previous step) -->
       <button type="button" class="btn client-top-back-btn profile-nav-back" id="profile_top_back_btn" title="Back to previous step" style="display:none !important;">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
           <path d="M19 12H5"/>
@@ -113,7 +126,7 @@
         <span>Back</span>
       </button>
 
-      <!-- Steps 1-4: Next Page Button -->
+      <!-- Steps 1-5: Next Page Button -->
       <button type="button" class="btn client-top-next-btn profile-nav-next" id="profile_top_next_btn">
         <span>Next Page</span>
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
@@ -122,7 +135,7 @@
         </svg>
       </button>
 
-      <!-- Step 5: Final Submit / Update Button -->
+      <!-- Step 6: Final Submit / Update Button -->
       <button type="button" class="btn client-top-submit-btn profile-submit-btn frmupdate" id="submitBtn" style="display:none !important;">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
           <polyline points="20 6 9 17 4 12"/>
