@@ -226,22 +226,7 @@ class CandidateDrawerQueryService
             $filter[] = [
                 'bool' => [
                     'should' => [
-                        ['term' => ['to_company_id' => $companyId]],
                         ['term' => ['ClientComID' => $companyId]],
-                        ['term' => ['company_id' => $companyId]],
-                        ['term' => ['client_comapny_id' => $companyId]],
-                        ['term' => ['thirdparty_company_id' => $companyId]],
-                    ],
-                    'minimum_should_match' => 1,
-                ],
-            ];
-            // Align with Direct Client relationship: final_status 1 or 2 (Active/Approved share)
-            $filter[] = [
-                'bool' => [
-                    'should' => [
-                        ['terms' => ['final_status' => [1, 2]]],
-                        ['terms' => ['job_id' => ! empty($clientJobIds) ? $clientJobIds : [-1]]],
-                        ['terms' => ['jobId' => ! empty($clientJobIds) ? $clientJobIds : [-1]]],
                     ],
                     'minimum_should_match' => 1,
                 ],
@@ -728,28 +713,56 @@ class CandidateDrawerQueryService
                             ],
                         ],
                     ];
-                } else {
+                } elseif ($clientType === 'direct') {
+                    // Direct Client: jobs belonging to client or shared with agency
                     $scopeMust = [
                         [
                             'bool' => [
                                 'should' => [
-                                    ['term' => ['client_id' => $clientId]],
                                     ['term' => ['company_id' => $clientId]],
-                                    ['term' => ['comId' => $clientId]],
+                                    ['term' => ['client_id' => $clientId]],
                                     [
                                         'nested' => [
                                             'path' => 'recommendation_relation',
                                             'query' => [
                                                 'bool' => [
-                                                    'must' => [
-                                                        ['term' => ['recommendation_relation.to_company_id' => $companyId]],
-                                                        ['terms' => ['recommendation_relation.final_status' => [1, 2]]],
-                                                        ['term' => ['recommendation_relation.from_company_id' => $clientId]],
+                                                    'should' => [
+                                                        [
+                                                            'bool' => [
+                                                                'must' => [
+                                                                    ['term' => ['recommendation_relation.to_company_id' => $companyId]],
+                                                                    ['term' => ['recommendation_relation.from_company_id' => $clientId]],
+                                                                ],
+                                                            ],
+                                                        ],
+                                                        [
+                                                            'bool' => [
+                                                                'must' => [
+                                                                    ['term' => ['recommendation_relation.to_company_id' => $clientId]],
+                                                                    ['term' => ['recommendation_relation.from_company_id' => $companyId]],
+                                                                ],
+                                                            ],
+                                                        ],
                                                     ],
+                                                    'minimum_should_match' => 1,
                                                 ],
                                             ],
                                         ],
                                     ],
+                                ],
+                                'minimum_should_match' => 1,
+                            ],
+                        ],
+                    ];
+                } else {
+                    // Internal client: jobs created by companyId for internal client clientId
+                    $scopeMust = [
+                        ['term' => ['company_id' => $companyId]],
+                        [
+                            'bool' => [
+                                'should' => [
+                                    ['term' => ['client_id' => $clientId]],
+                                    ['term' => ['comId' => $clientId]],
                                 ],
                                 'minimum_should_match' => 1,
                             ],

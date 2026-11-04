@@ -15529,6 +15529,13 @@ END:VCALENDAR";
     public static function DirectClientCandidatesCount($from_company_id, $to_company_id)
     {
         $elasticService = app(ElasticService::class);
+        $pairCompIds = array_values(array_unique(array_filter([(int) $from_company_id, (int) $to_company_id])));
+        $viewerCompanyId = (auth()->check() && (int) auth()->user()->company_id > 0)
+            ? (int) auth()->user()->company_id
+            : (int) $to_company_id;
+        if ($viewerCompanyId <= 0) {
+            $viewerCompanyId = (int) $from_company_id;
+        }
 
         $params = [
             'index' => ELASTIC_CANDIDATES,
@@ -15537,20 +15544,49 @@ END:VCALENDAR";
                 'query' => [
                     'bool' => [
                         'must' => [
-                            ['term' => ['from_company_id' => $from_company_id]],
-                            ['term' => ['to_company_id' => $to_company_id]],
-                            ['term' => ['ClientComID' => $to_company_id]],
-                            ['term' => ['final_status' => 1]],
+                            [
+                                'bool' => [
+                                    'should' => [
+                                        ['terms' => ['company_id' => $pairCompIds]],
+                                        ['terms' => ['from_company_id' => $pairCompIds]],
+                                    ],
+                                    'minimum_should_match' => 1,
+                                ],
+                            ],
+                            [
+                                'bool' => [
+                                    'should' => [
+                                        ['term' => ['ClientComID' => (int) $viewerCompanyId]],
+                                        [
+                                            'bool' => [
+                                                'must' => [
+                                                    ['terms' => ['ClientComID' => $pairCompIds]],
+                                                    ['range' => ['ClientComID' => ['gt' => 0]]],
+                                                ],
+                                            ],
+                                        ],
+                                    ],
+                                    'minimum_should_match' => 1,
+                                ],
+                            ],
                         ],
                         'must_not' => [
-                            ['terms' => ['job_master_status_id' => [8, 9]]],
+                            ['terms' => ['job_master_status_id' => [8, 9, '8', '9']]],
+                            [
+                                'bool' => [
+                                    'must' => [['terms' => ['master_status_id' => [8, 9, '8', '9']]]],
+                                    'must_not' => [['range' => ['job_master_status_id' => ['gt' => 0]]]],
+                                ],
+                            ],
                         ],
                     ],
                 ],
                 'aggs' => [
                     'all_candidates' => [
-                        'value_count' => [
-                            'field' => 'id',
+                        'filter' => [
+                            'terms' => [
+                                'job_master_status_id' => [1, 2, 3, 4, 5, 6],
+                            ],
                         ],
                     ],
                     'joined' => [
@@ -15947,6 +15983,13 @@ END:VCALENDAR";
 
             if ($elasticService->indexExists(ELASTIC_CANDIDATES)) {
                 $pairCompIds = array_values(array_unique(array_filter([(int) $from_company_id, (int) $to_company_id])));
+                $viewerCompanyId = (auth()->check() && (int) auth()->user()->company_id > 0)
+                    ? (int) auth()->user()->company_id
+                    : (int) $to_company_id;
+                if ($viewerCompanyId <= 0) {
+                    $viewerCompanyId = (int) $from_company_id;
+                }
+
                 $params = [
                     'index' => ELASTIC_CANDIDATES,
                     'request_cache' => true,
@@ -15958,27 +16001,21 @@ END:VCALENDAR";
                                     [
                                         'bool' => [
                                             'should' => [
+                                                ['terms' => ['company_id' => $pairCompIds]],
+                                                ['terms' => ['from_company_id' => $pairCompIds]],
+                                            ],
+                                            'minimum_should_match' => 1,
+                                        ],
+                                    ],
+                                    [
+                                        'bool' => [
+                                            'should' => [
+                                                ['term' => ['ClientComID' => (int) $viewerCompanyId]],
                                                 [
                                                     'bool' => [
                                                         'must' => [
-                                                            ['terms' => ['from_company_id' => $pairCompIds]],
-                                                            ['terms' => ['to_company_id' => $pairCompIds]],
-                                                        ],
-                                                    ],
-                                                ],
-                                                [
-                                                    'bool' => [
-                                                        'must' => [
-                                                            ['terms' => ['company_id' => $pairCompIds]],
                                                             ['terms' => ['ClientComID' => $pairCompIds]],
-                                                        ],
-                                                    ],
-                                                ],
-                                                [
-                                                    'bool' => [
-                                                        'must' => [
-                                                            ['terms' => ['company_id' => $pairCompIds]],
-                                                            ['terms' => ['thirdparty_company_id' => $pairCompIds]],
+                                                            ['range' => ['ClientComID' => ['gt' => 0]]],
                                                         ],
                                                     ],
                                                 ],
@@ -16036,8 +16073,8 @@ END:VCALENDAR";
                             'bool' => [
                                 'must' => [$tenantInterviewQuery],
                                 'must_not' => [
-                                    ['terms' => ['master_status_id' => [8, '8']]],
-                                    ['terms' => ['job_master_status_id' => [8, '8']]],
+                                    ['terms' => ['master_status_id' => [8, 9, '8', '9']]],
+                                    ['terms' => ['job_master_status_id' => [8, 9, '8', '9']]],
                                 ],
                             ],
                         ],

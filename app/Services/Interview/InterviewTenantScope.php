@@ -80,7 +80,8 @@ class InterviewTenantScope
         if ($relationshipType === 'DIRECT_CLIENT') {
             // Direct Client Tenancy Filter:
             // 1. Normalized Envelope: tenant is visible_to_tenants, client_id matches from_company, rel matches DIRECT_CLIENT
-            // 2. Strict Migration Fallback: ClientComID or to_company_id matches companyId AND from_company_id or client_id matches clientId
+            // 2. Strict Migration Fallback: candidate attributed to viewing agency (ClientComID/thirdparty_company_id/to_company_id matches companyId),
+            //    associated with client (from_company_id/client_id/job_company_id matches clientId), and recommendation share is approved (final_status in [1, 2]).
             return [
                 'bool' => [
                     'should' => [
@@ -102,7 +103,6 @@ class InterviewTenantScope
                                                 ['term' => ['ClientComID' => $companyId]],
                                                 ['term' => ['thirdparty_company_id' => $companyId]],
                                                 ['term' => ['to_company_id' => $companyId]],
-                                                ['term' => ['job_company_id' => $companyId]],
                                             ],
                                             'minimum_should_match' => 1,
                                         ],
@@ -112,7 +112,29 @@ class InterviewTenantScope
                                             'should' => [
                                                 ['term' => ['from_company_id' => $clientId]],
                                                 ['term' => ['client_id' => $clientId]],
-                                                ['term' => ['company_id' => $clientId]],
+                                                ['term' => ['job_company_id' => $clientId]],
+                                            ],
+                                            'minimum_should_match' => 1,
+                                        ],
+                                    ],
+                                    [
+                                        'bool' => [
+                                            'should' => [
+                                                ['terms' => ['final_status' => [1, 2]]],
+                                                [
+                                                    'nested' => [
+                                                        'path' => 'recommendation_relation',
+                                                        'query' => [
+                                                            'bool' => [
+                                                                'must' => [
+                                                                    ['term' => ['recommendation_relation.to_company_id' => $companyId]],
+                                                                    ['terms' => ['recommendation_relation.final_status' => [1, 2]]],
+                                                                    ['term' => ['recommendation_relation.from_company_id' => $clientId]],
+                                                                ],
+                                                            ],
+                                                        ],
+                                                    ],
+                                                ],
                                             ],
                                             'minimum_should_match' => 1,
                                         ],
