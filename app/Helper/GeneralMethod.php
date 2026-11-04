@@ -16734,8 +16734,11 @@ END:VCALENDAR";
         $allCandidate = 0;
         $Joined = 0;
         $sourced = 0;
+        $screening = 0;
         $evaluated = 0;
+        $negotiation = 0;
         $offers = 0;
+        $rejected = 0;
         $allInterview = 0;
 
         $to_company_id = (int) $to_company_id;
@@ -16795,6 +16798,17 @@ END:VCALENDAR";
                                 ],
                             ],
                         ],
+                        'screening' => [
+                            'filter' => [
+                                'bool' => [
+                                    'should' => [
+                                        ['term' => ['job_master_status_id' => 2]],
+                                        ['term' => ['master_status_id' => 2]],
+                                    ],
+                                    'minimum_should_match' => 1,
+                                ],
+                            ],
+                        ],
                         'evaluated' => [
                             'filter' => [
                                 'bool' => [
@@ -16806,14 +16820,34 @@ END:VCALENDAR";
                                 ],
                             ],
                         ],
+                        'negotiation' => [
+                            'filter' => [
+                                'bool' => [
+                                    'should' => [
+                                        ['term' => ['job_master_status_id' => 4]],
+                                        ['term' => ['master_status_id' => 4]],
+                                    ],
+                                    'minimum_should_match' => 1,
+                                ],
+                            ],
+                        ],
                         'offers' => [
                             'filter' => [
                                 'bool' => [
                                     'should' => [
                                         ['term' => ['job_master_status_id' => 5]],
                                         ['term' => ['master_status_id' => 5]],
-                                        ['exists' => ['field' => 'offer_released_at']],
-                                        ['exists' => ['field' => 'of_created_date']],
+                                    ],
+                                    'minimum_should_match' => 1,
+                                ],
+                            ],
+                        ],
+                        'rejected' => [
+                            'filter' => [
+                                'bool' => [
+                                    'should' => [
+                                        ['term' => ['job_master_status_id' => 7]],
+                                        ['term' => ['master_status_id' => 7]],
                                     ],
                                     'minimum_should_match' => 1,
                                 ],
@@ -16828,8 +16862,11 @@ END:VCALENDAR";
                 $allCandidate = $response['hits']['total']['value'] ?? ($response['aggregations']['all_candidates']['value'] ?? 0);
                 $Joined = $response['aggregations']['joined']['doc_count'] ?? 0;
                 $sourced = $response['aggregations']['sourced']['doc_count'] ?? 0;
+                $screening = $response['aggregations']['screening']['doc_count'] ?? 0;
                 $evaluated = $response['aggregations']['evaluated']['doc_count'] ?? 0;
+                $negotiation = $response['aggregations']['negotiation']['doc_count'] ?? 0;
                 $offers = $response['aggregations']['offers']['doc_count'] ?? 0;
+                $rejected = $response['aggregations']['rejected']['doc_count'] ?? 0;
             } catch (\Exception $e) {
                 $allCandidate = 0;
             }
@@ -16879,12 +16916,19 @@ END:VCALENDAR";
             $candidateDbStats = DB::table('add_job_wise_condidates')
                 ->select(
                     DB::raw('COUNT(1) AS total_cand'),
-                    DB::raw('COUNT(CASE WHEN master_status_id = 6 THEN 1 END) AS joined_cand'),
                     DB::raw('COUNT(CASE WHEN master_status_id = 1 THEN 1 END) AS sourced_cand'),
+                    DB::raw('COUNT(CASE WHEN master_status_id = 2 THEN 1 END) AS screening_cand'),
                     DB::raw('COUNT(CASE WHEN master_status_id = 3 THEN 1 END) AS eval_cand'),
-                    DB::raw('COUNT(CASE WHEN master_status_id = 5 THEN 1 END) AS offer_cand')
+                    DB::raw('COUNT(CASE WHEN master_status_id = 4 THEN 1 END) AS neg_cand'),
+                    DB::raw('COUNT(CASE WHEN master_status_id = 5 THEN 1 END) AS offer_cand'),
+                    DB::raw('COUNT(CASE WHEN master_status_id = 6 THEN 1 END) AS joined_cand'),
+                    DB::raw('COUNT(CASE WHEN master_status_id = 7 THEN 1 END) AS rejected_cand')
                 )
-                ->where('company_id', $from_company_id)
+                ->where(function ($q) use ($from_company_id) {
+                    $q->where('company_id', '=', $from_company_id)
+                        ->orWhere('company_id', '=', 0)
+                        ->orWhereNull('company_id');
+                })
                 ->where('thirdparty_company_id', $to_company_id)
                 ->whereNotIn('master_status_id', [8, 9])
                 ->first();
@@ -16893,15 +16937,21 @@ END:VCALENDAR";
                 $allCandidate = (int) $candidateDbStats->total_cand;
                 $Joined = (int) $candidateDbStats->joined_cand;
                 $sourced = (int) $candidateDbStats->sourced_cand;
+                $screening = (int) $candidateDbStats->screening_cand;
                 $evaluated = (int) $candidateDbStats->eval_cand;
+                $negotiation = (int) $candidateDbStats->neg_cand;
                 $offers = (int) $candidateDbStats->offer_cand;
+                $rejected = (int) $candidateDbStats->rejected_cand;
             }
         }
 
         if ($allInterview == 0) {
             $interviewDbCount = DB::table('interview_schedules')
                 ->join('add_job_wise_condidates', 'add_job_wise_condidates.job_application_id', '=', 'interview_schedules.job_application_id')
-                ->where('add_job_wise_condidates.company_id', $from_company_id)
+                ->where(function ($q) use ($from_company_id) {
+                    $q->where('add_job_wise_condidates.company_id', $from_company_id)
+                        ->orWhere('interview_schedules.company_id', $from_company_id);
+                })
                 ->where('add_job_wise_condidates.thirdparty_company_id', $to_company_id)
                 ->whereNotIn('add_job_wise_condidates.master_status_id', [8, 9])
                 ->count('interview_schedules.id');
@@ -16916,7 +16966,10 @@ END:VCALENDAR";
             'Joined' => $Joined,
             'offers' => $offers,
             'sourced' => $sourced,
+            'screening' => $screening,
             'evaluated' => $evaluated,
+            'negotiation' => $negotiation,
+            'rejected' => $rejected,
             'all_interview' => $allInterview,
         ];
     }

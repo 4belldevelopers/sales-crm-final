@@ -129,8 +129,8 @@ class ServiceCompanyConsultancyController extends ServiceCompanyBaseController
         $versionKey = 'allconsultancy_version_user_'.$userId;
         $version = cache()->get($versionKey, 1);
         $hash = md5(json_encode($cachePayload));
-        $cacheKeySet = 'ats:allconsultancy:'.$userId.':'.$version.':'.$hash;
-        $etag = '"agency-'.$company_id.'-'.$version.'-'.$hash.'"';
+        $cacheKeySet = 'ats:allconsultancy_v3:'.$userId.':'.$version.':'.$hash;
+        $etag = '"agency-v3-'.$company_id.'-'.$version.'-'.$hash.'"';
 
         if ($request->header('If-None-Match') === $etag) {
             return response('', 304)->header('ETag', $etag);

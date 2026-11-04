@@ -154,7 +154,7 @@ class AgencyListingService
                             ->where('recommendation_relation.final_status', '=', 1);
                     })
                     ->whereIn('add_job_wise_condidates.thirdparty_company_id', $connectedAgencyIds)
-                    ->whereIn('add_job_wise_condidates.master_status_id', [3, 6, 7, 10])
+                    ->whereIn('add_job_wise_condidates.master_status_id', [3, 4, 5, 6])
                     ->distinct()
                     ->count('add_job_wise_condidates.thirdparty_company_id');
             }
@@ -207,7 +207,7 @@ class AgencyListingService
                     ->where('recommendation_relation.final_status', '=', 1);
             })
             ->whereIn('add_job_wise_condidates.thirdparty_company_id', $agencyCompanyIds)
-            ->whereIn('add_job_wise_condidates.master_status_id', [3, 6, 7, 10])
+            ->whereIn('add_job_wise_condidates.master_status_id', [3, 4, 5, 6])
             ->distinct()
             ->pluck('add_job_wise_condidates.thirdparty_company_id')
             ->toArray();
@@ -377,10 +377,13 @@ class AgencyListingService
                 'job_hold' => 0,
                 'all_candidates' => 0,
                 'sourced' => 0,
+                'screening' => 0,
                 'evaluated' => 0,
-                'all_interview' => 0,
+                'negotiation' => 0,
                 'offers' => 0,
                 'Joined' => 0,
+                'rejected' => 0,
+                'all_interview' => 0,
             ];
         }
 
@@ -409,34 +412,63 @@ class AgencyListingService
 
         // 2. Bulk Query for Candidate Pipeline Stats
         $candidateCounts = DB::table('add_job_wise_condidates')
-            ->join('recommendation_relation', function ($join) use ($fromCompanyId) {
-                $join->on('recommendation_relation.job_id', '=', 'add_job_wise_condidates.job_id')
-                    ->on('recommendation_relation.to_company_id', '=', 'add_job_wise_condidates.thirdparty_company_id')
-                    ->where('recommendation_relation.from_company_id', '=', $fromCompanyId)
-                    ->where('recommendation_relation.final_status', '=', 1);
-            })
             ->select(
-                'add_job_wise_condidates.thirdparty_company_id',
+                'thirdparty_company_id',
                 DB::raw('COUNT(1) AS all_candidates'),
-                DB::raw('COUNT(CASE WHEN add_job_wise_condidates.master_status_id = 1 THEN 1 END) AS sourced'),
-                DB::raw('COUNT(CASE WHEN add_job_wise_condidates.master_status_id = 3 THEN 1 END) AS evaluated'),
-                DB::raw('COUNT(CASE WHEN add_job_wise_condidates.master_status_id = 7 THEN 1 END) AS all_interview'),
-                DB::raw('COUNT(CASE WHEN add_job_wise_condidates.master_status_id = 10 THEN 1 END) AS offers'),
-                DB::raw('COUNT(CASE WHEN add_job_wise_condidates.master_status_id = 6 THEN 1 END) AS joined')
+                DB::raw('COUNT(CASE WHEN master_status_id = 1 THEN 1 END) AS sourced'),
+                DB::raw('COUNT(CASE WHEN master_status_id = 2 THEN 1 END) AS screening'),
+                DB::raw('COUNT(CASE WHEN master_status_id = 3 THEN 1 END) AS evaluated'),
+                DB::raw('COUNT(CASE WHEN master_status_id = 4 THEN 1 END) AS negotiation'),
+                DB::raw('COUNT(CASE WHEN master_status_id = 5 THEN 1 END) AS offers'),
+                DB::raw('COUNT(CASE WHEN master_status_id = 6 THEN 1 END) AS joined'),
+                DB::raw('COUNT(CASE WHEN master_status_id = 7 THEN 1 END) AS rejected')
             )
-            ->whereIn('add_job_wise_condidates.thirdparty_company_id', $agencyCompanyIds)
-            ->whereNotIn('add_job_wise_condidates.master_status_id', [8, 9])
-            ->groupBy('add_job_wise_condidates.thirdparty_company_id')
+            ->where(function ($q) use ($fromCompanyId) {
+                $q->where('company_id', '=', $fromCompanyId)
+                    ->orWhere('company_id', '=', 0)
+                    ->orWhereNull('company_id');
+            })
+            ->whereIn('thirdparty_company_id', $agencyCompanyIds)
+            ->whereNotIn('master_status_id', [8, 9])
+            ->groupBy('thirdparty_company_id')
             ->get();
 
         foreach ($candidateCounts as $cc) {
             if (isset($stats[$cc->thirdparty_company_id])) {
                 $stats[$cc->thirdparty_company_id]->all_candidates = (int) $cc->all_candidates;
                 $stats[$cc->thirdparty_company_id]->sourced = (int) $cc->sourced;
+                $stats[$cc->thirdparty_company_id]->screening = (int) $cc->screening;
                 $stats[$cc->thirdparty_company_id]->evaluated = (int) $cc->evaluated;
-                $stats[$cc->thirdparty_company_id]->all_interview = (int) $cc->all_interview;
+                $stats[$cc->thirdparty_company_id]->negotiation = (int) $cc->negotiation;
                 $stats[$cc->thirdparty_company_id]->offers = (int) $cc->offers;
                 $stats[$cc->thirdparty_company_id]->Joined = (int) $cc->joined;
+                $stats[$cc->thirdparty_company_id]->rejected = (int) $cc->rejected;
+            }
+        }
+
+        // 3. Bulk Query for Scheduled Interviews per Agency
+        $interviewCounts = DB::table('interview_schedules')
+            ->join('job_applications', 'job_applications.id', '=', 'interview_schedules.job_application_id')
+            ->leftJoin('add_job_wise_condidates', 'add_job_wise_condidates.job_application_id', '=', 'job_applications.id')
+            ->where(function ($q) use ($fromCompanyId) {
+                $q->where('interview_schedules.company_id', '=', $fromCompanyId)
+                    ->orWhere('job_applications.company_id', '=', $fromCompanyId)
+                    ->orWhere('add_job_wise_condidates.company_id', '=', $fromCompanyId);
+            })
+            ->where(function ($q) use ($agencyCompanyIds) {
+                $q->whereIn('job_applications.thirdparty_company_id', $agencyCompanyIds)
+                    ->orWhereIn('add_job_wise_condidates.thirdparty_company_id', $agencyCompanyIds);
+            })
+            ->select(
+                DB::raw('COALESCE(job_applications.thirdparty_company_id, add_job_wise_condidates.thirdparty_company_id) AS agency_id'),
+                DB::raw('COUNT(DISTINCT interview_schedules.id) AS interview_count')
+            )
+            ->groupBy('agency_id')
+            ->get();
+
+        foreach ($interviewCounts as $ic) {
+            if (isset($stats[$ic->agency_id])) {
+                $stats[$ic->agency_id]->all_interview = (int) $ic->interview_count;
             }
         }
 
@@ -632,7 +664,7 @@ class AgencyListingService
 
             $activeAgencyIds = DB::table('add_job_wise_condidates')
                 ->whereIn('thirdparty_company_id', $connectedIds)
-                ->whereIn('master_status_id', [1, 3, 6, 7, 10])
+                ->whereIn('master_status_id', [1, 2, 3, 4, 5, 6, 7])
                 ->distinct()
                 ->pluck('thirdparty_company_id')
                 ->toArray();
