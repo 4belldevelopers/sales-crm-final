@@ -30,20 +30,20 @@
           <div class="client-social-single-list">
 
             <!-- 1. LinkedIn -->
-            <div class="client-social-row d-flex align-items-center justify-content-between py-3 px-6" style="border-bottom:1px solid #f1f5f9; gap:16px;">
-              <div class="d-flex align-items-center gap-3 client-social-platform-info" style="min-width:180px; flex-shrink:0;">
-                <div style="width:36px; height:36px; border-radius:8px; background:#0a66c2; display:inline-flex; align-items:center; justify-content:center; flex-shrink:0;">
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="#ffffff">
+            <div class="client-social-row d-flex align-items-center justify-content-between py-2 px-4" style="border-bottom:1px solid #f1f5f9; gap:12px;">
+              <div class="d-flex align-items-center gap-3 client-social-platform-info" style="min-width:160px; flex-shrink:0;">
+                <div style="width:32px; height:32px; border-radius:7px; background:#0a66c2; display:inline-flex; align-items:center; justify-content:center; flex-shrink:0;">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="#ffffff">
                     <path d="M19 3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14m-.5 15.5v-5.3a3.26 3.26 0 0 0-3.26-3.26c-.85 0-1.84.52-2.28 1.3v-1.11h-2.79v8.37h2.79v-4.93c0-.77.62-1.4 1.39-1.4a1.4 1.4 0 0 1 1.4 1.4v4.93h2.75M6.46 10.9v8.37H9.2V10.9H6.46M7.83 6.2a1.66 1.66 0 0 0-1.66 1.66c0 .92.75 1.67 1.66 1.67.92 0 1.67-.75 1.67-1.67 0-.92-.75-1.66-1.67-1.66Z"/>
                   </svg>
                 </div>
                 <div>
-                  <div style="font-size:13px; font-weight:700; color:#0f172a; line-height:1.2;">LinkedIn</div>
-                  <div style="font-size:11.5px; color:#64748b; line-height:1.2; margin-top:2px;">Company page</div>
+                  <div style="font-size:12.5px; font-weight:700; color:#0f172a; line-height:1.2;">LinkedIn</div>
+                  <div style="font-size:10.5px; color:#64748b; line-height:1.2; margin-top:2px;">Company page</div>
                 </div>
               </div>
               <div class="position-relative flex-grow-1 client-social-input-wrapper">
-                <input type="url" class="form-control client-social-url-input" name="linkedin_url" id="linkedin_url" value="{{ $linkedin_url ?? '' }}" placeholder="https://www.linkedin.com/company/clientname" style="height:42px; border:1px solid #cbd5e1; border-radius:8px; font-size:13px; padding-right:38px; padding-left:14px; color:#1e293b; background:#ffffff;">
+                <input type="url" class="form-control client-social-url-input" name="linkedin_url" id="linkedin_url" value="{{ $linkedin_url ?? '' }}" placeholder="https://www.linkedin.com/company/clientname" style="height:36px; border:1px solid #cbd5e1; border-radius:7px; font-size:12px; padding-right:34px; padding-left:12px; color:#1e293b; background:#ffffff;">
                 <button type="button" class="btn client-social-clear-btn" data-target="linkedin_url" title="Clear URL" style="{{ !empty($linkedin_url) ? 'display:inline-flex;' : 'display:none;' }}">
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18M6 6l12 12"/></svg>
                 </button>
@@ -51,20 +51,20 @@
             </div>
 
             <!-- 2. X / Twitter -->
-            <div class="client-social-row d-flex align-items-center justify-content-between py-3 px-6" style="border-bottom:1px solid #f1f5f9; gap:16px;">
-              <div class="d-flex align-items-center gap-3 client-social-platform-info" style="min-width:180px; flex-shrink:0;">
-                <div style="width:36px; height:36px; border-radius:8px; background:#000000; display:inline-flex; align-items:center; justify-content:center; flex-shrink:0;">
-                  <svg width="15" height="15" viewBox="0 0 24 24" fill="#ffffff">
+            <div class="client-social-row d-flex align-items-center justify-content-between py-2 px-4" style="border-bottom:1px solid #f1f5f9; gap:12px;">
+              <div class="d-flex align-items-center gap-3 client-social-platform-info" style="min-width:160px; flex-shrink:0;">
+                <div style="width:32px; height:32px; border-radius:7px; background:#000000; display:inline-flex; align-items:center; justify-content:center; flex-shrink:0;">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="#ffffff">
                     <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
                   </svg>
                 </div>
                 <div>
-                  <div style="font-size:13px; font-weight:700; color:#0f172a; line-height:1.2;">X / Twitter</div>
-                  <div style="font-size:11.5px; color:#64748b; line-height:1.2; margin-top:2px;">Official profile</div>
+                  <div style="font-size:12.5px; font-weight:700; color:#0f172a; line-height:1.2;">X / Twitter</div>
+                  <div style="font-size:10.5px; color:#64748b; line-height:1.2; margin-top:2px;">Official profile</div>
                 </div>
               </div>
               <div class="position-relative flex-grow-1 client-social-input-wrapper">
-                <input type="text" class="form-control client-social-url-input" name="twitter_url" id="twitter_url" value="{{ $twitter_url ?? '' }}" placeholder="https://x.com/clientname" style="height:42px; border:1px solid #cbd5e1; border-radius:8px; font-size:13px; padding-right:38px; padding-left:14px; color:#1e293b; background:#ffffff;">
+                <input type="text" class="form-control client-social-url-input" name="twitter_url" id="twitter_url" value="{{ $twitter_url ?? '' }}" placeholder="https://x.com/clientname" style="height:36px; border:1px solid #cbd5e1; border-radius:7px; font-size:12px; padding-right:34px; padding-left:12px; color:#1e293b; background:#ffffff;">
                 <button type="button" class="btn client-social-clear-btn" data-target="twitter_url" title="Clear URL" style="{{ !empty($twitter_url) ? 'display:inline-flex;' : 'display:none;' }}">
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18M6 6l12 12"/></svg>
                 </button>
@@ -72,20 +72,20 @@
             </div>
 
             <!-- 3. Facebook -->
-            <div class="client-social-row d-flex align-items-center justify-content-between py-3 px-6" style="border-bottom:1px solid #f1f5f9; gap:16px;">
-              <div class="d-flex align-items-center gap-3 client-social-platform-info" style="min-width:180px; flex-shrink:0;">
-                <div style="width:36px; height:36px; border-radius:8px; background:#1877f2; display:inline-flex; align-items:center; justify-content:center; flex-shrink:0;">
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="#ffffff">
+            <div class="client-social-row d-flex align-items-center justify-content-between py-2 px-4" style="border-bottom:1px solid #f1f5f9; gap:12px;">
+              <div class="d-flex align-items-center gap-3 client-social-platform-info" style="min-width:160px; flex-shrink:0;">
+                <div style="width:32px; height:32px; border-radius:7px; background:#1877f2; display:inline-flex; align-items:center; justify-content:center; flex-shrink:0;">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="#ffffff">
                     <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
                   </svg>
                 </div>
                 <div>
-                  <div style="font-size:13px; font-weight:700; color:#0f172a; line-height:1.2;">Facebook</div>
-                  <div style="font-size:11.5px; color:#64748b; line-height:1.2; margin-top:2px;">Official page</div>
+                  <div style="font-size:12.5px; font-weight:700; color:#0f172a; line-height:1.2;">Facebook</div>
+                  <div style="font-size:10.5px; color:#64748b; line-height:1.2; margin-top:2px;">Official page</div>
                 </div>
               </div>
               <div class="position-relative flex-grow-1 client-social-input-wrapper">
-                <input type="url" class="form-control client-social-url-input" name="facebook_url" id="facebook_url" value="{{ $facebook_url ?? '' }}" placeholder="https://facebook.com/clientname" style="height:42px; border:1px solid #cbd5e1; border-radius:8px; font-size:13px; padding-right:38px; padding-left:14px; color:#1e293b; background:#ffffff;">
+                <input type="url" class="form-control client-social-url-input" name="facebook_url" id="facebook_url" value="{{ $facebook_url ?? '' }}" placeholder="https://facebook.com/clientname" style="height:36px; border:1px solid #cbd5e1; border-radius:7px; font-size:12px; padding-right:34px; padding-left:12px; color:#1e293b; background:#ffffff;">
                 <button type="button" class="btn client-social-clear-btn" data-target="facebook_url" title="Clear URL" style="{{ !empty($facebook_url) ? 'display:inline-flex;' : 'display:none;' }}">
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18M6 6l12 12"/></svg>
                 </button>
@@ -93,20 +93,20 @@
             </div>
 
             <!-- 4. Instagram -->
-            <div class="client-social-row d-flex align-items-center justify-content-between py-3 px-6" style="border-bottom:1px solid #f1f5f9; gap:16px;">
-              <div class="d-flex align-items-center gap-3 client-social-platform-info" style="min-width:180px; flex-shrink:0;">
-                <div style="width:36px; height:36px; border-radius:8px; background:linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%); display:inline-flex; align-items:center; justify-content:center; flex-shrink:0;">
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="#ffffff">
+            <div class="client-social-row d-flex align-items-center justify-content-between py-2 px-4" style="border-bottom:1px solid #f1f5f9; gap:12px;">
+              <div class="d-flex align-items-center gap-3 client-social-platform-info" style="min-width:160px; flex-shrink:0;">
+                <div style="width:32px; height:32px; border-radius:7px; background:linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%); display:inline-flex; align-items:center; justify-content:center; flex-shrink:0;">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="#ffffff">
                     <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
                   </svg>
                 </div>
                 <div>
-                  <div style="font-size:13px; font-weight:700; color:#0f172a; line-height:1.2;">Instagram</div>
-                  <div style="font-size:11.5px; color:#64748b; line-height:1.2; margin-top:2px;">Official profile</div>
+                  <div style="font-size:12.5px; font-weight:700; color:#0f172a; line-height:1.2;">Instagram</div>
+                  <div style="font-size:10.5px; color:#64748b; line-height:1.2; margin-top:2px;">Official profile</div>
                 </div>
               </div>
               <div class="position-relative flex-grow-1 client-social-input-wrapper">
-                <input type="url" class="form-control client-social-url-input" name="instagram_url" id="instagram_url" value="{{ $instagram_url ?? '' }}" placeholder="https://instagram.com/clientname" style="height:42px; border:1px solid #cbd5e1; border-radius:8px; font-size:13px; padding-right:38px; padding-left:14px; color:#1e293b; background:#ffffff;">
+                <input type="url" class="form-control client-social-url-input" name="instagram_url" id="instagram_url" value="{{ $instagram_url ?? '' }}" placeholder="https://instagram.com/clientname" style="height:36px; border:1px solid #cbd5e1; border-radius:7px; font-size:12px; padding-right:34px; padding-left:12px; color:#1e293b; background:#ffffff;">
                 <button type="button" class="btn client-social-clear-btn" data-target="instagram_url" title="Clear URL" style="{{ !empty($instagram_url) ? 'display:inline-flex;' : 'display:none;' }}">
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18M6 6l12 12"/></svg>
                 </button>
@@ -114,20 +114,20 @@
             </div>
 
             <!-- 5. YouTube -->
-            <div class="client-social-row d-flex align-items-center justify-content-between py-3 px-6" style="border-bottom:1px solid #f1f5f9; gap:16px;">
-              <div class="d-flex align-items-center gap-3 client-social-platform-info" style="min-width:180px; flex-shrink:0;">
-                <div style="width:36px; height:36px; border-radius:8px; background:#ff0000; display:inline-flex; align-items:center; justify-content:center; flex-shrink:0;">
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="#ffffff">
+            <div class="client-social-row d-flex align-items-center justify-content-between py-2 px-4" style="border-bottom:1px solid #f1f5f9; gap:12px;">
+              <div class="d-flex align-items-center gap-3 client-social-platform-info" style="min-width:160px; flex-shrink:0;">
+                <div style="width:32px; height:32px; border-radius:7px; background:#ff0000; display:inline-flex; align-items:center; justify-content:center; flex-shrink:0;">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="#ffffff">
                     <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
                   </svg>
                 </div>
                 <div>
-                  <div style="font-size:13px; font-weight:700; color:#0f172a; line-height:1.2;">YouTube</div>
-                  <div style="font-size:11.5px; color:#64748b; line-height:1.2; margin-top:2px;">Official channel</div>
+                  <div style="font-size:12.5px; font-weight:700; color:#0f172a; line-height:1.2;">YouTube</div>
+                  <div style="font-size:10.5px; color:#64748b; line-height:1.2; margin-top:2px;">Official channel</div>
                 </div>
               </div>
               <div class="position-relative flex-grow-1 client-social-input-wrapper">
-                <input type="url" class="form-control client-social-url-input" name="youtube_url" id="youtube_url" value="{{ $youtube_url ?? '' }}" placeholder="https://youtube.com/@clientname" style="height:42px; border:1px solid #cbd5e1; border-radius:8px; font-size:13px; padding-right:38px; padding-left:14px; color:#1e293b; background:#ffffff;">
+                <input type="url" class="form-control client-social-url-input" name="youtube_url" id="youtube_url" value="{{ $youtube_url ?? '' }}" placeholder="https://youtube.com/@clientname" style="height:36px; border:1px solid #cbd5e1; border-radius:7px; font-size:12px; padding-right:34px; padding-left:12px; color:#1e293b; background:#ffffff;">
                 <button type="button" class="btn client-social-clear-btn" data-target="youtube_url" title="Clear URL" style="{{ !empty($youtube_url) ? 'display:inline-flex;' : 'display:none;' }}">
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18M6 6l12 12"/></svg>
                 </button>
@@ -135,20 +135,20 @@
             </div>
 
             <!-- 6. GitHub -->
-            <div class="client-social-row d-flex align-items-center justify-content-between py-3 px-6" style="border-bottom:1px solid #f1f5f9; gap:16px;">
-              <div class="d-flex align-items-center gap-3 client-social-platform-info" style="min-width:180px; flex-shrink:0;">
-                <div style="width:36px; height:36px; border-radius:8px; background:#24292f; display:inline-flex; align-items:center; justify-content:center; flex-shrink:0;">
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="#ffffff">
+            <div class="client-social-row d-flex align-items-center justify-content-between py-2 px-4" style="border-bottom:1px solid #f1f5f9; gap:12px;">
+              <div class="d-flex align-items-center gap-3 client-social-platform-info" style="min-width:160px; flex-shrink:0;">
+                <div style="width:32px; height:32px; border-radius:7px; background:#24292f; display:inline-flex; align-items:center; justify-content:center; flex-shrink:0;">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="#ffffff">
                     <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/>
                   </svg>
                 </div>
                 <div>
-                  <div style="font-size:13px; font-weight:700; color:#0f172a; line-height:1.2;">GitHub</div>
-                  <div style="font-size:11.5px; color:#64748b; line-height:1.2; margin-top:2px;">Organization</div>
+                  <div style="font-size:12.5px; font-weight:700; color:#0f172a; line-height:1.2;">GitHub</div>
+                  <div style="font-size:10.5px; color:#64748b; line-height:1.2; margin-top:2px;">Organization</div>
                 </div>
               </div>
               <div class="position-relative flex-grow-1 client-social-input-wrapper">
-                <input type="url" class="form-control client-social-url-input" name="github_url" id="github_url" value="{{ $github_url ?? '' }}" placeholder="https://github.com/clientname" style="height:42px; border:1px solid #cbd5e1; border-radius:8px; font-size:13px; padding-right:38px; padding-left:14px; color:#1e293b; background:#ffffff;">
+                <input type="url" class="form-control client-social-url-input" name="github_url" id="github_url" value="{{ $github_url ?? '' }}" placeholder="https://github.com/clientname" style="height:36px; border:1px solid #cbd5e1; border-radius:7px; font-size:12px; padding-right:34px; padding-left:12px; color:#1e293b; background:#ffffff;">
                 <button type="button" class="btn client-social-clear-btn" data-target="github_url" title="Clear URL" style="{{ !empty($github_url) ? 'display:inline-flex;' : 'display:none;' }}">
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18M6 6l12 12"/></svg>
                 </button>
@@ -156,21 +156,21 @@
             </div>
 
             <!-- 7. Custom Link (Always Available) -->
-            <div class="client-social-row d-flex align-items-center justify-content-between py-3 px-6" style="gap:16px;">
-              <div class="d-flex align-items-center gap-3 client-social-platform-info" style="min-width:180px; flex-shrink:0;">
-                <div style="width:36px; height:36px; border-radius:8px; background:#f1f5f9; border:1px solid #e2e8f0; display:inline-flex; align-items:center; justify-content:center; flex-shrink:0;">
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <div class="client-social-row d-flex align-items-center justify-content-between py-2 px-4" style="gap:12px;">
+              <div class="d-flex align-items-center gap-3 client-social-platform-info" style="min-width:160px; flex-shrink:0;">
+                <div style="width:32px; height:32px; border-radius:7px; background:#f1f5f9; border:1px solid #e2e8f0; display:inline-flex; align-items:center; justify-content:center; flex-shrink:0;">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
                     <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
                   </svg>
                 </div>
                 <div>
-                  <div style="font-size:13px; font-weight:700; color:#0f172a; line-height:1.2;">Custom Link</div>
-                  <div style="font-size:11.5px; color:#64748b; line-height:1.2; margin-top:2px;">Other official profile</div>
+                  <div style="font-size:12.5px; font-weight:700; color:#0f172a; line-height:1.2;">Custom Link</div>
+                  <div style="font-size:10.5px; color:#64748b; line-height:1.2; margin-top:2px;">Other official profile</div>
                 </div>
               </div>
               <div class="position-relative flex-grow-1 client-social-input-wrapper">
-                <input type="url" class="form-control client-social-url-input" name="custom_link" id="custom_link" value="{{ $custom_link ?? '' }}" placeholder="Enter URL (e.g. https://example.com)" style="height:42px; border:1px solid #cbd5e1; border-radius:8px; font-size:13px; padding-right:38px; padding-left:14px; color:#1e293b; background:#ffffff;">
+                <input type="url" class="form-control client-social-url-input" name="custom_link" id="custom_link" value="{{ $custom_link ?? '' }}" placeholder="Enter URL (e.g. https://example.com)" style="height:36px; border:1px solid #cbd5e1; border-radius:7px; font-size:12px; padding-right:34px; padding-left:12px; color:#1e293b; background:#ffffff;">
                 <button type="button" class="btn client-social-clear-btn" data-target="custom_link" title="Clear URL" style="{{ !empty($custom_link) ? 'display:inline-flex;' : 'display:none;' }}">
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18M6 6l12 12"/></svg>
                 </button>
