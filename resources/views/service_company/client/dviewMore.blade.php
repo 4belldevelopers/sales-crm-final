@@ -4617,7 +4617,7 @@
             </a>
 
             <!-- KPI 5: All Offers -->
-            <a href="javascript:void(0);" class="cd-kpi-card cd-kpi-nav-trigger" data-tab-target="#candidate_joining" title="Total offers generated for this client till date">
+            <a href="javascript:void(0);" class="cd-kpi-card cd-kpi-nav-trigger" data-tab-target="#candidate_offers" title="Total offers generated for this client till date">
               <div class="cd-kpi-icon cd-kpi-icon-rose">
                 <i class="fas fa-file-signature fa-solid"></i>
               </div>
@@ -4689,11 +4689,18 @@
               </li>
 
               <li class="nav-item" role="presentation">
-                <a class="cd-tab-pill-btn nav-link" data-bs-toggle="tab" data-toggle="tab" href="#candidate_joining" role="tab" aria-selected="false" title="Offers & Joinings">
+                <a class="cd-tab-pill-btn nav-link" data-bs-toggle="tab" data-toggle="tab" href="#candidate_offers" role="tab" aria-selected="false" title="Candidate Offers">
                   <i class="fas fa-file-signature"></i>
-                  <span>Offers &amp; Joins</span>
-                  @php $totalOffersJoinsDirect = ($kpiOffers ?? 0) + ($kpiJoins ?? 0); @endphp
-                  <span class="cd-tab-badge-pill" id="ojDirectTabBadge" @if($totalOffersJoinsDirect <= 0) style="display:none;" @endif>{{ $totalOffersJoinsDirect }}</span>
+                  <span>Offers</span>
+                  <span class="cd-tab-badge-pill" id="offersDirectTabBadge" @if(($kpiOffers ?? 0) <= 0) style="display:none;" @endif>{{ $kpiOffers ?? 0 }}</span>
+                </a>
+              </li>
+
+              <li class="nav-item" role="presentation">
+                <a class="cd-tab-pill-btn nav-link" data-bs-toggle="tab" data-toggle="tab" href="#candidate_joining" role="tab" aria-selected="false" title="Joined Candidates">
+                  <i class="fas fa-handshake"></i>
+                  <span>Joined</span>
+                  <span class="cd-tab-badge-pill" id="joinedDirectTabBadge" @if(($kpiJoins ?? 0) <= 0) style="display:none;" @endif>{{ $kpiJoins ?? 0 }}</span>
                 </a>
               </li>
 
@@ -5531,29 +5538,84 @@
                     </div>
                     <!--end::interview_tracker Candidate List-->
 
+                    <!--begin::candidate_offers Candidate List-->
+                    <div class="tab-pane" id="candidate_offers" role="tabpanel" style="background:#ffffff; min-height: 520px;">
+                        <div class="cd-oj-wrapper">
+                            <!-- TIER 1: TOP HEADER TOOLBAR CARD -->
+                            <div class="cd-oj-header-card">
+                                <div class="cd-oj-header-left">
+                                    <div class="cd-oj-header-icon" style="background:#fff1f2; color:#e11d48;">
+                                        <i class="fas fa-file-signature"></i>
+                                    </div>
+                                    <div>
+                                        <div class="d-flex align-items-center gap-2">
+                                            <h4 class="cd-oj-header-title">Candidate Offers</h4>
+                                            <span class="cd-oj-header-badge" id="cdOffersCountBadgeDirect" style="color:#e11d48; background:#fff1f2; border-color:#fecdd3;">
+                                                <span id="cdOffersCountTextDirect">{{ $kpiOffers ?? 0 }}</span> Offers Extended
+                                            </span>
+                                        </div>
+                                        <div class="cd-oj-header-sub">Track direct candidate job offers, compensation proposals and release confirmations.</div>
+                                    </div>
+                                </div>
+                                <div class="cd-oj-header-right">
+                                    <div class="cd-oj-search-subcard">
+                                        <i class="fas fa-search"></i>
+                                        <input type="text" id="offersSearchInputDirect" placeholder="Search candidate, job, CTC..." autocomplete="off">
+                                        <button type="button" class="cd-oj-search-clear" id="offersSearchClearDirect" style="display: none;" title="Clear search">
+                                            <i class="fas fa-times"></i>
+                                        </button>
+                                    </div>
+                                    <button type="button" id="offersResetBtnDirect" class="cd-oj-action-subcard" title="Reset Filters &amp; Refresh">
+                                        <i class="fas fa-sync-alt"></i>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- TIER 2: SUB-TABS CARD WITH WHITE BACKGROUND -->
+                            <div class="cd-oj-tabs-card">
+                                <div class="cd-oj-tabs-group" id="offersSegmentGroupDirect">
+                                    <button type="button" class="cd-oj-tab-btn active cd-offers-seg-btn-direct" data-segment="offers">
+                                        <span class="cd-oj-dot dot-warning"></span>
+                                        <span>Offers Extended</span>
+                                        <span class="cd-oj-tab-badge badge-warning" id="offersCountOffersDirect">{{ $kpiOffers ?? 0 }}</span>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- TIER 3: PRIMARY CARDS LIST STREAM (Populated via AJAX) -->
+                            <div class="cd-oj-stream-wrap">
+                                <div id="candidatetListOffers" class="cd-oj-stream" data-role="offers-list">
+                                </div>
+                            </div>
+                            <div id="paginationcandidateoffers" class="mt-3">
+                            </div>
+                        </div>
+                    </div>
+                    <!--end::candidate_offers Candidate List-->
+
                     <!--begin::candidate_joining Candidate List-->
                     <div class="tab-pane" id="candidate_joining" role="tabpanel" style="background:#ffffff; min-height: 520px;">
                         <div class="cd-oj-wrapper">
                             <!-- TIER 1: TOP HEADER TOOLBAR CARD -->
                             <div class="cd-oj-header-card">
                                 <div class="cd-oj-header-left">
-                                    <div class="cd-oj-header-icon">
+                                    <div class="cd-oj-header-icon" style="background:#ecfdf5; color:#059669;">
                                         <i class="fas fa-handshake"></i>
                                     </div>
                                     <div>
                                         <div class="d-flex align-items-center gap-2">
-                                            <h4 class="cd-oj-header-title">Offer &amp; Joining</h4>
-                                            <span class="cd-oj-header-badge" id="cdOjCountBadgeDirect">
-                                                <span id="cdOjCountTextDirect">{{ ($kpiOffers ?? 0) + ($kpiJoins ?? 0) }}</span> Offers &amp; Joinings
+                                            <h4 class="cd-oj-header-title">Joined Candidates</h4>
+                                            <span class="cd-oj-header-badge" id="cdJoinedCountBadgeDirect" style="color:#059669; background:#ecfdf5; border-color:#a7f3d0;">
+                                                <span id="cdJoinedCountTextDirect">{{ $kpiJoins ?? 0 }}</span> Joined &amp; Onboarded
                                             </span>
                                         </div>
-                                        <div class="cd-oj-header-sub">Track direct candidate job offers, joining confirmations and onboardings.</div>
+                                        <div class="cd-oj-header-sub">Track candidates joined, onboarded dates and successful placements.</div>
                                     </div>
                                 </div>
                                 <div class="cd-oj-header-right">
                                     <div class="cd-oj-search-subcard">
                                         <i class="fas fa-search"></i>
-                                        <input type="text" id="ojSearchInputDirect" placeholder="Search candidate, job, CTC, status..." autocomplete="off">
+                                        <input type="text" id="ojSearchInputDirect" placeholder="Search candidate, job, CTC..." autocomplete="off">
                                         <button type="button" class="cd-oj-search-clear" id="ojSearchClearDirect" style="display: none;" title="Clear search">
                                             <i class="fas fa-times"></i>
                                         </button>
@@ -5567,21 +5629,7 @@
                             <!-- TIER 2: SUB-TABS CARD WITH WHITE BACKGROUND -->
                             <div class="cd-oj-tabs-card">
                                 <div class="cd-oj-tabs-group" id="ojSegmentGroupDirect">
-                                    <button type="button" class="cd-oj-tab-btn active cd-oj-seg-btn-direct" data-segment="all">
-                                        <span>All Records</span>
-                                        <span class="cd-oj-tab-badge" id="ojCountAllDirect">{{ ($kpiOffers ?? 0) + ($kpiJoins ?? 0) }}</span>
-                                    </button>
-                                    <button type="button" class="cd-oj-tab-btn cd-oj-seg-btn-direct" data-segment="offers">
-                                        <span class="cd-oj-dot dot-warning"></span>
-                                        <span>Offers Extended</span>
-                                        <span class="cd-oj-tab-badge badge-warning" id="ojCountOffersDirect">{{ $kpiOffers ?? 0 }}</span>
-                                    </button>
-                                    <button type="button" class="cd-oj-tab-btn cd-oj-seg-btn-direct" data-segment="joining">
-                                        <span class="cd-oj-dot dot-primary"></span>
-                                        <span>Joining Soon</span>
-                                        <span class="cd-oj-tab-badge badge-primary" id="ojCountJoiningDirect">0</span>
-                                    </button>
-                                    <button type="button" class="cd-oj-tab-btn cd-oj-seg-btn-direct" data-segment="joined">
+                                    <button type="button" class="cd-oj-tab-btn active cd-oj-seg-btn-direct" data-segment="joined">
                                         <span class="cd-oj-dot dot-success"></span>
                                         <span>Joined &amp; Onboarded</span>
                                         <span class="cd-oj-tab-badge badge-success" id="ojCountJoinedDirect">{{ $kpiJoins ?? 0 }}</span>
@@ -5591,7 +5639,7 @@
 
                             <!-- TIER 3: PRIMARY CARDS LIST STREAM (Populated via AJAX) -->
                             <div class="cd-oj-stream-wrap">
-                                <div id="candidatetListJoin" class="cd-oj-stream" data-role="offer-joining-list">
+                                <div id="candidatetListJoin" class="cd-oj-stream" data-role="joined-list">
                                 </div>
                             </div>
                             <div id="paginationcandidatejoin" class="mt-3">
@@ -5682,7 +5730,7 @@
                           </div>
 
                           <!-- KPI 3: Offers Generated -->
-                          <div class="cd-perf-kpi-card cd-nav-tab" data-target="#candidate_joining">
+                          <div class="cd-perf-kpi-card cd-nav-tab" data-target="#candidate_offers">
                             <div class="cd-perf-kpi-top">
                               <div class="cd-perf-kpi-icon cd-perf-kpi-icon-amber">
                                 <i class="fas fa-file-alt fa-solid fa-file-lines"></i>
@@ -7450,8 +7498,11 @@
             } else if (clean === 'interview_tracker' || clean === 'interviews') {
                 normTab = 'interviews';
                 domPaneId = 'interview_tracker';
-            } else if (clean === 'candidate_joining' || clean === 'offers' || clean === 'joining') {
+            } else if (clean === 'candidate_offers' || clean === 'offers') {
                 normTab = 'offers';
+                domPaneId = 'candidate_offers';
+            } else if (clean === 'candidate_joining' || clean === 'joined' || clean === 'joining') {
+                normTab = 'joined';
                 domPaneId = 'candidate_joining';
             } else if (clean === 'recent_activity' || clean === 'activity') {
                 normTab = 'recent_activity';
@@ -7647,32 +7698,42 @@
             }
 
             if (normTab === 'offers') {
-                var activeSegBtn = $('#kt_activitiesDirectClient #candidate_joining .cd-oj-seg-btn-direct.active');
-                var currentActiveSeg = activeSegBtn.length ? (activeSegBtn.data('segment') || 'all') : (window.currentOjSegmentDirect || 'all');
-                var segStatus = filter ? filter : currentActiveSeg;
-
-                if (filter) {
-                    $('#kt_activitiesDirectClient #candidate_joining .cd-oj-seg-btn-direct').removeClass('active');
-                    $('#kt_activitiesDirectClient #candidate_joining .cd-oj-seg-btn-direct[data-segment="' + segStatus + '"]').addClass('active');
-                } else if (!activeSegBtn.length) {
-                    $('#kt_activitiesDirectClient #candidate_joining .cd-oj-seg-btn-direct[data-segment="all"]').addClass('active');
+                var search = $('#kt_activitiesDirectClient #offersSearchInputDirect').val() || '';
+                if (typeof directfetchCandidatesOffers === 'function') {
+                    var $directOffersList = $('#kt_activitiesDirectClient #candidatetListOffers');
+                    if ($directOffersList.length && $directOffersList.children().length === 0) {
+                        $directOffersList.html(`
+                            <div class="d-flex flex-column align-items-center justify-content-center py-10" style="min-height:200px;">
+                                <div class="spinner-border text-primary mb-3" style="width:2rem;height:2rem;" role="status"></div>
+                                <span class="text-gray-600 font-poppins fs-7 fw-semibold">Loading candidate offers...</span>
+                            </div>
+                        `);
+                    }
+                    directfetchCandidatesOffers(1, search);
                 }
-                window.currentOjSegmentDirect = segStatus;
+                if (coord) coord.transition(normTab, 'READY');
+                if (window.ClientStateManager) {
+                    window.ClientStateManager.markTabLoaded(activeSelId || dcClientId, target);
+                    if (activeSelId && parseInt(activeSelId, 10) !== dcClientId) window.ClientStateManager.markTabLoaded(dcClientId, target);
+                }
+                return;
+            }
 
+            if (normTab === 'joined') {
                 var search = $('#kt_activitiesDirectClient #ojSearchInputDirect').val() || '';
                 if (typeof directfetchCandidatesJoin === 'function') {
                     var $directOjList = $('#kt_activitiesDirectClient #candidatetListJoin');
                     if ($directOjList.length && $directOjList.children().length === 0) {
                         $directOjList.html(`
                             <div class="d-flex flex-column align-items-center justify-content-center py-10" style="min-height:200px;">
-                                <div class="spinner-border text-primary mb-3" style="width:2rem;height:2rem;" role="status"></div>
-                                <span class="text-gray-600 font-poppins fs-7 fw-semibold">Loading offers &amp; joinings...</span>
+                                <div class="spinner-border text-success mb-3" style="width:2rem;height:2rem;" role="status"></div>
+                                <span class="text-gray-600 font-poppins fs-7 fw-semibold">Loading joined candidates...</span>
                             </div>
                         `);
                     }
-                    directfetchCandidatesJoin(1, search, segStatus);
+                    directfetchCandidatesJoin(1, search, 'joined');
                 }
-                if (coord) coord.transition(normTab, 'READY', { filter: segStatus });
+                if (coord) coord.transition(normTab, 'READY', { filter: 'joined' });
                 if (window.ClientStateManager) {
                     window.ClientStateManager.markTabLoaded(activeSelId || dcClientId, target);
                     if (activeSelId && parseInt(activeSelId, 10) !== dcClientId) window.ClientStateManager.markTabLoaded(dcClientId, target);
@@ -7742,12 +7803,12 @@
             if (e && typeof e.preventDefault === 'function') {
                 e.preventDefault();
             }
-            var target = $(this).data('target-tab') || $(this).attr('data-target-tab');
+            var target = $(this).data('target-tab') || $(this).attr('data-target-tab') || $(this).data('tab-target') || $(this).attr('data-tab-target');
             if (!target) return;
             target = target.replace('#', '').trim();
 
             var segment = $(this).data('segment');
-            if (segment && (target === 'candidate_joining' || target === 'offers')) {
+            if (segment && (target === 'candidate_joining' || target === 'candidate_offers' || target === 'offers')) {
                 window.currentOjSegmentDirect = segment;
                 $('#kt_activitiesDirectClient .cd-oj-seg-btn-direct').removeClass('active');
                 $(`#kt_activitiesDirectClient .cd-oj-seg-btn-direct[data-segment="${segment}"]`).addClass('active');
@@ -7796,6 +7857,20 @@
             }
         });
 
+        $(document).on('click.directDrawer', '#kt_activitiesDirectClient #paginationcandidateoffers [data-page], #kt_activitiesDirectClient #paginationcandidateoffers .page-link, #kt_activitiesDirectClient #paginationcandidateoffers .pagi-page, #kt_activitiesDirectClient #paginationcandidateoffers .pagi-arrow', function(e) {
+            e.preventDefault();
+            var $btn = $(e.target).closest('[data-page]');
+            if (!$btn.length) return;
+
+            var page = parseInt($btn.attr('data-page') || $btn.data('page'), 10);
+            if (!page || page < 1 || $btn.hasClass('disabled') || $btn.hasClass('pagi-disabled') || $btn.hasClass('pagi-active-disabled') || $btn.is(':disabled')) return;
+
+            var search = $('#kt_activitiesDirectClient #offersSearchInputDirect').val() || '';
+            if (typeof directfetchCandidatesOffers === 'function') {
+                directfetchCandidatesOffers(page, search);
+            }
+        });
+
         $(document).on('click.directDrawer', '#kt_activitiesDirectClient #paginationcandidatejoin [data-page], #kt_activitiesDirectClient #paginationcandidatejoin .page-link, #kt_activitiesDirectClient #paginationcandidatejoin .pagi-page, #kt_activitiesDirectClient #paginationcandidatejoin .pagi-arrow', function(e) {
             e.preventDefault();
             var $btn = $(e.target).closest('[data-page]');
@@ -7805,7 +7880,7 @@
             if (!page || page < 1 || $btn.hasClass('disabled') || $btn.hasClass('pagi-disabled') || $btn.hasClass('pagi-active-disabled') || $btn.is(':disabled')) return;
 
             var search = $('#kt_activitiesDirectClient #ojSearchInputDirect').val() || '';
-            var segment = window.currentOjSegmentDirect || 'all';
+            var segment = window.currentOjSegmentDirect || 'joined';
             if (typeof directfetchCandidatesJoin === 'function') {
                 directfetchCandidatesJoin(page, search, segment);
             }
@@ -9153,7 +9228,113 @@
         return window.ClientCandidateStoreDirect.fetch(page);
     }
 
-    window.currentOjSegmentDirect = 'all';
+    window.currentOjSegmentDirect = 'joined';
+
+    function directfetchCandidatesOffers(page = 1, search = '') {
+        var activeSelectedId = window.ClientStateManager && typeof window.ClientStateManager.getSelectedClientId === 'function'
+            ? window.ClientStateManager.getSelectedClientId()
+            : (window.activeSelectedClientId || null);
+        if (activeSelectedId && !isMatchingDirectClient(activeSelectedId)) {
+            $('.page-loader').css('display', 'none');
+            return;
+        }
+
+        if (search === null || search === undefined) {
+            search = $('#kt_activitiesDirectClient #offersSearchInputDirect').val() || '';
+        }
+
+        if (window._activeOffersDirectXhr && window._activeOffersDirectXhr.readyState !== 4) {
+            try { window._activeOffersDirectXhr.abort(); } catch(e){}
+        }
+
+        $('.page-loader').css('display', 'flex');
+        var clientid = '{{ $directClientDetail->client_id ?: ($directClientDetail->from_company_id ?: $directClientDetail->company_id) }}';
+        window._activeOffersDirectXhr = $.ajax({
+            url: `{{ url('service_company/direct-client-candidate-join-list') }}?page=${page}`,
+            type: 'GET',
+            data: {
+                search: search,
+                segment: 'offers',
+                clientid: clientid
+            },
+            success: function(response) {
+                $('.page-loader').css('display', 'none');
+                var curSelId = window.ClientStateManager && typeof window.ClientStateManager.getSelectedClientId === 'function'
+                    ? window.ClientStateManager.getSelectedClientId()
+                    : (window.activeSelectedClientId || null);
+                if (curSelId && !isMatchingDirectClient(curSelId)) {
+                    return;
+                }
+                $('#candidatetListOffers').html(response.html);
+                $('#paginationcandidateoffers').html(response.pagination);
+                if (response.counts) {
+                    var offCount = response.counts.offers || 0;
+                    $('#offersCountOffersDirect').text(offCount);
+                    if ($('#cdOffersCountTextDirect').length) {
+                        $('#cdOffersCountTextDirect').text(offCount);
+                    }
+                    if ($('#offersDirectTabBadge').length) {
+                        if (offCount > 0) {
+                            $('#offersDirectTabBadge').text(offCount).show();
+                        } else {
+                            $('#offersDirectTabBadge').hide();
+                        }
+                    }
+                    if ($('#cdKpiOffersGeneratedDirect').length) {
+                        $('#cdKpiOffersGeneratedDirect').text(offCount);
+                    }
+                    if ($('#perfKpiOffers').length) {
+                        $('#perfKpiOffers').text(offCount);
+                    }
+                }
+            },
+            error: function(xhr, status) {
+                if (status === 'abort') return;
+                $('.page-loader').css('display', 'none');
+                $('#candidatetListOffers').html(`
+                    <div class="cd-oj-empty" style="background:#ffffff; border:1px dashed #cbd5e1; border-radius:10px; padding:36px 20px; text-align:center;">
+                        <i class="fas fa-exclamation-circle text-danger fs-2 d-block mb-2"></i>
+                        <div class="fw-bold text-gray-800 fs-6">Failed to load candidate offers</div>
+                        <div class="text-muted fs-7 mb-3">An error occurred while fetching records.</div>
+                        <button type="button" class="btn btn-sm btn-light-primary fw-bold" onclick="directfetchCandidatesOffers(${page}, '${search}')">
+                            <i class="fas fa-sync-alt me-1"></i> Retry
+                        </button>
+                    </div>
+                `);
+            }
+        });
+        return window._activeOffersDirectXhr;
+    }
+    window.directfetchCandidatesOffers = directfetchCandidatesOffers;
+
+    var offersSearchTimerDirect = null;
+    $(document).off('keyup.directDrawerOffersPane', '#kt_activitiesDirectClient #offersSearchInputDirect');
+    $(document).on('keyup.directDrawerOffersPane', '#kt_activitiesDirectClient #offersSearchInputDirect', function() {
+        clearTimeout(offersSearchTimerDirect);
+        var search = $(this).val();
+        if (search && search.length > 0) {
+            $('#kt_activitiesDirectClient #offersSearchClearDirect').show();
+        } else {
+            $('#kt_activitiesDirectClient #offersSearchClearDirect').hide();
+        }
+        offersSearchTimerDirect = setTimeout(function() {
+            directfetchCandidatesOffers(1, search);
+        }, 300);
+    });
+
+    $(document).off('click.directDrawerOffersPane', '#kt_activitiesDirectClient #offersSearchClearDirect');
+    $(document).on('click.directDrawerOffersPane', '#kt_activitiesDirectClient #offersSearchClearDirect', function() {
+        $('#kt_activitiesDirectClient #offersSearchInputDirect').val('');
+        $(this).hide();
+        directfetchCandidatesOffers(1, '');
+    });
+
+    $(document).off('click.directDrawerOffersPane', '#kt_activitiesDirectClient #offersResetBtnDirect');
+    $(document).on('click.directDrawerOffersPane', '#kt_activitiesDirectClient #offersResetBtnDirect', function() {
+        $('#kt_activitiesDirectClient #offersSearchInputDirect').val('');
+        $('#kt_activitiesDirectClient #offersSearchClearDirect').hide();
+        directfetchCandidatesOffers(1, '');
+    });
 
     function directfetchCandidatesJoin(page = 1, search = '', segment = null) {
         var activeSelectedId = window.ClientStateManager && typeof window.ClientStateManager.getSelectedClientId === 'function'
@@ -9165,7 +9346,7 @@
         }
 
         if (segment === null || segment === undefined) {
-            segment = window.currentOjSegmentDirect || 'all';
+            segment = window.currentOjSegmentDirect || 'joined';
         } else {
             window.currentOjSegmentDirect = segment;
         }
@@ -9199,28 +9380,37 @@
                 $('#candidatetListJoin').html(response.html);
                 $('#paginationcandidatejoin').html(response.pagination);
                 if (response.counts) {
-                    $('#ojCountAllDirect').text(response.counts.all || 0);
-                    $('#ojCountOffersDirect').text(response.counts.offers || 0);
-                    $('#ojCountJoiningDirect').text(response.counts.joining || 0);
-                    $('#ojCountJoinedDirect').text(response.counts.joined || 0);
-                    if ($('#cdOjCountTextDirect').length) {
-                        $('#cdOjCountTextDirect').text(response.counts.all || 0);
+                    var joinedCount = response.counts.joined || 0;
+                    var offersCount = response.counts.offers || 0;
+                    $('#ojCountJoinedDirect').text(joinedCount);
+                    if ($('#cdJoinedCountTextDirect').length) {
+                        $('#cdJoinedCountTextDirect').text(joinedCount);
                     }
-                    if ($('#ojCountAllBadgeDirect').length) {
-                        $('#ojCountAllBadgeDirect').text(response.counts.all || 0);
-                    }
-                    if ($('#ojDirectTabBadge').length) {
-                        if (response.counts.all > 0) {
-                            $('#ojDirectTabBadge').text(response.counts.all).show();
+                    if ($('#joinedDirectTabBadge').length) {
+                        if (joinedCount > 0) {
+                            $('#joinedDirectTabBadge').text(joinedCount).show();
                         } else {
-                            $('#ojDirectTabBadge').hide();
+                            $('#joinedDirectTabBadge').hide();
                         }
                     }
-                    if ($('#kpiOffersCountDirect').length) {
-                        $('#kpiOffersCountDirect').text(response.counts.offers || 0);
+                    if ($('#cdKpiJoinedDirect').length) {
+                        $('#cdKpiJoinedDirect').text(joinedCount);
                     }
-                    if ($('#kpiJoinsCountDirect').length) {
-                        $('#kpiJoinsCountDirect').text(response.counts.joined || 0);
+                    if ($('#perfKpiJoins').length) {
+                        $('#perfKpiJoins').text(joinedCount);
+                    }
+                    if ($('#offersDirectTabBadge').length && offersCount !== undefined) {
+                        if (offersCount > 0) {
+                            $('#offersDirectTabBadge').text(offersCount).show();
+                        } else {
+                            $('#offersDirectTabBadge').hide();
+                        }
+                    }
+                    if ($('#offersCountOffersDirect').length && offersCount !== undefined) {
+                        $('#offersCountOffersDirect').text(offersCount);
+                    }
+                    if ($('#cdOffersCountTextDirect').length && offersCount !== undefined) {
+                        $('#cdOffersCountTextDirect').text(offersCount);
                     }
                 }
             },
@@ -9230,7 +9420,7 @@
                 $('#candidatetListJoin').html(`
                     <div class="cd-oj-empty" style="background:#ffffff; border:1px dashed #cbd5e1; border-radius:10px; padding:36px 20px; text-align:center;">
                         <i class="fas fa-exclamation-circle text-danger fs-2 d-block mb-2"></i>
-                        <div class="fw-bold text-gray-800 fs-6">Failed to load offers &amp; joinings</div>
+                        <div class="fw-bold text-gray-800 fs-6">Failed to load joined candidates</div>
                         <div class="text-muted fs-7 mb-3">An error occurred while fetching records.</div>
                         <button type="button" class="btn btn-sm btn-light-primary fw-bold" onclick="directfetchCandidatesJoin(${page}, '${search}', '${segment}')">
                             <i class="fas fa-sync-alt me-1"></i> Retry
@@ -9246,13 +9436,13 @@
     $(document).off('click.directDrawerOffers', '#kt_activitiesDirectClient .cd-oj-seg-btn-direct');
     $(document).on('click.directDrawerOffers', '#kt_activitiesDirectClient .cd-oj-seg-btn-direct', function(e) {
         if (e && typeof e.preventDefault === 'function') e.preventDefault();
-        var segment = $(this).data('segment') || 'all';
+        var segment = $(this).data('segment') || 'joined';
         $('#kt_activitiesDirectClient .cd-oj-seg-btn-direct').removeClass('active');
         $(this).addClass('active');
         window.currentOjSegmentDirect = segment;
         var search = $('#kt_activitiesDirectClient #ojSearchInputDirect').val() || '';
         if (window.__activeClientDrawer && window.__activeClientDrawer.coordinator) {
-            window.__activeClientDrawer.coordinator.getState('offers').filter = segment;
+            window.__activeClientDrawer.coordinator.getState('joined').filter = segment;
         }
         if (typeof directfetchCandidatesJoin === 'function') {
             directfetchCandidatesJoin(1, search, segment);
@@ -9270,7 +9460,7 @@
             $('#kt_activitiesDirectClient #ojSearchClearDirect').hide();
         }
         ojSearchTimerDirect = setTimeout(function() {
-            directfetchCandidatesJoin(1, search, window.currentOjSegmentDirect || 'all');
+            directfetchCandidatesJoin(1, search, window.currentOjSegmentDirect || 'joined');
         }, 300);
     });
 
@@ -9278,17 +9468,17 @@
     $(document).on('click.directDrawerOffers', '#kt_activitiesDirectClient #ojSearchClearDirect', function() {
         $('#kt_activitiesDirectClient #ojSearchInputDirect').val('');
         $(this).hide();
-        directfetchCandidatesJoin(1, '', window.currentOjSegmentDirect || 'all');
+        directfetchCandidatesJoin(1, '', window.currentOjSegmentDirect || 'joined');
     });
 
     $(document).off('click.directDrawerOffers', '#kt_activitiesDirectClient #ojResetBtnDirect');
     $(document).on('click.directDrawerOffers', '#kt_activitiesDirectClient #ojResetBtnDirect', function() {
         $('#kt_activitiesDirectClient #ojSearchInputDirect').val('');
         $('#kt_activitiesDirectClient #ojSearchClearDirect').hide();
-        window.currentOjSegmentDirect = 'all';
+        window.currentOjSegmentDirect = 'joined';
         $('#kt_activitiesDirectClient .cd-oj-seg-btn-direct').removeClass('active');
-        $('#kt_activitiesDirectClient .cd-oj-seg-btn-direct[data-segment="all"]').addClass('active');
-        directfetchCandidatesJoin(1, '', 'all');
+        $('#kt_activitiesDirectClient .cd-oj-seg-btn-direct[data-segment="joined"]').addClass('active');
+        directfetchCandidatesJoin(1, '', 'joined');
     });
 
     // ══════════════════════════════════════════════════════════════════════════
