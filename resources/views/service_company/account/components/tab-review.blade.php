@@ -144,6 +144,27 @@
         </div>
       </div>
 
+      <!-- CARD 5: Social Links & Official Profiles -->
+      <div class="card client-review-section-card mb-3" style="background:#ffffff; border:1px solid #e2e8f0; border-radius:12px; box-shadow:0 1px 3px rgba(0,0,0,0.03); overflow:hidden;">
+        <div class="card-header border-0 py-3 px-4 d-flex align-items-center justify-content-between" style="background:#ffffff; border-bottom:1px solid #f8fafc !important;">
+          <div class="d-flex align-items-center gap-3">
+            <div class="client-review-icon-box" style="width:32px; height:32px; border-radius:8px; background:#fffbeb; display:inline-flex; align-items:center; justify-content:center; color:#d97706;">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#d97706" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+            </div>
+            <h4 class="client-review-card-title mb-0" style="font-size:13.5px; font-weight:700; color:#0f172a;">Official Social Profiles</h4>
+          </div>
+          <button type="button" class="btn btn-sm client-review-edit-btn" onclick="window.goToWizardStep ? window.goToWizardStep(5) : false;" style="background:#ffffff; border:1px solid #cbd5e1; border-radius:7px; padding:5px 12px; font-size:11.5px; font-weight:600; color:#334155; display:inline-flex; align-items:center; gap:5px; cursor:pointer;">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+            <span>Edit</span>
+          </button>
+        </div>
+        <div class="card-body px-4 py-3">
+          <div class="d-flex flex-wrap gap-2" id="profile_review_social_badges">
+            <!-- Populated dynamically by populateReviewSummaries() -->
+          </div>
+        </div>
+      </div>
+
     </div>
 
     <!-- ==============================================================
@@ -203,6 +224,13 @@
             <div class="d-flex align-items-center gap-2">
               <span class="checklist-icon" style="width:18px; height:18px; border-radius:50%; background:#dcfce7; display:flex; align-items:center; justify-content:center; color:#15803d;"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></span>
               <span class="checklist-text" style="font-size:11.5px; font-weight:500; color:#334155;">Headquarters &amp; Locations</span>
+            </div>
+            <span class="checklist-status" style="font-size:10.5px; font-weight:600; color:#10b981;">Completed</span>
+          </div>
+          <div class="checklist-item d-flex align-items-center justify-content-between" id="chk_social">
+            <div class="d-flex align-items-center gap-2">
+              <span class="checklist-icon" style="width:18px; height:18px; border-radius:50%; background:#dcfce7; display:flex; align-items:center; justify-content:center; color:#15803d;"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></span>
+              <span class="checklist-text" style="font-size:11.5px; font-weight:500; color:#334155;">Social Profiles</span>
             </div>
             <span class="checklist-status" style="font-size:10.5px; font-weight:600; color:#10b981;">Completed</span>
           </div>

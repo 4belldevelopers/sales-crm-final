@@ -486,6 +486,22 @@ class ServiceCompanyAccountSettingsController extends ServiceCompanyBaseControll
             ->orderBy('state_list.state')
             ->get()->toArray();
         $this->indianStatelist = json_decode(json_encode($statelist), true);
+
+        // Social profile links extraction from $client->detail JSON with fallback to company_career_settings
+        $clientDetail = [];
+        if (! empty($this->client->detail)) {
+            $clientDetail = is_string($this->client->detail) ? (json_decode($this->client->detail, true) ?: []) : (array) $this->client->detail;
+        }
+        $careerSettings = DB::table('company_career_settings')->where('company_id', $company_id)->first();
+
+        $this->linkedin_url = $clientDetail['linkedin_url'] ?? ($careerSettings->ci_linkedin ?? ($careerSettings->seo_linkedin ?? ''));
+        $this->twitter_url = $clientDetail['twitter_url'] ?? ($careerSettings->ci_twitter ?? ($careerSettings->seo_twitter ?? ''));
+        $this->facebook_url = $clientDetail['facebook_url'] ?? ($careerSettings->seo_facebook ?? '');
+        $this->instagram_url = $clientDetail['instagram_url'] ?? ($careerSettings->seo_instagram ?? '');
+        $this->youtube_url = $clientDetail['youtube_url'] ?? ($careerSettings->seo_youtube ?? '');
+        $this->github_url = $clientDetail['github_url'] ?? '';
+        $this->custom_link = $clientDetail['custom_link'] ?? '';
+
         $this->page_mode = 'EDIT';
 
         return view('service_company.account.edit', $this->data);
@@ -933,7 +949,46 @@ class ServiceCompanyAccountSettingsController extends ServiceCompanyBaseControll
         if (! empty(@$request->description)) {
             $client->description = @$request->description;
         }
+
+        // Authoritatively persist social links and metadata into $client->detail JSON
+        $existingDetail = [];
+        if (! empty($client->detail)) {
+            $existingDetail = is_string($client->detail) ? (json_decode($client->detail, true) ?: []) : (array) $client->detail;
+        }
+        $detailData = array_merge($existingDetail, [
+            'career_page_url' => $request->career_page_url ?? $request->career_page_link ?? null,
+            'linkedin_url' => $request->linkedin_url ?? null,
+            'twitter_url' => $request->twitter_url ?? null,
+            'github_url' => $request->github_url ?? null,
+            'youtube_url' => $request->youtube_url ?? null,
+            'facebook_url' => $request->facebook_url ?? null,
+            'instagram_url' => $request->instagram_url ?? null,
+            'custom_link' => $request->custom_link ?? null,
+            'tax_id' => $request->tax_id ?? null,
+        ]);
+        $filteredDetail = array_filter($detailData, fn ($val) => $val !== null && $val !== '');
+        if (! empty($filteredDetail)) {
+            $client->detail = json_encode($filteredDetail);
+        }
+
         $client->save();
+
+        // Also synchronize to company_career_settings if table exists
+        if (\Illuminate\Support\Facades\Schema::hasTable('company_career_settings')) {
+            DB::table('company_career_settings')->updateOrInsert(
+                ['company_id' => $company_id],
+                [
+                    'ci_linkedin' => $request->linkedin_url,
+                    'ci_twitter' => $request->twitter_url,
+                    'seo_linkedin' => $request->linkedin_url,
+                    'seo_twitter' => $request->twitter_url,
+                    'seo_facebook' => $request->facebook_url,
+                    'seo_instagram' => $request->instagram_url,
+                    'seo_youtube' => $request->youtube_url,
+                    'updated_at' => now(),
+                ]
+            );
+        }
 
         if ($client_data) {
             GeneralMethod::clientStaffingPartner($client_data->client_id);
@@ -2009,9 +2064,63 @@ class ServiceCompanyAccountSettingsController extends ServiceCompanyBaseControll
             ->orderBy('state_list.state')
             ->get()->toArray();
         $this->indianStatelist = json_decode(json_encode($statelist), true);
+
+        // Social profile links extraction from $client->detail JSON with fallback to company_career_settings
+        $clientDetail = [];
+        if (! empty($this->client->detail)) {
+            $clientDetail = is_string($this->client->detail) ? (json_decode($this->client->detail, true) ?: []) : (array) $this->client->detail;
+        }
+        $careerSettings = DB::table('company_career_settings')->where('company_id', $company_id)->first();
+
+        $this->linkedin_url = $clientDetail['linkedin_url'] ?? ($careerSettings->ci_linkedin ?? ($careerSettings->seo_linkedin ?? ''));
+        $this->twitter_url = $clientDetail['twitter_url'] ?? ($careerSettings->ci_twitter ?? ($careerSettings->seo_twitter ?? ''));
+        $this->facebook_url = $clientDetail['facebook_url'] ?? ($careerSettings->seo_facebook ?? '');
+        $this->instagram_url = $clientDetail['instagram_url'] ?? ($careerSettings->seo_instagram ?? '');
+        $this->youtube_url = $clientDetail['youtube_url'] ?? ($careerSettings->seo_youtube ?? '');
+        $this->github_url = $clientDetail['github_url'] ?? '';
+        $this->custom_link = $clientDetail['custom_link'] ?? '';
+
         $this->page_mode = 'ONBOARDING';
 
         return view('service_company.account.onboarding', $this->data);
+    }
+
+    /**
+     * Point-of-Entry Company Website Domain Duplicate Check
+     * Validates domain uniqueness against other registered companies, excluding the current tenant.
+     */
+    public function checkDomainAvailability(Request $request)
+    {
+        $company_id = auth()->user()->company_id;
+        $website = trim($request->website ?? '');
+        if (empty($website)) {
+            return response()->json(['status' => 'success']);
+        }
+
+        $parsedHost = parse_url($website, PHP_URL_HOST) ?? $website;
+        $domainKey = preg_replace('/^www\./i', '', strtolower(trim($parsedHost)));
+
+        if (empty($domainKey) || strlen($domainKey) < 3) {
+            return response()->json(['status' => 'success']);
+        }
+
+        // Check if domain is registered by another company in companies table
+        $existingCompany = DB::table('companies')
+            ->where('id', '!=', $company_id)
+            ->where(function ($q) use ($domainKey) {
+                $q->where('domain_key', $domainKey)
+                    ->orWhere('website', 'LIKE', '%'.$domainKey.'%');
+            })
+            ->first();
+
+        if ($existingCompany) {
+            return response()->json([
+                'status' => 'fail',
+                'message' => 'This website domain is already registered to another organization ('.($existingCompany->company_name ?? 'Registered Company').').',
+            ]);
+        }
+
+        return response()->json(['status' => 'success']);
     }
 
     /**
