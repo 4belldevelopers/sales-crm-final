@@ -310,7 +310,10 @@
                 $Joined         = $candidatesProfiles->Joined ?? 0;
                 $offers         = $candidatesProfiles->offers ?? 0;
                 $sourced        = $candidatesProfiles->sourced ?? 0;
+                $screening      = $candidatesProfiles->screening ?? 0;
                 $evaluated      = $candidatesProfiles->evaluated ?? 0;
+                $negotiation    = $candidatesProfiles->negotiation ?? 0;
+                $rejected       = $candidatesProfiles->rejected ?? 0;
                 $all_interview  = $candidatesProfiles->all_interview ?? 0;
 
                 $isDirect = ($final_status == 1);
@@ -430,39 +433,39 @@
                                 <span class="cl-subcard-title" title="Candidate pipeline funnel and stage conversion">Candidate Pipeline</span>
                             </div>
                         </div>
-                        <div class="cl-pipe-body tbl-cell-pipeline" title="Pipeline Summary: Total Submissions: {{ $all_candidates }} | Interviews: {{ $all_interview }} | Offers: {{ $offers }} | Joined: {{ $Joined }}">
+                        <div class="cl-pipe-body tbl-cell-pipeline" title="Pipeline Summary: Total Submissions: {{ $all_candidates }} | Sourcing: {{ $sourced }} | Screening: {{ $screening }} | Evaluation: {{ $evaluated }} | Interviews: {{ $all_interview }} | Offers: {{ $offers }} | Joined: {{ $Joined }}">
                             <div class="cl-pipeline-flow">
                                 <div class="cl-pipe-step step-sourcing {{ $sourced > 0 ? 'has-count' : '' }}" title="Sourcing Stage: {{ $sourced }} candidates submitted">
-                                    <span class="cl-pipe-pill pill-sourcing">{{ $sourced }}</span>
+                                    <span class="cl-pipe-pill cl-pipe-num pill-sourcing">{{ $sourced }}</span>
                                     <span class="cl-pipe-label" title="Sourcing Stage">Sourcing</span>
                                 </div>
-                                <div class="cl-pipe-step step-screening {{ $evaluated > 0 ? 'has-count' : '' }}" title="Screening Stage: {{ $evaluated }} candidates">
-                                    <span class="cl-pipe-pill pill-screening">{{ $evaluated }}</span>
+                                <div class="cl-pipe-step step-screening {{ $screening > 0 ? 'has-count' : '' }}" title="Screening Stage: {{ $screening }} candidates">
+                                    <span class="cl-pipe-pill cl-pipe-num pill-screening">{{ $screening }}</span>
                                     <span class="cl-pipe-label" title="Screening Stage">Screening</span>
                                 </div>
                                 <div class="cl-pipe-step step-evaluation {{ $evaluated > 0 ? 'has-count' : '' }}" title="Evaluation Stage: {{ $evaluated }} candidates">
-                                    <span class="cl-pipe-pill pill-evaluation">{{ $evaluated }}</span>
+                                    <span class="cl-pipe-pill cl-pipe-num pill-evaluation">{{ $evaluated }}</span>
                                     <span class="cl-pipe-label" title="Evaluation Stage">Evaluation</span>
                                 </div>
-                                <div class="cl-pipe-step step-negotiations no-count" title="Negotiations Stage: 0 candidates">
-                                    <span class="cl-pipe-pill pill-negotiations">0</span>
+                                <div class="cl-pipe-step step-negotiations {{ $negotiation > 0 ? 'has-count' : '' }}" title="Negotiations Stage: {{ $negotiation }} candidates">
+                                    <span class="cl-pipe-pill cl-pipe-num pill-negotiations">{{ $negotiation }}</span>
                                     <span class="cl-pipe-label" title="Negotiations Stage">Negotiation</span>
                                 </div>
                                 <div class="cl-pipe-step step-offer {{ $offers > 0 ? 'has-count' : '' }}" title="Offers Extended: {{ $offers }} candidates">
-                                    <span class="cl-pipe-pill pill-offer">{{ $offers }}</span>
+                                    <span class="cl-pipe-pill cl-pipe-num pill-offer">{{ $offers }}</span>
                                     <span class="cl-pipe-label" title="Offers Extended">Offer</span>
                                 </div>
                                 <div class="cl-pipe-step step-joined {{ $Joined > 0 ? 'has-count' : '' }}" title="Candidates Joined: {{ $Joined }} verified hires">
-                                    <span class="cl-pipe-pill pill-joined">{{ $Joined }}</span>
+                                    <span class="cl-pipe-pill cl-pipe-num pill-joined">{{ $Joined }}</span>
                                     <span class="cl-pipe-label" title="Candidates Joined">Joined</span>
                                 </div>
-                                <div class="cl-pipe-step step-rejected no-count" title="Rejected Submissions: 0">
-                                    <span class="cl-pipe-pill pill-rejected">0</span>
+                                <div class="cl-pipe-step step-rejected {{ $rejected > 0 ? 'has-count' : '' }}" title="Rejected Submissions: {{ $rejected }}">
+                                    <span class="cl-pipe-pill cl-pipe-num pill-rejected">{{ $rejected }}</span>
                                     <span class="cl-pipe-label" title="Rejected">Rejected</span>
                                 </div>
                                 <div class="cl-pipe-divider" aria-hidden="true"></div>
                                 <div class="cl-pipe-step step-interview {{ $all_interview > 0 ? 'has-count' : '' }}" title="Interviews Conducted: {{ $all_interview }} candidates">
-                                    <span class="cl-pipe-pill pill-interview">{{ $all_interview }}</span>
+                                    <span class="cl-pipe-pill cl-pipe-num pill-interview">{{ $all_interview }}</span>
                                     <span class="cl-pipe-label" title="Interviews Conducted">Interview</span>
                                 </div>
                             </div>
