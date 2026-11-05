@@ -13652,6 +13652,7 @@ $('.remove_address').click(function(){
     var filteredList = [];
     var focusedIndex = -1;
     var isOpen = false;
+    var isUserTyping = false;
     var suppressOpenOnFocus = false;
 
     // DOM References
@@ -13804,9 +13805,9 @@ $('.remove_address').click(function(){
             var containerBottom = containerTop + listContainer.offsetHeight;
 
             if (itemTop < containerTop) {
-                listContainer.scrollTop = itemTop;
+                listContainer.scrollTop = Math.max(0, itemTop - 20);
             } else if (itemBottom > containerBottom) {
-                listContainer.scrollTop = itemBottom - listContainer.offsetHeight;
+                listContainer.scrollTop = itemBottom - listContainer.offsetHeight + 20;
             }
 
             // WAI-ARIA 1.2: Update aria-activedescendant to the focused option's id
@@ -13831,12 +13832,14 @@ $('.remove_address').click(function(){
     function openDropdown() {
         if (isOpen) return;
         isOpen = true;
+        isUserTyping = false;
         updateDropdownPosition();
         if (wrap) wrap.classList.add('is-open');
         if (dropdown) dropdown.style.display = 'flex';
         if (input) input.setAttribute('aria-expanded', 'true');
 
-        filterItems(input ? input.value : '');
+        // Always show all options on open so user can immediately switch options in 1 click
+        filterItems('');
         var selectedId = getSelectedId();
         focusedIndex = -1;
         if (selectedId !== null) {
@@ -13850,12 +13853,25 @@ $('.remove_address').click(function(){
         if (focusedIndex === -1 && filteredList.length > 0) {
             focusedIndex = 0;
         }
-        renderList(input ? input.value : '');
+        renderList('');
+        setTimeout(function() {
+            scrollFocusedIntoView();
+        }, 20);
+
+        // Auto-select text in input so typing replaces immediately, while keeping all options visible
+        if (input) {
+            setTimeout(function() {
+                try {
+                    input.select();
+                } catch (e) {}
+            }, 10);
+        }
     }
 
     function closeDropdown(restoreText) {
         if (!isOpen) return;
         isOpen = false;
+        isUserTyping = false;
         if (wrap) wrap.classList.remove('is-open');
         if (dropdown) dropdown.style.display = 'none';
         if (input) input.setAttribute('aria-expanded', 'false');
@@ -13888,6 +13904,7 @@ $('.remove_address').click(function(){
 
     function selectItem(item) {
         if (!item) return;
+        isUserTyping = false;
         if (hiddenSelect) {
             hiddenSelect.value = item.id;
             $(hiddenSelect).trigger('change');
@@ -13903,6 +13920,7 @@ $('.remove_address').click(function(){
     }
 
     function clearSelection() {
+        isUserTyping = false;
         if (hiddenSelect) {
             hiddenSelect.value = '';
             $(hiddenSelect).trigger('change');
@@ -13950,6 +13968,11 @@ $('.remove_address').click(function(){
                 if (!isOpen) {
                     input.focus();
                     openDropdown();
+                } else {
+                    input.focus();
+                    try {
+                        input.select();
+                    } catch (e) {}
                 }
             });
         }
@@ -13960,7 +13983,13 @@ $('.remove_address').click(function(){
         });
         input.addEventListener('click', function(e) {
             e.stopPropagation();
-            openDropdown();
+            if (!isOpen) {
+                openDropdown();
+            } else {
+                try {
+                    input.select();
+                } catch (e) {}
+            }
         });
 
         // Dropdown internal clicks should never bubble out to close
@@ -13975,7 +14004,14 @@ $('.remove_address').click(function(){
 
         // Typing in input
         input.addEventListener('input', function() {
-            if (!isOpen) openDropdown();
+            if (!isOpen) {
+                isOpen = true;
+                updateDropdownPosition();
+                if (wrap) wrap.classList.add('is-open');
+                if (dropdown) dropdown.style.display = 'flex';
+                if (input) input.setAttribute('aria-expanded', 'true');
+            }
+            isUserTyping = true;
             focusedIndex = 0;
             filterItems(input.value);
             renderList(input.value);
@@ -13990,7 +14026,7 @@ $('.remove_address').click(function(){
             });
         }
 
-        // Item selection via click
+        // Item selection via click (single-click immediate selection)
         if (listContainer) {
             listContainer.addEventListener('click', function(e) {
                 var itemEl = e.target.closest('.jero-ctype-item');
@@ -14012,7 +14048,7 @@ $('.remove_address').click(function(){
                 }
                 if (filteredList.length > 0) {
                     focusedIndex = (focusedIndex + 1) % filteredList.length;
-                    renderList(input.value);
+                    renderList(isUserTyping ? input.value : '');
                 }
             } else if (e.key === 'ArrowUp') {
                 e.preventDefault();
@@ -14022,19 +14058,19 @@ $('.remove_address').click(function(){
                 }
                 if (filteredList.length > 0) {
                     focusedIndex = (focusedIndex - 1 + filteredList.length) % filteredList.length;
-                    renderList(input.value);
+                    renderList(isUserTyping ? input.value : '');
                 }
             } else if (e.key === 'Home') {
                 if (isOpen && filteredList.length > 0) {
                     e.preventDefault();
                     focusedIndex = 0;
-                    renderList(input.value);
+                    renderList(isUserTyping ? input.value : '');
                 }
             } else if (e.key === 'End') {
                 if (isOpen && filteredList.length > 0) {
                     e.preventDefault();
                     focusedIndex = filteredList.length - 1;
-                    renderList(input.value);
+                    renderList(isUserTyping ? input.value : '');
                 }
             } else if (e.key === 'Enter') {
                 if (isOpen) {

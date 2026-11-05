@@ -4203,6 +4203,7 @@ input:checked + .slider-custom:before {
   var ctypeFilteredList = [];
   var ctypeFocusedIndex = -1;
   var ctypeIsOpen = false;
+  var ctypeIsUserTyping = false;
 
   var ctypeWrap = null;
   var ctypeInput = null;
@@ -4308,9 +4309,9 @@ input:checked + .slider-custom:before {
       var containerBottom = containerTop + ctypeListContainer.offsetHeight;
 
       if (itemTop < containerTop) {
-        ctypeListContainer.scrollTop = itemTop;
+        ctypeListContainer.scrollTop = Math.max(0, itemTop - 20);
       } else if (itemBottom > containerBottom) {
-        ctypeListContainer.scrollTop = itemBottom - ctypeListContainer.offsetHeight;
+        ctypeListContainer.scrollTop = itemBottom - ctypeListContainer.offsetHeight + 20;
       }
 
       if (ctypeInput && item.id) {
@@ -4334,12 +4335,14 @@ input:checked + .slider-custom:before {
   function openCtypeDropdown() {
     if (ctypeIsOpen) return;
     ctypeIsOpen = true;
+    ctypeIsUserTyping = false;
     updateCtypeDropdownPosition();
     if (ctypeWrap) ctypeWrap.classList.add('is-open');
     if (ctypeDropdown) ctypeDropdown.style.display = 'flex';
     if (ctypeInput) ctypeInput.setAttribute('aria-expanded', 'true');
 
-    filterCompanyTypeItems(ctypeInput ? ctypeInput.value : '');
+    // Always show full list on open so user can immediately switch in 1 click
+    filterCompanyTypeItems('');
     var selectedId = getSelectedCompanyTypeId();
     ctypeFocusedIndex = -1;
     if (selectedId !== '') {
@@ -4353,12 +4356,25 @@ input:checked + .slider-custom:before {
     if (ctypeFocusedIndex === -1 && ctypeFilteredList.length > 0) {
       ctypeFocusedIndex = 0;
     }
-    renderCompanyTypeList(ctypeInput ? ctypeInput.value : '');
+    renderCompanyTypeList('');
+    setTimeout(function() {
+      scrollCtypeFocusedIntoView();
+    }, 20);
+
+    // Auto-select text in input so typing replaces immediately, while keeping all options visible
+    if (ctypeInput) {
+      setTimeout(function() {
+        try {
+          ctypeInput.select();
+        } catch (e) {}
+      }, 10);
+    }
   }
 
   function closeCtypeDropdown(restoreText) {
     if (!ctypeIsOpen) return;
     ctypeIsOpen = false;
+    ctypeIsUserTyping = false;
     if (ctypeWrap) ctypeWrap.classList.remove('is-open');
     if (ctypeDropdown) ctypeDropdown.style.display = 'none';
     if (ctypeInput) ctypeInput.setAttribute('aria-expanded', 'false');
@@ -4391,6 +4407,7 @@ input:checked + .slider-custom:before {
 
   function selectCtypeItem(item) {
     if (!item) return;
+    ctypeIsUserTyping = false;
     var strId = String(item.id);
     if (strId === '' || strId === 'null' || strId === 'undefined') {
       clearCtypeSelection();
@@ -4412,6 +4429,7 @@ input:checked + .slider-custom:before {
   }
 
   function clearCtypeSelection() {
+    ctypeIsUserTyping = false;
     if (ctypeHiddenSelect) {
       ctypeHiddenSelect.value = '';
       $(ctypeHiddenSelect).trigger('change');
@@ -4460,6 +4478,11 @@ input:checked + .slider-custom:before {
         if (!ctypeIsOpen) {
           ctypeInput.focus();
           openCtypeDropdown();
+        } else {
+          ctypeInput.focus();
+          try {
+            ctypeInput.select();
+          } catch (e) {}
         }
       });
     }
@@ -4469,7 +4492,13 @@ input:checked + .slider-custom:before {
     });
     ctypeInput.addEventListener('click', function(e) {
       e.stopPropagation();
-      openCtypeDropdown();
+      if (!ctypeIsOpen) {
+        openCtypeDropdown();
+      } else {
+        try {
+          ctypeInput.select();
+        } catch (e) {}
+      }
     });
 
     if (ctypeDropdown) {
@@ -4482,7 +4511,14 @@ input:checked + .slider-custom:before {
     }
 
     ctypeInput.addEventListener('input', function() {
-      if (!ctypeIsOpen) openCtypeDropdown();
+      if (!ctypeIsOpen) {
+        ctypeIsOpen = true;
+        updateCtypeDropdownPosition();
+        if (ctypeWrap) ctypeWrap.classList.add('is-open');
+        if (ctypeDropdown) ctypeDropdown.style.display = 'flex';
+        if (ctypeInput) ctypeInput.setAttribute('aria-expanded', 'true');
+      }
+      ctypeIsUserTyping = true;
       ctypeFocusedIndex = 0;
       filterCompanyTypeItems(ctypeInput.value);
       renderCompanyTypeList(ctypeInput.value);
@@ -4516,7 +4552,7 @@ input:checked + .slider-custom:before {
         }
         if (ctypeFilteredList.length > 0) {
           ctypeFocusedIndex = (ctypeFocusedIndex + 1) % ctypeFilteredList.length;
-          renderCompanyTypeList(ctypeInput.value);
+          renderCompanyTypeList(ctypeIsUserTyping ? ctypeInput.value : '');
         }
       } else if (e.key === 'ArrowUp') {
         e.preventDefault();
@@ -4526,7 +4562,7 @@ input:checked + .slider-custom:before {
         }
         if (ctypeFilteredList.length > 0) {
           ctypeFocusedIndex = (ctypeFocusedIndex - 1 + ctypeFilteredList.length) % ctypeFilteredList.length;
-          renderCompanyTypeList(ctypeInput.value);
+          renderCompanyTypeList(ctypeIsUserTyping ? ctypeInput.value : '');
         }
       } else if (e.key === 'Enter') {
         if (ctypeIsOpen) {
