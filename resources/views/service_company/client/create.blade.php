@@ -10994,6 +10994,12 @@ $('.remove_address').click(function(){
         if (typeof window.updateSuggestedServicesForIndustry === 'function') {
           try { window.updateSuggestedServicesForIndustry(); } catch (e) {}
         }
+        // Auto-select services on entering Step 2 if no services are currently selected
+        if (window.clientServicesManager && (!window.clientServicesManager.selected || window.clientServicesManager.selected.length === 0)) {
+          if (typeof window.addAllSuggestedServices === 'function') {
+            try { window.addAllSuggestedServices(); } catch (e) {}
+          }
+        }
       }
 
       // On Step 3 (Address / Locations), sync AI discovery buttons and website links
@@ -11434,6 +11440,31 @@ $('.remove_address').click(function(){
       }
     };
 
+    // =========================================================================
+    // Industry-Specific Dedicated Services Taxonomy (God-Level Precision)
+    // =========================================================================
+    var INDUSTRY_SPECIFIC_SERVICES = {
+      // 131: Staffing & Recruiting (Specialized Workforce & Recruitment Solutions)
+      131: {
+        name: 'Staffing & Recruiting',
+        services: [
+          'Contract Staffing / Contingent Workforce',
+          'Permanent Placement / Direct Hire',
+          'Executive Search & Leadership Hiring',
+          'Recruitment Process Outsourcing (RPO)',
+          'IT & Technical Staffing',
+          'Volume & Bulk Hiring',
+          'Campus & Graduate Recruitment',
+          'Payroll & Staffing Compliance',
+          'Candidate Assessment & Screening',
+          'Talent Sourcing & Headhunting',
+          'Diversity & Inclusion (D&I) Hiring',
+          'Employer Branding & Talent Advisory'
+        ],
+        desc: 'is a premier Staffing & Recruiting organization delivering end-to-end talent acquisition, executive search, contract staffing, and specialized workforce solutions. The company connects top-tier talent with leading enterprise organizations through rigorous technical screening, rapid turnaround, and proven placement excellence.'
+      }
+    };
+
     window.addSuggestedService = function(svc) {
       if (!svc) return;
       if (window.clientServicesManager) {
@@ -11463,7 +11494,7 @@ $('.remove_address').click(function(){
       $('#client_tags_error').hide();
     };
 
-    window.updateSuggestedServicesForIndustry = function(industryItem) {
+    window.updateSuggestedServicesForIndustry = function(industryItem, autoSelect) {
       var $container = $('#client_suggested_services');
       var $label = $('#client_suggested_label');
       if (!$container.length) return;
@@ -11474,6 +11505,7 @@ $('.remove_address').click(function(){
 
       var sectorId = null;
       var sectorName = '';
+      var indId = item ? parseInt(item.id, 10) : parseInt($('#industry').val(), 10);
 
       if (item && item.sector_id) {
         sectorId = parseInt(item.sector_id, 10);
@@ -11493,11 +11525,23 @@ $('.remove_address').click(function(){
       var sectorConfig = INDUSTRY_SECTOR_SERVICES[sectorId] || INDUSTRY_SECTOR_SERVICES[1];
       if (!sectorName) sectorName = sectorConfig.name;
 
+      var indLower = (indName || '').toLowerCase();
+      var isStaffing = (indId === 131) || indLower.indexOf('staffing') !== -1 || indLower.indexOf('recruiting') !== -1;
+      var specificConfig = isStaffing ? INDUSTRY_SPECIFIC_SERVICES[131] : (INDUSTRY_SPECIFIC_SERVICES[indId] || null);
+
       if ($label.length) {
         $label.text(indName ? 'Suggested Services (' + indName + ')' : 'Suggested Services (' + sectorName + ')');
       }
 
-      var services = sectorConfig.services || [];
+      var services = (specificConfig && specificConfig.services) ? specificConfig.services : (sectorConfig.services || []);
+
+      // Automatically select services into active tags if autoSelect flag is true
+      if (autoSelect && window.clientServicesManager && typeof window.clientServicesManager.addTag === 'function') {
+        services.forEach(function (s) {
+          window.clientServicesManager.addTag(s);
+        });
+      }
+
       var existingTags = [];
       if (window.clientServicesManager && Array.isArray(window.clientServicesManager.selected)) {
         existingTags = window.clientServicesManager.selected.map(function(t) { return String(t || '').toLowerCase(); });
@@ -11526,7 +11570,12 @@ $('.remove_address').click(function(){
       var clientName = ($('#client_id').val() || '').trim() || '4bell';
       var $aiDesc = $('#client_ai_suggested_desc');
       if (indName && $aiDesc.length) {
-        var indDesc = clientName + ' is an industry-leading ' + indName + ' organization providing end-to-end solutions, enterprise excellence, and specialized operations within the ' + sectorName + ' sector. The company focuses on scalable innovation, operational agility, and high-quality client delivery.';
+        var indDesc;
+        if (specificConfig && specificConfig.desc) {
+          indDesc = clientName + ' ' + specificConfig.desc;
+        } else {
+          indDesc = clientName + ' is an industry-leading ' + indName + ' organization providing end-to-end solutions, enterprise excellence, and specialized operations within the ' + sectorName + ' sector. The company focuses on scalable innovation, operational agility, and high-quality client delivery.';
+        }
         $aiDesc.text(indDesc);
       }
     };
@@ -12443,9 +12492,9 @@ $('.remove_address').click(function(){
             window.clearFieldError($('#industry'));
         }
 
-        // Dynamic linkage to Step 2 Services
+        // Dynamic linkage to Step 2 Services (auto-select services on user industry selection)
         if (typeof window.updateSuggestedServicesForIndustry === 'function') {
-            window.updateSuggestedServicesForIndustry(item);
+            window.updateSuggestedServicesForIndustry(item, true);
         }
 
         // Recency
