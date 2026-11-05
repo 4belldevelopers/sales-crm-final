@@ -469,5 +469,23 @@ Following review of the native `<select>` dropdown menu, the founder requested a
    - `php -l resources/views/service_company/team/index.blade.php`: Pass.
    - `php scratch/test_team_invite_and_profile_governance.php`: 4/4 Tests Green (100%).
 
+---
+
+## 13. Phase 5: High-Contrast Light Header Icons Optimization
+
+Following implementation of the enterprise drawer, the founder noted that the icons in the blue header needed higher contrast and visibility:
+1. **Title Icon Light Pill Container (`.invite-head-icon-box`)**:
+   - Encased the `fa-user-plus` icon in a dedicated 28px × 28px frosted glass pill (`background: rgba(255, 255, 255, 0.22); border: 1px solid rgba(255, 255, 255, 0.45); border-radius: 7px;`).
+   - Forced `color: #ffffff !important; opacity: 1 !important;`, replacing the previous semi-transparent bluish tint with pure bright light white.
+2. **Cancel Button Light Icon**:
+   - Added `<i class="fa-solid fa-xmark"></i>` with `color: #ffffff !important;` inside `#inviteCancelBtn` and boosted button opacity (`rgba(255, 255, 255, 0.18)` + border `rgba(255, 255, 255, 0.45)`).
+3. **Send Invitation Button Icon Contrast**:
+   - Explicitly styled `.invite-head-btn-send i` with `color: #008be3 !important; opacity: 1 !important;`, overriding Metronic's washed-out gray icon defaults so the paper plane is crisp and prominent.
+4. **Close Button Light Icon**:
+   - Sized close `[x]` icon to 14px with `color: #ffffff !important; font-weight: 700;` on `rgba(255, 255, 255, 0.2)` background with `border: 1px solid rgba(255, 255, 255, 0.45)`.
+5. **Universal Header Icon Rule**:
+   - Added scoped rule `.invite-drawer-head i { color: #ffffff !important; opacity: 1 !important; }` to prevent any CSS theme overrides from muting header icons.
+
+
 
 
