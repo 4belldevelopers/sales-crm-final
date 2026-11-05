@@ -9,7 +9,7 @@
 
                 // Rank & Scores
                 $rawRank = $row->ranking ?? ($row->pre_rank ?? ($row->rank ?? 'N/A'));
-                $isInvited = (empty($row->password) && strtolower($row->status ?? '') !== 'active') || strtolower($row->status ?? '') === 'invited';
+                $isInvited = (strtolower($row->status ?? '') !== 'active') && (empty($row->password) || strtolower($row->status ?? '') === 'invited' || ! empty($row->email_verification_code));
                 $isRanked = ! $isInvited && is_numeric($rawRank) && (int) $rawRank > 0 && strtolower($row->status ?? '') === 'active';
                 $rankDisplay = $isRanked ? '#' . (int) $rawRank : 'N/A';
                 $rankMonthDisplay = $isRanked ? '(' . ($row->performance_band ?? ($row->pre_rank_month ?? Carbon::now()->startOfMonth()->subMonth()->format('M Y'))) . ')' : '';

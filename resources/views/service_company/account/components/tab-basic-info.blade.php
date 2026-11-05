@@ -6,13 +6,26 @@
 --}}
 <?php
   $selectedIndName = '';
-  if (!empty($industry) && !empty($department)) {
-      foreach ($department as $k => $val) {
-          $currId = is_object($val) ? ($val->ind_id ?? $k) : (is_array($val) ? ($val['ind_id'] ?? $k) : $k);
-          $currName = is_object($val) ? ($val->ind_name ?? $val->name ?? '') : (is_array($val) ? ($val['ind_name'] ?? $val['name'] ?? '') : $val);
-          if ($currId == $industry && !empty($currName)) {
-              $selectedIndName = ucwords($currName);
-              break;
+  if (!empty($industry)) {
+      if (!empty($department)) {
+          foreach ($department as $k => $val) {
+              $currId = is_object($val) ? ($val->ind_id ?? $k) : (is_array($val) ? ($val['ind_id'] ?? $k) : $k);
+              $currName = is_object($val) ? ($val->ind_name ?? $val->name ?? '') : (is_array($val) ? ($val['ind_name'] ?? $val['name'] ?? '') : $val);
+              $decodedName = html_entity_decode((string)$currName, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+              if (((string)$currId === (string)$industry || strcasecmp($decodedName, (string)$industry) === 0) && !empty($currName)) {
+                  $selectedIndName = ucwords($decodedName);
+                  break;
+              }
+          }
+      }
+      if (empty($selectedIndName)) {
+          $manifest = \App\Services\IndustryTaxonomyService::getGlobalManifest();
+          foreach ($manifest['industries'] ?? [] as $mInd) {
+              $mName = html_entity_decode((string)($mInd['name'] ?? ''), ENT_QUOTES | ENT_HTML5, 'UTF-8');
+              if ((string)$mInd['id'] === (string)$industry || strcasecmp($mName, (string)$industry) === 0) {
+                  $selectedIndName = ucwords($mName);
+                  break;
+              }
           }
       }
   }
@@ -141,7 +154,8 @@
                      name="name"
                      id="client_id"
                      value="{{ $name ?? ($company_name ?? '') }}"
-                     placeholder="e.g. Stripe">
+                     placeholder="e.g. Stripe"
+                     oninput="var h = document.getElementById('hidden_company_name'); if (h) h.value = this.value;">
             </div>
             <input type="hidden" name="company_name" id="hidden_company_name" value="{{ $name ?? ($company_name ?? '') }}">
             <!-- Company Name Duplicate Warning Container -->
@@ -162,16 +176,23 @@
             <!-- Native select kept synchronized for form POST & validation -->
             <select name="industry" id="industry" style="position:absolute; width:1px; height:1px; opacity:0; pointer-events:none;" tabindex="-1" aria-hidden="true">
               <option value="">Select industry</option>
+              @php $indFoundInDept = false; @endphp
               @if(!empty($department))
                 @foreach($department as $key => $val)
                   @php
                     $optId = is_object($val) ? ($val->ind_id ?? $key) : (is_array($val) ? ($val['ind_id'] ?? $key) : $key);
-                    $optName = is_object($val) ? ($val->ind_name ?? $val->name ?? '') : (is_array($val) ? ($val['ind_name'] ?? $val['name'] ?? '') : $val);
+                    $optNameRaw = is_object($val) ? ($val->ind_name ?? $val->name ?? '') : (is_array($val) ? ($val['ind_name'] ?? $val['name'] ?? '') : $val);
+                    $optName = html_entity_decode((string)$optNameRaw, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+                    $isSel = ((string)$optId === (string)($industry ?? '') || (!empty($selectedIndName) && strcasecmp($optName, $selectedIndName) === 0));
+                    if ($isSel) $indFoundInDept = true;
                   @endphp
                   @if(!empty($optId) && !empty($optName))
-                    <option value="{{ $optId }}" {{ $optId == $industry ? 'selected="selected"' : '' }}>{{ ucwords($optName) }}</option>
+                    <option value="{{ $optId }}" {!! $isSel ? 'selected="selected"' : '' !!}>{{ ucwords($optName) }}</option>
                   @endif
                 @endforeach
+              @endif
+              @if(!empty($industry) && !empty($selectedIndName) && !$indFoundInDept)
+                <option value="{{ $industry }}" selected="selected">{{ $selectedIndName }}</option>
               @endif
             </select>
             <input type="hidden" name="industries" id="hidden_industries" value="{{ $industry ?? '' }}">
@@ -199,7 +220,7 @@
                        aria-expanded="false"
                        aria-haspopup="listbox"
                        aria-autocomplete="list"
-                       value="{{ htmlspecialchars($selectedIndName) }}">
+                       value="{{ $selectedIndName }}">
                 <button type="button" class="god-input-clear-btn jero-ind-clear-btn" id="jero_ind_clear_btn" aria-label="Clear industry" title="Clear selection" style="{{ $selectedIndName ? 'display:inline-flex;' : 'display:none;' }}">
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18M6 6l12 12"/></svg>
                 </button>

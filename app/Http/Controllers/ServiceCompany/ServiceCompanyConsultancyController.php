@@ -10,6 +10,9 @@ Date			:	05-April-2021
 
 namespace App\Http\Controllers\ServiceCompany;
 
+use App\Domain\AgencyPartnership\Actions\CreateInvitationAction;
+use App\Domain\AgencyPartnership\Actions\CancelInvitationAction;
+use App\Domain\AgencyPartnership\Exceptions\AgencyPartnershipException;
 use App\Events\ConsultancyPartnershipUpdated;
 use App\Exports\ConsultancyExport;
 use App\Helper\GeneralMethod;
@@ -685,8 +688,9 @@ class ServiceCompanyConsultancyController extends ServiceCompanyBaseController
         return response()->json($responseData)->header('ETag', $etag);
     }
 
-    public function staffing_invitation(Request $request, $id)
+    public function staffing_invitation(Request $request, $id, ?CreateInvitationAction $createAction = null)
     {
+        $createAction = $createAction ?: app(CreateInvitationAction::class);
         $staffing_partners_email = $request->input('staffing_partners_email', $_REQUEST['staffing_partners_email'] ?? '');
         $staffing_partners_email = trim((string) $staffing_partners_email);
         $company_id = (int) auth()->user()->company_id;
@@ -708,213 +712,14 @@ class ServiceCompanyConsultancyController extends ServiceCompanyBaseController
             return Reply::dataOnly(['status' => 'warning', 'message' => $validator->errors()->first()]);
         }
 
-        // Idempotency: Extract or derive stable key
         $idempotencyKey = $request->header('X-Idempotency-Key')
-            ?? $request->input('idempotency_key')
-            ?? ('idemp_'.md5($company_id.':'.strtolower($staffing_partners_email).':'.date('YmdHi')));
-
-        $idempotencyPayload = [
-            'email' => strtolower($staffing_partners_email),
-            'company_id' => $company_id,
-        ];
-
-        $idempotencyCheck = $this->claimIdempotency($company_id, $idempotencyKey, $idempotencyPayload);
-        if ($idempotencyCheck !== null) {
-            return Reply::dataOnly($idempotencyCheck);
-        }
-
-        // Concurrency & Idempotency Protection: Atomic lock per tenant + email
-        $lockKey = 'lock:staffing_invite:comp_'.$company_id.':'.md5(strtolower($staffing_partners_email));
-        $lock = cache()->lock($lockKey, 10); // 10 second safety TTL
-
-        if (! $lock->get()) {
-            return Reply::dataOnly([
-                'status' => 'warning',
-                'message' => 'An invitation request for this email is currently being processed. Please wait a moment.',
-            ]);
-        }
-
-        // Cooldown Protection: Prevent duplicate invitations to the same email within 30 seconds
-        $cooldownKey = 'cooldown:staffing_invite:comp_'.$company_id.':'.md5(strtolower($staffing_partners_email));
-        if (cache()->has($cooldownKey)) {
-            return Reply::dataOnly([
-                'status' => 'warning',
-                'message' => 'An invitation was recently sent to this email. Please allow a moment before sending another.',
-            ]);
-        }
+            ?? $request->input('idempotency_key');
 
         try {
-            $clientRow = DB::table('clients')
-                ->select('id', 'name', 'company_id')
-                ->where('company_id', $company_id)
-                ->where('self_company', 1)
-                ->first();
+            $result = $createAction->execute($company_id, $userId, $staffing_partners_email, $idempotencyKey);
 
-            // Case check: Registered vs Unregistered user (Optimized: single indexed query for existence and root status)
-            $userRow = DB::table('users')
-                ->select('id', 'company_id', 'root_user', 'email')
-                ->where('email', $staffing_partners_email)
-                ->first();
-
-            if ($userRow) {
-                if ((int) $userRow->root_user === 0) {
-                    $message = 'Use the company’s main email ID to add them as a Staffing Partner, not an employee’s email ID.';
-                    $this->failIdempotency($company_id, $idempotencyKey, $message);
-
-                    return Reply::dataOnly(['status' => 'warning', 'message' => $message]);
-                }
-
-                // CASE 2. DO NOT SEND INTERNAL TEAM MEMBER
-                if ($userRow->company_id == $company_id) {
-                    $message = 'Can not send internal team member';
-                    $this->failIdempotency($company_id, $idempotencyKey, $message);
-
-                    return Reply::dataOnly(['status' => 'warning', 'message' => $message]);
-                }
-
-                // CHECK ALREADY LINKED
-                $staffingRowCount = DB::table('staffing_company_relation')
-                    ->where('from_company_id', $company_id)
-                    ->where('to_company_id', $userRow->company_id)
-                    ->where('final_status', 1)
-                    ->count();
-
-                if ($staffingRowCount > 0) {
-                    $message = 'Agency already added';
-                    $this->failIdempotency($company_id, $idempotencyKey, $message);
-
-                    return Reply::dataOnly(['status' => 'warning', 'message' => $message]);
-                }
-            }
-
-            if (empty($staffing_partners_email)) {
-                $message = 'Email can not be empty, please enter email';
-                $this->failIdempotency($company_id, $idempotencyKey, $message);
-
-                return Reply::dataOnly(['status' => 'warning', 'message' => $message]);
-            }
-
-            $invitationId = null;
-            $outboxId = null;
-
-            // ACID Database Transaction: Atomic invitation mutation + outbox record
-            DB::transaction(function () use (
-                $company_id,
-                $clientRow,
-                $userId,
-                $userRow,
-                $staffing_partners_email,
-                $idempotencyKey,
-                &$invitationId,
-                &$outboxId
-            ) {
-                // DELETE ALL OLD INVITATION
-                DB::table('staffing_company_invitation')
-                    ->where('staffing_company_invitation.from_company_id', $company_id)
-                    ->where('staffing_company_invitation.to_email', $staffing_partners_email)
-                    ->where('staffing_company_invitation.to_invitation_status', '!=', 1)
-                    ->delete();
-
-                $staffing_company_invitation = [
-                    'from_client_id' => $clientRow ? $clientRow->id : null,
-                    'from_company_id' => $company_id,
-                    'from_user_id' => $userId,
-                    'from_status' => 1,
-                    'from_created_at' => date('Y-m-d'),
-                    'to_company_id' => $userRow ? $userRow->company_id : null,
-                    'to_email' => $staffing_partners_email,
-                    'to_status' => $userRow ? 1 : 0,
-                ];
-
-                DB::table('staffing_company_invitation')->insert($staffing_company_invitation);
-                $invitationId = (int) DB::getPdo()->lastInsertId();
-
-                $outboxId = DB::table('sys_outbox_events')->insertGetId([
-                    'tenant_id' => $company_id,
-                    'idempotency_key' => $idempotencyKey,
-                    'aggregate_type' => 'AgencyRequest',
-                    'aggregate_id' => $invitationId,
-                    'aggregate_version' => 1,
-                    'event_type' => 'AGENCY_INVITATION_SENT',
-                    'payload' => json_encode([
-                        'from_company_id' => $company_id,
-                        'to_company_id' => $userRow ? $userRow->company_id : null,
-                        'to_email' => $staffing_partners_email,
-                        'invitation_id' => $invitationId,
-                        'user_id' => $userId,
-                    ]),
-                    'status' => 'PENDING',
-                    'attempts' => 0,
-                    'available_at' => now(),
-                    'created_at' => now(),
-                ]);
-            });
-
-            // Asynchronous Outbox Worker Dispatch (offloads ES sync & background delivery)
-            if ($outboxId) {
-                try {
-                    ProcessAgencyOutboxEventJob::dispatch($outboxId)->afterCommit();
-                } catch (\Throwable $e) {
-                    Log::warning('ProcessAgencyOutboxEventJob dispatch deferred: '.$e->getMessage());
-                }
-            }
-
-            // Invalidate tenant and user caches
             $this->agencyListingService->clearCompanyStatsCache($company_id);
             $this->agencyListingService->clearUserConsultancyCache($userId);
-
-            // Optimized: Select only required columns instead of full SELECT * on companies
-            $Companies = DB::table('companies')->select('id', 'company_name')->where('id', $company_id)->first();
-            $encode = base64_encode($invitationId);
-            $reqdate = date('d M Y');
-            $Url = url('/invitation-company-register/'.$encode);
-            $attachments = [];
-            $cc = [];
-            $basecompany = GeneralMethod::baseCompany();
-            $senderName = $basecompany ? ($basecompany->companyName ?: '') : '';
-            $fromAddress = $basecompany ? ($basecompany->companyEmail ?: '') : '';
-            $checkMailPermision = GeneralMethod::mailPermission(40);
-
-            if ($checkMailPermision && $Companies) {
-                $mailTypeSubject = GeneralMethod::mailTypeSubject(40, 1);
-                $subject = str_replace(['[COMPANY_NAME]', '[REQUEST_DATE]'], [$Companies->company_name, $reqdate], $mailTypeSubject->subject);
-                $template_description = $mailTypeSubject->body_description;
-
-                $AcceptInvite = '<a href="'.$Url.'" rel="noopener" style="text-decoration:none;display:inline-block;text-align:center;padding:0.75575rem 1.3rem;font-size:0.925rem;line-height:1.5;border-radius:0.35rem;color:#ffffff;background-color:#009EF7;border:0px;margin-right:0.75rem!important;font-weight:600!important;outline:none!important;vertical-align:middle">Accept Invite</a>';
-                $urlLink = '<a href="'.$Url.'" rel="noopener" style="text-decoration:none;color: #009EF7">'.$Url.'</a>';
-
-                $template_description = str_replace(['[COMPANY_NAME]', '[ACCEPT_INVITE]', '[URL_LINK]'], [$Companies->company_name, $AcceptInvite, $urlLink], $template_description);
-
-                $data = [
-                    'message' => $template_description,
-                ];
-
-                QueueNotificationMailService::dispatch(
-                    $staffing_partners_email,
-                    $subject,
-                    'email.common.index',
-                    (object) $data,
-                    $attachments,
-                    $fromAddress,
-                    $senderName,
-                    $cc,
-                    $company_id
-                )->afterCommit()->onConnection('emails');
-            }
-
-            if ($userRow) {
-                $message = 'An invitation has been sent to'.$staffing_partners_email.'<br>
-Please ask the agency to check their email and accept the invitation.<br>
-Once accepted, they can proceed with either of the following:<br>
-<ul>
-<li> Register on Jero.works, or </li>
-<li>If already registered, accept the request from the <b>Client Request tab</b> </li>
-</ul><br>
-After completing these steps, they will be able to start collaborating with your organization.';
-            } else {
-                $message = 'Invitation request has been sent on email !';
-            }
-
             $spartnerDataCnt = $this->agencyListingService->getSummaryCounters($company_id);
 
             try {
@@ -928,30 +733,92 @@ After completing these steps, they will be able to start collaborating with your
                 Log::warning('ConsultancyPartnershipUpdated broadcast deferred: '.$e->getMessage());
             }
 
-            cache()->put($cooldownKey, true, 30);
-
-            $responsePayload = [
+            return Reply::dataOnly([
                 'status' => 'success',
-                'message' => $message,
+                'message' => $result['message'],
                 'spartnerDataCnt' => $spartnerDataCnt,
-                'invitation_id' => $invitationId,
-            ];
-
-            $this->completeIdempotency($company_id, $idempotencyKey, $responsePayload);
-
-            return Reply::dataOnly($responsePayload);
-
+                'invitation_id' => $result['invitation_id'],
+                'coins_deducted' => $result['coins_deducted'] ?? 5,
+                'remaining_coins' => $result['remaining_coins'] ?? 0,
+                'daily_quota_remaining' => $result['daily_quota_remaining'] ?? 19,
+                'invite_url' => $result['invite_url'] ?? '',
+            ]);
+        } catch (AgencyPartnershipException $ape) {
+            return Reply::dataOnly(['status' => 'warning', 'message' => $ape->getMessage()]);
         } catch (\Throwable $e) {
-            $this->failIdempotency($company_id, $idempotencyKey, $e->getMessage());
             Log::error('Staffing invitation mutation failed: '.$e->getMessage(), [
                 'company_id' => $company_id,
                 'email' => $staffing_partners_email,
                 'trace' => $e->getTraceAsString(),
             ]);
 
-            throw $e;
-        } finally {
-            $lock->release();
+            return Reply::dataOnly(['status' => 'error', 'message' => 'Failed to send invitation: '.$e->getMessage()]);
+        }
+    }
+
+    public function cancel_invitation(Request $request, $id, ?CancelInvitationAction $cancelAction = null)
+    {
+        $cancelAction = $cancelAction ?: app(CancelInvitationAction::class);
+        $company_id = (int) auth()->user()->company_id;
+        $invitationId = (int) $id;
+
+        try {
+            $result = $cancelAction->execute($invitationId, $company_id);
+            $this->agencyListingService->clearCompanyStatsCache($company_id);
+            $spartnerDataCnt = $this->agencyListingService->getSummaryCounters($company_id);
+
+            return Reply::dataOnly([
+                'status' => 'success',
+                'message' => $result['message'],
+                'spartnerDataCnt' => $spartnerDataCnt,
+                'invitation_id' => $invitationId,
+            ]);
+        } catch (AgencyPartnershipException $ape) {
+            return Reply::dataOnly(['status' => 'warning', 'message' => $ape->getMessage()]);
+        } catch (\Throwable $e) {
+            Log::error('Cancel invitation failed: '.$e->getMessage(), ['exception' => $e]);
+            return Reply::dataOnly(['status' => 'error', 'message' => 'Failed to cancel invitation: '.$e->getMessage()]);
+        }
+    }
+
+    public function re_invite(Request $request, $id, ?CreateInvitationAction $createAction = null)
+    {
+        $createAction = $createAction ?: app(CreateInvitationAction::class);
+        $company_id = (int) auth()->user()->company_id;
+        $userId = (int) ($this->user->id ?? auth()->id());
+        $invitationId = (int) $id;
+
+        $oldInv = DB::table('staffing_company_invitation')
+            ->where('id', $invitationId)
+            ->where('from_company_id', $company_id)
+            ->first();
+
+        if (!$oldInv) {
+            return Reply::dataOnly(['status' => 'error', 'message' => 'Original invitation not found.']);
+        }
+
+        try {
+            $idempotencyKey = 'reinvite_' . $invitationId . '_' . time();
+            $result = $createAction->execute($company_id, $userId, (string) $oldInv->to_email, $idempotencyKey);
+
+            $this->agencyListingService->clearCompanyStatsCache($company_id);
+            $this->agencyListingService->clearUserConsultancyCache($userId);
+            $spartnerDataCnt = $this->agencyListingService->getSummaryCounters($company_id);
+
+            return Reply::dataOnly([
+                'status' => 'success',
+                'message' => 'Invitation re-sent successfully.',
+                'invitation_id' => $result['invitation_id'],
+                'spartnerDataCnt' => $spartnerDataCnt,
+                'coins_deducted' => $result['coins_deducted'] ?? 5,
+                'remaining_coins' => $result['remaining_coins'] ?? 0,
+                'invite_url' => $result['invite_url'] ?? '',
+            ]);
+        } catch (AgencyPartnershipException $ape) {
+            return Reply::dataOnly(['status' => 'warning', 'message' => $ape->getMessage()]);
+        } catch (\Throwable $e) {
+            Log::error('Re-invite failed: '.$e->getMessage(), ['exception' => $e]);
+            return Reply::dataOnly(['status' => 'error', 'message' => 'Failed to re-invite agency: '.$e->getMessage()]);
         }
     }
 

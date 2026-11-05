@@ -451,6 +451,8 @@ Route::group(['middleware' => 'auth'], function () {
                 Route::get('consultancy/suggestedPartners/{id?}', [ServiceCompanyConsultancyController::class, 'suggestedPartners'])->name('consultancy.suggestedPartners');
                 Route::get('consultancy/requestPartners/{id?}', [ServiceCompanyConsultancyController::class, 'requestPartners'])->name('consultancy.requestPartners');
                 Route::match(['get', 'post'], 'consultancy/staffing_invitation/{id?}', [ServiceCompanyConsultancyController::class, 'staffing_invitation'])->name('consultancy.staffing_invitation');
+                Route::post('consultancy/cancel_invitation/{id}', [ServiceCompanyConsultancyController::class, 'cancel_invitation'])->name('consultancy.cancel_invitation');
+                Route::post('consultancy/re_invite/{id}', [ServiceCompanyConsultancyController::class, 're_invite'])->name('consultancy.re_invite');
                 Route::get('consultancy/dviewmore/{id?}', [ServiceCompanyConsultancyController::class, 'dviewMore'])->middleware(['throttle:120,1', 'consultancy.etag'])->name('consultancy.dviewmore');
                 Route::get('consultancy/staffing_contact_list/{id?}', [ServiceCompanyConsultancyController::class, 'staffingContactList'])->name('consultancy.staffing_contact_list');
                 Route::get('consultancy_ajax/allreq/{id?}', [ServiceCompanyConsultancyController::class, 'allreq_ajax'])->name('consultancy.allreq_ajax');
