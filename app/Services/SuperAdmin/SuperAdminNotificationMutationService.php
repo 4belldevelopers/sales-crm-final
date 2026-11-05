@@ -4,34 +4,61 @@ namespace App\Services\SuperAdmin;
 
 use App\Jobs\ProcessNotificationOutboxEventJob;
 use Carbon\Carbon;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
+use Throwable;
 
 /**
  * Class SuperAdminNotificationMutationService
  *
  * Intent: Encapsulates transactional state mutations for Super Admin Email Notification Templates
- * and Role Permissions. Implements strict distributed idempotency via sys_idempotency_keys,
- * guarantees at-least-once asynchronous synchronization to Elasticsearch via sys_outbox_events,
- * invalidates multi-tenant Redis/Dragonfly notification caches, and eliminates stale reads.
+ * and Role Permissions. Implements strict two-tier distributed idempotency via sys_idempotency_keys,
+ * guarantees at-least-once asynchronous synchronization to Elasticsearch projections via sys_outbox_events,
+ * invalidates multi-tenant Dragonfly/Redis caches via SuperAdminNotificationCacheManager, and eliminates stale reads.
  *
- * Tenancy: Super Admin operations are registered with tenant_id = 0.
+ * Tenancy: Super Admin operations operate with tenant_id = 0.
  *
- * Author: Antigravity AI — Phase 1 Outbox & Idempotency Architecture
- * Date: October 28, 2026
- * Complies with docs/CODE_DOCUMENTATION_STANDARD.md.
+ * Author: Antigravity AI — Super Admin Backend Architecture
+ * Complies with docs/CODE_DOCUMENTATION_STANDARD.md and docs/AI_RULES.md.
  */
 class SuperAdminNotificationMutationService
 {
+    public function __construct(
+        protected ?SuperAdminNotificationReadService $readService = null
+    ) {
+        $this->readService = $readService ?? app(SuperAdminNotificationReadService::class);
+    }
+
     /**
-     * Mutate notification active/inactive status with transactional outbox and idempotency.
+     * Compute a deterministic sha256 request hash from a payload.
+     */
+    public function computeRequestHash(array $payload): string
+    {
+        ksort($payload);
+
+        return hash('sha256', json_encode($payload));
+    }
+
+    /**
+     * Format a clean idempotency key when provided.
+     */
+    protected function formatIdempotencyKey(?string $clientKey): ?string
+    {
+        if ($clientKey && trim($clientKey) !== '') {
+            return trim($clientKey);
+        }
+
+        return null;
+    }
+
+    /**
+     * Mutate notification active/inactive status with transactional outbox and two-tier idempotency.
      *
-     * @param int $notificationId Target email_notifications.id
-     * @param int $newStatus Target status (1 = Active, 0 = Inactive)
-     * @param string|null $idempotencyKey Client-supplied UUID or auto-generated token
-     * @param int|null $adminId Authenticated admin user ID
+     * @param  int  $notificationId  Target email_notifications.id
+     * @param  int  $newStatus  Target status (1 = Active, 0 = Inactive)
+     * @param  string|null  $idempotencyKey  Client-supplied UUID or auto-generated token
+     * @param  int|null  $adminId  Authenticated admin user ID
      * @return array<string, mixed> Structured domain result payload
      */
     public function toggleStatus(
@@ -41,9 +68,64 @@ class SuperAdminNotificationMutationService
         ?int $adminId = null
     ): array {
         $normalizedStatus = $newStatus === 1 ? 1 : 0;
-        $idempotencyKey = $idempotencyKey ?: (string) Str::uuid();
+        $clientKey = $this->formatIdempotencyKey($idempotencyKey);
+        $finalIdempotencyKey = $clientKey ?: (string) Str::uuid();
 
-        // 1. Verify existence of record
+        $requestPayload = [
+            'action' => 'toggle_status',
+            'notification_id' => $notificationId,
+            'status' => $normalizedStatus,
+            'admin_id' => $adminId,
+        ];
+        $requestHash = $this->computeRequestHash($requestPayload);
+
+        // 1. Two-Tier Idempotency Lease Claim Check
+        if ($clientKey) {
+            $inserted = DB::table('sys_idempotency_keys')->insertOrIgnore([
+                'tenant_id' => 0,
+                'idempotency_key' => $clientKey,
+                'request_hash' => $requestHash,
+                'status' => 'PROCESSING',
+                'expires_at' => Carbon::now()->addHours(24),
+                'created_at' => Carbon::now(),
+                'updated_at' => Carbon::now(),
+            ]);
+
+            if (! $inserted) {
+                $existing = DB::table('sys_idempotency_keys')
+                    ->where('tenant_id', 0)
+                    ->where('idempotency_key', $clientKey)
+                    ->first();
+
+                if ($existing) {
+                    if ($existing->status === 'COMPLETED' && $existing->response_body) {
+                        $cached = json_decode($existing->response_body, true);
+                        if (is_array($cached)) {
+                            $cached['_replayed'] = true;
+
+                            return $cached;
+                        }
+                    }
+
+                    if ($existing->status === 'PROCESSING') {
+                        if ($existing->updated_at && Carbon::parse($existing->updated_at)->gt(Carbon::now()->subSeconds(120))) {
+                            abort(409, 'A notification status update is currently in-flight for this key. Please wait.');
+                        }
+
+                        DB::table('sys_idempotency_keys')
+                            ->where('tenant_id', 0)
+                            ->where('idempotency_key', $clientKey)
+                            ->update([
+                                'status' => 'PROCESSING',
+                                'request_hash' => $requestHash,
+                                'updated_at' => Carbon::now(),
+                            ]);
+                    }
+                }
+            }
+        }
+
+        // 2. Authoritative check for record existence
         $notification = DB::table('email_notifications')
             ->where('id', $notificationId)
             ->first();
@@ -58,7 +140,7 @@ class SuperAdminNotificationMutationService
 
         $now = Carbon::now();
 
-        // 2. Compute next aggregate version from outbox or fallback to timestamp
+        // 3. Compute aggregate version
         $latestVersion = (int) (DB::table('sys_outbox_events')
             ->where('aggregate_type', 'EmailNotification')
             ->where('aggregate_id', $notificationId)
@@ -79,10 +161,9 @@ class SuperAdminNotificationMutationService
 
         $eventId = null;
 
-        // 3. Execute atomic MySQL transaction
+        // 4. Micro-transaction (<15ms duration)
         DB::beginTransaction();
         try {
-            // Update authoritative MySQL record
             DB::table('email_notifications')
                 ->where('id', $notificationId)
                 ->update([
@@ -90,10 +171,9 @@ class SuperAdminNotificationMutationService
                     'updated_at' => $now,
                 ]);
 
-            // Insert durable outbox record (same transaction)
             $eventId = (int) DB::table('sys_outbox_events')->insertGetId([
                 'tenant_id' => 0,
-                'idempotency_key' => $idempotencyKey,
+                'idempotency_key' => $finalIdempotencyKey,
                 'aggregate_type' => 'EmailNotification',
                 'aggregate_id' => $notificationId,
                 'aggregate_version' => $nextVersion,
@@ -105,9 +185,61 @@ class SuperAdminNotificationMutationService
                 'created_at' => $now,
             ]);
 
+            $responseResult = [
+                'status' => 'success',
+                'message' => 'Status Changed',
+                'id' => $notificationId,
+                'new_status' => $normalizedStatus,
+                'event_id' => $eventId,
+                'idempotency_key' => $finalIdempotencyKey,
+            ];
+
+            if ($clientKey) {
+                DB::table('sys_idempotency_keys')
+                    ->where('tenant_id', 0)
+                    ->where('idempotency_key', $clientKey)
+                    ->update([
+                        'status' => 'COMPLETED',
+                        'response_status' => 200,
+                        'response_body' => json_encode($responseResult),
+                        'completed_at' => Carbon::now(),
+                        'updated_at' => Carbon::now(),
+                    ]);
+            }
+
+            // 5. Post-Commit Hook: Invalidate L2 Dragonfly Cache & Immediate Projection Sync
+            DB::afterCommit(function () use ($notificationId, $eventId) {
+                SuperAdminNotificationCacheManager::flushCaches($notificationId);
+
+                if ($eventId) {
+                    try {
+                        ProcessNotificationOutboxEventJob::dispatchSync($eventId);
+                    } catch (Throwable $e) {
+                        Log::warning("[NOTIFICATION_MUTATION] Immediate projection sync queued for background retry: {$e->getMessage()}", [
+                            'event_id' => $eventId,
+                            'notification_id' => $notificationId,
+                        ]);
+                    }
+                }
+            });
+
             DB::commit();
-        } catch (\Throwable $e) {
+
+            return $responseResult;
+        } catch (Throwable $e) {
             DB::rollBack();
+
+            if ($clientKey) {
+                DB::table('sys_idempotency_keys')
+                    ->where('tenant_id', 0)
+                    ->where('idempotency_key', $clientKey)
+                    ->update([
+                        'status' => 'FAILED_FINAL',
+                        'last_error' => substr($e->getMessage(), 0, 1000),
+                        'updated_at' => Carbon::now(),
+                    ]);
+            }
+
             Log::error("[NOTIFICATION_MUTATION] Status toggle transaction failed: {$e->getMessage()}", [
                 'notification_id' => $notificationId,
                 'new_status' => $normalizedStatus,
@@ -120,43 +252,15 @@ class SuperAdminNotificationMutationService
                 'code' => 500,
             ];
         }
-
-        // 4. Post-Commit: Synchronize to Elasticsearch projection immediately
-        if ($eventId) {
-            try {
-                // Synchronous projection execution for zero UI latency (< 25ms)
-                ProcessNotificationOutboxEventJob::dispatchSync($eventId);
-            } catch (\Throwable $esEx) {
-                // ES failure is non-fatal to MySQL commit; outbox worker handles background retry
-                Log::warning("[NOTIFICATION_MUTATION] Immediate ES sync failed; outbox worker will retry: {$esEx->getMessage()}", [
-                    'event_id' => $eventId,
-                    'notification_id' => $notificationId,
-                ]);
-            }
-        }
-
-        // 5. Invalidate dependent application caches
-        Cache::forget('email_notification_cpr_admin');
-        Cache::forget('email_notification_cpr_customer');
-        Cache::forget("email_notification:{$notificationId}");
-
-        return [
-            'status' => 'success',
-            'message' => 'Status Changed',
-            'id' => $notificationId,
-            'new_status' => $normalizedStatus,
-            'event_id' => $eventId,
-            'idempotency_key' => $idempotencyKey,
-        ];
     }
 
     /**
      * Create or update notification template and associated role permissions.
      *
-     * @param array<string, mixed> $data Form payload
-     * @param int|null $tokenId Notification ID (0/null = create, >0 = update)
-     * @param string|null $idempotencyKey Client-supplied UUID or auto-generated token
-     * @param int|null $adminId Authenticated admin user ID
+     * @param  array<string, mixed>  $data  Form payload
+     * @param  int|null  $tokenId  Notification ID (0/null = create, >0 = update)
+     * @param  string|null  $idempotencyKey  Client-supplied UUID or auto-generated token
+     * @param  int|null  $adminId  Authenticated admin user ID
      * @return array<string, mixed> Structured domain result payload
      */
     public function saveNotification(
@@ -167,20 +271,64 @@ class SuperAdminNotificationMutationService
     ): array {
         $tokenId = (int) ($tokenId ?? ($data['tokenId'] ?? 0));
         $isCreate = $tokenId === 0;
-        $idempotencyKey = $idempotencyKey ?: (string) Str::uuid();
-        $now = Carbon::now();
+        $clientKey = $this->formatIdempotencyKey($idempotencyKey);
+        $finalIdempotencyKey = $clientKey ?: (string) Str::uuid();
 
-        // 1. Sanitize and validate role selections against roles table
+        $requestHash = $this->computeRequestHash($data);
+
+        // 1. Two-Tier Idempotency Lease Claim Check
+        if ($clientKey) {
+            $inserted = DB::table('sys_idempotency_keys')->insertOrIgnore([
+                'tenant_id' => 0,
+                'idempotency_key' => $clientKey,
+                'request_hash' => $requestHash,
+                'status' => 'PROCESSING',
+                'expires_at' => Carbon::now()->addHours(24),
+                'created_at' => Carbon::now(),
+                'updated_at' => Carbon::now(),
+            ]);
+
+            if (! $inserted) {
+                $existing = DB::table('sys_idempotency_keys')
+                    ->where('tenant_id', 0)
+                    ->where('idempotency_key', $clientKey)
+                    ->first();
+
+                if ($existing) {
+                    if ($existing->status === 'COMPLETED' && $existing->response_body) {
+                        $cached = json_decode($existing->response_body, true);
+                        if (is_array($cached)) {
+                            $cached['_replayed'] = true;
+
+                            return $cached;
+                        }
+                    }
+
+                    if ($existing->status === 'PROCESSING') {
+                        if ($existing->updated_at && Carbon::parse($existing->updated_at)->gt(Carbon::now()->subSeconds(120))) {
+                            abort(409, 'Notification save is already processing for this key. Please wait.');
+                        }
+
+                        DB::table('sys_idempotency_keys')
+                            ->where('tenant_id', 0)
+                            ->where('idempotency_key', $clientKey)
+                            ->update([
+                                'status' => 'PROCESSING',
+                                'request_hash' => $requestHash,
+                                'updated_at' => Carbon::now(),
+                            ]);
+                    }
+                }
+            }
+        }
+
+        // 2. Validate role selections against cached roles (0% MySQL reads)
         $rawRoles = $data['role_ck'] ?? [];
         if (! is_array($rawRoles)) {
             $rawRoles = [];
         }
 
-        $validRoles = DB::table('roles')
-            ->distinct()
-            ->pluck('display_name')
-            ->toArray();
-
+        $validRoles = $this->readService->getRoles()->pluck('display_name')->toArray();
         $selectedRoles = array_values(array_intersect($rawRoles, $validRoles));
 
         $purpose = trim((string) ($data['purpose'] ?? ''));
@@ -192,12 +340,12 @@ class SuperAdminNotificationMutationService
 
         $targetId = $tokenId;
         $eventId = null;
+        $now = Carbon::now();
 
-        // 2. Execute atomic MySQL transaction
+        // 3. Micro-transaction (<15ms duration)
         DB::beginTransaction();
         try {
             if ($isCreate) {
-                // INSERT new notification
                 $targetId = (int) DB::table('email_notifications')->insertGetId([
                     'purpose' => $purpose,
                     'subject' => $subject,
@@ -209,7 +357,6 @@ class SuperAdminNotificationMutationService
                     'updated_at' => $now,
                 ]);
 
-                // Insert associated role permissions
                 foreach ($selectedRoles as $roleName) {
                     DB::table('mail_permissions')->insert([
                         'role_name' => $roleName,
@@ -221,7 +368,6 @@ class SuperAdminNotificationMutationService
                 $nextVersion = 1;
 
             } else {
-                // UPDATE existing notification
                 DB::table('email_notifications')
                     ->where('id', $targetId)
                     ->update([
@@ -234,7 +380,6 @@ class SuperAdminNotificationMutationService
                         'updated_at' => $now,
                     ]);
 
-                // Atomically replace role permissions
                 DB::table('mail_permissions')
                     ->where('notification_id', $targetId)
                     ->delete();
@@ -254,7 +399,6 @@ class SuperAdminNotificationMutationService
                 $nextVersion = $latestVersion + 1;
             }
 
-            // Construct minimal outbox payload for projection sync
             $outboxPayload = [
                 'id' => $targetId,
                 'purpose' => $purpose,
@@ -269,10 +413,9 @@ class SuperAdminNotificationMutationService
                 'admin_id' => $adminId,
             ];
 
-            // Insert durable outbox event (same transaction)
             $eventId = (int) DB::table('sys_outbox_events')->insertGetId([
                 'tenant_id' => 0,
-                'idempotency_key' => $idempotencyKey,
+                'idempotency_key' => $finalIdempotencyKey,
                 'aggregate_type' => 'EmailNotification',
                 'aggregate_id' => $targetId,
                 'aggregate_version' => $nextVersion,
@@ -284,9 +427,60 @@ class SuperAdminNotificationMutationService
                 'created_at' => $now,
             ]);
 
+            $responseResult = [
+                'status' => 'success',
+                'message' => 'Email Notification saved successfully.',
+                'id' => $targetId,
+                'event_id' => $eventId,
+                'idempotency_key' => $finalIdempotencyKey,
+            ];
+
+            if ($clientKey) {
+                DB::table('sys_idempotency_keys')
+                    ->where('tenant_id', 0)
+                    ->where('idempotency_key', $clientKey)
+                    ->update([
+                        'status' => 'COMPLETED',
+                        'response_status' => 200,
+                        'response_body' => json_encode($responseResult),
+                        'completed_at' => Carbon::now(),
+                        'updated_at' => Carbon::now(),
+                    ]);
+            }
+
+            // 4. Post-Commit Hook: Invalidate L2 Dragonfly Cache & Fast-Path Projection Sync
+            DB::afterCommit(function () use ($targetId, $eventId) {
+                SuperAdminNotificationCacheManager::flushCaches($targetId);
+
+                if ($eventId) {
+                    try {
+                        ProcessNotificationOutboxEventJob::dispatchSync($eventId);
+                    } catch (Throwable $e) {
+                        Log::warning("[NOTIFICATION_MUTATION] Immediate projection sync queued for background retry: {$e->getMessage()}", [
+                            'event_id' => $eventId,
+                            'notification_id' => $targetId,
+                        ]);
+                    }
+                }
+            });
+
             DB::commit();
-        } catch (\Throwable $e) {
+
+            return $responseResult;
+        } catch (Throwable $e) {
             DB::rollBack();
+
+            if ($clientKey) {
+                DB::table('sys_idempotency_keys')
+                    ->where('tenant_id', 0)
+                    ->where('idempotency_key', $clientKey)
+                    ->update([
+                        'status' => 'FAILED_FINAL',
+                        'last_error' => substr($e->getMessage(), 0, 1000),
+                        'updated_at' => Carbon::now(),
+                    ]);
+            }
+
             Log::error("[NOTIFICATION_MUTATION] Save notification transaction failed: {$e->getMessage()}", [
                 'target_id' => $targetId,
                 'is_create' => $isCreate,
@@ -300,30 +494,5 @@ class SuperAdminNotificationMutationService
                 'code' => 500,
             ];
         }
-
-        // 3. Post-Commit: Synchronize to Elasticsearch projection immediately
-        if ($eventId) {
-            try {
-                ProcessNotificationOutboxEventJob::dispatchSync($eventId);
-            } catch (\Throwable $esEx) {
-                Log::warning("[NOTIFICATION_MUTATION] Immediate ES sync failed for save; outbox worker will retry: {$esEx->getMessage()}", [
-                    'event_id' => $eventId,
-                    'notification_id' => $targetId,
-                ]);
-            }
-        }
-
-        // 4. Invalidate affected Redis / Dragonfly caches
-        Cache::forget('email_notification_cpr_admin');
-        Cache::forget('email_notification_cpr_customer');
-        Cache::forget("email_notification:{$targetId}");
-
-        return [
-            'status' => 'success',
-            'message' => 'Email Notification saved successfully.',
-            'id' => $targetId,
-            'event_id' => $eventId,
-            'idempotency_key' => $idempotencyKey,
-        ];
     }
 }

@@ -223,200 +223,221 @@ class HomeController extends Controller
     // 1️⃣ Create Instance
     public function create(Request $request)
     {
+        $userId = (int) ($request->userid ?: auth()->id());
+        if (! $userId) {
+            return response()->json(['error' => 'User not authenticated'], 401);
+        }
 
-        // $userId = auth()->user()->id;
-        $userId = (int) $request->userid;
         $user = tenant_table('users')->select('company_id', 'name')->where('id', $userId)->first();
+        if (! $user) {
+            return response()->json(['error' => 'User not found'], 404);
+        }
 
         $companyId = $user->company_id;
         $username = Str::slug($user->name, '_'); // clean name
 
         $instanceName = config('services.evolution.instance_pre').$companyId.'_'.$username.'_'.$userId;
 
-        // $instanceName = config('services.evolution.instance_pre').$userId;
-
-        // dd($instanceName);
-
-        $response = Http::withHeaders([
-            'apikey' => config('services.evolution.global_key'),
-        ])->get(
-            $this->baseUrl().'/instance/connectionState/'.$instanceName
-        );
-        $data = $response->json();
-
-        if (($data['status'] ?? null) == 404) {
-            $token = Str::random(40);
-
-            DB::table('whatsapp_instances')->updateOrInsert(
-                ['user_id' => $userId],
-                [
-                    'company_id' => $companyId,
-                    'instance_name' => $instanceName,
-                    'token' => $token,
-                    'status' => 'creating',
-                    'updated_at' => now(),
-                    'created_at' => now(),
-                ]
-            );
-
+        try {
             $response = Http::withHeaders([
                 'apikey' => config('services.evolution.global_key'),
-            ])->post(
-                $this->baseUrl().'/instance/create',
-                [
-                    'instanceName' => $instanceName,
-                    'token' => $token,
-                    'qrcode' => true,
-                    'integration' => 'WHATSAPP-BAILEYS',
-                ]);
+            ])->get(
+                $this->baseUrl().'/instance/connectionState/'.$instanceName
+            );
+            $data = $response->json();
 
-            return response()->json(['success' => true]);
+            if (($data['status'] ?? null) == 404) {
+                $token = Str::random(40);
 
-        } else {
+                DB::table('whatsapp_instances')->updateOrInsert(
+                    ['user_id' => $userId],
+                    [
+                        'company_id' => $companyId,
+                        'instance_name' => $instanceName,
+                        'token' => $token,
+                        'status' => 'creating',
+                        'updated_at' => now(),
+                        'created_at' => now(),
+                    ]
+                );
 
-            return response()->json(['success' => true]);
+                Http::withHeaders([
+                    'apikey' => config('services.evolution.global_key'),
+                ])->post(
+                    $this->baseUrl().'/instance/create',
+                    [
+                        'instanceName' => $instanceName,
+                        'token' => $token,
+                        'qrcode' => true,
+                        'integration' => 'WHATSAPP-BAILEYS',
+                    ]
+                );
+
+                return response()->json(['success' => true]);
+
+            } else {
+
+                return response()->json(['success' => true]);
+            }
+        } catch (\Throwable $e) {
+            \Log::error('WhatsApp create error: '.$e->getMessage());
+
+            return response()->json(['success' => false, 'error' => $e->getMessage()], 500);
         }
-
     }
 
     // 2️⃣ Get QR
     public function qr(Request $request)
     {
-        $userid = (int) $request->userid;
+        $userid = (int) ($request->userid ?: auth()->id());
         $instance = $this->getInstance($userid);
 
         if (! $instance) {
             return response()->json(['qr' => null, 'error' => 'Instance not found'], 200);
         }
 
-        $response = Http::withHeaders([
-            'apikey' => config('services.evolution.global_key'),
-        ])->get(
-            $this->baseUrl().'/instance/connect/'.$instance->instance_name
-        );
+        try {
+            $response = Http::withHeaders([
+                'apikey' => config('services.evolution.global_key'),
+            ])->get(
+                $this->baseUrl().'/instance/connect/'.$instance->instance_name
+            );
 
-        $data = $response->json();
+            $data = $response->json();
 
-        return response()->json([
-            'qr' => $data['base64'] ?? null,
-        ]);
+            return response()->json([
+                'qr' => $data['base64'] ?? null,
+            ]);
+        } catch (\Throwable $e) {
+            \Log::error('WhatsApp qr error: '.$e->getMessage());
+
+            return response()->json(['qr' => null, 'error' => $e->getMessage()], 200);
+        }
     }
 
     // 3️⃣ Check Status
     public function status(Request $request)
     {
-        $userid = (int) $request->userid;
+        $userid = (int) ($request->userid ?: auth()->id());
         $instance = $this->getInstance($userid);
 
         if (! $instance) {
             return response()->json(['instance' => null, 'error' => 'Instance not found'], 200);
         }
 
-        $response = Http::withHeaders([
-            'apikey' => config('services.evolution.global_key'),
-        ])->get(
-            $this->baseUrl().'/instance/connectionState/'.@$instance->instance_name
-        );
+        try {
+            $response = Http::withHeaders([
+                'apikey' => config('services.evolution.global_key'),
+            ])->get(
+                $this->baseUrl().'/instance/connectionState/'.@$instance->instance_name
+            );
 
-        $data = $response->json();
+            $data = $response->json();
 
-        $responseConnected = Http::withHeaders([
-            'apikey' => config('services.evolution.global_key'),
-        ])->get(
-            $this->baseUrl().'/instance/fetchInstances'
-        );
-        $dataConnected = $responseConnected->json();
+            $responseConnected = Http::withHeaders([
+                'apikey' => config('services.evolution.global_key'),
+            ])->get(
+                $this->baseUrl().'/instance/fetchInstances'
+            );
+            $dataConnected = $responseConnected->json();
 
-        $connectedNumber = collect($dataConnected)
-            ->firstWhere('name', @$instance->instance_name)['ownerJid'] ?? null;
+            $connectedNumber = collect($dataConnected)
+                ->firstWhere('name', @$instance->instance_name)['ownerJid'] ?? null;
 
-        if ($connectedNumber) {
-            $connectedNumber = explode('@', $connectedNumber)[0];
+            if ($connectedNumber) {
+                $connectedNumber = explode('@', $connectedNumber)[0];
+            }
+
+            $data['instance']['connectedNumber'] = $connectedNumber;
+
+            if (isset($data['instance']['state'])) {
+                DB::table('whatsapp_instances')
+                    ->where('user_id', auth()->id())
+                    ->update([
+                        'status' => 1,
+                        'updated_at' => now(),
+                    ]);
+            }
+
+            return $data;
+        } catch (\Throwable $e) {
+            \Log::error('WhatsApp status error: '.$e->getMessage());
+
+            return response()->json(['instance' => null, 'error' => $e->getMessage()], 200);
         }
-
-        $data['instance']['connectedNumber'] = $connectedNumber;
-
-        if (isset($data['instance']['state'])) {
-            DB::table('whatsapp_instances')
-                ->where('user_id', auth()->id())
-                ->update([
-                    'status' => 1,
-                    'updated_at' => now(),
-                ]);
-        }
-
-        return $data;
     }
 
     // 4️⃣ Restart
     public function restart(Request $request)
     {
-        $userid = (int) $request->userid;
+        $userid = (int) ($request->userid ?: auth()->id());
         $instance = $this->getInstance($userid);
-
-        Http::withHeaders([
-            'apikey' => config('services.evolution.global_key'),
-        ])->post(
-            $this->baseUrl().'/instance/restart/'.$instance->instance_name
-        );
-
-        return response()->json(['success' => true]);
-    }
-
-    public function delete(Request $request)
-    {
-        $userid = (int) $request->userid;
-        $instance = $this->getInstance($userid);
-
-        $response = Http::withHeaders([
-            'apikey' => config('services.evolution.global_key'),
-        ])->delete(
-            $this->baseUrl().'/instance/delete/'.$instance->instance_name
-        );
-
-        $data = $response->json();
-
-        // dd($data);
 
         if (! $instance) {
             return response()->json(['error' => 'Instance not found'], 404);
         }
 
-        $data = $response->json();
-        //    dd($data);
+        try {
+            Http::withHeaders([
+                'apikey' => config('services.evolution.global_key'),
+            ])->post(
+                $this->baseUrl().'/instance/restart/'.$instance->instance_name
+            );
 
-        if ($response->successful()) {
+            return response()->json(['success' => true]);
+        } catch (\Throwable $e) {
+            \Log::error('WhatsApp restart error: '.$e->getMessage());
 
-            DB::table('whatsapp_instances')
-                ->where('user_id', $userid)
-                ->delete();
+            return response()->json(['success' => false, 'error' => $e->getMessage()], 500);
+        }
+    }
+
+    public function delete(Request $request)
+    {
+        $userid = (int) ($request->userid ?: auth()->id());
+        $instance = $this->getInstance($userid);
+
+        if (! $instance) {
+            return response()->json(['error' => 'Instance not found'], 404);
         }
 
-        $response = Http::withHeaders([
-            'apikey' => config('services.evolution.global_key'),
-        ])->get(
-            $this->baseUrl().'/instance/connectionState/'.$instance->instance_name
-        );
-        $data = $response->json();
+        try {
+            $response = Http::withHeaders([
+                'apikey' => config('services.evolution.global_key'),
+            ])->delete(
+                $this->baseUrl().'/instance/delete/'.$instance->instance_name
+            );
 
-        $this->classname = '';
-        $this->textvalue = '';
-        $this->connectBtn = '';
-        $this->connectedNumberGet = '';
+            if ($response->successful()) {
+                DB::table('whatsapp_instances')
+                    ->where('user_id', $userid)
+                    ->delete();
+            }
 
-        $this->classname = 'btn-primary';
-        $this->textvalue = 'Click to Connect';
-        $this->connectBtn = 'connectBtn';
-        $this->connectedNumberGet = '';
+            $responseStatus = Http::withHeaders([
+                'apikey' => config('services.evolution.global_key'),
+            ])->get(
+                $this->baseUrl().'/instance/connectionState/'.$instance->instance_name
+            );
 
-        return response()->json([
-            'status' => $response->status(),
-            'body' => $response->json(),
-            'classname' => $this->classname,
-            'textvalue' => $this->textvalue,
-            'connectBtn' => $this->connectBtn,
-            'connectedNumberGet' => $this->connectedNumberGet,
-        ]);
+            $this->classname = 'btn-primary';
+            $this->textvalue = 'Click to Connect';
+            $this->connectBtn = 'connectBtn';
+            $this->connectedNumberGet = '';
+
+            return response()->json([
+                'status' => $responseStatus->status(),
+                'body' => $responseStatus->json(),
+                'classname' => $this->classname,
+                'textvalue' => $this->textvalue,
+                'connectBtn' => $this->connectBtn,
+                'connectedNumberGet' => $this->connectedNumberGet,
+            ]);
+        } catch (\Throwable $e) {
+            \Log::error('WhatsApp delete error: '.$e->getMessage());
+
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
     }
 
     // 5️⃣ Send Message
@@ -435,7 +456,7 @@ class HomeController extends Controller
             return Reply::dataOnly(['status' => 'coinCheck', 'message' => $coinsDeductions->message, 'company_coins' => $coinsDeductions->company_coins]);
         }
 
-        $userid = (int) $request->userid;
+        $userid = (int) ($request->userid ?: auth()->id());
         $instance = $this->getInstance($userid);
 
         if (! $instance) {
@@ -839,7 +860,8 @@ class HomeController extends Controller
                 // Auto-promote from temp if present
                 try {
                     Storage::disk('r2')->copy('temp/'.$baseNameOnly, $storedPath);
-                } catch (\Throwable) {}
+                } catch (\Throwable) {
+                }
                 if (! Storage::disk('r2')->exists($storedPath)) {
                     $storedPath = 'temp/'.$baseNameOnly;
                 }
@@ -10380,7 +10402,7 @@ class HomeController extends Controller
                 return response()->json([
                     'status' => false,
                     'type' => 'error',
-                    'message' => 'Exchange Rate API service returned an error (HTTP ' . $response->status() . '). Existing rates preserved.',
+                    'message' => 'Exchange Rate API service returned an error (HTTP '.$response->status().'). Existing rates preserved.',
                 ], 502);
             }
 
@@ -10407,6 +10429,7 @@ class HomeController extends Controller
                             'inr_based_rates' => round($usdToInr, 4),
                             'updated_at' => now(),
                         ]);
+
                         continue;
                     }
 
@@ -10417,6 +10440,7 @@ class HomeController extends Controller
                             'inr_based_rates' => 1.0000,
                             'updated_at' => now(),
                         ]);
+
                         continue;
                     }
 
@@ -10444,12 +10468,12 @@ class HomeController extends Controller
                 'message' => 'Global currency exchange rates updated and synchronized successfully!',
             ]);
         } catch (\Throwable $e) {
-            Log::error('Currency rates update failed: ' . $e->getMessage(), ['exception' => $e]);
+            Log::error('Currency rates update failed: '.$e->getMessage(), ['exception' => $e]);
 
             return response()->json([
                 'status' => false,
                 'type' => 'error',
-                'message' => 'Unable to connect to Exchange Rate API: ' . $e->getMessage(),
+                'message' => 'Unable to connect to Exchange Rate API: '.$e->getMessage(),
             ], 500);
         }
     }
@@ -13946,7 +13970,10 @@ class HomeController extends Controller
     {
         $stateId = $request->query('state');
 
-        $cities = DB::table('city_list')->where('state_id', $stateId)->get(['city_id as id', 'city as name']);
+        // Performance Note: Cache static cities per state in Redis to prevent DB read load under 10K+ concurrency.
+        $cities = Cache::remember("static_cities_state_{$stateId}", 86400, function () use ($stateId) {
+            return DB::table('city_list')->where('state_id', $stateId)->get(['city_id as id', 'city as name']);
+        });
 
         return response()->json($cities);
     }

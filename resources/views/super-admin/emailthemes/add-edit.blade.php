@@ -1324,14 +1324,66 @@
                         });
                         evt.editor.on('change', function() {
                             updateCharCount();
+                            autosaveDraftLocally();
                         });
                         evt.editor.on('key', function() {
-                            setTimeout(updateCharCount, 50);
+                            setTimeout(function() {
+                                updateCharCount();
+                                autosaveDraftLocally();
+                            }, 50);
                         });
                         updateCharCount();
+
+                        // Restore draft if creating a new template ($('#tokenId').val() == '0') and editor is empty
+                        try {
+                            var existingDraft = sessionStorage.getItem(draftKey);
+                            if (existingDraft && ($('#tokenId').val() === '0' || !$('#tokenId').val())) {
+                                var parsedDraft = JSON.parse(existingDraft);
+                                if (parsedDraft && parsedDraft.editor1 && !evt.editor.getData().trim()) {
+                                    evt.editor.setData(parsedDraft.editor1);
+                                    if (parsedDraft.template && !$('#template').val().trim()) {
+                                        $('#template').val(parsedDraft.template);
+                                    }
+                                    if (parsedDraft.subject && !$('#subject').val().trim()) {
+                                        $('#subject').val(parsedDraft.subject);
+                                    }
+                                }
+                            }
+                        } catch (e) {}
                     }
                 });
             }
+
+            // ── Client-Side Draft Resilience (SessionStorage Autosave) ──
+            var draftKey = 'jero_email_theme_draft_' + ($('#tokenId').val() || '0');
+            var draftAutosaveTimer = null;
+
+            function autosaveDraftLocally() {
+                clearTimeout(draftAutosaveTimer);
+                draftAutosaveTimer = setTimeout(function() {
+                    try {
+                        var bodyVal = '';
+                        if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances && CKEDITOR.instances.editor1) {
+                            bodyVal = CKEDITOR.instances.editor1.getData();
+                        } else {
+                            bodyVal = $('#editor1').val();
+                        }
+                        var draft = {
+                            template: $('#template').val(),
+                            subject: $('#subject').val(),
+                            editor1: bodyVal,
+                            temptype_is: $('#temptype_is').val(),
+                            status_is: $('#status_is').val(),
+                            client_required_is: $('#client_required_is').val(),
+                            tempForInterview_is: $('#tempForInterview_is').val(),
+                            timestamp: Date.now()
+                        };
+                        sessionStorage.setItem(draftKey, JSON.stringify(draft));
+                    } catch (e) {}
+                }, 400);
+            }
+
+            $('#template, #subject, #temptype_is, #status_is, #client_required_is, #tempForInterview_is').on('input change', autosaveDraftLocally);
 
             // Subject focus sets target to subject
             $('#subject').on('focus', function() {
@@ -1501,9 +1553,24 @@
             }
         }
 
+        function generateIdempotencyKey() {
+            if (window.crypto && window.crypto.randomUUID) {
+                return window.crypto.randomUUID();
+            }
+            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+                var r = Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8);
+                return v.toString(16);
+            });
+        }
+
         // Save Template Form Submission
         $('#save-form').on('click', function(e) {
             e.preventDefault();
+
+            var saveBtn = $('#save-form');
+            if (saveBtn.data('submitting')) {
+                return false;
+            }
 
             var template = $('#template').val().trim();
             var subject = $('#subject').val().trim();
@@ -1544,13 +1611,18 @@
                 return;
             }
 
-            var saveBtn = $('#save-form');
+            saveBtn.data('submitting', true);
             var originalBtnHtml = saveBtn.html();
             saveBtn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-2"></span>Saving...');
+
+            var idempotencyKey = generateIdempotencyKey();
 
             $.ajax({
                 type: 'POST',
                 url: "{{ route('superadmin.company.addEditemailThemesupdate') }}",
+                headers: {
+                    'X-Idempotency-Key': idempotencyKey
+                },
                 data: {
                     '_token': "{{ csrf_token() }}",
                     'tokenId': tokenId,
@@ -1562,9 +1634,16 @@
                     'client_required_is': client_required_is,
                     'tempForInterview_is': tempForInterview_is
                 },
+                complete: function() {
+                    saveBtn.data('submitting', false);
+                },
                 success: function(response) {
                     saveBtn.prop('disabled', false).html(originalBtnHtml);
                     if (response.status === 'success') {
+                        try {
+                            sessionStorage.removeItem(draftKey);
+                        } catch (e) {}
+
                         Swal.fire({
                             icon: 'success',
                             title: 'Success!',

@@ -930,6 +930,48 @@
 var _rnoteEditor = null;
 var _rnoteActiveFilter = 'all';
 var _rnoteSearchTimer = null;
+var _clientTemplateCache = {};
+var _inFlightDeletes = {};
+var _inFlightDuplicates = {};
+
+// Client-First Idempotency UUID Generator
+function generateIdempotencyKey() {
+    if (window.crypto && window.crypto.randomUUID) {
+        return window.crypto.randomUUID();
+    }
+    return 'rnote_' + Date.now() + '_' + Math.random().toString(36).substring(2, 11);
+}
+
+// Client-First RAM Cache for Single Template Lookups (0ms modal openings & previews)
+function fetchTemplateData(id, callback) {
+    var now = Date.now();
+    if (_clientTemplateCache[id] && (now - _clientTemplateCache[id].timestamp < 60000)) {
+        callback(_clientTemplateCache[id].data);
+        return;
+    }
+
+    $.ajax({
+        url: '{{ route("superadmin.recruiter-note.getData", ["id" => "__ID__"]) }}'.replace('__ID__', id),
+        type: 'GET',
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        },
+        success: function(res) {
+            if (res.status === 'success' && res.data) {
+                _clientTemplateCache[id] = {
+                    data: res.data,
+                    timestamp: Date.now()
+                };
+                callback(res.data);
+            } else {
+                toastr.error(res.message || 'Failed to load template data.');
+            }
+        },
+        error: function() {
+            toastr.error('Network error loading template.');
+        }
+    });
+}
 
 // Tier 2: Sub-tab filtering
 function filterTemplates(type, btn) {
@@ -994,15 +1036,24 @@ function updateKpiCounters() {
     }
 }
 
-// Tier 3: Instant 1-Click AJAX Status Toggle
+// Tier 3: Instant 1-Click AJAX Status Toggle with Idempotency & In-Flight Fencing
 function toggleTemplateStatus(id, switchEl) {
     var $switch = $(switchEl);
+    if ($switch.prop('disabled')) return;
     $switch.prop('disabled', true);
+
+    var idempotencyKey = generateIdempotencyKey();
 
     $.ajax({
         url: '{{ route("superadmin.recruiter-note.toggleStatus", ["id" => "__ID__"]) }}'.replace('__ID__', id),
         type: 'POST',
-        data: { _token: '{{ csrf_token() }}' },
+        headers: {
+            'X-Idempotency-Key': idempotencyKey
+        },
+        data: {
+            _token: '{{ csrf_token() }}',
+            _idempotency_key: idempotencyKey
+        },
         success: function(res) {
             if (res.status === 'success') {
                 toastr.success(res.message);
@@ -1015,6 +1066,7 @@ function toggleTemplateStatus(id, switchEl) {
                       .addClass(isNowActive ? 'active' : 'inactive')
                       .text(res.status_label);
 
+                delete _clientTemplateCache[id];
                 updateKpiCounters();
                 applyFilters();
             } else {
@@ -1032,8 +1084,10 @@ function toggleTemplateStatus(id, switchEl) {
     });
 }
 
-// Tier 3: Instant 1-Click Duplicate
+// Tier 3: Instant 1-Click Duplicate with Single-Flight Fencing & Idempotency
 function duplicateTemplate(id) {
+    if (_inFlightDuplicates[id]) return;
+
     Swal.fire({
         title: 'Duplicate Template?',
         text: 'This will create an inactive draft copy of this evaluation template.',
@@ -1045,10 +1099,19 @@ function duplicateTemplate(id) {
     }).then(function(result) {
         if (!result.isConfirmed) return;
 
+        _inFlightDuplicates[id] = true;
+        var idempotencyKey = generateIdempotencyKey();
+
         $.ajax({
             url: '{{ route("superadmin.recruiter-note.duplicate", ["id" => "__ID__"]) }}'.replace('__ID__', id),
             type: 'POST',
-            data: { _token: '{{ csrf_token() }}' },
+            headers: {
+                'X-Idempotency-Key': idempotencyKey
+            },
+            data: {
+                _token: '{{ csrf_token() }}',
+                _idempotency_key: idempotencyKey
+            },
             success: function(res) {
                 if (res.status === 'success') {
                     toastr.success(res.message);
@@ -1059,16 +1122,74 @@ function duplicateTemplate(id) {
             },
             error: function() {
                 toastr.error('Failed to duplicate template.');
+            },
+            complete: function() {
+                delete _inFlightDuplicates[id];
             }
         });
     });
 }
 
-// Tier 3: 1-Click Clipboard Copying
+// Tier 3: Instant 1-Click Delete with SweetAlert & Dynamic DOM Removal
+function deleteTemplate(id) {
+    if (_inFlightDeletes[id]) return;
+
+    Swal.fire({
+        title: 'Delete Template?',
+        text: 'Are you sure you want to delete this recruiter note template? This action cannot be undone.',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#7e8299',
+        confirmButtonText: 'Yes, delete it'
+    }).then(function(result) {
+        if (!result.isConfirmed) return;
+
+        _inFlightDeletes[id] = true;
+        var idempotencyKey = generateIdempotencyKey();
+
+        $.ajax({
+            url: '{{ route("superadmin.recruiter-note.destroy", ["id" => "__ID__"]) }}'.replace('__ID__', id),
+            type: 'DELETE',
+            headers: {
+                'X-Idempotency-Key': idempotencyKey
+            },
+            data: {
+                _token: '{{ csrf_token() }}',
+                _idempotency_key: idempotencyKey
+            },
+            success: function(res) {
+                if (res.status === 'success') {
+                    toastr.success(res.message || 'Template deleted successfully.');
+                    delete _clientTemplateCache[id];
+                    var $card = $('#rnote-card-' + id);
+                    if ($card.length > 0) {
+                        $card.slideUp(250, function() {
+                            $(this).remove();
+                            updateKpiCounters();
+                            applyFilters();
+                        });
+                    } else {
+                        setTimeout(function() { location.reload(); }, 500);
+                    }
+                } else {
+                    toastr.error(res.message || 'Failed to delete template.');
+                }
+            },
+            error: function() {
+                toastr.error('Failed to delete recruiter note template.');
+            },
+            complete: function() {
+                delete _inFlightDeletes[id];
+            }
+        });
+    });
+}
+
+// Tier 3: 1-Click Clipboard Copying via Cached Lookup
 function copyTemplateContent(id) {
-    $.get('{{ route("superadmin.recruiter-note.getData", ["id" => "__ID__"]) }}'.replace('__ID__', id), function(res) {
-        if (res.status !== 'success') return toastr.error('Failed to load template content.');
-        var text = $('<div>').html(res.data.content).text().trim();
+    fetchTemplateData(id, function(data) {
+        var text = $('<div>').html(data.content).text().trim();
         if (navigator.clipboard) {
             navigator.clipboard.writeText(text).then(function() {
                 toastr.success('Template content copied to clipboard!');
@@ -1137,15 +1258,13 @@ function openAddModal() {
     $('#rnoteModal').modal('show');
 }
 
-// Open Edit Modal
+// Open Edit Modal with Fast RAM Cache
 function openEditModal(id) {
     $('#rnoteModalTitle').text('Edit Recruiter Note Template');
     $('#rnoteModalIcon i').attr('class', 'fas fa-edit');
     $('#rnoteSaveBtnText').text('Update Template');
 
-    $.get('{{ route("superadmin.recruiter-note.getData", ["id" => "__ID__"]) }}'.replace('__ID__', id), function(res) {
-        if (res.status !== 'success') return toastr.error('Failed to load template data.');
-        var d = res.data;
+    fetchTemplateData(id, function(d) {
         $('#rnote_id').val(d.id);
         $('#rnote_title').val(d.title);
         $('#titleCharCount').text((d.title || '').length + ' / 255');
@@ -1162,7 +1281,7 @@ function openEditModal(id) {
     });
 }
 
-// Full Content Preview Modal
+// Full Content Preview Modal with Fast RAM Cache
 function openPreviewModal(id) {
     _activePreviewId = id;
     $('#previewModalTitle').text('Loading...');
@@ -1170,13 +1289,7 @@ function openPreviewModal(id) {
     $('#previewModalContent').html('<div class="text-center py-5 text-muted"><i class="fas fa-spinner fa-spin me-2"></i>Loading formatted template...</div>');
     $('#rnotePreviewModal').modal('show');
 
-    $.get('{{ route("superadmin.recruiter-note.getData", ["id" => "__ID__"]) }}'.replace('__ID__', id), function(res) {
-        if (res.status !== 'success') {
-            $('#previewModalContent').html('<div class="text-danger py-3">Failed to load template content.</div>');
-            return toastr.error('Failed to load template.');
-        }
-
-        var d = res.data;
+    fetchTemplateData(id, function(d) {
         $('#previewModalTitle').text(d.title);
         $('#previewModalId').text('#' + d.id);
         
@@ -1251,11 +1364,16 @@ $('#rnoteModal').on('hidden.bs.modal', function() {
     }
     $('#rnote_id').val('');
     $('#rnoteModal').removeData('pendingContent');
-    $('#rnoteSaveBtn').prop('disabled', false);
+    $('#rnoteSaveBtn').prop('disabled', false).removeData('submitting');
 });
 
-// Save Template with FormRequest validation feedback
+// Save Template with Single-Submit Guard, Idempotency & FormRequest validation feedback
 function saveTemplate() {
+    var $btn = $('#rnoteSaveBtn');
+    if ($btn.data('submitting') === true || $btn.prop('disabled') === true) {
+        return;
+    }
+
     if (_rnoteEditor) {
         _rnoteEditor.updateElement();
     }
@@ -1282,14 +1400,19 @@ function saveTemplate() {
         : '{{ route("superadmin.recruiter-note.store") }}';
     var method = id ? 'PUT' : 'POST';
 
-    var $btn = $('#rnoteSaveBtn');
-    $btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin me-1"></i> Saving…');
+    var idempotencyKey = generateIdempotencyKey();
+
+    $btn.data('submitting', true).prop('disabled', true).html('<i class="fas fa-spinner fa-spin me-1"></i> Saving…');
 
     $.ajax({
         url: url,
         type: method,
+        headers: {
+            'X-Idempotency-Key': idempotencyKey
+        },
         data: {
             _token: '{{ csrf_token() }}',
+            _idempotency_key: idempotencyKey,
             title: title,
             content: content,
             status: status
@@ -1297,6 +1420,9 @@ function saveTemplate() {
         success: function(res) {
             if (res.status === 'success') {
                 toastr.success(res.message || 'Saved successfully.');
+                if (id) {
+                    delete _clientTemplateCache[id];
+                }
                 $('#rnoteModal').modal('hide');
                 setTimeout(function() {
                     location.reload();
@@ -1319,7 +1445,7 @@ function saveTemplate() {
             toastr.error(msg);
         },
         complete: function() {
-            $btn.prop('disabled', false).html('<i class="fas fa-check me-1"></i> <span id="rnoteSaveBtnText">' + (id ? 'Update Template' : 'Save Template') + '</span>');
+            $btn.data('submitting', false).prop('disabled', false).html('<i class="fas fa-check me-1"></i> <span id="rnoteSaveBtnText">' + (id ? 'Update Template' : 'Save Template') + '</span>');
         }
     });
 }

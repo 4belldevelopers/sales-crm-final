@@ -9,7 +9,6 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
@@ -113,28 +112,46 @@ class ProcessTransactionOutboxEventJob implements ShouldQueue
             $adminName = $payload['admin_name'] ?? 'Super Admin';
             $entityVersion = (int) ($event->aggregate_version ?? 1);
 
-            // Invalidate Redis/Dragonfly caches
-            Cache::forget('superadmin:tx:kpi:v1');
-            Cache::forget("superadmin:tx:detail:{$transactionId}");
+            // 1. Dual-Store Synchronization: Update document in Elasticsearch
+            $elasticService = app(\App\Services\ElasticService::class);
+            $index = config('constants.ELASTIC_CART_TRANSACTION_HISTORY', 'local_cart_transaction_history');
 
-            // Compute fresh lightweight KPI metrics for broadcast delta via single consolidated query
-            $kpiRow = DB::table('cart_transaction_history')
-                ->selectRaw("
-                    COALESCE(SUM(CASE WHEN status = 'captured' AND currency = 'INR' THEN total_price ELSE 0 END), 0) as totalRevenueInr,
-                    COALESCE(SUM(CASE WHEN status = 'captured' AND currency = 'USD' THEN total_price ELSE 0 END), 0) as totalRevenueUsd,
-                    COUNT(*) as totalTransactions,
-                    COUNT(CASE WHEN status = 'captured' THEN 1 END) as capturedCount,
-                    COUNT(CASE WHEN invoice_approval = 'Yes' THEN 1 END) as approvedInvoiceCount
-                ")
-                ->first();
+            if ($elasticService->indexExists($index)) {
+                try {
+                    $esDocUpdates = [
+                        'updated_at' => Carbon::now()->toIso8601String(),
+                    ];
+                    if ($invoiceApproval !== null) {
+                        $esDocUpdates['invoice_approval'] = $invoiceApproval;
+                    }
+                    if ($approvalInvoiceNo !== null) {
+                        $esDocUpdates['approval_invoice_no'] = $approvalInvoiceNo;
+                    }
+                    if ($approvalInvoiceDate !== null) {
+                        $esDocUpdates['approval_invoice_date'] = Carbon::parse($approvalInvoiceDate)->toIso8601String();
+                    }
 
-            $freshKpis = [
-                'totalRevenueInr' => (float) ($kpiRow->totalRevenueInr ?? 0),
-                'totalRevenueUsd' => (float) ($kpiRow->totalRevenueUsd ?? 0),
-                'totalTransactions' => (int) ($kpiRow->totalTransactions ?? 0),
-                'capturedCount' => (int) ($kpiRow->capturedCount ?? 0),
-                'approvedInvoiceCount' => (int) ($kpiRow->approvedInvoiceCount ?? 0),
-            ];
+                    $elasticService->getClient()->update([
+                        'index' => $index,
+                        'id' => (string) $transactionId,
+                        'refresh' => 'wait_for',
+                        'retry_on_conflict' => 3,
+                        'body' => [
+                            'doc' => $esDocUpdates,
+                            'doc_as_upsert' => true,
+                        ],
+                    ]);
+                } catch (\Throwable $esEx) {
+                    Log::warning("[TX_OUTBOX] ES sync exception for transaction #{$transactionId}: {$esEx->getMessage()}");
+                }
+            }
+
+            // Invalidate Redis/Dragonfly caches atomically
+            \App\Services\SuperAdmin\TransactionHistoryCacheManager::flushCaches($transactionId);
+
+            // Compute fresh lightweight KPI metrics for broadcast delta via Elasticsearch (0% MySQL Reads)
+            $readService = app(\App\Services\SuperAdmin\SuperAdminTransactionHistoryReadService::class);
+            $freshKpis = $readService->getKpiMetrics();
 
             // 2. Broadcast real-time delta via Reverb WebSocket
             try {

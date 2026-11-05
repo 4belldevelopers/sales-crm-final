@@ -2097,98 +2097,94 @@ $(document).on('click', '.deleteBtn', function (e){
     });
 });
 
+    let whatsappStatusInterval = null;
+
     $(document).on('click', '.sendwhatsapp_panel', function (){
         var btn = $(this);
         var userid = $(this).data('userid');
         var seconds = 10;
-         // show processing
-         buttonAgree.disabled = !this.checked;
-         $('#loadingText').text('Loading......');
-         $('#send_qrBox').modal('show');
+        // show processing
+        var isAgreed = $('#agreeCheck').is(':checked');
+        if (typeof buttonAgree !== 'undefined' && buttonAgree) {
+            buttonAgree.disabled = !isAgreed;
+        }
+        $('#loadingText').text('Loading......');
+        $('#send_qrBox').modal('show');
         btn.html('<i class="fa fa-spinner fa-spin"></i> QR Generating....');
-        
 
         var timer = setInterval(function(){
-
             seconds--;
-
-            // btn.html('<i class="fa fa-spinner fa-spin"></i> QR Generating...');
-
             if(seconds <= 0){
-
                 clearInterval(timer);
-
-                // $('#send_qrBox').modal('hide');
-
-                // toggle buttons
-                // alert('sendwhatsapp_connected_'+ userid);
-                // $('.sendwhatsapp_connected_' + userid).addClass('d-none');
-                // $('.sendwhatsapp_connect_' + userid).removeClass('d-none');
             }
-
         },1000);
 
-
-
         $.post('{{ url('/whatsapp/create') }}',
-        {_token:'{{ csrf_token() }}',
-        userid: userid
+        {
+            _token:'{{ csrf_token() }}',
+            userid: userid
         },function(){
             loadQR(userid);
+        }).fail(function(xhr){
+            console.error('WhatsApp create failed:', xhr);
+            $('#loadingText').text('Failed to initiate. Try again.');
+            btn.html('<i class="fab fa-whatsapp text-white"></i> Click to Connect');
         });
     });
 
-     $(document).on('click', '#agreeBtn', function (){
-
+    $(document).on('click', '#agreeBtn', function (){
         // Hide dummy QR
         $('#dummyQr').addClass('d-none');
-
         // Show real QR
         $('#qrBox').removeClass('d-none');
-
-        // OPTIONAL: Load QR dynamically
-        // $('#qrBox').html('<img src="your-qr-api-url" />');
-
     });
-         $(document).on('click', '#disagreeBtn', function (){
 
+    $(document).on('click', '#disagreeBtn', function (){
         // Hide dummy QR
         $('.sendwhatsapp_panel').html('<i class="fab fa-whatsapp text-white"></i> <span id="">Click to Connect</span>');
         $('#dummyQr').removeClass('d-none');
-
         // Show real QR
         $('#qrBox').addClass('d-none');
-
-        // OPTIONAL: Load QR dynamically
-        // $('#qrBox').html('<img src="your-qr-api-url" />');
-
+        if (whatsappStatusInterval) {
+            clearInterval(whatsappStatusInterval);
+            whatsappStatusInterval = null;
+        }
     });
 
-
     function loadQR(userid){
-      
         $.get('{{ url('/whatsapp/qr') }}',{ userid: userid }, function(res){
             if(res.qr){
-               audioUnlocked
                 $('#qrBox').html(
                     '<img width="250" src="'+res.qr+'">'
                 );
                 checkStatus(userid);
-                buttonAgree.disabled = this.checked;
+                if (typeof buttonAgree !== 'undefined' && buttonAgree) {
+                    buttonAgree.disabled = !$('#agreeCheck').is(':checked');
+                }
                 $('#loadingText').text('⟳');
+            } else if (res.error) {
+                $('#loadingText').text(res.error);
             }
+        }).fail(function(xhr){
+            console.error('WhatsApp QR fetch failed:', xhr);
+            $('#loadingText').text('Failed to load QR');
         });
     }
-    // checkStatus();
+
     function checkStatus(userid){
-        setInterval(function(){
+        if (whatsappStatusInterval) {
+            clearInterval(whatsappStatusInterval);
+        }
+        whatsappStatusInterval = setInterval(function(){
             $.get('{{ url('/whatsapp/status') }}',{ userid: userid },function(res){
                 if(res.instance && res.instance.state){
                     $('#statusBox').html(res.instance.state);
                     if(res.instance.state === "open"){
-                        console.log("Connected!"+userid+"jdgkdjkgdf");
-                        // console.log(res.instance.connectedNumber);
-                        // Change button color
+                        console.log("Connected!"+userid);
+                        if (whatsappStatusInterval) {
+                            clearInterval(whatsappStatusInterval);
+                            whatsappStatusInterval = null;
+                        }
                         $('#send_qrBox').modal('hide');
                         $('.sendwhatsapp_connected_'+userid).removeClass('d-none');
                         $('.sendwhatsapp_connect_'+userid).addClass('d-none');
@@ -2196,13 +2192,18 @@ $(document).on('click', '.deleteBtn', function (e){
                         $('#f_phone_'+userid).val(res.instance.connectedNumber);
                         $('.connectBtn').css('right', '90px');
                         $('#f_phone_user'+userid).text(res.instance.connectedNumber);
-                        // Change text
-
                     }
                 }
             });
         },5000);
     }
+
+    $('#send_qrBox').on('hidden.bs.modal', function () {
+        if (whatsappStatusInterval) {
+            clearInterval(whatsappStatusInterval);
+            whatsappStatusInterval = null;
+        }
+    });
 
 
 

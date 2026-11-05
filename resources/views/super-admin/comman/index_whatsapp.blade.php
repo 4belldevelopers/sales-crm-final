@@ -1383,13 +1383,32 @@
                 $('#waCardGrid').addClass('stream-mode');
             });
 
-            // ── Live Status Switch Toggle (AJAX) ──
+            // ── RFC4122 v4 UUID Generator for Idempotent Requests ──
+            function generateIdempotencyKey() {
+                if (window.crypto && window.crypto.randomUUID) {
+                    return window.crypto.randomUUID();
+                }
+                return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+                    var r = Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8);
+                    return v.toString(16);
+                });
+            }
+
+            // ── Live Status Switch Toggle (AJAX with Idempotency & In-Flight Fencing) ──
             $(document).on('change', '.wa-status-toggle', function() {
                 var $toggle = $(this);
+
+                // In-Flight Fencing Guard to prevent rapid-click race conditions
+                if ($toggle.data('in-flight')) {
+                    return false;
+                }
+                $toggle.data('in-flight', true);
+
                 var id = $toggle.attr('data-id');
                 var newStatus = $toggle.is(':checked') ? 1 : 0;
                 var $label = $('#statusLabel_' + id);
                 var $card = $('#waCard_' + id);
+                var idempotencyKey = generateIdempotencyKey();
 
                 // Optimistic UI Update
                 if (newStatus === 1) {
@@ -1403,6 +1422,9 @@
                 $.ajax({
                     url: "{{ route('superadmin.company.toggleWhatsappTemplateStatus') }}",
                     type: "POST",
+                    headers: {
+                        'X-Idempotency-Key': idempotencyKey
+                    },
                     data: {
                         _token: "{{ csrf_token() }}",
                         id: id,
@@ -1424,6 +1446,9 @@
                     error: function(xhr) {
                         revertToggle();
                         toastr.error('Failed to update status. Please try again.');
+                    },
+                    complete: function() {
+                        $toggle.data('in-flight', false);
                     }
                 });
 

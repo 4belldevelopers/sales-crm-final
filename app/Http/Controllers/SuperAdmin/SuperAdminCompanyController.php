@@ -34,7 +34,10 @@ use App\Models\Ticket;
 use App\Models\TicketStatus;
 use App\Models\User;
 use App\Services\AgencyCommercialTermsService;
+use App\Services\CoinFeatureCacheManager;
+use App\Services\CoinFeatureMutationService;
 use App\Services\CompanyMutationService;
+use App\Services\ElasticCoinEventsIndex;
 use App\Services\ElasticsearchCircuitBreaker;
 use App\Services\ElasticService;
 use App\Services\GoogleSheetServiceCandidate;
@@ -43,20 +46,24 @@ use App\Services\MailService;
 use App\Services\MarketplaceModerationService;
 use App\Services\Notification\NotificationHtmlSanitizer;
 use App\Services\Notification\NotificationTokenRegistry;
+use App\Services\SuperAdmin\EmailThemeCacheManager;
+use App\Services\SuperAdmin\SuperAdminEmailThemeMutationService;
+use App\Services\SuperAdmin\SuperAdminEmailThemeReadService;
 use App\Services\SuperAdmin\SuperAdminBenchMutationService;
 use App\Services\SuperAdmin\SuperAdminCandidateMutationService;
+use App\Services\SuperAdmin\SuperAdminDefaultTermsMutationService;
+use App\Services\SuperAdmin\SuperAdminDefaultTermsReadService;
 use App\Services\SuperAdmin\SuperAdminJdMutationService;
 use App\Services\SuperAdmin\SuperAdminMeetingMutationService;
-use App\Services\CoinFeatureCacheManager;
-use App\Services\CoinFeatureMutationService;
-use App\Services\ElasticCoinEventsIndex;
 use App\Services\SuperAdmin\SuperAdminNotificationMutationService;
+use App\Services\SuperAdmin\SuperAdminNotificationReadService;
+use App\Services\SuperAdmin\SuperAdminNotificationCacheManager;
+use App\Services\SuperAdmin\SuperAdminWhatsAppThemeMutationService;
+use App\Services\SuperAdmin\SuperAdminWhatsAppThemeReadService;
+use App\Services\SuperAdmin\WhatsAppThemeCacheManager;
 use App\Services\SuperAdminBenchCandidatesCacheManager;
 use App\Services\SuperAdminCandidateListsCacheManager;
 use App\Services\SuperAdminMeetingScheduleCacheManager;
-use App\Services\SuperAdmin\SuperAdminDefaultTermsCacheManager;
-use App\Services\SuperAdmin\SuperAdminDefaultTermsMutationService;
-use App\Services\SuperAdmin\SuperAdminDefaultTermsReadService;
 use Carbon\Carbon;
 use Crypt;
 use Illuminate\Http\Request;
@@ -66,7 +73,6 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
@@ -4969,321 +4975,132 @@ class SuperAdminCompanyController extends SuperAdminBaseController
             ->make(true);
     }
 
+    /**
+     * Display listing of SuperAdmin global Email templates.
+     *
+     * Intent: CQRS Read path (Rule 1 & 2). 100% queries and KPI metrics served from
+     * Elasticsearch ELASTIC_EMAIL_TEMPLATE with L2 Redis/Dragonfly caching
+     * via EmailThemeCacheManager. 0% MySQL reads on web/API request paths.
+     */
     public function emailThemes()
     {
-        $templates = collect();
+        $readService = app(SuperAdminEmailThemeReadService::class);
+        $data = $readService->getThemes();
 
-        // CQRS: Elasticsearch strictly for reads
-        try {
-            $params = [
-                'index' => ELASTIC_EMAIL_TEMPLATE,
-                'body' => [
-                    'size' => 10000,
-                    'query' => [
-                        'bool' => [
-                            'must_not' => [
-                                [
-                                    'term' => [
-                                        'temptype' => 9,
-                                    ],
-                                ],
-                            ],
-                        ],
-                    ],
-                ],
-            ];
-
-            $response = $this->elasticService->getClient()->search($params);
-
-            $templates = collect($response['hits']['hits'] ?? [])
-                ->map(function ($hit) {
-                    return (object) $hit['_source'];
-                });
-        } catch (\Exception $e) {
-            \Log::error('ES search error in emailThemes: '.$e->getMessage());
-        }
-
-        // Resilient fallback to MySQL if ES empty or failed
-        if ($templates->isEmpty()) {
-            $templates = DB::table('th_email_template')
-                ->where('temptype', '!=', 9)
-                ->orderBy('e_temp_id', 'ASC')
-                ->get();
-        } else {
-            // Natural sort by e_temp_id ascending
-            $templates = $templates->sortBy(function ($t) {
-                return (int) ($t->e_temp_id ?? $t->id ?? 0);
-            })->values();
-        }
-
-        $this->th_email_template = $templates;
-
-        // Calculate KPI Metrics for Header Cards and Filter Tabs
-        $this->kpi = [
-            'total' => $templates->count(),
-            'active' => $templates->where('status', 1)->count(),
-            'inactive' => $templates->where('status', 0)->count(),
-            'send_mail' => $templates->where('temptype', 4)->count(),
-            'interview_mail' => $templates->where('temptype', 3)->count(),
-            'mass_mail' => $templates->where('temptype', 2)->count(),
-            'forward_mail' => $templates->where('temptype', 1)->count(),
-            'system_mail' => $templates->whereIn('temptype', [5, 6, 7, 8])->count(),
-        ];
+        $this->th_email_template = $data['templates'];
+        $this->kpi = $data['kpi'];
 
         return view('super-admin.emailthemes.index', $this->data);
     }
 
+    /**
+     * Display edit or create form for a SuperAdmin Email template.
+     *
+     * Intent: CQRS Read path. Resolves template from L2 Cache / Elasticsearch without MySQL read strain.
+     * If Id <= 0, initializes a clean DTO without querying MySQL.
+     */
     public function emailThemesupdate(Request $request, $Id)
     {
-        $template = null;
+        $templateId = (int) $Id;
+        $readService = app(SuperAdminEmailThemeReadService::class);
 
-        if ((int) $Id > 0) {
-            try {
-                $params = [
-                    'index' => ELASTIC_EMAIL_TEMPLATE,
-                    'body' => [
-                        'size' => 1,
-                        'query' => [
-                            'bool' => [
-                                'must' => [
-                                    ['term' => ['e_temp_id' => (int) $Id]],
-                                ],
-                            ],
-                        ],
-                    ],
-                ];
-
-                $response = $this->elasticService->getClient()->search($params);
-                $template = isset($response['hits']['hits'][0]) ? (object) $response['hits']['hits'][0]['_source'] : null;
-            } catch (\Exception $e) {
-                \Log::error('ES search error in emailThemesupdate: '.$e->getMessage());
-            }
-
-            // Resilient fallback to MySQL
-            if (! $template) {
-                $template = DB::table('th_email_template')->where('e_temp_id', (int) $Id)->first();
-            }
-        }
-
-        $this->th_email_template = $template;
-        $this->tokenId = (int) $Id;
+        $this->th_email_template = $readService->getThemeById($templateId);
+        $this->tokenId = $templateId;
 
         return view('super-admin.emailthemes.add-edit', $this->data);
     }
 
+    /**
+     * Create or update an Email template.
+     *
+     * Intent: CQRS Write path. Two-tier request idempotency (sys_idempotency_keys),
+     * row-locked ACID MySQL transaction (<15ms), Transactional Outbox (sys_outbox_events),
+     * and post-commit fast-path Elasticsearch dual-store synchronization.
+     */
     public function addEditemailThemesupdate(Request $request)
     {
-        $tempForInterviewVal = (int) ($request->tempForInterview_is ?: 1);
-        $statusVal = (int) ($request->status_is ?? 1);
-        $temptypeVal = (int) ($request->temptype_is ?? 1);
-        $clientRequiredVal = (int) ($request->client_required_is ?? ($request->client_required ?? 0));
+        $idempotencyKey = $request->header('X-Idempotency-Key') ?: $request->input('idempotency_key');
+        $mutationService = app(SuperAdminEmailThemeMutationService::class);
 
-        if ((int) $request->tokenId == 0) {
-            $values = [
-                'template_name' => $request->template,
-                'display_name' => $request->template,
-                'template_subject' => $request->subject,
-                'template_description' => $request->editor1,
-                'status' => $statusVal,
-                'temptype' => $temptypeVal,
-                'tempForInterview' => $tempForInterviewVal,
-                'client_required' => $clientRequiredVal,
-                'curr_date' => now(),
-            ];
-            $e_temp_id = DB::table('th_email_template')->insertGetId($values);
+        $result = $mutationService->saveTheme(
+            $request->all(),
+            $idempotencyKey,
+            auth()->id()
+        );
 
-            try {
-                $this->elasticService->getClient()->update([
-                    'index' => ELASTIC_EMAIL_TEMPLATE,
-                    'id' => (string) $e_temp_id,
-                    'retry_on_conflict' => 5,
-                    'refresh' => true,
-                    'body' => [
-                        'doc' => [
-                            'id' => (int) $e_temp_id,
-                            'e_temp_id' => (int) $e_temp_id,
-                            'template_name' => $request->template,
-                            'display_name' => $request->template,
-                            'template_subject' => $request->subject,
-                            'template_description' => $request->editor1,
-                            'status' => $statusVal,
-                            'tempForInterview' => $tempForInterviewVal,
-                            'client_required' => $clientRequiredVal,
-                            'temptype' => $temptypeVal,
-                            'curr_date' => now()->toIso8601String(),
-                        ],
-                        'doc_as_upsert' => true,
-                        'detect_noop' => false,
-                    ],
-                ]);
-            } catch (\Exception $e) {
-                \Log::error('ES insert error: '.$e->getMessage());
-            }
-
-        } else {
-            $values = [
-                'template_name' => $request->template,
-                'display_name' => $request->template,
-                'template_subject' => $request->subject,
-                'template_description' => $request->editor1,
-                'status' => $statusVal,
-                'temptype' => $temptypeVal,
-                'tempForInterview' => $tempForInterviewVal,
-                'client_required' => $clientRequiredVal,
-                'curr_date' => now(),
-            ];
-            DB::table('th_email_template')->where('e_temp_id', '=', $request->tokenId)->update($values);
-
-            try {
-                $this->elasticService->getClient()->update([
-                    'index' => ELASTIC_EMAIL_TEMPLATE,
-                    'id' => (string) $request->tokenId,
-                    'retry_on_conflict' => 5,
-                    'refresh' => true,
-                    'body' => [
-                        'doc' => [
-                            'id' => (int) $request->tokenId,
-                            'e_temp_id' => (int) $request->tokenId,
-                            'template_name' => $request->template,
-                            'display_name' => $request->template,
-                            'template_subject' => $request->subject,
-                            'template_description' => $request->editor1,
-                            'status' => $statusVal,
-                            'temptype' => $temptypeVal,
-                            'tempForInterview' => $tempForInterviewVal,
-                            'client_required' => $clientRequiredVal,
-                            'curr_date' => now()->toIso8601String(),
-                        ],
-                        'doc_as_upsert' => true,
-                        'detect_noop' => false,
-                    ],
-                ]);
-            } catch (\Exception $e) {
-                \Log::error('ES update error: '.$e->getMessage());
-            }
-
-        }
-
-        return Reply::successWithData('Email template saved successfully.', [
-            'status' => 'success',
-            'url' => route('superadmin.company.emailthemes'),
-        ]);
-
+        return response()->json($result);
     }
 
+    /**
+     * Instant toggle active/inactive status for an Email template via AJAX.
+     *
+     * Intent: CQRS Write path. Two-tier idempotency, row-locked ACID transaction (<15ms),
+     * Transactional Outbox event dispatch, and post-commit dual-store Elasticsearch sync.
+     */
     public function toggleEmailTemplateStatus(Request $request)
     {
         $id = (int) $request->id;
         $status = (int) $request->status;
+        $idempotencyKey = $request->header('X-Idempotency-Key') ?: $request->input('idempotency_key');
 
-        if (! $id) {
-            return Reply::error('Invalid template ID.');
-        }
+        $mutationService = app(SuperAdminEmailThemeMutationService::class);
 
-        DB::table('th_email_template')->where('e_temp_id', $id)->update([
-            'status' => $status,
-            'curr_date' => now(),
-        ]);
+        $result = $mutationService->toggleStatus(
+            $id,
+            $status,
+            $idempotencyKey,
+            auth()->id()
+        );
 
-        try {
-            $this->elasticService->getClient()->update([
-                'index' => ELASTIC_EMAIL_TEMPLATE,
-                'id' => (string) $id,
-                'retry_on_conflict' => 5,
-                'refresh' => true,
-                'body' => [
-                    'doc' => [
-                        'status' => $status,
-                        'curr_date' => now()->toIso8601String(),
-                    ],
-                    'doc_as_upsert' => true,
-                ],
-            ]);
-        } catch (\Exception $e) {
-            \Log::error('ES toggle status error: '.$e->getMessage());
-        }
-
-        return Reply::successWithData('Template status updated successfully.', [
-            'id' => $id,
-            'template_status' => $status,
-            'status_text' => $status == 1 ? 'Active' : 'Inactive',
-        ]);
+        return response()->json($result);
     }
 
+    /**
+     * Instant toggle client requirement status for an Email template via AJAX.
+     *
+     * Intent: CQRS Write path. Two-tier idempotency, row-locked ACID transaction (<15ms),
+     * Transactional Outbox event dispatch, and post-commit dual-store Elasticsearch sync.
+     */
     public function toggleEmailTemplateClientRequired(Request $request)
     {
         $id = (int) $request->id;
         $clientRequired = (int) $request->client_required;
+        $idempotencyKey = $request->header('X-Idempotency-Key') ?: $request->input('idempotency_key');
 
-        if (! $id) {
-            return Reply::error('Invalid template ID.');
-        }
+        $mutationService = app(SuperAdminEmailThemeMutationService::class);
 
-        DB::table('th_email_template')->where('e_temp_id', $id)->update([
-            'client_required' => $clientRequired,
-            'curr_date' => now(),
-        ]);
+        $result = $mutationService->toggleClientRequired(
+            $id,
+            $clientRequired,
+            $idempotencyKey,
+            auth()->id()
+        );
 
-        try {
-            $this->elasticService->getClient()->update([
-                'index' => ELASTIC_EMAIL_TEMPLATE,
-                'id' => (string) $id,
-                'retry_on_conflict' => 5,
-                'refresh' => true,
-                'body' => [
-                    'doc' => [
-                        'client_required' => $clientRequired,
-                        'curr_date' => now()->toIso8601String(),
-                    ],
-                    'doc_as_upsert' => true,
-                ],
-            ]);
-        } catch (\Exception $e) {
-            \Log::error('ES toggle client_required error: '.$e->getMessage());
-        }
-
-        return Reply::successWithData('Template client requirement updated successfully.', [
-            'id' => $id,
-            'client_required' => $clientRequired,
-            'status_text' => $clientRequired == 1 ? 'Client Required' : 'All Positions',
-        ]);
+        return response()->json($result);
     }
 
+    /**
+     * Bulk update template active/inactive status via AJAX.
+     *
+     * Intent: CQRS Write path. Two-tier idempotency, row-locked ACID transaction (<15ms),
+     * Transactional Outbox event dispatch, and post-commit dual-store Elasticsearch sync.
+     */
     public function bulkUpdateEmailTemplateStatus(Request $request)
     {
         $ids = (array) $request->ids;
         $status = (int) $request->status;
+        $idempotencyKey = $request->header('X-Idempotency-Key') ?: $request->input('idempotency_key');
 
-        if (empty($ids)) {
-            return Reply::error('No templates selected.');
-        }
+        $mutationService = app(SuperAdminEmailThemeMutationService::class);
 
-        DB::table('th_email_template')->whereIn('e_temp_id', $ids)->update([
-            'status' => $status,
-            'curr_date' => now(),
-        ]);
+        $result = $mutationService->bulkUpdateStatus(
+            $ids,
+            $status,
+            $idempotencyKey,
+            auth()->id()
+        );
 
-        foreach ($ids as $id) {
-            try {
-                $this->elasticService->getClient()->update([
-                    'index' => ELASTIC_EMAIL_TEMPLATE,
-                    'id' => (string) $id,
-                    'retry_on_conflict' => 5,
-                    'refresh' => true,
-                    'body' => [
-                        'doc' => [
-                            'status' => $status,
-                            'curr_date' => now()->toIso8601String(),
-                        ],
-                        'doc_as_upsert' => true,
-                    ],
-                ]);
-            } catch (\Exception $e) {
-                // log
-            }
-        }
-
-        return Reply::success('Bulk status updated successfully.');
+        return response()->json($result);
     }
 
     /**
@@ -5321,88 +5138,17 @@ class SuperAdminCompanyController extends SuperAdminBaseController
     /**
      * Display listing of SuperAdmin global WhatsApp templates.
      *
-     * Intent: CQRS Read path. Queries Elasticsearch index ELASTIC_EMAIL_TEMPLATE with temptype=9.
-     * Tenancy: Global templates for SuperAdmin (applied across all organizations).
-     * Fault Tolerance: Defensive try/catch with resilient fallback to MySQL th_email_template.
+     * Intent: CQRS Read path (Rule 1 & 2). 100% queries and KPI metrics served from
+     * Elasticsearch ELASTIC_EMAIL_TEMPLATE / ELASTIC_WHATSAPP_THEMES with L2 Redis/Dragonfly caching
+     * via WhatsAppThemeCacheManager. 0% MySQL reads on web/API request paths.
      */
     public function whatsappThemes()
     {
-        $templates = collect();
+        $readService = app(SuperAdminWhatsAppThemeReadService::class);
+        $data = $readService->getThemes();
 
-        try {
-            $params = [
-                'index' => ELASTIC_EMAIL_TEMPLATE,
-                'body' => [
-                    'size' => 10000,
-                    'query' => [
-                        'bool' => [
-                            'filter' => [
-                                ['term' => ['temptype' => 9]],
-                            ],
-                        ],
-                    ],
-                    'sort' => [
-                        ['orderByShow' => ['order' => 'asc', 'unmapped_type' => 'long']],
-                        ['e_temp_id' => ['order' => 'asc', 'unmapped_type' => 'long']],
-                    ],
-                ],
-            ];
-
-            $response = $this->elasticService->getClient()->search($params);
-
-            $templates = collect($response['hits']['hits'] ?? [])
-                ->map(function ($hit) {
-                    return (object) $hit['_source'];
-                });
-        } catch (\Throwable $e) {
-            \Log::error('ES search error in whatsappThemes: '.$e->getMessage());
-        }
-
-        // Resilient fallback to MySQL if ES empty or failed
-        if ($templates->isEmpty()) {
-            $templates = DB::table('th_email_template')
-                ->where('temptype', 9)
-                ->orderByRaw('CASE WHEN orderByShow IS NULL OR orderByShow = 0 THEN 999999 ELSE orderByShow END ASC')
-                ->orderBy('e_temp_id', 'ASC')
-                ->get();
-        } else {
-            // Natural sort by orderByShow ascending (nulls last) then e_temp_id ascending
-            $templates = $templates->sortBy(function ($t) {
-                $order = isset($t->orderByShow) && is_numeric($t->orderByShow) && (int) $t->orderByShow > 0 ? (int) $t->orderByShow : 999999;
-                $id = (int) ($t->e_temp_id ?? $t->id ?? 0);
-
-                return sprintf('%06d_%06d', $order, $id);
-            })->values();
-        }
-
-        $this->th_email_template = $templates;
-
-        // Calculate KPI Metrics for Header Badges and Sub-Tab Filters
-        $this->kpi = [
-            'total' => $templates->count(),
-            'active' => $templates->where('status', 1)->count(),
-            'inactive' => $templates->where('status', 0)->count(),
-            'reminders' => $templates->filter(function ($t) {
-                $name = strtolower($t->display_name ?? $t->template_name ?? '');
-
-                return str_contains($name, 'reminder') || str_contains($name, 'notification automatic');
-            })->count(),
-            'interview' => $templates->filter(function ($t) {
-                $name = strtolower($t->display_name ?? $t->template_name ?? '');
-
-                return str_contains($name, 'interview');
-            })->count(),
-            'call' => $templates->filter(function ($t) {
-                $name = strtolower($t->display_name ?? $t->template_name ?? '');
-
-                return str_contains($name, 'call') || str_contains($name, 'answer');
-            })->count(),
-            'offer_joining' => $templates->filter(function ($t) {
-                $name = strtolower($t->display_name ?? $t->template_name ?? '');
-
-                return str_contains($name, 'offer') || str_contains($name, 'joining');
-            })->count(),
-        ];
+        $this->th_email_template = $data['templates'];
+        $this->kpi = $data['kpi'];
 
         return view('super-admin.comman.index_whatsapp', $this->data);
     }
@@ -5410,61 +5156,15 @@ class SuperAdminCompanyController extends SuperAdminBaseController
     /**
      * Display edit or create form for a SuperAdmin WhatsApp template.
      *
-     * Intent: CQRS Read path. If Id > 0, retrieves template from ELASTIC_EMAIL_TEMPLATE with MySQL fallback.
-     * If Id <= 0, initializes a clean DTO with default values without unnecessary ES roundtrips.
+     * Intent: CQRS Read path. Resolves template from L2 Cache / Elasticsearch without MySQL read strain.
+     * If Id <= 0, initializes a clean DTO with next sequence order position derived from cached metadata.
      */
     public function whatsappThemesupdate(Request $request, $Id)
     {
         $templateId = (int) $Id;
-        $template = null;
+        $readService = app(SuperAdminWhatsAppThemeReadService::class);
 
-        if ($templateId > 0) {
-            try {
-                $params = [
-                    'index' => ELASTIC_EMAIL_TEMPLATE,
-                    'body' => [
-                        'size' => 1,
-                        'query' => [
-                            'bool' => [
-                                'must' => [
-                                    ['term' => ['e_temp_id' => $templateId]],
-                                ],
-                            ],
-                        ],
-                    ],
-                ];
-
-                $response = $this->elasticService->getClient()->search($params);
-                $template = isset($response['hits']['hits'][0]) ? (object) $response['hits']['hits'][0]['_source'] : null;
-            } catch (\Throwable $e) {
-                \Log::error('ES search error in whatsappThemesupdate: '.$e->getMessage());
-            }
-
-            // Resilient fallback to MySQL
-            if (! $template) {
-                $template = DB::table('th_email_template')->where('e_temp_id', $templateId)->first();
-            }
-        }
-
-        // Clean default template object if creating new (Id <= 0) or template not found
-        if (! $template) {
-            $nextOrder = DB::table('th_email_template')->where('temptype', 9)->max('orderByShow');
-            $template = (object) [
-                'e_temp_id' => 0,
-                'id' => 0,
-                'template_name' => '',
-                'display_name' => '',
-                'template_subject' => '',
-                'template_description' => '',
-                'status' => 1,
-                'orderByShow' => ($nextOrder ? (int) $nextOrder + 1 : 1),
-                'temptype' => 9,
-                'tempForInterview' => 1,
-                'client_required' => 0,
-            ];
-        }
-
-        $this->th_email_template = $template;
+        $this->th_email_template = $readService->getThemeById($templateId);
 
         return view('super-admin.comman.add-edit-whatsapp', $this->data);
     }
@@ -5472,177 +5172,46 @@ class SuperAdminCompanyController extends SuperAdminBaseController
     /**
      * Create or update a WhatsApp template.
      *
-     * Intent: CQRS Write path. Validates input, executes atomic write to MySQL th_email_template,
-     * and synchronizes to Elasticsearch index ELASTIC_EMAIL_TEMPLATE with refresh=true.
-     * Tenancy: Enforces temptype=9 (WhatsApp template) for global ATS usage.
+     * Intent: CQRS Write path. Two-tier request idempotency (sys_idempotency_keys),
+     * row-locked ACID MySQL transaction (<15ms), Transactional Outbox (sys_outbox_events),
+     * and post-commit fast-path Elasticsearch dual-store synchronization.
      */
     public function addEditwhatsappThemesupdate(Request $request)
     {
-        $validator = \Validator::make($request->all(), [
-            'template' => 'required|string|max:255',
-            'editor1' => 'required|string',
-            'orderByShow' => 'nullable|integer|min:0',
-            'status_is' => 'required|in:0,1',
-        ], [
-            'template.required' => 'Please enter the Template Name.',
-            'editor1.required' => 'Please enter the WhatsApp message body content.',
-            'status_is.required' => 'Please select the template status.',
-        ]);
+        $idempotencyKey = $request->header('X-Idempotency-Key') ?: $request->input('idempotency_key');
+        $mutationService = app(SuperAdminWhatsAppThemeMutationService::class);
 
-        if ($validator->fails()) {
-            return Reply::error($validator->errors()->first());
-        }
+        $result = $mutationService->saveTheme(
+            $request->all(),
+            $idempotencyKey,
+            auth()->id()
+        );
 
-        $tokenId = (int) ($request->tokenId ?? 0);
-        $statusVal = (int) $request->status_is;
-        $orderByShowVal = ! is_null($request->orderByShow) && $request->orderByShow !== '' ? (int) $request->orderByShow : null;
-        $templateName = trim((string) $request->template);
-        $subject = trim((string) ($request->subject ?? $request->template));
-        $content = (string) $request->editor1;
-
-        if ($tokenId === 0) {
-            $values = [
-                'template_name' => $templateName,
-                'display_name' => $templateName,
-                'template_subject' => $subject,
-                'template_description' => $content,
-                'status' => $statusVal,
-                'orderByShow' => $orderByShowVal,
-                'temptype' => 9, // Strictly enforced WhatsApp Template
-                'tempForInterview' => 1,
-                'client_required' => 0,
-                'curr_date' => now(),
-            ];
-
-            $e_temp_id = DB::table('th_email_template')->insertGetId($values);
-
-            try {
-                $this->elasticService->getClient()->update([
-                    'index' => ELASTIC_EMAIL_TEMPLATE,
-                    'id' => (string) $e_temp_id,
-                    'retry_on_conflict' => 5,
-                    'refresh' => true,
-                    'body' => [
-                        'doc' => [
-                            'id' => (int) $e_temp_id,
-                            'e_temp_id' => (int) $e_temp_id,
-                            'template_name' => $templateName,
-                            'display_name' => $templateName,
-                            'template_subject' => $subject,
-                            'template_description' => $content,
-                            'status' => $statusVal,
-                            'orderByShow' => $orderByShowVal,
-                            'tempForInterview' => 1,
-                            'client_required' => 0,
-                            'temptype' => 9,
-                            'curr_date' => now()->toIso8601String(),
-                        ],
-                        'doc_as_upsert' => true,
-                        'detect_noop' => false,
-                    ],
-                ]);
-            } catch (\Throwable $e) {
-                \Log::error('ES insert error in addEditwhatsappThemesupdate: '.$e->getMessage());
-            }
-
-            return Reply::successWithData('WhatsApp template created successfully.', [
-                'status' => 'success',
-                'url' => route('superadmin.company.whatsappthemes'),
-            ]);
-        } else {
-            $values = [
-                'template_name' => $templateName,
-                'display_name' => $templateName,
-                'template_subject' => $subject,
-                'template_description' => $content,
-                'status' => $statusVal,
-                'orderByShow' => $orderByShowVal,
-                'temptype' => 9, // Strictly enforced WhatsApp Template
-                'curr_date' => now(),
-            ];
-
-            DB::table('th_email_template')->where('e_temp_id', $tokenId)->update($values);
-
-            try {
-                $this->elasticService->getClient()->update([
-                    'index' => ELASTIC_EMAIL_TEMPLATE,
-                    'id' => (string) $tokenId,
-                    'retry_on_conflict' => 5,
-                    'refresh' => true,
-                    'body' => [
-                        'doc' => [
-                            'id' => (int) $tokenId,
-                            'e_temp_id' => (int) $tokenId,
-                            'template_name' => $templateName,
-                            'display_name' => $templateName,
-                            'template_subject' => $subject,
-                            'template_description' => $content,
-                            'status' => $statusVal,
-                            'orderByShow' => $orderByShowVal,
-                            'temptype' => 9,
-                            'curr_date' => now()->toIso8601String(),
-                        ],
-                        'doc_as_upsert' => true,
-                        'detect_noop' => false,
-                    ],
-                ]);
-            } catch (\Throwable $e) {
-                \Log::error('ES update error in addEditwhatsappThemesupdate: '.$e->getMessage());
-            }
-
-            return Reply::successWithData('WhatsApp template updated successfully.', [
-                'status' => 'success',
-                'url' => route('superadmin.company.whatsappthemes'),
-            ]);
-        }
+        return response()->json($result);
     }
 
     /**
      * Instant toggle active/inactive status for a WhatsApp template via AJAX.
      *
-     * Intent: CQRS Write path. Synchronizes MySQL status and Elasticsearch status atomically.
-     * Tenancy: Enforces temptype=9 for safety.
+     * Intent: CQRS Write path. Two-tier idempotency, row-locked ACID transaction (<15ms),
+     * Transactional Outbox event dispatch, and post-commit dual-store Elasticsearch sync.
      */
     public function toggleWhatsappTemplateStatus(Request $request)
     {
         $id = (int) $request->id;
         $status = (int) $request->status;
+        $idempotencyKey = $request->header('X-Idempotency-Key') ?: $request->input('idempotency_key');
 
-        if ($id <= 0) {
-            return Reply::error('Invalid template ID.');
-        }
+        $mutationService = app(SuperAdminWhatsAppThemeMutationService::class);
 
-        DB::table('th_email_template')
-            ->where('e_temp_id', $id)
-            ->where('temptype', 9)
-            ->update([
-                'status' => $status,
-                'curr_date' => now(),
-            ]);
+        $result = $mutationService->toggleStatus(
+            $id,
+            $status,
+            $idempotencyKey,
+            auth()->id()
+        );
 
-        try {
-            $this->elasticService->getClient()->update([
-                'index' => ELASTIC_EMAIL_TEMPLATE,
-                'id' => (string) $id,
-                'retry_on_conflict' => 5,
-                'refresh' => true,
-                'body' => [
-                    'doc' => [
-                        'status' => $status,
-                        'curr_date' => now()->toIso8601String(),
-                    ],
-                    'doc_as_upsert' => true,
-                ],
-            ]);
-        } catch (\Throwable $e) {
-            \Log::error('ES toggle whatsapp status error: '.$e->getMessage());
-        }
-
-        return Reply::successWithData('WhatsApp template status updated successfully.', [
-            'id' => $id,
-            'template_status' => $status,
-            'status_text' => $status == 1 ? 'Active' : 'Inactive',
-        ]);
+        return response()->json($result);
     }
 
     /**
@@ -5802,66 +5371,15 @@ class SuperAdminCompanyController extends SuperAdminBaseController
      *
      * @return \Illuminate\View\View
      */
-    public function notification()
+    public function notification(SuperAdminNotificationReadService $readService)
     {
-        $notificationIndex = defined('ELASTIC_EMAIL_NOTIFICATIONS')
-            ? ELASTIC_EMAIL_NOTIFICATIONS
-            : config('constants.ELASTIC_EMAIL_NOTIFICATIONS', 'local_email_notifications');
+        $catalog = $readService->getNotificationsCatalog();
 
-        $permissionIndex = defined('ELASTIC_EMAIL_PERMISSIONS')
-            ? ELASTIC_EMAIL_PERMISSIONS
-            : config('constants.ELASTIC_EMAIL_PERMISSIONS', 'local_mail_permissions');
-
-        try {
-            // 1. Fetch all notifications from Elasticsearch sorted deterministically by ID ASC
-            $response = $this->elasticService->getClient()->search([
-                'index' => $notificationIndex,
-                'body' => [
-                    'size' => 1000,
-                    'track_total_hits' => true,
-                    'sort' => [
-                        ['id' => ['order' => 'asc']],
-                    ],
-                ],
-            ]);
-
-            // 2. Fetch all role permissions in a single batch Elasticsearch request (0% MySQL reads)
-            $permResponse = $this->elasticService->getClient()->search([
-                'index' => $permissionIndex,
-                'body' => [
-                    'size' => 1000,
-                    'track_total_hits' => true,
-                    'query' => ['match_all' => (object) []],
-                ],
-            ]);
-
-            $permissionMap = [];
-            foreach ($permResponse['hits']['hits'] ?? [] as $permHit) {
-                $src = $permHit['_source'];
-                if (! empty($src['notification_id']) && ! empty($src['role_name'])) {
-                    $permissionMap[(int) $src['notification_id']][] = (string) $src['role_name'];
-                }
-            }
-
-            // 3. Map permissions into notification objects in memory (microsecond assembly)
-            $this->th_email_template = collect($response['hits']['hits'] ?? [])
-                ->map(function ($hit) use ($permissionMap) {
-                    $item = (object) $hit['_source'];
-                    $item->role_names = $permissionMap[(int) $item->id] ?? [];
-
-                    return $item;
-                });
-
-        } catch (\Throwable $e) {
-            Log::error("[NOTIFICATION_LISTING] Elasticsearch read exception, circuit breaker engaged: {$e->getMessage()}");
-            $this->th_email_template = collect();
-        }
-
-        // 4. In-memory KPI summary computation for Tier 0 strip
-        $this->totalNotifications = $this->th_email_template->count();
-        $this->activeNotifications = $this->th_email_template->where('status', 1)->count();
-        $this->inactiveNotifications = $this->th_email_template->where('status', 0)->count();
-        $this->roleGovernedCount = $this->th_email_template->filter(fn ($item) => ! empty($item->role_names))->count();
+        $this->th_email_template = $catalog['templates'];
+        $this->totalNotifications = $catalog['totalNotifications'];
+        $this->activeNotifications = $catalog['activeNotifications'];
+        $this->inactiveNotifications = $catalog['inactiveNotifications'];
+        $this->roleGovernedCount = $catalog['roleGovernedCount'];
 
         return view('super-admin.notification.index', $this->data);
     }
@@ -5870,58 +5388,21 @@ class SuperAdminCompanyController extends SuperAdminBaseController
      * Authoring console for Email Notification template.
      *
      * Intent: Load template and role permissions for editing or provision blank template for creation.
-     * Fixes SQL ONLY_FULL_GROUP_BY error on roles query.
+     * Strictly 0% MySQL reads on request path via Dragonfly L2 caching & Elasticsearch projections.
      *
      * @param  int|string  $Id
      * @return \Illuminate\View\View
      */
-    public function notificationupdate(Request $request, $Id, NotificationTokenRegistry $tokenRegistry)
-    {
+    public function notificationupdate(
+        Request $request,
+        $Id,
+        SuperAdminNotificationReadService $readService,
+        NotificationTokenRegistry $tokenRegistry
+    ) {
         $id = (int) $Id;
-        $this->th_email_template = null;
-
-        if ($id > 0) {
-            $notificationIndex = defined('ELASTIC_EMAIL_NOTIFICATIONS')
-                ? ELASTIC_EMAIL_NOTIFICATIONS
-                : config('constants.ELASTIC_EMAIL_NOTIFICATIONS', 'local_email_notifications');
-
-            try {
-                $response = $this->elasticService->getClient()->search([
-                    'index' => $notificationIndex,
-                    'body' => [
-                        'size' => 1,
-                        'query' => [
-                            'bool' => [
-                                'must' => [
-                                    ['term' => ['id' => $id]],
-                                ],
-                            ],
-                        ],
-                    ],
-                ]);
-
-                $this->th_email_template = isset($response['hits']['hits'][0])
-                    ? (object) $response['hits']['hits'][0]['_source']
-                    : null;
-            } catch (\Throwable $e) {
-                Log::warning("[NOTIFICATION_UPDATE] ES fetch fallback to DB for #{$id}: {$e->getMessage()}");
-                $this->th_email_template = DB::table('email_notifications')->where('id', $id)->first();
-            }
-        }
-
-        // Authoritative role permissions for this notification
-        $this->mail_permissions = $id > 0
-            ? DB::table('mail_permissions')->where('notification_id', $id)->pluck('role_name')->toArray()
-            : [];
-
-        // Authoritative roles distinct list (SQL ONLY_FULL_GROUP_BY compliant)
-        $this->roles = DB::table('roles')
-            ->select('display_name')
-            ->distinct()
-            ->orderBy('display_name', 'asc')
-            ->get();
-
-        // 96 Canonical Merge Tokens Palette for 1-click CKEditor insertion
+        $this->th_email_template = $id > 0 ? $readService->getNotificationById($id) : null;
+        $this->mail_permissions = $id > 0 ? $readService->getMailPermissionsForNotification($id) : [];
+        $this->roles = $readService->getRoles();
         $this->token_palette = $tokenRegistry->getPaletteTokens();
         $this->domain_meta = $tokenRegistry->getDomainMeta();
 
@@ -5933,7 +5414,7 @@ class SuperAdminCompanyController extends SuperAdminBaseController
      *
      * Intent: Atomically persist email notification changes in MySQL and mail_permissions,
      * record durable outbox event in sys_outbox_events, synchronize Elasticsearch projections,
-     * and invalidate application caches.
+     * enforce two-tier idempotency, and invalidate application caches.
      * Tenancy: Global Super Admin scope (tenant_id = 0).
      */
     public function addEditnotificationupdate(
@@ -5972,38 +5453,12 @@ class SuperAdminCompanyController extends SuperAdminBaseController
     public function previewNotification(
         Request $request,
         $id,
+        SuperAdminNotificationReadService $readService,
         NotificationHtmlSanitizer $sanitizer,
         NotificationTokenRegistry $tokenRegistry
     ) {
         $id = (int) $id;
-        $notification = null;
-
-        $notificationIndex = defined('ELASTIC_EMAIL_NOTIFICATIONS')
-            ? ELASTIC_EMAIL_NOTIFICATIONS
-            : config('constants.ELASTIC_EMAIL_NOTIFICATIONS', 'local_email_notifications');
-
-        try {
-            $response = $this->elasticService->getClient()->search([
-                'index' => $notificationIndex,
-                'body' => [
-                    'size' => 1,
-                    'query' => [
-                        'bool' => [
-                            'must' => [
-                                ['term' => ['id' => $id]],
-                            ],
-                        ],
-                    ],
-                ],
-            ]);
-
-            $notification = isset($response['hits']['hits'][0])
-                ? (object) $response['hits']['hits'][0]['_source']
-                : null;
-        } catch (\Throwable $e) {
-            Log::warning("[NOTIFICATION_PREVIEW] ES fetch fallback to DB for #{$id}: {$e->getMessage()}");
-            $notification = DB::table('email_notifications')->where('id', $id)->first();
-        }
+        $notification = $readService->getNotificationById($id);
 
         if (! $notification) {
             return response()->json(['status' => 'fail', 'message' => 'Notification template not found.'], 404);
@@ -6088,7 +5543,6 @@ class SuperAdminCompanyController extends SuperAdminBaseController
         return view('super-admin.default-terms', $this->data);
     }
 
-
     /**
      * Super-Admin Default Legal, Compliance & Offer Terms Catalog
      *
@@ -6120,7 +5574,6 @@ class SuperAdminCompanyController extends SuperAdminBaseController
      *         ACID row-locked MySQL transactions (<15ms), Transactional Outbox (sys_outbox_events),
      *         and post-commit fast-path Elasticsearch dual-store synchronization.
      *
-     * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\JsonResponse
      */
     public function addEditTermsupdate(Request $request)
@@ -6134,7 +5587,6 @@ class SuperAdminCompanyController extends SuperAdminBaseController
 
         return Reply::dataOnly($result);
     }
-
 
     /**
      * Super Admin Bench Candidates Approval Hub — Index Page
@@ -8057,145 +7509,32 @@ class SuperAdminCompanyController extends SuperAdminBaseController
     public function transactionhistory(Request $request)
     {
         $this->user = auth()->user();
+        $this->pageTitle = 'Transaction History';
 
-        // ---------------------------------------------------------------------
-        // Tier 0: Executive Financial KPI Aggregations (Cached in Redis for 10K Concurrency)
-        // Consolidated single-query scan: replaces 8 sequential queries with 1 consolidated SQL scan
-        // ---------------------------------------------------------------------
-        $this->kpiMetrics = Cache::remember('superadmin:tx:kpi:v1', 60, function () {
-            $row = DB::table('cart_transaction_history')
-                ->selectRaw("
-                    COALESCE(SUM(CASE WHEN status = 'captured' AND currency = 'INR' THEN total_price ELSE 0 END), 0) as totalRevenueInr,
-                    COALESCE(SUM(CASE WHEN status = 'captured' AND currency = 'USD' THEN total_price ELSE 0 END), 0) as totalRevenueUsd,
-                    COUNT(*) as totalTransactions,
-                    COUNT(CASE WHEN status = 'captured' THEN 1 END) as capturedCount,
-                    COUNT(CASE WHEN status = 'failed' THEN 1 END) as failedCount,
-                    COUNT(CASE WHEN status IN ('created', 'authorized') THEN 1 END) as pendingCount,
-                    COUNT(CASE WHEN LOWER(COALESCE(payment_mode, 'Online')) IN ('online', 'payment link', 'gateway') THEN 1 END) as onlineCount,
-                    COUNT(CASE WHEN LOWER(COALESCE(payment_mode, 'Online')) NOT IN ('online', 'payment link', 'gateway') THEN 1 END) as offlineCount,
-                    COALESCE(SUM(CASE WHEN status = 'captured' THEN credit ELSE 0 END), 0) as totalCoinsIssued,
-                    COUNT(CASE WHEN invoice_approval = 'Yes' THEN 1 END) as approvedInvoiceCount
-                ")
-                ->first();
+        $search = trim((string) $request->input('search', ''));
+        $tab = $request->input('tab', $request->input('status', 'all'));
+        $perPage = (int) $request->input('per_page', 25);
+        $page = (int) $request->input('page', 1);
 
-            return [
-                'totalRevenueInr' => (float) ($row->totalRevenueInr ?? 0),
-                'totalRevenueUsd' => (float) ($row->totalRevenueUsd ?? 0),
-                'totalTransactions' => (int) ($row->totalTransactions ?? 0),
-                'capturedCount' => (int) ($row->capturedCount ?? 0),
-                'failedCount' => (int) ($row->failedCount ?? 0),
-                'pendingCount' => (int) ($row->pendingCount ?? 0),
-                'onlineCount' => (int) ($row->onlineCount ?? 0),
-                'offlineCount' => (int) ($row->offlineCount ?? 0),
-                'totalCoinsIssued' => (float) ($row->totalCoinsIssued ?? 0),
-                'approvedInvoiceCount' => (int) ($row->approvedInvoiceCount ?? 0),
-            ];
-        });
+        // Strict CQRS (Rule 1 & Rule 2): 100% Read Path served from Elasticsearch with Dragonfly/Redis L2 cache
+        $readService = app(\App\Services\SuperAdmin\SuperAdminTransactionHistoryReadService::class);
+        $result = $readService->getTransactions(
+            filters: [
+                'tab' => $tab,
+                'search' => $search,
+                'status' => $request->input('status'),
+                'payment_mode' => $request->input('payment_mode'),
+                'invoice_approval' => $request->input('invoice_approval'),
+            ],
+            page: $page,
+            perPage: $perPage,
+            paginationPath: route('superadmin.company.transactionhistory'),
+            queryParams: $request->query()
+        );
 
-        // ---------------------------------------------------------------------
-        // Primary Ledger Query: Left joins to safeguard orphaned/soft-deleted records
-        // ---------------------------------------------------------------------
-        $query = DB::table('cart_transaction_history')
-            ->leftJoin('companies', 'companies.id', '=', 'cart_transaction_history.company_id')
-            ->leftJoin('billing_address_by_orders', 'billing_address_by_orders.cart_transaction_id', '=', 'cart_transaction_history.id')
-            ->leftJoin('countries', 'countries.id', '=', 'billing_address_by_orders.country_id')
-            ->leftJoin('state_list', 'state_list.id', '=', 'billing_address_by_orders.state_id')
-            ->leftJoin('city_list', 'city_list.city_id', '=', 'billing_address_by_orders.city')
-            ->select([
-                'cart_transaction_history.*',
-                'companies.company_name',
-                'companies.logo as company_logo',
-                'companies.company_email',
-                'companies.company_phone',
-                'billing_address_by_orders.organization',
-                'billing_address_by_orders.first_name as billing_first_name',
-                'billing_address_by_orders.last_name as billing_last_name',
-                'billing_address_by_orders.phone as billing_phone',
-                'billing_address_by_orders.building as billing_building',
-                'billing_address_by_orders.street as billing_street',
-                'billing_address_by_orders.postal_code as billing_postal_code',
-                'billing_address_by_orders.gstin',
-                'billing_address_by_orders.pan_no',
-                'billing_address_by_orders.sold_organization',
-                'billing_address_by_orders.sold_gstin',
-                'billing_address_by_orders.sold_pan_no',
-                'billing_address_by_orders.sold_phone',
-                'billing_address_by_orders.sold_street',
-                'billing_address_by_orders.sold_building',
-                'billing_address_by_orders.sold_postal_code',
-                'countries.country_name',
-                'state_list.state',
-                'city_list.city',
-            ]);
-
-        // Filter: Global Search
-        if ($request->filled('search')) {
-            $search = trim($request->search);
-            // Handle padded order numbers like #00002 or 00002
-            $cleanNumeric = ltrim(ltrim($search, '#'), '0');
-
-            $query->where(function ($q) use ($search, $cleanNumeric) {
-                if (! empty($cleanNumeric) && is_numeric($cleanNumeric)) {
-                    $q->orWhere('cart_transaction_history.id', '=', (int) $cleanNumeric);
-                }
-                $q->orWhere('companies.company_name', 'LIKE', "%{$search}%")
-                    ->orWhere('cart_transaction_history.product_name', 'LIKE', "%{$search}%")
-                    ->orWhere('cart_transaction_history.payment_Id', 'LIKE', "%{$search}%")
-                    ->orWhere('cart_transaction_history.payment_orderId', 'LIKE', "%{$search}%")
-                    ->orWhere('cart_transaction_history.transactionid', 'LIKE', "%{$search}%")
-                    ->orWhere('cart_transaction_history.bankname', 'LIKE', "%{$search}%")
-                    ->orWhere('cart_transaction_history.invoiceId', 'LIKE', "%{$search}%")
-                    ->orWhere('cart_transaction_history.approval_invoice_no', 'LIKE', "%{$search}%")
-                    ->orWhere('billing_address_by_orders.gstin', 'LIKE', "%{$search}%")
-                    ->orWhere('billing_address_by_orders.organization', 'LIKE', "%{$search}%");
-            });
-        }
-
-        // Filter: Tier 2 Sub-Tabs Selection (Syncs seamlessly with UI)
-        if ($request->filled('tab') && $request->tab !== 'all') {
-            $tab = strtolower(trim($request->tab));
-            if ($tab === 'captured') {
-                $query->where('cart_transaction_history.status', '=', 'captured');
-            } elseif ($tab === 'pending') {
-                $query->where(function ($q) {
-                    $q->whereIn('cart_transaction_history.status', ['created', 'authorized', 'pending'])
-                        ->orWhereNull('cart_transaction_history.status');
-                });
-            } elseif ($tab === 'failed') {
-                $query->where('cart_transaction_history.status', '=', 'failed');
-            } elseif ($tab === 'online') {
-                $query->where(function ($q) {
-                    $q->whereNull('cart_transaction_history.payment_mode')
-                        ->orWhereIn(DB::raw('LOWER(cart_transaction_history.payment_mode)'), ['online', 'payment link', 'gateway', 'razorpay']);
-                });
-            } elseif ($tab === 'offline') {
-                $query->whereNotNull('cart_transaction_history.payment_mode')
-                    ->whereNotIn(DB::raw('LOWER(cart_transaction_history.payment_mode)'), ['online', 'payment link', 'gateway', 'razorpay']);
-            } elseif ($tab === 'invoiced') {
-                $query->where('cart_transaction_history.invoice_approval', '=', 'Yes');
-            }
-        }
-
-        // Filter: Payment Status (fallback)
-        if ($request->filled('status') && $request->status !== 'all') {
-            $query->where('cart_transaction_history.status', '=', $request->status);
-        }
-
-        // Filter: Payment Mode (fallback)
-        if ($request->filled('payment_mode') && $request->payment_mode !== 'all') {
-            $query->where('cart_transaction_history.payment_mode', '=', $request->payment_mode);
-        }
-
-        // Filter: Invoice Approval (fallback)
-        if ($request->filled('invoice_approval') && $request->invoice_approval !== 'all') {
-            $query->where('cart_transaction_history.invoice_approval', '=', $request->invoice_approval);
-        }
-
-        $this->activeTab = $request->get('tab', $request->get('status', 'all'));
-
-        $this->cart_transaction_history = $query->orderByDesc('cart_transaction_history.id')
-            ->paginate(25)
-            ->withQueryString();
+        $this->kpiMetrics = $result['kpiMetrics'];
+        $this->activeTab = $result['activeTab'];
+        $this->cart_transaction_history = $result['cart_transaction_history'];
 
         return view('super-admin.subscription.transactionhistory', $this->data);
     }
@@ -8298,56 +7637,9 @@ class SuperAdminCompanyController extends SuperAdminBaseController
         try {
             $recordId = is_numeric($id) ? (int) $id : decrypt($id);
 
-            $cacheKey = "superadmin:tx:detail:{$recordId}";
-            $transaction = Cache::remember($cacheKey, 300, function () use ($recordId) {
-                $tx = DB::table('cart_transaction_history')
-                    ->leftJoin('companies', 'companies.id', '=', 'cart_transaction_history.company_id')
-                    ->leftJoin('billing_address_by_orders', 'billing_address_by_orders.cart_transaction_id', '=', 'cart_transaction_history.id')
-                    ->leftJoin('countries', 'countries.id', '=', 'billing_address_by_orders.country_id')
-                    ->leftJoin('state_list', 'state_list.id', '=', 'billing_address_by_orders.state_id')
-                    ->leftJoin('city_list', 'city_list.city_id', '=', 'billing_address_by_orders.city')
-                    ->select([
-                        'cart_transaction_history.*',
-                        'companies.company_name',
-                        'companies.logo as company_logo',
-                        'companies.company_email',
-                        'companies.company_phone',
-                        'billing_address_by_orders.organization',
-                        'billing_address_by_orders.first_name as billing_first_name',
-                        'billing_address_by_orders.last_name as billing_last_name',
-                        'billing_address_by_orders.phone as billing_phone',
-                        'billing_address_by_orders.building as billing_building',
-                        'billing_address_by_orders.street as billing_street',
-                        'billing_address_by_orders.postal_code as billing_postal_code',
-                        'billing_address_by_orders.gstin',
-                        'billing_address_by_orders.pan_no',
-                        'billing_address_by_orders.sold_organization',
-                        'billing_address_by_orders.sold_gstin',
-                        'billing_address_by_orders.sold_pan_no',
-                        'billing_address_by_orders.sold_phone',
-                        'billing_address_by_orders.sold_street',
-                        'billing_address_by_orders.sold_building',
-                        'billing_address_by_orders.sold_postal_code',
-                        'countries.country_name',
-                        'state_list.state',
-                        'city_list.city',
-                    ])
-                    ->where('cart_transaction_history.id', '=', $recordId)
-                    ->first();
-
-                if ($tx) {
-                    $soldFixed = Cache::remember('platform:sold_by_address:static', 86400, function () {
-                        return DB::table('sold_by_address')->first();
-                    });
-                    $tx->platform_organization = $tx->sold_organization ?: ($soldFixed->organization ?? 'JERO');
-                    $tx->platform_gstin = $tx->sold_gstin ?: ($soldFixed->gstin ?? 'N/A');
-                    $tx->platform_pan = $tx->sold_pan_no ?: ($soldFixed->pan_no ?? 'N/A');
-                    $tx->platform_phone = $tx->sold_phone ?: ($soldFixed->phone ?? 'N/A');
-                    $tx->platform_address = trim(($tx->sold_building ?: ($soldFixed->building ?? '')).' '.($tx->sold_street ?: ($soldFixed->street ?? '')));
-                }
-
-                return $tx;
-            });
+            // Strict CQRS: 100% Read served from Elasticsearch or Dragonfly L2 cache
+            $readService = app(\App\Services\SuperAdmin\SuperAdminTransactionHistoryReadService::class);
+            $transaction = $readService->getTransactionDetails($recordId);
 
             if (! $transaction) {
                 return response()->json([
@@ -9383,122 +8675,19 @@ class SuperAdminCompanyController extends SuperAdminBaseController
 
     /**
      * Display the Master Skills directory using Elasticsearch reads.
-     * Strict CQRS: 100% Elasticsearch reads, 0% MySQL reads.
+     * Strict CQRS: 100% Elasticsearch reads with L2 Redis/Dragonfly caching, 0% MySQL reads.
      */
     public function skillskElastic(Request $request)
     {
-        $this->ensureSkillsIndexExists();
+        $readService = app(\App\Services\SuperAdmin\SuperAdminSkillReadService::class);
+        $result = $readService->getSkills($request);
 
+        $paginatedSkills = $result['dataskill'];
+        $total = $result['total'];
+        $totalAll = $result['totalAll'];
         $searchQuery = trim((string) $request->input('q', ''));
-        $letterFilter = strtolower(trim((string) $request->input('letter', '')));
-        $rangeFilter = strtolower(trim((string) $request->input('range', '')));
-        $page = max((int) $request->input('page', 1), 1);
-        $size = min(max((int) $request->input('size', 20), 10), 250);
-        $from = ($page - 1) * $size;
 
-        $sortParam = $request->input('sort', 'newest');
-        $sort = match ($sortParam) {
-            'oldest' => [['created_at' => ['order' => 'asc', 'unmapped_type' => 'date']]],
-            'alpha_asc' => [['skill_name' => ['order' => 'asc']]],
-            'alpha_desc' => [['skill_name' => ['order' => 'desc']]],
-            default => [['created_at' => ['order' => 'desc', 'unmapped_type' => 'date']]],
-        };
-
-        // Construct Elasticsearch Bool Query
-        $mustClauses = [];
-
-        if ($searchQuery !== '') {
-            $mustClauses[] = [
-                'wildcard' => [
-                    'skill_name' => '*'.strtolower($searchQuery).'*',
-                ],
-            ];
-        } elseif ($letterFilter !== '') {
-            $mustClauses[] = [
-                'prefix' => [
-                    'skill_name' => $letterFilter,
-                ],
-            ];
-        } elseif ($rangeFilter !== '') {
-            if ($rangeFilter === 'other') {
-                $mustClauses[] = [
-                    'regexp' => [
-                        'skill_name' => '[0-9#+/. -].*',
-                    ],
-                ];
-            } else {
-                $ranges = [
-                    'a-d' => ['a', 'b', 'c', 'd'],
-                    'e-h' => ['e', 'f', 'g', 'h'],
-                    'i-l' => ['i', 'j', 'k', 'l'],
-                    'm-p' => ['m', 'n', 'o', 'p'],
-                    'q-t' => ['q', 'r', 's', 't'],
-                    'u-z' => ['u', 'v', 'w', 'x', 'y', 'z'],
-                ];
-                if (isset($ranges[$rangeFilter])) {
-                    $shouldLetters = [];
-                    foreach ($ranges[$rangeFilter] as $ltr) {
-                        $shouldLetters[] = ['prefix' => ['skill_name' => $ltr]];
-                    }
-                    $mustClauses[] = [
-                        'bool' => [
-                            'should' => $shouldLetters,
-                            'minimum_should_match' => 1,
-                        ],
-                    ];
-                }
-            }
-        }
-
-        $body = [
-            'from' => $from,
-            'size' => $size,
-            'track_total_hits' => true,
-            'sort' => $sort,
-        ];
-
-        if (! empty($mustClauses)) {
-            $body['query'] = [
-                'bool' => [
-                    'must' => $mustClauses,
-                ],
-            ];
-        }
-
-        $params = [
-            'index' => ELASTIC_SKILLS,
-            'request_cache' => true,
-            'body' => $body,
-        ];
-
-        $totalAll = 0;
-        try {
-            $countRes = $this->elasticService->getClient()->count(['index' => ELASTIC_SKILLS]);
-            $totalAll = $countRes['count'] ?? 0;
-            $response = $this->elasticService->getClient()->search($params);
-        } catch (\Exception $e) {
-            Log::error('SuperAdmin skillskElastic ES Search Failed: '.$e->getMessage(), ['trace' => $e->getTraceAsString()]);
-            $response = ['hits' => ['hits' => [], 'total' => ['value' => 0]]];
-        }
-
-        $dataskill = collect($response['hits']['hits'] ?? [])->map(function ($hit) {
-            return (object) array_merge(
-                ['id' => $hit['_id']],
-                $hit['_source'] ?? []
-            );
-        });
-
-        $total = $response['hits']['total']['value'] ?? 0;
-
-        $paginatedSkills = new LengthAwarePaginator(
-            $dataskill,
-            $total,
-            $size,
-            $page,
-            ['path' => request()->url(), 'query' => request()->query()]
-        );
-
-        if ($request->ajax()) {
+        if ($request->ajax() || $request->wantsJson()) {
             $html = view('super-admin.comman.skill-cards-stream', [
                 'dataskill' => $paginatedSkills,
                 'total' => $total,
@@ -9511,7 +8700,7 @@ class SuperAdminCompanyController extends SuperAdminBaseController
                 'html' => $html,
                 'total' => $total,
                 'totalAll' => $totalAll,
-                'count' => count($dataskill),
+                'count' => $result['count'],
             ]);
         }
 
@@ -9520,15 +8709,15 @@ class SuperAdminCompanyController extends SuperAdminBaseController
             'total' => $total,
             'totalAll' => $totalAll,
             'q' => $searchQuery,
-            'letter' => $letterFilter,
-            'range' => $rangeFilter,
-            'size' => $size,
-            'sort' => $sortParam,
+            'letter' => strtolower(trim((string) $request->input('letter', ''))),
+            'range' => strtolower(trim((string) $request->input('range', ''))),
+            'size' => min(max((int) $request->input('size', 20), 10), 250),
+            'sort' => (string) $request->input('sort', 'newest'),
         ]);
     }
 
     /**
-     * Delete one or multiple master skills from Elasticsearch.
+     * Delete one or multiple master skills with transactional outbox, idempotency, and ES sync.
      * Tenancy: Global Super Admin scope. Synchronous refresh for zero stale reads.
      */
     public function skillDelete(DeleteSkillRequest $request)
@@ -9539,35 +8728,11 @@ class SuperAdminCompanyController extends SuperAdminBaseController
             return Reply::error('No valid skill identifiers provided.');
         }
 
-        $deletedCount = 0;
-        foreach ($docIds as $docId) {
-            try {
-                if ($this->elasticService->getClient()->exists(['index' => ELASTIC_SKILLS, 'id' => $docId])) {
-                    $this->elasticService->getClient()->delete([
-                        'index' => ELASTIC_SKILLS,
-                        'id' => $docId,
-                    ]);
-                    $deletedCount++;
-                }
-            } catch (\Exception $e) {
-                Log::warning("Failed to delete ES skill {$docId}: ".$e->getMessage());
-            }
-        }
+        $idempotencyKey = $request->header('X-Idempotency-Key') ?? $request->input('idempotency_key');
+        $mutationService = app(\App\Services\SuperAdmin\SuperAdminSkillMutationService::class);
+        $result = $mutationService->deleteSkills($docIds, $idempotencyKey);
 
-        // Force synchronous index refresh
-        try {
-            $this->elasticService->getClient()->indices()->refresh(['index' => ELASTIC_SKILLS]);
-        } catch (\Exception $e) {
-            Log::warning('Failed to refresh ELASTIC_SKILLS index: '.$e->getMessage());
-        }
-
-        return response()->json([
-            'status' => 'success',
-            'message' => $deletedCount > 1
-                ? "{$deletedCount} skills deleted successfully."
-                : 'Skill deleted successfully.',
-            'deleted_count' => $deletedCount,
-        ]);
+        return response()->json($result);
     }
 
     /**
@@ -9583,98 +8748,26 @@ class SuperAdminCompanyController extends SuperAdminBaseController
     }
 
     /**
-     * Add or update master skills in Elasticsearch.
+     * Add or update master skills with Transactional Outbox, Two-Tier Idempotency, and ES sync.
      * Supports single-skill renaming and multi-skill bulk indexing with deduplication.
      */
     public function addEditSkillUpdate(StoreOrUpdateSkillRequest $request)
     {
-        $this->ensureSkillsIndexExists();
         $skills = $request->getSanitizedSkills();
 
         if (empty($skills)) {
             return Reply::error('Please provide at least one valid skill name (letters, numbers, +, #, /, ., -).');
         }
 
-        if ($request->tokenId === '0') {
-            // Bulk Add Mode
-            $addedCount = 0;
-            $skippedCount = 0;
+        $idempotencyKey = $request->header('X-Idempotency-Key') ?? $request->input('idempotency_key');
+        $mutationService = app(\App\Services\SuperAdmin\SuperAdminSkillMutationService::class);
+        $result = $mutationService->saveSkills($request->tokenId, $skills, $idempotencyKey);
 
-            foreach ($skills as $skillName) {
-                try {
-                    $search = $this->elasticService->getClient()->search([
-                        'index' => ELASTIC_SKILLS,
-                        'body' => [
-                            'query' => [
-                                'term' => ['skill_name' => $skillName],
-                            ],
-                        ],
-                    ]);
-
-                    if (($search['hits']['total']['value'] ?? 0) > 0) {
-                        $skippedCount++;
-
-                        continue;
-                    }
-
-                    $customId = uniqid('skill_', true);
-                    $this->elasticService->getClient()->index([
-                        'index' => ELASTIC_SKILLS,
-                        'id' => $customId,
-                        'body' => [
-                            'skill_name' => $skillName,
-                            'created_at' => now()->toIso8601String(),
-                            'updated_at' => now()->toIso8601String(),
-                        ],
-                    ]);
-                    $addedCount++;
-                } catch (\Exception $e) {
-                    Log::error("Failed to index skill '{$skillName}': ".$e->getMessage());
-                }
-            }
-
-            try {
-                $this->elasticService->getClient()->indices()->refresh(['index' => ELASTIC_SKILLS]);
-            } catch (\Exception $e) {
-                Log::warning('Failed to refresh ELASTIC_SKILLS index: '.$e->getMessage());
-            }
-
-            $message = "{$addedCount} skill(s) added successfully.";
-            if ($skippedCount > 0) {
-                $message .= " ({$skippedCount} duplicate(s) skipped).";
-            }
-
-            return Reply::success($message);
+        if (($result['status'] ?? '') === 'fail') {
+            return Reply::error($result['message'] ?? 'Failed to process skill operation.');
         }
 
-        // Edit / Rename Single Skill Mode
-        $docId = trim((string) $request->tokenId);
-        try {
-            if (! $this->elasticService->getClient()->exists(['index' => ELASTIC_SKILLS, 'id' => $docId])) {
-                return Reply::error('Skill document not found in Elasticsearch.');
-            }
-
-            $cleanSkillName = $skills[0];
-
-            $this->elasticService->getClient()->update([
-                'index' => ELASTIC_SKILLS,
-                'id' => $docId,
-                'body' => [
-                    'doc' => [
-                        'skill_name' => $cleanSkillName,
-                        'updated_at' => now()->toIso8601String(),
-                    ],
-                ],
-            ]);
-
-            $this->elasticService->getClient()->indices()->refresh(['index' => ELASTIC_SKILLS]);
-
-            return Reply::success("Skill updated to '{$cleanSkillName}'.");
-        } catch (\Exception $e) {
-            Log::error("Failed to update skill {$docId}: ".$e->getMessage());
-
-            return Reply::error('Failed to update skill in Elasticsearch.');
-        }
+        return response()->json($result);
     }
 
     /**
@@ -9698,31 +8791,7 @@ class SuperAdminCompanyController extends SuperAdminBaseController
      */
     private function ensureSkillsIndexExists(): void
     {
-        try {
-            if (! $this->elasticService->indexExists(ELASTIC_SKILLS)) {
-                $params = [
-                    'index' => ELASTIC_SKILLS,
-                    'body' => [
-                        'settings' => [
-                            'number_of_shards' => 1,
-                            'number_of_replicas' => 0,
-                            'index.requests.cache.enable' => true,
-                        ],
-                        'mappings' => [
-                            'properties' => [
-                                'id' => ['type' => 'keyword'],
-                                'skill_name' => ['type' => 'keyword'],
-                                'created_at' => ['type' => 'date'],
-                                'updated_at' => ['type' => 'date'],
-                            ],
-                        ],
-                    ],
-                ];
-                $this->elasticService->getClient()->indices()->create($params);
-            }
-        } catch (\Exception $e) {
-            Log::warning('ensureSkillsIndexExists encountered exception: '.$e->getMessage());
-        }
+        app(\App\Services\SuperAdmin\SuperAdminSkillReadService::class)->ensureSkillsIndexExists();
     }
 
     public function job_request($id)

@@ -958,6 +958,49 @@
 var _brmEditor = null;
 var _brmActiveFilter = 'all';
 var _brmSearchTimer = null;
+var _clientTemplateCache = {};
+var _inFlightToggles = {};
+var _inFlightDuplicates = {};
+var _inFlightDeletes = {};
+
+// Client-First Idempotency UUID Generator
+function generateIdempotencyKey() {
+    if (window.crypto && window.crypto.randomUUID) {
+        return window.crypto.randomUUID();
+    }
+    return 'brmnote_' + Date.now() + '_' + Math.random().toString(36).substring(2, 11);
+}
+
+// Client-First RAM Cache for Single Template Lookups (0ms modal openings & previews)
+function fetchTemplateData(id, callback) {
+    var now = Date.now();
+    if (_clientTemplateCache[id] && (now - _clientTemplateCache[id].timestamp < 60000)) {
+        callback(_clientTemplateCache[id].data);
+        return;
+    }
+
+    $.ajax({
+        url: '{{ route("superadmin.rm-note.getData", ["id" => "__ID__"]) }}'.replace('__ID__', id),
+        type: 'GET',
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        },
+        success: function(res) {
+            if (res.status === 'success' && res.data) {
+                _clientTemplateCache[id] = {
+                    data: res.data,
+                    timestamp: Date.now()
+                };
+                callback(res.data);
+            } else {
+                toastr.error(res.message || 'Failed to load template data.');
+            }
+        },
+        error: function() {
+            toastr.error('Network error loading template.');
+        }
+    });
+}
 
 // Tier 2: Sub-tab filtering
 function filterTemplates(type, btn) {
@@ -1022,15 +1065,25 @@ function updateKpiCounters() {
     }
 }
 
-// Tier 3: Instant 1-Click AJAX Status Toggle
+// Tier 3: Instant 1-Click AJAX Status Toggle with Idempotency & In-Flight Fencing
 function toggleTemplateStatus(id, switchEl) {
     var $switch = $(switchEl);
+    if ($switch.prop('disabled') || _inFlightToggles[id]) return;
+    
     $switch.prop('disabled', true);
+    _inFlightToggles[id] = true;
+    var idempotencyKey = generateIdempotencyKey();
 
     $.ajax({
         url: '{{ route("superadmin.rm-note.toggleStatus", ["id" => "__ID__"]) }}'.replace('__ID__', id),
         type: 'POST',
-        data: { _token: '{{ csrf_token() }}' },
+        headers: {
+            'X-Idempotency-Key': idempotencyKey
+        },
+        data: {
+            _token: '{{ csrf_token() }}',
+            _idempotency_key: idempotencyKey
+        },
         success: function(res) {
             if (res.status === 'success') {
                 toastr.success(res.message);
@@ -1043,6 +1096,7 @@ function toggleTemplateStatus(id, switchEl) {
                       .addClass(isNowActive ? 'active' : 'inactive')
                       .text(res.status_label);
 
+                delete _clientTemplateCache[id];
                 updateKpiCounters();
                 applyFilters();
             } else {
@@ -1055,13 +1109,16 @@ function toggleTemplateStatus(id, switchEl) {
             $switch.prop('checked', !$switch.prop('checked'));
         },
         complete: function() {
+            delete _inFlightToggles[id];
             $switch.prop('disabled', false);
         }
     });
 }
 
-// Tier 3: Instant 1-Click Duplicate
+// Tier 3: Instant 1-Click Duplicate with Single-Flight Fencing & Idempotency
 function duplicateTemplate(id) {
+    if (_inFlightDuplicates[id]) return;
+
     Swal.fire({
         title: 'Duplicate RM Template?',
         text: 'This will create an inactive draft copy of this Relationship Manager template.',
@@ -1073,10 +1130,19 @@ function duplicateTemplate(id) {
     }).then(function(result) {
         if (!result.isConfirmed) return;
 
+        _inFlightDuplicates[id] = true;
+        var idempotencyKey = generateIdempotencyKey();
+
         $.ajax({
             url: '{{ route("superadmin.rm-note.duplicate", ["id" => "__ID__"]) }}'.replace('__ID__', id),
             type: 'POST',
-            data: { _token: '{{ csrf_token() }}' },
+            headers: {
+                'X-Idempotency-Key': idempotencyKey
+            },
+            data: {
+                _token: '{{ csrf_token() }}',
+                _idempotency_key: idempotencyKey
+            },
             success: function(res) {
                 if (res.status === 'success') {
                     toastr.success(res.message);
@@ -1087,16 +1153,18 @@ function duplicateTemplate(id) {
             },
             error: function() {
                 toastr.error('Failed to duplicate template.');
+            },
+            complete: function() {
+                delete _inFlightDuplicates[id];
             }
         });
     });
 }
 
-// Tier 3: 1-Click Clipboard Copying
+// Tier 3: 1-Click Clipboard Copying with Fast RAM Cache
 function copyTemplateContent(id) {
-    $.get('{{ route("superadmin.rm-note.getData", ["id" => "__ID__"]) }}'.replace('__ID__', id), function(res) {
-        if (res.status !== 'success') return toastr.error('Failed to load template content.');
-        var text = $('<div>').html(res.data.content).text().trim();
+    fetchTemplateData(id, function(d) {
+        var text = $('<div>').html(d.content).text().trim();
         if (navigator.clipboard) {
             navigator.clipboard.writeText(text).then(function() {
                 toastr.success('Template content copied to clipboard!');
@@ -1165,15 +1233,13 @@ function openAddModal() {
     $('#brmModal').modal('show');
 }
 
-// Open Edit Modal
+// Open Edit Modal with Fast RAM Cache
 function openEditModal(id) {
     $('#brmModalTitle').text('Edit Relationship Manager Template');
     $('#brmModalIcon i').attr('class', 'fas fa-edit');
     $('#brmSaveBtnText').text('Update Template');
 
-    $.get('{{ route("superadmin.rm-note.getData", ["id" => "__ID__"]) }}'.replace('__ID__', id), function(res) {
-        if (res.status !== 'success') return toastr.error('Failed to load template data.');
-        var d = res.data;
+    fetchTemplateData(id, function(d) {
         $('#brm_id').val(d.id);
         $('#brm_title').val(d.title);
         $('#titleCharCount').text((d.title || '').length + ' / 255');
@@ -1190,7 +1256,7 @@ function openEditModal(id) {
     });
 }
 
-// Full Content Preview Modal
+// Full Content Preview Modal with Fast RAM Cache
 function openPreviewModal(id) {
     _activePreviewId = id;
     $('#previewModalTitle').text('Loading...');
@@ -1198,13 +1264,7 @@ function openPreviewModal(id) {
     $('#previewModalContent').html('<div class="text-center py-5 text-muted"><i class="fas fa-spinner fa-spin me-2"></i>Loading formatted template...</div>');
     $('#brmPreviewModal').modal('show');
 
-    $.get('{{ route("superadmin.rm-note.getData", ["id" => "__ID__"]) }}'.replace('__ID__', id), function(res) {
-        if (res.status !== 'success') {
-            $('#previewModalContent').html('<div class="text-danger py-3">Failed to load template content.</div>');
-            return toastr.error('Failed to load template.');
-        }
-
-        var d = res.data;
+    fetchTemplateData(id, function(d) {
         $('#previewModalTitle').text(d.title);
         $('#previewModalId').text('#' + d.id);
         
@@ -1285,11 +1345,16 @@ $('#brmModal').on('hidden.bs.modal', function() {
     }
     $('#brm_id').val('');
     $('#brmModal').removeData('pendingContent');
-    $('#brmSaveBtn').prop('disabled', false);
+    $('#brmSaveBtn').prop('disabled', false).removeData('submitting');
 });
 
-// Save Template with FormRequest validation feedback
+// Save Template with Single-Submit Guard, Idempotency & FormRequest validation feedback
 function saveTemplate() {
+    var $btn = $('#brmSaveBtn');
+    if ($btn.data('submitting') === true || $btn.prop('disabled') === true) {
+        return;
+    }
+
     if (_brmEditor) {
         _brmEditor.updateElement();
     }
@@ -1316,14 +1381,19 @@ function saveTemplate() {
         : '{{ route("superadmin.rm-note.store") }}';
     var method = id ? 'PUT' : 'POST';
 
-    var $btn = $('#brmSaveBtn');
-    $btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin me-1"></i> Saving…');
+    var idempotencyKey = generateIdempotencyKey();
+
+    $btn.data('submitting', true).prop('disabled', true).html('<i class="fas fa-spinner fa-spin me-1"></i> Saving…');
 
     $.ajax({
         url: url,
         type: method,
+        headers: {
+            'X-Idempotency-Key': idempotencyKey
+        },
         data: {
             _token: '{{ csrf_token() }}',
+            _idempotency_key: idempotencyKey,
             title: title,
             content: content,
             status: status
@@ -1331,6 +1401,9 @@ function saveTemplate() {
         success: function(res) {
             if (res.status === 'success') {
                 toastr.success(res.message || 'Saved successfully.');
+                if (id) {
+                    delete _clientTemplateCache[id];
+                }
                 $('#brmModal').modal('hide');
                 setTimeout(function() {
                     location.reload();
@@ -1353,13 +1426,15 @@ function saveTemplate() {
             toastr.error(msg);
         },
         complete: function() {
-            $btn.prop('disabled', false).html('<i class="fas fa-check me-1"></i> <span id="brmSaveBtnText">' + (id ? 'Update Template' : 'Save Template') + '</span>');
+            $btn.prop('disabled', false).removeData('submitting').html('<i class="fas fa-check me-1"></i> <span id="brmSaveBtnText">' + (id ? 'Update Template' : 'Save Template') + '</span>');
         }
     });
 }
 
-// Delete Template using SweetAlert2
+// Delete Template using SweetAlert2 with In-Flight Fencing & Idempotency
 function deleteTemplate(id) {
+    if (_inFlightDeletes[id]) return;
+
     Swal.fire({
         title: 'Delete Relationship Manager Template?',
         text: 'This action will permanently delete this global bench evaluation template.',
@@ -1371,13 +1446,23 @@ function deleteTemplate(id) {
     }).then(function(result) {
         if (!result.isConfirmed) return;
 
+        _inFlightDeletes[id] = true;
+        var idempotencyKey = generateIdempotencyKey();
+
         $.ajax({
             url: '{{ route("superadmin.rm-note.destroy", ["id" => "__ID__"]) }}'.replace('__ID__', id),
             type: 'DELETE',
-            data: { _token: '{{ csrf_token() }}' },
+            headers: {
+                'X-Idempotency-Key': idempotencyKey
+            },
+            data: {
+                _token: '{{ csrf_token() }}',
+                _idempotency_key: idempotencyKey
+            },
             success: function(res) {
                 if (res.status === 'success') {
                     toastr.success(res.message || 'Template deleted.');
+                    delete _clientTemplateCache[id];
                     $('#brmnote-card-' + id).fadeOut(300, function() {
                         $(this).remove();
                         updateKpiCounters();
@@ -1389,6 +1474,9 @@ function deleteTemplate(id) {
             },
             error: function() {
                 toastr.error('Failed to delete template.');
+            },
+            complete: function() {
+                delete _inFlightDeletes[id];
             }
         });
     });

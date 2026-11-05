@@ -41,7 +41,7 @@ class ProcessNotificationOutboxEventJob implements ShouldQueue
     /**
      * Create a new job instance.
      *
-     * @param int|null $specificEventId Target specific outbox event ID or null for batch mode
+     * @param  int|null  $specificEventId  Target specific outbox event ID or null for batch mode
      */
     public function __construct(
         public readonly ?int $specificEventId = null
@@ -137,6 +137,9 @@ class ProcessNotificationOutboxEventJob implements ShouldQueue
             if (isset($payload['mailType'])) {
                 $docData['mailType'] = (int) $payload['mailType'];
             }
+            if (isset($payload['role_names']) && is_array($payload['role_names'])) {
+                $docData['role_names'] = $payload['role_names'];
+            }
             if (array_key_exists('body_description', $payload)) {
                 $docData['body_description'] = $payload['body_description'];
             }
@@ -200,7 +203,8 @@ class ProcessNotificationOutboxEventJob implements ShouldQueue
                 }
             }
 
-            // 4. Invalidate affected Redis / Dragonfly caches
+            // 4. Invalidate affected Redis / Dragonfly caches via CacheManager
+            \App\Services\SuperAdmin\SuperAdminNotificationCacheManager::flushCaches($notificationId);
             Cache::forget('email_notification_cpr_admin');
             Cache::forget('email_notification_cpr_customer');
             Cache::forget("email_notification:{$notificationId}");

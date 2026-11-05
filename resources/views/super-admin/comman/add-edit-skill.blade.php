@@ -260,6 +260,17 @@ $(document).ready(function() {
 
     let isEditMode = {{ $isEdit ? 'true' : 'false' }};
     let maxItems = isEditMode ? 1 : 50;
+    let isSubmitting = false;
+
+    function generateUUID() {
+        if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+            return crypto.randomUUID();
+        }
+        return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+            let r = Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8);
+            return v.toString(16);
+        });
+    }
 
     let input = document.querySelector('input[name=skill_name]');
     let tagify = new Tagify(input, {
@@ -279,7 +290,27 @@ $(document).ready(function() {
         }
     });
 
+    // SessionStorage Autosave for Draft Recovery (Add Mode Only)
+    if (!isEditMode && typeof sessionStorage !== 'undefined') {
+        let savedDraft = sessionStorage.getItem('jero_master_skill_draft');
+        if (savedDraft && (!tagify.value || tagify.value.length === 0)) {
+            try {
+                let parsed = JSON.parse(savedDraft);
+                if (Array.isArray(parsed) && parsed.length > 0) {
+                    tagify.addTags(parsed);
+                }
+            } catch (e) {}
+        }
+
+        tagify.on('change', function() {
+            let currentTags = tagify.value.map(t => t.value);
+            sessionStorage.setItem('jero_master_skill_draft', JSON.stringify(currentTags));
+        });
+    }
+
     function submitSkillForm() {
+        if (isSubmitting) return;
+
         // Auto-commit any typed text remaining in the Tagify input buffer before submitting
         if (tagify && tagify.DOM && tagify.DOM.input && tagify.DOM.input.textContent.trim()) {
             tagify.addTags([tagify.DOM.input.textContent.trim()]);
@@ -289,20 +320,31 @@ $(document).ready(function() {
         let form = $('#editSettings')[0];
         let formData = new FormData(form);
 
+        isSubmitting = true;
         $btn.attr('data-kt-indicator', 'on').prop('disabled', true);
         $('#btnTopSave').prop('disabled', true);
+
+        let idempKey = generateUUID();
 
         $.ajax({
             type: 'POST',
             url: "{{ route('superadmin.company.addEditSkillUpdate') }}",
+            headers: {
+                'X-Idempotency-Key': idempKey
+            },
             data: formData,
             processData: false,
             contentType: false,
             success: function(response) {
+                isSubmitting = false;
                 $btn.removeAttr('data-kt-indicator').prop('disabled', false);
                 $('#btnTopSave').prop('disabled', false);
 
                 if (response.status === 'success') {
+                    if (typeof sessionStorage !== 'undefined') {
+                        sessionStorage.removeItem('jero_master_skill_draft');
+                    }
+
                     Swal.fire({
                         title: 'Success!',
                         text: response.message || 'Skill saved successfully.',
@@ -317,6 +359,7 @@ $(document).ready(function() {
                 }
             },
             error: function(xhr) {
+                isSubmitting = false;
                 $btn.removeAttr('data-kt-indicator').prop('disabled', false);
                 $('#btnTopSave').prop('disabled', false);
 
