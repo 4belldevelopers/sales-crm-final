@@ -638,11 +638,34 @@ class ServiceCompanyProfileController extends ServiceCompanyBaseController
         }
 
         $user = User::withoutGlobalScopes()->find($id);
-        $user->name = $request->name;
-        $user->mobile = $request->mobile;
+
+        $authUser = auth()->user();
+        $isOrgAdmin = ($authUser && (method_exists($authUser, 'hasRole') && $authUser->hasRole('admin') || (int) ($authUser->root_user ?? 0) === 1));
+
+        // Enterprise Hybrid Governance: Only Org Admin can mutate corporate full name
+        if ($isOrgAdmin && ! empty($request->name)) {
+            $user->name = ucwords(trim($request->name));
+        }
+
+        // Mobile update: Self-service allowed; modifications reset mobile_verified = 0
+        if ($request->has('mobile')) {
+            $newMobile = preg_replace('/[^0-9]/', '', (string) $request->mobile);
+            $newCallingCode = trim((string) $request->phone_country_code);
+            if ($user->mobile !== $newMobile || $user->calling_code !== $newCallingCode) {
+                $user->mobile_verified = 0;
+            }
+            $user->mobile = $newMobile;
+            $user->calling_code = $newCallingCode;
+        }
+
         $user->whatsapp_number = $request->whatsapp_number;
-        $user->linkedin = $request->linkedin;
-        $user->calling_code = $request->phone_country_code;
+        if ($request->has('linkedin')) {
+            $linkedin = trim((string) $request->linkedin);
+            if (! empty($linkedin) && ! preg_match('/^https?:\/\//i', $linkedin)) {
+                $linkedin = 'https://'.ltrim($linkedin, '/');
+            }
+            $user->linkedin = $linkedin;
+        }
         if ($request->hasFile('logo')) {
 
             $file = $request->file('logo');

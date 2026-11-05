@@ -33,6 +33,10 @@ class StoreTeam extends CoreRequest
             'name' => 'required|string|max:191',
             'email' => 'required|email:rfc,dns|disposable_email',
             'role_id' => 'required|integer',
+            'mobile' => 'nullable|string|max:25',
+            'calling_code' => 'nullable|string|max:10',
+            'phone_country_code' => 'nullable|string|max:10',
+            'linkedin' => 'nullable|string|max:255',
             'logo' => 'nullable|image|max:2048',
         ];
     }

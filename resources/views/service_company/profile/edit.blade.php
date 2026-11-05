@@ -36,6 +36,10 @@
    $completion   = $total ? (int) round(($filled / $total) * 100) : 0;
 
    $location_text = !empty(trim(@$return)) ? trim(@$return) : 'Location not set';
+   $isOrgAdmin = (auth()->check() && (
+       (method_exists(auth()->user(), 'hasRole') && auth()->user()->hasRole('admin')) ||
+       (int)(auth()->user()->root_user ?? 0) === 1
+   ));
 ?>
 <!--begin::Content-->
 <div class="content d-flex flex-column flex-column-fluid pt-2" id="kt_content">
@@ -105,8 +109,22 @@
 
             <div class="jp-form-grid">
               <div class="jp-field">
-                <label class="jp-label">Full Name <span class="jp-req">*</span></label>
-                <input type="text" name="name" id="name" class="jp-input" placeholder="Enter Full name" value="{{$team->name}}">
+                <div class="d-flex align-items-center justify-content-between mb-1">
+                  <label class="jp-label mb-0">Full Name <span class="jp-req">*</span></label>
+                  @if(!$isOrgAdmin)
+                    <span class="jp-badge" style="background:#fef3c7; color:#92400e; border:1px solid #fde68a; font-size:10.5px; padding:2px 8px; border-radius:999px;">
+                      <i class="bi bi-lock-fill me-1"></i> Admin Assigned
+                    </span>
+                  @endif
+                </div>
+                @if(!$isOrgAdmin)
+                  <input type="text" name="name" id="name" class="jp-input jp-input--readonly" placeholder="Enter Full name" value="{{$team->name}}" readonly style="background-color: #f8fafc; cursor: not-allowed; color: #475569; font-weight: 500;">
+                  <div style="font-size: 11px; color: #64748b; margin-top: 4px;">
+                    <i class="bi bi-info-circle me-1"></i> Full name is assigned by your organization admin and cannot be edited.
+                  </div>
+                @else
+                  <input type="text" name="name" id="name" class="jp-input" placeholder="Enter Full name" value="{{$team->name}}">
+                @endif
                 <div class="fv-plugins-message-container invalid-feedback"></div>
               </div>
 
