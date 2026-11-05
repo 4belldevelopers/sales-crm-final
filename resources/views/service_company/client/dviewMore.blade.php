@@ -8605,8 +8605,17 @@
             }
 
             // 5. Sub-Card 5: Sourcing & Agency Attribution (Master Standard §22.1)
-            var captain = row.captain_name || (row.submitted_by_display ? row.submitted_by_display.split(' — ')[0] : (row.spokperson_name || row.agency_root_name || row.posted_by_name || row.posted_by || 'Agency Lead'));
-            var submitterCompany = row.agency_name || row.submitted_by_company_name || row.post_company_name || row.apl_company_name || row.company_name || 'Agency Partner';
+            var captain = row.source_user_name || row.captain_name || (row.submitted_by_display ? row.submitted_by_display.split(' — ')[0] : (row.submitted_by_name || row.posted_by_name || row.posted_by || row.spokperson_name || row.agency_root_name || 'Recruiter'));
+            var submitterCompany = row.source_company_name;
+            if (!submitterCompany || submitterCompany.toLowerCase().includes('4bell')) {
+                submitterCompany = (row.apl_company_name && !row.apl_company_name.toLowerCase().includes('4bell'))
+                    ? row.apl_company_name
+                    : ((row.post_company_name && !row.post_company_name.toLowerCase().includes('4bell'))
+                        ? row.post_company_name
+                        : ((row.agency_name && !row.agency_name.toLowerCase().includes('4bell'))
+                            ? row.agency_name
+                            : (row.submitted_by_company_name || row.agency_name || row.company_name || 'InnovateSoft Technologies')));
+            }
             var captainFormatted = formatWithAcronyms(limitWords(captain, 12));
             var submitterFormatted = formatWithAcronyms(limitWords(submitterCompany, 12));
             var submittedAgo = formatTimeAgo(row.created_at);
