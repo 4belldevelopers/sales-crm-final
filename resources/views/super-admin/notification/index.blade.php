@@ -1047,6 +1047,18 @@ $(document).ready(function() {
     let activeCategory = 'all';
     let activeStatus = 'all';
     let searchDebounceTimer = null;
+    let activePreviewXhr = null;
+
+    // RFC 4122 v4 UUID Generator for Two-Tier Idempotency
+    function generateUUID() {
+        if (window.crypto && window.crypto.randomUUID) {
+            return window.crypto.randomUUID();
+        }
+        return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+            var r = Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8);
+            return v.toString(16);
+        });
+    }
 
     // Toast Notification helper using SweetAlert2
     const Toast = Swal.mixin({
@@ -1153,15 +1165,21 @@ $(document).ready(function() {
         filterCards();
     });
 
-    // --- OPTIMISTIC AJAX STATUS TOGGLE (ZERO PAGE RELOAD) ---
+    // --- OPTIMISTIC AJAX STATUS TOGGLE WITH TWO-TIER IDEMPOTENCY ---
     $(document).on('change', '.notif-status-toggle', function() {
         const $switch = $(this);
+        if ($switch.data('processing')) {
+            return;
+        }
+
         const notificationId = $switch.attr('data-id');
         const newStatus = $switch.is(':checked') ? 1 : 0;
         const $card = $switch.closest('.notif-primary-card');
         const $statusBadge = $(`#statusBadge_${notificationId}`);
+        const idempotencyKey = generateUUID();
 
-        // Disable switch temporarily to prevent click floods
+        // In-flight fencing: Disable switch and set processing flag
+        $switch.data('processing', true);
         $switch.prop('disabled', true);
 
         // Optimistically update badge and card data
@@ -1174,20 +1192,23 @@ $(document).ready(function() {
             $statusBadge.find('.status-label').text('Inactive');
         }
 
-        // Send AJAX mutation
+        // Send AJAX mutation with X-Idempotency-Key
         $.ajax({
             url: toggleUrl,
             type: 'POST',
             data: {
                 _token: csrfToken,
                 id: notificationId,
-                status: newStatus
+                status: newStatus,
+                idempotency_key: idempotencyKey
             },
             headers: {
                 'X-CSRF-TOKEN': csrfToken,
-                'X-Requested-With': 'XMLHttpRequest'
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-Idempotency-Key': idempotencyKey
             },
             success: function(response) {
+                $switch.data('processing', false);
                 $switch.prop('disabled', false);
 
                 // Update Tier 0 KPI summary counts dynamically
@@ -1210,7 +1231,9 @@ $(document).ready(function() {
                 });
             },
             error: function(xhr) {
+                $switch.data('processing', false);
                 $switch.prop('disabled', false);
+
                 // Revert optimistic switch and badge
                 const revertedStatus = newStatus === 1 ? 0 : 1;
                 $switch.prop('checked', revertedStatus === 1);
@@ -1235,7 +1258,7 @@ $(document).ready(function() {
         });
     });
 
-    // --- LIVE PREVIEW DRAWER TRIGGER ---
+    // --- LIVE PREVIEW DRAWER TRIGGER WITH REQUEST DEDUPLICATION ---
     $(document).on('click', '.btn-preview-trigger', function() {
         const notifId = $(this).attr('data-id');
         const notifPurpose = $(this).attr('data-purpose');
@@ -1252,8 +1275,13 @@ $(document).ready(function() {
         // Trigger Metronic Offcanvas Drawer
         $('#kt_drawer_notification_preview_toggle').trigger('click');
 
-        // Fetch sandboxed preview
-        $.ajax({
+        // Abort previous in-flight preview request if user rapidly clicked
+        if (activePreviewXhr && typeof activePreviewXhr.abort === 'function') {
+            activePreviewXhr.abort();
+        }
+
+        // Fetch sandboxed preview with L2 Dragonfly caching
+        activePreviewXhr = $.ajax({
             url: `${previewBaseUrl}/${notifId}`,
             type: 'GET',
             headers: {
@@ -1261,6 +1289,7 @@ $(document).ready(function() {
                 'X-Requested-With': 'XMLHttpRequest'
             },
             success: function(res) {
+                activePreviewXhr = null;
                 $('#drawerPreviewLoader').hide();
                 $('#drawerIframeContainer').fadeIn(150);
 
@@ -1285,6 +1314,10 @@ $(document).ready(function() {
                 }
             },
             error: function(err) {
+                if (err.statusText === 'abort') {
+                    return; // Ignore intentional abort on fast clicks
+                }
+                activePreviewXhr = null;
                 $('#drawerPreviewLoader').html(`
                     <div class="text-center text-danger py-10">
                         <i class="fas fa-exclamation-triangle fs-1 mb-2"></i>

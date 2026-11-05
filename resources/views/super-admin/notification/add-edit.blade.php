@@ -570,14 +570,76 @@
             $('.role_ck').prop('checked', false);
         });
 
+        // RFC 4122 v4 UUID Generator for Two-Tier Idempotency
+        function generateUUID() {
+            if (window.crypto && window.crypto.randomUUID) {
+                return window.crypto.randomUUID();
+            }
+            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+                var r = Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8);
+                return v.toString(16);
+            });
+        }
+
+        // Draft Recovery & Autosave in sessionStorage
+        const draftStorageKey = 'jero_notif_draft_' + ($('#tokenId').val() || 'new');
+        let draftAutosaveTimer = null;
+
+        function saveDraftToStorage() {
+            try {
+                const draft = {
+                    purpose: $('#purpose').val() || '',
+                    subject: $('#subject').val() || '',
+                    from_email_id: $('#from_email_id').val() || '',
+                    body: (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances.editor1) ? CKEDITOR.instances.editor1.getData() : '',
+                    timestamp: new Date().getTime()
+                };
+                sessionStorage.setItem(draftStorageKey, JSON.stringify(draft));
+            } catch (e) {
+                // Storage quota exceeded or private mode
+            }
+        }
+
+        function triggerDraftAutosave() {
+            clearTimeout(draftAutosaveTimer);
+            draftAutosaveTimer = setTimeout(saveDraftToStorage, 800);
+        }
+
+        // Listen for input changes to autosave draft
+        $('#purpose, #subject, #from_email_id').on('input change', triggerDraftAutosave);
+        if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances.editor1) {
+            CKEDITOR.instances.editor1.on('change', triggerDraftAutosave);
+        }
+
+        // Check if recoverable draft exists
+        try {
+            const savedDraftJson = sessionStorage.getItem(draftStorageKey);
+            if (savedDraftJson) {
+                const savedDraft = JSON.parse(savedDraftJson);
+                // If draft is recent (< 24 hours) and current form has empty purpose
+                if (savedDraft && (!($('#purpose').val() || '').trim()) && savedDraft.purpose) {
+                    $('#purpose').val(savedDraft.purpose);
+                    if (savedDraft.subject) $('#subject').val(savedDraft.subject);
+                    if (savedDraft.from_email_id) $('#from_email_id').val(savedDraft.from_email_id);
+                    if (savedDraft.body && typeof CKEDITOR !== 'undefined' && CKEDITOR.instances.editor1) {
+                        CKEDITOR.instances.editor1.setData(savedDraft.body);
+                    }
+                }
+            }
+        } catch (e) {}
+
         // Quick Test Preview Button (opens preview in modal/new window)
         $('#btnQuickTestPreview').on('click', function() {
             window.open(previewUrl, '_blank', 'width=850,height=700,scrollbars=yes');
         });
 
-        // AJAX Form Submission
+        // AJAX Form Submission with Two-Tier Idempotency & In-Flight Fencing
         $('#btnSaveTemplate').on('click', function() {
             const $btn = $(this);
+            if ($btn.data('submitting')) {
+                return;
+            }
+
             const purpose = $('#purpose').val().trim();
             const subject = $('#subject').val().trim();
             const fromEmail = $('#from_email_id').val().trim();
@@ -585,6 +647,7 @@
             const status = $('#status').val();
             const tokenId = $('#tokenId').val();
             const editorContent = CKEDITOR.instances.editor1 ? CKEDITOR.instances.editor1.getData() : '';
+            const idempotencyKey = generateUUID();
 
             const selectedRoles = $('.role_ck:checked').map(function() {
                 return this.value;
@@ -614,6 +677,8 @@
                 return;
             }
 
+            // Engage In-Flight Lock
+            $btn.data('submitting', true);
             $btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-2"></span>Saving...');
 
             $.ajax({
@@ -628,16 +693,24 @@
                     mailType_is: mailType,
                     status: status,
                     role_ck: selectedRoles,
-                    editor1: editorContent
+                    editor1: editorContent,
+                    idempotency_key: idempotencyKey
                 },
                 headers: {
                     'X-CSRF-TOKEN': csrfToken,
-                    'X-Requested-With': 'XMLHttpRequest'
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-Idempotency-Key': idempotencyKey
                 },
                 success: function(response) {
+                    $btn.data('submitting', false);
                     $btn.prop('disabled', false).html('<i class="fas fa-save me-1"></i> Save Changes');
 
                     if (response.status === 'success') {
+                        // Purge draft from sessionStorage on successful save
+                        try {
+                            sessionStorage.removeItem(draftStorageKey);
+                        } catch (e) {}
+
                         Swal.fire({
                             icon: 'success',
                             title: 'Template Saved Successfully',
@@ -656,6 +729,7 @@
                     }
                 },
                 error: function(xhr) {
+                    $btn.data('submitting', false);
                     $btn.prop('disabled', false).html('<i class="fas fa-save me-1"></i> Save Changes');
 
                     let errMsg = 'An unexpected error occurred while saving.';

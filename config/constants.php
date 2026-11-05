@@ -89,6 +89,7 @@ return [
     'ELASTIC_PAYMENT_SETTINGS' => env('ELASTIC_PAYMENT_SETTINGS', 'local_payment_settings'),
     'ELASTIC_CART_TRANSACTION_HISTORY' => env('ELASTIC_CART_TRANSACTION_HISTORY', 'local_cart_transaction_history'),
     'ELASTIC_SOLD_BY_ADDRESS' => env('ELASTIC_SOLD_BY_ADDRESS', 'local_sold_by_address'),
+    'ELASTIC_GLOBAL_SETTINGS' => env('ELASTIC_GLOBAL_SETTINGS', 'local_global_settings'),
     'ELASTIC_BILLING_ADDRESS_BY_ORDERS' => env('ELASTIC_BILLING_ADDRESS_BY_ORDERS', 'local_billing_address_by_orders'),
     'ELASTIC_JOB_APPLICATION_SKILLS' => env('ELASTIC_JOB_APPLICATION_SKILLS', 'local_job_application_skills'),
     'ELASTIC_EMAIL_COUNT' => env('ELASTIC_EMAIL_COUNT', 'local_email_count'),
@@ -99,5 +100,9 @@ return [
     'ELASTIC_AGENCY_ACTIVITY_STREAM' => env('ELASTIC_AGENCY_ACTIVITY_STREAM', 'local_agency_activity_stream'),
     'ELASTIC_COUPONS' => env('ELASTIC_COUPONS', 'local_coupons'),
     'ELASTIC_DEFAULT_TERMS' => env('ELASTIC_DEFAULT_TERMS', 'local_default_terms'),
+    'ELASTIC_WHATSAPP_THEMES' => env('ELASTIC_WHATSAPP_THEMES', 'local_email_template'),
+    'ELASTIC_SMTP_SETTINGS' => env('ELASTIC_SMTP_SETTINGS', 'local_smtp_settings'),
+    'ELASTIC_RECRUITER_NOTE_MASTER' => env('ELASTIC_RECRUITER_NOTE_MASTER', 'local_recruiter_note_master'),
+    'ELASTIC_BENCH_RM_NOTE_MASTER' => env('ELASTIC_BENCH_RM_NOTE_MASTER', 'local_bench_rm_note_master'),
     'COUNTRY_INDIA_ID' => 101,
 ];

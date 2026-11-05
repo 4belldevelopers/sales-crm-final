@@ -865,6 +865,21 @@ $(document).ready(function() {
     let selectedSkillIds = new Set();
     let tagifyInstance = null;
 
+    // Client-First In-Memory Cache (60s TTL) & Anti-Race XHR Controller
+    let clientRamCache = new Map();
+    const CLIENT_CACHE_TTL_MS = 60000;
+    let activeFetchXhr = null;
+
+    function generateUUID() {
+        if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+            return crypto.randomUUID();
+        }
+        return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+            let r = Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8);
+            return v.toString(16);
+        });
+    }
+
     // Initialize Tagify on Drawer Input
     const inputEl = document.querySelector('#drawerSkillInput');
     if (inputEl && typeof Tagify !== 'undefined') {
@@ -886,7 +901,7 @@ $(document).ready(function() {
         });
     }
 
-    // ─── Fetch Skills Data (AJAX Stream Update) ───
+    // ─── Fetch Skills Data (AJAX Stream Update with Client RAM Cache & In-Flight Abort) ───
     function fetchSkills(page = 1) {
         let params = {
             page: page,
@@ -902,10 +917,23 @@ $(document).ready(function() {
         let newUrl = window.location.pathname + '?' + queryStr;
         window.history.pushState(null, '', newUrl);
 
+        // 1. Client RAM Cache Check (0ms transition, 0 server strain)
+        let cacheKey = `${page}:${currentSearch}:${currentRange}:${currentLetter}:${currentSize}:${currentSort}`;
+        let cached = clientRamCache.get(cacheKey);
+        if (cached && (Date.now() - cached.timestamp < CLIENT_CACHE_TTL_MS)) {
+            renderSkillsResponse(cached.data);
+            return;
+        }
+
+        // 2. Abort previous in-flight request to eliminate race conditions
+        if (activeFetchXhr && activeFetchXhr.readyState !== 4) {
+            activeFetchXhr.abort();
+        }
+
         // Show subtle loading state
         $('#skillsStreamWrapper').css('opacity', '0.5');
 
-        $.ajax({
+        activeFetchXhr = $.ajax({
             url: "{{ route('superadmin.company.skillskElastic') }}",
             type: "GET",
             data: params,
@@ -913,33 +941,41 @@ $(document).ready(function() {
             success: function(res) {
                 $('#skillsStreamWrapper').css('opacity', '1');
                 if (res.status === 'success') {
-                    $('#skillsStreamWrapper').html(res.html);
-
-                    // Update KPI counters
-                    $('#kpiTotalSkills').text(res.totalAll.toLocaleString());
-                    $('#kpiFiltered').text(res.total.toLocaleString());
-                    $('#lblTotalCount').text(res.total.toLocaleString());
-                    let countDisplayed = res.count !== undefined ? res.count : (res.total ? Math.min(res.total, parseInt(currentSize)).toLocaleString() : '0');
-                    $('#lblShowingCount').text(countDisplayed);
-
-                    if (currentSearch || currentRange || currentLetter) {
-                        $('#kpiFilterCount').show();
-                        $('#btnResetAllFilters').show();
-                    } else {
-                        $('#kpiFilterCount').hide();
-                        $('#btnResetAllFilters').hide();
-                    }
-
-                    // Reset selection bar
-                    selectedSkillIds.clear();
-                    updateBulkToolbar();
+                    // Cache successful response in user RAM
+                    clientRamCache.set(cacheKey, { timestamp: Date.now(), data: res });
+                    renderSkillsResponse(res);
                 }
             },
             error: function(err) {
-                $('#skillsStreamWrapper').css('opacity', '1');
-                console.error("Failed to fetch skills:", err);
+                if (err.statusText !== 'abort') {
+                    $('#skillsStreamWrapper').css('opacity', '1');
+                    console.error("Failed to fetch skills:", err);
+                }
             }
         });
+    }
+
+    function renderSkillsResponse(res) {
+        $('#skillsStreamWrapper').html(res.html);
+
+        // Update KPI counters
+        $('#kpiTotalSkills').text(res.totalAll.toLocaleString());
+        $('#kpiFiltered').text(res.total.toLocaleString());
+        $('#lblTotalCount').text(res.total.toLocaleString());
+        let countDisplayed = res.count !== undefined ? res.count : (res.total ? Math.min(res.total, parseInt(currentSize)).toLocaleString() : '0');
+        $('#lblShowingCount').text(countDisplayed);
+
+        if (currentSearch || currentRange || currentLetter) {
+            $('#kpiFilterCount').show();
+            $('#btnResetAllFilters').show();
+        } else {
+            $('#kpiFilterCount').hide();
+            $('#btnResetAllFilters').hide();
+        }
+
+        // Reset selection bar
+        selectedSkillIds.clear();
+        updateBulkToolbar();
     }
 
     // ─── Search Input Debounce (300ms Standard) ───
@@ -1140,8 +1176,11 @@ $(document).ready(function() {
         updateBulkToolbar();
     });
 
-    // Bulk Delete Action
+    // Bulk Delete Action with Two-Tier Idempotency & In-Flight Fencing
     $('#btnBulkDelete').on('click', function() {
+        let $btn = $(this);
+        if ($btn.data('processing')) return;
+
         let count = selectedSkillIds.size;
         if (count === 0) return;
 
@@ -1158,15 +1197,23 @@ $(document).ready(function() {
             }
         }).then((result) => {
             if (result.isConfirmed) {
+                $btn.data('processing', true).prop('disabled', true);
+                let idempKey = generateUUID();
+
                 $.ajax({
                     url: "{{ route('superadmin.company.skillsBulkDelete') }}",
                     type: 'POST',
+                    headers: {
+                        'X-Idempotency-Key': idempKey
+                    },
                     data: {
                         _token: "{{ csrf_token() }}",
                         ids: Array.from(selectedSkillIds)
                     },
                     success: function(res) {
+                        $btn.data('processing', false).prop('disabled', false);
                         if (res.status === 'success') {
+                            clientRamCache.clear();
                             Swal.fire('Deleted!', res.message, 'success');
                             selectedSkillIds.clear();
                             updateBulkToolbar();
@@ -1176,6 +1223,7 @@ $(document).ready(function() {
                         }
                     },
                     error: function(err) {
+                        $btn.data('processing', false).prop('disabled', false);
                         Swal.fire('Error', 'An unexpected error occurred during bulk deletion.', 'error');
                     }
                 });
@@ -1183,10 +1231,13 @@ $(document).ready(function() {
         });
     });
 
-    // ─── Single Delete Action ───
+    // ─── Single Delete Action with Two-Tier Idempotency & In-Flight Fencing ───
     $(document).on('click', '.btn-delete-skill', function() {
-        let docId = $(this).data('id');
-        let skillName = $(this).data('name');
+        let $btn = $(this);
+        if ($btn.data('processing')) return;
+
+        let docId = $btn.data('id');
+        let skillName = $btn.data('name');
 
         Swal.fire({
             title: `Delete "${skillName}"?`,
@@ -1201,15 +1252,23 @@ $(document).ready(function() {
             }
         }).then((result) => {
             if (result.isConfirmed) {
+                $btn.data('processing', true).prop('disabled', true);
+                let idempKey = generateUUID();
+
                 $.ajax({
                     url: "{{ route('superadmin.company.skillDelete') }}",
                     type: 'POST',
+                    headers: {
+                        'X-Idempotency-Key': idempKey
+                    },
                     data: {
                         _token: "{{ csrf_token() }}",
                         id: docId
                     },
                     success: function(res) {
+                        $btn.data('processing', false).prop('disabled', false);
                         if (res.status === 'success') {
+                            clientRamCache.clear();
                             toastr.success(res.message || 'Skill deleted successfully.');
                             $('#skill-card-' + docId).fadeOut(200, function() {
                                 $(this).remove();
@@ -1220,6 +1279,7 @@ $(document).ready(function() {
                         }
                     },
                     error: function(err) {
+                        $btn.data('processing', false).prop('disabled', false);
                         Swal.fire('Error', 'An error occurred while deleting the skill.', 'error');
                     }
                 });
@@ -1335,10 +1395,11 @@ $(document).ready(function() {
         }
     });
 
-    // Save Skills via Drawer AJAX
+    // Save Skills via Drawer AJAX with Two-Tier Idempotency
     $('#btnSaveSkillDrawer').on('click', function(e) {
         e.preventDefault();
         let $btn = $(this);
+        if ($btn.prop('disabled')) return;
 
         // Auto-commit any typed text in Tagify input before submitting
         if (tagifyInstance && tagifyInstance.DOM && tagifyInstance.DOM.input && tagifyInstance.DOM.input.textContent && tagifyInstance.DOM.input.textContent.trim()) {
@@ -1352,9 +1413,14 @@ $(document).ready(function() {
         $btn.find('.indicator-progress').show();
         $btn.prop('disabled', true);
 
+        let idempKey = generateUUID();
+
         $.ajax({
             url: "{{ route('superadmin.company.addEditSkillUpdate') }}",
             type: "POST",
+            headers: {
+                'X-Idempotency-Key': idempKey
+            },
             data: formData,
             processData: false,
             contentType: false,
@@ -1364,6 +1430,7 @@ $(document).ready(function() {
                 $btn.prop('disabled', false);
 
                 if (res.status === 'success') {
+                    clientRamCache.clear();
                     hideSkillDrawer();
                     Swal.fire({
                         title: 'Success!',

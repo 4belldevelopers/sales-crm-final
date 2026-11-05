@@ -294,9 +294,8 @@ class SuperAdminTransactionMutationService
                 'created_at' => Carbon::now(),
             ]);
 
-            // 4. Invalidate Redis Caches
-            Cache::forget('superadmin:tx:kpi:v1');
-            Cache::forget("superadmin:tx:detail:{$transactionId}");
+            // 4. Invalidate Redis / Dragonfly Caches atomically
+            TransactionHistoryCacheManager::flushCaches($transactionId);
 
             // 5. Update Idempotency Key Status to COMPLETED
             DB::table('sys_idempotency_keys')

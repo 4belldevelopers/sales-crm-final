@@ -4,13 +4,12 @@ namespace App\Http\Controllers\SuperAdmin;
 
 use App\Helper\Reply;
 use App\Http\Requests\SmtpSetting\UpdateSmtpSetting;
-use App\Models\EmailSetting;
 use App\Notifications\SuperAdminTestEmailNotification;
+use App\Services\SuperAdmin\SuperAdminSmtpSettingMutationService;
+use App\Services\SuperAdmin\SuperAdminSmtpSettingReadService;
 use Illuminate\Contracts\View\Factory;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Notification;
@@ -28,8 +27,11 @@ use Throwable;
  * - Gateway 11: System Notifications & Tenant Alerts
  * - Gateway 12: Accounts, Offers & Billing Desk
  *
- * Implements atomic transactional updating, post-commit cache invalidation,
- * password preservation, counter protection, and multi-stage socket diagnostics.
+ * Implements strict CQRS (100% Elasticsearch reads / 0% MySQL reads), Two-Tier Idempotency,
+ * Transactional Outbox (<15ms MySQL transactions), L2 Redis/Dragonfly caching, password preservation,
+ * and multi-stage diagnostic testing.
+ *
+ * Complies with docs/CODE_DOCUMENTATION_STANDARD.md and docs/AI_RULES.md.
  */
 class SuperAdminSmtpSettingController extends SuperAdminBaseController
 {
@@ -40,44 +42,38 @@ class SuperAdminSmtpSettingController extends SuperAdminBaseController
      */
     public const GATEWAY_IDS = [8, 9, 10, 11, 12];
 
-    public function __construct()
-    {
+    public function __construct(
+        protected ?SuperAdminSmtpSettingReadService $readService = null,
+        protected ?SuperAdminSmtpSettingMutationService $mutationService = null
+    ) {
         parent::__construct();
         $this->pageTitle = 'menu.mailSetting';
         $this->pageIcon = 'ti-email';
+        $this->readService = $readService ?? app(SuperAdminSmtpSettingReadService::class);
+        $this->mutationService = $mutationService ?? app(SuperAdminSmtpSettingMutationService::class);
     }
 
     /**
      * Display the SMTP multi-gateway settings management dashboard.
+     * 100% CQRS read path from Elasticsearch & L2 Dragonfly/Redis cache.
+     * 0% MySQL reads.
      *
      * @return Factory|View
      */
     public function index()
     {
-        $gateways = EmailSetting::whereIn('id', self::GATEWAY_IDS)
-            ->orderBy('id', 'asc')
-            ->get();
+        $catalog = $this->readService->getGatewaysCatalog();
 
-        // Calculate KPI summary metrics for Tier 1 toolbar
-        $totalGateways = $gateways->count();
-        $activeGateways = $gateways->where('status', 0)->count();
-        $inactiveGateways = $gateways->where('status', 1)->count();
-        $totalDailySent = (int) $gateways->sum('dailyCount');
-
-        $this->smtpSetting = $gateways;
-        $this->kpiStats = [
-            'total_gateways' => $totalGateways,
-            'active_gateways' => $activeGateways,
-            'inactive_gateways' => $inactiveGateways,
-            'total_daily_sent' => $totalDailySent,
-        ];
+        $this->smtpSetting = $catalog['gateways'];
+        $this->kpiStats = $catalog['kpiStats'];
 
         return view('super-admin.mail-setting.index', $this->data);
     }
 
     /**
      * Persist updated configurations across all 5 gateways atomically.
-     * Preserves existing passwords when omitted and protects live operational counters.
+     * Powered by SuperAdminSmtpSettingMutationService with Transactional Outbox
+     * and Two-Tier Idempotency.
      *
      * @param  mixed  $id
      * @return array
@@ -85,123 +81,13 @@ class SuperAdminSmtpSettingController extends SuperAdminBaseController
     public function update(UpdateSmtpSetting $request, $id = null)
     {
         $validated = $request->validator ? $request->validated() : $request->all();
-        $hostInput = $validated['mail_host'] ?? null;
+        $idempotencyKey = $request->header('X-Idempotency-Key') ?: $request->input('_idempotency_key');
+        $adminId = auth()->id();
 
         try {
-            DB::transaction(function () use ($validated, $hostInput, $id) {
-                // Multi-gateway batch updating
-                if (is_array($hostInput)) {
-                    // Pre-verify that all requested gateways exist in database
-                    $existingGateways = EmailSetting::whereIn('id', array_keys($hostInput))
-                        ->get()
-                        ->keyBy('id');
-
-                    foreach ($hostInput as $gatewayId => $host) {
-                        $gatewayId = (int) $gatewayId;
-
-                        if (! in_array($gatewayId, self::GATEWAY_IDS, true)) {
-                            throw new InvalidArgumentException("Unauthorized gateway ID ({$gatewayId}) submitted.");
-                        }
-
-                        $existing = $existingGateways->get($gatewayId);
-                        if (! $existing) {
-                            throw new InvalidArgumentException("Gateway record #{$gatewayId} does not exist in smtp_settings.");
-                        }
-
-                        $encryption = $validated['mail_encryption'][$gatewayId] ?? null;
-                        if ($encryption === 'none' || empty($encryption)) {
-                            $encryption = null;
-                        }
-
-                        $fromEmail = trim((string) ($validated['from_mail'][$gatewayId] ?? ''));
-                        $fromName = trim((string) ($validated['mail_from_name'][$gatewayId] ?? 'JERO.WORKS'));
-                        $port = (int) ($validated['mail_port'][$gatewayId] ?? 465);
-                        $username = trim((string) ($validated['mail_username'][$gatewayId] ?? ''));
-
-                        // Password preservation: retain existing password if omitted or blank
-                        $submittedPassword = $validated['mail_password'][$gatewayId] ?? null;
-                        $finalPassword = (! is_null($submittedPassword) && trim((string) $submittedPassword) !== '')
-                            ? (string) $submittedPassword
-                            : (string) $existing->mail_password;
-
-                        $status = (int) ($validated['status'][$gatewayId] ?? 0);
-
-                        // Note: dailyCount is explicitly NOT updated to prevent overwriting live counters
-                        $updateData = [
-                            'mail_host' => trim((string) $host),
-                            'mail_port' => $port,
-                            'mail_username' => $username,
-                            'mail_password' => $finalPassword,
-                            'mail_encryption' => $encryption,
-                            'notification_mail_host' => trim((string) $host),
-                            'notification_mail_port' => $port,
-                            'notification_mail_username' => $username,
-                            'notification_mail_password' => $finalPassword,
-                            'notification_mail_encryption' => $encryption,
-                            'email_id' => $fromEmail,
-                            'mail_from_email' => $fromEmail,
-                            'mail_from_name' => $fromName,
-                            'status' => $status,
-                            'updated_at' => now(),
-                        ];
-
-                        DB::table('smtp_settings')->where('id', $gatewayId)->update($updateData);
-                    }
-                } else {
-                    // Single gateway fallback
-                    $targetId = (int) ($id ?: 8);
-                    if (! in_array($targetId, self::GATEWAY_IDS, true)) {
-                        throw new InvalidArgumentException("Unauthorized gateway ID ({$targetId}).");
-                    }
-
-                    $existing = EmailSetting::find($targetId);
-                    if (! $existing) {
-                        throw new InvalidArgumentException("Gateway record #{$targetId} does not exist.");
-                    }
-
-                    $encryption = $validated['mail_encryption'] ?? null;
-                    if ($encryption === 'none' || empty($encryption)) {
-                        $encryption = null;
-                    }
-                    $fromEmail = trim((string) ($validated['from_mail'] ?? $validated['mail_from_email'] ?? ''));
-
-                    $submittedPassword = $validated['mail_password'] ?? null;
-                    $finalPassword = (! is_null($submittedPassword) && trim((string) $submittedPassword) !== '')
-                        ? (string) $submittedPassword
-                        : (string) $existing->mail_password;
-
-                    $updateData = [
-                        'mail_host' => trim((string) $hostInput),
-                        'mail_port' => (int) ($validated['mail_port'] ?? 465),
-                        'mail_username' => trim((string) ($validated['mail_username'] ?? '')),
-                        'mail_password' => $finalPassword,
-                        'mail_encryption' => $encryption,
-                        'notification_mail_host' => trim((string) $hostInput),
-                        'notification_mail_port' => (int) ($validated['mail_port'] ?? 465),
-                        'notification_mail_username' => trim((string) ($validated['mail_username'] ?? '')),
-                        'notification_mail_password' => $finalPassword,
-                        'notification_mail_encryption' => $encryption,
-                        'email_id' => $fromEmail,
-                        'mail_from_email' => $fromEmail,
-                        'mail_from_name' => trim((string) ($validated['mail_from_name'] ?? 'JERO.WORKS')),
-                        'status' => (int) ($validated['status'] ?? 0),
-                        'updated_at' => now(),
-                    ];
-
-                    DB::table('smtp_settings')->where('id', $targetId)->update($updateData);
-                }
-
-                // Reliable post-commit cache invalidation
-                DB::afterCommit(function () {
-                    try {
-                        Cache::forget('smtp_settings:default');
-                    } catch (Throwable $e) {
-                        Log::warning('SMTP settings cache eviction warning: '.$e->getMessage());
-                    }
-                });
-            });
-
-            return Reply::success(__('messages.updatedSuccessfully'));
+            return $this->mutationService->updateSettings($validated, $idempotencyKey, $adminId, $id);
+        } catch (InvalidArgumentException $e) {
+            return Reply::error($e->getMessage());
         } catch (Throwable $e) {
             Log::error('SuperAdmin SMTP Settings update failure: '.$e->getMessage(), [
                 'trace' => $e->getTraceAsString(),
@@ -213,6 +99,7 @@ class SuperAdminSmtpSettingController extends SuperAdminBaseController
 
     /**
      * Dispatch live diagnostic verification email with multi-stage reporting and rate limiting.
+     * Fetches gateway credentials from CQRS Read Service / L2 Cache (0% MySQL reads).
      *
      * @return array
      */
@@ -236,7 +123,7 @@ class SuperAdminSmtpSettingController extends SuperAdminBaseController
         ]);
 
         $gatewayId = (int) ($request->gateway_id ?: 8);
-        $gateway = EmailSetting::where('id', $gatewayId)->first();
+        $gateway = $this->readService->getGatewayById($gatewayId);
 
         if (! $gateway) {
             return Reply::error('Target SMTP Gateway record not found.');

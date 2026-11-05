@@ -1125,11 +1125,18 @@
             });
 
             // -----------------------------------------------------------------
-            // 4. Robust Cascading Location Engine (Country -> State -> City)
+            // 4. Robust Cascading Location Engine with Client In-Memory Caching
             // -----------------------------------------------------------------
             const targetCountryId = "{{ $countrie_id ?? '' }}";
             const targetStateId = "{{ $state_id ?? '' }}";
             const targetCityId = "{{ $city_id ?? '' }}";
+
+            const clientLocationCache = {
+                states: {},
+                cities: {}
+            };
+            let activeStatesXhr = null;
+            let activeCitiesXhr = null;
 
             function updateTaxLabels(countryId) {
                 if (countryId == 101) { // India
@@ -1147,6 +1154,22 @@
                 }
             }
 
+            function renderStatesOptions(states, stateToSelect, cityToSelect) {
+                const stateSelect = $('#state');
+                stateSelect.empty().append('<option value="">Select State</option>');
+                if (states && states.length) {
+                    states.forEach(function(state) {
+                        stateSelect.append(new Option(state.name, state.id));
+                    });
+                    stateSelect.prop('disabled', false);
+
+                    if (stateToSelect) {
+                        stateSelect.val(stateToSelect).trigger('change.select2');
+                        fetchCities(stateToSelect, cityToSelect);
+                    }
+                }
+            }
+
             function fetchStates(countryId, stateToSelect, cityToSelect) {
                 const stateSelect = $('#state');
                 const citySelect = $('#city');
@@ -1159,28 +1182,48 @@
                     return;
                 }
 
-                $.ajax({
+                // Check client in-memory cache first for 0ms instant render
+                if (clientLocationCache.states[countryId]) {
+                    renderStatesOptions(clientLocationCache.states[countryId], stateToSelect, cityToSelect);
+                    return;
+                }
+
+                if (activeStatesXhr) {
+                    activeStatesXhr.abort();
+                }
+
+                activeStatesXhr = $.ajax({
                     url: '{{ route("get.states") }}',
                     type: 'GET',
                     data: { country: countryId },
                     success: function(response) {
-                        stateSelect.empty().append('<option value="">Select State</option>');
-                        if (response && response.length) {
-                            response.forEach(function(state) {
-                                stateSelect.append(new Option(state.name, state.id));
-                            });
-                            stateSelect.prop('disabled', false);
-
-                            if (stateToSelect) {
-                                stateSelect.val(stateToSelect).trigger('change.select2');
-                                fetchCities(stateToSelect, cityToSelect);
-                            }
+                        clientLocationCache.states[countryId] = response || [];
+                        renderStatesOptions(clientLocationCache.states[countryId], stateToSelect, cityToSelect);
+                    },
+                    error: function(xhr, status) {
+                        if (status !== 'abort') {
+                            stateSelect.empty().append('<option value="">Error loading states</option>');
                         }
                     },
-                    error: function() {
-                        stateSelect.empty().append('<option value="">Error loading states</option>');
+                    complete: function() {
+                        activeStatesXhr = null;
                     }
                 });
+            }
+
+            function renderCitiesOptions(cities, cityToSelect) {
+                const citySelect = $('#city');
+                citySelect.empty().append('<option value="">Select City</option>');
+                if (cities && cities.length) {
+                    cities.forEach(function(city) {
+                        citySelect.append(new Option(city.name, city.id));
+                    });
+                    citySelect.prop('disabled', false);
+
+                    if (cityToSelect) {
+                        citySelect.val(cityToSelect).trigger('change.select2');
+                    }
+                }
             }
 
             function fetchCities(stateId, cityToSelect) {
@@ -1192,25 +1235,31 @@
                     return;
                 }
 
-                $.ajax({
+                // Check client in-memory cache first for 0ms instant render
+                if (clientLocationCache.cities[stateId]) {
+                    renderCitiesOptions(clientLocationCache.cities[stateId], cityToSelect);
+                    return;
+                }
+
+                if (activeCitiesXhr) {
+                    activeCitiesXhr.abort();
+                }
+
+                activeCitiesXhr = $.ajax({
                     url: '{{ route("get.cities") }}',
                     type: 'GET',
                     data: { state: stateId },
                     success: function(response) {
-                        citySelect.empty().append('<option value="">Select City</option>');
-                        if (response && response.length) {
-                            response.forEach(function(city) {
-                                citySelect.append(new Option(city.name, city.id));
-                            });
-                            citySelect.prop('disabled', false);
-
-                            if (cityToSelect) {
-                                citySelect.val(cityToSelect).trigger('change.select2');
-                            }
+                        clientLocationCache.cities[stateId] = response || [];
+                        renderCitiesOptions(clientLocationCache.cities[stateId], cityToSelect);
+                    },
+                    error: function(xhr, status) {
+                        if (status !== 'abort') {
+                            citySelect.empty().append('<option value="">Error loading cities</option>');
                         }
                     },
-                    error: function() {
-                        citySelect.empty().append('<option value="">Error loading cities</option>');
+                    complete: function() {
+                        activeCitiesXhr = null;
                     }
                 });
             }
@@ -1235,8 +1284,61 @@
             }
 
             // -----------------------------------------------------------------
-            // 5. AJAX Form Submission with Validation & SweetAlert2 Feedback
+            // 5. Client-Side Autosave & Draft Recovery (sessionStorage)
             // -----------------------------------------------------------------
+            const DRAFT_STORAGE_KEY = 'jero_global_settings_draft_{{ $global->id }}';
+            let draftDebounceTimer = null;
+
+            function saveDraftToStorage() {
+                const draftData = {
+                    company_name: $('#company_name').val(),
+                    company_email: $('#company_email').val(),
+                    company_phone: $('#company_phone').val(),
+                    website: $('#website').val(),
+                    address: $('#address').val(),
+                    delete_account_in: $('#delete_account_in').val(),
+                    first_name: $('[name="first_name"]').val(),
+                    last_name: $('[name="last_name"]').val(),
+                    organization: $('[name="organization"]').val(),
+                    building: $('[name="building"]').val(),
+                    street: $('[name="street"]').val(),
+                    postal_code: $('[name="postal_code"]').val(),
+                    gstin: $('[name="gstin"]').val(),
+                    pan_no: $('[name="pan_no"]').val()
+                };
+                try {
+                    sessionStorage.setItem(DRAFT_STORAGE_KEY, JSON.stringify(draftData));
+                } catch (e) {
+                    // Ignore storage quota errors
+                }
+            }
+
+            function clearDraftStorage() {
+                try {
+                    sessionStorage.removeItem(DRAFT_STORAGE_KEY);
+                } catch (e) {
+                    // Ignore
+                }
+            }
+
+            $('#globalSettingsForm').on('input change', 'input:not([type="file"]):not([type="password"]), textarea', function() {
+                clearTimeout(draftDebounceTimer);
+                draftDebounceTimer = setTimeout(saveDraftToStorage, 600);
+            });
+
+            // -----------------------------------------------------------------
+            // 6. Two-Tier Idempotency & In-Flight Mutation Lock
+            // -----------------------------------------------------------------
+            function generateUuidV4() {
+                return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+                    const r = Math.random() * 16 | 0;
+                    const v = c === 'x' ? r : (r & 0x3 | 0x8);
+                    return v.toString(16);
+                });
+            }
+
+            let isSubmittingGlobalSettings = false;
+
             function clearValidationErrors() {
                 $('.is-invalid').removeClass('is-invalid');
                 $('.invalid-feedback').text('');
@@ -1293,8 +1395,13 @@
             }
 
             function saveGlobalSettings() {
+                if (isSubmittingGlobalSettings) {
+                    return false;
+                }
+
                 clearValidationErrors();
                 setButtonLoading(true);
+                isSubmittingGlobalSettings = true;
 
                 const form = document.getElementById('globalSettingsForm');
                 const formData = new FormData(form);
@@ -1306,6 +1413,9 @@
                     formData.set('system_update', '1');
                 }
 
+                const idempotencyKey = generateUuidV4();
+                formData.set('idempotency_key', idempotencyKey);
+
                 $.ajax({
                     url: '{{ route("superadmin.global-settings.update", $global->id) }}',
                     type: 'POST',
@@ -1314,12 +1424,13 @@
                     contentType: false,
                     headers: {
                         'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content'),
-                        'X-HTTP-Method-Override': 'PUT'
+                        'X-HTTP-Method-Override': 'PUT',
+                        'X-Idempotency-Key': idempotencyKey
                     },
                     success: function(response) {
-                        setButtonLoading(false);
-
                         if (response.status === 'success' || response.status === 'done') {
+                            clearDraftStorage();
+
                             Swal.fire({
                                 icon: 'success',
                                 title: '@lang("menu.settings") Updated',
@@ -1348,8 +1459,6 @@
                         }
                     },
                     error: function(xhr) {
-                        setButtonLoading(false);
-
                         if (xhr.status === 422 && xhr.responseJSON && xhr.responseJSON.errors) {
                             displayValidationErrors(xhr.responseJSON.errors);
                             Swal.fire({
@@ -1367,6 +1476,10 @@
                                 confirmButtonColor: '#f1416c'
                             });
                         }
+                    },
+                    complete: function() {
+                        setButtonLoading(false);
+                        isSubmittingGlobalSettings = false;
                     }
                 });
             }
@@ -1388,6 +1501,7 @@
                     cancelButtonText: 'Cancel'
                 }).then((result) => {
                     if (result.isConfirmed) {
+                        clearDraftStorage();
                         location.reload();
                     }
                 });

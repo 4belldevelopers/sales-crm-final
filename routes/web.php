@@ -25,16 +25,20 @@ use App\Http\Controllers\ZoomController;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Route;
 
+// WhatsApp Integration (Evolution API) — Production & Staging routes for authenticated ATS users
+Route::middleware(['auth'])->group(function () {
+    Route::post('/whatsapp/create', [HomeController::class, 'create'])->name('whatsapp.create');
+    Route::get('/whatsapp/qr', [HomeController::class, 'qr'])->name('whatsapp.qr');
+    Route::get('/whatsapp/status', [HomeController::class, 'status'])->name('whatsapp.status');
+    Route::post('/whatsapp/restart', [HomeController::class, 'restart'])->name('whatsapp.restart');
+    Route::post('/whatsapp/send', [HomeController::class, 'send'])->name('whatsapp.send');
+    Route::post('/whatsapp/delete', [HomeController::class, 'delete'])->name('whatsapp.delete');
+});
+
 if (app()->environment('local')) {
     Route::get('/whatsapp/connect', function () {
         return view('whatsapp.connect');
     });
-    Route::post('/whatsapp/create', [HomeController::class, 'create']);
-    Route::get('/whatsapp/qr', [HomeController::class, 'qr']);
-    Route::get('/whatsapp/status', [HomeController::class, 'status']);
-    Route::post('/whatsapp/restart', [HomeController::class, 'restart']);
-    Route::post('/whatsapp/send', [HomeController::class, 'send']);
-    Route::post('/whatsapp/delete', [HomeController::class, 'delete']);
 
     Route::get('/mail-test', function () {
         $filePath = 'https://file.jero.works/Companies/4bell_technology_2/Resumes/2026/02/JERO_699c43f99f495.pdf';

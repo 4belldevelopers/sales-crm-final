@@ -1478,9 +1478,24 @@
             paginateTemplates();
         }
 
+        function generateIdempotencyKey() {
+            if (window.crypto && window.crypto.randomUUID) {
+                return window.crypto.randomUUID();
+            }
+            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+                var r = Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8);
+                return v.toString(16);
+            });
+        }
+
         // Toggle Status via AJAX with zero stale data
         function toggleTemplateStatus(templateId, newStatus) {
             var pill = $('#statusPill-' + templateId);
+            if (pill.data('in-flight')) {
+                return false;
+            }
+            pill.data('in-flight', true);
+
             var dot = $('#statusDot-' + templateId);
             var text = $('#statusText-' + templateId);
 
@@ -1491,13 +1506,21 @@
             pill.css('opacity', '0.5');
             gridPill.css('opacity', '0.5');
 
+            var idempotencyKey = generateIdempotencyKey();
+
             $.ajax({
                 type: 'POST',
                 url: "{{ route('superadmin.company.emailThemesToggleStatus') }}",
+                headers: {
+                    'X-Idempotency-Key': idempotencyKey
+                },
                 data: {
                     '_token': "{{ csrf_token() }}",
                     'id': templateId,
                     'status': newStatus
+                },
+                complete: function() {
+                    pill.data('in-flight', false);
                 },
                 success: function(response) {
                     pill.css('opacity', '1');
@@ -1565,18 +1588,30 @@
 
         function toggleTemplateClientRequired(templateId, newReq) {
             var pill = $('#scopePill-' + templateId);
+            if (pill.data('in-flight')) {
+                return false;
+            }
+            pill.data('in-flight', true);
+
             var icon = $('#scopeIcon-' + templateId);
             var text = $('#scopeText-' + templateId);
 
             pill.css('opacity', '0.5');
+            var idempotencyKey = generateIdempotencyKey();
 
             $.ajax({
                 type: 'POST',
                 url: "{{ route('superadmin.company.emailThemesToggleClientRequired') }}",
+                headers: {
+                    'X-Idempotency-Key': idempotencyKey
+                },
                 data: {
                     '_token': "{{ csrf_token() }}",
                     'id': templateId,
                     'client_required': newReq
+                },
+                complete: function() {
+                    pill.data('in-flight', false);
                 },
                 success: function(response) {
                     pill.css('opacity', '1');
@@ -1655,6 +1690,10 @@
         }
 
         function submitBulkStatus(newStatus) {
+            if ($('#bulkActionBar').data('in-flight')) {
+                return false;
+            }
+
             var selectedIds = [];
             $('.template-row-check:checked').each(function() {
                 selectedIds.push($(this).val());
@@ -1662,13 +1701,22 @@
 
             if (selectedIds.length === 0) return;
 
+            $('#bulkActionBar').data('in-flight', true);
+            var idempotencyKey = generateIdempotencyKey();
+
             $.ajax({
                 type: 'POST',
                 url: "{{ route('superadmin.company.emailThemesBulkStatus') }}",
+                headers: {
+                    'X-Idempotency-Key': idempotencyKey
+                },
                 data: {
                     '_token': "{{ csrf_token() }}",
                     'ids': selectedIds,
                     'status': newStatus
+                },
+                complete: function() {
+                    $('#bulkActionBar').data('in-flight', false);
                 },
                 success: function(response) {
                     if (response.status === 'success') {

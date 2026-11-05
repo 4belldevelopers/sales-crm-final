@@ -1125,31 +1125,94 @@ $(document).ready(function() {
     }
 
     // =========================================================================
-    // 7. Save All Settings via Transactional AJAX
+    // 6.1 Idempotency RFC 4122 v4 UUID Generator & Client Draft Resilience
     // =========================================================================
+    function generateUUID() {
+        if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+            return crypto.randomUUID();
+        }
+        return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+            const r = Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8);
+            return v.toString(16);
+        });
+    }
+
+    let draftAutosaveTimeout = null;
+    $('#smtpSettingsForm').on('input change', 'input:not([type="password"]), select', function() {
+        clearTimeout(draftAutosaveTimeout);
+        draftAutosaveTimeout = setTimeout(persistSmtpFormDrafts, 350);
+    });
+
+    function persistSmtpFormDrafts() {
+        try {
+            const draftObj = {};
+            $('#smtpSettingsForm').serializeArray().forEach(function(item) {
+                if (!item.name.includes('password') && item.name !== '_token' && item.name !== '_method') {
+                    draftObj[item.name] = item.value;
+                }
+            });
+            sessionStorage.setItem('jero_smtp_settings_draft', JSON.stringify(draftObj));
+        } catch(e) {}
+    }
+
+    function restoreSmtpFormDrafts() {
+        try {
+            const rawDraft = sessionStorage.getItem('jero_smtp_settings_draft');
+            if (!rawDraft) return;
+            const draftObj = JSON.parse(rawDraft);
+            Object.keys(draftObj).forEach(function(fieldName) {
+                const target = $('[name="' + fieldName + '"]');
+                if (target.length && target.val() !== draftObj[fieldName]) {
+                    target.val(draftObj[fieldName]);
+                    if (target.is(':checkbox')) {
+                        target.prop('checked', draftObj[fieldName] === '1');
+                    }
+                }
+            });
+        } catch(e) {}
+    }
+    restoreSmtpFormDrafts();
+
+    // =========================================================================
+    // 7. Save All Settings via Transactional AJAX with Two-Tier Idempotency
+    // =========================================================================
+    let isSavingSmtp = false;
+
     $('#btn-save-smtp-settings, #btn-save-smtp-settings-bottom').on('click', function(e) {
         e.preventDefault();
         saveAllSmtpSettings();
     });
 
     function saveAllSmtpSettings() {
+        if (isSavingSmtp) {
+            return;
+        }
+
         const saveBtns = $('#btn-save-smtp-settings, #btn-save-smtp-settings-bottom');
         const form = $('#smtpSettingsForm');
+        const idempotencyKey = generateUUID();
 
+        isSavingSmtp = true;
         saveBtns.attr('data-kt-indicator', 'on').prop('disabled', true);
 
         $.ajax({
             url: "{{ route('superadmin.smtp-settings.update', 8) }}",
             type: "POST",
-            data: form.serialize(),
+            data: form.serialize() + '&_idempotency_key=' + encodeURIComponent(idempotencyKey),
             dataType: "json",
             headers: {
-                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content'),
+                'X-Idempotency-Key': idempotencyKey
             },
             success: function(response) {
+                isSavingSmtp = false;
                 saveBtns.removeAttr('data-kt-indicator').prop('disabled', false);
 
                 if (response.status === 'success') {
+                    try {
+                        sessionStorage.removeItem('jero_smtp_settings_draft');
+                    } catch(e) {}
+
                     if (typeof Swal !== 'undefined') {
                         Swal.fire({
                             icon: 'success',
@@ -1171,10 +1234,13 @@ $(document).ready(function() {
                 }
             },
             error: function(xhr) {
+                isSavingSmtp = false;
                 saveBtns.removeAttr('data-kt-indicator').prop('disabled', false);
                 let errorMsg = 'An unexpected error occurred while saving.';
 
-                if (xhr.responseJSON) {
+                if (xhr.status === 409) {
+                    errorMsg = 'An update is already in progress. Please wait a moment.';
+                } else if (xhr.responseJSON) {
                     if (xhr.responseJSON.errors) {
                         const errList = [];
                         $.each(xhr.responseJSON.errors, function(k, v) {
@@ -1207,8 +1273,10 @@ $(document).ready(function() {
     }
 
     // =========================================================================
-    // 8. Test Email Modal & Live Diagnostic Execution
+    // 8. Test Email Modal & Live Diagnostic Execution (In-Flight Abort Protected)
     // =========================================================================
+    let activeTestEmailXhr = null;
+
     $('#btn-open-test-modal').on('click', function() {
         $('#smtpTestEmailModal').modal('show');
     });
@@ -1241,11 +1309,15 @@ $(document).ready(function() {
             return;
         }
 
+        if (activeTestEmailXhr && activeTestEmailXhr.readyState !== 4) {
+            activeTestEmailXhr.abort();
+        }
+
         btn.attr('data-kt-indicator', 'on').prop('disabled', true);
         consoleBox.show();
         consoleText.html(`[Initiating] Connecting to Gateway #${gatewayId} socket...<br>[Handshake] Verifying host and authentication credentials...`);
 
-        $.ajax({
+        activeTestEmailXhr = $.ajax({
             url: "{{ route('superadmin.smtp-settings.sendTestEmail') }}",
             type: "POST",
             data: {
@@ -1294,11 +1366,17 @@ $(document).ready(function() {
                     }
                 }
             },
-            error: function(xhr) {
+            error: function(xhr, statusText) {
+                if (statusText === 'abort') {
+                    return;
+                }
+
                 btn.removeAttr('data-kt-indicator').prop('disabled', false);
                 let errMsg = 'Connection timed out or failed to reach mail server.';
 
-                if (xhr.responseJSON && xhr.responseJSON.message) {
+                if (xhr.status === 429) {
+                    errMsg = 'Rate limit exceeded. Please wait a moment before dispatching another test.';
+                } else if (xhr.responseJSON && xhr.responseJSON.message) {
                     errMsg = xhr.responseJSON.message;
                 }
                 consoleText.html(`<span class="smtp-diag-error">[FATAL ERROR] ${errMsg}</span>`);

@@ -1174,9 +1174,65 @@
                 }
             });
 
-            // ── AJAX Form Submission ──
+            // ── RFC4122 v4 UUID Generator for Idempotent Requests ──
+            function generateIdempotencyKey() {
+                if (window.crypto && window.crypto.randomUUID) {
+                    return window.crypto.randomUUID();
+                }
+                return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+                    var r = Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8);
+                    return v.toString(16);
+                });
+            }
+
+            // ── Client-Side Draft Resilience (SessionStorage Autosave) ──
+            var draftKey = 'jero_wa_theme_draft_' + ($('#tokenId').val() || '0');
+            var draftAutosaveTimer = null;
+
+            function autosaveDraftLocally() {
+                clearTimeout(draftAutosaveTimer);
+                draftAutosaveTimer = setTimeout(function() {
+                    try {
+                        var draft = {
+                            template: $('#template').val(),
+                            subject: $('#subject').val(),
+                            editor1: $editor.val(),
+                            updatedAt: Date.now()
+                        };
+                        sessionStorage.setItem(draftKey, JSON.stringify(draft));
+                    } catch (e) {}
+                }, 350);
+            }
+
+            $('#template, #subject').on('input', autosaveDraftLocally);
+            $editor.on('input', autosaveDraftLocally);
+
+            // Restore draft if available and editor is currently blank
+            try {
+                var existingDraft = sessionStorage.getItem(draftKey);
+                if (existingDraft) {
+                    var parsedDraft = JSON.parse(existingDraft);
+                    if (parsedDraft && parsedDraft.editor1 && !$editor.val().trim()) {
+                        $editor.val(parsedDraft.editor1);
+                        if (parsedDraft.template && !$('#template').val().trim()) {
+                            $('#template').val(parsedDraft.template);
+                        }
+                        if (parsedDraft.subject && !$('#subject').val().trim()) {
+                            $('#subject').val(parsedDraft.subject);
+                        }
+                        updateSimulationAndMetrics();
+                    }
+                }
+            } catch (e) {}
+
+            // ── AJAX Form Submission (With Idempotency & In-Flight Fencing) ──
             $('#btnSaveTemplate').on('click', function(e) {
                 e.preventDefault();
+
+                var $btn = $('#btnSaveTemplate');
+                if ($btn.data('submitting')) {
+                    return;
+                }
 
                 var templateName = $('#template').val().trim();
                 var messageContent = $editor.val().trim();
@@ -1193,10 +1249,11 @@
                     return;
                 }
 
-                var $btn = $('#btnSaveTemplate');
                 var $btnText = $('#btnSaveText');
                 var $btnSpinner = $('#btnSaveSpinner');
+                var idempotencyKey = generateIdempotencyKey();
 
+                $btn.data('submitting', true);
                 $btn.prop('disabled', true);
                 $btnText.text('Saving & Syncing...');
                 $btnSpinner.removeClass('d-none');
@@ -1206,6 +1263,9 @@
                 $.ajax({
                     url: "{{ route('superadmin.company.addEditwhatsappThemesupdate') }}",
                     type: "POST",
+                    headers: {
+                        'X-Idempotency-Key': idempotencyKey
+                    },
                     data: formData,
                     success: function(response) {
                         $btn.prop('disabled', false);
@@ -1213,6 +1273,11 @@
                         $btnSpinner.addClass('d-none');
 
                         if (response.status === 'success') {
+                            // Purge draft from local session storage on confirmed save
+                            try {
+                                sessionStorage.removeItem(draftKey);
+                            } catch (e) {}
+
                             Swal.fire({
                                 icon: 'success',
                                 title: 'Template Saved Successfully!',
@@ -1236,6 +1301,9 @@
                             errorMsg = xhr.responseJSON.message;
                         }
                         toastr.error(errorMsg);
+                    },
+                    complete: function() {
+                        $btn.data('submitting', false);
                     }
                 });
             });
