@@ -411,7 +411,7 @@ class IndustryTaxonomyCompiler
         $rules = [
             1 => [
                 'name' => 'Technology, Software & Telecom',
-                'patterns' => ['/\b(tech|technology|software|computer|data|cloud|saas|security|cyber|internet|telecom|game|gaming|hardware|network|networking|ai|ml|deeptech)\b/i'],
+                'patterns' => ['/\b(tech|technology|software|computer|data|cloud|saas|security|cyber|cybersecurity|infosec|devops|internet|telecom|telecommunications|wireless|game|gaming|esports|hardware|network|networking|ai|ml|genai|deeptech|openai|llm|foundation models|semiconductor|semiconductors|microchip|chipset)\b/i'],
                 'weight' => 0.95,
             ],
             2 => [
@@ -421,42 +421,42 @@ class IndustryTaxonomyCompiler
             ],
             3 => [
                 'name' => 'Healthcare, Life Sciences & Wellness',
-                'patterns' => ['/\b(health|healthcare|hospital|medical|pharma|pharmaceutical|biotech|biotechnology|clinic|wellness|fitness|nursing|surgical|surgery|dental|clinical|patient)\b/i'],
+                'patterns' => ['/\b(health|healthcare|healthtech|hospital|medical|pharma|pharmaceutical|biotech|biotechnology|clinic|wellness|fitness|nursing|surgical|surgery|dental|clinical|patient|veterinary)\b/i'],
                 'weight' => 0.95,
             ],
             4 => [
                 'name' => 'Manufacturing, Industrial & Automotive',
-                'patterns' => ['/\b(manufacturing|machinery|chemical|automotive|automobile|ev|industrial|engineering|defense|aerospace|steel|metals|plastics|robotics|printing|print|factory|fabrication|assembly)\b/i'],
+                'patterns' => ['/\b(manufacturing|machinery|chemical|chemicals|automotive|automobile|ev|industrial|engineering|defense|aerospace|spacetech|satellite|drones|uav|steel|metals|plastics|robotics|printing|print|factory|fabrication|assembly|shipbuilding|textiles)\b/i'],
                 'weight' => 0.90,
             ],
             5 => [
                 'name' => 'Professional Services, Consulting & Legal',
-                'patterns' => ['/\b(consulting|consultant|legal|law|attorney|human resources|recruiting|staffing|public relations|\bpr\b|management consulting)\b/i'],
+                'patterns' => ['/\b(consulting|consultant|legal|law|attorney|legaltech|regtech|human resources|hr|hrtech|recruiting|recruitment|staffing|headhunting|talent acquisition|public relations|\bpr\b|management consulting|advisory|outsourcing|translation)\b/i'],
                 'weight' => 0.88,
             ],
             6 => [
                 'name' => 'Consumer Goods, Retail & Hospitality',
-                'patterns' => ['/\b(food|beverage|retail|consumer goods|fmcg|apparel|fashion|restaurant|hospitality|hotel|supermarket|ecommerce|d2c)\b/i'],
+                'patterns' => ['/\b(food|beverage|retail|consumer goods|fmcg|apparel|fashion|restaurant|hospitality|hotel|supermarket|ecommerce|e-commerce|d2c|luxury|cosmetics|tobacco)\b/i'],
                 'weight' => 0.90,
             ],
             7 => [
                 'name' => 'Energy, Utilities & Environment',
-                'patterns' => ['/\b(energy|oil|gas|petroleum|solar|wind|cleantech|renewables|utilities|environment|environmental|water utility)\b/i'],
+                'patterns' => ['/\b(energy|oil|gas|petroleum|solar|wind|cleantech|climatetech|renewables|utilities|environment|environmental|water utility|farming|agriculture|agritech|aquaculture|fishery|ranching|dairy)\b/i'],
                 'weight' => 0.90,
             ],
             8 => [
                 'name' => 'Real Estate, Construction & Infrastructure',
-                'patterns' => ['/\b(real estate|construction|builder|property|civil engineering|infrastructure|architecture|proptech)\b/i'],
+                'patterns' => ['/\b(real estate|construction|builder|property|civil engineering|infrastructure|architecture|proptech|facilities)\b/i'],
                 'weight' => 0.90,
             ],
             9 => [
                 'name' => 'Logistics, Transportation & Supply Chain',
-                'patterns' => ['/\b(logistics|transport|transportation|supply chain|shipping|freight|warehouse|warehousing|maritime|airline|courier)\b/i'],
+                'patterns' => ['/\b(logistics|transport|transportation|supply chain|shipping|freight|warehouse|warehousing|maritime|airline|courier|delivery)\b/i'],
                 'weight' => 0.90,
             ],
             10 => [
                 'name' => 'Media, Education & Public Sector',
-                'patterns' => ['/\b(media|education|edtech|university|college|school|government|public sector|ngo|nonprofit|publishing|journalism|entertainment)\b/i'],
+                'patterns' => ['/\b(media|education|edtech|e-learning|university|college|school|government|public sector|ngo|nonprofit|publishing|journalism|entertainment|broadcasting|animation)\b/i'],
                 'weight' => 0.85,
             ],
         ];
