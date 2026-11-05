@@ -602,15 +602,25 @@ class ClientPerformanceScopeResolver
         // Verify relationship in cache
         $rel = cache()->remember("direct_rel_{$authCompanyId}_{$clientId}", 3600, function () use ($authCompanyId, $clientId) {
             $r = DB::table('recommendation_relation')
-                ->where('from_company_id', $clientId)
-                ->where('to_company_id', $authCompanyId)
+                ->where(function ($query) use ($authCompanyId, $clientId) {
+                    $query->where(function ($q) use ($authCompanyId, $clientId) {
+                        $q->where('from_company_id', $clientId)->where('to_company_id', $authCompanyId);
+                    })->orWhere(function ($q) use ($authCompanyId, $clientId) {
+                        $q->where('from_company_id', $authCompanyId)->where('to_company_id', $clientId);
+                    });
+                })
                 ->where('final_status', 1)
                 ->first();
 
             if (! $r) {
                 $r = DB::table('staffing_company_relation')
-                    ->where('from_company_id', $clientId)
-                    ->where('to_company_id', $authCompanyId)
+                    ->where(function ($query) use ($authCompanyId, $clientId) {
+                        $query->where(function ($q) use ($authCompanyId, $clientId) {
+                            $q->where('from_company_id', $clientId)->where('to_company_id', $authCompanyId);
+                        })->orWhere(function ($q) use ($authCompanyId, $clientId) {
+                            $q->where('from_company_id', $authCompanyId)->where('to_company_id', $clientId);
+                        });
+                    })
                     ->first();
             }
 

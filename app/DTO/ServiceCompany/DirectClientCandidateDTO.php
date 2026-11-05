@@ -45,42 +45,86 @@ class DirectClientCandidateDTO
             unset($sanitized[$key]);
         }
 
-        // 2. Resolve Captain Name & Agency Name
-        $captainName = ! empty($source['captain_name']) && $source['captain_name'] !== 'Agency Lead'
-            ? (string) $source['captain_name']
-            : (! empty($source['spokperson_name']) && $source['spokperson_name'] !== ($source['posted_by'] ?? null)
-                ? (string) $source['spokperson_name']
-                : (! empty($source['agency_root_name']) ? (string) $source['agency_root_name'] : 'Agency Lead'));
+        $isDirectClient = ($context['client_type'] ?? '') === 'direct';
 
-        if (! empty($context['job_captain_map']) && ! empty($source['jobId']) && ! empty($context['job_captain_map'][$source['jobId']])) {
-            $captainName = (string) $context['job_captain_map'][$source['jobId']];
-        } elseif (! empty($context['captain_name']) && ($captainName === 'Agency Lead' || empty($captainName))) {
-            $captainName = (string) $context['captain_name'];
-        }
+        if ($isDirectClient) {
+            // Direct Client Drawer: Show authoritative Source User Name & Source Company Name (User Mandate)
+            $sourceUserName = ! empty($source['submitted_by_name'])
+                ? (string) $source['submitted_by_name']
+                : (! empty($source['posted_by_name'])
+                    ? (string) $source['posted_by_name']
+                    : (! empty($source['posted_by']) && strtolower($source['posted_by']) !== 'agency lead'
+                        ? (string) $source['posted_by']
+                        : (! empty($source['recruiter_name'])
+                            ? (string) $source['recruiter_name']
+                            : (! empty($source['captain_name']) && $source['captain_name'] !== 'Agency Lead'
+                                ? (string) $source['captain_name']
+                                : (! empty($source['spokperson_name'])
+                                    ? (string) $source['spokperson_name']
+                                    : 'Recruiter')))));
 
-        $agencyName = ! empty($source['agency_name']) && ! str_contains(strtolower((string) $source['agency_name']), '4bell')
-            ? (string) $source['agency_name']
-            : (! empty($context['agency_name'])
-                ? (string) $context['agency_name']
-                : (! empty($source['submitted_by_company_name'])
-                    ? (string) $source['submitted_by_company_name']
-                    : (! empty($source['post_company_name'])
-                        ? (string) $source['post_company_name']
-                        : (! empty($source['company_name']) && ! str_contains(strtolower((string) $source['company_name']), '4bell')
-                            ? (string) $source['company_name']
-                            : (! empty($context['agency_name']) ? (string) $context['agency_name'] : 'Agency Partner')))));
+            $sourceCompanyName = ! empty($source['apl_company_name']) && ! str_contains(strtolower((string) $source['apl_company_name']), '4bell')
+                ? (string) $source['apl_company_name']
+                : (! empty($source['post_company_name']) && ! str_contains(strtolower((string) $source['post_company_name']), '4bell')
+                    ? (string) $source['post_company_name']
+                    : (! empty($source['agency_name']) && ! str_contains(strtolower((string) $source['agency_name']), '4bell')
+                        ? (string) $source['agency_name']
+                        : (! empty($source['submitted_by_company_name']) && ! str_contains(strtolower((string) $source['submitted_by_company_name']), '4bell')
+                            ? (string) $source['submitted_by_company_name']
+                            : (! empty($source['company_name']) && ! str_contains(strtolower((string) $source['company_name']), '4bell')
+                                ? (string) $source['company_name']
+                                : 'InnovateSoft Technologies'))));
 
-        // 3. Compute or resolve canonical submitted_by_display
-        if (! empty($source['submitted_by_display']) 
-            && ! str_contains((string) $source['submitted_by_display'], (string) ($source['posted_by'] ?? '___NEVER___'))
-            && ! str_contains(strtolower((string) $source['submitted_by_display']), 'agency lead')
-            && ! str_contains(strtolower((string) $source['submitted_by_display']), '4bell')
-        ) {
-            $submittedByDisplay = (string) $source['submitted_by_display'];
+            $captainName = $sourceUserName;
+            $agencyName = $sourceCompanyName;
+            $submittedByDisplay = "{$sourceUserName} — {$sourceCompanyName}";
+
+            $sanitized['source_user_name'] = $sourceUserName;
+            $sanitized['source_company_name'] = $sourceCompanyName;
+            $sanitized['submitted_by_name'] = $sourceUserName;
+            $sanitized['posted_by'] = $sourceUserName;
+            $sanitized['posted_by_name'] = $sourceUserName;
+            $sanitized['recruiter_name'] = $sourceUserName;
+            $sanitized['apl_company_name'] = $source['apl_company_name'] ?? null;
+            $sanitized['post_company_name'] = $source['post_company_name'] ?? null;
         } else {
-            $submittedByDisplay = ($captainName !== $agencyName)
-                ? "{$captainName} — {$agencyName}"
-                : $agencyName;
+            // 2. Resolve Captain Name & Agency Name for Agency Drawer (Untouched)
+            $captainName = ! empty($source['captain_name']) && $source['captain_name'] !== 'Agency Lead'
+                ? (string) $source['captain_name']
+                : (! empty($source['spokperson_name']) && $source['spokperson_name'] !== ($source['posted_by'] ?? null)
+                    ? (string) $source['spokperson_name']
+                    : (! empty($source['agency_root_name']) ? (string) $source['agency_root_name'] : 'Agency Lead'));
+
+            if (! empty($context['job_captain_map']) && ! empty($source['jobId']) && ! empty($context['job_captain_map'][$source['jobId']])) {
+                $captainName = (string) $context['job_captain_map'][$source['jobId']];
+            } elseif (! empty($context['captain_name']) && ($captainName === 'Agency Lead' || empty($captainName))) {
+                $captainName = (string) $context['captain_name'];
+            }
+
+            $agencyName = ! empty($source['agency_name']) && ! str_contains(strtolower((string) $source['agency_name']), '4bell')
+                ? (string) $source['agency_name']
+                : (! empty($context['agency_name'])
+                    ? (string) $context['agency_name']
+                    : (! empty($source['submitted_by_company_name'])
+                        ? (string) $source['submitted_by_company_name']
+                        : (! empty($source['post_company_name'])
+                            ? (string) $source['post_company_name']
+                            : (! empty($source['company_name']) && ! str_contains(strtolower((string) $source['company_name']), '4bell')
+                                ? (string) $source['company_name']
+                                : (! empty($context['agency_name']) ? (string) $context['agency_name'] : 'Agency Partner')))));
+
+            // 3. Compute or resolve canonical submitted_by_display
+            if (! empty($source['submitted_by_display']) 
+                && ! str_contains((string) $source['submitted_by_display'], (string) ($source['posted_by'] ?? '___NEVER___'))
+                && ! str_contains(strtolower((string) $source['submitted_by_display']), 'agency lead')
+                && ! str_contains(strtolower((string) $source['submitted_by_display']), '4bell')
+            ) {
+                $submittedByDisplay = (string) $source['submitted_by_display'];
+            } else {
+                $submittedByDisplay = ($captainName !== $agencyName)
+                    ? "{$captainName} — {$agencyName}"
+                    : $agencyName;
+            }
         }
 
         $sanitized['captain_name'] = $captainName;

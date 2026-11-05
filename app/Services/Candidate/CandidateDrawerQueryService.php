@@ -611,6 +611,10 @@ class CandidateDrawerQueryService
                 }
             }
 
+            $agencyContext['client_type'] = $clientType;
+            $agencyContext['client_id'] = $clientId;
+            $agencyContext['company_id'] = $companyId;
+
             $items = array_map(function ($doc) use ($agencyContext) {
                 return \App\DTO\ServiceCompany\DirectClientCandidateDTO::fromElasticDoc($doc, $agencyContext)->toArray();
             }, $items);
