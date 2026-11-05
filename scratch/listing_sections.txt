@@ -1,0 +1,147 @@
+=== AGENCY CONTENT ===
+@section('content')
+@php
+    $currentTab = $initialTab ?? 'all';
+    $totalAgenciesCount = (int)($spartnerDataCnt['spartnerAll'] ?? 0);
+    $newlyAddedCount = (int)($spartnerDataCnt['newlyAdded'] ?? 0);
+    $topPerformingCount = (int)($spartnerDataCnt['topPerforming'] ?? 0);
+    $activeAgenciesCount = (int)($spartnerDataCnt['workingOnJobs'] ?? 0);
+    $inactiveAgenciesCount = (int)max(0, $totalAgenciesCount - $activeAgenciesCount);
+    $pendingRequestsCount = (int)($spartnerDataCnt['sentRequest'] ?? 0);
+@endphp
+
+<script>
+    // ── Authoritative Single Source of Truth for Agency Tab Counters ──
+    window.AGENCY_DATA_COUNTERS = {
+        spartnerAll: {{ (int)($totalAgenciesCount ?? 0) }},
+        spartnerNewlyAdded: {{ (int)($newlyAddedCount ?? 0) }},
+        spartnerTopPerforming: {{ (int)($topPerformingCount ?? 0) }},
+        spartnerHiring: {{ (int)($activeAgenciesCount ?? 0) }},
+        spartnerInactive: {{ (int)($inactiveAgenciesCount ?? 0) }},
+        spartnerRequest: {{ (int)($pendingRequestsCount ?? 0) }}
+    };
+
+    function updateAgencyTabCounters(counts) {
+        if (!counts || typeof counts !== 'object') return;
+
+        var all = counts.spartnerAll !== undefined ? Number(counts.spartnerAll) : null;
+        var newlyAdded = counts.newlyAdded !== undefined ? Number(counts.newlyAdded) : (counts.spartnerNewlyAdded !== undefined ? Number(counts.spartnerNewlyAdded) : null);
+        var topPerforming = counts.topPerforming !== undefined ? Number(counts.topPerforming) : (counts.spartnerTopPerforming !== undefined ? Number(counts.spartnerTopPerforming) : null);
+        var hiring = counts.workingOnJobs !== undefined ? Number(counts.workingOnJobs) : (counts.spartnerHiring !== undefined ? Number(counts.spartnerHiring) : null);
+        var inactive = counts.inactive !== undefined ? Number(counts.inactive) : (counts.spartnerInactive !== undefined ? Number(counts.spartnerInactive) : null);
+        var request = counts.sentRequest !== undefined ? Number(counts.sentRequest) : (counts.spartnerRequest !== undefined ? Number(counts.spartnerRequest) : null);
+
+        if (all !== null && !isNaN(all)) {
+            $('#span_spartnerAll').text(all);
+            window.AGENCY_DATA_COUNTERS.spartnerAll = all;
+            $('#span_spartnerAll').closest('.cl-card').find('.cl-card-sub span').text('+' + Math.max(all, 1) + ' registered');
+        }
+        if (newlyAdded !== null && !isNaN(newlyAdded)) {
+            $('#span_spartnerNewlyAdded').text(newlyAdded);
+            window.AGENCY_DATA_COUNTERS.spartnerNewlyAdded = newlyAdded;
+        }
+        if (topPerforming !== null && !isNaN(topPerforming)) {
+            $('#span_spartnerTopPerforming').text(topPerforming);
+            window.AGENCY_DATA_COUNTERS.spartnerTopPerforming = topPerforming;
+        }
+        if (hiring !== null && !isNaN(hiring)) {
+            $('#span_spartnerHiring').text(hiring);
+            window.AGENCY_DATA_COUNTERS.spartnerHiring = hiring;
+        }
+        if (inactive !== null && !isNaN(inactive)) {
+            $('#span_spartnerInactive').text(inactive);
+            window.AGENCY_DATA_COUNTERS.spartnerInactive = inactive;
+        }
+        if (request !== null && !isNaN(request)) {
+            $('#span_spartnerRequest').text(request);
+            window.AGENCY_DATA_COUNTERS.spartnerRequest = request;
+            $('#span_spartnerRequest').closest('.cl-card').find('.cl-card-sub span').text(request > 0 ? request + ' action needed' : 'All confirmed');
+        }
+    }
+    window.updateAgencyTabCounters = updateAgencyTabCounters;
+</script>
+
+<!--begin::Content-->
+<div class="content d-flex flex-column flex-column-fluid pt-3 kt_content_agency" id="kt_content">
+  <!--begin::Post-->
+  <div class="post d-flex flex-column-fluid" id="kt_post">
+    <!--begin::Container-->
+    <div id="kt_content_container" class="container-fluid px-3">
+
+        <!-- ── TIER 1: TOP HEADER TOOLBAR CARD ── -->
+        <div class="cl-header cl-header-card">
+            <div cla
+
+=== CLIENT CONTENT ===
+@section('content')
+@php
+    $totalClientsCount = (int)($clientDataCnt['clientAll'] ?? 0);
+    $internalClientsCount = (int)($clientDataCnt['clientCustom'] ?? 0);
+    $directClientsCount = (int)($clientDataCnt['clientDirect'] ?? 0);
+    $hiringClientsCount = (int)($clientDataCnt['clientHiring'] ?? 0);
+    $inactiveClientsCount = (int)($clientDataCnt['clientInactive'] ?? max(0, $totalClientsCount - $hiringClientsCount));
+    $activeJobsCount = (int)($clientDataCnt['activeJobs'] ?? 0);
+    $pendingRequestsCount = (int)($clientDataCnt['clientRequest'] ?? 0);
+
+    $directPercent = ($totalClientsCount > 0) ? round(($directClientsCount / $totalClientsCount) * 100) : 0;
+@endphp
+
+<script>
+    // ── Authoritative Single Source of Truth for Tab Counters ──
+    window.CLIENT_DATA_COUNTERS = {
+        clientAll: {{ (int)($totalClientsCount ?? 0) }},
+        clientCustom: {{ (int)($internalClientsCount ?? 0) }},
+        clientDirect: {{ (int)($directClientsCount ?? 0) }},
+        clientHiring: {{ (int)($hiringClientsCount ?? 0) }},
+        clientInactive: {{ (int)($inactiveClientsCount ?? 0) }},
+        clientRequest: {{ (int)($pendingRequestsCount ?? 0) }},
+        activeJobs: {{ (int)($activeJobsCount ?? 0) }}
+    };
+
+    function updateClientTabCounters(counts) {
+        if (!counts || typeof counts !== 'object') return;
+
+        var all = counts.clientAll !== undefined ? Number(counts.clientAll) : (counts.all !== undefined ? Number(counts.all) : null);
+        var internal = counts.clientCustom !== undefined ? Number(counts.clientCustom) : (counts.internal !== undefined ? Number(counts.internal) : null);
+        var direct = counts.clientDirect !== undefined ? Number(counts.clientDirect) : (counts.direct !== undefined ? Number(counts.direct) : null);
+        var hiring = counts.clientHiring !== undefined ? Number(counts.clientHiring) : (counts.hiring !== undefined ? Number(counts.hiring) : null);
+        var inactive = counts.clientInactive !== undefined ? Number(counts.clientInactive) : (counts.inactive !== undefined ? Number(counts.inactive) : null);
+        var request = counts.clientRequest !== undefined ? Number(counts.clientRequest) : (counts.request !== undefined ? Number(counts.request) : null);
+
+        if (all !== null && !isNaN(all)) {
+            $('#span_clientAll, #tabBadgeAll').text(all);
+            window.CLIENT_DATA_COUNTERS.clientAll = all;
+        }
+        if (internal !== null && !isNaN(internal)) {
+            $('#span_clientCustom, #tabBadgeInternal').text(internal);
+            window.CLIENT_DATA_COUNTERS.clientCustom = internal;
+        }
+        if (direct !== null && !isNaN(direct)) {
+            $('#span_clientDirect, #tabBadgeDirect').text(direct);
+            window.CLIENT_DATA_COUNTERS.clientDirect = direct;
+        }
+        if (hiring !== null && !isNaN(hiring)) {
+            $('#span_clientHiring, #tabBadgeHiring').text(hiring);
+            window.CLIENT_DATA_COUNTERS.clientHiring = hiring;
+        }
+        if (inactive !== null && !isNaN(inactive)) {
+            $('#span_clientInactive, #tabBadgeInactive').text(inactive);
+            window.CLIENT_DATA_COUNTERS.clientInactive = inactive;
+        }
+        if (request !== null && !isNaN(request)) {
+            $('#span_clientRequest, #tabBadgeRequest').text(request);
+            window.CLIENT_DATA_COUNTERS.clientRequest = request;
+        }
+
+        var curAll = (all !== null && !isNaN(all)) ? all : (window.CLIENT_DATA_COUNTERS.clientAll || 0);
+        var curDirect = (direct !== null && !isNaN(direct)) ? direct : (window.CLIENT_DATA_COUNTERS.clientDirect || 0);
+        if ($('#span_clientDirectPercent').length) {
+            var pct = (curAll > 0) ? Math.round((curDirect / curAll) * 100) : 0;
+            $('#span_clientDirectPercent').text(pct + '% of total clients');
+        }
+    }
+    window.updateClientTabCounters = updateClientTabCounters;
+</script>
+
+<!--begin::Content-->
+<div class="content d-flex flex-column flex-column-fluid pt-4 kt_
