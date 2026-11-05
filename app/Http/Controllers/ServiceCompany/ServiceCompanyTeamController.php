@@ -80,7 +80,6 @@ class ServiceCompanyTeamController extends ServiceCompanyBaseController
                                         'bool' => [
                                             'must' => [
                                                 ['term' => ['status' => 'active']],
-                                                ['wildcard' => ['password' => '?*']],
                                             ],
                                             'must_not' => [
                                                 ['wildcard' => ['email_verification_code' => '?*']],
@@ -119,9 +118,9 @@ class ServiceCompanyTeamController extends ServiceCompanyBaseController
                     \Illuminate\Support\Facades\Log::warning('getTeamCounts ES count fallback: '.$e->getMessage());
                     $status = User::query()->where('company_id', $companyId)
                         ->selectRaw('COUNT(*) as total')
-                        ->selectRaw("SUM(status = 'active' AND (password IS NOT NULL AND password != '') AND (email_verification_code IS NULL OR email_verification_code = '')) as active")
+                        ->selectRaw("SUM(status = 'active' AND (email_verification_code IS NULL OR email_verification_code = '')) as active")
                         ->selectRaw("SUM(status = 'inactive' AND (password IS NOT NULL AND password != '') AND (email_verification_code IS NULL OR email_verification_code = '')) as inactive")
-                        ->selectRaw("SUM((email_verification_code IS NOT NULL AND email_verification_code != '') OR (password = '' OR password IS NULL)) as invited")
+                        ->selectRaw("SUM(status != 'active' AND ((email_verification_code IS NOT NULL AND email_verification_code != '') OR (password = '' OR password IS NULL))) as invited")
                         ->first();
                     $totalUsers = (int) ($status->total ?? 0);
                     $activeUsers = (int) ($status->active ?? 0);
@@ -375,6 +374,9 @@ class ServiceCompanyTeamController extends ServiceCompanyBaseController
             if ($statusTab === 'invited') {
                 $must[] = [
                     'bool' => [
+                        'must_not' => [
+                            ['term' => ['status' => 'active']],
+                        ],
                         'should' => [
                             ['wildcard' => ['email_verification_code' => '?*']],
                             ['bool' => ['must_not' => [['wildcard' => ['password' => '?*']]]]],
@@ -680,7 +682,8 @@ class ServiceCompanyTeamController extends ServiceCompanyBaseController
             $allRankedUsers = $allRankedUsers->filter(function ($u) use ($allRolesMap, $hasAnyBenchRep) {
                 $uid = (int) ($u['id'] ?? 0);
                 $roles = $allRolesMap[$uid] ?? [];
-                $isInvited = ! empty($u['email_verification_code']) || empty($u['password']);
+                $isInvited = (! empty($u['email_verification_code']) || empty($u['password']))
+                    && (strtolower($u['status'] ?? '') !== 'active');
                 $hasBenchRole = in_array('bench', $roles, true) || in_array('recruitment', $roles, true);
                 $isActiveNonRootRecruiter = ((int) ($u['root_user'] ?? 0) !== 1) && (strtolower($u['status'] ?? '') === 'active') && ! $isInvited;
                 $isFallbackRoot = (! $hasAnyBenchRep && (int) ($u['root_user'] ?? 0) === 1);

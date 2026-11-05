@@ -5533,7 +5533,7 @@
 					var r = window.teamState.records[i];
 					var status = (r.status || '').toLowerCase();
 					var channels = Array.isArray(r.channels) ? r.channels : [];
-					var isInvited = !r.password || status === 'invited';
+					var isInvited = (status !== 'active') && (!r.password || status === 'invited' || !!r.email_verification_code);
 
 					if (channels.indexOf('client') !== -1 || r.is_client_rep) clientCount++;
 					if (channels.indexOf('agency') !== -1 || channels.indexOf('vendor') !== -1 || r.is_agency_rep || (r.pre_agency_shares > 0)) vendorCount++;
@@ -5577,7 +5577,7 @@
 					list = list.filter(function(r) {
 						var channels = Array.isArray(r.channels) ? r.channels : [];
 						var status = (r.status || '').toLowerCase();
-						var isInvited = !r.password || status === 'invited';
+						var isInvited = (status !== 'active') && (!r.password || status === 'invited' || !!r.email_verification_code);
 
 						if (statusTab === 'client') {
 							return channels.indexOf('client') !== -1 || !!r.is_client_rep;
@@ -5716,7 +5716,7 @@
 				var channels = Array.isArray(row.channels) ? row.channels : [];
 				var publicCount = channels.length;
 
-				var isInvited = (!row.password && row.status !== 'active') || row.status === 'invited';
+				var isInvited = (row.status !== 'active') && (!row.password || row.status === 'invited' || !!row.email_verification_code);
 				var isActive = (row.status === 'active');
 
 				var cardAccent = '#cbd5e1';

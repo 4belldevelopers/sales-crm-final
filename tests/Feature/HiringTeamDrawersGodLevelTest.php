@@ -200,6 +200,7 @@ class HiringTeamDrawersGodLevelTest extends TestCase
             $recruiter2->email = 'recruiter2_99992@example.com';
             $recruiter2->company_id = $this->companyId;
             $recruiter2->status = 'active';
+            $recruiter2->password = bcrypt('Password123!');
             $recruiter2->save();
         }
 
@@ -260,6 +261,7 @@ class HiringTeamDrawersGodLevelTest extends TestCase
             $recruiter2->email = 'recruiter_promo@example.com';
             $recruiter2->company_id = $this->companyId;
             $recruiter2->status = 'active';
+            $recruiter2->password = bcrypt('Password123!');
             $recruiter2->save();
         }
 
