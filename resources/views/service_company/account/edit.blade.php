@@ -7223,6 +7223,16 @@ $('.remove_address').click(function(){
         var $btn = $(this);
         isClientSubmitting = true;
 
+    	var authoritativeCompName = ($('#client_id').val() || '').trim();
+    	$('#hidden_company_name').val(authoritativeCompName);
+
+    	var authoritativeIndustry = $('#industry').val() || '';
+    	if (!authoritativeIndustry && window.JeroIndustryIntelligenceEngine && window.JeroIndustryIntelligenceEngine.getSelected()) {
+    	    authoritativeIndustry = window.JeroIndustryIntelligenceEngine.getSelected().id;
+    	    $('#industry').val(authoritativeIndustry);
+    	}
+    	$('#hidden_industries').val(authoritativeIndustry);
+
     	var data 			=	new FormData();
     	var form_data 		=	$('#kt_form').serializeArray();
 
@@ -7240,6 +7250,16 @@ $('.remove_address').click(function(){
     	$.each(form_data, function (key, input) {
         		data.append(input.name, input.value);
     	});
+
+    	// Ensure authoritative name and industry overwrite any legacy serialized values
+    	if (authoritativeCompName) {
+    	    data.set('name', authoritativeCompName);
+    	    data.set('company_name', authoritativeCompName);
+    	}
+    	if (authoritativeIndustry) {
+    	    data.set('industry', authoritativeIndustry);
+    	    data.set('industries', authoritativeIndustry);
+    	}
 
     	var file_data 		= $('input[name="logo"]')[0].files;
     	for (var i = 0; i < file_data.length; i++) {
@@ -12656,6 +12676,11 @@ $('.remove_address').click(function(){
             $(select).val(item.id).trigger('change');
         }
 
+        var hiddenInd = document.getElementById('hidden_industries');
+        if (hiddenInd) {
+            hiddenInd.value = item.id;
+        }
+
         if (displayInput) {
             displayInput.value = item.name;
         }
@@ -12782,6 +12807,8 @@ $('.remove_address').click(function(){
         selectedIndustry = null;
 
         if (customInput) customInput.value = '';
+        var hiddenInd = document.getElementById('hidden_industries');
+        if (hiddenInd) hiddenInd.value = '';
 
         if (select) {
             select.selectedIndex = 0;
@@ -12854,11 +12881,26 @@ $('.remove_address').click(function(){
         var kbdEl = document.getElementById('jero_ind_kbd');
         var inputBox = document.getElementById('jero_ind_input_box');
         var customInput = document.getElementById('custom_industry');
+        var hiddenInd = document.getElementById('hidden_industries');
 
         if (!displayInput) return;
 
         var currentVal = select ? (select.value || '').trim() : '';
+        if (!currentVal && hiddenInd && hiddenInd.value) {
+            currentVal = String(hiddenInd.value).trim();
+        }
         var customVal = customInput ? (customInput.value || '').trim() : '';
+
+        // If currentVal is still empty, try matching displayInput text with manifest indList
+        if (!currentVal && displayInput && displayInput.value.trim()) {
+            var rawText = displayInput.value.trim().toLowerCase();
+            for (var i = 0; i < indList.length; i++) {
+                if ((indList[i].name || '').toLowerCase() === rawText) {
+                    currentVal = String(indList[i].id);
+                    break;
+                }
+            }
+        }
 
         if (currentVal && indMap.has(parseInt(currentVal, 10))) {
             var curr = indMap.get(parseInt(currentVal, 10));
@@ -12882,7 +12924,7 @@ $('.remove_address').click(function(){
             if (clearBtn) clearBtn.style.display = 'inline-flex';
             if (kbdEl) kbdEl.style.display = 'none';
             $('.span_industry').text(custName);
-        } else if (currentVal && select.selectedIndex >= 0 && select.options[select.selectedIndex]) {
+        } else if (currentVal && select && select.selectedIndex >= 0 && select.options[select.selectedIndex]) {
             var text = select.options[select.selectedIndex].text;
             selectedIndustry = { id: currentVal, name: text };
             displayInput.value = text;
@@ -12895,6 +12937,28 @@ $('.remove_address').click(function(){
             if (inputBox) inputBox.classList.remove('has-value');
             if (clearBtn) clearBtn.style.display = 'none';
             if (kbdEl) kbdEl.style.display = '';
+        }
+
+        // Keep select and hidden_industries synchronized
+        if (selectedIndustry && selectedIndustry.id !== undefined) {
+            if (hiddenInd) hiddenInd.value = selectedIndustry.id;
+            if (select && select.value != selectedIndustry.id) {
+                var hasOpt = false;
+                for (var o = 0; o < select.options.length; o++) {
+                    if (select.options[o].value == selectedIndustry.id) {
+                        select.selectedIndex = o;
+                        hasOpt = true;
+                        break;
+                    }
+                }
+                if (!hasOpt) {
+                    var newOpt = document.createElement('option');
+                    newOpt.value = selectedIndustry.id;
+                    newOpt.text = selectedIndustry.name;
+                    newOpt.selected = true;
+                    select.appendChild(newOpt);
+                }
+            }
         }
 
         if (selectedIndustry && typeof window.updateSuggestedServicesForIndustry === 'function') {
@@ -13447,6 +13511,11 @@ $('.remove_address').click(function(){
             if (e.key === 'jero_industry_sync_timestamp') {
                 fetchBundleFromServer(1);
             }
+        });
+
+        // Continuous synchronization between company name input and hidden_company_name
+        $('#client_id').on('input change blur', function() {
+            $('#hidden_company_name').val($(this).val());
         });
 
         // Tab focus reconciliation
