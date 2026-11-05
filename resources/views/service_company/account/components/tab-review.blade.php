@@ -134,35 +134,7 @@
       </div>
 
       <!-- ==========================================
-           CARD 4: Company Contacts
-           ========================================== -->
-      <div class="card client-review-section-card">
-        <div class="card-header border-0 py-3 px-5 d-flex align-items-center justify-content-between">
-          <div class="d-flex align-items-center gap-3">
-            <div class="client-review-icon-box">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ca8a04" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-                <circle cx="9" cy="7" r="4"></circle>
-                <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
-                <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
-              </svg>
-            </div>
-            <h4 class="client-review-card-title">Company Contacts</h4>
-          </div>
-          <button type="button" class="btn btn-sm client-review-edit-btn" onclick="window.goToWizardStep ? window.goToWizardStep(4) : false;">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
-            <span>Edit</span>
-          </button>
-        </div>
-        <div class="card-body px-5 py-4 pt-1">
-          <div class="client-review-contacts-grid" id="client_review_contacts_grid">
-            <!-- Dynamically populated contact cards -->
-          </div>
-        </div>
-      </div>
-
-      <!-- ==========================================
-           CARD 5: Social links
+           CARD 4: Social links
            ========================================== -->
       <div class="card client-review-section-card">
         <div class="card-header border-0 py-3 px-5 d-flex align-items-center justify-content-between">
@@ -176,7 +148,7 @@
             </div>
             <h4 class="client-review-card-title">Social links</h4>
           </div>
-          <button type="button" class="btn btn-sm client-review-edit-btn" onclick="window.goToWizardStep ? window.goToWizardStep(5) : false;">
+          <button type="button" class="btn btn-sm client-review-edit-btn" onclick="window.goToWizardStep ? window.goToWizardStep(4) : false;">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
             <span>Edit</span>
           </button>
@@ -238,11 +210,6 @@
           <div class="checklist-item">
             <span class="checklist-icon"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></span>
             <span class="checklist-text">Addresses &amp; locations</span>
-            <span class="checklist-status">Completed</span>
-          </div>
-          <div class="checklist-item">
-            <span class="checklist-icon"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></span>
-            <span class="checklist-text">Company contacts</span>
             <span class="checklist-status">Completed</span>
           </div>
           <div class="checklist-item">
@@ -318,7 +285,7 @@
 
 <style>
   /* --------------------------------------------------------------------------
-     Step 6: Review & Submit Details (100% Client Standard Aligned)
+     Step 5: Review & Submit Details (100% Client Standard Aligned)
      -------------------------------------------------------------------------- */
   .client-review-layout {
     display: grid !important;
@@ -902,4 +869,4 @@
     }
   }
 </style>
-<!--end::Step 6: Review and Submit-->
+<!--end::Step 5: Review and Submit-->

@@ -2151,37 +2151,34 @@ html, body {
   }
   body.on-step-2 #client_top_back_btn,
   body.on-step-3 #client_top_back_btn,
-  body.on-step-4 #client_top_back_btn,
-  body.on-step-5 #client_top_back_btn {
+  body.on-step-4 #client_top_back_btn {
     display: inline-flex !important;
   }
   body.on-step-2 #client_top_next_btn,
   body.on-step-3 #client_top_next_btn,
-  body.on-step-4 #client_top_next_btn,
-  body.on-step-5 #client_top_next_btn {
+  body.on-step-4 #client_top_next_btn {
     display: inline-flex !important;
   }
   body.on-step-2 #submitBtn,
   body.on-step-3 #submitBtn,
-  body.on-step-4 #submitBtn,
-  body.on-step-5 #submitBtn {
+  body.on-step-4 #submitBtn {
     display: none !important;
   }
 
-  /* Step 6 (Review & Submit): Close hidden, Back visible, Next hidden, Submit visible */
-  body.on-step-6 #client_top_close_btn,
+  /* Step 5 (Review & Submit): Close hidden, Back visible, Next hidden, Submit visible */
+  body.on-step-5 #client_top_close_btn,
   body.on-review-step #client_top_close_btn {
     display: none !important;
   }
-  body.on-step-6 #client_top_back_btn,
+  body.on-step-5 #client_top_back_btn,
   body.on-review-step #client_top_back_btn {
     display: inline-flex !important;
   }
-  body.on-step-6 #client_top_next_btn,
+  body.on-step-5 #client_top_next_btn,
   body.on-review-step #client_top_next_btn {
     display: none !important;
   }
-  body.on-step-6 #submitBtn,
+  body.on-step-5 #submitBtn,
   body.on-review-step #submitBtn {
     display: inline-flex !important;
   }
@@ -4451,15 +4448,7 @@ if (!empty($account->detail)) {
                   <!--begin::Address Details (Page 3)-->
                   @include('service_company.account.components.tab-locations', ['page_event' => $page_event])
 
-                  <!--begin::Contact Person (Page 4)-->
-                  @include('service_company.account.components.tab-contacts', [
-                    'client_contact_info' => ($page_event === 'ADD') ? [] : ($client_contact_info ?? []),
-                    'client_contact_arr'  => ($page_event === 'ADD') ? [] : ($client_contact_arr ?? ($client_contact_info ?? [])),
-                    'page_event'          => $page_event,
-                    'country_code'        => $country_code ?? 'in'
-                  ])
-
-                  <!--begin::Social Links (Page 5)-->
+                  <!--begin::Social Links (Page 4)-->
                   @include('service_company.account.components.tab-social-links', [
                     'linkedin_url'  => ($page_event === 'ADD') ? '' : ($linkedin_url ?? ''),
                     'twitter_url'   => ($page_event === 'ADD') ? '' : ($twitter_url ?? ''),
@@ -4470,7 +4459,7 @@ if (!empty($account->detail)) {
                     'custom_link'   => ($page_event === 'ADD') ? '' : ($custom_link ?? ''),
                   ])
 
-                  <!--begin::Review and Submit (Page 6)-->
+                  <!--begin::Review and Submit (Page 5)-->
                   @include('service_company.account.components.tab-review', ['page_event' => $page_event])
                 </form>
                 <!--end::Wizard Form-->
@@ -7187,7 +7176,7 @@ $('.remove_address').click(function(){
         }
 
         // Validate all wizard steps before submitting!
-        for (var s = 1; s <= 5; s++) {
+        for (var s = 1; s <= 4; s++) {
           if (typeof validateWizardStep === 'function' && !validateWizardStep(s)) {
             isClientSubmitting = false;
             if (typeof goToWizardStep === 'function') {
@@ -7209,9 +7198,7 @@ $('.remove_address').click(function(){
                   ? window._dupCompanyNameError
                   : ((s === 3 && window._lastStep3Error)
                     ? window._lastStep3Error
-                    : ((s === 4 && window._lastStep4Error)
-                      ? window._lastStep4Error
-                      : 'Please complete all required fields in Step ' + s + ' before submitting.')));
+                    : 'Please complete all required fields in Step ' + s + ' before submitting.'));
               Swal.fire({
                 icon: 'warning',
                 title: 'Incomplete Details',
@@ -7282,7 +7269,7 @@ $('.remove_address').click(function(){
         }
 
         // Validate all wizard steps before updating!
-        for (var s = 1; s <= 5; s++) {
+        for (var s = 1; s <= 4; s++) {
           if (typeof validateWizardStep === 'function' && !validateWizardStep(s)) {
             isClientSubmitting = false;
             if (typeof goToWizardStep === 'function') {
@@ -7304,9 +7291,7 @@ $('.remove_address').click(function(){
                   ? window._dupCompanyNameError
                   : ((s === 3 && window._lastStep3Error)
                     ? window._lastStep3Error
-                    : ((s === 4 && window._lastStep4Error)
-                      ? window._lastStep4Error
-                      : 'Please complete all required fields in Step ' + s + ' before saving.')));
+                    : 'Please complete all required fields in Step ' + s + ' before saving.'));
               Swal.fire({
                 icon: 'warning',
                 title: 'Incomplete Details',
@@ -8106,7 +8091,6 @@ $('.remove_address').click(function(){
       $('#tags').val(),
       $('textarea[name="address[]"]').first().val(),
       ((typeof selectedCities !== 'undefined' && selectedCities.length) ? 'loc_set' : $('input[name="kt_tagify_work_location[]"]').first().val()),
-      $('input[name="cp_name[]"]').first().val(),
       hasSocial ? 'social_set' : ''
     ];
     var filled = checks.filter(function (v) { return !!v; }).length;
@@ -10441,145 +10425,8 @@ $('.remove_address').click(function(){
       });
     }
 
-    // Section 4: Contact Person
+    // Section 4: Social Links (Step 4 - Optional, but validated if entered)
     if (step === 4) {
-      window._lastStep4Error = null;
-      var contacts = getContactRowsData();
-      if (!contacts.length) {
-        var $contactSection = $('.client-contact-toolbar, .client-contact-section, #client_contact_table_body').first();
-        showInlineError($contactSection, 'Minimum 1 Contact Person is required. Please click "Add Contact Person" to add details.');
-        $firstInvalid = $firstInvalid || $('#client_open_contact_drawer');
-        isValid = false;
-        window._lastStep4Error = 'Minimum 1 Contact Person is required. Please click "Add Contact Person" to add details.';
-      } else {
-        var seenEmailsInStep4 = {};
-        for (var i = 0; i < contacts.length; i++) {
-          var c = contacts[i];
-          var eLower = (c.email || '').trim().toLowerCase();
-          if (eLower && seenEmailsInStep4[eLower]) {
-            var $dupRow = $('#client_contact_table_body tr[data-contact-index="' + i + '"]');
-            if (!$dupRow.length) { $dupRow = $('#client_contact_table_body tr').eq(i); }
-            $dupRow.css({ 'background-color': '#fef2f2', 'border-left': '3px solid #dc2626' });
-            $('#client_contacts_duplicate_alert').show();
-            $('#client_contacts_duplicate_alert_text').text('This contact is already registered with the current company.');
-            showInlineError($dupRow, 'This contact is already registered with the current company.');
-            $firstInvalid = $firstInvalid || $dupRow;
-            isValid = false;
-            window._lastStep4Error = 'This contact is already registered with the current company.';
-            break;
-          }
-          if (eLower) {
-            seenEmailsInStep4[eLower] = true;
-          }
-
-          var nameRes = ClientValidationEngine.validateField('cp_name', c.name);
-          var emailRes = ClientValidationEngine.validateField('cp_email', c.email);
-          var phoneRes = ClientValidationEngine.validateField('cp_number', c.phone);
-          var desigRes = ClientValidationEngine.validateField('cp_desigination', c.designation);
-
-          if (!nameRes.valid || !emailRes.valid || !phoneRes.valid || !desigRes.valid) {
-            var $contactRow = $('#client_contact_table_body tr[data-contact-index="' + i + '"]');
-            if (!$contactRow.length) { $contactRow = $('#client_contact_table_body tr').eq(i); }
-            var errMsg = !nameRes.valid ? nameRes.message : (!emailRes.valid ? emailRes.message : (!phoneRes.valid ? phoneRes.message : desigRes.message));
-            showInlineError($contactRow, 'Contact #' + (i + 1) + ': ' + errMsg);
-            $firstInvalid = $firstInvalid || $contactRow;
-            isValid = false;
-            window._lastStep4Error = 'Contact #' + (i + 1) + ': ' + errMsg;
-            break;
-          }
-        }
-
-        // Database duplicate validation across Internal Clients before advancing to Step 5
-        if (isValid) {
-          var batchPayload = {
-            field: 'all',
-            client_id: (window.JERO_CLIENT_CONFIG && window.JERO_CLIENT_CONFIG.clientId) ? window.JERO_CLIENT_CONFIG.clientId : {{ $client->id ?? 'null' }},
-            cp_name: [],
-            cp_email: [],
-            cp_number: [],
-            calling_code: []
-          };
-          contacts.forEach(function (c) {
-            batchPayload.cp_name.push(c.name || '');
-            batchPayload.cp_email.push(c.email || '');
-            batchPayload.cp_number.push(c.phone || '');
-            batchPayload.calling_code.push(c.callingCode || '+91');
-          });
-
-          $.ajax({
-            url: "{{ route('service_company.clients.validateInternalField') }}",
-            type: 'POST',
-            async: false,
-            headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
-            data: batchPayload,
-            success: function (resp) {
-              if (resp && resp.duplicate) {
-                isValid = false;
-                var dupIdx = (typeof resp.index !== 'undefined' && resp.index !== null) ? parseInt(resp.index, 10) : 0;
-                var $badRow = $('#client_contact_table_body tr[data-contact-index="' + dupIdx + '"]');
-                if (!$badRow.length) {
-                  $badRow = $('#client_contact_table_body tr').eq(dupIdx);
-                }
-                $('#client_contacts_duplicate_alert').show();
-                var msg = resp.message || 'This contact is already registered with another internal company. Please verify the contact details before adding this person.';
-                $('#client_contacts_duplicate_alert_text').text(msg);
-                showInlineError($badRow, msg);
-                $firstInvalid = $firstInvalid || $badRow;
-                window._lastStep4Error = msg;
-              } else {
-                $('#client_contacts_duplicate_alert').hide();
-                $('#client_contact_table_body tr').removeClass('is-invalid is-invalid-row').css({
-                  'background-color': '',
-                  'border-left': ''
-                });
-                $('.client-row-error-notice').remove();
-              }
-            },
-            error: function () {
-              // Server error / offline fallback
-            }
-          });
-        }
-      }
-
-      if (isValid && $('#client_contact_drawer').hasClass('is-open')) {
-        var drawerEmail = ($('#client_drawer_email').val() || '').trim();
-        if (drawerEmail) {
-          var isDrawerEmailValid = window.checkDrawerEmailDuplicate ? window.checkDrawerEmailDuplicate(drawerEmail, true) : true;
-          if (!isDrawerEmailValid || window._drawerContactEmailDupError) {
-            $firstInvalid = $firstInvalid || $('#client_drawer_email');
-            isValid = false;
-            window._lastStep4Error = window._drawerContactEmailDupError || 'Please resolve the contact email duplicate before continuing.';
-          }
-        }
-        var drawerPhone = ($('#client_drawer_phone').val() || '').trim();
-        var drawerCalling = ($('#client_drawer_calling_code').val() || '+91').trim();
-        if (isValid && drawerPhone) {
-          var isDrawerPhoneValid = window.checkDrawerPhoneDuplicate ? window.checkDrawerPhoneDuplicate(drawerPhone, drawerCalling, true) : true;
-          if (!isDrawerPhoneValid || window._drawerContactPhoneDupError) {
-            $firstInvalid = $firstInvalid || $('#client_drawer_phone');
-            isValid = false;
-            window._lastStep4Error = window._drawerContactPhoneDupError || 'Please resolve the contact phone duplicate before continuing.';
-          }
-        }
-      }
-
-      if (isValid) {
-        var apEmailVal = ($('#ap_email').val() || '').trim();
-        if (apEmailVal) {
-          var apRes = ClientValidationEngine.validateField('ap_email', apEmailVal);
-          if (!apRes.valid) {
-            showInlineError($('#ap_email'), apRes.message);
-            $firstInvalid = $firstInvalid || $('#ap_email');
-            isValid = false;
-            window._lastStep4Error = apRes.message;
-          }
-        }
-      }
-    }
-
-    // Section 5: Social Links (Step 5 - Optional, but validated if entered)
-    if (step === 5) {
       var socialFields = [
         { id: '#linkedin_url', name: 'LinkedIn URL' },
         { id: '#twitter_url', name: 'X / Twitter URL' },
@@ -10601,6 +10448,16 @@ $('.remove_address').click(function(){
           }
         }
       });
+
+      var customLinkVal = ($('#custom_link').val() || '').trim();
+      if (customLinkVal) {
+        var resCustom = ClientValidationEngine.validateField('url', customLinkVal, $('#custom_link'));
+        if (!resCustom.valid) {
+          showInlineError($('#custom_link'), 'Please enter a valid URL for Custom Link (e.g. https://...).');
+          $firstInvalid = $firstInvalid || $('#custom_link');
+          isValid = false;
+        }
+      }
     }
 
     window.$firstInvalid = $firstInvalid;
@@ -10617,29 +10474,29 @@ $('.remove_address').click(function(){
   /* Synchronize wizard action buttons and stepper visual tokens */
   function syncWizardNavigationState(activeStep) {
     activeStep = parseInt(activeStep, 10);
-    if (!activeStep || activeStep < 1 || activeStep > 6) {
+    if (!activeStep || activeStep < 1 || activeStep > 5) {
       activeStep = (typeof getCurrentStepNumber === 'function') ? getCurrentStepNumber() : 1;
     }
 
     // Step-conditional body classes & action controls:
     // Step 1: Show Close (x) button, hide Back button, show Next Page, hide Submit
-    // Steps 2-5: Hide Close button, show Back button, show Next Page, hide Submit
-    // Step 6: Hide Close button, show Back button, hide Next Page, show Submit
+    // Steps 2-4: Hide Close button, show Back button, show Next Page, hide Submit
+    // Step 5: Hide Close button, show Back button, hide Next Page, show Submit
     if (activeStep <= 1) {
-      $('body').addClass('on-step-1').removeClass('on-step-2 on-step-3 on-step-4 on-step-5 on-step-6 on-review-step');
+      $('body').addClass('on-step-1').removeClass('on-step-2 on-step-3 on-step-4 on-step-5 on-review-step');
       $('#client_top_close_btn').attr('style', 'display: inline-flex !important;').show();
       $('#client_top_back_btn').attr('style', 'display: none !important;').hide();
       $('#client_top_next_btn').attr('style', 'display: inline-flex !important;').show();
       $('#continueButton, [data-wizard-type="action-next"]').attr('style', 'display: inline-flex !important;').show();
       $('#submitBtn, .submitfrm, .updatefrm').attr('style', 'display: none !important;').hide();
-    } else if (activeStep < 6) {
-      $('body').removeClass('on-step-1 on-step-6 on-review-step').addClass('on-step-' + activeStep);
+    } else if (activeStep < 5) {
+      $('body').removeClass('on-step-1 on-step-5 on-review-step').addClass('on-step-' + activeStep);
       $('#client_top_close_btn').attr('style', 'display: none !important;').hide();
       $('#client_top_back_btn').attr('style', 'display: inline-flex !important;').show();
       $('#client_top_next_btn, #continueButton, [data-wizard-type="action-next"]').attr('style', 'display: inline-flex !important;').show();
       $('#submitBtn, .submitfrm, .updatefrm').attr('style', 'display: none !important;').hide();
     } else {
-      $('body').removeClass('on-step-1 on-step-2 on-step-3 on-step-4 on-step-5').addClass('on-step-6 on-review-step');
+      $('body').removeClass('on-step-1 on-step-2 on-step-3 on-step-4').addClass('on-step-5 on-review-step');
       $('#client_top_close_btn').attr('style', 'display: none !important;').hide();
       $('#client_top_back_btn').attr('style', 'display: inline-flex !important;').show();
       $('#client_top_next_btn, #continueButton, [data-wizard-type="action-next"]').attr('style', 'display: none !important;').hide();
@@ -10651,12 +10508,11 @@ $('.remove_address').click(function(){
 
     // Dynamic Top Header Subtitles matching workflow steps
     var subtitles = {
-      1: 'Create a client profile for recruitment operations',
-      2: 'Provide client description and service offerings.',
-      3: 'Enter the city and full address of this client.',
-      4: 'Add key contacts for this client organization.',
-      5: 'Add the client’s official social media and professional profiles.',
-      6: 'Review all the information before submitting.'
+      1: 'Manage your company identity, domain and registration details.',
+      2: 'Provide company description and core expertise.',
+      3: 'Enter headquarters and additional office addresses.',
+      4: 'Add official social media and professional profiles.',
+      5: 'Review all the information before saving.'
     };
     var currentSub = subtitles[activeStep] || subtitles[1];
     $('#client_header_subtitle').text(currentSub).attr('title', currentSub);
@@ -10905,7 +10761,7 @@ $('.remove_address').click(function(){
       var $currentContent = $('#kt_wizard [data-wizard-type="step-content"][data-wizard-state="current"]');
       if ($currentContent.length) {
         var cIdx = $('#kt_wizard [data-wizard-type="step-content"]').index($currentContent.first());
-        if (cIdx >= 0 && cIdx <= 5) {
+        if (cIdx >= 0 && cIdx <= 4) {
           currentStepNumber = cIdx + 1;
           return currentStepNumber;
         }
@@ -10915,7 +10771,7 @@ $('.remove_address').click(function(){
       var $topActive = $('#client_wizard_stepper .client-step-item.is-active, #client_wizard_stepper .client-step-item[aria-current="step"]');
       if ($topActive.length) {
         var sVal = parseInt($topActive.first().data('step'), 10);
-        if (sVal >= 1 && sVal <= 6) {
+        if (sVal >= 1 && sVal <= 5) {
           currentStepNumber = sVal;
           return currentStepNumber;
         }
@@ -10925,14 +10781,14 @@ $('.remove_address').click(function(){
       var $currentStep = $('#kt_wizard .wizard-step[data-wizard-state="current"], #kt_wizard .wizard-step.current, #kt_wizard .wizard-step.active');
       if ($currentStep.length) {
         var hIdx = $('#kt_wizard .wizard-step').index($currentStep.first());
-        if (hIdx >= 0 && hIdx <= 5) {
+        if (hIdx >= 0 && hIdx <= 4) {
           currentStepNumber = hIdx + 1;
           return currentStepNumber;
         }
       }
 
       // 4. Fallback to tracked state if in range
-      if (currentStepNumber >= 1 && currentStepNumber <= 6) {
+      if (currentStepNumber >= 1 && currentStepNumber <= 5) {
         return currentStepNumber;
       }
 
@@ -10941,7 +10797,7 @@ $('.remove_address').click(function(){
 
     function goToWizardStep(targetStep) {
       targetStep = parseInt(targetStep, 10);
-      if (!targetStep || targetStep < 1 || targetStep > 6) return;
+      if (!targetStep || targetStep < 1 || targetStep > 5) return;
 
       currentStepNumber = targetStep;
 
@@ -10951,14 +10807,14 @@ $('.remove_address').click(function(){
       }
 
       // Track step via body class
-      $('body').removeClass('on-step-1 on-step-2 on-step-3 on-step-4 on-step-5 on-step-6 on-review-step')
+      $('body').removeClass('on-step-1 on-step-2 on-step-3 on-step-4 on-step-5 on-review-step')
                .addClass('on-step-' + targetStep);
-      if (targetStep === 6) {
+      if (targetStep === 5) {
         $('body').addClass('on-review-step');
       }
 
       // Update Metronic outer wizard container state for CSS rules
-      var stepState = (targetStep === 1 ? 'first' : (targetStep === 6 ? 'last' : 'between'));
+      var stepState = (targetStep === 1 ? 'first' : (targetStep === 5 ? 'last' : 'between'));
       $('#kt_wizard').attr('data-wizard-state', stepState);
 
       // Synchronize Step Header indicators
@@ -11032,17 +10888,8 @@ $('.remove_address').click(function(){
         }
       }
 
-      // On Step 4 (Contacts), render table and sync hidden inputs
+      // On Step 4 (Social Links), sync AI discovery buttons and website links
       if (targetStep === 4) {
-        if (window.clientContactManager) {
-          try {
-            window.clientContactManager.renderTable();
-          } catch (e) {}
-        }
-      }
-
-      // On Step 5 (Social Links), sync AI discovery buttons and website links
-      if (targetStep === 5) {
         if (window.clientSocialManager) {
           try {
             window.clientSocialManager.syncWebsiteLink();
@@ -11051,8 +10898,8 @@ $('.remove_address').click(function(){
         }
       }
 
-      // On Step 6 (Review & Submit), populate real-time review summaries
-      if (targetStep === 6 && typeof populateReviewSummaries === 'function') {
+      // On Step 5 (Review & Submit), populate real-time review summaries
+      if (targetStep === 5 && typeof populateReviewSummaries === 'function') {
         try {
           populateReviewSummaries();
         } catch (e) {
@@ -11132,9 +10979,7 @@ $('.remove_address').click(function(){
               ? window._dupCompanyNameError
               : ((currentStep === 3 && window._lastStep3Error)
                 ? window._lastStep3Error
-                : ((currentStep === 4 && window._lastStep4Error)
-                  ? window._lastStep4Error
-                  : 'Please fill in the required fields marked in red.')));
+                : 'Please fill in the required fields marked in red.'));
           Toast.fire({
             icon: 'warning',
             title: customMsg
@@ -11146,7 +10991,7 @@ $('.remove_address').click(function(){
       // Record successful navigation time
       lastNavTime = Date.now();
 
-      var nextStep = Math.min(6, currentStep + 1);
+      var nextStep = Math.min(5, currentStep + 1);
       try {
         goToWizardStep(nextStep);
       } catch (err) {
@@ -11255,9 +11100,7 @@ $('.remove_address').click(function(){
                   ? window._dupCompanyNameError
                   : ((s === 3 && window._lastStep3Error)
                     ? window._lastStep3Error
-                    : ((s === 4 && window._lastStep4Error)
-                      ? window._lastStep4Error
-                      : 'Please complete the required fields in Step ' + s + ' before continuing.')));
+                    : 'Please complete the required fields in Step ' + s + ' before continuing.'));
               Toast.fire({
                 icon: 'warning',
                 title: headerMsg

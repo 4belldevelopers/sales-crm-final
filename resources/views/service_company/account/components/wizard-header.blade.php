@@ -1,6 +1,8 @@
 {{-- 
-  Unified Header & 6-Step Stepper Navigation for Company Profile / Account Edit
-  100% Replicates Add Internal Client Stepper Architecture (Rule 20 Design Standard)
+  Unified Header & 5-Step Stepper Navigation for Company Profile / Account Edit
+  Strictly 5 Steps: Company -> Description -> Address -> Social Links -> Review
+  (Contacts removed as organization team members are managed via Team module)
+  100% Replicates Add Internal Client Visual & UI/UX Standards (Rule 20 Design Standard)
   Optimized for 15.6" Laptops (1366x768 & 1920x1080) and Smaller Screens
   Tenancy Scoped to Authenticated Service Company (company_id)
 --}}
@@ -19,7 +21,7 @@
       </div>
     </div>
 
-    <!-- CENTER: Stepper (1 Company → 2 Description → 3 Address → 4 Contacts → 5 Social Links → 6 Review) -->
+    <!-- CENTER: Stepper (1 Company → 2 Description → 3 Address → 4 Social Links → 5 Review) -->
     <div class="client-header-stepper-col">
       <div class="client-stepper-wrap" id="client_wizard_stepper" role="tablist">
         
@@ -62,10 +64,10 @@
           </svg>
         </div>
 
-        <!-- Step 4: Contacts -->
-        <div class="client-step-item" data-step="4" role="tab" aria-label="Step 4: Contacts">
+        <!-- Step 4: Social Links -->
+        <div class="client-step-item" data-step="4" role="tab" aria-label="Step 4: Social Links">
           <div class="client-step-circle client-step-circle-4 is-upcoming">4</div>
-          <span class="client-step-name">Contacts</span>
+          <span class="client-step-name">Social Links</span>
         </div>
 
         <div class="client-step-arrow" data-arrow-after="4" aria-hidden="true">
@@ -75,22 +77,9 @@
           </svg>
         </div>
 
-        <!-- Step 5: Social Links -->
-        <div class="client-step-item" data-step="5" role="tab" aria-label="Step 5: Social Links">
+        <!-- Step 5: Review -->
+        <div class="client-step-item" data-step="5" role="tab" aria-label="Step 5: Review">
           <div class="client-step-circle client-step-circle-5 is-upcoming">5</div>
-          <span class="client-step-name">Social Links</span>
-        </div>
-
-        <div class="client-step-arrow" data-arrow-after="5" aria-hidden="true">
-          <svg class="client-step-arrow-svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M5 12h14"/>
-            <path d="m12 5 7 7-7 7"/>
-          </svg>
-        </div>
-
-        <!-- Step 6: Review -->
-        <div class="client-step-item" data-step="6" role="tab" aria-label="Step 6: Review">
-          <div class="client-step-circle client-step-circle-6 is-upcoming">6</div>
           <span class="client-step-name">Review</span>
         </div>
 
@@ -110,7 +99,7 @@
       </button>
       @endif
 
-      <!-- Steps 2-6: Back Button (Returns to previous step) -->
+      <!-- Steps 2-5: Back Button (Returns to previous step) -->
       <button type="button" class="btn client-top-back-btn client-nav-back" id="client_top_back_btn" title="Back to previous step" style="display:none !important;">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
           <path d="M19 12H5"/>
@@ -119,7 +108,7 @@
         <span>Back</span>
       </button>
 
-      <!-- Steps 1-5: Next Page Button -->
+      <!-- Steps 1-4: Next Page Button -->
       <button type="button" class="btn client-top-next-btn client-nav-next" id="client_top_next_btn">
         <span>Next Page</span>
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
@@ -128,7 +117,7 @@
         </svg>
       </button>
 
-      <!-- Step 6: Final Submit / Update Button -->
+      <!-- Step 5: Final Submit / Update Button -->
       <button type="button" class="btn client-top-submit-btn updatefrm" id="submitBtn" style="display:none !important;">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
           <polyline points="20 6 9 17 4 12"/>
