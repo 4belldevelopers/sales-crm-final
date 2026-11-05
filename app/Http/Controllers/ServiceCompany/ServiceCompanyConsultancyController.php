@@ -1388,6 +1388,12 @@ After completing these steps, they will be able to start collaborating with your
             ->where('thirdparty_company_id', '=', $partnerCompanyId)
             ->whereNotIn('master_status_id', [8, 9]);
 
+        if (! empty($sharedJobIds)) {
+            $candQuery->whereIn('job_id', $sharedJobIds);
+        } else {
+            $candQuery->whereRaw('1=0');
+        }
+
         $dbCandStats = $candQuery->first();
 
         $this->all_candidates = $dbCandStats ? (int) $dbCandStats->total_count : 0;
@@ -1404,7 +1410,7 @@ After completing these steps, they will be able to start collaborating with your
         $this->total_candidates = $this->all_candidates;
 
         // ── 3. Submitted Candidates List ──
-        $this->candidatesList = DB::table('job_applications')
+        $candListQuery = DB::table('job_applications')
             ->leftJoin('jobs', 'jobs.id', '=', 'job_applications.job_id')
             ->leftJoin('clients', 'clients.id', '=', 'jobs.client_id')
             ->leftJoin('add_job_wise_condidates', 'add_job_wise_condidates.job_application_id', '=', 'job_applications.id')
@@ -1434,7 +1440,15 @@ After completing these steps, they will be able to start collaborating with your
                 $q->where('add_job_wise_condidates.thirdparty_company_id', '=', $partnerCompanyId)
                     ->orWhere('job_applications.thirdparty_company_id', '=', $partnerCompanyId);
             })
-            ->whereNotIn('add_job_wise_condidates.master_status_id', [8, 9])
+            ->whereNotIn('add_job_wise_condidates.master_status_id', [8, 9]);
+
+        if (! empty($sharedJobIds)) {
+            $candListQuery->whereIn('job_applications.job_id', $sharedJobIds);
+        } else {
+            $candListQuery->whereRaw('1=0');
+        }
+
+        $this->candidatesList = $candListQuery
             ->orderBy('job_applications.id', 'desc')
             ->limit(50)
             ->get();

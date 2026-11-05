@@ -372,15 +372,18 @@ class ClientPerformanceQueryBuilder
      */
     public function buildJobQuery(array $scope, array $boundaries): array
     {
-        $mustClauses = $scope['job_filter']['bool']['must'] ?? [];
+        $jobFilter = $scope['job_filter'] ?? [];
+        if (! empty($jobFilter['bool'])) {
+            $rootQuery = $jobFilter;
+        } elseif (! empty($jobFilter)) {
+            $rootQuery = ['bool' => ['must' => [$jobFilter]]];
+        } else {
+            $rootQuery = ['bool' => ['must' => [['term' => ['id' => -999999]]]]];
+        }
 
         return [
             'size' => 100, // Retrieve up to 100 jobs for direct inspection
-            'query' => [
-                'bool' => [
-                    'must' => $mustClauses,
-                ],
-            ],
+            'query' => $rootQuery,
             'aggs' => [
                 'status_breakdown' => [
                     'terms' => [

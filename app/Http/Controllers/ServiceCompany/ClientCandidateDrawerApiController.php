@@ -58,7 +58,45 @@ class ClientCandidateDrawerApiController extends Controller
         if ($companyId <= 1) {
             // Admin/SuperAdmin view: resolve target agency tenancy from request or fallback
             $passedCompanyId = (int) ($request->input('company_id') ?: $request->input('service_company_id') ?: session('company_id') ?: 0);
-            $companyId = $passedCompanyId > 1 ? $passedCompanyId : 2;
+            if ($passedCompanyId <= 1) {
+                // Super Admin receives empty envelope to prevent cross-tenant data harvesting (TC-10)
+                return response()->json([
+                    'data' => [],
+                    'meta' => [
+                        'client_id' => $clientId,
+                        'client_type' => 'direct',
+                        'query_fingerprint' => '',
+                        'client_candidate_version' => 1,
+                        'projection_schema_version' => 2,
+                        'stage_counts' => [
+                            'sourcing' => 0,
+                            'screening' => 0,
+                            'evaluation' => 0,
+                            'negotiations' => 0,
+                            'offer' => 0,
+                            'joined' => 0,
+                            'rejected' => 0,
+                            'in_review' => 0,
+                        ],
+                        'server_time' => now()->toIso8601String(),
+                    ],
+                    'pagination' => [
+                        'mode' => 'page',
+                        'total' => 0,
+                        'total_relation' => 'eq',
+                        'per_page' => 25,
+                        'has_more' => false,
+                        'current_page' => 1,
+                        'last_page' => 1,
+                    ],
+                    'filters' => [
+                        'search' => '',
+                        'status_id' => null,
+                        'job_id' => null,
+                    ],
+                ]);
+            }
+            $companyId = $passedCompanyId;
         }
 
         $clientType = (string) ($request->input('client_type') ?: ($request->input('clienttype') ?: 'direct'));

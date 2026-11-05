@@ -1000,14 +1000,14 @@ window.ClientJobsPipelineEngine = window.ClientJobsPipelineEngine || {
             });
 
             var counts = {
+                8: 0, // INW (In-Review — only counted for Internal Client)
                 1: 0, // SOU
                 2: 0, // SCR
                 3: 0, // EVA
                 4: 0, // NEG
                 5: 0, // OFF
                 6: 0, // JOI
-                7: 0, // REJ
-                8: 0  // INW
+                7: 0  // REJ
             };
 
             var totalApps = 0;
@@ -1029,12 +1029,18 @@ window.ClientJobsPipelineEngine = window.ClientJobsPipelineEngine || {
                     }
                 }
 
-                // Status 8 (In Review) and Status 9 (Archived) must NOT be included anywhere for Direct Client or Agency
-                if (isInReview || sid === 8 || sid === 9 || jSid === 8 || jSid === 9 || mSid === 8 || mSid === 9) {
+                // Status 8 (In Review) is excluded for Direct Client and Agency.
+                // Status 8 (In Review / INW) is a valid pipeline stage for Internal Client — do NOT exclude it.
+                // Status 9 (Archived) is always excluded for all client types.
+                var isInternal = (clientType === 'internal');
+                if ((!isInternal && (isInReview || sid === 8 || jSid === 8 || mSid === 8)) || sid === 9 || jSid === 9 || mSid === 9) {
                     return; // Dropped client-side
                 }
 
-                if (sid === 1) {
+                if (sid === 8 && isInternal) {
+                    counts[8]++;
+                    totalApps++;
+                } else if (sid === 1) {
                     counts[1]++;
                     totalSourcing++;
                     totalApps++;
@@ -1062,7 +1068,12 @@ window.ClientJobsPipelineEngine = window.ClientJobsPipelineEngine || {
                     totalApps++;
                 } else {
                     var sName = String(cand.child_status_name || cand.master_status_name || cand.name || '').toLowerCase().trim();
-                    if (sName.indexOf('inreview') !== -1 || sName.indexOf('in review') !== -1 || sName.indexOf('archived') !== -1) { return; }
+                    if (sName.indexOf('inreview') !== -1 || sName.indexOf('in review') !== -1 || sName.indexOf('archived') !== -1) {
+                        if (isInternal && (sName.indexOf('inreview') !== -1 || sName.indexOf('in review') !== -1)) {
+                            counts[8]++; totalApps++; // INW counts for internal
+                        }
+                        // Archived (status 9 by name) is dropped for all
+                    }
                     else if (sName.indexOf('sourc') !== -1) { counts[1]++; totalSourcing++; totalApps++; }
                     else if (sName.indexOf('screen') !== -1) { counts[2]++; totalApps++; }
                     else if (sName.indexOf('eval') !== -1 || sName.indexOf('interview') !== -1) { counts[3]++; totalInterviews++; totalApps++; }
@@ -1074,7 +1085,7 @@ window.ClientJobsPipelineEngine = window.ClientJobsPipelineEngine || {
                 }
             });
 
-            // Update 8 track badge elements
+            // Update track badge elements (8 for internal, 7 for direct/agency; .s-inw badge only exists in internal HTML)
             $card.find('.s-inw').text(counts[8]);
             $card.find('.s-sou').text(counts[1]);
             $card.find('.s-scr').text(counts[2]);

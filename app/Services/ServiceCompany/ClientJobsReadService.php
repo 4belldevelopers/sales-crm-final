@@ -263,11 +263,25 @@ class ClientJobsReadService
         // 6. Secondary Query: Candidate Pipeline Stages (Batched O(1))
         $jobIds = array_filter(array_map(fn ($j) => (int) ($j->id ?? 0), $jobs));
         $pipelineStageMap = [];
+        $interviewMap = [];
         $logoMap = [];
 
         if (! empty($jobIds)) {
             $candFilter = [
-                ['terms' => ['job_id' => array_values($jobIds)]],
+                [
+                    'bool' => [
+                        'should' => [
+                            ['terms' => ['jobId' => array_values($jobIds)]],
+                            [
+                                'bool' => [
+                                    'must' => [['terms' => ['job_id' => array_values($jobIds)]]],
+                                    'must_not' => [['exists' => ['field' => 'jobId']]],
+                                ],
+                            ],
+                        ],
+                        'minimum_should_match' => 1,
+                    ],
+                ],
             ];
 
             if ($query->clientType === 'internal') {
@@ -275,62 +289,41 @@ class ClientJobsReadService
                 if ($query->clientId > 0) {
                     $candFilter[] = ['term' => ['client_id' => (int) $query->clientId]];
                 }
-            } elseif ($query->clientType === 'agency') {
-                $agencyCompanyId = $partnerPart > 0 ? $partnerPart : (int) $query->clientId;
-                $candFilter[] = [
+            } elseif ($query->clientType === 'agency' || $query->clientType === 'direct') {
+                $party1 = (int) $query->serviceCompanyId;
+                $party2 = (int) ($partnerPart > 0 ? $partnerPart : $query->clientId);
+
+                $partyScope = fn (int $cid) => [
                     'bool' => [
                         'should' => [
-                            ['term' => ['ClientComID' => $agencyCompanyId]],
-                            [
-                                'bool' => [
-                                    'must' => [
-                                        ['term' => ['thirdparty_company_id' => $agencyCompanyId]],
-                                    ],
-                                    'must_not' => [
-                                        ['term' => ['ClientComID' => 0]],
-                                    ],
-                                ],
-                            ],
-                            ['term' => ['agency_id' => $agencyCompanyId]],
-                            ['term' => ['agency_company_id' => $agencyCompanyId]],
-                            ['term' => ['from_company_id' => $agencyCompanyId]],
+                            ['term' => ['company_id' => $cid]],
+                            ['term' => ['from_company_id' => $cid]],
+                            ['term' => ['to_company_id' => $cid]],
+                            ['term' => ['ClientComID' => $cid]],
+                            ['term' => ['thirdparty_company_id' => $cid]],
+                            ['term' => ['agency_id' => $cid]],
+                            ['term' => ['agency_company_id' => $cid]],
+                            ['term' => ['job_company_id' => $cid]],
+                            ['term' => ['client_comapny_id' => $cid]],
                         ],
                         'minimum_should_match' => 1,
                     ],
                 ];
-                $candFilter[] = [
-                    'bool' => [
-                        'should' => [
-                            ['term' => ['company_id' => (int) $query->serviceCompanyId]],
-                            ['term' => ['to_company_id' => (int) $query->serviceCompanyId]],
-                            ['term' => ['ClientComID' => (int) $query->serviceCompanyId]],
-                            ['term' => ['job_company_id' => (int) $query->serviceCompanyId]],
-                            ['term' => ['client_comapny_id' => (int) $query->serviceCompanyId]],
-                        ],
-                        'minimum_should_match' => 1,
-                    ],
-                ];
-            } else {
-                $allowedCompIds = array_values(array_filter([
-                    (int) $query->clientId,
-                    (int) $query->serviceCompanyId,
-                    (int) ($query->partnerCompanyId ?? 0),
-                    (int) $query->tenantId,
-                ]));
-                $candFilter[] = [
-                    'bool' => [
-                        'should' => [
-                            ['terms' => ['company_id' => $allowedCompIds]],
-                            ['terms' => ['from_company_id' => $allowedCompIds]],
-                            ['terms' => ['client_id' => $allowedCompIds]],
-                        ],
-                        'minimum_should_match' => 1,
-                    ],
-                ];
+
+                $candFilter[] = $partyScope($party1);
+                $candFilter[] = $partyScope($party2);
             }
 
-            $mustNot = [];
-            if ($query->clientType === 'direct' || $query->clientType === 'agency') {
+            // Rule: Internal client retains INW (status 8) in pipeline counts.
+            // Direct client and Agency strictly exclude status 8 (In-Review) and status 9.
+            if ($query->clientType === 'internal') {
+                // Internal client: only exclude status 9 (Archived/Deleted) — INW (8) is a valid stage
+                $mustNot = [
+                    ['terms' => ['job_master_status_id' => [9, '9']]],
+                    ['terms' => ['master_status_id' => [9, '9']]],
+                ];
+            } else {
+                // Direct client & Agency: strictly exclude status 8 (In-Review) and 9
                 $mustNot = [
                     ['terms' => ['job_master_status_id' => [8, 9, '8', '9']]],
                     ['terms' => ['master_status_id' => [8, 9, '8', '9']]],
@@ -349,7 +342,31 @@ class ClientJobsReadService
                     ],
                     'aggs' => [
                         'by_job' => [
-                            'terms' => ['field' => 'job_id', 'size' => count($jobIds)],
+                            'terms' => ['field' => 'jobId', 'size' => max(10, count($jobIds))],
+                            'aggs' => [
+                                'by_job_stage' => [
+                                    'terms' => ['field' => 'job_master_status_id', 'size' => 10],
+                                ],
+                                'by_master_stage' => [
+                                    'terms' => ['field' => 'master_status_id', 'size' => 10],
+                                ],
+                                'with_interview' => [
+                                    'filter' => [
+                                        'bool' => [
+                                            'should' => [
+                                                ['exists' => ['field' => 'schedule_date']],
+                                                ['exists' => ['field' => 'interviewDateOne']],
+                                                ['terms' => ['job_master_status_id' => [3, 4]]],
+                                                ['terms' => ['master_status_id' => [3, 4]]],
+                                            ],
+                                            'minimum_should_match' => 1,
+                                        ],
+                                    ],
+                                ],
+                            ],
+                        ],
+                        'by_job_legacy' => [
+                            'terms' => ['field' => 'job_id', 'size' => max(10, count($jobIds))],
                             'aggs' => [
                                 'by_job_stage' => [
                                     'terms' => ['field' => 'job_master_status_id', 'size' => 10],
@@ -366,31 +383,53 @@ class ClientJobsReadService
             try {
                 $candResponse = $this->elasticService->getClient()->search($candParams);
                 $jobBuckets = $candResponse['aggregations']['by_job']['buckets'] ?? [];
+                $legacyBuckets = $candResponse['aggregations']['by_job_legacy']['buckets'] ?? [];
+
+                $processedJobIds = [];
+                // For internal client, status 8 (INW) is a valid pipeline stage and must be included.
+                // For direct client and agency, status 8 (INW) must always be excluded.
+                $isInternalPipeline = ($query->clientType === 'internal');
+
                 foreach ($jobBuckets as $jb) {
                     $jId = (int) $jb['key'];
+                    if ($jId <= 0) {
+                        continue;
+                    }
+                    $processedJobIds[$jId] = true;
+                    $interviewMap[$jId] = (int) ($jb['with_interview']['doc_count'] ?? 0);
+
                     $jobStageBuckets = $jb['by_job_stage']['buckets'] ?? [];
                     $masterStageBuckets = $jb['by_master_stage']['buckets'] ?? [];
 
-                    if (! empty($jobStageBuckets)) {
-                        foreach ($jobStageBuckets as $sb) {
-                            $sId = (int) $sb['key'];
-                            if ($sId > 0) {
-                                if (($query->clientType === 'direct' || $query->clientType === 'agency') && ($sId === 8 || $sId === 9)) {
-                                    continue;
-                                }
-                                $pipelineStageMap[$jId][$sId] = ($pipelineStageMap[$jId][$sId] ?? 0) + (int) $sb['doc_count'];
-                            }
+                    $targetBuckets = ! empty($jobStageBuckets) ? $jobStageBuckets : $masterStageBuckets;
+                    foreach ($targetBuckets as $sb) {
+                        $sId = (int) $sb['key'];
+                        // Always exclude status 9. For direct/agency, also exclude status 8 (INW).
+                        if ($sId <= 0 || $sId === 9 || (! $isInternalPipeline && $sId === 8)) {
+                            continue;
                         }
-                    } else {
-                        foreach ($masterStageBuckets as $sb) {
-                            $sId = (int) $sb['key'];
-                            if ($sId > 0) {
-                                if (($query->clientType === 'direct' || $query->clientType === 'agency') && ($sId === 8 || $sId === 9)) {
-                                    continue;
-                                }
-                                $pipelineStageMap[$jId][$sId] = ($pipelineStageMap[$jId][$sId] ?? 0) + (int) $sb['doc_count'];
-                            }
+                        $pipelineStageMap[$jId][$sId] = ($pipelineStageMap[$jId][$sId] ?? 0) + (int) $sb['doc_count'];
+                    }
+                }
+
+                // If any job was not in by_job, check by_job_legacy
+                foreach ($legacyBuckets as $lb) {
+                    $jId = (int) $lb['key'];
+                    if ($jId <= 0 || ! empty($processedJobIds[$jId])) {
+                        continue;
+                    }
+                    $processedJobIds[$jId] = true;
+
+                    $jobStageBuckets = $lb['by_job_stage']['buckets'] ?? [];
+                    $masterStageBuckets = $lb['by_master_stage']['buckets'] ?? [];
+
+                    $targetBuckets = ! empty($jobStageBuckets) ? $jobStageBuckets : $masterStageBuckets;
+                    foreach ($targetBuckets as $sb) {
+                        $sId = (int) $sb['key'];
+                        if ($sId <= 0 || $sId === 9 || (! $isInternalPipeline && $sId === 8)) {
+                            continue;
                         }
+                        $pipelineStageMap[$jId][$sId] = ($pipelineStageMap[$jId][$sId] ?? 0) + (int) $sb['doc_count'];
                     }
                 }
             } catch (\Throwable $e) {
@@ -398,6 +437,64 @@ class ClientJobsReadService
                     'error' => $e->getMessage(),
                 ]);
             }
+
+            // Circuit-breaker DB fallback (Rules 1 & 2): if any job on page has 0 candidate counts,
+            // populate from MySQL for agency and direct client types (not internal — ES handles INW for internal).
+            if ($query->clientType === 'agency') {
+                $agencyCompanyId = $partnerPart > 0 ? $partnerPart : (int) $query->clientId;
+                foreach ($jobIds as $jId) {
+                    if (empty($pipelineStageMap[$jId])) {
+                        try {
+                            $dbStages = \Illuminate\Support\Facades\DB::table('add_job_wise_condidates')
+                                ->where('job_id', $jId)
+                                ->where('company_id', (int) $query->serviceCompanyId)
+                                ->where(function ($q) use ($agencyCompanyId) {
+                                    $q->where('thirdparty_company_id', $agencyCompanyId)
+                                      ->orWhere('ClientComID', $agencyCompanyId);
+                                })
+                                ->whereNotIn('master_status_id', [8, 9])
+                                ->select('master_status_id', \Illuminate\Support\Facades\DB::raw('COUNT(*) as cnt'))
+                                ->groupBy('master_status_id')
+                                ->get();
+
+                            foreach ($dbStages as $row) {
+                                $sId = (int) $row->master_status_id;
+                                if ($sId > 0 && $sId !== 8 && $sId !== 9) {
+                                    $pipelineStageMap[$jId][$sId] = (int) $row->cnt;
+                                }
+                            }
+                        } catch (\Throwable $e) {
+                            // Defensive
+                        }
+                    }
+                }
+            } elseif ($query->clientType === 'direct') {
+                // Direct client DB fallback: query job_applications scoped to service company (excludes status 8 & 9)
+                $directClientId = $partnerPart > 0 ? $partnerPart : (int) $query->clientId;
+                foreach ($jobIds as $jId) {
+                    if (empty($pipelineStageMap[$jId])) {
+                        try {
+                            $dbStages = \Illuminate\Support\Facades\DB::table('job_applications')
+                                ->where('job_id', $jId)
+                                ->where('company_id', (int) $query->serviceCompanyId)
+                                ->whereNotIn('master_status_id', [8, 9])
+                                ->select('master_status_id', \Illuminate\Support\Facades\DB::raw('COUNT(*) as cnt'))
+                                ->groupBy('master_status_id')
+                                ->get();
+
+                            foreach ($dbStages as $row) {
+                                $sId = (int) $row->master_status_id;
+                                if ($sId > 0 && $sId !== 8 && $sId !== 9) {
+                                    $pipelineStageMap[$jId][$sId] = (int) $row->cnt;
+                                }
+                            }
+                        } catch (\Throwable $e) {
+                            // Defensive
+                        }
+                    }
+                }
+            }
+            // Internal client: no DB fallback needed here — INW (status 8) counts come from ES pipeline above
 
             // Pre-calculate visual metadata (logos/initials)
             foreach ($jobs as $job) {
@@ -537,7 +634,8 @@ class ClientJobsReadService
             queryHash: md5($cacheKey),
             generatedAt: now()->toIso8601String(),
             clientName: $clientDisplayName,
-            clientType: $query->clientType
+            clientType: $query->clientType,
+            interviewMap: $interviewMap
         );
 
         // 9. Store in Redis Query Cache

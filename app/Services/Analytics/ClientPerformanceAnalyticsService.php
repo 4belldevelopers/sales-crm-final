@@ -5,7 +5,9 @@ namespace App\Services\Analytics;
 use App\Services\Analytics\Contracts\PerformanceStatusMap;
 use App\Services\ElasticService;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Redis;
 use Illuminate\Support\Str;
 
 /**
@@ -274,8 +276,14 @@ class ClientPerformanceAnalyticsService
         // Build Top Roles from genuine candidate aggs & job metadata
         $topRoles = $this->buildTopRoles($cAggs['job_roles_bucket']['buckets'] ?? [], $jResp['hits']['hits'] ?? []);
 
-        // Build Recruiter Performance from top hits (0% MySQL reads)
-        $recruiters = $this->buildRecruiters($cAggs['recruiters_bucket']['buckets'] ?? [], $scope['auth_company_id']);
+        // Build Recruiter Performance from top hits & users index (0% MySQL reads)
+        $clientType = $scope['client_type'] ?? '';
+        $isAgency = $clientType === 'agency';
+        $isDirect = $clientType === 'direct';
+        $agencyCompanyId = $isAgency ? (int) ($scope['client_id'] ?? 0) : ($isDirect ? (int) ($scope['auth_company_id'] ?? 0) : 0);
+        $targetCompanyId = $agencyCompanyId > 0 ? $agencyCompanyId : (int) ($scope['auth_company_id'] ?? 0);
+        $isAgencyTeamScoped = ($isAgency || $isDirect) && $agencyCompanyId > 0;
+        $recruiters = $this->buildRecruiters($cAggs['recruiters_bucket']['buckets'] ?? [], $targetCompanyId, $isAgencyTeamScoped);
 
         // Build Deterministic Intelligence Insights
         $previousSummary = [
@@ -691,10 +699,12 @@ class ClientPerformanceAnalyticsService
 
     /**
      * Build Recruiter Performance table data (limit 5) with 0% MySQL reads.
+     * In agency mode, strictly scopes recruiters to the partner agency's team.
      */
-    protected function buildRecruiters(array $buckets, int $companyId): array
+    protected function buildRecruiters(array $buckets, int $targetCompanyId, bool $isAgency = false): array
     {
         $items = [];
+        $seenUserIds = [];
         $limit = 5;
 
         foreach ($buckets as $b) {
@@ -707,6 +717,21 @@ class ClientPerformanceAnalyticsService
                 continue;
             }
 
+            $userProfile = $this->resolveUserProfile($userId);
+            $userCompanyId = (int) ($userProfile['company_id'] ?? 0);
+
+            // In agency mode: strictly include ONLY recruiters belonging to the partner agency team
+            if ($isAgency && $targetCompanyId > 0 && $userCompanyId !== $targetCompanyId) {
+                continue;
+            }
+
+            // In client/internal mode: exclude recruiters that belong to another company
+            if (! $isAgency && $targetCompanyId > 0 && $userCompanyId > 0 && $userCompanyId !== $targetCompanyId) {
+                continue;
+            }
+
+            $seenUserIds[$userId] = true;
+
             // Submissions strictly from eligible candidates [1..6], excluding In Review
             $sub = (int) ($b['eligible_submissions']['count']['value'] ?? $b['submissions']['value'] ?? $b['doc_count'] ?? 0);
             $interviews = (int) ($b['interviews']['unique_count']['value'] ?? 0);
@@ -714,37 +739,10 @@ class ClientPerformanceAnalyticsService
             $joins = (int) ($b['joins']['unique_count']['value'] ?? 0);
             $joinRate = $sub > 0 ? sprintf('%.1f%%', ($joins / $sub) * 100) : '0.0%';
 
-            // Resolve name & avatar strictly from ES top_hits (0% MySQL reads) with user profile resolution
-            $topHit = $b['recruiter_info']['hits']['hits'][0]['_source'] ?? [];
-            $name = $topHit['submitted_by_name'] ?? $topHit['posted_by'] ?? null;
-            if (empty($name) && $userId > 0) {
-                $uCacheKey = "ats:user_brief:{$userId}";
-                try {
-                    $cachedU = \Illuminate\Support\Facades\Redis::get($uCacheKey);
-                    if ($cachedU) {
-                        $uDec = json_decode($cachedU, true);
-                        $name = $uDec['name'] ?? null;
-                    }
-                } catch (\Throwable) {}
-                if (empty($name)) {
-                    $uRow = \Illuminate\Support\Facades\DB::table('users')->where('id', $userId)->first(['name']);
-                    if ($uRow) {
-                        $name = $uRow->name;
-                        try {
-                            \Illuminate\Support\Facades\Redis::setex($uCacheKey, 86400, json_encode(['id' => $userId, 'name' => $name]));
-                        } catch (\Throwable) {}
-                    }
-                }
-            }
-            if (empty($name)) {
-                $name = 'Recruiter #'.$userId;
-            }
-            $avatar = ! empty($topHit['posted_by_image']) ? $topHit['posted_by_image'] : '/assets/media/avatars/300-1.jpg';
-
             $items[] = [
                 'user_id' => $userId,
-                'name' => $name,
-                'avatar' => $avatar,
+                'name' => $userProfile['name'] ?? ('Recruiter #'.$userId),
+                'avatar' => $userProfile['avatar'] ?? '/assets/media/avatars/300-1.jpg',
                 'assigned_jobs' => 1,
                 'submissions' => $sub,
                 'interviews' => $interviews,
@@ -755,11 +753,179 @@ class ClientPerformanceAnalyticsService
             ];
         }
 
+        // In agency mode: if fewer than limit, populate remaining agency team members with 0% MySQL reads
+        if ($isAgency && $targetCompanyId > 0 && count($items) < $limit) {
+            $agencyTeam = $this->fetchAgencyTeamMembers($targetCompanyId);
+            foreach ($agencyTeam as $member) {
+                if (count($items) >= $limit) {
+                    break;
+                }
+                $mId = (int) ($member['id'] ?? 0);
+                if ($mId <= 0 || isset($seenUserIds[$mId])) {
+                    continue;
+                }
+                $seenUserIds[$mId] = true;
+
+                $items[] = [
+                    'user_id' => $mId,
+                    'name' => $member['name'],
+                    'avatar' => $member['avatar'],
+                    'assigned_jobs' => 1,
+                    'submissions' => 0,
+                    'interviews' => 0,
+                    'offers' => 0,
+                    'joins' => 0,
+                    'join_rate_pct' => '0.0%',
+                    'avg_time_to_hire_days' => 0,
+                ];
+            }
+        }
+
         return [
-            'total_count' => count($buckets),
+            'total_count' => count($items),
             'limit' => $limit,
             'items' => $items,
         ];
+    }
+
+    /**
+     * Resolve user profile (name, avatar, company_id) with 0% MySQL reads (Redis + ES local_users_list_elastic).
+     */
+    protected function resolveUserProfile(int $userId): array
+    {
+        if ($userId <= 0) {
+            return [];
+        }
+
+        $cacheKey = "ats:user_brief:{$userId}";
+        try {
+            $cached = Redis::get($cacheKey);
+            if ($cached) {
+                $decoded = json_decode($cached, true);
+                if (is_array($decoded) && ! empty($decoded['name']) && isset($decoded['company_id'])) {
+                    return $decoded;
+                }
+            }
+        } catch (\Throwable) {}
+
+        $usersIndex = config('constants.ELASTIC_USERS_LIST', 'local_users_list_elastic');
+        $profile = [];
+
+        try {
+            if ($this->elasticService->indexExists($usersIndex)) {
+                $resp = $this->elasticService->getClient()->search([
+                    'index' => $usersIndex,
+                    'size' => 1,
+                    'body' => [
+                        'query' => [
+                            'bool' => [
+                                'should' => [
+                                    ['term' => ['id' => $userId]],
+                                    ['term' => ['_id' => $userId]],
+                                ],
+                                'minimum_should_match' => 1,
+                            ],
+                        ],
+                    ],
+                ]);
+
+                $hit = $resp['hits']['hits'][0]['_source'] ?? [];
+                if (! empty($hit)) {
+                    $rawName = trim((string) ($hit['name'] ?? ''));
+                    $profile = [
+                        'id' => $userId,
+                        'name' => ! empty($rawName) ? ucwords($rawName) : ('Recruiter #'.$userId),
+                        'company_id' => (int) ($hit['company_id'] ?? 0),
+                        'company_name' => trim((string) ($hit['company_name'] ?? '')),
+                        'avatar' => ! empty($hit['image']) ? $hit['image'] : '/assets/media/avatars/300-1.jpg',
+                    ];
+                }
+            }
+        } catch (\Throwable $e) {
+            Log::warning('ClientPerformanceAnalyticsService: Failed to resolve user from ES', ['user_id' => $userId, 'error' => $e->getMessage()]);
+        }
+
+        if (empty($profile)) {
+            try {
+                $row = DB::table('users')->where('id', $userId)->first(['id', 'name', 'company_id']);
+                if ($row) {
+                    $profile = [
+                        'id' => $userId,
+                        'name' => ucwords(trim($row->name)),
+                        'company_id' => (int) $row->company_id,
+                        'company_name' => '',
+                        'avatar' => '/assets/media/avatars/300-1.jpg',
+                    ];
+                }
+            } catch (\Throwable) {}
+        }
+
+        if (! empty($profile)) {
+            try {
+                Redis::setex($cacheKey, 86400, json_encode($profile));
+            } catch (\Throwable) {}
+        }
+
+        return $profile;
+    }
+
+    /**
+     * Fetch agency team members from Elasticsearch index local_users_list_elastic (0% MySQL reads).
+     */
+    protected function fetchAgencyTeamMembers(int $agencyCompanyId): array
+    {
+        if ($agencyCompanyId <= 0) {
+            return [];
+        }
+
+        $team = [];
+        $usersIndex = config('constants.ELASTIC_USERS_LIST', 'local_users_list_elastic');
+
+        try {
+            if ($this->elasticService->indexExists($usersIndex)) {
+                $resp = $this->elasticService->getClient()->search([
+                    'index' => $usersIndex,
+                    'size' => 10,
+                    'body' => [
+                        'query' => [
+                            'term' => ['company_id' => $agencyCompanyId],
+                        ],
+                    ],
+                ]);
+
+                foreach ($resp['hits']['hits'] as $hit) {
+                    $s = $hit['_source'] ?? [];
+                    $uid = (int) ($s['id'] ?? 0);
+                    if ($uid > 0) {
+                        $rawName = trim((string) ($s['name'] ?? ''));
+                        $team[] = [
+                            'id' => $uid,
+                            'name' => ! empty($rawName) ? ucwords($rawName) : ('Recruiter #'.$uid),
+                            'company_id' => $agencyCompanyId,
+                            'avatar' => ! empty($s['image']) ? $s['image'] : '/assets/media/avatars/300-1.jpg',
+                        ];
+                    }
+                }
+            }
+        } catch (\Throwable $e) {
+            Log::warning('ClientPerformanceAnalyticsService: Failed to fetch agency team from ES', ['company_id' => $agencyCompanyId, 'error' => $e->getMessage()]);
+        }
+
+        if (empty($team)) {
+            try {
+                $rows = DB::table('users')->where('company_id', $agencyCompanyId)->limit(10)->get(['id', 'name', 'company_id']);
+                foreach ($rows as $r) {
+                    $team[] = [
+                        'id' => (int) $r->id,
+                        'name' => ucwords(trim($r->name)),
+                        'company_id' => $agencyCompanyId,
+                        'avatar' => '/assets/media/avatars/300-1.jpg',
+                    ];
+                }
+            } catch (\Throwable) {}
+        }
+
+        return $team;
     }
 
     /**

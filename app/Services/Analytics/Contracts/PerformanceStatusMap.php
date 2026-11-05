@@ -29,18 +29,24 @@ class PerformanceStatusMap
 
     public const STAGE_INTERVIEW = 'INTERVIEW';   // ID = 3
 
+    public const STAGE_EVALUATION = 'EVALUATION'; // ID = 3
+
     public const STAGE_NEGOTIATION = 'NEGOTIATION'; // ID = 4
 
     public const STAGE_OFFER = 'OFFER';       // ID = 5
 
     public const STAGE_JOINED = 'JOINED';      // ID = 6
 
-    public const STAGE_REJECTED = 'REJECTED';    // ID = 7
+    public const STAGE_REJECTED = 'REJECTED';    // ID = 7 (Count only ones marked 7; do not include 9)
 
     public const STAGE_ARCHIVED = 'ARCHIVED';    // ID = 9
 
     // Integer Status Identifiers
     public const STATUS_IN_REVIEW_INT = 8;
+
+    public const STATUS_REJECTED_INT = 7;
+
+    public const STATUS_REJECTED_DIRECT_INT = 9;
 
     public const STATUS_ARCHIVED_INT = 9;
 
@@ -50,12 +56,15 @@ class PerformanceStatusMap
         self::STAGE_SOURCING => [1],
         self::STAGE_SCREENING => [2],
         self::STAGE_INTERVIEW => [3],
+        self::STAGE_EVALUATION => [3],
         self::STAGE_NEGOTIATION => [4],
         self::STAGE_OFFER => [5],
         self::STAGE_JOINED => [6],
         self::STAGE_REJECTED => [7],
         self::STAGE_ARCHIVED => [9],
     ];
+
+    public const REJECTED_STATUSES = [7];
 
     /**
      * Authoritative positive allow-list for candidates officially shared with the Direct Client.

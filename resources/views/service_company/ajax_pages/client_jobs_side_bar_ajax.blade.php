@@ -9,8 +9,24 @@
     $jobs = isset($viewModel) ? $viewModel->jobs : (isset($data) ? $data : []);
     $currentStatus = isset($viewModel) ? $viewModel->getActiveFilter() : (request('custom_status') ?: request('status') ?: 'all');
 
-    // 8 Canonical recruitment pipeline stages
+    // Determine overall view context from ViewModel or $custom flag
+    // $custom = 'true' means Internal Client; $custom = 'false' means Direct Client or Agency
+    $isInternalClientView = (isset($viewModel) && $viewModel->clientType === 'internal')
+        || (isset($custom) && ($custom === 'true' || $custom === true));
+
+    // 7 Canonical recruitment pipeline stages (Direct Client & Agency: strictly exclude status 8 INW and status 9)
     $pipelineStages = [
+        ['label' => 'SOU', 'cls' => 's-sou', 'id' => 1],
+        ['label' => 'SCR', 'cls' => 's-scr', 'id' => 2],
+        ['label' => 'EVA', 'cls' => 's-eva', 'id' => 3],
+        ['label' => 'NEG', 'cls' => 's-neg', 'id' => 4],
+        ['label' => 'OFF', 'cls' => 's-off', 'id' => 5],
+        ['label' => 'JOI', 'cls' => 's-joi', 'id' => 6],
+        ['label' => 'REJ', 'cls' => 's-rej', 'id' => 7],
+    ];
+
+    // 8 Full pipeline stages (Internal Client only: INW is a valid internal staging state)
+    $pipelineStagesInternal = [
         ['label' => 'INW', 'cls' => 's-inw', 'id' => 8],
         ['label' => 'SOU', 'cls' => 's-sou', 'id' => 1],
         ['label' => 'SCR', 'cls' => 's-scr', 'id' => 2],
@@ -20,6 +36,9 @@
         ['label' => 'JOI', 'cls' => 's-joi', 'id' => 6],
         ['label' => 'REJ', 'cls' => 's-rej', 'id' => 7],
     ];
+
+    // Choose active pipeline stage list based on view context
+    $activePipelineStages = $isInternalClientView ? $pipelineStagesInternal : $pipelineStages;
 @endphp
 
 @if (!empty($jobs) && count($jobs) > 0)
@@ -230,13 +249,15 @@
                             if (!empty($cachedCompName)) {
                                 $agencyName = (string) $cachedCompName;
                             } else {
-                                $cRow = \Illuminate\Support\Facades\DB::table('companies')->where('id', $targetAgencyId)->first(['company_name']);
-                                if ($cRow) {
-                                    $agencyName = $cRow->company_name ?? null;
-                                    if ($agencyName) {
-                                        \Illuminate\Support\Facades\Redis::setex($cacheCompKey, 86400, $agencyName);
+                                try {
+                                    $cRow = \Illuminate\Support\Facades\DB::table('companies')->where('id', $targetAgencyId)->first(['company_name']);
+                                    if ($cRow) {
+                                        $agencyName = $cRow->company_name ?? null;
+                                        if ($agencyName) {
+                                            \Illuminate\Support\Facades\Redis::setex($cacheCompKey, 86400, $agencyName);
+                                        }
                                     }
-                                }
+                                } catch (\Throwable) {}
                             }
                         }
                     }
@@ -251,9 +272,13 @@
                         if (!empty($cachedCompName)) {
                             $agencyName = (string) $cachedCompName;
                         } else {
-                            $cRow = \Illuminate\Support\Facades\DB::table('companies')->where('id', $viewerCompanyId)->first(['company_name']);
-                            $agencyName = $cRow->company_name ?? '4Bell Technology';
-                            \Illuminate\Support\Facades\Redis::setex($cacheCompKey, 86400, $agencyName);
+                            try {
+                                $cRow = \Illuminate\Support\Facades\DB::table('companies')->where('id', $viewerCompanyId)->first(['company_name']);
+                                $agencyName = $cRow->company_name ?? '4Bell Technology';
+                                \Illuminate\Support\Facades\Redis::setex($cacheCompKey, 86400, $agencyName);
+                            } catch (\Throwable) {
+                                $agencyName = '4Bell Technology';
+                            }
                         }
                     } else {
                         $agencyName = '4Bell Technology';
@@ -298,21 +323,27 @@
                 $totalJoined = 0;
                 $totalSourcing = (int) ($jobStageCounts[1] ?? 0);
 
-                foreach ($pipelineStages as $st) {
-                    $c = (int) ($jobStageCounts[$st['id']] ?? 0);
-                    // Rule 10: In Review candidates must NOT be counted anywhere in direct client pipeline!
-                    if ($isDirect && $st['id'] === 8) {
+                foreach ($activePipelineStages as $st) {
+                    $sId = (int) $st['id'];
+                    // Always exclude status 9 (Archived). For direct/agency, INW (8) is not in $activePipelineStages.
+                    // For internal client, INW (8) is included in $activePipelineStages and counts toward totalApps.
+                    if ($sId === 9) {
                         continue;
                     }
+                    $c = (int) ($jobStageCounts[$sId] ?? 0);
                     $totalApps += $c;
-                    if (in_array($st['id'], [3, 4])) {
+                    if (in_array($sId, [3, 4])) {
                         $totalInterviews += $c;
-                    } elseif ($st['id'] === 5) {
+                    } elseif ($sId === 5) {
                         $totalOffers += $c;
-                    } elseif ($st['id'] === 6) {
+                    } elseif ($sId === 6) {
                         $totalJoined += $c;
                     }
                 }
+
+                $resolvedInterviews = isset($viewModel) && isset($viewModel->interviewMap[$jobId])
+                    ? max($totalInterviews, (int) $viewModel->interviewMap[$jobId])
+                    : $totalInterviews;
 
                 // Client Representative & Company Attribution (Actual User · Company Name)
                 $clientCompany = !empty($resolvedClient) ? ucwords(strtolower($resolvedClient)) : 'Client';
@@ -477,16 +508,16 @@
                         </div>
                     </div>
 
-                    <!-- Sub-Card 5: Hiring Pipeline (8 Stages + Counters) -->
+                    <!-- Sub-Card 5: Hiring Pipeline (Stages: 8 for Internal, 7 for Direct/Agency) -->
                     <div class="cd-job-subcard cd-subcard-pipeline">
                         <div class="cd-subcard-header">
                             <span class="cd-subcard-label">Hiring Pipeline</span>
                         </div>
                         <div class="cd-subcard-body">
                             <div class="cd-pipeline-track">
-                                @foreach ($pipelineStages as $stage)
+                                @foreach ($activePipelineStages as $stage)
                                     @php
-                                        $stageCount = ($isDirect && $stage['id'] === 8) ? 0 : ($jobStageCounts[$stage['id']] ?? 0);
+                                        $stageCount = (int) ($jobStageCounts[$stage['id']] ?? 0);
                                     @endphp
                                     <div class="cd-track-stage" title="{{ $stage['label'] }}: {{ $stageCount }}">
                                         <span class="cd-track-label">{{ $stage['label'] }}</span>
@@ -497,7 +528,7 @@
                             <div class="cd-track-summary">
                                 <span>Applications: <strong>{{ $totalApps }}</strong></span>
                                 <span class="cd-bullet">&bull;</span>
-                                <span>Interviews: <strong>{{ $totalInterviews }}</strong></span>
+                                <span>Interviews: <strong>{{ $resolvedInterviews }}</strong></span>
                             </div>
                         </div>
                     </div>
