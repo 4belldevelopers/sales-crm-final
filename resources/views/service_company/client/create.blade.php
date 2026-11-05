@@ -13840,7 +13840,12 @@ $('.remove_address').click(function(){
 
     function filterItems(query) {
         var clean = (query || '').trim().toLowerCase();
-        if (!clean) {
+        var selectedId = getSelectedId();
+        var selectedItem = (selectedId !== null && taxonomyMap.has(selectedId)) ? taxonomyMap.get(selectedId) : null;
+        var selectedName = selectedItem ? (selectedItem.display_name || selectedItem.name || '').trim().toLowerCase() : '';
+
+        // If no query OR query matches the current selection, display all options so user can switch in 1 click
+        if (!clean || (selectedName && clean === selectedName)) {
             filteredList = taxonomyList.map(function(item) {
                 return { item: item, matchedAlias: null };
             });
@@ -13885,6 +13890,10 @@ $('.remove_address').click(function(){
         }
 
         var selectedId = getSelectedId();
+        var selectedItem = (selectedId !== null && taxonomyMap.has(selectedId)) ? taxonomyMap.get(selectedId) : null;
+        var selectedName = selectedItem ? (selectedItem.display_name || selectedItem.name || '').trim().toLowerCase() : '';
+        var activeQuery = (query && query.trim().toLowerCase() !== selectedName) ? query : '';
+
         var html = '';
 
         for (var i = 0; i < filteredList.length; i++) {
@@ -13910,7 +13919,7 @@ $('.remove_address').click(function(){
             html += '<div class="jero-ctype-item ' + (isSelected ? 'selected' : '') + ' ' + (isFocused ? 'focused' : '') + '" ' +
                 'data-idx="' + i + '" data-id="' + item.id + '" role="option" id="jero_ctype_opt_' + item.id + '" aria-selected="' + (isSelected ? 'true' : 'false') + '">' +
                 '<div class="jero-ctype-item-main">' +
-                '<div class="jero-ctype-item-name">' + highlightMatch(item.display_name || item.name, query) + '</div>' +
+                '<div class="jero-ctype-item-name">' + highlightMatch(item.display_name || item.name, activeQuery) + '</div>' +
                 '</div>' +
                 '<div class="jero-ctype-item-side">' +
                 checkIcon +
@@ -14157,8 +14166,18 @@ $('.remove_address').click(function(){
             });
         }
 
-        // Item selection via click (single-click immediate selection)
+        // Item selection via click / mousedown (0ms instant switch, preventing focus loss)
         if (listContainer) {
+            listContainer.addEventListener('mousedown', function(e) {
+                // Prevent input blur before selection completes
+                e.preventDefault();
+                var itemEl = e.target.closest('.jero-ctype-item');
+                if (!itemEl) return;
+                var id = parseInt(itemEl.getAttribute('data-id'), 10);
+                if (taxonomyMap.has(id)) {
+                    selectItem(taxonomyMap.get(id));
+                }
+            });
             listContainer.addEventListener('click', function(e) {
                 var itemEl = e.target.closest('.jero-ctype-item');
                 if (!itemEl) return;
