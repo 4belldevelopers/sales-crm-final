@@ -55,7 +55,7 @@ When the user provides a brief or shorthand request, the AI MUST automatically i
 #### Shorthand: `"audit"` / `"review"` / `"feedback"` / `"changes"` / `"suggestions"` / `"new feature"`
 - **Meaning**: Execute audit, feedback capture, changelog/refactor documentation, feature design, or suggestions.
 - **Enforced Execution**:
-  - Store the resulting document permanently in `docs/audit documents/`.
-  - Format filename as `YYYY-MM-DD-<topic>-<type>.md` (e.g. `YYYY-MM-DD-candidate-drawer-audit.md`).
+  - Store the resulting document permanently in its dedicated module or feature subfolder: `docs/audit documents/<module_or_feature_name>/YYYY-MM-DD-<topic>-<type>.md`. Zero loose files allowed.
+  - Structure the document using the standard uniform pattern: Header Metadata, Executive Summary & Objective, Architecture & Data Flow, File Changes Matrix, 15.6" Screen Fit, and Verification Evidence so anyone can immediately understand the changes.
   - Never keep critical review findings solely in ephemeral chat context or memory.
 

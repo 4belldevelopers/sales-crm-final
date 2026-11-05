@@ -1,81 +1,29 @@
 {{--
-  God-Level Company Profile — Step 1: Company Profile & Company Logo
-  Pixel-matched to user specification & reference design system (Rule 20 Design Standard)
+  God-Level Company Profile — Page 1 (Company Profile & Company Logo)
+  100% Replicates Add Internal Client Step 1 Architecture (Rule 20 Design Standard)
   Preserves 100% of Form Bindings, tenanted scope, and JeroIndustryIntelligenceEngine integration
-  Optimized for 15.6" Screens (1366x768 & 1920x1080) and smaller viewports
-  Primary Domain field removed from UI per explicit user instruction
+  Optimized for 15.6" Screens (1366x768 & 1920x1080) and smaller screens
 --}}
 <?php
-  use App\Helper\GeneralMethod;
-
-  $selectedIndustryId = $account->industries ?? ($client->industry ?? '');
   $selectedIndName = '';
-  if (!empty($selectedIndustryId) && !empty($department)) {
+  if (!empty($industry) && !empty($department)) {
       foreach ($department as $k => $val) {
           $currId = is_object($val) ? ($val->ind_id ?? $k) : (is_array($val) ? ($val['ind_id'] ?? $k) : $k);
           $currName = is_object($val) ? ($val->ind_name ?? $val->name ?? '') : (is_array($val) ? ($val['ind_name'] ?? $val['name'] ?? '') : $val);
-          if ($currId == $selectedIndustryId && !empty($currName)) {
+          if ($currId == $industry && !empty($currName)) {
               $selectedIndName = ucwords($currName);
               break;
           }
       }
   }
 
-  $compName = $account->company_name ?? ($client->name ?? '');
-  $compWebsite = $account->website ?? ($client->website ?? '');
-  $compDomainKey = $account->domain_key ?? '';
-  if (empty($compDomainKey) && !empty($compWebsite)) {
-      $parsed = parse_url($compWebsite, PHP_URL_HOST) ?? $compWebsite;
-      $compDomainKey = preg_replace('/^www\./i', '', strtolower(trim($parsed)));
-  }
-
-  $compLogo = $account->logo ?? ($client->logo ?? '');
-  $compCareerLink = $account->career_page_link ?? '';
-  $compTaxId = $client->tax_id ?? '';
-  $compFounded = $account->founded ?? ($client->founded ?? '');
-
-  // Normalized company size key
-  $cSizeFrom = $account->company_size_from ?? ($client->company_size_from ?? '');
-  $cSizeTo = $account->company_size ?? ($client->company_sizes ?? '');
-  $currSizeKey = '';
-  if ($cSizeFrom && $cSizeTo) {
-      $currSizeKey = $cSizeFrom . '-' . $cSizeTo;
-  } elseif ($cSizeTo) {
-      $currSizeKey = '2-' . $cSizeTo;
-  }
-  if ($currSizeKey === '1-10') $currSizeKey = '2-10';
-  if (in_array($currSizeKey, ['50001-', '10000-999999'])) $currSizeKey = '50001-0';
-
-  $companySizeTiers = [
-    '1-1'         => ['label' => 'Solo (1 employee)',        'badge' => '1',           'desc' => 'Individual practitioner / Freelancer'],
-    '2-10'        => ['label' => '2 – 10 employees',          'badge' => '2 – 10',      'desc' => 'Seed / Startup stage team'],
-    '11-50'       => ['label' => '11 – 50 employees',         'badge' => '11 – 50',     'desc' => 'Early growth stage business'],
-    '51-200'      => ['label' => '51 – 200 employees',        'badge' => '51 – 200',    'desc' => 'Mid-sized established business'],
-    '201-500'     => ['label' => '201 – 500 employees',       'badge' => '201 – 500',   'desc' => 'Upper mid-market company'],
-    '501-1000'    => ['label' => '501 – 1,000 employees',     'badge' => '501 – 1K',    'desc' => 'Commercial scale organization'],
-    '1001-5000'   => ['label' => '1,001 – 5,000 employees',   'badge' => '1K – 5K',     'desc' => 'Enterprise tier organization'],
-    '5001-10000'  => ['label' => '5,001 – 10,000 employees',  'badge' => '5K – 10K',    'desc' => 'Large enterprise corporation'],
-    '10001-50000' => ['label' => '10,001 – 50,000 employees', 'badge' => '10K – 50K',   'desc' => 'Global enterprise scale'],
-    '50001-0'     => ['label' => '50,000+ employees',        'badge' => '50,000+',     'desc' => 'Multinational conglomerate']
-  ];
-  $selectedSizeLabel = isset($companySizeTiers[$currSizeKey]) ? $companySizeTiers[$currSizeKey]['label'] : '';
-
-  // Company Type taxonomy
-  $companyTypeTaxonomy = $companyTypeTaxonomy ?? \App\Helper\GeneralMethod::companyTypeTaxonomy();
-  $selectedCompType = $account->company_type ?? ($account->industries_type ?? 0);
-  $selectedCompTypeName = '';
-  foreach ($companyTypeTaxonomy as $tItem) {
-      if ((string)$tItem['id'] === (string)$selectedCompType) {
-          $selectedCompTypeName = $tItem['display_name'];
-          break;
-      }
-  }
-  if (!$selectedCompTypeName && isset($companyType[$selectedCompType])) {
-      $selectedCompTypeName = $companyType[$selectedCompType];
+  $background_image = !empty($logo) ? $logo : (!empty($account->logo) ? $account->logo : (!empty($client->logo) ? $client->logo : ''));
+  if ($background_image && !preg_match('/^https?:\/\//i', $background_image) && !str_starts_with($background_image, 'data:')) {
+      $background_image = asset('user-uploads/company-logo/' . $background_image);
   }
 ?>
 
-<div class="pb-5 client-info-step profile-info-step" data-wizard-type="step-content" data-wizard-state="current">
+<div class="pb-5 client-info-step" data-wizard-type="step-content" data-wizard-state="current">
   <div class="client-step-layout client-information-layout god-level-company-layout">
     
     <!-- =========================================================================
@@ -104,10 +52,10 @@
           </div>
         </div>
 
-        <!-- 2-Column Fields Grid (Matches Add Internal Client reference design 100%) -->
+        <!-- 2-Column Fields Grid (Company Website & Name on separate rows) -->
         <div class="god-fields-grid">
 
-          <!-- ROW 1 (Full Width): Company Website (Optional) with Fetch Details Button -->
+          <!-- ROW 1 (Full Width): Company Website with Fetch Details Button -->
           <div class="client-field fv-plugins-icon-container god-field-wrap god-field-full">
             <div class="god-field-header">
               <label class="god-field-label" for="website">Company Website (Optional)</label>
@@ -125,7 +73,7 @@
                        class="god-native-input"
                        name="website"
                        id="website"
-                       value="{{ $compWebsite }}"
+                       value="{{ $website ?? '' }}"
                        placeholder="https://stripe.com"
                        autocomplete="off"
                        spellcheck="false"
@@ -136,7 +84,7 @@
                         id="website_clear_btn"
                         title="Clear website"
                         aria-label="Clear website"
-                        style="{{ !empty($compWebsite) ? 'display:flex;' : 'display:none;' }}">
+                        style="{{ !empty($website) ? 'display:flex;' : 'display:none;' }}">
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                     <line x1="18" y1="6" x2="6" y2="18"></line>
                     <line x1="6" y1="6" x2="18" y2="18"></line>
@@ -161,12 +109,19 @@
               <span class="spinner-border spinner-border-sm me-1" style="width:12px;height:12px;border-width:1.5px;" role="status"></span>
               <span>Checking domain availability...</span>
             </div>
+            <!-- Dedicated Company Domain Duplicate Warning Container -->
+            <div class="god-field-inline-error text-danger" id="website_duplicate_error" style="display:none; font-size:12px; margin-top:6px; font-weight:500;">
+              <span class="d-inline-flex align-items-center gap-1">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                <span id="website_duplicate_error_text">This website domain is already registered to another organization.</span>
+              </span>
+            </div>
           </div>
 
           <!-- ROW 2 (Full Width): Company Name -->
           <div class="client-field fv-plugins-icon-container god-field-wrap god-field-full">
             <div class="god-field-header">
-              <label class="god-field-label" for="company_name">Company Name <span class="text-danger">*</span></label>
+              <label class="god-field-label" for="client_id">Company Name</label>
             </div>
             <div class="god-input-box">
               <span class="god-input-left-icon">
@@ -183,45 +138,28 @@
               </span>
               <input type="text"
                      class="god-native-input"
-                     name="company_name"
-                     id="company_name"
-                     value="{{ $compName }}"
-                     placeholder="e.g. Stripe"
-                     required>
+                     name="name"
+                     id="client_id"
+                     value="{{ $name ?? ($company_name ?? '') }}"
+                     placeholder="e.g. Stripe">
             </div>
-            <div class="god-field-inline-error text-danger" id="company_name_error" style="display:none; font-size:12px; margin-top:6px; font-weight:500;">
+            <input type="hidden" name="company_name" id="hidden_company_name" value="{{ $name ?? ($company_name ?? '') }}">
+            <!-- Company Name Duplicate Warning Container -->
+            <div class="god-field-inline-error text-danger" id="company_duplicate_error" style="display:none; font-size:12px; margin-top:6px; font-weight:500;">
               <span class="d-inline-flex align-items-center gap-1">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-                <span>Please enter your organization name.</span>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                <span id="company_duplicate_error_text">A company with this name already exists in the system.</span>
               </span>
             </div>
           </div>
 
-          <!-- Hidden Normalized Domain Key (Preserved for backend, removed from UI per user request) -->
-          <input type="hidden" name="domain_key" id="domain_key" value="{{ $compDomainKey }}">
-
           <!-- ROW 3, COL 1: Industry (Combobox with JeroIndustryIntelligenceEngine) -->
           <div class="client-field fv-plugins-icon-container god-field-wrap">
             <div class="god-field-header">
-              <label class="god-field-label" for="industry_display">Industry <span class="text-danger">*</span></label>
+              <label class="god-field-label" for="industry_display">Industry</label>
             </div>
 
             <!-- Native select kept synchronized for form POST & validation -->
-            <select name="industries" id="industries" style="position:absolute; width:1px; height:1px; opacity:0; pointer-events:none;" tabindex="-1" aria-hidden="true" required>
-              <option value="">Select industry</option>
-              @if(!empty($department))
-                @foreach($department as $key => $val)
-                  @php
-                    $optId = is_object($val) ? ($val->ind_id ?? $key) : (is_array($val) ? ($val['ind_id'] ?? $key) : $key);
-                    $optName = is_object($val) ? ($val->ind_name ?? $val->name ?? '') : (is_array($val) ? ($val['ind_name'] ?? $val['name'] ?? '') : $val);
-                  @endphp
-                  @if(!empty($optId) && !empty($optName))
-                    <option value="{{ $optId }}" {{ (string)$optId === (string)$selectedIndustryId ? 'selected="selected"' : '' }}>{{ ucwords($optName) }}</option>
-                  @endif
-                @endforeach
-              @endif
-            </select>
-            <!-- Native alias for client validation compatibility -->
             <select name="industry" id="industry" style="position:absolute; width:1px; height:1px; opacity:0; pointer-events:none;" tabindex="-1" aria-hidden="true">
               <option value="">Select industry</option>
               @if(!empty($department))
@@ -231,11 +169,12 @@
                     $optName = is_object($val) ? ($val->ind_name ?? $val->name ?? '') : (is_array($val) ? ($val['ind_name'] ?? $val['name'] ?? '') : $val);
                   @endphp
                   @if(!empty($optId) && !empty($optName))
-                    <option value="{{ $optId }}" {{ (string)$optId === (string)$selectedIndustryId ? 'selected="selected"' : '' }}>{{ ucwords($optName) }}</option>
+                    <option value="{{ $optId }}" {{ $optId == $industry ? 'selected="selected"' : '' }}>{{ ucwords($optName) }}</option>
                   @endif
                 @endforeach
               @endif
             </select>
+            <input type="hidden" name="industries" id="hidden_industries" value="{{ $industry ?? '' }}">
 
             <!-- God-Level Enterprise Industry Combobox Component -->
             <div class="jero-ind-select-wrap god-ind-wrap" id="jero_ind_select_wrap">
@@ -274,31 +213,46 @@
                 <div class="jero-ind-list-container" id="jero_ind_list_container"></div>
               </div>
             </div>
-            <div class="god-field-inline-error text-danger" id="industry_error" style="display:none; font-size:12px; margin-top:6px; font-weight:500;">
-              <span>Please select your primary industry.</span>
-            </div>
           </div>
 
           <!-- ROW 3, COL 2: Company Size (Enterprise Custom Dropdown) -->
+          @php
+            $companySizeTiers = [
+              '1-1'         => ['label' => 'Solo (1 employee)',        'badge' => '1',           'desc' => 'Individual practitioner / Freelancer'],
+              '2-10'        => ['label' => '2 – 10 employees',          'badge' => '2 – 10',      'desc' => 'Seed / Startup stage team'],
+              '11-50'       => ['label' => '11 – 50 employees',         'badge' => '11 – 50',     'desc' => 'Early growth stage business'],
+              '51-200'      => ['label' => '51 – 200 employees',        'badge' => '51 – 200',    'desc' => 'Mid-sized established business'],
+              '201-500'     => ['label' => '201 – 500 employees',       'badge' => '201 – 500',   'desc' => 'Upper mid-market company'],
+              '501-1000'    => ['label' => '501 – 1,000 employees',     'badge' => '501 – 1K',    'desc' => 'Commercial scale organization'],
+              '1001-5000'   => ['label' => '1,001 – 5,000 employees',   'badge' => '1K – 5K',     'desc' => 'Enterprise tier organization'],
+              '5001-10000'  => ['label' => '5,001 – 10,000 employees',  'badge' => '5K – 10K',    'desc' => 'Large enterprise corporation'],
+              '10001-50000' => ['label' => '10,001 – 50,000 employees', 'badge' => '10K – 50K',   'desc' => 'Global enterprise scale'],
+              '50001-0'     => ['label' => '50,000+ employees',        'badge' => '50,000+',     'desc' => 'Multinational conglomerate']
+            ];
+
+            // Normalize any legacy 1-10 to 2-10 or match selected
+            $currSizeKey = @$company_sizes;
+            if ($currSizeKey === '1-10') {
+              $currSizeKey = '2-10';
+            } elseif (in_array($currSizeKey, ['50001-', '10000-999999'])) {
+              $currSizeKey = '50001-0';
+            }
+
+            $selectedSizeLabel = isset($companySizeTiers[$currSizeKey]) ? $companySizeTiers[$currSizeKey]['label'] : '';
+          @endphp
           <div class="client-field fv-plugins-icon-container god-field-wrap">
             <div class="god-field-header">
-              <label class="god-field-label" for="company_size_display">Company Size <span class="text-danger">*</span></label>
+              <label class="god-field-label" for="company_sizes_display">Company Size</label>
             </div>
 
             <!-- Native select kept synchronized for 100% Form POST & Validation compatibility -->
-            <select name="company_size" id="company_size" style="position:absolute; width:1px; height:1px; opacity:0; pointer-events:none;" tabindex="-1" aria-hidden="true" required>
-              <option value="">Select company size</option>
-              @foreach($companySizeTiers as $cVal => $cData)
-                <option value="{{ $cVal }}" {{ (string)$currSizeKey === (string)$cVal ? 'selected="selected"' : '' }}>{{ $cData['label'] }}</option>
-              @endforeach
-            </select>
-            <!-- Native alias for client engine compatibility -->
             <select name="company_sizes" id="company_sizes" style="position:absolute; width:1px; height:1px; opacity:0; pointer-events:none;" tabindex="-1" aria-hidden="true">
               <option value="">Select company size</option>
               @foreach($companySizeTiers as $cVal => $cData)
                 <option value="{{ $cVal }}" {{ (string)$currSizeKey === (string)$cVal ? 'selected="selected"' : '' }}>{{ $cData['label'] }}</option>
               @endforeach
             </select>
+            <input type="hidden" name="company_size" id="hidden_company_size" value="{{ $currSizeKey }}">
 
             <!-- God-Level Enterprise Company Size Combobox -->
             <div class="jero-csize-select-wrap god-csize-wrap" id="jero_csize_select_wrap">
@@ -313,7 +267,7 @@
                 </span>
                 <input type="text"
                        class="god-native-input jero-csize-input"
-                       id="company_size_display"
+                       id="company_sizes_display"
                        placeholder="Select company size"
                        readonly
                        autocomplete="off"
@@ -357,26 +311,39 @@
                 </div>
               </div>
             </div>
-            <div class="god-field-inline-error text-danger" id="company_size_error" style="display:none; font-size:12px; margin-top:6px; font-weight:500;">
-              <span>Please select your organization size.</span>
-            </div>
           </div>
 
           <!-- ROW 4, COL 1: Company Type (Search-First Dual-Layer Intelligence Combobox) -->
+          @php
+            $companyTypeTaxonomy = $companyTypeTaxonomy ?? \App\Helper\GeneralMethod::companyTypeTaxonomy();
+            $selectedCompTypeName = '';
+            if (isset($company_type) && $company_type !== '') {
+              foreach($companyTypeTaxonomy as $tItem) {
+                if ((string)$tItem['id'] === (string)$company_type) {
+                  $selectedCompTypeName = $tItem['display_name'];
+                  break;
+                }
+              }
+              if (!$selectedCompTypeName && isset($companyType[$company_type])) {
+                $selectedCompTypeName = $companyType[$company_type];
+              }
+            }
+          @endphp
           <div class="client-field fv-plugins-icon-container god-field-wrap">
             <div class="god-field-header">
-              <label class="god-field-label" for="company_type_display">Company Type <span class="text-danger">*</span></label>
+              <label class="god-field-label" for="company_type_display">Company Type</label>
             </div>
 
             <!-- Native select kept synchronized for 100% Form POST & Validation compatibility -->
-            <select name="company_type" id="company_type" style="position:absolute; width:1px; height:1px; opacity:0; pointer-events:none;" tabindex="-1" aria-hidden="true" required>
+            <select name="company_type" id="company_type" style="position:absolute; width:1px; height:1px; opacity:0; pointer-events:none;" tabindex="-1" aria-hidden="true">
               <option value="">Select company type</option>
-              @if(!empty($companyTypeTaxonomy))
-                @foreach($companyTypeTaxonomy as $tItem)
-                  <option value="{{ $tItem['id'] }}" {{ (string)$tItem['id'] === (string)$selectedCompType ? 'selected="selected"' : '' }}>{{ ucwords($tItem['display_name']) }}</option>
+              @if(!empty($companyType))
+                @foreach($companyType as $key => $val)
+                  <option value="{{ $key }}" {{ (string)$key === (string)$company_type ? 'selected="selected"' : '' }}>{{ ucwords($val) }}</option>
                 @endforeach
               @endif
             </select>
+            <input type="hidden" name="industries_type" id="hidden_industries_type" value="{{ $company_type ?? '' }}">
 
             <!-- God-Level Enterprise Company Type Combobox -->
             <div class="jero-ctype-select-wrap god-ctype-wrap" id="jero_ctype_select_wrap">
@@ -417,9 +384,6 @@
                 <div class="jero-ctype-list-container" id="jero_ctype_list_container"></div>
               </div>
             </div>
-            <div class="god-field-inline-error text-danger" id="company_type_error" style="display:none; font-size:12px; margin-top:6px; font-weight:500;">
-              <span>Please select your organization type.</span>
-            </div>
           </div>
 
           <!-- ROW 4, COL 2: Founded Year (Enterprise Searchable Dropdown) -->
@@ -428,12 +392,12 @@
               <label class="god-field-label" for="founded_display">Founded Year</label>
             </div>
 
-            <!-- Native hidden input kept synchronized -->
-            <input type="hidden" name="founded" id="founded" value="{{ $compFounded }}">
+            <!-- Native hidden input kept synchronized for 100% Form POST, validation, and API compatibility -->
+            <input type="hidden" name="founded" id="founded" value="{{ $founded ?? '' }}">
 
             <!-- God-Level Enterprise Founded Year Combobox -->
             <div class="jero-founded-select-wrap god-founded-wrap" id="jero_founded_select_wrap">
-              <div class="god-input-box jero-founded-input-box {{ !empty($compFounded) ? 'has-value' : '' }}" id="jero_founded_input_box">
+              <div class="god-input-box jero-founded-input-box {{ !empty($founded) ? 'has-value' : '' }}" id="jero_founded_input_box">
                 <span class="god-input-left-icon jero-founded-calendar-icon">
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
@@ -453,8 +417,8 @@
                        aria-haspopup="listbox"
                        aria-controls="jero_founded_dropdown"
                        readonly
-                       value="{{ $compFounded }}">
-                <button type="button" class="god-input-clear-btn jero-founded-clear-btn" id="jero_founded_clear_btn" aria-label="Clear founded year" title="Clear selection" style="{{ !empty($compFounded) ? 'display:inline-flex;' : 'display:none;' }}">
+                       value="{{ $founded ?? '' }}">
+                <button type="button" class="god-input-clear-btn jero-founded-clear-btn" id="jero_founded_clear_btn" aria-label="Clear founded year" title="Clear selection" style="{{ !empty($founded) ? 'display:inline-flex;' : 'display:none;' }}">
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18M6 6l12 12"/></svg>
                 </button>
                 <div class="jero-dropdown-chevron jero-founded-chevron" id="jero_founded_chevron" title="Toggle founded year list" role="button" aria-label="Toggle founded year list" tabindex="-1">
@@ -506,14 +470,14 @@
                      class="god-native-input"
                      name="career_page_url"
                      id="career_page_url"
-                     value="{{ $compCareerLink }}"
+                     value="{{ $career_page_url ?? '' }}"
                      placeholder="https://stripe.com/jobs">
+              <input type="hidden" name="career_page_link" id="hidden_career_page_link" value="{{ $career_page_url ?? '' }}">
               <button type="button"
                       class="god-input-external-btn"
                       id="career_url_open_btn"
                       title="Open career page in new tab"
-                      aria-label="Open career page"
-                      onclick="var u=document.getElementById('career_page_url').value; if(u){ window.open(u.startsWith('http')?u:('https://'+u), '_blank'); }">
+                      aria-label="Open career page">
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
                   <polyline points="15 3 21 3 21 9"/>
@@ -523,7 +487,7 @@
             </div>
           </div>
 
-          <!-- ROW 5, COL 2: Tax ID / Business Reg No / GST / Service Number (Optional) -->
+          <!-- ROW 5, COL 2: Tax ID / Business Reg No -->
           <div class="client-field fv-plugins-icon-container god-field-wrap">
             <div class="god-field-header">
               <label class="god-field-label" for="tax_id">Tax ID / Business Reg No / GST / Service Number (Optional)</label>
@@ -541,7 +505,7 @@
                      class="god-native-input"
                      name="tax_id"
                      id="tax_id"
-                     value="{{ $compTaxId }}"
+                     value="{{ $tax_id ?? '' }}"
                      placeholder="e.g. EIN, CIN, VAT, LEI">
             </div>
           </div>
@@ -583,10 +547,10 @@
 
         <!-- Large Logo Preview Container (Dashed border rounded box) -->
         <div class="god-logo-preview-box" id="company_logo_preview_box">
-          <div class="god-logo-surface {{ !empty($compLogo) ? 'has-image' : '' }}"
+          <div class="god-logo-surface {{ !empty($background_image) ? 'has-image' : '' }}"
                id="company_logo_box"
-               style="<?php echo !empty($compLogo) ? 'background-image: url(' . $compLogo . ');' : ''; ?>">
-            @if(empty($compLogo))
+               style="<?php echo !empty($background_image) ? 'background-image: url(' . $background_image . ');' : ''; ?>">
+            @if(empty($background_image))
               <div class="god-logo-placeholder" id="logo_placeholder">
                 <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
                   <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
@@ -601,16 +565,16 @@
         </div>
 
         <!-- Status Banner: Logo automatically detected from website -->
-        <div class="god-logo-status-banner {{ !empty($compLogo) ? 'is-detected' : 'is-empty' }}" id="logo_status_banner">
+        <div class="god-logo-status-banner {{ !empty($background_image) ? 'is-detected' : 'is-empty' }}" id="logo_status_banner">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
             <polyline points="20 6 9 17 4 12"/>
           </svg>
-          <span id="logo_status_text">{{ !empty($compLogo) ? 'Logo automatically detected from website' : 'No logo detected yet' }}</span>
+          <span id="logo_status_text">{{ !empty($background_image) ? 'Logo automatically detected from website' : 'No logo detected yet' }}</span>
         </div>
 
         <!-- Action Buttons: Change Logo & Remove Logo -->
         <div class="god-logo-actions">
-          <button type="button" class="btn god-logo-btn god-change-logo-btn" id="client_change_logo_btn" onclick="document.getElementById('client_logo_input').click();">
+          <button type="button" class="btn god-logo-btn god-change-logo-btn" id="client_change_logo_btn">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
               <circle cx="12" cy="13" r="4"/>
@@ -621,8 +585,7 @@
           <button type="button"
                   class="btn god-logo-btn god-remove-logo-btn"
                   id="client_remove_logo_btn"
-                  style="{{ !empty($compLogo) ? 'display:flex;' : 'display:none;' }}"
-                  onclick="window.removeCompanyLogo ? window.removeCompanyLogo() : false;">
+                  style="{{ !empty($background_image) ? 'display:flex;' : 'display:none;' }}">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <polyline points="3 6 5 6 21 6"/>
               <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>

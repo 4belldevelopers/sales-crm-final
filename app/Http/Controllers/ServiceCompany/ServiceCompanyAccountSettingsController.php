@@ -450,7 +450,8 @@ class ServiceCompanyAccountSettingsController extends ServiceCompanyBaseControll
             $this->switchSection = $_GET['switchSection'];
         }
         $_SESSION['profile_popup_modal_show'] = 0;
-        abort_if(! $this->user->can('edit_settings'), 403);
+        $this->user = $this->user ?? auth()->user();
+        abort_if(! $this->user || ! $this->user->can('edit_settings'), 403);
 
         $this->categories = JobCategory::all();
         $this->companyType = GeneralMethod::companyType();
@@ -486,6 +487,69 @@ class ServiceCompanyAccountSettingsController extends ServiceCompanyBaseControll
             ->orderBy('state_list.state')
             ->get()->toArray();
         $this->indianStatelist = json_decode(json_encode($statelist), true);
+
+        // Social profile links extraction from $client->detail JSON with fallback to company_career_settings
+        $clientDetail = [];
+        if (! empty($this->client->detail)) {
+            $clientDetail = is_string($this->client->detail) ? (json_decode($this->client->detail, true) ?: []) : (array) $this->client->detail;
+        }
+        $careerSettings = DB::table('company_career_settings')->where('company_id', $company_id)->first();
+
+        $this->linkedin_url = $clientDetail['linkedin_url'] ?? ($careerSettings->ci_linkedin ?? ($careerSettings->seo_linkedin ?? ''));
+        $this->twitter_url = $clientDetail['twitter_url'] ?? ($careerSettings->ci_twitter ?? ($careerSettings->seo_twitter ?? ''));
+        $this->facebook_url = $clientDetail['facebook_url'] ?? ($careerSettings->seo_facebook ?? '');
+        $this->instagram_url = $clientDetail['instagram_url'] ?? ($careerSettings->seo_instagram ?? '');
+        $this->youtube_url = $clientDetail['youtube_url'] ?? ($careerSettings->seo_youtube ?? '');
+        $this->github_url = $clientDetail['github_url'] ?? '';
+        $this->custom_link = $clientDetail['custom_link'] ?? '';
+
+        $clientId = $this->client->id ?? null;
+        $contactsQuery = DB::table('client_contact_info')
+            ->leftJoin('client_contact_info_jobs', 'client_contact_info_jobs.client_contact_info_id', '=', 'client_contact_info.id')
+            ->select(
+                'client_contact_info.id',
+                'client_contact_info.client_id',
+                'client_contact_info.contact_person_name',
+                'client_contact_info.calling_code',
+                'client_contact_info.contact_person_email',
+                'client_contact_info.contact_person_number',
+                'client_contact_info.contact_person_designation',
+                'client_contact_info.created_at',
+                DB::raw('COUNT(DISTINCT client_contact_info_jobs.job_id) as linked_jobs_count')
+            )
+            ->where('client_contact_info.client_id', $clientId)
+            ->groupBy(
+                'client_contact_info.id',
+                'client_contact_info.client_id',
+                'client_contact_info.contact_person_name',
+                'client_contact_info.calling_code',
+                'client_contact_info.contact_person_email',
+                'client_contact_info.contact_person_number',
+                'client_contact_info.contact_person_designation',
+                'client_contact_info.created_at'
+            )
+            ->get();
+        $this->client_contact_info = $contactsQuery;
+        $this->client_contact_arr = $contactsQuery;
+        $this->client_location_arr = $this->client_location;
+
+        $this->website = $this->account->website ?? ($this->client->website ?? '');
+        $this->name = $this->account->company_name ?? ($this->client->name ?? '');
+        $this->company_name = $this->name;
+        $this->industry = $this->account->industries ?? ($this->client->industry ?? '');
+        $this->company_sizes = $this->account->company_size ?? ($this->client->company_sizes ?? '');
+        $this->company_size_from = $this->account->company_size_from ?? ($this->client->company_size_from ?? '');
+        $this->company_size_to = $this->account->company_size ?? ($this->client->company_sizes ?? '');
+        $this->company_type = $this->account->company_type ?? ($this->account->industries_type ?? 0);
+        $this->founded = $this->account->founded ?? ($this->client->founded ?? '');
+        $this->career_page_url = $this->account->career_page_link ?? ($this->client->career_page_link ?? ($clientDetail['career_page_url'] ?? ''));
+        $this->tax_id = $this->client->tax_id ?? ($clientDetail['tax_id'] ?? '');
+        $this->logo = $this->account->logo ?? ($this->client->logo ?? '');
+        $this->description = $this->account->description ?? ($this->client->description ?? '');
+        $this->tags = $this->client->tags ?? '';
+        $this->page_event = 'EDIT';
+        $this->country_code = 'in';
+
         $this->page_mode = 'EDIT';
 
         return view('service_company.account.edit', $this->data);
@@ -933,7 +997,49 @@ class ServiceCompanyAccountSettingsController extends ServiceCompanyBaseControll
         if (! empty(@$request->description)) {
             $client->description = @$request->description;
         }
+        if ($request->has('tags') && \Illuminate\Support\Facades\Schema::hasColumn('clients', 'tags')) {
+            $client->tags = is_array($request->tags) ? json_encode($request->tags) : $request->tags;
+        }
+
+        // Authoritatively persist social links and metadata into $client->detail JSON
+        $existingDetail = [];
+        if (! empty($client->detail)) {
+            $existingDetail = is_string($client->detail) ? (json_decode($client->detail, true) ?: []) : (array) $client->detail;
+        }
+        $detailData = array_merge($existingDetail, [
+            'career_page_url' => $request->career_page_url ?? $request->career_page_link ?? null,
+            'linkedin_url' => $request->linkedin_url ?? null,
+            'twitter_url' => $request->twitter_url ?? null,
+            'github_url' => $request->github_url ?? null,
+            'youtube_url' => $request->youtube_url ?? null,
+            'facebook_url' => $request->facebook_url ?? null,
+            'instagram_url' => $request->instagram_url ?? null,
+            'custom_link' => $request->custom_link ?? null,
+            'tax_id' => $request->tax_id ?? null,
+        ]);
+        $filteredDetail = array_filter($detailData, fn ($val) => $val !== null && $val !== '');
+        if (! empty($filteredDetail)) {
+            $client->detail = json_encode($filteredDetail);
+        }
+
         $client->save();
+
+        // Also synchronize to company_career_settings if table exists
+        if (\Illuminate\Support\Facades\Schema::hasTable('company_career_settings')) {
+            DB::table('company_career_settings')->updateOrInsert(
+                ['company_id' => $company_id],
+                [
+                    'ci_linkedin' => $request->linkedin_url,
+                    'ci_twitter' => $request->twitter_url,
+                    'seo_linkedin' => $request->linkedin_url,
+                    'seo_twitter' => $request->twitter_url,
+                    'seo_facebook' => $request->facebook_url,
+                    'seo_instagram' => $request->instagram_url,
+                    'seo_youtube' => $request->youtube_url,
+                    'updated_at' => now(),
+                ]
+            );
+        }
 
         if ($client_data) {
             GeneralMethod::clientStaffingPartner($client_data->client_id);
@@ -1184,17 +1290,23 @@ class ServiceCompanyAccountSettingsController extends ServiceCompanyBaseControll
         // Insert Skills
         $strdata = $tagsArr = '';
         // Insert Skills
-        if (! empty(@$request->tags)) {
-            $tags = @$request->tags;
-            $tags = json_decode($tags, true);
-            $tagsArr = array_column($tags, 'value');
-            $strdata = implode(',', $tagsArr);
+        if (! empty($request->tags)) {
+            $tagsRaw = $request->tags;
+            $tagsDecoded = is_string($tagsRaw) ? json_decode($tagsRaw, true) : null;
+            if (is_array($tagsDecoded)) {
+                $tagsArr = array_column($tagsDecoded, 'value');
+                $strdata = implode(',', array_filter($tagsArr));
+            } elseif (is_array($tagsRaw)) {
+                $strdata = implode(',', array_filter($tagsRaw));
+            } else {
+                $strdata = (string) $tagsRaw;
+            }
 
             DB::table('clients')
-                ->where('company_id', @$company_id)
+                ->where('company_id', $company_id)
                 ->where('self_company', 1)
                 ->limit(1)
-                ->update(['tags' => @$strdata]);
+                ->update(['tags' => $strdata]);
         }
 
         if ($request->pagename != 'settings') {
@@ -1257,6 +1369,79 @@ class ServiceCompanyAccountSettingsController extends ServiceCompanyBaseControll
                     }
                 }
 
+            }
+
+            // Synchronize contacts for the company's client record
+            if ($client_id && ($request->has('cp_name') || $request->has('contactPersonId'))) {
+                $seenEmailsInSubmission = [];
+                $totalCpNames = is_array($request->cp_name) ? count($request->cp_name) : 0;
+                $contactPersonId = max($totalCpNames - 1, (int) (@$request->contactPersonId ?? 0));
+                $contactsToUpdate = [];
+                $contactsToInsert = [];
+                $processedContactIds = [];
+
+                $existingContacts = DB::table('client_contact_info')
+                    ->where('client_id', $client_id)
+                    ->get()
+                    ->keyBy(fn ($c) => strtolower(trim($c->contact_person_email)));
+
+                for ($j = 0; $j <= $contactPersonId; $j++) {
+                    $cp_name = @$request->cp_name[$j];
+                    $cp_email = @$request->cp_email[$j];
+                    $cp_number = @$request->cp_number[$j];
+                    $cp_desigination = @$request->cp_desigination[$j];
+                    $calling_code = @$request->calling_code[$j];
+
+                    if (! empty($cp_name) && ! empty($cp_email) && ! empty($cp_desigination)) {
+                        $normEmail = strtolower(trim($cp_email));
+                        if (isset($seenEmailsInSubmission[$normEmail])) {
+                            continue;
+                        }
+                        $seenEmailsInSubmission[$normEmail] = true;
+
+                        $values = [
+                            'client_id' => $client_id,
+                            'contact_person_name' => $cp_name,
+                            'contact_person_email' => $cp_email,
+                            'contact_person_number' => $cp_number,
+                            'calling_code' => $calling_code,
+                            'contact_person_designation' => $cp_desigination,
+                            'updated_at' => now(),
+                        ];
+
+                        if (isset($existingContacts[$normEmail])) {
+                            $existingId = $existingContacts[$normEmail]->id;
+                            $contactsToUpdate[$existingId] = $values;
+                            $processedContactIds[] = $existingId;
+                        } else {
+                            $values['created_at'] = now();
+                            $contactsToInsert[] = $values;
+                        }
+                    }
+                }
+
+                if (! empty($contactsToInsert) || ! empty($contactsToUpdate)) {
+                    $primaryContact = ! empty($contactsToInsert) ? reset($contactsToInsert) : reset($contactsToUpdate);
+                    $client->contact_person_name = substr($primaryContact['contact_person_name'] ?? $client->contact_person_name, 0, 55);
+                    $client->email = substr($primaryContact['contact_person_email'] ?? $client->email, 0, 55);
+                    $client->contact_number = substr($primaryContact['contact_person_number'] ?? $client->contact_number, 0, 55);
+                    $client->save();
+                }
+
+                foreach ($contactsToUpdate as $contactId => $cntValues) {
+                    DB::table('client_contact_info')->where('id', $contactId)->update($cntValues);
+                }
+                foreach ($contactsToInsert as $newCnt) {
+                    $newContactId = DB::table('client_contact_info')->insertGetId($newCnt);
+                    $processedContactIds[] = $newContactId;
+                }
+
+                if (! empty($processedContactIds)) {
+                    DB::table('client_contact_info')
+                        ->where('client_id', $client_id)
+                        ->whereNotIn('id', $processedContactIds)
+                        ->delete();
+                }
             }
 
             // for($i=0; $i<=$addressId; $i++){
@@ -1368,6 +1553,7 @@ class ServiceCompanyAccountSettingsController extends ServiceCompanyBaseControll
             'status' => 'success',
             'message' => 'Company profile updated successfully.',
             'redirect_url' => route('service_company.account.index'),
+            'url' => route('service_company.account.index'),
             'tenant_defaults' => GeneralMethod::getTenantDefaultsPayload($company_id),
         ]);
 
@@ -1975,6 +2161,7 @@ class ServiceCompanyAccountSettingsController extends ServiceCompanyBaseControll
      */
     public function onboarding()
     {
+        $this->user = $this->user ?? auth()->user();
         $this->pageTitle = 'Setup Company Profile';
         $company_id = auth()->user()->company_id;
         $this->company_id = $company_id;
@@ -2009,9 +2196,110 @@ class ServiceCompanyAccountSettingsController extends ServiceCompanyBaseControll
             ->orderBy('state_list.state')
             ->get()->toArray();
         $this->indianStatelist = json_decode(json_encode($statelist), true);
+
+        // Social profile links extraction from $client->detail JSON with fallback to company_career_settings
+        $clientDetail = [];
+        if (! empty($this->client->detail)) {
+            $clientDetail = is_string($this->client->detail) ? (json_decode($this->client->detail, true) ?: []) : (array) $this->client->detail;
+        }
+        $careerSettings = DB::table('company_career_settings')->where('company_id', $company_id)->first();
+
+        $this->linkedin_url = $clientDetail['linkedin_url'] ?? ($careerSettings->ci_linkedin ?? ($careerSettings->seo_linkedin ?? ''));
+        $this->twitter_url = $clientDetail['twitter_url'] ?? ($careerSettings->ci_twitter ?? ($careerSettings->seo_twitter ?? ''));
+        $this->facebook_url = $clientDetail['facebook_url'] ?? ($careerSettings->seo_facebook ?? '');
+        $this->instagram_url = $clientDetail['instagram_url'] ?? ($careerSettings->seo_instagram ?? '');
+        $this->youtube_url = $clientDetail['youtube_url'] ?? ($careerSettings->seo_youtube ?? '');
+        $this->github_url = $clientDetail['github_url'] ?? '';
+        $this->custom_link = $clientDetail['custom_link'] ?? '';
+
+        $clientId = $this->client->id ?? null;
+        $contactsQuery = DB::table('client_contact_info')
+            ->leftJoin('client_contact_info_jobs', 'client_contact_info_jobs.client_contact_info_id', '=', 'client_contact_info.id')
+            ->select(
+                'client_contact_info.id',
+                'client_contact_info.client_id',
+                'client_contact_info.contact_person_name',
+                'client_contact_info.calling_code',
+                'client_contact_info.contact_person_email',
+                'client_contact_info.contact_person_number',
+                'client_contact_info.contact_person_designation',
+                'client_contact_info.created_at',
+                DB::raw('COUNT(DISTINCT client_contact_info_jobs.job_id) as linked_jobs_count')
+            )
+            ->where('client_contact_info.client_id', $clientId)
+            ->groupBy(
+                'client_contact_info.id',
+                'client_contact_info.client_id',
+                'client_contact_info.contact_person_name',
+                'client_contact_info.calling_code',
+                'client_contact_info.contact_person_email',
+                'client_contact_info.contact_person_number',
+                'client_contact_info.contact_person_designation',
+                'client_contact_info.created_at'
+            )
+            ->get();
+        $this->client_contact_info = $contactsQuery;
+        $this->client_contact_arr = $contactsQuery;
+        $this->client_location_arr = $this->client_location;
+
+        $this->website = $this->account->website ?? ($this->client->website ?? '');
+        $this->name = $this->account->company_name ?? ($this->client->name ?? '');
+        $this->company_name = $this->name;
+        $this->industry = $this->account->industries ?? ($this->client->industry ?? '');
+        $this->company_sizes = $this->account->company_size ?? ($this->client->company_sizes ?? '');
+        $this->company_size_from = $this->account->company_size_from ?? ($this->client->company_size_from ?? '');
+        $this->company_size_to = $this->account->company_size ?? ($this->client->company_sizes ?? '');
+        $this->company_type = $this->account->company_type ?? ($this->account->industries_type ?? 0);
+        $this->founded = $this->account->founded ?? ($this->client->founded ?? '');
+        $this->career_page_url = $this->account->career_page_link ?? ($this->client->career_page_link ?? ($clientDetail['career_page_url'] ?? ''));
+        $this->tax_id = $this->client->tax_id ?? ($clientDetail['tax_id'] ?? '');
+        $this->logo = $this->account->logo ?? ($this->client->logo ?? '');
+        $this->description = $this->account->description ?? ($this->client->description ?? '');
+        $this->tags = $this->client->tags ?? '';
+        $this->page_event = 'EDIT';
+        $this->country_code = 'in';
+
         $this->page_mode = 'ONBOARDING';
 
         return view('service_company.account.onboarding', $this->data);
+    }
+
+    /**
+     * Point-of-Entry Company Website Domain Duplicate Check
+     * Validates domain uniqueness against other registered companies, excluding the current tenant.
+     */
+    public function checkDomainAvailability(Request $request)
+    {
+        $company_id = auth()->user()->company_id;
+        $website = trim($request->website ?? '');
+        if (empty($website)) {
+            return response()->json(['status' => 'success']);
+        }
+
+        $parsedHost = parse_url($website, PHP_URL_HOST) ?? $website;
+        $domainKey = preg_replace('/^www\./i', '', strtolower(trim($parsedHost)));
+
+        if (empty($domainKey) || strlen($domainKey) < 3) {
+            return response()->json(['status' => 'success']);
+        }
+
+        // Check if domain is registered by another company in companies table
+        $existingCompany = DB::table('companies')
+            ->where('id', '!=', $company_id)
+            ->where(function ($q) use ($domainKey) {
+                $q->where('domain_key', $domainKey)
+                    ->orWhere('website', 'LIKE', '%'.$domainKey.'%');
+            })
+            ->first();
+
+        if ($existingCompany) {
+            return response()->json([
+                'status' => 'fail',
+                'message' => 'This website domain is already registered to another organization ('.($existingCompany->company_name ?? 'Registered Company').').',
+            ]);
+        }
+
+        return response()->json(['status' => 'success']);
     }
 
     /**

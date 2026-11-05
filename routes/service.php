@@ -551,6 +551,7 @@ Route::group(['middleware' => 'auth'], function () {
                 Route::resource('account', ServiceCompanyAccountSettingsController::class);
                 Route::get('account/tab/{tabName}', [ServiceCompanyAccountSettingsController::class, 'getTabContent'])->name('account.tab');
                 Route::post('account/update/{id}', [ServiceCompanyAccountSettingsController::class, 'update'])->name('account.update');
+                Route::post('account/check-domain', [ServiceCompanyAccountSettingsController::class, 'checkDomainAvailability'])->name('account.check_domain');
                 Route::post('account/videoMeetingSeetingUpdate', [ServiceCompanyAccountSettingsController::class, 'videoMeetingSeetingUpdate'])->name('account.videoMeetingSeetingUpdate');
                 Route::post('boostkeywordadd', [ServiceCompanyAccountSettingsController::class, 'boostkeywordadd'])->name('account.boostkeywordadd');
                 Route::get('kayaccount/key-add-create', [ServiceCompanyAccountSettingsController::class, 'keyaddcreate'])->name('account.key_add_create');
