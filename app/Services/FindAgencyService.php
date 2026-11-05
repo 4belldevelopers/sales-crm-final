@@ -2,6 +2,8 @@
 
 namespace App\Services;
 
+use App\Domain\AgencyPartnership\Services\AgencyRecipientNormalizer;
+use App\Domain\AgencyPartnership\Services\InvitationTokenService;
 use App\Helper\GeneralMethod;
 use App\Helper\Reply;
 use App\Jobs\ProcessAgencyOutboxEventJob;
@@ -542,6 +544,11 @@ class FindAgencyService
                     $invitationId = 0;
 
                     if ($clientInvitationCounter === 0) {
+                        $targetEmail = $company_row ? (string) $company_row->company_email : '';
+                        $normalizedRecipient = AgencyRecipientNormalizer::normalize($targetEmail);
+                        $tokenService = app(InvitationTokenService::class);
+                        $tokenData = $tokenService->generate();
+
                         $insertArr = [
                             'from_company_id' => $from_company_id,
                             'from_client_id' => $clientRow ? $clientRow->id : null,
@@ -549,20 +556,23 @@ class FindAgencyService
                             'from_status' => 1,
                             'from_created_at' => now(),
                             'to_company_id' => $to_company_id,
-                            'to_email' => $company_row ? $company_row->company_email : null,
+                            'to_email' => $targetEmail,
                             'to_status' => 0,
                             'to_invitation_status' => 0,
+                            'token_hash' => $tokenData['token_hash'],
+                            'expires_at' => now()->addDays(7),
+                            'delivery_status' => 'PENDING',
+                            'normalized_recipient' => $normalizedRecipient,
                         ];
 
                         $invitationId = (int) DB::table('staffing_company_invitation')->insertGetId($insertArr);
 
-                        // Queue email notification if permitted
-                        if ($company_row && ! empty($company_row->company_email)) {
+                        // Queue email notification with scanner-safe link
+                        if (!empty($targetEmail)) {
                             try {
                                 $employerCompany = Company::withoutGlobalScopes()->find($from_company_id);
                                 $reqdate = date('d M Y');
-                                $encode = base64_encode((string) $invitationId);
-                                $url = url('/invitation-company-register/'.$encode);
+                                $url = $tokenData['url'];
                                 $checkMailPermision = GeneralMethod::mailPermission(40);
 
                                 if ($checkMailPermision && $employerCompany) {
@@ -586,7 +596,7 @@ class FindAgencyService
                                     $fromAddress = $basecompany->companyEmail ?? '';
 
                                     QueueNotificationMailService::dispatch(
-                                        $company_row->company_email,
+                                        $targetEmail,
                                         $subject,
                                         'email.common.index',
                                         (object) ['message' => $template_description],

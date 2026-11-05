@@ -317,6 +317,12 @@ Route::post('verifyTeamProfile', [SaasFrontController::class, 'verifyTeamProfile
 Route::get('invitation-company-register/{code?}', [SaasFrontController::class, 'invitationCompanyRegister'])->name('invitation-company-register');
 Route::get('company-registration-invitation/{code?}', [SaasFrontController::class, 'invitationCompanyRegisterDirectAccess'])->name('company-registration-invitation');
 Route::post('invitation-company-store/', [SaasFrontController::class, 'invitationCompanyStore'])->name('invitation-company-store');
+
+// ############# SCANNER-SAFE AGENCY PARTNERSHIP ROUTES (OWASP Safe) #############
+Route::get('partner-invite/{raw_token}', [\App\Http\Controllers\PartnerInvitationController::class, 'landing'])->name('partner-invite.landing');
+Route::post('partner-invite/accept', [\App\Http\Controllers\PartnerInvitationController::class, 'accept'])->name('partner-invite.accept');
+Route::post('partner-invite/decline', [\App\Http\Controllers\PartnerInvitationController::class, 'decline'])->name('partner-invite.decline');
+Route::post('webhook/partner-invite/bounce', [\App\Http\Controllers\PartnerInvitationController::class, 'webhookBounce'])->name('partner-invite.webhook-bounce');
 Route::post('/', [SaasFrontController::class, 'submitContact'])->name('contact');
 Route::post('/company-register', [SaasFrontController::class, 'companyRegister'])->name('company-register')->middleware('throttle:register-submit');
 Route::post('/company-register-chk', [SaasFrontController::class, 'companyRegisterChk'])->name('company-register-chk')->middleware('throttle:register-form');

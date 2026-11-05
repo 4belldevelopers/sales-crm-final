@@ -176,13 +176,19 @@
                             <span>Status: <strong>{{ $statusLabel }}</strong></span>
                         </span>
                     </div>
-                    <div class="cl-bottom-actions">
-                        <button type="button" class="btn btn-sm btn-light-primary fw-bold px-3 py-1.5 resend-agency-invite" data-email="{{ e($invEmail) }}" style="display: inline-flex !important; align-items: center !important; justify-content: center !important; gap: 6px !important; white-space: nowrap !important; line-height: 1 !important; font-size: 11px; border-radius: 6px;" title="Resend invitation email to {{ e($invEmail) }}">
+                    <div class="cl-bottom-actions" style="display: flex; gap: 6px; align-items: center;">
+                        <button type="button" class="btn btn-sm btn-light-primary fw-bold px-3 py-1.5 resend-agency-invite" data-id="{{ $invId }}" data-email="{{ e($invEmail) }}" style="display: inline-flex !important; align-items: center !important; justify-content: center !important; gap: 6px !important; white-space: nowrap !important; line-height: 1 !important; font-size: 11px; border-radius: 6px;" title="Resend invitation email to {{ e($invEmail) }}">
                             <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
                                 <polyline points="23 4 23 10 17 10"/>
                                 <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
                             </svg>
                             <span>Resend Invite</span>
+                        </button>
+                        <button type="button" class="btn btn-sm btn-light-danger fw-bold px-3 py-1.5 cancel-agency-invite" data-invitation-id="{{ $invId }}" style="display: inline-flex !important; align-items: center !important; justify-content: center !important; gap: 4px !important; white-space: nowrap !important; line-height: 1 !important; font-size: 11px; border-radius: 6px;" title="Cancel this invitation">
+                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                <line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line>
+                            </svg>
+                            <span>Cancel</span>
                         </button>
                     </div>
                 </div>
