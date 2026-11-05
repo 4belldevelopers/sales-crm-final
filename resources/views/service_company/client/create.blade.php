@@ -11462,8 +11462,194 @@ $('.remove_address').click(function(){
           'Employer Branding & Talent Advisory'
         ],
         desc: 'is a premier Staffing & Recruiting organization delivering end-to-end talent acquisition, executive search, contract staffing, and specialized workforce solutions. The company connects top-tier talent with leading enterprise organizations through rigorous technical screening, rapid turnaround, and proven placement excellence.'
+      },
+
+      // 127: Semiconductors & Microelectronics
+      127: {
+        name: 'Semiconductors',
+        services: [
+          'ASIC & FPGA Design',
+          'VLSI Verification & Emulation',
+          'Silicon Fabrication & Foundry Services',
+          'System-on-Chip (SoC) Architecture',
+          'Semiconductor Packaging & Testing (OSAT)',
+          'Analog & Mixed-Signal IC Design',
+          'Embedded Firmware & Board Support Packages (BSP)',
+          'EDA Tooling & Physical Design / Synthesis',
+          'RF & High-Frequency Wireless IC Design',
+          'Design for Testability (DFT) & Silicon Bring-Up',
+          'Power Management IC (PMIC) Engineering',
+          'MEMS & Micro-Sensor Development'
+        ],
+        desc: 'is a pioneering Semiconductor and microelectronics company specializing in advanced silicon engineering, SoC architecture, VLSI verification, and specialized integrated circuit solutions. The company delivers high-efficiency chipsets, embedded firmware, and foundry-grade hardware to power next-generation computing and industrial systems.'
+      },
+
+      // 68: Internet & Digital Platforms
+      68: {
+        name: 'Internet & Digital Platforms',
+        services: [
+          'High-Concurrency Web Platforms',
+          'Search & Discovery Engine Architecture',
+          'Content Delivery & Video Streaming (CDN/OTT)',
+          'E-Commerce & Digital Marketplace Infrastructure',
+          'AdTech, Bidding & Monetization Platforms',
+          'Real-Time Messaging & WebSocket Engines',
+          'Social Graph & Community Features',
+          'User Acquisition & Growth Engineering',
+          'Identity, Authentication & SSO (OAuth/SAML)',
+          'Trust & Safety / Automated Content Moderation',
+          'Web Performance & Core Web Vitals Optimization',
+          'Progressive Web Apps (PWA) & Headless Web'
+        ],
+        desc: 'is a premier Internet and digital platforms organization delivering scalable web architectures, high-concurrency cloud applications, and high-engagement digital experiences. The company drives audience growth, digital monetization, and real-time connectivity across global web ecosystems.'
+      },
+
+      // 64: Information Technology & Services (Enterprise Managed IT & Systems)
+      64: {
+        name: 'Information Technology & Services',
+        services: [
+          'Enterprise IT Managed Services (MSP)',
+          'Cloud Architecture & Multi-Cloud DevOps',
+          'Custom Software & Systems Engineering',
+          'IT Infrastructure & Network Operations (NOC)',
+          'Cybersecurity, Governance & IT Compliance',
+          'Enterprise Systems Integration (ERP/CRM)',
+          'Data Engineering, ETL & Business Intelligence',
+          '24/7 Enterprise Helpdesk & Technical Support',
+          'Disaster Recovery & Business Continuity (BCDR)',
+          'Database Administration & Performance Tuning',
+          'Digital Workplace & Hybrid Collaboration Tech',
+          'API & Microservices Integration'
+        ],
+        desc: 'is an enterprise Information Technology & Services provider delivering end-to-end managed IT services, cloud infrastructure management, systems integration, and round-the-clock enterprise support. The company empowers organizations through secure digital transformation, reliable operations, and modern technology management.'
+      },
+
+      // 25: Computer Software & SaaS Products
+      25: {
+        name: 'Computer Software & SaaS',
+        services: [
+          'SaaS Platform Engineering & Multi-Tenancy',
+          'Full-Stack Web & Mobile App Development',
+          'Cloud-Native Distributed Architecture',
+          'API Design & Webhook Orchestration',
+          'Agile Product Delivery & Sprint Management',
+          'Automated QA & Continuous Testing Pipelines',
+          'UI/UX Product Design & User Journeys',
+          'Software Modernization & Refactoring',
+          'Billing, Subscription & Stripe Integration',
+          'Data Modeling & Query Optimization',
+          'SDK & Developer Tooling Creation',
+          'Micro-Frontend Architecture'
+        ],
+        desc: 'is an innovative Computer Software and SaaS company designing resilient, cloud-native applications and user-centric digital products. The company combines modern engineering practices, scalable multi-tenant architectures, and intuitive UI/UX design to accelerate digital innovation.'
+      },
+
+      // 1001: Artificial Intelligence & Machine Learning (AI/ML)
+      1001: {
+        name: 'Artificial Intelligence & Machine Learning (AI/ML)',
+        services: [
+          'Generative AI & LLM Application Development',
+          'Retrieval-Augmented Generation (RAG) Systems',
+          'Computer Vision & Real-Time Video Analytics',
+          'Natural Language Processing (NLP) & Speech AI',
+          'MLOps, Model Serving & Automated Pipelines',
+          'Custom AI Autonomous Agents & Tool Calling',
+          'Predictive Modeling & Statistical Forecasting',
+          'Data Labeling, Annotation & Curation',
+          'AI Model Fine-Tuning & Quantization',
+          'Recommendation & Personalization Engines',
+          'Deep Learning Neural Network Design',
+          'AI Safety, Governance & Bias Auditing'
+        ],
+        desc: 'is an advanced Artificial Intelligence & Machine Learning company building state-of-the-art intelligent systems, Generative AI models, and automated MLOps pipelines. The company leverages deep learning, computer vision, and autonomous agent architectures to solve complex enterprise problems.'
+      },
+
+      // 1004: Cybersecurity & Data Privacy (and alias 21)
+      1004: {
+        name: 'Cybersecurity & Data Privacy',
+        services: [
+          'Penetration Testing & Red Teaming',
+          'SOC Operations & SIEM Monitoring',
+          'Zero Trust Architecture & Network Security',
+          'Vulnerability Assessment & Patch Management',
+          'Cloud Security Posture Management (CSPM)',
+          'DevSecOps & Secure Code Auditing (SAST/DAST)',
+          'Identity & Access Management (IAM / PAM)',
+          'Endpoint Detection & Response (EDR / XDR)',
+          'Regulatory Compliance (SOC 2, ISO 27001, HIPAA)',
+          'Incident Response & Forensic Investigation',
+          'Data Loss Prevention (DLP) & Cryptography',
+          'Security Awareness & Phishing Simulation'
+        ],
+        desc: 'is a dedicated Cybersecurity and data privacy organization safeguarding enterprise digital assets against sophisticated threats. Through advanced Zero Trust architecture, 24/7 SOC monitoring, penetration testing, and regulatory compliance advisory, the company ensures defense-in-depth security.'
+      },
+
+      // 1005: Cloud Computing, DevOps & Infrastructure
+      1005: {
+        name: 'Cloud Computing, DevOps & Infrastructure',
+        services: [
+          'Multi-Cloud Architecture (AWS, Azure, GCP)',
+          'Kubernetes & Container Orchestration',
+          'CI/CD Pipeline Automation & GitOps',
+          'Infrastructure as Code (Terraform, Ansible)',
+          'Site Reliability Engineering (SRE) & Observability',
+          'Cloud Cost Optimization (FinOps)',
+          'Cloud Migration & Application Modernization',
+          'High-Availability Database Clustering',
+          'Serverless Architecture & Microservices',
+          'Zero-Downtime Deployment Strategies',
+          'Disaster Recovery & Automated Failover',
+          'Cloud Security Guardrails & Policy-as-Code'
+        ],
+        desc: 'is a high-performance Cloud Computing and DevOps consultancy specializing in automated cloud infrastructure, container orchestration, and continuous delivery pipelines. The company empowers enterprise scale with zero-downtime deployments, cost-optimized architectures, and rock-solid site reliability.'
+      },
+
+      // 133: Telecommunications & Wireless (and aliases 145, 24)
+      133: {
+        name: 'Telecommunications & Wireless',
+        services: [
+          '5G & 4G LTE Network Engineering',
+          'Fiber Optic & Broadband Infrastructure',
+          'Network Operations Center (NOC) Support',
+          'VoIP & Unified Communications (UCaaS)',
+          'Cell Tower Site Acquisition & RF Planning',
+          'Telecom Billing & OSS / BSS Integration',
+          'Satellite Communications & Backhaul',
+          'SD-WAN & Enterprise Managed Connectivity',
+          'Spectrum Management & Regulatory Filings',
+          'IoT & Machine-to-Machine (M2M) Networks',
+          'Telecom Network Slicing & Edge Compute',
+          'Optical Transport & DWDM Systems'
+        ],
+        desc: 'is a premier Telecommunications infrastructure and networking provider delivering robust 5G connectivity, fiber broadband, and enterprise communication solutions. The company connects global businesses and consumers with high-availability networks and next-generation telecom infrastructure.'
+      },
+
+      // 23: Computer Hardware & Electronics (and alias 27)
+      23: {
+        name: 'Computer Hardware & Electronics',
+        services: [
+          'PCB Schematic Design & Layout',
+          'Embedded C/C++ Firmware Engineering',
+          'Hardware Board Bring-Up & Diagnostics',
+          'Thermal, Mechanical & Enclosure Design',
+          'FCC, CE & RoHS Regulatory Certification',
+          'Component Sourcing & Bill of Materials (BOM)',
+          'Contract Manufacturing & EMS Supervision',
+          'High-Speed Signal Integrity & EMC Testing',
+          'IoT Device Prototyping & Edge Hardware',
+          'Power Electronics & Battery Management Systems',
+          'Reliability & Stress Testing (HALT/HASS)',
+          'Hardware Lifecycle & RMA Engineering'
+        ],
+        desc: 'is an engineering-driven Computer Hardware enterprise developing high-reliability electronic assemblies, embedded hardware systems, and computing products. The company brings electronic innovations from initial PCB concept through rigorous regulatory compliance to mass production.'
       }
     };
+
+    // Aliases for unified taxonomy mapping
+    INDUSTRY_SPECIFIC_SERVICES[21] = INDUSTRY_SPECIFIC_SERVICES[1004]; // Computer & Network Security -> Cybersecurity
+    INDUSTRY_SPECIFIC_SERVICES[145] = INDUSTRY_SPECIFIC_SERVICES[133];  // Wireless -> Telecommunications & Wireless
+    INDUSTRY_SPECIFIC_SERVICES[24] = INDUSTRY_SPECIFIC_SERVICES[133];   // Computer Networking -> Telecom & Wireless
+    INDUSTRY_SPECIFIC_SERVICES[27] = INDUSTRY_SPECIFIC_SERVICES[23];    // Consumer Electronics -> Hardware & Electronics
 
     window.addSuggestedService = function(svc) {
       if (!svc) return;
@@ -11526,8 +11712,31 @@ $('.remove_address').click(function(){
       if (!sectorName) sectorName = sectorConfig.name;
 
       var indLower = (indName || '').toLowerCase();
-      var isStaffing = (indId === 131) || indLower.indexOf('staffing') !== -1 || indLower.indexOf('recruiting') !== -1;
-      var specificConfig = isStaffing ? INDUSTRY_SPECIFIC_SERVICES[131] : (INDUSTRY_SPECIFIC_SERVICES[indId] || null);
+      var specificConfig = INDUSTRY_SPECIFIC_SERVICES[indId] || null;
+
+      if (!specificConfig) {
+        if (indId === 131 || indLower.indexOf('staffing') !== -1 || indLower.indexOf('recruiting') !== -1) {
+          specificConfig = INDUSTRY_SPECIFIC_SERVICES[131];
+        } else if (indId === 127 || indLower.indexOf('semiconductor') !== -1 || indLower.indexOf('microchip') !== -1) {
+          specificConfig = INDUSTRY_SPECIFIC_SERVICES[127];
+        } else if (indId === 68 || indLower.indexOf('internet') !== -1 || indLower.indexOf('digital platform') !== -1) {
+          specificConfig = INDUSTRY_SPECIFIC_SERVICES[68];
+        } else if (indId === 1001 || indLower.indexOf('artificial intelligence') !== -1 || indLower === 'ai' || indLower.indexOf('machine learning') !== -1) {
+          specificConfig = INDUSTRY_SPECIFIC_SERVICES[1001];
+        } else if (indId === 1004 || indId === 21 || indLower.indexOf('cybersecurity') !== -1 || indLower.indexOf('infosec') !== -1 || indLower.indexOf('network security') !== -1) {
+          specificConfig = INDUSTRY_SPECIFIC_SERVICES[1004];
+        } else if (indId === 1005 || indLower.indexOf('cloud computing') !== -1 || indLower.indexOf('devops') !== -1) {
+          specificConfig = INDUSTRY_SPECIFIC_SERVICES[1005];
+        } else if (indId === 25 || indLower.indexOf('computer software') !== -1 || indLower.indexOf('saas') !== -1) {
+          specificConfig = INDUSTRY_SPECIFIC_SERVICES[25];
+        } else if (indId === 64 || indLower.indexOf('information technology') !== -1) {
+          specificConfig = INDUSTRY_SPECIFIC_SERVICES[64];
+        } else if (indId === 133 || indId === 145 || indId === 24 || indLower.indexOf('telecom') !== -1 || indLower.indexOf('wireless') !== -1) {
+          specificConfig = INDUSTRY_SPECIFIC_SERVICES[133];
+        } else if (indId === 23 || indId === 27 || indLower.indexOf('computer hardware') !== -1 || indLower.indexOf('consumer electronics') !== -1) {
+          specificConfig = INDUSTRY_SPECIFIC_SERVICES[23];
+        }
+      }
 
       if ($label.length) {
         $label.text(indName ? 'Suggested Services (' + indName + ')' : 'Suggested Services (' + sectorName + ')');
@@ -12733,42 +12942,47 @@ $('.remove_address').click(function(){
         'tech': 64,
         'technology': 64,
         'technology services': 64,
-        'saas': 64,
-        'software as a service': 64,
+        'saas': 25, // Computer Software & SaaS
+        'software as a service': 25,
         'software': 25, // Computer Software
         'software development': 25,
         'software engineering': 25,
         'software company': 25,
         'computer software': 25,
-        'cloud': 148, // Cloud Infrastructure & DevOps
-        'cloud computing': 148,
-        'devops': 148,
-        'cloud infrastructure': 148,
-        'artificial intelligence': 147, // Artificial Intelligence & Machine Learning
-        'ai': 147,
-        'machine learning': 147,
-        'ai/ml': 147,
-        'cybersecurity': 153, // Cybersecurity & Privacy Infrastructure
-        'cyber security': 153,
-        'infosec': 153,
+        'cloud': 1005, // Cloud Computing, DevOps & Infrastructure
+        'cloud computing': 1005,
+        'devops': 1005,
+        'cloud infrastructure': 1005,
+        'artificial intelligence': 1001, // Artificial Intelligence & Machine Learning (AI/ML)
+        'ai': 1001,
+        'machine learning': 1001,
+        'ai/ml': 1001,
+        'genai': 1001,
+        'cybersecurity': 1004, // Cybersecurity & Data Privacy
+        'cyber security': 1004,
+        'infosec': 1004,
         'information security': 21, // Computer & Network Security
         'computer networking': 24,
         'networking': 24,
         'semiconductors': 127,
+        'semiconductor': 127,
+        'microchips': 127,
         'hardware': 23, // Computer Hardware
         'computer hardware': 23,
+        'consumer electronics': 27,
         'internet': 68,
-        'e-commerce': 152, // E-Commerce & Quick Commerce
-        'ecommerce': 152,
+        'e-commerce': 1003, // E-Commerce & Direct-to-Consumer (D2C)
+        'ecommerce': 1003,
+        'd2c': 1003,
         'web development': 68,
         'digital media': 98, // Online Media
-        'gaming': 157, // Gaming, Esports & Interactive Media
+        'gaming': 1009, // Gaming, Esports & Interactive Entertainment
         'video games': 22, // Computer Games
-        'esports': 157,
+        'esports': 1009,
 
         // Finance & Banking
-        'fintech': 149, // FinTech & Digital Assets
-        'financial technology': 149,
+        'fintech': 1002, // FinTech, Payments & Digital Banking
+        'financial technology': 1002,
         'banking': 11,
         'financial services': 43,
         'finance': 43,
@@ -12782,8 +12996,8 @@ $('.remove_address').click(function(){
         'capital markets': 16,
 
         // Healthcare & Life Sciences
-        'healthtech': 150, // HealthTech & Digital Health
-        'digital health': 150,
+        'healthtech': 1006, // HealthTech & Digital Health
+        'digital health': 1006,
         'healthcare': 57, // Hospital & Health Care
         'health care': 57,
         'hospital': 57,
@@ -12797,7 +13011,7 @@ $('.remove_address').click(function(){
         'wellness': 55,
 
         // Professional Services & HR
-        'hrtech': 160, // HRTech & Workforce Platforms
+        'hrtech': 1012, // HRTech & Talent Acquisition Platforms
         'recruiting': 131, // Staffing & Recruiting
         'recruitment': 131,
         'staffing': 131,
@@ -12814,14 +13028,18 @@ $('.remove_address').click(function(){
         'legal services': 74,
         'legal': 74,
         'law practice': 73,
+        'legaltech': 1013, // LegalTech & Regulatory Technology (RegTech)
+        'regtech': 1013,
         'design': 33,
         'graphic design': 54,
 
         // Manufacturing, Industrial, Automotive
         'automotive': 9,
-        'autotech': 158, // AutoTech, EV & Autonomous Mobility
-        'ev': 158,
-        'electric vehicles': 158,
+        'autotech': 9,
+        'ev': 9,
+        'electric vehicles': 9,
+        'spacetech': 1014, // SpaceTech, Aerospace & Autonomous Systems
+        'space technology': 1014,
         'aerospace': 10,
         'aviation': 10,
         'defense': 32,
@@ -12834,7 +13052,7 @@ $('.remove_address').click(function(){
         // Logistics, Supply Chain & Transport
         'logistics': 78, // Logistics & Supply Chain
         'supply chain': 78,
-        'supply chain tech': 156, // Supply Chain Tech & Autonomous Logistics
+        'supply chain tech': 78,
         'transportation': 138,
         'trucking': 138,
         'warehousing': 142,
@@ -12842,7 +13060,7 @@ $('.remove_address').click(function(){
         'shipping': 82, // Maritime
 
         // Real Estate & Construction
-        'proptech': 159, // PropTech & Smart Spaces
+        'proptech': 1010, // PropTech & Real Estate Technology
         'real estate': 119,
         'commercial real estate': 20,
         'construction': 26,
@@ -12850,22 +13068,24 @@ $('.remove_address').click(function(){
         'architecture': 7,
 
         // Energy & CleanTech
-        'cleantech': 154, // ClimateTech, CleanTech & ESG
-        'climatetech': 154,
+        'cleantech': 1008, // CleanTech, ClimateTech & Renewable Energy
+        'climatetech': 1008,
         'renewables': 122,
         'clean energy': 122,
         'solar': 122,
         'oil & energy': 97,
         'oil and gas': 97,
         'utilities': 139,
+        'agritech': 1011, // AgriTech & Smart Farming
 
         // Education, Media, Public
-        'edtech': 151, // EdTech & Future of Work
+        'edtech': 1007, // EdTech & Digital Learning
         'e-learning': 34,
         'education': 35, // Education Management
         'higher education': 56,
         'telecommunications': 133,
         'telecom': 133,
+        'wireless': 145,
         'entertainment': 37,
         'broadcast media': 13,
         'publishing': 116,
