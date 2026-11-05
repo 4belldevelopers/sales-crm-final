@@ -1394,9 +1394,9 @@
         .invite-drawer {
             position: fixed;
             top: 0; right: 0; bottom: 0;
-            width: 580px;
+            width: 530px;
             max-width: 100vw;
-            background: #f8fafc;
+            background: linear-gradient(180deg, #f0f4f9 0%, #f7f9fc 50%, #edf2f7 100%);
             z-index: 1050;
             display: flex;
             flex-direction: column;
@@ -1408,9 +1408,9 @@
 
         /* Header: Deep Vibrant Blue with Integrated Action Buttons */
         .invite-drawer-head {
-            padding: 14px 20px;
+            padding: 12px 18px;
             background: linear-gradient(135deg, #009ef7 0%, #0077c8 100%);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.18);
             display: flex;
             align-items: center;
             justify-content: space-between;
@@ -1422,7 +1422,7 @@
             flex: 1;
         }
         .invite-drawer-title {
-            font-size: 16px;
+            font-size: 15px;
             font-weight: 700;
             color: #ffffff;
             line-height: 1.25;
@@ -1430,7 +1430,7 @@
             font-family: 'Poppins', sans-serif;
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 7px;
         }
         .invite-drawer-subtitle {
             font-size: 11px;
@@ -1445,16 +1445,16 @@
         .invite-head-actions {
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 7px;
             flex-shrink: 0;
         }
         .invite-head-btn-cancel {
-            height: 33px;
-            padding: 0 13px;
-            border-radius: 7px;
+            height: 31px;
+            padding: 0 12px;
+            border-radius: 6px;
             border: 1px solid rgba(255, 255, 255, 0.4);
             background: rgba(255, 255, 255, 0.14);
-            font-size: 12px;
+            font-size: 11.5px;
             font-weight: 600;
             font-family: 'Poppins', sans-serif;
             color: #ffffff;
@@ -1466,12 +1466,12 @@
             border-color: rgba(255, 255, 255, 0.65);
         }
         .invite-head-btn-send {
-            height: 33px;
-            padding: 0 15px;
-            border-radius: 7px;
+            height: 31px;
+            padding: 0 14px;
+            border-radius: 6px;
             border: none;
             background: #ffffff;
-            font-size: 12px;
+            font-size: 11.5px;
             font-weight: 700;
             font-family: 'Poppins', sans-serif;
             color: #008be3;
@@ -1485,7 +1485,7 @@
         .invite-head-btn-send:hover {
             background: #f8fafc;
             color: #0077c8;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.18);
+            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.16);
         }
         .invite-head-btn-send:disabled {
             opacity: .7;
@@ -1495,9 +1495,9 @@
         .invite-head-btn-send.loading .invite-label { display: none; }
         .invite-head-btn-send.loading .invite-spinner { display: inline-flex !important; align-items: center; }
         .invite-head-close {
-            width: 32px;
-            height: 32px;
-            border-radius: 7px;
+            width: 31px;
+            height: 31px;
+            border-radius: 6px;
             border: 1px solid rgba(255, 255, 255, 0.3);
             background: rgba(255, 255, 255, 0.12);
             color: #ffffff;
@@ -1505,7 +1505,7 @@
             align-items: center;
             justify-content: center;
             cursor: pointer;
-            font-size: 14px;
+            font-size: 13px;
             transition: background .15s, border-color .15s;
             flex-shrink: 0;
             margin-left: 2px;
@@ -1516,13 +1516,13 @@
             color: #ffffff;
         }
 
-        /* Body: Compact padding, fits 15.6" screen with ZERO vertical scroll needed */
+        /* Body: Gradient light background, zero vertical scroll */
         .invite-drawer-body {
             flex: 1;
             overflow-y: auto;
             overflow-x: hidden;
-            padding: 14px 18px 10px;
-            background: #f8fafc;
+            padding: 12px 18px 8px;
+            background: linear-gradient(180deg, #f0f4f9 0%, #f7f9fc 60%, #edf2f7 100%);
         }
         .invite-drawer-body::-webkit-scrollbar {
             width: 4px;
@@ -1532,29 +1532,27 @@
             border-radius: 4px;
         }
 
-        /* Card + Sub-Card Enterprise Styling (Rule 20) */
-        .invite-subcard {
+        /* Single Unified Card (Rule 20 Modern Card Standard) */
+        .invite-unified-card {
             background: #ffffff;
-            border: 1px solid #e2e8f0;
+            border: 1.5px solid #dbe2ea;
             border-radius: 10px;
-            padding: 13px 15px 9px;
-            margin-bottom: 11px;
-            box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03);
+            padding: 13px 16px 10px;
+            box-shadow: 0 3px 14px rgba(15, 23, 42, 0.05);
             transition: border-color .15s ease, box-shadow .15s ease;
         }
-        .invite-subcard:hover {
+        .invite-unified-card:hover {
             border-color: #cbd5e1;
-            box-shadow: 0 3px 8px rgba(15, 23, 42, 0.05);
         }
-        .invite-subcard-head {
+        .invite-card-head {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            margin-bottom: 9px;
+            margin-bottom: 8px;
             padding-bottom: 6px;
             border-bottom: 1px solid #f1f5f9;
         }
-        .invite-subcard-title {
+        .invite-card-title {
             font-size: 11px;
             font-weight: 700;
             color: #1e293b;
@@ -1566,51 +1564,47 @@
             margin: 0;
             font-family: 'Poppins', sans-serif;
         }
-        .invite-subcard-badge {
-            font-size: 10px;
+        .invite-card-badge {
+            font-size: 9.5px;
             font-weight: 600;
             padding: 2px 7px;
             border-radius: 999px;
             line-height: 1.25;
             font-family: 'Poppins', sans-serif;
-        }
-        .invite-subcard-badge.badge-req {
-            background: #f0fdf4;
-            color: #166534;
-            border: 1px solid #bbf7d0;
-        }
-        .invite-subcard-badge.badge-opt {
-            background: #f8fafc;
-            color: #64748b;
-            border: 1px solid #e2e8f0;
-        }
-        .invite-subcard-hint {
-            font-size: 11px;
-            color: #64748b;
-            margin: -3px 0 9px;
-            line-height: 1.35;
-            font-family: 'Poppins', sans-serif;
+            background: #eff6ff;
+            color: #1d4ed8;
+            border: 1px solid #bfdbfe;
         }
 
-        /* 2-Column Responsive Grid */
-        .invite-row-2col {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 12px;
-            margin-bottom: 7px;
-        }
+        /* 1 Field per Row - Full Width */
         .invite-field { margin-bottom: 7px; }
         .invite-field-label {
             font-size: 11.5px;
             font-weight: 600;
-            color: #334155;
-            margin-bottom: 4px;
+            color: #1e293b;
+            margin-bottom: 3px;
             display: flex;
             align-items: center;
-            gap: 3px;
+            justify-content: space-between;
+            gap: 4px;
             font-family: 'Poppins', sans-serif;
         }
-        .invite-field-label .req { color: #ef4444; margin-left: 1px; }
+        .invite-field-label-text {
+            display: inline-flex;
+            align-items: center;
+            gap: 2px;
+        }
+        .invite-field-label .req { color: #ef4444; margin-left: 2px; font-weight: 700; }
+        .invite-opt-tag {
+            font-size: 9.5px;
+            font-weight: 500;
+            color: #64748b;
+            background: #f1f5f9;
+            border: 1px solid #e2e8f0;
+            padding: 1px 6px;
+            border-radius: 4px;
+        }
+
         .invite-input-wrap {
             position: relative;
             display: flex;
@@ -1619,34 +1613,77 @@
         .invite-input-icon {
             position: absolute;
             left: 11px;
-            color: #94a3b8;
+            color: #475569;
             font-size: 13.5px;
             pointer-events: none;
             line-height: 1;
+            z-index: 2;
         }
         .invite-input-wrap input,
         .invite-input-wrap select {
             width: 100%;
-            height: 38px;
-            border: 1px solid #d8deec;
+            height: 35px;
+            border: 1.5px solid #cbd5e1;
             border-radius: 6px;
             padding: 0 12px 0 34px;
             font-size: 12.5px;
             font-family: 'Poppins', sans-serif;
-            color: #1e293b;
-            background: #fff;
+            color: #0f172a;
+            font-weight: 500;
+            background: #ffffff !important;
             outline: none;
             transition: border-color .15s, box-shadow .15s;
             -webkit-appearance: none;
             appearance: none;
         }
         .invite-input-wrap input::placeholder,
-        .invite-input-wrap select.placeholder-active { color: #9ca3af; }
+        .invite-input-wrap select.placeholder-active {
+            color: #94a3b8;
+            font-weight: 400;
+        }
+        .invite-input-wrap input:hover,
+        .invite-input-wrap select:hover {
+            border-color: #94a3b8;
+        }
         .invite-input-wrap input:focus,
         .invite-input-wrap select:focus {
             border-color: #009ef7;
-            box-shadow: 0 0 0 3px rgba(0, 158, 247, .12);
+            box-shadow: 0 0 0 3px rgba(0, 158, 247, .15);
         }
+        /* prevent browser autofill from washing out the background */
+        .invite-input-wrap input:-webkit-autofill,
+        .invite-input-wrap input:-webkit-autofill:hover,
+        .invite-input-wrap input:-webkit-autofill:focus {
+            -webkit-box-shadow: 0 0 0 1000px #ffffff inset !important;
+            -webkit-text-fill-color: #0f172a !important;
+        }
+        /* ensure phone component input group matches */
+        .invite-drawer-body .jero-phone-input-group {
+            height: 35px !important;
+            min-height: 35px !important;
+            max-height: 35px !important;
+            border: 1.5px solid #cbd5e1 !important;
+            border-radius: 6px !important;
+            background: #ffffff !important;
+        }
+        .invite-drawer-body .jero-phone-input-group:hover {
+            border-color: #94a3b8 !important;
+        }
+        .invite-drawer-body .jero-phone-input-group:focus-within {
+            border-color: #009ef7 !important;
+            box-shadow: 0 0 0 3px rgba(0, 158, 247, .15) !important;
+        }
+        .invite-drawer-body .jero-country-picker-btn {
+            min-height: 33px !important;
+            max-height: 33px !important;
+            height: 33px !important;
+        }
+        .invite-drawer-body .jero-phone-main-input {
+            color: #0f172a !important;
+            font-weight: 500 !important;
+            font-size: 12.5px !important;
+        }
+
         /* chevron for select */
         .invite-select-wrap { position: relative; }
         .invite-select-wrap::after {
@@ -1657,21 +1694,21 @@
             transform: translateY(-50%);
             pointer-events: none;
             width: 12px; height: 12px;
-            background: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2.5'><path d='M6 9l6 6 6-6'/></svg>") center/contain no-repeat;
+            background: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23475569' stroke-width='2.5'><path d='M6 9l6 6 6-6'/></svg>") center/contain no-repeat;
         }
         .invite-field-hint {
-            font-size: 10.5px;
+            font-size: 10px;
             color: #64748b;
-            margin-top: 3px;
+            margin-top: 2px;
             margin-bottom: 0;
-            line-height: 1.35;
+            line-height: 1.3;
             font-family: 'Poppins', sans-serif;
         }
         .invite-secure-strip {
             text-align: center;
             font-size: 10.5px;
-            color: #94a3b8;
-            padding: 4px 0 2px;
+            color: #64748b;
+            padding: 5px 0 2px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -2487,40 +2524,75 @@
                 <form id="inviteForm" enctype="multipart/form-data">
                     @csrf
 
-                    {{-- Sub-Card 1: Account Identity & Role (Required) --}}
-                    <div class="invite-subcard">
-                        <div class="invite-subcard-head">
-                            <h4 class="invite-subcard-title">
-                                <i class="fa-solid fa-user-shield text-primary"></i> Account Identity &amp; Role
+                    {{-- Single Unified Card (Rule 20 Modern Card Standard) --}}
+                    <div class="invite-unified-card">
+                        <div class="invite-card-head">
+                            <h4 class="invite-card-title">
+                                <i class="fa-solid fa-id-badge text-primary"></i> Team Member Details
                             </h4>
-                            <span class="invite-subcard-badge badge-req">Required</span>
+                            <span class="invite-card-badge"><i class="fa-solid fa-shield-halved me-1"></i> Admin Assigned</span>
                         </div>
 
-                        {{-- Row 1: Full Name & Work Email side-by-side --}}
-                        <div class="invite-row-2col">
-                            <div class="invite-field">
-                                <label class="invite-field-label">Full Name <span class="req">*</span></label>
-                                <div class="invite-input-wrap">
-                                    <span class="invite-input-icon"><i class="fa-regular fa-user"></i></span>
-                                    <input type="text" name="name" id="inviteName" placeholder="Enter full name" autocomplete="off" />
-                                </div>
-                            </div>
-
-                            <div class="invite-field">
-                                <label class="invite-field-label">Work Email <span class="req">*</span></label>
-                                <div class="invite-input-wrap">
-                                    <span class="invite-input-icon"><i class="fa-regular fa-envelope"></i></span>
-                                    <input type="email" name="email" id="inviteEmail" placeholder="name@company.com" maxlength="254" inputmode="email" autocomplete="email" autocapitalize="none" spellcheck="false" />
-                                </div>
-                                <div id="inviteEmail_typo_hint" class="team-email-typo-hint" style="display: none; margin-top: 4px; font-size: 11px; color: #b45309; background: #fef3c7; border: 1px solid #fde68a; border-radius: 5px; padding: 3px 6px;"></div>
+                        {{-- Row 1: Full Name --}}
+                        <div class="invite-field">
+                            <label class="invite-field-label" for="inviteName">
+                                <span class="invite-field-label-text">Full Name <span class="req">*</span></span>
+                            </label>
+                            <div class="invite-input-wrap">
+                                <span class="invite-input-icon"><i class="fa-solid fa-user"></i></span>
+                                <input type="text" name="name" id="inviteName" placeholder="Enter full name" autocomplete="off" />
                             </div>
                         </div>
 
-                        {{-- Row 2: Role & Permissions --}}
-                        <div class="invite-field" style="margin-bottom: 4px;">
-                            <label class="invite-field-label">Role &amp; Permissions <span class="req">*</span></label>
+                        {{-- Row 2: Work Email --}}
+                        <div class="invite-field">
+                            <label class="invite-field-label" for="inviteEmail">
+                                <span class="invite-field-label-text">Work Email <span class="req">*</span></span>
+                            </label>
+                            <div class="invite-input-wrap">
+                                <span class="invite-input-icon"><i class="fa-solid fa-envelope"></i></span>
+                                <input type="email" name="email" id="inviteEmail" placeholder="name@company.com" maxlength="254" inputmode="email" autocomplete="email" autocapitalize="none" spellcheck="false" />
+                            </div>
+                            <div id="inviteEmail_typo_hint" class="team-email-typo-hint" style="display: none; margin-top: 3px; font-size: 11px; color: #b45309; background: #fef3c7; border: 1px solid #fde68a; border-radius: 5px; padding: 2px 6px;"></div>
+                        </div>
+
+                        {{-- Row 3: Mobile Number (Optional) --}}
+                        <div class="invite-field">
+                            <label class="invite-field-label" for="inviteMobile">
+                                <span class="invite-field-label-text">Mobile Number</span>
+                                <span class="invite-opt-tag">Optional</span>
+                            </label>
+                            <x-jero-phone-input
+                                id="inviteMobile"
+                                name="mobile"
+                                countryCodeName="phone_country_code"
+                                countryCodeId="invitePhoneCountryCode"
+                                value=""
+                                countryCode=""
+                                label=""
+                                :required="false"
+                                placeholder="Enter mobile number" />
+                        </div>
+
+                        {{-- Row 4: LinkedIn Profile URL (Optional) --}}
+                        <div class="invite-field">
+                            <label class="invite-field-label" for="inviteLinkedin">
+                                <span class="invite-field-label-text">LinkedIn Profile URL</span>
+                                <span class="invite-opt-tag">Optional</span>
+                            </label>
+                            <div class="invite-input-wrap">
+                                <span class="invite-input-icon"><i class="fa-brands fa-linkedin" style="color: #0a66c2; font-size: 15px;"></i></span>
+                                <input type="text" name="linkedin" id="inviteLinkedin" placeholder="https://linkedin.com/in/username" autocomplete="off" />
+                            </div>
+                        </div>
+
+                        {{-- Row 5: Roles & Permissions --}}
+                        <div class="invite-field" style="margin-bottom: 2px;">
+                            <label class="invite-field-label" for="inviteRole">
+                                <span class="invite-field-label-text">Role &amp; Permissions <span class="req">*</span></span>
+                            </label>
                             <div class="invite-input-wrap invite-select-wrap">
-                                <span class="invite-input-icon"><i class="fa-solid fa-shield-halved"></i></span>
+                                <span class="invite-input-icon"><i class="fa-solid fa-shield-halved" style="color: #009ef7;"></i></span>
                                 <select name="role_id" id="inviteRole">
                                     <option value="" disabled selected>Select role</option>
                                     {{-- Options populated cleanly via AJAX --}}
@@ -2530,46 +2602,8 @@
                         </div>
                     </div>
 
-                    {{-- Sub-Card 2: Professional Contact Details (Optional) --}}
-                    <div class="invite-subcard">
-                        <div class="invite-subcard-head">
-                            <h4 class="invite-subcard-title">
-                                <i class="fa-solid fa-address-book text-primary"></i> Contact &amp; Social
-                            </h4>
-                            <span class="invite-subcard-badge badge-opt">Optional</span>
-                        </div>
-                        <p class="invite-subcard-hint">
-                            Can also be provided by the team member upon account activation or in profile.
-                        </p>
-
-                        {{-- Row: Mobile & LinkedIn side-by-side --}}
-                        <div class="invite-row-2col" style="margin-bottom: 2px;">
-                            <div class="invite-field" style="margin-bottom: 0;">
-                                <label class="invite-field-label">Mobile Number</label>
-                                <x-jero-phone-input
-                                    id="inviteMobile"
-                                    name="mobile"
-                                    countryCodeName="phone_country_code"
-                                    countryCodeId="invitePhoneCountryCode"
-                                    value=""
-                                    countryCode=""
-                                    label=""
-                                    :required="false"
-                                    placeholder="Enter mobile" />
-                            </div>
-
-                            <div class="invite-field" style="margin-bottom: 0;">
-                                <label class="invite-field-label">LinkedIn Profile URL</label>
-                                <div class="invite-input-wrap">
-                                    <span class="invite-input-icon"><i class="fa-brands fa-linkedin" style="color: #0a66c2;"></i></span>
-                                    <input type="text" name="linkedin" id="inviteLinkedin" placeholder="linkedin.com/in/..." autocomplete="off" />
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
                     {{-- Message area --}}
-                    <div id="inviteMsg" style="display:none; font-size:12.5px; padding:8px 12px; border-radius:7px; margin-top:4px;"></div>
+                    <div id="inviteMsg" style="display:none; font-size:12px; padding:7px 12px; border-radius:6px; margin-top:5px;"></div>
 
                     {{-- Micro security strip --}}
                     <div class="invite-secure-strip">

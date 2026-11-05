@@ -423,3 +423,53 @@ PHASE 2 (Zero-Scroll Compact Layout - ~420px height):
 - **Syntax Validation**: `php -l resources/views/service_company/team/index.blade.php` $\to$ `No syntax errors detected`.
 - **Test Suite**: `scratch/test_team_invite_and_profile_governance.php` $\to$ `4/4 passed (100%)`.
 
+---
+
+## 11. Phase 3 Refinement: Single Unified Card, 1 Box Per Row & Light Gradient Canvas
+
+Following visual review of the 2-column layout, the founder provided direct feedback to further elevate the drawer design:
+1. **Light Gradient Background**: Styled the drawer body with an ultra-clean, subtle gradient (`linear-gradient(180deg, #f0f4f9 0%, #f7f9fc 60%, #edf2f7 100%)`) providing soft contrast against the pure white card.
+2. **Single Unified Card Only**: Merged the two separate sub-cards into **one unified enterprise card** (`.invite-unified-card`), eliminating duplicate card boundaries and excessive vertical margins.
+3. **One Box Per Row (Full Width)**: Each field occupies its own row with 100% width, eliminating cramped 2-column inputs:
+   - Row 1: Full Name (`*` Required)
+   - Row 2: Work Email (`*` Required)
+   - Row 3: Mobile Number (`Optional` badge + international `<x-jero-phone-input>`)
+   - Row 4: LinkedIn Profile URL (`Optional` badge + brand icon)
+   - Row 5: Role & Permissions (`*` Required + system permission micro hint)
+4. **Enhanced High-Contrast Box & Icon Visibility**:
+   - Outlined all input boxes with crisp `1.5px solid #cbd5e1` borders on `#ffffff` backgrounds, overriding browser autofill styling so boxes never appear washed out.
+   - Sized and aligned solid icons (`fa-solid fa-user`, `fa-solid fa-envelope`, `fa-brands fa-linkedin`, `fa-solid fa-shield-halved`) with dark slate and primary brand colors for 100% sharp visibility.
+5. **Zero Vertical Scroll on 15.6" Screens Verified**:
+   - Total rendered height of the unified 5-row card is **~327px**.
+   - Total drawer content height is **~415px**, fitting inside the 1366×768 visible client viewport (~620px) with over **200px of vertical clearance**.
+   - Strictly 0 vertical scrollbar required.
+
+### Phase 3 Unified Architecture Blueprint
+
+```
+┌────────────────────────────────────────────────────────┐
+│  Invite Team Member            [Cancel] [🚀 Send] [ × ]│  <-- Blue Gradient Header (50px)
+├────────────────────────────────────────────────────────┤
+│  ┌─ Team Member Details ────────── [ Admin Assigned ] ┐│
+│  │                                                    ││
+│  │ Full Name *                                        ││
+│  │ [ 👤  Shivangi Jaiswal                           ] ││  <-- Row 1: Full Width (35px)
+│  │                                                    ││
+│  │ Work Email *                                       ││
+│  │ [ ✉   ershivangijaiswal@gmail.com                ] ││  <-- Row 2: Full Width (35px)
+│  │                                                    ││
+│  │ Mobile Number                           [Optional] ││
+│  │ [ 🇮🇳 +91 ▼ | 9559409102                    10/10 ] ││  <-- Row 3: Full Width (35px)
+│  │                                                    ││
+│  │ LinkedIn Profile URL                    [Optional] ││
+│  │ [ 🔗  https://linkedin.com/in/username           ] ││  <-- Row 4: Full Width (35px)
+│  │                                                    ││
+│  │ Role & Permissions *                               ││
+│  │ [ 🛡   Select role                               ▼ ] ││  <-- Row 5: Full Width (35px)
+│  │ Defines the system access permissions and visibi.. ││
+│  └────────────────────────────────────────────────────┘│  <-- Single Card Total: 327px
+│  🔒 Tenant-scoped invite • Enterprise RBAC protected   │  <-- Micro strip (18px)
+└────────────────────────────────────────────────────────┘  <-- Total: 415px (0px Scrollbar!)
+```
+
+
