@@ -1684,18 +1684,281 @@
             font-size: 12.5px !important;
         }
 
-        /* chevron for select */
-        .invite-select-wrap { position: relative; }
-        .invite-select-wrap::after {
-            content: '';
-            position: absolute;
-            right: 12px;
-            top: 50%;
-            transform: translateY(-50%);
-            pointer-events: none;
-            width: 12px; height: 12px;
-            background: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23475569' stroke-width='2.5'><path d='M6 9l6 6 6-6'/></svg>") center/contain no-repeat;
+        /* Custom Enterprise Role Dropdown (Rule 20 Enterprise Standard) */
+        .invite-role-picker {
+            position: relative;
+            width: 100%;
         }
+        .invite-role-trigger {
+            width: 100%;
+            height: 35px;
+            border: 1.5px solid #cbd5e1;
+            border-radius: 6px;
+            background: #ffffff;
+            padding: 0 10px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            cursor: pointer;
+            transition: all .15s ease;
+            user-select: none;
+        }
+        .invite-role-trigger:hover {
+            border-color: #94a3b8;
+        }
+        .invite-role-picker.open .invite-role-trigger {
+            border-color: #009ef7;
+            box-shadow: 0 0 0 3px rgba(0, 158, 247, .15);
+        }
+        .invite-role-trigger-left {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            min-width: 0;
+            flex: 1;
+        }
+        .invite-role-trigger-icon {
+            font-size: 13.5px;
+            color: #009ef7;
+            flex-shrink: 0;
+            line-height: 1;
+        }
+        .invite-role-trigger-text {
+            font-size: 12.5px;
+            font-family: 'Poppins', sans-serif;
+            color: #0f172a;
+            font-weight: 500;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .invite-role-trigger-text.is-placeholder {
+            color: #94a3b8;
+            font-weight: 400;
+        }
+        .invite-role-trigger-badge {
+            font-size: 9px;
+            font-weight: 600;
+            padding: 1px 6px;
+            border-radius: 4px;
+            margin-left: 6px;
+            flex-shrink: 0;
+            line-height: 1.3;
+        }
+        .invite-role-chevron {
+            font-size: 10.5px;
+            color: #64748b;
+            transition: transform .2s ease, color .15s ease;
+            flex-shrink: 0;
+            margin-left: 8px;
+        }
+        .invite-role-picker.open .invite-role-chevron {
+            transform: rotate(180deg);
+            color: #009ef7;
+        }
+
+        /* Floating Dropdown Menu */
+        .invite-role-dropdown {
+            position: absolute;
+            top: calc(100% + 4px);
+            left: 0;
+            right: 0;
+            background: #ffffff;
+            border: 1px solid #d8deec;
+            border-radius: 8px;
+            box-shadow: 0 10px 25px rgba(15, 23, 42, 0.14);
+            z-index: 1060;
+            display: none;
+            flex-direction: column;
+            overflow: hidden;
+            animation: inviteDropdownFadeIn .15s cubic-bezier(.4, 0, .2, 1);
+        }
+        .invite-role-dropdown.dropup {
+            top: auto;
+            bottom: calc(100% + 4px);
+            box-shadow: 0 -10px 25px rgba(15, 23, 42, 0.14);
+        }
+        @keyframes inviteDropdownFadeIn {
+            from { opacity: 0; transform: translateY(-4px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .invite-role-picker.open .invite-role-dropdown {
+            display: flex;
+        }
+
+        /* Dropdown Search Bar */
+        .invite-role-search-wrap {
+            padding: 6px 8px;
+            background: #f8fafc;
+            border-bottom: 1px solid #f1f5f9;
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+        .invite-role-search-icon {
+            position: absolute;
+            left: 16px;
+            color: #94a3b8;
+            font-size: 11px;
+            pointer-events: none;
+        }
+        .invite-role-search-input {
+            width: 100%;
+            height: 28px;
+            padding: 0 24px 0 26px;
+            border: 1px solid #e2e8f0;
+            border-radius: 5px;
+            font-size: 11.5px;
+            font-family: 'Poppins', sans-serif;
+            color: #0f172a;
+            background: #ffffff;
+            outline: none;
+            transition: border-color .15s;
+        }
+        .invite-role-search-input:focus {
+            border-color: #009ef7;
+        }
+        .invite-role-search-clear {
+            position: absolute;
+            right: 14px;
+            color: #94a3b8;
+            font-size: 11px;
+            cursor: pointer;
+            display: none;
+        }
+        .invite-role-search-clear:hover { color: #475569; }
+
+        /* Role Items Stream */
+        .invite-role-list {
+            max-height: 200px;
+            overflow-y: auto;
+            padding: 4px;
+            scrollbar-width: thin;
+        }
+        .invite-role-list::-webkit-scrollbar { width: 4px; }
+        .invite-role-list::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+
+        .invite-role-item {
+            padding: 7px 9px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            cursor: pointer;
+            transition: background .12s ease;
+            margin-bottom: 2px;
+            border: 1px solid transparent;
+        }
+        .invite-role-item:hover {
+            background: #f0f7ff;
+            border-color: #e0f2fe;
+        }
+        .invite-role-item.selected {
+            background: #e0f2fe;
+            border-color: #bae6fd;
+        }
+        .invite-role-item-main {
+            display: flex;
+            align-items: center;
+            gap: 9px;
+            min-width: 0;
+            flex: 1;
+        }
+        .invite-role-item-icon {
+            width: 28px;
+            height: 28px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            flex-shrink: 0;
+        }
+        .invite-role-item-content {
+            min-width: 0;
+            flex: 1;
+        }
+        .invite-role-item-head {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            line-height: 1.2;
+        }
+        .invite-role-item-title {
+            font-size: 12px;
+            font-weight: 600;
+            color: #1e293b;
+            font-family: 'Poppins', sans-serif;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .invite-role-item:hover .invite-role-item-title {
+            color: #009ef7;
+        }
+        .invite-role-item-desc {
+            font-size: 10px;
+            color: #64748b;
+            line-height: 1.25;
+            margin: 1px 0 0 0;
+            font-family: 'Poppins', sans-serif;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .invite-role-item-check {
+            width: 17px;
+            height: 17px;
+            border-radius: 50%;
+            border: 1.5px solid #cbd5e1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            margin-left: 8px;
+            transition: all .15s ease;
+        }
+        .invite-role-item.selected .invite-role-item-check {
+            background: #009ef7;
+            border-color: #009ef7;
+            color: #ffffff;
+        }
+        .invite-role-item-check i {
+            display: none;
+            font-size: 9px;
+            color: #ffffff;
+        }
+        .invite-role-item.selected .invite-role-item-check i {
+            display: block;
+        }
+
+        /* Empty search state */
+        .invite-role-empty {
+            padding: 18px 12px;
+            text-align: center;
+            font-size: 11px;
+            color: #94a3b8;
+            font-family: 'Poppins', sans-serif;
+            display: none;
+        }
+
+        /* Role tier badge colors */
+        .role-badge-admin { background: #fee2e2; color: #b91c1c; border: 1px solid #fca5a5; }
+        .role-badge-mgmt { background: #fef3c7; color: #b45309; border: 1px solid #fde68a; }
+        .role-badge-hiring { background: #e0f2fe; color: #0369a1; border: 1px solid #bae6fd; }
+        .role-badge-eval { background: #f3e8ff; color: #7e22ce; border: 1px solid #d8b4fe; }
+        .role-badge-sales { background: #dcfce7; color: #15803d; border: 1px solid #86efac; }
+        .role-badge-std { background: #f1f5f9; color: #475569; border: 1px solid #e2e8f0; }
+
+        .role-icon-admin { background: #fee2e2; color: #dc2626; }
+        .role-icon-mgmt { background: #fef3c7; color: #d97706; }
+        .role-icon-hiring { background: #e0f2fe; color: #0284c7; }
+        .role-icon-eval { background: #f3e8ff; color: #9333ea; }
+        .role-icon-sales { background: #dcfce7; color: #16a34a; }
+        .role-icon-std { background: #f1f5f9; color: #64748b; }
         .invite-field-hint {
             font-size: 10px;
             color: #64748b;
@@ -2586,16 +2849,50 @@
                             </div>
                         </div>
 
-                        {{-- Row 5: Roles & Permissions --}}
+                        {{-- Row 5: Roles & Permissions (Custom Enterprise Dropdown) --}}
                         <div class="invite-field" style="margin-bottom: 2px;">
-                            <label class="invite-field-label" for="inviteRole">
+                            <label class="invite-field-label" for="inviteRoleTrigger">
                                 <span class="invite-field-label-text">Role &amp; Permissions <span class="req">*</span></span>
                             </label>
-                            <div class="invite-input-wrap invite-select-wrap">
-                                <span class="invite-input-icon"><i class="fa-solid fa-shield-halved" style="color: #009ef7;"></i></span>
-                                <select name="role_id" id="inviteRole">
+
+                            <!-- Custom Enterprise Role Picker -->
+                            <div class="invite-role-picker" id="inviteRolePicker">
+                                <!-- Trigger Box (Matches 35px Input Heights) -->
+                                <div class="invite-role-trigger" id="inviteRoleTrigger" tabindex="0" role="button" aria-haspopup="listbox" aria-expanded="false">
+                                    <div class="invite-role-trigger-left">
+                                        <i class="fa-solid fa-shield-halved invite-role-trigger-icon" id="inviteRoleTriggerIcon"></i>
+                                        <span class="invite-role-trigger-text is-placeholder" id="inviteRoleTriggerText">Select role &amp; permissions</span>
+                                        <span class="invite-role-trigger-badge" id="inviteRoleTriggerBadge" style="display: none;"></span>
+                                    </div>
+                                    <i class="fa-solid fa-chevron-down invite-role-chevron"></i>
+                                </div>
+
+                                <!-- Floating Enterprise Dropdown Panel -->
+                                <div class="invite-role-dropdown" id="inviteRoleDropdown" role="listbox">
+                                    <!-- Search Bar -->
+                                    <div class="invite-role-search-wrap">
+                                        <i class="fa-solid fa-magnifying-glass invite-role-search-icon"></i>
+                                        <input type="text" class="invite-role-search-input" id="inviteRoleSearch" placeholder="Search role name or permission..." autocomplete="off" spellcheck="false" />
+                                        <span class="invite-role-search-clear" id="inviteRoleSearchClear" title="Clear search">
+                                            <i class="fa-solid fa-circle-xmark"></i>
+                                        </span>
+                                    </div>
+
+                                    <!-- Role Options List -->
+                                    <div class="invite-role-list" id="inviteRoleList">
+                                        <!-- Dynamically rendered via JS -->
+                                    </div>
+
+                                    <!-- Empty Search State -->
+                                    <div class="invite-role-empty" id="inviteRoleEmpty">
+                                        <i class="fa-solid fa-filter-circle-xmark d-block mb-1 fs-5 text-muted"></i>
+                                        No matching roles found
+                                    </div>
+                                </div>
+
+                                <!-- Hidden Native Select (For 100% Form & Test Compatibility) -->
+                                <select name="role_id" id="inviteRole" style="display: none !important;" tabindex="-1" aria-hidden="true">
                                     <option value="" disabled selected>Select role</option>
-                                    {{-- Options populated cleanly via AJAX --}}
                                 </select>
                             </div>
                             <p class="invite-field-hint">Defines the system access permissions and workspace visibility for this member.</p>
@@ -3948,23 +4245,276 @@
 
             // Close drawer on ESC
             $(document).on('keydown', function(e) {
-                if (e.key === 'Escape') closeEditRoleDrawer();
+                if (e.key === 'Escape') {
+                    closeInviteRoleDropdown();
+                    closeEditRoleDrawer();
+                }
             });
 
-            // Phase 1 Optimization: Populate roles into select helper
+            // Role tier classification helper for Enterprise Role Dropdown
+            function getRoleTierMeta(roleName, rawDesc) {
+                var name = (roleName || '').toLowerCase();
+                var desc = rawDesc || '';
+
+                if (name.indexOf('administrator') !== -1 && name.indexOf('sub') === -1) {
+                    return {
+                        tier: 'admin',
+                        badgeText: 'Full Admin',
+                        badgeClass: 'role-badge-admin',
+                        iconClass: 'role-icon-admin',
+                        iconHtml: '<i class="fa-solid fa-user-gear"></i>',
+                        defaultDesc: 'Full organization control, team governance, billing & settings.'
+                    };
+                }
+                if (name.indexOf('sub administrator') !== -1 || name.indexOf('sub admin') !== -1) {
+                    return {
+                        tier: 'mgmt',
+                        badgeText: 'Sub Admin',
+                        badgeClass: 'role-badge-mgmt',
+                        iconClass: 'role-icon-mgmt',
+                        iconHtml: '<i class="fa-solid fa-user-shield"></i>',
+                        defaultDesc: 'Operational authority, user onboarding & workflow management.'
+                    };
+                }
+                if (name.indexOf('team lead') !== -1 || name.indexOf('lead') !== -1) {
+                    return {
+                        tier: 'mgmt',
+                        badgeText: 'Team Lead',
+                        badgeClass: 'role-badge-mgmt',
+                        iconClass: 'role-icon-mgmt',
+                        iconHtml: '<i class="fa-solid fa-user-group"></i>',
+                        defaultDesc: 'Supervises recruiters, manages job pipeline & assignments.'
+                    };
+                }
+                if (name.indexOf('recruiter') !== -1) {
+                    return {
+                        tier: 'hiring',
+                        badgeText: 'Recruiter',
+                        badgeClass: 'role-badge-hiring',
+                        iconClass: 'role-icon-hiring',
+                        iconHtml: '<i class="fa-solid fa-briefcase"></i>',
+                        defaultDesc: 'Candidate sourcing, screening, stage updates & job submissions.'
+                    };
+                }
+                if (name.indexOf('interview') !== -1) {
+                    return {
+                        tier: 'eval',
+                        badgeText: 'Evaluation',
+                        badgeClass: 'role-badge-eval',
+                        iconClass: 'role-icon-eval',
+                        iconHtml: '<i class="fa-solid fa-comments"></i>',
+                        defaultDesc: 'Conducts interviews, reviews submissions & submits scorecards.'
+                    };
+                }
+                if (name.indexOf('sale') !== -1 || name.indexOf('bd') !== -1 || name.indexOf('business') !== -1) {
+                    return {
+                        tier: 'sales',
+                        badgeText: 'Sales & BD',
+                        badgeClass: 'role-badge-sales',
+                        iconClass: 'role-icon-sales',
+                        iconHtml: '<i class="fa-solid fa-chart-line"></i>',
+                        defaultDesc: 'Client management, requirement intakes & commercials.'
+                    };
+                }
+                return {
+                    tier: 'std',
+                    badgeText: 'Standard',
+                    badgeClass: 'role-badge-std',
+                    iconClass: 'role-icon-std',
+                    iconHtml: '<i class="fa-solid fa-user-check"></i>',
+                    defaultDesc: 'Standard organization member access and task collaboration.'
+                };
+            }
+
+            // Custom Enterprise Role Picker Functions
             function populateInviteRoleOptions(roles) {
                 var $select = $('#inviteRole');
                 $select.find('option:not([disabled])').remove();
-                if (roles && roles.length > 0) {
-                    $.each(roles, function(i, role) {
-                        var val = role.id;
-                        var label = role.display_name || role.name;
-                        if (val && label) {
-                            $select.append('<option value="' + val + '">' + label + '</option>');
-                        }
-                    });
+                var $list = $('#inviteRoleList');
+                $list.empty();
+
+                if (!roles || roles.length === 0) {
+                    $('#inviteRoleEmpty').show().html('No roles available for this workspace.');
+                    return;
+                }
+
+                // Deduplicate roles by normalized display name (e.g. cleans duplicate "Administrator")
+                var seen = {};
+                var deduplicated = [];
+                $.each(roles, function(i, role) {
+                    var label = $.trim(role.display_name || role.name || '');
+                    var key = label.toLowerCase();
+                    if (label && !seen[key]) {
+                        seen[key] = true;
+                        deduplicated.push(role);
+                    }
+                });
+
+                $.each(deduplicated, function(i, role) {
+                    var val = role.id;
+                    var label = role.display_name || role.name;
+                    var meta = getRoleTierMeta(label, role.description);
+                    var desc = role.description && role.description !== label && role.description.length > 5
+                             ? role.description
+                             : meta.defaultDesc;
+
+                    // Sync hidden native select (preserves form submission & test compatibility)
+                    $select.append('<option value="' + val + '">' + label + '</option>');
+
+                    // Render custom enterprise card item
+                    var $item = $(
+                        '<div class="invite-role-item" data-role-id="' + val + '" data-role-name="' + $('<div>').text(label).html() + '">' +
+                            '<div class="invite-role-item-main">' +
+                                '<div class="invite-role-item-icon ' + meta.iconClass + '">' +
+                                    meta.iconHtml +
+                                '</div>' +
+                                '<div class="invite-role-item-content">' +
+                                    '<div class="invite-role-item-head">' +
+                                        '<span class="invite-role-item-title">' + $('<div>').text(label).html() + '</span>' +
+                                        '<span class="invite-role-trigger-badge ' + meta.badgeClass + '">' + meta.badgeText + '</span>' +
+                                    '</div>' +
+                                    '<p class="invite-role-item-desc" title="' + $('<div>').text(desc).html() + '">' + $('<div>').text(desc).html() + '</p>' +
+                                '</div>' +
+                            '</div>' +
+                            '<div class="invite-role-item-check">' +
+                                '<i class="fa-solid fa-check"></i>' +
+                            '</div>' +
+                        '</div>'
+                    );
+
+                    $list.append($item);
+                });
+
+                $('#inviteRoleEmpty').hide();
+            }
+
+            function openInviteRoleDropdown() {
+                var $picker = $('#inviteRolePicker');
+                var $dropdown = $('#inviteRoleDropdown');
+                var triggerEl = $('#inviteRoleTrigger')[0];
+                if (triggerEl) {
+                    var triggerRect = triggerEl.getBoundingClientRect();
+                    var spaceBelow = window.innerHeight - triggerRect.bottom;
+                    if (spaceBelow < 240 && triggerRect.top > 240) {
+                        $dropdown.addClass('dropup');
+                    } else {
+                        $dropdown.removeClass('dropup');
+                    }
+                }
+                $picker.addClass('open');
+                $('#inviteRoleTrigger').attr('aria-expanded', 'true');
+                $('#inviteRoleSearch').val('').trigger('input');
+                setTimeout(function() {
+                    $('#inviteRoleSearch').focus();
+                }, 50);
+            }
+
+            function closeInviteRoleDropdown() {
+                var $picker = $('#inviteRolePicker');
+                $picker.removeClass('open');
+                $('#inviteRoleTrigger').attr('aria-expanded', 'false');
+            }
+
+            function selectInviteRole(roleId, roleName) {
+                // Update hidden select
+                $('#inviteRole').val(roleId).trigger('change');
+
+                // Update visual checkmark
+                $('#inviteRoleList .invite-role-item').removeClass('selected');
+                var $selectedItem = $('#inviteRoleList .invite-role-item[data-role-id="' + roleId + '"]');
+                $selectedItem.addClass('selected');
+
+                if (roleId && roleName) {
+                    var meta = getRoleTierMeta(roleName);
+                    $('#inviteRoleTriggerText')
+                        .removeClass('is-placeholder')
+                        .text(roleName);
+                    $('#inviteRoleTriggerBadge')
+                        .attr('class', 'invite-role-trigger-badge ' + meta.badgeClass)
+                        .text(meta.badgeText)
+                        .show();
+                    $('#inviteRoleTriggerIcon')
+                        .attr('class', 'fa-solid fa-shield-halved invite-role-trigger-icon')
+                        .css('color', meta.tier === 'admin' ? '#dc2626' : (meta.tier === 'mgmt' ? '#d97706' : '#009ef7'));
+                } else {
+                    resetInviteRoleTrigger();
                 }
             }
+
+            function resetInviteRoleTrigger() {
+                $('#inviteRole').val('');
+                $('#inviteRoleList .invite-role-item').removeClass('selected');
+                $('#inviteRoleTriggerText')
+                    .addClass('is-placeholder')
+                    .text('Select role & permissions');
+                $('#inviteRoleTriggerBadge').hide().empty();
+                $('#inviteRoleTriggerIcon').attr('class', 'fa-solid fa-shield-halved invite-role-trigger-icon').css('color', '#009ef7');
+            }
+
+            // Trigger click & keyboard
+            $(document).on('click', '#inviteRoleTrigger', function(e) {
+                e.stopPropagation();
+                if ($('#inviteRolePicker').hasClass('open')) {
+                    closeInviteRoleDropdown();
+                } else {
+                    openInviteRoleDropdown();
+                }
+            });
+
+            $(document).on('keydown', '#inviteRoleTrigger', function(e) {
+                if (e.key === 'Enter' || e.key === ' ' || e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    openInviteRoleDropdown();
+                }
+            });
+
+            // Close dropdown on outside click
+            $(document).on('click', function(e) {
+                if (!$(e.target).closest('#inviteRolePicker').length) {
+                    closeInviteRoleDropdown();
+                }
+            });
+
+            // Dropdown search filter
+            $(document).on('input', '#inviteRoleSearch', function() {
+                var query = $.trim($(this).val()).toLowerCase();
+                if (query.length > 0) {
+                    $('#inviteRoleSearchClear').show();
+                } else {
+                    $('#inviteRoleSearchClear').hide();
+                }
+
+                var matchedCount = 0;
+                $('#inviteRoleList .invite-role-item').each(function() {
+                    var text = $(this).text().toLowerCase();
+                    if (!query || text.indexOf(query) !== -1) {
+                        $(this).show();
+                        matchedCount++;
+                    } else {
+                        $(this).hide();
+                    }
+                });
+
+                if (matchedCount === 0) {
+                    $('#inviteRoleEmpty').show();
+                } else {
+                    $('#inviteRoleEmpty').hide();
+                }
+            });
+
+            $(document).on('click', '#inviteRoleSearchClear', function(e) {
+                e.stopPropagation();
+                $('#inviteRoleSearch').val('').trigger('input').focus();
+            });
+
+            // Item selection
+            $(document).on('click', '#inviteRoleList .invite-role-item', function(e) {
+                e.stopPropagation();
+                var roleId = $(this).data('role-id');
+                var roleName = $(this).data('role-name');
+                selectInviteRole(roleId, roleName);
+                closeInviteRoleDropdown();
+            });
 
             // ---- Invite Drawer ----
             function openInviteDrawer() {
@@ -4014,6 +4564,8 @@
                 if ($('#inviteMobile').length) {
                     $('#inviteMobile').val('');
                 }
+                resetInviteRoleTrigger();
+                closeInviteRoleDropdown();
                 $('#inviteSubmitBtn').removeClass('loading').prop('disabled', false);
                 isInviteSubmitting = false;
                 // Open
@@ -4024,6 +4576,7 @@
             function closeInviteDrawer() {
                 $('#inviteOverlay, #inviteDrawer').removeClass('open');
                 $('#inviteEmail_typo_hint').hide().empty();
+                closeInviteRoleDropdown();
                 document.body.style.overflow = '';
                 isInviteSubmitting = false;
             }

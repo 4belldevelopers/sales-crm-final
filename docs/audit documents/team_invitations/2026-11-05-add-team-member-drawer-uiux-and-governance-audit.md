@@ -444,32 +444,30 @@ Following visual review of the 2-column layout, the founder provided direct feed
    - Total drawer content height is **~415px**, fitting inside the 1366×768 visible client viewport (~620px) with over **200px of vertical clearance**.
    - Strictly 0 vertical scrollbar required.
 
-### Phase 3 Unified Architecture Blueprint
+---
 
-```
-┌────────────────────────────────────────────────────────┐
-│  Invite Team Member            [Cancel] [🚀 Send] [ × ]│  <-- Blue Gradient Header (50px)
-├────────────────────────────────────────────────────────┤
-│  ┌─ Team Member Details ────────── [ Admin Assigned ] ┐│
-│  │                                                    ││
-│  │ Full Name *                                        ││
-│  │ [ 👤  Shivangi Jaiswal                           ] ││  <-- Row 1: Full Width (35px)
-│  │                                                    ││
-│  │ Work Email *                                       ││
-│  │ [ ✉   ershivangijaiswal@gmail.com                ] ││  <-- Row 2: Full Width (35px)
-│  │                                                    ││
-│  │ Mobile Number                           [Optional] ││
-│  │ [ 🇮🇳 +91 ▼ | 9559409102                    10/10 ] ││  <-- Row 3: Full Width (35px)
-│  │                                                    ││
-│  │ LinkedIn Profile URL                    [Optional] ││
-│  │ [ 🔗  https://linkedin.com/in/username           ] ││  <-- Row 4: Full Width (35px)
-│  │                                                    ││
-│  │ Role & Permissions *                               ││
-│  │ [ 🛡   Select role                               ▼ ] ││  <-- Row 5: Full Width (35px)
-│  │ Defines the system access permissions and visibi.. ││
-│  └────────────────────────────────────────────────────┘│  <-- Single Card Total: 327px
-│  🔒 Tenant-scoped invite • Enterprise RBAC protected   │  <-- Micro strip (18px)
-└────────────────────────────────────────────────────────┘  <-- Total: 415px (0px Scrollbar!)
-```
+## 12. Phase 4: Enterprise Custom Roles & Permissions Dropdown Redesign
+
+Following review of the native `<select>` dropdown menu, the founder requested a complete UI/UX redesign of the **Roles & Permissions dropdown listing**:
+1. **Replaced Native Browser Dropdown with Custom Enterprise Picker**:
+   - Native `<select>` opened an unstyled OS-level list without icons, descriptions, or badges, and displayed duplicate "Administrator" rows.
+   - Built `.invite-role-picker` featuring:
+     - **35px High-Contrast Trigger Box**: Left shield icon (`#009ef7`), selected role name with tier badge, and rotating chevron (`fa-chevron-down`).
+     - **Floating Enterprise Dropdown Panel**: Sits on `z-index: 1060`, with subtle shadow (`0 10px 25px rgba(15,23,42,0.14)`), rounded corners, and smart auto-flip (opens upward as dropup if vertical clearance is constrained).
+     - **Real-Time Role Search**: Integrated search bar (`#inviteRoleSearch`) with clear button, enabling instant role filtering.
+     - **Role Card Items**:
+       - Role icon container with role-specific color tinting (Admin: Red, Lead/Sub-Admin: Amber, Recruiter: Blue, Interviewer: Purple, Sales: Green, Default: Slate).
+       - Role title + Access tier pill badge (`Full Admin`, `Sub Admin`, `Team Lead`, `Recruiter`, `Evaluation`, `Sales & BD`, `Standard`).
+       - Micro-permission description (e.g. *"Full organization control, team governance, billing & settings"*).
+       - Radio checkmark indicator that lights up in Primary Blue on active selection.
+     - **Data Deduplication**: Automatically deduplicates role options by normalized display name, eliminating redundant entries.
+2. **Underlying Sync & Zero Regression**:
+   - Hidden `<select name="role_id" id="inviteRole">` is kept fully in sync with the custom picker.
+   - `$('#inviteRole').val()` and `new FormData($form[0])` capture `role_id` identically without altering backend controllers or request validation.
+   - Zero business logic regressions.
+3. **Verification**:
+   - `php -l resources/views/service_company/team/index.blade.php`: Pass.
+   - `php scratch/test_team_invite_and_profile_governance.php`: 4/4 Tests Green (100%).
+
 
 
