@@ -486,6 +486,29 @@ Following implementation of the enterprise drawer, the founder noted that the ic
 5. **Universal Header Icon Rule**:
    - Added scoped rule `.invite-drawer-head i { color: #ffffff !important; opacity: 1 !important; }` to prevent any CSS theme overrides from muting header icons.
 
+---
+
+## 14. Phase 6: Default Recruiter Role Auto-Selection Upon Drawer Open
+
+To minimize user friction and streamline team onboarding, the founder requested that the **Recruiter** role be automatically selected by default when opening the Invite Team Member drawer:
+1. **Intelligent Recruiter Role Discovery (`autoSelectDefaultRecruiterRole`)**:
+   - Evaluates workspace roles in RAM cache or DOM:
+     - Exact match: `name === 'recruiter'`.
+     - Substring match: `name.indexOf('recruiter') !== -1` (e.g. *"Lead Recruiter"*, *"Senior Recruiter"*).
+   - If found, instantly executes `selectInviteRole(target.id, target.name)`:
+     - Pre-fills `#inviteRole` value with the recruiter role ID.
+     - Updates trigger box text and access tier pill (`Recruiter`).
+     - Activates radio checkmark on the role item.
+2. **Lifecycle Binding**:
+   - Executed on `openInviteDrawer()`: when the drawer opens fresh, the Recruiter role is pre-selected with 0ms delay.
+   - Executed in `populateInviteRoleOptions()`: handles asynchronous loading on cold loads.
+   - Full user override: user can switch to any other role (e.g. Administrator, Team Lead, Interviewer) at any time.
+3. **Verification**:
+   - `php -l resources/views/service_company/team/index.blade.php`: Pass.
+   - `php scratch/test_recruiter_default.php`: Pass.
+   - `php scratch/test_team_invite_and_profile_governance.php`: 4/4 Tests Green (100%).
+
+
 
 
 

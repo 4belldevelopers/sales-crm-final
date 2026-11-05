@@ -4438,6 +4438,61 @@
                 });
 
                 $('#inviteRoleEmpty').hide();
+
+                // By default select the Recruiter role upon populating role options
+                autoSelectDefaultRecruiterRole(deduplicated);
+            }
+
+            // Auto-select Recruiter role helper
+            function autoSelectDefaultRecruiterRole(rolesList) {
+                var list = rolesList || (window.teamState ? window.teamState.rolesCache : null);
+                if (!list || list.length === 0) {
+                    var $recruiterItem = $('#inviteRoleList .invite-role-item').filter(function() {
+                        var name = ($(this).data('role-name') || '').toLowerCase().trim();
+                        return name === 'recruiter';
+                    });
+                    if (!$recruiterItem.length) {
+                        $recruiterItem = $('#inviteRoleList .invite-role-item').filter(function() {
+                            var name = ($(this).data('role-name') || '').toLowerCase().trim();
+                            return name.indexOf('recruiter') !== -1;
+                        });
+                    }
+                    if ($recruiterItem.length) {
+                        var id = $recruiterItem.first().data('role-id');
+                        var name = $recruiterItem.first().data('role-name');
+                        selectInviteRole(id, name);
+                        return true;
+                    }
+                    return false;
+                }
+
+                // 1. Exact match "recruiter"
+                var target = null;
+                for (var i = 0; i < list.length; i++) {
+                    var n = $.trim(list[i].display_name || list[i].name || '').toLowerCase();
+                    if (n === 'recruiter') {
+                        target = list[i];
+                        break;
+                    }
+                }
+
+                // 2. Contains "recruiter" (e.g. Lead Recruiter)
+                if (!target) {
+                    for (var j = 0; j < list.length; j++) {
+                        var m = $.trim(list[j].display_name || list[j].name || '').toLowerCase();
+                        if (m.indexOf('recruiter') !== -1) {
+                            target = list[j];
+                            break;
+                        }
+                    }
+                }
+
+                if (target) {
+                    var label = target.display_name || target.name;
+                    selectInviteRole(target.id, label);
+                    return true;
+                }
+                return false;
             }
 
             function openInviteRoleDropdown() {
@@ -4616,7 +4671,10 @@
                 if ($('#inviteMobile').length) {
                     $('#inviteMobile').val('');
                 }
-                resetInviteRoleTrigger();
+                // By default select the Recruiter role upon opening drawer
+                if (!autoSelectDefaultRecruiterRole()) {
+                    resetInviteRoleTrigger();
+                }
                 closeInviteRoleDropdown();
                 $('#inviteSubmitBtn').removeClass('loading').prop('disabled', false);
                 isInviteSubmitting = false;
