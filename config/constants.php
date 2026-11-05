@@ -79,6 +79,7 @@ return [
     'ELASTIC_COIN_EVENTS' => env('ELASTIC_COIN_EVENTS', 'local_coin_events'),
     'ELASTIC_COMPANY_COINS' => env('ELASTIC_COMPANY_COINS', 'local_company_coins'),
     'ELASTIC_COIN_PACKAGES' => env('ELASTIC_COIN_PACKAGES', 'local_coin_packages'),
+    'ELASTIC_TOP_UP_COIN_PACKAGES' => env('ELASTIC_TOP_UP_COIN_PACKAGES', 'local_top_up_coin_packages'),
     'ELASTIC_COIN_ORDER_EVENTS' => env('ELASTIC_COIN_ORDER_EVENTS', 'local_coin_order_events'),
     'ELASTIC_COIN_ORDERS' => env('ELASTIC_COIN_ORDERS', 'local_coin_orders'),
     'ELASTIC_COIN_TRANSECTION_LOGS' => env('ELASTIC_COIN_TRANSECTION_LOGS', 'local_coin_transection_logs'),
@@ -96,5 +97,7 @@ return [
     'ELASTIC_COMPANY_SKILLS' => env('ELASTIC_COMPANY_SKILLS', 'local_company_skills'),
     'ELASTIC_CUSTOM_PLAN_REQUESTS' => env('ELASTIC_CUSTOM_PLAN_REQUESTS', 'local_custom_plan_requests'),
     'ELASTIC_AGENCY_ACTIVITY_STREAM' => env('ELASTIC_AGENCY_ACTIVITY_STREAM', 'local_agency_activity_stream'),
+    'ELASTIC_COUPONS' => env('ELASTIC_COUPONS', 'local_coupons'),
+    'ELASTIC_DEFAULT_TERMS' => env('ELASTIC_DEFAULT_TERMS', 'local_default_terms'),
     'COUNTRY_INDIA_ID' => 101,
 ];

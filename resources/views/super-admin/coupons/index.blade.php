@@ -72,34 +72,75 @@
 
 @push('footer-script')
 <script>
+    function generateUUID() {
+        if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+            return crypto.randomUUID();
+        }
+        return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+            var r = Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8);
+            return v.toString(16);
+        });
+    }
+
     $(document).on('click', '.coupon-toggle-status', function(e) {
         e.preventDefault();
         var $el = $(this);
+        if ($el.data('processing')) { return; }
+        $el.data('processing', true);
+
         var id = $el.data('id');
+        var idempKey = generateUUID();
+
         $.ajax({
             type: 'POST',
             url: "{{ route('superadmin.coupons.toggleStatus') }}",
+            headers: {
+                'X-Idempotency-Key': idempKey
+            },
             data: { '_token': "{{ csrf_token() }}", 'id': id },
             success: function(response) {
                 if (response.status === 'success') {
-                    location.reload();
+                    if (response.new_status === 'active') {
+                        $el.html('<span class="badge bg-light-success text-success fs-7 py-1 px-3">Active</span>');
+                    } else {
+                        $el.html('<span class="badge bg-light-danger text-danger fs-7 py-1 px-3">Inactive</span>');
+                    }
                 }
+            },
+            complete: function() {
+                $el.data('processing', false);
             }
         });
     });
 
     $(document).on('click', '.coupon-delete', function(e) {
         e.preventDefault();
-        var id = $(this).data('id');
+        var $el = $(this);
+        if ($el.data('processing')) { return; }
+
+        var id = $el.data('id');
         if (!confirm('Delete this coupon? This cannot be undone.')) { return; }
+
+        $el.data('processing', true);
+        var idempKey = generateUUID();
+
         $.ajax({
             type: 'POST',
             url: "{{ route('superadmin.coupons.destroy') }}",
+            headers: {
+                'X-Idempotency-Key': idempKey
+            },
             data: { '_token': "{{ csrf_token() }}", 'id': id },
             success: function(response) {
                 if (response.status === 'success') {
                     $('#row-' + id).remove();
+                    if ($('table tbody tr').length === 0) {
+                        $('table tbody').html('<tr><td colspan="6" class="text-center text-muted py-10">No coupons yet.</td></tr>');
+                    }
                 }
+            },
+            complete: function() {
+                $el.data('processing', false);
             }
         });
     });

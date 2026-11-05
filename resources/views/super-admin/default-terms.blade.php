@@ -1173,12 +1173,68 @@ $(document).ready(function() {
         }
     });
 
+    // RFC 4122 v4 UUID Generator for Request Idempotency
+    function generateIdempotencyKey() {
+        if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+            return crypto.randomUUID();
+        }
+        return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+            var r = Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8);
+            return v.toString(16);
+        });
+    }
+
+    var termDraftKey = 'jero_term_draft_{{ $termId ?? 0 }}';
+    var isSavingInProgress = false;
+
+    // Client-side Draft Autosave Recovery
+    try {
+        var savedDraft = sessionStorage.getItem(termDraftKey);
+        if (savedDraft && savedDraft.trim() !== '') {
+            setTimeout(function() {
+                if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances.editor1) {
+                    var currentVal = CKEDITOR.instances.editor1.getData();
+                    if (!currentVal || currentVal.trim() === '') {
+                        CKEDITOR.instances.editor1.setData(savedDraft);
+                    }
+                }
+            }, 800);
+        }
+    } catch(e) {}
+
+    // Track content modifications for draft persistence
+    var draftDebounceTimer = null;
+    function persistDraftContent(content) {
+        clearTimeout(draftDebounceTimer);
+        draftDebounceTimer = setTimeout(function() {
+            try {
+                if (content && content.trim() !== '') {
+                    sessionStorage.setItem(termDraftKey, content);
+                }
+            } catch(e) {}
+        }, 1000);
+    }
+
+    if (typeof CKEDITOR !== 'undefined') {
+        CKEDITOR.on('instanceReady', function(evt) {
+            if (evt.editor.name === 'editor1') {
+                evt.editor.on('change', function() {
+                    persistDraftContent(evt.editor.getData());
+                });
+            }
+        });
+    }
+
     $('#btn_quick_save_top').click(function(e) {
         e.preventDefault();
         $('#save-form').trigger('click');
     });
 
     $('#save-form').click(function() {
+        if (isSavingInProgress) {
+            return false;
+        }
+
         var id = 0;
         var url = "{{ route('superadmin.company.addEditTermsupdate', ':id') }}";
         url = url.replace(':id', id);
@@ -1186,13 +1242,15 @@ $(document).ready(function() {
         var purpose = $('#purpose').val();
         var encrypt_id = $('#encrypt_id').val();
         var editor1 = (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances.editor1) ? CKEDITOR.instances.editor1.getData() : $('#editor1').val();
+        var idempotencyKey = generateIdempotencyKey();
 
         var requestData = {
             '_token': token,
             '_method': 'POST',
             'purpose': purpose,
             'editor1': editor1,
-            'encrypt_id': encrypt_id
+            'encrypt_id': encrypt_id,
+            'idempotency_key': idempotencyKey
         };
 
         if ($('#agencyCommercialDefaultsFields').length) {
@@ -1213,6 +1271,7 @@ $(document).ready(function() {
         var origHtml = $btn.html();
         var origTopHtml = $topBtn.html();
 
+        isSavingInProgress = true;
         $btn.prop('disabled', true).html('<i class="fa fa-spinner fa-spin me-1"></i> Saving...');
         $topBtn.prop('disabled', true).html('<i class="fa fa-spinner fa-spin me-1"></i> Saving...');
         if ($statusBadge.length) {
@@ -1222,12 +1281,20 @@ $(document).ready(function() {
         $.ajax({
             type: 'POST',
             url: url,
+            headers: {
+                'X-Idempotency-Key': idempotencyKey
+            },
             data: requestData,
             success: function(response) {
+                isSavingInProgress = false;
                 $btn.prop('disabled', false).html(origHtml);
                 $topBtn.prop('disabled', false).html(origTopHtml);
 
                 if (response.status === "success") {
+                    try {
+                        sessionStorage.removeItem(termDraftKey);
+                    } catch(e) {}
+
                     if ($statusBadge.length) {
                         $statusBadge.removeClass('text-warning text-danger').addClass('text-success').html('<i class="fa fa-circle-check text-success me-1"></i> Saved Just Now');
                     }
@@ -1259,6 +1326,7 @@ $(document).ready(function() {
                 }
             },
             error: function(xhr) {
+                isSavingInProgress = false;
                 $btn.prop('disabled', false).html(origHtml);
                 $topBtn.prop('disabled', false).html(origTopHtml);
                 if ($statusBadge.length) {
@@ -1282,5 +1350,6 @@ $(document).ready(function() {
         });
     });
 });
+
 </script>
 @endpush
