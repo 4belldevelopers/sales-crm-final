@@ -10,6 +10,7 @@ namespace App\Services;
  * locations, industries, and relation statuses in bulk.
  */
 
+use App\Helper\GeneralMethod;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 
@@ -410,39 +411,21 @@ class AgencyListingService
             }
         }
 
-        // 2. Bulk Query for Candidate Pipeline Stats
-        $candidateCounts = DB::table('add_job_wise_condidates')
-            ->select(
-                'thirdparty_company_id',
-                DB::raw('COUNT(1) AS all_candidates'),
-                DB::raw('COUNT(CASE WHEN master_status_id = 1 THEN 1 END) AS sourced'),
-                DB::raw('COUNT(CASE WHEN master_status_id = 2 THEN 1 END) AS screening'),
-                DB::raw('COUNT(CASE WHEN master_status_id = 3 THEN 1 END) AS evaluated'),
-                DB::raw('COUNT(CASE WHEN master_status_id = 4 THEN 1 END) AS negotiation'),
-                DB::raw('COUNT(CASE WHEN master_status_id = 5 THEN 1 END) AS offers'),
-                DB::raw('COUNT(CASE WHEN master_status_id = 6 THEN 1 END) AS joined'),
-                DB::raw('COUNT(CASE WHEN master_status_id = 7 THEN 1 END) AS rejected')
-            )
-            ->where(function ($q) use ($fromCompanyId) {
-                $q->where('company_id', '=', $fromCompanyId)
-                    ->orWhere('company_id', '=', 0)
-                    ->orWhereNull('company_id');
-            })
-            ->whereIn('thirdparty_company_id', $agencyCompanyIds)
-            ->whereNotIn('master_status_id', [8, 9])
-            ->groupBy('thirdparty_company_id')
-            ->get();
-
-        foreach ($candidateCounts as $cc) {
-            if (isset($stats[$cc->thirdparty_company_id])) {
-                $stats[$cc->thirdparty_company_id]->all_candidates = (int) $cc->all_candidates;
-                $stats[$cc->thirdparty_company_id]->sourced = (int) $cc->sourced;
-                $stats[$cc->thirdparty_company_id]->screening = (int) $cc->screening;
-                $stats[$cc->thirdparty_company_id]->evaluated = (int) $cc->evaluated;
-                $stats[$cc->thirdparty_company_id]->negotiation = (int) $cc->negotiation;
-                $stats[$cc->thirdparty_company_id]->offers = (int) $cc->offers;
-                $stats[$cc->thirdparty_company_id]->Joined = (int) $cc->joined;
-                $stats[$cc->thirdparty_company_id]->rejected = (int) $cc->rejected;
+        // 2. Query Elasticsearch for Candidate Pipeline Stats via Symmetric DirectClientCandidatesCountList (Rule 1 & 2 compliant)
+        foreach ($agencyCompanyIds as $agencyId) {
+            $candStats = GeneralMethod::DirectClientCandidatesCountList($fromCompanyId, $agencyId);
+            if (isset($stats[$agencyId])) {
+                $stats[$agencyId]->all_candidates = (int) ($candStats->all_candidates ?? 0);
+                $stats[$agencyId]->sourced = (int) ($candStats->sourced ?? 0);
+                $stats[$agencyId]->screening = (int) ($candStats->screening ?? 0);
+                $stats[$agencyId]->evaluated = (int) ($candStats->evaluated ?? 0);
+                $stats[$agencyId]->negotiation = (int) ($candStats->negotiations ?? ($candStats->negotiation ?? 0));
+                $stats[$agencyId]->offers = (int) ($candStats->offers ?? 0);
+                $stats[$agencyId]->Joined = (int) ($candStats->joined ?? ($candStats->Joined ?? 0));
+                $stats[$agencyId]->rejected = (int) ($candStats->rejected ?? 0);
+                if (isset($candStats->all_interview) && $candStats->all_interview > 0) {
+                    $stats[$agencyId]->all_interview = (int) $candStats->all_interview;
+                }
             }
         }
 

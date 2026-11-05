@@ -386,11 +386,13 @@
       line-height: 1;
     }
     .cd-donut-center-lbl {
-      font-size: 10px !important;
-      font-weight: 400 !important;
+      font-size: 9px !important;
+      font-weight: 500 !important;
       color: #94a3b8;
       line-height: 1;
-      margin-top: 2px;
+      margin-top: 3px;
+      white-space: nowrap;
+      text-align: center;
     }
     .cd-donut-list {
       flex: 1;
@@ -4676,7 +4678,7 @@
                 <a class="cd-tab-pill-btn nav-link" data-bs-toggle="tab" data-toggle="tab" href="#candidate_list" role="tab" aria-selected="false" title="Candidates Pipeline">
                   <i class="fas fa-users"></i>
                   <span>Candidates</span>
-                  @if($kpiSubmitted > 0)<span class="cd-tab-badge-pill">{{ $kpiSubmitted }}</span>@endif
+                  <span class="cd-tab-badge-pill" id="tabBadgeCandidates" @if(($kpiSubmitted ?? 0) <= 0) style="display:none;" @endif>{{ $kpiSubmitted ?? 0 }}</span>
                 </a>
               </li>
 
@@ -5946,7 +5948,7 @@
                                 <canvas id="chartJobType" width="110" height="110"></canvas>
                                 <div class="cd-donut-center">
                                   <div class="cd-donut-center-num" id="donutTotalJobs">0</div>
-                                  <div class="cd-donut-center-lbl">Active Jobs</div>
+                                  <div class="cd-donut-center-lbl" id="donutCenterLabel">Active Jobs</div>
                                 </div>
                               </div>
                               <div class="cd-donut-list">
@@ -6625,7 +6627,11 @@
             }
         });
 
-        $('#donutTotalJobs').text(j.active || 0);
+        var activeJobsCount = j.active || 0;
+        $('#donutTotalJobs').text(activeJobsCount);
+        if ($('#donutCenterLabel').length) {
+            $('#donutCenterLabel').text(activeJobsCount === 1 ? 'Active Job' : 'Active Jobs');
+        }
         if (jt.counts && jt.counts[0] !== undefined) $('#donutCountFulltime').text(jt.counts[0]);
         if (jt.percentages && jt.percentages[0]) $('#donutPctFulltime').text(jt.percentages[0]);
         if (jt.counts && jt.counts[1] !== undefined) $('#donutCountContract').text(jt.counts[1]);
@@ -7963,8 +7969,8 @@
             sort: { fields: ['created_at', 'wiseId'] },
             visibility: {
                 excluded_values: {
-                    master_status_id: [9],
-                    job_master_status_id: [9]
+                    master_status_id: [8, 9],
+                    job_master_status_id: [8, 9]
                 }
             }
         },
@@ -8175,9 +8181,9 @@
             var mSid = parseInt(cand.master_status_id, 10);
             var sid = (!isNaN(jSid) && jSid > 0) ? jSid : ((!isNaN(mSid) && mSid > 0) ? mSid : 0);
 
-            // InReview boundary (Status 8)
-            if (this.isInReview(cand)) {
-                return 'inreview';
+            // Strict Status 8 (InReview) and Status 9 (Rejected type 2) exclusion guard
+            if (sid === 8 || sid === 9 || this.isInReview(cand)) {
+                return 'excluded';
             }
 
             // 2. Strict 1:1 Stage Boundaries (Mutual Exclusion)
@@ -8199,8 +8205,11 @@
             if (sid === 6) {
                 return 'joined';
             }
-            if (sid === 7 || sid === 9) {
+            if (sid === 7) {
                 return 'rejected';
+            }
+            if (sid === 9) {
+                return 'excluded';
             }
 
             // 3. Fallback: Check status strings ONLY if sid is unmapped or 0
@@ -8323,6 +8332,8 @@
             var formatted = (relation === 'gte') ? (num.toLocaleString() + '+') : num.toLocaleString();
             $('#cdCandidateCountTextDirect').text(formatted);
             $('#tabBadgeCandidates').text(formatted).show();
+            $('#cdKpiCandidatesSubmittedDirect').text(formatted);
+            $('#perfKpiCandidates').text(formatted);
 
             // InReview count & badge indicator: In Review candidates must NOT appear or be counted in Candidate Tab
             $('#cdInReviewCountBadgeDirect').hide();

@@ -160,12 +160,17 @@ class CandidateDrawerQueryService
         $filter = [];
         $must = [];
         $mustNot = [
-            // Visibility Guard: In Review (status 8) and Archived (status 9) are strictly excluded from client-facing drawer views
+            // Visibility Guard: In Review (status 8) and Status 9 are strictly excluded from client-facing drawer views
             ['terms' => ['job_master_status_id' => [8, 9, '8', '9']]],
-            ['terms' => ['master_status_id' => [8, 9, '8', '9']]],
+            [
+                'bool' => [
+                    'must' => [['terms' => ['master_status_id' => [8, 9, '8', '9']]]],
+                    'must_not' => [['range' => ['job_master_status_id' => ['gt' => 0]]]],
+                ],
+            ],
         ];
 
-        // Status 8 (In Review) and 9 (Archived) Client Guard: In Review / Archived candidates must NEVER appear in client drawer
+        // Status 8 (In Review) and Status 9 Client Guard: In Review and Status 9 candidates must NEVER appear in client drawer
         if (! empty($params['status_id']) && in_array((int) $params['status_id'], [8, 9], true)) {
             return [
                 'data' => [],
@@ -207,62 +212,30 @@ class CandidateDrawerQueryService
         // 5.1 Resolve client's jobs from ELASTIC_JOBS (cached in Dragonfly/Redis)
         $clientJobIds = $this->resolveClientJobIds($companyId, $clientId, $clientType);
 
-        if ($clientType === 'direct') {
-            $directScope = [
-                ['term' => ['from_company_id' => $clientId]],
-                ['term' => ['company_id' => $clientId]],
-                ['term' => ['client_id' => $clientId]],
-            ];
-            if (! empty($clientJobIds)) {
-                $directScope[] = ['terms' => ['jobId' => $clientJobIds]];
-                $directScope[] = ['terms' => ['job_id' => $clientJobIds]];
-            }
-            $filter[] = [
-                'bool' => [
-                    'should' => $directScope,
-                    'minimum_should_match' => 1,
-                ],
-            ];
+        if ($clientType === 'direct' || $clientType === 'agency' || $clientType === 'consultancy') {
+            // Symmetrical Partnership Candidate Filter:
+            // Symmetrically matches candidates submitted between Company A ($companyId) and Partner B ($clientId)
+            // (either added by A with partner B, or added by B with partner A).
+            // Uses authoritative ClientComID (mapped to add_job_wise_condidates.thirdparty_company_id) and company_id.
             $filter[] = [
                 'bool' => [
                     'should' => [
-                        ['term' => ['ClientComID' => $companyId]],
-                    ],
-                    'minimum_should_match' => 1,
-                ],
-            ];
-        } elseif ($clientType === 'agency') {
-            // Agency scope: candidates submitted by or attributed to this partner agency
-            $agencyScope = [
-                ['term' => ['ClientComID' => $clientId]],
-                [
-                    'bool' => [
-                        'must' => [
-                            ['term' => ['thirdparty_company_id' => $clientId]],
+                        [
+                            'bool' => [
+                                'must' => [
+                                    ['term' => ['company_id' => $companyId]],
+                                    ['term' => ['ClientComID' => $clientId]],
+                                ],
+                            ],
                         ],
-                        'must_not' => [
-                            ['term' => ['ClientComID' => 0]],
+                        [
+                            'bool' => [
+                                'must' => [
+                                    ['term' => ['company_id' => $clientId]],
+                                    ['term' => ['ClientComID' => $companyId]],
+                                ],
+                            ],
                         ],
-                    ],
-                ],
-                ['term' => ['agency_id' => $clientId]],
-                ['term' => ['agency_company_id' => $clientId]],
-                ['term' => ['from_company_id' => $clientId]],
-            ];
-            $filter[] = [
-                'bool' => [
-                    'should' => $agencyScope,
-                    'minimum_should_match' => 1,
-                ],
-            ];
-            $filter[] = [
-                'bool' => [
-                    'should' => [
-                        ['term' => ['company_id' => $companyId]],
-                        ['term' => ['to_company_id' => $companyId]],
-                        ['term' => ['ClientComID' => $companyId]],
-                        ['term' => ['job_company_id' => $companyId]],
-                        ['term' => ['client_comapny_id' => $companyId]],
                     ],
                     'minimum_should_match' => 1,
                 ],
@@ -300,7 +273,7 @@ class CandidateDrawerQueryService
         }
 
         // Active Status Filter (Strict Canonical Status Resolution)
-        if (! empty($params['status_id'])) {
+        if (! empty($params['status_id']) && $params['status_id'] !== 'all' && is_numeric($params['status_id']) && (int) $params['status_id'] > 0) {
             $statusId = (int) $params['status_id'];
             $statusTerms = [$statusId];
             $filter[] = [
@@ -696,61 +669,37 @@ class CandidateDrawerQueryService
                             ],
                         ],
                     ];
-                } elseif ($clientType === 'agency') {
+                } elseif ($clientType === 'agency' || $clientType === 'direct' || $clientType === 'consultancy') {
+                    // Shared Requisitions Boundary: Symmetrically matches jobs shared between Operating Company & Partner
                     $scopeMust = [
                         [
                             'nested' => [
                                 'path' => 'recommendation_relation',
                                 'query' => [
                                     'bool' => [
-                                        'must' => [
-                                            ['term' => ['recommendation_relation.from_company_id' => $companyId]],
-                                            ['terms' => ['recommendation_relation.final_status' => [1, 2]]],
-                                            ['term' => ['recommendation_relation.to_company_id' => $clientId]],
-                                        ],
-                                    ],
-                                ],
-                            ],
-                        ],
-                    ];
-                } elseif ($clientType === 'direct') {
-                    // Direct Client: jobs belonging to client or shared with agency
-                    $scopeMust = [
-                        [
-                            'bool' => [
-                                'should' => [
-                                    ['term' => ['company_id' => $clientId]],
-                                    ['term' => ['client_id' => $clientId]],
-                                    [
-                                        'nested' => [
-                                            'path' => 'recommendation_relation',
-                                            'query' => [
+                                        'should' => [
+                                            [
                                                 'bool' => [
-                                                    'should' => [
-                                                        [
-                                                            'bool' => [
-                                                                'must' => [
-                                                                    ['term' => ['recommendation_relation.to_company_id' => $companyId]],
-                                                                    ['term' => ['recommendation_relation.from_company_id' => $clientId]],
-                                                                ],
-                                                            ],
-                                                        ],
-                                                        [
-                                                            'bool' => [
-                                                                'must' => [
-                                                                    ['term' => ['recommendation_relation.to_company_id' => $clientId]],
-                                                                    ['term' => ['recommendation_relation.from_company_id' => $companyId]],
-                                                                ],
-                                                            ],
-                                                        ],
+                                                    'must' => [
+                                                        ['term' => ['recommendation_relation.from_company_id' => (int) $companyId]],
+                                                        ['term' => ['recommendation_relation.to_company_id' => (int) $clientId]],
+                                                        ['terms' => ['recommendation_relation.final_status' => [1, 2]]],
                                                     ],
-                                                    'minimum_should_match' => 1,
+                                                ],
+                                            ],
+                                            [
+                                                'bool' => [
+                                                    'must' => [
+                                                        ['term' => ['recommendation_relation.from_company_id' => (int) $clientId]],
+                                                        ['term' => ['recommendation_relation.to_company_id' => (int) $companyId]],
+                                                        ['terms' => ['recommendation_relation.final_status' => [1, 2]]],
+                                                    ],
                                                 ],
                                             ],
                                         ],
+                                        'minimum_should_match' => 1,
                                     ],
                                 ],
-                                'minimum_should_match' => 1,
                             ],
                         ],
                     ];
@@ -787,6 +736,51 @@ class CandidateDrawerQueryService
                 $jobIds = array_values(array_filter(array_map(function ($hit) {
                     return (int) ($hit['_source']['id'] ?? $hit['_id'] ?? 0);
                 }, $response['hits']['hits'] ?? [])));
+
+                // Symmetrical Candidate Partnership Shared Jobs Resolution
+                if (($clientType === 'agency' || $clientType === 'direct' || $clientType === 'consultancy') && $this->elasticService->indexExists(ELASTIC_CANDIDATES)) {
+                    try {
+                        $candRes = $this->elasticService->getClient()->search([
+                            'index' => ELASTIC_CANDIDATES,
+                            'size' => 0,
+                            'body' => [
+                                'query' => [
+                                    'bool' => [
+                                        'should' => [
+                                            [
+                                                'bool' => [
+                                                    'must' => [
+                                                        ['term' => ['company_id' => $companyId]],
+                                                        ['term' => ['ClientComID' => $clientId]],
+                                                    ],
+                                                ],
+                                            ],
+                                            [
+                                                'bool' => [
+                                                    'must' => [
+                                                        ['term' => ['company_id' => $clientId]],
+                                                        ['term' => ['ClientComID' => $companyId]],
+                                                    ],
+                                                ],
+                                            ],
+                                        ],
+                                        'minimum_should_match' => 1,
+                                    ],
+                                ],
+                                'aggs' => [
+                                    'shared_jobs' => [
+                                        'terms' => ['field' => 'jobId', 'size' => 500],
+                                    ],
+                                ],
+                            ],
+                        ]);
+                        foreach ($candRes['aggregations']['shared_jobs']['buckets'] ?? [] as $b) {
+                            $jobIds[] = (int) $b['key'];
+                        }
+                        $jobIds = array_values(array_unique(array_filter($jobIds)));
+                    } catch (\Throwable $e) {
+                    }
+                }
 
                 try {
                     cache()->store('dragonfly')->put($cacheKey, $jobIds, 60);

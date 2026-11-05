@@ -117,6 +117,8 @@ class DirectClientCandidateDTO
             $sanitized['job_application_id'] = (int) $source['id'];
         }
 
+
+
         return new self($sanitized);
     }
 

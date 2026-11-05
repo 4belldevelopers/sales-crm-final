@@ -15828,8 +15828,7 @@ END:VCALENDAR";
                             ],
                         ],
                         'aggs' => [
-                            // Authoritative Positive Allow-List: Sourcing through Joined [1..6] (Excludes In Review 8 and Archived 9)
-                            'all_candidates' => ['filter' => ['terms' => ['job_master_status_id' => [1, 2, 3, 4, 5, 6]]]],
+                            'all_candidates' => ['filter' => ['terms' => ['job_master_status_id' => [1, 2, 3, 4, 5, 6, 7]]]],
                             'joined' => ['filter' => ['term' => ['job_master_status_id' => 6]]],
                             'sourced' => ['filter' => ['term' => ['job_master_status_id' => 1]]],
                             'screening' => ['filter' => ['term' => ['job_master_status_id' => 2]]],
@@ -15842,7 +15841,6 @@ END:VCALENDAR";
                     ],
                 ];
                 $response = $elasticService->getClient()->search($params);
-                $allCandidates = $response['aggregations']['all_candidates']['doc_count'] ?? 0;
                 $joined = $response['aggregations']['joined']['doc_count'] ?? 0;
                 $sourced = $response['aggregations']['sourced']['doc_count'] ?? 0;
                 $screening = $response['aggregations']['screening']['doc_count'] ?? 0;
@@ -15850,6 +15848,7 @@ END:VCALENDAR";
                 $negotiations = $response['aggregations']['negotiations']['doc_count'] ?? 0;
                 $offers = $response['aggregations']['offers']['doc_count'] ?? 0;
                 $rejected = $response['aggregations']['rejected']['doc_count'] ?? 0;
+                $allCandidates = $sourced + $screening + $evaluated + $negotiations + $offers + $joined + $rejected;
                 $inReview = 0; // In Review candidates are strictly excluded from client-facing counters
             }
 
@@ -15970,53 +15969,95 @@ END:VCALENDAR";
      */
     public static function DirectClientCandidatesCountList($from_company_id, $to_company_id)
     {
-        $cacheKey = "ats:kpi:direct_client_cand_v2:{$from_company_id}:{$to_company_id}";
+        $fId = (int) $from_company_id;
+        $tId = (int) $to_company_id;
+        if ($fId <= 0 || $tId <= 0) {
+            return (object) [
+                'all_candidates' => 0,
+                'Joined' => 0,
+                'joined' => 0,
+                'sourced' => 0,
+                'screening' => 0,
+                'evaluated' => 0,
+                'negotiations' => 0,
+                'offers' => 0,
+                'rejected' => 0,
+                'in_review' => 0,
+                'all_interview' => 0,
+            ];
+        }
 
-        return cache()->remember($cacheKey, 900, function () use ($from_company_id, $to_company_id) {
+        $cacheKey = "ats:kpi:direct_client_cand_v2:{$fId}:{$tId}";
+
+        return cache()->remember($cacheKey, 900, function () use ($fId, $tId) {
             $elasticService = app(ElasticService::class);
             $allCandidates = 0;
             $joined = 0;
             $sourced = 0;
+            $screening = 0;
             $evaluated = 0;
+            $negotiations = 0;
             $offers = 0;
+            $rejected = 0;
             $allInterview = 0;
 
             if ($elasticService->indexExists(ELASTIC_CANDIDATES)) {
-                $pairCompIds = array_values(array_unique(array_filter([(int) $from_company_id, (int) $to_company_id])));
-                $viewerCompanyId = (auth()->check() && (int) auth()->user()->company_id > 0)
-                    ? (int) auth()->user()->company_id
-                    : (int) $to_company_id;
-                if ($viewerCompanyId <= 0) {
-                    $viewerCompanyId = (int) $from_company_id;
-                }
-
-                $params = [
-                    'index' => ELASTIC_CANDIDATES,
-                    'request_cache' => true,
-                    'body' => [
-                        'size' => 0,
-                        'query' => [
-                            'bool' => [
-                                'must' => [
-                                    [
-                                        'bool' => [
-                                            'should' => [
-                                                ['terms' => ['company_id' => $pairCompIds]],
-                                                ['terms' => ['from_company_id' => $pairCompIds]],
-                                            ],
-                                            'minimum_should_match' => 1,
-                                        ],
+                $partnershipScope = [
+                    'bool' => [
+                        'should' => [
+                            [
+                                'bool' => [
+                                    'must' => [
+                                        ['term' => ['company_id' => $fId]],
+                                        ['term' => ['ClientComID' => $tId]],
                                     ],
-                                    [
+                                ],
+                            ],
+                            [
+                                'bool' => [
+                                    'must' => [
+                                        ['term' => ['company_id' => $tId]],
+                                        ['term' => ['ClientComID' => $fId]],
+                                    ],
+                                ],
+                            ],
+                        ],
+                        'minimum_should_match' => 1,
+                    ],
+                ];
+
+                $query = [
+                    'bool' => [
+                        'must' => [$partnershipScope],
+                        'must_not' => [
+                            // Strictly exclude In Review (8) and Status 9 (do not include ones marked 9)
+                            ['terms' => ['job_master_status_id' => [8, 9, '8', '9']]],
+                            [
+                                'bool' => [
+                                    'must' => [['terms' => ['master_status_id' => [8, 9, '8', '9']]]],
+                                    'must_not' => [['range' => ['job_master_status_id' => ['gt' => 0]]]],
+                                ],
+                            ],
+                        ],
+                    ],
+                ];
+
+                    $params = [
+                        'index' => ELASTIC_CANDIDATES,
+                        'request_cache' => true,
+                        'body' => [
+                            'size' => 0,
+                            'query' => $query,
+                            'aggs' => [
+                                'all_candidates' => [
+                                    'filter' => [
                                         'bool' => [
                                             'should' => [
-                                                ['term' => ['ClientComID' => (int) $viewerCompanyId]],
+                                                ['terms' => ['job_master_status_id' => [1, 2, 3, 4, 5, 6, 7]]],
                                                 [
                                                     'bool' => [
-                                                        'must' => [
-                                                            ['terms' => ['ClientComID' => $pairCompIds]],
-                                                            ['range' => ['ClientComID' => ['gt' => 0]]],
-                                                        ],
+                                                        'must' => [['terms' => ['master_status_id' => [1, 2, 3, 4, 5, 6, 7]]]],
+                                                        'must_not' => [['range' => ['job_master_status_id' => ['gt' => 0]]]],
                                                     ],
                                                 ],
                                             ],
@@ -16024,46 +16065,155 @@ END:VCALENDAR";
                                         ],
                                     ],
                                 ],
-                                'must_not' => [
-                                    ['terms' => ['job_master_status_id' => [8, 9, '8', '9']]],
-                                    [
+                                'sourced' => [
+                                    'filter' => [
                                         'bool' => [
-                                            'must' => [['terms' => ['master_status_id' => [8, 9, '8', '9']]]],
-                                            'must_not' => [['range' => ['job_master_status_id' => ['gt' => 0]]]],
+                                            'should' => [
+                                                ['term' => ['job_master_status_id' => 1]],
+                                                [
+                                                    'bool' => [
+                                                        'must' => [['term' => ['master_status_id' => 1]]],
+                                                        'must_not' => [['range' => ['job_master_status_id' => ['gt' => 0]]]],
+                                                    ],
+                                                ],
+                                            ],
+                                            'minimum_should_match' => 1,
+                                        ],
+                                    ],
+                                ],
+                                'sourcing' => [
+                                    'filter' => [
+                                        'bool' => [
+                                            'should' => [
+                                                ['term' => ['job_master_status_id' => 1]],
+                                                [
+                                                    'bool' => [
+                                                        'must' => [['term' => ['master_status_id' => 1]]],
+                                                        'must_not' => [['range' => ['job_master_status_id' => ['gt' => 0]]]],
+                                                    ],
+                                                ],
+                                            ],
+                                            'minimum_should_match' => 1,
+                                        ],
+                                    ],
+                                ],
+                                'screening' => [
+                                    'filter' => [
+                                        'bool' => [
+                                            'should' => [
+                                                ['term' => ['job_master_status_id' => 2]],
+                                                [
+                                                    'bool' => [
+                                                        'must' => [['term' => ['master_status_id' => 2]]],
+                                                        'must_not' => [['range' => ['job_master_status_id' => ['gt' => 0]]]],
+                                                    ],
+                                                ],
+                                            ],
+                                            'minimum_should_match' => 1,
+                                        ],
+                                    ],
+                                ],
+                                'evaluated' => [
+                                    'filter' => [
+                                        'bool' => [
+                                            'should' => [
+                                                ['term' => ['job_master_status_id' => 3]],
+                                                [
+                                                    'bool' => [
+                                                        'must' => [['term' => ['master_status_id' => 3]]],
+                                                        'must_not' => [['range' => ['job_master_status_id' => ['gt' => 0]]]],
+                                                    ],
+                                                ],
+                                            ],
+                                            'minimum_should_match' => 1,
+                                        ],
+                                    ],
+                                ],
+                                'negotiations' => [
+                                    'filter' => [
+                                        'bool' => [
+                                            'should' => [
+                                                ['term' => ['job_master_status_id' => 4]],
+                                                [
+                                                    'bool' => [
+                                                        'must' => [['term' => ['master_status_id' => 4]]],
+                                                        'must_not' => [['range' => ['job_master_status_id' => ['gt' => 0]]]],
+                                                    ],
+                                                ],
+                                            ],
+                                            'minimum_should_match' => 1,
+                                        ],
+                                    ],
+                                ],
+                                'offers' => [
+                                    'filter' => [
+                                        'bool' => [
+                                            'should' => [
+                                                ['term' => ['job_master_status_id' => 5]],
+                                                [
+                                                    'bool' => [
+                                                        'must' => [['term' => ['master_status_id' => 5]]],
+                                                        'must_not' => [['range' => ['job_master_status_id' => ['gt' => 0]]]],
+                                                    ],
+                                                ],
+                                            ],
+                                            'minimum_should_match' => 1,
+                                        ],
+                                    ],
+                                ],
+                                'joined' => [
+                                    'filter' => [
+                                        'bool' => [
+                                            'should' => [
+                                                ['term' => ['job_master_status_id' => 6]],
+                                                [
+                                                    'bool' => [
+                                                        'must' => [['term' => ['master_status_id' => 6]]],
+                                                        'must_not' => [['range' => ['job_master_status_id' => ['gt' => 0]]]],
+                                                    ],
+                                                ],
+                                            ],
+                                            'minimum_should_match' => 1,
+                                        ],
+                                    ],
+                                ],
+                                'rejected' => [
+                                    'filter' => [
+                                        'bool' => [
+                                            'should' => [
+                                                ['term' => ['job_master_status_id' => 7]],
+                                                [
+                                                    'bool' => [
+                                                        'must' => [['term' => ['master_status_id' => 7]]],
+                                                        'must_not' => [['range' => ['job_master_status_id' => ['gt' => 0]]]],
+                                                    ],
+                                                ],
+                                            ],
+                                            'minimum_should_match' => 1,
                                         ],
                                     ],
                                 ],
                             ],
                         ],
-                        'aggs' => [
-                            // Authoritative Positive Allow-List: Sourcing through Joined [1..6] (Excludes In Review 8 and Archived 9)
-                            'all_candidates' => ['filter' => ['terms' => ['job_master_status_id' => [1, 2, 3, 4, 5, 6]]]],
-                            'joined' => ['filter' => ['term' => ['job_master_status_id' => 6]]],
-                            'sourced' => ['filter' => ['term' => ['job_master_status_id' => 1]]],
-                            'screening' => ['filter' => ['term' => ['job_master_status_id' => 2]]],
-                            'evaluated' => ['filter' => ['term' => ['job_master_status_id' => 3]]],
-                            'negotiations' => ['filter' => ['term' => ['job_master_status_id' => 4]]],
-                            'offers' => ['filter' => ['term' => ['job_master_status_id' => 5]]],
-                            'rejected' => ['filter' => ['term' => ['job_master_status_id' => 7]]],
-                            'in_review' => ['filter' => ['term' => ['job_master_status_id' => 8]]],
-                        ],
-                    ],
-                ];
+                    ];
 
-                $response = $elasticService->getClient()->search($params);
-                $allCandidates = $response['aggregations']['all_candidates']['doc_count'] ?? 0;
-                $joined = $response['aggregations']['joined']['doc_count'] ?? 0;
-                $sourced = $response['aggregations']['sourced']['doc_count'] ?? 0;
-                $screening = $response['aggregations']['screening']['doc_count'] ?? 0;
-                $evaluated = $response['aggregations']['evaluated']['doc_count'] ?? 0;
-                $negotiations = $response['aggregations']['negotiations']['doc_count'] ?? 0;
-                $offers = $response['aggregations']['offers']['doc_count'] ?? 0;
-                $rejected = $response['aggregations']['rejected']['doc_count'] ?? 0;
-                $inReview = 0; // In Review candidates are strictly excluded from client-facing counters
+                    $response = $elasticService->getClient()->search($params);
+                    $aggs = $response['aggregations'] ?? [];
+
+                    $sourced = (int) ($aggs['sourced']['doc_count'] ?? ($aggs['sourcing']['doc_count'] ?? 0));
+                    $screening = (int) ($aggs['screening']['doc_count'] ?? 0);
+                    $evaluated = (int) ($aggs['evaluated']['doc_count'] ?? 0);
+                    $negotiations = (int) ($aggs['negotiations']['doc_count'] ?? 0);
+                    $offers = (int) ($aggs['offers']['doc_count'] ?? 0);
+                    $joined = (int) ($aggs['joined']['doc_count'] ?? 0);
+                    $rejected = (int) ($aggs['rejected']['doc_count'] ?? 0);
+                    $allCandidates = isset($response['aggregations']['all_candidates']['doc_count'])
+                        ? (int) $response['aggregations']['all_candidates']['doc_count']
+                        : ($sourced + $screening + $evaluated + $negotiations + $offers + $joined + $rejected);
             }
 
             if ($elasticService->indexExists(ELASTIC_INERTVIEW_TRACKER)) {
-                $tenantInterviewQuery = \App\Services\Interview\InterviewTenantScope::forClient((int) $to_company_id, (int) $from_company_id, 'direct');
+                $tenantInterviewQuery = \App\Services\Interview\InterviewTenantScope::forClient($tId, $fId, 'direct');
                 $paramsInterview = [
                     'index' => ELASTIC_INERTVIEW_TRACKER,
                     'request_cache' => true,
@@ -16073,8 +16223,8 @@ END:VCALENDAR";
                             'bool' => [
                                 'must' => [$tenantInterviewQuery],
                                 'must_not' => [
-                                    ['terms' => ['master_status_id' => [8, 9, '8', '9']]],
-                                    ['terms' => ['job_master_status_id' => [8, 9, '8', '9']]],
+                                    ['terms' => ['master_status_id' => [8, '8']]],
+                                    ['terms' => ['job_master_status_id' => [8, '8']]],
                                 ],
                             ],
                         ],
@@ -16082,9 +16232,13 @@ END:VCALENDAR";
                     ],
                 ];
 
-                $responseInterview = $elasticService->getClient()->search($paramsInterview);
-                $totalHitData = $responseInterview['hits']['total'] ?? 0;
-                $allInterview = is_array($totalHitData) ? ($totalHitData['value'] ?? 0) : (int) $totalHitData;
+                try {
+                    $responseInterview = $elasticService->getClient()->search($paramsInterview);
+                    $totalHitData = $responseInterview['hits']['total'] ?? 0;
+                    $allInterview = is_array($totalHitData) ? ($totalHitData['value'] ?? 0) : (int) $totalHitData;
+                } catch (\Throwable $e) {
+                    $allInterview = 0;
+                }
             }
 
             return (object) [

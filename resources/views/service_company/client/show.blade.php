@@ -2679,11 +2679,13 @@ use Carbon\Carbon;
             line-height: 1;
           }
           .cd-donut-center-lbl {
-            font-size: 10px !important;
-            font-weight: 400 !important;
+            font-size: 9px !important;
+            font-weight: 500 !important;
             color: #94a3b8;
             line-height: 1;
-            margin-top: 2px;
+            margin-top: 3px;
+            white-space: nowrap;
+            text-align: center;
           }
           .cd-donut-list {
             flex: 1;
@@ -5526,7 +5528,7 @@ use Carbon\Carbon;
                                 <canvas id="chartJobType" width="110" height="110"></canvas>
                                 <div class="cd-donut-center">
                                   <div class="cd-donut-center-num" id="donutTotalJobs">0</div>
-                                  <div class="cd-donut-center-lbl">Active Jobs</div>
+                                  <div class="cd-donut-center-lbl" id="donutCenterLabel">Active Jobs</div>
                                 </div>
                               </div>
                               <div class="cd-donut-list">
@@ -6193,7 +6195,11 @@ use Carbon\Carbon;
             }
         });
 
-        $('#donutTotalJobs').text(j.active || 0);
+        var activeJobsCount = j.active || 0;
+        $('#donutTotalJobs').text(activeJobsCount);
+        if ($('#donutCenterLabel').length) {
+            $('#donutCenterLabel').text(activeJobsCount === 1 ? 'Active Job' : 'Active Jobs');
+        }
         if (jt.counts && jt.counts[0] !== undefined) $('#donutCountFulltime').text(jt.counts[0]);
         if (jt.percentages && jt.percentages[0]) $('#donutPctFulltime').text(jt.percentages[0]);
         if (jt.counts && jt.counts[1] !== undefined) $('#donutCountContract').text(jt.counts[1]);
@@ -7501,8 +7507,11 @@ use Carbon\Carbon;
             if (sid === 6) {
                 return 'joined';
             }
-            if (sid === 7 || sid === 9) {
+            if (sid === 7) {
                 return 'rejected';
+            }
+            if (sid === 9) {
+                return 'excluded';
             }
 
             // 3. Fallback: Check status strings ONLY if sid is unmapped or 0
@@ -7621,6 +7630,8 @@ use Carbon\Carbon;
             var formatted = (relation === 'gte') ? (num.toLocaleString() + '+') : num.toLocaleString();
             $('#cdCandidateCountText').text(formatted);
             $('#tabBadgeCandidates, #cdCandidatesNavBadgeInternal').text(formatted).show();
+            $('#cdKpiCandidatesSubmittedInternal').text(formatted);
+            $('#perfKpiCandidates').text(formatted);
 
             // InReview count & badge indicator: In Review candidates must NOT appear or be counted in Candidate Tab
             $('#cdInReviewCountBadge').hide();

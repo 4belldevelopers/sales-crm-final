@@ -890,7 +890,7 @@ class ClientDrawerCandidateVisibilityRuleTest extends TestCase
         $this->assertEquals(10, $internalCounts->all_candidates);
     }
 
-    public function test_direct_client_candidates_count_list_query_contract_excludes_status_8_and_9(): void
+    public function test_direct_client_candidates_count_list_query_contract_excludes_status_8_and_counts_reject_7_only(): void
     {
         $mockElastic = \Mockery::mock(ElasticService::class);
         $mockClient = \Mockery::mock();
@@ -933,13 +933,18 @@ class ClientDrawerCandidateVisibilityRuleTest extends TestCase
         $this->assertEquals(2, $result->screening);
         $this->assertEquals(0, $result->in_review);
 
-        // Verify candidate query scopes to client and agency attribution, and excludes job_master_status_id [8, 9]
+        // Verify candidate query scopes to client and agency attribution, and strictly excludes In Review (8) and Status 9
         $candQuery = $capturedParams[ELASTIC_CANDIDATES]['body']['query']['bool'] ?? [];
         $this->assertNotEmpty($candQuery, 'ELASTIC_CANDIDATES query must be executed');
 
         $mustNot = json_encode($candQuery['must_not'] ?? []);
         $this->assertStringContainsString('8', $mustNot);
         $this->assertStringContainsString('9', $mustNot);
+
+        // Verify rejection aggregation counts status 7 only (User: "For the 'rejected' you need to count the ones marked '7'—and also provide the list. Do not include the ones marked '9'.")
+        $aggs = json_encode($capturedParams[ELASTIC_CANDIDATES]['body']['aggs']['rejected'] ?? []);
+        $this->assertStringContainsString('7', $aggs);
+        $this->assertStringNotContainsString('9', $aggs);
 
         $must = json_encode($candQuery['must'] ?? []);
         $this->assertStringContainsString('company_id', $must);
