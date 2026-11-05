@@ -2069,6 +2069,9 @@ class ServiceCompanyTeamController extends ServiceCompanyBaseController
                     'email' => $email,
                     'role_id' => (int) $request->role_id,
                     'role_name' => $role_row->display_name ?? $role_row->name,
+                    'mobile' => $request->mobile ?? null,
+                    'calling_code' => $request->phone_country_code ?? $request->calling_code ?? null,
+                    'linkedin' => $request->linkedin ?? null,
                 ],
                 mutationCallback: function () use ($request, $company_id, $email, $role_row) {
                     // Double-check inside transaction (concurrency race check)
@@ -2098,6 +2101,23 @@ class ServiceCompanyTeamController extends ServiceCompanyBaseController
                     $user->email_verification_code = str_random(40);
                     $user->status = 'inactive';
                     $user->working_status = 0;
+
+                    // Calling code, mobile, and LinkedIn profile link
+                    $callingCode = $request->phone_country_code ?? $request->calling_code ?? null;
+                    if (! empty($callingCode)) {
+                        $user->calling_code = trim((string) $callingCode);
+                    }
+                    if (! empty($request->mobile)) {
+                        $user->mobile = preg_replace('/[^0-9]/', '', (string) $request->mobile);
+                        $user->mobile_verified = 0;
+                    }
+                    if (! empty($request->linkedin)) {
+                        $linkedin = trim((string) $request->linkedin);
+                        if (! preg_match('/^https?:\/\//i', $linkedin)) {
+                            $linkedin = 'https://'.ltrim($linkedin, '/');
+                        }
+                        $user->linkedin = $linkedin;
+                    }
 
                     if ($request->hasFile('logo')) {
                         $file = $request->file('logo');

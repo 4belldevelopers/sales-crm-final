@@ -1494,8 +1494,67 @@
         .invite-input-wrap select.placeholder-active { color: #9ca3af; }
         .invite-input-wrap input:focus,
         .invite-input-wrap select:focus {
-            border-color: #6366f1;
-            box-shadow: 0 0 0 3px rgba(99,102,241,.12);
+            border-color: #009ef7;
+            box-shadow: 0 0 0 3px rgba(0,158,247,.12);
+        }
+        /* Card + Sub-Card Enterprise Styling (Rule 20) */
+        .invite-subcard {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 16px 18px 6px;
+            margin-bottom: 16px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+            transition: border-color .15s ease, box-shadow .15s ease;
+        }
+        .invite-subcard:hover {
+            border-color: #cbd5e1;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+        }
+        .invite-subcard-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 14px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #f1f5f9;
+        }
+        .invite-subcard-title {
+            font-size: 11.5px;
+            font-weight: 700;
+            color: #1e293b;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            margin: 0;
+            font-family: 'Poppins', sans-serif;
+        }
+        .invite-subcard-badge {
+            font-size: 10.5px;
+            font-weight: 600;
+            padding: 2px 8px;
+            border-radius: 999px;
+            line-height: 1.3;
+            font-family: 'Poppins', sans-serif;
+        }
+        .invite-subcard-badge.badge-req {
+            background: #f0fdf4;
+            color: #166534;
+            border: 1px solid #bbf7d0;
+        }
+        .invite-subcard-badge.badge-opt {
+            background: #f8fafc;
+            color: #64748b;
+            border: 1px solid #e2e8f0;
+        }
+        .invite-subcard-hint {
+            font-size: 11.5px;
+            color: #64748b;
+            margin: -6px 0 14px;
+            line-height: 1.4;
+            font-family: 'Poppins', sans-serif;
         }
         /* chevron for select */
         .invite-select-wrap { position: relative; }
@@ -1544,7 +1603,7 @@
             padding: 0 24px;
             border-radius: 10px;
             border: none;
-            background: #6366f1;
+            background: #009ef7;
             font-size: 14px;
             font-weight: 600;
             font-family: 'Poppins', sans-serif;
@@ -1553,7 +1612,7 @@
             display: flex; align-items: center; gap: 8px;
             transition: background .15s;
         }
-        .invite-btn-send:hover { background: #4f46e5; }
+        .invite-btn-send:hover { background: #0086d1; }
         .invite-btn-send:disabled { opacity: .65; cursor: not-allowed; }
         .invite-spinner { display: none; }
         .invite-btn-send.loading .invite-label { display: none; }
@@ -2339,7 +2398,7 @@
             <div class="invite-drawer-head">
                 <div>
                     <p class="invite-drawer-title">Invite Team Member</p>
-                    <p class="invite-drawer-subtitle">Add a new team member and set their role &amp; permissions</p>
+                    <p class="invite-drawer-subtitle">Add a new colleague and configure their role &amp; access permissions</p>
                 </div>
                 <button class="invite-drawer-close" id="inviteDrawerClose" aria-label="Close">
                     <i class="fa-solid fa-xmark"></i>
@@ -2351,37 +2410,83 @@
                 <form id="inviteForm" enctype="multipart/form-data">
                     @csrf
 
-                    {{-- Name --}}
-                    <div class="invite-field">
-                        <label class="invite-field-label">Name <span class="req">*</span></label>
-                        <div class="invite-input-wrap">
-                            <span class="invite-input-icon"><i class="fa-regular fa-user"></i></span>
-                            <input type="text" name="name" id="inviteName" placeholder="Enter full name" autocomplete="off" />
+                    {{-- Sub-Card 1: Account Identity & Role (Required) --}}
+                    <div class="invite-subcard">
+                        <div class="invite-subcard-head">
+                            <h4 class="invite-subcard-title">
+                                <i class="fa-solid fa-user-shield text-primary"></i> Account Identity &amp; Role
+                            </h4>
+                            <span class="invite-subcard-badge badge-req">Required</span>
+                        </div>
+
+                        {{-- Name --}}
+                        <div class="invite-field">
+                            <label class="invite-field-label">Full Name <span class="req">*</span></label>
+                            <div class="invite-input-wrap">
+                                <span class="invite-input-icon"><i class="fa-regular fa-user"></i></span>
+                                <input type="text" name="name" id="inviteName" placeholder="Enter full name" autocomplete="off" />
+                            </div>
+                        </div>
+
+                        {{-- Email --}}
+                        <div class="invite-field">
+                            <label class="invite-field-label">Work Email <span class="req">*</span></label>
+                            <div class="invite-input-wrap">
+                                <span class="invite-input-icon"><i class="fa-regular fa-envelope"></i></span>
+                                <input type="email" name="email" id="inviteEmail" placeholder="Enter work email address" maxlength="254" inputmode="email" autocomplete="email" autocapitalize="none" spellcheck="false" />
+                            </div>
+                            <div id="inviteEmail_typo_hint" class="team-email-typo-hint" style="display: none; margin-top: 5px; font-size: 11.5px; color: #b45309; background: #fef3c7; border: 1px solid #fde68a; border-radius: 6px; padding: 4px 8px;"></div>
+                        </div>
+
+                        {{-- Role --}}
+                        <div class="invite-field" style="margin-bottom: 12px;">
+                            <label class="invite-field-label">Role &amp; Permissions <span class="req">*</span></label>
+                            <div class="invite-input-wrap invite-select-wrap">
+                                <span class="invite-input-icon"><i class="fa-solid fa-shield-halved"></i></span>
+                                <select name="role_id" id="inviteRole">
+                                    <option value="" disabled selected>Select role</option>
+                                    {{-- Options populated cleanly via AJAX --}}
+                                </select>
+                            </div>
+                            <p class="invite-field-hint" style="margin-bottom: 0;">Role defines the permissions and access levels the user will have in JERO.</p>
                         </div>
                     </div>
 
-                    {{-- Email --}}
-                    <div class="invite-field">
-                        <label class="invite-field-label">Email <span class="req">*</span></label>
-                        <div class="invite-input-wrap">
-                            <span class="invite-input-icon"><i class="fa-regular fa-envelope"></i></span>
-                            <input type="email" name="email" id="inviteEmail" placeholder="Enter email address" maxlength="254" inputmode="email" autocomplete="email" autocapitalize="none" spellcheck="false" />
+                    {{-- Sub-Card 2: Professional Contact Details (Optional) --}}
+                    <div class="invite-subcard">
+                        <div class="invite-subcard-head">
+                            <h4 class="invite-subcard-title">
+                                <i class="fa-solid fa-address-book text-primary"></i> Contact &amp; Social
+                            </h4>
+                            <span class="invite-subcard-badge badge-opt">Optional</span>
                         </div>
-                        <div id="inviteEmail_typo_hint" class="team-email-typo-hint" style="display: none; margin-top: 5px; font-size: 11.5px; color: #b45309; background: #fef3c7; border: 1px solid #fde68a; border-radius: 6px; padding: 4px 8px;"></div>
-                    </div>
+                        <p class="invite-subcard-hint">
+                            Can also be provided by the team member upon account activation or in profile.
+                        </p>
 
-                    {{-- Role --}}
-                    <div class="invite-field">
-                        <label class="invite-field-label">Role &amp; Permissions <span class="req">*</span></label>
-                        <div class="invite-input-wrap invite-select-wrap">
-                            <span class="invite-input-icon"><i class="fa-solid fa-shield-halved"></i></span>
-                            <select name="role_id" id="inviteRole">
-                                <option value="" disabled selected>Select role</option>
-                                {{-- Populated by AJAX --}}
-                                <div id="inviteRoleOptions"></div>
-                            </select>
+                        {{-- Mobile Number --}}
+                        <div class="invite-field">
+                            <label class="invite-field-label">Mobile Number</label>
+                            <x-jero-phone-input
+                                id="inviteMobile"
+                                name="mobile"
+                                countryCodeName="phone_country_code"
+                                countryCodeId="invitePhoneCountryCode"
+                                value=""
+                                countryCode=""
+                                label=""
+                                :required="false"
+                                placeholder="Enter mobile number" />
                         </div>
-                        <p class="invite-field-hint">Role will define the permissions the user will have in the system.</p>
+
+                        {{-- LinkedIn Profile Link --}}
+                        <div class="invite-field" style="margin-bottom: 12px;">
+                            <label class="invite-field-label">LinkedIn Profile URL</label>
+                            <div class="invite-input-wrap">
+                                <span class="invite-input-icon"><i class="fa-brands fa-linkedin" style="color: #0a66c2;"></i></span>
+                                <input type="text" name="linkedin" id="inviteLinkedin" placeholder="https://linkedin.com/in/username" autocomplete="off" />
+                            </div>
+                        </div>
                     </div>
 
                     {{-- Message area --}}
@@ -2391,11 +2496,16 @@
 
             {{-- Footer --}}
             <div class="invite-drawer-foot">
-                <button class="invite-btn-cancel" id="inviteCancelBtn">Cancel</button>
-                <button class="invite-btn-send" id="inviteSubmitBtn">
-                    <span class="invite-label"><i class="fa-solid fa-paper-plane me-1"></i> Send Invitation</span>
-                    <span class="invite-spinner"><span class="spinner-border spinner-border-sm"></span> Sending...</span>
-                </button>
+                <div style="font-size: 11.5px; color: #64748b; display: flex; align-items: center; gap: 6px;">
+                    <i class="fa-solid fa-shield-halved text-primary"></i> Tenant-scoped invite
+                </div>
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <button type="button" class="invite-btn-cancel" id="inviteCancelBtn">Cancel</button>
+                    <button type="button" class="invite-btn-send" id="inviteSubmitBtn">
+                        <span class="invite-label"><i class="fa-solid fa-paper-plane me-1"></i> Send Invitation</span>
+                        <span class="invite-spinner"><span class="spinner-border spinner-border-sm"></span> Sending...</span>
+                    </button>
+                </div>
             </div>
         </div>
         {{-- End Invite Drawer --}}
@@ -3796,6 +3906,10 @@
                 $('#inviteForm').removeData('idempotency-key');
                 $('#inviteEmail_typo_hint').hide().empty();
                 $('#inviteMsg').hide().text('');
+                $('#inviteLinkedin').val('');
+                if ($('#inviteMobile').length) {
+                    $('#inviteMobile').val('');
+                }
                 $('#inviteSubmitBtn').removeClass('loading').prop('disabled', false);
                 isInviteSubmitting = false;
                 // Open
@@ -3878,6 +3992,11 @@
                 }
                 if (!role) {
                     showInviteMsg('Please select a role.', 'error'); return;
+                }
+
+                var rawLinkedin = $.trim($('#inviteLinkedin').val());
+                if (rawLinkedin && !/^https?:\/\//i.test(rawLinkedin)) {
+                    $('#inviteLinkedin').val('https://' + rawLinkedin.replace(/^\/+/, ''));
                 }
 
                 isInviteSubmitting = true;

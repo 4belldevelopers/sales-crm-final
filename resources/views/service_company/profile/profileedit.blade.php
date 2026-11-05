@@ -5,6 +5,12 @@
 
 </style>
 @section('content')
+@php
+  $isOrgAdmin = (auth()->check() && (
+      (method_exists(auth()->user(), 'hasRole') && auth()->user()->hasRole('admin')) ||
+      (int)(auth()->user()->root_user ?? 0) === 1
+  ));
+@endphp
 <!--begin::Toolbar-->
 <div class="toolbar" id="kt_toolbar">
   <!--begin::Container-->
@@ -81,7 +87,12 @@
                 <!--end::Label-->
                 <!--begin::Col-->
                 <div class="col-lg-9 fv-row fv-plugins-icon-container">
-                  <input type="text" name="fullname" class="form-control form-control-lg form-control-solid" placeholder="Enter Full name" value="">
+                  @if(!$isOrgAdmin)
+                    <input type="text" name="fullname" class="form-control form-control-lg form-control-solid" placeholder="Enter Full name" value="" readonly style="background-color: #f8fafc; cursor: not-allowed; color: #475569;">
+                    <div class="form-text text-muted fs-8 mt-1"><i class="bi bi-lock-fill me-1"></i> Full name is assigned by organization admin and cannot be edited.</div>
+                  @else
+                    <input type="text" name="fullname" class="form-control form-control-lg form-control-solid" placeholder="Enter Full name" value="">
+                  @endif
                   <div class="fv-plugins-message-container invalid-feedback"></div>
                 </div>
                 <!--end::Col-->
@@ -107,8 +118,8 @@
                 <!--end::Label-->
                 <!--begin::Col-->
                 <div class="col-lg-9 fv-row fv-plugins-icon-container">
-                  <input type="email" name="email" id="profile_email" class="form-control form-control-lg form-control-solid" placeholder="Enter Email" value="" maxlength="254" inputmode="email" autocomplete="email" autocapitalize="none" spellcheck="false">
-                  <div id="profile_email_typo_hint" class="email-typo-hint-container mt-1" style="display: none; font-size: 11px;"></div>
+                  <input type="email" name="email" id="profile_email" class="form-control form-control-lg form-control-solid" placeholder="Enter Email" value="" maxlength="254" inputmode="email" autocomplete="email" autocapitalize="none" spellcheck="false" readonly style="background-color: #f8fafc; cursor: not-allowed;">
+                  <div class="form-text text-muted fs-8 mt-1"><i class="bi bi-lock-fill me-1"></i> Work email is governed by organization domain policy and cannot be edited.</div>
                   <div class="fv-plugins-message-container invalid-feedback"></div>
                 </div>
                 <!--end::Col-->
