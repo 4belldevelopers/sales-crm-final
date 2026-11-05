@@ -1,4 +1,4 @@
-<!--begin::Step 5: Social Links (Enterprise Single-Column & AI Discovery Architecture)-->
+<!--begin::Step 4: Social Links (Enterprise Single-Column & AI Discovery Architecture)-->
 <div class="pb-5 client-social-step profile-social-step" data-wizard-type="step-content">
   <div class="client-step-layout client-social-layout">
 
