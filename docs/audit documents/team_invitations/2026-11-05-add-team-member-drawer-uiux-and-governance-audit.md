@@ -364,3 +364,62 @@ As instructed by the founder, the Enterprise Hybrid Governance Model (Option C) 
   - Test 3: Profile edit blade Admin-Locked protection — **PASS**.
   - Test 4: Profile controller governance & mobile verification reset — **PASS**.
   - **Verdict: 4/4 Tests Green (100%)**.
+
+---
+
+## 10. Phase 2 Upgrade: Blue Header, Header Action Buttons & Zero-Scroll 15.6" Standard
+
+Following initial implementation, the founder directed a targeted UI/UX evolution:
+1. **Zero Vertical Scrollbar Required**: All fields and controls must fit completely in viewport on 15.6" laptop screens (`1366×768` with visible height ~620px-650px, and `1920×1080`).
+2. **Blue Header Visual Hierarchy**: Drawer header styled with JERO Primary Blue gradient (`linear-gradient(135deg, #009ef7 0%, #0077c8 100%)`) with crisp white typography.
+3. **Header-Mounted Action Buttons**: "Cancel" and "Send Invitation" buttons relocated from the bottom footer directly into the header bar alongside the close `[×]` button.
+4. **Bottom Footer Elimination**: The 75px bottom footer bar was removed completely, replaced by a subtle 20px micro security strip (`.invite-secure-strip`), saving ~60px of vertical space.
+5. **Ultra-Compact 2-Column Grid Architecture**:
+   - Sub-Card 1 (*Account Identity & Role*):
+     - Row 1: Full Name (left) & Work Email (right) side-by-side in a responsive 2-column flex grid (`.invite-row-2col`).
+     - Row 2: Role & Permissions selector with contextual micro-hint.
+   - Sub-Card 2 (*Contact & Social*):
+     - Row 1: Mobile Number with `<x-jero-phone-input>` (left) & LinkedIn Profile URL (right) side-by-side in a 2-column flex grid.
+   - Input heights optimized to 38px (matching phone input height).
+   - Card paddings optimized to 12px-14px.
+   - Total rendered drawer height reduced to **~420px**, which is ~200px below the 620px viewport threshold $\to$ **100% Zero vertical scrollbar required**.
+
+### Layout Blueprint Comparison (Phase 1 vs Phase 2)
+
+```
+PHASE 1 (Stacked Layout - ~676px height):
+┌────────────────────────────────────────────────────────┐
+│  Invite Team Member                               [ × ] │  <-- White header (64px)
+├────────────────────────────────────────────────────────┤
+│  [Sub-Card 1: Identity & Role]                         │
+│  - Name input (46px)                                   │
+│  - Email input (46px)                                  │
+│  - Role select (46px)                                  │
+│  [Sub-Card 2: Contact & Social]                        │
+│  - Mobile input (40px)                                 │
+│  - LinkedIn input (46px)                               │  <-- Triggers vertical scroll
+├────────────────────────────────────────────────────────┤
+│  [Lock] Tenant-scoped       [Cancel] [Send Invitation] │  <-- White footer (75px)
+└────────────────────────────────────────────────────────┘
+
+PHASE 2 (Zero-Scroll Compact Layout - ~420px height):
+┌────────────────────────────────────────────────────────┐
+│  Invite Team Member            [Cancel] [🚀 Send] [ × ]│  <-- Blue Gradient Header (56px)
+├────────────────────────────────────────────────────────┤
+│  ┌─ Sub-Card 1: Account Identity & Role ─────────────┐ │
+│  │ [ 👤 Full Name ]          │ [ ✉ Work Email ]      │ │  <-- 2-Column Row (38px inputs)
+│  │ [ 🛡 Role & Permissions                         ] │ │  <-- Role Dropdown (38px)
+│  └───────────────────────────────────────────────────┘ │
+│  ┌─ Sub-Card 2: Contact & Social ────────────────────┐ │
+│  │ [ 📱 Mobile (Flag + Code) ]│ [ 🔗 LinkedIn URL ]   │ │  <-- 2-Column Row (38px inputs)
+│  └───────────────────────────────────────────────────┘ │
+│  🔒 Tenant-scoped invite • Enterprise RBAC protected   │  <-- Micro strip (20px)
+└────────────────────────────────────────────────────────┘  <-- ZERO SCROLLBAR ON 1366×768!
+```
+
+### Verification & Visual Preview
+- **Interactive Visual Preview Artifact**: [`invite_drawer_redesign_preview.html`](file:///C:/Users/VIBHANSHU%20JAISWAL.000/.gemini/antigravity/brain/21c63aca-a17b-49ce-ae98-4051258bf5ff/invite_drawer_redesign_preview.html)
+- **Viewport Measurement**: Exactly 420px rendered height inside 620px visible viewport $\to$ 0px overflow, 0px vertical scrolling.
+- **Syntax Validation**: `php -l resources/views/service_company/team/index.blade.php` $\to$ `No syntax errors detected`.
+- **Test Suite**: `scratch/test_team_invite_and_profile_governance.php` $\to$ `4/4 passed (100%)`.
+

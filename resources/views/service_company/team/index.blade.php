@@ -1394,149 +1394,184 @@
         .invite-drawer {
             position: fixed;
             top: 0; right: 0; bottom: 0;
-            width: 520px;
+            width: 580px;
             max-width: 100vw;
-            background: #fff;
+            background: #f8fafc;
             z-index: 1050;
             display: flex;
             flex-direction: column;
             transform: translateX(100%);
-            transition: transform .3s cubic-bezier(.4,0,.2,1);
+            transition: transform .3s cubic-bezier(.4, 0, .2, 1);
+            box-shadow: -10px 0 35px rgba(15, 23, 42, 0.15);
         }
         .invite-drawer.open { transform: translateX(0); }
 
-        /* Header */
+        /* Header: Deep Vibrant Blue with Integrated Action Buttons */
         .invite-drawer-head {
-            padding: 28px 32px 20px;
-            border-bottom: 1px solid #f0f1f6;
+            padding: 14px 20px;
+            background: linear-gradient(135deg, #009ef7 0%, #0077c8 100%);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.15);
             display: flex;
-            align-items: flex-start;
+            align-items: center;
             justify-content: space-between;
             flex-shrink: 0;
+            gap: 12px;
+        }
+        .invite-drawer-title-wrap {
+            min-width: 0;
+            flex: 1;
         }
         .invite-drawer-title {
-            font-size: 20px;
+            font-size: 16px;
             font-weight: 700;
-            color: #111827;
-            line-height: 1.2;
-            margin: 0 0 4px;
+            color: #ffffff;
+            line-height: 1.25;
+            margin: 0;
+            font-family: 'Poppins', sans-serif;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
         .invite-drawer-subtitle {
-            font-size: 13px;
-            color: #6b7280;
-            margin: 0;
+            font-size: 11px;
+            color: #e0f2fe;
+            margin: 2px 0 0 0;
+            font-family: 'Poppins', sans-serif;
+            opacity: 0.92;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
-        .invite-drawer-close {
-            width: 34px; height: 34px;
-            border-radius: 8px;
-            border: none;
-            background: #f3f4f6;
-            color: #374151;
-            display: flex; align-items: center; justify-content: center;
-            cursor: pointer;
-            font-size: 16px;
-            transition: background .15s;
+        .invite-head-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
             flex-shrink: 0;
-            margin-left: 16px;
-            margin-top: 2px;
         }
-        .invite-drawer-close:hover { background: #e5e7eb; color: #111; }
+        .invite-head-btn-cancel {
+            height: 33px;
+            padding: 0 13px;
+            border-radius: 7px;
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            background: rgba(255, 255, 255, 0.14);
+            font-size: 12px;
+            font-weight: 600;
+            font-family: 'Poppins', sans-serif;
+            color: #ffffff;
+            cursor: pointer;
+            transition: all .15s ease;
+        }
+        .invite-head-btn-cancel:hover {
+            background: rgba(255, 255, 255, 0.26);
+            border-color: rgba(255, 255, 255, 0.65);
+        }
+        .invite-head-btn-send {
+            height: 33px;
+            padding: 0 15px;
+            border-radius: 7px;
+            border: none;
+            background: #ffffff;
+            font-size: 12px;
+            font-weight: 700;
+            font-family: 'Poppins', sans-serif;
+            color: #008be3;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
+            transition: all .15s ease;
+        }
+        .invite-head-btn-send:hover {
+            background: #f8fafc;
+            color: #0077c8;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.18);
+        }
+        .invite-head-btn-send:disabled {
+            opacity: .7;
+            cursor: not-allowed;
+        }
+        .invite-spinner { display: none; }
+        .invite-head-btn-send.loading .invite-label { display: none; }
+        .invite-head-btn-send.loading .invite-spinner { display: inline-flex !important; align-items: center; }
+        .invite-head-close {
+            width: 32px;
+            height: 32px;
+            border-radius: 7px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            background: rgba(255, 255, 255, 0.12);
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background .15s, border-color .15s;
+            flex-shrink: 0;
+            margin-left: 2px;
+        }
+        .invite-head-close:hover {
+            background: rgba(255, 255, 255, 0.28);
+            border-color: rgba(255, 255, 255, 0.6);
+            color: #ffffff;
+        }
 
-        /* Body */
+        /* Body: Compact padding, fits 15.6" screen with ZERO vertical scroll needed */
         .invite-drawer-body {
             flex: 1;
             overflow-y: auto;
-            padding: 28px 32px;
+            overflow-x: hidden;
+            padding: 14px 18px 10px;
+            background: #f8fafc;
+        }
+        .invite-drawer-body::-webkit-scrollbar {
+            width: 4px;
+        }
+        .invite-drawer-body::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
         }
 
-        /* Field */
-        .invite-field { margin-bottom: 22px; }
-        .invite-field-label {
-            font-size: 13px;
-            font-weight: 600;
-            color: #374151;
-            margin-bottom: 8px;
-            display: flex;
-            align-items: center;
-            gap: 3px;
-        }
-        .invite-field-label .req { color: #ef4444; margin-left: 1px; }
-        .invite-input-wrap {
-            position: relative;
-            display: flex;
-            align-items: center;
-        }
-        .invite-input-icon {
-            position: absolute;
-            left: 14px;
-            color: #9ca3af;
-            font-size: 15px;
-            pointer-events: none;
-            line-height: 1;
-        }
-        .invite-input-wrap input,
-        .invite-input-wrap select {
-            width: 100%;
-            height: 48px;
-            border: 1.5px solid #e5e7eb;
-            border-radius: 10px;
-            padding: 0 16px 0 44px;
-            font-size: 14px;
-            font-family: 'Poppins', sans-serif;
-            color: #111827;
-            background: #fff;
-            outline: none;
-            transition: border-color .15s, box-shadow .15s;
-            -webkit-appearance: none;
-            appearance: none;
-        }
-        .invite-input-wrap input::placeholder,
-        .invite-input-wrap select.placeholder-active { color: #9ca3af; }
-        .invite-input-wrap input:focus,
-        .invite-input-wrap select:focus {
-            border-color: #009ef7;
-            box-shadow: 0 0 0 3px rgba(0,158,247,.12);
-        }
         /* Card + Sub-Card Enterprise Styling (Rule 20) */
         .invite-subcard {
             background: #ffffff;
             border: 1px solid #e2e8f0;
             border-radius: 10px;
-            padding: 16px 18px 6px;
-            margin-bottom: 16px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+            padding: 13px 15px 9px;
+            margin-bottom: 11px;
+            box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03);
             transition: border-color .15s ease, box-shadow .15s ease;
         }
         .invite-subcard:hover {
             border-color: #cbd5e1;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+            box-shadow: 0 3px 8px rgba(15, 23, 42, 0.05);
         }
         .invite-subcard-head {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            margin-bottom: 14px;
-            padding-bottom: 8px;
+            margin-bottom: 9px;
+            padding-bottom: 6px;
             border-bottom: 1px solid #f1f5f9;
         }
         .invite-subcard-title {
-            font-size: 11.5px;
+            font-size: 11px;
             font-weight: 700;
             color: #1e293b;
             text-transform: uppercase;
             letter-spacing: 0.5px;
             display: flex;
             align-items: center;
-            gap: 7px;
+            gap: 6px;
             margin: 0;
             font-family: 'Poppins', sans-serif;
         }
         .invite-subcard-badge {
-            font-size: 10.5px;
+            font-size: 10px;
             font-weight: 600;
-            padding: 2px 8px;
+            padding: 2px 7px;
             border-radius: 999px;
-            line-height: 1.3;
+            line-height: 1.25;
             font-family: 'Poppins', sans-serif;
         }
         .invite-subcard-badge.badge-req {
@@ -1550,73 +1585,106 @@
             border: 1px solid #e2e8f0;
         }
         .invite-subcard-hint {
-            font-size: 11.5px;
+            font-size: 11px;
             color: #64748b;
-            margin: -6px 0 14px;
-            line-height: 1.4;
+            margin: -3px 0 9px;
+            line-height: 1.35;
             font-family: 'Poppins', sans-serif;
+        }
+
+        /* 2-Column Responsive Grid */
+        .invite-row-2col {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 7px;
+        }
+        .invite-field { margin-bottom: 7px; }
+        .invite-field-label {
+            font-size: 11.5px;
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 4px;
+            display: flex;
+            align-items: center;
+            gap: 3px;
+            font-family: 'Poppins', sans-serif;
+        }
+        .invite-field-label .req { color: #ef4444; margin-left: 1px; }
+        .invite-input-wrap {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+        .invite-input-icon {
+            position: absolute;
+            left: 11px;
+            color: #94a3b8;
+            font-size: 13.5px;
+            pointer-events: none;
+            line-height: 1;
+        }
+        .invite-input-wrap input,
+        .invite-input-wrap select {
+            width: 100%;
+            height: 38px;
+            border: 1px solid #d8deec;
+            border-radius: 6px;
+            padding: 0 12px 0 34px;
+            font-size: 12.5px;
+            font-family: 'Poppins', sans-serif;
+            color: #1e293b;
+            background: #fff;
+            outline: none;
+            transition: border-color .15s, box-shadow .15s;
+            -webkit-appearance: none;
+            appearance: none;
+        }
+        .invite-input-wrap input::placeholder,
+        .invite-input-wrap select.placeholder-active { color: #9ca3af; }
+        .invite-input-wrap input:focus,
+        .invite-input-wrap select:focus {
+            border-color: #009ef7;
+            box-shadow: 0 0 0 3px rgba(0, 158, 247, .12);
         }
         /* chevron for select */
         .invite-select-wrap { position: relative; }
         .invite-select-wrap::after {
             content: '';
             position: absolute;
-            right: 16px;
+            right: 12px;
             top: 50%;
             transform: translateY(-50%);
             pointer-events: none;
-            width: 14px; height: 14px;
-            background: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2.5'><path d='M6 9l6 6 6-6'/></svg>") center/contain no-repeat;
+            width: 12px; height: 12px;
+            background: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2.5'><path d='M6 9l6 6 6-6'/></svg>") center/contain no-repeat;
         }
         .invite-field-hint {
-            font-size: 12px;
-            color: #6b7280;
-            margin-top: 7px;
+            font-size: 10.5px;
+            color: #64748b;
+            margin-top: 3px;
+            margin-bottom: 0;
+            line-height: 1.35;
+            font-family: 'Poppins', sans-serif;
         }
-
-        /* Footer */
-        .invite-drawer-foot {
-            padding: 20px 32px 28px;
-            border-top: 1px solid #f0f1f6;
+        .invite-secure-strip {
+            text-align: center;
+            font-size: 10.5px;
+            color: #94a3b8;
+            padding: 4px 0 2px;
             display: flex;
             align-items: center;
-            justify-content: flex-end;
-            gap: 12px;
-            flex-shrink: 0;
-        }
-        .invite-btn-cancel {
-            height: 44px;
-            padding: 0 24px;
-            border-radius: 10px;
-            border: 1.5px solid #e5e7eb;
-            background: #fff;
-            font-size: 14px;
-            font-weight: 600;
+            justify-content: center;
+            gap: 6px;
             font-family: 'Poppins', sans-serif;
-            color: #374151;
-            cursor: pointer;
-            transition: background .15s;
         }
-        .invite-btn-cancel:hover { background: #f3f4f6; }
-        .invite-btn-send {
-            height: 44px;
-            padding: 0 24px;
-            border-radius: 10px;
-            border: none;
-            background: #009ef7;
-            font-size: 14px;
-            font-weight: 600;
-            font-family: 'Poppins', sans-serif;
-            color: #fff;
-            cursor: pointer;
-            display: flex; align-items: center; gap: 8px;
-            transition: background .15s;
+
+        @media (max-width: 576px) {
+            .invite-drawer { width: 100vw; }
+            .invite-row-2col { grid-template-columns: 1fr; gap: 6px; }
+            .invite-drawer-head { flex-wrap: wrap; }
+            .invite-head-actions { width: 100%; justify-content: flex-end; margin-top: 6px; }
         }
-        .invite-btn-send:hover { background: #0086d1; }
-        .invite-btn-send:disabled { opacity: .65; cursor: not-allowed; }
-        .invite-spinner { display: none; }
-        .invite-btn-send.loading .invite-label { display: none; }
-        .invite-btn-send.loading .invite-spinner { display: inline-block; }
 
         @media (max-width: 1200px) {
             .team-stats-row { grid-template-columns: repeat(2, 1fr); }
@@ -2394,18 +2462,27 @@
         {{-- Invite Member Drawer --}}
         <div class="invite-overlay" id="inviteOverlay"></div>
         <div class="invite-drawer" id="inviteDrawer" role="dialog" aria-modal="true" aria-label="Invite Team Member">
-            {{-- Header --}}
+            {{-- Header: Blue Background with Integrated Action Buttons --}}
             <div class="invite-drawer-head">
-                <div>
-                    <p class="invite-drawer-title">Invite Team Member</p>
-                    <p class="invite-drawer-subtitle">Add a new colleague and configure their role &amp; access permissions</p>
+                <div class="invite-drawer-title-wrap">
+                    <h3 class="invite-drawer-title">
+                        <i class="fa-solid fa-user-plus" style="font-size: 14px; opacity: 0.92;"></i> Invite Team Member
+                    </h3>
+                    <p class="invite-drawer-subtitle">Add colleague &amp; configure role permissions</p>
                 </div>
-                <button class="invite-drawer-close" id="inviteDrawerClose" aria-label="Close">
-                    <i class="fa-solid fa-xmark"></i>
-                </button>
+                <div class="invite-head-actions">
+                    <button type="button" class="invite-head-btn-cancel" id="inviteCancelBtn">Cancel</button>
+                    <button type="button" class="invite-head-btn-send" id="inviteSubmitBtn">
+                        <span class="invite-label"><i class="fa-solid fa-paper-plane me-1"></i> Send Invitation</span>
+                        <span class="invite-spinner" style="display:none;"><span class="spinner-border spinner-border-sm me-1"></span> Sending...</span>
+                    </button>
+                    <button type="button" class="invite-head-close" id="inviteDrawerClose" aria-label="Close">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                </div>
             </div>
 
-            {{-- Body --}}
+            {{-- Body: Compact 2-Subcard Layout, Zero Vertical Scroll on 15.6" Laptops --}}
             <div class="invite-drawer-body">
                 <form id="inviteForm" enctype="multipart/form-data">
                     @csrf
@@ -2419,27 +2496,28 @@
                             <span class="invite-subcard-badge badge-req">Required</span>
                         </div>
 
-                        {{-- Name --}}
-                        <div class="invite-field">
-                            <label class="invite-field-label">Full Name <span class="req">*</span></label>
-                            <div class="invite-input-wrap">
-                                <span class="invite-input-icon"><i class="fa-regular fa-user"></i></span>
-                                <input type="text" name="name" id="inviteName" placeholder="Enter full name" autocomplete="off" />
+                        {{-- Row 1: Full Name & Work Email side-by-side --}}
+                        <div class="invite-row-2col">
+                            <div class="invite-field">
+                                <label class="invite-field-label">Full Name <span class="req">*</span></label>
+                                <div class="invite-input-wrap">
+                                    <span class="invite-input-icon"><i class="fa-regular fa-user"></i></span>
+                                    <input type="text" name="name" id="inviteName" placeholder="Enter full name" autocomplete="off" />
+                                </div>
+                            </div>
+
+                            <div class="invite-field">
+                                <label class="invite-field-label">Work Email <span class="req">*</span></label>
+                                <div class="invite-input-wrap">
+                                    <span class="invite-input-icon"><i class="fa-regular fa-envelope"></i></span>
+                                    <input type="email" name="email" id="inviteEmail" placeholder="name@company.com" maxlength="254" inputmode="email" autocomplete="email" autocapitalize="none" spellcheck="false" />
+                                </div>
+                                <div id="inviteEmail_typo_hint" class="team-email-typo-hint" style="display: none; margin-top: 4px; font-size: 11px; color: #b45309; background: #fef3c7; border: 1px solid #fde68a; border-radius: 5px; padding: 3px 6px;"></div>
                             </div>
                         </div>
 
-                        {{-- Email --}}
-                        <div class="invite-field">
-                            <label class="invite-field-label">Work Email <span class="req">*</span></label>
-                            <div class="invite-input-wrap">
-                                <span class="invite-input-icon"><i class="fa-regular fa-envelope"></i></span>
-                                <input type="email" name="email" id="inviteEmail" placeholder="Enter work email address" maxlength="254" inputmode="email" autocomplete="email" autocapitalize="none" spellcheck="false" />
-                            </div>
-                            <div id="inviteEmail_typo_hint" class="team-email-typo-hint" style="display: none; margin-top: 5px; font-size: 11.5px; color: #b45309; background: #fef3c7; border: 1px solid #fde68a; border-radius: 6px; padding: 4px 8px;"></div>
-                        </div>
-
-                        {{-- Role --}}
-                        <div class="invite-field" style="margin-bottom: 12px;">
+                        {{-- Row 2: Role & Permissions --}}
+                        <div class="invite-field" style="margin-bottom: 4px;">
                             <label class="invite-field-label">Role &amp; Permissions <span class="req">*</span></label>
                             <div class="invite-input-wrap invite-select-wrap">
                                 <span class="invite-input-icon"><i class="fa-solid fa-shield-halved"></i></span>
@@ -2448,7 +2526,7 @@
                                     {{-- Options populated cleanly via AJAX --}}
                                 </select>
                             </div>
-                            <p class="invite-field-hint" style="margin-bottom: 0;">Role defines the permissions and access levels the user will have in JERO.</p>
+                            <p class="invite-field-hint">Defines the system access permissions and workspace visibility for this member.</p>
                         </div>
                     </div>
 
@@ -2464,48 +2542,40 @@
                             Can also be provided by the team member upon account activation or in profile.
                         </p>
 
-                        {{-- Mobile Number --}}
-                        <div class="invite-field">
-                            <label class="invite-field-label">Mobile Number</label>
-                            <x-jero-phone-input
-                                id="inviteMobile"
-                                name="mobile"
-                                countryCodeName="phone_country_code"
-                                countryCodeId="invitePhoneCountryCode"
-                                value=""
-                                countryCode=""
-                                label=""
-                                :required="false"
-                                placeholder="Enter mobile number" />
-                        </div>
+                        {{-- Row: Mobile & LinkedIn side-by-side --}}
+                        <div class="invite-row-2col" style="margin-bottom: 2px;">
+                            <div class="invite-field" style="margin-bottom: 0;">
+                                <label class="invite-field-label">Mobile Number</label>
+                                <x-jero-phone-input
+                                    id="inviteMobile"
+                                    name="mobile"
+                                    countryCodeName="phone_country_code"
+                                    countryCodeId="invitePhoneCountryCode"
+                                    value=""
+                                    countryCode=""
+                                    label=""
+                                    :required="false"
+                                    placeholder="Enter mobile" />
+                            </div>
 
-                        {{-- LinkedIn Profile Link --}}
-                        <div class="invite-field" style="margin-bottom: 12px;">
-                            <label class="invite-field-label">LinkedIn Profile URL</label>
-                            <div class="invite-input-wrap">
-                                <span class="invite-input-icon"><i class="fa-brands fa-linkedin" style="color: #0a66c2;"></i></span>
-                                <input type="text" name="linkedin" id="inviteLinkedin" placeholder="https://linkedin.com/in/username" autocomplete="off" />
+                            <div class="invite-field" style="margin-bottom: 0;">
+                                <label class="invite-field-label">LinkedIn Profile URL</label>
+                                <div class="invite-input-wrap">
+                                    <span class="invite-input-icon"><i class="fa-brands fa-linkedin" style="color: #0a66c2;"></i></span>
+                                    <input type="text" name="linkedin" id="inviteLinkedin" placeholder="linkedin.com/in/..." autocomplete="off" />
+                                </div>
                             </div>
                         </div>
                     </div>
 
                     {{-- Message area --}}
-                    <div id="inviteMsg" style="display:none; font-size:13px; padding:10px 14px; border-radius:8px; margin-top:4px;"></div>
-                </form>
-            </div>
+                    <div id="inviteMsg" style="display:none; font-size:12.5px; padding:8px 12px; border-radius:7px; margin-top:4px;"></div>
 
-            {{-- Footer --}}
-            <div class="invite-drawer-foot">
-                <div style="font-size: 11.5px; color: #64748b; display: flex; align-items: center; gap: 6px;">
-                    <i class="fa-solid fa-shield-halved text-primary"></i> Tenant-scoped invite
-                </div>
-                <div style="display: flex; align-items: center; gap: 10px;">
-                    <button type="button" class="invite-btn-cancel" id="inviteCancelBtn">Cancel</button>
-                    <button type="button" class="invite-btn-send" id="inviteSubmitBtn">
-                        <span class="invite-label"><i class="fa-solid fa-paper-plane me-1"></i> Send Invitation</span>
-                        <span class="invite-spinner"><span class="spinner-border spinner-border-sm"></span> Sending...</span>
-                    </button>
-                </div>
+                    {{-- Micro security strip --}}
+                    <div class="invite-secure-strip">
+                        <i class="fa-solid fa-lock text-muted"></i> Tenant-scoped invite &bull; Enterprise RBAC protected
+                    </div>
+                </form>
             </div>
         </div>
         {{-- End Invite Drawer --}}
