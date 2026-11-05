@@ -1417,6 +1417,30 @@
             flex-shrink: 0;
             gap: 12px;
         }
+        /* Enforce light/white color for all header icons so they are crisply visible */
+        .invite-drawer-head i {
+            color: #ffffff !important;
+            opacity: 1 !important;
+        }
+        .invite-head-icon-box {
+            width: 28px;
+            height: 28px;
+            border-radius: 7px;
+            background: rgba(255, 255, 255, 0.22);
+            border: 1px solid rgba(255, 255, 255, 0.45);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            color: #ffffff !important;
+            font-size: 13px;
+            flex-shrink: 0;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+        }
+        .invite-head-icon-box i {
+            color: #ffffff !important;
+            opacity: 1 !important;
+            font-size: 13px !important;
+        }
         .invite-drawer-title-wrap {
             min-width: 0;
             flex: 1;
@@ -1424,20 +1448,20 @@
         .invite-drawer-title {
             font-size: 15px;
             font-weight: 700;
-            color: #ffffff;
+            color: #ffffff !important;
             line-height: 1.25;
             margin: 0;
             font-family: 'Poppins', sans-serif;
             display: flex;
             align-items: center;
-            gap: 7px;
+            gap: 8px;
         }
         .invite-drawer-subtitle {
             font-size: 11px;
             color: #e0f2fe;
             margin: 2px 0 0 0;
             font-family: 'Poppins', sans-serif;
-            opacity: 0.92;
+            opacity: 0.95;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
@@ -1452,18 +1476,27 @@
             height: 31px;
             padding: 0 12px;
             border-radius: 6px;
-            border: 1px solid rgba(255, 255, 255, 0.4);
-            background: rgba(255, 255, 255, 0.14);
+            border: 1px solid rgba(255, 255, 255, 0.45);
+            background: rgba(255, 255, 255, 0.18);
             font-size: 11.5px;
             font-weight: 600;
             font-family: 'Poppins', sans-serif;
-            color: #ffffff;
+            color: #ffffff !important;
             cursor: pointer;
             transition: all .15s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .invite-head-btn-cancel i {
+            color: #ffffff !important;
+            opacity: 1 !important;
+            font-size: 11px !important;
         }
         .invite-head-btn-cancel:hover {
-            background: rgba(255, 255, 255, 0.26);
-            border-color: rgba(255, 255, 255, 0.65);
+            background: rgba(255, 255, 255, 0.32);
+            border-color: #ffffff;
+            color: #ffffff !important;
         }
         .invite-head-btn-send {
             height: 31px;
@@ -1474,7 +1507,7 @@
             font-size: 11.5px;
             font-weight: 700;
             font-family: 'Poppins', sans-serif;
-            color: #008be3;
+            color: #008be3 !important;
             cursor: pointer;
             display: flex;
             align-items: center;
@@ -1482,10 +1515,18 @@
             box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
             transition: all .15s ease;
         }
+        .invite-head-btn-send i {
+            color: #008be3 !important;
+            opacity: 1 !important;
+            font-size: 12px !important;
+        }
         .invite-head-btn-send:hover {
             background: #f8fafc;
-            color: #0077c8;
+            color: #0077c8 !important;
             box-shadow: 0 3px 8px rgba(0, 0, 0, 0.16);
+        }
+        .invite-head-btn-send:hover i {
+            color: #0077c8 !important;
         }
         .invite-head-btn-send:disabled {
             opacity: .7;
@@ -1498,22 +1539,28 @@
             width: 31px;
             height: 31px;
             border-radius: 6px;
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            background: rgba(255, 255, 255, 0.12);
-            color: #ffffff;
+            border: 1px solid rgba(255, 255, 255, 0.45);
+            background: rgba(255, 255, 255, 0.2);
+            color: #ffffff !important;
             display: flex;
             align-items: center;
             justify-content: center;
             cursor: pointer;
-            font-size: 13px;
+            font-size: 14px;
             transition: background .15s, border-color .15s;
             flex-shrink: 0;
             margin-left: 2px;
         }
+        .invite-head-close i {
+            color: #ffffff !important;
+            opacity: 1 !important;
+            font-size: 14px !important;
+            font-weight: 700;
+        }
         .invite-head-close:hover {
-            background: rgba(255, 255, 255, 0.28);
-            border-color: rgba(255, 255, 255, 0.6);
-            color: #ffffff;
+            background: rgba(255, 255, 255, 0.35);
+            border-color: #ffffff;
+            color: #ffffff !important;
         }
 
         /* Body: Gradient light background, zero vertical scroll */
@@ -2762,21 +2809,26 @@
         {{-- Invite Member Drawer --}}
         <div class="invite-overlay" id="inviteOverlay"></div>
         <div class="invite-drawer" id="inviteDrawer" role="dialog" aria-modal="true" aria-label="Invite Team Member">
-            {{-- Header: Blue Background with Integrated Action Buttons --}}
+            {{-- Header: Blue Background with Integrated Action Buttons & High-Contrast Light Icons --}}
             <div class="invite-drawer-head">
                 <div class="invite-drawer-title-wrap">
                     <h3 class="invite-drawer-title">
-                        <i class="fa-solid fa-user-plus" style="font-size: 14px; opacity: 0.92;"></i> Invite Team Member
+                        <span class="invite-head-icon-box">
+                            <i class="fa-solid fa-user-plus"></i>
+                        </span>
+                        <span>Invite Team Member</span>
                     </h3>
                     <p class="invite-drawer-subtitle">Add colleague &amp; configure role permissions</p>
                 </div>
                 <div class="invite-head-actions">
-                    <button type="button" class="invite-head-btn-cancel" id="inviteCancelBtn">Cancel</button>
+                    <button type="button" class="invite-head-btn-cancel" id="inviteCancelBtn">
+                        <i class="fa-solid fa-xmark"></i> Cancel
+                    </button>
                     <button type="button" class="invite-head-btn-send" id="inviteSubmitBtn">
                         <span class="invite-label"><i class="fa-solid fa-paper-plane me-1"></i> Send Invitation</span>
                         <span class="invite-spinner" style="display:none;"><span class="spinner-border spinner-border-sm me-1"></span> Sending...</span>
                     </button>
-                    <button type="button" class="invite-head-close" id="inviteDrawerClose" aria-label="Close">
+                    <button type="button" class="invite-head-close" id="inviteDrawerClose" aria-label="Close" title="Close drawer">
                         <i class="fa-solid fa-xmark"></i>
                     </button>
                 </div>
