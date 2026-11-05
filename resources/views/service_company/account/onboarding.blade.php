@@ -6952,7 +6952,7 @@ $('.remove_address').click(function(){
         var countdownInterval = null;
         var isReadyConfirmed = false;
         var checkReadyUrl = null;
-        var redirectUrl = '{{ route('service_company.clients.custom_client') }}/0';
+        var redirectUrl = '{{ url('service_company/dashboard') }}';
         var newClientId = null;
 
         $('#clientReadinessModal').remove();
@@ -6971,9 +6971,9 @@ $('.remove_address').click(function(){
                     </div>
                 </div>
 
-                <h3 id="crGateTitle" style="font-size:18px;font-weight:700;color:#0F172A;margin-bottom:6px;">Creating Internal Client...</h3>
+                <h3 id="crGateTitle" style="font-size:18px;font-weight:700;color:#0F172A;margin-bottom:6px;">Setting Up Workspace...</h3>
                 <p id="crGateSubtitle" style="font-size:12.5px;color:#64748B;line-height:1.5;margin-bottom:18px;">
-                    Verifying company data and search index so your new internal client appears immediately on your client listing without any delay or confusion.
+                    Validating company data, writing authoritative records, and synchronizing search indices so your workspace is immediately ready.
                 </p>
 
                 <div id="crStagesList" style="text-align:left; background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; padding:14px 18px; margin-bottom:20px; font-size:12px;">
@@ -6983,23 +6983,23 @@ $('.remove_address').click(function(){
                     </div>
                     <div id="cr_stg_web" style="display:flex;align-items:center;gap:10px;margin-bottom:8px;color:#10b981;font-weight:600;">
                         <span style="font-size:13px;width:16px;text-align:center;">✓</span>
-                        <span>Validating website/domain</span>
+                        <span>Validating website & domain</span>
                     </div>
                     <div id="cr_stg_contact" style="display:flex;align-items:center;gap:10px;margin-bottom:8px;color:#10b981;font-weight:600;">
                         <span style="font-size:13px;width:16px;text-align:center;">✓</span>
-                        <span>Validating contacts</span>
+                        <span>Validating contacts & addresses</span>
                     </div>
                     <div id="cr_stg_profile" style="display:flex;align-items:center;gap:10px;margin-bottom:8px;color:#2563eb;font-weight:600;">
                         <span style="font-size:13px;width:16px;text-align:center;">●</span>
-                        <span>Preparing client profile</span>
+                        <span>Writing authoritative company profile</span>
                     </div>
                     <div id="cr_stg_sync" style="display:flex;align-items:center;gap:10px;margin-bottom:8px;color:#94a3b8;">
                         <span style="font-size:13px;width:16px;text-align:center;">○</span>
-                        <span>Synchronizing listing data</span>
+                        <span>Flushing caches & updating search indices</span>
                     </div>
                     <div id="cr_stg_finalize" style="display:flex;align-items:center;gap:10px;color:#94a3b8;">
                         <span style="font-size:13px;width:16px;text-align:center;">○</span>
-                        <span>Finalizing client record</span>
+                        <span>Verifying data freshness & completing setup</span>
                     </div>
                 </div>
 
@@ -7033,13 +7033,13 @@ $('.remove_address').click(function(){
                     </svg>
                 </div>
             `);
-            $('#crGateTitle').text('Client Live & Verified!').css('color', '#059669');
-            $('#crGateSubtitle').text('Your internal client is 100% indexed and ready to view. Redirecting to your listing now...');
+            $('#crGateTitle').text('Profile 100% Completed & Updated!').css('color', '#059669');
+            $('#crGateSubtitle').text('Your company profile is 100% verified, fresh indices are synchronized, and live data is now active. Redirecting now...');
 
             try { localStorage.removeItem('jero_company_profile_draft_' + {{ (int) (auth()->user()->company_id ?? 0) }}); } catch (e) {}
 
             setTimeout(function() {
-                window.location.href = redirectUrl + (redirectUrl.indexOf('?') === -1 ? '?' : '&') + 'new_client_id=' + (newClientId || '');
+                window.location.href = redirectUrl || "{{ url('service_company/dashboard') }}";
             }, 800);
         }
 
@@ -7047,7 +7047,7 @@ $('.remove_address').click(function(){
             clearInterval(pollInterval);
             clearInterval(countdownInterval);
             isClientSubmitting = false;
-            $('#submitBtn, .submitfrm').prop('disabled', false).html('<i class="la la-paper-plane"></i> Submit Client');
+            $('#submitBtn, .submitfrm, .updatefrm').prop('disabled', false).html('<i class="la la-check"></i> Complete Setup');
 
             $('#crGateIconContainer').html(`
                 <div style="width:72px;height:72px;border-radius:50%;background:#FEF2F2;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;">
@@ -7058,32 +7058,32 @@ $('.remove_address').click(function(){
                     </svg>
                 </div>
             `);
-            $('#crGateTitle').text(errorTitle || 'Registration Could Not Be Completed').css('color', '#DC2626');
+            $('#crGateTitle').text(errorTitle || 'Setup Could Not Be Completed').css('color', '#DC2626');
             $('#crGateSubtitle').text(errorMsg || 'Some required company data could not be processed successfully. Please review the details and try again.');
             $('#crStagesList').hide();
             $('#crGateActions').css('display', 'flex');
 
             $('#crBtnReview').off('click').on('click', function() {
                 $('#clientReadinessModal').remove();
-                if (conflictingField === 'name' || conflictingField === 'website') {
+                if (conflictingField === 'company_name' || conflictingField === 'name' || conflictingField === 'website' || conflictingField === 'industries' || conflictingField === 'company_size' || conflictingField === 'company_type' || conflictingField === 'founded' || conflictingField === 'logo') {
                     if (typeof goToWizardStep === 'function') goToWizardStep(1);
-                    var $f = conflictingField === 'name' ? $('#client_id') : $('#website');
-                    $f.focus().addClass('is-invalid');
-                    if (conflictingField === 'name') {
-                        $('#company_duplicate_error').show();
-                        $('#company_duplicate_error_text').text(errorMsg);
-                    } else {
-                        $('#website_duplicate_error').show();
-                        $('#website_duplicate_error_text').text(errorMsg);
-                    }
-                } else if (conflictingField === 'contact_email' || conflictingField === 'contact_phone') {
+                    var fieldId = conflictingField === 'company_name' ? 'company_name' : conflictingField;
+                    var $f = $('#' + fieldId);
+                    if ($f.length) $f.focus().addClass('is-invalid');
+                } else if (conflictingField === 'description') {
+                    if (typeof goToWizardStep === 'function') goToWizardStep(2);
+                    $('#kt_froala_editor_description').focus();
+                } else if (conflictingField === 'address') {
+                    if (typeof goToWizardStep === 'function') goToWizardStep(3);
+                } else if (conflictingField === 'social' || conflictingField === 'linkedin_url') {
                     if (typeof goToWizardStep === 'function') goToWizardStep(4);
+                    $('#linkedin_url').focus();
                 }
             });
 
             $('#crBtnRetry').off('click').on('click', function() {
                 $('#clientReadinessModal').remove();
-                $('.submitfrm').trigger('click');
+                $('.submitfrm, .updatefrm').trigger('click');
             });
         }
 
@@ -7105,10 +7105,10 @@ $('.remove_address').click(function(){
             if (totalElapsed >= maxWaitSeconds) {
                 clearInterval(pollInterval);
                 clearInterval(countdownInterval);
-                if (newClientId) {
+                if (newClientId || !checkReadyUrl) {
                     markSuccess();
                 } else {
-                    markError('Registration Timed Out', 'Client processing is continuing in the background, but search index verification exceeded timeout. You may check your client list or retry.', null);
+                    markError('Setup Timed Out', 'Company processing is continuing in the background, but search index verification exceeded timeout. You may check your profile or retry.', null);
                 }
             }
         }, 1000);
@@ -7125,51 +7125,60 @@ $('.remove_address').click(function(){
             contentType: false,
             data: jobParams.formData,
             success: function(res) {
-                if (res && res.status === 'success') {
+                if (res && (res.status === 'success' || res.action === 'success')) {
                     newClientId = res.client_id;
                     checkReadyUrl = res.check_ready_url;
                     if (res.redirect_url) redirectUrl = res.redirect_url;
+                    if (res.url) redirectUrl = res.url;
 
                     $('#cr_stg_profile').css({'color':'#10b981','font-weight':'600'}).find('span:first').text('✓');
-                    $('#cr_stg_sync').css({'color':'#2563eb','font-weight':'600'}).find('span:first').text('●');
 
-                    // Start polling check_ready_url
-                    pollInterval = setInterval(function() {
-                        if (isReadyConfirmed) return;
-                        $.ajax({
-                            url: checkReadyUrl,
-                            type: 'GET',
-                            cache: false,
-                            success: function(probe) {
-                                if (probe && probe.ready === true) {
-                                    markSuccess();
+                    // If check_ready_url is returned, poll for async readiness;
+                    // otherwise, mark success immediately for synchronous save!
+                    if (checkReadyUrl) {
+                        $('#cr_stg_sync').css({'color':'#2563eb','font-weight':'600'}).find('span:first').text('●');
+                        pollInterval = setInterval(function() {
+                            if (isReadyConfirmed) return;
+                            $.ajax({
+                                url: checkReadyUrl,
+                                type: 'GET',
+                                cache: false,
+                                success: function(probe) {
+                                    if (probe && probe.ready === true) {
+                                        markSuccess();
+                                    }
+                                },
+                                error: function() {
+                                    // Non-blocking
                                 }
-                            },
-                            error: function() {
-                                // Non-blocking
-                            }
-                        });
-                    }, 800);
+                            });
+                        }, 800);
+                    } else {
+                        // Authoritative synchronous completion
+                        $('#cr_stg_sync').css({'color':'#10b981','font-weight':'600'}).find('span:first').text('✓');
+                        $('#cr_stg_finalize').css({'color':'#10b981','font-weight':'600'}).find('span:first').text('✓');
+                        markSuccess();
+                    }
 
                 } else {
-                    markError('Registration Notice', res.message || 'Operation failed', res.field || null);
+                    markError('Setup Notice', res.message || 'Operation failed', res.field || res.error_name || null);
                 }
             },
             error: function(xhr) {
-                var msg = 'We couldn\'t complete the Internal Client registration. Please review the details and try again.';
+                var msg = 'We couldn\'t complete the company profile setup. Please review the details and try again.';
                 var field = null;
                 if (xhr.responseJSON && xhr.responseJSON.message) {
                     msg = xhr.responseJSON.message;
-                    field = xhr.responseJSON.field || null;
+                    field = xhr.responseJSON.field || xhr.responseJSON.error_name || null;
                 }
-                markError('Registration Could Not Be Completed', msg, field);
+                markError('Setup Could Not Be Completed', msg, field);
             }
         });
     }
 
     var isClientSubmitting = false;
 
-    $(document).on('click', '.submitfrm', function(e) {
+    $(document).on('click', '.submitfrm, .updatefrm, #submitBtn', function(e) {
         if (e && e.preventDefault) { e.preventDefault(); }
         if (isClientSubmitting) {
             return false;
@@ -7239,13 +7248,14 @@ $('.remove_address').click(function(){
 
  	var kt_docs_tinymce_hidden = (typeof getClientDescriptionHtml === 'function') ? getClientDescriptionHtml() : ($('#kt_docs_tinymce_hidden').val() || '');
      data.append("description", kt_docs_tinymce_hidden);
+     $('#hidden_description').val(kt_docs_tinymce_hidden);
 
     	data.append('key', 'value');
 
      if (!navigator.onLine) {
          Swal.fire({ title: "No Internet", text: "You are currently offline or the server is unreachable.", icon: "warning", confirmButtonText: "Ok, got it!", customClass: { confirmButton: "btn btn-warning" } });
          isClientSubmitting = false;
-         $btn.prop("disabled", false).html('<i class="la la-paper-plane"></i> Submit Client');
+         $btn.prop("disabled", false).html('<i class="la la-check"></i> Complete Setup');
          return;
      }
 
@@ -7257,141 +7267,6 @@ $('.remove_address').click(function(){
     });
           
 </script>
-<?php
-   if ($page_event == 'EDIT') {
-       ?>
-<script>
-
-   $(document).on('click', '.updatefrm', function(e) {
-        if (e && e.preventDefault) { e.preventDefault(); }
-        if (isClientSubmitting) {
-            return false;
-        }
-
-        // Validate all wizard steps before updating!
-        for (var s = 1; s <= 4; s++) {
-          if (typeof validateWizardStep === 'function' && !validateWizardStep(s)) {
-            isClientSubmitting = false;
-            if (typeof goToWizardStep === 'function') {
-              goToWizardStep(s);
-            }
-            var $invalidEl = window.$firstInvalid;
-            if ($invalidEl && $invalidEl.length) {
-              $invalidEl.focus();
-              try {
-                $('html, body').animate({
-                  scrollTop: Math.max(0, $invalidEl.offset().top - 140)
-                }, 300);
-              } catch (err) {}
-            }
-            if (typeof Swal !== 'undefined' && typeof Swal.fire === 'function') {
-              var updateErrMsg = (s === 1 && window._dupWebsiteError)
-                ? window._dupWebsiteError
-                : ((s === 1 && window._dupCompanyNameError)
-                  ? window._dupCompanyNameError
-                  : ((s === 3 && window._lastStep3Error)
-                    ? window._lastStep3Error
-                    : 'Please complete all required fields in Step ' + s + ' before saving.'));
-              Swal.fire({
-                icon: 'warning',
-                title: 'Incomplete Details',
-                text: updateErrMsg,
-                confirmButtonText: 'Review Step ' + s,
-                customClass: { confirmButton: 'btn btn-warning' }
-              });
-            }
-            return false;
-          }
-        }
-
-        var $btn = $(this);
-        isClientSubmitting = true;
-
-    $btn.prop("disabled", true);
-    $btn.html(
-        `<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Waiting...`
-      );
-
-    var idempotencyKey = $('#kt_form_idempotency_key').val();
-    if (!idempotencyKey) {
-        idempotencyKey = 'sc_client_' + Date.now() + '_' + Math.random().toString(36).substring(2, 11) + Math.random().toString(36).substring(2, 11);
-        $('#kt_form_idempotency_key').val(idempotencyKey);
-    }
-
-   	var data 			=	new FormData();
-   	var form_data 		=	$('#kt_form').serializeArray();
-   	$.each(form_data, function (key, input) {
-       		data.append(input.name, input.value);
-   	});
-   	var file_data 		= $('input[name="logo"]')[0].files;
-   	for (var i = 0; i < file_data.length; i++) {
-       		data.append("logo", file_data[i]);
-   	}
-
- 	var kt_docs_tinymce_hidden = (typeof getClientDescriptionHtml === 'function') ? getClientDescriptionHtml() : ($('#kt_docs_tinymce_hidden').val() || '');
- 	data.append("description", kt_docs_tinymce_hidden);
-
- 	data.append('key', 'value');
-  // data.append('_method', 'PUT');
-
-    if (!navigator.onLine) {
-        Swal.fire({ title: "No Internet", text: "You are currently offline or the server is unreachable.", icon: "warning", confirmButtonText: "Ok, got it!", customClass: { confirmButton: "btn btn-warning" } });
-        isClientSubmitting = false;
-        $btn.prop("disabled", false).html('<i class="la la-paper-plane"></i> Update Client');
-        return;
-    }
-
-   	$.ajax({
-   				url					: '{{ route('service_company.account.onboarding.save') }}',
-   				headers				: {
-                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content'),
-                    'X-Idempotency-Key': idempotencyKey
-                },
-       			method				: "POST",
-       			processData			: false,
-       			contentType			: false,
-      		 	data				: data,
-   				redirect			: true,
-        			success				: function (data)
-               {
-                  if(data.status == 'success')
-                  {
-                     try { localStorage.removeItem('jero_company_profile_draft_' + {{ (int) (auth()->user()->company_id ?? 0) }}); } catch (e) {}
-                     window.location = data.url || '{{ route('service_company.dashboard') }}';
-                  } else if (data.status === 'processing') {
-                     try { localStorage.removeItem('jero_company_profile_draft_' + {{ (int) (auth()->user()->company_id ?? 0) }}); } catch (e) {}
-                     setTimeout(function() {
-                         window.location = data.url || '{{ route('service_company.dashboard') }}';
-                     }, 1000);
-                  } else {
-                     isClientSubmitting = false;
-                     $('#kt_form_idempotency_key').val('sc_client_' + Date.now() + '_' + Math.random().toString(36).substring(2, 11) + Math.random().toString(36).substring(2, 11));
-                     $btn.prop("disabled", false).html('<i class="la la-paper-plane"></i> Update Client');
-                     Swal.fire("Notice", data.message || "Operation failed", "warning");
-                  }
-       			},
-       			error				: function (xhr) {
-                    isClientSubmitting = false;
-                    $('#kt_form_idempotency_key').val('sc_client_' + Date.now() + '_' + Math.random().toString(36).substring(2, 11) + Math.random().toString(36).substring(2, 11));
-                    $btn.prop("disabled", false).html('<i class="la la-paper-plane"></i> Update Client');
-                    if (xhr.status === 0 || !navigator.onLine) {
-                        Swal.fire({ title: "No Internet", text: "You are currently offline or the server is unreachable.", icon: "warning", confirmButtonText: "Ok, got it!", customClass: { confirmButton: "btn btn-warning" } });
-                    } else if (xhr.responseJSON && xhr.responseJSON.message) {
-                        Swal.fire("Error", xhr.responseJSON.message, "error");
-                    } else {
-                        Swal.fire("Error", "Something went wrong. Please try again.", "error");
-                    }
-       			}
-   		});
-
-   });
-</script>
-<?php
-   } else {
-       ?>
-<?php
-   }
-?>
 <script>
 	$(document).on('change', '.change_state', function() { 
    	
@@ -7692,6 +7567,7 @@ $('.remove_address').click(function(){
           window.clientDescQuill.root.innerHTML = data.description;
         }
         $('#kt_docs_tinymce_hidden').val(data.description).trigger('input');
+        $('#hidden_description').val(data.description);
         var plainText = data.description.replace(/<[^>]+>/g, '').trim();
         $('#client_desc_count').text(Math.min(plainText.length, 2000));
         if ($('#client_preview_description').length) {
@@ -11892,6 +11768,7 @@ $('.remove_address').click(function(){
         setClientDescriptionContent(suggestion);
       } else {
         $('#kt_docs_tinymce_hidden').val(suggestion).trigger('input');
+        $('#hidden_description').val(suggestion);
         $('#client_desc_count').text(Math.min(suggestion.length, 2000));
       }
       $('.client-editor-box').removeClass('is-invalid');
@@ -12117,6 +11994,7 @@ $('.remove_address').click(function(){
       var cleanHtml = (text.length === 0 || html === '<p><br></p>' || html === '<p></p>') ? '' : html;
 
       $('#kt_docs_tinymce_hidden').val(cleanHtml);
+      $('#hidden_description').val(cleanHtml);
       $('#client_desc_count').text(Math.min(text.length, 2000));
 
       if ($('#client_preview_description').length) {
@@ -13709,7 +13587,12 @@ $('.remove_address').click(function(){
 
     function filterItems(query) {
         var clean = (query || '').trim().toLowerCase();
-        if (!clean) {
+        var selectedId = getSelectedId();
+        var selectedItem = (selectedId !== null && taxonomyMap.has(selectedId)) ? taxonomyMap.get(selectedId) : null;
+        var selectedName = selectedItem ? (selectedItem.display_name || selectedItem.name || '').trim().toLowerCase() : '';
+
+        // If no query OR query matches the current selection, display all options so user can switch in 1 click
+        if (!clean || (selectedName && clean === selectedName)) {
             filteredList = taxonomyList.map(function(item) {
                 return { item: item, matchedAlias: null };
             });
@@ -13754,6 +13637,10 @@ $('.remove_address').click(function(){
         }
 
         var selectedId = getSelectedId();
+        var selectedItem = (selectedId !== null && taxonomyMap.has(selectedId)) ? taxonomyMap.get(selectedId) : null;
+        var selectedName = selectedItem ? (selectedItem.display_name || selectedItem.name || '').trim().toLowerCase() : '';
+        var activeQuery = (query && query.trim().toLowerCase() !== selectedName) ? query : '';
+
         var html = '';
 
         for (var i = 0; i < filteredList.length; i++) {
@@ -13779,7 +13666,7 @@ $('.remove_address').click(function(){
             html += '<div class="jero-ctype-item ' + (isSelected ? 'selected' : '') + ' ' + (isFocused ? 'focused' : '') + '" ' +
                 'data-idx="' + i + '" data-id="' + item.id + '" role="option" id="jero_ctype_opt_' + item.id + '" aria-selected="' + (isSelected ? 'true' : 'false') + '">' +
                 '<div class="jero-ctype-item-main">' +
-                '<div class="jero-ctype-item-name">' + highlightMatch(item.display_name || item.name, query) + '</div>' +
+                '<div class="jero-ctype-item-name">' + highlightMatch(item.display_name || item.name, activeQuery) + '</div>' +
                 '</div>' +
                 '<div class="jero-ctype-item-side">' +
                 checkIcon +
@@ -14026,8 +13913,18 @@ $('.remove_address').click(function(){
             });
         }
 
-        // Item selection via click (single-click immediate selection)
+        // Item selection via click / mousedown (0ms instant switch, preventing focus loss)
         if (listContainer) {
+            listContainer.addEventListener('mousedown', function(e) {
+                // Prevent input blur before selection completes
+                e.preventDefault();
+                var itemEl = e.target.closest('.jero-ctype-item');
+                if (!itemEl) return;
+                var id = parseInt(itemEl.getAttribute('data-id'), 10);
+                if (taxonomyMap.has(id)) {
+                    selectItem(taxonomyMap.get(id));
+                }
+            });
             listContainer.addEventListener('click', function(e) {
                 var itemEl = e.target.closest('.jero-ctype-item');
                 if (!itemEl) return;

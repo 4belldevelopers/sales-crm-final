@@ -4239,7 +4239,12 @@ input:checked + .slider-custom:before {
 
   function filterCompanyTypeItems(query) {
     var clean = (query || '').trim().toLowerCase();
-    if (!clean) {
+    var selectedId = getSelectedCompanyTypeId();
+    var selectedItem = (selectedId !== '' && ctypeTaxonomyMap.has(selectedId)) ? ctypeTaxonomyMap.get(selectedId) : null;
+    var selectedName = selectedItem ? (selectedItem.display_name || selectedItem.name || '').trim().toLowerCase() : '';
+
+    // If no query OR query matches the current selection, display all options so user can switch in 1 click
+    if (!clean || (selectedName && clean === selectedName)) {
       ctypeFilteredList = ctypeTaxonomyList.slice(0);
       return;
     }
@@ -4266,6 +4271,10 @@ input:checked + .slider-custom:before {
     }
 
     var selectedId = getSelectedCompanyTypeId();
+    var selectedItem = (selectedId !== '' && ctypeTaxonomyMap.has(selectedId)) ? ctypeTaxonomyMap.get(selectedId) : null;
+    var selectedName = selectedItem ? (selectedItem.display_name || selectedItem.name || '').trim().toLowerCase() : '';
+    var activeQuery = (query && query.trim().toLowerCase() !== selectedName) ? query : '';
+
     var html = '';
 
     for (var i = 0; i < ctypeFilteredList.length; i++) {
@@ -4277,7 +4286,7 @@ input:checked + .slider-custom:before {
       html += '<div class="jero-ctype-item ' + (isSelected ? 'selected' : '') + ' ' + (isFocused ? 'focused' : '') + '" ' +
         'data-idx="' + i + '" data-id="' + escapeHtmlText(itemIdStr) + '" role="option" id="jero_ctype_opt_' + escapeHtmlText(itemIdStr) + '" aria-selected="' + (isSelected ? 'true' : 'false') + '">' +
         '<div class="jero-ctype-item-main">' +
-        '<div class="jero-ctype-item-name">' + highlightCtypeMatch(item.display_name || item.name, query) + '</div>' +
+        '<div class="jero-ctype-item-name">' + highlightCtypeMatch(item.display_name || item.name, activeQuery) + '</div>' +
         '</div>' +
         '</div>';
     }
@@ -4533,6 +4542,16 @@ input:checked + .slider-custom:before {
     }
 
     if (ctypeListContainer) {
+      ctypeListContainer.addEventListener('mousedown', function(e) {
+        // Prevent input blur before selection completes
+        e.preventDefault();
+        var itemEl = e.target.closest('.jero-ctype-item');
+        if (!itemEl) return;
+        var id = itemEl.getAttribute('data-id');
+        if (id !== null && ctypeTaxonomyMap.has(String(id))) {
+          selectCtypeItem(ctypeTaxonomyMap.get(String(id)));
+        }
+      });
       ctypeListContainer.addEventListener('click', function(e) {
         var itemEl = e.target.closest('.jero-ctype-item');
         if (!itemEl) return;
